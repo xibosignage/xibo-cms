@@ -1,0 +1,73 @@
+/*
+ * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+body {
+	font-size:76.1%;
+	font-family:Verdana, Arial, Helvetica, sans-serif;
+}
+
+.message_box {
+	background: #E0E9F6;
+	border: 1px solid #003399;
+	margin-top: 6em;
+	padding-right: 5px;
+	text-align:center;
+	margin: 10px auto;
+	clear:both;
+	width: 500px !important;
+	width: 500px;
+}
+
+.message_header {
+	margin-right: -5px; 
+	padding-right: 40px;
+}
+
+.message_header h1 {
+	margin: 0;
+	border: 0; 
+	padding: 30px 0 15px 40px;
+	height: auto !important; 
+	height: 1%; /* IE Holly Hack */ 
+}
+
+.message_body {
+	text-align:left;
+	margin-right: 25px; 
+	padding: 25px 0 15px 10px;
+}
+
+.message_body li{
+	list-style-type: circle;
+}
+
+.highlight {
+	color:red;
+	font-size:1.2em;
+	display:inline;
+	float:none;
+	border:0;
+	background:none;
+}
+
+#content {
+	width:100%;
+	margin: 0 auto;
+
+}

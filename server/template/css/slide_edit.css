@@ -1,0 +1,230 @@
+/*
+ * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+#ctl_nav_bar {
+	position:absolute;
+	left:0px;
+	top:0px;
+	height:50px;
+}
+
+#ctl_slide_edit {
+	position:absolute;
+	width:900px;
+	height:675px;
+	left:10px;
+	top:51px;
+	border: 1px solid #000;
+}
+
+#div_dialog, #div_dialog form {
+	font-size: 10px;
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+}
+
+.ctl_buttons a {
+    display:block;
+    float:left;
+    margin:0 7px 0 0;
+    background-color:#f5f5f5;
+    border:1px solid #dedede;
+    border-top:1px solid #eee;
+    border-left:1px solid #eee;
+
+    font-family:"Lucida Grande", Tahoma, Arial, Verdana, sans-serif;
+    font-size:100%;
+    line-height:130%;
+    text-decoration:none;
+    font-weight:bold;
+    color:#565656;
+    cursor:pointer;
+    padding:5px 10px 6px 7px; /* Links */
+}
+
+.ctl_link {
+	color: white; 
+	font-size: 10px
+}
+
+#stack_media table, #stack_media td, #stack_media th {
+	border:1px solid #DCE4F5;
+    background:#FFFFFF;
+	border-collapse:collapse;
+	margin:10px 0px 10px 0px;
+}
+
+#stack_media th{
+	background:#E0E9F6;
+}
+
+#pageback_button {
+	background:url(../../img/forms/backup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width:90px;
+}
+
+#pageback_button:hover {
+	background:url(../../img/forms/backdown.png);
+	background-repeat: no-repeat;
+	width:90px;
+}
+
+/* Default tables and forms */
+table,td,th {
+    background:#fff;
+    border:1px solid #DCE4F5;
+	
+	border-collapse:collapse;
+	margin:10px 0px 10px 0px;
+	padding:5px;
+	font-size:1em;
+}
+
+th {
+	background: #E0E9F6;
+}
+
+form table, form td, form th {
+	border:0;
+	border-collapse:collapse;
+	margin:auto;
+	padding:5px;
+	background: none;
+}
+
+/* Caution! Ensure accessibility in print and other media types... */
+@media projection, screen { /* Use class for showing/hiding tab content, so that visibility can be better controlled in different media types... */
+    .tabs-hide {
+        display: none;
+    }
+}
+
+/* Hide useless elements in print layouts... */
+@media print {
+    .tabs-nav {
+        display: none;
+    }
+}
+
+.tabs-nav {
+    list-style: none;
+    margin: 0;
+    padding: 5px 0 0 0px;
+}
+.tabs-nav:after { /* clearing without presentational markup, IE gets extra treatment */
+    display: block;
+    clear: both;
+    content: " ";
+}
+.tabs-nav li {
+    float: left;
+    margin: 0 0 0 1px;
+    min-width: 84px; /* be nice to Opera */
+}
+.tabs-nav a, .tabs-nav a span {
+    display: block;
+    padding: 0 10px;
+    background: url(../../img/tabs/tab.png) no-repeat;
+}
+.tabs-nav a {
+    position: relative;
+    top: 1px;
+    z-index: 1;
+    padding-left: 0;
+    color: #27537a;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap; /* required in IE 6 */    
+}
+.tabs-nav .tabs-selected a {
+    color: #000;
+}
+.tabs-nav .tabs-selected a, .tabs-nav a:hover, .tabs-nav a:focus, .tabs-nav a:active {
+    background-position: 100% -150px;
+    outline: 0; /* prevent dotted border in Firefox */
+}
+.tabs-nav a, .tabs-nav .tabs-disabled a:hover, .tabs-nav .tabs-disabled a:focus, .tabs-nav .tabs-disabled a:active {
+    background-position: 100% -100px;
+}
+.tabs-nav a span {
+    width: 64px; /* IE 6 treats width as min-width */
+    min-width: 64px;
+    height: 18px; /* IE 6 treats height as min-height */
+    min-height: 18px;
+    padding-top: 6px;
+    padding-right: 0;
+}
+*>.tabs-nav a span { /* hide from IE 6 */
+    width: auto;
+    height: auto;
+}
+.tabs-nav .tabs-selected a span {
+    padding-top: 7px;
+}
+.tabs-nav .tabs-selected a span, .tabs-nav a:hover span, .tabs-nav a:focus span, .tabs-nav a:active span {
+    background-position: 0 -50px;
+}
+.tabs-nav a span, .tabs-nav .tabs-disabled a:hover span, .tabs-nav .tabs-disabled a:focus span, .tabs-nav .tabs-disabled a:active span {
+    background-position: 0 0;
+}
+.tabs-nav .tabs-selected a:link, .tabs-nav .tabs-selected a:visited, .tabs-nav .tabs-disabled a:link, .tabs-nav .tabs-disabled a:visited { /* @ Opera, use pseudo classes otherwise it confuses cursor... */
+    cursor: text;
+}
+.tabs-nav a:hover, .tabs-nav a:focus, .tabs-nav a:active { /* @ Opera, we need to be explicit again here now... */
+    cursor: pointer;
+}
+.tabs-nav .tabs-disabled {
+    opacity: .4;
+}
+.tabs-container {
+	border-top:  1px solid #DCE4F5;
+    padding: 1em 8px;
+    background: url(../../img/tabs/tabbackground.png) repeat-x #e5f0ff; /* declare background color for container to avoid distorted fonts in IE while fading */
+	clear:both;
+	margin-left: 1px;
+}
+.tabs-loading em {
+    padding: 0 0 0 20px;
+    background: url(loading.gif) no-repeat 0 50%;
+}
+
+/*
+Tabs - additional IE specific bug fixes
+
+Recommended usage (Conditional Comments):
+<!--[if lte IE 7]>
+<link rel="stylesheet" href="tabs_ie.css" type="text/css" media="projection, screen" />
+<![endif]-->
+
+*/
+.tabs-nav { /* auto clear */
+    display: inline-block;
+}
+.tabs-nav .tabs-disabled {
+    position: relative; /* fixes opacity */
+    filter: alpha(opacity=40);
+}
+.tabs-nav .tabs-disabled a span {
+    _height: 19px; /* for some reason the height is 1px to less with opacity... */
+    min-height: 19px; /* ...in both IE 6 and 7 */
+}
