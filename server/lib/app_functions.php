@@ -1,0 +1,700 @@
+<?php
+/*
+ * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+ 
+define('VAR_FOR_SQL',1);
+
+define('MSG_MODE_MANUAL',2);
+define('MSG_MODE_AUTO',1);
+
+define('AJAX_REDIRECT',3);
+define('AJAX_SUCCESS_NOREDIRECT',4);
+define('AJAX_SUCCESS_REFRESH',5);
+define('AJAX_LOAD_FORM',6);
+
+require ("display_objects.php");
+
+
+/**
+ * Sets a message to display, this is checked when each page loads
+ *
+ * @param string $message
+ */
+function setMessage($message) {
+	if (!isset($_SESSION['message'])) $_SESSION['message'] = "";
+	$_SESSION['message'] .= "$message<br />";
+}
+
+function displayMessage($mode = MSG_MODE_AUTO, $msg="", $show_back = true, $template = "template/pages/message_page.php") {
+		
+	switch ($mode) {
+	
+		case MSG_MODE_AUTO:
+			if (isset($_SESSION['message'])) {
+				echo "<div class=\"highlight\">" . $_SESSION['message'] . "</div>";
+				unset($_SESSION['message']);
+			}
+		break;
+		
+		//Displays a manual message
+		case MSG_MODE_MANUAL:
+			$errorMessage = $msg;
+			//clear the object buffer - so we only see this error message
+			//ob_get_clean();
+			include($template);
+		break;
+	}
+}
+
+//Returns a drop down list based on the provided SQL - the ID should be the first field, and the name the second
+function dropdownlist($SQL, $list_name, $selected = "", $callback = "", $flat_list = false, $checkPermissions = false, $userid = "", $permissionLevel = "see", $useQueryId = false) {
+	global $db;
+	global $user;
+
+	if (!$result = $db->query($SQL)) {
+		trigger_error($db->error());
+		return "Query Error";
+	}
+	
+	if ($db->num_rows($result)==0) {
+		$list = "No selections available";
+		return $list;
+	}
+	
+	if ($flat_list) {
+		//we want to generate a flat list of option | value pairs
+		$list = "";
+	
+		while ($results = $db->get_row($result)) {
+			$col0 = $results[0];
+			$col1 = $results[1];
+			
+			if ($checkPermissions) {
+				$permissionid = $results[2];
+				$ownerid	  = $results[3];
+				
+				if ($useQueryId)
+				{
+					list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $col0);					
+				}
+				else
+				{
+					list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $userid);
+				}
+
+				if (($permissionLevel == "see" && $see_permissions) || $permissionLevel == "edit" && $edit_permissions) {
+					$list .= "$col0|$col1,";
+				}
+			}
+			else {
+				$list .= "$col0|$col1,";
+			}
+		}
+		//trim the commas
+		$list = rtrim($list,",");
+	}
+	else {
+	
+		$list = <<<END
+		<select name="$list_name" id="$list_name" $callback>
+END;
+		while ($results = $db->get_row($result)) {
+			$col0 = $results[0];
+			$col1 = $results[1];
+			
+			if ($checkPermissions) {
+				$permissionid = $results[2];
+				$ownerid	  = $results[3];
+				
+				if ($useQueryId)
+				{
+					list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $col0);					
+				}
+				else
+				{
+					list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $userid);
+				}
+
+				if (($permissionLevel == "see" && $see_permissions) || $permissionLevel == "edit" && $edit_permissions) {
+					if ($col0 == $selected) {
+						$list .= "<option value='" . $col0 . "' selected>" . $col1 . "</option>\n";
+					}
+					else {
+						$list .= "<option value='" . $col0 . "'>" . $col1 . "</option>\n";
+					}
+				}
+			}
+			else {
+				if ($col0 == $selected) {
+					$list .= "<option value='" . $col0 . "' selected>" . $col1 . "</option>\n";
+				}
+				else {
+					$list .= "<option value='" . $col0 . "'>" . $col1 . "</option>\n";
+				}
+			}
+		}
+		$list .= "</select>\n";
+	}
+	return $list;
+}
+
+function listcontent($list_string, $list_name, $selected = "", $callback = "") {
+	//generates a list based on a list option | value, list
+	if ($list_string == "") return "Empty list content";
+	
+	$list_string = rtrim($list_string,","); //clean up
+	
+	$list_values = explode(",", $list_string); //gives us each option value pair
+	
+	$list = <<<END
+	<select name="$list_name" id="$list_name" $callback>
+END;
+	foreach ($list_values as $list_option) {
+	
+		$option = explode("|", $list_option);
+		
+		$col0 = $option[0];
+		$col1 = $option[1];
+
+		if ($col0 == $selected) {
+			$list .= "<option value='" . $col0 . "' selected>" . $col1 . "</option>\n";
+		}
+		else {
+			$list .= "<option value='" . $col0 . "'>" . $col1 . "</option>\n";
+		}
+	}
+	$list .= "</select>\n";
+		
+	return $list;
+}
+
+
+//generates a list of all the users - assuming that the SQL given contains userid's
+function userlist($SQL) {
+	global $db;
+	global $user;
+
+	if (!$result = $db->query($SQL)) {
+		trigger_error($db->error());
+		return "Query Error";
+	}
+	
+	if ($db->num_rows($result)==0) {
+		$list = "No selections available";
+		return $list;
+	}
+	
+	while ($row = $db->get_row($result)) {
+	
+		$userid 	= $row[0];
+		$username 	= $user->getNameFromID($userid);
+		
+		$user_ids[] = array('id'=>$userid);
+		$user_names[] = array('name'=>$username);
+	}
+	
+	array_multisort($user_names, SORT_DESC, $user_ids, SORT_ASC); //sorts the two arrays, so that the usernames are Alpha sorted, and the ID's tag along
+
+	$list = "";
+	foreach ($user_names as $key => $row) {
+		
+		if($list != "") $list .= ","; //if we arnt equal to the first, append a seperator
+		
+		$list .= $user_ids[$key]['id']."|".$row['name'];
+	}
+	return $list;
+}
+
+function setSession($page, $var, $value) {
+	/**
+	 * Sets a session variable from a javascript call (so when we XMLHTTPRequest we can set a sesson var)
+	 * 
+	 */
+	$_SESSION[$page][$var] = $value;
+
+	return true;
+}
+
+/**
+ * Depricate
+ * @return 
+ * @param $var Object
+ * @param $purpose Object
+ * @param $db Object[optional]
+ */
+function clean_input($var, $purpose, $db = false) {
+	/*Cleans the $var depending on the $purpose*/
+	
+	switch ($purpose) {
+	
+	case VAR_FOR_SQL:
+		if (!$db) {
+			trigger_error("Trying to clean a var for SQL, but no DB passed", E_USER_ERROR);
+		}
+		
+		if (!get_magic_quotes_gpc())
+		{
+			$var = $db->escape_string($var);	
+		}
+		
+		break;
+	
+	}
+	
+	return $var;
+}
+
+
+function sec2hms($sec, $padHours = false) {
+	// holds formatted string
+	$hms = "";
+
+	// there are 3600 seconds in an hour, so if we
+	// divide total seconds by 3600 and throw away
+	// the remainder, we've got the number of hours
+	$hours = intval(intval($sec) / 3600);
+
+	// add to $hms, with a leading 0 if asked for
+	$hms .= ($padHours) ? str_pad($hours, 2, "0", STR_PAD_LEFT) . ':':$hours . ':';
+
+	// dividing the total seconds by 60 will give us
+	// the number of minutes, but we're interested in
+	// minutes past the hour: to get that, we need to
+	// divide by 60 again and keep the remainder
+	$minutes = intval(($sec / 60) % 60);
+
+	// then add to $hms (with a leading 0 if needed)
+	$hms .= str_pad($minutes, 2, "0", STR_PAD_LEFT) . ':';
+
+	// seconds are simple - just divide the total
+	// seconds by 60 and keep the remainder
+	$seconds = intval($sec % 60);
+
+	// add to $hms, again with a leading 0 if needed
+	$hms .= str_pad($seconds, 2, "0", STR_PAD_LEFT);
+
+	// done!
+	return $hms;
+}
+
+function show_no_settings() {
+	/**
+	 * We need to show a page that indicates there are isnt a settings.php file
+	 * and to direct appropriatly
+	 */
+	 include("template/pages/no_settings_error.php");
+	 
+	 exit;
+}
+
+define('STAT_LAYOUT_START', 'LayoutStart');
+define('STAT_LAYOUT_END', 'LayoutEnd');
+define('STAT_MEDIA_START', 'MediaStart');
+define('STAT_MEDIA_END', 'MediaEnd');
+
+/**
+ * Records a Stat Record
+ * @return 
+ * @param $statType Object
+ * @param $statDate Object
+ * @param $scheduleID Object
+ * @param $displayID Object
+ * @param $layoutID Object
+ * @param $mediaID Object
+ * @param $start Object
+ * @param $end Object
+ */
+function StatRecord($statType, $statDate, $scheduleID, $displayID, $layoutID, $mediaID, $start, $end) {
+	
+	global $db;
+	
+	$infinityDate = "2050-12-31 00:00:00";
+	
+	// Look up the stat type
+	switch ($statType)
+	{
+		case STAT_LAYOUT_START:
+			// If its a layout start
+			//	Check for an open Layout which has this schedule & close it
+			$SQL  = "";
+			$SQL .= " UPDATE stat SET end = '$end' WHERE scheduleID = '$scheduleID' AND layoutID = '$layoutID' AND end = '$infinityDate' ";
+			
+			if (!$db->query($SQL)) 
+			{
+				trigger_error($db->error());
+				return false;
+			}
+			
+			//	Insert a new stat record for this layout
+			$SQL  = "";
+			$SQL .= " INSERT INTO stat (statDate, scheduleID, displayID, layoutID, start, end)";
+			$SQL .= "  VALUES ('$statDate', '$scheduleID', '$displayID', '$layoutID', '$start', '$infinityDate')";
+			
+			if (!$db->query($SQL)) 
+			{
+				trigger_error($db->error());
+				return false;
+			}
+			
+			break;
+			
+		case STAT_LAYOUT_END:
+			// If its a layout end
+			// Close the layout stat record for this schedule (by updating the end time)
+			// Also close any open media records (they should all be shut anyway)
+			$SQL  = "";
+			$SQL .= " UPDATE stat SET end = '$end' WHERE scheduleID = '$scheduleID' AND layoutID = '$layoutID' AND end = '$infinityDate' ";
+			
+			if (!$db->query($SQL)) 
+			{
+				trigger_error($db->error());
+				return false;
+			}
+			break;
+			
+		case STAT_MEDIA_START:
+			// If its a media start
+			// Create a new media stat record for this layout 
+			$SQL  = "";
+			$SQL .= " INSERT INTO stat (statDate, scheduleID, displayID, layoutID, mediaID, start, end)";
+			$SQL .= "  VALUES ('$statDate', '$scheduleID', '$displayID', '$layoutID', '$mediaID', '$start', '$infinityDate')";
+			
+			if (!$db->query($SQL)) 
+			{
+				trigger_error($db->error());
+				return false;
+			}
+			break;
+			
+		case STAT_MEDIA_END:
+			// If its a media end
+			// Close the stat record
+			$SQL  = "";
+			$SQL .= " UPDATE stat SET end = '$end' WHERE scheduleID = '$scheduleID' AND layoutID = '$layoutID' AND mediaID = '$mediaID' AND end = '$infinityDate' ";
+			
+			if (!$db->query($SQL)) 
+			{
+				trigger_error($db->error());
+				return false;
+			}
+			break;
+			
+		default:
+			return false;
+	}
+
+	return true;
+}
+
+/**
+ * Gets web safe colors
+ * @return 
+ */
+function gwsc($list_name, $selected) {
+	
+    $cs = array('00', '33', '66', '99', 'CC', 'FF');
+	
+	$list = <<<END
+	<select name="$list_name" id="$list_name">
+END;
+
+    for($i=0; $i<6; $i++) {
+        for($j=0; $j<6; $j++) {
+            for($k=0; $k<6; $k++) {
+                $c = $cs[$i] .$cs[$j] .$cs[$k];
+				
+				if ($c == $selected) {
+                    $list .= "<option value='".$c."' selected style='background: #$c; color:#$c'>#$c</option>";
+				}
+				else {
+                    $list .= "<option value='".$c."' style='background: #$c; color:#$c'>#$c</option>";
+				}
+            }
+        }
+    }
+	
+	$list .= "</select>\n";
+	
+	return $list;
+}
+
+/**
+ * Resizes the image
+ * @return 
+ * @param $file Object The Source File
+ * @param $target Object The Target File
+ * @param $width Object[optional] The Width
+ * @param $height Object[optional] The Height
+ * @param $proportional Object[optional] Proportional Resize
+ * @param $output Object[optional] file|browser|return
+ * @param $delete_original Object[optional]
+ * @param $use_linux_commands Object[optional]
+ */
+function ResizeImage( $file, $target = "", $width = 0, $height = 0, $proportional = false, $output = 'file', $delete_original = false, $use_linux_commands = false )
+{
+    if ( $height <= 0 && $width <= 0 ) {
+        return false;
+    }
+
+    $info = getimagesize($file);
+    $image = '';
+
+    $final_width = 0;
+    $final_height = 0;
+    list($width_old, $height_old) = $info;
+
+    if ($proportional) {
+        if ($width == 0) $factor = $height/$height_old;
+        elseif ($height == 0) $factor = $width/$width_old;
+        else $factor = min ( $width / $width_old, $height / $height_old);   
+
+        $final_width = round ($width_old * $factor);
+        $final_height = round ($height_old * $factor);
+
+    }
+    else {
+        $final_width = ( $width <= 0 ) ? $width_old : $width;
+        $final_height = ( $height <= 0 ) ? $height_old : $height;
+    }
+
+    switch ( $info[2] ) {
+        case IMAGETYPE_GIF:
+            $image = imagecreatefromgif($file);
+        break;
+        case IMAGETYPE_JPEG:
+            $image = imagecreatefromjpeg($file);
+        break;
+        case IMAGETYPE_PNG:
+            $image = imagecreatefrompng($file);
+        break;
+        default:
+            return false;
+    }
+    
+    $image_resized = imagecreatetruecolor( $final_width, $final_height );
+            
+    if ( ($info[2] == IMAGETYPE_GIF) || ($info[2] == IMAGETYPE_PNG) ) {
+        $trnprt_indx = imagecolortransparent($image);
+
+        // If we have a specific transparent color
+        if ($trnprt_indx >= 0) 
+		{
+
+            // Get the original image's transparent color's RGB values
+            $trnprt_color    = imagecolorsforindex($image, $trnprt_indx);
+
+            // Allocate the same color in the new image resource
+            $trnprt_indx    = imagecolorallocate($image_resized, $trnprt_color['red'], $trnprt_color['green'], $trnprt_color['blue']);
+
+            // Completely fill the background of the new image with allocated color.
+            imagefill($image_resized, 0, 0, $trnprt_indx);
+
+            // Set the background color for new image to transparent
+            imagecolortransparent($image_resized, $trnprt_indx);
+        } 
+        // Always make a transparent background color for PNGs that don't have one allocated already
+        elseif ($info[2] == IMAGETYPE_PNG) 
+		{
+            // Turn off transparency blending (temporarily)
+            imagealphablending($image_resized, false);
+
+            // Create a new transparent color for image
+            $color = imagecolorallocatealpha($image_resized, 0, 0, 0, 127);
+
+            // Completely fill the background of the new image with allocated color.
+            imagefill($image_resized, 0, 0, $color);
+
+            // Restore transparency blending
+            imagesavealpha($image_resized, true);
+        }
+    }
+
+    imagecopyresampled($image_resized, $image, 0, 0, 0, 0, $final_width, $final_height, $width_old, $height_old);
+
+    if ( $delete_original ) 
+	{
+        if ( $use_linux_commands )
+            exec('rm '.$file);
+        else
+            @unlink($file);
+    }
+    
+    switch ( strtolower($output) ) 
+	{
+        case 'browser':
+            $mime = image_type_to_mime_type($info[2]);
+            header("Content-type: $mime");
+            $output = NULL;
+        break;
+        case 'file':
+            $output = $target;
+        break;
+        case 'return':
+            return $image_resized;
+        break;
+        default:
+        break;
+    }
+
+    switch ( $info[2] ) {
+        case IMAGETYPE_GIF:
+            imagegif($image_resized, $output);
+        break;
+        case IMAGETYPE_JPEG:
+            imagejpeg($image_resized, $output, 70);
+        break;
+        case IMAGETYPE_PNG:
+            imagepng($image_resized, $output, 5);
+        break;
+        default:
+            return false;
+    }
+
+    return true;
+}
+
+/**
+ * Cleans a file name
+ * @return 
+ * @param $filename String
+ */
+function cleanFilename($name)
+{
+	$name = strtolower($name); 
+	$code_entities_match = array( '&quot;' ,'!' ,'@' ,'#' ,'$' ,'%' ,'^' ,'&' ,'*' ,'(' ,')' ,'+' ,'{' ,'}' ,'|' ,':' ,'"' ,'<' ,'>' ,'?' ,'[' ,']' ,'' ,';' ,"'" ,',' ,'_' ,'/' ,'*' ,'+' ,'~' ,'`' ,'=' ,' ' ,'---' ,'--','--'); 
+	$code_entities_replace = array('' ,'-' ,'-' ,'' ,'' ,'' ,'-' ,'-' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'-' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'-' ,'-' ,'-' ,'' ,'' ,'' ,'' ,'' ,'-' ,'-' ,'-','-'); 
+	
+	$name = str_replace($code_entities_match, $code_entities_replace, $name); 
+	return $name;
+}
+
+/**
+ * Depricate
+ * @return 
+ * @param $number Object
+ */
+function CleanNumber($number)
+{
+	if (!is_numeric($number))
+	{
+		header("HTTP/1.1 404 Not Found");
+		// How do I send the default apache 404 message
+		// instead of the message below?
+		print("<html><body>HTTP 404 - Possible Hack.</body></html>");
+		exit;
+	}
+	return $number;
+}
+
+/**
+ * Depricate
+ * @return 
+ * @param $var Object
+ */
+function validate($var)
+{
+	$valid = true;
+	
+	// Validate against XSS
+	if (strstr($var, "http")) $valid = false;
+	if (strstr($var, "www")) $valid = false;
+	
+	if (eregi('[^A-Za-z0-9_]', $var)) $valid = false;
+	
+	if (!$valid) 
+	{
+		header("HTTP/1.1 404 Not Found");
+		// How do I send the default apache 404 message
+		// instead of the message below?
+		print("<html><body>HTTP 404 - Possible Hack.</body></html>");
+		exit;
+	}
+	
+	return $var;
+}
+
+/**
+* Creates a form token
+* @return 
+*/
+function CreateFormToken($tokenName = "token")
+{
+	//Store in the users session
+	$token = md5(uniqid()."xsmsalt".time());
+	
+	$_SESSION[$tokenName] = $token;
+	$_SESSION[$tokenName.'_timeout'] = time();
+	
+	return $token;
+}
+
+/**
+ * Checks a form token
+ * @param string token
+ * @return 
+ */
+function CheckFormToken($token, $tokenName = "token")
+{
+	global $db;
+	
+	if ($token == $_SESSION[$tokenName])
+	{
+		// See if its still in Date
+		if (($_SESSION[$tokenName.'_timeout'] + 1200) <= time())
+		{
+			return false;
+		}
+		return true;
+	}
+	else
+	{
+		Debug::LogEntry($db, 'error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [$token]");
+		return false;
+	}
+}
+
+/**
+ * Convert a shorthand byte value from a PHP configuration directive to an integer value
+ * @param    string   $value
+ * @return   int
+ */
+function convertBytes( $value ) {
+    if ( is_numeric( $value ) ) {
+        return $value;
+    } else {
+        $value_length = strlen( $value );
+        $qty = substr( $value, 0, $value_length - 1 );
+        $unit = strtolower( substr( $value, $value_length - 1 ) );
+        switch ( $unit ) {
+            case 'k':
+                $qty *= 1024;
+                break;
+            case 'm':
+                $qty *= 1048576;
+                break;
+            case 'g':
+                $qty *= 1073741824;
+                break;
+        }
+        return $qty;
+    }
+}
+?>
