@@ -16,7 +16,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
@@ -30,43 +30,37 @@ class displayDAO
 	private $display;
 	private $layoutid;
 	private $license;
-	private $license_request;
+	private $licensed;
 	private $inc_schedule;
 	private $auditing;
-	
-	//
-	private $countTakenLic = 999999999; //set very high, incase the query fails
+	private $ajax;
 
 	function __construct(database $db) 
 	{
 		$this->db =& $db;
 		
-		if (isset($_GET['sp'])){
-			$this->sub_page = $_GET['sp'];
-		}
-		else {
-			$this->sub_page = 'view'; //assume edit
-		}
+		$this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
+		$this->ajax		= Kit::GetParam('ajax', _REQUEST, _WORD, 'false');
+		$displayid 		= Kit::GetParam('displayid', _REQUEST, _INT, 0);
 
-		if ($this->sub_page == 'view') {
-			#validate displays so we get a realistic view of the table
+		if ($this->sub_page == 'view') 
+		{
+			// validate displays so we get a realistic view of the table
 			$this->validateDisplays();
 		}
-		
-		if (isset($_REQUEST['displayid'])) {
-			$this->displayid = clean_input($_REQUEST['displayid'], VAR_FOR_SQL, $db);
-		}
-		
-		if(isset($_GET['modify']) || isset($_REQUEST['displayid'])) {
+				
+		if(isset($_GET['modify']) || $displayid != 0) 
+		{
 			$this->sub_page = 'edit';
 			
-			if (!$this->has_permissions && $_REQUEST['ajax']=="true") {
+			if (!$this->has_permissions && $this->ajax == 'true') 
+			{
 				//ajax request handler
 				$arh = new AjaxRequest();
 				$arh->decode_response(false, "You do not have permissions to edit this display");
 			}
 
-$SQL = <<<SQL
+			$SQL = <<<SQL
 		SELECT  display.displayid,
 				display.display,
 				display.defaultlayoutid,
@@ -75,42 +69,41 @@ $SQL = <<<SQL
 				display.inc_schedule,
 				display.isAuditing
 		FROM display
-		WHERE display.displayid = $this->displayid
+		WHERE display.displayid = %d
 SQL;
 
-			if(!($results = $db->query($SQL))) {
+			$SQL = sprintf($SQL, $displayid);
+			
+			Debug::LogEntry($db, 'audit', $SQL);
+
+			if(!$results = $db->query($SQL)) 
+			{
 				trigger_error($db->error());
 				trigger_error("Can not get the display information for display [$this->displayid]", E_USER_ERROR);
 			}
 
-			while($row = $db->get_row($results)) {
-				$this->displayid 		= $row[0];
-				$this->display 			= $row[1];
-				$this->layoutid 		= $row[2];
-				$this->license 			= $row[3];
-				$this->licensed		 	= $row[4];
-				$this->inc_schedule 	= $row[5];
-				$this->auditing			= $row[6];
+			while($row = $db->get_row($results)) 
+			{
+				$this->displayid 		= Kit::ValidateParam($row[0], _INT);
+				$this->display 			= Kit::ValidateParam($row[1], _STRING);
+				$this->layoutid 		= Kit::ValidateParam($row[2], _INT);
+				$this->license 			= Kit::ValidateParam($row[3], _STRING);
+				$this->licensed		 	= Kit::ValidateParam($row[4], _INT);
+				$this->inc_schedule 	= Kit::ValidateParam($row[5], _INT);
+				$this->auditing			= Kit::ValidateParam($row[6], _INT);
 			}
-			
-			$SQL = "SELECT COUNT(displayid) FROM display WHERE licensed = 1";
-			if(!($results = $db->query($SQL))) {
-				trigger_error($db->error());
-				trigger_error("Can not get the display license information for display [$this->displayid]", E_USER_ERROR);
-			}
-			$row = $db->get_row($results);
-			
-			$this->countTakenLic = $row[0];
 		}
 
 		return true;
 	}
 
-	function on_page_load() {
+	function on_page_load() 
+	{
 		return "";
 	}
 
-	function echo_page_heading() {
+	function echo_page_heading() 
+	{
 		echo "Display Administration";
 		return true;
 	}
@@ -119,40 +112,49 @@ SQL;
 	 * Modifies the selected display record
 	 * @return 
 	 */
-	function modify() {
+	function modify() 
+	{
 		$db =& $this->db;
 		
 		//ajax request handler
 		$arh = new AjaxRequest();
 
-		$displayid 		= clean_input($_POST['displayid'], VAR_FOR_SQL, $db);
-		$display 		= clean_input($_POST['display'], VAR_FOR_SQL, $db);
-		$layoutid 		= clean_input($_POST['defaultlayoutid'], VAR_FOR_SQL, $db);
-		$inc_schedule 	= clean_input($_POST['inc_schedule'], VAR_FOR_SQL, $db);
-		$auditing		= clean_input($_POST['auditing'], VAR_FOR_SQL, $db);
+		$displayid 		= Kit::GetParam('displayid', _POST, _INT);
+		$display 		= Kit::GetParam('display', _POST, _STRING);
+		$layoutid 		= Kit::GetParam('defaultlayoutid', _POST, _INT);
+		$inc_schedule 	= Kit::GetParam('inc_schedule', _POST, _INT);
+		$auditing 		= Kit::GetParam('auditing', _POST, _INT);
 		
-		//Do we take, or revoke a license
-		if (isset($_POST['takeLicense'])) {
-			$licensed = clean_input($_POST['takeLicense'], VAR_FOR_SQL, $db);
+		// Do we take, or revoke a license
+		if (isset($_POST['takeLicense'])) 
+		{
+			$licensed = Kit::GetParam('takeLicense', _POST, _INT);
 		}
-		if (isset($_POST['revokeLicense'])) {
-			$licensed = clean_input($_POST['revokeLicense'], VAR_FOR_SQL, $db);
+		if (isset($_POST['revokeLicense'])) 
+		{
+			$licensed = Kit::GetParam('revokeLicense', _POST, _INT);
 		}
 		
 		//Validation
-		if ($display=="") {
+		if ($display == "") 
+		{
 			$arh->decode_response(false, "Can not have a display with no name");
 		}
 		
 		//Update the display record
-		$SQL = "UPDATE display SET display ='$display', ";
-		$SQL .= "		defaultlayoutid ='$layoutid', ";
-		$SQL .= "		inc_schedule='$inc_schedule', ";
-		$SQL .= " 		licensed = '$licensed', ";
-		$SQL .= "		isAuditing = $auditing ";
+		$SQL  = "UPDATE display SET display = '%s', ";
+		$SQL .= "		defaultlayoutid = %d, ";
+		$SQL .= "		inc_schedule = %d, ";
+		$SQL .= " 		licensed = %d, ";
+		$SQL .= "		isAuditing = %d ";
 		$SQL .= "WHERE displayid = ".$displayid;
 		
-		if (!$db->query($SQL)) {
+		$SQL = sprintf($SQL, $db->escape_string($display), $layoutid, $inc_schedule, $licensed, $auditing, $displayid);
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+		
+		if (!$db->query($SQL)) 
+		{
 			trigger_error($db->error());
 			trigger_error("Could not update display - stage 1", E_USER_ERROR);
 		}
@@ -160,32 +162,46 @@ SQL;
 		//check that we have a default layout display record to update
 		//we might not and should be able to resolve it by editing the display
 		$SQL = "SELECT schedule_detailID FROM schedule_detail ";
-		$SQL .= " WHERE displayid = $displayid";
+		$SQL .= " WHERE displayid = %d ";
 		$SQL .= "   AND starttime = '2050-12-31 00:00:00' ";
-		$SQL .= "   AND endtime = '2050-12-31 00:00:00'";
+		$SQL .= "   AND endtime = '2050-12-31 00:00:00' ";
 		
-		if (!$results = $db->query($SQL)) {
+		$SQL = sprintf($SQL, $displayid);
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+		
+		if (!$results = $db->query($SQL)) 
+		{
 			trigger_error($db->error());
 			trigger_error("Could not update display - stage 1", E_USER_ERROR);
 		}
 		
-		if ($db->num_rows($results)==0) {
+		if ($db->num_rows($results) == 0) 
+		{
 			//INSERT one
-			$SQL = " INSERT INTO schedule_detail (displayid, layoutid, starttime, endtime) ";
-			$SQL .= " VALUES ($displayid, $layoutid, '2050-12-31 00:00:00','2050-12-31 00:00:00') ";
+			$SQL  = " INSERT INTO schedule_detail (displayid, layoutid, starttime, endtime) ";
+			$SQL .= " VALUES (%d, %d, '2050-12-31 00:00:00','2050-12-31 00:00:00') ";
+			
+			$SQL = sprintf($SQL, $displayid, $layoutid);
 			
 			//indicate what we have done
 			setMessage("Display Default Layout fixed");
 		}
-		else {
+		else 
+		{
 			//Update the default layoutdisplay record
-			$SQL = " UPDATE schedule_detail SET layoutid = $layoutid ";
-			$SQL .= " WHERE displayid = $displayid";
+			$SQL = " UPDATE schedule_detail SET layoutid = %d ";
+			$SQL .= " WHERE displayid = %d ";
 			$SQL .= "   AND starttime = '2050-12-31 00:00:00' ";
 			$SQL .= "   AND endtime = '2050-12-31 00:00:00'";
-		}
 			
-		if (!$db->query($SQL)) {
+			$SQL = sprintf($SQL, $layoutid, $displayid);
+		}
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+			
+		if (!$db->query($SQL)) 
+		{
 			trigger_error($db->error());
 			trigger_error("Could not update display - stage 2 (default layout)", E_USER_ERROR);
 		}
@@ -193,10 +209,14 @@ SQL;
 		setMessage("Display Modified");
 		
 		$arh->response(AJAX_REDIRECT,"index.php?p=display");
-
 	}
 
-	function displayForm() {
+	/**
+	 * Modify Display form
+	 * @return 
+	 */
+	function displayForm() 
+	{
 		$db =& $this->db;
 		
 		//ajax request handler
@@ -219,26 +239,18 @@ SQL;
 		$licenseHelp	= HelpIcon("Control the licensing on this display.", true);
 		$auditHelp		= HelpIcon("Collect auditing from this client. Should only be used if there is a problem with the display.", true);
 		
-		$layout_list = dropdownlist("SELECT layoutid, layout FROM layout ORDER by layout","defaultlayoutid",$layoutid);
+		$layout_list = dropdownlist("SELECT layoutid, layout FROM layout ORDER by layout", "defaultlayoutid", $layoutid);
 		$inc_schedule_list = listcontent("1|Yes,0|No","inc_schedule",$inc_schedule);
 		$auditing_list = listcontent("1|Yes,0|No","auditing",$auditing);
 
 		$license_list = "";		
+		
 		//Are we licensed
 		if ($licensed == 0)
 		{
-			//Are there any licenses left to take
-			if ($this->countTakenLic >= DISPLAYS)
-			{
-				//There are no more licenses to take
-				$license_list = "<td colspan='2'><span class='required' title='To purchase an additional license contact Xstreamedia. If you are moving a display you should revoke the license on that display.'>There are no more available licenses.</span></td>";
-			}
-			else
-			{
 				//There are licenses to take, shall we take them?
 				$license_list = "<td><label for='takeLicense' title='Will use one of the available licenses for this display'>License Display</label></td>";
 				$license_list .= "<td>" . listcontent("1|Yes,0|No", "takeLicense", "1") . "</td>";
-			}
 		}
 		else
 		{
@@ -285,8 +297,13 @@ END;
 
 		return true;
 	}
-		
-	function data_table() {
+	
+	/**
+	 * Grid of Displays
+	 * @return 
+	 */
+	function data_table() 
+	{
 		$db =& $this->db;		
 					
 		//display the display table
@@ -303,7 +320,8 @@ END;
 		ORDER BY display.displayid
 SQL;
 
-		if(!($results = $db->query($SQL))) {
+		if(!($results = $db->query($SQL))) 
+		{
 			trigger_error($db->error());
 			trigger_error("Can not list displays", E_USER_ERROR);
 		}
@@ -327,7 +345,8 @@ SQL;
 END;
 		echo $output;
 
-		while($aRow = $db->get_row($results)) {
+		while($aRow = $db->get_row($results)) 
+		{
 			$displayid 		= $aRow[0];
 			$display 		= $aRow[1];
 			$defaultlayoutid = $aRow[2];
@@ -358,30 +377,25 @@ END;
 		return false;
 	}
 
-	function displayPage() {
+	/**
+	 * Include display page template page based on sub page selected
+	 * @return 
+	 */
+	function displayPage() 
+	{
 		$db =& $this->db;
 		
-		if (!$this->has_permissions) {
+		if (!$this->has_permissions) 
+		{
 			displayMessage(MSG_MODE_MANUAL, "You do not have permissions to access this page");
 			return false;
 		}
 		
-		switch ($this->sub_page) {
+		switch ($this->sub_page) 
+		{
 			
-			case 'add':
-				require("template/pages/display_add.php");
-				break;
-				
 			case 'view':
 				require("template/pages/display_view.php");
-				break;
-				
-			case 'edit':
-				require("template/pages/display_edit.php");
-				break;
-				
-			case 'swap':
-				require("template/pages/display_swap.php");
 				break;
 				
 			default:
@@ -391,13 +405,18 @@ END;
 		return false;
 	}
 	
-	function display_tabs($defaulted_displayid, $link, $currently_playing = true) {
+	/**
+	 * Output some display tabs based on displays that are licensed
+	 * @return 
+	 * @param $defaulted_displayid Object
+	 * @param $link Object
+	 * @param $currently_playing Object[optional]
+	 */
+	function display_tabs($defaulted_displayid, $link, $currently_playing = true) 
+	{
 		$db =& $this->db;
 		$output = "";
-		/*
-		 * Function to generate some display tabs.
-		 */
-		$lic_displays = DISPLAYS;
+
 		
 		//get the number of displays allowed in the license
 		$SQL  = "SELECT display.displayid, ";
@@ -409,14 +428,17 @@ END;
 
 		$output .= "<div class='buttons'>";
 		
-		while ($row = $db->get_row($results)) {
+		while ($row = $db->get_row($results)) 
+		{
 			$displayid = $row[0];
 			$display = substr($row[1], 0, 8);
 			
-			if ($displayid == $defaulted_displayid) {
+			if ($displayid == $defaulted_displayid) 
+			{
 				$output .= "<a class='defaulted_tab' href='$link&displayid=$displayid'><div class='button_text'>$display</div></a>";
 			}
-			else {
+			else 
+			{
 				$output .= "<a class='normal_tab' href='$link&displayid=$displayid'><div class='button_text'>$display</div></a>";
 			}
 		}
@@ -426,7 +448,13 @@ END;
 		return $output;
 	}
 	
-	function currently_playing($displayid) {
+	/**
+	 * Display what is currently playing on this display
+	 * @return 
+	 * @param $displayid Object
+	 */
+	function currently_playing($displayid) 
+	{
 		$db =& $this->db;
 		$currentdate = date("Y-m-d H:i:s");
 		$return = "<div class='display_info'>Currently Playing: "; //return string
@@ -450,7 +478,8 @@ END;
 
 		if(!$results = $db->query($SQL))  trigger_error($db->error(), E_USER_ERROR);
 
-		if($db->num_rows($results)==0) {
+		if($db->num_rows($results)==0) 
+		{
 			//check to see if there is a default layout assigned instead
 			$SQL  = "";
 			$SQL .= "SELECT  1, layout.Name, ";
@@ -462,14 +491,17 @@ END;
 
 			if(!$results = $db->query($SQL))  trigger_error($db->error(), E_USER_ERROR);
 
-			if($db->num_rows($results)==0) {
+			if($db->num_rows($results)==0) 
+			{
 				$return .= "Nothing.</div>";
 				return $return;
 			}
 		}
 		
 		$count = 1;
-		while ($row = $db->get_row($results)) {
+		
+		while ($row = $db->get_row($results)) 
+		{
 			$name = $row[1];
 			
 			$return .= "$count. $name.   ";
@@ -480,35 +512,12 @@ END;
 		return $return;
 	}
 	
-	function swap_form() {
-	//sets the player_ip to be equal to the request_ip, therefore allowing a player license move
-		$db =& $this->db;
-		
-		if(!$results = $db->query("SELECT display, player_ip, request_ip FROM display WHERE displayid = $this->displayid ")) trigger_error("Can not get the IP information ", E_USER_ERROR);
-		
-		while ($row = $db->get_row($results)) {
-		
-			$displayname = $row[0];
-			$player_ip = $row[1];
-			$request_ip = $row[2];
-			
-			$form = <<<END
-			<p>$displayname player ip is $player_ip and the requested ip is $request_ip</p>
-			<form action="index.php?p=display&q=swap" method="post">
-				<input type="hidden" name="displayid" value="$this->displayid">
-				<input type="hidden" name="request_ip" value="$request_ip">
-				
-				<input type="submit" value="Swap">
-			</form>
-			
-END;
-			echo $form;
-		}
-	
-	}
-	
-	//used for timeout
-    function validateDisplays() {
+	/**
+	 * Assess each Display to correctly set the logged in flag based on last accessed time
+	 * @return 
+	 */
+    function validateDisplays() 
+	{
         $db =& $this->db;
 		
 		$timeout = date("Y-m-d H:i:s", time() -10);
@@ -519,10 +528,11 @@ END;
 
         $result = $db->query($SQL) or trigger_error($db->error(), E_USER_ERROR);
 
-        while($row = $db->get_row($result)) {
-            $userid = $row[0];
+        while($row = $db->get_row($result)) 
+		{
+            $displayid = $row[0];
 
-            $SQL = "UPDATE display SET loggedin = 0 WHERE displayid = ".$userid;
+            $SQL = "UPDATE display SET loggedin = 0 WHERE displayid = " . $displayid;
             $db->query($SQL) or trigger_error($db->error(), E_USER_ERROR);
         }
     }

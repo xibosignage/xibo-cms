@@ -16,7 +16,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
