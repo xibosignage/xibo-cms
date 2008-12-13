@@ -36,7 +36,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 				<?php button('content', 'view', 'View Content Library', "<img class='dash_button' src='img/dashboard/content.png'><span class='dash_text'>Library</span>", '', 'content_button', "dashicons") ?>
 
-				<?php /*if (config::getSetting($db,"openflashchart_path")!="") {
+				<?php /*if (Config::GetSetting($db,"openflashchart_path")!="") {
 					button('chart', '', 'View Graphs', "<img class='dash_button' src='img/dashboard/graph.png'><span class='dash_text'>Charts</span>", '', 'chart_button', "dashicons"); } ?>
 
 				<?php button('dataset', '', 'View Dataset', "<img class='dash_button' src='img/dashboard/datasets.png'><span class='dash_text'>Datasets</span>", '', 'dataset_button', "dashicons") */?>
@@ -50,7 +50,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<?php button('license', '', 'License', "<img class='dash_button' src='img/dashboard/license.png'><span class='dash_text'>License</span>", '', 'license_button', "dashicons") ?>
 				
 				<div class="dashicons">
-					<a id="help_button" target="_blank" alt="The Manual" href="http://www.xibo.co.uk/manual/index.php?p=content/dashboard/overview">
+					<a id="help_button" target="_blank" alt="The Manual" href="http://www.xibo.org.uk/manual/index.php?p=content/dashboard/overview">
 					<img class="dash_button" src="img/dashboard/help.png"/>
 					<span class="dash_text">Manual</span></a>
 				</div>

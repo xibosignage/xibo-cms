@@ -303,7 +303,7 @@ class moduleDAO
 		$dynamic	= isset($_REQUEST['dynamic']);
 		
 		//File upload directory.. get this from the settings object
-		$library 	= config::getSetting($db, "LIBRARY_LOCATION");
+		$library 	= Config::GetSetting($db, "LIBRARY_LOCATION");
 		
 		$fileName 	= $library . $file;
 		$uid 		= $fileName;

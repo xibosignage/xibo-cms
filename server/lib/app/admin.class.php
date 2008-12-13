@@ -158,10 +158,6 @@ FORM;
 		if (!array_search('SimpleXML', $extensions)) {
 			$issues .= "<p>SimpleXML must be enabled to Run Xibo</p>";
 		}
-
-		if (!in_array('zip', $extensions)) {
-			$issues .= "<p>Zip must be enabled to use Updates</p>";
-		}
 		
 		$allow_url_fopen = ini_get("allow_url_fopen");
 		if ($allow_url_fopen != 1) {
@@ -175,10 +171,10 @@ FORM;
 	{
 		$db =& $this->db;
 		
-		$to = config::getSetting($db, "mail_to");
+		$to = Config::GetSetting($db, "mail_to");
 		if ($to == "") return true; //they might not have an email recipient set
 		
-		$from = config::getSetting($db, "mail_from");
+		$from = Config::GetSetting($db, "mail_from");
 		if ($from == "") return true;
 
 		$headers = "From: $from" . "\r\n" . "Reply-To: $from" . "\r\n" .

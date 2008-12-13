@@ -36,7 +36,7 @@
 				</div>	
 					
 				<div id="notes" style="display:none;">
-					<h4>Schedule Help <a href="http://www.xibo.co.uk/manual/index.php?p=content/schedule/overview" target="_blank" alt="The Manual">(Click for Manual)</a></h4>
+					<h4>Schedule Help <a href="http://www.xibo.org.uk/manual/index.php?p=content/schedule/overview" target="_blank" alt="The Manual">(Click for Manual)</a></h4>
 					<div id="helptabs">
 						<ul id="help" class="tabs-nav"><!-- the class on this element has to remain the same -->
 							<li><a href="#cal_div" class="help_tab"><span>Calendar</span></a></li>

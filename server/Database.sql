@@ -496,8 +496,7 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 (1, 'defaultMedia', 'private', 'dropdown', 'Sets whether media is set to public or private by default.\r\n<br />\r\nWe recommend a setting of "Private"', 'private|public', 'default', 1),
 (2, 'defaultPlaylist', 'private', 'dropdown', 'Sets whether playlists are set to public or private by default.\r\n<br />\r\nCurrently there is only a private option.', 'private|public', 'default', 1),
 (3, 'defaultUsertype', 'user', 'dropdown', 'Sets the default user type selected when creating a user.\r\n<br />\r\nWe recommend that this is set to "User"', 'user|admin', 'default', 1),
-(5, 'debug', 'On', 'dropdown', 'Sets whether debug information is recorded when an error occurs.\r\n<br />\r\nThis should be set to "off" to ensure smaller log sizes', 'On|Off', 'error', 1),
-(6, 'defaultLength', '60', 'text', 'This sets the default length a display will wait before checking for new media to show.', NULL, 'default', 1),
+(5, 'debug', 'Off', 'dropdown', 'Sets whether debug information is recorded when an error occurs.\r\n<br />\r\nThis should be set to "off" to ensure smaller log sizes', 'On|Off', 'error', 1),
 (7, 'userModule', 'module_user_general.php', 'dirselect', 'This sets which user authentication module is currently being used.', NULL, 'user', 0),
 (10, 'adminMessage', '', 'text', 'Sets the admin message to be displayed on the client page at all times', NULL, 'general', 0),
 (11, 'defaultTimezone', 'Europe/London', 'dropdown', 'Set the default timezone for the application', 'Europe/London', 'default', 1),
@@ -509,10 +508,10 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 (25, 'ppt_height', '768', 'text', 'Default height for PPT files', NULL, 'content', 0),
 (26, 'ppt_length', '120', 'text', 'Default length for PPT files (in seconds)', NULL, 'content', 1),
 (29, 'swf_length', '60', 'text', 'Default length for SWF files', NULL, 'content', 1),
-(30, 'audit', 'On', 'dropdown', 'Turn on the auditing information. Warning this will quickly fill up the log', 'On|Off', 'error', 1),
+(30, 'audit', 'Off', 'dropdown', 'Turn on the auditing information. Warning this will quickly fill up the log', 'On|Off', 'error', 1),
 (31, 'openflashchart_path', '../open-flash-chart.swf', 'text', 'The path to open flash charting module. Relative to the Xibo directory. This module is licensed under the GPL and is not a part of Xibo. Open flash chart can therefore be obtained separately for no charge.'', ', NULL, 'path', 0),
 (32, 'NUSOAP_PATH', 'C:/Intranet/nuSoap/nusoap.php', 'text', NULL, NULL, 'path', 1),
-(33, 'LIBRARY_LOCATION', 'C:/Intranet/xsm_library/', 'text', NULL, NULL, 'path', 0),
+(33, 'LIBRARY_LOCATION', '', 'text', NULL, NULL, 'path', 1),
 (34, 'SERVER_KEY', 'xsm', 'text', NULL, NULL, 'general', 1);
 
 --

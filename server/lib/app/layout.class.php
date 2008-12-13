@@ -703,7 +703,7 @@ END;
 		
 		if($permissionid == "") 
 		{
-			$default = config::getSetting($db, "defaultPlaylist");
+			$default = Config::GetSetting($db, "defaultPlaylist");
 		}
 		else 
 		{
@@ -772,7 +772,7 @@ END;
 		$height				= (string) $xml['height'];
 		
 		//File upload directory.. get this from the settings object
-		$databaseDir = config::getSetting($db, "libraryLocation");
+		$databaseDir = Config::GetSetting($db, "LIBRARY_LOCATION");
 		
 		//Manipulate the images slightly
 		if ($backgroundImage != "")
@@ -872,7 +872,7 @@ FORM;
 		$resolutionid		= Kit::GetParam('resolutionid', _POST, _INT);
 		
 		//File upload directory.. get this from the settings object
-		$libraryLocation = config::getSetting($db, "libraryLocation");
+		$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 		
 		//Look up the width and the height
 		$SQL = sprintf("SELECT width, height FROM resolution WHERE resolutionID = %d ", $resolutionid);
@@ -1116,7 +1116,7 @@ END;
 		$bgColor = (string) $xml['bgcolor'];
 
 		//Library location
-		$libraryLocation = config::getSetting($db, "libraryLocation");
+		$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 		
 		//Fix up the background css
 		if ($bgImage == "")
@@ -1198,7 +1198,7 @@ HTML;
 		$arh = new AjaxRequest();
 		
 		//Library location
-		$libraryLocation = config::getSetting($db, "libraryLocation");
+		$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 		
 		//Buttons down the side - media across the top, absolutly positioned in the canvas div
 		$mediaHtml = "";

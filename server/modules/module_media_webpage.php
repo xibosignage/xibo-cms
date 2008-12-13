@@ -137,7 +137,7 @@ XML;
 		    		<td><input id="duration" name="duration" type="text"></td>		
 				</tr>
 				<tr>
-					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.co.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
+					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.org.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
 				</tr>
 				<tr>
 					<td></td>
@@ -189,7 +189,7 @@ FORM;
 		    		<td><input id="duration" name="duration" value="$this->duration" type="text"></td>		
 				</tr>
 				<tr>
-					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.co.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
+					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.org.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
 				</tr>
 				<tr>
 					<td></td>
@@ -400,7 +400,7 @@ END;
 	private function DeleteMediaFiles()
 	{
 		//Library location
-		$databaseDir = config::getSetting($db, "libraryLocation");
+		$databaseDir = Config::GetSetting($db, "LIBRARY_LOCATION");
 		
 		//3 things to check for..
 		//the actual file, the thumbnail, the background

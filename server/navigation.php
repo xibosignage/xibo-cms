@@ -42,13 +42,13 @@ navlink("index.php?p=layout&sp=view", "layout", "Layout", "", "current");
 //navheading("content,datasets,media,xslt,chart", "Library", "current", 'begin'); 
 navlink("index.php?p=content&sp=view", "content", "Library", "view", "current"); 
 
-/*if (config::getSetting($db,"scanPath")!="") {
+/*if (Config::GetSetting($db,"scanPath")!="") {
 navlink("index.php?p=content&sp=scanner", "content", "Scanner", "scanner", "current");
 }
 
 navlink("index.php?p=dataset", "dataset", "Datasets", "", "current"); 
 
-if (config::getSetting($db,"openflashchart_path")!="") {
+if (Config::GetSetting($db,"openflashchart_path")!="") {
 navlink("index.php?p=chart", "chart", "Charts", "", "current");
 }*/
 

@@ -595,10 +595,10 @@ END;
 		 */
 		
 		//File upload directory.. get this from the settings object
-		$libraryFolder 	= config::getSetting($db, "libraryLocation");
+		$libraryFolder 	= Config::GetSetting($db, "LIBRARY_LOCATION");
 		$fileId 		= uniqid() . rand(100, 999);
 		
-		Debug::LogEntry($db, "audit", "[IN]", "", "FileUpload");
+		Debug::LogEntry($db, "audit", '[IN - FileId ' . $fileId . '] to library location: '. $libraryFolder, 'FileUpload');
 		
 		if (isset($_FILES["media_file"]) && is_uploaded_file($_FILES["media_file"]["tmp_name"]) && $_FILES["media_file"]["error"] == 0) 
 		{
@@ -609,11 +609,11 @@ END;
 			// Save the FILE
 			move_uploaded_file($_FILES["media_file"]["tmp_name"], $fileLocation);
 			
-			Debug::LogEntry($db, "audit", "Upload Success", "", "FileUpload");
+			Debug::LogEntry($db, "audit", "Upload Success", "FileUpload");
 		} 
 		else 
 		{
-			Debug::LogEntry($db, "audit", "Error uploading the file num [{$_FILES["media_file"]["error"]}]", "","FileUpload");
+			Debug::LogEntry($db, "audit", "Error uploading the file num [{$_FILES["media_file"]["error"]}]", "FileUpload");
 			
 			$error = $_FILES["media_file"]["error"];
 			$fileName = "Error";
@@ -646,7 +646,7 @@ HTML;
 		
 		echo $complete_page;
 		
-		Debug::LogEntry($db, "audit", "[OUT]", "", "", "FileUpload");
+		Debug::LogEntry($db, "audit", "[OUT]", "FileUpload");
 		exit;
 	}
 }

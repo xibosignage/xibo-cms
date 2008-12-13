@@ -161,7 +161,7 @@ XML;
 		$regionid 	= Kit::GetParam("regionid", _REQUEST, _STRING);
 		
 		//Get the default value for the shared list
-		$default = config::getSetting($db,"defaultMedia");
+		$default = Config::GetSetting($db,"defaultMedia");
 
 		if($default=="private") {
 			$permissionid = 1;
@@ -239,7 +239,7 @@ END;
 				</tr>
 				<tr>
 					<td></td>
-					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.co.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
+					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.org.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
 				</tr>
 				<tr>
 					<td></td>
@@ -344,7 +344,7 @@ END;
 				</tr>
 				<tr>
 					<td></td>
-					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.co.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
+					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.org.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
 				</tr>
 				<tr>
 					<td></td>
@@ -535,7 +535,7 @@ END;
 		}
 				
 		//File upload directory.. get this from the settings object
-		$databaseDir = config::getSetting($db, "libraryLocation");
+		$databaseDir = Config::GetSetting($db, "LIBRARY_LOCATION");
 
 
 		$SQL =  "INSERT INTO media (name, type, duration, originalFilename, permissionID, userID, retired ) ";
@@ -699,7 +699,7 @@ END;
 		}
 				
 		//File upload directory.. get this from the settings object
-		$databaseDir = config::getSetting($db, "libraryLocation");
+		$databaseDir = Config::GetSetting($db, "LIBRARY_LOCATION");
 		
 		//Are we revising this media - or just plain editing
 		if ($fileRevision)

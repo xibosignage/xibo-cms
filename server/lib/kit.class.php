@@ -38,10 +38,29 @@ define('_CHECKBOX', "checkbox");
 define('_FILENAME', "filename");
 define('_URI', "uri");
 
-class Kit {
+class Kit 
+{
+
 	// Ends the current execution and issues a redirect - should only be called before headers have been sent (i.e. no output)
 	static function Redirect($page, $message = '', $pageIsUrl = false)
-	{	
+	{
+		$url = $page;
+		
+		// Header or JS redirect
+		if (headers_sent()) 
+		{
+			echo "<script>document.location.href='$url';</script>\n";
+		} 
+		else 
+		{
+			header( 'HTTP/1.1 301 Moved Permanently' );
+			header( 'Location: ' . $url );
+		}
+		
+		die();
+		
+		// Redirect should be made cleverer at some point
+		
 		// If this is an ajax request just poke out the message
 		if (Kit::GetParam('ajax', _GET, _WORD) == "true")
 		{
@@ -65,19 +84,6 @@ class Kit {
 		// Strip out any line breaks
 		$url = preg_split("/[\r\n]/", $url);
 		$url = $url[0];
-		
-		// Header or JS redirect
-		if (headers_sent()) 
-		{
-			echo "<script>document.location.href='$url';</script>\n";
-		} 
-		else 
-		{
-			header( 'HTTP/1.1 301 Moved Permanently' );
-			header( 'Location: ' . $url );
-		}
-		
-		die();
 	}
 	
 	/**
@@ -274,6 +280,8 @@ class Kit {
 	 */
 	public static function GetUri($page = "", $id = "", $full = false)
 	{
+		global $db;
+		
 		$opage = $page;
 		
 		if ($page == "")

@@ -40,7 +40,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			</div>	
 			
 			<div id="notes" style="display:none;">
-				<h4>Layout Design Help <a href="http://www.xibo.co.uk/manual/index.php?p=content/layout/design" target="_blank" alt="The Manual">(Click for Manual)</a></h4>
+				<h4>Layout Design Help <a href="http://www.xibo.org.uk/manual/index.php?p=content/layout/design" target="_blank" alt="The Manual">(Click for Manual)</a></h4>
 					<div id="helptabs">
 					
 						<ul id="help" class="tabs-nav">

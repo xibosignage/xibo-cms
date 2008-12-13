@@ -163,7 +163,7 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 {
 	global $db;
 
-	$libraryLocation = config::getSetting($db, "libraryLocation");
+	$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 	
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
@@ -323,7 +323,7 @@ function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $
 {
 	global $db;
 	
-	$libraryLocation = config::getSetting($db, "libraryLocation");
+	$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 	
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))

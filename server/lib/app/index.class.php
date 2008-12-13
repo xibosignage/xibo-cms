@@ -159,7 +159,7 @@ class indexDAO
 		}
 		
 		//send the email
-		$from = config::getSetting($db, "mail_from");
+		$from = Config::GetSetting($db, "mail_from");
 		if ($from == "") 
 		{
 			setMessage("Email is not set up, please contact your IT manager");

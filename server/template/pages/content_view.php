@@ -38,7 +38,7 @@
 				<a id="help_button" onclick="toggle_div_view('notes')"><div class="button_text">Help</div></a>
 			</div>
 			<div id="notes" style="display:none;">
-					<h4>Content Help <a href="http://www.xibo.co.uk/manual/index.php?p=content/content/overview" target="_blank" alt="The Manual">(Click for Manual)</a></h4>
+					<h4>Content Help <a href="http://www.xibo.org.uk/manual/index.php?p=content/content/overview" target="_blank" alt="The Manual">(Click for Manual)</a></h4>
 					<div id="helptabs">
 						<ul id="help" class="tabs-nav"><!-- the class on this element has to remain the same -->
 							<li><a href="#add_help_div" class="help_tab"><span>Add/Edit</span></a></li>	

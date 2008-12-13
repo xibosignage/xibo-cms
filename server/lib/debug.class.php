@@ -109,7 +109,7 @@ class Debug
 
 		$to = 'info@xibo.org.uk';
 		
-		$from = config::getSetting($db, "mail_from");
+		$from = Config::GetSetting($db, "mail_from");
 		if ($from == "") return true;
 		
 		$subject = "Error message from Xibo";

@@ -421,8 +421,8 @@ class userDAO
 	{
 		$this->db =& $db;
 		
-		$sp 	= Kit::GetParam('sp', _REQUEST, _WORD, 'view');
-		$userid = Kit::GetParam('userID', _REQUEST, _INT, 0);
+		$this->sub_page = Kit::GetParam('sp', _REQUEST, _WORD, 'view');
+		$userid 		= Kit::GetParam('userID', _REQUEST, _INT, 0);
 
 		if($userid != 0) 
 		{
@@ -867,7 +867,7 @@ FORM;
 		//get us the user type if we dont have it (for the default value)
 		if($usertypeid=="") 
 		{
-			$usertype = config::getSetting($db,"defaultUsertype");
+			$usertype = Config::GetSetting($db,"defaultUsertype");
 
 			$SQL = "SELECT usertypeid FROM usertype WHERE usertype = '$usertype'";
 			if(!$results = $db->query($SQL)) 
