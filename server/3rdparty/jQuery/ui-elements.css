@@ -1,108 +1,374 @@
-.ui-resizable { position: relative; }
-
-/* Global handle styles */
-.ui-resizable-handle { position: absolute; display: none; font-size: 0.1px; }
-.ui-resizable .ui-resizable-handle { display: block; }
-body .ui-resizable-disabled .ui-resizable-handle { display: none; } /* use 'body' to make it more specific (css order) */
-body .ui-resizable-autohide .ui-resizable-handle { display: none; } /* use 'body' to make it more specific (css order) */
-
-.ui-resizable-n { cursor: n-resize; height: 6px; width: 100%; top: 0px; left: 0px; background: transparent url(../../img/dialogs/resizable-n.gif) repeat scroll center top; }
-.ui-resizable-s { cursor: s-resize; height: 6px; width: 100%; bottom: 0px; left: 0px; background: transparent url(../../img/dialogs/resizable-s.gif) repeat scroll center top; }
-
-.ui-resizable-e { cursor: e-resize; width: 6px; right: 0px; top: 0px; height: 100%; background: transparent url(../../img/dialogs/resizable-e.gif) repeat scroll right center; }
-.ui-resizable-w { cursor: w-resize; width: 6px; left: 0px; top: 0px; height: 100%; background: transparent url(../../img/dialogs/resizable-w.gif) repeat scroll right center; }
-
-.ui-resizable-se { cursor: se-resize; width: 9px; height: 9px; right: 0px; bottom: 0px; background: transparent url(../../img/dialogs/resizable-se.gif); }
-.ui-resizable-sw { cursor: sw-resize; width: 9px; height: 9px; left: 0px; bottom: 0px; background: transparent url(../../img/dialogs/resizable-sw.gif); }
-.ui-resizable-nw { cursor: nw-resize; width: 9px; height: 9px; left: 0px; top: 0px; background: transparent url(../../img/dialogs/resizable-nw.gif); }
-.ui-resizable-ne { cursor: ne-resize; width: 9px; height: 9px; right: 0px; top: 0px; background: transparent url(../../img/dialogs/resizable-ne.gif); }
-
-/* This file skins dialog */
-
- .ui-dialog,
-.ui-dialog {
+.ui-resizable
+{
+	position: relative;
+}
+.ui-resizable-handle
+{
+	display: none;
+	font-size: 0.1px;
+	position: absolute;
+}
+.ui-resizable .ui-resizable-handle
+{
+	display: block;
+}
+body .ui-resizable-disabled .ui-resizable-handle
+{
+	display: none;
+}
+body .ui-resizable-autohide .ui-resizable-handle
+{
+	display: none;
+}
+.ui-resizable-n
+{
+	background: transparent url(../../img/dialogs/resizable-n.gif) repeat scroll center top;
+	cursor: n-resize;
+	height: 6px;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+}
+.ui-resizable-s
+{
+	background: transparent url(../../img/dialogs/resizable-s.gif) repeat scroll center top;
+	bottom: 0px;
+	cursor: s-resize;
+	height: 6px;
+	left: 0px;
+	width: 100%;
+}
+.ui-resizable-e
+{
+	background: transparent url(../../img/dialogs/resizable-e.gif) repeat scroll right center;
+	cursor: e-resize;
+	height: 100%;
+	right: 0px;
+	top: 0px;
+	width: 6px;
+}
+.ui-resizable-w
+{
+	background: transparent url(../../img/dialogs/resizable-w.gif) repeat scroll right center;
+	cursor: w-resize;
+	height: 100%;
+	left: 0px;
+	top: 0px;
+	width: 6px;
+}
+.ui-resizable-se
+{
+	background: transparent url(../../img/dialogs/resizable-se.gif);
+	bottom: 0px;
+	cursor: se-resize;
+	height: 9px;
+	right: 0px;
+	width: 9px;
+}
+.ui-resizable-sw
+{
+	background: transparent url(../../img/dialogs/resizable-sw.gif);
+	bottom: 0px;
+	cursor: sw-resize;
+	height: 9px;
+	left: 0px;
+	width: 9px;
+}
+.ui-resizable-nw
+{
+	background: transparent url(../../img/dialogs/resizable-nw.gif);
+	cursor: nw-resize;
+	height: 9px;
+	left: 0px;
+	top: 0px;
+	width: 9px;
+}
+.ui-resizable-ne
+{
+	background: transparent url(../../img/dialogs/resizable-ne.gif);
+	cursor: ne-resize;
+	height: 9px;
+	right: 0px;
+	top: 0px;
+	width: 9px;
+}
+.ui-dialog,
+.ui-dialog
+{
 	background-color: #E2F0FF;
 }
-
- .ui-dialog .ui-dialog-titlebar,
-.ui-dialog .ui-dialog-titlebar {
+.ui-dialog .ui-dialog-titlebar,
+.ui-dialog .ui-dialog-titlebar
+{
+	_height: 30px;
 	background: #003399 url(../../img/dialogs/dialog-title.gif) repeat-x;
-	padding: 0px;
 	cursor: move;
 	height: 29px;
-	_height: 30px;
+	padding: 0px;
 }
-
-.ui-dialog-titlebar-close span {
-	display:none;
+.ui-dialog-titlebar-close span
+{
+	display: none;
 }
-
 .ui-dialog .ui-dialog-titlebar-close,
-.ui-dialog .ui-dialog-titlebar-close {
-	width: 16px;
-	height: 16px;
+.ui-dialog .ui-dialog-titlebar-close
+{
 	background: url(../../img/dialogs/dialog-titlebar-close.png) no-repeat;
-	position:absolute;
-	top: 6px;
-	right: 7px;
 	cursor: default;
+	height: 16px;
+	position: absolute;
+	right: 7px;
+	top: 6px;
+	width: 16px;
 }
-
- .ui-dialog .ui-dialog-titlebar-close-hover,
-.ui-dialog .ui-dialog-titlebar-close-hover {
+.ui-dialog .ui-dialog-titlebar-close-hover,
+.ui-dialog .ui-dialog-titlebar-close-hover
+{
 	background: url(../../img/dialogs/dialog-titlebar-close-hover.png) no-repeat;
 }
-
- .ui-dialog .ui-dialog-title,
-.ui-dialog .ui-dialog-title {
-	margin-left: 5px;
+.ui-dialog .ui-dialog-title,
+.ui-dialog .ui-dialog-title
+{
 	color: white;
 	font-weight: bold;
+	left: 4px;
+	margin-left: 5px;
 	position: relative;
 	top: 7px;
-	left: 4px;
 }
-
- .ui-dialog .ui-dialog-content,
-.ui-dialog .ui-dialog-content {
+.ui-dialog .ui-dialog-content,
+.ui-dialog .ui-dialog-content
+{
 	margin: 1.2em;
 }
-
- .ui-dialog .ui-dialog-buttonpane,
-.ui-dialog .ui-dialog-buttonpane {
-	position: absolute;
+.ui-dialog .ui-dialog-buttonpane,
+.ui-dialog .ui-dialog-buttonpane
+{
 	bottom: 8px;
+	position: absolute;
 	right: 12px;
-	width: 100%;
 	text-align: right;
+	width: 100%;
 }
-
- .ui-dialog .ui-dialog-buttonpane button,
-.ui-dialog .ui-dialog-buttonpane button {
+.ui-dialog .ui-dialog-buttonpane button,
+.ui-dialog .ui-dialog-buttonpane button
+{
 	margin: 6px;
 }
+.ui-dialog .ui-resizable-n,
+.ui-dialog .ui-resizable-n
+{
+	background: transparent url(../../img/dialogs/dialog-n.gif) repeat scroll center top;
+	cursor: n-resize;
+	height: 6px;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+}
+.ui-dialog .ui-resizable-s,
+.ui-dialog .ui-resizable-s
+{
+	background: transparent url(../../img/dialogs/dialog-s.gif) repeat scroll center top;
+	bottom: 0px;
+	cursor: s-resize;
+	height: 8px;
+	left: 0px;
+	width: 100%;
+}
+.ui-dialog .ui-resizable-e,
+.ui-dialog .ui-resizable-e
+{
+	background: transparent url(../../img/dialogs/dialog-e.gif) repeat scroll right center;
+	cursor: e-resize;
+	height: 100%;
+	right: 0px;
+	top: 0px;
+	width: 7px;
+}
+.ui-dialog .ui-resizable-w,
+.ui-dialog .ui-resizable-w
+{
+	background: transparent url(../../img/dialogs/dialog-w.gif) repeat scroll right center;
+	cursor: w-resize;
+	height: 100%;
+	left: 0px;
+	top: 0px;
+	width: 7px;
+}
+.ui-dialog .ui-resizable-se,
+.ui-dialog .ui-resizable-se
+{
+	background: transparent url(../../img/dialogs/dialog-se.gif);
+	bottom: 0px;
+	cursor: se-resize;
+	height: 9px;
+	right: 0px;
+	width: 9px;
+}
+.ui-dialog .ui-resizable-sw,
+.ui-dialog .ui-resizable-sw
+{
+	background: transparent url(../../img/dialogs/dialog-sw.gif);
+	bottom: 0px;
 
-/* Dialog handle styles */
- .ui-dialog .ui-resizable-n,
-.ui-dialog .ui-resizable-n { cursor: n-resize; height: 6px; width: 100%; top: 0px; left: 0px; background: transparent url(../../img/dialogs/dialog-n.gif) repeat scroll center top; }
-
- .ui-dialog .ui-resizable-s,
-.ui-dialog .ui-resizable-s { cursor: s-resize; height: 8px; width: 100%; bottom: 0px; left: 0px; background: transparent url(../../img/dialogs/dialog-s.gif) repeat scroll center top; }
-
- .ui-dialog .ui-resizable-e,
-.ui-dialog .ui-resizable-e { cursor: e-resize; width: 7px; right: 0px; top: 0px; height: 100%; background: transparent url(../../img/dialogs/dialog-e.gif) repeat scroll right center; }
-
- .ui-dialog .ui-resizable-w,
-.ui-dialog .ui-resizable-w { cursor: w-resize; width: 7px; left: 0px; top: 0px; height: 100%; background: transparent url(../../img/dialogs/dialog-w.gif) repeat scroll right center; }
-
- .ui-dialog .ui-resizable-se,
-.ui-dialog .ui-resizable-se { cursor: se-resize; width: 9px; height: 9px; right: 0px; bottom: 0px; background: transparent url(../../img/dialogs/dialog-se.gif); }
-
- .ui-dialog .ui-resizable-sw,
-.ui-dialog .ui-resizable-sw { cursor: sw-resize; width: 9px; height: 9px; left: 0px; bottom: 0px; background: transparent url(../../img/dialogs/dialog-sw.gif); }
-
- .ui-dialog .ui-resizable-nw,
-.ui-dialog .ui-resizable-nw { cursor: nw-resize; width: 9px; height: 29px; left: 0px; top: 0px; background: transparent url(../../img/dialogs/dialog-nw.gif); }
-
- .ui-dialog .ui-resizable-ne,
-.ui-dialog .ui-resizable-ne { cursor: ne-resize; width: 9px; height: 29px; right: 0px; top: 0px; background: transparent url(../../img/dialogs/dialog-ne.gif); }
+	cursor: sw-resize;
+	height: 9px;
+	left: 0px;
+	width: 9px;
+}
+.ui-dialog .ui-resizable-nw,
+.ui-dialog .ui-resizable-nw
+{
+	background: transparent url(../../img/dialogs/dialog-nw.gif);
+	cursor: nw-resize;
+	height: 29px;
+	left: 0px;
+	top: 0px;
+	width: 9px;
+}
+.ui-dialog .ui-resizable-ne,
+.ui-dialog .ui-resizable-ne
+{
+	background: transparent url(../../img/dialogs/dialog-ne.gif);
+	cursor: ne-resize;
+	height: 29px;
+	right: 0px;
+	top: 0px;
+	width: 9px;
+}
+@media projection, screen
+{
+	.tabs-hide
+	{
+		display: none;
+	}
+}
+@media print
+{
+	.tabs-nav
+	{
+		display: none;
+	}
+}
+.ui-tabs-nav
+{
+	list-style: none;
+	margin: 0;
+	padding: 5px 0 0 0px;
+	width: 100%;
+}
+.ui-tabs-nav:after
+{
+	clear: both;
+	content: " ";
+	display: block;
+}
+.ui-tabs-nav li
+{
+	float: left;
+	margin: 0 0 0 1px;
+	min-width: 84px;
+}
+.ui-tabs-nav a, .ui-tabs-nav a span
+{
+	background: url(../../img/tabs/tab.png) no-repeat;
+	display: block;
+	padding: 0 10px;
+}
+.ui-tabs-nav a
+{
+	color: #27537a;
+	font-size: 12px;
+	font-weight: bold;
+	line-height: 1.2;
+	padding-left: 0;
+	position: relative;
+	text-align: center;
+	text-decoration: none;
+	top: 1px;
+	white-space: nowrap;
+	z-index: 1;
+}
+.ui-tabs-nav .ui-tabs-selected a
+{
+	color: #000;
+}
+.ui-tabs-nav .ui-tabs-selected a, .ui-tabs-nav a:hover, .ui-tabs-nav a:focus, .ui-tabs-nav a:active
+{
+	background-position: 100% -150px;
+	outline: 0;
+}
+.ui-tabs-nav a, .ui-tabs-nav .ui-tabs-disabled a:hover, .ui-tabs-nav .ui-tabs-disabled a:focus, .ui-tabs-nav .ui-tabs-disabled a:active
+{
+	background-position: 100% -100px;
+}
+.ui-tabs-nav a span
+{
+	height: 18px;
+	min-height: 18px;
+	min-width: 64px;
+	padding-right: 0;
+	padding-top: 6px;
+	width: 64px;
+}
+*>.ui-tabs-nav a span
+{
+	height: auto;
+	width: auto;
+}
+.ui-tabs-nav .ui-tabs-selected a span
+{
+	padding-top: 7px;
+}
+.ui-tabs-nav .ui-tabs-selected a span, .ui-tabs-nav a:hover span, .ui-tabs-nav a:focus span, .ui-tabs-nav a:active span
+{
+	background-position: 0 -50px;
+}
+.ui-tabs-nav a span, .ui-tabs-nav .ui-tabs-disabled a:hover span, .ui-tabs-nav .ui-tabs-disabled a:focus span, .ui-tabs-nav .ui-tabs-disabled a:active span
+{
+	background-position: 0 0;
+}
+.ui-tabs-nav .ui-tabs-selected a:link, .ui-tabs-nav .ui-tabs-selected a:visited, .ui-tabs-nav .ui-tabs-disabled a:link, .ui-tabs-nav .ui-tabs-disabled a:visited
+{
+	cursor: text;
+}
+.ui-tabs-nav a:hover, .ui-tabs-nav a:focus, .ui-tabs-nav a:active
+{
+	cursor: pointer;
+}
+.ui-tabs-nav .ui-tabs-disabled
+{
+	opacity: .4;
+}
+.ui-tabs-panel
+{
+	background: url(../../img/tabs/tabbackground.png) repeat-x #e5f0ff;
+	border-top: 1px solid #DCE4F5;
+	clear: both;
+	margin-left: 1px;
+	padding: 1em 8px;
+	width: 100%;
+}
+.ui-tabs-hide
+{
+	display:none;
+}
+.ui-tabs-loading em
+{
+	background: url(loading.gif) no-repeat 0 50%;
+	padding: 0 0 0 20px;
+}
+.ui-tabs-nav
+{
+	display: inline-block;
+}
+.ui-tabs-nav .ui-tabs-disabled
+{
+	filter: alpha(opacity=40);
+	position: relative;
+}
+.ui-tabs-nav .ui-tabs-disabled a span
+{
+	_height: 19px;
+	min-height: 19px;
+}
