@@ -329,7 +329,7 @@ function grid_form(source, dialogTitle, exec_filter_callback,filter,output,width
 	//call the load form
 	load_form($(source).attr('href'),$('#div_dialog'), exec_filter_callback, function() {
 		//init the filter bind
-		$(' :input','#'+filter).change(function(){	
+		$(' :input','#'+filter).change(function() {	
 			exec_filter(filter,output);
 		});
 		
