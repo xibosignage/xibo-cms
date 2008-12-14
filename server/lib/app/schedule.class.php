@@ -220,7 +220,8 @@ class scheduleDAO {
 		return false;
 	}
 	
-	function display_form () {
+	function display_form () 
+	{
 		$db =& $this->db;
 		global $user;
 		//ajax request handler
@@ -354,7 +355,7 @@ END;
 				<td>
 					<input type="submit" value="Save" />
 					$edit_link
-					<input id="btnCancel" type="button" title="No / Cancel" onclick="$(this).parent().parent().dialogClose();return false; " value="Cancel" />	
+					<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close'); return false;" value="Cancel" />	
 					$helpButton
 				</td>
 			</tr>
@@ -371,7 +372,8 @@ END;
 		return true;
 	}
 	
-	function delete_form() {
+	function delete_form() 
+	{
 		$db =& $this->db;
 		
 		//ajax request handler
@@ -402,15 +404,16 @@ END;
 		$arh->decode_response(true,$form);
 	}
 	
-	function display_boxes($linked_events) {
+	function display_boxes($linked_events) 
+	{
 		$db =& $this->db;
 		
-		$lic_displays = DISPLAYS; //the licensed displays
-		
-		if ($linked_events != "") { //if there is a linked event given (i.e. we are on an edit)
+		if ($linked_events != "") 
+		{ //if there is a linked event given (i.e. we are on an edit)
 			$linked_displayids = $this->getDisplaysForEvent($linked_events);
 		}
-		else {
+		else 
+		{
 			$linked_displayids[] = $this->displayid;
 		}
 			
@@ -423,29 +426,34 @@ END;
 SQL;
 	
 		//get the displays
-		if (!$result = $db->query($SQL)) {
+		if (!$result = $db->query($SQL)) 
+		{
 			trigger_error("Can not get the displays from the database.", E_USER_ERROR);
 		}
 	
-		if($db->num_rows($result) < 1) {
+		if($db->num_rows($result) < 1) 
+		{
 			$boxes = "No displays available";
 			return $boxes;
 		}
 		
 		$input_fields = "";
 		
-		while ($row = $db->get_row($result)) {
-		
+		while ($row = $db->get_row($result)) 
+		{
 			$displayid = $row[0];
 			$display = $row[1];
 			
-			if (in_array($displayid, $linked_displayids)) {
+			if (in_array($displayid, $linked_displayids)) 
+			{
 				$input_fields .= "<option value='$displayid' selected>$display</option>";
 			}
-			else {
+			else 
+			{
 				$input_fields .= "<option value='$displayid'>$display</option>";
 			}
 		}
+		
 		$boxes = <<<END
 		<select name='displayids[]' MULTIPLE SIZE=6>
 		$input_fields
@@ -966,7 +974,8 @@ END;
 	 * 		datetime = the default datetime
 	 * 		selectName = the select name
 	 */
-	function datetime_select($datetime, $selectName, $dropdowns = false) {
+	function datetime_select($datetime, $selectName, $dropdowns = false) 
+	{
         //$datetime is in TIMESTAMP format
 
         $y = date("Y", $datetime);
@@ -987,7 +996,8 @@ END;
 
 		$return ="";
 		
-		if ($dropdowns) {
+		if ($dropdowns) 
+		{
 		
 			/* Days */
 			$return.= "<select class='date' name=".$d_name.">";
@@ -1038,12 +1048,16 @@ END;
 	        }
 	        $return.= "</select>";
 		}
-		else {
-			$return .= "<input type=\"text\" id=\"$selectName\" class=\"date-pick\" value=\"$date\" name=\"$date_name\">";
+		else 
+		{
+			$return .= '<input type="text" id="'.$selectName.'" class="date-pick" value="'.$date.'" name="'.$date_name.'">';
+			//$return .= '<input type="text" id="'.$selectName.'" class="date-pick" value="" name="'.$date_name.'">';
 		}
 			
-		$return.="<div class='hour_select'><input class=\"date\" type=\"text\" value=\"$h\" name=\"$h_name\">: ";
-		$return.="<input class=\"date\" type=\"text\" value=\"$mi\" name=\"$i_name\"></div>";
+		//$return .= '<div class="hour_select">';
+		$return .= '<input class="date" type="text" value="'.$h.'" name="'.$h_name.'">: ';
+		$return .= '<input class="date" type="text" value="'.$mi.'" name="'.$i_name.'">';
+		//$return .= '</div>';
 
         return $return;
     }

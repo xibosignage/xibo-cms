@@ -26,16 +26,13 @@ var exec_filter_callback = function(outputDiv) {
 
 $(document).ready(function() {
 	
-	$('.date-pick').each(function(){
-		$(this).datePicker({clickInput:false, createButton:true, startDate:'01/01/1996'})
-		
-				.bind(
-					'dateSelected',
-					function(e, selectedDate, $td) {
-						exec_filter('filter_form','log_table');
-					}
-				)
+	$('.date-pick').datepicker({
+		dateFormat: "dd/mm/yy",
+		showOn: "button", 
+    	buttonImage: "img/calendar.png", 
+    	buttonImageOnly: true
 	});
+	
 });
 
 $(document).ready(function() {

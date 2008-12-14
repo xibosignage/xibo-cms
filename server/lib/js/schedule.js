@@ -171,52 +171,31 @@ function exec_filter_callback() {
 
 function init_callback() {
     //set up any date fields we have with the date picker
-    $('.date-pick').datePicker({clickInput:true, createButton:true}).val();
-	
-	if ( $('.date-pick').size() != 0 ) {
-		$('#starttime').dpSetSelected($('#starttime').fieldValue()[0]);
-		$('#endtime').dpSetSelected($('#endtime').fieldValue()[0]);		
-		$('#rec_range').dpSetSelected($('#rec_range').fieldValue()[0]);		
-	}
-	
-	$('#starttime').bind (
-		'dpClosed',
-		function(e, selectedDates)
-		{
-			var d = selectedDates[0];
-			if (d) {
-				$('#endtime').dpSetStartDate(d.asString());
-			}
-		}
-	);
-	$('#endtime').bind (
-		'dpClosed',
-		function(e, selectedDates)
-		{
-			var d = selectedDates[0];
-			if (d) {
-				$('#starttime').dpSetEndDate(d.asString());
-			}
-		}
-	);
-	$('#starttime').bind (
-		'dpClosed',
-		function(e, selectedDates)
-		{
-			var d = selectedDates[0];
-			if (d) {
-				$('#rec_range').dpSetStartDate(d.asString());
-			}
-		}
-	);
-	
+    $('.date-pick').datepicker({
+		dateFormat: "dd/mm/yy",
+		showOn: "button", 
+    	buttonImage: "img/calendar.png", 
+    	buttonImageOnly: true,
+		beforeShow: customRange
+	});
+
+	/*if ( $('.date-pick').size() != 0 ) {
+		$('#starttime').datepicker("setDate", $('#starttime').fieldValue()[0]);
+		$('#endtime').datepicker("setDate", $('#endtime').fieldValue()[0]);		
+		$('#rec_range').datepicker("setDate", $('#rec_range').fieldValue()[0]);		
+	}*/
+
 	ctlRec();
 	
 	$('#rec_type').change(function() {
 		ctlRec();
 	});
-
 }
+
+function customRange(input) { 
+    return {minDate: (input.id == "endtime" ? $("#starttime").datepicker("getDate") : null), 
+        maxDate: (input.id == "starttime" ? $("#endtime").datepicker("getDate") : null)}; 
+} 
 
 function ctlRec() {
 	/*

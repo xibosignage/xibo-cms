@@ -77,7 +77,7 @@ var text_callback = function()
 {	
 	//Create the FCK editor
 	var oFCKeditor = new FCKeditor( 'ta_text' ) ;
-	oFCKeditor.BasePath = "lib/fckeditor/" ;
+	oFCKeditor.BasePath = "3rdparty/fckeditor/" ;
 	oFCKeditor.ReplaceTextarea();
 
 	var regionid = $("#iRegionId").val();

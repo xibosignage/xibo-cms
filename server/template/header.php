@@ -32,24 +32,16 @@ $q 			= Kit::GetParam('q', _REQUEST, _WORD);
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 		<link rel="shortcut icon" href="img/favicon.ico" />
 		<!-- Javascript Libraries -->
-		<script type="text/javascript" src="lib/js/jquery/jquery.pack.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/jquery.dimensions.pack.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/ui.dialog.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/ui.draggable.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/ui.droppable.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/ui.resizable.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/ui.mouse.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/jquery.form.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/jquery.tabs.pack.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/jquery.bgiframe.min.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/jquery.date.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/jquery.datePicker.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/jquery.tablesorter.pack.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/jquery.tablesorter.pager.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/jquery.ifixpng.js"></script>
-		<script type="text/javascript" src="lib/js/jquery/jquery.contextmenu.r2.packed.js"></script>
-		<link rel="stylesheet" type="text/css" href="lib/js/jquery/datePicker.css" />
-		<link rel="stylesheet" type="text/css" href="lib/js/jquery/ui-elements.css" />
+		<script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
+		<script type="text/javascript" src="3rdparty/jQuery/jquery-ui.packed.js"></script>
+		<script type="text/javascript" src="3rdparty/jQuery/jquery.form.js"></script>
+		<script type="text/javascript" src="3rdparty/jQuery/jquery.bgiframe.min.js"></script>
+		<script type="text/javascript" src="3rdparty/jQuery/jquery.tablesorter.pack.js"></script>
+		<script type="text/javascript" src="3rdparty/jQuery/jquery.tablesorter.pager.js"></script>
+		<script type="text/javascript" src="3rdparty/jQuery/jquery.ifixpng.js"></script>
+		<script type="text/javascript" src="3rdparty/jQuery/jquery.contextmenu.r2.packed.js"></script>
+		<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/datePicker.css" />
+		<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/ui-elements.css" />
 		
 		<!-- Our own -->
 		<link rel="stylesheet" type="text/css" href="template/css/presentation.css" />
@@ -62,7 +54,7 @@ $q 			= Kit::GetParam('q', _REQUEST, _WORD);
 			if ($p == 'layout')
 			{
 				?>
-					<script type="text/javascript" src="lib/fckeditor/fckeditor.js"></script>
+					<script type="text/javascript" src="3rdparty/fckeditor/fckeditor.js"></script>
 					<script type="text/javascript" src="lib/js/text-render.js"></script>
 				<?php
 			}
@@ -79,7 +71,7 @@ $q 			= Kit::GetParam('q', _REQUEST, _WORD);
 	echo ">";
 ?>
 
-<div class="ui-dialog ui-draggable" style="display:block;overflow: hidden; position: absolute; width: 200px; height: 100px; top: 253.5px; left: 388px; display: none; z-index: 5000;">
+<div class="ui-dialog ui-draggable" style="display:block;overflow: hidden; position: absolute; width: 200px; height: 100px; top: 253.5px; left: 388px; display: none; z-index: 8000;">
 	<div class="ui-dialog-container" style="position: relative;">
 		<div class="ui-dialog-titlebar">
 			<span class="ui-dialog-title">Xibo</span>
@@ -91,7 +83,7 @@ $q 			= Kit::GetParam('q', _REQUEST, _WORD);
 	</div>
 </div>
 
-<div class="ui-dialog ui-draggable" style="display:block;overflow: hidden; position: absolute; width: 300px; height: 150px; top: 0px; left: 0px; display: none; z-index: 5000;">
+<div class="ui-dialog ui-draggable" style="display:block;overflow: hidden; position: absolute; width: 300px; height: 150px; top: 0px; left: 0px; display: none; z-index: 10000;">
 	<div class="ui-dialog-container" style="position: relative;">
 		<div class="ui-dialog-titlebar">
 			<span class="ui-dialog-title">Message</span>
@@ -122,4 +114,4 @@ $q 			= Kit::GetParam('q', _REQUEST, _WORD);
   <div id="content">
 
      <!--The remaining content follows here in the page that included this template file
-      #The footer.php file then closes off any block elements that remain open-->
+      The footer.php file then closes off any block elements that remain open-->

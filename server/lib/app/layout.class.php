@@ -409,7 +409,7 @@ END;
 				<input type="hidden" name="layoutid" value="$layoutid">
 				<p>Are you sure you want to delete $this->name? All media will be unassigned. Any layout specific media such as text/rss will be lost.</p>
 				<input type="submit" value="Yes">
-				<input type="submit" value="No" onclick="$(this).parent().parent().dialogClose();return false; ">
+				<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
 			</form>
 END;
 		}
@@ -422,7 +422,7 @@ END;
 				<p>Sorry, unable to delete $this->name.</p>
 				<p>Retire this layout instead?</p>
 				<input type="submit" value="Yes">
-				<input type="submit" value="No" onclick="$(this).parent().parent().dialogClose();return false; ">
+				<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
 			</form>
 END;
 		}
@@ -741,7 +741,7 @@ END;
 				</td>
 				<td>
 					<input type="submit" value="Save" />
-					<input id="btnCancel" type="button" title="No / Cancel" onclick="$(this).parent().parent().dialogClose();return false; " value="Cancel" />	
+					<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />	
 					$helpButton
 				</td>
 			</tr>
@@ -844,7 +844,7 @@ END;
 					<td></td>
 					<td>
 						<input type="submit" value="Save" />
-						<input id="btnCancel" type="button" title="No / Cancel" onclick="$(this).parent().parent().dialogClose();return false; " value="Cancel" />
+						<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />
 						$helpButton
 					</td>
 				</tr>
@@ -1091,7 +1091,7 @@ FORM;
 			<input type="hidden" name="regionid" value="$regionid">
 			<p>Are you sure you want to remove this region. All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.</p>
 			<input type="submit" value="Yes">
-			<input type="submit" value="No" onclick="$(this).parent().parent().dialogClose();return false; ">
+			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
 END;
 		

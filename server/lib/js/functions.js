@@ -55,7 +55,7 @@ $(document).ready(function() {
 	$('#notes').bgiframe();
 	
 	//setup the dialog
-	$('#div_dialog').dialog({title:"Xibo",width:"500px",height:"240px", draggable:true, resizable:false}).dialogClose().parent().parent().css("z-index","300").bgiframe();
+	$('#div_dialog').dialog({title:"Xibo",width:"500px",height:"240px", draggable:true, resizable:false, bgiframe:true}).dialog("close").parent().parent().css("z-index","300");
 
 	//handle the trigger function (we might want to trigger some javascript on the page load)
 	var trigger = gup('trigger')
@@ -77,6 +77,7 @@ $(document).ready(function() {
 var init_button = function(source, dialogTitle, exec_filter_callback, init_callback) {
 	
 	//clear down the html before opening
+	$('#div_dialog').dialog("close");
 	$('#div_dialog').html("");
 	
 	//do any changes to the dialog form here
@@ -121,7 +122,7 @@ function exec_filter(filter, outputDiv) {
 				});
 				$('#div_dialog').parent().parent().width("450px").height("320px");
 				
-				$('#div_dialog').dialogOpen();
+				$('#div_dialog').dialog("open");
 				
 				$('#username','#div_dialog').focus();
 				
@@ -199,7 +200,7 @@ var load_form = function(url, div, callback, onSuccess) {
 					eval(onSuccess)(name);
 				}
 				
-				$('#div_dialog').dialogOpen();
+				$('#div_dialog').dialog("open");
 				
 				var index = 0;
 				
@@ -226,7 +227,7 @@ var load_form = function(url, div, callback, onSuccess) {
 				});
 				$('#div_dialog').parent().parent().width("450px").height("320px");
 				
-				$('#div_dialog').dialogOpen();
+				$('#div_dialog').dialog("open");
 				
 				$('#username','#div_dialog').focus();
 			}
@@ -251,7 +252,7 @@ ajax_submit_form  = function(form, parentDialog, callback) {
 			
 			if (response[0] == '0') {
 				//success
-				$(parentDialog).dialogClose();
+				$(parentDialog).dialog("close");
 				
 				if (callback != "" && callback != undefined) {
 					eval(callback)(name);
@@ -266,7 +267,7 @@ ajax_submit_form  = function(form, parentDialog, callback) {
 			else if (response[0] == '2') { //login
 				SystemMessage("You need to login");
 				//success
-				$(parentDialog).dialogClose();
+				$(parentDialog).dialog("close");
 			}
 			else if (response[0] == '3') { //redirect
 				window.location = response[1];
@@ -318,7 +319,7 @@ function grid_form(source, dialogTitle, exec_filter_callback,filter,output,width
 	$('#div_dialog').parent().parent().width(width+"px").height(height+"px");
 	
 	//clear down the html before opening
-	$('#div_dialog').html("");
+	$('#div_dialog').html("").dialog("close");
 	
 	//do any changes to the dialog form here
 	$('#div_dialog').parent().children().each(function(){
@@ -340,6 +341,8 @@ function grid_form(source, dialogTitle, exec_filter_callback,filter,output,width
 		//exec the filter on start
 		exec_filter(filter,output);
 		
+		$('#div_dialog').dialog("open");
+		
 		return false;
 	});
 	
@@ -358,7 +361,7 @@ ajax_submit_link  = function(link, callback) {
 			
 			if (response[0] == '0') {
 				//success
-				$('#div_dialog').dialogClose();
+				$('#div_dialog').dialog("close");
 				
 				if (callback != "" && callback != undefined) {
 					eval(callback)(name);
@@ -373,7 +376,7 @@ ajax_submit_link  = function(link, callback) {
 			else if (response[0] == '2') { //login
 				SystemMessage("You need to login");
 				//success
-				$('#div_dialog').dialogClose();
+				$('#div_dialog').dialog("close");
 			}
 			else if (response[0] == '3') { //redirect
 				window.location = response[1];

@@ -224,7 +224,7 @@ END;
 			<input type="hidden" name="userid" value="userid" />
 			<p>Are you sure you want to logout this user?</p>
 			<input type="submit" value="Yes">
-			<input type="submit" value="No" onclick="$(this).parent().parent().dialogClose();return false; ">
+			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
 END;
 		$arh->decode_response(true, $form);

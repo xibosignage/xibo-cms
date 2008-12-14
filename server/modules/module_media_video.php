@@ -436,7 +436,7 @@ FORM;
 			<input type="hidden" name="regionid" value="$regionid">
 			<p>'$this->name' <br />Are you sure you want to: $deleteOptions ?</p>
 			<input id="btnSave" type="submit" value="Yes"  />
-			<input id="btnCancel" type="button" title="No / Cancel" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" onclick="$(this).parent().parent().dialogClose();return false; " value="No" />
+			<input id="btnCancel" type="button" title="No / Cancel" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" onclick="$('#div_dialog').dialog('close');return false; " value="No" />
 			<input type="button" onclick="window.open('$this->help_link')" value="Help" />
 		</form>
 END;

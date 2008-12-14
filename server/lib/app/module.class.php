@@ -233,7 +233,7 @@ class moduleDAO
 		
 		//Optional parameters
 		if (isset($_POST['layoutid'])) $layoutid = Kit::GetParam('layoutid', _POST, _INT);
-		if (isset($_POST['layoutid'])) $regionid = Kit::GetParam('regionid', _POST, _INT);
+		if (isset($_POST['regionid'])) $regionid = Kit::GetParam('regionid', _POST, _STRING);
 		
 		if (!$this->module->EditMedia())
 		{
@@ -263,7 +263,7 @@ class moduleDAO
 		
 		//Optional parameters
 		if (isset($_POST['layoutid'])) $layoutid = Kit::GetParam('layoutid', _POST, _INT);
-		if (isset($_POST['layoutid'])) $regionid = Kit::GetParam('regionid', _POST, _INT);
+		if (isset($_POST['regionid'])) $regionid = Kit::GetParam('regionid', _POST, _STRING);
 		
 		if (!$this->module->DeleteMedia())
 		{

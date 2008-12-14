@@ -286,7 +286,7 @@ SQL;
 					<td></td>
 					<td>
 						<input type='submit' value="Save" / >
-						<input id="btnCancel" type="button" title="No / Cancel" onclick="$(this).parent().parent().dialogClose();return false; " value="Cancel" />	
+						<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />	
 						$helpButton
 					</td>
 				</tr>
