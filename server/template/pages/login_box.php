@@ -28,7 +28,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<link rel="stylesheet" type="text/css" href="template/css/login_box.css" />
 	
 	<link rel="shortcut icon" href="img/favicon.ico" />
-	<script type="text/javascript" src="lib/js/jquery/jquery.pack.js"></script>
+	<script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
 	
 	<script type="text/javascript">
 		$(document).ready(function(){

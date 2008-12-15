@@ -623,7 +623,7 @@ END;
 		$complete_page = <<<HTML
 		<html>
 			<head>
-				<script type="text/javascript" src="lib/js/jquery/jquery.pack.js"></script>
+				<script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
 				<script type="text/javascript">
 					
 					var fileId = '$fileId';

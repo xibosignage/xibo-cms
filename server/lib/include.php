@@ -20,9 +20,9 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-error_reporting(E_ALL);
-$g_log_to_audit = false;
-ini_set('display_errors',1);
+// No errors reported until we read the settings from the DB
+error_reporting(0);
+ini_set('display_errors', 0);
 ini_set('gd.jpeg_ignore_warning', 1);
 
 // Required Library Files
@@ -60,10 +60,10 @@ if (!file_exists("settings.php"))
 }
 require_once("config/config.class.php");
 
-//parse and init the settings.php
+// parse and init the settings.php
 Config::Load();
 
-//create a database class instance
+// create a database class instance
 require_once("config/db_config.php");
 
 $db = new database();
@@ -76,6 +76,7 @@ date_default_timezone_set(Config::GetSetting($db, "defaultTimezone"));
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));
 
+// Define the VERSION
 Config::Version($db);
 
 // Debugging?
@@ -83,21 +84,17 @@ if(Config::GetSetting($db,"debug")=="On")
 {
 	error_reporting(E_ALL);
 }
-else 
-{
-	error_reporting(0);
-}
 
-// Page variable set?
+// Page variable set? Otherwise default to index
 $page = Kit::GetParam('p', _REQUEST, _WORD, 'index');
 
 // Create login control system
-$module = Config::GetSetting($db,"userModule");
+$module = Config::GetSetting($db, "userModule");
 
 require_once("modules/$module");
 $user = new user();
 
-/**
+/*
  * Require a class for the page we have loaded
  * Unless it has already been loaded for us (i.e a user page)
  */
@@ -108,9 +105,7 @@ if(!class_exists($pageObject))
 	require("lib/app/$page.class.php");
 }
 
-/**
- * Session handling to be taken care of by the DB connection
- */
+// Session handling
 include_once("lib/session.class.php");
 $session = new Session($db);
 
@@ -160,20 +155,20 @@ if ($functionstring != '')
     	Kit::Redirect($reloadLocation);
     }
 }
-/* If its not then we want to display the page */
+// Display a page instead
 else 
 {
-	//create a user object (will try to login)
-	//we must do this after executing any functions otherwise we will be logged
-	//out again before exec any log in function calls
+	// create a user object (will try to login)
+	// we must do this after executing any functions otherwise we will be logged
+	// out again before exec any log in function calls
 	$user->attempt_login(false); //we expect AJAX to be false here
 	
-	//permissions
+	// permissions
 	$g_Security = groupPageSecurity($user->getGroupFromID($userid, true));
 	
 	pageSecurityCheck($page);
 	
-	//output the page
+	// output the page
 	$pageObject = new $pageObject($db);
 
 	include("template/header.php");
