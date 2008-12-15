@@ -196,7 +196,7 @@ END;
 		$SQL .= "WHERE   1            = 1  AND isEdited = 0 ";
 		if ($mediatype != "all") 
 		{
-			$SQL .= sprintf(" AND media.type='%s'", $db->escape_string($mediatype));
+			$SQL .= sprintf(" AND media.type = '%s'", $db->escape_string($mediatype));
 		}
 		if ($name != "") 
 		{
@@ -247,14 +247,14 @@ END;
 		
 	    while ($aRow = $db->get_row($results)) 
 		{
-	    	$mediaid 		= $aRow[0];
-	    	$media 			= $aRow[1];
-	    	$mediatype 		= $aRow[2];
-	    	$length 		= sec2hms($aRow[3]);
-	    	$ownerid 		= $aRow[4];
+	    	$mediaid 		= Kit::ValidateParam($aRow[0], _INT);
+			$media 			= Kit::ValidateParam($aRow[1], _STRING);
+			$mediatype 		= Kit::ValidateParam($aRow[2], _WORD);
+			$length 		= sec2hms(Kit::ValidateParam($aRow[3], _DOUBLE));
+			$ownerid 		= Kit::ValidateParam($aRow[4], _INT);
 			
-			$permission 	= $aRow[5];
-			$permissionid 	= $aRow[6];
+			$permission 	= Kit::ValidateParam($aRow[5], _STRING);
+			$permissionid 	= Kit::ValidateParam($aRow[6], _INT);
 			
 			//get the username from the userID using the user module
 			$username 		= $user->getNameFromID($ownerid);
@@ -292,12 +292,6 @@ END;
 					
 			   		$buttons = "<a class='positive' href='index.php?p=module&mod=$mediatype&q=EditForm&mediaid=$mediaid' onclick=\"return init_button(this,'Edit Content',exec_filter_callback,set_form_size(450,320))\"><span>Edit</span></a>";					
 	    			$buttons .= "<a class='negative' href='index.php?p=module&mod=$mediatype&q=DeleteForm&mediaid=$mediaid' onclick=\"return init_button(this,'Delete Content',exec_filter_callback,media_form_call(350,160))\"><span>Delete</span></a>";
-		    		
-					if ($mediatype == 'channel' || $mediatype == 'chart') 
-					{
-						//overwrite the edit link with "No actions" and display no other links
-						$buttons = "<a class='neutral' href='index.php?p=$mediatype' title='Media Admin'><span>$mediatype Admin</span></a>";
-					}
 		    	}
 		    	else 
 				{
@@ -380,14 +374,6 @@ END;
 			case 'view':
 				require("template/pages/content_view.php");
 				break;
-				
-			case 'scanner':
-				require("template/pages/content_scanner.php");
-				break;
-				
-			case 'scanner_results':
-				require("template/pages/content_scanner_results.php");
-				break;
 					
 			default:
 				break;
@@ -408,8 +394,8 @@ END;
 		$arh = new AjaxRequest();
 		
 		//Input vars
-		$layoutid = $_REQUEST['layoutid'];
-		$regionid = $_REQUEST['regionid'];
+		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
+		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
 					
 		$form = <<<END
 		<form id="library_filter_form" onsubmit="false">
@@ -430,7 +416,7 @@ END;
 		$sql .= "FROM media WHERE 1=1 ";
 		$sql .= "  GROUP BY type ";
 		
-		$type_list = dropdownlist($sql,"type",$mediatype);
+		$type_list = dropdownlist($sql, "type", $mediatype);
 		
 		$form .= <<<END
 				<tr>
@@ -470,18 +456,16 @@ END;
 	 */
 	function LibraryAssignView() 
 	{
-		$db =& $this->db;
-		$userid = $_SESSION['userid'];
+		$db 	=& $this->db;
+		$userid = Kit::GetParam('userid', _SESSION, _INT);
 		
 		global $user;
 		
 		//Input vars
-		$layoutid = $_REQUEST['layoutid'];
-		$regionid = $_REQUEST['regionid'];
-
-		//Filter Input Vars
-		$mediatype 	= clean_input($_POST['type'], VAR_FOR_SQL, $db);
-		$name 		= clean_input($_POST['name'], VAR_FOR_SQL, $db);
+		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT);
+		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
+		$mediatype 	= Kit::GetParam('type', _POST, _STRING, 'all');
+		$name 		= Kit::GetParam('name', _POST, _STRING, 'all');
 		
 		setSession('content', 'mediatype', $mediatype);
 		setSession('content', 'name', $name);
@@ -498,19 +482,19 @@ END;
 		$SQL .= "FROM    media ";
 		$SQL .= "INNER JOIN permission ON permission.permissionID = media.permissionID ";
 		$SQL .= "WHERE   retired = 0 AND isEdited = 0 ";
-		if($mediatype!="all") 
+		if($mediatype != "all") 
 		{
-			$SQL.= " AND media.type = '".$mediatype."'"; //id of the remaining items
+			$SQL.= sprintf(" AND media.type = '%s'", $mediatype); //id of the remaining items
 		}
-		if ($name!="all") 
+		if ($name != "all") 
 		{
-			$SQL.= " AND media.name LIKE '%$name%'";
+			$SQL.= " AND media.name LIKE '%" . sprintf('%s', $name) . "%'";
 		}
 		
 		if(!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error("Cant get content list",E_USER_ERROR);			
+			trigger_error("Cant get content list", E_USER_ERROR);			
 		}
 		
 		$output = <<<END
@@ -535,14 +519,14 @@ END;
 		{
 			$count++;
 
-			$mediaid 		= $aRow[0];
-			$media 			= $aRow[1];
-			$mediatype 		= $aRow[2];
-			$length 		= sec2hms($aRow[3]);
-			$ownerid 		= $aRow[4];
+			$mediaid 		= Kit::ValidateParam($aRow[0], _INT);
+			$media 			= Kit::ValidateParam($aRow[1], _STRING);
+			$mediatype 		= Kit::ValidateParam($aRow[2], _WORD);
+			$length 		= sec2hms(Kit::ValidateParam($aRow[3], _DOUBLE));
+			$ownerid 		= Kit::ValidateParam($aRow[4], _INT);
 			
-			$permission 	= $aRow[5];
-			$permissionid 	= $aRow[6];
+			$permission 	= Kit::ValidateParam($aRow[5], _STRING);
+			$permissionid 	= Kit::ValidateParam($aRow[6], _INT);
 			
 			//get the username from the userID using the user module
 			$username 		= $user->getNameFromID($ownerid);

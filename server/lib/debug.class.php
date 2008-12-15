@@ -91,7 +91,7 @@ class Debug
 		else //Debug OFF (i.e. production)
 		{
 			//Log everything but never display
-			Debug::LogEntry("error", $err);
+			Debug::LogEntry($db, "error", $err);
 			
 			if (in_array($errno, $user_errors_inline)) 
 			{
@@ -102,7 +102,8 @@ class Debug
 		return true;
 	}
 	
-	function MailError($errmsg, $err) {
+	function MailError($errmsg, $err) 
+	{
 		global $db;
 		
 		return true;
