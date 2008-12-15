@@ -332,16 +332,16 @@ END;
 		//ajax request handler
 		$arh = new AjaxRequest();
 		
-		$image_button = ModuleButton("image", "index.php?p=module&mod=image&q=AddForm&layoutid=$this->layoutid&regionid=$regionid", "Add Image",
+		$image_button = ModuleButton("image", "index.php?p=module&mod=image&q=AddForm", "Add Image",
 										"return init_button(this,'Add Image',exec_filter_callback,set_form_size(450,320))", "img/forms/image.gif", "Add Image");
 		
-		$powerpoint_button = ModuleButton("powerpoint", "index.php?p=module&mod=powerpoint&q=AddForm&layoutid=$this->layoutid&regionid=$regionid", "Add PowerPoint",
+		$powerpoint_button = ModuleButton("powerpoint", "index.php?p=module&mod=powerpoint&q=AddForm", "Add PowerPoint",
 										"return init_button(this,'Add Powerpoint',exec_filter_callback,set_form_size(450,320))", "img/forms/powerpoint.gif", "Add PowerPoint");
 		
-		$flash_button = ModuleButton("flash", "index.php?p=module&mod=flash&q=AddForm&layoutid=$this->layoutid&regionid=$regionid", "Add Flash",
+		$flash_button = ModuleButton("flash", "index.php?p=module&mod=flash&q=AddForm", "Add Flash",
 										"return init_button(this,'Add Flash',exec_filter_callback,set_form_size(450,320))", "img/forms/flash.gif", "Add Flash");
 		
-		$video_button = ModuleButton("video" ,"index.php?p=module&mod=video&q=AddForm&layoutid=$this->layoutid&regionid=$regionid", "Add Video",
+		$video_button = ModuleButton("video" ,"index.php?p=module&mod=video&q=AddForm", "Add Video",
 										"return init_button(this,'Add Video',exec_filter_callback,set_form_size(450,320))", "img/forms/video.gif", "Add Video");
 		
 		$options = <<<END

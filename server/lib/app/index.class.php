@@ -44,8 +44,6 @@ class indexDAO
 	{
 		global $user;
 		global $session;
-		$referingpage = ""; //init to ""
-		
 		$db =& $this->db;
 
 		//this page must be called from a form therefore we expect POST variables		
@@ -53,7 +51,7 @@ class indexDAO
 		$password 		= Kit::GetParam('password', _POST, _PASSWORD);
 		$password		= md5($password);
 		
-		$referingpage 	= Kit::GetParam('referingPage', _GET, _WORD);
+		$referingpage 	= Kit::GetParam('referingPage', _GET, _WORD, 'index');
 		
 		if (isset($_REQUEST['ajax'])) 
 		{
@@ -98,12 +96,14 @@ class indexDAO
 			$session->set_user(session_id(), $userid, 'user');
 			
 			//if the referingpage is blank, then use the users homepage
-			if ($referingpage == "") $referingpage = $user->homepage($userid);
+			if ($referingpage == 'index') $referingpage = $user->homepage($userid);
 		}
 		
-		if ($referingpage == '') 
+		Debug::LogEntry($db, 'audit', 'Login with refering page: ' . $referingpage);
+		
+		if ($referingpage == 'index') 
 		{
-			header("Location:index.php");
+			header("Location:index.php?p=dashboard");
 		}
 		else 
 		{
