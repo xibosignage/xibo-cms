@@ -206,7 +206,8 @@ FORM;
 		/*
 			Firstly we want to individually get the user module
 		*/
-		if($cat=='user') {
+		if($cat=='user') 
+		{
 		
 			$SQL = "";
 			$SQL.= "SELECT settingid, setting, value, helptext FROM setting WHERE setting = 'userModule'";
@@ -217,7 +218,7 @@ FORM;
 			$settingid 	= Kit::ValidateParam($row[0], _INT);
 			$setting 	= Kit::ValidateParam($row[1], _STRING);
 			$value 		= Kit::ValidateParam($row[2], _STRING);
-			$helptext	= Kit::ValidateParam($row[3], _STRING);
+			$helptext	= Kit::ValidateParam($row[3], _HTMLSTRING);
 			
 			$output .= <<<END
 			<h5>$setting</h5>
@@ -259,7 +260,7 @@ END;
 			$settingid 	= Kit::ValidateParam($row[0], _INT);
 			$setting 	= Kit::ValidateParam($row[1], _STRING);
 			$value 		= Kit::ValidateParam($row[2], _STRING);
-			$helptext	= Kit::ValidateParam($row[3], _STRING);
+			$helptext	= Kit::ValidateParam($row[3], _HTMLSTRING);
 
 			$output .=  <<<END
 			<h5>$setting</h5>
@@ -287,7 +288,7 @@ END;
 			$settingid 	= Kit::ValidateParam($row[0], _INT);
 			$setting 	= Kit::ValidateParam($row[1], _STRING);
 			$value 		= Kit::ValidateParam($row[2], _STRING);
-			$helptext	= Kit::ValidateParam($row[3], _STRING);
+			$helptext	= Kit::ValidateParam($row[3], _HTMLSTRING);
 			$options	= Kit::ValidateParam($row[4], _STRING);
 
 			$select = "";
