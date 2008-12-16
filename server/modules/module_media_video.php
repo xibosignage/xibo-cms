@@ -18,8 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-class media_video {
-	
+class media_video 
+{
 	private $db;
 	
 	//Media information
@@ -152,20 +152,21 @@ XML;
 		// Set the Session / Security information
 		$sessionId 		= session_id();
 		$securityToken 	= CreateFormToken();
-		
 		$session->setSecurityToken($securityToken);
 		
 		//Parameters
-		$layoutid 	= GetParam("layoutid", _REQUEST, _INT);
-		$regionid 	= GetParam("regionid", _REQUEST, _STRING);
+		$layoutid 	= Kit::GetParam("layoutid", _REQUEST, _INT);
+		$regionid 	= Kit::GetParam("regionid", _REQUEST, _STRING);
 		
 		//Get the default value for the shared list
 		$default = Config::GetSetting($db,"defaultMedia");
 
-		if($default=="private") {
+		if($default=="private") 
+		{
 			$permissionid = 1;
 		}
-		else {
+		else 
+		{
 			$permissionid = 0;
 		}
 		
@@ -173,7 +174,7 @@ XML;
 		$shared_list = dropdownlist("SELECT permissionID, permission FROM permission", "permissionid", $permissionid);
 		
 		//Save button is different depending on if we are on a region or not
-		if ($regionid != "")
+		if ($regionid != '')
 		{
 			setSession('content','mediatype','video');
 			
@@ -195,7 +196,8 @@ END;
 		
 		$form = <<<FORM
 		<div style="display:none"><iframe name="fileupload" width="1px" height="1px"></iframe></div>
-		<form id="file_upload" method="post" action="index.php?p=content&q=FileUpload" enctype="multipart/form-data" target="fileupload">
+		<div>	
+			<form id="file_upload" method="post" action="index.php?p=content&q=FileUpload" enctype="multipart/form-data" target="fileupload">
 				<input type="hidden" id="PHPSESSID" value="$sessionId" />
 				<input type="hidden" id="SecurityToken" value="$securityToken" />
 				<input type="hidden" name="MAX_FILE_SIZE" value="$this->maxFileSizeBytes" />
@@ -208,6 +210,10 @@ END;
 					</tr>
 				</table>
 			</form>
+		</div>
+		<div id="uploadProgress" style="display:none">
+			<img src="img/loading.gif"><span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
+		</div>
 		<form class="dialog_file_form" method="post" action="index.php?p=module&mod=video&q=AddMedia" enctype="multipart/form-data">
 			<input type="hidden" name="MAX_FILE_SIZE" value="1048576000">
 			<input type="hidden" name="layoutid" value="$layoutid">
@@ -261,10 +267,10 @@ FORM;
 		$session->setSecurityToken($securityToken);
 		
 		//Parameters
-		$layoutid 	= GetParam("layoutid", _REQUEST, _INT);
-		$regionid 	= GetParam("regionid", _REQUEST, _STRING);
-		$mediaid  	= GetParam("mediaid", _REQUEST, _STRING);
-		$lkid  		= GetParam("lkid", _REQUEST, _INT);
+		$layoutid 	= Kit::GetParam("layoutid", _REQUEST, _INT);
+		$regionid 	= Kit::GetParam("regionid", _REQUEST, _STRING);
+		$mediaid  	= Kit::GetParam("mediaid", _REQUEST, _STRING);
+		$lkid  		= Kit::GetParam("lkid", _REQUEST, _INT);
 		
 		//Set the mediaId and get the info from the Db
 		$this->SetMediaId($mediaid);
@@ -362,10 +368,10 @@ FORM;
 		$arh = new AjaxRequest();
 		
 		//Parameters
-		$layoutid 	= GetParam("layoutid", _REQUEST, _INT);
-		$regionid 	= GetParam("regionid", _REQUEST, _STRING);
-		$mediaid  	= GetParam("mediaid", _REQUEST, _STRING);
-		$lkid  		= GetParam("lkid", _REQUEST, _INT);
+		$layoutid 	= Kit::GetParam("layoutid", _REQUEST, _INT);
+		$regionid 	= Kit::GetParam("regionid", _REQUEST, _STRING);
+		$mediaid  	= Kit::GetParam("mediaid", _REQUEST, _STRING);
+		$lkid  		= Kit::GetParam("lkid", _REQUEST, _INT);
 		
 		//Set the mediaId and get the info from the Db
 		$this->SetMediaId($mediaid);

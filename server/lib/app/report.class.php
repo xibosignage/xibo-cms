@@ -341,7 +341,7 @@ END;
 		$SQL .= sprintf("AND logdate <= '%s' ", $todt);
 		if($page != "All") 
 		{
-			$SQL .= spr	("AND page = '%s' ", $page);
+			$SQL .= sprintf("AND page = '%s' ", $page);
 		}
 		if($function != "All") 
 		{
