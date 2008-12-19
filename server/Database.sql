@@ -614,3 +614,80 @@ ALTER TABLE `template`
 ALTER TABLE `user`
   ADD CONSTRAINT `user_ibfk_2` FOREIGN KEY (`usertypeid`) REFERENCES `usertype` (`usertypeid`),
   ADD CONSTRAINT `user_ibfk_3` FOREIGN KEY (`groupID`) REFERENCES `group` (`groupID`);
+  
+  
+  
+-- AS of R22
+
+CREATE TABLE IF NOT EXISTS `lkmenuitemgroup` (
+  `LkMenuItemGroupID` int(11) NOT NULL auto_increment,
+  `GroupID` int(11) NOT NULL,
+  `MenuItemID` int(11) NOT NULL,
+  PRIMARY KEY  (`LkMenuItemGroupID`),
+  KEY `GroupID` (`GroupID`),
+  KEY `MenuItemID` (`MenuItemID`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7 ;
+
+INSERT INTO `lkmenuitemgroup` (`LkMenuItemGroupID`, `GroupID`, `MenuItemID`) VALUES
+(1, 1, 1),
+(2, 1, 2),
+(3, 1, 3),
+(4, 1, 14),
+(5, 1, 15),
+(6, 1, 16);
+
+CREATE TABLE IF NOT EXISTS `menu` (
+  `MenuID` smallint(6) NOT NULL auto_increment,
+  `Menu` varchar(50) NOT NULL,
+  PRIMARY KEY  (`MenuID`),
+  UNIQUE KEY `Menu` (`Menu`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='A Menu (or collection of links)' AUTO_INCREMENT=5 ;
+
+INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
+(2, 'Dashboard'),
+(4, 'Management'),
+(3, 'Region Manager'),
+(1, 'Top Nav');
+
+CREATE TABLE IF NOT EXISTS `menuitem` (
+  `MenuItemID` int(11) NOT NULL auto_increment,
+  `MenuID` smallint(6) NOT NULL,
+  `PageID` int(11) NOT NULL,
+  `Args` varchar(254) default NULL,
+  `Text` varchar(20) NOT NULL,
+  `Class` varchar(50) default NULL,
+  `Img` varchar(254) default NULL,
+  `Sequence` smallint(6) NOT NULL default '1',
+  PRIMARY KEY  (`MenuItemID`),
+  KEY `PageID` (`PageID`),
+  KEY `MenuID` (`MenuID`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=22 ;
+
+INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`) VALUES
+(1, 1, 2, NULL, 'Schedule', NULL, NULL, 1),
+(2, 1, 5, NULL, 'Layout', NULL, NULL, 2),
+(3, 1, 7, NULL, 'Library', NULL, NULL, 3),
+(4, 1, 17, NULL, 'Management', NULL, NULL, 4),
+(7, 4, 11, NULL, 'Displays', NULL, NULL, 1),
+(8, 4, 15, NULL, 'Groups', NULL, NULL, 2),
+(9, 4, 17, NULL, 'Users', NULL, NULL, 3),
+(10, 4, 16, 'sp=log', 'Log', NULL, NULL, 4),
+(11, 4, 18, NULL, 'License', NULL, NULL, 5),
+(12, 4, 16, 'sp=sessions', 'Sessions', NULL, NULL, 6),
+(13, 4, 14, NULL, 'Settings', NULL, NULL, 7),
+(14, 2, 2, 'sp=month', 'Schedule', 'schedule_button', 'img/dashboard/scheduleview.png', 1),
+(15, 2, 5, NULL, 'Layouts', 'playlist_button', 'img/dashboard/presentations.png', 2),
+(16, 2, 7, NULL, 'Library', 'content_button', 'img/dashboard/content.png', 3),
+(17, 2, 25, NULL, 'Templates', 'layout_button', 'img/dashboard/layouts.png', 4),
+(18, 2, 17, NULL, 'Users', 'user_button', 'img/dashboard/users.png', 5),
+(19, 2, 14, NULL, 'Settings', 'settings_button', 'img/dashboard/settings.png', 6),
+(20, 2, 18, NULL, 'License', 'license_button', 'img/dashboard/license.png', 7),
+(21, 3, 5, 'q=RegionOptions&[[layoutid]]&[[regionid]]', 'Edit your Display', 'playlist_button', 'img/dashboard/edit_content.png', 1);
+
+ALTER TABLE `lkmenuitemgroup`
+  ADD CONSTRAINT `lkmenuitemgroup_ibfk_1` FOREIGN KEY (`GroupID`) REFERENCES `group` (`groupID`),
+  ADD CONSTRAINT `lkmenuitemgroup_ibfk_2` FOREIGN KEY (`MenuItemID`) REFERENCES `menuitem` (`MenuItemID`);
+
+ALTER TABLE `menuitem`
+  ADD CONSTRAINT `menuitem_ibfk_1` FOREIGN KEY (`MenuID`) REFERENCES `menu` (`MenuID`),
+  ADD CONSTRAINT `menuitem_ibfk_2` FOREIGN KEY (`PageID`) REFERENCES `pages` (`pageID`);
