@@ -30,25 +30,33 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 	<div id="form_body">
 			<div id="dashbuttons">
-				<?php button('schedule', 'month', 'Schedule a Playlist', "<img class='dash_button' src='img/dashboard/scheduleview.png'><span class='dash_text'>Schedule</span>", '', 'schedule_button', "dashicons") ?>
-
-				<?php button('layout', 'view', 'Layout Manager', "<img class='dash_button' src='img/dashboard/presentations.png'><span class='dash_text'>Layouts</span>", '', 'playlist_button', "dashicons") ?>
-
-				<?php button('content', 'view', 'View Content Library', "<img class='dash_button' src='img/dashboard/content.png'><span class='dash_text'>Library</span>", '', 'content_button', "dashicons") ?>
-
-				<?php /*if (Config::GetSetting($db,"openflashchart_path")!="") {
-					button('chart', '', 'View Graphs', "<img class='dash_button' src='img/dashboard/graph.png'><span class='dash_text'>Charts</span>", '', 'chart_button', "dashicons"); } ?>
-
-				<?php button('dataset', '', 'View Dataset', "<img class='dash_button' src='img/dashboard/datasets.png'><span class='dash_text'>Datasets</span>", '', 'dataset_button', "dashicons") */?>
-
-				<?php button('template', 'view', 'View templates', "<img class='dash_button' src='img/dashboard/layouts.png'><span class='dash_text'>Templates</span>", '', 'layout_button', "dashicons") ?>
-
-				<?php button('user', '', 'User', "<img class='dash_button' src='img/dashboard/users.png'><span class='dash_text'>Users</span>", '', 'user_button', "dashicons") ?>
-
-				<?php button('admin', '', 'settings', "<img class='dash_button' src='img/dashboard/settings.png'><span class='dash_text'>Settings</span>", '', 'settings_button', "dashicons") ?>
-
-				<?php button('license', '', 'License', "<img class='dash_button' src='img/dashboard/license.png'><span class='dash_text'>License</span>", '', 'license_button', "dashicons") ?>
-				
+				<?php
+					// Put a menu here
+					if (!$menu = new MenuManager($db, 'Dashboard')) trigger_error($menu->message, E_USER_ERROR);
+					
+					while ($menuItem = $menu->GetNextMenuItem())
+					{
+						$uri 	= Kit::ValidateParam($menuItem['name'], _WORD);
+						$args 	= Kit::ValidateParam($menuItem['Args'], _STRING);
+						$class 	= Kit::ValidateParam($menuItem['Class'], _WORD);
+						$title 	= Kit::ValidateParam($menuItem['Text'], _STRING);
+						$img 	= Kit::ValidateParam($menuItem['Img'], _STRING);
+						
+						// Extra style for the current one
+						if ($p == $uri) $class = 'current ' . $class;
+						
+						$href = 'index.php?p=' . $uri . '&' . $args;
+						
+						$out = <<<END
+							<div class="dashicons">
+								<a id="$class" alt="$title" href="$href">
+								<img class="dash_button" src="$img"/>
+								<span class="dash_text">$title</span></a>
+							</div>
+END;
+						echo $out;
+					}
+				?>
 				<div class="dashicons">
 					<a id="help_button" target="_blank" alt="The Manual" href="http://www.xibo.org.uk/manual/index.php?p=content/dashboard/overview">
 					<img class="dash_button" src="img/dashboard/help.png"/>

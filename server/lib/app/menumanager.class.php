@@ -55,7 +55,8 @@ class MenuManager
 		$SQL .= "SELECT   pages.name     , ";
 		$SQL .= "         menuitem.Args , ";
 		$SQL .= "         menuitem.Text , ";
-		$SQL .= "         menuitem.Class ";
+		$SQL .= "         menuitem.Class, ";
+		$SQL .= "         menuitem.Img ";
 		$SQL .= "FROM     menuitem ";
 		$SQL .= "         INNER JOIN menu ";
 		$SQL .= "         ON       menuitem.MenuID = menu.MenuID ";

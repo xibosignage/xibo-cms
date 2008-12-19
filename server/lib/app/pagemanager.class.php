@@ -158,6 +158,8 @@ class PageManager
 			{
 				trigger_error($this->p . ' does not support the function: ' . $this->q, E_USER_ERROR);
 			}
+			
+			if ($this->ajax) exit;
 		
 		    // once we have dealt with it, reload the page      	
 		    Kit::Redirect($reloadLocation);

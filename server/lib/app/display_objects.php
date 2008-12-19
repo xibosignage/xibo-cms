@@ -23,45 +23,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 DEFINE('HELP_BASE', "http://www.xibo.org.uk/manual/");
 
 /**
- * Outputs a button
- *
- */
-function button($page, $sp = "", $alt, $txt, $class = "", $id = "", $container = "", $onclick = "") 
-{
-	global $g_Security; //the page/group security settings
-	
-	if ($class!="") $class = "class='$class'";
-	if ($id!="") $id = "id='$id'";
-	if ($sp!="") $sp = "&sp=$sp";
-	
-	//we need to intercept the page and work out if the user is allowed to see it or not
-	if (strpos($page,'&') === false) {
-		if (!in_array($page, $g_Security)) 
-		{
-			return;
-		}		
-	}
-	else {
-		if (!in_array(substr($page, 0, strpos($page,'&')), $g_Security)) 
-		{
-			return;
-		}
-	}
-	
-	$button_html = <<<END
-	<a $class $id href="index.php?p=$page$sp" alt="$alt" onclick="$onclick">$txt</a>	
-END;
-
-	if ($container != "") {
-		$button_html = "<div class=\"$container\">$button_html</div>";
-	}
-
-	echo $button_html;
-	
-	return true;
-}
-
-/**
  * 
  * @return 
  * @param $location Object
