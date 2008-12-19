@@ -201,7 +201,7 @@ class scheduleDAO {
 		switch ($this->sub_page) {
 				
 			case 'month':
-				include("lib/app/display.class.php");
+				include("lib/pages/display.class.php");
 				$displayDAO = new displayDAO($db);
 				
 				include ("template/pages/schedule_month_view.php");
@@ -1522,7 +1522,7 @@ END;
 		global $user;
 		
 		//validate displays so we get a realistic view of the table
-		include_once("lib/app/display.class.php");
+		include_once("lib/pages/display.class.php");
 		$display = new displayDAO($db);
 		$display->validateDisplays();
 		

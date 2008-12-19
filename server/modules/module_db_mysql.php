@@ -88,6 +88,12 @@ class database
 	{
         return mysql_fetch_row($result);
     }
+	
+	function get_assoc_row($result) 
+	{
+        return mysql_fetch_assoc($result);
+    }
+
 
     //gets the number of rows
     function num_rows($result) 

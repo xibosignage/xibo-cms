@@ -43,6 +43,8 @@
 			{
 				$this->printLoginBox($referingPage);
 			}
+			
+			return false;
 		}
 		else 
 		{
@@ -51,6 +53,8 @@
 			$SQL = sprintf("UPDATE user SET lastaccessed = '" . date("Y-m-d H:i:s") . "', loggedin = 1 WHERE userid = %d ", $userid);
 			
 			$results = $db->query($SQL) or trigger_error("Can not write last accessed info.", E_USER_ERROR);
+			
+			return true;
 		}
 	}
 
@@ -844,12 +848,13 @@ END;
 			$action = "index.php?p=user&q=EditUser";
 			
 			//split the homepage into its component parts (if it needs to be)
-			if (strpos($homepage,'&') !== false) {
-				$homepage_page 	= substr($homepage, 0, strpos($homepage,'&'));
+			if (strpos($homepage,'&') !== false) 
+			{
+				$homepage = substr($homepage, 0, strpos($homepage,'&'));
 			}
 		
 			//make the homepage dropdown
-			$homepage_list = listcontent("dashboard|dashboard,mediamanager|mediamanager", "homepage", $homepage_page);
+			$homepage_list = listcontent("dashboard|dashboard,mediamanager|mediamanager", "homepage", $homepage);
 			
 			$homepageOption = <<<END
 			<tr>

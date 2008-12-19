@@ -21,6 +21,33 @@
  defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 
+<div class="ui-dialog ui-draggable" style="display:block;overflow: hidden; position: absolute; width: 200px; height: 100px; top: 253.5px; left: 388px; display: none; z-index: 8000;">
+	<div class="ui-dialog-container" style="position: relative;">
+		<div class="ui-dialog-titlebar">
+			<span class="ui-dialog-title">Xibo</span>
+			<div class="ui-dialog-titlebar-close"></div>
+		</div>
+		<div id="system_working" class="ui-dialog-content">
+			<img src="img/loading.gif"><span style="padding-left:10px">Please Wait ...</span>
+		</div>
+	</div>
+</div>
+
+<div class="ui-dialog ui-draggable" style="display:block;overflow: hidden; position: absolute; width: 300px; height: 150px; top: 0px; left: 0px; display: none; z-index: 10000;">
+	<div class="ui-dialog-container" style="position: relative;">
+		<div class="ui-dialog-titlebar">
+			<span class="ui-dialog-title">Message</span>
+			<div class="ui-dialog-titlebar-close" onclick="$(this).parent().parent().parent().hide('slow')"></div>
+		</div>
+		<div id="system_message" class="ui-dialog-content">
+			<span>Message</span>
+			<p style="align:center; width:100%;"><button onclick="$(this).parent().parent().parent().parent().hide('slow')">OK</button></p>
+		</div>
+	</div>
+</div>
+
+<div id="div_dialog"></div>
+
 </div> <!-- Ends the content div -->
 </div> <!-- Ends contentwrap div -->
 </div> <!-- Ends the container div -->

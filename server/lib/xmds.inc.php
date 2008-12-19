@@ -22,13 +22,15 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
  
 error_reporting(E_ALL);
 ini_set('display_errors',1); //we never want to display errors on the screen
-require_once("lib/app_functions.php");
+
 // Required Library Files
-require_once("lib/debug.class.php");
-require_once("lib/kit.class.php");
+require_once("lib/app/app_functions.php");
+require_once("lib/app/debug.class.php");
+require_once("lib/app/kit.class.php");
 
 require_once("config/db_config.php");
 require_once("config/config.class.php");
+
 
 date_default_timezone_set("Europe/London");
 

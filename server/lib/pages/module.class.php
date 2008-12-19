@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-  
+
 class moduleDAO 
 {
 	private $db;
@@ -36,8 +36,8 @@ class moduleDAO
 		
 		$mod = Kit::GetParam('mod', _REQUEST, _WORD);
 		
-		//If we have the module - create an instance of the module class
-		//This will only be true when we are displaying the Forms
+		// If we have the module - create an instance of the module class
+		// This will only be true when we are displaying the Forms
 		if ($mod != '') 
 		{			
 			$moduleName = 'media_'.$mod;

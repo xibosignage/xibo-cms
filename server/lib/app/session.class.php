@@ -219,6 +219,8 @@ class Session
 	{
 		$db =& $this->db;
 		
+		$_SESSION['pagename'] = $lastpage;
+		
 		$SQL = "UPDATE session SET LastPage = '$lastpage' WHERE session_id = '$key' ";
 		
 		if(!$db->query($SQL)) {

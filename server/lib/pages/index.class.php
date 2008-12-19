@@ -234,9 +234,9 @@ class indexDAO
 	{
 		$db =& $this->db;
 		
-		include("lib/app/schedule.class.php");
+		include("lib/pages/dashboard.class.php");
 		
-		$schedule = new scheduleDAO($db);
+		$schedule = new dashboardDAO($db);
 		
 		$schedule->displayPage();
 		

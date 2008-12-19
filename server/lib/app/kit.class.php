@@ -40,6 +40,26 @@ define('_URI', "uri");
 
 class Kit 
 {
+	// The parameterized factory method
+    public static function ModuleFactory($class)
+    {
+    	if (class_exists($class))
+		{
+			return new $class;
+		}
+		
+		// It doesnt already exist - so lets look in some places to try and find it
+		if (file_exists('modules/' . $class . '.class.php'))
+		{
+			include_once('modules/' . $class . '.class.php');
+		}
+		else 
+		{
+            throw new Exception ('Class not Found.');
+        }
+		
+        return new $class;
+    }
 
 	// Ends the current execution and issues a redirect - should only be called before headers have been sent (i.e. no output)
 	static function Redirect($page, $message = '', $pageIsUrl = false)

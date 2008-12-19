@@ -21,14 +21,23 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 // No errors reported until we read the settings from the DB
-error_reporting(0);
+error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('gd.jpeg_ignore_warning', 1);
 
 // Required Library Files
-require_once("lib/debug.class.php");
-require_once("lib/kit.class.php");
-require_once("lib/app_functions.php");
+require_once("lib/app/debug.class.php");
+require_once("lib/app/kit.class.php");
+require_once("lib/app/pagemanager.class.php");
+require_once("lib/app/menumanager.class.php");
+require_once("lib/app/app_functions.php");
+require_once("lib/modules/module.interface.php");
+require_once("lib/modules/module.class.php");
+require_once("lib/app/session.class.php");
+
+// Required Config Files
+require_once("config/config.class.php");
+require_once("config/db_config.php");
 
 // Sort out Magic Quotes
 if (get_magic_quotes_gpc()) 
@@ -56,16 +65,14 @@ if (get_magic_quotes_gpc())
  */
 if (!file_exists("settings.php")) 
 {
-	show_no_settings();	
+	include("template/pages/no_settings_error.php");
+	die();
 }
-require_once("config/config.class.php");
 
 // parse and init the settings.php
 Config::Load();
 
 // create a database class instance
-require_once("config/db_config.php");
-
 $db = new database();
 
 if (!$db->connect_db($dbhost, $dbuser, $dbpass)) trigger_error($db->error(), E_USER_ERROR);
@@ -80,99 +87,24 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 Config::Version($db);
 
 // Debugging?
-if(Config::GetSetting($db,"debug")=="On") 
-{
-	error_reporting(E_ALL);
-}
-
-// Page variable set? Otherwise default to index
-$page = Kit::GetParam('p', _REQUEST, _WORD, 'index');
+if(Config::GetSetting($db, "debug")=="On") error_reporting(E_ALL);
 
 // Create login control system
-$module = Config::GetSetting($db, "userModule");
+require_once('modules/' . Config::GetSetting($db, "userModule"));
 
-require_once("modules/$module");
-$user = new user();
+$user 		= new user();
+$session 	= new Session($db);
 
-/*
- * Require a class for the page we have loaded
- * Unless it has already been loaded for us (i.e a user page)
- */
-$pageObject = $page."DAO";
+// Page variable set? Otherwise default to index
+$page 		= Kit::GetParam('p', _REQUEST, _WORD, 'index');
 
-if(!class_exists($pageObject)) 
-{
-	require("lib/app/$page.class.php");
-}
-
-// Session handling
-include_once("lib/session.class.php");
-$session = new Session($db);
-
-Session::Set('pagename', $page); //Assign the page name to the session
-
+// Assign the page name to the session
 $session->set_page(session_id(), $page);
 
-// Vars
-$ajax			= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
-$functionstring = Kit::GetParam('q', _REQUEST, _WORD);
-$userid 		= Kit::GetParam('userid', _SESSION, _INT);
+// Create Page
+$pageManager = new PageManager($db, $page);
+$pageManager->Authenticate($user);
+$pageManager->Render();
 
-// If we have an AJAX request, include the AJAX request handler
-if ($ajax) 
-{
-	require_once("lib/ajax_request_handler.class.php");
-}
-
-if ($functionstring != '') 
-{
-
-	if ($functionstring != "login" && $functionstring != "forgotten") 
-	{ 
-		//check auth info unless we are logging in
-		$user->attempt_login($ajax); //the most common query (q) is from an AJAX call - either a form request, or submit
-		
-		//permissions
-		$g_Security = groupPageSecurity($user->getGroupFromID($userid, true));
-		
-		pageSecurityCheck($page);
-	}
-
-	$pageObject = new $pageObject($db);
-	
-	if (method_exists($pageObject,$functionstring)) 
-	{
-		$reloadLocation = $pageObject->$functionstring();
-	}
-	else 
-	{
-		trigger_error("Unrecognised text in action variable $functionstring", E_USER_ERROR);
-	}
-
-    // once we have dealt with it, reload the page    
-    if($reloadLocation) 
-	{    	
-    	Kit::Redirect($reloadLocation);
-    }
-}
-// Display a page instead
-else 
-{
-	// create a user object (will try to login)
-	// we must do this after executing any functions otherwise we will be logged
-	// out again before exec any log in function calls
-	$user->attempt_login(false); //we expect AJAX to be false here
-	
-	// permissions
-	$g_Security = groupPageSecurity($user->getGroupFromID($userid, true));
-	
-	pageSecurityCheck($page);
-	
-	// output the page
-	$pageObject = new $pageObject($db);
-
-	include("template/header.php");
-	$pageObject->displayPage();
-	include("template/footer.php");
-}
+die();
 ?>

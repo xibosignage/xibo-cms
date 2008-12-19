@@ -295,16 +295,6 @@ function sec2hms($sec, $padHours = false) {
 	return $hms;
 }
 
-function show_no_settings() {
-	/**
-	 * We need to show a page that indicates there are isnt a settings.php file
-	 * and to direct appropriatly
-	 */
-	 include("template/pages/no_settings_error.php");
-	 
-	 exit;
-}
-
 define('STAT_LAYOUT_START', 'LayoutStart');
 define('STAT_LAYOUT_END', 'LayoutEnd');
 define('STAT_MEDIA_START', 'MediaStart');

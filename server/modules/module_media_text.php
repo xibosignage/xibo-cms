@@ -272,16 +272,11 @@ END;
 		$duration	  = $_POST['duration'];
 		$text		  = $_POST['ta_text'];
 		
-		if (get_magic_quotes_gpc())
-		{
-			$text = stripslashes($text);
-		}
-		
 		//Optional parameters
 		$layoutid = $_POST['layoutid'];
 		$regionid = $_POST['regionid'];
 		
-		//Do we want to assign this to the region after adding it?<whey
+		//Do we want to assign this to the region after adding it?
 		if ($layoutid == "" && $regionid == "")
 		{
 			$this->message .= "Text must be assigned to regions";
