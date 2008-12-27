@@ -92,7 +92,7 @@ if(Config::GetSetting($db, "debug")=="On") error_reporting(E_ALL);
 // Create login control system
 require_once('modules/' . Config::GetSetting($db, "userModule"));
 
-$user 		= new user();
+$user 		= new User($db);
 $session 	= new Session($db);
 
 // Page variable set? Otherwise default to index
@@ -102,8 +102,8 @@ $page 		= Kit::GetParam('p', _REQUEST, _WORD, 'index');
 $session->set_page(session_id(), $page);
 
 // Create Page
-$pageManager = new PageManager($db, $page);
-$pageManager->Authenticate($user);
+$pageManager = new PageManager($db, $user, $page);
+$pageManager->Authenticate();
 $pageManager->Render();
 
 die();

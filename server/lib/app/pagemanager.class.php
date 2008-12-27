@@ -37,9 +37,10 @@ class PageManager
 	private $authed;
 	private $thePage;
 	
-	function __construct(database $db, $page)
+	function __construct(database $db, user $user, $page)
 	{
 		$this->db 		=& $db;
+		$this->user 	=& $user;
 		$this->path 	= 'lib/pages/' . $page . '.class.php';
 		$this->page 	= $page . 'DAO';
 		$this->p	 	= $page;
@@ -67,10 +68,10 @@ class PageManager
 	 * Checks the Security of the logged in user
 	 * @return 
 	 */
-	public function Authenticate($user)
+	public function Authenticate()
 	{
 		$db 		=& $this->db;
-		$this->user =& $user;
+		$user 		=& $this->user;
 		
 		// create a user object (will try to login)
 		// we must do this after executing any functions otherwise we will be logged
@@ -83,40 +84,7 @@ class PageManager
 				return false;
 			}
 			
-			$usertype 	= Kit::GetParam('usertype', _SESSION, _INT);
-			$groupid	= $user->getGroupFromID($this->userid, true);
-			
-			// Check the security
-			if ($usertype == 1) 
-			{
-				// if the usertype is 1 (admin) then we have access to all the pages
-				$this->authed = true;
-				
-				Debug::LogEntry($db, 'audit', 'Granted admin access to page: ' . $this->p);
-			}
-			else 
-			{
-				// we have access to only the pages assigned to this group
-				$SQL = "SELECT page.pageID FROM pages INNER JOIN lkpagegroup ON lkpagegroup.pageid = pages.pageid ";
-				$SQL .= sprintf(" WHERE lkpagegroup.groupid = %d AND page.name = '%s' ", $groupid, $db->escape_string($this->p));
-			
-				Debug::LogEntry($db, 'audit', $SQL);
-			
-				if (!$results = $db->query($SQL)) 
-				{
-					trigger_error($db->error());
-					trigger_error('Can not get the page security for this group [' . $groupid . '] and page [' . $this->p . ']');
-				}
-				
-				if ($db->num_rows($results) < 1)
-				{
-					$this->authed = false;
-				}
-				else
-				{
-					$this->authed = true;
-				}
-			}
+			$this->authed = $user->PageAuth($this->p);
 		}
 		else
 		{
@@ -145,7 +113,7 @@ class PageManager
 		}
 		
 		// Create the requested page
-		$this->thePage = new $this->page($db);
+		$this->thePage = new $this->page($db, $user);
 		
 		if ($this->q != '') 
 		{
