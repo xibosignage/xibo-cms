@@ -193,19 +193,22 @@ class scheduleDAO {
 		return true;
 	}
 	
-	function displayPage() {
-		$db =& $this->db;
+	function displayPage() 
+	{
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 		
-		if (!$this->has_permission) {
+		if (!$this->has_permission) 
+		{
 			displayMessage(MSG_MODE_MANUAL, "You do not have permissions to access this page");
 			return false;
 		}
 
-		switch ($this->sub_page) {
-				
+		switch ($this->sub_page) 
+		{		
 			case 'month':
 				include("lib/pages/display.class.php");
-				$displayDAO = new displayDAO($db);
+				$displayDAO = new displayDAO($db, $user);
 				
 				include ("template/pages/schedule_month_view.php");
 				break;
