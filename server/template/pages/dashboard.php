@@ -32,7 +32,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<div id="dashbuttons">
 				<?php
 					// Put a menu here
-					if (!$menu = new MenuManager($db, 'Dashboard')) trigger_error($menu->message, E_USER_ERROR);
+					if (!$menu = new MenuManager($db, $user, 'Dashboard')) trigger_error($menu->message, E_USER_ERROR);
 					
 					while ($menuItem = $menu->GetNextMenuItem())
 					{

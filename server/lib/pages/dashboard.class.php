@@ -23,10 +23,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class dashboardDAO 
 {
 	private $db;
+	private $user;
 
-	function __construct(database $db) 
+	function __construct(database $db, user $user) 
 	{
-		$this->db =& $db;
+		$this->db 	=& $db;
+		$this->user =& $user;
 	}
 	
 	function on_page_load() 
@@ -36,7 +38,7 @@ class dashboardDAO
 	
 	function echo_page_heading() 
 	{
-		global $user;
+		$user 	=& $this->user;
 		
 		$userid = Kit::GetParam('userid', _SESSION, _INT);
 		
@@ -48,7 +50,8 @@ class dashboardDAO
 
 	function displayPage() 
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 
 		include_once("template/pages/dashboard.php");
 	}

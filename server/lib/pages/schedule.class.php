@@ -21,6 +21,7 @@
 class scheduleDAO {
 
 	private $db;
+	private $user;
 	private $sub_page;
 	private $ret_page;
 	private $start_date;
@@ -55,8 +56,10 @@ class scheduleDAO {
 	 * @return 
 	 * @param $db Object
 	 */
-    function scheduleDAO(database $db) {
-    	$this->db =& $db;
+    function __construct(database $db, user $user) 
+	{
+		$this->db 	=& $db;
+		$this->user =& $user;
 		
 		//work out the page we are on   	
     	if (!isset($_GET['sp'])) {

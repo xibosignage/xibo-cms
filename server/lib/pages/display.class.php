@@ -23,6 +23,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class displayDAO 
 {
 	private $db;
+	private $user;
 	private $has_permissions = true;
 	
 	//display table fields
@@ -35,9 +36,10 @@ class displayDAO
 	private $auditing;
 	private $ajax;
 
-	function __construct(database $db) 
+	function __construct(database $db, user $user) 
 	{
-		$this->db =& $db;
+		$this->db 	=& $db;
+		$this->user =& $user;
 		
 		$this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
 		$this->ajax		= Kit::GetParam('ajax', _REQUEST, _WORD, 'false');

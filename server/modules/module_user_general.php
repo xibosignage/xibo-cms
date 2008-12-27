@@ -31,8 +31,11 @@
 		$this->userid 	= Kit::GetParam('userid', _SESSION, _INT);
 	}
 	
-	//attempt to validate the login params
-	//$ajax specifies whether this is an ajax request, or not
+	/**
+	 * Validate the User is Logged In
+	 * @return 
+	 * @param $ajax Object[optional] Indicates if this request came from an AJAX call or otherwise
+	 */
 	function attempt_login($ajax = false) 
 	{
 		$db 			=& $this->db;
@@ -67,6 +70,12 @@
 		}
 	}
 
+	/**
+	 * Login a user
+	 * @return 
+	 * @param $username Object
+	 * @param $password Object
+	 */
 	function login($username, $password) 
 	{
 		$db 		=& $this->db;
@@ -107,7 +116,10 @@
 		return true;
 	}
 
-	//Logout someone that wants to logout
+	/**
+	 * Logout the user associated with this user object
+	 * @return 
+	 */
 	function logout() 
 	{
 		$db 		=& $this->db;
@@ -305,7 +317,7 @@
 	}
 	
 	/**
-	 * evaulates the permissons and returns an array [canSee,canEdit]
+	 * Evaulates the permissons and returns an array [canSee,canEdit]
 	 * @return 
 	 * @param $ownerid Object
 	 * @param $permissionid Object
@@ -316,7 +328,8 @@
 		$db 		=& $this->db;
 		
 		if ($userid != "") 
-		{ //use the userid provided
+		{
+			//use the userid provided
 			$groupid 		= $this->getGroupFromID($userid, true);
 			$usertypeid		= $this->getUserTypeFromID($userid, true);
 		}
@@ -327,7 +340,7 @@
 			$usertypeid = Kit::GetParam('usertype', _SESSION, _INT);	//the logged in users group (admin, group admin, user)			
 		}
 		
-		$ownerGroupID 	= $this->getGroupFromID($ownerid, true); //the owners groupid
+		$ownerGroupID 	= $this->getGroupFromID($ownerid, true); 		//the owners groupid
 		
 		//if we are a super admin we can view/edit anything we like regardless of settings
 		if ($usertypeid == 1) 
@@ -410,8 +423,8 @@
 		}
 		
 		// we have access to only the pages assigned to this group
-		$SQL = "SELECT page.pageID FROM pages INNER JOIN lkpagegroup ON lkpagegroup.pageid = pages.pageid ";
-		$SQL .= sprintf(" WHERE lkpagegroup.groupid = %d AND page.name = '%s' ", $groupid, $db->escape_string($page));
+		$SQL = "SELECT pages.pageID FROM pages INNER JOIN lkpagegroup ON lkpagegroup.pageid = pages.pageid ";
+		$SQL .= sprintf(" WHERE lkpagegroup.groupid = %d AND pages.name = '%s' ", $groupid, $db->escape_string($page));
 	
 		Debug::LogEntry($db, 'audit', $SQL);
 	
@@ -429,6 +442,68 @@
 		{
 			return true;
 		}
+	}
+	
+	/**
+	 * Return a Menu for this user
+	 * TODO: Would like to cache this menu array for future requests
+	 * @return 
+	 * @param $menu Object
+	 */
+	public function MenuAuth($menu)
+	{
+		$db 		=& $this->db;
+		$userid		=& $this->userid;
+		
+		// Get some information about this menu
+		// I.e. get the Menu Items this user has access to
+		$SQL  = "";
+		$SQL .= "SELECT   pages.name     , ";
+		$SQL .= "         menuitem.Args , ";
+		$SQL .= "         menuitem.Text , ";
+		$SQL .= "         menuitem.Class, ";
+		$SQL .= "         menuitem.Img ";
+		$SQL .= "FROM     menuitem ";
+		$SQL .= "         INNER JOIN menu ";
+		$SQL .= "         ON       menuitem.MenuID = menu.MenuID ";
+		$SQL .= "         INNER JOIN pages ";
+		$SQL .= "         ON       pages.pageID = menuitem.PageID ";
+		if ($usertypeid != 1) 
+		{
+			$SQL .= "         INNER JOIN lkmenuitemgroup ";
+			$SQL .= "         ON       lkmenuitemgroup.MenuItemID = menuitem.MenuItemID ";
+			$SQL .= "         INNER JOIN `group` ";
+			$SQL .= "         ON       lkmenuitemgroup.GroupID = group.GroupID ";
+			$SQL .= "         INNER JOIN `user` ";
+			$SQL .= "         ON       group.groupid = user.userid ";
+		}
+		$SQL .= sprintf("WHERE    menu.Menu              = '%s' ", $db->escape_string($menu));
+		$SQL .= "ORDER BY menuitem.Sequence";
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+		
+		if (!$result = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			
+			return false;
+		}
+		
+		// No permissions to see any of it
+		if ($db->num_rows($result) == 0)
+		{
+			return false;
+		}
+		
+		$theMenu = array();
+
+		// Load the results into a menu array
+		while ($row = $db->get_assoc_row($result))
+		{
+			$theMenu[] = $row;
+		}
+		
+		return $theMenu;
 	}
 	
 	function forget_details() 

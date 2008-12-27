@@ -98,7 +98,7 @@ else
 					echo '<li><a href="index.php?p=' . $homepage . '">Dashboard</a></li>';
 				
 					// Put a menu here
-					if (!$menu = new MenuManager($db, 'Top Nav')) trigger_error($menu->message, E_USER_ERROR);
+					if (!$menu = new MenuManager($db, $user, 'Top Nav')) trigger_error($menu->message, E_USER_ERROR);
 					
 					while ($menuItem = $menu->GetNextMenuItem())
 					{

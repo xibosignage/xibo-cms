@@ -23,11 +23,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class adminDAO 
 {
 	private $db;
+	private $user;
 	private $display_page = true;
 
-	function __construct(database $db) 
+	function __construct(database $db, user $user) 
 	{
-		$this->db =& $db;
+		$this->db 	=& $db;
+		$this->user =& $user;
 	}
 	
 	function displayPage() 

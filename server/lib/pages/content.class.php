@@ -23,6 +23,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class contentDAO 
 {
 	private $db;
+	private $user;
 	private $isadmin = false;
 	private $has_permissions = true;
 	private $sub_page = "";
@@ -51,9 +52,10 @@ class contentDAO
 	private $redirect = false;
 	private $redirect_addr = "";
 
-	function __construct(database $db) 
-	{ //construct
-		$this->db =& $db;
+	function __construct(database $db, user $user) 
+	{
+		$this->db 	=& $db;
+		$this->user =& $user;
 		
 		$usertype = Kit::GetParam('usertype', _SESSION, _INT, 0);
 		

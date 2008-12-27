@@ -22,14 +22,14 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class region 
 {
-	
+	private $user;
 	private $db;
 	public $errorMsg;
 	
-	public function __construct($db) 
+	function __construct(database $db, user $user) 
 	{
-		
-		$this->db =& $db;
+		$this->db 	=& $db;
+		$this->user =& $user;
 		
 		require_once("lib/app/module.class.php");
 	}

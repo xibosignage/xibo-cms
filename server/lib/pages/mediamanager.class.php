@@ -23,10 +23,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class mediamanagerDAO 
 {
 	private $db;
+	private $user;
 
-	function mediamanagerDAO(database $db) 
+	function __construct(database $db, user $user) 
 	{
-		$this->db =& $db;
+		$this->db 	=& $db;
+		$this->user =& $user;
 	}
 	
 	function on_page_load() 
@@ -47,7 +49,8 @@ class mediamanagerDAO
 
 	function displayPage() 
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 		
 		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
 		$regionid = Kit::GetParam('regionid', _REQUEST, _INT);

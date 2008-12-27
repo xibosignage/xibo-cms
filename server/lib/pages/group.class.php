@@ -20,6 +20,7 @@
  */ 
 class groupDAO {
 	private $db;
+	private $user;
 	private $isadmin = false;
 	private $has_permissions = true;
 	
@@ -34,8 +35,10 @@ class groupDAO {
 	private $pageid;
 	
 	//init
-	function groupDAO(database $db) {
-		$this->db =& $db;
+	function __construct(database $db, user $user) 
+	{
+		$this->db 	=& $db;
+		$this->user =& $user;
 		
 		if ($_SESSION['usertype']==1) $this->isadmin = true;
 		

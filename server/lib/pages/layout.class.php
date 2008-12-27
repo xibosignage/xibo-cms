@@ -23,6 +23,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class layoutDAO 
 {
 	private $db;
+	private $user;
 	private $has_permissions = true;
 	
 	private $isadmin = false;
@@ -46,9 +47,10 @@ class layoutDAO
 	 * @return 
 	 * @param $db Object
 	 */
-	function __construct(database $db) 
+	function __construct(database $db, user $user) 
 	{
-		$this->db =& $db;
+		$this->db 	=& $db;
+		$this->user =& $user;
 		
 		$usertype 		= Kit::GetParam('usertype', _SESSION, _INT);
 		$this->sub_page	= Kit::GetParam('sp', _GET, _WORD, 'view');

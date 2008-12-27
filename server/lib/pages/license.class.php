@@ -21,11 +21,13 @@
 class licenseDAO 
 {
 	private $db;
+	private $user;
 	private $has_permissions = true;
 	
-    function __construct(database $db) 
+    function __construct(database $db, user $user) 
 	{
-    	$this->db =& $db;
+		$this->db 	=& $db;
+		$this->user =& $user;
     	
     }
     

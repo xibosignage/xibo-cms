@@ -23,10 +23,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class indexDAO 
 {
 	private $db;
+	private $user;
 
-	function indexDAO(database $db) 
+	function __construct(database $db, user $user) 
 	{
-		$this->db =& $db;
+		$this->db 	=& $db;
+		$this->user =& $user;
 	}
 	
 	function on_page_load() 
@@ -232,7 +234,8 @@ class indexDAO
 	
 	function displayPage() 
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 		
 		include("lib/pages/dashboard.class.php");
 		

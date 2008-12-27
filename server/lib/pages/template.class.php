@@ -18,8 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-class templateDAO {
+class templateDAO 
+{
 	private $db;
+	private $user;
 	private $isadmin = false;
 	private $has_permissions = true;
 	
@@ -42,8 +44,10 @@ class templateDAO {
 	 * @return 
 	 * @param $db Object
 	 */
-	function __construct(database $db) {
-		$this->db =& $db;
+	function __construct(database $db, user $user) 
+	{
+		$this->db 	=& $db;
+		$this->user =& $user;
 		
 		if ($_SESSION['usertype'] ==1 ) $this->isadmin = true;
 		

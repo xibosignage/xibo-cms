@@ -23,6 +23,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class moduleDAO 
 {
 	private $db;
+	private $user;
 	private $module;
 
 	/**
@@ -30,9 +31,10 @@ class moduleDAO
 	 * @return 
 	 * @param $db Object
 	 */
-	function __construct(database $db) 
+	function __construct(database $db, user $user) 
 	{
-		$this->db =& $db;
+		$this->db 	=& $db;
+		$this->user =& $user;
 		
 		$mod = Kit::GetParam('mod', _REQUEST, _WORD);
 		

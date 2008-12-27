@@ -23,7 +23,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class userDAO 
 {
 	private $db;
-	
+	private $user;
 	private $sub_page;
 	
 	//database fields
@@ -41,9 +41,10 @@ class userDAO
 	 * @param database $db
 	 * @return userDAO
 	 */
-	function userDAO(database $db) 
+	function __construct(database $db, user $user) 
 	{
-		$this->db =& $db;
+		$this->db 	=& $db;
+		$this->user =& $user;
 		
 		$this->sub_page = Kit::GetParam('sp', _REQUEST, _WORD, 'view');
 		$userid 		= Kit::GetParam('userID', _REQUEST, _INT, 0);

@@ -35,9 +35,10 @@ class MenuManager
 	private $current;
 	private $numberItems;
 	
-	public function __construct(database $db, $menu)
+	public function __construct(database $db, User $user, $menu)
 	{
 		$this->db 		=& $db;
+		$this->user 	=& $user;
 		$this->ajax		= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
 		$this->q		= Kit::GetParam('q', _REQUEST, _WORD);
 		$this->userid 	= Kit::GetParam('userid', _SESSION, _INT);
@@ -49,47 +50,10 @@ class MenuManager
 			return false;
 		}
 		
-		// Get some information about this menu
-		// I.e. get the Menu Items this user has access to
-		$SQL  = "";
-		$SQL .= "SELECT   pages.name     , ";
-		$SQL .= "         menuitem.Args , ";
-		$SQL .= "         menuitem.Text , ";
-		$SQL .= "         menuitem.Class, ";
-		$SQL .= "         menuitem.Img ";
-		$SQL .= "FROM     menuitem ";
-		$SQL .= "         INNER JOIN menu ";
-		$SQL .= "         ON       menuitem.MenuID = menu.MenuID ";
-		$SQL .= "         INNER JOIN pages ";
-		$SQL .= "         ON       pages.pageID = menuitem.PageID ";
-		if ($usertypeid != 1) 
+		if (!$this->theMenu = $user->MenuAuth($menu))
 		{
-			$SQL .= "         INNER JOIN lkmenuitemgroup ";
-			$SQL .= "         ON       lkmenuitemgroup.MenuItemID = menuitem.MenuItemID ";
-			$SQL .= "         INNER JOIN `group` ";
-			$SQL .= "         ON       lkmenuitemgroup.GroupID = group.GroupID ";
-			$SQL .= "         INNER JOIN `user` ";
-			$SQL .= "         ON       group.groupid = user.userid ";
-		}
-		$SQL .= sprintf("WHERE    menu.Menu              = '%s' ", $db->escape_string($menu));
-		$SQL .= "ORDER BY menuitem.Sequence";
-		
-		Debug::LogEntry($db, 'audit', $SQL);
-		
-		if (!$result = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			
-			$this->message = 'No such menu ['. $menu . ']';
+			$this->message = 'No permissions for this menu.';
 			return false;
-		}
-		
-		$this->theMenu = array();
-
-		// Load the results into a menu array
-		while ($row = $db->get_assoc_row($result))
-		{
-			$this->theMenu[] = $row;
 		}
 
 		// Set some information about this menu		

@@ -23,12 +23,14 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class reportDAO 
 {
 	private $db;
+	private $user;
 	private $has_permissions = true;
 	private $sub_page;
 
-	function __construct(database $db) 
+	function __construct(database $db, user $user) 
 	{
-		$this->db =& $db;
+		$this->db 	=& $db;
+		$this->user =& $user;
 		
 		$this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'sessions');
 	}
