@@ -114,7 +114,7 @@ else
 						{
 							// This is the management menu, so behave differently
 							// Code duplication here - i wonder if we could be more effective?
-							if (!$mgmMenu = new MenuManager($db, 'Management')) trigger_error($mgmMenu->message, E_USER_ERROR);
+							if (!$mgmMenu = new MenuManager($db, $user, 'Management')) trigger_error($mgmMenu->message, E_USER_ERROR);
 							
 							echo '<li><a href="#" class="' . $class . '">' . $title . '</a><ul>';
 							
