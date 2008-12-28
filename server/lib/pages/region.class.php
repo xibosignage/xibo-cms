@@ -31,7 +31,7 @@ class region
 		$this->db 	=& $db;
 		$this->user =& $user;
 		
-		require_once("lib/app/module.class.php");
+		require_once("lib/pages/module.class.php");
 	}
 	
 	/**
@@ -166,7 +166,8 @@ class region
 	 */
 	public function AddMedia($layoutid, $regionid, $mediaid = "", $mediaXml = "") 
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 		
 		//Load the XML for this layout
 		$xml = new DOMDocument("1.0");
@@ -176,7 +177,7 @@ class region
 		if ($mediaXml == "")
 		{
 			//Get the new media node in question
-			$media = new moduleDAO($db);
+			$media = new moduleDAO($db, $user);
 			
 			//Call to setup the module class with the appropriate media information
 			if (!$media->SetMediaId($mediaid))
@@ -387,7 +388,8 @@ class region
 	 */
 	public function SwapMedia($layoutid, $regionid, $lkid, $existingMediaid, $newMediaid, $mediaXml = "")
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 		
 		//Load the XML for this layout
 		$xml = new DOMDocument("1.0");
@@ -397,7 +399,7 @@ class region
 		if ($mediaXml == "")
 		{
 			//Get the new media node in question
-			$media = new moduleDAO($db);
+			$media = new moduleDAO($db, $user);
 			
 			//Call to setup the module class with the appropriate media information
 			if (!$media->SetMediaId($newMediaid))

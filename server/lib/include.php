@@ -30,6 +30,7 @@ require_once("lib/app/debug.class.php");
 require_once("lib/app/kit.class.php");
 require_once("lib/app/pagemanager.class.php");
 require_once("lib/app/menumanager.class.php");
+require_once("lib/app/modulemanager.class.php");
 require_once("lib/app/app_functions.php");
 require_once("lib/modules/module.interface.php");
 require_once("lib/modules/module.class.php");

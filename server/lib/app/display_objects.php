@@ -74,42 +74,4 @@ END;
 		return true;
 	}
 }
-
-/**
- * Checks whether a Module is enabled, if so returns a button
- * @return 
- * @param $href Object
- * @param $title Object
- * @param $onclick Object
- * @param $image Object
- * @param $text Object
- */
-function ModuleButton($module, $href, $title, $onclick, $image, $text)
-{
-	global $db;
-	
-	// Check that the module is enabled
-	$SQL = "SELECT Enabled FROM module WHERE Module = '$module' AND Enabled = 1";
-	if (!$result = $db->query($SQL))
-	{
-		trigger_error($db->error());
-		return "";
-	}
-	// If there were no modules enabled with that name, then return nothing (i.e. we dont output a button)
-	if ($db->num_rows($result) == 0 )
-	{
-		return "";
-	}
-	
-	$button = <<<HTML
-	<div class="regionicons">
-		<a title="$title" href="$href" onclick="$onclick">
-		<img class="dash_button" src="$image" />
-		<span class="dash_text">$text</span></a>
-	</div>
-HTML;
-
-	return $button;
-}
-
 ?>

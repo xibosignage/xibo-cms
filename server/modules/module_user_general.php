@@ -506,6 +506,53 @@
 		return $theMenu;
 	}
 	
+	/**
+	 * Authenticates this user against the given module
+	 * or if none provided returns an array of optional modules
+	 * @return Array
+	 * @param [Optional] $module String
+	 */
+	public function ModuleAuth($regionSpecific, $module = '')
+	{
+		$db 		=& $this->db;
+		$userid		=& $this->userid;
+		
+		// Check that the module is enabled
+		$SQL  = "SELECT * FROM module WHERE Enabled = 1 ";
+		if ($regionSpecific != -1)
+		{
+			$SQL .= sprintf(" AND RegionSpecific = %d ", $regionSpecific);
+		}
+		if ($module != '')
+		{
+			$SQL .= sprintf(" AND Module = '%s' ", $db->escape_string($module));
+		}
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+		
+		if (!$result = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			return false;
+		}
+		
+		if ($db->num_rows($result) == 0)
+		{
+			return false;
+		}
+		
+		// Put all these into a normal array
+		$modules = array();
+
+		while ($row = $db->get_assoc_row($result))
+		{
+			$modules[] = $row;
+		}
+		
+		// Return this array		
+		return $modules;
+	}
+	
 	function forget_details() 
 	{
 		$output = <<<END

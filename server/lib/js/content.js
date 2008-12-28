@@ -30,6 +30,13 @@ function dialog_filter() {
 	return false;
 }
 
+var submit_form_callback = function(outputDiv) {
+	
+	exec_filter('filter_form','data_table');
+	
+	return false;
+}
+
 
 //when the DOM is ready
 $(document).ready(function() {

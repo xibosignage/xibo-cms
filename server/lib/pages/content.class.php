@@ -324,29 +324,42 @@ END;
 	 */
 	function displayForms() 
 	{
+		$db 	=& $this->db;
+		$user 	=& $this->user;
+		
 		//displays all the content add forms - tabbed.
 		//ajax request handler
 		$arh = new AjaxRequest();
 		
-		$image_button = ModuleButton("image", "index.php?p=module&mod=image&q=AddForm", "Add Image",
-										"return init_button(this,'Add Image',exec_filter_callback,set_form_size(450,320))", "img/forms/image.gif", "Add Image");
+		// Get a list of the enabled modules and then create buttons for them
+		if (!$enabledModules = new ModuleManager($db, $user, 0)) trigger_error($enabledModules->message, E_USER_ERROR);
 		
-		$powerpoint_button = ModuleButton("powerpoint", "index.php?p=module&mod=powerpoint&q=AddForm", "Add PowerPoint",
-										"return init_button(this,'Add Powerpoint',exec_filter_callback,set_form_size(450,320))", "img/forms/powerpoint.gif", "Add PowerPoint");
+		$buttons = '';
 		
-		$flash_button = ModuleButton("flash", "index.php?p=module&mod=flash&q=AddForm", "Add Flash",
-										"return init_button(this,'Add Flash',exec_filter_callback,set_form_size(450,320))", "img/forms/flash.gif", "Add Flash");
-		
-		$video_button = ModuleButton("video" ,"index.php?p=module&mod=video&q=AddForm", "Add Video",
-										"return init_button(this,'Add Video',exec_filter_callback,set_form_size(450,320))", "img/forms/video.gif", "Add Video");
+		// Loop through the buttons we have and output store HTML for each one in $buttons.
+		while ($modulesItem = $enabledModules->GetNextModule())
+		{
+			$caption 	= Kit::ValidateParam($modulesItem['AddCaption'], _STRING);
+			$title 		= Kit::ValidateParam($modulesItem['Description'], _STRING);
+			$uri 		= Kit::ValidateParam($modulesItem['AddUri'], _URI);
+			$onclick 	= Kit::ValidateParam($modulesItem['AddOnclick'], _STRING);
+			$img 		= Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
+			
+			$uri		.= '&ajax=true';
+			
+			$buttons .= <<<HTML
+			<div class="regionicons">
+				<a title="$title" href="$uri" onclick="return $onclick">
+				<img class="dash_button" src="$img" />
+				<span class="dash_text">$caption</span></a>
+			</div>
+HTML;
+		}
 		
 		$options = <<<END
 		<div id="canvas">
 			<div id="buttons">
-				$image_button
-				$powerpoint_button
-				$flash_button
-				$video_button
+				$buttons
 			</div>
 		</div>
 END;

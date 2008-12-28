@@ -862,7 +862,8 @@ FORM;
 	 */
 	function EditBackground()
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 		
 		//ajax request handler
 		$arh = new AjaxRequest();
@@ -902,9 +903,9 @@ FORM;
 			}
 		}
 		
-		include_once("lib/app/region.class.php");
+		include_once("lib/pages/region.class.php");
 		
-		$region = new region($db);
+		$region = new region($db, $user);
 		
 		if (!$region->EditBackground($layoutid, $bg_color, $bg_image_original, $width, $height))
 		{
@@ -930,7 +931,8 @@ FORM;
 	 */
 	function AddRegion()
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 		
 		//ajax request handler
 		$arh = new AjaxRequest();
@@ -943,9 +945,9 @@ FORM;
 			return false;
 		}
 		
-		include_once("lib/app/region.class.php");
+		include_once("lib/pages/region.class.php");
 		
-		$region = new region($db);
+		$region = new region($db, $user);
 		
 		if (!$region->AddRegion($this->layoutid))
 		{
@@ -965,7 +967,8 @@ FORM;
 	 */
 	function DeleteRegion()
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 		
 		//ajax request handler
 		$arh = new AjaxRequest();
@@ -979,9 +982,9 @@ FORM;
 			return false;
 		}
 		
-		include_once("lib/app/region.class.php");
+		include_once("lib/pages/region.class.php");
 		
-		$region = new region($db);
+		$region = new region($db, $user);
 		
 		if (!$region->DeleteRegion($this->layoutid, $regionid))
 		{
@@ -1001,7 +1004,8 @@ FORM;
 	 */
 	function RegionChange()
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 		
 		//ajax request handler
 		$arh = new AjaxRequest();
@@ -1019,9 +1023,9 @@ FORM;
 		$top 	= str_replace("px", '', $top);
 		$left 	= str_replace("px", '', $left);
 		
-		include_once("lib/app/region.class.php");
+		include_once("lib/pages/region.class.php");
 		
-		$region = new region($db);
+		$region = new region($db, $user);
 		
 		if (!$region->EditRegion($this->layoutid, $regionid, $width, $height, $top, $left))
 		{
@@ -1037,7 +1041,8 @@ FORM;
 	 */
 	function RegionOrder()
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 		
 		//ajax request handler
 		$arh = new AjaxRequest();
@@ -1050,9 +1055,9 @@ FORM;
 		
 		$sequence--; //zero based
 		
-		include_once("lib/app/region.class.php");
+		include_once("lib/pages/region.class.php");
 		
-		$region = new region($db);
+		$region = new region($db, $user);
 		
 		if (!$region->ReorderMedia($this->layoutid, $regionid, $mediaid, $sequence))
 		{
@@ -1192,7 +1197,8 @@ HTML;
 	 */
 	function RegionOptions()
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 		
 		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
 		
@@ -1209,7 +1215,7 @@ HTML;
 		$xml = simplexml_load_string($this->xml);
 		
 		//We need to set the duration per pixel...
-		$maxMediaDuration = 0;
+		$maxMediaDuration = 1;
 		$numMediaNodes = 0;
 		
 		foreach ($xml->xpath("//region[@id='$regionid']/media") as $mediaNode)
@@ -1384,26 +1390,30 @@ BUTTON;
 		
 		$timelineCtlMargin = "margin-left:5px;";
 		
-		$image_button = ModuleButton("image", "index.php?p=module&mod=image&q=AddForm&layoutid=$this->layoutid&regionid=$regionid", "Add Image",
-										"return init_button(this,'Add Image',submit_form_callback,set_form_size(450,320))", "img/forms/image.gif", "Add Image");
+		// Get a list of the enabled modules and then create buttons for them
+		if (!$enabledModules = new ModuleManager($db, $user)) trigger_error($enabledModules->message, E_USER_ERROR);
 		
-		$powerpoint_button = ModuleButton("powerpoint", "index.php?p=module&mod=powerpoint&q=AddForm&layoutid=$this->layoutid&regionid=$regionid", "Add PowerPoint",
-										"return init_button(this,'Add Powerpoint',submit_form_callback,set_form_size(450,320))", "img/forms/powerpoint.gif", "Add PowerPoint");
+		$buttons = '';
 		
-		$flash_button = ModuleButton("flash", "index.php?p=module&mod=flash&q=AddForm&layoutid=$this->layoutid&regionid=$regionid", "Add Flash",
-										"return init_button(this,'Add Flash',submit_form_callback,set_form_size(450,320))", "img/forms/flash.gif", "Add Flash");
-		
-		$text_button = ModuleButton("text", "index.php?p=module&mod=text&q=AddForm&layoutid=$this->layoutid&regionid=$regionid", "Add Text",
-										"return init_button(this,'Add Text',submit_form_callback,text_callback)", "img/forms/text.gif", "Add Text");
-		
-		$ticker_button = ModuleButton("ticker", "index.php?p=module&mod=ticker&q=AddForm&layoutid=$this->layoutid&regionid=$regionid", "Add Ticker",
-										"return init_button(this,'Add Ticker',submit_form_callback,text_callback)", "img/forms/ticker.gif", "Add Ticker");
-		
-		$webpage_button = ModuleButton("webpage", "index.php?p=module&mod=webpage&q=AddForm&layoutid=$this->layoutid&regionid=$regionid", "Add Webpage",
-										"return init_button(this,'Add Webpage',submit_form_callback,set_form_size(450,320))", "img/forms/webpage.gif", "Add Webpage");
-		
-		$video_button = ModuleButton("video" ,"index.php?p=module&mod=video&q=AddForm&layoutid=$this->layoutid&regionid=$regionid", "Add Video",
-										"return init_button(this,'Add Video',submit_form_callback,set_form_size(450,320))", "img/forms/video.gif", "Add Video");
+		// Loop through the buttons we have and output store HTML for each one in $buttons.
+		while ($modulesItem = $enabledModules->GetNextModule())
+		{
+			$caption 	= Kit::ValidateParam($modulesItem['AddCaption'], _STRING);
+			$title 		= Kit::ValidateParam($modulesItem['Description'], _STRING);
+			$uri 		= Kit::ValidateParam($modulesItem['AddUri'], _URI);
+			$onclick 	= Kit::ValidateParam($modulesItem['AddOnclick'], _STRING);
+			$img 		= Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
+			
+			$uri		.= '&ajax=true&layoutid=' . $this->layoutid . '&regionid=' . $regionid;
+			
+			$buttons .= <<<HTML
+			<div class="regionicons">
+				<a title="$title" href="$uri" onclick="return $onclick">
+				<img class="dash_button" src="$img" />
+				<span class="dash_text">$caption</span></a>
+			</div>
+HTML;
+		}
 		
 		$options = <<<END
 		<div id="canvas">
@@ -1413,13 +1423,7 @@ BUTTON;
 					<img class="region_button" src="img/forms/library.gif"/>
 					<span class="region_text">Library</span></a>
 				</div>
-				$image_button
-				$powerpoint_button
-				$flash_button
-				$text_button
-				$ticker_button
-				$webpage_button
-				$video_button
+				$buttons
 			</div>
 			<div id="timeline" style="clear:left; float:none;">
 				<div id="timeline_ctl" style="$timelineCtlMargin width:790px; position:relative; overflow-y:hidden; overflow-x:scroll;" layoutid="$this->layoutid" regionid="$regionid">
@@ -1463,7 +1467,9 @@ END;
 	 */
 	function AddFromLibrary()
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		$user 	=& $this->user;
+		
 		$xml = simplexml_load_string($this->xml);
 		
 		//ajax request handler
@@ -1472,7 +1478,7 @@ END;
 		$regionid 		= Kit::GetParam('regionid', _REQUEST, _STRING);
 		$mediaid 		= Kit::GetParam('mediaid', _REQUEST, _INT);
 		
-		include_once("lib/app/region.class.php");
+		include_once("lib/pages/region.class.php");
 		
 		$region = new region($db);
 		
@@ -1507,8 +1513,10 @@ END;
 	 */
 	public function RegionPreview()
 	{
-		$db =& $this->db;
-		include_once("lib/app/region.class.php");
+		$db 	=& $this->db;
+		$user 	=& $this->user;
+		
+		include_once("lib/pages/region.class.php");
 		
 		//ajax request handler
 		$arh = new AjaxRequest();
@@ -1528,7 +1536,7 @@ END;
 		// Get some region imformation
 		$return		= "";
 		$xml		= new DOMDocument("1.0");
-		$region 	= new region($db);
+		$region 	= new region($db, $user);
 		
 		if (!$xmlString = $region->GetLayoutXml($layoutid))
 		{
