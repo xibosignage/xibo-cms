@@ -649,7 +649,10 @@ END;
 
 	function displayForm () 
 	{
-		$db =& $this->db;
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		
+		$helpManager	= new HelpManager($db, $user);
 
 		$action 		= "index.php?p=layout&q=add";
 		
@@ -666,13 +669,13 @@ END;
 		//check on permissions
 		
 		// Help icons for the form
-		$helpButton 	= HelpButton("content/layout/adding", true);
-		$nameHelp		= HelpIcon("The Name of the Layout - (1 - 50 characters)", true);
-		$descHelp		= HelpIcon("An optional description of the Layout. (1 - 250 characters)", true);
-		$tagsHelp		= HelpIcon("Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)", true);
-		$sharedHelp		= HelpIcon("The permissions to associate with this Layout", true);
-		$retireHelp		= HelpIcon("Retire this layout or not? It will no longer be visible in lists", true);
-		$templateHelp	= HelpIcon("Template to create this layout with.", true);
+		$helpButton 	= $helpManager->HelpButton("content/layout/adding", true);
+		$nameHelp		= $helpManager->HelpIcon("The Name of the Layout - (1 - 50 characters)", true);
+		$descHelp		= $helpManager->HelpIcon("An optional description of the Layout. (1 - 250 characters)", true);
+		$tagsHelp		= $helpManager->HelpIcon("Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)", true);
+		$sharedHelp		= $helpManager->HelpIcon("The permissions to associate with this Layout", true);
+		$retireHelp		= $helpManager->HelpIcon("Retire this layout or not? It will no longer be visible in lists", true);
+		$templateHelp	= $helpManager->HelpIcon("Template to create this layout with.", true);
 		
 		//init the retired option
 		$retired_option = "";
@@ -760,7 +763,10 @@ END;
 	 */
 	function BackgroundForm() 
 	{
-		$db =& $this->db;
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		
+		$helpManager	= new HelpManager($db, $user);
 		
 		//ajax request handler
 		$arh = new AjaxRequest();
@@ -812,11 +818,11 @@ END;
 		$resolution_list = dropdownlist("SELECT resolutionID, resolution FROM resolution ORDER BY width", "resolutionid", $resolutionid);
 		
 		// Help text for fields
-		$resolutionHelp = HelpIcon("Pick the resolution", true);
-		$bgImageHelp	= HelpIcon("Select the background image from the library.", true);
-		$bgColorHelp	= HelpIcon("Use the color picker to select the background color.", true);
+		$resolutionHelp = $helpManager->HelpIcon("Pick the resolution", true);
+		$bgImageHelp	= $helpManager->HelpIcon("Select the background image from the library.", true);
+		$bgColorHelp	= $helpManager->HelpIcon("Use the color picker to select the background color.", true);
 		
-		$helpButton = HelpButton("content/layout/layouteditor", true);
+		$helpButton 	= $helpManager->HelpButton("content/layout/layouteditor", true);
 		
 		//
 		// Begin the form output

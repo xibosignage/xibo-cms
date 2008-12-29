@@ -228,24 +228,28 @@ class scheduleDAO {
 	
 	function display_form () 
 	{
-		$db =& $this->db;
-		global $user;
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		
+		$helpManager	= new HelpManager($db, $user);
+		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh 	= new AjaxRequest();
 					
 		$start	= $this->starttime;
 		$end	= $this->endtime;
 		
 		//set the action for the form
 		$action = "index.php?p=schedule&q=add";			
-		if ($this->schedule_detailid != "") {
+		if ($this->schedule_detailid != "") 
+		{
 			//assume an edit
 			$action = "index.php?p=schedule&q=edit";
 		}
 		
 		// Help icons for the form
-		$helpButton = HelpButton("content/schedule/adding", true);
-		$nameHelp	= HelpIcon("The Name of the Layout - (1 - 50 characters)", true);
+		$helpButton = $helpManager->HelpButton("content/schedule/adding", true);
+		$nameHelp	= $helpManager->HelpIcon("The Name of the Layout - (1 - 50 characters)", true);
 		
 		// Params		
 		$start_time_select	= $this->datetime_select($start, 'starttime');
@@ -1522,14 +1526,15 @@ END;
 	 * Shows whats currently on (i.e. which layouts are currently being send to which displays
 	 * @return 
 	 */
-	function whats_on() {
-		$db =& $this->db;
-		
-		global $user;
+	function whats_on() 
+	{
+		$db 	=& $this->db;
+		$user 	=& $this->user;
 		
 		//validate displays so we get a realistic view of the table
 		include_once("lib/pages/display.class.php");
-		$display = new displayDAO($db);
+		
+		$display = new displayDAO($db, $user);
 		$display->validateDisplays();
 		
 		$currentdate = date("Y-m-d H:i:s");

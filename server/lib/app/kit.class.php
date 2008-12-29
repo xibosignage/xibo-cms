@@ -40,27 +40,6 @@ define('_URI', "uri");
 
 class Kit 
 {
-	// The parameterized factory method
-    public static function ModuleFactory($class)
-    {
-    	if (class_exists($class))
-		{
-			return new $class;
-		}
-		
-		// It doesnt already exist - so lets look in some places to try and find it
-		if (file_exists('modules/' . $class . '.class.php'))
-		{
-			include_once('modules/' . $class . '.class.php');
-		}
-		else 
-		{
-            throw new Exception ('Class not Found.');
-        }
-		
-        return new $class;
-    }
-
 	// Ends the current execution and issues a redirect - should only be called before headers have been sent (i.e. no output)
 	static function Redirect($page, $message = '', $pageIsUrl = false)
 	{
@@ -80,37 +59,15 @@ class Kit
 		die();
 		
 		// Redirect should be made cleverer at some point
-		
-		// If this is an ajax request just poke out the message
-		if (Kit::GetParam('ajax', _GET, _WORD) == "true")
-		{
-			echo json_encode($page);
-			exit;
-		}
-	
-		//Set the correct url
-		if (!$pageIsUrl)
-		{
-			$url = Kit::GetUri($page, "", true);
-		}
-		else
-		{
-			$url = $page; // Just take it as its given
-		}
-		
-		// Store the message
-		Session::Set('message',$message);
-	
-		// Strip out any line breaks
-		$url = preg_split("/[\r\n]/", $url);
-		$url = $url[0];
 	}
 	
 	/**
 	 * Gets the appropriate Param, making sure its valid
 	 * @return 
 	 * @param $param Object
-	 * @param $type Object[optional] (Default _POST)
+	 * @param $source Object[optional]
+	 * @param $type Object[optional]
+	 * @param $default Object[optional]
 	 */
 	static public function GetParam($param, $source = _POST, $type = _STRING, $default = '')
 	{

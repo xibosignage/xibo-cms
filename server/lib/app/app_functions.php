@@ -30,9 +30,6 @@ define('AJAX_SUCCESS_NOREDIRECT',4);
 define('AJAX_SUCCESS_REFRESH',5);
 define('AJAX_LOAD_FORM',6);
 
-require ("display_objects.php");
-
-
 /**
  * Sets a message to display, this is checked when each page loads
  *
@@ -43,12 +40,14 @@ function setMessage($message) {
 	$_SESSION['message'] .= "$message<br />";
 }
 
-function displayMessage($mode = MSG_MODE_AUTO, $msg="", $show_back = true, $template = "template/pages/message_page.php") {
-		
-	switch ($mode) {
+function displayMessage($mode = MSG_MODE_AUTO, $msg="", $show_back = true, $template = "template/pages/message_page.php") 
+{
+	switch ($mode) 
+	{
 	
 		case MSG_MODE_AUTO:
-			if (isset($_SESSION['message'])) {
+			if (isset($_SESSION['message'])) 
+			{
 				echo "<div class=\"highlight\">" . $_SESSION['message'] . "</div>";
 				unset($_SESSION['message']);
 			}
@@ -69,25 +68,30 @@ function dropdownlist($SQL, $list_name, $selected = "", $callback = "", $flat_li
 	global $db;
 	global $user;
 
-	if (!$result = $db->query($SQL)) {
+	if (!$result = $db->query($SQL)) 
+	{
 		trigger_error($db->error());
 		return "Query Error";
 	}
 	
-	if ($db->num_rows($result)==0) {
+	if ($db->num_rows($result)==0) 
+	{
 		$list = "No selections available";
 		return $list;
 	}
 	
-	if ($flat_list) {
+	if ($flat_list) 
+	{
 		//we want to generate a flat list of option | value pairs
 		$list = "";
 	
-		while ($results = $db->get_row($result)) {
+		while ($results = $db->get_row($result)) 
+		{
 			$col0 = $results[0];
 			$col1 = $results[1];
 			
-			if ($checkPermissions) {
+			if ($checkPermissions) 
+			{
 				$permissionid = $results[2];
 				$ownerid	  = $results[3];
 				
@@ -104,23 +108,26 @@ function dropdownlist($SQL, $list_name, $selected = "", $callback = "", $flat_li
 					$list .= "$col0|$col1,";
 				}
 			}
-			else {
+			else 
+			{
 				$list .= "$col0|$col1,";
 			}
 		}
 		//trim the commas
 		$list = rtrim($list,",");
 	}
-	else {
-	
+	else 
+	{
 		$list = <<<END
 		<select name="$list_name" id="$list_name" $callback>
 END;
-		while ($results = $db->get_row($result)) {
+		while ($results = $db->get_row($result)) 
+		{
 			$col0 = $results[0];
 			$col1 = $results[1];
 			
-			if ($checkPermissions) {
+			if ($checkPermissions) 
+			{
 				$permissionid = $results[2];
 				$ownerid	  = $results[3];
 				
@@ -133,20 +140,26 @@ END;
 					list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $userid);
 				}
 
-				if (($permissionLevel == "see" && $see_permissions) || $permissionLevel == "edit" && $edit_permissions) {
-					if ($col0 == $selected) {
+				if (($permissionLevel == "see" && $see_permissions) || $permissionLevel == "edit" && $edit_permissions) 
+				{
+					if ($col0 == $selected) 
+					{
 						$list .= "<option value='" . $col0 . "' selected>" . $col1 . "</option>\n";
 					}
-					else {
+					else 
+					{
 						$list .= "<option value='" . $col0 . "'>" . $col1 . "</option>\n";
 					}
 				}
 			}
-			else {
-				if ($col0 == $selected) {
+			else 
+			{
+				if ($col0 == $selected) 
+				{
 					$list .= "<option value='" . $col0 . "' selected>" . $col1 . "</option>\n";
 				}
-				else {
+				else 
+				{
 					$list .= "<option value='" . $col0 . "'>" . $col1 . "</option>\n";
 				}
 			}
@@ -156,7 +169,8 @@ END;
 	return $list;
 }
 
-function listcontent($list_string, $list_name, $selected = "", $callback = "") {
+function listcontent($list_string, $list_name, $selected = "", $callback = "") 
+{
 	//generates a list based on a list option | value, list
 	if ($list_string == "") return "Empty list content";
 	
@@ -167,17 +181,20 @@ function listcontent($list_string, $list_name, $selected = "", $callback = "") {
 	$list = <<<END
 	<select name="$list_name" id="$list_name" $callback>
 END;
-	foreach ($list_values as $list_option) {
+	foreach ($list_values as $list_option) 
+	{
 	
 		$option = explode("|", $list_option);
 		
 		$col0 = $option[0];
 		$col1 = $option[1];
 
-		if ($col0 == $selected) {
+		if ($col0 == $selected) 
+		{
 			$list .= "<option value='" . $col0 . "' selected>" . $col1 . "</option>\n";
 		}
-		else {
+		else 
+		{
 			$list .= "<option value='" . $col0 . "'>" . $col1 . "</option>\n";
 		}
 	}
@@ -188,21 +205,25 @@ END;
 
 
 //generates a list of all the users - assuming that the SQL given contains userid's
-function userlist($SQL) {
+function userlist($SQL) 
+{
 	global $db;
 	global $user;
 
-	if (!$result = $db->query($SQL)) {
+	if (!$result = $db->query($SQL)) 
+	{
 		trigger_error($db->error());
 		return "Query Error";
 	}
 	
-	if ($db->num_rows($result)==0) {
+	if ($db->num_rows($result)==0) 
+	{
 		$list = "No selections available";
 		return $list;
 	}
 	
-	while ($row = $db->get_row($result)) {
+	while ($row = $db->get_row($result)) 
+	{
 	
 		$userid 	= $row[0];
 		$username 	= $user->getNameFromID($userid);
@@ -214,7 +235,8 @@ function userlist($SQL) {
 	array_multisort($user_names, SORT_DESC, $user_ids, SORT_ASC); //sorts the two arrays, so that the usernames are Alpha sorted, and the ID's tag along
 
 	$list = "";
-	foreach ($user_names as $key => $row) {
+	foreach ($user_names as $key => $row) 
+	{
 		
 		if($list != "") $list .= ","; //if we arnt equal to the first, append a seperator
 		
@@ -223,11 +245,15 @@ function userlist($SQL) {
 	return $list;
 }
 
-function setSession($page, $var, $value) {
-	/**
-	 * Sets a session variable from a javascript call (so when we XMLHTTPRequest we can set a sesson var)
-	 * 
-	 */
+/**
+ * Sets a session variable from a javascript call (so when we XMLHTTPRequest we can set a sesson var)
+ * @return 
+ * @param $page Object
+ * @param $var Object
+ * @param $value Object
+ */
+function setSession($page, $var, $value) 
+{
 	$_SESSION[$page][$var] = $value;
 
 	return true;
@@ -240,13 +266,16 @@ function setSession($page, $var, $value) {
  * @param $purpose Object
  * @param $db Object[optional]
  */
-function clean_input($var, $purpose, $db = false) {
+function clean_input($var, $purpose, $db = false) 
+{
 	/*Cleans the $var depending on the $purpose*/
 	
-	switch ($purpose) {
+	switch ($purpose) 
+	{
 	
 	case VAR_FOR_SQL:
-		if (!$db) {
+		if (!$db) 
+		{
 			trigger_error("Trying to clean a var for SQL, but no DB passed", E_USER_ERROR);
 		}
 		
@@ -263,7 +292,8 @@ function clean_input($var, $purpose, $db = false) {
 }
 
 
-function sec2hms($sec, $padHours = false) {
+function sec2hms($sec, $padHours = false) 
+{
 	// holds formatted string
 	$hms = "";
 
@@ -312,8 +342,8 @@ define('STAT_MEDIA_END', 'MediaEnd');
  * @param $start Object
  * @param $end Object
  */
-function StatRecord($statType, $statDate, $scheduleID, $displayID, $layoutID, $mediaID, $start, $end) {
-	
+function StatRecord($statType, $statDate, $scheduleID, $displayID, $layoutID, $mediaID, $start, $end) 
+{
 	global $db;
 	
 	$infinityDate = "2050-12-31 00:00:00";
@@ -398,7 +428,8 @@ function StatRecord($statType, $statDate, $scheduleID, $displayID, $layoutID, $m
  * Gets web safe colors
  * @return 
  */
-function gwsc($list_name, $selected) {
+function gwsc($list_name, $selected) 
+{
 	
     $cs = array('00', '33', '66', '99', 'CC', 'FF');
 	
@@ -406,15 +437,20 @@ function gwsc($list_name, $selected) {
 	<select name="$list_name" id="$list_name">
 END;
 
-    for($i=0; $i<6; $i++) {
-        for($j=0; $j<6; $j++) {
-            for($k=0; $k<6; $k++) {
+    for($i=0; $i<6; $i++) 
+	{
+        for($j=0; $j<6; $j++) 
+		{
+            for($k=0; $k<6; $k++) 
+			{
                 $c = $cs[$i] .$cs[$j] .$cs[$k];
 				
-				if ($c == $selected) {
+				if ($c == $selected) 
+				{
                     $list .= "<option value='".$c."' selected style='background: #$c; color:#$c'>#$c</option>";
 				}
-				else {
+				else 
+				{
                     $list .= "<option value='".$c."' style='background: #$c; color:#$c'>#$c</option>";
 				}
             }
@@ -440,7 +476,8 @@ END;
  */
 function ResizeImage( $file, $target = "", $width = 0, $height = 0, $proportional = false, $output = 'file', $delete_original = false, $use_linux_commands = false )
 {
-    if ( $height <= 0 && $width <= 0 ) {
+    if ( $height <= 0 && $width <= 0 ) 
+	{
         return false;
     }
 
@@ -451,7 +488,8 @@ function ResizeImage( $file, $target = "", $width = 0, $height = 0, $proportiona
     $final_height = 0;
     list($width_old, $height_old) = $info;
 
-    if ($proportional) {
+    if ($proportional) 
+	{
         if ($width == 0) $factor = $height/$height_old;
         elseif ($height == 0) $factor = $width/$width_old;
         else $factor = min ( $width / $width_old, $height / $height_old);   
@@ -460,12 +498,14 @@ function ResizeImage( $file, $target = "", $width = 0, $height = 0, $proportiona
         $final_height = round ($height_old * $factor);
 
     }
-    else {
+    else 
+	{
         $final_width = ( $width <= 0 ) ? $width_old : $width;
         $final_height = ( $height <= 0 ) ? $height_old : $height;
     }
 
-    switch ( $info[2] ) {
+    switch ( $info[2] ) 
+	{
         case IMAGETYPE_GIF:
             $image = imagecreatefromgif($file);
         break;
@@ -481,7 +521,8 @@ function ResizeImage( $file, $target = "", $width = 0, $height = 0, $proportiona
     
     $image_resized = imagecreatetruecolor( $final_width, $final_height );
             
-    if ( ($info[2] == IMAGETYPE_GIF) || ($info[2] == IMAGETYPE_PNG) ) {
+    if ( ($info[2] == IMAGETYPE_GIF) || ($info[2] == IMAGETYPE_PNG) ) 
+	{
         $trnprt_indx = imagecolortransparent($image);
 
         // If we have a specific transparent color
@@ -666,14 +707,19 @@ function CheckFormToken($token, $tokenName = "token")
  * @param    string   $value
  * @return   int
  */
-function convertBytes( $value ) {
-    if ( is_numeric( $value ) ) {
+function convertBytes( $value ) 
+{
+    if ( is_numeric( $value ) ) 
+	{
         return $value;
-    } else {
+    } 
+	else 
+	{
         $value_length = strlen( $value );
         $qty = substr( $value, 0, $value_length - 1 );
         $unit = strtolower( substr( $value, $value_length - 1 ) );
-        switch ( $unit ) {
+        switch ( $unit ) 
+		{
             case 'k':
                 $qty *= 1024;
                 break;

@@ -432,9 +432,10 @@ END;
 	 */
 	function display_form () 
 	{
-		$db =& $this->db;
+		$db 			=& $this->db;
+		$user			=& $this->user;
 		
-		global $user;
+		$helpManager	= new HelpManager($db, $user);
 		
 		//ajax request handler
 		$arh = new AjaxRequest();
@@ -448,14 +449,14 @@ END;
 		$groupid	= $this->groupid;
 		
 		// Help UI
-		$helpButton 	= HelpButton("content/users/overview", true);
-		$nameHelp		= HelpIcon("The Login Name of the user.", true);
-		$passHelp		= HelpIcon("The Password for this user.", true);
-		$emailHelp		= HelpIcon("Users email address. E.g. user@example.com", true);
-		$homepageHelp	= HelpIcon("The users Homepage. This should not be changed until you want to reset their homepage.", true);
-		$overpassHelp	= HelpIcon("Do you want to override this users password with the one entered here.", true);
-		$usertypeHelp	= HelpIcon("What is this users type? This would usually be set to 'User'", true);
-		$groupHelp		= HelpIcon("Which group does this user belong to? User groups control media sharing and access to functional areas of Xibo.", true);
+		$helpButton 	= $helpManager->HelpButton("content/users/overview", true);
+		$nameHelp		= $helpManager->HelpIcon("The Login Name of the user.", true);
+		$passHelp		= $helpManager->HelpIcon("The Password for this user.", true);
+		$emailHelp		= $helpManager->HelpIcon("Users email address. E.g. user@example.com", true);
+		$homepageHelp	= $helpManager->HelpIcon("The users Homepage. This should not be changed until you want to reset their homepage.", true);
+		$overpassHelp	= $helpManager->HelpIcon("Do you want to override this users password with the one entered here.", true);
+		$usertypeHelp	= $helpManager->HelpIcon("What is this users type? This would usually be set to 'User'", true);
+		$groupHelp		= $helpManager->HelpIcon("Which group does this user belong to? User groups control media sharing and access to functional areas of Xibo.", true);
 		
 		//What form are we displaying
 		if ($userid == "")

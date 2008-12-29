@@ -219,7 +219,10 @@ SQL;
 	 */
 	function displayForm() 
 	{
-		$db =& $this->db;
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		
+		$helpManager		= new HelpManager($db, $user);
 		
 		//ajax request handler
 		$arh = new AjaxRequest();
@@ -234,12 +237,12 @@ SQL;
 		$auditing			= $this->auditing;
 		
 		// Help UI
-		$helpButton 	= HelpButton("content/config/displays", true);
-		$nameHelp		= HelpIcon("The Name of the Display - (1 - 50 characters).", true);
-		$defaultHelp	= HelpIcon("The Default Layout to Display where there is no other content.", true);
-		$interleveHelp	= HelpIcon("Whether to always put the default into the cycle.", true);
-		$licenseHelp	= HelpIcon("Control the licensing on this display.", true);
-		$auditHelp		= HelpIcon("Collect auditing from this client. Should only be used if there is a problem with the display.", true);
+		$helpButton 	= $helpManager->HelpButton("content/config/displays", true);
+		$nameHelp		= $helpManager->HelpIcon("The Name of the Display - (1 - 50 characters).", true);
+		$defaultHelp	= $helpManager->HelpIcon("The Default Layout to Display where there is no other content.", true);
+		$interleveHelp	= $helpManager->HelpIcon("Whether to always put the default into the cycle.", true);
+		$licenseHelp	= $helpManager->HelpIcon("Control the licensing on this display.", true);
+		$auditHelp		= $helpManager->HelpIcon("Collect auditing from this client. Should only be used if there is a problem with the display.", true);
 		
 		$layout_list = dropdownlist("SELECT layoutid, layout FROM layout ORDER by layout", "defaultlayoutid", $layoutid);
 		$inc_schedule_list = listcontent("1|Yes,0|No","inc_schedule",$inc_schedule);

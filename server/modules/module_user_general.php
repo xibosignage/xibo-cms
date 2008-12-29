@@ -24,6 +24,7 @@
  {
  	private $db;
 	private $userid;
+	private $usertypeid;
 	
  	public function __construct(database $db)
 	{
@@ -61,6 +62,7 @@
 		else 
 		{
 			$userid = Kit::GetParam('userid', _SESSION, _INT);
+			
 			//write out to the db that the logged in user has accessed the page still
 			$SQL = sprintf("UPDATE user SET lastaccessed = '" . date("Y-m-d H:i:s") . "', loggedin = 1 WHERE userid = %d ", $userid);
 			
@@ -454,6 +456,7 @@
 	{
 		$db 		=& $this->db;
 		$userid		=& $this->userid;
+		$usertypeid = Kit::GetParam('usertype', _SESSION, _INT);
 		
 		// Get some information about this menu
 		// I.e. get the Menu Items this user has access to

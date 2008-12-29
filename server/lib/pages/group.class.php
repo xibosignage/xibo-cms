@@ -192,22 +192,29 @@ END;
 		return false;
 	}
 	
-	function group_form() {
+	function group_form() 
+	{
+		$db				=& $this->db;
+		$user			=& $this->user;
+		
+		$helpManager		= new HelpManager($db, $user);
 		
 		//ajax request handler
 		$arh = new AjaxRequest();
 		
 		//alter the action variable depending on which form we are after
-		if ($this->groupid == "") {
+		if ($this->groupid == "") 
+		{
 			$action = "index.php?p=group&q=add";
 		}
-		else {
+		else 
+		{
 			$action = "index.php?p=group&q=edit";
 		}
 		
 		// Help UI
-		$helpButton 	= HelpButton("content/users/groups", true);
-		$nameHelp		= HelpIcon("The Name of this Group.", true);
+		$helpButton 	= $helpManager->HelpButton("content/users/groups", true);
+		$nameHelp		= $helpManager->HelpIcon("The Name of this Group.", true);
 		
 		$form = <<<END
 		<form class="dialog_form" action="$action" method="post">
@@ -229,7 +236,8 @@ END;
 		</form>
 END;
 
-		if ($this->groupid == "") {
+		if ($this->groupid == "") 
+		{
 			//add form, so finish
 			$arh->decode_response(true,$form);
 		}

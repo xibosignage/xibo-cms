@@ -87,9 +87,12 @@ class adminDAO
 	
 	function display_settings() 
 	{
-		$db =& $this->db;
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		
+		$helpObject		= new HelpManager($db, $user);
 			
-		$helpButton 	= HelpButton("content/config/settings", true);
+		$helpButton 	= $helpObject->HelpButton("content/config/settings", true);
 		
 		//one giant form, split into tabs
 		$form = '<form method="post" action="index.php?p=admin&q=modify">';

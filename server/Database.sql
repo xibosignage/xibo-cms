@@ -705,3 +705,8 @@ ADD `DeleteOnclick` VARCHAR( 254 ) NOT NULL ;
 
 ALTER TABLE `module` ADD `RegionSpecific` TINYINT NOT NULL DEFAULT '1' AFTER `Enabled` ;
 ALTER TABLE `module` ADD `ImageUri` VARCHAR( 254 ) NOT NULL AFTER `Description` ;
+
+
+-- AS of R32
+INSERT INTO `setting` (`settingid`,`setting` ,`value` ,`type` ,`helptext` ,`options` ,`cat` ,`userChange`)
+VALUES (NULL , 'HELP_BASE', 'http://www.xibo.org.uk/manual/', 'text', NULL , NULL , 'path', '0');
