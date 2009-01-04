@@ -214,8 +214,8 @@ END;
 		$response 				= array();
 		$response['html'] 		= $table;
 		$response['success']	= true;
-		$response['paging']		= false;
-		$response['pagingDiv']	= '.info_table table';
+		$response['sortable']	= true;
+		$response['sortingDiv']	= '.info_table table';
 		
 		Kit::Redirect($response);
 	}
@@ -264,7 +264,7 @@ END;
 		$nameHelp		= $helpManager->HelpIcon("The Name of this Group.", true);
 		
 		$form = <<<END
-		<form class="dialog_form" action="$action" method="post">
+		<form class="XiboForm" action="$action" method="post">
 			<input type="hidden" name="groupid" value="$this->groupid">
 			<table>
 				<tr>
@@ -366,34 +366,37 @@ HTML;
 				) pages_assigned
 		ON pagegroup.pagegroupID = pages_assigned.pagegroupID
 END;
-		if(!$results = $db->query($SQL)) {
+		if(!$results = $db->query($SQL)) 
+		{
 			trigger_error($db->error());
 			trigger_error("Can't get this groups information", E_USER_ERROR);
 		}
 		
-		if ($db->num_rows($results)==0) {
+		if ($db->num_rows($results) == 0) 
+		{
 			echo "";
 			exit;
 		}
 		
 		//some table headings
 		$form = <<<END
-		<form id="group_media" method="post" action="index.php?p=group&q=assign" onsubmit="return ajax_submit_form(this,'#div_dialog',dialog_filter)">
+		<form class="XiboForm" method="post" action="index.php?p=group&q=assign">
 			<input type="hidden" name="groupid" value="$groupid">
-		<div class="dialog_table">
-		<table style="width:100%">
-			<thead>
-				<tr>
-				<th></th>
-				<th>Security Group</th>
-				<th>Assigned</th>
-				</tr>
-			</thead>
-			<tbody>
+			<div class="dialog_table">
+			<table style="width:100%">
+				<thead>
+					<tr>
+					<th></th>
+					<th>Security Group</th>
+					<th>Assigned</th>
+					</tr>
+				</thead>
+				<tbody>
 END;
 
 		//while loop
-		while ($row = $db->get_row($results)) {
+		while ($row = $db->get_row($results)) 
+		{
 			
 			$name		= $row[0];
 			$pageid		= $row[1];
@@ -415,22 +418,27 @@ END;
 		<input type='submit' value="Assign / Unassign" / >
 	</form>
 END;
-		echo $form;
-		exit;
+		
+		// Construct the Response
+		$response 				= array();
+		$response['html'] 		= $form;
+		$response['success']	= true;
+		$response['sortable']	= false;
+		$response['sortingDiv']	= '.info_table table';
+		
+		Kit::Redirect($response);
 	}
 	
-	function delete_form() {
+	function delete_form() 
+	{
 		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new AjaxRequest();
 		
 		//expect the playlistID to be set
 		$groupid = $this->groupid;
 		
 		//we can delete
 		$form = <<<END
-		<form class="dialog_form" method="post" action="index.php?p=group&q=delete">
+		<form class="XiboForm" method="post" action="index.php?p=group&q=delete">
 			<input type="hidden" name="groupid" value="$groupid">
 			<p>Are you sure you want to delete $this->group?</p>
 			<input type="submit" value="Yes">
@@ -438,8 +446,16 @@ END;
 		</form>
 END;
 		
+		// Construct the Response
+		$response 					= array();
+		$response['html'] 			= $form;
+		$response['success']		= true;
+		$response['dialogSize']		= true;
+		$response['dialogWidth']	= '400px';
+		$response['dialogHeight'] 	= '180px';
+		$response['dialogTitle']	= 'Delete Group';
 		
-		$arh->decode_response(true, $form);
+		Kit::Redirect($response);
 	}
 	
 	function add() {

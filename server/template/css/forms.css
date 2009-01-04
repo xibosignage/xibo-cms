@@ -119,14 +119,14 @@ form.scanresults table, form.scanresults td, form.scanresults th, #stack_media t
 	margin:10px 0px 10px 0px;
 }
 
-#group_media table, #group_media td, #group_media th {
+.dialog_table table, .dialog_table td, .dialog_table th {
 	border:1px solid #DCE4F5;
     background:#FFFFFF;
 	border-collapse:collapse;
 	margin:10px 0px 10px 0px;
 }
 
-form.scanresults th, #stack_media th, #group_media th {
+form.scanresults th, #stack_media th, .dialog_table th {
 	background:#E0E9F6;
 }
 

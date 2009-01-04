@@ -62,31 +62,23 @@ function XiboInitialise(scope){
 		return false;
 	});
 	
-	/*// Search for any forms that will need submitting
-    $('form.dialog_form').submit(function(){
-        ajax_submit_form($(this), div, callback);
+	// Search for any forms that will need submitting
+    $(scope + ' .XiboForm').submit(function(){
+        XiboFormSubmit(this);
         
         return false;
     });
     
-    // Capture the form submit
-    $('form.dialog_text_form').submit(function(){
+    // Search for any text forms that will need submitting
+    $(scope + ' .XiboTextForm').submit(function(){
         var inst = FCKeditorAPI.GetInstance("ta_text");
         
         $('#ta_text').val(inst.GetHTML());
         
-        ajax_submit_form($(this), div, callback);
+        XiboFormSubmit(this);
         
         return false;
     });
-    
-    // Capture the file form submit
-    $('.dialog_file_form').submit(function(){
-    
-        ajax_submit_form($(this), div, callback);
-        
-        return false;
-    });*/
 }
 
 /**
@@ -128,12 +120,12 @@ function XiboGridRender(gridId){
             $(outputDiv).html(respHtml);
             
             // Do we need to do anything else now?
-            if (response.paging) {
+            if (response.sortable) {
                 // Call paging
-                var pagingDiv = response.pagingDiv;
+                var sortingDiv = response.sortingDiv;
                 
-                if ($('tbody', pagingDiv).html() != "") {
-                    $(pagingDiv).tablesorter({
+                if ($('tbody', sortingDiv).html() != "") {
+                    $(sortingDiv).tablesorter({
                         sortList: [[1, 0]],
                         widthFixed: true
                     })
@@ -221,6 +213,16 @@ function XiboFormRender(formId) {
 	
 	// Dont then submit the link/button	
 	return false;
+}
+
+/**
+ * Submits the Form
+ * @param {Object} form
+ */
+function XiboFormSubmit(form)
+{
+	alert("Form Submit Code Missing");
+	return true;
 }
 
 /**
