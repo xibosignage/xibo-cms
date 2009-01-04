@@ -394,10 +394,9 @@ END;
 				<tbody>
 END;
 
-		//while loop
+		// while loop
 		while ($row = $db->get_row($results)) 
 		{
-			
 			$name		= $row[0];
 			$pageid		= $row[1];
 			$assigned	= $row[2];
@@ -488,32 +487,39 @@ END;
 		return true;	
 	}
 	
-	function edit() {
-		$db =& $this->db;
+	/**
+	 * Edits the Group Information
+	 * @return 
+	 */
+	function edit() 
+	{
+		$db 		=& $this->db;
 		
-		//ajax request handler
-		$arh = new AjaxRequest();
-		
-		$group 		= $_POST['group'];
-		$groupid 	= $_POST['groupid'];
+		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
+		$group 		= Kit::GetParam('group', _POST, _STRING);
 		
 		$userid 	= $_SESSION['userid'];
 		
 		//check on required fields
-		if ($group == "") {
-			$arh->decode_response(false,'group must have a value');
+		if ($group == "") 
+		{
+			Kit::Redirect(array('success'=>false, 'message' => 'Group Name cannot be empty.'));
 		}
 		
-		$SQL = "UPDATE `group` SET `group` = '$group' WHERE groupid = $groupid ";
-		if (!$db->query($SQL)) {
+		$SQL = sprintf("UPDATE `group` SET `group` = '%s' WHERE groupid = %d ", $db->escape_string($group), $groupid);
+		
+		if (!$db->query($SQL)) 
+		{
 			trigger_error($db->error());
-			$arh->decode_response(false,"Can not edit the group record");
+			Kit::Redirect(array('success'=>false, 'message' => 'Unexpected error editing the Group'));
 		}
 
+		// Construct the Response
+		$response 					= array();
+		$response['success']		= true;
+		$response['message']		= 'Edited the Group';
 		
-		$arh->decode_response(true,'Group Edited');
-		
-		return true;	
+		Kit::Redirect($response);	
 	}
 	
 	function delete() {

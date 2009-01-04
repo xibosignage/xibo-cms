@@ -55,9 +55,9 @@ function XiboInitialise(scope){
 	// Search for any Buttons / Links on the page that are used to load forms
 	$(scope + " .XiboFormButton").click(function(){
 		
-		var formId = $(this).attr("id");
+		var formUrl = $(this).attr("href");
 		
-		XiboFormRender(formId);
+		XiboFormRender(formUrl);
 		
 		return false;
 	});
@@ -145,12 +145,9 @@ function XiboGridRender(gridId){
 
 /**
  * Renders the formid provided
- * @param {Number} formId
+ * @param {String} formId
  */
-function XiboFormRender(formId) {
-	
-	// Use the formId to get the URL we need to call for this form
-	var url = $('#'+formId).attr("href");
+function XiboFormRender(formUrl) {
 	
 	// Prepare the Dialog
 	$('#div_dialog').dialog("close");
@@ -159,7 +156,7 @@ function XiboFormRender(formId) {
 	// Call with AJAX
     $.ajax({
         type: "get",
-        url: url + "&ajax=true",
+        url: formUrl + "&ajax=true",
         cache: false,
         dataType: "json",
         success: function(response){
@@ -189,7 +186,7 @@ function XiboFormRender(formId) {
                 
                 // Do we have to call any functions due to this success?
                 if (response.callBack != "" && response.callBack != undefined) {
-                    eval(callBack)(name);
+                    eval(response.callBack)(name);
                 }
 				
 				// Call Xibo Init for this form
@@ -221,8 +218,73 @@ function XiboFormRender(formId) {
  */
 function XiboFormSubmit(form)
 {
-	alert("Form Submit Code Missing");
-	return true;
+	// Get the URL from the action part of the form)
+	var url = $(form).attr("action") + "&ajax=true";
+	
+	$.ajax({type:"post", url:url, cache:false, dataType:"json", data:$(form).serialize(), 
+		
+		success:function(response) {
+			// Did we actually succeed
+			if (response.success) {
+				// Success - what do we do now?
+				
+				// We might need to keep the form open
+				if (!response.keepOpen) {
+					$('#div_dialog').dialog("close");
+				}
+				
+				// Should we display the message?
+				if (!response.hideMessage) {
+					SystemMessage(response.message);
+				}
+				
+				// Do we need to fire a callback function?
+				if (response.callBack != undefined && response.callBack != "") {
+                    eval(response.callBack)(name);
+                }
+				
+				// Do we need to load a new form?
+				if (response.loadForm) {
+					// We need: uri, callback, onsubmit
+					var uri = response.loadFormUri;
+					
+					// File forms give the URI back with &amp's in it
+					uri = unescape(uri);
+				
+					XiboFormRender(uri);
+				}
+				
+				// Should we refresh the window?
+				if (response.refresh) {
+					// We need to refresh - check to see if there is a new location provided
+					if (response.refreshLocation == undefined || repsonse.refreshLocation == "") {
+						// If not refresh the current location
+				    	window.location.reload();
+					}
+					else {
+						// Refresh to the new location
+						window.location = response.refreshLocation;
+					}
+				}
+			}
+			else {
+				// Why did we fail? 
+				if (response.login) {
+					// We were logged out
+	                LoginBox(response.message);
+	                return false;
+	            }
+	            else {
+	                // Likely just an error that we want to report on
+	                SystemMessage(response.message);
+	            }
+			}
+			
+			return false;
+		}
+	});
+	
+	return;
 }
 
 /**
