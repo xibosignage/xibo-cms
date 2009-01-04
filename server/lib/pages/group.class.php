@@ -585,7 +585,7 @@ END;
 			
 			// The page ID actuall refers to the pagegroup ID - we have to look up all the page ID's for this
 			// PageGroupID
-			$SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . Kit::GetParam($row[1], _INT);
+			$SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . Kit::ValidateParam($row[1], _INT);
 			
 			if(!$results = $db->query($SQL))
 			{
