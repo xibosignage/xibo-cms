@@ -173,8 +173,8 @@ END;
 		
 		while ($row = $db->get_assoc_row($results)) 
 		{
-			$group 		= Kit::ValidateParam($row['group'], _STRING);
 			$groupid	= Kit::ValidateParam($row['groupID'], _INT);
+			$group 		= Kit::ValidateParam($row['group'], _STRING);
 			
 			$editButtonId 		= uniqid();
 			$pageSecButtonId 	= uniqid();
@@ -220,6 +220,10 @@ END;
 		Kit::Redirect($response);
 	}
 	
+	/**
+	 * Display page logic
+	 * @return 
+	 */
 	function displayPage() 
 	{
 		if (!$this->has_permissions) 
@@ -242,6 +246,10 @@ END;
 		return false;
 	}
 	
+	/**
+	 * Add / Edit Group Form
+	 * @return 
+	 */
 	function GroupForm() 
 	{
 		$db				=& $this->db;
@@ -297,6 +305,10 @@ END;
 		return true;
 	}
 	
+	/**
+	 * Assign Page Security Filter form (will trigger grid)
+	 * @return 
+	 */
 	function PageSecurityForm()
 	{
 		$form = <<<HTML
@@ -340,11 +352,14 @@ HTML;
 		return true;
 	}
 	
+	/**
+	 * Assign Page Security Grid
+	 * @return 
+	 */
 	function data_grid() 
 	{
-		$db =& $this->db;
-		
-		$groupid = $_REQUEST['groupid'];
+		$db 		=& $this->db;
+		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
 		
 		$SQL = <<<END
 		SELECT 	pagegroup.pagegroup,
@@ -428,12 +443,14 @@ END;
 		Kit::Redirect($response);
 	}
 	
+	/**
+	 * Shows the Delete Group Form
+	 * @return 
+	 */
 	function delete_form() 
 	{
-		$db =& $this->db;
-		
-		//expect the playlistID to be set
-		$groupid = $this->groupid;
+		$db 		=& $this->db;
+		$groupid 	= $this->groupid;
 		
 		//we can delete
 		$form = <<<END
@@ -457,34 +474,38 @@ END;
 		Kit::Redirect($response);
 	}
 	
-	function add() {
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new AjaxRequest();
-		
-		$group 		= $_POST['group'];
-		$groupid 	= $_POST['groupid'];
-		
+	/**
+	 * Adds a group
+	 * @return 
+	 */
+	function add() 
+	{
+		$db 		=& $this->db;
+		$group 		= Kit::GetParam('group', _POST, _STRING);
 		$userid 	= $_SESSION['userid'];
 		
 		//check on required fields
-		if ($group == "") {
-			$arh->decode_response(false,'group must have a value');
+		if ($group == "") 
+		{
+			Kit::Redirect(array('success'=>false, 'message' => 'Group Name cannot be empty.'));
 		}
 		
 		//add the group record
-		$SQL = "INSERT INTO `group` (`group`) ";
-		$SQL.= " VALUES ('$group') ";
+		$SQL  = "INSERT INTO `group` (`group`) ";
+		$SQL .= sprintf(" VALUES ('%s') ", $db->escape_string($group));
 		
-		if (!$db->query($SQL)) {
+		if (!$db->query($SQL)) 
+		{
 			trigger_error($db->error());
-			$arh->decode_response(false,"Can not add the group");
+			Kit::Redirect(array('success'=>false, 'message' => 'Error adding a new group.'));
 		}
 		
-		$arh->decode_response(true,'group Added');
+		// Construct the Response
+		$response 					= array();
+		$response['success']		= true;
+		$response['message']		= 'Added the Group';
 		
-		return true;	
+		Kit::Redirect($response);		
 	}
 	
 	/**
@@ -522,80 +543,92 @@ END;
 		Kit::Redirect($response);	
 	}
 	
-	function delete() {
-		$db =& $this->db;
+	/**
+	 * Deletes a Group
+	 * @return 
+	 */
+	function delete() 
+	{
+		$db 		=& $this->db;		
+		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
 		
-		//ajax request handler
-		$arh = new AjaxRequest();
-		
-		$groupid 	= $_REQUEST['groupid'];
-		
-		$SQL = "DELETE FROM `group` WHERE groupid = $groupid";
+		$SQL = sprintf("DELETE FROM `group` WHERE groupid = %d", $groupid);
 	
-		if (!$db->query($SQL)) {
+		if (!$db->query($SQL)) 
+		{
 			trigger_error($db->error());
-			$arh->decode_response(false,'You can not delete this group. There are either page permissions assigned, or users with this group');
+			Kit::Redirect(array('success'=>false, 'message' => 'You can not delete this group. There are either page permissions assigned, or users with this group.'));
 		}
 		
-		$arh->decode_response(true,'Group Deleted');
-	
-		return true;
+		// Construct the Response
+		$response 					= array();
+		$response['success']		= true;
+		$response['message']		= 'Deleted the Group';
+		
+		Kit::Redirect($response);	
 	}
 	
 	/**
 	 * Assigns and unassigns pages from groups
-	 * @return ajax request handler
+	 * @return JSON object
 	 */
 	function assign() 
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new AjaxRequest();
-		
+		$db 		=& $this->db;
+		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
+
 		$pageids 	= $_POST['pageids'];
-		$groupid 	= $_POST['groupid'];
 		
-		foreach ($pageids as $pagegroupid) {
-			
+		foreach ($pageids as $pagegroupid) 
+		{
 			$row = explode(",",$pagegroupid);
 			
-			//the page ID actuall refers to the pagegroup ID - we have to look up all the page ID's for this
-			//pagegroupid
-			$SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . $row[1];
-			if(!$results = $db->query($SQL)) {
+			// The page ID actuall refers to the pagegroup ID - we have to look up all the page ID's for this
+			// PageGroupID
+			$SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . Kit::GetParam($row[1], _INT);
+			
+			if(!$results = $db->query($SQL))
+			{
 				trigger_error($db->error());
-				$arh->decode_response(false,"Can't assign this page to this group [error getting pages]");
+				Kit::Redirect(array('success'=>false, 'message' => 'Can\'t assign this page to this group [error getting pages]'));
 			}
 			
-			while ($page_row = $db->get_row($results)) {
-				
+			while ($page_row = $db->get_row($results)) 
+			{
 				$pageid = $page_row[0];
 			
-				if ($row[0]=="0") {
+				if ($row[0]=="0") 
+				{
 					//it isnt assigned and we should assign it
 					$SQL = "INSERT INTO lkpagegroup (groupID, pageID) VALUES ($groupid, $pageid)";
 					
-					if(!$db->query($SQL)) {
+					if(!$db->query($SQL)) 
+					{
 						trigger_error($db->error());
-						$arh->decode_response(false,"Can't assign this page to this group");
+						Kit::Redirect(array('success'=>false, 'message' => 'Can\'t assign this page to this group'));
 					}
 				}
-				else { 
+				else 
+				{ 
 					//it is already assigned and we should remove it
 					$SQL = "DELETE FROM lkpagegroup WHERE groupid = $groupid AND pageID = $pageid";
 					
-					if(!$db->query($SQL)) {
+					if(!$db->query($SQL)) 
+					{
 						trigger_error($db->error());
-						$arh->decode_response(false,"Can't remove this page from this group");
+						Kit::Redirect(array('success'=>false, 'message' => 'Can\'t remove this page from this group'));
 					}
 				}	
 			}
 		}
 		
-		$arh->response(AJAX_SUCCESS_NOREDIRECT,"Pages Assigned");
+		// Construct the Response
+		$response 					= array();
+		$response['success']		= true;
+		$response['message']		= 'Edited the Group Page Security';
+		$response['keepOpen']		= true;
 		
-		return false;
+		Kit::Redirect($response);
 	}
 }
 ?>

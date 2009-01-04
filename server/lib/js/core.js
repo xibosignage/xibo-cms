@@ -234,7 +234,7 @@ function XiboFormSubmit(form)
 				}
 				
 				// Should we display the message?
-				if (!response.hideMessage) {
+				if (!response.hideMessage || response.message == undefined) {
 					SystemMessage(response.message);
 				}
 				
@@ -254,7 +254,7 @@ function XiboFormSubmit(form)
 					XiboFormRender(uri);
 				}
 				
-				// Should we refresh the window?
+				// Should we refresh the window or refresh the Grids?
 				if (response.refresh) {
 					// We need to refresh - check to see if there is a new location provided
 					if (response.refreshLocation == undefined || repsonse.refreshLocation == "") {
@@ -265,6 +265,16 @@ function XiboFormSubmit(form)
 						// Refresh to the new location
 						window.location = response.refreshLocation;
 					}
+				}
+				else {
+					// We should refresh the grids (this is a global refresh)
+					$(" .XiboGrid").each(function(){
+		
+						var gridId = $(this).attr("id");
+						
+						// Render
+						XiboGridRender(gridId);
+					});
 				}
 			}
 			else {
