@@ -18,7 +18,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
+
 <div id="form_container">
 	<div id="form_header">
 		<div id="form_header_left">
@@ -30,11 +32,10 @@
 	<div id="form_body">
 		<div class="filter_form_container">
 			<div class="buttons">
-				<a id="add_button" href="index.php?p=group&q=group_form" alt="Add a Group"><div class="button_text">Add Group</div></a>
+				<a id="add_button" class="XiboFormButton" href="index.php?p=group&q=GroupForm" alt="Add a Group"><div class="button_text">Add Group</div></a>
 			</div>
 			<div class="leftbuttons">
 				<div class="buttons">
-					<a id="toggle_button" onclick="toggle_div_view('playlist_filterform_div')"><div class="button_text">Filter</div></a>
 					<a id="help_button" onclick="toggle_div_view('notes')"><div class="button_text">Help</div></a>
 				</div>	
 					<div id="notes" style="display:none;">
@@ -73,30 +74,8 @@
 						</div>
 					</div>	
 			</div>
-			<div id="playlist_filterform_div">
-				<?php $this->Group_filter(); ?>
-			</div>
 		</div>
-			<!-- Do not rename this div -->
-			<div id="paging">
-				<form>
-					<img src="img/forms/first.png" class="first"/>
-					<img src="img/forms/previous.png" class="prev"/>
-					<input type="text" class="pagedisplay" readonly size="5"/>
-					<img src="img/forms/next.png" class="next"/>
-					<img src="img/forms/last.png" class="last"/>
-					<select class="pagesize">
-						<option selected="selected" value="10">10</option>
-						<option value="20">20</option>
-						<option value="30">30</option>
-						<option  value="40">40</option>
-					</select>
-				</form>
-			</div>
-			<div id="data_table">
-
-			</div>
-	</div>
+		<?php $this->GroupGrid(); ?>
 </div>
 	
 	<div id="form_footer">

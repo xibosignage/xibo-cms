@@ -82,7 +82,7 @@ var init_button = function(source, dialogTitle, exec_filter_callback, init_callb
 	
 	//do any changes to the dialog form here
 	$('#div_dialog').parent().children().each(function(){
-	 $(".ui-dialog-title", this).html(dialogTitle);
+		$(".ui-dialog-title", this).html(dialogTitle);
 	});
 
 	//call the load form
@@ -204,7 +204,7 @@ var load_form = function(url, div, callback, onSuccess) {
 				
 				var index = 0;
 				
-				//Focus in the first form element
+				// Focus in the first form element
 				$('input[@type=text]','#div_dialog').eq(0).focus();
 			}
 			else if (response[0] == '1') { //fail
@@ -327,90 +327,104 @@ function grid_form(source, dialogTitle, exec_filter_callback,filter,output,width
 	});
 
 	//call the load form
-	load_form($(source).attr('href'),$('#div_dialog'), exec_filter_callback, function() {
-		//init the filter bind
-		$(' :input','#'+filter).change(function() {	
-			exec_filter(filter,output);
-		});
-		
-		//make sure the form doesnt get submitted using the traditional method
-		$('#'+filter).submit(function(){
-			return false;
-		});
-			
-		//exec the filter on start
-		exec_filter(filter,output);
-		
-		$('#div_dialog').dialog("open");
-		
-		return false;
-	});
+    load_form($(source).attr('href'), $('#div_dialog'), exec_filter_callback, function(){
+        //init the filter bind
+        $(' :input', '#' + filter).change(function(){
+            exec_filter(filter, output);
+        });
+        
+        //make sure the form doesnt get submitted using the traditional method
+        $('#' + filter).submit(function(){
+            return false;
+        });
+        
+        //exec the filter on start
+        exec_filter(filter, output);
+        
+        $('#div_dialog').dialog("open");
+        
+        return false;
+    });
 	
 	return false;
 }
 
-//submits a form via ajax
-ajax_submit_link  = function(link, callback) {
+/**
+ * Submits a form via AJAX
+ * @param {Object} link
+ * @param {Object} callback
+ */
+function ajax_submit_link(link, callback){
 
-	var url_loc = $(link).attr("href") + "&ajax=true";
-	
-	$.ajax({type:"post", url:url_loc, cache:false, datatype:"html", 
-		success:function(transport) {
-		
-			var response = transport.split('|');
-			
-			if (response[0] == '0') {
-				//success
-				$('#div_dialog').dialog("close");
-				
-				if (callback != "" && callback != undefined) {
-					eval(callback)(name);
-				}
-				
-				SystemMessage(response[1]);
-			}
-			else if (response[0] == '1') {
-				//failure
-				SystemMessage(response[1]);
-			}
-			else if (response[0] == '2') { //login
-				SystemMessage("You need to login");
-				//success
-				$('#div_dialog').dialog("close");
-			}
-			else if (response[0] == '3') { //redirect
-				window.location = response[1];
-			}
-			else if (response[0] == '4') { //success, but dont close the form
-				if (callback != "" && callback != undefined) {
-					eval(callback)(name);
-				}
-				SystemMessage(response[1]);
-			}
-			else if (response[0] == '5') { //success, refresh
-			    SystemMessage(response[1]);
-			    window.location.reload();
-			}
-			else if (response[0] == '6') { //success, load form
-				//we need: uri, callback, onsubmit
-				var uri = response[1];
-				var cb = response[2];
-				var onsubmit = response[3];
-				
-				//File forms give the URI back with &amp's in it
-				uri = unescape(uri);
-				
-				load_form(uri, $('#div_dialog'), cb, onsubmit);
-			}
-			else {
-				SystemMessage("An unknown error occured");
-			}
-			
-			return false;
-		}
-	});
-	
-	return false; //so we dont then submit the form again
+    var url_loc = $(link).attr("href") + "&ajax=true";
+    
+    $.ajax({
+        type: "post",
+        url: url_loc,
+        cache: false,
+        datatype: "html",
+        success: function(transport){
+        
+            var response = transport.split('|');
+            
+            if (response[0] == '0') {
+                //success
+                $('#div_dialog').dialog("close");
+                
+                if (callback != "" && callback != undefined) {
+                    eval(callback)(name);
+                }
+                
+                SystemMessage(response[1]);
+            }
+            else 
+                if (response[0] == '1') {
+                    //failure
+                    SystemMessage(response[1]);
+                }
+                else 
+                    if (response[0] == '2') { //login
+                        SystemMessage("You need to login");
+                        //success
+                        $('#div_dialog').dialog("close");
+                    }
+                    else 
+                        if (response[0] == '3') { //redirect
+                            window.location = response[1];
+                        }
+                        else 
+                            if (response[0] == '4') { //success, but dont close the form
+                                if (callback != "" && callback != undefined) {
+                                    eval(callback)(name);
+                                }
+                                SystemMessage(response[1]);
+                            }
+                            else 
+                                if (response[0] == '5') { //success, refresh
+                                    SystemMessage(response[1]);
+                                    window.location.reload();
+                                }
+                                else 
+                                    if (response[0] == '6') { //success, load form
+                                        //we need: uri, callback, onsubmit
+                                        var uri = response[1];
+                                        var cb = response[2];
+                                        var onsubmit = response[3];
+                                        
+                                        //File forms give the URI back with &amp's in it
+                                        uri = unescape(uri);
+                                        
+                                        load_form(uri, $('#div_dialog'), cb, onsubmit);
+                                    }
+                                    else {
+                                        SystemMessage("An unknown error occured");
+                                    }
+            
+            return false;
+        }
+    });
+    
+    return false; //so we dont then submit the form again
 };
 
 function sfHover () {
@@ -426,32 +440,13 @@ function sfHover () {
 	}
 }
 
-function validateScan(formid, field, button) {
-	//loop through all the checkboxes in the form to see if there is one checked
-	//if there is, return true there and then, otherwise continue
-	var form = document.getElementById(formid)
-	
-	var checkboxes = form.elements[field];
-	if(typeof checkboxes.length == 'undefined') checkboxes = [checkboxes];
-	
-	var count_selected = checkboxes.length;
-	
-	for (var i=0; i<count_selected; i++) {
-		var value = checkboxes[i].checked;
-		
-		if(value) {
-			document.getElementById(button).disabled = false;
-			return true;
-		}
-		else {
-			document.getElementById(button).disabled = true;
-		}
-	}
-	
-	return true;
-}
-
-//checks all checkboxes
+/**
+ * Checks all the checkboxes for a particular form
+ * @param {Object} formid
+ * @param {Object} field
+ * @param {Object} value
+ * @param {Object} button
+ */
 function checkAll(formid, field, value, button) { //checks all the boxes with the provided name
 	
 	var form = document.getElementById(formid);
@@ -469,7 +464,11 @@ function checkAll(formid, field, value, button) { //checks all the boxes with th
 	}
 }
 
-//inverts all checkboxes
+/**
+ * Inverts all the checkboxes on a form
+ * @param {Object} formid
+ * @param {Object} field
+ */
 function invertChecked(formid, field) { //inverts the selected checkboxes
 	
 	var form = document.getElementById(formid);
@@ -525,8 +524,7 @@ function confirm_delete() {
  * Returns the parameter specified in name from the window.location.href
  * @param {Object} name
  */
-function gup( name )
-{  
+function gup( name ){  
 	name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");  
 	var regexS = "[\\?&]"+name+"=([^&#]*)";  
 	var regex = new RegExp( regexS );  
@@ -539,8 +537,7 @@ function gup( name )
 /**
  * Gets the current window URL
  */
-function getUrl() 
-{
+function getUrl() {
 	var url = window.location.href;
 	url = url.split("?");
 	
@@ -551,8 +548,7 @@ function getUrl()
  * Displays the system message
  * @param {String} message
  */
-function SystemMessage(messageText) 
-{
+function SystemMessage(messageText) {
 	var message 			= $('#system_message');
 	var messageContainer 	= message.parent().parent();
 
@@ -561,14 +557,10 @@ function SystemMessage(messageText)
 		
 	$('span', message).html(messageText);
 
-	messageContainer
-		.css("top", top)
-		.css("left", left)
-		.show();
+    messageContainer.css("top", top).css("left", left).show();
 }
 
-function fileFormSubmit()
-{
+function fileFormSubmit(){
 	// Update the UI to say its submitting
 	$('#uploadProgress').fadeIn("slow");
 	$('#file_upload').parent().hide();
@@ -580,8 +572,7 @@ function fileFormSubmit()
  * @param {Object} fileId
  * @param {Object} errorCode
  */
-function fileUploadReport(fileName, fileId, errorCode)
-{
+function fileUploadReport(fileName, fileId, errorCode){
 	var button = document.getElementById("btnSave");
 	var uploadProgress = $('#uploadProgress');
 	

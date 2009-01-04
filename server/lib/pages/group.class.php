@@ -18,7 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-class groupDAO {
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+ 
+class groupDAO 
+{
 	private $db;
 	private $user;
 	private $isadmin = false;
@@ -37,58 +40,65 @@ class groupDAO {
 	//init
 	function __construct(database $db, user $user) 
 	{
-		$this->db 	=& $db;
-		$this->user =& $user;
+		$this->db 		=& $db;
+		$this->user 	=& $user;
+		$this->sub_page = Kit::GetParam('sp', _REQUEST, _WORD, 'view');
 		
-		if ($_SESSION['usertype']==1) $this->isadmin = true;
+		$usertype 		= Kit::GetParam('usertype', _SESSION, _INT, 0);
+		$this->groupid	= Kit::GetParam('groupid', _REQUEST, _INT, 0);
 		
-		if (isset($_REQUEST['sp'])) {
-			$this->sub_page = $_REQUEST['sp'];
-		}
-		else {
-			$this->sub_page = "view";
-		}
+		if ($usertype == 1) $this->isadmin = true;
 		
-		if (isset($_REQUEST['groupid']) && $_REQUEST['groupid'] != "") {
-								
-			$this->groupid = $_REQUEST['groupid'];
-			
+		// Do we have a user group selected?
+		if ($this->groupid != 0) 
+		{						
+			// If so then we will need to get some information about it
 			$SQL = <<<END
-			SELECT 	group.groupID,
-					group.group
+			SELECT 	group.GroupID,
+					group.Group
 			FROM `group`
-			WHERE groupID = $this->groupid
+			WHERE groupID = %d
 END;
 			
-			if (!$results = $db->query($SQL)) {
+			$SQL = sprintf($SQL, $this->groupid);
+			
+			if (!$results = $db->query($SQL)) 
+			{
 				trigger_error($db->error());
 				trigger_error("Can not get Group information.", E_USER_ERROR);
 			}
 			
-			$aRow = $db->get_row($results);
+			$aRow = $db->get_assoc_row($results);
 			
-			$this->group 			= $aRow[1];
+			$this->group = $aRow['Group'];
 		}
 	}
 	
-	function on_page_load() {
+	function on_page_load() 
+	{
 		return "";
 	}
 	
-	function echo_page_heading() {
+	function echo_page_heading() 
+	{
 		echo "Group Admin";
 		return true;
 	}
 	
-	function group_filter() {
-		$db =& $this->db;
-		
+	/**
+	 * Filter Form for the group page
+	 * Included by the template view
+	 * Not AJAX
+	 * @return 
+	 */
+	function GroupGrid() 
+	{
 		//filter form defaults
 		$filter_name = "";
 		if (isset($_SESSION['group']['name'])) $filter_name = $_SESSION['group']['name'];
 		
-		$output = <<<END
-		<form id="filter_form">
+		$filterForm = <<<END
+		<form>
 			<input type="hidden" name="p" value="group">
 			<input type="hidden" name="q" value="group_view">
 			<table>
@@ -99,28 +109,52 @@ END;
 			</table>
 		</form>
 END;
-		echo $output;
+		$id = uniqid();
+		
+		$xiboGrid = <<<HTML
+		<div class="XiboGrid" id="$id">
+			<div class="XiboFilter">
+				$filterForm
+			</div>
+			<div class="XiboData">
+			
+			</div>
+		</div>
+HTML;
+		echo $xiboGrid;
 	}
 	
-	function group_view() {
-		$db =& $this->db;
+	/**
+	 * Group Grid
+	 * Called by AJAX
+	 * @return 
+	 */
+	function group_view() 
+	{
+		$db 		=& $this->db;
+		$user		=& $this->user;
 		
-		$filter_name = clean_input($_REQUEST['name'], VAR_FOR_SQL, $db);
+		$filter_name = Kit::GetParam('name', _POST, _STRING);
+		
 		setSession('group', 'name', $filter_name);
 	
 		$SQL = <<<END
 		SELECT 	group.group,
 				group.groupID
 		FROM `group`
-		WHERE 1=1
+		WHERE 1 = 1
 END;
-		if ($filter_name != "") {
-			$SQL .= " AND group.group LIKE '%$filter_name%' ";
+		if ($filter_name != '') 
+		{
+			$SQL .= sprintf(" AND group.group LIKE '%%%s%%' ", $db->escape_string($filter_name));
 		}
 		
 		$SQL .= " ORDER BY group.group ";
 		
-		if (!$results = $db->query($SQL)) {
+		Debug::LogEntry($db, 'audit', $SQL);
+		
+		if (!$results = $db->query($SQL)) 
+		{
 			trigger_error($db->error());
 			trigger_error("Can not get group information.", E_USER_ERROR);
 		}
@@ -136,26 +170,34 @@ END;
 			</thead>
 			<tbody>
 END;
-		echo $table;
 		
-		while ($row = $db->get_row($results)) {
-		
-			$group 		= $row[0];
-			$groupid	= $row[1];
+		while ($row = $db->get_assoc_row($results)) 
+		{
+			$group 		= Kit::ValidateParam($row['group'], _STRING);
+			$groupid	= Kit::ValidateParam($row['groupID'], _INT);
 			
-			//we only want to show certain buttons, depending on the user logged in
-			if ($_SESSION['usertype']!="1") {
+			$editButtonId 		= uniqid();
+			$pageSecButtonId 	= uniqid();
+			$deleteButtonId 	= uniqid();
+			
+			Debug::LogEntry($db, 'audit', 'UserTypeID is: ' . $user->GetUserTypeID());
+			
+			// we only want to show certain buttons, depending on the user logged in
+			if ($user->GetUserTypeID() != 1) 
+			{
 				//dont any actions
 				$buttons = "No available Actions";
 			}
-			else {
+			else 
+			{
 				$buttons = <<<END
-				<a class="positive" href="index.php?p=group&q=group_form&groupid=$groupid" onclick="return grid_form(this,'Edit Group',dialog_filter,'group_filter_form','pages_grid',600,570)"><span>Edit</span></a>
-				<a class="negative" href="index.php?p=group&q=delete_form&groupid=$groupid" onclick="return init_button(this,'Delete Group',exec_filter_callback,set_form_size(350,160))"><span>Delete</span></a>
+				<a id="$editButtonId" class="XiboFormButton positive" href="index.php?p=group&q=GroupForm&groupid=$groupid"><span>Edit</span></a>
+				<a id="$pageSecButtonId" class="XiboFormButton positive" href="index.php?p=group&q=PageSecurityForm&groupid=$groupid"><span>Page Security</span></a>
+				<a id="$deleteButtonId" class="XiboFormButton negative" href="index.php?p=group&q=delete_form&groupid=$groupid"><span>Delete</span></a>
 END;
 			}
 			
-			$table = <<<END
+			$table .= <<<END
 			<tr>
 				<td>$group</td>
 				<td>
@@ -165,21 +207,29 @@ END;
 				</td>
 			</tr>
 END;
-			echo $table;
 		}
-		echo "</tbody></table></div>";
+		$table .= "</tbody></table></div>";
 		
+		// Construct the Response
+		$response 				= array();
+		$response['html'] 		= $table;
+		$response['success']	= true;
+		$response['paging']		= false;
+		$response['pagingDiv']	= '.info_table table';
+		
+		Kit::Redirect($response);
 	}
 	
-	function displayPage() {
-		$db =& $this->db;
-		
-		if (!$this->has_permissions) {
+	function displayPage() 
+	{
+		if (!$this->has_permissions) 
+		{
 			displayMessage(MSG_MODE_MANUAL, "You do not have permissions to access this page");
 			return false;
 		}
 		
-		switch ($this->sub_page) {
+		switch ($this->sub_page) 
+		{
 				
 			case 'view':
 				require("template/pages/group_view.php");
@@ -192,17 +242,14 @@ END;
 		return false;
 	}
 	
-	function group_form() 
+	function GroupForm() 
 	{
 		$db				=& $this->db;
 		$user			=& $this->user;
 		
-		$helpManager		= new HelpManager($db, $user);
-		
-		//ajax request handler
-		$arh = new AjaxRequest();
-		
-		//alter the action variable depending on which form we are after
+		$helpManager	= new HelpManager($db, $user);
+				
+		// alter the action variable depending on which form we are after
 		if ($this->groupid == "") 
 		{
 			$action = "index.php?p=group&q=add";
@@ -236,48 +283,65 @@ END;
 		</form>
 END;
 
-		if ($this->groupid == "") 
-		{
-			//add form, so finish
-			$arh->decode_response(true,$form);
-		}
+		// Construct the Response
+		$response 					= array();
+		$response['html'] 			= $form;
+		$response['success']		= true;
+		$response['dialogSize']		= true;
+		$response['dialogWidth']	= '400px';
+		$response['dialogHeight'] 	= '180px';
+		$response['dialogTitle']	= 'Add/Edit Group';
+		
+		Kit::Redirect($response);
 
-		//if we get here we are an edit form - and therefore want a grid showing all the assigned / unassigned pages
-		$form .= <<<END
-	<form id="group_filter_form" onsubmit="false">
-		<input type="hidden" name="p" value="group">
-		<input type="hidden" name="q" value="data_grid">
-		<input type="hidden" name="groupid" value="$this->groupid">
-		<table style="display:none;" id="group_filterform" class="filterform">
-			<tr>
-				<td>Name</td>
-				<td><input type="text" name="name" id="name"></td>
-			</tr>
-		</table>
-	</form>
-	<div id="paging_dialog">
-		<form>
-			<img src="img/forms/first.png" class="first"/>
-			<img src="img/forms/previous.png" class="prev"/>
-			<input type="text" class="pagedisplay" readonly size="5"/>
-			<img src="img/forms/next.png" class="next"/>
-			<img src="img/forms/last.png" class="last"/>
-			<select class="pagesize">
-				<option selected="selected" value="10">10</option>
-				<option value="20">20</option>
-				<option value="30">30</option>
-				<option  value="40">40</option>
-			</select>
-		</form>
-	</div>
-	<div id="pages_grid"></div>
-END;
-	
-		$arh->decode_response(true,$form);
 		return true;
 	}
 	
-	function data_grid() {
+	function PageSecurityForm()
+	{
+		$form = <<<HTML
+		<form>
+			<input type="hidden" name="p" value="group">
+			<input type="hidden" name="q" value="data_grid">
+			<input type="hidden" name="groupid" value="$this->groupid">
+			<table style="display:none;" id="group_filterform" class="filterform">
+				<tr>
+					<td>Name</td>
+					<td><input type="text" name="name" id="name"></td>
+				</tr>
+			</table>
+		</form>
+HTML;
+		
+		$id = uniqid();
+		
+		$xiboGrid = <<<HTML
+		<div class="XiboGrid" id="$id">
+			<div class="XiboFilter">
+				$form
+			</div>
+			<div class="XiboData">
+			
+			</div>
+		</div>
+HTML;
+		
+		// Construct the Response
+		$response 					= array();
+		$response['html'] 			= $xiboGrid;
+		$response['success']		= true;
+		$response['dialogSize']		= true;
+		$response['dialogWidth']	= '500px';
+		$response['dialogHeight'] 	= '380px';
+		$response['dialogTitle']	= 'Page Security';
+		
+		Kit::Redirect($response);
+
+		return true;
+	}
+	
+	function data_grid() 
+	{
 		$db =& $this->db;
 		
 		$groupid = $_REQUEST['groupid'];
@@ -460,7 +524,8 @@ END;
 	 * Assigns and unassigns pages from groups
 	 * @return ajax request handler
 	 */
-	function assign() {
+	function assign() 
+	{
 		$db =& $this->db;
 		
 		//ajax request handler

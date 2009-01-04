@@ -19,6 +19,7 @@
  */ 
 @import url(forms.css);
 @import url(links.css);
+@import url(xibo.css);
 
 body {
 	background: url(../../img/headerback.png) repeat-x;

@@ -43,7 +43,14 @@ class Kit
 	// Ends the current execution and issues a redirect - should only be called before headers have been sent (i.e. no output)
 	static function Redirect($page, $message = '', $pageIsUrl = false)
 	{
-		$url = $page;
+		$url 	= $page;
+		$ajax 	= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
+		
+		if ($ajax)
+		{
+			echo json_encode($page);
+			die();
+		}
 		
 		// Header or JS redirect
 		if (headers_sent()) 

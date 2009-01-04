@@ -59,6 +59,7 @@ else
 		<!-- Our own -->
 		<link rel="stylesheet" type="text/css" href="template/css/presentation.css" />
 		<script type="text/javascript" src="lib/js/functions.js"></script>
+		<script type="text/javascript" src="lib/js/core.js"></script>
         <?php
 		if ($p != '') 
 		{
