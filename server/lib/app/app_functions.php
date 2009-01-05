@@ -63,7 +63,7 @@ function displayMessage($mode = MSG_MODE_AUTO, $msg="", $show_back = true, $temp
 	}
 }
 
-//Returns a drop down list based on the provided SQL - the ID should be the first field, and the name the second
+// Returns a drop down list based on the provided SQL - the ID should be the first field, and the name the second
 function dropdownlist($SQL, $list_name, $selected = "", $callback = "", $flat_list = false, $checkPermissions = false, $userid = "", $permissionLevel = "see", $useQueryId = false) {
 	global $db;
 	global $user;

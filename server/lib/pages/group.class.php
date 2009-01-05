@@ -638,15 +638,20 @@ END;
 	 */
 	function MenuItemSecurityForm()
 	{
+		$db 			=& $this->db;
+		$user 			=& $this->user;
+		$formMgr 		= new FormManager($db, $user);
+		$filterMenuList = $formMgr->DropDown("SELECT MenuID, Menu FROM menu", 'filterMenu');
+		
 		$form = <<<HTML
 		<form>
 			<input type="hidden" name="p" value="group">
 			<input type="hidden" name="q" value="MenuItemSecurityGrid">
 			<input type="hidden" name="groupid" value="$this->groupid">
-			<table style="display:none;" id="group_filterform" class="filterform">
+			<table>
 				<tr>
-					<td>Name</td>
-					<td><input type="text" name="name" id="name"></td>
+					<td>Menu</td>
+					<td>$filterMenuList</td>
 				</tr>
 			</table>
 		</form>
@@ -688,6 +693,10 @@ HTML;
 		$db 		=& $this->db;
 		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
 		
+		$filter_menu = Kit::GetParam('filterMenu', _POST, _STRING);
+		
+		setSession('group', 'menu', $filter_menu);
+		
 		$SQL = <<<END
 		SELECT 	menu.Menu,
 				menuitem.Text,
@@ -709,7 +718,11 @@ HTML;
 				 WHERE  GroupID = $groupid
 				) menuitems_assigned
 		ON menuitem.MenuItemID = menuitems_assigned.MenuItemID
+		WHERE menuitem.MenuID = %d
 END;
+		
+		$SQL = sprintf($SQL, $filter_menu);
+
 		if(!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
@@ -730,7 +743,6 @@ END;
 				<thead>
 					<tr>
 					<th></th>
-					<th>Menu</th>
 					<th>Menu Item</th>
 					<th>Assigned</th>
 					</tr>
@@ -749,7 +761,6 @@ END;
 			
 			$form .= "<tr>";
 			$form .= "<td><input type='checkbox' name='pageids[]' value='$assignedId,$menuItemId'></td>";
-			$form .= "<td>$menuName</td>";
 			$form .= "<td>$itemName</td>";
 			$form .= "<td>$assigned</td>";
 			$form .= "</tr>";
