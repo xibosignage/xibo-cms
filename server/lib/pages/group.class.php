@@ -768,10 +768,10 @@ END;
 
 		//table ending
 		$form .= <<<END
-			</tbody>
-		</table>
+				</tbody>
+			</table>
+			<input type='submit' value="Assign / Unassign" / >
 		</div>
-		<input type='submit' value="Assign / Unassign" / >
 	</form>
 END;
 		
@@ -781,6 +781,57 @@ END;
 		$response['success']	= true;
 		$response['sortable']	= false;
 		$response['sortingDiv']	= '.info_table table';
+		
+		Kit::Redirect($response);
+	}
+	
+	/**
+	 * Menu Item Security Assignment to Groups
+	 * @return 
+	 */
+	function MenuItemSecurityAssign()
+	{
+		$db 		=& $this->db;
+		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
+
+		$pageids 	= $_POST['pageids'];
+		
+		foreach ($pageids as $menuItemId) 
+		{
+			$row = explode(",", $menuItemId);
+			
+			$menuItemId = $row[1];
+			
+			// If the ID is 0 then this menu item is not currently assigned
+			if ($row[0]=="0") 
+			{
+				//it isnt assigned and we should assign it
+				$SQL = sprintf("INSERT INTO lkmenuitemgroup (GroupID, MenuItemID) VALUES (%d, %d)", $groupid, $menuItemId);
+				
+				if(!$db->query($SQL)) 
+				{
+					trigger_error($db->error());
+					Kit::Redirect(array('success'=>false, 'message' => 'Can\'t assign this menu item to this group'));
+				}
+			}
+			else 
+			{ 
+				//it is already assigned and we should remove it
+				$SQL = sprintf("DELETE FROM lkmenuitemgroup WHERE groupid = %d AND MenuItemID = %d", $groupid, $menuItemId);
+				
+				if(!$db->query($SQL)) 
+				{
+					trigger_error($db->error());
+					Kit::Redirect(array('success'=>false, 'message' => 'Can\'t remove this menu item from this group'));
+				}
+			}
+		}
+		
+		// Construct the Response
+		$response 					= array();
+		$response['success']		= true;
+		$response['message']		= 'Edited the MenuItem Group Security';
+		$response['keepOpen']		= true;
 		
 		Kit::Redirect($response);
 	}
