@@ -131,7 +131,7 @@ class moduleDAO
 	public function AddForm()
 	{
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$form = $this->module->AddForm();
 		
@@ -151,7 +151,7 @@ class moduleDAO
 	public function EditForm()
 	{
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$form = $this->module->EditForm();
 		
@@ -171,7 +171,7 @@ class moduleDAO
 	public function DeleteForm()
 	{
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$form = $this->module->DeleteForm();
 		
@@ -191,7 +191,7 @@ class moduleDAO
 	function AddMedia() 
 	{
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		if (!isset($_REQUEST['termsOfService']))
 		{
@@ -226,7 +226,7 @@ class moduleDAO
 	function EditMedia() 
 	{
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		if (!isset($_REQUEST['termsOfService']))
 		{
@@ -261,7 +261,7 @@ class moduleDAO
 	function DeleteMedia() 
 	{
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//Optional parameters
 		if (isset($_POST['layoutid'])) $layoutid = Kit::GetParam('layoutid', _POST, _INT);

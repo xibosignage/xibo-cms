@@ -93,7 +93,7 @@ class userDAO
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 
 		$user		= Kit::GetParam('username', _POST, _USERNAME);
 		$password 	= md5(Kit::GetParam('password', _POST, _USERNAME));
@@ -150,7 +150,7 @@ class userDAO
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 			
 		$error = "";
 
@@ -226,7 +226,7 @@ class userDAO
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$userid = $_POST['userid'];
 
@@ -438,7 +438,7 @@ END;
 		$helpManager	= new HelpManager($db, $user);
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$userid		= $this->userid;
 		$username 	= $this->username;
@@ -575,7 +575,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//expect the $userid to be set
 		$userid = $this->userid;
@@ -602,7 +602,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$layoutid	= $_REQUEST['layoutid'];
 		$regionid	= $_REQUEST['regionid'];
@@ -663,7 +663,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$userid		= $_POST['userid'];
 		$layoutid	= $_POST['layoutid'];

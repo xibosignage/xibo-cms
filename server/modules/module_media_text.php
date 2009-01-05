@@ -233,7 +233,7 @@ FORM;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//Parameters
 		$layoutid 	= $_REQUEST['layoutid'];
@@ -265,7 +265,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//Other properties
 		$direction	  = $_POST['direction'];
@@ -331,7 +331,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//Other properties
 		$direction	  = $_POST['direction'];

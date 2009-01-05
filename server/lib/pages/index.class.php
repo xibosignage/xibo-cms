@@ -58,7 +58,7 @@ class indexDAO
 		if (isset($_REQUEST['ajax'])) 
 		{
 			//ajax request handler
-			$arh = new AjaxRequest();
+			$arh = new ResponseManager();
 			
 			//use the ajax login method
 			if($user->login($username,$password)) 

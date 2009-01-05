@@ -58,7 +58,7 @@ class displayDAO
 			if (!$this->has_permissions && $this->ajax == 'true') 
 			{
 				//ajax request handler
-				$arh = new AjaxRequest();
+				$arh = new ResponseManager();
 				$arh->decode_response(false, "You do not have permissions to edit this display");
 			}
 
@@ -119,7 +119,7 @@ SQL;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 
 		$displayid 		= Kit::GetParam('displayid', _POST, _INT);
 		$display 		= Kit::GetParam('display', _POST, _STRING);
@@ -225,7 +225,7 @@ SQL;
 		$helpManager		= new HelpManager($db, $user);
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//get some vars
 		$displayid 			= $this->displayid;

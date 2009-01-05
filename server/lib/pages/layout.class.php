@@ -94,7 +94,7 @@ class layoutDAO
 				// check on permissions
 				if ($ajax == "true" && (!$this->has_permissions)) 
 				{
-					$arh = new AjaxRequest();
+					$arh = new ResponseManager();
 					$arh->decode_response(false, "You do not have permissions to edit this layout");
 				}
 			}
@@ -204,7 +204,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 
 		$layout 		= Kit::GetParam('layout', _POST, _STRING);
 		$description 	= Kit::GetParam('description', _POST, _STRING);
@@ -316,7 +316,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 
 		$layout 		= Kit::GetParam('layout', _POST, _STRING);
 		$description 	= Kit::GetParam('description', _POST, _STRING);
@@ -388,7 +388,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//expect the $layoutid to be set
 		$layoutid = $this->layoutid;
@@ -442,7 +442,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 
 		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
 		
@@ -476,7 +476,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
 		
@@ -664,7 +664,7 @@ END;
 		$tags			= $this->tags;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//check on permissions
 		
@@ -769,7 +769,7 @@ END;
 		$helpManager	= new HelpManager($db, $user);
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 
 		//load the XML into a SimpleXML OBJECT
 		$xml = simplexml_load_string($this->xml);
@@ -872,7 +872,7 @@ FORM;
 		$user 	=& $this->user;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$layoutid 			= Kit::GetParam('layoutid', _POST, _INT);
 		$bg_color 			= '#'.Kit::GetParam('bg_color', _POST, _STRING);
@@ -941,7 +941,7 @@ FORM;
 		$user 	=& $this->user;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
 		
@@ -977,7 +977,7 @@ FORM;
 		$user 	=& $this->user;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
 		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
@@ -1014,7 +1014,7 @@ FORM;
 		$user 	=& $this->user;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//Vars
 		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
@@ -1051,7 +1051,7 @@ FORM;
 		$user 	=& $this->user;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//Vars
 		$regionid 		= Kit::GetParam('regionid', _POST, _STRING);
@@ -1091,7 +1091,7 @@ FORM;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//Parameters
 		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
@@ -1209,7 +1209,7 @@ HTML;
 		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//Library location
 		$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
@@ -1479,7 +1479,7 @@ END;
 		$xml = simplexml_load_string($this->xml);
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$regionid 		= Kit::GetParam('regionid', _REQUEST, _STRING);
 		$mediaid 		= Kit::GetParam('mediaid', _REQUEST, _INT);
@@ -1525,7 +1525,7 @@ END;
 		include_once("lib/pages/region.class.php");
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//Expect
 		$layoutid = Kit::GetParam('layoutid', _POST, _INT, 0);

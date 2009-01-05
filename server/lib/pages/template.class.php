@@ -94,7 +94,7 @@ class templateDAO
 			//check on permissions
 			if (isset($_REQUEST['ajax']) && (!$this->has_permissions || !$see_permission)) {
 				//ajax request handler
-				$arh = new AjaxRequest();
+				$arh = new ResponseManager();
 				$arh->decode_response(false, "You do not have permissions to edit this layout");
 			}
 		}
@@ -300,7 +300,7 @@ END;
 	function TemplateForm() {
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 	
 		//database fields
 		$templateid 		= $this->templateid;
@@ -376,7 +376,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 
 		$template 		= $_POST['template'];
 		$tags		 	= $_POST['tags'];
@@ -438,7 +438,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$arh->decode_response(true, 'Editing of templates currently unavailable.');
 		return false;	
@@ -454,7 +454,7 @@ END;
 		$templateid = $_REQUEST['templateid'];
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$arh->decode_response(true, 'Deleting of templates currently unavailable.');
 		return false;	

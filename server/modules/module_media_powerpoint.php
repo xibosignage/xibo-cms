@@ -361,7 +361,7 @@ FORM;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		//Parameters
 		$layoutid 	= GetParam("layoutid", _REQUEST, _INT);
@@ -456,7 +456,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		if (!$_POST['hidFileID']) 
 		{
@@ -600,7 +600,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 
 		//For the edit we may not have a file (only when revising)
 		if ($_POST['txtFileName'] == "") {

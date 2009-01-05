@@ -234,7 +234,7 @@ class scheduleDAO {
 		$helpManager	= new HelpManager($db, $user);
 		
 		//ajax request handler
-		$arh 	= new AjaxRequest();
+		$arh 	= new ResponseManager();
 					
 		$start	= $this->starttime;
 		$end	= $this->endtime;
@@ -387,7 +387,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$form = <<<END
 <form class="dialog_form" action="index.php?p=schedule&q=remove">
@@ -1076,7 +1076,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 
 		$userid 				= $_SESSION['userid'];
 		$layoutid				= clean_input($_POST['layoutid'], VAR_FOR_SQL, $db);
@@ -1164,7 +1164,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 		
 		$userid 				= $_SESSION['userid'];
 		
@@ -1338,7 +1338,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new AjaxRequest();
+		$arh = new ResponseManager();
 
 		$displayid			= clean_input($_REQUEST['displayid'], VAR_FOR_SQL, $db);
 		$schedule_detailid	= clean_input($_REQUEST['schedule_detailid'], VAR_FOR_SQL, $db);

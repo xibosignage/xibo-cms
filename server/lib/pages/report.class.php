@@ -217,7 +217,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh 	= new AjaxRequest();
+		$arh 	= new ResponseManager();
 		
 		$userID = Kit::GetParam('userid', _GET, _INT);
 		
@@ -241,7 +241,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh 	= new AjaxRequest();
+		$arh 	= new ResponseManager();
 		$userID = Kit::GetParam('userid', _POST, _INT);
 		
 		$SQL = sprintf("UPDATE session SET IsExpired = 1 WHERE userID = %d", $userID);
