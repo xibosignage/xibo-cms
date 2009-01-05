@@ -551,6 +551,8 @@ function getUrl() {
 function SystemMessage(messageText) {
 	var message 			= $('#system_message');
 	var messageContainer 	= message.parent().parent();
+	
+	$('span', message).html("");
 
 	var left = $(window).width() / 2 - messageContainer.width() / 2;	
 	var top = $(window).height() / 2 - messageContainer.height() / 2;

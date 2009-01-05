@@ -132,7 +132,7 @@ class media_image
 		$uri = $this->mediaid . "." . $this->ext;
 		
 		$xml = <<<XML
-		<media uri="$uri" sequence="1" id="$this->mediaid" duration="$this->duration" direction="none" type="image" name="$this->name" filename="$this->storedAs">
+		<media uri="$uri" id="$this->mediaid" duration="$this->duration" direction="none" type="image" name="$this->name" filename="$this->storedAs">
 			<text></text>
 			<template></template>
 		</media>

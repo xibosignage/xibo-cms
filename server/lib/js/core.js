@@ -200,7 +200,12 @@ function XiboFormRender(formUrl) {
 	            }
 	            else {
 	                // Just an error we dont know about
-	                SystemMessage(response.message);
+					if (response.message == undefined) {
+						SystemMessage(response);
+					}
+					else {
+		                SystemMessage(response.message);
+					}
 	            }
 			}
             

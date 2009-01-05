@@ -193,6 +193,7 @@ END;
 				$buttons = <<<END
 				<a id="$editButtonId" class="XiboFormButton positive" href="index.php?p=group&q=GroupForm&groupid=$groupid"><span>Edit</span></a>
 				<a id="$pageSecButtonId" class="XiboFormButton positive" href="index.php?p=group&q=PageSecurityForm&groupid=$groupid"><span>Page Security</span></a>
+				<a id="$pageSecButtonId" class="XiboFormButton positive" href="index.php?p=group&q=MenuItemSecurityForm&groupid=$groupid"><span>Menu Security</span></a>
 				<a id="$deleteButtonId" class="XiboFormButton negative" href="index.php?p=group&q=delete_form&groupid=$groupid"><span>Delete</span></a>
 END;
 			}
@@ -627,6 +628,148 @@ END;
 		$response['success']		= true;
 		$response['message']		= 'Edited the Group Page Security';
 		$response['keepOpen']		= true;
+		
+		Kit::Redirect($response);
+	}
+	
+	/**
+	 * Security for Menu Items
+	 * @return 
+	 */
+	function MenuItemSecurityForm()
+	{
+		$form = <<<HTML
+		<form>
+			<input type="hidden" name="p" value="group">
+			<input type="hidden" name="q" value="MenuItemSecurityGrid">
+			<input type="hidden" name="groupid" value="$this->groupid">
+			<table style="display:none;" id="group_filterform" class="filterform">
+				<tr>
+					<td>Name</td>
+					<td><input type="text" name="name" id="name"></td>
+				</tr>
+			</table>
+		</form>
+HTML;
+		
+		$id = uniqid();
+		
+		$xiboGrid = <<<HTML
+		<div class="XiboGrid" id="$id">
+			<div class="XiboFilter">
+				$form
+			</div>
+			<div class="XiboData">
+			
+			</div>
+		</div>
+HTML;
+		
+		// Construct the Response
+		$response 					= array();
+		$response['html'] 			= $xiboGrid;
+		$response['success']		= true;
+		$response['dialogSize']		= true;
+		$response['dialogWidth']	= '500px';
+		$response['dialogHeight'] 	= '380px';
+		$response['dialogTitle']	= 'Menu Item Security';
+		
+		Kit::Redirect($response);
+
+		return true;
+	}
+	
+	/**
+	 * Assign Menu Item Security Grid
+	 * @return 
+	 */
+	function MenuItemSecurityGrid() 
+	{
+		$db 		=& $this->db;
+		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
+		
+		$SQL = <<<END
+		SELECT 	menu.Menu,
+				menuitem.Text,
+				menuitem.MenuItemID,
+				CASE WHEN menuitems_assigned.MenuItemID IS NULL 
+					THEN '<img src="img/disact.gif">'
+		        	ELSE '<img src="img/act.gif">'
+		        END AS Assigned,
+				CASE WHEN menuitems_assigned.MenuItemID IS NULL 
+					THEN 0
+		        	ELSE 1
+		        END AS AssignedID
+		FROM	menuitem
+		INNER JOIN menu
+		ON		menu.MenuID = menuitem.MenuID
+		LEFT OUTER JOIN 
+				(SELECT DISTINCT lkmenuitemgroup.MenuItemID
+				 FROM	lkmenuitemgroup
+				 WHERE  GroupID = $groupid
+				) menuitems_assigned
+		ON menuitem.MenuItemID = menuitems_assigned.MenuItemID
+END;
+		if(!$results = $db->query($SQL)) 
+		{
+			trigger_error($db->error());
+			Kit::Redirect(array('success' => false, 'message' => 'Cannot get the menu items for this Group.'));
+		}
+		
+		if ($db->num_rows($results) == 0) 
+		{
+			Kit::Redirect(array('success' => false, 'message' => 'Cannot get the menu items for this Group.'));
+		}
+		
+		//some table headings
+		$form = <<<END
+		<form class="XiboForm" method="post" action="index.php?p=group&q=MenuItemSecurityAssign">
+			<input type="hidden" name="groupid" value="$groupid">
+			<div class="dialog_table" style="overflow-y: scroll; height: 300px;">
+			<table style="width:100%">
+				<thead>
+					<tr>
+					<th></th>
+					<th>Menu</th>
+					<th>Menu Item</th>
+					<th>Assigned</th>
+					</tr>
+				</thead>
+				<tbody>
+END;
+
+		// while loop
+		while ($row = $db->get_assoc_row($results)) 
+		{			
+			$menuItemId		= Kit::ValidateParam($row['MenuItemID'], _INT);
+			$menuName		= Kit::ValidateParam($row['Menu'], _STRING);
+			$itemName		= Kit::ValidateParam($row['Text'], _STRING);
+			$assigned		= Kit::ValidateParam($row['Assigned'], _HTMLSTRING);
+			$assignedId		= Kit::ValidateParam($row['AssignedID'], _INT);
+			
+			$form .= "<tr>";
+			$form .= "<td><input type='checkbox' name='pageids[]' value='$assignedId,$menuItemId'></td>";
+			$form .= "<td>$menuName</td>";
+			$form .= "<td>$itemName</td>";
+			$form .= "<td>$assigned</td>";
+			$form .= "</tr>";
+		}
+
+		//table ending
+		$form .= <<<END
+			</tbody>
+		</table>
+		</div>
+		<input type='submit' value="Assign / Unassign" / >
+	</form>
+END;
+		
+		// Construct the Response
+		$response 				= array();
+		$response['html'] 		= $form;
+		$response['success']	= true;
+		$response['sortable']	= false;
+		$response['sortingDiv']	= '.info_table table';
 		
 		Kit::Redirect($response);
 	}

@@ -106,7 +106,7 @@ class media_text {
  	public function AsXml()
 	{	
 		$xml = <<<XML
-		<media uri="" sequence="" id="$this->mediaid" duration="$this->duration" direction="$this->direction" type="text" name="Text" filename="" lkid="">
+		<media uri="" id="$this->mediaid" duration="$this->duration" direction="$this->direction" type="text" name="Text" filename="" lkid="">
 			<text>
 				<![CDATA[
 				$this->text
