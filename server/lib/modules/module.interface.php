@@ -22,19 +22,15 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 interface ModuleInterface
 {
-	public function SetMediaId($mediaid);
-	public function SetLayoutId($layoutid);
-	public function SetRegionId($regionid);
-	public function SetDb(database $db);
-	
+	protected function SetOption($name, $value);
 	public function AsXml();
+	
 	public function AddForm();
 	public function EditForm();
 	public function DeleteForm();
 	public function AddMedia();
 	public function EditMedia();
 	public function DeleteMedia();
-	public function DisplayPage();
 }
 
 ?>

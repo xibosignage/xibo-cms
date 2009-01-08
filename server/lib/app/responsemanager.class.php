@@ -22,19 +22,18 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
  
 class ResponseManager 
 {
-	/**
-	 * 
-	 * 0 = Success
-	 * 1 = Failure
-	 * 2 = Log In
-	 * 3 = Redirect
-	 * 4 = Refresh
-	 */
-	function __construct() 
-	{
-		
-	}
+	private $ajax;
+	private $success;
+	private $message;
 	
+	public function __construct()
+	{
+		// Determine if this is an AJAX call or not
+		$this->ajax	= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
+		
+		return true;
+	}
+		
 	function login() 
 	{
 		//prints out the login box
@@ -62,6 +61,78 @@ class ResponseManager
 		//output the code and exit
 		echo "$code|$html";
 		exit;
+	}
+	
+	/**
+	 * Sets the error message for the response
+	 * @return 
+	 * @param $message Object
+	 */
+	public function SetError($message)
+	{
+		$this->success = false;
+		$this->message = $message;
+		
+		return true;
+	}
+	
+	/**
+	 * Outputs the Response to the browser
+	 * @return 
+	 */
+	public function Respond()
+	{
+		if ($this->ajax)
+		{
+			// Construct the Response
+			$response 					= array();
+			
+			// General
+			$response['html'] 			= $table;
+			$response['success']		= $this->success;
+			$response['callBack']		= '';
+			$response['message']		= $this->message;
+			
+			// Grids
+			$response['sortable']		= true;
+			$response['sortingDiv']		= '.info_table table';
+			
+			// Dialogs
+			$response['dialogSize']		= true;
+			$response['dialogWidth']	= '400px';
+			$response['dialogHeight'] 	= '180px';
+			$response['dialogTitle']	= 'Add/Edit Group';
+			
+			// Form Submits
+			$response['keepOpen']		= true;
+			$response['hideMessage']	= false;
+			$response['loadForm']		= false;
+			$response['loadFormUri']	= '';
+			$response['refresh']		= false;
+			$response['refreshLocation']= '';
+			
+			// Login
+			$response['login']			= false;
+			
+			echo json_encode($response);
+			
+			// End the execution
+			die();
+		}
+		else
+		{
+			// If the response does not equal success then output an error
+			if (!$this->success)
+			{
+				setMessage($this->message);
+				trigger_error($this->message, E_USER_ERROR);
+				
+				// End the execution
+				die();
+			}
+		}
+		
+		return;
 	}
 }
 

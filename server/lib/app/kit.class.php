@@ -64,8 +64,6 @@ class Kit
 		}
 		
 		die();
-		
-		// Redirect should be made cleverer at some point
 	}
 	
 	/**

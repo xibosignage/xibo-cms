@@ -69,25 +69,24 @@ class moduleDAO
 	 */
 	function on_page_load() 
 	{
-		return "";
+		return '';
 	}
 	
 	/**
-	 * Echo's the page heading
+	 * No page heading
 	 * @return 
 	 */
 	function echo_page_heading() 
 	{
-		echo "Module Admin";
 		return true;
-	}	
+	}
 	
 	/**
-	 * Sets the media id for this module class
+	 * Sets the media id for this moduleDAO class
 	 * @return 
-	 * @param $id Object
+	 * @param $id String
 	 */
-	function SetMediaId($id)
+	public function SetMediaId($id)
 	{
 		$db =& $this->db;
 		
@@ -122,6 +121,29 @@ class moduleDAO
 		if (!$this->module->SetMediaId($id)) return false;
 		
 		return true;
+	}
+	
+	/**
+	 * What action to perform?
+	 * @return 
+	 */
+	public function Exec()
+	{
+		// What module has been requested?
+		$method	= Kit::GetParam('method', _REQUEST, _WORD);
+		
+		if (method_exists($this->module,$method)) 
+		{
+			$response = $this->module->$method();
+		}
+		else
+		{
+			// Set the error to display
+			$response = new ResponseManager();
+			$response->SetError('This Module does not exist');
+		}
+		
+		$response->Respond();
 	}
 
 	/**
@@ -190,7 +212,7 @@ class moduleDAO
 	 */
 	function AddMedia() 
 	{
-		//ajax request handler
+		// ajax request handler
 		$arh = new ResponseManager();
 		
 		if (!isset($_REQUEST['termsOfService']))

@@ -309,7 +309,7 @@ END;
 		setSession('content', 'type', 'text');
 		
 		//Do the assignment here - we probabily want to create a region object to handle this.
-		include_once("lib/app/region.class.php");
+		include_once("lib/pages/region.class.php");
 	
 		$region = new region($db);
 		
@@ -378,7 +378,7 @@ END;
 		$this->direction = $direction;
 		
 		//Do the assignment here - we probabily want to create a region object to handle this.
-		include_once("lib/app/region.class.php");
+		include_once("lib/pages/region.class.php");
 	
 		$region = new region($db);
 		

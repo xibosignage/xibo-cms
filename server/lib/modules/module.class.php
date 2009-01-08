@@ -32,58 +32,29 @@ class Module implements ModuleInterface
 
 	protected $xml;
 	
-	public function __construct($mediaid = '', $layoutid = '', $regionid = '')
+	/**
+	 * Constructor - sets up this media object with all the available information
+	 * @return 
+	 * @param $db database
+	 * @param $user user
+	 * @param $mediaid String[optional]
+	 * @param $layoutid String[optional]
+	 * @param $regionid String[optional]
+	 */
+	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
 	{
+		$this->db 		=& $db;
+		$this->user 	=& $user;
+		
 		$this->mediaid 	= $mediaid;
 		$this->layoutid = $layoutid;
 		$this->regionid = $regionid;
 		
-		return true;
-	}
-	
-	/**
-	 * Sets the MediaID and gets information about this media record
-	 * @return 
-	 * @param $mediaid Object
-	 */
-	final public function SetMediaId($mediaid)
-	{
-		$this->mediaid = $mediaid;
-		
-		if ($this->regionid != '' && $this->layoutid != '')
+		// If this module is definately associated with a region - then get the region information
+		if ($this->mediaid != '' && $this->regionid != '' && $this->layoutid != '')
 		{
 			$this->SetRegionInformation($this->layoutid, $this->regionid, $mediaid);
 		}
-	}
-	
-	/**
-	 * Sets the LayoutID this media belongs to
-	 * @return 
-	 * @param $layoutid Object
-	 */
-	final public function SetLayoutId($layoutid)
-	{
-		$this->layoutid = $layoutid;
-	}
-
-	/**
-	 * Sets the Region this media belongs to
-	 * @return 
-	 * @param $regionid Object
-	 */
-	final public function SetRegionId($regionid)
-	{
-		$this->regionid = $regionid;
-	}	
-	
-	/**
-	 * Sets the Database
-	 * @return 
-	 * @param $db Object
-	 */
-	final public function SetDb(database $db)
-	{
-		$this->db =& $db;
 		
 		return true;
 	}
@@ -100,16 +71,16 @@ class Module implements ModuleInterface
 		$db =& $this->db;
 		
 		// Create a region to work with
-		include_once("lib/app/region.class.php");
+		include_once("lib/pages/region.class.php");
 	
 		$region = new region($db);
 		
-		//Set the layout Xml
+		// Set the layout Xml
 		$layoutXml = $region->GetLayoutXml($layoutid);
 		
 		$xml = simplexml_load_string($layoutXml);
 		
-		//Get the media node and extract the info
+		// Get the media node and extract the info
 		$mediaNodeXpath = $xml->xpath("//region[@id='$regionid']/media[@id='$mediaid']");
 		$mediaNode 		= $mediaNodeXpath[0];
 		
@@ -122,9 +93,20 @@ class Module implements ModuleInterface
 	 * This Media item represented as XML
 	 * @return 
 	 */
-	public function AsXml()
+	final public function AsXml()
 	{
 		return $this->xml;
+	}
+	
+	/**
+	 * Adds the name/value element to the XML Options sequence 
+	 * @return 
+	 * @param $name String
+	 * @param $value String
+	 */
+	final protected function SetOption($name, $value)
+	{
+		
 	}
 	
 	public function AddForm()
@@ -153,11 +135,6 @@ class Module implements ModuleInterface
 	}
 	
 	public function DeleteMedia() 
-	{
-		
-	}
-	
-	public function DisplayPage() 
 	{
 		
 	}
