@@ -1319,30 +1319,11 @@ HTML;
 			$top			= $this->GetTopForMediaType($mediaType, $count);
 			$leftMediaBreakVal = ($left + $thumbWidth)."px";
 			
-			if ($mediaType == "text" || $mediaType == "ticker")
-			{
-				$editLink = <<<LINK
-				<a style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" onclick="return init_button(this,'Edit $mediaType',submit_form_callback,text_callback)" title="Click to edit this media">
+			$editLink = <<<LINK
+				<a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to edit this media">
 					Edit
 				</a><br />
 LINK;
-			}
-			elseif ($mediaType == "powerpoint" || $mediaType == "video" || $mediaType == "image" || $mediaType == "flash")
-			{
-				$editLink = <<<LINK
-				<a style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" onclick="return init_button(this,'Edit $mediaType',submit_form_callback,set_form_size(450,320))" title="Click to edit this media">
-					Edit
-				</a><br />
-LINK;
-			}
-			else 
-			{
-				$editLink = <<<LINK
-				<a style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" onclick="return init_button(this,'Edit $mediaType',submit_form_callback,set_form_size(600,320))" title="Click to edit this media">
-					Edit
-				</a><br />
-LINK;
-			}
 			
 			$mediaBreakHtml = <<<END
 			<div class="mediabreak" breakid="$count" style="position:absolute; top:20px; left:$leftMediaBreakVal; width:$mediaBreakWidthVal;"></div>
@@ -1361,7 +1342,7 @@ END;
 					<div class="$leftClass"></div>
 						<br />
 						$editLink
-						<a style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=DeleteForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" onclick="return init_button(this,'Delete $mediaType',submit_form_callback,set_form_size(600,320))" title="Click to delete this media">
+						<a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=DeleteForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to delete this media">
 							Delete
 						</a>
 					</div>

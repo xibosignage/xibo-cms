@@ -24,6 +24,7 @@ class text extends Module
 	private	$duration;
 	private $text;
 	private $direction;
+	private $schemaVersion;
 	
 	/**
 	 * Return the Add Form as HTML
@@ -172,64 +173,38 @@ END;
 	 */
 	public function AddMedia()
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
+		$db 		=& $this->db;
+		$response 	=& $this->response;
 		
 		//Other properties
-		$direction	  = $_POST['direction'];
-		$duration	  = $_POST['duration'];
-		$text		  = $_POST['ta_text'];
-		
-		//Optional parameters
-		$layoutid = $_POST['layoutid'];
-		$regionid = $_POST['regionid'];
-		
-		//Do we want to assign this to the region after adding it?
-		if ($layoutid == "" && $regionid == "")
-		{
-			$this->message .= "Text must be assigned to regions";
-			return false;
-		}
-		
+		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
+		$duration	  = Kit::GetParam('duration', _POST, _INT, 1);
+		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+						
 		//validation
-		if ($text == "")
+		if ($text == '')
 		{
-			$this->message .= "Please enter some text";
-			return false;
+			$response->SetError('Please enter some text');
+			$response->keepOpen = true;
+			return $response;
 		}
 		
-		//Validate the URL?
-		
-		if (!is_numeric($duration))
-		{
-			$this->message .= "You must enter a value for duration";
-			return false;
-		}
-		
-		//Generate a MediaID
-		$this->SetMediaId(uniqid());
-		
-		$this->text		= $text;
+		// Required Attributes
+		$this->mediaid	= md5(uniqid());
+		$this->type		= 'text';
 		$this->duration = $duration;
-		$this->direction = $direction;
+		
+		// Any Options
+		$this->SetOption('direction', $direction);
+		$this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
+		
+		// Should have built the media object entirely by this time
+		$this->UpdateRegion();
 		
 		//Set this as the session information
 		setSession('content', 'type', 'text');
 		
-		//Do the assignment here - we probabily want to create a region object to handle this.
-		include_once("lib/pages/region.class.php");
-	
-		$region = new region($db);
-		
-		if (!$region->AddMedia($layoutid, $regionid, "", $this->AsXml()))
-		{
-			$this->message = "Error adding this media to the library";
-			return false;
-		}
-		
-		return true;
+		return $response;
 	}
 	
 	/**

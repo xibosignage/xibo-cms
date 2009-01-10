@@ -61,11 +61,8 @@ class Module implements ModuleInterface
 		
 		Debug::LogEntry($db, 'audit', 'New module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 		
-		// If this module is definately associated with a region - then get the region information
-		if ($this->mediaid != '' && $this->regionid != '' && $this->layoutid != '')
-		{
-			$this->SetRegionInformation($this->layoutid, $this->regionid, $mediaid);
-		}
+		// Either the information from the region - or some blanks
+		$this->SetMediaInformation($this->layoutid, $this->regionid, $mediaid);
 		
 		return true;
 	}
@@ -77,21 +74,39 @@ class Module implements ModuleInterface
 	 * @param $regionid Object
 	 * @param $mediaid Object
 	 */
-	private function SetRegionInformation($layoutid, $regionid, $mediaid)
+	private function SetMediaInformation($layoutid, $regionid, $mediaid)
 	{
 		$db 		=& $this->db;
 		$region 	=& $this->region;
+		$xmlDoc 	= new DOMDocument();
 		
-		// Set the layout Xml
-		$layoutXml = $region->GetLayoutXml($layoutid);
+		if ($this->mediaid != '' && $this->regionid != '' && $this->layoutid != '')
+		{
+			// Set the layout Xml
+			$layoutXml = $region->GetLayoutXml($layoutid);
+			
+			$xml = simplexml_load_string($layoutXml);
+			
+			// Get the media node and extract the info
+			$mediaNodeXpath = $xml->xpath("//region[@id='$regionid']/media[@id='$mediaid']");
+			$mediaNode 		= $mediaNodeXpath[0];
+			
+			$xmlDoc->importNode($mediaNode, true);
+		}
+		else
+		{			
+			$xml = <<<XML
+			<media id="" type="" duration="" lkid="">
+				<options />
+				<raw />
+			</media>
+XML;
+			$xmlDoc->loadXML($xml);
+		}
 		
-		$xml = simplexml_load_string($layoutXml);
+		$this->xml = $xmlDoc;
 		
-		// Get the media node and extract the info
-		$mediaNodeXpath = $xml->xpath("//region[@id='$regionid']/media[@id='$mediaid']");
-		$mediaNode 		= $mediaNodeXpath[0];
-		
-		$this->xml		= $mediaNode->saveXML();
+		Debug::LogEntry($db, 'audit', 'XML is: ' . $this->xml->saveXML());
 		
 		return true;
 	}
@@ -113,7 +128,60 @@ class Module implements ModuleInterface
 	 */
 	final protected function SetOption($name, $value)
 	{
+		if ($name == '' || $value == '') return;
 		
+		// Get the options node from this document
+		$optionNodes = $this->xml->getElementsByTagName('options');
+		// There is only 1
+		$optionNode = $optionNodes[0];
+		
+		// Create a new option node
+		$newNode = $this->xml->createElement($name, $value);
+		
+		
+		// Check to see if we already have this option or not
+		$xpath = new DOMXPath($xml);
+		
+		// Xpath for it
+		$userOptions = $xpath->query('//options/option/' . $name);
+		
+		if ($userOptions->length == 0)
+		{
+			// Append the new node to the list
+			$optionNode->appendChild($newNode);
+		}
+		else
+		{
+			// Replace the old node we found with XPath with the new node we just created
+			$optionNode->replaceChild($newNode, $userOptions[0]);	
+		}
+	}
+	
+	/**
+	 * Sets the RAW XML string that is given as the content for Raw
+	 * @return 
+	 * @param $xml String
+	 * @param $replace Boolean[optional]
+	 */
+	final protected function SetRaw($xml, $replace = false)
+	{
+		if ($xml == '') return;
+		
+		// Load the XML we are given into its own document
+		$rawNode = new DOMDocument();
+		$rawNode->loadXML($xml);
+		
+		// Import the Raw node into this document (with all sub nodes)
+		$importedNode = $this->xml->importNode($rawNode->documentElement, true);
+		
+		// Get the Raw Xml node from our document
+		$rawNodes = $this->xml->getElementsByTagName('raw');
+
+		// There is only 1
+		$rawNode = $rawNodes[0];
+		
+		// Append the imported node (at the end of whats already there)
+		$rawNode->appendChild($importedNode);
 	}
 	
 	/**
@@ -122,7 +190,16 @@ class Module implements ModuleInterface
 	 */
 	protected function UpdateRegion()
 	{
+		// By this point we expect to have a MediaID, duration
 		
+		$layoutid = $this->layoutid;
+		$regionid = $this->regionid;
+		
+		if (!$this->region->AddMedia($layoutid, $regionid, $this->AsXml()))
+		{
+			$this->message = "Error adding this media to the library";
+			return false;
+		}
 	}
 }
 ?>

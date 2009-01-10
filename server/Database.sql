@@ -693,18 +693,9 @@ ALTER TABLE `menuitem`
   ADD CONSTRAINT `menuitem_ibfk_2` FOREIGN KEY (`PageID`) REFERENCES `pages` (`pageID`);
 
   -- AS of R30
-ALTER TABLE `module` ADD `AddCaption` VARCHAR( 50 ) NOT NULL ,
-ADD `EditCaption` VARCHAR( 50 ) NOT NULL ,
-ADD `DeleteCaption` VARCHAR( 50 ) NOT NULL ,
-ADD `AddUri` VARCHAR( 254 ) NOT NULL ,
-ADD `EditUri` VARCHAR( 254 ) NOT NULL ,
-ADD `DeleteUri` VARCHAR( 254 ) NOT NULL ,
-ADD `AddOnclick` VARCHAR( 254 ) NOT NULL ,
-ADD `EditOnclick` VARCHAR( 254 ) NOT NULL ,
-ADD `DeleteOnclick` VARCHAR( 254 ) NOT NULL ;
-
 ALTER TABLE `module` ADD `RegionSpecific` TINYINT NOT NULL DEFAULT '1' AFTER `Enabled` ;
 ALTER TABLE `module` ADD `ImageUri` VARCHAR( 254 ) NOT NULL AFTER `Description` ;
+ALTER TABLE `module` ADD `SchemaVersion` INT NOT NULL DEFAULT '1' AFTER `ImageUri` ;
 
 
 -- AS of R32
