@@ -73,7 +73,7 @@ class region
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$errMsg = "Unable to Update that layouts XML with a new Media Node ";
+			$this->errMsg = "Unable to Update that layouts XML with a new Media Node ";
 			return false;
 		}
 		
@@ -126,7 +126,7 @@ class region
 		//Do we have a region ID provided?
 		if ($regionid == "")
 		{
-			$message = "No region ID provided, cannot delete";
+			$this->errMsg = "No region ID provided, cannot delete";
 			return false;
 		}
 		
@@ -164,7 +164,7 @@ class region
 	 * Adds the media to this region
 	 * @return 
 	 */
-	public function AddMedia($layoutid, $regionid, $mediaid = "", $mediaXml = "") 
+	public function AddMedia($layoutid, $regionid, $mediaXmlString) 
 	{
 		$db 	=& $this->db;
 		$user 	=& $this->user;
@@ -172,33 +172,7 @@ class region
 		//Load the XML for this layout
 		$xml = new DOMDocument("1.0");
 		$xml->loadXML($this->GetLayoutXml($layoutid));
-		
-		//Have we got some Xml provided
-		if ($mediaXml == "")
-		{
-			//Get the new media node in question
-			$media = new moduleDAO($db, $user);
 			
-			//Call to setup the module class with the appropriate media information
-			if (!$media->SetMediaId($mediaid))
-			{
-				$errMsg = "Failed setting the media information";
-				return false;
-			}
-			
-			//Add a link between this media and this layout - for easy querying in the interface
-			if (!$id = $this->AddDbLink($layoutid, $regionid, $mediaid))
-			{
-				return false;
-			}
-			
-			$mediaXmlString = $media->AsXml();
-		}
-		else
-		{
-			$mediaXmlString = $mediaXml;
-		}
-		
 		Debug::LogEntry($db, "audit", $mediaXmlString, "region", "AddMedia");
 		
 		//Get the media's Xml
@@ -386,7 +360,7 @@ class region
 	 * @param $newMediaid Int
 	 * @param $mediaXml String
 	 */
-	public function SwapMedia($layoutid, $regionid, $lkid, $existingMediaid, $newMediaid, $mediaXml = "")
+	public function SwapMedia($layoutid, $regionid, $lkid, $existingMediaid, $newMediaid, $mediaXmlString)
 	{
 		$db 	=& $this->db;
 		$user 	=& $this->user;
@@ -394,27 +368,7 @@ class region
 		//Load the XML for this layout
 		$xml = new DOMDocument("1.0");
 		$xml->loadXML($this->GetLayoutXml($layoutid));
-		
-		//Have we got some Xml provided
-		if ($mediaXml == "")
-		{
-			//Get the new media node in question
-			$media = new moduleDAO($db, $user);
 			
-			//Call to setup the module class with the appropriate media information
-			if (!$media->SetMediaId($newMediaid))
-			{
-				$errMsg = "Failed setting the media information";
-				return false;
-			}
-			
-			$mediaXmlString = $media->AsXml();
-		}
-		else
-		{
-			$mediaXmlString = $mediaXml;
-		}
-		
 		Debug::LogEntry($db, "audit", $mediaXmlString, "region", "SwapMedia");
 		
 		//Get the media's Xml

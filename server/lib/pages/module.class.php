@@ -42,13 +42,16 @@ class moduleDAO
 		// This will only be true when we are displaying the Forms
 		if ($mod != '') 
 		{			
-			$moduleName = 'media_'.$mod;
+			require_once("modules/$mod.module.php");
 			
-			require_once("modules/module_$moduleName.php");
+			// Try to get the layout, region and media id's
+			$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
+			$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
+			$mediaid  = Kit::GetParam('mediaid', _REQUEST, _STRING);
 			
-			$this->module = new $moduleName();
+			Debug::LogEntry($db, 'audit', 'Creating new module with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 			
-			$this->module->SetDb($db);
+			$this->module = new $mod($db, $user, $mediaid, $layoutid, $regionid);
 		}
 		
 		return true;
@@ -82,48 +85,6 @@ class moduleDAO
 	}
 	
 	/**
-	 * Sets the media id for this moduleDAO class
-	 * @return 
-	 * @param $id String
-	 */
-	public function SetMediaId($id)
-	{
-		$db =& $this->db;
-		
-		$SQL = sprintf("SELECT type FROM media WHERE mediaID = %d ", $id);
-		
-		Debug::LogEntry($db, 'audit', $SQL);
-		
-		if (!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error("Cant get this medias type");
-			return false;
-		}
-		
-		$row = $db->get_row($results);
-		
-		//we have the type
-		$type = Kit::ValidateParam($row[0], _STRING);
-		
-		//we require the standard class
-		$className = "media_".$type;
-		
-		require_once("modules/module_$className.php");
-		
-		//Create the class object
-		$this->module = new $className();
-		
-		//Give it the Db Object
-		$this->module->SetDb($db);
-		
-		//Set the media ID of this module object
-		if (!$this->module->SetMediaId($id)) return false;
-		
-		return true;
-	}
-	
-	/**
 	 * What action to perform?
 	 * @return 
 	 */
@@ -146,175 +107,6 @@ class moduleDAO
 		$response->Respond();
 	}
 
-	/**
-	 * A wrapper for the modules own method
-	 * @return 
-	 */
-	public function AddForm()
-	{
-		//ajax request handler
-		$arh = new ResponseManager();
-		
-		$form = $this->module->AddForm();
-		
-		if (!$form) 
-		{
-			$arh->decode_response(false,$this->module->message);
-		}
-		$arh->decode_response(true, $form);
-		
-		return false;
-	}
-	
-	/**
-	 * A wrapper for the modules own method
-	 * @return 
-	 */
-	public function EditForm()
-	{
-		//ajax request handler
-		$arh = new ResponseManager();
-		
-		$form = $this->module->EditForm();
-		
-		if (!$form) 
-		{
-			$arh->decode_response(false,$this->module->message);
-		}
-		$arh->decode_response(true, $form);
-		
-		return false;
-	}
-	
-	/**
-	 * A wrapper for the modules own method
-	 * @return 
-	 */
-	public function DeleteForm()
-	{
-		//ajax request handler
-		$arh = new ResponseManager();
-		
-		$form = $this->module->DeleteForm();
-		
-		if (!$form) 
-		{
-			$arh->decode_response(false,$this->module->message);
-		}
-		$arh->decode_response(true, $form);
-		
-		return false;
-	}
-
-	/**
-	 * Calls the relevant add procedure
-	 * @return 
-	 */
-	function AddMedia() 
-	{
-		// ajax request handler
-		$arh = new ResponseManager();
-		
-		if (!isset($_REQUEST['termsOfService']))
-		{
-			$arh->decode_response(false, "Media cannot be added without agreeing to the terms of service.");
-		}
-		
-		//Optional parameters
-		$layoutid = Kit::GetParam('layoutid', _POST, _INT);
-		$regionid = Kit::GetParam('regionid', _POST, _STRING);
-		
-		if (!$this->module->AddMedia())
-		{
-			$arh->decode_response(false, $this->module->message);
-		}
-		
-		if ($regionid != '') //layout page
-		{
-			$arh->response(AJAX_LOAD_FORM, urlencode("index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions")."||region_options_callback");
-		}
-		else //Context page
-		{
-			$arh->decode_response(true, "Media Added");
-		}
-		
-		return;
-	}
-
-	/**
-	 * Calls the relevant modify procedure
-	 * @return 
-	 */
-	function EditMedia() 
-	{
-		//ajax request handler
-		$arh = new ResponseManager();
-		
-		if (!isset($_REQUEST['termsOfService']))
-		{
-			$arh->decode_response(false, "Media cannot be edited without agreeing to the terms of service.");
-		}
-		
-		//Optional parameters
-		if (isset($_POST['layoutid'])) $layoutid = Kit::GetParam('layoutid', _POST, _INT);
-		if (isset($_POST['regionid'])) $regionid = Kit::GetParam('regionid', _POST, _STRING);
-		
-		if (!$this->module->EditMedia())
-		{
-			$arh->decode_response(false, $this->module->message);
-		}
-		
-		if ($regionid != "") //layout page
-		{
-			$arh->response(AJAX_LOAD_FORM, urlencode("index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions")."||region_options_callback");
-		}
-		else //Context page
-		{
-			$arh->decode_response(true, "Media Edited");
-		}
-		
-		return;
-	}
-	
-	/**
-	 * Calls the relevant delete procedure
-	 * @return 
-	 */
-	function DeleteMedia() 
-	{
-		//ajax request handler
-		$arh = new ResponseManager();
-		
-		//Optional parameters
-		if (isset($_POST['layoutid'])) $layoutid = Kit::GetParam('layoutid', _POST, _INT);
-		if (isset($_POST['regionid'])) $regionid = Kit::GetParam('regionid', _POST, _STRING);
-		
-		if (!$this->module->DeleteMedia())
-		{
-			$arh->decode_response(false, $this->module->message);
-		}
-		
-		if ($regionid != "") //layout page
-		{
-			$arh->response(AJAX_LOAD_FORM, "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions||region_options_callback");
-		}
-		else //Context page
-		{
-			$arh->decode_response(true, "Media Deleted");
-		}
-		
-		return;
-	}
-	
-	/**
-	 * Calls the relevant AsXml procedure
-	 * @return 
-	 */
-	function AsXml() 
-	{
-		return $this->module->AsXml();
-	}
-	
 	/**
 	 * Returns an image stream to the browser - for the mediafile specified.
 	 * @return 

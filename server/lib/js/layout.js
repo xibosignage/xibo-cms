@@ -36,6 +36,8 @@ var region_options_callback = function(outputDiv)
 {
 	set_form_size(830,450);
 	
+	XiboInitialise('#div_dialog');
+	
 	//Get all the tooltip_hidden
 	$(".tooltip_hidden").parent().hover(function()
 	{

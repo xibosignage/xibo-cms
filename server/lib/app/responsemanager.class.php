@@ -23,13 +23,37 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class ResponseManager 
 {
 	private $ajax;
-	private $success;
-	private $message;
+	
+	public $message;
+	public $success;
+	public $html;
+	public $callBack;
+	
+	public $sortable;
+	public $sortingDiv;
+	
+	public $dialogSize;
+	public $dialogWidth;
+	public $dialogHeight;
+	public $dialogTitle;
+	
+	public $keepOpen;
+	public $hideMessage;
+	public $loadForm;
+	public $loadFormUri;
+	public $refresh;
+	public $refreshLocation;
+	
+	public $login;
+	
 	
 	public function __construct()
 	{
 		// Determine if this is an AJAX call or not
 		$this->ajax	= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
+		
+		// Assume success
+		$this->success = true;
 		
 		return true;
 	}
@@ -88,31 +112,31 @@ class ResponseManager
 			$response 					= array();
 			
 			// General
-			$response['html'] 			= $table;
+			$response['html'] 			= $this->html;
 			$response['success']		= $this->success;
-			$response['callBack']		= '';
+			$response['callBack']		= $this->callBack;
 			$response['message']		= $this->message;
 			
 			// Grids
-			$response['sortable']		= true;
-			$response['sortingDiv']		= '.info_table table';
+			$response['sortable']		= $this->sortable;
+			$response['sortingDiv']		= $this->sortingDiv;
 			
 			// Dialogs
-			$response['dialogSize']		= true;
-			$response['dialogWidth']	= '400px';
-			$response['dialogHeight'] 	= '180px';
-			$response['dialogTitle']	= 'Add/Edit Group';
+			$response['dialogSize']		= $this->dialogSize;
+			$response['dialogWidth']	= $this->dialogWidth;
+			$response['dialogHeight'] 	= $this->dialogHeight;
+			$response['dialogTitle']	= $this->dialogTitle;
 			
 			// Form Submits
-			$response['keepOpen']		= true;
-			$response['hideMessage']	= false;
-			$response['loadForm']		= false;
-			$response['loadFormUri']	= '';
-			$response['refresh']		= false;
-			$response['refreshLocation']= '';
+			$response['keepOpen']		= $this->keepOpen;
+			$response['hideMessage']	= $this->hideMessage;
+			$response['loadForm']		= $this->loadForm;
+			$response['loadFormUri']	= $this->loadFormUri;
+			$response['refresh']		= $this->refresh;
+			$response['refreshLocation']= $this->refreshLocation;
 			
 			// Login
-			$response['login']			= false;
+			$response['login']			= $this->login;
 			
 			echo json_encode($response);
 			

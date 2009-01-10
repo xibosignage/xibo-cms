@@ -24,6 +24,10 @@ class Module implements ModuleInterface
 {
 	//Media information
 	protected $db;
+	protected $user;
+	protected $region;
+	protected $response;
+	
 	protected $layoutid;
 	protected $regionid;
 	
@@ -41,14 +45,21 @@ class Module implements ModuleInterface
 	 * @param $layoutid String[optional]
 	 * @param $regionid String[optional]
 	 */
-	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
+	final public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
 	{
+		include_once("lib/pages/region.class.php");
+		
 		$this->db 		=& $db;
 		$this->user 	=& $user;
 		
 		$this->mediaid 	= $mediaid;
 		$this->layoutid = $layoutid;
 		$this->regionid = $regionid;
+		
+		$this->region 	= new region($db, $user);
+		$this->response = new ResponseManager();
+		
+		Debug::LogEntry($db, 'audit', 'New module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 		
 		// If this module is definately associated with a region - then get the region information
 		if ($this->mediaid != '' && $this->regionid != '' && $this->layoutid != '')
@@ -68,12 +79,8 @@ class Module implements ModuleInterface
 	 */
 	private function SetRegionInformation($layoutid, $regionid, $mediaid)
 	{
-		$db =& $this->db;
-		
-		// Create a region to work with
-		include_once("lib/pages/region.class.php");
-	
-		$region = new region($db);
+		$db 		=& $this->db;
+		$region 	=& $this->region;
 		
 		// Set the layout Xml
 		$layoutXml = $region->GetLayoutXml($layoutid);
@@ -109,32 +116,11 @@ class Module implements ModuleInterface
 		
 	}
 	
-	public function AddForm()
-	{
-		
-	}
-	
-	public function EditForm() 
-	{
-		
-	}
-	
-	public function DeleteForm() 
-	{
-		
-	}
-	
-	public function AddMedia() 
-	{
-		
-	}
-	
-	public function EditMedia() 
-	{
-		
-	}
-	
-	public function DeleteMedia() 
+	/**
+	 * Updates the region information with this media record
+	 * @return 
+	 */
+	protected function UpdateRegion()
 	{
 		
 	}

@@ -42,8 +42,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 						$title 	= Kit::ValidateParam($menuItem['Text'], _STRING);
 						$img 	= Kit::ValidateParam($menuItem['Img'], _STRING);
 						
-						// Extra style for the current one
-						if ($p == $uri) $class = 'current ' . $class;
 						
 						$href = 'index.php?p=' . $uri . '&' . $args;
 						

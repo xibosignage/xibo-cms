@@ -18,105 +18,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-class media_text {
-	
-	private $db;
-	
+class text extends Module
+{
 	//Media information
-	private $mediaid;
 	private	$duration;
 	private $text;
 	private $direction;
-	
-	//Information vars
-	public $message = "";
-	private $help_link;
-
-	function __construct() 
-	{
-		$this->help_link = HELP_BASE . "?p=content/layout/assigncontent";
-		return true;
-	}
-	
-	/**
-	 * Sets the media Id
-	 * @return 
-	 * @param $mediaid Object
-	 */
-	public function SetMediaId($mediaid) 
-	{
-		$db =& $this->db;
-		
-		//Set the mediaId
-		$this->mediaid = $mediaid;
-		
-		//This doesnt really do anything on this media type. We need to generate our own unique media id.
-		
-		return true;
-	}
-	
-	/**
-	 * Gets the information about this Media on this region on this layout
-	 * @return 
-	 * @param $layoutid Object
-	 * @param $regionid Object
-	 * @param $mediaid Object
-	 */
-	private function SetRegionInformation($layoutid, $regionid, $mediaid)
-	{
-		$db =& $this->db;
-		
-		//Create a region to work with
-		include_once("lib/app/region.class.php");
-	
-		$region = new region($db);
-		
-		//Set the layout Xml
-		$layoutXml = $region->GetLayoutXml($layoutid);
-		
-		$xml = simplexml_load_string($layoutXml);
-		
-		//Get the media node and extract the info
-		$mediaNodeXpath = $xml->xpath("//region[@id='$regionid']/media[@id='$mediaid']");
-		$mediaNode 		= $mediaNodeXpath[0];
-		
-		$this->text	 	 = (string) $mediaNode->text;
-		$this->duration  = (string) $mediaNode['duration'];
-		$this->direction = (string) $mediaNode['direction'];
-		
-		return true;
-	}
-	
-	/**
-	 * Sets the Database
-	 * @return 
-	 * @param $db Object
-	 */
-	public function SetDb($db)
-	{
-		$this->db =& $db;
-		
-		return true;
-	}
- 
- 	/**
- 	 * Converts this Media object into Xml
- 	 * @return 
- 	 */
- 	public function AsXml()
-	{	
-		$xml = <<<XML
-		<media uri="" id="$this->mediaid" duration="$this->duration" direction="$this->direction" type="text" name="Text" filename="" lkid="">
-			<text>
-				<![CDATA[
-				$this->text
-				]]>
-			</text>
-			<template></template>
-		</media>
-XML;
-		return $xml;
-	}
 	
 	/**
 	 * Return the Add Form as HTML
@@ -124,20 +31,19 @@ XML;
 	 */
 	public function AddForm()
 	{
-		$db =& $this->db;
-		
-		$layoutid = $_REQUEST['layoutid'];
-		$regionid = $_REQUEST['regionid'];
-		
-		//Would like to get the regions width / height 
-		$rWidth		= $_REQUEST['rWidth'];
-		$rHeight	= $_REQUEST['rHeight'];
-		
+		$db 		=& $this->db;
+		$user		=& $this->user;
+				
+		// Would like to get the regions width / height 
+		$layoutid	= $this->layoutid;
+		$regionid	= $this->regionid;
+		$rWidth		= Kit::GetParam('rWidth', _REQUEST, _STRING);
+		$rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
 		
 		$form = <<<FORM
-		<form class="dialog_text_form" method="post" action="index.php?p=module&mod=text&q=AddMedia">
+		<form class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=AddMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
 			<table>
@@ -159,14 +65,18 @@ XML;
 					<td></td>
 					<td>
 						<input id="btnSave" type="submit" value="Save"  />
-						<input id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" onclick="return init_button(this,'Region Options','',region_options_callback)" value="Cancel" />
-						<input type="button" onclick="window.open('$this->help_link')" value="Help" />
+						<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
 					</td>
 				</tr>
 			</table>
 		</form>
 FORM;
-		return $form;
+
+		$this->response->html 		= $form;
+		$this->response->callBack 	= 'text_callback';
+		$this->response->dialogTitle = 'Add new Text item';
+
+		return $this->response;
 	}
 	
 	/**
@@ -233,12 +143,12 @@ FORM;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new ResponseManager();
+		$response = new ResponseManager();
 		
 		//Parameters
-		$layoutid 	= $_REQUEST['layoutid'];
-		$regionid 	= $_REQUEST['regionid'];
-		$mediaid	= $_REQUEST['mediaid'];
+		$layoutid 	= $this->layoutid;
+		$regionid 	= $this->regionid;
+		$mediaid	= $this->mediaid;
 
 		//we can delete
 		$form = <<<END
@@ -380,7 +290,7 @@ END;
 		//Do the assignment here - we probabily want to create a region object to handle this.
 		include_once("lib/pages/region.class.php");
 	
-		$region = new region($db);
+		$region = new region($db, $user);
 		
 		if (!$region->SwapMedia($layoutid, $regionid, "", $mediaid, $mediaid, $this->AsXml()))
 		{

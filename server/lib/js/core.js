@@ -179,15 +179,15 @@ function XiboFormRender(formUrl) {
 					$('#div_dialog').parent().parent().width(response.dialogWidth).height(response.dialogHeight);
 				}
 				
-				$('#div_dialog').dialog("open");
-                             
-                // Focus in the first form element
-                $('input[@type=text]', '#div_dialog').eq(0).focus();
-                
                 // Do we have to call any functions due to this success?
                 if (response.callBack != "" && response.callBack != undefined) {
                     eval(response.callBack)(name);
                 }
+
+				$('#div_dialog').dialog("open");
+                             
+                // Focus in the first form element
+                $('input[@type=text]', '#div_dialog').eq(0).focus();
 				
 				// Call Xibo Init for this form
 				XiboInitialise("#div_dialog");

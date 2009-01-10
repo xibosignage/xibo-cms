@@ -1161,7 +1161,7 @@ END;
 			$paddingTop		= $region['height'] / 2 - 16;
 			$paddingTop		= $paddingTop . "px";
 
-			$doubleClickLink = "init_button(this,'Region Options','',region_options_callback)";
+			$doubleClickLink = "XiboFormRender($(this).attr('href'))";
 			$regionHtml .= "<div id='region_$regionid' regionid='$regionid' layoutid='$this->layoutid' href='index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions' ondblclick=\"$doubleClickLink\"' class='region' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft; background-color: #FFF; opacity: .75; filter: alpha(opacity=75); border: 1px dashed #000\">
 								<div class='preview' style='$previewStyle'>
 									<div class='previewContent'></div>
@@ -1404,17 +1404,17 @@ BUTTON;
 		// Loop through the buttons we have and output store HTML for each one in $buttons.
 		while ($modulesItem = $enabledModules->GetNextModule())
 		{
-			$caption 	= Kit::ValidateParam($modulesItem['AddCaption'], _STRING);
+			$mod 		= Kit::ValidateParam($modulesItem['Module'], _STRING);
+			$caption 	= 'Add ' . $mod;
+			$mod		= strtolower($mod);
 			$title 		= Kit::ValidateParam($modulesItem['Description'], _STRING);
-			$uri 		= Kit::ValidateParam($modulesItem['AddUri'], _URI);
-			$onclick 	= Kit::ValidateParam($modulesItem['AddOnclick'], _STRING);
 			$img 		= Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
 			
-			$uri		.= '&ajax=true&layoutid=' . $this->layoutid . '&regionid=' . $regionid;
+			$uri		= 'index.php?p=module&q=Exec&mod=' . $mod . '&method=AddForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid;
 			
 			$buttons .= <<<HTML
 			<div class="regionicons">
-				<a title="$title" href="$uri" onclick="return $onclick">
+				<a class="XiboFormButton" title="$title" href="$uri">
 				<img class="dash_button" src="$img" />
 				<span class="dash_text">$caption</span></a>
 			</div>
@@ -1442,9 +1442,11 @@ HTML;
 		</div>
 END;
 		
-		$arh->decode_response(true, $options);
+		$arh->html 		= $options;
+		$arh->callBack 	= 'region_options_callback';
+		$arh->dialogTitle = 'Region Options';
 		
-		return;
+		$arh->Respond();
 	}
 	
 	/**
