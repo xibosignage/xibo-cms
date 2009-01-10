@@ -39,6 +39,52 @@ class image extends Module
 	}
 	
 	/**
+	 * Sets the Layout and Region Information
+	 *  it will then fill in any blanks it has about this media if it can
+	 * @return 
+	 * @param $layoutid Object
+	 * @param $regionid Object
+	 * @param $mediaid Object
+	 */
+	public function SetRegionInformation($layoutid, $regionid)
+	{
+		$db						=& $this->db;
+		$this->layoutid 		= $layoutid;
+		$this->regionid 		= $regionid;
+		$mediaid			 	= $this->mediaid;
+		$this->existingMedia 	= false;
+		
+		if ($this->regionSpecific == 1) return;
+		
+		// Load what we know about this media into the object
+		$SQL = "SELECT name, type, duration, originalFilename, userID, permissionID, retired, storedAs, isEdited, editedMediaID FROM media WHERE mediaID = $mediaid ";
+		
+		if (!$result = $db->query($SQL))
+		{
+			trigger_error($db->error()); //log the error
+			return false;
+		}
+		
+		if ($db->num_rows($result) != 1)
+		{
+			trigger_error("More than one row for mediaId [$mediaid] How can this be?");
+			return false;
+		}
+		
+		$row 				= $db->get_row($result);
+		$duration			= $row[2];
+		$storedAs			= $row[7];
+		
+		// Required Attributes
+		$this->duration = $duration;
+		
+		// Any Options
+		$this->SetOption('uri', $storedAs);
+		
+		return true;
+	}
+	
+	/**
 	 * Return the Add Form as HTML
 	 * @return 
 	 */
@@ -760,7 +806,6 @@ END;
 		
 		// Stored As from the XML
 		$this->uri	= $this->GetOption('uri');
-		
 				
 		// If we are set to retire we retire
 		if ($options == "retire")

@@ -1406,7 +1406,7 @@ HTML;
 		<div id="canvas">
 			<div id="buttons">
 				<div class="regionicons">
-					<a href="index.php?p=content&q=LibraryAssignForm&layoutid=$this->layoutid&regionid=$regionid" onclick="return grid_form(this,'Media Library',exec_filter_callback,'library_filter_form','pages_grid',600,570)" title="Library">
+					<a class="XiboFormButton" href="index.php?p=content&q=LibraryAssignForm&layoutid=$this->layoutid&regionid=$regionid" title="Library">
 					<img class="region_button" src="img/forms/library.gif"/>
 					<span class="region_text">Library</span></a>
 				</div>
@@ -1470,14 +1470,29 @@ END;
 		$regionid 		= Kit::GetParam('regionid', _REQUEST, _STRING);
 		$mediaid 		= Kit::GetParam('mediaid', _REQUEST, _INT);
 		
-		include_once("lib/pages/region.class.php");
+		// Get the type from this media
+		$SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaid);
 		
-		$region = new region($db);
-		
-		if (!$region->AddMedia($this->layoutid, $regionid, $mediaid))
+		if (!$result = $db->query($SQL))
 		{
-			//there was an ERROR
-			$arh->decode_response(false,$region->errorMsg);
+			trigger_error($db->error());
+		}
+		
+		$row = $db->get_row($result);
+		$mod = $row[0];
+		
+		require_once("modules/$mod.module.php");
+		
+		// Create the media object without any region and layout information
+		$this->module = new $mod($db, $user, $mediaid);
+		
+		if ($this->module->SetRegionInformation($this->layoutid, $regionid))
+		{
+			$this->module->UpdateRegion();
+		}
+		else
+		{
+			$arh->decode_response(2, "Cannot set region information.");
 		}
 		
 		$arh->response(AJAX_LOAD_FORM, "index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions||region_options_callback");

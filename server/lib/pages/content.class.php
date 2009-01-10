@@ -403,23 +403,10 @@ END;
 	 */
 	function LibraryAssignForm() 
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
-		
-		//Input vars
-		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
-		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
-					
-		$form = <<<END
-		<form id="library_filter_form" onsubmit="false">
-			<input type="hidden" name="p" value="content">
-			<input type="hidden" name="q" value="LibraryAssignView">
-			<input type="hidden" name="layoutid" value="$layoutid" />
-			<input type="hidden" name="regionid" value="$regionid" />
-			<table id="filterform" class="filterform">
-END;
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		$response		= new ResponseManager();
+		$formMgr 		= new FormManager($db, $user);
 		
 		if (isset($_SESSION['content']['mediatype'])) $mediatype = $_SESSION['content']['mediatype'];
 		if (isset($_SESSION['content']['name'])) $name = $_SESSION['content']['name'];
@@ -431,38 +418,51 @@ END;
 		$sql .= "FROM media WHERE 1=1 ";
 		$sql .= "  GROUP BY type ";
 		
-		$type_list = dropdownlist($sql, "type", $mediatype);
+		$type_list 	= $formMgr->DropDown($sql, 'type', $mediatype);
 		
-		$form .= <<<END
+		//Input vars
+		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
+		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
+		
+		$form = <<<HTML
+		<form>
+			<input type="hidden" name="p" value="content">
+			<input type="hidden" name="q" value="LibraryAssignView">
+			<input type="hidden" name="layoutid" value="$layoutid" />
+			<input type="hidden" name="regionid" value="$regionid" />
+			<table>
 				<tr>
 					<td>Name</td>
 					<td><input type="text" name="name" id="name" value="$name"></td>
 					<td>Media Type</td>
 					<td>$type_list</td>
 				</tr>
-				</table>
-			</form>
+			</table>
+		</form>
+HTML;
 		
-			<div id="paging_dialog">
-				<form>
-					<img src="img/forms/first.png" class="first"/>
-					<img src="img/forms/previous.png" class="prev"/>
-					<input type="text" class="pagedisplay" readonly size="5"/>
-					<img src="img/forms/next.png" class="next"/>
-					<img src="img/forms/last.png" class="last"/>
-					<select class="pagesize">
-						<option selected="selected" value="10">10</option>
-						<option value="20">20</option>
-						<option value="30">30</option>
-						<option  value="40">40</option>
-					</select>
-				</form>
+		$id = uniqid();
+		
+		$xiboGrid = <<<HTML
+		<div class="XiboGrid" id="$id">
+			<div class="XiboFilter">
+				$form
 			</div>
-			<div id="pages_grid"></div>
-END;
-		$arh->decode_response(true, $form);
+			<div class="XiboData">
+			
+			</div>
+		</div>
+HTML;
 		
-		return;		
+		// Construct the Response
+		$response->html			= $xiboGrid;
+		$response->success		= true;
+		$response->dialogSize	= true;
+		$response->dialogWidth	= '500px';
+		$response->dialogHeight = '380px';
+		$response->dialogTitle	= 'Assign an item from the Library';
+		
+		$response->Respond();	
 	}
 	
 	/**
@@ -471,10 +471,10 @@ END;
 	 */
 	function LibraryAssignView() 
 	{
-		$db 	=& $this->db;
-		$userid = Kit::GetParam('userid', _SESSION, _INT);
-		
-		global $user;
+		$db 		=& $this->db;
+		$user		=& $this->user;
+		$userid 	= Kit::GetParam('userid', _SESSION, _INT);
+		$response	= new ResponseManager();
 		
 		//Input vars
 		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT);
@@ -512,8 +512,10 @@ END;
 			trigger_error("Cant get content list", E_USER_ERROR);			
 		}
 		
-		$output = <<<END
-			<div class="dialog_table">
+		//some table headings
+		$form = <<<END
+		<form class="XiboForm" method="post" action="index.php?p=group&q=MenuItemSecurityAssign">
+			<div class="dialog_table" style="overflow-y: scroll; height: 300px;">
 			<table style="width:100%">
 				<thead>
 			    <tr>
@@ -526,27 +528,22 @@ END;
 				</thead>
 				<tbody>
 END;
-		echo $output;
 
-		$count = 0;
-		
-		while($aRow = $db->get_row($results)) 
-		{
-			$count++;
-
-			$mediaid 		= Kit::ValidateParam($aRow[0], _INT);
-			$media 			= Kit::ValidateParam($aRow[1], _STRING);
-			$mediatype 		= Kit::ValidateParam($aRow[2], _WORD);
-			$length 		= sec2hms(Kit::ValidateParam($aRow[3], _DOUBLE));
-			$ownerid 		= Kit::ValidateParam($aRow[4], _INT);
+		// while loop
+		while ($row = $db->get_row($results)) 
+		{			
+			$mediaid 		= Kit::ValidateParam($row[0], _INT);
+			$media 			= Kit::ValidateParam($row[1], _STRING);
+			$mediatype 		= Kit::ValidateParam($row[2], _WORD);
+			$length 		= sec2hms(Kit::ValidateParam($row[3], _DOUBLE));
+			$ownerid 		= Kit::ValidateParam($row[4], _INT);
 			
-			$permission 	= Kit::ValidateParam($aRow[5], _STRING);
-			$permissionid 	= Kit::ValidateParam($aRow[6], _INT);
+			$permission 	= Kit::ValidateParam($row[5], _STRING);
+			$permissionid 	= Kit::ValidateParam($row[6], _INT);
 			
 			//get the username from the userID using the user module
 			$username 		= $user->getNameFromID($ownerid);
 			$group			= $user->getGroupFromID($ownerid);
-			
 	
 			//get the permissions
 			list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid);
@@ -554,25 +551,32 @@ END;
 			if ($see_permissions) 
 			{ //is this user allowed to see this
 
-				echo "<tr>";
-				echo "<td>" . $media . "</td>\n";
-				echo "<td>" . $mediatype . "</td>\n";
-				echo "<td>" . $length . "</td>\n";
-				echo "<td>" . $permission . "</td>\n";
-				$output = <<<END
-	       	 	<td>
-	       	 		<div class="buttons">
-						<a class="dialog_form" href="index.php?p=layout&q=AddFromLibrary&regionid=$regionid&layoutid=$layoutid&mediaid=$mediaid" onclick=" return ajax_submit_link(this,'')"><span>Assign</span></a>
-	        		</div>
-				</td>
-	        </tr>
-END;
-				echo $output;
+				$form .= "<tr>";
+				$form .= "<td>" . $media . "</td>\n";
+				$form .= "<td>" . $mediatype . "</td>\n";
+				$form .= "<td>" . $length . "</td>\n";
+				$form .= "<td>" . $permission . "</td>\n";
+				$form .= "<td><input type='checkbox' name='mediaids[]' value='$mediaid'></td>";
+				$form .= "</tr>";
 			}
 		}
-		echo "</tbody></table></div>";
+
+		//table ending
+		$form .= <<<END
+				</tbody>
+			</table>
+			<input type='submit' value="Assign" / >
+		</div>
+	</form>
+END;
 		
-		exit;
+		// Construct the Response
+		$response->html 		= $form;
+		$response->success		= true;
+		$response->sortable		= false;
+		$response->sortingDiv	= '.info_table table';
+		
+		$response->Respond();
 	}
 	
 	/**

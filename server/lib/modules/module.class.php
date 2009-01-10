@@ -153,7 +153,7 @@ class Module implements ModuleInterface
 			{
 				Debug::LogEntry($db, 'audit', 'Media Node Found.');
 				
-				// Create a Media node in the DOMDOcument for us to replace
+				// Create a Media node in the DOMDocument for us to replace
 				$xmlDoc->loadXML('<root/>');
 			}
 			else
@@ -192,6 +192,21 @@ XML;
 		$this->xml = $xmlDoc;
 		
 		Debug::LogEntry($db, 'audit', 'XML is: ' . $this->xml->saveXML());
+		
+		return true;
+	}
+	
+	/**
+	 * Sets the Layout and Region Information
+	 * @return 
+	 * @param $layoutid Object
+	 * @param $regionid Object
+	 * @param $mediaid Object
+	 */
+	public function SetRegionInformation($layoutid, $regionid)
+	{	
+		$this->layoutid = $layoutid;
+		$this->regionid = $regionid;
 		
 		return true;
 	}
@@ -335,7 +350,7 @@ XML;
 	 * Updates the region information with this media record
 	 * @return 
 	 */
-	final protected function UpdateRegion()
+	final public function UpdateRegion()
 	{
 		// By this point we expect to have a MediaID, duration
 		$layoutid = $this->layoutid;
