@@ -164,7 +164,7 @@ class region
 	 * Adds the media to this region
 	 * @return 
 	 */
-	public function AddMedia($layoutid, $regionid, $mediaXmlString) 
+	public function AddMedia($layoutid, $regionid, $regionSpecific, $mediaXmlString) 
 	{
 		$db 	=& $this->db;
 		$user 	=& $this->user;
@@ -180,7 +180,19 @@ class region
 		
 		//Load the Media's XML into a SimpleXML object
 		$mediaXml->loadXML($mediaXmlString);
-		$mediaXml->documentElement->setAttribute("lkid", $id);
+		
+		// Do we need to add a Link here?
+		if ($regionSpecific == 0)
+		{
+			// Get the Media ID from the mediaXml node
+			$mediaid = (int) $mediaXml['id'];
+			
+			// Add the DB link
+			$lkid = $this->AddDbLink($layoutid, $regionid, $mediaid);
+			
+			// Attach this lkid to the media item
+			$mediaXml->documentElement->setAttribute("lkid", $lkid);
+		}
 		
 		//Find the region in question
 		$xpath = new DOMXPath($xml);
@@ -252,7 +264,7 @@ class region
 	 * Removes the DBlink for records for the given id's
 	 * @return 
 	 */
-	public function RemoveDbLink($lkid)
+	private function RemoveDbLink($lkid)
 	{
 		$db =& $this->db;
 		

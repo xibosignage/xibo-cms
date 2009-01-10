@@ -239,12 +239,12 @@ function XiboFormSubmit(form)
 				}
 				
 				// Should we display the message?
-				if (!response.hideMessage || response.message == undefined) {
+				if (!response.hideMessage || response.message != '') {
 					SystemMessage(response.message);
 				}
 				
 				// Do we need to fire a callback function?
-				if (response.callBack != undefined && response.callBack != "") {
+				if (response.callBack != null && response.callBack != "") {
                     eval(response.callBack)(name);
                 }
 				

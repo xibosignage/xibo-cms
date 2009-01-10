@@ -20,10 +20,18 @@
  */ 
 class text extends Module
 {
-	//Media information
-	private	$duration;
+	// Custom Media information
 	private $text;
 	private $direction;
+	
+	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
+	{
+		// Must set the type of the class
+		$this->type = 'text';
+	
+		// Must call the parent class	
+		parent::__construct($db, $user, $mediaid, $layoutid, $regionid);
+	}
 	
 	/**
 	 * Return the Add Form as HTML
@@ -91,11 +99,24 @@ FORM;
 		$regionid	= $this->regionid;
 		$mediaid  	= $this->mediaid;
 		
-		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $this->direction);
+		$direction	= $this->GetOption('direction');
+		
+		// Get the text out of RAW
+		$rawXml = new DOMDocument();
+		$rawXml->loadXML($this->GetRaw());
+		
+		Debug::LogEntry($db, 'audit', 'Raw XML returned: ' . $this->GetRaw());
+		
+		// Get the Text Node out of this
+		$textNodes 	= $rawXml->getElementsByTagName('text');
+		$textNode 	= $textNodes->item(0);
+		$text 		= $textNode->nodeValue;
+		
+		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
 		
 		//Output the form
 		$form = <<<FORM
-		<form class="dialog_text_form" method="post" action="index.php?p=module&mod=text&q=EditMedia">
+		<form class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=EditMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="mediaid" value="$mediaid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
@@ -108,7 +129,7 @@ FORM;
 				</tr>
 				<tr>
 					<td colspan="4">
-						<textarea id="ta_text" name="ta_text">$this->text</textarea>
+						<textarea id="ta_text" name="ta_text">$text</textarea>
 					</td>
 				</tr>
 				<tr>
@@ -118,8 +139,7 @@ FORM;
 					<td></td>
 					<td>
 						<input id="btnSave" type="submit" value="Save"  />
-						<input id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" onclick="return init_button(this,'Region Options','',region_options_callback)" value="Cancel" />
-						<input type="button" onclick="window.open('$this->help_link')" value="Help" />
+						<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
 					</td>
 				</tr>
 			</table>
@@ -141,9 +161,6 @@ FORM;
 	{
 		$db =& $this->db;
 		
-		//ajax request handler
-		$response = new ResponseManager();
-		
 		//Parameters
 		$layoutid 	= $this->layoutid;
 		$regionid 	= $this->regionid;
@@ -151,18 +168,20 @@ FORM;
 
 		//we can delete
 		$form = <<<END
-		<form class="dialog_form" method="post" action="index.php?p=module&mod=text&q=DeleteMedia">
+		<form class="XiboForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=DeleteMedia">
 			<input type="hidden" name="mediaid" value="$mediaid">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="regionid" value="$regionid">
 			<p>Are you sure you want to remove this webpage from Xibo? <span class="required">It will be lost</span>.</p>
 			<input id="btnSave" type="submit" value="Yes"  />
-			<input id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" onclick="return init_button(this,'Region Options','',region_options_callback)" value="No" />
-			<input type="button" onclick="window.open('$this->help_link')" value="Help" />
+			<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="No" />
 		</form>
 END;
 		
-		$arh->decode_response(true, $form);
+		$this->response->html 		 = $form;
+		$this->response->dialogTitle = 'Delete this Text Item';
+
+		return $this->response;	
 	}
 	
 	/**
@@ -172,19 +191,24 @@ END;
 	public function AddMedia()
 	{
 		$db 		=& $this->db;
-		$response 	=& $this->response;
+		
+		$layoutid 	= $this->layoutid;
+		$regionid 	= $this->regionid;
+		$mediaid	= $this->mediaid;
 		
 		//Other properties
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 1);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+		
+		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
 		//validation
 		if ($text == '')
 		{
-			$response->SetError('Please enter some text');
-			$response->keepOpen = true;
-			return $response;
+			$this->response->SetError('Please enter some text');
+			$this->response->keepOpen = true;
+			return $this->response;
 		}
 		
 		// Required Attributes
@@ -203,7 +227,11 @@ END;
 		//Set this as the session information
 		setSession('content', 'type', 'text');
 		
-		return $response;
+		// We want to load a new form
+		$this->response->loadForm	= true;
+		$this->response->loadFormUri= $url;
+		
+		return $this->response;
 	}
 	
 	/**
@@ -212,70 +240,47 @@ END;
 	 */
 	public function EditMedia()
 	{
-		$db =& $this->db;
+		$db 		=& $this->db;
 		
-		//ajax request handler
-		$arh = new ResponseManager();
+		$layoutid 	= $this->layoutid;
+		$regionid 	= $this->regionid;
+		$mediaid	= $this->mediaid;
 		
 		//Other properties
-		$direction	  = $_POST['direction'];
-		$duration	  = $_POST['duration'];
-		$text		  = $_POST['ta_text'];
+		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
+		$duration	  = Kit::GetParam('duration', _POST, _INT, 1);
+		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		
-		if (get_magic_quotes_gpc())
-		{
-			$text = stripslashes($text);
-		}
-		
-		//Optional parameters
-		$layoutid = $_POST['layoutid'];
-		$regionid = $_POST['regionid'];
-		$mediaid  = $_POST['mediaid'];
-		
-		//Ensure regions
-		if ($layoutid == "" && $regionid == "")
-		{
-			$this->message .= "Text must be assigned to regions";
-			return false;
-		}
-		
+		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+						
 		//validation
-		if ($text == "")
+		if ($text == '')
 		{
-			$this->message .= "Please enter some text";
-			return false;
+			$this->response->SetError('Please enter some text');
+			$this->response->keepOpen = true;
+			return $this->response;
 		}
 		
-		//Validate the URL?
-		
-		if (!is_numeric($duration))
-		{
-			$this->message .= "You must enter a value for duration";
-			return false;
-		}
-		
-		//Save the info in the object
-		$this->SetMediaId($mediaid);
-		
-		$this->text		= $text;
+		// Required Attributes
+		$this->type		= 'text';
 		$this->duration = $duration;
-		$this->direction = $direction;
 		
-		//Do the assignment here - we probabily want to create a region object to handle this.
-		include_once("lib/pages/region.class.php");
-	
-		$region = new region($db, $user);
+		// Any Options
+		$this->SetOption('direction', $direction);
+		$this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 		
-		if (!$region->SwapMedia($layoutid, $regionid, "", $mediaid, $mediaid, $this->AsXml()))
-		{
-			$message = "Unable to assign to the Region";
-			return false;
-		}
-
+		// Should have built the media object entirely by this time
+		// This saves the Media Object to the Region
+		$this->UpdateRegion();
+		
 		//Set this as the session information
 		setSession('content', 'type', 'text');
 		
-		return true;		
+		// We want to load a new form
+		$this->response->loadForm	= true;
+		$this->response->loadFormUri= $url;
+		
+		return $this->response;		
 	}
 	
 	/**
@@ -284,25 +289,24 @@ END;
 	 */
 	public function DeleteMedia() 
 	{
-		$db =& $this->db;
+		$db 		=& $this->db;
 		
-		$layoutid = $_REQUEST['layoutid'];
-		$regionid = $_REQUEST['regionid'];
-		$mediaid  = $_REQUEST['mediaid'];
+		$layoutid 	= $this->layoutid;
+		$regionid 	= $this->regionid;
 		
-		//Options
-		//Regardless of the option we want to unassign.
-		include_once("lib/app/region.class.php");
-	
-		$region = new region($db);
+		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 		
-		if (!$region->RemoveMedia($layoutid, $regionid, $lkid, $mediaid))
-		{
-			$this->message = "Unable to Remove this media from the Layout";
-			return false;
-		}
+		$this->deleteFromRegion = true;
+		$this->UpdateRegion();
 		
-		return true;
+		//Set this as the session information
+		setSession('content', 'type', 'text');
+		
+		// We want to load a new form
+		$this->response->loadForm	= true;
+		$this->response->loadFormUri= $url;
+		
+		return $this->response;	
 	}
 }
 

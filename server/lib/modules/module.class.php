@@ -34,8 +34,14 @@ class Module implements ModuleInterface
 	protected $mediaid;
 	protected $type;
 	private   $schemaVersion;
+	protected $regionSpecific;
+	protected $duration;
+	protected $lkid;
 
 	protected $xml;
+	
+	protected $existingMedia;
+	protected $deleteFromRegion;
 	
 	/**
 	 * Constructor - sets up this media object with all the available information
@@ -46,7 +52,7 @@ class Module implements ModuleInterface
 	 * @param $layoutid String[optional]
 	 * @param $regionid String[optional]
 	 */
-	final public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
+	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
 	{
 		include_once("lib/pages/region.class.php");
 		
@@ -60,10 +66,55 @@ class Module implements ModuleInterface
 		$this->region 	= new region($db, $user);
 		$this->response = new ResponseManager();
 		
+		$this->existingMedia 	= false;
+		$this->deleteFromRegion = false;
+		$this->lkid				= '';
+		$this->duration 		= '';
+		
+		// Determine which type this module is
+		$this->SetModuleInformation();
+		
 		Debug::LogEntry($db, 'audit', 'New module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 		
 		// Either the information from the region - or some blanks
 		$this->SetMediaInformation($this->layoutid, $this->regionid, $mediaid);
+		
+		return true;
+	}
+	
+	/**
+	 * Sets the module information
+	 * @return 
+	 */
+	final private function SetModuleInformation()
+	{
+		$db 		=& $this->db;
+		$type		= $this->type;
+		
+		if ($type == '')
+		{
+			$this->response->SetError('Unable to create Module [No type given] - please refer to the Module Documentation.');
+			$this->response->Respond();
+		}
+		
+		$SQL = sprintf("SELECT * FROM module WHERE Module = '%s'", $db->escape_string($type));
+		
+		if (!$result = $db->query($SQL)) 
+		{
+			$this->response->SetError('Unable to create Module [Cannot find type in the database] - please refer to the Module Documentation.');
+			$this->response->Respond();
+		}
+		
+		if ($db->num_rows($result) != 1)
+		{
+			$this->response->SetError('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.');
+			$this->response->Respond();
+		}
+		
+		$row = $db->get_assoc_row($result);
+		
+		$this->schemaVersion 	= Kit::ValidateParam($row['SchemaVersion'], _INT);
+		$this->regionSpecific 	= Kit::ValidateParam($row['RegionSpecific'], _INT);
 		
 		return true;
 	}
@@ -83,24 +134,57 @@ class Module implements ModuleInterface
 		
 		if ($this->mediaid != '' && $this->regionid != '' && $this->layoutid != '')
 		{
+			$this->existingMedia = true;
+			
 			// Set the layout Xml
 			$layoutXml = $region->GetLayoutXml($layoutid);
 			
-			$xml = simplexml_load_string($layoutXml);
+			Debug::LogEntry($db, 'audit', 'Layout XML retrieved: ' . $layoutXml);
+			
+			$layoutDoc = new DOMDocument();
+			$layoutDoc->loadXML($layoutXml);
+			
+			$layoutXpath = new DOMXPath($layoutDoc);
 			
 			// Get the media node and extract the info
-			$mediaNodeXpath = $xml->xpath("//region[@id='$regionid']/media[@id='$mediaid']");
-			$mediaNode 		= $mediaNodeXpath[0];
+			$mediaNodeXpath = $layoutXpath->query("//region[@id='$regionid']/media[@id='$mediaid']");
 			
-			$xmlDoc->importNode($mediaNode, true);
+			if ($mediaNodeXpath->length > 0)
+			{
+				Debug::LogEntry($db, 'audit', 'Media Node Found.');
+				
+				// Create a Media node in the DOMDOcument for us to replace
+				$xmlDoc->loadXML('<root/>');
+			}
+			else
+			{
+				$this->response->SetError('Cannot find this media item. Please refresh the region options.');
+				$this->response->Respond();
+			}
+			
+			$mediaNode = $mediaNodeXpath->item(0);
+			$mediaNode->setAttribute('schemaVersion', $this->schemaVersion);
+			
+			$this->duration = $mediaNode->getAttribute('duration');
+			$this->lkid	 	= $mediaNode->getAttribute('lkid');
+			
+			$mediaNode = $xmlDoc->importNode($mediaNode, true);
+			$xmlDoc->documentElement->appendChild($mediaNode);
 		}
 		else
-		{			
+		{
+			if ($this->mediaid != '')
+			{
+				$this->existingMedia = true;
+			}
+			
 			$xml = <<<XML
-			<media id="" type="" duration="" lkid="" schemaVersion="">
-				<options />
-				<raw />
-			</media>
+			<root>
+				<media id="" type="" duration="" lkid="" schemaVersion="$this->schemaVersion">
+					<options />
+					<raw />
+				</media>
+			</root>
 XML;
 			$xmlDoc->loadXML($xml);
 		}
@@ -125,8 +209,14 @@ XML;
 		//		Type
 		//		SchemaVersion (use the type to get this from the DB)
 		// LkID is done by the region code (where applicable - otherwise it will be left blank)
+		$mediaNodes = $this->xml->getElementsByTagName('media');
+		$mediaNode	= $mediaNodes->item(0);
 		
-		return $this->xml->saveXML();
+		$mediaNode->setAttribute('id', $this->mediaid);
+		$mediaNode->setAttribute('duration', $this->duration);
+		$mediaNode->setAttribute('type', $this->type);
+		
+		return $this->xml->saveXML($mediaNode);
 	}
 	
 	/**
@@ -142,17 +232,17 @@ XML;
 		// Get the options node from this document
 		$optionNodes = $this->xml->getElementsByTagName('options');
 		// There is only 1
-		$optionNode = $optionNodes[0];
+		$optionNode = $optionNodes->item(0);
 		
 		// Create a new option node
 		$newNode = $this->xml->createElement($name, $value);
 		
 		
 		// Check to see if we already have this option or not
-		$xpath = new DOMXPath($xml);
+		$xpath = new DOMXPath($this->xml);
 		
 		// Xpath for it
-		$userOptions = $xpath->query('//options/option/' . $name);
+		$userOptions = $xpath->query('//options/' . $name);
 		
 		if ($userOptions->length == 0)
 		{
@@ -162,18 +252,40 @@ XML;
 		else
 		{
 			// Replace the old node we found with XPath with the new node we just created
-			$optionNode->replaceChild($newNode, $userOptions[0]);	
+			$optionNode->replaceChild($newNode, $userOptions->item(0));	
 		}
 	}
 	
 	/**
 	 * Gets the value for the option in Parameter 1
 	 * @return 
-	 * @param $name String
+	 * @param $name String The Option Name
+	 * @param $default Object[optional] The Default Value
 	 */
-	final protected function GetOption($name)
+	final protected function GetOption($name, $default = false)
 	{
+		$db =& $this->db;
 		
+		if ($name == '') return false;
+		
+		// Check to see if we already have this option or not
+		$xpath = new DOMXPath($this->xml);
+		
+		// Xpath for it
+		$userOptions = $xpath->query('//options/' . $name);
+		
+		if ($userOptions->length == 0)
+		{
+			// We do not have an option - return the default
+			Debug::LogEntry($db, 'audit', 'GetOption ' . $name . ': Not Set - returning default ' . $default);
+			return $default;
+		}
+		else
+		{
+			// Replace the old node we found with XPath with the new node we just created
+			Debug::LogEntry($db, 'audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue);
+			return $userOptions->item(0)->nodeValue;
+		}
 	}
 	
 	/**
@@ -197,7 +309,7 @@ XML;
 		$rawNodes = $this->xml->getElementsByTagName('raw');
 
 		// There is only 1
-		$rawNode = $rawNodes[0];
+		$rawNode = $rawNodes->item(0);
 		
 		// Append the imported node (at the end of whats already there)
 		$rawNode->appendChild($importedNode);
@@ -209,7 +321,14 @@ XML;
 	 */
 	final protected function GetRaw()
 	{
+		// Get the Raw Xml node from our document
+		$rawNodes = $this->xml->getElementsByTagName('raw');
+
+		// There is only 1
+		$rawNode = $rawNodes->item(0);
 		
+		// Return it as a XML string
+		return $this->xml->saveXML($rawNode);
 	}
 	
 	/**
@@ -219,15 +338,41 @@ XML;
 	final protected function UpdateRegion()
 	{
 		// By this point we expect to have a MediaID, duration
-		
 		$layoutid = $this->layoutid;
 		$regionid = $this->regionid;
 		
-		if (!$this->region->AddMedia($layoutid, $regionid, $this->AsXml()))
+		if ($this->deleteFromRegion)
 		{
-			$this->message = "Error adding this media to the library";
-			return false;
+			// We call region delete
+			if (!$this->region->RemoveMedia($layoutid, $regionid, $this->lkid, $this->mediaid))
+			{
+				$this->message = "Unable to Remove this media from the Layout";
+				return false;
+			}
 		}
+		else
+		{
+			if ($this->existingMedia)
+			{
+				// We call region swap with the same media id
+				if (!$this->region->SwapMedia($layoutid, $regionid, $this->lkid, $this->mediaid, $this->mediaid, $this->AsXml()))
+				{
+					$this->message = "Unable to assign to the Region";
+					return false;
+				}
+			}
+			else
+			{
+				// We call region add
+				if (!$this->region->AddMedia($layoutid, $regionid, $this->regionSpecific, $this->AsXml()))
+				{
+					$this->message = "Error adding this media to the library";
+					return false;
+				}
+			}
+		}
+		
+		return true;
 	}
 }
 ?>
