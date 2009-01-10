@@ -33,6 +33,7 @@ class Module implements ModuleInterface
 	
 	protected $mediaid;
 	protected $type;
+	private   $schemaVersion;
 
 	protected $xml;
 	
@@ -74,7 +75,7 @@ class Module implements ModuleInterface
 	 * @param $regionid Object
 	 * @param $mediaid Object
 	 */
-	private function SetMediaInformation($layoutid, $regionid, $mediaid)
+	final private function SetMediaInformation($layoutid, $regionid, $mediaid)
 	{
 		$db 		=& $this->db;
 		$region 	=& $this->region;
@@ -96,7 +97,7 @@ class Module implements ModuleInterface
 		else
 		{			
 			$xml = <<<XML
-			<media id="" type="" duration="" lkid="">
+			<media id="" type="" duration="" lkid="" schemaVersion="">
 				<options />
 				<raw />
 			</media>
@@ -117,7 +118,15 @@ XML;
 	 */
 	final public function AsXml()
 	{
-		return $this->xml;
+		// Make sure the required attributes are present on the Media Node
+		// We can add / change:
+		// 		MediaID
+		//		Duration
+		//		Type
+		//		SchemaVersion (use the type to get this from the DB)
+		// LkID is done by the region code (where applicable - otherwise it will be left blank)
+		
+		return $this->xml->saveXML();
 	}
 	
 	/**
@@ -158,6 +167,16 @@ XML;
 	}
 	
 	/**
+	 * Gets the value for the option in Parameter 1
+	 * @return 
+	 * @param $name String
+	 */
+	final protected function GetOption($name)
+	{
+		
+	}
+	
+	/**
 	 * Sets the RAW XML string that is given as the content for Raw
 	 * @return 
 	 * @param $xml String
@@ -185,10 +204,19 @@ XML;
 	}
 	
 	/**
+	 * Gets the XML string from RAW
+	 * @return 
+	 */
+	final protected function GetRaw()
+	{
+		
+	}
+	
+	/**
 	 * Updates the region information with this media record
 	 * @return 
 	 */
-	protected function UpdateRegion()
+	final protected function UpdateRegion()
 	{
 		// By this point we expect to have a MediaID, duration
 		

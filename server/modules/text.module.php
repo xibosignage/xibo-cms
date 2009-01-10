@@ -24,7 +24,6 @@ class text extends Module
 	private	$duration;
 	private $text;
 	private $direction;
-	private $schemaVersion;
 	
 	/**
 	 * Return the Add Form as HTML
@@ -86,17 +85,11 @@ FORM;
 	 */
 	public function EditForm()
 	{
-		$db =& $this->db;
+		$db 		=& $this->db;
 		
-		$layoutid = $_REQUEST['layoutid'];
-		$regionid = $_REQUEST['regionid'];
-		$mediaid  = $_REQUEST['mediaid'];
-		
-		//Set the mediaId and get the info from the Db
-		$this->SetMediaId($mediaid);
-		
-		//Set the media information (get the node)
-		$this->SetRegionInformation($layoutid, $regionid, $mediaid);
+		$layoutid	= $this->layoutid;
+		$regionid	= $this->regionid;
+		$mediaid  	= $this->mediaid;
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $this->direction);
 		
@@ -132,7 +125,12 @@ FORM;
 			</table>
 		</form>
 FORM;
-		return $form;		
+		
+		$this->response->html 		= $form;
+		$this->response->callBack 	= 'text_callback';
+		$this->response->dialogTitle = 'Edit Text item';
+
+		return $this->response;		
 	}
 	
 	/**
@@ -199,6 +197,7 @@ END;
 		$this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 		
 		// Should have built the media object entirely by this time
+		// This saves the Media Object to the Region
 		$this->UpdateRegion();
 		
 		//Set this as the session information
