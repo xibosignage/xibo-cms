@@ -538,7 +538,7 @@ function SystemMessage(messageText) {
 	message.dialog('open');
 }
 
-function fileFormSubmit(){
+function fileFormSubmit() {
 	// Update the UI to say its submitting
 	$('#uploadProgress').fadeIn("slow");
 	$('#file_upload').parent().hide();
@@ -550,7 +550,7 @@ function fileFormSubmit(){
  * @param {Object} fileId
  * @param {Object} errorCode
  */
-function fileUploadReport(fileName, fileId, errorCode){
+function fileUploadReport(fileName, fileId, errorCode) {
 	var button = document.getElementById("btnSave");
 	var uploadProgress = $('#uploadProgress');
 	

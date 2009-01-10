@@ -67,7 +67,7 @@ class media_image
 		//Set the mediaId
 		$this->mediaid = $mediaid;
 		
-		//Load what we know about this media into the object
+		// Load what we know about this media into the object
 		$SQL = "SELECT name, type, duration, originalFilename, userID, permissionID, retired, storedAs, isEdited, editedMediaID FROM media WHERE mediaID = $mediaid ";
 		
 		if (!$result = $db->query($SQL))
@@ -180,17 +180,15 @@ XML;
 			
 			$save_button = <<<END
 			<input id="btnSave" type="submit" value="Save" disabled />
-			<input id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" onclick="return init_button(this,'Region Options','',region_options_callback)" value="Cancel" />
-			<input type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" onclick="return grid_form(this,'Media Library',exec_filter_callback,'library_filter_form','pages_grid',600,570)" title="Library" value="Library" />
-			<input type="button" onclick="window.open('$this->help_link')" value="Help" />
+			<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
+			<input class="XiboFormButton" type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" title="Library" value="Library" />
 END;
 		}
 		else
 		{
 			$save_button = <<<END
 			<input id="btnSave" type="submit" value="Save" disabled />
-			<input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').parent().parent().hide()" value="Cancel" />
-			<input type="button" onclick="window.open('$this->help_link')" value="Help" />
+			<input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
 END;
 		}
 		

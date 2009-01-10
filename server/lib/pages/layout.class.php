@@ -1563,7 +1563,6 @@ END;
 						<h5>Media Information</h5>
 						<ul>
 							<li>Type: $type</li>
-							<li>Name: $mediaName</li>
 							<li>Duration: $mediaDurationText</li>
 						</ul>
 					</div>";
@@ -1646,7 +1645,7 @@ END;
 			$ratioHeight = $height;
 			
 			//Show the image - scaled to the aspect ratio of this region (get from GET)
-			$return .= "<div style='text-align:center; margin-top:$centerHeight;'><img alt='$type thumbnail' src='index.php?p=module&q=GetImage&file=$uri&width=$ratioWidth&height=$ratioHeight&dynamic' /></div>";
+			$return .= "<div style='text-align:center;'><img alt='$type thumbnail' src='index.php?p=module&q=GetImage&file=$uri&width=$ratioWidth&height=$ratioHeight&dynamic' /></div>";
 		}
 		else
 		{
@@ -1654,7 +1653,7 @@ END;
 			$centerHeight = $height / 2 - 40;
 			$centerHeight = $centerHeight . "px";
 			
-			$return .= "<div style='text-align:center; margin-top:$centerHeight;'><img alt='$type thumbnail' src='img/forms/$type.png' /></div>";
+			$return .= "<div style='text-align:center;'><img alt='$type thumbnail' src='img/forms/$type.png' /></div>";
 		}
 		
 		$arh->decode_response(true, $return);

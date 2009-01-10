@@ -185,7 +185,7 @@ class region
 		if ($regionSpecific == 0)
 		{
 			// Get the Media ID from the mediaXml node
-			$mediaid = (int) $mediaXml['id'];
+			$mediaid = $mediaXml->documentElement->getAttribute('id');
 			
 			// Add the DB link
 			$lkid = $this->AddDbLink($layoutid, $regionid, $mediaid);

@@ -363,7 +363,7 @@ function tRegionOptions()
 	var regionid = gup("regionid");
 	var layoutid = gup("layoutid");
 	
-	load_form('index.php?p=layout&layoutid='+layoutid+'&regionid='+regionid+'&q=RegionOptions', $('#div_dialog'),'',region_options_callback);
+	XiboFormRender('index.php?p=layout&layoutid='+layoutid+'&regionid='+regionid+'&q=RegionOptions');
 }
 
 
