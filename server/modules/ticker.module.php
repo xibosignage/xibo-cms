@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-class text extends Module
+class ticker extends Module
 {
 	// Custom Media information
 	private $text;
@@ -27,7 +27,7 @@ class text extends Module
 	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
 	{
 		// Must set the type of the class
-		$this->type = 'text';
+		$this->type = 'ticker';
 	
 		// Must call the parent class	
 		parent::__construct($db, $user, $mediaid, $layoutid, $regionid);
@@ -51,10 +51,16 @@ class text extends Module
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
 		
 		$form = <<<FORM
-		<form class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=AddMedia">
+		<form class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=AddMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
 			<table>
+				<tr>
+					<td><label for="uri" title="The Link for the RSS feed">Link<span class="required">*</span></label></td>
+					<td><input id="uri" name="uri" value="http://" type="text"></td>
+					<td><label for="copyright" title="Copyright information to display as the last item in this feed.">Copyright</label></td>
+					<td><input id="copyright" name="copyright" type="text" /></td>
+				</td>
 				<tr>
 		    		<td><label for="direction" title="The Direction this text should move, if any">Direction<span class="required">*</span></label></td>
 		    		<td>$direction_list</td>
@@ -63,11 +69,10 @@ class text extends Module
 				</tr>
 				<tr>
 					<td colspan="4">
-						<textarea id="ta_text" name="ta_text"></textarea>
+						<textarea id="ta_text" name="ta_text">
+							[Title] - [Date] - [Description]
+						</textarea>
 					</td>
-				</tr>
-				<tr>
-					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.org.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
 				</tr>
 				<tr>
 					<td></td>
@@ -82,7 +87,7 @@ FORM;
 
 		$this->response->html 		= $form;
 		$this->response->callBack 	= 'text_callback';
-		$this->response->dialogTitle = 'Add new Text item';
+		$this->response->dialogTitle = 'Add New Ticker';
 
 		return $this->response;
 	}
@@ -100,6 +105,8 @@ FORM;
 		$mediaid  	= $this->mediaid;
 		
 		$direction	= $this->GetOption('direction');
+		$copyright	= $this->GetOption('copyright');
+		$uri		= $this->GetOption('uri');
 		
 		// Get the text out of RAW
 		$rawXml = new DOMDocument();
@@ -108,7 +115,7 @@ FORM;
 		Debug::LogEntry($db, 'audit', 'Raw XML returned: ' . $this->GetRaw());
 		
 		// Get the Text Node out of this
-		$textNodes 	= $rawXml->getElementsByTagName('text');
+		$textNodes 	= $rawXml->getElementsByTagName('template');
 		$textNode 	= $textNodes->item(0);
 		$text 		= $textNode->nodeValue;
 		
@@ -116,11 +123,17 @@ FORM;
 		
 		//Output the form
 		$form = <<<FORM
-		<form class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=EditMedia">
+		<form class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=EditMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="mediaid" value="$mediaid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
 			<table>
+				<tr>
+					<td><label for="uri" title="The Link for the RSS feed">Link<span class="required">*</span></label></td>
+					<td><input id="uri" name="uri" value="$uri" type="text"></td>
+					<td><label for="copyright" title="Copyright information to display as the last item in this feed.">Copyright</label></td>
+					<td><input id="copyright" name="copyright" type="text" value="$copyright" /></td>
+				</td>
 				<tr>
 		    		<td><label for="direction" title="The Direction this text should move, if any">Direction<span class="required">*</span></label></td>
 		    		<td>$direction_list</td>
@@ -131,9 +144,6 @@ FORM;
 					<td colspan="4">
 						<textarea id="ta_text" name="ta_text">$text</textarea>
 					</td>
-				</tr>
-				<tr>
-					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.org.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
 				</tr>
 				<tr>
 					<td></td>
@@ -166,9 +176,11 @@ FORM;
 		$mediaid	= $this->mediaid;
 		
 		//Other properties
+		$uri		  = Kit::GetParam('uri', _POST, _URI);
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 1);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -180,13 +192,24 @@ FORM;
 			return $this->response;
 		}
 		
+		//Validate the URL?
+		if ($uri == "" || $uri == "http://")
+		{
+			$this->response->SetError('Please enter a Link for this Ticker');
+			$this->response->keepOpen = true;
+			return $this->response;
+		}
+		
 		// Required Attributes
 		$this->mediaid	= md5(uniqid());
 		$this->duration = $duration;
 		
 		// Any Options
 		$this->SetOption('direction', $direction);
-		$this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
+		$this->SetOption('copyright', $copyright);
+		$this->SetOption('uri', $uri);
+
+		$this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
 		
 		// Should have built the media object entirely by this time
 		// This saves the Media Object to the Region
@@ -215,9 +238,11 @@ FORM;
 		$mediaid	= $this->mediaid;
 		
 		//Other properties
+		$uri		  = Kit::GetParam('uri', _POST, _URI);
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 1);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -229,12 +254,23 @@ FORM;
 			return $this->response;
 		}
 		
+		//Validate the URL?
+		if ($uri == "" || $uri == "http://")
+		{
+			$this->response->SetError('Please enter a Link for this Ticker');
+			$this->response->keepOpen = true;
+			return $this->response;
+		}
+		
 		// Required Attributes
 		$this->duration = $duration;
 		
 		// Any Options
 		$this->SetOption('direction', $direction);
-		$this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
+		$this->SetOption('copyright', $copyright);
+		$this->SetOption('uri', $uri);
+
+		$this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
 		
 		// Should have built the media object entirely by this time
 		// This saves the Media Object to the Region
@@ -247,7 +283,7 @@ FORM;
 		$this->response->loadForm	= true;
 		$this->response->loadFormUri= $url;
 		
-		return $this->response;		
+		return $this->response;	
 	}
 }
 

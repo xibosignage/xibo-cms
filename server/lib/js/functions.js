@@ -24,23 +24,6 @@ if (window.attachEvent) window.attachEvent("onload", sfHover); //if IE6 imitate 
 
 $(document).ready(function() {
 
-	//define the ajax start event
-	$('#system_working').parent().parent().ajaxStart(function(){
-	
-		var left = $(window).width() / 2 - $(this).width() / 2;
-		
-		var top = $(window).height() / 2 - $(this).height() / 2;
-		
-		$(this)
-			.css("top", top)
-			.css("left", left);
-			
-		$(this).show();
-		
-	}).ajaxComplete(function(){
-		$(this).fadeOut("slow");
-	});
-	
 	//help tabs - where they are found
 	$('#helptabs').tabs({ fxSlide: true, fxFade: true, fxSpeed: 'fast' });
 	
@@ -53,9 +36,6 @@ $(document).ready(function() {
 	$("li ul","#nav").css("z-index","2").bgiframe();
 	
 	$('#notes').bgiframe();
-	
-	//setup the dialog
-	$('#div_dialog').dialog({title:"Xibo",width:"500px",height:"240px", draggable:true, resizable:false, bgiframe:true}).dialog("close").parent().parent().css("z-index","300");
 
 	//handle the trigger function (we might want to trigger some javascript on the page load)
 	var trigger = gup('trigger')
@@ -549,17 +529,13 @@ function getUrl() {
  * @param {String} message
  */
 function SystemMessage(messageText) {
-	var message 			= $('#system_message');
-	var messageContainer 	= message.parent().parent();
 	
-	$('span', message).html("");
+	if (messageText == '') return;
+	
+	var message = $('#system_message');
 
-	var left = $(window).width() / 2 - messageContainer.width() / 2;	
-	var top = $(window).height() / 2 - messageContainer.height() / 2;
-		
-	$('span', message).html(messageText);
-
-    messageContainer.css("top", top).css("left", left).show();
+	message.html(messageText);
+	message.dialog('open');
 }
 
 function fileFormSubmit(){

@@ -19,6 +19,40 @@
  */
 
 $(document).ready(function(){
+	
+	// Setup the dialogs
+    $('#div_dialog').dialog({
+        title: "Xibo",
+        width: "500px",
+        height: "240px",
+        draggable: true,
+        resizable: false,
+        bgiframe: true
+    }).dialog("close").parent().parent().css("z-index", "300");
+	
+    $('#system_message').dialog({
+        title: "Xibo",
+        width: "500px",
+        height: "240px",
+        draggable: true,
+        resizable: false,
+        bgiframe: true
+    }).dialog("close").parent().parent().css("z-index", "300");
+	
+    $('#system_working').dialog({
+        title: "Xibo",
+        width: "500px",
+        height: "240px",
+        draggable: true,
+        resizable: false,
+        bgiframe: true
+    }).dialog("close").ajaxStart(function(){
+    	$(this).dialog("open");
+    }).ajaxComplete(function(){
+        $(this).dialog("close");
+    }).parent().parent().css("z-index", "300");
+
+	
 	XiboInitialise();
 });
 

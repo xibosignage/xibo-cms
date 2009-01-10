@@ -300,7 +300,7 @@ XML;
 		
 		// Load the XML we are given into its own document
 		$rawNode = new DOMDocument();
-		$rawNode->loadXML($xml);
+		$rawNode->loadXML('<raw>' . $xml . '</raw>');
 		
 		// Import the Raw node into this document (with all sub nodes)
 		$importedNode = $this->xml->importNode($rawNode->documentElement, true);
@@ -312,7 +312,7 @@ XML;
 		$rawNode = $rawNodes->item(0);
 		
 		// Append the imported node (at the end of whats already there)
-		$rawNode->appendChild($importedNode);
+		$rawNode->parentNode->replaceChild($importedNode, $rawNode);
 	}
 	
 	/**
@@ -373,6 +373,63 @@ XML;
 		}
 		
 		return true;
+	}
+	
+	/**
+	 * Return the Delete Form as HTML
+	 * @return 
+	 */
+	public function DeleteForm()
+	{
+		$db =& $this->db;
+		
+		//Parameters
+		$layoutid 	= $this->layoutid;
+		$regionid 	= $this->regionid;
+		$mediaid	= $this->mediaid;
+
+		//we can delete
+		$form = <<<END
+		<form class="XiboForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=DeleteMedia">
+			<input type="hidden" name="mediaid" value="$mediaid">
+			<input type="hidden" name="layoutid" value="$layoutid">
+			<input type="hidden" name="regionid" value="$regionid">
+			<p>Are you sure you want to remove this item from Xibo? <span class="required">It will be lost</span>.</p>
+			<input id="btnSave" type="submit" value="Yes"  />
+			<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="No" />
+		</form>
+END;
+		
+		$this->response->html 		 	= $form;
+		$this->response->dialogTitle 	= 'Delete Item';
+		$this->response->dialogSize 	= true;
+		$this->response->dialogWidth 	= '450px';
+		$this->response->dialogHeight 	= '150px';
+
+		return $this->response;	
+	}
+	
+	/**
+	 * Delete Media from the Database
+	 * @return 
+	 */
+	public function DeleteMedia() 
+	{
+		$db 		=& $this->db;
+		
+		$layoutid 	= $this->layoutid;
+		$regionid 	= $this->regionid;
+		
+		$url 		= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+		
+		$this->deleteFromRegion = true;
+		$this->UpdateRegion();
+		
+		// We want to load a new form
+		$this->response->loadForm	= true;
+		$this->response->loadFormUri= $url;
+		
+		return $this->response;	
 	}
 }
 ?>

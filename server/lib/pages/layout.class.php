@@ -1426,6 +1426,9 @@ END;
 		$arh->html 		= $options;
 		$arh->callBack 	= 'region_options_callback';
 		$arh->dialogTitle = 'Region Options';
+		$arh->dialogSize = true;
+		$arh->dialogWidth = '830px';
+		$arh->dialogHeight = '450px';
 		
 		$arh->Respond();
 	}
@@ -1554,9 +1557,7 @@ END;
 			
 		// We have our node.
 		$type 				= (string) $node->getAttribute("type");
-		$mediaName 			= (string) $node->getAttribute("name");
 		$mediaDurationText 	= (string) $node->getAttribute("duration");
-		$uri				= (string) $node->getAttribute("uri");
 		
 		$return .= "<div class='info' style='display:none; position:absolute; top: 15px; left: 150px; background-color:#FFF; z-index: 50;'>
 						<h5>Media Information</h5>
