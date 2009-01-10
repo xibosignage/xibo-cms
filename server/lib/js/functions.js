@@ -530,11 +530,11 @@ function getUrl() {
  */
 function SystemMessage(messageText) {
 	
-	if (messageText == '') return;
+	if (messageText == '' || messageText == null) return;
 	
 	var message = $('#system_message');
 
-	message.html(messageText);
+	$('span', message).html(messageText);
 	message.dialog('open');
 }
 
