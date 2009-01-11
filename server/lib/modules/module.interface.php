@@ -22,7 +22,36 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 interface ModuleInterface
 {
+	/**
+	 * Returns an XML string representing this module at the time of calling.
+	 * @return 
+	 */
 	public function AsXml();
+	
+	/**
+	 * Set the layout and region IDs for this module.
+	 * Should be called if a module has been created without this information (such as during the AssignFromLibrary)
+	 * Each module should override this method to fill in missing module information they want added to the assignment
+	 * Such information should always include generating the Options and RAW xml nodes.
+	 * @return 
+	 * @param $layoutid Object
+	 * @param $regionid Object
+	 */
+	public function SetRegionInformation($layoutid, $regionid);
+	
+	/**
+	 * Updates this module on the Region it is associated with
+	 * Mainly used to push changes back to the region.
+	 * @return 
+	 */
+	public function UpdateRegion();
+	
+	public function AddForm();
+	public function EditForm();
+	public function DeleteForm();
+	public function AddMedia();
+	public function EditMedia();
+	public function DeleteMedia();
 }
 
 ?>

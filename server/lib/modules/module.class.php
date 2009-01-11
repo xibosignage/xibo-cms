@@ -463,5 +463,67 @@ END;
 		
 		return $this->response;	
 	}
+	
+	/**
+	 * Default AddForm
+	 * @return 
+	 */
+	public function AddForm()
+	{
+		$form = <<<END
+		<p>Not yet implemented by this module.</p>
+END;
+		
+		$this->response->html 		 	= $form;
+		$this->response->dialogTitle 	= 'Add Item';
+		$this->response->dialogSize 	= true;
+		$this->response->dialogWidth 	= '450px';
+		$this->response->dialogHeight 	= '150px';
+
+		return $this->response;	
+	}
+	
+	/**
+	 * Default Edit Form
+	 * @return 
+	 */
+	public function EditForm()
+	{
+		$form = <<<END
+		<p>Not yet implemented by this module.</p>
+END;
+		
+		$this->response->html 		 	= $form;
+		$this->response->dialogTitle 	= 'Add Item';
+		$this->response->dialogSize 	= true;
+		$this->response->dialogWidth 	= '450px';
+		$this->response->dialogHeight 	= '150px';
+
+		return $this->response;	
+	}
+	
+	/**
+	 * Default Add Media
+	 * @return 
+	 */
+	public function AddMedia()
+	{
+		// We want to load a new form
+		$this->response->message	= 'Add Media has not been implemented for this module.';
+		
+		return $this->response;	
+	}
+	
+	/**
+	 * Default EditMedia
+	 * @return 
+	 */
+	public function EditMedia()
+	{
+		// We want to load a new form
+		$this->response->message	= 'Edit Media has not been implemented for this module.';
+		
+		return $this->response;	
+	}
 }
 ?>
