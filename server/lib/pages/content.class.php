@@ -27,25 +27,17 @@ class contentDAO
 	private $isadmin = false;
 	private $has_permissions = true;
 	private $sub_page = "";
-	private $edittype = "";
-	private $editid = "";
-	private $playlistid;
-
-	private $upload_file_size;
-	private $supported_file_types;
 	
 	//Table Fields
 	private $mediaid;
 	private $name = ""; 
 	private $filepath = ""; 
-	private $text = "Your text here"; 
 	private $type = "";
 	private $length = "";
 	private $width = "";
 	private $height = "";
 	private $permissionid;
 	private $media_class = "";
-	private $xsltid;
 	private $retired;
 	
 	//are we redirecting to another page once we are done?
@@ -328,8 +320,7 @@ END;
 		$user 	=& $this->user;
 		
 		//displays all the content add forms - tabbed.
-		//ajax request handler
-		$arh = new ResponseManager();
+		$response = new ResponseManager();
 		
 		// Get a list of the enabled modules and then create buttons for them
 		if (!$enabledModules = new ModuleManager($db, $user, 0)) trigger_error($enabledModules->message, E_USER_ERROR);
@@ -339,17 +330,17 @@ END;
 		// Loop through the buttons we have and output store HTML for each one in $buttons.
 		while ($modulesItem = $enabledModules->GetNextModule())
 		{
-			$caption 	= Kit::ValidateParam($modulesItem['AddCaption'], _STRING);
+			$mod 		= Kit::ValidateParam($modulesItem['Module'], _STRING);
+			$caption 	= 'Add ' . $mod;
+			$mod		= strtolower($mod);
 			$title 		= Kit::ValidateParam($modulesItem['Description'], _STRING);
-			$uri 		= Kit::ValidateParam($modulesItem['AddUri'], _URI);
-			$onclick 	= Kit::ValidateParam($modulesItem['AddOnclick'], _STRING);
 			$img 		= Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
 			
-			$uri		.= '&ajax=true';
+			$uri		= 'index.php?p=module&q=Exec&mod=' . $mod . '&method=AddForm';
 			
 			$buttons .= <<<HTML
 			<div class="regionicons">
-				<a title="$title" href="$uri" onclick="return $onclick">
+				<a class="XiboFormButton" title="$title" href="$uri">
 				<img class="dash_button" src="$img" />
 				<span class="dash_text">$caption</span></a>
 			</div>
@@ -364,9 +355,13 @@ HTML;
 		</div>
 END;
 		
-		$arh->decode_response(true, $options);
-		
-		return;
+		$response->html 		= $options;
+		$response->dialogTitle 	= 'Add Media to the Library.';
+		$response->dialogSize 	= true;
+		$response->dialogWidth 	= '650px';
+		$response->dialogHeight = '280px';
+
+		$response->Respond();
 	}
 
 	/**
@@ -514,7 +509,9 @@ HTML;
 		
 		//some table headings
 		$form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=group&q=MenuItemSecurityAssign">
+		<form class="XiboForm" method="post" action="index.php?p=layout&q=AddFromLibrary">
+			<input type="hidden" name="layoutid" value="$layoutid" />
+			<input type="hidden" name="regionid" value="$regionid" />
 			<div class="dialog_table" style="overflow-y: scroll; height: 300px;">
 			<table style="width:100%">
 				<thead>

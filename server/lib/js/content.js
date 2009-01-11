@@ -68,24 +68,6 @@ $(document).ready(function() {
 	
 });
 
-
-//add stuff
-$(document).ready(function() {
-
-	$('#add_button').click(function(){
-		
-		init_button(this,'Add Content',exec_filter_callback, function() {
-			$('#tabs').tabs({ fxSlide: true, fxFade: true, fxSpeed: 'fast' });
-			
-			$('#div_dialog').parent().parent().width("600px").height("430px");
-		});
-
-		return false;
-		
-	});
-	
-});
-
 var media_form_call = function(width, height) {
 	$('#div_dialog').parent().parent().width(width+"px").height(height+"px");
 }

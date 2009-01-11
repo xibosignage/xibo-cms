@@ -132,7 +132,7 @@ END;
 		{
 			$save_button = <<<END
 			<input id="btnSave" type="submit" value="Save" disabled />
-			<input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
+			<input class="XiboFormButton" id="btnCancel" type="button" title="Close" href="index.php?p=content&q=displayForms&sp=add" value="Cancel" />
 END;
 		}
 		
@@ -603,11 +603,15 @@ END;
 		{
 			// This saves the Media Object to the Region
 			$this->UpdateRegion();
+			$this->response->loadFormUri = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
+		}
+		else
+		{
+			$this->response->loadFormUri = "index.php?p=content&q=displayForms&sp=add";			
 		}
 				
 		// We want to load a new form
 		$this->response->loadForm	= true;
-		$this->response->loadFormUri= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
 		
 		return $this->response;
 	}

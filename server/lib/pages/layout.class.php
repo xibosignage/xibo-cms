@@ -1459,43 +1459,53 @@ END;
 	 */
 	function AddFromLibrary()
 	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
+		$db 		=& $this->db;
+		$user 		=& $this->user;
+		$response 	= new ResponseManager();
 		
-		$xml = simplexml_load_string($this->xml);
+		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
+		$mediaids 	= $_POST['mediaids'];
 		
-		//ajax request handler
-		$arh = new ResponseManager();
-		
-		$regionid 		= Kit::GetParam('regionid', _REQUEST, _STRING);
-		$mediaid 		= Kit::GetParam('mediaid', _REQUEST, _INT);
-		
-		// Get the type from this media
-		$SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaid);
-		
-		if (!$result = $db->query($SQL))
+		foreach ($mediaids as $mediaid)
 		{
-			trigger_error($db->error());
+			$mediaid = Kit::ValidateParam($mediaid, _INT);
+			
+			// Get the type from this media
+			$SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaid);
+			
+			if (!$result = $db->query($SQL))
+			{
+				trigger_error($db->error());
+				$response->SetError('Error getting type from a media item.');
+				$response->keepOpen = false;
+				return $response;
+			}
+			
+			$row = $db->get_row($result);
+			$mod = $row[0];
+			
+			require_once("modules/$mod.module.php");
+			
+			// Create the media object without any region and layout information
+			$this->module = new $mod($db, $user, $mediaid);
+			
+			if ($this->module->SetRegionInformation($this->layoutid, $regionid))
+			{
+				$this->module->UpdateRegion();
+			}
+			else
+			{
+				$response->SetError('Cannot set region information.');
+				$response->keepOpen = true;
+				return $response;
+			}
 		}
 		
-		$row = $db->get_row($result);
-		$mod = $row[0];
+		// We want to load a new form
+		$response->loadForm	= true;
+		$response->loadFormUri= "index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions";;
 		
-		require_once("modules/$mod.module.php");
-		
-		// Create the media object without any region and layout information
-		$this->module = new $mod($db, $user, $mediaid);
-		
-		if ($this->module->SetRegionInformation($this->layoutid, $regionid))
-		{
-			$this->module->UpdateRegion();
-		}
-		else
-		{
-			$arh->decode_response(2, "Cannot set region information.");
-		}
-		
-		$arh->response(AJAX_LOAD_FORM, "index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions||region_options_callback");
+		return $response;
 	}
 
 	/**
