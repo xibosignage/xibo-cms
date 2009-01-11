@@ -46,6 +46,7 @@ interface ModuleInterface
 	 */
 	public function UpdateRegion();
 	
+	// Some Default Add/Edit/Delete functionality each module should have
 	public function AddForm();
 	public function EditForm();
 	public function DeleteForm();

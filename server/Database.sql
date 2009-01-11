@@ -420,18 +420,6 @@ INSERT INTO `lkpagegroup` (`lkpagegroupID`, `pageID`, `groupID`) VALUES
 (51, 7, 1),
 (54, 24, 1);
 
---
--- Dumping data for table `module`
---
-
-INSERT INTO `module` (`ModuleID`, `Module`, `Enabled`, `Description`) VALUES
-(1, 'Image', 1, 'Images. PNG, JPG, BMP, GIF'),
-(2, 'Video', 1, 'Videos. WMV.'),
-(3, 'Flash', 1, 'Flash'),
-(4, 'Powerpoint', 1, 'Powerpoint. PPT, PPS'),
-(5, 'Webpage', 1, 'Webpages.'),
-(6, 'Ticker', 1, 'RSS Ticker.'),
-(7, 'Text', 1, 'Text. With Directional Controls.');
 
 --
 -- Dumping data for table `pagegroup`
@@ -692,7 +680,7 @@ ALTER TABLE `menuitem`
   ADD CONSTRAINT `menuitem_ibfk_1` FOREIGN KEY (`MenuID`) REFERENCES `menu` (`MenuID`),
   ADD CONSTRAINT `menuitem_ibfk_2` FOREIGN KEY (`PageID`) REFERENCES `pages` (`pageID`);
 
-  -- AS of R30
+-- Run the Below for code greater than R30
 ALTER TABLE `module` ADD `RegionSpecific` TINYINT NOT NULL DEFAULT '1' AFTER `Enabled` ;
 ALTER TABLE `module` ADD `ImageUri` VARCHAR( 254 ) NOT NULL AFTER `Description` ;
 ALTER TABLE `module` ADD `SchemaVersion` INT NOT NULL DEFAULT '1' AFTER `ImageUri` ;
@@ -701,3 +689,14 @@ ALTER TABLE `module` ADD `SchemaVersion` INT NOT NULL DEFAULT '1' AFTER `ImageUr
 -- AS of R32
 INSERT INTO `setting` (`settingid`,`setting` ,`value` ,`type` ,`helptext` ,`options` ,`cat` ,`userChange`)
 VALUES (NULL , 'HELP_BASE', 'http://www.xibo.org.uk/manual/', 'text', NULL , NULL , 'path', '0');
+
+DELETE FROM module;
+
+INSERT INTO `module` (`ModuleID`, `Module`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`) VALUES
+(1, 'Image', 1, 0, 'Images. PNG, JPG, BMP, GIF', 'img/forms/image.gif', 1),
+(2, 'Video', 1, 0, 'Videos. WMV.', 'img/forms/video.gif', 1),
+(3, 'Flash', 1, 0, 'Flash', 'img/forms/flash.gif', 1),
+(4, 'Powerpoint', 1, 0, 'Powerpoint. PPT, PPS', 'img/forms/powerpoint.gif', 1),
+(5, 'Webpage', 1, 1, 'Webpages.', 'img/forms/webpage.gif', 1),
+(6, 'Ticker', 1, 1, 'RSS Ticker.', 'img/forms/ticker.gif', 1),
+(7, 'Text', 1, 1, 'Text. With Directional Controls.', 'img/forms/text.gif', 1);
