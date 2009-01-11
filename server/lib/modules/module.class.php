@@ -175,12 +175,29 @@ class Module implements ModuleInterface
 		{
 			if ($this->mediaid != '')
 			{
+				// We do not have a region or a layout
+				// But this is some existing media
+				// Therefore make sure we get the bare minimum!
 				$this->existingMedia = true;
+				
+				// Load what we know about this media into the object
+				$SQL = "SELECT duration FROM media WHERE mediaID = $mediaid ";
+				
+				if (!$result = $db->query($SQL))
+				{
+					trigger_error($db->error()); //log the error
+				}
+				
+				if ($db->num_rows($result) != 0)
+				{
+					$row 				= $db->get_row($result);
+					$this->duration		= $row[0];
+				}
 			}
 			
 			$xml = <<<XML
 			<root>
-				<media id="" type="" duration="" lkid="" schemaVersion="$this->schemaVersion">
+				<media id="" type="$this->type" duration="" lkid="" schemaVersion="$this->schemaVersion">
 					<options />
 					<raw />
 				</media>

@@ -263,7 +263,7 @@ END;
 				{
 					//double click action - depends on what type of media we are
 					$title = <<<END
-					<tr href='index.php?p=module&mod=$mediatype&q=EditForm&mediaid=$mediaid' ondblclick="init_button(this,'Edit Content', exec_filter_callback, set_form_size(450,320))">
+					<tr href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid' ondblclick="XiboFormRender($(this).attr('href'))">
 END;
 				}
 				else 
@@ -280,12 +280,12 @@ END;
 		    	echo "<td>$permission</td>\n";
 				echo "<td>$username</td>";
 				
-				//ACTION buttons
+				// ACTION buttons
 		    	if ($edit_permissions) 
 				{
 					
-			   		$buttons = "<a class='positive' href='index.php?p=module&mod=$mediatype&q=EditForm&mediaid=$mediaid' onclick=\"return init_button(this,'Edit Content',exec_filter_callback,set_form_size(450,320))\"><span>Edit</span></a>";					
-	    			$buttons .= "<a class='negative' href='index.php?p=module&mod=$mediatype&q=DeleteForm&mediaid=$mediaid' onclick=\"return init_button(this,'Delete Content',exec_filter_callback,media_form_call(350,160))\"><span>Delete</span></a>";
+			   		$buttons = "<a class='XiboFormButton positive' href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid'><span>Edit</span></a>";					
+	    			$buttons .= "<a class='XiboFormButton negative' href='index.php?p=module&mod=$mediatype&q=Exec&method=DeleteForm&mediaid=$mediaid'><span>Delete</span></a>";
 		    	}
 		    	else 
 				{

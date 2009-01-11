@@ -127,6 +127,9 @@ function exec_filter(filter, outputDiv) {
 				}
 			}
 			
+			// Temporary hack to allow the use of the new Xibo Core.js with the old exec filter tables.
+			// All exec filter calls should eventually be replaced with XiboGrid declarations (which are bound by XiboInitialise)
+			XiboInitialise('#data_table');
 		}
 	});
 

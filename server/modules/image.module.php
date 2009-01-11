@@ -219,7 +219,7 @@ FORM;
 		$session->setSecurityToken($securityToken);
 		
 		// Load what we know about this media into the object
-		$SQL = "SELECT name, type, duration, originalFilename, userID, permissionID, retired, storedAs, isEdited, editedMediaID FROM media WHERE mediaID = $mediaid ";
+		$SQL = "SELECT name, originalFilename, userID, permissionID, retired, storedAs, isEdited, editedMediaID FROM media WHERE mediaID = $mediaid ";
 		
 		if (!$result = $db->query($SQL))
 		{
@@ -239,14 +239,13 @@ FORM;
 		
 		$row 				= $db->get_row($result);
 		$name 				= $row[0];
-		$duration			= $row[2];
-		$originalFilename 	= $row[3];
-		$userid 			= $row[4];
-		$permissionid 		= $row[5];
-		$retired 			= $row[6];
-		$storedAs			= $row[7];
-		$isEdited			= $row[8];
-		$editedMediaID		= $row[9];
+		$originalFilename 	= $row[1];
+		$userid 			= $row[2];
+		$permissionid 		= $row[3];
+		$retired 			= $row[4];
+		$storedAs			= $row[5];
+		$isEdited			= $row[6];
+		$editedMediaID		= $row[7];
 		
 		// derive the ext
 		$ext				= strtolower(substr(strrchr($originalFilename, "."), 1));
@@ -786,11 +785,16 @@ END;
 		{
 			// This saves the Media Object to the Region
 			$this->UpdateRegion();
+			
+			$this->response->loadForm	 = true;
+			$this->response->loadFormUri = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
 		}
-				
-		// We want to load a new form
-		$this->response->loadForm	= true;
-		$this->response->loadFormUri= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
+		else
+		{
+			$this->response->loadFormUri = "index.php?p=content&q=displayForms&sp=add";			
+			$this->response->message = 'Edited the Image.';
+			
+		}
 		
 		return $this->response;
 	}
@@ -854,8 +858,7 @@ END;
 		else
 		{
 			// We want to load a new form
-			$this->response->loadForm	= true;
-			$this->response->loadFormUri= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
+			$this->response->message	 = 'Deleted the Media.';
 			
 			return $this->response;
 		}
