@@ -83,7 +83,7 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 {
 	global $db;
 	
-	define('SERVER_KEY', Config::getSetting($db,'SERVER_KEY'));
+	define('SERVER_KEY', Config::GetSetting($db,'SERVER_KEY'));
 	
 	Debug::LogEntry($db, "audit", "[IN]", "xmds", "RegisterDisplay");
 	Debug::LogEntry($db, "audit", "serverKey [$serverKey], hardwareKey [$hardwareKey], displayName [$displayName]", "xmds", "RegisterDisplay");
@@ -92,6 +92,12 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 	if ($serverKey != SERVER_KEY)
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "The Server key you entered does not match with the server key at this address", $serverKey);
+	}
+	
+	// Check the Length of the hardwareKey
+	if (strlen($hardwareKey) > 40)
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "The Hardware Key you sent was too long. Only 40 characters are allowed (SHA1).", $hardwareKey);
 	}
 	
 	//check in the database for this hardwareKey

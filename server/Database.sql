@@ -700,3 +700,6 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Enabled`, `RegionSpecific`, `Descri
 (5, 'Webpage', 1, 1, 'Webpages.', 'img/forms/webpage.gif', 1),
 (6, 'Ticker', 1, 1, 'RSS Ticker.', 'img/forms/ticker.gif', 1),
 (7, 'Text', 1, 1, 'Text. With Directional Controls.', 'img/forms/text.gif', 1);
+
+-- As of R50 ish
+ALTER TABLE `display` CHANGE `license` `license` VARCHAR( 40 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL  
