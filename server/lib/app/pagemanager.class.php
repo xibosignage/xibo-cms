@@ -55,12 +55,6 @@ class PageManager
 			require_once($this->path);
 		}
 		
-		// If we have an AJAX request, include the AJAX request handler
-		if ($this->ajax) 
-		{
-			require_once("lib/app/responsemanager.class.php");
-		}
-		
 		return;
 	}
 	

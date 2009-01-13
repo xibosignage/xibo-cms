@@ -48,7 +48,7 @@ class ResponseManager
 	
 	
 	public function __construct()
-	{
+	{		
 		// Determine if this is an AJAX call or not
 		$this->ajax	= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
 		
@@ -90,14 +90,14 @@ class ResponseManager
 	/**
 	 * Sets the error message for the response
 	 * @return 
-	 * @param $message Object
+	 * @param $message String
 	 */
 	public function SetError($message)
 	{
 		$this->success = false;
 		$this->message = $message;
 		
-		return true;
+		return;
 	}
 	
 	/**
@@ -105,7 +105,7 @@ class ResponseManager
 	 * @return 
 	 */
 	public function Respond()
-	{
+	{	
 		if ($this->ajax)
 		{
 			// Construct the Response
@@ -144,12 +144,26 @@ class ResponseManager
 			die();
 		}
 		else
-		{
+		{			
 			// If the response does not equal success then output an error
 			if (!$this->success)
 			{
-				setMessage($this->message);
-				trigger_error($this->message, E_USER_ERROR);
+				// Store the message
+				$_SESSION['ErrorMessage'] 	= $this->message;
+				
+				// Redirect to the following
+				$url						= 'index.php?p=error';
+				
+				// Header or JS redirect
+				if (headers_sent()) 
+				{
+					echo "<script>document.location.href='$url';</script>\n";
+				} 
+				else 
+				{
+					header( 'HTTP/1.1 301 Moved Permanently' );
+					header( 'Location: ' . $url );
+				}
 				
 				// End the execution
 				die();

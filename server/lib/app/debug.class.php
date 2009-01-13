@@ -61,7 +61,7 @@ class Debug
 
 		// set of errors for which a var trace will be saved
 		$user_errors_halt = array(E_USER_ERROR);
-		$user_errors_inline = array(E_USER_WARNING, E_USER_ERROR);
+		$user_errors_inline = array(E_USER_WARNING);
 
 		$err = "<errormsg>" . $errmsg . "</errormsg>\n";
 		$err .= "<errornum>" . $errno . "</errornum>\n";
@@ -69,39 +69,43 @@ class Debug
 		$err .= "<scriptname>" . $filename . "</scriptname>\n";
 		$err .= "<scriptlinenum>" . $linenum . "</scriptlinenum>\n";
 
+		// Log everything
+		Debug::LogEntry($db, "error", $err);
 		
-		//If debug is enabled OR we get an error before we get to debug
+		// Test to see if this is a HALT error or not (we do the same if we are in production or not!)
+		if (in_array($errno, $user_errors_halt)) 
+		{
+			// We have a halt error
+			Debug::LogEntry($db, 'audit', 'Creating a Response Manager to deal with the HALT Error.');
+
+			$response = new ResponseManager();
+			
+			$response->SetError($errmsg);
+			$response->Respond();
+		}
+		
+		// Is Debug Enabled? (i.e. Development or Support)
 		if (error_reporting() != 0) 
 		{
-			//Log everything
-			Debug::LogEntry($db, "error", $err);
-			
-			if (in_array($errno, $user_errors_halt)) 
-			{
-				$this->DisplayError($errmsg, true);
-				$this->MailError($errmsg, $err);
-				die();
-			}
-			//else if we have an inline error
-			elseif (in_array($errno, $user_errors_inline)) 
-			{
-				$this->DisplayError($errmsg, false);
-			}
-		}
-		else //Debug OFF (i.e. production)
-		{
-			//Log everything but never display
-			Debug::LogEntry($db, "error", $err);
-			
 			if (in_array($errno, $user_errors_inline)) 
 			{
-				// Mail fatal errors
-				$this->MailError($errmsg, $err);
+				// This is an inline error - therefore we really want to pop up a message box with this in it - so we know?
+				// For now we treat this like a halt error? Or do we just try and output some javascript to pop up an error
+				// surely the javascript idea wont work in ajax?
+				// or prehaps we add this to the session errormessage so we see it at a later date?
 			}
 		}
+		
+		// Must return false
 		return false;
 	}
 	
+	/**
+	 * Mail an error - currently disabled
+	 * @return 
+	 * @param $errmsg Object
+	 * @param $err Object
+	 */
 	function MailError($errmsg, $err) 
 	{
 		global $db;
@@ -123,14 +127,20 @@ class Debug
 		return true;
 	}
 
-	//Displays an error message to the client
-	function DisplayError($errorMessage, $show_back = true) 
-	{ 
-		echo "<div class=\"error\">".htmlentities($errorMessage)."</div>";
-
-		return true;
-	}
-	
+	/**
+	 * Write an Entry to the Log table
+	 * @return 
+	 * @param $db Object
+	 * @param $type Object
+	 * @param $message Object
+	 * @param $page Object[optional]
+	 * @param $function Object[optional]
+	 * @param $logdate Object[optional]
+	 * @param $displayid Object[optional]
+	 * @param $scheduleID Object[optional]
+	 * @param $layoutid Object[optional]
+	 * @param $mediaid Object[optional]
+	 */	
 	static function LogEntry(database $db, $type, $message, $page = "", $function = "", $logdate = "", $displayid = 0, $scheduleID = 0, $layoutid = 0, $mediaid = 0) 
 	{
 		if ($type == 'audit' && !AUDIT)
