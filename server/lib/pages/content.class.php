@@ -594,8 +594,22 @@ END;
 		 * 
 		 */
 		
-		//File upload directory.. get this from the settings object
+		// File upload directory.. get this from the settings object
 		$libraryFolder 	= Config::GetSetting($db, "LIBRARY_LOCATION");
+		
+		// Check that this location exists - and if not create it..
+		if (!file_exists($libraryFolder . 'temp'))
+		{
+			// Make the directory with broad permissions recursively (so will add the whole path)
+			mkdir($libraryFolder . 'temp', 777, true);
+		}
+		
+		if (!is_writable($libraryFolder . 'temp'))
+		{
+			trigger_error('The Library Location you have picked is not writable to the Xibo Server.', E_USER_ERROR);
+		}
+		
+		// Save this file in a random place
 		$fileId 		= uniqid() . rand(100, 999);
 		
 		Debug::LogEntry($db, "audit", '[IN - FileId ' . $fileId . '] to library location: '. $libraryFolder, 'FileUpload');

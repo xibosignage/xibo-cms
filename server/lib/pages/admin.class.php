@@ -68,14 +68,50 @@ class adminDAO
 			setMessage("Only admin users are allowed to modify settings");
 			return $refer;
 		}
+		
+		// Get the SettingId for LIBRARY_LOCATION
+		$SQL = sprintf("SELECT settingid FROM setting WHERE setting = '%s'", 'LIBRARY_LOCATION');
+		
+		if (!$result = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error('Cannot find the Library Location Setting - this is serious.', E_USER_ERROR);
+		}
+		
+		if ($db->num_rows($result) == 0)
+		{
+			trigger_error('Cannot find the Library Location Setting - this is serious.', E_USER_ERROR);
+		}
+		
+		$row 				= $db->get_row($result);
+		$librarySettingId 	= $row[0];
 	
+		// Loop through and modify the settings
 		for ($i=0; $i<$size; $i++) 
 		{
-		
 			$value = Kit::ValidateParam($values[$i], _STRING);
 			$id = $ids[$i];
 			
-			$SQL = sprintf("UPDATE setting SET value='%s' WHERE settingid = %d ", $db->escape_string($value), $id);
+			// Is this the library location setting
+			if ($id == $librarySettingId)
+			{
+				// Check for a trailing slash and add it if its not there
+				$value = rtrim($value, '/') . '/';
+				
+				// Attempt to add the directory specified
+				if (!file_exists($value . 'temp'))
+				{
+					// Make the directory with broad permissions recursively (so will add the whole path)
+					mkdir($value . 'temp', 777, true);
+				}
+				
+				if (!is_writable($value . 'temp'))
+				{
+					trigger_error('The Library Location you have picked is not writable to the Xibo Server.', E_USER_ERROR);
+				}
+			}
+			
+			$SQL = sprintf("UPDATE setting SET value = '%s' WHERE settingid = %d ", $db->escape_string($value), $id);
 
 			if(!$db->query($SQL)) trigger_error("Update of settings failed".$db->error(), E_USER_ERROR);
 		}
