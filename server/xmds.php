@@ -345,7 +345,7 @@ function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $
 
 	if ($fileType == "layout")
 	{
-		$SQL = "SELECT xml FROM layout WHERE layoutid = $filePath";
+		$SQL = sprintf("SELECT xml FROM layout WHERE layoutid = %d", $filePath);
 		if (!$results = $db->query($SQL))
 		{
 			trigger_error($db->error());

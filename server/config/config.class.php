@@ -52,19 +52,24 @@ class Config {
 	 * Defines the Version and returns it
 	 * @return 
 	 * @param $db Object
+	 * @param $object String [optional]
 	 */
-	static function Version(database $db) 
+	static function Version(database $db, $object = '') 
 	{
-		if (!$results = $db->query("SELECT app_ver FROM version")) 
+		if (!$results = $db->query("SELECT app_ver, XlfVersion, XmdsVersion FROM version")) 
 		{
 			trigger_error("No Version information - please contact Xibo support", E_USER_ERROR);
 		}
 		
-		$ver = $db->get_row($results);
-	
-		define('VERSION', $ver[0]);
+		$row 		= $db->get_assoc_row($results);
 		
-		return $ver;
+		$appVer		= Kit::ValidateParam($row['app_ver'], _STRING);
+		$xlfVer		= Kit::ValidateParam($row['XlfVersion'], _INT);
+		$xmdsVer	= Kit::ValidateParam($row['XmdsVersion'], _INT);
+	
+		define('VERSION', $appVer);
+		
+		return $row;
 	}
 }
 
