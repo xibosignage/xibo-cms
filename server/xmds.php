@@ -83,6 +83,12 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 {
 	global $db;
 	
+	// Sanitize
+	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
+	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
+	$displayName 	= Kit::ValidateParam($displayName, _STRING);
+	$version 		= Kit::ValidateParam($version, _STRING);
+	
 	define('SERVER_KEY', Config::GetSetting($db,'SERVER_KEY'));
 	
 	Debug::LogEntry($db, "audit", "[IN]", "xmds", "RegisterDisplay");
@@ -168,6 +174,11 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 function RequiredFiles($serverKey, $hardwareKey, $version)
 {
 	global $db;
+	
+	// Sanitize
+	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
+	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
+	$version 		= Kit::ValidateParam($version, _STRING);
 
 	$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 	
@@ -329,6 +340,14 @@ function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $
 {
 	global $db;
 	
+	// Sanitize
+	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
+	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
+	$fileType 		= Kit::ValidateParam($fileType, _WORD);
+	$chunkOffset 	= Kit::ValidateParam($chunkOffset, _INT);
+	$chunkSize 		= Kit::ValidateParam($chunkSize, _INT);
+	$version 		= Kit::ValidateParam($version, _STRING);
+	
 	$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 	
 	//auth this request...
@@ -345,6 +364,8 @@ function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $
 
 	if ($fileType == "layout")
 	{
+		$filePath = Kit::ValidateParam($filePath, _INT);
+		
 		$SQL = sprintf("SELECT xml FROM layout WHERE layoutid = %d", $filePath);
 		if (!$results = $db->query($SQL))
 		{
@@ -358,6 +379,8 @@ function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $
 	}
 	elseif ($fileType == "media")
 	{
+		$filePath = Kit::ValidateParam($filePath, _STRING);
+		
 		//Return the Chunk size specified
 		$f = fopen($libraryLocation.$filePath,"r");
 		
@@ -367,7 +390,7 @@ function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $
 	}
 	else 
 	{
-		return new soap_fault("SOAP-ENV:Client", "", "Unknown FileType Requested");
+		return new soap_fault("SOAP-ENV:Client", "", "Unknown FileType Requested.");
 	}
 	
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "[OUT]", "xmds", "GetFile");	
@@ -384,6 +407,10 @@ function Schedule($serverKey, $hardwareKey, $version)
 {
 	global $db;
 	
+	// Sanitize
+	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
+	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
+	$version 		= Kit::ValidateParam($version, _STRING);
 	
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
@@ -460,6 +487,11 @@ function Schedule($serverKey, $hardwareKey, $version)
 function RecieveXmlLog($serverKey, $hardwareKey, $xml, $version)
 {
 	global $db;
+	
+	// Sanitize
+	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
+	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
+	$version 		= Kit::ValidateParam($version, _STRING);
 
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
@@ -549,6 +581,14 @@ define('BLACKLIST_SINGLE', "Single");
 function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
 {
 	global $db;
+	
+	// Sanitize
+	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
+	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
+	$mediaId	 	= Kit::ValidateParam($mediaId, _STRING);
+	$type		 	= Kit::ValidateParam($type, _STRING);
+	$reason		 	= Kit::ValidateParam($reason, _STRING);
+	$version 		= Kit::ValidateParam($version, _STRING);
 
 	// Auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
@@ -558,10 +598,7 @@ function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
 		
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "[IN]", "xmds", "BlackList", "", $displayInfo['displayid']);
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "$xml", "xmds", "BlackList", "", $displayInfo['displayid']);
-	
-	// Clean up the htmlentities
-	$reason = htmlentities($reason);
-	
+		
 	// Check to see if this media/display is already blacklisted (and not ignored)
 	$SQL = "SELECT BlackListID FROM blacklist WHERE MediaID = $mediaId AND isIgnored = 0 AND DisplayID = " . $displayInfo['displayid'];
 	
