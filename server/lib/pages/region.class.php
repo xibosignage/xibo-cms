@@ -455,6 +455,7 @@ class region
 		$xml->documentElement->setAttribute("bgcolor", $bg_color);
 		$xml->documentElement->setAttribute('width', $width);
 		$xml->documentElement->setAttribute('height', $height);
+		$xml->documentElement->setAttribute("schemaVersion", Config::Version($db, 'XlfVersion'));
 		
 		//Convert back to XML		
 		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;

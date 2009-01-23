@@ -69,6 +69,11 @@ class Config {
 	
 		define('VERSION', $appVer);
 		
+		if ($object != '')
+		{
+			return Kit::GetParam($object, $row, _STRING, false);
+		}
+		
 		return $row;
 	}
 }

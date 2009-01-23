@@ -507,10 +507,10 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 --
 
 INSERT INTO `template` (`templateID`, `template`, `xml`, `permissionID`, `userID`, `createdDT`, `modifiedDT`, `description`, `tags`, `thumbnail`, `isSystem`, `retired`) VALUES
-(1, 'Full Screen 16:9', '<?xml version="1.0"?>\n<layout width="800" height="450" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="450" top="0" left="0"/></layout>\n', 3, 1, '2008-01-01 01:00:00', '2008-01-01 01:00:00', '', 'fullscreen', NULL, 1, 0),
-(2, 'Full Screen 16:10', '<?xml version="1.0"?>\n<layout width="800" height="500" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="500" top="0" left="0"/></layout>\n', 3, 1, '2008-01-01 01:00:00', '2008-01-01 01:00:00', '', 'fullscreen', NULL, 1, 0),
-(3, 'Full Screen 4:3', '<?xml version="1.0"?>\n<layout width="800" height="600" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="600" top="0" left="0"/></layout>\n', 3, 1, '2008-01-01 01:00:00', '2008-01-01 01:00:00', '', 'fullscreen', NULL, 1, 0),
-(4, 'Full Screen 3:2', '<?xml version="1.0"?>\n<layout width="720" height="480" bgcolor="#000000"><region id="47ff29524ce1b" width="720" height="480" top="0" left="0"/></layout>\n', 3, 1, '2008-01-01 01:00:00', '2008-01-01 01:00:00', '', 'fullscreen', NULL, 1, 0);
+(1, 'Full Screen 16:9', '<?xml version="1.0"?>\n<layout schemaVersion="1" width="800" height="450" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="450" top="0" left="0"/></layout>\n', 3, 1, '2008-01-01 01:00:00', '2008-01-01 01:00:00', '', 'fullscreen', NULL, 1, 0),
+(2, 'Full Screen 16:10', '<?xml version="1.0"?>\n<layout schemaVersion="1" width="800" height="500" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="500" top="0" left="0"/></layout>\n', 3, 1, '2008-01-01 01:00:00', '2008-01-01 01:00:00', '', 'fullscreen', NULL, 1, 0),
+(3, 'Full Screen 4:3', '<?xml version="1.0"?>\n<layout schemaVersion="1" width="800" height="600" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="600" top="0" left="0"/></layout>\n', 3, 1, '2008-01-01 01:00:00', '2008-01-01 01:00:00', '', 'fullscreen', NULL, 1, 0),
+(4, 'Full Screen 3:2', '<?xml version="1.0"?>\n<layout schemaVersion="1" width="720" height="480" bgcolor="#000000"><region id="47ff29524ce1b" width="720" height="480" top="0" left="0"/></layout>\n', 3, 1, '2008-01-01 01:00:00', '2008-01-01 01:00:00', '', 'fullscreen', NULL, 1, 0);
 
 --
 -- Dumping data for table `user`

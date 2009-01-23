@@ -204,7 +204,7 @@ END;
 		$db =& $this->db;
 		
 		//ajax request handler
-		$arh = new ResponseManager();
+		$arh 			= new ResponseManager();
 
 		$layout 		= Kit::GetParam('layout', _POST, _STRING);
 		$description 	= Kit::GetParam('description', _POST, _STRING);
@@ -250,6 +250,7 @@ END;
 			$layoutNode->setAttribute("width", 800);
 			$layoutNode->setAttribute("height", 450);
 			$layoutNode->setAttribute("bgcolor", "#000000");
+			$layoutNode->setAttribute("schemaVersion", Config::Version($db, 'XlfVersion'));
 			
 			$xmlDoc->appendChild($layoutNode);
 			
@@ -274,7 +275,7 @@ END;
 			$arh->decode_response(false,"Unknown error adding layout.");
 		}
 
-		$arh->response(AJAX_REDIRECT, sprintf("index.php?p=layout&modify=true&layoutid=", $id));
+		$arh->response(AJAX_REDIRECT, sprintf("index.php?p=layout&modify=true&layoutid=%d", $id));
 	}
 
 	function db_add($layout, $description, $permissionid, $tags, $userid, $xml) 
@@ -872,7 +873,7 @@ FORM;
 		$user 	=& $this->user;
 		
 		//ajax request handler
-		$arh = new ResponseManager();
+		$arh 				= new ResponseManager();
 		
 		$layoutid 			= Kit::GetParam('layoutid', _POST, _INT);
 		$bg_color 			= '#'.Kit::GetParam('bg_color', _POST, _STRING);
