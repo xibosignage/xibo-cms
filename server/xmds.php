@@ -73,6 +73,16 @@ function Auth($hardwareKey)
 }
 
 /**
+ * Checks that the calling service is talking the correct version
+ * @return 
+ * @param $version Object
+ */
+function CheckVersion($version)
+{
+	return true;
+}
+
+/**
  * Registers the Display with the server - if there is an available slot
  * @return 
  * @param $serverKey Object
