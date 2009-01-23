@@ -118,7 +118,7 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 	if ($db->num_rows($result) == 0) 
 	{
 		//Add this display record
-		$SQL = "INSERT INTO display (display, defaultlayoutid, license, licensed) VALUES ('$displayName', 1, '$hardwareKey', 0)";
+		$SQL = sprintf("INSERT INTO display (display, defaultlayoutid, license, licensed) VALUES ('%s', 1, '%s', 0)", $displayName, $hardwareKey);
 		if (!$displayid = $db->insert_query($SQL)) 
 		{
 			trigger_error($db->error());
@@ -146,7 +146,7 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 			else
 			{
 				//Update the name
-				$SQL = "UPDATE display SET display = '$displayName' WHERE license = '$hardwareKey' ";
+				$SQL = sprintf("UPDATE display SET display = '%s' WHERE license = '%s' ", $displayName, $hardwareKey);
 				
 				if (!$db->query($SQL)) 
 				{
@@ -155,7 +155,6 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 				}
 				
 				$active = "Changed display name from '{$row[1]}' to '$displayName' Display is active and ready to start.";
-				
 			}
 		}
 	}
@@ -210,16 +209,16 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	$SQL .= " FROM layout ";
 	$SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
 	$SQL .= " INNER JOIN display ON schedule_detail.displayID = display.displayID ";
-	$SQL .= " WHERE display.license = '$hardwareKey'  ";
+	$SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
 	//Do we include the default display
 	if ($displayInfo['inc_schedule'] == 1)
 	{
-		$SQL .= " AND ((schedule_detail.starttime < '$plus4hours' AND schedule_detail.endtime > '$currentdate' )";
+		$SQL .= sprintf(" AND ((schedule_detail.starttime < '%s' AND schedule_detail.endtime > '%s' )", $plus4hours, $currentdate);
 		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
 	}
 	else
 	{
-		$SQL .= " AND (schedule_detail.starttime < '$plus4hours' AND schedule_detail.endtime > '$currentdate' )";
+		$SQL .= sprintf(" AND (schedule_detail.starttime < '%s' AND schedule_detail.endtime > '%s' )", $plus4hours, $currentdate);
 	}
 	
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "RequiredFiles");	
