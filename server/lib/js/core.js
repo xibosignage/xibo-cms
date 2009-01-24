@@ -27,26 +27,30 @@ $(document).ready(function(){
         height: "240px",
         draggable: true,
         resizable: false,
-        bgiframe: true
-    }).dialog("close").parent().parent().css("z-index", "300");
+        bgiframe: true,
+		autoOpen: false
+    }).parent().parent().css("z-index", "300");
 	
     $('#system_message').dialog({
-        title: "Xibo",
-        width: "500px",
-        height: "240px",
-        draggable: true,
+        title: "Application Message",
+        width: "320px",
+        height: "120px",
+        draggable: false,
         resizable: false,
-        bgiframe: true
-    }).dialog("close").parent().parent().css("z-index", "300");
+        bgiframe: true,
+		autoOpen: false,
+		modal: true
+    }).parent().parent().css("z-index", "300");
 	
     $('#system_working').dialog({
-        title: "Xibo",
-        width: "500px",
-        height: "240px",
-        draggable: true,
+        title: "Progress...",
+        width: "240px",
+        height: "90px",
+        draggable: false,
         resizable: false,
-        bgiframe: true
-    }).dialog("close").ajaxStart(function(){
+        bgiframe: true,
+		autoOpen: false
+    }).ajaxStart(function(){
     	$(this).dialog("open");
     }).ajaxComplete(function(){
         $(this).dialog("close");
@@ -339,7 +343,7 @@ function XiboFormSubmit(form)
 /**
  * Display a login box
  */
-function LoginBox(message){
+function LoginBox(message) {
     $('#div_dialog').html(message);
     
     //capture the form submit
@@ -361,4 +365,33 @@ function LoginBox(message){
     $('#username', '#div_dialog').focus();
     
     return;
+}
+
+/**
+ * Displays the system message
+ * @param {String} messageText
+ */
+function SystemMessage(messageText) {
+	
+	if (messageText == '' || messageText == null) return;
+	
+	var message = $('#system_message');
+
+	$('span', message).html(messageText);
+	message.dialog('open');
+}
+
+/**
+ * Toggles the FilterForm view
+ */
+function ToggleFilterView(div)
+{
+	if ($('#'+div).css("display") == "none") {
+    	$('#'+div).fadeIn("slow");
+    }
+    else {
+    	$('#'+div).fadeOut("slow");
+    }
+	
+	return false;
 }

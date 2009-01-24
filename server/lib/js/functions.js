@@ -527,20 +527,6 @@ function getUrl() {
 	return url[0];
 }
 
-/**
- * Displays the system message
- * @param {String} message
- */
-function SystemMessage(messageText) {
-	
-	if (messageText == '' || messageText == null) return;
-	
-	var message = $('#system_message');
-
-	$('span', message).html(messageText);
-	message.dialog('open');
-}
-
 function fileFormSubmit() {
 	// Update the UI to say its submitting
 	$('#uploadProgress').fadeIn("slow");

@@ -139,9 +139,10 @@ class layoutDAO
 		return false;
 	}
 	
-	function displayFilter() 
+	function LayoutFilter() 
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
+		
 		$layout = ""; //3
 		if (isset($_SESSION['layout']['layout'])) $layout = $_SESSION['layout']['layout'];
 		
@@ -164,11 +165,11 @@ class layoutDAO
 		$filter_tags = "";
 		if(isset($_SESSION['layout']['filter_tags'])) $filter_tags = $_SESSION['layout']['filter_tags'];
 
-		$output = <<<END
-		<div id="filterform_div">
-			<form id="filter_form" onsubmit="return false">
+		$filterForm = <<<END
+		<div class="FilterDiv" id="LayoutFilter">
+			<form onsubmit="return false">
 			<input type="hidden" name="p" value="layout">
-			<input type="hidden" name="q" value="data_table">
+			<input type="hidden" name="q" value="LayoutGrid">
 		
 			<table class="layout_filterform">
 				<tr>
@@ -176,22 +177,33 @@ class layoutDAO
 					<td><input type="text" name="layout"></td>
 					<td>Owner</td>
 					<td>$user_list</td>
-				</tr>
-				<tr>
-					<td>Retired</td>
-					<td>$retired_list</td>
 					<td>Shared</td>
 					<td>$shared_list</td>
 				</tr>
 				<tr>
 					<td>Tags</td>
-					<td><input type="text" name="filter_tags" value="$filter_tags" />
+					<td><input type="text" name="filter_tags" value="$filter_tags" /></td>
+					<td>Retired</td>
+					<td>$retired_list</td>
 				</tr>
 			</table>
 			</form>
 		</div>
 END;
-		echo $output;
+		
+		$id = uniqid();
+		
+		$xiboGrid = <<<HTML
+		<div class="XiboGrid" id="$id">
+			<div class="XiboFilter">
+				$filterForm
+			</div>
+			<div class="XiboData">
+			
+			</div>
+		</div>
+HTML;
+		echo $xiboGrid;
 	}
 	
 
@@ -509,11 +521,16 @@ END;
 		$response->SetFormSubmitResponse('Layout Retired.');
 		$response->Respond();
 	}
-
-	function data_table() 
+	
+	/**
+	 * Shows the Layout Grid
+	 * @return 
+	 */
+	function LayoutGrid() 
 	{
-		$db =& $this->db;
-		global $user;
+		$db 		=& $this->db;
+		$user		=& $this->user;
+		$response	= new ResponseManager();
 		
 		$name = "";
 		if (isset($_REQUEST['layout'])) $name = clean_input($_REQUEST['layout'], VAR_FOR_SQL, $db);
@@ -595,7 +612,6 @@ END;
 			</thead>
 			<tbody>
 END;
-		echo $output;
 		
 		while($aRow = $db->get_row($results)) 
 		{
@@ -621,7 +637,7 @@ END;
 				if ($edit_permissions) 
 				{			
 					$title = <<<END
-					<tr ondblclick="return XiboFormRender('index.php?p=layout&modify=true&layoutid=$layoutid')">
+					<tr ondblclick="return XiboFormRender('index.php?p=layout&q=displayForm&layoutid=$layoutid')">
 END;
 				}
 				else 
@@ -631,7 +647,7 @@ END;
 END;
 				}
 				
-				$output = <<<END
+				$output .= <<<END
 				$title
 				<td>$layout</td>
 				<td>$description</td>
@@ -639,24 +655,27 @@ END;
 				<td>$username</td>
 				<td>$group</td>
 END;
-				echo $output;
 				
 				if ($edit_permissions) 
 				{
-					echo "<td class='centered'><div class='buttons'><a class='positive' href='index.php?p=layout&modify=true&layoutid=$layoutid'><span>Design</span></a>\n";
-					echo "<a class='neutral XiboFormButton' href='index.php?p=layout&q=displayForm&modify=true&layoutid=$layoutid'><span>Edit</span></a>\n";
-					echo "<a class='negative XiboFormButton' href='index.php?p=layout&q=delete_form&layoutid=$layoutid'><span>Delete</span></a></td></div>\n";
+					$output .= '<td>';
+					$output .= '<button href="index.php?p=layout&modify=true&layoutid=' . $layoutid . '"><span>Design</span></button>';
+					$output .= '<button class="XiboFormButton" href="index.php?p=layout&q=displayForm&modify=true&layoutid=' . $layoutid . '"><span>Edit</span></button>';
+					$output .= '<button class="XiboFormButton" href="index.php?p=layout&q=delete_form&layoutid=' . $layoutid . '"><span>Delete</span></button>';
+					$output .= '</td>';
 				}
 				else 
 				{
-					echo "<td class='centered'>None</td>";
+					$output .= '<td class="centered">None</td>';
 				}
-				echo "</tr>\n";
-			
+				
+				$output .= '</tr>';
 			}
 		}
-		echo "</tbody></table>\n</div>\n";
+		$output .= '</tbody></table></div>';
 		
+		$response->SetGridResponse($output);
+		$response->Respond();
 	}
 
 	function displayForm () 

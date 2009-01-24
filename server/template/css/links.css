@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-.buttons a, button {
+.buttons a {
 	float:left;
 	margin-left: 5px;
     margin:0 7px 0 0; 
@@ -37,7 +37,7 @@
 /* Colors */
 /* STANDARD */
 
-button:hover, .buttons a:hover{
+.buttons a:hover{
     color:#336699;
 }
 .buttons a:active{

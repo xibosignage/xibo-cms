@@ -126,6 +126,22 @@ class ResponseManager
 	}
 	
 	/**
+	 * Sets the Defaul response for a grid
+	 * @return 
+	 * @param $table Object
+	 * @param $sortingDiv Object[optional]
+	 */
+	public function SetGridResponse($table, $sortingDiv = '.info_table table')
+	{		
+		$this->html 		= $table;
+		$this->success		= true;
+		$this->sortable		= true;
+		$this->sortingDiv	= $sortingDiv;
+		
+		return;
+	}
+	
+	/**
 	 * Sets the Default response options for a form submit
 	 * @return 
 	 * @param $message String

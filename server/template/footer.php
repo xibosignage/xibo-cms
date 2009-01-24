@@ -26,9 +26,9 @@
 	<img src="img/loading.gif"><span style="padding-left:10px">Please Wait ...</span>
 </div>
 
-<div id="system_message" class="ui-dialog-content">
+<div id="system_message" style="text-align: center;">
 	<span>Message</span>
-	<p style="align:center; width:100%;"><button onclick="$('#system_message').dialog('close')">OK</button></p>
+	<p><input type="submit" value="OK" onclick="$('#system_message').dialog('close')" /></p>
 </div>
 
 <div id="div_dialog"></div>
