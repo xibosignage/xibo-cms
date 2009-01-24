@@ -98,16 +98,18 @@ END;
 		if (isset($_SESSION['group']['name'])) $filter_name = $_SESSION['group']['name'];
 		
 		$filterForm = <<<END
-		<form>
-			<input type="hidden" name="p" value="group">
-			<input type="hidden" name="q" value="group_view">
-			<table>
-				<tr>
-					<td>Name</td>
-					<td><input type="text" name="name" value="$filter_name"></td>
-				</tr>
-			</table>
-		</form>
+		<div id="GroupFilter" class="FilterDiv">
+			<form>
+				<input type="hidden" name="p" value="group">
+				<input type="hidden" name="q" value="group_view">
+				<table>
+					<tr>
+						<td>Name</td>
+						<td><input type="text" name="name" value="$filter_name"></td>
+					</tr>
+				</table>
+			</form>
+		</div>
 END;
 		$id = uniqid();
 		
@@ -176,10 +178,6 @@ END;
 			$groupid	= Kit::ValidateParam($row['groupID'], _INT);
 			$group 		= Kit::ValidateParam($row['group'], _STRING);
 			
-			$editButtonId 		= uniqid();
-			$pageSecButtonId 	= uniqid();
-			$deleteButtonId 	= uniqid();
-			
 			Debug::LogEntry($db, 'audit', 'UserTypeID is: ' . $user->GetUserTypeID());
 			
 			// we only want to show certain buttons, depending on the user logged in
@@ -191,21 +189,17 @@ END;
 			else 
 			{
 				$buttons = <<<END
-				<a id="$editButtonId" class="XiboFormButton positive" href="index.php?p=group&q=GroupForm&groupid=$groupid"><span>Edit</span></a>
-				<a id="$pageSecButtonId" class="XiboFormButton positive" href="index.php?p=group&q=PageSecurityForm&groupid=$groupid"><span>Page Security</span></a>
-				<a id="$pageSecButtonId" class="XiboFormButton positive" href="index.php?p=group&q=MenuItemSecurityForm&groupid=$groupid"><span>Menu Security</span></a>
-				<a id="$deleteButtonId" class="XiboFormButton negative" href="index.php?p=group&q=delete_form&groupid=$groupid"><span>Delete</span></a>
+				<button class="XiboFormButton" href="index.php?p=group&q=GroupForm&groupid=$groupid"><span>Edit</span></button>
+				<button class="XiboFormButton" href="index.php?p=group&q=PageSecurityForm&groupid=$groupid"><span>Page Security</span></button>
+				<button class="XiboFormButton" href="index.php?p=group&q=MenuItemSecurityForm&groupid=$groupid"><span>Menu Security</span></button>
+				<button class="XiboFormButton" href="index.php?p=group&q=delete_form&groupid=$groupid"><span>Delete</span></button>
 END;
 			}
 			
 			$table .= <<<END
 			<tr>
 				<td>$group</td>
-				<td>
-					<div class="buttons">
-						$buttons
-					</div>
-				</td>
+				<td>$buttons</td>
 			</tr>
 END;
 		}
