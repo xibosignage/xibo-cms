@@ -61,7 +61,8 @@ class templateDAO
 		}
 		
 		//if available get the templateid
-		if (isset($_REQUEST['$templateid'])) {
+		if (isset($_REQUEST['$templateid'])) 
+		{
 			$this->templateid = clean_input($_REQUEST['$templateid'], VAR_FOR_SQL, $db);
 		}
 		
@@ -71,7 +72,8 @@ class templateDAO
 				
 			$SQL = "SELECT template, description, permissionID, xml, tags, retired, isSystem, thumbnail FROM template WHERE templateID = $this->templateid ";
 			
-			if (!$results = $db->query($SQL)) {
+			if (!$results = $db->query($SQL)) 
+			{
 				trigger_error($db->error());
 				trigger_error("Can not get template information.", E_USER_ERROR);
 			}
@@ -100,11 +102,13 @@ class templateDAO
 		}
 	}
 	
-	function on_page_load() {
+	function on_page_load() 
+	{
     	return "";
 	}
 	
-	function echo_page_heading() {
+	function echo_page_heading() 
+	{
 		echo "Templates";
 		return true;
 	}
@@ -113,7 +117,8 @@ class templateDAO
 	 * Template filter
 	 * @return 
 	 */
-	function template_filter() {
+	function template_filter() 
+	{
 		$db =& $this->db;
 		
 		//filter form defaults
@@ -297,11 +302,13 @@ END;
 	 * Displays the TemplateForm (for adding and editing)
 	 * @return 
 	 */
-	function TemplateForm() {
-		
-		//ajax request handler
-		$arh = new ResponseManager();
-	
+	function TemplateForm() 
+	{
+		$db 		=& $this->db;
+		$user 		=& $this->user;
+		$response 	= new ResponseManager();
+		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
+			
 		//database fields
 		$templateid 		= $this->templateid;
 		$template 			= $this->template;
@@ -310,14 +317,14 @@ END;
 		$permissionid		= $this->permissionid;
 		$retired			= $this->retired;
 		
-		$layoutid			= $_REQUEST['layoutid'];
-		
 		//init the retired option
 		$retired_option = "";
 		
 		$action = "index.php?p=template&q=AddTemplate";
 		
-		if ($templateid != "") { //assume an edit
+		if ($templateid != "") 
+		{ 
+			//assume an edit
 			$action = "index.php?p=template&q=EditTemplate";
 			
 			//build the retired option
@@ -334,7 +341,7 @@ END;
 	
 		$form = <<<END
 		
-			<form class="dialog_form" action="$action" method="post">
+			<form class="XiboForm" action="$action" method="post">
 
 				<input type="hidden" name="templateid" value="$templateid">
 				<input type="hidden" name="layoutid" value="$layoutid">
@@ -355,32 +362,29 @@ END;
 					<tr>
 						<td></td>
 						<td>
-							<div class="buttons">
-								<button class="positive" type="submit"><span>Save</span></button>
-							</div>
+							<input type="submit" value="Save" />
 						</td>
 					</tr>
 				</table>
 			</form>
 END;
-		$arh->decode_response(true, $form);
-	
-		return true;
+		
+		$response->SetFormRequestResponse($form, 'Save this layout as a Template?', '550px', '200px');
+		$response->Respond();
 	}
 	
 	/**
 	 * Adds a template
 	 * @return 
 	 */
-	function AddTemplate() {
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
+	function AddTemplate() 
+	{
+		$db 			=& $this->db;
+		$response		= new ResponseManager();
 
 		$template 		= $_POST['template'];
 		$tags		 	= $_POST['tags'];
-		$permissionid	= $_POST['permissionid'];
+		$permissionid 	= Kit::GetParam('permissionid', _POST, _INT);
 		$description	= $_POST['description'];
 		
 		$layoutid		= $_POST['layoutid'];
@@ -389,52 +393,65 @@ END;
 		$currentdate 	= date("Y-m-d H:i:s");
 		
 		//validation
-		if (strlen($template) > 50 || strlen($template) < 1) {
-			$arh->decode_response(false, "Template Name must be between 1 and 50 characters");
+		if (strlen($template) > 50 || strlen($template) < 1) 
+		{
+			$response->SetError("Template Name must be between 1 and 50 characters");
+			$response->Respond();
 		}
 		
-		if (strlen($description) > 254) {
-			$arh->decode_response(false, "Description can not be longer than 254 characters");
+		if (strlen($description) > 254) 
+		{
+			$response->SetError("Description can not be longer than 254 characters");
+			$response->Respond();
 		}
 		
-		if (strlen($tags) > 254) {
-			$arh->decode_response(false, "Tags can not be longer than 254 characters");
+		if (strlen($tags) > 254) 
+		{
+			$response->SetError("Tags can not be longer than 254 characters");
+			$response->Respond();
 		}
 		
 		//Check on the name the user has selected
 		$check = "SELECT template FROM template WHERE template = '$template' AND userID = $userid ";
+		
 		$result = $db->query($check) or trigger_error($db->error());
+		
 		//Template with the same name?
 		if($db->num_rows($result) != 0) 
 		{
-			$arh->decode_response(false,"You already own a template called '$template'. Please choose another name.");
+			$response->SetError("You already own a template called '$template'. Please choose another name.");
+			$response->Respond();
 		}
 		//end validation
 		
 		//Get the Layout XML (but reconstruct so that there are no media nodes in it)
 		if (!$xml = $this->GetLayoutXmlNoMedia($layoutid))
 		{
-			$arh->decode_response(false,"Cannot get the Layout Structure.");
+			$response->SetError("Cannot get the Layout Structure.");
+			$response->Respond();
 		}
 		
 		//Insert the template
 		$SQL = "INSERT INTO template (template, tags, issystem, retired, description, createdDT, modifiedDT, userID, xml, permissionID) ";
 		$SQL.= "	   VALUES ('$template', '$tags', 0, 0, '$description', '$currentdate', '$currentdate', $userid, '$xml', $permissionid) ";
 		
-		if (!$db->query($SQL)) {
+		if (!$db->query($SQL)) 
+		{
 			trigger_error($db->error());
-			$arh->decode_response(false,"Unexpected error adding Template.");
+			$response->SetError("Unexpected error adding Template.");
+			$response->Respond();
 		}
 		
-		$arh->decode_response(true, 'template Added');
-		return false;	
+		$response->SetFormSubmitResponse('Template Added.');
+		$response->Respond();
 	}
 	
 	/**
 	 * Edits a template
 	 * @return 
 	 */
-	function EditTemplate() {
+	function EditTemplate() 
+	{
 		$db =& $this->db;
 		
 		//ajax request handler
@@ -448,7 +465,8 @@ END;
 	 * Deletes a template
 	 * @return 
 	 */
-	function DeleteTemplate() {
+	function DeleteTemplate() 
+	{
 		$db =& $this->db;
 		
 		$templateid = $_REQUEST['templateid'];

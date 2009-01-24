@@ -101,6 +101,48 @@ class ResponseManager
 	}
 	
 	/**
+	 * Sets the Default response options for a form request
+	 * @return 
+	 * @param $form Object
+	 * @param $title Object
+	 * @param $width Object[optional]
+	 * @param $height Object[optional]
+	 * @param $callBack Object[optional]
+	 */
+	public function SetFormRequestResponse($form, $title, $width = '', $height = '', $callBack = '')
+	{
+		$this->html 					= $form;
+		$this->dialogTitle 				= $title;
+		$this->callBack 				= $callBack;
+		
+		if ($width != '' && $height != '')
+		{
+			$this->dialogSize 	= true;
+			$this->dialogWidth 	= $width;
+			$this->dialogHeight	= $height;
+		}
+		
+		return;
+	}
+	
+	/**
+	 * Sets the Default response options for a form submit
+	 * @return 
+	 * @param $message String
+	 * @param $refresh Boolean[optional]
+	 * @param $refreshLocation String[optional]
+	 */
+	public function SetFormSubmitResponse($message, $refresh = false, $refreshLocation = '')
+	{
+		$this->success			= true;
+		$this->message			= $message;
+		$this->refresh			= $refresh;
+		$this->refreshLocation 	= $refreshLocation;
+		
+		return;
+	}
+	
+	/**
 	 * Outputs the Response to the browser
 	 * @return 
 	 */

@@ -201,10 +201,8 @@ END;
 	 */
 	function add() 
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh 			= new ResponseManager();
+		$db 			=& $this->db;
+		$response		= new ResponseManager();
 
 		$layout 		= Kit::GetParam('layout', _POST, _STRING);
 		$description 	= Kit::GetParam('description', _POST, _STRING);
@@ -217,26 +215,30 @@ END;
 		//validation
 		if (strlen($layout) > 50 || strlen($layout) < 1) 
 		{
-			$arh->decode_response(false, "Layout Name must be between 1 and 50 characters");
+			$response->SetError("Layout Name must be between 1 and 50 characters");
+			$response->Respond();
 		}
 		
 		if (strlen($description) > 254) 
 		{
-			$arh->decode_response(false, "Description can not be longer than 254 characters");
+			$response->SetError("Description can not be longer than 254 characters");
+			$response->Respond();
 		}
 		
 		if (strlen($tags) > 254) 
 		{
-			$arh->decode_response(false, "Tags can not be longer than 254 characters");
+			$response->SetError("Tags can not be longer than 254 characters");
+			$response->Respond();
 		}
 		
-		$check = sprintf("SELECT layout FROM layout WHERE layout = '%s' AND userID = %d ", $layout, $userid);
+		$check 	= sprintf("SELECT layout FROM layout WHERE layout = '%s' AND userID = %d ", $layout, $userid);
 		$result = $db->query($check) or trigger_error($db->error());
 		
 		//Layouts with the same name?
 		if($db->num_rows($result) != 0) 
 		{
-			$arh->decode_response(false,sprintf("You already own a layout called '%s'. Please choose another.", $layout));
+			$response->SetError(sprintf("You already own a layout called '%s'. Please choose another.", $layout));
+			$response->Respond();
 		}
 		//end validation
 		
@@ -262,20 +264,23 @@ END;
 			$SQL = sprintf("SELECT xml FROM template WHERE templateID = %d ", $templateid);
 			if (!$result = $db->query($SQL))
 			{
-				$arh->decode_response(false,"Error getting this template.");
+				$response->SetError("Error getting this template.");
+				$response->Respond();
 			}
-			$row = $db->get_row($result);
 			
+			$row = $db->get_row($result);
 			$xml = $row[0];
 		}
 
 		if(!$id = $this->db_add($layout, $description, $permissionid, $tags, $userid, $xml)) 
 		{
 			//otherwise we need to take them back and tell them why the playlist has failed.
-			$arh->decode_response(false,"Unknown error adding layout.");
+			$response->SetError("Unknown error adding layout.");
+			$response->Respond();
 		}
 
-		$arh->response(AJAX_REDIRECT, sprintf("index.php?p=layout&modify=true&layoutid=%d", $id));
+		$response->SetFormSubmitResponse('Layout Details Changed.', true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $id));
+		$response->Respond();
 	}
 
 	function db_add($layout, $description, $permissionid, $tags, $userid, $xml) 
@@ -314,10 +319,8 @@ END;
 	 */
 	function modify ()
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
+		$db 			=& $this->db;
+		$response		= new ResponseManager();
 
 		$layout 		= Kit::GetParam('layout', _POST, _STRING);
 		$description 	= Kit::GetParam('description', _POST, _STRING);
@@ -331,17 +334,20 @@ END;
 		//validation
 		if (strlen($layout) > 50 || strlen($layout) < 1) 
 		{
-			$arh->decode_response(false, "Layout Name must be between 1 and 50 characters");
+			$response->SetError("Layout Name must be between 1 and 50 characters");
+			$response->Respond();
 		}
 		
 		if (strlen($description) > 254) 
 		{
-			$arh->decode_response(false, "Description can not be longer than 254 characters");
+			$response->SetError("Description can not be longer than 254 characters");
+			$response->Respond();
 		}
 		
 		if (strlen($tags) > 254) 
 		{
-			$arh->decode_response(false, "Tags can not be longer than 254 characters");
+			$response->SetError("Tags can not be longer than 254 characters");
+			$response->Respond();
 		}
 		
 		$check = sprintf("SELECT layout FROM layout WHERE layout = '%s' AND userID = %d AND layoutid <> %d ", $db->escape_string($layout), $userid, $this->layoutid);
@@ -350,7 +356,8 @@ END;
 		//Layouts with the same name?
 		if($db->num_rows($result) != 0) 
 		{
-			$arh->decode_response(false,sprintf("You already own a layout called '%s'. Please choose another.", $layout));
+			$$response->SetError(sprintf("You already own a layout called '%s'. Please choose another.", $layout));
+			$response->Respond();
 		}
 		//end validation
 
@@ -378,18 +385,19 @@ END;
 		if(!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false, sprintf("Unknown error editing %s", $layout));
+			$response->SetError(sprintf("Unknown error editing %s", $layout));
+			$response->Respond();
 		}
 
-		$arh->decode_response(true, sprintf('%s modified.', $layout));
+		$response->SetFormSubmitResponse('Layout Details Changed.');
+		$response->Respond();
 	}
 	
 	function delete_form() 
 	{
-		$db =& $this->db;
+		$db 		=& $this->db;
+		$response 	= new ResponseManager();
 		
-		//ajax request handler
-		$arh = new ResponseManager();
 		
 		//expect the $layoutid to be set
 		$layoutid = $this->layoutid;
@@ -408,7 +416,7 @@ END;
 		{
 			//we can delete
 			$form = <<<END
-			<form class="dialog_form" method="post" action="index.php?p=layout&q=delete">
+			<form class="XiboForm" method="post" action="index.php?p=layout&q=delete">
 				<input type="hidden" name="layoutid" value="$layoutid">
 				<p>Are you sure you want to delete $this->name? All media will be unassigned. Any layout specific media such as text/rss will be lost.</p>
 				<input type="submit" value="Yes">
@@ -420,7 +428,7 @@ END;
 		{
 			//we can only retire
 			$form = <<<END
-			<form class="dialog_form" method="post" action="index.php?p=layout&q=retire">
+			<form class="XiboForm" method="post" action="index.php?p=layout&q=retire">
 				<input type="hidden" name="layoutid" value="$layoutid">
 				<p>Sorry, unable to delete $this->name.</p>
 				<p>Retire this layout instead?</p>
@@ -430,26 +438,23 @@ END;
 END;
 		}
 		
-		$arh->decode_response(true, $form);
+		$response->SetFormRequestResponse($form, 'Delete this layout?', '260px', '180px');
+		$response->Respond();
 	}
 
 	/**
 	 * Deletes a layout record from the DB
-	 *
-	 * @param int $id
 	 */
 	function delete() 
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
-
-		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
+		$db 			=& $this->db;
+		$response		= new ResponseManager();
+		$layoutid 		= Kit::GetParam('layoutid', _POST, _INT, 0);
 		
 		if ($layoutid == 0) 
 		{
-			$arh->decode_response(false,"No Layout selected");
+			$response->SetError("No Layout selected");
+			$response->Respond();
 		}
 		
 		// Unassign all the Media
@@ -457,7 +462,8 @@ END;
 		
 		if (!$db->query($SQL)) 
 		{
-			$arh->decode_response(false,"Cannot unassign this layouts media. Please manually unassign.");
+			$response->SetError("Cannot unassign this layouts media. Please manually unassign.");
+			$response->Respond();
 		}
 
 		$SQL = " ";
@@ -466,24 +472,27 @@ END;
 
 		if (!$db->query($SQL)) 
 		{
-			$arh->decode_response(false,"Cannot delete this layout. You may retire it from the Edit form.");
+			$response->SetError("Cannot delete this layout. You may retire it from the Edit form.");
 		}
 
-		$arh->decode_response(true,"The Layout has been Deleted");
+		$response->SetFormSubmitResponse("The Layout has been Deleted");
+		$response->Respond();
 	}
 	
+	/**
+	 * Retire a Layout
+	 * @return 
+	 */
 	function retire() 
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
-		
-		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
+		$db 			=& $this->db;
+		$response		= new ResponseManager();
+		$layoutid 		= Kit::GetParam('layoutid', _POST, _INT, 0);
 		
 		if ($layoutid == 0) 
 		{
-			$arh->decode_response(false, "No Layout selected");
+			$response->SetError("No Layout selected");
+			$response->Respond();
 		}
 		
 		$SQL = sprintf("UPDATE layout SET retired = 1 WHERE layoutID = %d", $layoutid);
@@ -493,10 +502,12 @@ END;
 		{
 			trigger_error($db->error());
 			
-			$arh->decode_response(false,"Failed to retire, Unknown Error.");
+			$response->SetError("Failed to retire, Unknown Error.");
+			$response->Respond();
 		}
 
-		$arh->decode_response(true,"Layout Retired");
+		$response->SetFormSubmitResponse('Layout Retired.');
+		$response->Respond();
 	}
 
 	function data_table() 
@@ -610,7 +621,7 @@ END;
 				if ($edit_permissions) 
 				{			
 					$title = <<<END
-					<tr ondblclick="window.location = 'index.php?p=layout&modify=true&layoutid=$layoutid'">
+					<tr ondblclick="return XiboFormRender('index.php?p=layout&modify=true&layoutid=$layoutid')">
 END;
 				}
 				else 
@@ -633,8 +644,8 @@ END;
 				if ($edit_permissions) 
 				{
 					echo "<td class='centered'><div class='buttons'><a class='positive' href='index.php?p=layout&modify=true&layoutid=$layoutid'><span>Design</span></a>\n";
-					echo "<a class='neutral' href='index.php?p=layout&q=displayForm&modify=true&layoutid=$layoutid' onclick=\"return init_button(this,'Edit Layout', exec_filter_callback, set_form_size(550,350))\"><span>Edit</span></a>\n";
-					echo "<a class='negative' href='index.php?p=layout&q=delete_form&layoutid=$layoutid' onclick=\"return init_button(this,'Delete Layout', exec_filter_callback, set_form_size(350,160))\"><span>Delete</span></a></td></div>\n";
+					echo "<a class='neutral XiboFormButton' href='index.php?p=layout&q=displayForm&modify=true&layoutid=$layoutid'><span>Edit</span></a>\n";
+					echo "<a class='negative XiboFormButton' href='index.php?p=layout&q=delete_form&layoutid=$layoutid'><span>Delete</span></a></td></div>\n";
 				}
 				else 
 				{
@@ -652,6 +663,7 @@ END;
 	{
 		$db 			=& $this->db;
 		$user			=& $this->user;
+		$response		= new ResponseManager();
 		
 		$helpManager	= new HelpManager($db, $user);
 
@@ -664,8 +676,6 @@ END;
 		$retired		= $this->retired;
 		$tags			= $this->tags;
 		
-		//ajax request handler
-		$arh = new ResponseManager();
 		
 		//check on permissions
 		
@@ -721,7 +731,7 @@ END;
 		$shared_list = dropdownlist("SELECT permissionID, permission FROM permission", "permissionid", $default);
 		
 		$form = <<<END
-		<form class="dialog_form" method="post" action="$action">
+		<form class="XiboForm" method="post" action="$action">
 			<input type="hidden" name="layoutid" value="$this->layoutid">
 		<table>
 			<tr>
@@ -755,7 +765,8 @@ END;
 		</form>
 END;
 
-		$arh->decode_response(true, $form);
+		$response->SetFormRequestResponse($form, 'Add/Edit a Layout.', '350px', '275px');
+		$response->Respond();
 	}
 	
 	/**
@@ -768,12 +779,11 @@ END;
 		$user			=& $this->user;
 		
 		$helpManager	= new HelpManager($db, $user);
+		$response		= new ResponseManager();
 		
-		//ajax request handler
-		$arh = new ResponseManager();
 
 		//load the XML into a SimpleXML OBJECT
-		$xml = simplexml_load_string($this->xml);
+		$xml 				= simplexml_load_string($this->xml);
 				
 		$backgroundImage 	= (string) $xml['background'];
 		$backgroundColor 	= (string) $xml['bgcolor'];
@@ -829,7 +839,7 @@ END;
 		// Begin the form output
 		//
 		$form = <<<FORM
-		<form class="dialog_form" method="post" action="index.php?p=layout&q=EditBackground">
+		<form class="XiboForm" method="post" action="index.php?p=layout&q=EditBackground">
 			<input type="hidden" id="libraryloc" value="$databaseDir">
 			<input type="hidden" id="layoutid" name="layoutid" value="$this->layoutid">
 			<table>
@@ -860,7 +870,9 @@ END;
 			</table>
 		</form>
 FORM;
-		$arh->decode_response(true, $form);
+		
+		$response->SetFormRequestResponse($form, 'Change the Background Properties', '550px', '240px');
+		$response->Respond();
 	}
 	
 	/**
@@ -869,11 +881,9 @@ FORM;
 	 */
 	function EditBackground()
 	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-		
-		//ajax request handler
-		$arh 				= new ResponseManager();
+		$db 				=& $this->db;
+		$user 				=& $this->user;
+		$response			= new ResponseManager();
 		
 		$layoutid 			= Kit::GetParam('layoutid', _POST, _INT);
 		$bg_color 			= '#'.Kit::GetParam('bg_color', _POST, _STRING);
@@ -882,7 +892,7 @@ FORM;
 		$resolutionid		= Kit::GetParam('resolutionid', _POST, _INT);
 		
 		//File upload directory.. get this from the settings object
-		$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
+		$libraryLocation 	= Config::GetSetting($db, "LIBRARY_LOCATION");
 		
 		//Look up the width and the height
 		$SQL = sprintf("SELECT width, height FROM resolution WHERE resolutionID = %d ", $resolutionid);
@@ -890,7 +900,8 @@ FORM;
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false,"Unable to get the Resolution information");
+			$response->SetError("Unable to get the Resolution information");
+			$response->Respond();
 		}
 		
 		$row 	= $db->get_row($results) ;
@@ -917,7 +928,8 @@ FORM;
 		if (!$region->EditBackground($layoutid, $bg_color, $bg_image_original, $width, $height))
 		{
 			//there was an ERROR
-			$arh->decode_response(false,$region->errorMsg);
+			$response->SetError($region->errorMsg);
+			$response->Respond();
 		}
 		
 		// Update the layout record with the new background
@@ -926,10 +938,12 @@ FORM;
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false, "Unable to update background information");
+			$response->SetError("Unable to update background information");
+			$response->Respond();
 		}
 		
-		$arh->response(AJAX_REDIRECT, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
+		$response->SetFormSubmitResponse('Layout Details Changed.', true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
+		$response->Respond();
 	}
 	
 	/**
@@ -974,19 +988,17 @@ FORM;
 	 */
 	function DeleteRegion()
 	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
+		$db 		=& $this->db;
+		$user 		=& $this->user;
+		$response 	= new ResponseManager();
 		
-		//ajax request handler
-		$arh = new ResponseManager();
-		
-		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
+		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
+		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
 		
 		if ($layoutid == 0 || $regionid == '')
 		{
-			$arh->decode_response(false, "No layout/region information available, please refresh the page and try again.");
-			return false;
+			$response->SetError("No layout/region information available, please refresh the page and try again.");
+			$response->Respond();
 		}
 		
 		include_once("lib/pages/region.class.php");
@@ -996,13 +1008,12 @@ FORM;
 		if (!$region->DeleteRegion($this->layoutid, $regionid))
 		{
 			//there was an ERROR
-			$arh->decode_response(false,$region->errorMsg);
+			$response->SetError($region->errorMsg);
+			$response->Respond();
 		}
 		
-		
-		$arh->response(AJAX_REDIRECT, "index.php?p=layout&modify=true&layoutid=$layoutid");
-		
-		return false;
+		$response->SetFormSubmitResponse('Region Deleted.', true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
+		$response->Respond();
 	}
 	
 	/**
@@ -1089,18 +1100,14 @@ FORM;
 	 */
 	public function DeleteRegionForm()
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
-		
-		//Parameters
-		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
+		$db 		=& $this->db;
+		$response	= new ResponseManager();
+		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
+		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
 		
 		//we can delete
 		$form = <<<END
-		<form class="dialog_form" method="post" action="index.php?p=layout&q=DeleteRegion">
+		<form class="XiboForm" method="post" action="index.php?p=layout&q=DeleteRegion">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="regionid" value="$regionid">
 			<p>Are you sure you want to remove this region. All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.</p>
@@ -1109,7 +1116,8 @@ FORM;
 		</form>
 END;
 		
-		$arh->decode_response(true, $form);
+		$response->SetFormRequestResponse($form, 'Delete this region?', '260px', '180px');
+		$response->Respond();
 	}
 	
 	function RenderDesigner() 

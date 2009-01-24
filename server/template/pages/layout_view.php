@@ -30,7 +30,7 @@
 	<div id="form_body">
 		<div class="filter_form_container">
 			<div class="buttons">
-				<a id="add_button" href="index.php?p=layout&q=displayForm" title="Add a new Layout"><div class="button_text">Add Layout</div></a>
+				<a id="add_button" class="XiboFormButton" href="index.php?p=layout&q=displayForm" title="Add a new Layout"><div class="button_text">Add Layout</div></a>
 			</div>
 			<div class="leftbuttons">
 				<div class="buttons">

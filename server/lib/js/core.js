@@ -296,7 +296,7 @@ function XiboFormSubmit(form)
 				// Should we refresh the window or refresh the Grids?
 				if (response.refresh) {
 					// We need to refresh - check to see if there is a new location provided
-					if (response.refreshLocation == undefined || repsonse.refreshLocation == "") {
+					if (response.refreshLocation == undefined || response.refreshLocation == "") {
 						// If not refresh the current location
 				    	window.location.reload();
 					}

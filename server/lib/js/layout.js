@@ -108,55 +108,7 @@ $(document).ready(function() {
 		
 		exec_filter('filter_form','data_table'); //calls the filter form
 	});
-
-
-	/**
-	 * Buttons
-	 *
-	 */
-	$('#add_button').click(function() {
-		
-		init_button(this,'Add Layout',exec_filter_callback, set_form_size(600,350));
-
-		return false;
-		
-	});
 	
-	$('#edit_button').click(function() {
-		
-		init_button(this,'Properties',exec_filter_callback, set_form_size(600,350));
-
-		return false;
-		
-	});
-	
-	$('#background_button').click(function() {
-		
-		init_button(this,'Background Properties',function() {window.location = window.location.href;}, set_form_size(600,250));
-
-		return false;
-		
-	});
-	
-	$('#add_slide_button').click(function() {
-				
-		init_button(this,'Add Slide','',function() {
-			slide_refresh_list($('#layoutid'),'styleid');
-		});
-		
-		return false;
-		
-	});
-	// End
-	
-	//add the tr hover class
-	$(".show_slide_table tr").hover(
-		function(){
-			$(this).addClass("hover");
-		},function() {
-			$(this).removeClass("hover");
-		}
-	);
 	
 	var container = document.getElementById('layout');
 	
@@ -169,7 +121,7 @@ $(document).ready(function() {
 	}}).contextMenu('regionMenu', {
 	    bindings: {
 	        'options': function(t) {
-	            init_button(t,'Region Options','',region_options_callback)
+				XiboFormRender($(t).attr("href"));
 	        },
 			'deleteRegion': function(t) {
 	            deleteRegion(t);
@@ -179,7 +131,7 @@ $(document).ready(function() {
 				var layoutid = $(t).attr("layoutid");
 				var regionid = $(t).attr("regionid");
 				
-	            load_form("index.php?p=user&q=SetUserHomepageForm&layoutid="+layoutid+"&regionid="+regionid, $('#div_dialog'),'',set_form_size(320,150));
+	            XiboFormRender("index.php?p=user&q=SetUserHomepageForm&layoutid="+layoutid+"&regionid="+regionid);
 	        }
     	}
 	});
@@ -190,15 +142,15 @@ $(document).ready(function() {
 				addRegion(t);
 			},
 			'editBackground': function(t) {
-				init_button($('#background_button')[0],'Background Properties',function() {window.location = window.location.href;}, set_form_size(600,250));
+				XiboFormRender($('#background_button').attr("href"));
 			},
 			'layoutProperties': function(t) {
-				init_button($('#edit_button')[0],'Properties',exec_filter_callback, set_form_size(600,350));
+				XiboFormRender($('#edit_button').attr("href"));
 			},
 			'templateSave': function(t) {
 				var layoutid = $(t).attr("layoutid");
 			
-				load_form("index.php?p=template&q=TemplateForm&layoutid="+layoutid, $('#div_dialog'),'',set_form_size(600,250));
+				XiboFormRender("index.php?p=template&q=TemplateForm&layoutid="+layoutid);
 			}
 		}
 	});
@@ -297,7 +249,7 @@ function deleteRegion(region)
 	var regionid = $(region).attr("regionid");
 	var layoutid = $(region).attr("layoutid");
 
-	load_form("index.php?p=layout&q=DeleteRegionForm&layoutid="+layoutid+"&regionid="+regionid, $('#div_dialog'),'','');
+	XiboFormRender("index.php?p=layout&q=DeleteRegionForm&layoutid="+layoutid+"&regionid="+regionid);
 }
 
 /**

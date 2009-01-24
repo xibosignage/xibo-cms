@@ -599,13 +599,10 @@ END;
 	 */
 	function SetUserHomepageForm()
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
-		
-		$layoutid	= $_REQUEST['layoutid'];
-		$regionid	= $_REQUEST['regionid'];
+		$db 		=& $this->db;
+		$response	= new ResponseManager();
+		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
+		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
 		
 		//Homepages are for layouts / region combinations
 		//The user doesnt have to have access to the layout.
@@ -639,19 +636,17 @@ END;
 		$user_list = dropdownlist($SQL, "userid", '', '', false, true, "", "edit", true);
 		
 		$form = <<<END
-		<form class="dialog_form" action="index.php?p=user&q=SetUserHomepage" method="post">
+		<form class="XiboForm" action="index.php?p=user&q=SetUserHomepage" method="post">
 			<input type="hidden" name="layoutid" value="$layoutid" />
 			<input type="hidden" name="regionid" value="$regionid" />
-			Set this region to be the homepage for $user_list 
-			<br />
-			<div class="buttons">
-				<button class="positive" type="submit">Save</button>
-			</div>
+			Set this region to be the homepage for: <br /><br /> $user_list 
+			<input type="submit" value="Yes" />
+			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
 END;
 		
-		$arh->decode_response(true, $form);
-		return;
+		$response->SetFormRequestResponse($form, 'Set as the home page for a User?', '350px', '150px');
+		$response->Respond();
 	}
 	
 	/**
@@ -660,26 +655,26 @@ END;
 	 */
 	function SetUserHomepage()
 	{
-		$db =& $this->db;
+		$db 		=& $this->db;
+		$response 	= new ResponseManager();
+
+		$userid 	= Kit::GetParam('userid', _POST, _INT, 0);
+		$layoutid 	= Kit::GetParam('layoutid', _POST, _INT, 0);
+		$regionid 	= Kit::GetParam('regionid', _POST, _STRING);
 		
-		//ajax request handler
-		$arh = new ResponseManager();
+		$homepage 	= "mediamanager&layoutid=$layoutid&regionid=$regionid";
 		
-		$userid		= $_POST['userid'];
-		$layoutid	= $_POST['layoutid'];
-		$regionid	= $_POST['regionid'];
+		$SQL = sprintf("UPDATE user SET homepage = '%s' WHERE userID = $userid ", $homepage);
 		
-		$homepage = "mediamanager&layoutid=$layoutid&regionid=$regionid";
-		
-		$SQL = "UPDATE user SET homepage = '$homepage' WHERE userID = $userid ";
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false, "Unknown error setting this users homepage.");
+			$response->SetError('Unknown error setting this users homepage.');
+			$response->Respond();
 		}
 		
-		$arh->decode_response(true, "User homepage set");
-		return;
+		$response->SetFormSubmitResponse('Homepage has been set.');
+		$response->Respond();
 	}
 }
 ?>
