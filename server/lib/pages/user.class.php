@@ -90,10 +90,8 @@ class userDAO
 	 */
 	function AddUser () 
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
+		$db 		=& $this->db;
+		$response	= new ResponseManager();
 
 		$user		= Kit::GetParam('username', _POST, _USERNAME);
 		$password 	= md5(Kit::GetParam('password', _POST, _USERNAME));
@@ -101,13 +99,22 @@ class userDAO
 		$email 		= Kit::GetParam('email', _POST, _STRING);
 		$groupid	= Kit::GetParam('groupid', _POST, _INT);
 		
-		//Construct the Homepage
+		// Construct the Homepage
 		$homepage	= "dashboard";
 
-		//Validation
-		if ($user=="") $arh->decode_response(false, "Please enter a User Name.");
-		if ($password=="") $arh->decode_response(false, "Please enter a Password.");
-		if ($email == "") $arh->decode_response(false, "Please enter an Email Address.");
+		// Validation
+		if ($user=="")
+		{
+			trigger_error("Please enter a User Name.", E_USER_ERROR);
+		} 
+		if ($password=="") 
+		{
+			trigger_error("Please enter a Password.", E_USER_ERROR);
+		}
+		if ($email == "") 
+		{
+			trigger_error("Please enter an Email Address.", E_USER_ERROR);
+		} 
 		
 		if ($homepage == "") $homepage = "dashboard";
 
@@ -118,12 +125,12 @@ class userDAO
 		if(!$sqlcheckresult = $db->query($sqlcheck)) 
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false, "Cant get this user's name. Please try another.");			
+			trigger_error("Cant get this user's name. Please try another.", E_USER_ERROR);			
 		}
 		
 		if($db->num_rows($sqlcheckresult) != 0) 
 		{
-			$arh->decode_response(false, "Could Not Complete, Duplicate User Name Exists");
+			trigger_error("Could Not Complete, Duplicate User Name Exists", E_USER_ERROR);
 		}
 		
 		//Ready to enter the user into the database
@@ -133,11 +140,11 @@ class userDAO
 		if(!$id = $db->insert_query($query)) 
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false, "Error adding that user");
+			trigger_error("Error adding that user", E_USER_ERROR);
 		}
 
-		$arh->decode_response(true, "$user Added");
-		return;
+		$response->SetFormSubmitResponse('User Saved.');
+		$response->Respond();
 	}
 
 	/**
@@ -147,14 +154,12 @@ class userDAO
 	 */
 	function EditUser() 
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
+		$db 		=& $this->db;
+		$response	= new ResponseManager();
 			
 		$error = "";
 
-		$userID 	= $_POST['userid'];
+		$userID		= Kit::GetParam('userid', _POST, _INT, 0);
 		$username 	= $_POST['username'];
 		$password 	= md5($_POST['password']);
 		$email 		= $_POST['email'];
@@ -163,10 +168,19 @@ class userDAO
 		$groupid	= $_POST['groupid'];
 		$pass_change = isset($_POST['pass_change']);
 
-		//Validation
-		if ($username=="") $arh->decode_response(false, "Please enter a User Name.");
-		if ($password=="") $arh->decode_response(false, "Please enter a Password.");
-		if ($email == "") $arh->decode_response(false, "Please enter an Email Address.");
+		// Validation
+		if ($username == "")
+		{
+			trigger_error("Please enter a User Name.", E_USER_ERROR);
+		} 
+		if ($password == "") 
+		{
+			trigger_error("Please enter a Password.", E_USER_ERROR);
+		}
+		if ($email == "") 
+		{
+			trigger_error("Please enter an Email Address.", E_USER_ERROR);
+		} 
 		
 		if ($homepage == "") $homepage = "dashboard";
 
@@ -177,12 +191,12 @@ class userDAO
 		if (!$sqlcheckresult = $db->query($sqlcheck)) 
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false, "Cant get this user's name. Please try another.");			
+			trigger_error("Cant get this user's name. Please try another.", E_USER_ERROR);			
 		}
 		
 		if ($db->num_rows($sqlcheckresult) != 0) 
 		{
-			$arh->decode_response(false, "Could Not Complete, Duplicate User Name Exists");
+			trigger_error("Could Not Complete, Duplicate User Name Exists", E_USER_ERROR);
 		}
 
 		//Everything is ok - run the update
@@ -208,11 +222,11 @@ class userDAO
 		if (!$db->query($sql)) 
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false, "Error updating that user");
+			trigger_error("Error updating that user", E_USER_ERROR);
 		}
 
-		$arh->decode_response(true, "User Edited");
-		return;
+		$response->SetFormSubmitResponse('User Saved.');
+		$response->Respond();
 	}
 
 	/**
@@ -223,48 +237,44 @@ class userDAO
 	 */
 	function DeleteUser() 
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
-		
-		$userid = $_POST['userid'];
+		$db 			=& $this->db;
+		$response		= new ResponseManager();
+		$userid 		= Kit::GetParam('userid', _POST, _INT, 0);
 
-		$sqldel = " ";
-		$sqldel .= "DELETE FROM user";
+		$sqldel = "DELETE FROM user";
 		$sqldel .= " WHERE UserID = ". $userid . "";
 
 		if (!$db->query($sqldel)) 
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false, "This user has been active, you may only retire them.");
+			trigger_error("This user has been active, you may only retire them.", E_USER_ERROR);
 		}
 
-		//We should delete this users sessions record.
+		// We should delete this users sessions record.
 		$SQL = "DELETE FROM session WHERE userID = $userID ";
 		
 		if (!$db->query($sqldel)) 
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false, "If logged in, this user will be deleted once they log out.");
+			trigger_error("If logged in, this user will be deleted once they log out.", E_USER_ERROR);
 		}
 		
-		$arh->decode_response(true, "User Deleted");
-		return;
+		$response->SetFormSubmitResponse('User Deleted.');
+		$response->Respond();
 	}
 
 	/**
 	 * Prints the user information in a table based on a check box selection
 	 *
 	 */
-	function data_table() 
+	function UserGrid() 
 	{
-		$db =& $this->db;
+		$db 		=& $this->db;
+		$user		=& $this->user;
+		$response	= new ResponseManager();
 
 		$itemName = $_REQUEST['usertypeid'];
-		
 		$username = $_REQUEST['username'];
-		
 
 		$sql = "SELECT user.UserID, user.UserName, user.usertypeid, user.loggedin, user.lastaccessed, user.email, user.homepage, group.group ";
 		$sql .= " FROM user ";
@@ -293,22 +303,22 @@ class userDAO
 
 		$table = <<<END
 		<div class="info_table">
-		<table style="width:100%">
-			<thead>
-				<tr>
-					<th>Name</th>
-					<th>Homepage</th>
-					<th>Layout</th>
-					<th>Email</th>
-					<th>Group</th>
-					<th>Action</th>
-				</tr>
-			</thead>
-			<tbody>
+			<table style="width:100%">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Homepage</th>
+						<th>Layout</th>
+						<th>Email</th>
+						<th>Group</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
 END;
-		echo $table;
 		
-		while($aRow = $db->get_row($results)) {
+		while($aRow = $db->get_row($results)) 
+		{
 			$userID 	= $aRow[0];
 			$userName 	= $aRow[1];
 			$usertypeid = $aRow[2];
@@ -352,31 +362,34 @@ END;
 
 			if($_SESSION['usertype'] == 1 ||($userID == $_SESSION['userid'])) 
 			{
-				echo "<tr href='index.php?p=user&q=display_form&userID=$userID' ondblclick=\"return init_button(this,'Edit User', exec_filter_callback, set_form_size(550,350))\">";
+				$table .= '<tr ondblclick="XiboFormRender(\'index.php?p=user&q=DisplayForm&userID=' . $userID . '\')">';
 			}
 			else
 			{
-				echo "<tr>";
+				$table .= "<tr>";
 			}
-			echo "<td>" . $userName . "</td>";
-			echo "<td>" . $homepageArray[0] . "</td>";
-			echo "<td>" . $layout . "</td>";
-			echo "<td>" . $email . "</td>";
-			echo "<td>" . $group . "</td>";
-			echo "<td><div class='buttons'>";
+			$table .= "<td>" . $userName . "</td>";
+			$table .= "<td>" . $homepageArray[0] . "</td>";
+			$table .= "<td>" . $layout . "</td>";
+			$table .= "<td>" . $email . "</td>";
+			$table .= "<td>" . $group . "</td>";
+			$table .= "<td>";
+			
 			if($_SESSION['usertype'] == 1 ||($userID == $_SESSION['userid'])) 
 			{
-				echo "<a class='positive' href='index.php?p=user&q=display_form&userID=$userID' onclick=\"return init_button(this,'Edit User', exec_filter_callback, set_form_size(550,350))\"><span>Edit</span></a>";
-				echo "<a class='negative' href='index.php?p=user&q=DeleteForm&userID=$userID' onclick=\"return init_button(this,'Delete User', exec_filter_callback, set_form_size(450,250))\"><span>Delete</span></a></div></td>";
+				$table .= '<button class="XiboFormButton" href="index.php?p=user&q=DisplayForm&userID=' . $userID . '"><span>Edit</span></button>';
+				$table .= '<button class="XiboFormButton" href="index.php?p=user&q=DeleteForm&userID=' . $userID . '" ><span>Delete</span></button></div></td>';
 			}
 			else 
 			{
-				echo "</td>";
+				$table .= "</td>";
 			}
-			echo "</tr>";
+			$table .= "</tr>";
 		}
-		echo "</tbody></table></div>";
-		exit;
+		$table .= "</tbody></table></div>";
+		
+		$response->SetGridResponse($table);
+		$response->Respond();
 	}
 
 	/**
@@ -403,42 +416,56 @@ END;
 	 * Outputs the filter page
 	 * @return 
 	 */
-	function filter() 
+	function UserFilter() 
 	{
 		$db =& $this->db;
 		
 		$usertype_list = dropdownlist("SELECT 'all', 'All' as usertype UNION SELECT usertypeID, usertype FROM usertype ORDER BY usertype", "usertypeid", 'all');
 		
-		$output = <<<END
-		<form id="filter_form" onsubmit="return false">
-			<input type="hidden" name="p" value="user">
-			<input type="hidden" name="q" value="data_table">
-			<table>
-				<tr>
-					<td>Name</td>
-					<td><input type="text" name="username"></td>
-					<td>User Type</td>
-			   		<td>$usertype_list</td>
-				</tr>
-			</table>
-		</form>
+		$filterForm = <<<END
+		<div class="FilterDiv" id="UserFilter">
+			<form onsubmit="return false">
+				<input type="hidden" name="p" value="user">
+				<input type="hidden" name="q" value="UserGrid">
+				<table>
+					<tr>
+						<td>Name</td>
+						<td><input type="text" name="username"></td>
+						<td>User Type</td>
+				   		<td>$usertype_list</td>
+					</tr>
+				</table>
+			</form>
+		</div>
 END;
-		echo $output;		
+		$id = uniqid();
+		
+		$xiboGrid = <<<HTML
+		<div class="XiboGrid" id="$id">
+			<div class="XiboFilter">
+				$filterForm
+			</div>
+			<div class="XiboData">
+			
+			</div>
+		</div>
+HTML;
+		echo $xiboGrid;	
 	}
 
 	/**
 	 * Displays the Add user form (from Ajax)
 	 * @return 
 	 */
-	function display_form () 
+	function DisplayForm() 
 	{
 		$db 			=& $this->db;
 		$user			=& $this->user;
+		$response 		= new ResponseManager();
 		
 		$helpManager	= new HelpManager($db, $user);
 		
 		//ajax request handler
-		$arh = new ResponseManager();
 		
 		$userid		= $this->userid;
 		$username 	= $this->username;
@@ -532,7 +559,7 @@ END;
 		
 				
 		$form = <<<END
-		<form class="dialog_form" method='post' action='$action'>
+		<form class="XiboForm" method='post' action='$action'>
 			<input type='hidden' name='userid' value='$userid'>
 			<table>
 				<tr>
@@ -561,9 +588,9 @@ END;
 			</table>
 		</form>
 END;
-		$arh->decode_response(true, $form);
-		
-		return;
+
+		$response->SetFormRequestResponse($form, 'Add/Edit a User.', '550px', '320px');
+		$response->Respond();
 	}
 	
 	/**
@@ -572,17 +599,15 @@ END;
 	 */
 	function DeleteForm() 
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
+		$db 		=& $this->db;
+		$response 	= new ResponseManager();
 		
 		//expect the $userid to be set
-		$userid = $this->userid;
+		$userid 	= $this->userid;
 		
 		//we can delete
 		$form = <<<END
-		<form class="dialog_form" method="post" action="index.php?p=user&q=DeleteUser">
+		<form class="XiboForm" method="post" action="index.php?p=user&q=DeleteUser">
 			<input type="hidden" name="userid" value="$userid">
 			<p>Are you sure you want to delete $this->name?</p>
 			<input type="submit" value="Yes">
@@ -590,7 +615,8 @@ END;
 		</form>
 END;
 
-		$arh->decode_response(true, $form);
+		$response->SetFormRequestResponse($form, 'Delete this User?', '260px', '180px');
+		$response->Respond();
 	}
 	
 	/**

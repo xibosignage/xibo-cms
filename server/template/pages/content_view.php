@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
 ?>
 <div id="form_container">
 	<div id="form_header">
@@ -32,7 +34,7 @@
 			<!-- Maybe at a later date we could have these buttons generated from the DB - and therefore passed through the security system ? -->
 			<ul>
 				<li><a title="Add media to the Library" class="XiboFormButton" href="index.php?p=content&q=displayForms&sp=add" ><span>Add Media</span></a></li>
-				<li><a title="Show Layout Help" href="#" onclick="toggle_div_view('notes')"><span>Help</span></a></li>
+				<li><a title="Show User Help" href="#" onclick="toggle_div_view('notes')"><span>Help</span></a></li>
 				<li><a title="Show Filter" href="#" onclick="ToggleFilterView('LibraryFilter')"><span>Filter</span></a></li>
 			</ul>
 		</div>
