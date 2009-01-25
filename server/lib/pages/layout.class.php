@@ -168,8 +168,8 @@ class layoutDAO
 		$filterForm = <<<END
 		<div class="FilterDiv" id="LayoutFilter">
 			<form onsubmit="return false">
-			<input type="hidden" name="p" value="layout">
-			<input type="hidden" name="q" value="LayoutGrid">
+				<input type="hidden" name="p" value="layout">
+				<input type="hidden" name="q" value="LayoutGrid">
 		
 			<table class="layout_filterform">
 				<tr>

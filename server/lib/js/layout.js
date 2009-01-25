@@ -16,21 +16,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
-var exec_filter_callback = function(outputDiv) {
-	
-	exec_filter('filter_form','data_table');
-	
-	return false;
-}
-
-var submit_form_callback = function(outputDiv) {
-	
-	//Just refresh
-	//window.location = window.location.href;
-	
-	return false;
-}
+ */
 
 var region_options_callback = function(outputDiv)
 {	
@@ -98,17 +84,6 @@ var text_callback = function()
 }
 
 $(document).ready(function() {
-	
-	//filter form bindings
-	exec_filter('filter_form','data_table');
-	
-	$(' :input', '#filter_form').change(function(){
-		
-		$('#pages').attr("value","1"); //sets the pages to 1
-		
-		exec_filter('filter_form','data_table'); //calls the filter form
-	});
-	
 	
 	var container = document.getElementById('layout');
 	

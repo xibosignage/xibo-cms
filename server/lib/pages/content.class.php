@@ -86,8 +86,12 @@ class contentDAO
 		}
 		return true;
 	}
-		
-	function displayFilter() 
+	
+	/**
+	 * Library Filter form
+	 * @return 
+	 */	
+	function LibraryFilter() 
 	{
 		$db =& $this->db;
 		
@@ -125,44 +129,61 @@ class contentDAO
 		
 		$type_list =  dropdownlist($sql,"mediatype",$mediatype);
 
-		$output = <<<END
-				<form id="filter_form">
+		$filterForm = <<<END
+			<div class="FilterDiv" id="LibraryFilter">
+				<form>
 					<input type="hidden" name="p" value="content">
-					<input type="hidden" name="q" value="data_table">
+					<input type="hidden" name="q" value="LibraryGrid">
 					<input type="hidden" name="pages" id="pages">
-				<table id="content_filterform" class="filterform">
-					<tr>
-						<td>Name</td>
-						<td><input type='text' name='2' id='2' value="$name"></td>
-						<td>Shared</td>
-						<td>$shared_list</td>
-					</tr>
-					<tr>
-						<td>Type</td>
-						<td>$type_list</td>
-					</tr>
-					<tr>
-						<td>Owner</td>
-						<td>$user_list</td>
-						<td>Retired</td>
-						<td>$retired_list</td>
-					</tr>
-				</table>
+					
+					<table id="content_filterform" class="filterform">
+						<tr>
+							<td>Name</td>
+							<td><input type='text' name='2' id='2' value="$name" /></td>
+							<td>Type</td>
+							<td>$type_list</td>
+							<td>Retired</td>
+							<td>$retired_list</td>
+						</tr>
+						<tr>
+							<td>Owner</td>
+							<td>$user_list</td>
+							<td></td>
+							<td></td>
+							<td>Shared</td>
+							<td>$shared_list</td>
+							
+						</tr>
+					</table>
 			</form>
+		</div>
 END;
-		echo $output;
+		
+		$id = uniqid();
+		
+		$xiboGrid = <<<HTML
+		<div class="XiboGrid" id="$id">
+			<div class="XiboFilter">
+				$filterForm
+			</div>
+			<div class="XiboData">
+			
+			</div>
+		</div>
+HTML;
+		echo $xiboGrid;
 	}
 	
 	/**
 	 * Prints out a Table of all media items
 	 *
 	 */
-	function data_table() 
+	function LibraryGrid() 
 	{
-		$db =& $this->db;
-		
-		global $user;
-		
+		$db 		=& $this->db;
+		$user		=& $this->user;
+		$response	= new ResponseManager();
+
 		//Get the input params and store them
 		$mediatype 		= Kit::GetParam('mediatype', _REQUEST, _WORD, 'all');
 		$name 			= Kit::GetParam('2', _REQUEST, _STRING);
@@ -176,7 +197,7 @@ END;
 		setSession('content', 'filter_userid', $filter_userid);
 		setSession('content', 'filter_retired', $filter_userid);
 		
-		//construct the SQL
+		// Construct the SQL
 		$SQL  = "";
 		$SQL .= "SELECT  media.mediaID, ";
 		$SQL .= "        media.name, ";
@@ -237,7 +258,6 @@ END;
 			</thead>
 			<tbody>
 END;
-		echo $output;
 		
 	    while ($aRow = $db->get_row($results)) 
 		{
@@ -262,52 +282,51 @@ END;
 				if ($edit_permissions) 
 				{
 					//double click action - depends on what type of media we are
-					$title = <<<END
+					$output .= <<<END
 					<tr href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid' ondblclick="XiboFormRender($(this).attr('href'))">
 END;
 				}
 				else 
 				{
-					$title = <<<END
+					$output .= <<<END
 					<tr ondblclick="alert('You do not have permission to edit this media')">
 END;
 				}
 				
-				echo $title;
-				echo "<td>$media</td>\n";
-		    	echo "<td>$mediatype</td>\n";
-		    	echo "<td>$length</td>\n";
-		    	echo "<td>$permission</td>\n";
-				echo "<td>$username</td>";
+				$output .= "<td>$media</td>\n";
+		    	$output .= "<td>$mediatype</td>\n";
+		    	$output .= "<td>$length</td>\n";
+		    	$output .= "<td>$permission</td>\n";
+				$output .= "<td>$username</td>";
 				
 				// ACTION buttons
 		    	if ($edit_permissions) 
 				{
 					
-			   		$buttons = "<a class='XiboFormButton positive' href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid'><span>Edit</span></a>";					
-	    			$buttons .= "<a class='XiboFormButton negative' href='index.php?p=module&mod=$mediatype&q=Exec&method=DeleteForm&mediaid=$mediaid'><span>Delete</span></a>";
+			   		$buttons = "<button class='XiboFormButton' href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid'><span>Edit</span></button>";					
+	    			$buttons .= "<button class='XiboFormButton' href='index.php?p=module&mod=$mediatype&q=Exec&method=DeleteForm&mediaid=$mediaid'><span>Delete</span></button>";
 		    	}
 		    	else 
 				{
 		    		$buttons = "No available actions.";
 		    	}
 				
-				$output = <<<END
+				$output .= <<<END
 				<td>
 					<div class='buttons'>
 						$buttons
 					</div>
 				</td>
 END;
-				echo $output;		
 				
-		    	echo "</tr>\n";
+		    	$output .= "</tr>\n";
 			}
 	    }
 		
-    	echo "</tbody></table>\n</div>\n";
+    	$output .= "</tbody></table>\n</div>\n";
 
-    	exit;
+    	$response->SetGridResponse($output);
+		$response->Respond();
 	}
 	
 	/**

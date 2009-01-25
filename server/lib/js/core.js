@@ -342,6 +342,7 @@ function XiboFormSubmit(form)
 
 /**
  * Display a login box
+ * @param {String} message
  */
 function LoginBox(message) {
     $('#div_dialog').html(message);
