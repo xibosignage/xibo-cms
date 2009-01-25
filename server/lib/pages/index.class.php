@@ -44,9 +44,9 @@ class indexDAO
 
 	function login() 
 	{
-		global $user;
+		$db 		=& $this->db;
+		$user 		=& $this->user;
 		global $session;
-		$db =& $this->db;
 
 		//this page must be called from a form therefore we expect POST variables		
 		$username 		= Kit::GetParam('username', _POST, _USERNAME);
@@ -58,7 +58,7 @@ class indexDAO
 		if (isset($_REQUEST['ajax'])) 
 		{
 			//ajax request handler
-			$arh = new ResponseManager();
+			$response = new ResponseManager();
 			
 			//use the ajax login method
 			if($user->login($username,$password)) 
@@ -68,7 +68,8 @@ class indexDAO
 				
 				$session->set_user(session_id(), $userid, 'user');
 				
-				$arh->decode_response(true, $username . ' logged in');
+				$response->SetFormSubmitResponse($username . ' logged in');
+				$response->Respond();
 			}
 			else 
 			{
@@ -76,8 +77,10 @@ class indexDAO
 				$_SESSION['message'] = "";
 				
 				//send the failed info
-				$arh->decode_response(false, "Incorrect Login Information");
+				$response->SetError('Incorrect Login Information.');
+				$response->Respond();
 			}
+			
 			exit;
 		}
 		

@@ -102,7 +102,7 @@ class PageManager
 		if (!$this->authed)
 		{
 			// Output some message to say that we are not authed
-			displayMessage(MSG_MODE_MANUAL,"You do not have permission to access this page.");
+			trigger_error("You do not have permission to access this page.", E_USER_ERROR);
 			exit;
 		}
 		

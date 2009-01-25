@@ -347,9 +347,8 @@ function LoginBox(message) {
     $('#div_dialog').html(message);
     
     //capture the form submit
-    $('.dialog_form').submit(function(){
-        ajax_submit_form($(this), $('#div_dialog'), '');
-        
+    $('.XiboForm').submit(function() {
+        XiboFormSubmit(this);
         return false;
     });
     
@@ -358,7 +357,7 @@ function LoginBox(message) {
         $(".ui-dialog-title", this).html("Please Login");
     });
 	
-    $('#div_dialog').parent().parent().width("450px").height("320px");
+    $('#div_dialog').parent().parent().width("400px").height("200px");
     
     $('#div_dialog').dialog("open");
     

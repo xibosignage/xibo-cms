@@ -57,13 +57,20 @@ class ResponseManager
 		
 		return true;
 	}
-		
-	function login() 
+	
+	/**
+	 * Sets the Default response if for a login box
+	 * @return 
+	 */	
+	function Login() 
 	{
 		//prints out the login box
-		$login_form = file_get_contents("template/pages/login_box_ajax.php");
+		$login_form 	= file_get_contents("template/pages/login_box_ajax.php");
+		$this->message	= $login_form;
+		$this->login	= true;
+		$this->success	= false;
 		
-		$this->response("2", $login_form);
+		return;
 	}
 	
 	function decode_response($success, $message) 

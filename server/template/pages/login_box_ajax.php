@@ -1,8 +1,6 @@
 <div>
-	<h1>Login</h1>
-	<p>Xibo requires a valid user login to proceed.</p>
-	<form class="dialog_form" method="post" action="index.php?q=login">
-		<input type="hidden" name="token" value="<?php echo CreateFormToken() ?>" />
+	<p style="text-align:center">Xibo requires a valid user login to proceed.</p>
+	<form class="XiboForm" method="post" action="index.php?q=login">
 		<div class="login_table">
 			<table>
 				<tr>
@@ -16,7 +14,7 @@
 				<tr>
 					<td></td>
 					<td>
-						<div class="buttons"><button type="submit" class="positive" tabindex="3"><span>Log in</span></button></div>	
+						<input type="submit" tabindex="3" value="Login" />
 					</td>
 				</tr>
 			</table>

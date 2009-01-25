@@ -48,9 +48,10 @@
 			if ($ajax) 
 			{
 				//create the AJAX request object
-				$arh = new ResponseManager();
+				$response = new ResponseManager();
 				
-				$arh->login();
+				$response->Login();
+				$response->Respond();
 			}
 			else 
 			{
