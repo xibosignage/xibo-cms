@@ -17,11 +17,3 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-$(document).ready(function() {
-
-	//if the info table div is there... then we do the tablesorter
-	if ($('.info_table table tbody').html()!="") {
-		$(".info_table table").tablesorter({sortList:[[0,0]],widthFixed: true}).tablesorterPager({container: $("#paging")});
-	}
-
-});

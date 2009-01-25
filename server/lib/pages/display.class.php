@@ -116,10 +116,8 @@ SQL;
 	 */
 	function modify() 
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
+		$db 			=& $this->db;
+		$response		= new ResponseManager();
 
 		$displayid 		= Kit::GetParam('displayid', _POST, _INT);
 		$display 		= Kit::GetParam('display', _POST, _STRING);
@@ -140,7 +138,7 @@ SQL;
 		//Validation
 		if ($display == "") 
 		{
-			$arh->decode_response(false, "Can not have a display with no name");
+			trigger_error("Can not have a display with no name", E_USER_ERROR);
 		}
 		
 		//Update the display record
@@ -185,9 +183,6 @@ SQL;
 			$SQL .= " VALUES (%d, %d, '2050-12-31 00:00:00','2050-12-31 00:00:00') ";
 			
 			$SQL = sprintf($SQL, $displayid, $layoutid);
-			
-			//indicate what we have done
-			setMessage("Display Default Layout fixed");
 		}
 		else 
 		{
@@ -208,9 +203,8 @@ SQL;
 			trigger_error("Could not update display - stage 2 (default layout)", E_USER_ERROR);
 		}
 		
-		setMessage("Display Modified");
-		
-		$arh->response(AJAX_REDIRECT,"index.php?p=display");
+		$response->SetFormSubmitResponse('Display Saved.');
+		$response->Respond();
 	}
 
 	/**
@@ -221,11 +215,9 @@ SQL;
 	{
 		$db 			=& $this->db;
 		$user			=& $this->user;
+		$response		= new ResponseManager();
 		
-		$helpManager		= new HelpManager($db, $user);
-		
-		//ajax request handler
-		$arh = new ResponseManager();
+		$helpManager	= new HelpManager($db, $user);
 		
 		//get some vars
 		$displayid 			= $this->displayid;
@@ -237,7 +229,6 @@ SQL;
 		$auditing			= $this->auditing;
 		
 		// Help UI
-		$helpButton 	= $helpManager->HelpButton("content/config/displays", true);
 		$nameHelp		= $helpManager->HelpIcon("The Name of the Display - (1 - 50 characters).", true);
 		$defaultHelp	= $helpManager->HelpIcon("The Default Layout to Display where there is no other content.", true);
 		$interleveHelp	= $helpManager->HelpIcon("Whether to always put the default into the cycle.", true);
@@ -265,7 +256,7 @@ SQL;
 		}
 		
 		$form = <<<END
-		<form class="dialog_form" method="post" action="index.php?p=display&q=modify&id=$displayid">
+		<form class="XiboForm" method="post" action="index.php?p=display&q=modify&id=$displayid">
 			<input type="hidden" name="displayid" value="$displayid">
 			<table>
 				<tr>
@@ -292,24 +283,51 @@ SQL;
 					<td>
 						<input type='submit' value="Save" / >
 						<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />	
-						$helpButton
 					</td>
 				</tr>
 			</table>
 		</form>		
 END;
-		$arh->decode_response(true, $form);
-
-		return true;
+		
+		$response->SetFormRequestResponse($form, 'Edit a Display.', '650px', '250px');
+		$response->Respond();
+	}
+	
+	public function DisplayFilter()
+	{
+		$filterForm = <<<END
+		<div class="FilterDiv" id="LayoutFilter">
+			<form onsubmit="return false">
+				<input type="hidden" name="p" value="display">
+				<input type="hidden" name="q" value="DisplayGrid">
+			</form>
+		</div>
+END;
+		
+		$id = uniqid();
+		
+		$xiboGrid = <<<HTML
+		<div class="XiboGrid" id="$id">
+			<div class="XiboFilter">
+				$filterForm
+			</div>
+			<div class="XiboData">
+			
+			</div>
+		</div>
+HTML;
+		echo $xiboGrid;
 	}
 	
 	/**
 	 * Grid of Displays
 	 * @return 
 	 */
-	function data_table() 
+	function DisplayGrid() 
 	{
-		$db =& $this->db;		
+		$db 		=& $this->db;
+		$user		=& $this->user;
+		$response	= new ResponseManager();		
 					
 		//display the display table
 		$SQL = <<<SQL
@@ -348,7 +366,6 @@ SQL;
 			</thead>
 			<tbody>
 END;
-		echo $output;
 
 		while($aRow = $db->get_row($results)) 
 		{
@@ -360,7 +377,7 @@ END;
 			$inc_schedule 	= $aRow[5];
 			$licensed 		= $aRow[6];
 			
-			$output = <<<END
+			$output .= <<<END
 			
 			<tr>
 			<td>$displayid</td>
@@ -370,16 +387,13 @@ END;
 			<td>$inc_schedule</td>
 			<td>$loggedin</td>
 			<td>$lastaccessed</td>
-			<td>
-			<div class='buttons'>
-				<a class='positive' href='index.php?p=display&q=displayForm&displayid=$displayid' onclick="return init_button(this,'Edit Display','',set_form_size(640,260))"><span>Edit</span></a>
-			</div>
+			<td><button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>Edit</span></a></td>
 END;
-			echo $output;
 		}
-		echo "</tbody></table></div>";
+		$output .= "</tbody></table></div>";
 		
-		return false;
+		$response->SetGridResponse($output);
+		$response->Respond();
 	}
 
 	/**

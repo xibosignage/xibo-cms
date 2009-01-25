@@ -28,27 +28,7 @@
 	</div>
 	
 	<div id="form_body">
-		<h1>Displays</h1>
-		<p>Below are all the Displays that are registered with the system.</p>
-
-		<div id="paging">
-			<form>
-				<img src="img/forms/first.png" class="first"/>
-				<img src="img/forms/previous.png" class="prev"/>
-				<input type="text" class="pagedisplay" readonly size="5"/>
-				<img src="img/forms/next.png" class="next"/>
-				<img src="img/forms/last.png" class="last"/>
-			<select class="pagesize">
-				<option selected="selected" value="10">10</option>
-				<option value="20">20</option>
-				<option value="30">30</option>
-				<option  value="40">40</option>
-			</select>
-			</form>
-		</div>
-		<div id="data_table">
-			<?php $this->data_table(); ?>
-		</div>
+		<?php $this->DisplayFilter(); ?>
 	</div>
 	<div id="form_footer">
 		<div id="form_footer_left">
