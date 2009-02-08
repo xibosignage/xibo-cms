@@ -46,30 +46,17 @@ class templateDAO
 	 */
 	function __construct(database $db, user $user) 
 	{
-		$this->db 	=& $db;
-		$this->user =& $user;
+		$this->db 			=& $db;
+		$this->user 		=& $user;
+		$this->templateid 	= Kit::GetParam('templateid', _REQUEST, _INT);
+		$this->sub_page 	= Kit::GetParam('sp', _REQUEST, _WORD, 'view');
 		
 		if ($_SESSION['usertype'] ==1 ) $this->isadmin = true;
 		
-		if (isset($_REQUEST['sp'])) 
-		{
-			$this->sub_page = $_REQUEST['sp'];
-		}
-		else 
-		{
-			$this->sub_page = "view";
-		}
-		
-		//if available get the templateid
-		if (isset($_REQUEST['$templateid'])) 
-		{
-			$this->templateid = clean_input($_REQUEST['$templateid'], VAR_FOR_SQL, $db);
-		}
 		
 		//If we have the template ID get the templates information
 		if ($this->templateid != "")
-		{
-				
+		{	
 			$SQL = "SELECT template, description, permissionID, xml, tags, retired, isSystem, thumbnail FROM template WHERE templateID = $this->templateid ";
 			
 			if (!$results = $db->query($SQL)) 
@@ -89,8 +76,7 @@ class templateDAO
 			$this->isSystem		= $row[6];
 			$this->thumbnail	= $row[7];
 			
-			//get the permissions
-			global $user;
+			// get the permissions
 			list($see_permission , $this->has_permissions) = $user->eval_permission($ownerid, $this->permissionid);
 			
 			//check on permissions
@@ -104,12 +90,12 @@ class templateDAO
 	
 	function on_page_load() 
 	{
-    	return "";
+    	return '';
 	}
 	
 	function echo_page_heading() 
 	{
-		echo "Templates";
+		echo 'Templates';
 		return true;
 	}
 	
@@ -117,7 +103,7 @@ class templateDAO
 	 * Template filter
 	 * @return 
 	 */
-	function template_filter() 
+	function TemplateFilter() 
 	{
 		$db =& $this->db;
 		
@@ -134,43 +120,56 @@ class templateDAO
 		
 		//Output the filter form
 		$output = <<<END
-		<form id="filter_form">
-			<input type="hidden" name="p" value="template">
-			<input type="hidden" name="q" value="template_view">
-			<table>
-				<tr>
-					<td>Name</td>
-					<td><input type="text" name="name" value="$filter_name"></td>
-					<td>System</td>
-					<td>$system_list</td>
-				</tr>
-				<tr>
-					<td>Tags</td>
-					<td><input type="text" name="tags" value="$tags"></td>
-				</tr>
-			</table>
-		</form>
+		<div class="FilterDiv" id="TemplateFilter">
+			<form id="filter_form">
+				<input type="hidden" name="p" value="template">
+				<input type="hidden" name="q" value="TemplateView">
+				<table>
+					<tr>
+						<td>Name</td>
+						<td><input type="text" name="name" value="$filter_name"></td>
+						<td>System</td>
+						<td>$system_list</td>
+					</tr>
+					<tr>
+						<td>Tags</td>
+						<td><input type="text" name="tags" value="$tags"></td>
+					</tr>
+				</table>
+			</form>
+		</div>
 END;
-		echo $output;
+		$id = uniqid();
+		
+		$xiboGrid = <<<HTML
+		<div class="XiboGrid" id="$id">
+			<div class="XiboFilter">
+				$output
+			</div>
+			<div class="XiboData">
+			
+			</div>
+		</div>
+HTML;
+		echo $xiboGrid;
 	}
 	
 	/**
 	 * Data grid
 	 * @return 
 	 */
-	function template_view() {
-		$db =& $this->db;
+	function TemplateView() 
+	{
+		$db 		=& $this->db;
+		$user		=& $this->user;
+		$response	= new ResponseManager();
 		
-		global $user;
+		$filter_name = Kit::GetParam('name', _POST, _STRING);
+		$tags		 = Kit::GetParam('tags', _POST, _STRING);
+		$is_system	 = Kit::GetParam('is_system', _POST, _INT);
 		
-		$filter_name = clean_input($_REQUEST['name'], VAR_FOR_SQL, $db);
 		setSession('template', 'name', $filter_name);
-		
-		//number of positions
-		$tags = clean_input($_REQUEST['tags'], VAR_FOR_SQL, $db);
 		setSession('template', 'tags', $tags);
-		
-		$is_system = clean_input($_REQUEST['is_system'], VAR_FOR_SQL, $db);
 		setSession('template', 'is_system', $is_system);
 	
 		$SQL  = "";
@@ -184,18 +183,21 @@ END;
 		$SQL .= "FROM    template ";
 		$SQL .= "INNER JOIN permission ON template.permissionID = permission.permissionID ";
 		$SQL .= "WHERE 1=1 ";
-		if ($filter_name != "") {
-			$SQL .= " AND template.template LIKE '%$filter_name%' ";
+		if ($filter_name != "") 
+		{
+			$SQL .= " AND template.template LIKE '%" . $db->escape_string($filter_name) . "%' ";
 		}
-		if ($tags != "") {
-			$SQL .= " AND template.tags LIKE '%$tags%' ";
+		if ($tags != "") 
+		{
+			$SQL .= " AND template.tags LIKE '%" . $db->escape_string($tags) . "%' ";
 		}
-		if ($is_system != "all") {
-			$SQL .= " AND template.issystem = $is_system ";
+		if ($is_system != "all") 
+		{
+			$SQL .= sprintf(" AND template.issystem = %d ", $is_system);
 		}
 		
-		//query
-		if (!$results = $db->query($SQL)) {
+		if (!$results = $db->query($SQL)) 
+		{
 			trigger_error($db->error());
 			trigger_error("Can not get the templates - 1st query", E_USER_ERROR);
 		}
@@ -215,10 +217,9 @@ END;
 			</thead>
 			<tbody>
 END;
-		echo $table;
 		
-		while ($row = $db->get_row($results)) {
-		
+		while ($row = $db->get_row($results)) 
+		{
 			$templateid = $row[0];
 			$template 	= $row[1];
 			$issystem 	= $row[2];
@@ -234,43 +235,26 @@ END;
 			//get the permissions
 			list($see_permissions , $edit_permissions) = $user->eval_permission($userid, $permissionid);
 			
-			//we only want to show certain buttons, depending on the user logged in
-			//if (!$edit_permissions) {
-				//dont any actions
-				$buttons = "No available Actions";
-			/*}
-			else {
-				$buttons = <<<END
-				<a class="positive" href="index.php?p=templatestyle&sp=view&templateid=$templateid">Associate Styles</a>
-END;
-				if ($issystem == "No") {
-					$buttons .= <<<END
-					<a class="positive" href="index.php?p=template&sp=edit&templateid=$templateid">Edit</a>
-					<a class="negative" href="index.php?p=template&q=delete&templateid=$templateid">Delete</a>
-END;
-				}
-			}*/
+			$buttons = "No available Actions";
 			
 			if ($see_permissions)
 			{
-				$table = <<<END
+				$table .= <<<END
 				<tr>
 					<td>$template</td>
 					<td>$issystem</td>
 					<td>$tags</td>
 					<td>$permission</td>
 					<td>$username</td>
-					<td>
-						<div class="buttons">
-							$buttons
-						</div>
-					</td>
+					<td>$buttons</td>
 				</tr>
 END;
-				echo $table;
 			}
 		}
-		echo "</tbody></table></div>";
+		$table .= "</tbody></table></div>";
+		
+		$response->SetGridResponse($table);
+		$response->Respond();
 	}
 	
 	/**

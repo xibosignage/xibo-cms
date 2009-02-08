@@ -30,55 +30,29 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	</div>
 
 	<div id="form_body">
-		<div class="filter_form_container">
-			<div class="buttons">
-				
-			</div>
-			<div class="leftbuttons">
-				<div class="buttons">
-					<a id="toggle_button" onclick="toggle_div_view('playlist_filterform_div')"><div class="button_text">Filter</div></a>
-					<a id="help_button" onclick="toggle_div_view('notes')"><div class="button_text">Help</div></a>
-				</div>	
-					<div id="notes" style="display:none;">
-						<h4>Template Help <a href="manual/index.html" target="_blank" alt="The Manual">(Click for Manual)</a></h4>
-						<div id="helptabs">
-							<ul id="help" class="tabs-nav"><!-- the class on this element has to remain the same -->
-								<li><a href="#tips_div" class="help_tab"><span>Tips</span></a></li>
-							</ul>
+		<div class="SecondNav">
+			<!-- Maybe at a later date we could have these buttons generated from the DB - and therefore passed through the security system ? -->
+			<ul>
+				<li><a title="Show Template Help" href="#" onclick="toggle_div_view('notes')"><span>Help</span></a></li>
+				<li><a title="Show Filter" href="#" onclick="ToggleFilterView('TemplateFilter')"><span>Filter</span></a></li>
+			</ul>
+		</div>
+		<div id="notes" style="display:none;">
+			<h4>Template Help <a href="manual/index.html" target="_blank" alt="The Manual">(Click for Manual)</a></h4>
+			<div id="helptabs">
+				<ul id="help" class="tabs-nav"><!-- the class on this element has to remain the same -->
+					<li><a href="#tips_div" class="help_tab"><span>Tips</span></a></li>
+				</ul>
 
-							<div id="tips_div">
-								<p>A template is a stored layout without any media assigned to it. It is used when creating a new layout.</p>
-								<p>Templates can be created from the Layout Designer.</p>
-								<p>Templates are for a particular screen resolution.</p>
-							</div>
-						</div>
-					</div>	
-			</div>
-			<div id="playlist_filterform_div">
-				<?php $this->template_filter(); ?>
+				<div id="tips_div">
+					<p>A template is a stored layout without any media assigned to it. It is used when creating a new layout.</p>
+					<p>Templates can be created from the Layout Designer.</p>
+					<p>Templates are for a particular screen resolution.</p>
+				</div>
 			</div>
 		</div>
-			<!-- Do not rename this div -->
-			<div id="paging">
-				<form>
-					<img src="img/forms/first.png" class="first"/>
-					<img src="img/forms/previous.png" class="prev"/>
-					<input type="text" class="pagedisplay" readonly size="5"/>
-					<img src="img/forms/next.png" class="next"/>
-					<img src="img/forms/last.png" class="last"/>
-					<select class="pagesize">
-						<option selected="selected" value="10">10</option>
-						<option value="20">20</option>
-						<option value="30">30</option>
-						<option  value="40">40</option>
-					</select>
-				</form>
-			</div>
-			<div id="data_table">
-
-			</div>
+		<?php $this->TemplateFilter(); ?>
 	</div>
-</div>
 	
 	<div id="form_footer">
 		<div id="form_footer_left">
