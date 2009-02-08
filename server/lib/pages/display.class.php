@@ -327,7 +327,7 @@ HTML;
 	{
 		$db 		=& $this->db;
 		$user		=& $this->user;
-		$response	= new ResponseManager();		
+		$response	= new ResponseManager();	
 					
 		//display the display table
 		$SQL = <<<SQL

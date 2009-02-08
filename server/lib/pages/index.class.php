@@ -242,7 +242,7 @@ class indexDAO
 		
 		include("lib/pages/dashboard.class.php");
 		
-		$schedule = new dashboardDAO($db);
+		$schedule = new dashboardDAO($db, $user);
 		
 		$schedule->displayPage();
 		

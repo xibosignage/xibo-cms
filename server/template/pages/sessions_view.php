@@ -30,55 +30,27 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	</div>
 	
 	<div id="form_body">
-		<div class="leftbuttons">
-			<div class="buttons">
-				<a id="help_button" href="#" onclick="toggle_div_view('notes')"><div class="button_text">Help</div></a>
-			</div>	
-			
-			<div id="notes" style="display:none;">
-				<h4>Sessions Help</h4>
-					<div id="helptabs">
-					
-						<ul id="help" class="tabs-nav">
-							<li><a href="#tips_div" class="help_tab"><span>Tips</span></a></li>
-							<li><a href="#terms_div" class="help_tab"><span>Terms</span></a></li>	
-						</ul>
-
-						<div id="tips_div">
-							<p>Reports provide details of users that are currently on the system.</p>
-						</div>
-
-						<div id="terms_div">
-							
-						</div>
-					</div>
-				
-			</div><!-- end of notes div -->
+		<div class="SecondNav">
+			<!-- Maybe at a later date we could have these buttons generated from the DB - and therefore passed through the security system ? -->
+			<ul>
+				<li><a title="Show Sessions Help" href="#" onclick="toggle_div_view('notes')"><span>Help</span></a></li>
+				<li><a title="Show Filter" href="#" onclick="ToggleFilterView('SessionFilter')"><span>Filter</span></a></li>
+			</ul>
 		</div>
-		
-		<div id="playlist_filterform_div">
-				<?php $this->session_filter(); ?>
+		<div id="notes" style="display:none;">
+			<h4>Sessions Help</h4>
+			<div id="helptabs">
+				<ul id="help" class="tabs-nav">
+					<li><a href="#tips_div" class="help_tab"><span>Tips</span></a></li>
+					<li><a href="#terms_div" class="help_tab"><span>Terms</span></a></li>	
+				</ul>
+				<div id="tips_div">
+					<p>Reports provide details of users that are currently on the system.</p>
+				</div>
+				<div id="terms_div"></div>
+			</div>
 		</div>
-	
-		<!-- Do not rename this div -->
-		<div id="paging">
-			<form>
-			<img src="img/forms/first.png" class="first"/>
-			<img src="img/forms/previous.png" class="prev"/>
-			<input type="text" class="pagedisplay" readonly size="5"/>
-			<img src="img/forms/next.png" class="next"/>
-			<img src="img/forms/last.png" class="last"/>
-			<select class="pagesize">
-				<option selected="selected" value="10">10</option>
-				<option value="20">20</option>
-				<option value="30">30</option>
-				<option  value="40">40</option>
-			</select>
-		</form>
-		</div>
-		
-		<div id="data_table"></div>
-
+		<?php $this->SessionFilter(); ?>
 	</div>
 	
 	<div id="form_footer">

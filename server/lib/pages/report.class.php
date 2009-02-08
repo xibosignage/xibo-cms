@@ -76,9 +76,9 @@ class reportDAO
 
 	}
 	
-	function session_filter()
+	function SessionFilter()
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
 		
 		$type 	= Kit::GetParam('type', _SESSION, _STRING, 'active');
 		$fdate 	= date("d/m/Y", time() + 86400);
@@ -86,39 +86,52 @@ class reportDAO
 		$type_list = listcontent("all|All,active|Active,guest|Guest,expired|Expired", "type", $type);
 		
 		$output = <<<END
-<div id="filterform">
-	<form id="filter_form">
-	<table class="filterform" id="report_filterform">
-		<input type="hidden" name="p" value="report">
-		<input type="hidden" name="q" value="session_table">
-		<tr>
-			<td>Type</td>
-			<td>
-				<select name="type">
-					<option value="all" >All</option>
-					<option value="active" selected>Active</option>
-					<option value="guest">Guest</option>
-					<option value="expired">Expired</option>
-				</select>
-			</td>
-			<td>From DT</td>
-			<td><input id="fromdt" class="date-pick" name="fromdt" value="$fdate" /></td>
-		</tr>
-	</table>
-	</form>
-</div>
+		<div class="FilterDiv" id="SessionFilter">
+			<form>
+			<table class="filterform" id="report_filterform">
+				<input type="hidden" name="p" value="report">
+				<input type="hidden" name="q" value="SessionGrid">
+				<tr>
+					<td>Type</td>
+					<td>
+						<select name="type">
+							<option value="all" >All</option>
+							<option value="active" selected>Active</option>
+							<option value="guest">Guest</option>
+							<option value="expired">Expired</option>
+						</select>
+					</td>
+					<td>From DT</td>
+					<td><input id="fromdt" class="date-pick" name="fromdt" value="$fdate" /></td>
+				</tr>
+			</table>
+			</form>
+		</div>
 
 END;
-		echo $output;
+		$id = uniqid();
+		
+		$xiboGrid = <<<HTML
+		<div class="XiboGrid" id="$id">
+			<div class="XiboFilter">
+				$output
+			</div>
+			<div class="XiboData">
+			
+			</div>
+		</div>
+HTML;
+		echo $xiboGrid;
 	}
 	
-	function session_table() 
+	function SessionGrid() 
 	{
-		global $user;
-		$db =& $this->db;
+		$db 		=& $this->db;
+		$user		=& $this->user;
+		$response	= new ResponseManager();
 		
-		$type 	= Kit::GetParam('type', _POST, _WORD); //all, active, guest, expired
-		$fromdt = Kit::GetParam('fromdt', _POST, _STRING);
+		$type 		= Kit::GetParam('type', _POST, _WORD); //all, active, guest, expired
+		$fromdt 	= Kit::GetParam('fromdt', _POST, _STRING);
 		
 		//get the dates and times
 		$start_date = explode('/', $fromdt); //	dd/mm/yyyy
@@ -162,22 +175,21 @@ END;
 		}	
 			
 		$output = <<<END
-	<div class="info_table">
-	<table style="width:100%">
-		<thead>
-			<tr>
-				<th>Last Accessed</th>
-				<th>Active</th>
-				<th>User Name</th>
-				<th>Last Page</th>
-				<th>IP Address</th>
-				<th>Browser</th>
-				<th>Action</th>
-			</tr>	
-		</thead>
-		<tbody>
+		<div class="info_table">
+			<table style="width:100%">
+				<thead>
+					<tr>
+						<th>Last Accessed</th>
+						<th>Active</th>
+						<th>User Name</th>
+						<th>Last Page</th>
+						<th>IP Address</th>
+						<th>Browser</th>
+						<th>Action</th>
+					</tr>	
+				</thead>
+				<tbody>
 END;
-		echo $output;
 		
 		while ($row = $db->get_row($results))
 		{
@@ -189,7 +201,7 @@ END;
 			$ip 			= Kit::ValidateParam($row[5], _STRING);
 			$browser 		= Kit::ValidateParam($row[6], _STRING);
 			
-			$output = <<<END
+			$output .= <<<END
 			<tr>
 			<td>$lastAccessed</td>
 			<td>$isExpired</td>
@@ -204,12 +216,12 @@ END;
 			</td>
 			</tr>
 END;
-			echo $output;
 		}
 		
-		echo "</tbody></table></div>";
+		$output .= "</tbody></table></div>";
 		
-		exit;
+		$response->SetGridResponse($output);
+		$response->Respond();
 	}
 	
 	function ConfirmLogout()
@@ -259,9 +271,9 @@ END;
 	 * The Log table
 	 * @return 
 	 */
-	function log_info() 
+	function LogFilter() 
 	{
-		$db =& $this->db;
+		$db 			=& $this->db;
 		
 		$fdate 			= date("d/m/Y", time());
 		
@@ -269,51 +281,59 @@ END;
 		$function_list 	= dropdownlist("SELECT 'All', 'All' UNION SELECT DISTINCT function, function FROM log","function",'All');
 		$display_list 	= dropdownlist("SELECT 'All', 'All' UNION SELECT displayID, display FROM display WHERE licensed = 1 ORDER BY 2", "displayid");
 				
-		$output = <<<END
-<div id="filterform">
-	<form id="filter_form">
-	<table class="filterform" id="report_filterform">
-		<input type="hidden" name="p" value="report">
-		<input type="hidden" name="q" value="log_table">
-		<tr>
-			<td>Type</td>
-			<td>
-				<select name="type">
-					<option value="all" selected>All</option>
-					<option value="audit">Audit</option>
-					<option value="error">Error</option>
-				</select>
-			</td>
-			<td>From DT</td>
-			<td><input id="fromdt" class="date-pick" name="fromdt" value="$fdate" /></td>
+		$xiboGrid = <<<END
+		<div class="XiboGrid" id="LogGridId">
+			<div class="XiboFilter">
+				<div class="FilterDiv" id="LogFilter">
+					<form>
+						<table class="filterform" id="report_filterform">
+							<input type="hidden" name="p" value="report">
+							<input type="hidden" name="q" value="LogGrid">
+							<tr>
+								<td>Type</td>
+								<td>
+									<select name="type">
+										<option value="all" selected>All</option>
+										<option value="audit">Audit</option>
+										<option value="error">Error</option>
+									</select>
+								</td>
+								<td>From DT</td>
+								<td><input id="fromdt" class="date-pick" name="fromdt" value="$fdate" /></td>
+								
+							</tr>
+							<tr>
+								<td>Page</td>
+								<td>$page_list</td>
+								<td>Seconds back</td>
+								<td><input id="seconds" name="seconds" value="60" /></td>
+							</tr>
+							<tr>
+								<td>Function</td>
+								<td>$function_list</td>
+							</tr>
+							<tr>
+								<td>Display</td>
+								<td>$display_list</td>
+							</tr>
+						</table>
+					</form>
+				</div>
+			</div>
+			<div class="XiboData">
 			
-		</tr>
-		<tr>
-			<td>Page</td>
-			<td>$page_list</td>
-			<td>Seconds back</td>
-			<td><input id="seconds" name="seconds" value="60" /></td>
-		</tr>
-		<tr>
-			<td>Function</td>
-			<td>$function_list</td>
-		</tr>
-		<tr>
-			<td>Display</td>
-			<td>$display_list</td>
-		</tr>
-	</table>
-	</form>
-</div>
+			</div>
+		</div>
 
 END;
-		echo $output;
-
+		echo $xiboGrid;
 	}
 	
-	function log_table() 
+	function LogGrid() 
 	{
-		$db =& $this->db;
+		$db 		=& $this->db;
+		$user		=& $this->user;
+		$response	= new ResponseManager();
 		
 		$type 		= Kit::GetParam('type', _REQUEST, _STRING, 'all');
 		$function 	= Kit::GetParam('function', _REQUEST, _STRING, 'All');
@@ -364,19 +384,18 @@ END;
 		Debug::LogEntry($db, 'audit', $SQL);
 		
 		$output = <<<END
-	<div class="info_table">
-	<table style="width:100%">
-		<thead>
-			<tr>
-				<th>Log Date</th>
-				<th>Page</th>
-				<th>Function</th>
-				<th>Message</th>
-			</tr>	
-		</thead>
-		<tbody>
+		<div class="info_table">
+			<table style="width:100%">
+				<thead>
+					<tr>
+						<th>Log Date</th>
+						<th>Page</th>
+						<th>Function</th>
+						<th>Message</th>
+					</tr>	
+				</thead>
+				<tbody>
 END;
-		echo $output;
 		
 		while ($row = $db->get_row($results)) 
 		{
@@ -385,28 +404,25 @@ END;
 			$function 	= Kit::ValidateParam($row[2], _STRING);
 			$message 	= nl2br(htmlspecialchars($row[3]));
 			
-			$output = <<<END
-		<tr>
-			<td>$logdate</td>
-			<td>$page</td>
-			<td>$function</td>
-			<td>$message</td>
-		</tr>	
+			$output .= <<<END
+			<tr>
+				<td>$logdate</td>
+				<td>$page</td>
+				<td>$function</td>
+				<td>$message</td>
+			</tr>	
 END;
-			echo  $output;
 		}
 		
 		if ($db->num_rows($results) == 0) 
 		{
-			$output = <<<END
-			<tr>
-				<td colspan="4">None</td>
-			</tr>	
-END;
-			echo $output;
+			$output .= '<tr><td colspan="4">None</td></tr>';
 		}
 		
-		echo "</tbody></table></div>";
+		$output .=  '</tbody></table></div>';
+		
+		$response->SetGridResponse($output);
+		$response->Respond();
 	}
 	
 	function display_log_settings() 

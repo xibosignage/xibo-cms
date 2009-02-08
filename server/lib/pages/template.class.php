@@ -121,7 +121,7 @@ class templateDAO
 		//Output the filter form
 		$output = <<<END
 		<div class="FilterDiv" id="TemplateFilter">
-			<form id="filter_form">
+			<form>
 				<input type="hidden" name="p" value="template">
 				<input type="hidden" name="q" value="TemplateView">
 				<table>
