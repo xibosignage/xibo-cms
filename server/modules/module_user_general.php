@@ -432,6 +432,14 @@
 			return true;
 		}
 		
+		// Allow access to the error page
+		if ($page == 'error')
+		{
+			Debug::LogEntry($db, 'audit', 'Granted access to page: ' . $page);
+			
+			return true;
+		}
+		
 		// we have access to only the pages assigned to this group
 		$SQL = "SELECT pages.pageID FROM pages INNER JOIN lkpagegroup ON lkpagegroup.pageid = pages.pageid ";
 		$SQL .= sprintf(" WHERE lkpagegroup.groupid = %d AND pages.name = '%s' ", $groupid, $db->escape_string($page));

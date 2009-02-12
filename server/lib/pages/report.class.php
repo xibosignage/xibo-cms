@@ -416,7 +416,7 @@ END;
 		
 		if ($db->num_rows($results) == 0) 
 		{
-			$output .= '<tr><td colspan="4">None</td></tr>';
+			$output .= '<tr><td></td><td></td><td></td><td>None</td></tr>';
 		}
 		
 		$output .=  '</tbody></table></div>';
