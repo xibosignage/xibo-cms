@@ -702,7 +702,7 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Enabled`, `RegionSpecific`, `Descri
 (7, 'Text', 1, 1, 'Text. With Directional Controls.', 'img/forms/text.gif', 1);
 
 -- As of R50 ish
-ALTER TABLE `display` CHANGE `license` `license` VARCHAR( 40 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL
+ALTER TABLE `display` CHANGE `license` `license` VARCHAR( 40 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
 
 -- As of R55 ish
 ALTER TABLE `version` ADD `XmdsVersion` SMALLINT NOT NULL ,
