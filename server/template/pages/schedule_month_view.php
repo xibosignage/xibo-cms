@@ -31,7 +31,7 @@
 		<div id="schedule_form_container">
 			<div class="leftbuttons">
 				<div class="buttons">
-					<a id="whatson_button" href="#"><div class="button_text">Broadcasting</div></a>
+					<a id="whatson_button" class="XiboFormButton" href="index.php?p=schedule&q=WhatsOn"><div class="button_text">Broadcasting</div></a>
 					<a id="help_button"  href="#" onclick="toggle_div_view('notes')"><div class="button_text">Help</div></a>
 				</div>	
 					
@@ -135,12 +135,6 @@
 		<div id="form_footer_left">
 		</div>
 		<div id="form_footer_right">
-		</div>
-	</div>
-	<div id="whatson_pane" style="position: absolute; display:none">
-		<a href='#' id="whatson_refresh">Refresh</a> | <a href="#" id="whatson_close">Close</a>
-		<div class="info_table">
-			<?php $this->whats_on(); ?>
 		</div>
 	</div>
 </div>	

@@ -17,55 +17,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-$(document).ready(function() {
-
-	//set the z-index of the preview pane to be above the other content
-	$('#whatson_pane').css("z-index", 2).bgiframe();
-	
-	$('#whatson_pane').css("width", $(window).width()- 20 );
-	$('#whatson_pane').css("height", $(window).height()- 70 );
-	$('div.scrollingWindow','#whatson_pane').css("height", $(window).height()- 180 );
-	
-	$('#whatson_close').click(function() {
-		toggle_div_view('whatson_pane');
-	});
-	
-	$('#whatson_refresh').click(function() {
-		$.ajax({type:"get", url:"index.php?p=schedule&q=whats_on", datatype:"html", 
-			success:function(response) {
-				$('#whatson_pane .info_table').html(response);
-			}
-		});
-	});
-	
-	$('#whatson_button').click(function() {
-		toggle_div_view('whatson_pane');
-	});
-
-});
-//END WHATS ON
-
-
-function submit_form(form_name) {
-
-	var form = $('#'+form_name);
-
-	/* The form fields */
-	var form_start = $("#form_starttime").val();
-	var form_end = $("#form_endtime").val();
-	var href = form.attr("action");
-	
-	if (form_start > form_end) {
-		alert("The start time can not be before the end time");
-		return false;
-	}
-	
-	//call the load form
-	load_form(href+'&starttime='+form_start+'&endtime='+form_end,$('#div_dialog'), exec_filter_callback, init_callback);
-	
-	return false;
-}
-
 function set_time(hour_period) {
 	/* The form fields */
 	var form_start = document.getElementById("form_starttime");
@@ -133,7 +84,6 @@ function eval_add_cells(start, end) {
 			/* Want to set the color of the hour cells based on start and end time */
 			//cell.style.backgroundColor = "red;";
 			cell.className = "add";
-			
 		}
 		else {
 			/* set to no color */
@@ -141,32 +91,7 @@ function eval_add_cells(start, end) {
 			cell.className = "";
 		}
 	}
-
 	return true;
-}
-
-function day_clicked(date, displayid) {
-
-    var href = 'index.php?p=schedule&sp=add&q=display_form&date='+date+'&starttime='+date+'&endtime='+date+'&displayid='+displayid;
-
-    //clear down the html before opening
-	$('#div_dialog').html("");
-	
-	//do any changes to the dialog form here
-	$('#div_dialog').parent().children().each(function(){
-	 $(".ui-dialog-title", this).html("Add Event");
-	});
-	
-	$('#div_dialog').parent().parent().width("900px").height("600px");
-
-	//call the load form
-	load_form(href,$('#div_dialog'), exec_filter_callback, init_callback);
-	
-	return true;
-}
-
-function exec_filter_callback() {
-    //nothing in there, there is no filter
 }
 
 function setupScheduleForm() {

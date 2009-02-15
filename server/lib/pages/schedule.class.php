@@ -1600,10 +1600,11 @@ END;
 	 * Shows whats currently on (i.e. which layouts are currently being send to which displays
 	 * @return 
 	 */
-	function whats_on() 
+	function WhatsOn() 
 	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
+		$db 		=& $this->db;
+		$user 		=& $this->user;
+		$response 	= new ResponseManager();
 		
 		//validate displays so we get a realistic view of the table
 		include_once("lib/pages/display.class.php");
@@ -1633,9 +1634,8 @@ END;
 			trigger_error("Cannot get current schedule information", E_USER_ERROR);
 		} 
 		
-		$table = <<<END
-		<h2>Currently Scheduled</h2>
-		<div class="scrollingWindow">
+		$output = <<<END
+		<div class="scrollingWindow" style="height:400px;">
 		<table style="width:98%;">
 			<tr>
 				<th>Display</th>
@@ -1646,10 +1646,9 @@ END;
 				<th>Scheduled By</th>
 			</tr>
 END;
-		echo $table;
-
-		while ($row = $db->get_row($results)) {
 		
+		while ($row = $db->get_row($results)) 
+		{
 			$display = $row[0];
 			$layout = $row[1];
 			
@@ -1660,16 +1659,18 @@ END;
 			if ($endtime != "") $endtime = date("d-m-y H:i",$endtime);
 			
 			$loggedin = $row[5];
-			if($loggedin==1) {
+			if($loggedin==1) 
+			{
 				$loggedin="<img src=\"img/act.gif\">";
 			}
-			else {
+			else 
+			{
 				$loggedin="<img src=\"img/disact.gif\">";
 			}
 			
 			$username = $user->getNameFromID($row[4]);
 			
-			$table = <<<END
+			$output .= <<<END
 			<tr>
 				<td>$display</td>
 				<td>$loggedin</td>
@@ -1679,12 +1680,12 @@ END;
 				<td>$username</td>
 			</tr>
 END;
-			echo $table;
 		}
 		
-		echo "</table></div>";
+		$output .= "</table></div>";
 	
-		return true;
+		$response->SetFormRequestResponse($output, 'Currently Scheduled to Play.', '900px', '480px');
+		$response->Respond();
 	}
 	
 	function getDisplaysForEvent($eventid) 
