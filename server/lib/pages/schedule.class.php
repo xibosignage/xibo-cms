@@ -58,36 +58,17 @@ class scheduleDAO
 	 */
     function __construct(database $db, user $user) 
 	{
-		$this->db 	=& $db;
-		$this->user =& $user;
+		$this->db 			=& $db;
+		$this->user 		=& $user;
+		$this->sub_page 	= Kit::GetParam('sp', _GET, _WORD, 'month');
+		$this->start_date 	= Kit::GetParam('date', _REQUEST, _STRING, mktime(0,0,0,date('m'), date('d'), date('Y')));
+    	$this->layoutid		= Kit::GetParam('layoutid', _SESSION, _INT, 0);
+    	$this->displayid	= Kit::GetParam('displayid', _REQUEST, _INT, 0);
+		$this->schedule_detailid = Kit::GetParam('schedule_detailid', _REQUEST, _INT, 0);
+		$this->ret_page 	= Kit::GetParam('ret_page', _REQUEST, _WORD, 'day');
 		
-		//work out the page we are on   	
-    	if (!isset($_GET['sp'])) {
-    		$this->sub_page = 'month';
-    	}
-    	else {
-    		$this->sub_page = $_GET['sp'];
-    	}
-		
-		//if the date isnt set then get the default one
-    	if(!isset($_REQUEST['date'])){
-		   $this->start_date = mktime(0,0,0,date('m'), date('d'), date('Y'));
-		} 
-		else {
-		   $this->start_date = clean_input($_REQUEST['date'], VAR_FOR_SQL, $db);
-		}
-		
-		if (isset($_SESSION['layoutid'])) {
-			$this->layoutid = $_SESSION['layoutid'];
-		}
-		else {
-			$this->layoutid = 0;
-		}
-		
-		if (isset($_REQUEST['displayid'])) {
-			$this->displayid = clean_input($_REQUEST['displayid'], VAR_FOR_SQL, $db);
-		}
-		else {
+		if ($this->displayid == 0)
+		{
 			// Get the first licensed display from the table...
 			$SQL = "SELECT displayid FROM display WHERE licensed = 1";
 			if (!$result = $db->query($SQL)) 
@@ -104,26 +85,31 @@ class scheduleDAO
 			$this->displayid = $row[0];
 		}
 		
-		//get the layoutdisplayid if it is present
-		if (isset($_REQUEST['schedule_detailid'])) {
-			$this->schedule_detailid = clean_input($_REQUEST['schedule_detailid'], VAR_FOR_SQL, $db);
-		}
-		
 		//get the display name
 		$SQL = "SELECT display FROM display WHERE displayid = $this->displayid";
-		if (!$results = $db->query($SQL)) {
+		
+		if (!$results = $db->query($SQL)) 
+		{
 			trigger_error($db->error());
 			trigger_error("Can not get the display name", E_USER_ERROR);
 		}
-		$row = $db->get_row($results);
 		
-		$this->display = $row[0];
+		$row 			= $db->get_row($results);
+		$this->display 	= Kit::ValidateParam($row[0], _INT);
 		
-		if ($this->sub_page == 'edit') {
-			/*
-			 * Expect an ID
-			 */
-			$this->schedule_detailid = clean_input($_REQUEST['id'], VAR_FOR_SQL, $db);
+		if ($this->sub_page == 'add') 
+		{
+			$this->starttime	= Kit::GetParam('starttime', _REQUEST, _INT);
+			$this->endtime		= Kit::GetParam('endtime', _REQUEST, _INT) + 3600;
+			
+			//set the recurrence range to be starttime + 30 days
+			$this->rec_range 	= $this->starttime + (60*60*24*30);
+		}
+		
+		if ($this->sub_page == 'edit') 
+		{
+			// Must have an ID here
+			$this->schedule_detailid = Kit::GetParam('id', _REQUEST, _INT, 0);
 			
 			//we need to get out info from the old DB
 			$SQL = "";
@@ -161,35 +147,23 @@ class scheduleDAO
 			if ($this->rec_range == "") $this->rec_range = $this->starttime + (60*60*24*30);
 			
 			//If this user doesnt own this event OR they do not have the appropriate permissions for this event, disallow them the view
-			if ($row[5] != $_SESSION['userid'] && $_SESSION['usertype']!=1) {
+			if ($row[5] != $_SESSION['userid'] && $_SESSION['usertype'] != 1) 
+			{
 				$this->has_permission = false;
 			}
 		}
 		
-		if ($this->sub_page == 'add') {
-			$this->starttime	= clean_input($_REQUEST['starttime'], VAR_FOR_SQL, $db);
-			
-			//tweak the end time to be + one hour
-			$this->endtime		= clean_input($_REQUEST['endtime'], VAR_FOR_SQL, $db) + 3600;
-			
-			//set the recurrence range to be starttime + 30 days
-			$this->rec_range = $this->starttime + (60*60*24*30);
-		}
-		
-		if (isset($_REQUEST['ret_page'])) {
-			$this->ret_page = $_REQUEST['ret_page'];
-		}
-		else {
-			$this->ret_page = "day";
-		}
+		return;
     }
     
-    function on_page_load() {
-    	return "";
+    function on_page_load() 
+	{
+    	return '';
 	}
 	
-	function echo_page_heading() {
-		echo "Schedule";
+	function echo_page_heading() 
+	{
+		echo 'Schedule';
 		return true;
 	}
 	
@@ -198,11 +172,7 @@ class scheduleDAO
 		$db 	=& $this->db;
 		$user 	=& $this->user;
 		
-		if (!$this->has_permission) 
-		{
-			displayMessage(MSG_MODE_MANUAL, "You do not have permissions to access this page");
-			return false;
-		}
+		if (!$this->has_permission) trigger_error('You do not have permission to access this page.', E_USER_ERROR);
 
 		switch ($this->sub_page) 
 		{		
@@ -230,17 +200,14 @@ class scheduleDAO
 	{
 		$db 			=& $this->db;
 		$user			=& $this->user;
-		
+		$end			= $this->endtime;
+		$start			= $this->starttime;
 		$helpManager	= new HelpManager($db, $user);
-		
-		//ajax request handler
-		$arh 	= new ResponseManager();
-					
-		$start	= $this->starttime;
-		$end	= $this->endtime;
+		$response		= new ResponseManager();
 		
 		//set the action for the form
 		$action = "index.php?p=schedule&q=add";			
+		
 		if ($this->schedule_detailid != "") 
 		{
 			//assume an edit
@@ -248,14 +215,15 @@ class scheduleDAO
 		}
 		
 		// Help icons for the form
-		$helpButton = $helpManager->HelpButton("content/schedule/adding", true);
-		$nameHelp	= $helpManager->HelpIcon("The Name of the Layout - (1 - 50 characters)", true);
+		$helpButton 	= $helpManager->HelpButton("content/schedule/adding", true);
+		$nameHelp		= $helpManager->HelpIcon("The Name of the Layout - (1 - 50 characters)", true);
 		
 		// Params		
 		$start_time_select	= $this->datetime_select($start, 'starttime');
 		$end_time_select	= $this->datetime_select($end, 'endtime');
 		
 		$userid = $_SESSION['userid'];
+		
 		//need to do some user checking here
 		$sql  = "SELECT layoutID, layout, permissionID, userID ";
 		$sql .= "  FROM layout WHERE retired = 0";
@@ -265,7 +233,7 @@ class scheduleDAO
 		$display_select = $this->display_boxes($this->eventid);
 		
 		$form = <<<END
-	<form class="dialog_form" action="$action" method="post">
+	<form class="XiboForm" action="$action" method="post">
 		<input type="hidden" name="displayid" value="$this->displayid">
 		<input type="hidden" name="schedule_detailid" value="$this->schedule_detailid">
 		<table style="width:100%;">
@@ -288,11 +256,12 @@ class scheduleDAO
 END;
 		
 		//Admin ability to set events to be priority events
-		if ($_SESSION['usertype']==1 && $this->sub_page == 'edit') { //only through edit??
-			
+		if ($_SESSION['usertype']==1 && $this->sub_page == 'edit') 
+		{
 			//do we check the box or not
 			$checked = "";
-			if ($this->is_priority == 1) {
+			if ($this->is_priority == 1) 
+			{
 				$checked = "checked";
 			}
 		
@@ -307,7 +276,7 @@ END;
 		//
 		//recurrance part of the form
 		//
-		$days = 60*60*24;
+		$days 		= 60*60*24;
 		$rec_type 	= listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type", $this->rec_type);
 		$rec_detail	= listcontent("1|1,2|2,3|3,4|4,5|5,6|6,7|7,8|8,9|9,10|10,11|11,12|12,13|13,14|14", "rec_detail", $this->rec_detail);
 		$rec_range 	= $this->datetime_select($this->rec_range,"rec_range");
@@ -340,11 +309,11 @@ END;
 		// Sort out the extra things we need for an edit
 		//
 		$edit_link = "";
-		if ($this->schedule_detailid != "") {
+		if ($this->schedule_detailid != "") 
+		{
 			//edit specific output
 			$edit_link = <<<END
-			<input title="Opens up the delete options for this event." href="index.php?p=schedule&q=delete_form&schedule_detailid=$this->schedule_detailid&displayid=$this->displayid"
-				onclick="return init_button(this,'Delete Event',exec_filter_callback, init_callback)" type="button" value="Delete" />
+			<input class="XiboFormButton" title="Opens up the delete options for this event." href="index.php?p=schedule&q=delete_form&schedule_detailid=$this->schedule_detailid&displayid=$this->displayid" type="button" value="Delete" />
 END;
 			
 			$form .= <<<END
@@ -376,42 +345,41 @@ END;
 		//also output the day view (will need to be made to return a string)
 		$form .= $this->generate_day_view();
 		
-		//output
-		$arh->decode_response(true,$form);
-		
-		return true;
+		$response->SetFormRequestResponse($form, 'Schedule an Event', '900px', '600px');
+		$response->callBack = 'setupScheduleForm';
+		$response->Respond();
 	}
 	
 	function delete_form() 
 	{
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
+		$db 		=& $this->db;
+		$response 	= new ResponseManager();
 		
 		$form = <<<END
-<form class="dialog_form" action="index.php?p=schedule&q=remove">
-	<input type="hidden" name="schedule_detailid" value="$this->schedule_detailid" />
-	<input type="hidden" name="displayid" value="$this->displayid" />
-	<table>
-		<tr>
-			<td>Are you sure you want to delete this event?</td>
-		</tr>
-		<tr>
-			<td colspan="2">
-				<input id="radio_all" type="radio" name="linkupdate" value="all" checked>
-				<label for="radio_all">Delete event for all displays in this series</label>
-				<input id="radio_single" type="radio" name="linkupdate" value="single">
-				<label for="radio_single">Delete event for this display only</label>
-			</td>
-		</tr>
-		<tr>
-			<td><input type="submit" value="Delete"></td>
-		</tr>		
-	</table>	
-</form>
+		<form class="XiboForm" action="index.php?p=schedule&q=remove">
+			<input type="hidden" name="schedule_detailid" value="$this->schedule_detailid" />
+			<input type="hidden" name="displayid" value="$this->displayid" />
+			<table>
+				<tr>
+					<td>Are you sure you want to delete this event?</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<input id="radio_all" type="radio" name="linkupdate" value="all" checked>
+						<label for="radio_all">Delete event for all displays in this series</label>
+						<input id="radio_single" type="radio" name="linkupdate" value="single">
+						<label for="radio_single">Delete event for this display only</label>
+					</td>
+				</tr>
+				<tr>
+					<td><input type="submit" value="Delete"></td>
+				</tr>		
+			</table>	
+		</form>
 END;
-		$arh->decode_response(true,$form);
+
+		$response->SetFormRequestResponse($form, 'Delete an Event.', '480px', '240px');
+		$response->Respond();
 	}
 	
 	function display_boxes($linked_events) 
@@ -471,15 +439,19 @@ END;
 		return $boxes;
 	}
 	
-	function generate_calendar() {
+	function generate_calendar() 
+	{
 		$db =& $this->db;
 		
 		// Gather variables from
 		// user input and break them
 		// down for usage in our script
-		if(!isset($_REQUEST['date'])){
+		if(!isset($_REQUEST['date']))
+		{
 		   $date = mktime(0,0,0,date('m'), date('d'), date('Y'));
-		} else {
+		} 
+		else 
+		{
 		   $date = clean_input($_REQUEST['date'], VAR_FOR_SQL, $db);
 		}
 		
@@ -497,7 +469,8 @@ END;
 		// the month starts on.
 		$month_start_day = date('D', $month_start);
 		
-		switch($month_start_day){
+		switch($month_start_day)
+		{
 		    case "Sun": $offset = 0; break;
 		    case "Mon": $offset = 1; break;
 		    case "Tue": $offset = 2; break;
@@ -508,9 +481,12 @@ END;
 		}
 		
 		// determine how many days are in the last month.
-		if($month == 1){
+		if($month == 1)
+		{
 		   $num_days_last = cal_days_in_month(0, 12, ($year -1));
-		} else {
+		} 
+		else 
+		{
 		   $num_days_last = cal_days_in_month(0, ($month -1), $year);
 		}
 		
@@ -519,25 +495,29 @@ END;
 		
 		// Build an array for the current days
 		// in the month
-		for($i = 1; $i <= $num_days_current; $i++){
+		for($i = 1; $i <= $num_days_current; $i++)
+		{
 		    $num_days_array[] = $i;
 		}
 		
 		// Build an array for the number of days
 		// in last month
-		for($i = 1; $i <= $num_days_last; $i++){
+		for($i = 1; $i <= $num_days_last; $i++)
+		{
 		    $num_days_last_array[] = $i;
 		}
 		
 		// If the $offset from the starting day of the
 		// week happens to be Sunday, $offset would be 0,
 		// so don't need an offset correction.
-		if($offset > 0){
+		if($offset > 0)
+		{
 		    $offset_correction	= array_slice($num_days_last_array, -$offset, $offset);
 		    $new_count			= array_merge($offset_correction, $num_days_array);
 		    $offset_count		= count($offset_correction);
 		}
-		else { // The else statement is to prevent building the $offset array.
+		else 
+		{ // The else statement is to prevent building the $offset array.
 		    $offset_count	= 0;
 		    $new_count		= $num_days_array;
 		}
@@ -552,19 +532,26 @@ END;
 		// so, we will have to figure out
 		// how many days to appened to the end
 		// of the final array to make it 35 days.
-		if($current_num > 35){
+		if($current_num > 35)
+		{
 		   $num_weeks = 6;
 		   $outset = (42 - $current_num);
-		} elseif($current_num < 35){
+		} 
+		elseif($current_num < 35)
+		{
 		   $num_weeks = 5;
 		   $outset = (35 - $current_num);
 		}
-		if($current_num == 35){
+		
+		if($current_num == 35)
+		{
 		   $num_weeks = 5;
 		   $outset = 0;
 		}
+		
 		// Outset Correction
-		for($i = 1; $i <= $outset; $i++){
+		for($i = 1; $i <= $outset; $i++)
+		{
 		   $new_count[] = $i;
 		}
 		
@@ -576,17 +563,26 @@ END;
 		
 		// Build Previous and Next Links
 		$previous_link = "<a href=\"index.php?p=schedule&sp=month&displayid=$this->displayid&date=";
-		if($month == 1){
+		
+		if($month == 1)
+		{
 		   $previous_link .= mktime(0,0,0,12,$day,($year -1));
-		} else {
+		} 
+		else 
+		{
 		   $previous_link .= mktime(0,0,0,($month -1),$day,$year);
 		}
+		
 		$previous_link .= "\"><< Prev</a>";
 		
 		$next_link = "<a href=\"index.php?p=schedule&sp=month&displayid=$this->displayid&date=";
-		if($month == 12){
+		
+		if($month == 12)
+		{
 		   $next_link .= mktime(0,0,0,1,$day,($year + 1));
-		} else {
+		} 
+		else 
+		{
 		   $next_link .= mktime(0,0,0,($month +1),$day,$year);
 		}
 		$next_link .= "\">Next >></a>";
@@ -612,35 +608,42 @@ END;
 		// week with the days of that week in the table data
 		
 		$i = 0;
-		foreach($weeks AS $week) {
+		foreach($weeks AS $week) 
+		{
 	    	echo "<tr>\n";
 			$count = 0; //so we know which day we are on
 			
-	    	foreach($week as $d) {
+	    	foreach($week as $d) 
+			{
 	    		$count++;
 				
-	        	if($i < $offset_count) {
+	        	if($i < $offset_count) 
+				{
 	            	echo "<td class=\"nonmonthdays\">$d</td>\n";
 	        	}
 	        	
-	        	if(($i >= $offset_count) && ($i < ($num_weeks * 7) - $outset)) {
+	        	if(($i >= $offset_count) && ($i < ($num_weeks * 7) - $outset)) 
+				{
 	            	/*Prepare the day link*/
 					$day_clicked = mktime(date("H"),date("i"),0,$month,$d,$year);
 					
-					$day_link = "<a class='day_label' onclick=\"day_clicked('$day_clicked', $this->displayid)\">$d</a>";
+					$day_link  = "<a class='day_label' onclick=\"XiboFormRender('index.php?p=schedule&sp=add&q=display_form&date=$day_clicked&starttime=$day_clicked&endtime=$day_clicked&displayid=$this->displayid')\">$d</a>";
 	           		$day_link .= $this->get_events_between_dates(mktime(0,0,0,$month,$d,$year),mktime(0,0,0,$month,$d+1,$year),$count);
 	           		
-					//add the double click listeners					
-	           		if(mktime(0,0,0,date("m"),date("d"),date("Y")) == mktime(0,0,0,$month,$d,$year)) {
-	               		echo "<td ondblclick=\"day_clicked('$day_clicked', $this->displayid)\" class=\"today\">$day_link</a></td>\n";
+					// add the double click listeners					
+	           		if(mktime(0,0,0,date("m"),date("d"),date("Y")) == mktime(0,0,0,$month,$d,$year)) 
+					{
+	               		echo "<td ondblclick=\"XiboFormRender('index.php?p=schedule&sp=add&q=display_form&date=$day_clicked&starttime=$day_clicked&endtime=$day_clicked&displayid=$this->displayid')\" class=\"today\">$day_link</a></td>\n";
 	           		} 
-	           		else {
-	               		echo "<td ondblclick=\"day_clicked('$day_clicked', $this->displayid)\" class=\"days\">$day_link</td>\n";
+	           		else 
+					{
+	               		echo "<td ondblclick=\"XiboFormRender('index.php?p=schedule&sp=add&q=display_form&date=$day_clicked&starttime=$day_clicked&endtime=$day_clicked&displayid=$this->displayid')\" class=\"days\">$day_link</td>\n";
 	           		}
 	        	} 
-	        	elseif($outset > 0) {
-	            	
-	            	if(($i >= ($num_weeks * 7) - $outset)){
+	        	elseif($outset > 0) 
+				{
+	            	if(($i >= ($num_weeks * 7) - $outset))
+					{
 	               		echo "<td class=\"nonmonthdays\">$d</td>\n";
 	           		}
 	        	}
@@ -651,9 +654,12 @@ END;
 		
 		// Close out your table and that's it!
 		echo '</table>';
+		
+		return;
 	}
 	
-	function generate_day_view() {
+	function generate_day_view() 
+	{
 		$db =& $this->db;
 		
 		$date		= $this->start_date;
@@ -668,9 +674,7 @@ END;
 		
 		$day_text = date("d-m-Y", $date);
 		
-		/**
-		 * This is a view of a single day (with all events listed in a table)
-		 */
+		// This is a view of a single day (with all events listed in a table)
 		$SQL = "";
         $SQL.= "SELECT schedule_detail.schedule_detailID, ";
         $SQL.= "       schedule_detail.starttime, ";
@@ -704,7 +708,8 @@ END;
     		<th>End</th>
 END;
 		
-		for ($i=0; $i<24; $i++) {
+		for ($i=0; $i<24; $i++) 
+		{
 			
 			$h = $i;
 			if ($i<10) $h = "0$i";
@@ -717,22 +722,25 @@ END;
     	$table_html .= "</tr>";    
       	
       	  
-        while($row = $db->get_row($result)){
-            $schedule_detailid = $row[0];
-            $starttime = date("H:i",$row[4]);
-            $endtime = date("H:i",$row[5]);
-            $name = $row[3];
-            $times = date("H:i",$row[4])."-".date("H:i",$row[5]);
-            $userid = $row[6];
-            $is_priority = $row[7];
+        while($row = $db->get_row($result))
+		{
+            $schedule_detailid 	= $row[0];
+            $starttime 			= date("H:i",$row[4]);
+            $endtime 			= date("H:i",$row[5]);
+            $name 				= $row[3];
+            $times 				= date("H:i",$row[4])."-".date("H:i",$row[5]);
+            $userid 			= $row[6];
+            $is_priority 		= $row[7];
             
 			$start_row = $starttime;
-			if($row[4]<$date) {
+			if($row[4]<$date) 
+			{
 				$start_row = "Earlier Day";
 			}
 			
 			$end_row = $endtime;
-			if ($row[5]>$next_day) {
+			if ($row[5]>$next_day) 
+			{
 				$end_row = "Later Day";
 			}
 			
@@ -758,52 +766,61 @@ END;
 	         * 1. whether the record we've got is within the dates supplied (OR)
 	         * 2. whether the record is outside of these dates
 	         */
-            if ($row[4] < $date) { //if 'the event start date' < 'the we are on'
+            if ($row[4] < $date) 
+			{ //if 'the event start date' < 'the we are on'
             	$start_hour = 0;
             }
             
 			//if the event goes over this day, then the end hour will be the total_cols shown
-            if ($row[5] >= $next_day) {
+            if ($row[5] >= $next_day) 
+			{
             	$end_hour = $total_cols;
             }
 			
 			/*
 			 * We are ready to work it out
 			 */
-			if ($start_hour != 0) { //if the start_hour is 0 we dont bother with the beginning
-				for($i=0;$i<$start_hour;$i++) { //go from the first column, until the start hour
+			if ($start_hour != 0) 
+			{ //if the start_hour is 0 we dont bother with the beginning
+				for($i=0;$i<$start_hour;$i++) 
+				{ //go from the first column, until the start hour
 					$table_html .= "<td></td>";
 					$total_cols--;
 				}
 			}
 			
 			$colspan = 0;
-			for ($i = $start_hour; $i < $end_hour; $i++) {
+			for ($i = $start_hour; $i < $end_hour; $i++) 
+			{
 				$colspan++;
 				$total_cols--;
 			}
 			
 			if ($colspan == 0) $colspan = "";
 			
-			$onclick = "onclick=\"return init_button(this,'Edit Event',exec_filter_callback, init_callback)\"";
-			$link = "<a class='event' title='Load this event into the form for editing' href='index.php?p=schedule&sp=edit&q=display_form&id=$schedule_detailid&date=$this->start_date&displayid=$this->displayid' $onclick>Edit</a>";
+			$link = "<a class='XiboFormButton event' title='Load this event into the form for editing' href='index.php?p=schedule&sp=edit&q=display_form&id=$schedule_detailid&date=$this->start_date&displayid=$this->displayid'>Edit</a>";
 			$class = "busy";
 			
-			if ($userid != $_SESSION['userid']) {
+			if ($userid != $_SESSION['userid']) 
+			{
 				$class = "busy_no_edit";
 			}
-			if ($userid != $_SESSION['userid']&& $_SESSION['usertype']!=1) {
+			if ($userid != $_SESSION['userid']&& $_SESSION['usertype']!=1) 
+			{
 				$link = "";
 			}
-			if ($is_priority == 1) {
+			if ($is_priority == 1) 
+			{
 				$class = "busy_has_priority";
 			}
 			
 			$table_html .= "<td class='$class' colspan='$colspan'>" .
 					"$link</td>";
 			
-			if ($total_cols != 1) {
-				while ($total_cols > 0) {
+			if ($total_cols != 1) 
+			{
+				while ($total_cols > 0) 
+				{
 					$total_cols--;
 					$table_html .= "<td></td>";
 				}
@@ -811,6 +828,7 @@ END;
 			
 			$table_html .= "</tr>";
         }
+		
 		$table_html .= "</table></div>";
         
         return $table_html;
@@ -819,7 +837,8 @@ END;
 	/**
 	 * Gets the events for a specified date (returned as HTML string)
 	 */
-	function get_events_between_dates($date_start, $date_end, $day_number_in_week) {
+	function get_events_between_dates($date_start, $date_end, $day_number_in_week) 
+	{
 		$db =& $this->db;
 		
 		$last_day = $this->last_day;
@@ -871,7 +890,8 @@ END;
 		/*if ($date == '2007-06-16 00:00:00') {
 		echo "<pre>";print_r($last_day);echo "</pre>";}*/
 		
-        while(($row = $db->get_row($result)) && $count < 4) {
+        while(($row = $db->get_row($result)) && $count < 4) 
+		{
 			/* Info for this day */
             $schedule_detailid = $row[0];
             $starttime = $row[4];
@@ -883,10 +903,12 @@ END;
 			$event_text = $name;
 			
 			/* Are our events spanning multiple days?*/
-            if ($multi_day == 1) {
+            if ($multi_day == 1) 
+			{
 				$multi_day_count++;
 
-				if ($day_number_in_week != 1 && $pad) {
+				if ($day_number_in_week != 1 && $pad) 
+				{
 					/*
 					 * How can we tell if the last day had any padding on it!
 					 * If it did, we want to add however much padding the last day had, again - we can make use of a class variable here i think
@@ -903,18 +925,23 @@ END;
 						$event_text = "-";
 					}*/
 					
-					if ($count < $last_day['multi_day_count']) {
+					if ($count < $last_day['multi_day_count']) 
+					{
 					
-						if (isset($last_day[$count]['schedule_detailid'])) {							
+						if (isset($last_day[$count]['schedule_detailid'])) 
+						{							
 							//we now know that there was an event in this slot last time around!
-							if ($last_day[$count]['schedule_detailid']==$schedule_detailid) {
+							if ($last_day[$count]['schedule_detailid']==$schedule_detailid) 
+							{
 								//do nothing
 								//$event_text = "-";
 							}
-							elseif ($last_day[$count]['end'] < $date_start) {
+							elseif ($last_day[$count]['end'] < $date_start) 
+							{
 								//if it ended, we want to pad out this event
 								//unless the current event does not belong to the next one down!
-								if ($last_day[$count]['schedule_detailid']==0) {
+								if ($last_day[$count]['schedule_detailid']==0) 
+								{
 									$html_events_string .= "<a class='pad'>Pad</a>";
 									
 									//$event_text = "-";
@@ -923,7 +950,8 @@ END;
 									$count++;
 								}
 								
-								if ($layoutdisplayid == $last_day[$count+1]['schedule_detailid']) {
+								if ($layoutdisplayid == $last_day[$count+1]['schedule_detailid']) 
+								{
 									$html_events_string .= "<a class='pad'>Pad</a>";
 									
 									$this->last_day[$count]['schedule_detailid'] = 0;
@@ -935,13 +963,11 @@ END;
 				}
 				
 				$link = "href='index.php?p=schedule&sp=edit&q=display_form&id=$schedule_detailid&date=$date_start&displayid=$this->displayid'";
-				$onclick = "onclick=\"return init_button(this,'Edit Event',exec_filter_callback, edit_event_callback)\"";
 				
-				if ($userid != $_SESSION['userid'] && $_SESSION['usertype']!=1) {
-					$link = " ";
-					$onclick = "onclick=\"alert('Owned by another user')\"";
+				if ($userid == $_SESSION['userid'] || $_SESSION['usertype'] == 1) 
+				{
+					$html_events_string .= "<a class='XiboFormButton long_event' ".$color[$count]." $link>";
 				}
-				$html_events_string .= "<a class='long_event' ".$color[$count]." $link $onclick>";
 				$html_events_string .= "$event_text";
 			
 				//record the current days events
@@ -951,16 +977,14 @@ END;
 				
 				$this->last_day['multi_day_count']=$multi_day_count;
             }
-            else { //no spanning, event is contained within this day
+            else 
+			{ //no spanning, event is contained within this day
 				$link = "href='index.php?p=schedule&sp=edit&q=display_form&id=$schedule_detailid&date=$date_start&displayid=$this->displayid'";
-				$onclick = "onclick=\"return init_button(this,'Edit Event',exec_filter_callback, edit_event_callback)\"";
-			
-				if ($userid != $_SESSION['userid'] && $_SESSION['usertype']!=1) {
-					$link = "";
-					$onclick = "onclick=\"alert('Owned by another user')\"";
-				}
 				
-				$html_events_string .= "<a class='event' $link $onclick>";
+				if ($userid == $_SESSION['userid'] || $_SESSION['usertype'] == 1) 
+				{
+					$html_events_string .= "<a class='XiboFormButton event' $link>";
+				}
             	$html_events_string .= date("H:i",$row[4])." - ".$name;
             }
 			$html_events_string .= "</a>";
@@ -969,7 +993,9 @@ END;
         }
 
         $num_rows = $db->num_rows($result);
-        if ($num_rows > 3) {
+		
+        if ($num_rows > 3) 
+		{
         	$num_rows = $num_rows - 3;	
         
         	$html_events_string .= "+$num_rows More";
@@ -1008,18 +1034,20 @@ END;
 		
 		if ($dropdowns) 
 		{
-		
 			/* Days */
 			$return.= "<select class='date' name=".$d_name.">";
-	        for ($i = 1; $i <= 31; $i++) {
+	        for ($i = 1; $i <= 31; $i++) 
+			{
 	        	
 	        	$value = $i;
 	        	if ($value < 10) $value = "0$value";
 	        		
-	        	if ($i == $d) {
+	        	if ($i == $d) 
+				{
 	        		$return.= "<option value=$i selected>$value</option>";
 	        	}
-	        	else {
+	        	else 
+				{
 	        		$return.= "<option value=$i>$value</option>";
 	        	}
 	        }
@@ -1027,15 +1055,18 @@ END;
 			
 			/* Months */
 			$return.= "<select class='date' name=".$m_name.">";
-	        for ($i = 1; $i <= 12; $i++) {
+	        for ($i = 1; $i <= 12; $i++) 
+			{
 	        	
 	        	$value = $i;
 	        	if ($value < 10) $value = "0$value";
 	        		
-	        	if ($i == $m) {
+	        	if ($i == $m) 
+				{
 	        		$return.= "<option value=$i selected>$value</option>";
 	        	}
-	        	else {
+	        	else 
+				{
 	        		$return.= "<option value=$i>$value</option>";
 	        	}
 	        }
@@ -1044,12 +1075,14 @@ END;
 	        /* Years */
 			$return.= "<select class='date' name=".$y_name.">";
 			$count = 1; $i = $y;
-	        while ($count < 3) {
-
-	        	if ($i == $y) {
+	        while ($count < 3) 
+			{
+	        	if ($i == $y) 
+				{
 	        		$return.= "<option value=$i selected>$i</option>";
 	        	}
-	        	else {
+	        	else 
+				{
 	        		$return.= "<option value=$i>$i</option>";
 	        	}
 	        	
@@ -1072,25 +1105,27 @@ END;
         return $return;
     }
     
-    function add() {
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
+    function add() 
+	{
+		$db 					=& $this->db;
+		$response				= new ResponseManager();
 
 		$userid 				= $_SESSION['userid'];
 		$layoutid				= clean_input($_POST['layoutid'], VAR_FOR_SQL, $db);
 		$_SESSION['layoutid']	= $layoutid; //set the session to default layout forms to this layout
 		
 		//Validate layout
-		if ($layoutid == "") {
-			$arh->decode_response(false,"No layout selected");
+		if ($layoutid == "") 
+		{
+			trigger_error("No layout selected", E_USER_ERROR);
 		}
 		
 		//check that at least one display has been selected
-		if (!isset($_POST['displayids'])) {
-			$arh->decode_response(false,"No display selected");
+		if (!isset($_POST['displayids'])) 
+		{
+			trigger_error("No display selected", E_USER_ERROR);
 		}
+		
 		$displayid_array = $_POST['displayids'];
 		
 		//get the dates and times
@@ -1109,11 +1144,13 @@ END;
 		$endtime = date("Y-m-d H:i:s", $endtime_timestamp);
 		
 		//validate the dates
-		if ($endtime_timestamp < $starttime_timestamp) {
-			$arh->decode_response(false, "Can not have an end time earlier than your start time");	
+		if ($endtime_timestamp < $starttime_timestamp) 
+		{
+			trigger_error('Can not have an end time earlier than your start time', E_USER_ERROR);	
 		}
-		if ($starttime_timestamp < (time()- 86400)) {
-			$arh->decode_response(false, "$starttime is in the past. <br/>Can not schedule events in the past");
+		if ($starttime_timestamp < (time()- 86400)) 
+		{
+			trigger_error("$starttime is in the past. <br/>Can not schedule events in the past", E_USER_ERROR);
 		}
 		
 		//
@@ -1135,18 +1172,21 @@ END;
 		$count 			= count($displayid_array); //count how many there are for the message
 		
 		//if there is no recurrence then NULL those fields for this insert
-		if ($rec_type == "null") {
+		if ($rec_type == "null")
+		{
 			$SQL = "INSERT INTO schedule (layoutid, displayID_list, start, end, userID, is_priority) ";
 			$SQL .= " VALUES ($layoutid, '$displayid_list', '$starttime', '$endtime', $userid, 0) ";
 		}
-		else {
+		else 
+		{
 			$SQL = "INSERT INTO schedule (layoutid, displayID_list, start, end, userID, is_priority, recurrence_type, recurrence_detail, recurrence_range) ";
 			$SQL .= " VALUES ($layoutid, '$displayid_list', '$starttime', '$endtime', $userid, 0, '$rec_type', '$rec_detail', '$rec_range') ";
 		}
 		
-		if (!$eventid = $db->insert_query($SQL)) {
-			trigger_error("Cant insert into the schedule" . $db->error());
-			$arh->decode_response(false,"Cant insert into the schedule");
+		if (!$eventid = $db->insert_query($SQL)) 
+		{
+			trigger_error($db->error());
+			trigger_error("Cant insert into the schedule", E_USER_ERROR);
 		}
 		
 		//
@@ -1154,28 +1194,27 @@ END;
 		//
 		$this->setlayoutDisplayRecords($eventid);
 		
-		//we are done
-		$arh->response(AJAX_SUCCESS_REFRESH,"The layout has been assigned on $count displays at ".$starttime);
-
-		return false;
+		$response->SetFormSubmitResponse("The layout has been assigned on $count displays at ".$starttime);
+		$response->refresh = true;
+		$response->Respond();
 	}
 	
-	function edit() {
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
+	function edit() 
+	{
+		$db 					=& $this->db;
+		$response				= new ResponseManager();
 		
 		$userid 				= $_SESSION['userid'];
 		
 		//check that at least one display has been selected
-		if (!isset($_POST['displayids'])) {
-			$arh->decode_response(false,"No display selected");
+		if (!isset($_POST['displayids'])) 
+		{
+			$arh->decode_response(false,"No display selected", E_USER_ERROR);
 		}
-		$displayid_array	= $_POST['displayids'];
 		
-		$schedule_detailid	= clean_input($_POST['schedule_detailid'], VAR_FOR_SQL, $db);
-		$layoutid			= clean_input($_POST['layoutid'], VAR_FOR_SQL, $db);
+		$displayid_array	= $_POST['displayids'];
+		$schedule_detailid	= Kit::GetParam('schedule_detailid', _POST, _INT);
+		$layoutid			= Kit::GetParam('layoutid', _POST, _INT);
 
 		//
 		// Get the link update setting, this is quite important as it effects how we edit the event
@@ -1183,13 +1222,15 @@ END;
 		$linkupdate			= $_REQUEST['linkupdate']; //this is either all or single
 		
 		$is_priority = 0;
-		if (isset($_POST['is_priority'])) {
+		if (isset($_POST['is_priority'])) 
+		{
 			$is_priority = 1;
 		}
 		
 		//Validation
-		if ($layoutid == "") {
-			$arh->decode_response(false,"No layout selected");
+		if ($layoutid == "") 
+		{
+			trigger_error("No layout selected", E_USER_ERROR);
 		}
 		
 		$_SESSION['layoutid'] = $layoutid;
@@ -1210,8 +1251,9 @@ END;
 		$endtime = date("Y-m-d H:i:s", $endtime_timestamp);
 		
 		//Validation
-		if ($endtime_timestamp < $starttime_timestamp) {
-			$arh->decode_response(false,"Can not have an end time earlier than your start time");	
+		if ($endtime_timestamp < $starttime_timestamp) 
+		{
+			trigger_error("Can not have an end time earlier than your start time");	
 		}
 		
 		//we only want to check this if the starttime has been edited
@@ -1222,8 +1264,9 @@ END;
 		$original_start 	= $row[0];
 		$pd_displayid 		= $row[1];
 		
-		if ($starttime_timestamp < (time()- 86400) && $original_start != $starttime_timestamp) {
-			$arh->decode_response(false,"Can not schedule events in the past");
+		if ($starttime_timestamp < (time()- 86400) && $original_start != $starttime_timestamp) 
+		{
+			trigger_error("Can not schedule events in the past", E_USER_ERROR);
 		}
 		
 		//
@@ -1233,8 +1276,9 @@ END;
 		$SQL .= " FROM schedule_detail INNER JOIN schedule ON schedule.eventID = schedule_detail.eventID ";
 		$SQL .= " WHERE schedule_detailid = $schedule_detailid ";
 		
-		if(!$res_dups = $db->query($SQL)) {
-			$arh->decode_response(false,"Can not get duplicate events");			
+		if(!$res_dups = $db->query($SQL)) 
+		{
+			trigger_error("Can not get duplicate events", E_USER_ERROR);			
 		}
 		
 		$row = $db->get_row($res_dups);
@@ -1266,13 +1310,17 @@ END;
 		
 		
 		// If the starttime from the layoutdisplay is the same as the start time for this schedule
-		if ($original_start != $t_schedule_start || $linkupdate == "single") {
+		if ($original_start != $t_schedule_start || $linkupdate == "single") 
+		{
 			//we split the record
-			if ($linkupdate == "single") {
+			if ($linkupdate == "single") 
+			{
 				//we want to update the schedule record, but remove this display from the list
 				//remove $displayid from $displayid_list
-				foreach($displayid_list as $displayid_orig) {
-					if ($pd_displayid != $displayid_orig) {
+				foreach($displayid_list as $displayid_orig) 
+				{
+					if ($pd_displayid != $displayid_orig) 
+					{
 						$displayid_list_new[] = $displayid_orig;
 					}
 				}
@@ -1280,16 +1328,18 @@ END;
 				//make a new list from the altered array
 				$displayid_list_new = implode(",", $displayid_list_new);
 			}
-			else {
+			else 
+			{
 				$pd_displayid = $displayid_list;
 			}
 			
 			$SQL = "INSERT INTO schedule (layoutID, displayID_list, start, end, userID, is_priority, recurrence_type, recurrence_detail, recurrence_range) ";
 			$SQL .= " VALUES ($layoutid, '$pd_displayid', '$starttime', '$endtime', $userid, $is_priority, '$rec_type', '$rec_detail', '$rec_range') ";
 			
-			if (!$eventid = $db->insert_query($SQL)) {
-				trigger_error("Cant insert into the schedule" . $db->error());
-				$arh->decode_response(false,"Cant insert into the schedule");
+			if (!$eventid = $db->insert_query($SQL)) 
+			{
+				trigger_error($db->error());
+				trigger_error("Cant insert into the schedule", E_USER_ERROR);
 			}
 			
 			//
@@ -1297,11 +1347,13 @@ END;
 			//
 			$this->setlayoutDisplayRecords($eventid);
 			
-			if ($linkupdate == "single") {
+			if ($linkupdate == "single") 
+			{
 				//update the old record with the new display list
 				$displayid_list == $displayid_list_new;
 			}
-			if ($original_start != $t_schedule_start) {
+			if ($original_start != $t_schedule_start) 
+			{
 				//update the old record with the range of this records start date and the orignial start and end times
 				$rec_range = $starttime;
 				$starttime = $schedule_start;
@@ -1312,17 +1364,20 @@ END;
 		//we should be all set to update the original record now
 		$SQL = " UPDATE schedule SET start = '$starttime', end = '$endtime', displayID_list = '$displayid_list', layoutID = $layoutid, ";
 		$SQL .= " is_priority = $is_priority, ";
-		if ($rec_type == "null") {
+		if ($rec_type == "null") 
+		{
 			$SQL .= " recurrence_type = NULL, recurrence_detail = NULL, recurrence_range = NULL";
 		}
-		else {
+		else 
+		{
 			$SQL .= " recurrence_type = '$rec_type', recurrence_detail = '$rec_detail', recurrence_range = '$rec_range'";
 		}
 		$SQL .= " WHERE eventID = $linked_event_id ";			
 		
-		if (!$db->query($SQL)) {
-			trigger_error("Cant Update into the schedule" . $db->error());
-			$arh->decode_response(false,"Cant update the schedule");
+		if (!$db->query($SQL)) 
+		{
+			trigger_error($db->error());
+			trigger_error("Cant update the schedule", E_USER_ERROR);
 		}
 		
 		//
@@ -1330,18 +1385,22 @@ END;
 		//
 		$this->setlayoutDisplayRecords($linked_event_id);
 				
-		$arh->response(AJAX_SUCCESS_REFRESH,"The Event has been edited.");
-		return false;
+		$response->SetFormSubmitResponse('The Event has been edited.');
+		$response->refresh = true;
+		$response->Respond();
 	}
 
-	function remove() {
-		$db =& $this->db;
-		
-		//ajax request handler
-		$arh = new ResponseManager();
+	/**
+	 * Removes an event
+	 * @return 
+	 */
+	function remove() 
+	{
+		$db 				=& $this->db;
+		$response			= new ResponseManager();
 
-		$displayid			= clean_input($_REQUEST['displayid'], VAR_FOR_SQL, $db);
-		$schedule_detailid	= clean_input($_REQUEST['schedule_detailid'], VAR_FOR_SQL, $db);
+		$schedule_detailid	= Kit::GetParam('schedule_detailid', _POST, _INT);
+		$displayid			= Kit::GetParam('displayid', _POST, _INT);
 		
 		$linkupdate			= $_REQUEST['linkupdate']; //this is either all or single
 		
@@ -1349,8 +1408,10 @@ END;
 		$SQL =  "SELECT schedule_detail.eventID, displayID_list FROM schedule_detail INNER JOIN schedule ON schedule_detail.eventID = schedule.eventID ";
 		$SQL .= "WHERE schedule_detailid = $schedule_detailid ";
 		
-		if(!$res_dups = $db->query($SQL)) {
-			$arh->decode_response(false,"Can not get duplicate events");			
+		if(!$res_dups = $db->query($SQL)) 
+		{
+			trigger_error($db->error());
+			trigger_error("Can not get duplicate events", E_USER_ERROR);			
 		}
 		
 		$row = $db->get_row($res_dups);
@@ -1358,21 +1419,23 @@ END;
 		$linked_event_id = $row[0]; //the event id to update with
 		$displayid_list	 = explode(",",$row[1]);
 		
-		switch ($linkupdate) {
-			
+		switch ($linkupdate) 
+		{
 			case "all":
 				//we want to delete all the layout display records with the linked_events of $linked_event_id
 				$SQL = "DELETE FROM schedule_detail WHERE eventID = $linked_event_id ";
-				if (!$db->query($SQL)) {
-					trigger_error("Error removing all layout display records. " .$db->error());
-					$arh->decode_response(false, "Error removing this event");
+				if (!$db->query($SQL)) 
+				{
+					trigger_error($db->error());
+					trigger_error("Error removing this event", E_USER_ERROR);
 				}
 				
 				//and then we want to delete the schedule record itself
 				$SQL = "DELETE FROM schedule WHERE eventID = $linked_event_id ";
-				if (!$db->query($SQL)) {
-					trigger_error("Error removing one schedule record. " .$db->error());
-					$arh->decode_response(false, "Error removing this event");
+				if (!$db->query($SQL)) 
+				{
+					trigger_error($db->error());
+					trigger_error("Error removing this event", E_USER_ERROR);
 				}
 				
 				break;
@@ -1380,8 +1443,10 @@ END;
 			case "single":
 				//we want to update the schedule record, but remove this display from the list
 				//remove $displayid from $displayid_list
-				foreach($displayid_list as $displayid_orig) {
-					if ($displayid != $displayid_orig) {
+				foreach($displayid_list as $displayid_orig) 
+				{
+					if ($displayid != $displayid_orig) 
+					{
 						$displayid_list_new[] = $displayid_orig;
 					}
 				}
@@ -1393,27 +1458,30 @@ END;
 				
 				//run the update
 				$SQL = "UPDATE schedule SET displayID_list = '$displayid_list_new' WHERE eventID = $linked_event_id ";
-				if (!$db->query($SQL)) {
-					trigger_error("Error updating one schedule record. " .$db->error());
-					$arh->decode_response(false, "Error removing this event");
+				if (!$db->query($SQL)) 
+				{
+					trigger_error($db->error());
+					trigger_error("Error removing this event", E_USER_ERROR);
 				}
 				
 				//then delete the layoutdisplay record with this schedule_detailid
 				$SQL = "DELETE FROM schedule_detail WHERE schedule_detailid = $schedule_detailid ";
-				if (!$db->query($SQL)) {
-					trigger_error("Error removing one layout display record. " .$db->error());
-					$arh->decode_response(false, "Error removing this event");
+				if (!$db->query($SQL)) 
+				{
+					trigger_error($db->error());
+					trigger_error("Error removing this event", E_USER_ERROR);
 				}
 			
 				break;
 		}
 
-		$arh->response(AJAX_SUCCESS_REFRESH,"The event has been Removed.");
-
-		return false;
+		$response->SetFormSubmitResponse('The Event has been removed.');
+		$response->refresh = true;
+		$response->Respond();
 	}
 	
-	function setlayoutDisplayRecords($eventid) {
+	function setlayoutDisplayRecords($eventid) 
+	{
 		$db =& $this->db;
 		
 		//run a query to get info about this particular event
@@ -1431,7 +1499,8 @@ END;
 		WHERE eventID = $eventid
 END;
 
-		if (!$results = $db->query($SQL)) {
+		if (!$results = $db->query($SQL)) 
+		{
 			trigger_error($db->error());
 			trigger_error("Cant get Event Information", E_USER_ERROR);
 		}
@@ -1456,7 +1525,8 @@ END;
 		$db->query($SQL) or trigger_error($db->error(),E_USER_ERROR);
 
 		//we now need to deal with inserting the schedule_detail records, one for each display / recurrence
-		foreach ($displayid_array as $displayid) {
+		foreach ($displayid_array as $displayid) 
+		{
 
 			//we have no recurrence and therefore set the dates and enter one schedule_detail per display
 			$start 	= date("Y-m-d H:i:s", $t_start);
@@ -1468,15 +1538,18 @@ END;
 
 			$db->query($sql) or trigger_error($db->error(),E_USER_ERROR);
 				
-			if ($rec_type != "") {
+			if ($rec_type != "") 
+			{
 				//set the temp starts
 				$t_start_temp 	= $t_start;
 				$t_end_temp 	= $t_end;
 				
 				//loop until we have added the recurring events for the schedule
-				while ($t_start_temp < $t_rec_range) {
+				while ($t_start_temp < $t_rec_range) 
+				{
 					//add the appropriate time to the start and end
-					switch ($rec_type) {
+					switch ($rec_type) 
+					{
 						case 'Hour':
 							$t_start_temp = mktime(date("H", $t_start_temp)+$rec_detail, date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp) ,date("d", $t_start_temp), date("Y", $t_start_temp));
 							$t_end_temp = mktime(date("H", $t_end_temp)+$rec_detail, date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp) ,date("d", $t_end_temp), date("Y", $t_end_temp));
@@ -1504,7 +1577,8 @@ END;
 					}
 					
 					//after we have added the appropriate amount, are we still valid
-					if ($t_start_temp > $t_rec_range) {
+					if ($t_start_temp > $t_rec_range) 
+					{
 						break;
 					}
 					
@@ -1613,7 +1687,8 @@ END;
 		return true;
 	}
 	
-	function getDisplaysForEvent($eventid) {
+	function getDisplaysForEvent($eventid) 
+	{
 		$db =& $this->db;
 		
 		//we need to get all the displayid's that are assigned to this linked event
@@ -1621,11 +1696,13 @@ END;
 			SELECT DISTINCT displayID FROM schedule_detail WHERE eventID = $eventid
 SQL;
 		//get all the displays ids that are for this linked event
-		if (!$result = $db->query($SQL)) {
+		if (!$result = $db->query($SQL)) 
+		{
 			trigger_error("Can not get the displays from the database.", E_USER_ERROR);
 		}
 		
-		while ($row = $db->get_row($result)) {
+		while ($row = $db->get_row($result)) 
+		{
 			//make a comma seperated list of display ids
 			$linked_displayids[] = $row[0];
 		}

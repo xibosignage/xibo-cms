@@ -169,7 +169,7 @@ function exec_filter_callback() {
     //nothing in there, there is no filter
 }
 
-function init_callback() {
+function setupScheduleForm() {
     //set up any date fields we have with the date picker
     $('.date-pick').datepicker({
 		dateFormat: "dd/mm/yy",
@@ -179,16 +179,10 @@ function init_callback() {
 		beforeShow: customRange
 	});
 
-	/*if ( $('.date-pick').size() != 0 ) {
-		$('#starttime').datepicker("setDate", $('#starttime').fieldValue()[0]);
-		$('#endtime').datepicker("setDate", $('#endtime').fieldValue()[0]);		
-		$('#rec_range').datepicker("setDate", $('#rec_range').fieldValue()[0]);		
-	}*/
-
-	ctlRec();
+	bindRecurrenceCtl();
 	
 	$('#rec_type').change(function() {
-		ctlRec();
+		bindRecurrenceCtl();
 	});
 }
 
@@ -197,7 +191,8 @@ function customRange(input) {
         maxDate: (input.id == "starttime" ? $("#endtime").datepicker("getDate") : null)}; 
 } 
 
-function ctlRec() {
+function bindRecurrenceCtl() 
+{
 	/*
 	 * Recurrence
 	 * 	If the recurrence type value is NULL then hide the rec_detail and rec_range fields
