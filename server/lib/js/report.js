@@ -17,13 +17,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-var exec_filter_callback = function(outputDiv) {
-	
-	exec_filter('filter_form','data_table');
-	
-	return false;
-}
-
 $(document).ready(function() {
 	
 	$('.date-pick').datepicker({
@@ -31,23 +24,6 @@ $(document).ready(function() {
 		showOn: "button", 
     	buttonImage: "img/calendar.png", 
     	buttonImageOnly: true
-	});
-	
-});
-
-$(document).ready(function() {
-	
-	exec_filter('filter_form','data_table'); //exec the filter onload
-	
-	//init the filter bind
-	$(' :input','#filter_form').change(function(){
-		
-		exec_filter('filter_form','data_table');
-	});
-	
-	//make sure the form doesnt get submitted using the traditional method
-	$('#filter_form').submit(function(){
-		return false;
 	});
 	
 });

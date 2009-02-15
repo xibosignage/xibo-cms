@@ -35,7 +35,11 @@ class Config {
 		$SQL = "";
 		$SQL.= sprintf("SELECT value FROM setting WHERE setting='%s'", $setting);
 		
-		if(!$results = $db->query($SQL, true)) trigger_error($db->error(),E_USER_ERROR);
+		if(!$results = $db->query($SQL, true))
+		{
+			trigger_error($db->error());
+			trigger_error('Unable to get setting: ' . $setting, E_USER_WARNING);			
+		} 
 		
 		if($db->num_rows($results)==0) 
 		{
@@ -58,7 +62,7 @@ class Config {
 	{
 		if (!$results = $db->query("SELECT app_ver, XlfVersion, XmdsVersion FROM version")) 
 		{
-			trigger_error("No Version information - please contact Xibo support", E_USER_ERROR);
+			trigger_error("No Version information - please contact Xibo support", E_USER_WARNING);
 		}
 		
 		$row 		= $db->get_assoc_row($results);

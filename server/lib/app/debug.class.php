@@ -93,6 +93,7 @@ class Debug
 				// For now we treat this like a halt error? Or do we just try and output some javascript to pop up an error
 				// surely the javascript idea wont work in ajax?
 				// or prehaps we add this to the session errormessage so we see it at a later date?
+				echo $errmsg;
 			}
 		}
 		
