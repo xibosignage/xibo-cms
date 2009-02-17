@@ -69,8 +69,14 @@ if (get_magic_quotes_gpc())
  */
 if (!file_exists("settings.php")) 
 {
-	include("template/pages/no_settings_error.php");
+	include("install.php");
 	die();
+}
+
+if (file_exists("upgrade.php"))
+{
+        include("upgrade.php");
+        die();
 }
 
 // parse and init the settings.php

@@ -25,10 +25,3 @@ global $dbuser;
 global $dbpass;
 global $dbname;
 
-$dbhost = 'localhost';
-$dbuser = 'xibo';
-$dbpass = 'xibo';
-$dbname = 'xibo_0';
-
-define('SECRET_KEY','624d6f5sd265');
-?>
