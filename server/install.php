@@ -224,7 +224,7 @@ elseif ($_POST['xibo_step'] == 5) {
         reportError("3", "Could not connect to MySQL with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
       }
       
-      if (! @mysql_create_db($db_name, $db)) {
+      if (! @mysql_query("CREATE DATABASE " . $db_name, $db)) {
         # Create database and user
         reportError("3", "Could not create a new database with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
       }
@@ -232,10 +232,11 @@ elseif ($_POST['xibo_step'] == 5) {
       # Choose the MySQL DB to create a user
       @mysql_select_db("mysql", $db);
       
-      if (! @mysql_query("GRANT ALL PRIVILEGES ON " . $db_name . " to '" . $db_user . "'@'%' IDENTIFIED BY '" . $db_pass . "'", $db)) {
+      if (! @mysql_query("GRANT ALL PRIVILEGES ON " . $db_name . ".* to '" . $db_user . "'@'%' IDENTIFIED BY '" . $db_pass . "'", $db)) {
         reportError("3", "Could not create a new user with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
       }
-      
+
+      @mysql_query("FLUSH PRIVILEGES", $db);      
       @mysql_close($db);
       
     }
@@ -257,6 +258,7 @@ elseif ($_POST['xibo_step'] == 5) {
     @mysql_select_db($db_name,$db);
     
     # Load from sql files to db - HOW? //TODO
+    @mysql_close($db);
   }
 }
 # Setup xibo_admin password
