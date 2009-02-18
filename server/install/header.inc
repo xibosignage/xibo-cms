@@ -2,7 +2,7 @@
 <head>
 	<title>Xibo Admin - Installation</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-	<link rel="stylesheet" type="text/css" href="template/css/login_box.css" />
+	<link rel="stylesheet" type="text/css" href="install/install.css" />
 	
 	<link rel="shortcut icon" href="img/favicon.ico" />
 	
@@ -22,14 +22,15 @@
 
 	<div id="content">
 
-		<div class="login_box">
+		<div class="install_box">
 			
-			<div class="login_header">
-				<div class="login_header_left">
+			<div class="install_header">
+				<div class="install_header_left">
 				</div>
 
-				<div class="login_header_right">
+				<div class="install_header_right">
 				</div>
 			</div>
-			
-			<div class="login_body">
+			<div class="install_body">
+			<h1>Xibo Installer</h1>			
+

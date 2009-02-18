@@ -21,7 +21,7 @@
 
 include('install/header.inc');
 
-if (!isset($_POST['xibo_step'])) {
+if (!isset($_POST['xibo_step']) || $_POST['xibo_step'] == 0) {
   # First step of the process.
   # Show a welcome screen and next button
   ?>
@@ -35,24 +35,66 @@ if (!isset($_POST['xibo_step'])) {
   <?php
 }
 elseif ($_POST['xibo_step'] == 1) {
-# Check environment
-}
+  # Check environment
+  ?>
+  <p>First we need to check if your server meets Xibo's requirements.</p>
+  <div class="checks">
+  <?php
 ## Filesystem Permissions
-
+    if (checkFsPermissions()) {
+    ?>
+      <img src="install/dot_green.gif"> Filesystem Permissions<br />
+    <?php
+    }
+    else {
+    ?>
+      <img src="install/dot_red.gif"> Filesystem Permissions</br>
+      <span class="check_explain">
+      Xibo needs to be able to write to the following
+      <ul>
+        <li> settings.php
+        <li> install.php
+      </ul>
+      Please fix this, and retest.<br />
+      </span>
+    <?php
+    }
+## PHP5
+    if (checkPHP()) {
+    ?>
+      <img src="install/dot_green.gif"> PHP Version<br />
+    <?php
+    }
+    else {
+    ?>
+      <img src="install/dot_red.gif"> PHP Version<br />
+      <span class="check_explain">
+      Xibo requires PHP version 5 or later.<br />
+      Please fix this, and retest.<br />
+      </span>
+    <?php
+    }
+    ?>
+    </div>
+    <form action="install.php" method="POST">
+      <input type="hidden" name="xibo_step" value="2">
+      <div class="loginbutton"><button type="submit">Next ></button></div>
+    </form>
+    <form action="install.php" method="POST">
+      <input type="hidden" name="xibo_step" value="1">
+      <div class="loginbutton"><button type="submit">Retest</button></div>
+    </form>
+    <?php
 ## PHP 5
-
 ## MYSQL
-
 ## JSON
- 
+}
+elseif ($_POST['xibo_step'] == 2) {
 # Create database
-
 ## Does database exist already?
-
 ## If not, gather admin password and use to create empty db and new user.
-
 ## Populate database
-
+}
 # Setup xibo_admin password
 
 # Configure paths and keys
@@ -70,5 +112,17 @@ elseif ($_POST['xibo_step'] == 1) {
 # Redirect to login page.
  
 include('install/footer.inc');
+
+# Functions
+
+function checkFsPermissions() {
+  # Check for appropriate filesystem permissions
+  return 0;
+}
+
+function checkPHP() {
+  # Check PHP version > 5
+  return (version_compare("5",phpversion(), "<="));
+}
  
 ?>

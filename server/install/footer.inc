@@ -3,10 +3,10 @@
 			</div>
 
 			
-			<div class="login_foot">
-				<div class="login_foot_left">
+			<div class="install_foot">
+				<div class="install_foot_left">
 				</div>
-				<div class="login_foot_right">
+				<div class="install_foot_right">
 				</div>
 			</div>
 		</div>
