@@ -134,8 +134,130 @@ elseif ($_POST['xibo_step'] == 1) {
 elseif ($_POST['xibo_step'] == 2) {
 # Create database
 ## Does database exist already?
+
+  ?>
+  <div class="info">
+    <p>Xibo needs to setup a new database.</p>
+    <p>If you have not yet created an empty database and database user for
+    Xibo to use, and know the username/password of a MySQL administrator,
+    click the "Create New" button, otherwise click "Use Existing".</p>
+    <p><i>Note that any existing database must be empty</i></p>
+  </div>
+  <form action="install.php" method="POST">
+    <input type="hidden" name="xibo_step" value="3">
+    <button type="submit">Create New</button>
+  </form>
+  <form action="install.php" method="POST">
+    <input type="hidden" name="xibo_step" value="4">
+    <button type="submit">Use Existing</button>
+  </form>
+  <?php
+}
+elseif ($_POST['xibo_step'] == 3) {
 ## If not, gather admin password and use to create empty db and new user.
-## Populate database
+?>
+<div class="info">
+<p>Since no empty database has been created for Xibo to use, we need the username
+and password of a MySQL administrator to create a new database, and database
+user for Xibo.</p>
+<p>Additionally, please give us a new username and password to create in MySQL
+for Xibo to use. Xibo will create this automatically for you.</p>
+<form action="install.php" method="POST">
+<input type="hidden" name="xibo_step" value="5">
+<input type="hidden" name="db_create" value="true">
+<div class="install_table">
+  <p><label for="host">Host: </label><input class="username" type="text" id="host" name="host" size="12" value="localhost" /></p>
+  <p><label for="admin_username">Admin Username: </label><input class="username" type="text" id="admin_username" name="admin_username" size="12" /></p>
+  <p><label for="admin_password">Admin Password: </label><input class="username" type="password" id="admin_password" name="admin_password" size="12" /></p>
+  <p><label for="db_name">Xibo Database Name: </label><input class="username" type="text" id="db_name" name="db_name" size="12" value="xibo" /></p>
+  <p><label for="db_username">Xibo Database Username: </label><input class="username" type="text" id="db_username" name="db_username" size="12" value="xibo" /></p>
+  <p><label for="db_password">Xibo Database Password: </label><input class="username" type="password" id="db_password" name="db_password" size="12" /></p>
+</div>
+</div>
+<button type="submit">Create</button>
+</form>
+<?php
+}
+elseif ($_POST['xibo_step'] == 4) {
+## Get details of db that's been created already for us
+?>
+<div class="info">
+<p>Please enter the details of the database and user you have
+created for Xibo.</p>
+<form action="install.php" method="POST">
+<input type="hidden" name="xibo_step" value="5">
+<input type="hidden" name="db_create" value="false">
+<div class="install_table">
+  <p><label for="host">Host: </label><input class="username" type="text" id="host" name="host" size="12" value="localhost" /></p>
+  <p><label for="db_name">Xibo Database Name: </label><input class="username" type="text" id="db_name" name="db_name" size="12" value="xibo" /></p>
+  <p><label for="db_username">Xibo Database Username: </label><input class="username" type="text" id="db_username" name="db_username" size="12" value="xibo" /></p>
+  <p><label for="db_password">Xibo Database Password: </label><input class="username" type="password" id="db_password" name="db_password" size="12" /></p>
+</div>
+</div>
+<button type="submit">Create</button>
+</form>
+<?php
+}
+elseif ($_POST['xibo_step'] == 5) {
+  if (!isset($_POST['db_create'])) {
+    reportError("2","Something went wrong");
+  }
+  else {
+    $db_host = $_POST['host'];
+    $db_user = $_POST['db_username'];
+    $db_pass = $_POST['db_password'];
+    $db_name = $_POST['db_name'];
+    
+    if ($_POST['db_create'] == "true") {  
+      $db_admin_user = $_POST['admin_username'];
+      $db_admin_pass = $_POST['admin_password'];
+      
+      if (! ($db_host && $db_name && $db_user && $db_pass && $db_admin_user && $db_admin_pass)) {
+        # Something was blank.
+        # Throw an error.
+        reportError("3", "A field was blank. Please fill in all fields.");
+      }
+      
+      $db = @mysql_connect($db_host,$db_admin_user,$db_admin_pass);
+      
+      if (! $db) {
+        reportError("3", "Could not connect to MySQL with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+      }
+      
+      if (! @mysql_create_db($db_name, $db)) {
+        # Create database and user
+        reportError("3", "Could not create a new database with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+      }
+      
+      # Choose the MySQL DB to create a user
+      @mysql_select_db("mysql", $db);
+      
+      if (! @mysql_query("GRANT ALL PRIVILEGES ON " . $db_name . " to '" . $db_user . "'@'%' IDENTIFIED BY '" . $db_pass . "'", $db)) {
+        reportError("3", "Could not create a new user with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+      }
+      
+      @mysql_close($db);
+      
+    }
+    else {
+      if (! ($db_host && $db_name && $db_user && $db_pass)) {
+        # Something was blank
+        # Throw an error.
+        reportError("4", "A field was blank. Please fill in all fields.");
+      }
+    }
+    ## Populate database
+    
+    $db = @mysql_connect($db_host,$db_user,$db_pass);
+      
+    if (! $db) {
+      reportError("4", "Could not connect to MySQL with the Xibo User account details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+    }
+      
+    @mysql_select_db($db_name,$db);
+    
+    # Load from sql files to db - HOW? //TODO
+  }
 }
 # Setup xibo_admin password
 
@@ -176,5 +298,19 @@ function checkJson() {
   # Check PHP has JSON module installed
   return extension_loaded("json");
 }
+ 
+function reportError($step, $message) {
+?>
+    <div class="info">
+      <?php print $message; ?>
+    </div>
+    <form action="install.php" method="POST">
+      <input type="hidden" name="xibo_step" value="<?php print $step; ?>">
+      <button type="submit">&lt; Back</button>
+    </form>
+  <?php
+  include('install/footer.inc');
+  die();
+} 
  
 ?>
