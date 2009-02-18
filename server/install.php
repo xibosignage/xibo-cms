@@ -21,6 +21,8 @@
 
 include('install/header.inc');
 
+$fault = false;
+
 if (!isset($_POST['xibo_step']) || $_POST['xibo_step'] == 0) {
   # First step of the process.
   # Show a welcome screen and next button
@@ -47,16 +49,17 @@ elseif ($_POST['xibo_step'] == 1) {
     <?php
     }
     else {
+      $fault = true;
     ?>
       <img src="install/dot_red.gif"> Filesystem Permissions</br>
-      <span class="check_explain">
+      <div class="check_explain">
       Xibo needs to be able to write to the following
       <ul>
         <li> settings.php
         <li> install.php
       </ul>
       Please fix this, and retest.<br />
-      </span>
+      </div>
     <?php
     }
 ## PHP5
@@ -66,28 +69,67 @@ elseif ($_POST['xibo_step'] == 1) {
     <?php
     }
     else {
+      $fault = true;
     ?>
       <img src="install/dot_red.gif"> PHP Version<br />
-      <span class="check_explain">
+      <div class="check_explain">
       Xibo requires PHP version 5 or later.<br />
       Please fix this, and retest.<br />
-      </span>
+      </div>
+    <?php
+    }
+## MYSQL
+  if (checkMySQL()) {
+    ?>
+      <img src="install/dot_green.gif"> PHP MySQL Extension<br />
+    <?php
+    }
+    else {
+      $fault = true;
+    ?>
+      <img src="install/dot_red.gif"> PHP MySQL Extension<br />
+      <div class="check_explain">
+      Xibo needs to access a MySQL database to function.<br />
+      Please install MySQL and the appropriate MySQL extension and retest.<br />
+      </div>
+    <?php
+    }
+## JSON
+  if (checkJson()) {
+    ?>
+      <img src="install/dot_green.gif"> PHP JSON Extension<br />
+    <?php
+    }
+    else {
+      $fault = true;
+    ?>
+      <img src="install/dot_red.gif"> PHP JSON Extension<br />
+      <div class="check_explain">
+      Xibo needs the PHP JSON extension to function.<br />
+      Please install the PHP JSON extension and retest.<br />
+      </div>
     <?php
     }
     ?>
+    <br /><br />
     </div>
-    <form action="install.php" method="POST">
-      <input type="hidden" name="xibo_step" value="2">
-      <div class="loginbutton"><button type="submit">Next ></button></div>
-    </form>
-    <form action="install.php" method="POST">
-      <input type="hidden" name="xibo_step" value="1">
-      <div class="loginbutton"><button type="submit">Retest</button></div>
-    </form>
     <?php
-## PHP 5
-## MYSQL
-## JSON
+    if ($fault) {
+    ?>
+      <form action="install.php" method="POST">
+        <input type="hidden" name="xibo_step" value="1">
+        <div class="loginbutton"><button type="submit">Retest</button></div>
+      </form>
+    <?php
+    }
+    else {
+    ?>
+      <form action="install.php" method="POST">
+        <input type="hidden" name="xibo_step" value="2">
+        <div class="loginbutton"><button type="submit">Next ></button></div>
+      </form>
+    <?php
+    }    
 }
 elseif ($_POST['xibo_step'] == 2) {
 # Create database
@@ -117,12 +159,22 @@ include('install/footer.inc');
 
 function checkFsPermissions() {
   # Check for appropriate filesystem permissions
-  return 0;
+  return (is_writable("install.php") && (is_writable("settings.php") || is_writable(".")));
 }
 
 function checkPHP() {
   # Check PHP version > 5
   return (version_compare("5",phpversion(), "<="));
+}
+
+function checkMySQL() {
+  # Check PHP has MySQL module installed
+  return extension_loaded("mysql");
+}
+
+function checkJson() {
+  # Check PHP has JSON module installed
+  return extension_loaded("json");
 }
  
 ?>
