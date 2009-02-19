@@ -215,7 +215,9 @@ elseif ($xibo_step == 5) {
     $db_user = Kit::GetParam('db_username',_POST,_USERNAME);
     $db_pass = Kit::GetParam('db_password',_POST,_PASSWORD);
     $db_name = Kit::GetParam('db_name',_POST,_USERNAME);
-    
+    ?>
+    <div class="info">
+    <?php
     if ($db_create == true) {  
       $db_admin_user = Kit::GetParam('admin_username',_POST,_USERNAME);
       $db_admin_pass = Kit::GetParam('admin_password',_POST,_PASSWORD);
@@ -340,10 +342,13 @@ elseif ($xibo_step == 5) {
   # Form to get new admin password
   ?>
   <p>Xibo needs to set the "xibo_admin" user password. Please enter a password for this account below.</p>
-  <form action="install.php" method="POST">
-    <input type="hidden" name="xibo_step" value="6">
-    <p><label for="password1">Password: </label><input type="password" name="password1" size="12"></p>
-    <p><label for="password2">Retype Password: </label><input type="password" name="password2" size="12"></p>
+  </div>
+  <div class="install_table">
+    <form action="install.php" method="POST">
+      <input type="hidden" name="xibo_step" value="6">
+      <p><label for="password1">Password: </label><input type="password" name="password1" size="12"></p>
+      <p><label for="password2">Retype Password: </label><input type="password" name="password2" size="12"></p>
+  </div>
     <button type="submit">Next ></button>
   </form>
   <?php
