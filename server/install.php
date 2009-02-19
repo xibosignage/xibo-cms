@@ -19,11 +19,16 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 
+DEFINE('XIBO', true);
+
+include('lib/app/kit.class.php');
 include('install/header.inc');
 
 $fault = false;
 
-if (!isset($_POST['xibo_step']) || $_POST['xibo_step'] == 0) {
+$xibo_step = Kit::GetParam('xibo_step',_POST,_INT,'0');
+
+if (!isset($xibo_step) || $xibo_step == 0) {
   # First step of the process.
   # Show a welcome screen and next button
   ?>
@@ -36,7 +41,7 @@ if (!isset($_POST['xibo_step']) || $_POST['xibo_step'] == 0) {
   </form>
   <?php
 }
-elseif ($_POST['xibo_step'] == 1) {
+elseif ($xibo_step == 1) {
   # Check environment
   ?>
   <p>First we need to check if your server meets Xibo's requirements.</p>
@@ -131,7 +136,7 @@ elseif ($_POST['xibo_step'] == 1) {
     <?php
     }    
 }
-elseif ($_POST['xibo_step'] == 2) {
+elseif ($xibo_step == 2) {
 # Create database
 ## Does database exist already?
 
@@ -153,7 +158,7 @@ elseif ($_POST['xibo_step'] == 2) {
   </form>
   <?php
 }
-elseif ($_POST['xibo_step'] == 3) {
+elseif ($xibo_step == 3) {
 ## If not, gather admin password and use to create empty db and new user.
 ?>
 <div class="info">
@@ -178,7 +183,7 @@ for Xibo to use. Xibo will create this automatically for you.</p>
 </form>
 <?php
 }
-elseif ($_POST['xibo_step'] == 4) {
+elseif ($xibo_step == 4) {
 ## Get details of db that's been created already for us
 ?>
 <div class="info">
@@ -198,19 +203,22 @@ created for Xibo.</p>
 </form>
 <?php
 }
-elseif ($_POST['xibo_step'] == 5) {
-  if (!isset($_POST['db_create'])) {
+elseif ($xibo_step == 5) {
+
+  $db_create = Kit::GetParam('db_create',_POST,_BOOL);
+
+  if (!isset($db_create)) {
     reportError("2","Something went wrong");
   }
   else {
-    $db_host = $_POST['host'];
-    $db_user = $_POST['db_username'];
-    $db_pass = $_POST['db_password'];
-    $db_name = $_POST['db_name'];
+    $db_host = Kit::GetParam('host',_POST,_STRING,'localhost');
+    $db_user = Kit::GetParam('db_username',_POST,_USERNAME);
+    $db_pass = Kit::GetParam('db_password',_POST,_PASSWORD);
+    $db_name = Kit::GetParam('db_name',_POST,_USERNAME);
     
-    if ($_POST['db_create'] == "true") {  
-      $db_admin_user = $_POST['admin_username'];
-      $db_admin_pass = $_POST['admin_password'];
+    if ($db_create == true) {  
+      $db_admin_user = Kit::GetParam('admin_username',_POST,_USERNAME);
+      $db_admin_pass = Kit::GetParam('admin_password',_POST,_PASSWORD);
       
       if (! ($db_host && $db_name && $db_user && $db_pass && $db_admin_user && $db_admin_pass)) {
         # Something was blank.
@@ -231,10 +239,21 @@ elseif ($_POST['xibo_step'] == 5) {
       
       # Choose the MySQL DB to create a user
       @mysql_select_db("mysql", $db);
+
+      # Make $db_host lowercase so it matches "localhost" if required.
+      $db_host = strtolower($db_host);
       
-      if (! @mysql_query("GRANT ALL PRIVILEGES ON " . $db_name . ".* to '" . $db_user . "'@'%' IDENTIFIED BY '" . $db_pass . "'", $db)) {
-        reportError("3", "Could not create a new user with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+      if ($db_host == "localhost") {
+        if (! @mysql_query("GRANT ALL PRIVILEGES ON " . $db_name . ".* to '" . $db_user . "'@'localhost' IDENTIFIED BY '" . $db_pass . "'", $db)) {
+          reportError("3", "Could not create a new user with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+        }
       }
+      else {
+        if (! @mysql_query("GRANT ALL PRIVILEGES ON " . $db_name . ".* to '" . $db_user . "'@'%' IDENTIFIED BY '" . $db_pass . "'", $db)) {
+          reportError("3", "Could not create a new user with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+        }
+      }
+      
 
       @mysql_query("FLUSH PRIVILEGES", $db);      
       @mysql_close($db);
