@@ -69,13 +69,13 @@ if (get_magic_quotes_gpc())
  */
 if (!file_exists("settings.php")) 
 {
-	include("install.php");
+	Kit::Redirect("install.php");
 	die();
 }
 
 if (file_exists("upgrade.php"))
 {
-        include("upgrade.php");
+        Kit::Redirect("upgrade.php");
         die();
 }
 
