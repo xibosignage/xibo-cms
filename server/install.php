@@ -277,6 +277,16 @@ elseif ($xibo_step == 5) {
     @mysql_select_db($db_name,$db);
     
     # Load from sql files to db - HOW? //TODO
+    $delimiter = ';';
+    $sql_file = @file_get_contents('install/database/0.sql');
+    $sql_file = remove_remarks($sql_file);
+    $sql_file = split_sql_file($sql_file, $delimiter);
+    
+    foreach ($sql_file as $sql) {
+      if (! @mysql_query($sql,$db)) {
+        reportError("4", "An error occured populating the database.<br /><br />MySQL Error:<br />" . mysql_error());
+      }
+    }
     @mysql_close($db);
   }
 }
@@ -333,5 +343,35 @@ function reportError($step, $message) {
   include('install/footer.inc');
   die();
 } 
+
+// Taken from http://forums.devshed.com/php-development-5/php-wont-load-sql-from-file-515902.html
+// By Crackster 
+/**
+ * remove_remarks will strip the sql comment lines out of an uploaded sql file
+ */
+function remove_remarks($sql){
+  $sql = preg_replace('/\n{2,}/', "\n", preg_replace('/^[-].*$/m', "\n", $sql));
+  $sql = preg_replace('/\n{2,}/', "\n", preg_replace('/^#.*$/m', "\n", $sql));
+  return $sql;
+}
+
+// Taken from http://forums.devshed.com/php-development-5/php-wont-load-sql-from-file-515902.html
+// By Crackster              
+/**
+ * split_sql_file will split an uploaded sql file into single sql statements.
+ * Note: expects trim() to have already been run on $sql.
+ */
+function split_sql_file($sql, $delimiter){
+  $sql = str_replace("\r" , '', $sql);
+  $data = preg_split('/' . preg_quote($delimiter, '/') . '$/m', $sql);
+  $data = array_map('trim', $data);
+  // The empty case
+  $end_data = end($data);
+  if (empty($end_data))
+  {
+    unset($data[key($data)]);
+  }
+  return $data;
+}
  
 ?>
