@@ -232,6 +232,11 @@ elseif ($xibo_step == 5) {
         reportError("3", "Could not connect to MySQL with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
       }
       
+      ?>
+      <p>Creating new database.</p>
+      <?php
+      flush();
+      
       if (! @mysql_query("CREATE DATABASE " . $db_name, $db)) {
         # Create database and user
         reportError("3", "Could not create a new database with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
@@ -242,6 +247,11 @@ elseif ($xibo_step == 5) {
 
       # Make $db_host lowercase so it matches "localhost" if required.
       $db_host = strtolower($db_host);
+      
+      ?>
+      <p>Creating new user</p>
+      <?php
+      flush();
       
       if ($db_host == "localhost") {
         if (! @mysql_query("GRANT ALL PRIVILEGES ON " . $db_name . ".* to '" . $db_user . "'@'localhost' IDENTIFIED BY '" . $db_pass . "'", $db)) {
@@ -276,16 +286,33 @@ elseif ($xibo_step == 5) {
       
     @mysql_select_db($db_name,$db);
     
-    # Load from sql files to db - HOW? //TODO
-    $delimiter = ';';
-    $sql_file = @file_get_contents('install/database/0.sql');
-    $sql_file = remove_remarks($sql_file);
-    $sql_file = split_sql_file($sql_file, $delimiter);
+    ?>
+    <p>Populating the database</p>
+    <?php
+    flush();
     
-    foreach ($sql_file as $sql) {
-      if (! @mysql_query($sql,$db)) {
-        reportError("4", "An error occured populating the database.<br /><br />MySQL Error:<br />" . mysql_error());
-      }
+    # Load from sql files to db - HOW?
+    $sql_files = ls('*.sql','install/database',false,array('return_files'));
+
+    foreach ($sql_files as $filename) {
+      ?>
+      <p>Loading from <?php print $filename; ?>
+      <?php
+        flush();
+        
+        $delimiter = ';';
+        $sql_file = @file_get_contents('install/database/' . $filename);
+        $sql_file = remove_remarks($sql_file);
+        $sql_file = split_sql_file($sql_file, $delimiter);
+    
+        foreach ($sql_file as $sql) {
+          print ".";
+          flush();
+          if (! @mysql_query($sql,$db)) {
+            reportError("4", "An error occured populating the database.<br /><br />MySQL Error:<br />" . mysql_error());
+          }
+        }
+        print "</p>";
     }
     @mysql_close($db);
   }
@@ -374,4 +401,66 @@ function split_sql_file($sql, $delimiter){
   return $data;
 }
  
+/**
+ * This funtion will take a pattern and a folder as the argument and go thru it(recursivly if needed)and return the list of 
+ *               all files in that folder.
+ * Link             : http://www.bin-co.com/php/scripts/filesystem/ls/
+ * License	: BSD
+ * Arguments     :  $pattern - The pattern to look out for [OPTIONAL]
+ *                    $folder - The path of the directory of which's directory list you want [OPTIONAL]
+ *                    $recursivly - The funtion will traverse the folder tree recursivly if this is true. Defaults to false. [OPTIONAL]
+ *                    $options - An array of values 'return_files' or 'return_folders' or both
+ * Returns       : A flat list with the path of all the files(no folders) that matches the condition given.
+ */
+function ls($pattern="*", $folder="", $recursivly=false, $options=array('return_files','return_folders')) {
+    if($folder) {
+        $current_folder = realpath('.');
+        if(in_array('quiet', $options)) { // If quiet is on, we will suppress the 'no such folder' error
+            if(!file_exists($folder)) return array();
+        }
+        
+        if(!chdir($folder)) return array();
+    }
+    
+    
+    $get_files    = in_array('return_files', $options);
+    $get_folders= in_array('return_folders', $options);
+    $both = array();
+    $folders = array();
+    
+    // Get the all files and folders in the given directory.
+    if($get_files) $both = glob($pattern, GLOB_BRACE + GLOB_MARK);
+    if($recursivly or $get_folders) $folders = glob("*", GLOB_ONLYDIR + GLOB_MARK);
+    
+    //If a pattern is specified, make sure even the folders match that pattern.
+    $matching_folders = array();
+    if($pattern !== '*') $matching_folders = glob($pattern, GLOB_ONLYDIR + GLOB_MARK);
+    
+    //Get just the files by removing the folders from the list of all files.
+    $all = array_values(array_diff($both,$folders));
+        
+    if($recursivly or $get_folders) {
+        foreach ($folders as $this_folder) {
+            if($get_folders) {
+                //If a pattern is specified, make sure even the folders match that pattern.
+                if($pattern !== '*') {
+                    if(in_array($this_folder, $matching_folders)) array_push($all, $this_folder);
+                }
+                else array_push($all, $this_folder);
+            }
+            
+            if($recursivly) {
+                // Continue calling this function for all the folders
+                $deep_items = ls($pattern, $this_folder, $recursivly, $options); # :RECURSION:
+                foreach ($deep_items as $item) {
+                    array_push($all, $this_folder . $item);
+                }
+            }
+        }
+    }
+    
+    if($folder) chdir($current_folder);
+    return $all;
+}
+
 ?>
