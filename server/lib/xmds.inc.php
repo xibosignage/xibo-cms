@@ -56,13 +56,13 @@ if (!file_exists("settings.php") {
   // Xibo has not been configured. Just quit since we can't
   // raise a SOAP error because we don't know where
   // nuSOAP is yet.
-  die();
+  die("Not configured. Visit " . Kit::GetURL() . " to configure.");
 }
 
 if (file_exists("upgrade.php") {
   // An upgrade is in progress. Just quit since the server
   // won't be in a servicable state
-  die();
+  die("An upgrade is pending. Visit " . Kit::GetURL() . ".");
 }
 
 //parse and init the settings.xml
