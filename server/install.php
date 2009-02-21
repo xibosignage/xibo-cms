@@ -122,7 +122,7 @@ elseif ($xibo_step == 1) {
     if ($fault) {
     ?>
       <form action="install.php" method="POST">
-        <input type="hidden" name="xibo_step" value="1">
+        <input type="hidden" name="xibo_step" value="1" />
         <div class="loginbutton"><button type="submit">Retest</button></div>
       </form>
     <?php
@@ -130,7 +130,7 @@ elseif ($xibo_step == 1) {
     else {
     ?>
       <form action="install.php" method="POST">
-        <input type="hidden" name="xibo_step" value="2">
+        <input type="hidden" name="xibo_step" value="2" />
         <div class="loginbutton"><button type="submit">Next ></button></div>
       </form>
     <?php
@@ -149,11 +149,11 @@ elseif ($xibo_step == 2) {
     <p><i>Note that any existing database must be empty</i></p>
   </div>
   <form action="install.php" method="POST">
-    <input type="hidden" name="xibo_step" value="3">
+    <input type="hidden" name="xibo_step" value="3" />
     <button type="submit">Create New</button>
   </form>
   <form action="install.php" method="POST">
-    <input type="hidden" name="xibo_step" value="4">
+    <input type="hidden" name="xibo_step" value="4" />
     <button type="submit">Use Existing</button>
   </form>
   <?php
@@ -168,8 +168,8 @@ user for Xibo.</p>
 <p>Additionally, please give us a new username and password to create in MySQL
 for Xibo to use. Xibo will create this automatically for you.</p>
 <form action="install.php" method="POST">
-<input type="hidden" name="xibo_step" value="5">
-<input type="hidden" name="db_create" value="true">
+<input type="hidden" name="xibo_step" value="5" />
+<input type="hidden" name="db_create" value="true" />
 <div class="install_table">
   <p><label for="host">Host: </label><input class="username" type="text" id="host" name="host" size="12" value="localhost" /></p>
   <p><label for="admin_username">Admin Username: </label><input class="username" type="text" id="admin_username" name="admin_username" size="12" /></p>
@@ -190,8 +190,8 @@ elseif ($xibo_step == 4) {
 <p>Please enter the details of the database and user you have
 created for Xibo.</p>
 <form action="install.php" method="POST">
-<input type="hidden" name="xibo_step" value="5">
-<input type="hidden" name="db_create" value="false">
+<input type="hidden" name="xibo_step" value="5" />
+<input type="hidden" name="db_create" value="false" />
 <div class="install_table">
   <p><label for="host">Host: </label><input class="username" type="text" id="host" name="host" size="12" value="localhost" /></p>
   <p><label for="db_name">Xibo Database Name: </label><input class="username" type="text" id="db_name" name="db_name" size="12" value="xibo" /></p>
@@ -296,6 +296,22 @@ elseif ($xibo_step == 5) {
     # Load from sql files to db - HOW?
     $sql_files = ls('*.sql','install/database',false,array('return_files'));
 
+    // Sort the files in to sensible order, ie
+    //   0.sql
+    //	 1.sql
+    //	10.sql
+    //
+    // NOT
+    //
+    //	 0.sql
+    //	10.sql
+    //	 1.sql
+    //
+    // NB this is broken for 0 padded files
+    // eg 01.sql would be incorrectly sorted in the above example.
+    
+    natcasesort($sql_files);
+
     foreach ($sql_files as $filename) {
       ?>
       <p>Loading from <?php print $filename; ?>
@@ -339,35 +355,107 @@ elseif ($xibo_step == 5) {
     
   fclose($fh);
   
-  # Form to get new admin password
   ?>
-  <p>Xibo needs to set the "xibo_admin" user password. Please enter a password for this account below.</p>
   </div>
   <div class="install_table">
     <form action="install.php" method="POST">
-      <input type="hidden" name="xibo_step" value="6">
-      <p><label for="password1">Password: </label><input type="password" name="password1" size="12"></p>
-      <p><label for="password2">Retype Password: </label><input type="password" name="password2" size="12"></p>
+      <input type="hidden" name="xibo_step" value="6" />
   </div>
     <button type="submit">Next ></button>
   </form>
   <?php
 }
-# Setup xibo_admin password
-
-# Configure paths and keys
-
-## nuSoap
-
-## libraries
-
-## server_key
-
-## secret_key
-
+elseif ($xibo_step == 6) {
+  # Form to get new admin password
+  ?>
+  <div class="info">
+  <p>Xibo needs to set the "xibo_admin" user password. Please enter a password for this account below.</p>
+  </div>
+  <div class="install_table">
+    <form action="install.php" method="POST">
+      <input type="hidden" name="xibo_step" value="7" />
+      <p><label for="password1">Password: </label><input type="password" name="password1" size="12" /></p>
+      <p><label for="password2">Retype Password: </label><input type="password" name="password2" size="12" /></p>
+  </div>
+    <button type="submit">Next ></button>
+  </form>
+  <?php
+}
+elseif ($xibo_step == 7) {
+  # Setup xibo_admin password
+  $password1 = Kit::GetParam('password1',_POST,_PASSWORD);
+  $password2 = Kit::GetParam('password2',_POST,_PASSWORD);
+  
+  if (!(($password1 && $password2) && ($password1 == $password2))) {
+    reportError("6", "Please input a new password. Ensure both password fields are identical.");
+  }
+  
+  include('settings.php');
+  
+  $password_hash = md5($password1);
+  
+  $db = @mysql_connect($dbhost,$dbuser,$dbpass);
+      
+    if (! $db) {
+      reportError("6", "Could not connect to MySQL with the Xibo User account details saved in settings.php. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+    }
+      
+    @mysql_select_db($dbname,$db);
+    
+    if (! @mysql_query("UPDATE '" . $dbname . "'.'user' SET 'UserPassword' = '" . $password_hash . "' WHERE 'user'.'UserID' = 1 LIMIT = 1", $db)) {
+      reportError("6", "An error occured changing the xibo_admin password.<br /><br />MySQL Error:<br />" . mysql_error());    
+    }
+ 
+    @mysql_close($db);
+    
+    ?>
+    <div class="info">
+      Successfully changed the xibo_admin password. We're nearly there now. Just a couple more steps!
+    </div>
+    <form action="install.php" method="POST">
+      <input type="hidden" name="xibo_step" value="8" />
+      <button type="submit">Next ></button>
+    </form>
+    <?php
+}
+elseif ($xibo_step == 8) {
+  # Configure paths and keys
+  ## nuSoap
+  ## libraries
+  ## server_key
+  ?>
+  We should be configuring paths and keys here - but I need to sort this with Dan first.
+    <form action="install.php" method="POST">
+      <input type="hidden" name="xibo_step" value="9" />
+      <button type="submit">Next ></button>
+    </form>
+  <?php
+}
+elseif ($xibo_step == 9) {
+  ?>
+    We should be setting paths and keys here.
+    <form action="install.php" method="POST">
+      <input type="hidden" name="xibo_step" value="10" />
+      <button type="submit">Next ></button>
+    </form>
+  <?php
+}
+elseif ($xibo_step == 10) {
 # Delete install.php
-
 # Redirect to login page.
+  if (! unlink('install.php')) {
+    reportError("10", "Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry", "Retry");
+  }
+  ?>
+  <div class="info">
+    <p><b>Xibo was successfully installed.</b></p>
+    <p>Please click <a href="index.php">here</a> to logon to Xibo as "xibo_admin" with the password you chose earlier.</p>
+  </div>
+  <?php
+}
+else {
+  reportError("0","A required parameter was missing. Please go through the installer sequentially!","Start Again");
+}
  
 include('install/footer.inc');
 
@@ -393,14 +481,14 @@ function checkJson() {
   return extension_loaded("json");
 }
  
-function reportError($step, $message) {
+function reportError($step, $message, $button_text="%lt; Back") {
 ?>
     <div class="info">
       <?php print $message; ?>
     </div>
     <form action="install.php" method="POST">
-      <input type="hidden" name="xibo_step" value="<?php print $step; ?>">
-      <button type="submit">&lt; Back</button>
+      <input type="hidden" name="xibo_step" value="<?php print $step; ?>"/>
+      <button type="submit"><?php print $button_text; ?></button>
     </form>
   <?php
   include('install/footer.inc');
