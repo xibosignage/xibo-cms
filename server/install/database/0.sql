@@ -708,3 +708,6 @@ ALTER TABLE `version` ADD `XmdsVersion` SMALLINT NOT NULL ,
 ADD `XlfVersion` SMALLINT NOT NULL ;
 
 UPDATE `version` SET `XmdsVersion` = '1', `XlfVersion` = '1' LIMIT 1 ;
+
+-- From ServerInstaller branch.
+ALTER TABLE `version` ADD `DBVersion` INT NOT NULL DEFAULT '1';
