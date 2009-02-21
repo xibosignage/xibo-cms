@@ -402,7 +402,7 @@ elseif ($xibo_step == 7) {
       
     @mysql_select_db($dbname,$db);
     
-    if (! @mysql_query("UPDATE '" . $dbname . "'.'user' SET 'UserPassword' = '" . $password_hash . "' WHERE 'user'.'UserID' = 1 LIMIT = 1", $db)) {
+    if (! @mysql_query("UPDATE `user` SET UserPassword = '" . $password_hash . "' WHERE UserID = 1 LIMIT 1", $db)) {
       reportError("6", "An error occured changing the xibo_admin password.<br /><br />MySQL Error:<br />" . mysql_error());    
     }
  
@@ -481,7 +481,7 @@ function checkJson() {
   return extension_loaded("json");
 }
  
-function reportError($step, $message, $button_text="%lt; Back") {
+function reportError($step, $message, $button_text="&lt; Back") {
 ?>
     <div class="info">
       <?php print $message; ?>
