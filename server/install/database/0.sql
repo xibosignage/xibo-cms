@@ -497,7 +497,6 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 (26, 'ppt_length', '120', 'text', 'Default length for PPT files (in seconds)', NULL, 'content', 1),
 (29, 'swf_length', '60', 'text', 'Default length for SWF files', NULL, 'content', 1),
 (30, 'audit', 'Off', 'dropdown', 'Turn on the auditing information. Warning this will quickly fill up the log', 'On|Off', 'error', 1),
-(31, 'openflashchart_path', '../open-flash-chart.swf', 'text', 'The path to open flash charting module. Relative to the Xibo directory. This module is licensed under the GPL and is not a part of Xibo. Open flash chart can therefore be obtained separately for no charge.'', ', NULL, 'path', 0),
 (32, 'NUSOAP_PATH', '3rdparty/nuSoap/nusoap.php', 'text', NULL, NULL, 'path', 1),
 (33, 'LIBRARY_LOCATION', '', 'text', NULL, NULL, 'path', 1),
 (34, 'SERVER_KEY', 'xsm', 'text', NULL, NULL, 'general', 1);
