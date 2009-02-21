@@ -424,16 +424,93 @@ elseif ($xibo_step == 8) {
   ## libraries
   ## server_key
   ?>
-  We should be configuring paths and keys here - but I need to sort this with Dan first.
+  <div class="info">
+    <p>Library Location</p>
+    <p>Xibo needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your webserver - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, Xibo will attempt to create it for you.</p>
     <form action="install.php" method="POST">
+    <div class="install_table">
+       <p><label for="library_location">Library Location: </label><input type="text" name="library_location" value="" /></p>
+    </div>
+    <p>Server Key</p>
+    <p>Xibo needs you to choose a "key". This will be required each time you setup a new client. It should be complicated, and hard to remember. It is visible in the admin interface, so it need not be written down separately.</p>
+    <div class="install_table">
+      <p><label for="server_key">Server Key: </label><input type="text" name="server_key" value="" /></p>
+    </div>
       <input type="hidden" name="xibo_step" value="9" />
+    </div>
       <button type="submit">Next ></button>
     </form>
   <?php
 }
 elseif ($xibo_step == 9) {
+
+  $server_key = Kit::GetParam('server_key',_POST,_WORD);
+  $library_location = Kit::GetParam('library_location',_POST,_STRING);
+  
+  // Remove trailing whitespace from the path given.
+  $library_location = trim($library_location);
+
+  // Check both fields were completed
+  if (! ($server_key && $library_location)) {
+    reportError("8","A field was blank. Please make sure you complete all fields");
+  }
+
+  // Does library_location exist already?
+  if (! is_dir($library_location)) {
+    if (is_file($library_location)) {
+      reportError("8", "A file exists with the name you gave for the Library Location. Please choose another location");
+    }
+
+    // Directory does not exist. Attempt to make it
+    // Using mkdir recursively, so it will attempt to make any
+    // intermediate folders required.
+    if (! mkdir($library_location,0755,true)) {
+      reportError("8", "Could not create the Library Location directory for you. Please ensure the webserver has permission to create a folder in this location, or create the folder manually and grant permission for the webserver to write to the folder.");
+    }
+    
+  }
+  
+  // Is library_location writable?
+  if (! is_writable($library_location)) {
+    // Directory is not writable.
+    reportError("8","The Library Location you gave is not writable by the webserver. Please fix the permissions and try again.");
+  }
+  
+  // Is library_location empty?
+  if (count(ls("*",$library_location,true)) > 0) {
+    reportError("8","The Library Location you gave is not empty. Please give the location of an empty folder");
+  }
+  
+  // Check if the user has added a trailing slash.
+  // If not, add one.
+  if (!((substr($library_location, -1) == '/') || (substr($library_location, -1) == '\\'))) {
+    $library_location = $library_location . '/';
+  }
+
+  include('settings.php');
+  
+  $db = @mysql_connect($dbhost,$dbuser,$dbpass);
+      
+    if (! $db) {
+      reportError("8", "Could not connect to MySQL with the Xibo User account details saved in settings.php. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+    }
+      
+    @mysql_select_db($dbname,$db);
+    
+    if (! @mysql_query("UPDATE `setting` SET `value` = '" . $library_location . "' WHERE `setting`.`setting` = 'LIBRARY_LOCATION' LIMIT 1", $db)) {
+      reportError("8", "An error occured changing the library location.<br /><br />MySQL Error:<br />" . mysql_error());    
+    }
+    
+    if (! @mysql_query("UPDATE `setting` SET `value` = '" . $server_key . "' WHERE `setting`.`setting` = 'SERVER_KEY' LIMIT 1", $db)) {
+      reportError("8", "An error occured changing the server key.<br /><br />MySQL Error:<br />" . mysql_error());    
+    }
+ 
+    @mysql_close($db);
+  
   ?>
-    We should be setting paths and keys here.
+  <div class="info">
+    <p>Successfully set LIBRARY_LOCATION and SERVER_KEY.</p>
+  </div>
     <form action="install.php" method="POST">
       <input type="hidden" name="xibo_step" value="10" />
       <button type="submit">Next ></button>
