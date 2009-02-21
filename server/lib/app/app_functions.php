@@ -464,6 +464,9 @@ END;
 
 /**
  * Resizes the image
+ * Based on code from the Web - cannot find source.
+ * If this is your code please send a mail to info@xibo.org.uk
+ * to arrange for correct acknowledgement to be printed.
  * @return 
  * @param $file Object The Source File
  * @param $target Object The Target File

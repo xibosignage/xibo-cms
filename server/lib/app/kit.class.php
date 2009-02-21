@@ -68,6 +68,7 @@ class Kit
 	
 	/**
 	 * Gets the appropriate Param, making sure its valid
+	 * Based on code from Joomla! 1.5
 	 * @return 
 	 * @param $param Object
 	 * @param $source Object[optional]
@@ -164,6 +165,7 @@ class Kit
 	
 	/**
 	 * Validates a Parameter
+	 * Based on code from Joomla! 1.5
 	 * @return 
 	 * @param $param Object
 	 * @param $type Object
@@ -254,44 +256,38 @@ class Kit
 	}
 	
 	/**
-	 * Gets a formatted URI
+	 * Gets a formatted Url
 	 * @return 
 	 * @param $page Object[optional]
-	 * @param $id Object[optional]
-	 * @param $full Object[optional]
 	 */
-	public static function GetUri($page = "", $id = "", $full = false)
+	public static function GetURL($page = "")
 	{
-		global $db;
+		$page = ValidateParam($page, _WORD);
+		$fullUrl = 'http';
 		
-		$opage = $page;
-		
-		if ($page == "")
+		if($_SERVER['HTTPS']=='on')
 		{
-			$page = $_SERVER["REQUEST_URI"];
+			$fullUrl .=  's';
+		}
+		
+		$fullUrl .=  '://';
+		
+		if($_SERVER['SERVER_PORT']!='80')
+		{
+			$fullUrl .=  $_SERVER['HTTP_HOST'].':'.$_SERVER['SERVER_PORT'].$_SERVER['SCRIPT_NAME'];
 		}
 		else
 		{
-			if ($id != "")
-			{
-				$page = $page . "/$id";
-			}
+			$fullUrl .=  $_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'];
 		}
-
-		// Use the query to construct a SEF uri
-		if ($full)
+		
+		// Append the page if its not empty
+		if ($page != '')
 		{
-			if (!defined('BASE_URL')) 
-			{
-				define('BASE_URL', Config::GetSetting($db, 'BASE_URL'));
-			}
-			
-			return BASE_URL . $page;
+			$fullUrl .= '?p=' . $page;
 		}
-		else
-		{
-			return $page;
-		}
+		
+		return $fullUrl;
 	}
 }
 ?>

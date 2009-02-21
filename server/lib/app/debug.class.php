@@ -94,6 +94,7 @@ class Debug
 				// surely the javascript idea wont work in ajax?
 				// or prehaps we add this to the session errormessage so we see it at a later date?
 				echo $errmsg;
+				die();
 			}
 		}
 		

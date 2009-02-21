@@ -21,8 +21,7 @@
 var region_options_callback = function(outputDiv)
 {	
 	//Get all the tooltip_hidden
-	$(".tooltip_hidden").parent().hover(function()
-	{
+	$(".tooltip_hidden").parent().hover(function() {
 		var html = $(".tooltip_hidden",this).html();
 		var left = this.offsetLeft - this.offsetParent.scrollLeft;;
 		
@@ -30,12 +29,11 @@ var region_options_callback = function(outputDiv)
 		$('#tooltip_hover')	.html(html)
 							.css("left",left)
 							.show();
-	}, function() 
-	{
+	}, function() {
 		$('#tooltip_hover').hide();
 	});
 	
-	//Make the elements draggable
+	// Make the elements draggable
 	$(".timebar_ctl").draggable({
 		containment: document.getElementById("timeline_ctl")
 	});
@@ -219,8 +217,7 @@ function submitBackground(region)
 /**
  * Deletes a region
  */
-function deleteRegion(region)
-{
+function deleteRegion(region) {
 	var regionid = $(region).attr("regionid");
 	var layoutid = $(region).attr("layoutid");
 
@@ -232,54 +229,14 @@ function deleteRegion(region)
  * @param {Object} timeBar
  * @param {Object} mediaBreak
  */
-function orderRegion(timeBar, mediaBreak)
-{
+function orderRegion(timeBar, mediaBreak) {
 	var layoutid = $(timeBar.element.offsetParent).attr("layoutid");
 	var regionid = $(timeBar.element.offsetParent).attr("regionid");
 	var mediaid = $(timeBar.element).attr("mediaid");
 	var sequence = $(mediaBreak).attr("breakid");
 	
-	$.ajax({type:"post", url:"index.php?p=layout&q=RegionOrder&layoutid="+layoutid+"&callingpage=layout&ajax=true", cache:false, datatype:"html", 
-		data:{"mediaid":mediaid,"sequence":sequence,"regionid":regionid},
-		success:function(transport) {
-		
-			var response = transport.split('|');
-			
-			if (response[0] == '0') 
-			{
-				//success
-				//Post notice somewhere?
-			}
-			else if (response[0] == '1') //failure
-			{
-				
-				alert(response[1]);
-			}
-			else if (response[0] == '2') //login
-			{ 
-				alert("You need to login");
-			}
-			else if (response[0] == '3') 
-			{ 
-				window.location = response[1]; //redirect
-			}
-			else if (response[0] == '6') //success, load form
-			{ 
-				//we need: uri, callback, onsubmit
-				var uri 		= response[1];
-				var callback 	= response[2];
-				var onsubmit 	= response[3];
-				
-				load_form(uri, $('#div_dialog'),callback,onsubmit);
-			}
-			else 
-			{
-				alert("An unknown error occured");
-			}
-			
-			return false;
-		}
-	});
+	$.ajax({type:"post", url:"index.php?p=layout&q=RegionOrder&layoutid="+layoutid+"&callingpage=layout&ajax=true", cache:false, dataType:"json", 
+		data:{"mediaid":mediaid,"sequence":sequence,"regionid":regionid},success: XiboSubmitResponse});
 }
 
 /**
