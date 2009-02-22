@@ -58,8 +58,7 @@ class displayDAO
 			if (!$this->has_permissions && $this->ajax == 'true') 
 			{
 				//ajax request handler
-				$arh = new ResponseManager();
-				$arh->decode_response(false, "You do not have permissions to edit this display");
+				trigger_error("You do not have permissions to edit this display", E_USER_ERROR);
 			}
 
 			$SQL = <<<SQL

@@ -1209,7 +1209,7 @@ END;
 		//check that at least one display has been selected
 		if (!isset($_POST['displayids'])) 
 		{
-			$arh->decode_response(false,"No display selected", E_USER_ERROR);
+			trigger_error("No display selected", E_USER_ERROR);
 		}
 		
 		$displayid_array	= $_POST['displayids'];

@@ -527,7 +527,7 @@ FORM;
 			if(!$results = $db->query($SQL)) 
 			{
 				trigger_error($db->error());
-				$arh->decode_response(false, "Can not get Usertype information");
+				trigger_error("Can not get Usertype information", E_USER_ERROR);
 			}
 			$row = $db->get_row($results);
 			$usertypeid = $row['0'];
@@ -642,7 +642,7 @@ END;
 		if (!$result = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false, "Cant get this regions permissions details.");			
+			trigger_error("Cant get this regions permissions details.", E_USER_ERROR);			
 		}
 		
 		$row = $db->get_row($result);

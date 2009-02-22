@@ -241,7 +241,8 @@ END;
 			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
 END;
-		$arh->decode_response(true, $form);
+		$arh->SetFormSubmitResponse($form);
+		$arh->Respond();
 	}
 	
 	/**
@@ -261,10 +262,11 @@ END;
 		if (!$db->query($SQL))
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false, "Unable to log out this user");
+			trigger_error("Unable to log out this user", E_USER_ERROR);
 		}
 		
-		$arh->decode_response(true, "User Logged Out.");
+		$arh->SetFormSubmitResponse('User Logged Out.');
+		$arh->Respond();
 	}
 	
 	/**

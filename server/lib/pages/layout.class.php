@@ -94,8 +94,7 @@ class layoutDAO
 				// check on permissions
 				if ($ajax == "true" && (!$this->has_permissions)) 
 				{
-					$arh = new ResponseManager();
-					$arh->decode_response(false, "You do not have permissions to edit this layout");
+					trigger_error("You do not have permissions to edit this layout", E_USER_ERROR);
 				}
 			}
 		}
@@ -838,7 +837,7 @@ END;
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$arh->decode_response(false,"Unable to get the Resolution information");
+			trigger_error("Unable to get the Resolution information", E_USER_ERROR);
 		}
 		
 		$row 			= $db->get_row($results) ;
