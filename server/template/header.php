@@ -117,7 +117,9 @@ else
 							// Code duplication here - i wonder if we could be more effective?
 							if (!$mgmMenu = new MenuManager($db, $user, 'Management')) trigger_error($mgmMenu->message, E_USER_ERROR);
 							
-							echo '<li><a href="#" class="' . $class . '">' . $title . '</a><ul>';
+							$menuTitle = $title;
+							
+							echo '<li><ul>';
 							
 							while ($menuItem = $mgmMenu->GetNextMenuItem())
 							{
@@ -134,13 +136,13 @@ else
 								echo '<li><a href="' . $href . '" class="' . $class . '">' . $title . '</a></li>';
 							}
 							
-							echo '</ul></li>';
+							echo '</ul><a href="#" class="' . $class . '">' . $menuTitle . '</a></li>';
 						}
 						else
 						{
 							$href = 'index.php?p=' . $uri . '&' . $args;
 							
-							echo '<li><a href="' . $href . '" class="' . $class . '">' . $title . '</a></li>';
+							echo '<li class="' . $class . '"><a href="' . $href . '" class="' . $class . '">' . $title . '</a></li>';
 						}
 					}
 				?>

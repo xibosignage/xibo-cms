@@ -75,8 +75,8 @@ if (!file_exists("settings.php"))
 
 if (file_exists("upgrade.php"))
 {
-        Kit::Redirect("upgrade.php");
-        die();
+    Kit::Redirect("upgrade.php");
+    die();
 }
 
 // parse and init the settings.php
