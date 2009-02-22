@@ -40,8 +40,9 @@ var region_options_callback = function(outputDiv)
 	
 	$(".mediabreak").droppable({
 		accept: ".timebar_ctl",
+		tolerance: "pointer",
 		drop: function(ev, ui) {
-			orderRegion(ui, this);
+			orderRegion(ui.draggable, this);
 		}
 	});
 }
@@ -144,32 +145,7 @@ function addRegion(layout)
 {
 	var layoutid = $(layout).attr("layoutid");
 	
-	$.ajax({type:"post", url:"index.php?p=layout&q=AddRegion&layoutid="+layoutid+"&ajax=true", cache:false, datatype:"html", 
-		success:function(transport) {
-		
-			var response = transport.split('|');
-			
-			if (response[0] == '0') {
-				//success
-				//Post notice somewhere?
-			}
-			else if (response[0] == '1') {
-				//failure
-				alert(response[1]);
-			}
-			else if (response[0] == '2') { //login
-				alert("You need to login");
-			}
-			else if (response[0] == '3') { //redirect
-				window.location = response[1];
-			}
-			else {
-				alert("An unknown error occured");
-			}
-			
-			return false;
-		}
-	});
+	$.ajax({type:"post", url:"index.php?p=layout&q=AddRegion&layoutid="+layoutid+"&ajax=true", cache:false, dataType:"json",success: XiboSubmitResponse});
 }
 
 /**
@@ -185,33 +161,8 @@ function submitBackground(region)
 	var regionid = $(region).attr("regionid");
 	var layoutid = $(region).attr("layoutid");
 	
-	$.ajax({type:"post", url:"index.php?p=layout&q=RegionChange&layoutid="+layoutid+"&ajax=true", cache:false, datatype:"html", 
-		data:{"width":width,"height":height,"top":top,"left":left,"regionid":regionid},
-		success:function(transport) {
-		
-			var response = transport.split('|');
-			
-			if (response[0] == '0') {
-				//success
-				//Post notice somewhere?
-			}
-			else if (response[0] == '1') {
-				//failure
-				alert(response[1]);
-			}
-			else if (response[0] == '2') { //login
-				alert("You need to login");
-			}
-			else if (response[0] == '3') { //redirect
-				window.location = response[1];
-			}
-			else {
-				alert("An unknown error occured");
-			}
-			
-			return false;
-		}
-	});
+	$.ajax({type:"post", url:"index.php?p=layout&q=RegionChange&layoutid="+layoutid+"&ajax=true", cache:false, dataType:"json", 
+		data:{"width":width,"height":height,"top":top,"left":left,"regionid":regionid},success: XiboSubmitResponse});
 }
 
 /**
@@ -230,9 +181,11 @@ function deleteRegion(region) {
  * @param {Object} mediaBreak
  */
 function orderRegion(timeBar, mediaBreak) {
-	var layoutid = $(timeBar.element.offsetParent).attr("layoutid");
-	var regionid = $(timeBar.element.offsetParent).attr("regionid");
-	var mediaid = $(timeBar.element).attr("mediaid");
+	var timeLine = $(timeBar).parent().parent();
+	
+	var layoutid = timeLine.attr("layoutid");
+	var regionid = timeLine.attr("regionid");
+	var mediaid = $(timeBar).attr("mediaid");
 	var sequence = $(mediaBreak).attr("breakid");
 	
 	$.ajax({type:"post", url:"index.php?p=layout&q=RegionOrder&layoutid="+layoutid+"&callingpage=layout&ajax=true", cache:false, dataType:"json", 
@@ -242,8 +195,7 @@ function orderRegion(timeBar, mediaBreak) {
 /**
  * Handles the tRegionOptions trigger
  */
-function tRegionOptions()
-{
+function tRegionOptions() {
 	var regionid = gup("regionid");
 	var layoutid = gup("layoutid");
 	
@@ -338,32 +290,26 @@ Preview.prototype.SetSequence = function(seq)
 	$.ajax({type:"post", 
 		url:"index.php?p=layout&q=RegionPreview&ajax=true", 
 		cache:false, 
-		datatype:"html", 
+		dataType:"json", 
 		data:{"layoutid":layoutid,"seq":seq,"regionid":regionid,"width":this.width, "height":this.height},
-		success:function(transport) {
+		success:function(response) {
 		
-			var response = transport.split('|');
-			
-			if (response[0] == '0') 
-			{
-				// success
-				// Attach to the preview div
-				$(previewContent).html(response[1]);
+			if (response.success) {
+				// Success - what do we do now?
+				$(previewContent).html(response.html);
 			}
-			else if (response[0] == '1') //failure
-			{
-				
-				$(previewContent).html(response[1]);
+			else {
+				// Why did we fail? 
+				if (response.login) {
+					// We were logged out
+		            LoginBox(response.message);
+		            return false;
+		        }
+		        else {
+		            // Likely just an error that we want to report on
+		            $(previewContent).html(response.html);
+		        }
 			}
-			else if (response[0] == '2') //login
-			{ 
-				SystemMessage("You need to login");
-			}
-			else 
-			{
-				$(previewContent).html("An unknown error occured");
-			}
-			
 			return false;
 		}
 	});

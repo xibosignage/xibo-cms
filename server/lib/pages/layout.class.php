@@ -975,14 +975,13 @@ FORM;
 		$user 	=& $this->user;
 		
 		//ajax request handler
-		$arh = new ResponseManager();
+		$response = new ResponseManager();
 		
 		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
 		
 		if ($layoutid == 0)
 		{
-			$arh->decode_response(false, "No layout information available, please refresh the page.");
-			return false;
+			trigger_error("No layout information available, please refresh the page.", E_USER_ERROR);
 		}
 		
 		include_once("lib/pages/region.class.php");
@@ -992,13 +991,11 @@ FORM;
 		if (!$region->AddRegion($this->layoutid))
 		{
 			//there was an ERROR
-			$arh->decode_response(false,$region->errorMsg);
+			trigger_error($region->errorMsg, E_USER_ERROR);
 		}
 		
-		
-		$arh->response(AJAX_REDIRECT, "index.php?p=layout&modify=true&layoutid=$layoutid");
-		
-		return false;
+		$response->SetFormSubmitResponse('Region Added.', true, "index.php?p=layout&modify=true&layoutid=$layoutid");
+		$response->Respond();
 	}
 	
 	/**
@@ -1044,8 +1041,8 @@ FORM;
 		$db 	=& $this->db;
 		$user 	=& $this->user;
 		
-		//ajax request handler
-		$arh = new ResponseManager();
+		// ajax request handler
+		$response = new ResponseManager();
 		
 		//Vars
 		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
@@ -1067,9 +1064,12 @@ FORM;
 		if (!$region->EditRegion($this->layoutid, $regionid, $width, $height, $top, $left))
 		{
 			//there was an ERROR
-			$arh->decode_response(false,$region->errorMsg);
+			trigger_error($region->errorMsg, E_USER_ERROR);
 		}
-		$arh->decode_response(true,"Region Changed");
+		
+		$response->SetFormSubmitResponse('');
+		$response->hideMessage = true;
+		$response->Respond();
 	}
 	
 	/**
@@ -1081,8 +1081,8 @@ FORM;
 		$db 	=& $this->db;
 		$user 	=& $this->user;
 		
-		//ajax request handler
-		$arh = new ResponseManager();
+		// ajax request handler
+		$response = new ResponseManager();
 		
 		//Vars
 		$regionid 		= Kit::GetParam('regionid', _POST, _STRING);
@@ -1099,18 +1099,21 @@ FORM;
 		if (!$region->ReorderMedia($this->layoutid, $regionid, $mediaid, $sequence))
 		{
 			//there was an ERROR
-			$arh->decode_response(false,$region->errorMsg);
+			trigger_error($region->errorMsg, E_USER_ERROR);
 		}
 		
 		//Return a code here that reopens the options window
 		if ($callingPage == "mediamanager")
 		{
-			$arh->response(AJAX_REDIRECT,"index.php?p=mediamanager&layoutid=$this->layoutid&modify=true&regionid=$regionid&trigger=tRegionOptions");
+			$url = "index.php?p=mediamanager&layoutid=$this->layoutid&modify=true&regionid=$regionid&trigger=tRegionOptions";
 		}
 		else 
 		{
-			$arh->response(AJAX_REDIRECT,"index.php?p=layout&layoutid=$this->layoutid&modify=true&regionid=$regionid&trigger=tRegionOptions");
+			$url = "index.php?p=layout&layoutid=$this->layoutid&modify=true&regionid=$regionid&trigger=tRegionOptions";
 		}
+		
+		$response->SetFormSubmitResponse('Order Changed', true, $url);
+		$response->Respond();
 	}
 	
 	/**
@@ -1558,17 +1561,17 @@ END;
 	 */
 	public function RegionPreview()
 	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
+		$db 		=& $this->db;
+		$user 		=& $this->user;
 		
 		include_once("lib/pages/region.class.php");
 		
 		//ajax request handler
-		$arh = new ResponseManager();
+		$response	= new ResponseManager();
 		
 		//Expect
-		$layoutid = Kit::GetParam('layoutid', _POST, _INT, 0);
-		$regionid = Kit::GetParam('regionid', _POST, _STRING);
+		$layoutid 	= Kit::GetParam('layoutid', _POST, _INT, 0);
+		$regionid 	= Kit::GetParam('regionid', _POST, _STRING);
 		
 		$seqGiven 	= Kit::GetParam('seq', _POST, _INT, 0);
 		$seq	 	= Kit::GetParam('seq', _POST, _INT, 0);
@@ -1585,7 +1588,7 @@ END;
 		
 		if (!$xmlString = $region->GetLayoutXml($layoutid))
 		{
-			$arh->decode_response(false, $region->errorMsg);
+			trigger_error($region->errorMsg, E_USER_ERROR);
 		}
 		
 		$xml->loadXML($xmlString);
@@ -1603,7 +1606,9 @@ END;
 		{
 			// No media to preview
 			$return .= "<h1>Empty Region</h1>";
-			$arh->decode_response(true, $return);
+			
+			$response->html = $return;
+			$response->Respond();
 		}
 		
 		$node = $nodeList->item($seq);
@@ -1709,7 +1714,8 @@ END;
 			$return .= "<div style='text-align:center;'><img alt='$type thumbnail' src='img/forms/$type.png' /></div>";
 		}
 		
-		$arh->decode_response(true, $return);
+		$response->html = $return;
+		$response->Respond();
 	}
 }
 ?>
