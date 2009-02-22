@@ -22,21 +22,16 @@ This folder contains the Xibo SERVER application.
 Requirements:
 
 PHP 5+
- - SimpleXML support
- - JSON Support (not currently required but will be)
-
 MySQL
 
 Libraries
- - nuSOAP (not included)
+ - nuSOAP (included)
  - FCKEditor (included)
  - jQuery (included)
  
 Installation:
 
- - Create a DB and Run Database.sql
- - Edit the settings.php file and fill in your DB connection information
- - Log in using
- 	u: xibo_admin
- 	p: admin
- - Go to "Admin -> Settings" and set the path for the nuSOAP installation
+Uncompress the release file in to a folder on a webserver.
+Browse to http://your.server/install.php
+
+The installation wizard will guide you through the setup process.
