@@ -69,7 +69,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 						<p><label for="password">Password </label><input class="password" id="password" type="password" name="password" tabindex="2" size="12" /></p>
 						
 						<div class="loginbuton"><button type="submit" tabindex="3">Log in</button></div>
-						<a href="#" id="forgotten">Forgotten Password?</a>
+						<!--<a href="#" id="forgotten">Forgotten Password?</a>-->
 					</div>
 				</form>
 				
@@ -81,9 +81,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				
 				<div id="forgotten_details" style="display:none">
 					<?php
-						global $user;
+						/*global $user;
 						
-						$user->forget_details();
+						$user->forget_details();*/
 					?>
 				</div>				
 			</div>
