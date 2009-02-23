@@ -620,7 +620,7 @@ END;
 		if (!file_exists($libraryFolder . 'temp'))
 		{
 			// Make the directory with broad permissions recursively (so will add the whole path)
-			mkdir($libraryFolder . 'temp', 777, true);
+			mkdir($libraryFolder . 'temp', 0777, true);
 		}
 		
 		if (!is_writable($libraryFolder . 'temp'))
