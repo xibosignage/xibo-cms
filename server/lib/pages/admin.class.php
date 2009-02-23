@@ -102,7 +102,7 @@ class adminDAO
 				if (!file_exists($value . 'temp'))
 				{
 					// Make the directory with broad permissions recursively (so will add the whole path)
-					mkdir($value . 'temp', 777, true);
+					mkdir($value . 'temp', 0777, true);
 				}
 				
 				if (!is_writable($value . 'temp'))
