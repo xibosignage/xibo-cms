@@ -1,0 +1,528 @@
+/*
+ * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+.buttons a {
+	float:left;
+	margin-left: 5px;
+    margin:0 7px 0 0; 
+   border: 0px;
+
+
+    font-family:"Lucida Grande", Tahoma, Arial, Verdana, sans-serif;
+    font-size:100%;
+    line-height:130%;
+    text-decoration:none;
+    font-weight:bold;
+    cursor:pointer;
+  /* padding:5px 10px 6px 7px; /* Links */
+}
+
+
+/* Colors */
+/* STANDARD */
+
+.buttons a:hover{
+    color:#336699;
+}
+.buttons a:active{
+    color:#fff;
+}
+
+.buttons p {
+	float:left;
+	padding:5px 10px 6px 7px;
+}
+
+/* Page forward backwards style */
+.pages button {
+	float:left;
+	display:inline;
+	width: 25px;
+	height: 25px;
+	
+}
+
+.pages select {
+	display: inline;
+	float:right;
+}
+
+#forward_button {
+	background: url(../../img/forms/pageforward.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	float: right;
+}
+
+#forward_button:hover {
+	background: url(../../img/forms/pageforwardup.png);
+	background-repeat: no-repeat;
+	float: right;
+}
+
+#back_button {
+	background: url(../../img/forms/pagebackward.png);
+	background-repeat: no-repeat;
+	border: 0px;
+}
+
+#back_button:hover {
+	background: url(../../img/forms/pagebackwardup.png);
+	background-repeat: no-repeat;
+}
+
+/*add button*/
+
+#add_button, #add_slide_button {
+	background:url(../../img/forms/addup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width:90px;
+}
+
+#add_button:hover, #add_slide_button:hover {
+	background:url(../../img/forms/adddown.png);
+	background-repeat: no-repeat;
+	width:90px;
+}
+
+.add_button {
+	background:url(../../img/forms/addup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width:90px;
+}
+
+.add_button:hover {
+	background:url(../../img/forms/adddown.png);
+	background-repeat: no-repeat;
+	width:90px;
+}
+
+/*back button*/
+
+#pageback_button {
+	background:url(../../img/forms/backup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width:90px;
+}
+
+#pageback_button:hover {
+	background:url(../../img/forms/backdown.png);
+	background-repeat: no-repeat;
+	width:90px;
+}
+/*finish button*/
+
+/*Whats on broadcasting button*/
+#whatson_button {
+	background:url(../../img/forms/broadcastup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width:90px;
+}
+
+#whatson_button:hover {
+	background:url(../../img/forms/broadcastdown.png);
+	background-repeat: no-repeat;
+	width:90px;
+}
+
+.defaulted_tab{
+	background:url(../../img/forms/display_up.png) no-repeat;
+	width:90px;
+	height: 80px;
+	margin-bottom: 5px;
+}
+
+.defaulted_tab:hover{
+	background:url(../../img/forms/display_up.png) no-repeat;
+	width:90px;
+}
+
+.normal_tab{
+	background:url(../../img/forms/display.png) no-repeat;
+	width:90px;
+}
+.normal_tab:hover{
+	background:url(../../img/forms/display.png) no-repeat;
+	background-position: 0px -71px;
+	width:90px;
+}
+
+/*Presnetation button*/
+
+#pres_button {
+	background:url(../../img/forms/presentationup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width:90px;
+}
+
+#pres_button:hover {
+	background:url(../../img/forms/presentationdown.png);
+	background-repeat: no-repeat;
+	width:90px;
+}
+/*Preview button*/
+
+#preview_button {
+	background:url(../../img/forms/previewup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width: 90px;
+}
+
+#preview_button:hover {
+	background:url(../../img/forms/previewdown.png);
+	background-repeat: no-repeat;
+	width: 90px;
+}
+
+/*layout admin button*/
+
+#layout_admin {
+	background:url(../../img/forms/layoutup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width: 90px;
+}
+
+#layout_admin:hover {
+	background:url(../../img/forms/layoutdown.png);
+	background-repeat: no-repeat;
+	width: 90px;
+}
+
+/*rows button*/
+
+#rows_button{
+	background:url(../../img/forms/rowsup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width: 90px;
+}
+
+#rows_button:hover {
+	background:url(../../img/forms/rowsdown.png);
+	background-repeat: no-repeat;
+	width: 90px;
+}
+
+/*CSV button*/
+
+#csv_button{
+	background:url(../../img/forms/csvup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width: 90px;
+}
+
+#csv_button:hover {
+	background:url(../../img/forms/csvdown.png);
+	background-repeat: no-repeat;
+	width: 90px;
+}
+
+/*refresh button*/
+
+#refresh_button{
+	background:url(../../img/forms/refreshup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width: 90px;
+}
+
+#refresh_button:hover {
+	background:url(../../img/forms/refreshdown.png);
+	background-repeat: no-repeat;
+	width: 90px;
+}
+
+/*toggle button*/
+
+#toggle_button {
+	background:url(../../img/forms/toggleup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width: 90px;
+
+}
+
+#toggle_button:hover {
+	background:url(../../img/forms/toggledown.png);
+	background-repeat: no-repeat;
+	border:0px;
+	width: 90px;
+}
+
+/*edit_button*/
+
+#edit_button {
+	background:url(../../img/forms/editup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width: 90px;
+
+}
+
+#edit_button:hover {
+	background:url(../../img/forms/editdown.png);
+	background-repeat: no-repeat;
+	border:0px;
+	width: 90px;
+}
+
+#help_button{
+	background:url(../../img/forms/helpup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width:90px;
+}
+
+#help_button:hover {
+	background:url(../../img/forms/helpdown.png);
+	background-repeat: no-repeat;
+	width:90px;
+}
+
+.button_text{
+	margin-top: 50px;
+	text-align: center;
+}
+
+#background_button{
+	background:url(../../img/forms/background_button.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width:90px;
+}
+
+#background_button:hover {
+	background:url(../../img/forms/background_button_down.png);
+	background-repeat: no-repeat;
+	width:90px;
+}
+
+#log_button{
+	background:url(../../img/forms/truncate_log.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width:90px;
+}
+
+#log_button:hover {
+	background:url(../../img/forms/truncate_log_down.png);
+	background-repeat: no-repeat;
+	width:90px;
+}
+
+/* POSITIVE */
+
+button.positive{
+	background:url(../../img/forms/green_button.gif) no-repeat;
+	font: normal 15px Tahoma;
+	height:32px;
+	width:70px;
+	color: white;
+	display:block;
+	}
+	
+button.positive:hover{
+	background-position:0px -32px;
+	color:green;
+	}
+
+
+button.positive:hover span{
+	padding-top: 5px;
+	}		
+
+.buttons a.positive{
+    background:url(../../img/forms/left_positive_button.gif) no-repeat top left;
+	display: block;
+	float: left;
+	font: normal 15px Tahoma; /* Change 13px as desired */
+	line-height: 20px; /* This value + 4px + 4px (top and bottom padding of SPAN) must equal height of button background (default is 24px) */
+	height: 32px; /* Height of button background height */
+	padding-left: 13px; /* Width of left menu image */
+	text-decoration: none;
+	color:#fff;
+}
+.buttons a.positive:hover{
+     background:url(../../img/forms/button_positive_active_left.gif) no-repeat top left;
+	display: block;
+	float: left;
+	font: normal 15px Tahoma; /* Change 13px as desired */
+	line-height: 20px; /* This value + 4px + 4px (top and bottom padding of SPAN) must equal height of button background (default is 24px) */
+	height: 32px; /* Height of button background height */
+	padding-left: 13px; /* Width of left menu image */
+	text-decoration: none;
+	
+}
+
+.buttons a.positive:hover span{
+	background:url(../../img/forms/button_positive_right_active.gif) no-repeat top right;
+	color:green;
+}
+
+.buttons a.positive span{
+	background:url(../../img/forms/right_positive_button.gif) no-repeat top right;
+	display: block;
+	padding: 4px 11px 4px 0; /*Set 11px below to match value of 'padding-left' value above*/
+	height:32px;
+	min-width: 50px;
+	text-align:center;
+}
+* html .buttons a.positive span{width:80px}
+
+.buttons a.positive:visited{
+    color:#fff;
+}
+.buttons a.positive:active{
+
+    
+}
+
+/* NEGATIVE */
+
+button.negative{
+	background:url(../../img/forms/red_button.gif) no-repeat;
+	font: normal 15px Tahoma;
+	height:32px;
+	width:70px;
+	color: white;
+	line-height:20px;
+	display:block;
+	}
+	
+button.negative:hover{
+	background-position:0px -32px;
+	color:red;
+	}
+
+
+button.negative:hover span{
+	padding-top: 5px;
+	}	
+
+.buttons a.negative{
+    color:#fff;
+	background:url(../../img/forms/neg_button_left.gif) no-repeat top left;
+	display: block;
+	float: left;
+	font: normal 15px Tahoma; /* Change 13px as desired */
+	line-height: 20px; /* This value + 4px + 4px (top and bottom padding of SPAN) must equal height of button background (default is 24px) */
+	height: 32px; /* Height of button background height */
+	padding-left: 15px; /* Width of left menu image */
+	text-decoration: none;
+}
+.buttons a.negative:hover{
+      background:url(../../img/forms/neg_button_left_active.gif) no-repeat top left;
+	display: block;
+	float: left;
+	font: normal 15px Tahoma; /* Change 13px as desired */
+	line-height: 20px; /* This value + 4px + 4px (top and bottom padding of SPAN) must equal height of button background (default is 24px) */
+	height: 32px; /* Height of button background height */
+	padding-left: 15px; /* Width of left menu image */
+	text-decoration: none;
+    color:#d12f19;
+}
+
+.buttons a.negative:hover span{
+	background:url(../../img/forms/neg_button_right_active.gif) no-repeat top right;
+}
+
+.buttons a.negative span{
+	background:url(../../img/forms/neg_button_right.gif) no-repeat top right;
+	display: block;
+	padding: 4px 11px 4px 0; /*Set 11px below to match value of 'padding-left' value above*/
+	height:32px;
+	min-width:50px;
+	text-align:center;
+	
+}
+* html .buttons a.negative span{width:80px}
+.buttons a.negative:visited, button.negative:visited{
+    color:#d12f19;
+}
+.buttons a.negative:active{
+ 
+    color:#fff;
+}
+
+/*Edit button*/
+
+.buttons a.neutral, button.neutral{
+    color:#fff;
+	background:url(../../img/forms/button_edit_left.gif) no-repeat top left;
+	display: block;
+	float: left;
+	font: normal 15px Tahoma; /* Change 13px as desired */
+	line-height: 20px; /* This value + 4px + 4px (top and bottom padding of SPAN) must equal height of button background (default is 24px) */
+	height: 32px; /* Height of button background height */
+	padding-left: 15px; /* Width of left menu image */
+	text-decoration: none;
+	text-align: center;
+}
+.buttons a.neutral:hover, button.neutral:hover{
+      background:url(../../img/forms/button_edit_left_active.gif) no-repeat top left;
+	display: block;
+	float: left;
+	font: normal 15px Tahoma; /* Change 13px as desired */
+	line-height: 20px; /* This value + 4px + 4px (top and bottom padding of SPAN) must equal height of button background (default is 24px) */
+	height: 32px; /* Height of button background height */
+	padding-left: 15px; /* Width of left menu image */
+	text-decoration: none;
+    color:blue;
+	text-align: center;
+}
+
+.buttons a.neutral:hover span, button.neutral:hover span{
+	background:url(../../img/forms/button_edit_right_active.gif) no-repeat top right;
+}
+
+.buttons a.neutral span{
+	background:url(../../img/forms/button_edit_right.gif) no-repeat top right;
+	display: block;
+	padding: 4px 11px 4px 0; /*Set 11px below to match value of 'padding-left' value above*/
+	height:32px;
+	min-width: 50px;
+
+}
+* html .buttons a.neutral span{width:80px}
+.buttons a.neutral:visited, button.neutral:visited{
+    color:#d12f19;
+}
+.buttons a.neutral:active{
+
+    color:#fff;
+}
+
+
+/* Pages DIV */
+.pages a:hover {
+	text-decoration:underline;
+}
+
+.check_options {
+	padding: 8px 0px 0px 0px;
+	float:right;
+}
