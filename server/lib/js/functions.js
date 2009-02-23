@@ -139,6 +139,10 @@ function confirm_delete() {
 	return confirm('Are you sure you want to delete?');
 }
 
+var set_form_size = function(width,height) {
+	$('div_dialog').parent().parent().width(width+"px").height(height+"px");
+}
+
 /**
  * Returns the parameter specified in name from the window.location.href
  * @param {Object} name
