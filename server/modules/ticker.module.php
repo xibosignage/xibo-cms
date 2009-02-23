@@ -158,7 +158,7 @@ FORM;
 		
 		$this->response->html 		= $form;
 		$this->response->callBack 	= 'text_callback';
-		$this->response->dialogTitle = 'Edit Text item';
+		$this->response->dialogTitle = 'Edit Ticker.';
 
 		return $this->response;		
 	}
