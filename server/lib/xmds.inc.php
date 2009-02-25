@@ -52,14 +52,14 @@ if (get_magic_quotes_gpc())
     $_REQUEST = array_map('stripslashes_deep', $_REQUEST);
 }
 
-if (!file_exists("settings.php") {
+if (!file_exists("settings.php")) {
   // Xibo has not been configured. Just quit since we can't
   // raise a SOAP error because we don't know where
   // nuSOAP is yet.
   die("Not configured. Visit " . Kit::GetURL() . " to configure.");
 }
 
-if (file_exists("upgrade.php") {
+if (file_exists("upgrade.php")) {
   // An upgrade is in progress. Just quit since the server
   // won't be in a servicable state
   die("An upgrade is pending. Visit " . Kit::GetURL() . ".");
