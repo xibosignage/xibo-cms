@@ -167,7 +167,7 @@ FORM;
 		
 		//Other properties
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
-		$duration	  = Kit::GetParam('duration', _POST, _INT, 1);
+		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
@@ -176,6 +176,13 @@ FORM;
 		if ($text == '')
 		{
 			$this->response->SetError('Please enter some text');
+			$this->response->keepOpen = true;
+			return $this->response;
+		}
+		
+		if ($duration == 0)
+		{
+			$this->response->SetError('You must enter a duration.');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
@@ -216,7 +223,7 @@ FORM;
 		
 		//Other properties
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
-		$duration	  = Kit::GetParam('duration', _POST, _INT, 1);
+		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
@@ -225,6 +232,13 @@ FORM;
 		if ($text == '')
 		{
 			$this->response->SetError('Please enter some text');
+			$this->response->keepOpen = true;
+			return $this->response;
+		}
+		
+		if ($duration == 0)
+		{
+			$this->response->SetError('You must enter a duration.');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}

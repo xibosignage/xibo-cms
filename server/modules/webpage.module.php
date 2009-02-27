@@ -149,7 +149,7 @@ FORM;
 		
 		//Other properties
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
-		$duration	  = Kit::GetParam('duration', _POST, _INT, 1);
+		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -157,6 +157,13 @@ FORM;
 		if ($uri == "" || $uri == "http://")
 		{
 			$this->response->SetError('Please enter a Link for this Ticker');
+			$this->response->keepOpen = true;
+			return $this->response;
+		}
+		
+		if ($duration == 0)
+		{
+			$this->response->SetError('You must enter a duration.');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
@@ -196,7 +203,7 @@ FORM;
 		
 		//Other properties
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
-		$duration	  = Kit::GetParam('duration', _POST, _INT, 1);
+		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -204,6 +211,13 @@ FORM;
 		if ($uri == "" || $uri == "http://")
 		{
 			$this->response->SetError('Please enter a Link for this Ticker');
+			$this->response->keepOpen = true;
+			return $this->response;
+		}
+		
+		if ($duration == 0)
+		{
+			$this->response->SetError('You must enter a duration.');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
