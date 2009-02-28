@@ -874,8 +874,10 @@ END;
 	 */
 	private function DeleteMediaFiles()
 	{
+		$db =& $this->db;
+		
 		//Library location
-		$databaseDir = LIBRARY_LOCATION;
+		$databaseDir = Config::GetSetting($db, "LIBRARY_LOCATION");
 		
 		//3 things to check for..
 		//the actual file, the thumbnail, the background
