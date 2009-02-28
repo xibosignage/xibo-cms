@@ -1701,6 +1701,9 @@ END;
 			$ratioWidth = $width;
 			$ratioHeight = $height;
 			
+			// We need to get the URI from <options>
+			
+			
 			//Show the image - scaled to the aspect ratio of this region (get from GET)
 			$return .= "<div style='text-align:center;'><img alt='$type thumbnail' src='index.php?p=module&q=GetImage&file=$uri&width=$ratioWidth&height=$ratioHeight&dynamic' /></div>";
 		}
