@@ -1697,14 +1697,17 @@ END;
 		}
 		elseif ($type == "image")
 		{
-			//Cal the ratio width / height
+			// Call the ratio width / height
 			$ratioWidth = $width;
 			$ratioHeight = $height;
-			
+						
 			// We need to get the URI from <options>
+			$optionsNode = $node->getElementsByTagName("uri");
+			$uri		 = $optionsNode->item(0)->textContent;
+
+			Debug::LogEntry($db, 'audit', 'The Uri is:' . $uri);
 			
-			
-			//Show the image - scaled to the aspect ratio of this region (get from GET)
+			// Show the image - scaled to the aspect ratio of this region (get from GET)
 			$return .= "<div style='text-align:center;'><img alt='$type thumbnail' src='index.php?p=module&q=GetImage&file=$uri&width=$ratioWidth&height=$ratioHeight&dynamic' /></div>";
 		}
 		else
