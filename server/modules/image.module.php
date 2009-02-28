@@ -504,7 +504,7 @@ END;
 			
 		// Other properties
 		$name	  		= Kit::GetParam('name', _POST, _STRING);
-		$duration	  	= Kit::GetParam('duration', _POST, _INT, 1);
+		$duration	  	= Kit::GetParam('duration', _POST, _INT, 0);
 		$permissionid 	= Kit::GetParam('permissionid', _POST, _INT, 1);
 		
 		if ($name == '') $name = Kit::ValidateParam($fileName, _FILENAME);
@@ -521,6 +521,13 @@ END;
 		if (strlen($name) > 100) 
 		{
 			$this->response->SetError('The name cannot be longer than 100 characters');
+			$this->response->keepOpen = true;
+			return $this->response;
+		}
+		
+		if ($duration == 0)
+		{
+			$this->response->SetError('You must enter a duration.');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
@@ -656,7 +663,7 @@ END;
 			
 		// Other properties
 		$name	  		= Kit::GetParam('name', _POST, _STRING);
-		$duration	  	= Kit::GetParam('duration', _POST, _INT, 1);
+		$duration	  	= Kit::GetParam('duration', _POST, _INT, 0);
 		$permissionid 	= Kit::GetParam('permissionid', _POST, _INT, 1);
 		
 		if ($name == '')
@@ -677,6 +684,13 @@ END;
 		if (strlen($name) > 100) 
 		{
 			$this->response->SetError('The name cannot be longer than 100 characters');
+			$this->response->keepOpen = true;
+			return $this->response;
+		}
+		
+		if ($duration == 0)
+		{
+			$this->response->SetError('You must enter a duration.');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
@@ -814,6 +828,18 @@ END;
 		
 		// Stored As from the XML
 		$this->uri	= $this->GetOption('uri');
+		
+		// Do we need to remove this from a layout?
+		if ($layoutid != '')
+		{
+			// Call base method - which will set up the response
+			parent::DeleteMedia();
+		}
+		else
+		{
+			// Set this message now in preparation
+			$this->response->message = 'Deleted the Media.';
+		}
 				
 		// If we are set to retire we retire
 		if ($options == "retire")
@@ -849,19 +875,7 @@ END;
 			$this->DeleteMediaFiles();
 		}
 		
-		// Options
-		if ($layoutid != '')
-		{
-			// Call base method - which will handle the response too
-			return parent::DeleteMedia();
-		}
-		else
-		{
-			// We want to load a new form
-			$this->response->message	 = 'Deleted the Media.';
-			
-			return $this->response;
-		}
+		return $this->response;
 	}
 	
 	/**
