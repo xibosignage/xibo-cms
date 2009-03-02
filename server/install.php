@@ -436,6 +436,11 @@ elseif ($xibo_step == 8) {
     <div class="install_table">
       <p><label for="server_key">Server Key: </label><input type="text" name="server_key" value="" /></p>
     </div>
+    <p>Statistics</p>
+    <p>We'd love to know you're running Xibo. If you're happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please untick the box if your server does not have direct access to the internet.</p>
+    <div class="install_table">
+      <p><label for="stats">Anonymous Statistics: </label><input type="checkbox" name="stats" value="true" /></p>
+    </div>
       <input type="hidden" name="xibo_step" value="9" />
     </div>
       <button type="submit">Next ></button>
@@ -446,6 +451,7 @@ elseif ($xibo_step == 9) {
 
   $server_key = Kit::GetParam('server_key',_POST,_WORD);
   $library_location = Kit::GetParam('library_location',_POST,_STRING);
+  $stats = Kit::GetParam('stats',_POST,_BOOL);
   
   // Remove trailing whitespace from the path given.
   $library_location = trim($library_location);
@@ -453,6 +459,13 @@ elseif ($xibo_step == 9) {
   // Check both fields were completed
   if (! ($server_key && $library_location)) {
     reportError("8","A field was blank. Please make sure you complete all fields");
+  }
+
+  if ($stats) {
+    $stats="On";
+  }
+  else {
+    $stats="Off";
   }
 
   // Does library_location exist already?
@@ -505,6 +518,14 @@ elseif ($xibo_step == 9) {
       reportError("8", "An error occured changing the server key.<br /><br />MySQL Error:<br />" . mysql_error());    
     }
  
+    if (! @mysql_query("UPDATE `setting` SET `value` = `" . $stats . "' WHERE `setting`.`setting` = 'PHONE_HOME' LIMIT 1", $db)) {
+      reportError("8", "An error occured setting SEND_STATS.<br /><br />MySQL Error:<br />" . mysql_error());
+    }
+    
+    if (! @mysql_query("UPDATE `setting` SET `value` = `" . md5(uniqid(rand(), true)) . "' WHERE `setting`.`setting` = 'PHONE_HOME_KEY' LIMIT 1", $db)) {
+      reportError("8", "An error occured setting SEND_STATS.<br /><br />MySQL Error:<br />" . mysql_error());
+    }
+    
     @mysql_close($db);
   
   ?>
