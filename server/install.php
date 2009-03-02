@@ -518,11 +518,11 @@ elseif ($xibo_step == 9) {
       reportError("8", "An error occured changing the server key.<br /><br />MySQL Error:<br />" . mysql_error());    
     }
  
-    if (! @mysql_query("UPDATE `setting` SET `value` = `" . $stats . "' WHERE `setting`.`setting` = 'PHONE_HOME' LIMIT 1", $db)) {
+    if (! @mysql_query("UPDATE `setting` SET `value` = '" . $stats . "' WHERE `setting`.`setting` = 'PHONE_HOME' LIMIT 1", $db)) {
       reportError("8", "An error occured setting SEND_STATS.<br /><br />MySQL Error:<br />" . mysql_error());
     }
     
-    if (! @mysql_query("UPDATE `setting` SET `value` = `" . md5(uniqid(rand(), true)) . "' WHERE `setting`.`setting` = 'PHONE_HOME_KEY' LIMIT 1", $db)) {
+    if (! @mysql_query("UPDATE `setting` SET `value` = '" . md5(uniqid(rand(), true)) . "' WHERE `setting`.`setting` = 'PHONE_HOME_KEY' LIMIT 1", $db)) {
       reportError("8", "An error occured setting SEND_STATS.<br /><br />MySQL Error:<br />" . mysql_error());
     }
     
