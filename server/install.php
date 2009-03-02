@@ -439,7 +439,7 @@ elseif ($xibo_step == 8) {
     <p>Statistics</p>
     <p>We'd love to know you're running Xibo. If you're happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please untick the box if your server does not have direct access to the internet.</p>
     <div class="install_table">
-      <p><label for="stats">Anonymous Statistics: </label><input type="checkbox" name="stats" value="true" /></p>
+      <p><label for="stats">Anonymous Statistics: </label><input type="checkbox" name="stats" value="true" checked /></p>
     </div>
       <input type="hidden" name="xibo_step" value="9" />
     </div>
