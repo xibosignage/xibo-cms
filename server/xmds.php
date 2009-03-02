@@ -330,10 +330,10 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	}
 
 	// PHONE_HOME if required.
-	if (Config::GetSetting('PHONE_HOME') == 'On') {
+	if (Config::GetSetting($db,'PHONE_HOME') == 'On') {
 		// Find out when we last PHONED_HOME :D
 		// If it's been > 28 days since last PHONE_HOME then
-		if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
+		if (Config::GetSetting($db,'PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
 
 			// Retrieve number of displays
 			$SQL = "SELECT COUNT(*)
@@ -349,10 +349,9 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 			}
 			
 			// Retrieve version number
-			$tmp = Config::Version();
-			$PHONE_HOME_VERSION = $tmp[0];
+			$PHONE_HOME_VERSION = Config::Version($db, 'app_ver');
 
-			$PHONE_HOME_URL = urlencode(Config::GetSetting('PHONE_HOME_URL') . "?id=" . Config::GetSetting('PHONE_HOME_KEY') . "&version=" . $PHONE_HOME_VERSION . "&numClients=" . $PHONE_HOME_CLIENTS);
+			$PHONE_HOME_URL = Config::GetSetting($db,'PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting($db,'PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 
 			if ($displayInfo['isAuditing'] == 1) 
 			{
