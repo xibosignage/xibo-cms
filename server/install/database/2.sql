@@ -52,3 +52,18 @@ VALUES (
 NULL , 'PHONE_HOME_URL', 'http://www.xibo.org.uk/stats/track.php', 'text', 'The URL to connect to to PHONE_HOME (if enabled)', NULL , 'path', '0'
 );
 
+INSERT INTO `setting` (
+`settingid` ,
+`setting` ,
+`value` ,
+`type` ,
+`helptext` ,
+`options` ,
+`cat` ,
+`userChange`
+)
+VALUES (
+NULL , 'PHONE_HOME_DATE', '0', 'text', 'The last time we PHONED_HOME in seconds since the epoch', NULL , 'general', '0'
+);
+
+UPDATE `version` SET `app_ver` = '1.0.0';
