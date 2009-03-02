@@ -328,43 +328,12 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 		
 		$blackList->appendChild($file);
 	}
-	
-	if ($displayInfo['isAuditing'] == 1) 
-	{
-		Debug::LogEntry($db, "audit", $requiredFilesXml->saveXML(), "xmds", "RequiredFiles");	
-		Debug::LogEntry($db, "audit", "[OUT]", "xmds", "RequiredFiles");	
-	}
 
 	// PHONE_HOME if required.
-	$SQL = "SELECT `value` 
-			FROM `setting` 
-			WHERE `setting`.`value` = 'PHONE_HOME'";
-			
-	if (!$results = $db->query($SQL))
-	{
-		trigger_error($db->error());
-	}
-	while ($row = $db->get_row($results))
-	{
-		$PHONE_HOME = $row[0];
-	}
-
-	if ($PHONE_HOME == 'On') {
+	if (Config::GetSetting('PHONE_HOME') == 'On') {
 		// Find out when we last PHONED_HOME :D
-		$SQL = "SELECT `value`
-				FROM `setting`
-				WHERE `setting`.`setting` = 'PHONE_HOME_DATE'";
-		if (!$results = $db->query($SQL))
-		{
-			trigger_error($db->error());
-		}
-		while ($row = $db->get_row($results))
-		{
-			$PHONE_HOME_DATE = $row[0];
-		}
-
 		// If it's been > 28 days since last PHONE_HOME then
-		if ($PHONE_HOME_DATE < (time() - (60 * 60 * 24 * 28))) {
+		if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
 
 			// Retrieve number of displays
 			$SQL = "SELECT COUNT(*)
@@ -380,46 +349,19 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 			}
 			
 			// Retrieve version number
-			$SQL = "SELECT `app_ver`
-					FROM `version`";
-			if (!$results = $db->query($SQL))
-			{
-				trigger_error($db->error());
-			}
-			while ($row = $db->get_row($results))
-			{
-				$PHONE_HOME_VERSION = $row[0];
-			}			
+			$tmp = Config::Version();
+			$PHONE_HOME_VERSION = $tmp[0];
 
-			// Retrieve PHONE_HOME_KEY
-			$SQL = "SELECT `value`
-					FROM `setting`
-					WHERE `setting`.`setting` = 'PHONE_HOME_KEY'";
-			if (!$results = $db->query($SQL))
-			{
-				trigger_error($db->error());
-			}
-			while ($row = $db->get_row($results))
-			{
-				$PHONE_HOME_KEY = $row[0];
-			}
+			$PHONE_HOME_URL = urlencode(Config::GetSetting('PHONE_HOME_URL') . "?id=" . Config::GetSetting('PHONE_HOME_KEY') . "&version=" . $PHONE_HOME_VERSION . "&numClients=" . $PHONE_HOME_CLIENTS);
 
-			// Retrieve PHONE_HOME_URL
-			$SQL = "SELECT `value`
-					FROM `setting`
-					WHERE `setting`.`setting` = 'PHONE_HOME_KEY'";
-			if (!$results = $db->query($SQL))
+			if ($displayInfo['isAuditing'] == 1) 
 			{
-				trigger_error($db->error());
+				Debug::LogEntry($db, "audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");	
 			}
-			while ($row = $db->get_row($results))
-			{
-				$PHONE_HOME_KEY = $row[0];
-			}
-
-			@file_get_contents(urlencode($PHONE_HOME_URL . "?id=" . $PHONE_HOME_ID . "&version=" . $PHONE_HOME_VERSION . "&numClients=" . $PHONE_HOME_CLIENTS));
+		
+			@file_get_contents($PHONE_HOME_URL);
 			
-			// Set LAST_PHONE_HOME
+			// Set PHONE_HOME_TIME to NOW.
 			$SQL = "UPDATE `setting`
 					SET `value` = '" . time() . "'
 					WHERE `setting`.`setting` = 'PHONE_HOME_TIME' LIMIT 1";
@@ -432,6 +374,12 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 		}
 	}
 	// END OF PHONE_HOME CODE
+
+	if ($displayInfo['isAuditing'] == 1) 
+	{
+		Debug::LogEntry($db, "audit", $requiredFilesXml->saveXML(), "xmds", "RequiredFiles");	
+		Debug::LogEntry($db, "audit", "[OUT]", "xmds", "RequiredFiles");	
+	}
 	
 	// Return the results of requiredFiles()
 	return $requiredFilesXml->saveXML();
