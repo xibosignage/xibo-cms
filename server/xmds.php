@@ -345,7 +345,7 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 			}
 			while ($row = $db->get_row($results))
 			{
-				$PHONE_HOME_CLIENTS = $row[0];
+				$PHONE_HOME_CLIENTS = Kit::ValidateParam($row[0],_INT);
 			}
 			
 			// Retrieve version number
