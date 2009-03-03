@@ -425,18 +425,18 @@ elseif ($xibo_step == 8) {
   ## server_key
   ?>
   <div class="info">
-    <p>Library Location</p>
+    <p><b>Library Location</b></p>
     <p>Xibo needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your webserver - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, Xibo will attempt to create it for you.</p>
     <form action="install.php" method="POST">
     <div class="install_table">
        <p><label for="library_location">Library Location: </label><input type="text" name="library_location" value="" /></p>
     </div>
-    <p>Server Key</p>
+    <p><b>Server Key</b></p>
     <p>Xibo needs you to choose a "key". This will be required each time you setup a new client. It should be complicated, and hard to remember. It is visible in the admin interface, so it need not be written down separately.</p>
     <div class="install_table">
       <p><label for="server_key">Server Key: </label><input type="text" name="server_key" value="" /></p>
     </div>
-    <p>Statistics</p>
+    <p><b>Statistics</b></p>
     <p>We'd love to know you're running Xibo. If you're happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please untick the box if your server does not have direct access to the internet.</p>
     <div class="install_table">
       <p><label for="stats">Anonymous Statistics: </label><input type="checkbox" name="stats" value="true" checked /></p>
