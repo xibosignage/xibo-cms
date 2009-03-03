@@ -239,7 +239,9 @@ elseif ($xibo_step == 5) {
       <?php
       flush();
       
-      if (! @mysql_query("CREATE DATABASE " . $db_name, $db)) {
+      $SQL = sprintf("CREATE DATABASE %s",
+                      mysql_real_escape_string($db_name));
+      if (! @mysql_query($SQL, $db)) {
         # Create database and user
         reportError("3", "Could not create a new database with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
       }
@@ -255,15 +257,21 @@ elseif ($xibo_step == 5) {
       <?php
       flush();
       
-      if ($db_host == "localhost") {
-        if (! @mysql_query("GRANT ALL PRIVILEGES ON " . $db_name . ".* to '" . $db_user . "'@'localhost' IDENTIFIED BY '" . $db_pass . "'", $db)) {
-          reportError("3", "Could not create a new user with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
-        }
+      if ($db_host == 'localhost') {
+        $SQL = sprintf("GRANT ALL PRIVILEGES ON %s.* to '%s'@'%s' IDENTIFIED BY '%s'",
+                        mysql_real_escape_string($db_name),
+                        mysql_real_escape_string($db_user),
+                        mysql_real_escape_string($db_host),
+                        mysql_real_escape_string($db_pass));
       }
       else {
-        if (! @mysql_query("GRANT ALL PRIVILEGES ON " . $db_name . ".* to '" . $db_user . "'@'%' IDENTIFIED BY '" . $db_pass . "'", $db)) {
+        $SQL = sprintf("GRANT ALL PRIVILEGES ON %s.* to '%s'@'%%' IDENTIFIED BY '%s'",
+                        mysql_real_escape_string($db_name),
+                        mysql_real_escape_string($db_user),
+                        mysql_real_escape_string($db_pass));
+      }
+      if (! @mysql_query($SQL, $db)) {
           reportError("3", "Could not create a new user with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
-        }
       }
       
 
@@ -401,8 +409,10 @@ elseif ($xibo_step == 7) {
     }
       
     @mysql_select_db($dbname,$db);
-    
-    if (! @mysql_query("UPDATE `user` SET UserPassword = '" . $password_hash . "' WHERE UserID = 1 LIMIT 1", $db)) {
+
+    $SQL = sprintf("UPDATE `user` SET UserPassword = '%s' WHERE UserID = 1 LIMIT 1",
+                    mysql_real_escape_string($password_hash));
+    if (! @mysql_query($SQL, $db)) {
       reportError("6", "An error occured changing the xibo_admin password.<br /><br />MySQL Error:<br />" . mysql_error());    
     }
  
@@ -497,11 +507,15 @@ elseif ($xibo_step == 9) {
       
     @mysql_select_db($dbname,$db);
     
-    if (! @mysql_query("UPDATE `setting` SET `value` = '" . $library_location . "' WHERE `setting`.`setting` = 'LIBRARY_LOCATION' LIMIT 1", $db)) {
+    $SQL = sprintf("UPDATE `setting` SET `value` = '%s' WHERE `setting`.`setting` = 'LIBRARY_LOCATION' LIMIT 1",
+                    mysql_real_escape_string($library_location));
+    if (! @mysql_query($SQL, $db)) {
       reportError("8", "An error occured changing the library location.<br /><br />MySQL Error:<br />" . mysql_error());    
     }
     
-    if (! @mysql_query("UPDATE `setting` SET `value` = '" . $server_key . "' WHERE `setting`.`setting` = 'SERVER_KEY' LIMIT 1", $db)) {
+    $SQL = sprintf("UPDATE `setting` SET `value` = '%s' WHERE `setting`.`setting` = 'SERVER_KEY' LIMIT 1",
+                      mysql_real_escape_string($server_key));
+    if (! @mysql_query($SQL, $db)) {
       reportError("8", "An error occured changing the server key.<br /><br />MySQL Error:<br />" . mysql_error());    
     }
  
