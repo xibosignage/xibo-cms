@@ -363,7 +363,7 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 			// Set PHONE_HOME_TIME to NOW.
 			$SQL = "UPDATE `setting`
 					SET `value` = '" . time() . "'
-					WHERE `setting`.`setting` = 'PHONE_HOME_TIME' LIMIT 1";
+					WHERE `setting`.`setting` = 'PHONE_HOME_DATE' LIMIT 1";
 
 			if (!$results = $db->query($SQL))
 			{
