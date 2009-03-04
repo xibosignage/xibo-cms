@@ -239,7 +239,7 @@ elseif ($xibo_step == 5) {
       <?php
       flush();
       
-      $SQL = sprintf("CREATE DATABASE %s",
+      $SQL = sprintf("CREATE DATABASE `%s`",
                       mysql_real_escape_string($db_name));
       if (! @mysql_query($SQL, $db)) {
         # Create database and user
@@ -258,14 +258,14 @@ elseif ($xibo_step == 5) {
       flush();
       
       if ($db_host == 'localhost') {
-        $SQL = sprintf("GRANT ALL PRIVILEGES ON %s.* to '%s'@'%s' IDENTIFIED BY '%s'",
+        $SQL = sprintf("GRANT ALL PRIVILEGES ON `%s`.* to '%s'@'%s' IDENTIFIED BY '%s'",
                         mysql_real_escape_string($db_name),
                         mysql_real_escape_string($db_user),
                         mysql_real_escape_string($db_host),
                         mysql_real_escape_string($db_pass));
       }
       else {
-        $SQL = sprintf("GRANT ALL PRIVILEGES ON %s.* to '%s'@'%%' IDENTIFIED BY '%s'",
+        $SQL = sprintf("GRANT ALL PRIVILEGES ON `%s`.* to '%s'@'%%' IDENTIFIED BY '%s'",
                         mysql_real_escape_string($db_name),
                         mysql_real_escape_string($db_user),
                         mysql_real_escape_string($db_pass));
