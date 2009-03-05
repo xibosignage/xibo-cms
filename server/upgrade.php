@@ -22,27 +22,71 @@
 DEFINE('XIBO', true);
 
 include('lib/app/kit.class.php');
-include('install/header.inc');
+include('install/header_upgrade.inc');
+require('settings.php');
 
 $fault = false;
 
-$xibo_step = Kit::GetParam('xibo_step',_POST,_INT,'0');
+session_start();
 
-if (!isset($xibo_step) || $xibo_step == 0) {
+if (! $_SESSION['step']) {
+	$_SESSION['step'] = 0;
+}
+
+if ($_SESSION['step'] == 0) {
+
+  $_SESSION['step'] = 1;
+
   # First step of the process.
-  # Show a welcome screen and next button
+  # Show a welcome screen and authenticate the user
   ?>
-  Welcome to the Xibo Installer!<br /><br />
-  The installer will take you through setting up Xibo one step at a time.<br /><br />
+  Welcome to the Xibo Upgrade!<br /><br />
+  The upgrade program will take you through the process one step at a time.<br /><br />
   Lets get started!<br /><br />
-  <form action="install.php" method="POST">
-    <input type="hidden" name="xibo_step" value="1" />
+  Please enter your xibo_admin password:<br /><br />
+  <form action="upgrade.php" method="POST">
+    <div class="install_table">
+	<input type="password" name="password" length="12" />
+    </div>
     <div class="loginbutton"><button type="submit">Next ></button></div>
   </form>
   <?php
 }
-elseif ($xibo_step == 1) {
-  # Check environment
+elseif ($_SESSION['step'] == 1) {
+  $_SESSION['step'] = 2;
+  
+  if (! $_SESSION['auth']) {
+	  # Check password
+
+	  $password = Kit::GetParam('password',_POST,_PASSWORD);
+	  $password_hash = md5($password);
+
+
+  	$db = @mysql_connect($dbhost,$dbuser,$dbpass);
+      
+  	  if (! $db) {
+ 	     reportError("0", "Could not connect to MySQL with the Xibo User account details saved in settings.php. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+    	}
+      
+    	@mysql_select_db($dbname,$db);
+
+	    $SQL = sprintf("SELECT `id` FROM `user` WHERE UserPassword='%s' AND UserName='xibo_admin'",
+        	            mysql_real_escape_string($password_hash));
+    	if (! $result = mysql_query($SQL, $db)) {
+      	reportError("0", "An error occured checking your password.<br /><br />MySQL Error:<br />" . mysql_error());    
+    	}
+ 
+	if (mysql_num_rows($result) == 0) {	
+      		$_SESSION['auth'] = false;
+       		reportError("0", "Password incorrect. Please try again.");
+   	}
+   	else {
+		$_SESSION['auth'] = true;
+    	}
+    	@mysql_free_result($result);
+    	@mysql_close($db);
+   }
+## Check server meets specs (as specs might have changed in this release)
   ?>
   <p>First we need to check if your server meets Xibo's requirements.</p>
   <div class="checks">
@@ -79,7 +123,7 @@ elseif ($xibo_step == 1) {
     ?>
       <img src="install/dot_red.gif"> PHP Version<br />
       <div class="check_explain">
-      Xibo requires PHP version 5 or later.<br />
+      Xibo requires PHP version 5.02 or later.<br />
       Please fix this, and retest.<br />
       </div>
     <?php
@@ -121,42 +165,24 @@ elseif ($xibo_step == 1) {
     </div>
     <?php
     if ($fault) {
+	$_SESSION['step'] = 1;
     ?>
-      <form action="install.php" method="POST">
-        <input type="hidden" name="xibo_step" value="1" />
+      <form action="upgrade.php" method="POST">
         <div class="loginbutton"><button type="submit">Retest</button></div>
       </form>
     <?php
     }
     else {
     ?>
-      <form action="install.php" method="POST">
-        <input type="hidden" name="xibo_step" value="2" />
+      <form action="upgrade.php" method="POST">
         <div class="loginbutton"><button type="submit">Next ></button></div>
       </form>
     <?php
     }    
 }
-elseif ($xibo_step == 2) {
-# Create database
-## Does database exist already?
-
+elseif ($_SESSION['step'] == 2) {
+# Calculate the upgrade
   ?>
-  <div class="info">
-    <p>Xibo needs to setup a new database.</p>
-    <p>If you have not yet created an empty database and database user for
-    Xibo to use, and know the username/password of a MySQL administrator,
-    click the "Create New" button, otherwise click "Use Existing".</p>
-    <p><i>Note that any existing database must be empty</i></p>
-  </div>
-  <form action="install.php" method="POST">
-    <input type="hidden" name="xibo_step" value="3" />
-    <button type="submit">Create New</button>
-  </form>
-  <form action="install.php" method="POST">
-    <input type="hidden" name="xibo_step" value="4" />
-    <button type="submit">Use Existing</button>
-  </form>
   <?php
 }
 elseif ($xibo_step == 3) {
@@ -538,9 +564,6 @@ elseif ($xibo_step == 10) {
   if (! unlink('install.php')) {
     reportError("10", "Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry", "Retry");
   }
-  if (! unlink('upgrade.php')) {
-    reportError("10", "Unable to delete upgrade.php. Please ensure the webserver has permission to unlink this file and retry", "Retry");
-  }
   ?>
   <div class="info">
     <p><b>Xibo was successfully installed.</b></p>
@@ -558,7 +581,7 @@ include('install/footer.inc');
 
 function checkFsPermissions() {
   # Check for appropriate filesystem permissions
-  return ((is_writable("install.php") && (is_writable("settings.php") && (is_writable("upgrade.php")) || is_writable(".")));
+  return (is_writable("install.php") && (is_writable("settings.php") || is_writable(".")));
 }
 
 function checkPHP() {
@@ -702,36 +725,29 @@ function gen_secret() {
   return $key;
 }
 
-function settings_strings() {
-global $settings_header;
-global $settings_footer;
+class UpgradeStep 
+{
+	protected $db;
 
-  $settings_header = <<<END
-<?php
+	public function __construct($db)
+	{
+		$this->db 	=& $db;
+	}
 
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- *
- * This file is part of Xibo - and is automatically generated by the installer
- *
- * You should not need to edit this file, unless your SQL connection details have changed.
- */
+	public function Boot()
+	{
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+	}
 
-global \$dbhost;
-global \$dbuser;
-global \$dbpass;
-global \$dbname;
+	public function Questions()
+	{
 
+	}
 
-END;
+	public function ValidateQuestion($questionNumber,$response)
+	{
 
-$settings_footer = <<<END
-?>
-END;
-
-  return;
+	}
 }
 
 ?>
