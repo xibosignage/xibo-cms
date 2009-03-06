@@ -523,6 +523,12 @@ elseif ($xibo_step == 9) {
     if (! @mysql_query($SQL, $db)) {
       reportError("8", "An error occured changing the server key.<br /><br />MySQL Error:<br />" . mysql_error());    
     }
+    
+    $SQL = sprintf("UPDATE `setting` SET `value` = '%s' WHERE `setting`.`setting` = 'defaultTimezone' LIMIT 1",
+                      mysql_real_escape_string(date_default_timezone_get()));
+    if (! @mysql_query($SQL, $db)) {
+      reportError("8", "An error occured setting the default timezone.<br /><br />MySQL Error:<br />" . mysql_error());    
+    }
  
     @mysql_close($db);
   
