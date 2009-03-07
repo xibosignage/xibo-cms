@@ -607,12 +607,12 @@ function RecieveXmlLog($serverKey, $hardwareKey, $xml, $version)
 				break;
 				
 			default:
-				Debug::LogEntry($db, "audit", "Unknown entry in client log " . $node->nodeName, "xmds", "", "RecieveXmlLog", $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
+				Debug::LogEntry($db, "audit", "Unknown entry in client log " . $node->nodeName, "xmds", "RecieveXmlLog", $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
 				break;
 		}
 	}
 
-	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "[OUT]", "xmds", "", "RecieveXmlLog", "", $displayInfo['displayid']);
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "[OUT]", "xmds", "RecieveXmlLog", "", $displayInfo['displayid']);
 	
 	return true;
 }
