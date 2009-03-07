@@ -354,6 +354,84 @@ END;
 			<select name="value[]">$select</select>
 END;
 		}
+		
+		// Also deal with the timezone setting type
+		$SQL = "";
+		$SQL.= sprintf("SELECT settingid, setting, value, helptext FROM setting WHERE type = 'timezone' AND cat='%s' AND userChange = 1", $cat);
+
+		if(!$results = $db->query($SQL)) trigger_error("Can not get settings:".$db->error(), E_USER_ERROR);
+
+		while($row = $db->get_row($results)) 
+		{
+			$settingid 	= Kit::ValidateParam($row[0], _INT);
+			$setting 	= Kit::ValidateParam($row[1], _STRING);
+			$selectedzone = Kit::ValidateParam($row[2], _STRING);
+			$helptext	= Kit::ValidateParam($row[3], _HTMLSTRING);
+			$options	= timezone_identifiers_list();
+			$structure 	= '';
+			$i 			= 0;
+			
+			// Create a Zone array containing the timezones
+			// From: http://php.oregonstate.edu/manual/en/function.timezone-identifiers-list.php
+			foreach($options as $zone) 
+			{
+				$zone 					= explode('/',$zone);
+				$zonen[$i]['continent'] = isset($zone[0]) ? $zone[0] : '';
+				$zonen[$i]['city'] 		= isset($zone[1]) ? $zone[1] : '';
+				$zonen[$i]['subcity'] 	= isset($zone[2]) ? $zone[2] : '';
+				$i++;
+			}
+			
+			// Sort them
+			asort($zonen);
+			
+			foreach($zonen as $zone) 
+			{
+				extract($zone);
+				
+				if($continent == 'Africa' || $continent == 'America' || $continent == 'Antarctica' || $continent == 'Arctic' || $continent == 'Asia' || $continent == 'Atlantic' || $continent == 'Australia' || $continent == 'Europe' || $continent == 'Indian' || $continent == 'Pacific') 
+				{
+					if(!isset($selectcontinent)) 
+					{
+						$structure .= '<optgroup label="'.$continent.'">'; // continent
+					} 
+					elseif($selectcontinent != $continent) 
+					{
+						$structure .= '</optgroup><optgroup label="'.$continent.'">'; // continent
+					}
+			
+					if(isset($city) != '')
+					{
+						if (!empty($subcity) != '')
+						{
+							$city = $city . '/'. $subcity;
+						}
+						$structure .= "<option ".((($continent.'/'.$city)==$selectedzone)?'selected="selected "':'')." value=\"".($continent.'/'.$city)."\">".str_replace('_',' ',$city)."</option>"; //Timezone
+					} 
+					else 
+					{
+						if (!empty($subcity) != '')
+						{
+							$city = $city . '/'. $subcity;
+						}
+						$structure .= "<option ".(($continent==$selectedzone)?'selected="selected "':'')." value=\"".$continent."\">".$continent."</option>"; //Timezone
+					}
+			
+					$selectcontinent = $continent;
+				}
+			}
+			$structure .= '</optgroup>';
+			
+			// End
+			
+			$output .= <<<END
+			<h5>$setting</h5>
+			<p>$helptext</p>
+			<input type="hidden" name="id[]" value="$settingid">
+			<select name="value[]">$structure</select>
+END;
+		}
+		
 		return $output;
 	}
 }
