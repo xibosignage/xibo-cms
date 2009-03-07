@@ -56,23 +56,24 @@ elseif ($_SESSION['step'] == 1) {
   $_SESSION['step'] = 2;
   
   if (! $_SESSION['auth']) {
+
+	// parse and init the settings.php
+	Config::Load();
+
+	// create a database class instance
+	$db = new database();
+
+	if (!$db->connect_db($dbhost, $dbuser, $dbpass)) reportError(0, "Unable to connect to the MySQL database using the settings stored in settings.php.<br /><br />MySQL Error:<br />" . $db->error());
+	if (!$db->select_db($dbname)) reportError(0, "Unable to select the MySQL database using the settings stored in settings.php.<br /><br />MySQL Error:<br />" . $db->error());
+
 	  # Check password
 
 	  $password = Kit::GetParam('password',_POST,_PASSWORD);
 	  $password_hash = md5($password);
 
-
-  	$db = @mysql_connect($dbhost,$dbuser,$dbpass);
-      
-  	  if (! $db) {
- 	     reportError("0", "Could not connect to MySQL with the Xibo User account details saved in settings.php. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
-    	}
-      
-    	@mysql_select_db($dbname,$db);
-
-	    $SQL = sprintf("SELECT `id` FROM `user` WHERE UserPassword='%s' AND UserName='xibo_admin'",
+	$SQL = sprintf("SELECT `id` FROM `user` WHERE UserPassword='%s' AND UserName='xibo_admin'",
         	            mysql_real_escape_string($password_hash));
-    	if (! $result = mysql_query($SQL, $db)) {
+    	if (! $result = $db->query($SQL)) {
       	reportError("0", "An error occured checking your password.<br /><br />MySQL Error:<br />" . mysql_error());    
     	}
  
@@ -82,9 +83,10 @@ elseif ($_SESSION['step'] == 1) {
    	}
    	else {
 		$_SESSION['auth'] = true;
+		$_SESSION['db'] = $db;
     	}
     	@mysql_free_result($result);
-    	@mysql_close($db);
+
    }
 ## Check server meets specs (as specs might have changed in this release)
   ?>
@@ -181,8 +183,50 @@ elseif ($_SESSION['step'] == 1) {
     }    
 }
 elseif ($_SESSION['step'] == 2) {
+	checkAuth();
 # Calculate the upgrade
-  ?>
+  	$db = $_SESSION['db'];
+      
+	$_SESSION['upgradeFrom'] = Config::Version($db, 'DBVersion');
+
+	// Get a list of .sql and .php files for the upgrade
+	$sql_files = ls('*.sql','install/database',false,array('return_files'));
+	$php_files = ls('*.php','install/database',false,array('return_files'));
+    
+	// Sort by natural filename (eg 10 is bigger than 2)
+	natcasesort($sql_files);
+	natcasesort($php_files);
+
+	$_SESSION['phpFiles'] = $php_files;
+	$_SESSION['sqlFiles'] = $sql_files;
+
+	$_SESSION['upgradeTo'] = Kit::ValidateParam(substr(end($sql_files),0,-4),_INT);
+
+	if (! $_SESSION['upgradeTo']) {
+		reportError("2", "Unable to calculate the upgradeTo value. Check for non-numeric SQL and PHP files in the 'install/datbase' directory.", "Retry");
+	}
+
+	// Loop for $i between upgradeFrom + 1 and upgradeTo.
+	// If a php file exists for that upgrade, make an instance of it and call Questions so we can
+	// Ask the user for input.
+	for ($i=$_SESSION['upgradeFrom'] + 1; $i <= $_SESSION['upgradeTo']; $i++) {
+		if (file_exists('install/database/' . $i . '.php')) {
+			include_once('install/database/' . $i . '.php');
+			$stepName = 'Step' . $i;
+			
+			// Check that a class called Step$i exists
+			if (class_exists($stepName)) {
+				$_SESSION['Step' . $i] = new $stepName($db);
+				// Call Questions on the object and send the resulting hash to createQuestions routine
+				createQuestions($_SESSION['Step' . $i]->Questions());
+			}
+			else {
+				print "Warning: We included $i.php, but it did not include a class of appropriate name."
+			}						
+		}
+	}
+
+?>
   <?php
 }
 elseif ($xibo_step == 3) {
@@ -328,7 +372,7 @@ elseif ($xibo_step == 5) {
     <?php
     flush();
     
-    # Load from sql files to db - HOW?
+    # Load from sql files to db
     $sql_files = ls('*.sql','install/database',false,array('return_files'));
 
     // Sort the files in to sensible order, ie
@@ -600,18 +644,24 @@ function checkJson() {
 }
  
 function reportError($step, $message, $button_text="&lt; Back") {
+	$_SESSION['step'] = $step;
 ?>
     <div class="info">
       <?php print $message; ?>
     </div>
     <form action="install.php" method="POST">
-      <input type="hidden" name="xibo_step" value="<?php print $step; ?>"/>
       <button type="submit"><?php print $button_text; ?></button>
     </form>
   <?php
   include('install/footer.inc');
   die();
 } 
+
+function checkAuth() {
+	if (! $_SESSION['auth']) {
+		reportError(1, "You must authenticate to run the upgrade.");
+	}
+}
 
 // Taken from http://forums.devshed.com/php-development-5/php-wont-load-sql-from-file-515902.html
 // By Crackster 
@@ -728,10 +778,19 @@ function gen_secret() {
 class UpgradeStep 
 {
 	protected $db;
+	protected $q;
+	protected $a;
 
 	public function __construct($db)
 	{
 		$this->db 	=& $db;
+		$this->q	=& array();
+		$this->a	=& array();
+
+		define('_CHECKBOX', "checkbox");
+		define('_INPUTBOX', "inputbox");
+		define('_RADIOSET', "radioset");
+		define('_PASSWORDBOX', "password");
 	}
 
 	public function Boot()
@@ -741,12 +800,12 @@ class UpgradeStep
 
 	public function Questions()
 	{
-
+		return array();
 	}
 
 	public function ValidateQuestion($questionNumber,$response)
 	{
-
+		return true;
 	}
 }
 
