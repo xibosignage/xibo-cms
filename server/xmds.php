@@ -220,6 +220,9 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	$SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
 	$SQL .= " INNER JOIN display ON schedule_detail.displayID = display.displayID ";
 	$SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
+	
+	$SQLBase = $SQL;
+	
 	//Do we include the default display
 	if ($displayInfo['inc_schedule'] == 1)
 	{
@@ -237,6 +240,21 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	{
 		trigger_error($db->error());
 		return new soap_fault("SOAP-ENV:Server", "", "Unable to get a list of files", $db->error());
+	}
+	
+	// Was there anything?
+	if ($db->num_rows($results) == 0)
+	{
+		// No rows, run the query for default layout
+		$SQL  = $SQLBase;
+		$SQL .= sprintf(" AND ((schedule_detail.starttime < '%s' AND schedule_detail.endtime > '%s' )", $plus4hours, $currentdate);
+		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+		
+		if (!$results = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
+		}
 	}
 	
 	while ($row = $db->get_row($results))
@@ -445,6 +463,10 @@ function Schedule($serverKey, $hardwareKey, $version)
 	$SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
 	$SQL .= " INNER JOIN display ON schedule_detail.displayID = display.displayID ";
 	$SQL .= " WHERE display.license = '$hardwareKey'  ";
+	
+	// Store the Base SQL for this display
+	$SQLBase = $SQL;
+	
 	//Do we include the default display
 	if ($displayInfo['inc_schedule'] == 1)
 	{
@@ -455,12 +477,29 @@ function Schedule($serverKey, $hardwareKey, $version)
 	{
 		$SQL .= " AND (schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
 	}
+	
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
 
+	// Run the query
 	if (!$results = $db->query($SQL))
 	{
 		trigger_error($db->error());
 		return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
+	}
+	
+	// Was there anything?
+	if ($db->num_rows($results) == 0)
+	{
+		// No rows, run the query for default layout
+		$SQL  = $SQLBase;
+		$SQL .= " AND ((schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
+		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+		
+		if (!$results = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
+		}
 	}
 	
 	while ($row = $db->get_row($results))
