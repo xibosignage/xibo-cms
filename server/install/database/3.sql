@@ -11,4 +11,4 @@ INSERT INTO `layout` (`layoutID`, `layout`, `permissionID`, `xml`, `userID`, `cr
 				</media></region></layout>
 ', '1', NOW(), NOW(), NULL, NULL, NULL, '0', '0', NULL);
 
-UPDATE `version` SET `DBVersion` = '3' WHERE CONVERT( `version`.`app_ver` USING utf8 ) = '0.1.0' AND `version`.`XmdsVersion` =1 AND `version`.`XlfVersion` =1 AND `version`.`DBVersion` =1 LIMIT 1 ;
+UPDATE `version` SET `DBVersion` = '3';
