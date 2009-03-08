@@ -79,6 +79,17 @@ function Auth($hardwareKey)
  */
 function CheckVersion($version)
 {
+	global $db;
+	
+	// Look up the Service XMDS version from the Version table
+	$serverVersion = Config::Version($db, 'XmdsVersion');
+	
+	if ($version != $serverVersion)
+	{
+		Debug::LogEntry($db, 'audit', sprintf('A Client with an incorrect version connected. Client Version: [%s] Server Version [%s]', $version, $serverVersion));
+		return false;
+	}
+	
 	return true;
 }
 
@@ -99,7 +110,13 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 	$displayName 	= Kit::ValidateParam($displayName, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
 	
-	define('SERVER_KEY', Config::GetSetting($db,'SERVER_KEY'));
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
+	
+	define('SERVER_KEY', Config::GetSetting($db, 'SERVER_KEY'));
 	
 	Debug::LogEntry($db, "audit", "[IN]", "xmds", "RegisterDisplay");
 	Debug::LogEntry($db, "audit", "serverKey [$serverKey], hardwareKey [$hardwareKey], displayName [$displayName]", "xmds", "RegisterDisplay");
@@ -188,6 +205,12 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
+	
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
 
 	$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 	
@@ -377,6 +400,12 @@ function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $
 	
 	$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 	
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
+	
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
 	{
@@ -438,6 +467,12 @@ function Schedule($serverKey, $hardwareKey, $version)
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
+	
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
 	
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
@@ -540,6 +575,12 @@ function RecieveXmlLog($serverKey, $hardwareKey, $xml, $version)
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
+	
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
 
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
@@ -637,6 +678,12 @@ function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
 	$type		 	= Kit::ValidateParam($type, _STRING);
 	$reason		 	= Kit::ValidateParam($reason, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
+	
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
 
 	// Auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
