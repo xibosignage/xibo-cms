@@ -21,6 +21,11 @@
 
 DEFINE('XIBO', true);
 
+define('_CHECKBOX', "checkbox");
+define('_INPUTBOX', "inputbox");
+define('_RADIOSET', "radioset");
+define('_PASSWORDBOX', "password");
+
 include('lib/app/kit.class.php');
 include('install/header_upgrade.inc');
 require('settings.php');
@@ -834,11 +839,6 @@ class UpgradeStep
 		$this->db 	=& $db;
 		$this->q	=& array();
 		$this->a	=& array();
-
-		define('_CHECKBOX', "checkbox");
-		define('_INPUTBOX', "inputbox");
-		define('_RADIOSET', "radioset");
-		define('_PASSWORDBOX', "password");
 	}
 
 	public function Boot()
