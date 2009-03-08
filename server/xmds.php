@@ -554,13 +554,15 @@ function RecieveXmlLog($serverKey, $hardwareKey, $xml, $version)
 			}
 			else if ($nodeElements->nodeName == "category")
 			{
-				$cat = $nodeElements->tectContent;
+				$cat = $nodeElements->textContent;
 			}
 		}
 		
 		switch ($node->nodeName)
 		{
 			case "stat":
+				if ($mediaID == '') $mediaID = 0;
+			
 				StatRecord($type, $date, $scheduleID, $displayInfo['displayid'], $layoutID, $mediaID, $date, $date);
 				break;
 				
@@ -570,11 +572,11 @@ function RecieveXmlLog($serverKey, $hardwareKey, $xml, $version)
 				// Either Audit or Error (if *)
 				if (substr($message, 0, 3) == '[*]')
 				{
-					Debug::LogEntry($db, "error", $message, "xmds - RecieveXmlLog", $cat, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
+					Debug::LogEntry($db, "error", $message, ".NET Client", $cat, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
 				}
 				else
 				{
-					Debug::LogEntry($db, "audit", $message, "xmds - RecieveXmlLog", $cat, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
+					Debug::LogEntry($db, "audit", $message, ".NET Client", $cat, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
 				}
 				
 				break;
