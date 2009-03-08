@@ -523,6 +523,7 @@ function RecieveXmlLog($serverKey, $hardwareKey, $xml, $version)
 		$layoutID 	= "";
 		$mediaID 	= "";
 		$type		= "";
+		$cat		= '';
 			
 		// Get the date and the message (all log types have these)
 		foreach ($node->childNodes as $nodeElements)
@@ -551,20 +552,31 @@ function RecieveXmlLog($serverKey, $hardwareKey, $xml, $version)
 			{
 				$type = $nodeElements->textContent;
 			}
+			else if ($nodeElements->nodeName == "category")
+			{
+				$cat = $nodeElements->tectContent;
+			}
 		}
 		
 		switch ($node->nodeName)
 		{
-			case "Stat":
+			case "stat":
 				StatRecord($type, $date, $scheduleID, $displayInfo['displayid'], $layoutID, $mediaID, $date, $date);
 				break;
 				
-			case "Error":
-				Debug::LogEntry($db, "error", $message, "xmds", "RecieveXmlLog", $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
-				break;
+			case "trace":
 				
-			case "Audit":
-				Debug::LogEntry($db, "audit", $message, "xmds", "RecieveXmlLog", $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
+				// We have a trace message
+				// Either Audit or Error (if *)
+				if (substr($message, 0, 3) == '[*]')
+				{
+					Debug::LogEntry($db, "error", $message, "xmds - RecieveXmlLog", $cat, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
+				}
+				else
+				{
+					Debug::LogEntry($db, "audit", $message, "xmds - RecieveXmlLog", $cat, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
+				}
+				
 				break;
 				
 			default:
