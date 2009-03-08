@@ -167,6 +167,22 @@ elseif ($_SESSION['step'] == 1) {
       </div>
     <?php
     }
+## GD
+  if (checkGd()) {
+    ?>
+      <img src="install/dot_green.gif"> PHP GD Extension<br />
+    <?php
+    }
+    else {
+      $fault = true;
+    ?>
+      <img src="install/dot_red.gif"> PHP GD Extension<br />
+      <div class="check_explain">
+      Xibo needs to manipulate images to function.<br />
+      Please install the GD libraries and extension and retest.<br />
+      </div>
+    <?php
+    }
     ?>
     <br /><br />
     </div>
@@ -646,6 +662,11 @@ function checkMySQL() {
 function checkJson() {
   # Check PHP has JSON module installed
   return extension_loaded("json");
+}
+
+function checkGd() {
+  # Check PHP has JSON module installed
+  return extension_loaded("gd");
 }
  
 function reportError($step, $message, $button_text="&lt; Back") {
