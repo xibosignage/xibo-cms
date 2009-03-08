@@ -218,7 +218,7 @@ elseif ($_SESSION['step'] == 2) {
 			if (class_exists($stepName)) {
 				$_SESSION['Step' . $i] = new $stepName($db);
 				// Call Questions on the object and send the resulting hash to createQuestions routine
-				createQuestions($_SESSION['Step' . $i]->Questions());
+				createQuestions($i, $_SESSION['Step' . $i]->Questions());
 			}
 			else {
 				print "Warning: We included $i.php, but it did not include a class of appropriate name."
@@ -773,6 +773,54 @@ function gen_secret() {
   } 
   
   return $key;
+}
+
+function createQuestions($step, $questions) {
+	// Takes a multi-dimensional array eg:
+	// $q[0]['question'] = "May we collect anonymous usage statistics?";
+	// $q[0]['type'] = _CHECKBOX;
+	// $q[0]['default'] = true;
+	//
+	// And turns it in to an HTML form for the user to complete.
+	foreach ($questions as $qnum => $question) {
+		?>
+		<div class="info">
+		<?php
+		echo $question['question'];
+		?>
+		</div>
+		<div class="install-table">
+		<?php
+
+		if (($question['type'] == _INPUTBOX) || ($question['type'] == _PASSWORD)) {
+			?>
+			<input type="
+				<?php
+				if ($question['type'] == _INPUTBOX) {
+					echo "text";
+				}
+				else {
+					echo "password";
+				} ?>" name="<?php echo $step; ?>-<?php echo $qnum; ?>" value="
+				<?php echo $question['default']; ?>" length="12" />
+			<?php
+		}
+		elseif ($question['type'] == _CHECKBOX) {
+			?>
+			<input type="checkbox" name="
+			<?php echo $step; ?>-<?php echo $qnum; ?>
+			"
+			<?php
+			if ($question['default']) {
+				print " checked";)
+			?>
+			 />
+			<?php
+		}
+		?>
+		</div>
+		<?php
+	}
 }
 
 class UpgradeStep 
