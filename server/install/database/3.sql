@@ -11,4 +11,6 @@ INSERT INTO `layout` (`layoutID`, `layout`, `permissionID`, `xml`, `userID`, `cr
 				</media></region></layout>
 ', '1', NOW(), NOW(), NULL, NULL, NULL, '0', '0', NULL);
 
+ALTER TABLE `log` CHANGE `page` `page` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL  ;
+
 UPDATE `version` SET `DBVersion` = '3';
