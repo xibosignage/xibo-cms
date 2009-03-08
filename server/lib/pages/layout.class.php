@@ -484,6 +484,7 @@ END;
 		if (!$db->query($SQL)) 
 		{
 			$response->SetError("Cannot delete this layout. You may retire it from the Edit form.");
+			$response->Respond();
 		}
 
 		$response->SetFormSubmitResponse("The Layout has been Deleted");
