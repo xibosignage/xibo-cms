@@ -25,7 +25,6 @@ session_start();
 
 define('_CHECKBOX', "checkbox");
 define('_INPUTBOX', "inputbox");
-define('_RADIOSET', "radioset");
 define('_PASSWORDBOX', "password");
 
 include('lib/app/kit.class.php');
@@ -254,7 +253,6 @@ elseif ($_SESSION['step'] == 2) {
 
 ?>
   <?php
-exit;
 }
 elseif ($xibo_step == 3) {
 ## If not, gather admin password and use to create empty db and new user.
