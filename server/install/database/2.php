@@ -13,9 +13,12 @@ class Step2 extends UpgradeStep
 
 	public function Questions()
 	{
-		$this->q[0]['question'] = "May we collect anonymous usage statistics?";
+		$this->q[0]['question'] = "Please tick the box if we may collect anonymous usage statistics?";
 		$this->q[0]['type'] = _CHECKBOX;
 		$this->q[0]['default'] = true;
+		$this->q[1]['question'] = "Text Box";
+		$this->q[1]['type'] = _INPUTBOX;
+		$this->q[1]['default'] = "This is a text box";
 		return $this->q;
 	}
 

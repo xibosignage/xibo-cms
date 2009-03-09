@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Xibo Admin - Installation</title>
+	<title>Xibo Admin - Upgrade</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 	<link rel="stylesheet" type="text/css" href="install/install.css" />
 	
@@ -32,5 +32,5 @@
 				</div>
 			</div>
 			<div class="install_body">
-			<h1>Xibo Installer</h1>			
+			<h1>Xibo Upgrade</h1>			
 

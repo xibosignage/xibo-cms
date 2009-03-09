@@ -21,12 +21,16 @@
 
 DEFINE('XIBO', true);
 
+session_start();
+
 define('_CHECKBOX', "checkbox");
 define('_INPUTBOX', "inputbox");
 define('_RADIOSET', "radioset");
 define('_PASSWORDBOX', "password");
 
 include('lib/app/kit.class.php');
+include('config/db_config.php');
+include('config/config.class.php');
 include('install/header_upgrade.inc');
 require('settings.php');
 
@@ -38,8 +42,6 @@ if (!$db->select_db($dbname)) reportError(0, "Unable to select the MySQL databas
 
 
 $fault = false;
-
-session_start();
 
 if (! $_SESSION['step']) {
 	$_SESSION['step'] = 0;
@@ -74,7 +76,7 @@ elseif ($_SESSION['step'] == 1) {
 	$password = Kit::GetParam('password',_POST,_PASSWORD);
 	$password_hash = md5($password);
 
-	$SQL = sprintf("SELECT `id` FROM `user` WHERE UserPassword='%s' AND UserName='xibo_admin'",
+	$SQL = sprintf("SELECT `UserID` FROM `user` WHERE UserPassword='%s' AND UserName='xibo_admin'",
         	            $db->escape_string($password_hash));
     	if (! $result = $db->query($SQL)) {
       	reportError("0", "An error occured checking your password.<br /><br />MySQL Error:<br />" . mysql_error());    
@@ -203,9 +205,9 @@ elseif ($_SESSION['step'] == 1) {
 elseif ($_SESSION['step'] == 2) {
 	checkAuth();
 # Calculate the upgrade
-  	$db = $_SESSION['db'];
       
 	$_SESSION['upgradeFrom'] = Config::Version($db, 'DBVersion');
+	$_SESSION['upgradeFrom'] = 1;
 
 	// Get a list of .sql and .php files for the upgrade
 	$sql_files = ls('*.sql','install/database',false,array('return_files'));
@@ -218,11 +220,17 @@ elseif ($_SESSION['step'] == 2) {
 	$_SESSION['phpFiles'] = $php_files;
 	$_SESSION['sqlFiles'] = $sql_files;
 
-	$_SESSION['upgradeTo'] = Kit::ValidateParam(substr(end($sql_files),0,-4),_INT);
+	$max_sql = Kit::ValidateParam(substr(end($sql_files),0,-4),_INT);
+	$max_php = Kit::ValidateParam(substr(end($php_files),0,-4),_INT);
+	$_SESSION['upgradeTo'] = max($max_sql, $max_php);
 
 	if (! $_SESSION['upgradeTo']) {
 		reportError("2", "Unable to calculate the upgradeTo value. Check for non-numeric SQL and PHP files in the 'install/datbase' directory.", "Retry");
 	}
+
+	echo '<div class="info">';
+	echo '<p>Upgrading from database version ' . $_SESSION['upgradeFrom'] . ' to ' . $_SESSION['upgradeTo'];
+	echo '</p></div><hr />';
 
 	// Loop for $i between upgradeFrom + 1 and upgradeTo.
 	// If a php file exists for that upgrade, make an instance of it and call Questions so we can
@@ -807,9 +815,9 @@ function createQuestions($step, $questions) {
 	//
 	// And turns it in to an HTML form for the user to complete.
 	foreach ($questions as $qnum => $question) {
-		echo '<div class="info">';
+		echo '<div class="info"><p>';
 		echo $question['question'];
-		echo '</div><div class="install-table">';
+		echo '</p></div><div class="install-table">';
 
 		if (($question['type'] == _INPUTBOX) || ($question['type'] == _PASSWORD)) {
 			echo '<input type="';
@@ -828,7 +836,7 @@ function createQuestions($step, $questions) {
 			}
 			echo '/>';
 		}
-		echo '</div>';
+		echo '</div><hr />';
 	}
 }
 
