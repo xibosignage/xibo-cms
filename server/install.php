@@ -584,7 +584,7 @@ include('install/footer.inc');
 
 function checkFsPermissions() {
   # Check for appropriate filesystem permissions
-  return ((is_writable("install.php") && (is_writable("settings.php") && (is_writable("upgrade.php")) || is_writable(".")));
+  return ((is_writable("install.php") && (is_writable("settings.php")) && (is_writable("upgrade.php")) || is_writable(".")));
 }
 
 function checkPHP() {

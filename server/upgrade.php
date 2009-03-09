@@ -30,6 +30,13 @@ include('lib/app/kit.class.php');
 include('install/header_upgrade.inc');
 require('settings.php');
 
+// create a database class instance
+$db = new database();
+
+if (!$db->connect_db($dbhost, $dbuser, $dbpass)) reportError(0, "Unable to connect to the MySQL database using the settings stored in settings.php.<br /><br />MySQL Error:<br />" . $db->error());
+if (!$db->select_db($dbname)) reportError(0, "Unable to select the MySQL database using the settings stored in settings.php.<br /><br />MySQL Error:<br />" . $db->error());
+
+
 $fault = false;
 
 session_start();
@@ -62,27 +69,18 @@ elseif ($_SESSION['step'] == 1) {
   
   if (! $_SESSION['auth']) {
 
-	// parse and init the settings.php
-	Config::Load();
+	# Check password
 
-	// create a database class instance
-	$db = new database();
-
-	if (!$db->connect_db($dbhost, $dbuser, $dbpass)) reportError(0, "Unable to connect to the MySQL database using the settings stored in settings.php.<br /><br />MySQL Error:<br />" . $db->error());
-	if (!$db->select_db($dbname)) reportError(0, "Unable to select the MySQL database using the settings stored in settings.php.<br /><br />MySQL Error:<br />" . $db->error());
-
-	  # Check password
-
-	  $password = Kit::GetParam('password',_POST,_PASSWORD);
-	  $password_hash = md5($password);
+	$password = Kit::GetParam('password',_POST,_PASSWORD);
+	$password_hash = md5($password);
 
 	$SQL = sprintf("SELECT `id` FROM `user` WHERE UserPassword='%s' AND UserName='xibo_admin'",
-        	            mysql_real_escape_string($password_hash));
+        	            $db->escape_string($password_hash));
     	if (! $result = $db->query($SQL)) {
       	reportError("0", "An error occured checking your password.<br /><br />MySQL Error:<br />" . mysql_error());    
     	}
  
-	if (mysql_num_rows($result) == 0) {	
+	if ($db->num_rows($result) == 0) {	
       		$_SESSION['auth'] = false;
        		reportError("0", "Password incorrect. Please try again.");
    	}
@@ -90,7 +88,6 @@ elseif ($_SESSION['step'] == 1) {
 		$_SESSION['auth'] = true;
 		$_SESSION['db'] = $db;
     	}
-    	@mysql_free_result($result);
 
    }
 ## Check server meets specs (as specs might have changed in this release)
@@ -242,13 +239,14 @@ elseif ($_SESSION['step'] == 2) {
 				createQuestions($i, $_SESSION['Step' . $i]->Questions());
 			}
 			else {
-				print "Warning: We included $i.php, but it did not include a class of appropriate name."
+				print "Warning: We included $i.php, but it did not include a class of appropriate name.";
 			}						
 		}
 	}
 
 ?>
   <?php
+exit;
 }
 elseif ($xibo_step == 3) {
 ## If not, gather admin password and use to create empty db and new user.
@@ -809,43 +807,28 @@ function createQuestions($step, $questions) {
 	//
 	// And turns it in to an HTML form for the user to complete.
 	foreach ($questions as $qnum => $question) {
-		?>
-		<div class="info">
-		<?php
+		echo '<div class="info">';
 		echo $question['question'];
-		?>
-		</div>
-		<div class="install-table">
-		<?php
+		echo '</div><div class="install-table">';
 
 		if (($question['type'] == _INPUTBOX) || ($question['type'] == _PASSWORD)) {
-			?>
-			<input type="
-				<?php
-				if ($question['type'] == _INPUTBOX) {
-					echo "text";
-				}
-				else {
-					echo "password";
-				} ?>" name="<?php echo $step; ?>-<?php echo $qnum; ?>" value="
-				<?php echo $question['default']; ?>" length="12" />
-			<?php
+			echo '<input type="';
+			if ($question['type'] == _INPUTBOX) {
+				echo 'text';
+			}
+			else {
+				echo 'password';
+			}
+			echo '" name="' . $step . '-' . $qnum .'" value="'. $question['default'] .'" length="12" />';
 		}
 		elseif ($question['type'] == _CHECKBOX) {
-			?>
-			<input type="checkbox" name="
-			<?php echo $step; ?>-<?php echo $qnum; ?>
-			"
-			<?php
+			echo '<input type="checkbox" name="' . $step . '-' . $qnum . '" ';
 			if ($question['default']) {
-				print " checked";)
-			?>
-			 />
-			<?php
+				echo 'checked ';
+			}
+			echo '/>';
 		}
-		?>
-		</div>
-		<?php
+		echo '</div>';
 	}
 }
 
@@ -858,8 +841,8 @@ class UpgradeStep
 	public function __construct($db)
 	{
 		$this->db 	=& $db;
-		$this->q	=& array();
-		$this->a	=& array();
+		$this->q	= array();
+		$this->a	= array();
 	}
 
 	public function Boot()
