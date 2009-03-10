@@ -229,7 +229,8 @@ elseif ($_SESSION['step'] == 2) {
 
 	echo '<div class="info">';
 	echo '<p>Upgrading from database version ' . $_SESSION['upgradeFrom'] . ' to ' . $_SESSION['upgradeTo'];
-	echo '</p></div><hr />';
+	echo '</p></div><hr width="25%"/>';
+	echo '<form action="upgrade.php" method="POST">';
 
 	// Loop for $i between upgradeFrom + 1 and upgradeTo.
 	// If a php file exists for that upgrade, make an instance of it and call Questions so we can
@@ -250,6 +251,10 @@ elseif ($_SESSION['step'] == 2) {
 			}						
 		}
 	}
+
+	$_SESSION['step'] = 3;
+	echo '<p><input type="submit" value="Next >" /></p>';
+	echo '</form>';
 
 ?>
   <?php
@@ -679,7 +684,7 @@ function reportError($step, $message, $button_text="&lt; Back") {
     <div class="info">
       <?php print $message; ?>
     </div>
-    <form action="install.php" method="POST">
+    <form action="upgrade.php" method="POST">
       <button type="submit"><?php print $button_text; ?></button>
     </form>
   <?php
@@ -834,7 +839,7 @@ function createQuestions($step, $questions) {
 			}
 			echo '/>';
 		}
-		echo '</div><hr />';
+		echo '</div><hr width="25%" />';
 	}
 }
 
