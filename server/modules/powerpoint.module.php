@@ -176,7 +176,7 @@ END;
 				</tr>
 				<tr>
 					<td></td>
-					<td>This form accepts: <span class="required">swf</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+					<td>This form accepts: <span class="required">ppt/pps</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -322,7 +322,7 @@ END;
 				</tr>
 				<tr>
 					<td></td>
-					<td>This form accepts: <span class="required">jpg, jpeg, png and gif</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+					<td>This form accepts: <span class="required">ppt/pps</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
 				</tr>
 				<tr>
 					<td></td>
