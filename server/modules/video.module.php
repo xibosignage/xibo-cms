@@ -560,7 +560,7 @@ END;
 		
 		// All OK to insert this record
 		$SQL  = "INSERT INTO media (name, type, duration, originalFilename, permissionID, userID, retired ) ";
-		$SQL .= "VALUES ('%s', 'image', '%s', '%s', %d, %d, 0) ";
+		$SQL .= "VALUES ('%s', 'video', '%s', '%s', %d, %d, 0) ";
 		
 		$SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($duration), $db->escape_string($fileName), $permissionid, $userid);
 
