@@ -362,6 +362,7 @@ elseif ($_SESSION['step'] == 3) {
 		else {
 			echo '<b>There was an error during the upgrade. Please take a screenshot of this page and seek help!</b>';
 		}
+		session_destroy();
 	}
 }
 else {
