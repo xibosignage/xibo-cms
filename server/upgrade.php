@@ -21,17 +21,39 @@
 
 DEFINE('XIBO', true);
 
-session_start();
-
-define('_CHECKBOX', "checkbox");
-define('_INPUTBOX', "inputbox");
-define('_PASSWORDBOX', "password");
-
 include('lib/app/kit.class.php');
 include('config/db_config.php');
 include('config/config.class.php');
 include('install/header_upgrade.inc');
 require('settings.php');
+
+// Once we've calculated the upgrade in step 2 below, we need
+// to have included the appropriate upgrade php files
+// before we restore the session, so objects get recreated properly.
+//
+// Check to see if we've passed that point, and if so look at what was posted
+// to include those classes.
+
+if (Kit::GetParam("includes", _POST, _BOOL)) {
+	foreach ($_POST as $key => $post) {
+		// $key should be like 1-2, 1-3 etc
+		// Split $key on - character.
+
+		$parts = explode('-', $key);
+		if (count($parts) == 2) {
+			$step = Kit::ValidateParam($parts[0], _INT);
+			if (file_exists('install/database/' . $step . '.php')) {
+				include_once('install/database/' . $step . '.php');
+			}
+		}
+	}
+}
+
+session_start();
+
+define('_CHECKBOX', "checkbox");
+define('_INPUTBOX', "inputbox");
+define('_PASSWORDBOX', "password");
 
 // create a database class instance
 $db = new database();
@@ -242,10 +264,9 @@ elseif ($_SESSION['step'] == 2) {
 			
 			// Check that a class called Step$i exists
 			if (class_exists($stepName)) {
-				$_SESSION['q']['Step' . $i] = new $stepName($db);
+				$_SESSION['Step' . $i] = new $stepName($db);
 				// Call Questions on the object and send the resulting hash to createQuestions routine
-				createQuestions($i, $_SESSION['q']['Step' . $i]->Questions());
-				$_SESSION['q']['Step' . $i] = serialize($_SESSION['Step' . $i]);
+				createQuestions($i, $_SESSION['Step' . $i]->Questions());
 			}
 			else {
 				print "Warning: We included $i.php, but it did not include a class of appropriate name.";
@@ -254,6 +275,7 @@ elseif ($_SESSION['step'] == 2) {
 	}
 
 	$_SESSION['step'] = 3;
+	echo '<input type="hidden" name="includes" value="true" />';
 	echo '<p><input type="submit" value="Next >" /></p>';
 	echo '</form>';
 
@@ -273,8 +295,9 @@ elseif ($_SESSION['step'] == 3) {
 		if (count($parts) == 2) {
 			$step_num = 'Step' . $parts[0];
 			include_once('install/database/' . $parts[0] . '.php');
-			$_SESSION['q'][$step_num] = unserialize($_SESSION['q'][$step_num]);
-			$response = $_SESSION['q'][$step_num]->ValidateQuestion($parts[1], $post);
+			// $_SESSION['q'][$step_num] = unserialize($_SESSION['q'][$step_num]);
+;
+			$response = $_SESSION[$step_num]->ValidateQuestion($parts[1], $post);
 			if (! $response == true) {
 				// The upgrade routine for this step wasn't happy.
 				$fault = true;
