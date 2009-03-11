@@ -27,7 +27,7 @@ class Step2 extends UpgradeStep
 		switch ($questionNumber) {
 			case 0:
 				$this->a[0] = Kit::ValidateParam($response, _BOOL);
-				return $this->a[0];
+				return true;
 		}
 
 		return false;

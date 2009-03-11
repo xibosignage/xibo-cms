@@ -242,9 +242,10 @@ elseif ($_SESSION['step'] == 2) {
 			
 			// Check that a class called Step$i exists
 			if (class_exists($stepName)) {
-				$_SESSION['Step' . $i] = new $stepName($db);
+				$_SESSION['q']['Step' . $i] = new $stepName($db);
 				// Call Questions on the object and send the resulting hash to createQuestions routine
-				createQuestions($i, $_SESSION['Step' . $i]->Questions());
+				createQuestions($i, $_SESSION['q']['Step' . $i]->Questions());
+				$_SESSION['q']['Step' . $i] = serialize($_SESSION['Step' . $i]);
 			}
 			else {
 				print "Warning: We included $i.php, but it did not include a class of appropriate name.";
@@ -259,7 +260,34 @@ elseif ($_SESSION['step'] == 2) {
 ?>
   <?php
 }
-elseif ($xibo_step == 3) {
+elseif ($_SESSION['step'] == 3) {
+
+	$fault = false;
+	$fault_string = "";
+	print_r($_POST);
+	foreach ($_POST as $key => $post) {
+		// $key should be like 1-2, 1-3 etc
+		// Split $key on - character.
+
+		$parts = explode('-', $key);
+		if (count($parts) == 2) {
+			$step_num = 'Step' . $parts[0];
+			include_once('install/database/' . $parts[0] . '.php');
+			$_SESSION['q'][$step_num] = unserialize($_SESSION['q'][$step_num]);
+			$response = $_SESSION['q'][$step_num]->ValidateQuestion($parts[1], $post);
+			if (! $response == true) {
+				// The upgrade routine for this step wasn't happy.
+				$fault = true;
+				$fault_string .= $response . "<br />\n";
+			}
+		}
+	}
+
+	if ($fault) {
+		echo $fault_string;
+	}
+
+exit;
 ## If not, gather admin password and use to create empty db and new user.
 ?>
 <div class="info">
@@ -900,6 +928,13 @@ function createQuestions($step, $questions) {
 		echo '</div><hr width="25%" />';
 	}
 }
+
+//function __autoload($class_name) {
+//    if (substr($class_name,0,4) == "Step") {
+//	    $class_name = substr($class_name,4);
+//	    require_once install/database/$class_name . '.php';
+//    }
+//}
 
 class UpgradeStep 
 {
