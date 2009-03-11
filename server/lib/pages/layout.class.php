@@ -1536,7 +1536,7 @@ END;
 		$response->loadForm	= true;
 		$response->loadFormUri= "index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions";;
 		
-		return $response;
+		$response->Respond();
 	}
 
 	/**
