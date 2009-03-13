@@ -1147,18 +1147,18 @@ END;
 	{
 		$db =& $this->db;
 		
-		//Assume we have the xml in memory already
+		// Assume we have the xml in memory already
+		// Make a DOM from the XML
+		$xml = new DOMDocument();
+		$xml->loadXML($this->xml);
 		
-		//load the XML into a SimpleXML OBJECT
-		$xml = simplexml_load_string($this->xml);
-		
-		//get the width and the height
-		$width 	= (string) $xml['width'];
-		$height = (string) $xml['height'];
+		// get the width and the height
+		$width 	= $xml->documentElement->getAttribute('width');
+		$height = $xml->documentElement->getAttribute('height');
 		
 		//do we have a background? Or a background color (or both)
-		$bgImage = (string) $xml['background'];
-		$bgColor = (string) $xml['bgcolor'];
+		$bgImage = $xml->documentElement->getAttribute('background');
+		$bgColor = $xml->documentElement->getAttribute('bgcolor');
 
 		//Library location
 		$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
@@ -1177,20 +1177,22 @@ END;
 		$width 	= $width . "px";
 		$height = $height . "px";
 		
-		$regionHtml = "";
+		// Get all the regions and draw them on
+		$regionHtml 	= "";
+		$regionNodeList = $xml->getElementsByTagName('region');
 
 		//get the regions
-		foreach ($xml->region as $region)
+		foreach ($regionNodeList as $region)
 		{
 			//get dimensions
-			$regionWidth 	= (string) $region['width'] . "px";
-			$regionHeight 	= (string) $region['height'] . "px";
-			$regionLeft		= (string) $region['left'] . "px";
-			$regionTop		= (string) $region['top'] . "px";
-			$regionid		= (string) $region['id'];
+			$regionWidth 	= $region->getAttribute('width') . "px";
+			$regionHeight 	= $region->getAttribute('height') . "px";
+			$regionLeft		= $region->getAttribute('left') . "px";
+			$regionTop		= $region->getAttribute('top') . "px";
+			$regionid		= $region->getAttribute('id');
 			
 			$previewStyle	= "position:absolute; top:0px; left:0px; width: 100%; height: 100%;";
-			$paddingTop		= $region['height'] / 2 - 16;
+			$paddingTop		= $regionHeight / 2 - 16;
 			$paddingTop		= $paddingTop . "px";
 
 			$doubleClickLink = "XiboFormRender($(this).attr('href'))";
@@ -1249,18 +1251,23 @@ HTML;
 		//Buttons down the side - media across the top, absolutly positioned in the canvas div
 		$mediaHtml = "";
 		
-		//load the XML into a SimpleXML OBJECT
-		$xml = simplexml_load_string($this->xml);
+		// Make a DOM from the XML
+		$xml = new DOMDocument();
+		$xml->loadXML($this->xml);
 		
 		//We need to set the duration per pixel...
-		$maxMediaDuration = 1;
-		$numMediaNodes = 0;
+		$maxMediaDuration 	= 1;
+		$numMediaNodes 		= 0;
 		
-		foreach ($xml->xpath("//region[@id='$regionid']/media") as $mediaNode)
+		$xpath = new DOMXPath($xml);
+		$mediaNodes = $xpath->query("//region[@id='$regionid']/media");
+		
+		foreach ($mediaNodes as $mediaNode)
 		{
 			$numMediaNodes++;
 			
-			$mediaDuration = (string) $mediaNode['duration'];
+			// Get the duration of this media node
+			$mediaDuration = $mediaNode->getAttribute('duration');
 			
 			if ($mediaDuration == 0) 
 			{
@@ -1301,8 +1308,8 @@ HTML;
 		$tableWidthPx = $availableWidth . "px";
 		$count = 0;
 		
-		$mediaNodes = $xml->xpath("//region[@id='$regionid']/media");
-		$countNodes = count($mediaNodes);
+		// Go through the media nodes again
+		$countNodes = $mediaNodes->length;
 		
 		//Find the RegionXml and then query each media node
 		foreach ($mediaNodes as $mediaNode)
@@ -1310,12 +1317,12 @@ HTML;
 			$count++;
 			
 			//Build up a button with position information
-			$mediaid 		= (string) $mediaNode['id'];
-			$lkid 			= (string) $mediaNode['lkid'];
-			$mediaType 		= (string) $mediaNode['type'];
-			$mediaFileName 	= (string) $mediaNode['filename'];
-			$mediaName		= (string) $mediaNode['name'];
-			$mediaDuration  = (string) $mediaNode['duration'];
+			$mediaid 		= $mediaNode->getAttribute('id');
+			$lkid 			= $mediaNode->getAttribute('lkid');
+			$mediaType 		= $mediaNode->getAttribute('type');
+			$mediaFileName 	= $mediaNode->getAttribute('filename');
+			$mediaName		= $mediaNode->getAttribute('name');
+			$mediaDuration  = $mediaNode->getAttribute('duration');
 			
 			//Do we have a thumbnail for this media?
 			if ($mediaType == "image" && file_exists($libraryLocation."tn_$mediaFileName"))
