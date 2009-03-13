@@ -96,7 +96,7 @@ FORM;
 		
 		$direction	= $this->GetOption('direction');
 		$copyright	= $this->GetOption('copyright');
-		$uri		= $this->GetOption('uri');
+		$uri		= urldecode($this->GetOption('uri'));
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
 		

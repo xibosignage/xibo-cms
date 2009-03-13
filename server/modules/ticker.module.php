@@ -106,7 +106,7 @@ FORM;
 		
 		$direction	= $this->GetOption('direction');
 		$copyright	= $this->GetOption('copyright');
-		$uri		= $this->GetOption('uri');
+		$uri		= urldecode($this->GetOption('uri'));
 		
 		// Get the text out of RAW
 		$rawXml = new DOMDocument();
