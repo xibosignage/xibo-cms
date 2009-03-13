@@ -708,7 +708,8 @@ END;
 		$templateHelp	= $helpManager->HelpIcon("Template to create this layout with.", true);
 		
 		//init the retired option
-		$retired_option = "";
+		$retired_option 	= '';
+		$template_option 	= '';
 		
 		if ($this->layoutid != "") 
 		{ //assume an edit
