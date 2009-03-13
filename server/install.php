@@ -136,6 +136,22 @@ elseif ($xibo_step == 1) {
       </div>
     <?php
     }
+## Calendar
+  if (checkCal()) {
+    ?>
+      <img src="install/dot_green.gif"> PHP Calendar Extension<br />
+    <?php
+    }
+    else {
+      $fault = true;
+    ?>
+      <img src="install/dot_red.gif"> PHP Calendar Extension<br />
+      <div class="check_explain">
+      Xibo needs the calendar extension to function.<br />
+      Please install the calendar extension and retest.<br />
+      </div>
+    <?php
+    }
     ?>
     <br /><br />
     </div>
@@ -605,6 +621,11 @@ function checkJson() {
 function checkGd() {
   # Check PHP has JSON module installed
   return extension_loaded("gd");
+}
+
+function checkCalendar() {
+  # Check PHP has JSON module installed
+  return extension_loaded("calendar");
 }
  
 function reportError($step, $message, $button_text="&lt; Back") {
