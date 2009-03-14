@@ -21,6 +21,10 @@
 
 DEFINE('XIBO', true);
 
+if (! checkPHP()) {
+  die('Xibo requires PHP 5.0.2 or later');
+}
+
 include('lib/app/kit.class.php');
 include('install/header.inc');
 
@@ -62,6 +66,7 @@ elseif ($xibo_step == 1) {
       <ul>
         <li> settings.php
         <li> install.php
+	<li> upgrade.php
       </ul>
       Please fix this, and retest.<br />
       </div>
@@ -112,6 +117,38 @@ elseif ($xibo_step == 1) {
       <div class="check_explain">
       Xibo needs the PHP JSON extension to function.<br />
       Please install the PHP JSON extension and retest.<br />
+      </div>
+    <?php
+    }
+## GD
+  if (checkGd()) {
+    ?>
+      <img src="install/dot_green.gif"> PHP GD Extension<br />
+    <?php
+    }
+    else {
+      $fault = true;
+    ?>
+      <img src="install/dot_red.gif"> PHP GD Extension<br />
+      <div class="check_explain">
+      Xibo needs to manipulate images to function.<br />
+      Please install the GD libraries and extension and retest.<br />
+      </div>
+    <?php
+    }
+## Calendar
+  if (checkCal()) {
+    ?>
+      <img src="install/dot_green.gif"> PHP Calendar Extension<br />
+    <?php
+    }
+    else {
+      $fault = true;
+    ?>
+      <img src="install/dot_red.gif"> PHP Calendar Extension<br />
+      <div class="check_explain">
+      Xibo needs the calendar extension to function.<br />
+      Please install the calendar extension and retest.<br />
       </div>
     <?php
     }
@@ -531,6 +568,12 @@ elseif ($xibo_step == 9) {
     if (! @mysql_query($SQL, $db)) {
       reportError("8", "An error occured changing the server key.<br /><br />MySQL Error:<br />" . mysql_error());    
     }
+    
+    $SQL = sprintf("UPDATE `setting` SET `value` = '%s' WHERE `setting`.`setting` = 'defaultTimezone' LIMIT 1",
+                      mysql_real_escape_string(date_default_timezone_get()));
+    if (! @mysql_query($SQL, $db)) {
+      reportError("8", "An error occured setting the default timezone.<br /><br />MySQL Error:<br />" . mysql_error());    
+    }
  
     $SQL = sprintf("UPDATE `setting` SET `value` = '%s' WHERE `setting`.`setting` = 'PHONE_HOME' LIMIT 1",
                       mysql_real_escape_string($stats));
@@ -560,6 +603,9 @@ elseif ($xibo_step == 10) {
   if (! unlink('install.php')) {
     reportError("10", "Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry", "Retry");
   }
+  if (! unlink('upgrade.php')) {
+    reportError("10", "Unable to delete upgrade.php. Please ensure the webserver has permission to unlink this file and retry", "Retry");
+  }
   ?>
   <div class="info">
     <p><b>Xibo was successfully installed.</b></p>
@@ -577,7 +623,7 @@ include('install/footer.inc');
 
 function checkFsPermissions() {
   # Check for appropriate filesystem permissions
-  return (is_writable("install.php") && (is_writable("settings.php") || is_writable(".")));
+  return ((is_writable("install.php") && (is_writable("settings.php")) && (is_writable("upgrade.php")) || is_writable(".")));
 }
 
 function checkPHP() {
@@ -593,6 +639,16 @@ function checkMySQL() {
 function checkJson() {
   # Check PHP has JSON module installed
   return extension_loaded("json");
+}
+
+function checkGd() {
+  # Check PHP has JSON module installed
+  return extension_loaded("gd");
+}
+
+function checkCalendar() {
+  # Check PHP has JSON module installed
+  return extension_loaded("calendar");
 }
  
 function reportError($step, $message, $button_text="&lt; Back") {

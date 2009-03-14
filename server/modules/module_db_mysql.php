@@ -100,6 +100,12 @@ class database
 	{
         return mysql_num_rows($result);
     }
+
+    //gets the number of fields
+    function num_fields($result) 
+	{
+        return mysql_num_fields($result);
+    }
     
     function escape_string($string) 
 	{
