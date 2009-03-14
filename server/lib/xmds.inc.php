@@ -29,10 +29,7 @@ require_once("lib/app/debug.class.php");
 require_once("lib/app/kit.class.php");
 
 require_once("config/db_config.php");
-require_once("config/config.class.php");
-
-
-date_default_timezone_set("Europe/London");
+require_once("config/config.class.php");
 
 // Sort out magic quotes
 if (get_magic_quotes_gpc()) 
@@ -76,6 +73,8 @@ if (!$db->select_db($dbname)) trigger_error($db->error(), E_USER_ERROR);
 
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));
+
+date_default_timezone_set(Config::GetSetting($db, 'defaultTimezone'));
 
 require_once(Config::GetSetting($db, 'NUSOAP_PATH'));
 ?>
