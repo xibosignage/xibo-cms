@@ -646,7 +646,7 @@ function checkGd() {
   return extension_loaded("gd");
 }
 
-function checkCalendar() {
+function checkCal() {
   # Check PHP has JSON module installed
   return extension_loaded("calendar");
 }

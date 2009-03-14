@@ -382,6 +382,10 @@ END;
 				$i++;
 			}
 			
+			// Add UTC to the list of options as a last resort option.
+			$zonen[$i]['continent'] = "General";
+			$zonen[$i]['city'] = "UTC";
+
 			// Sort them
 			asort($zonen);
 			
@@ -389,7 +393,7 @@ END;
 			{
 				extract($zone);
 				
-				if($continent == 'Africa' || $continent == 'America' || $continent == 'Antarctica' || $continent == 'Arctic' || $continent == 'Asia' || $continent == 'Atlantic' || $continent == 'Australia' || $continent == 'Europe' || $continent == 'Indian' || $continent == 'Pacific') 
+				if($continent == 'Africa' || $continent == 'America' || $continent == 'Antarctica' || $continent == 'Arctic' || $continent == 'Asia' || $continent == 'Atlantic' || $continent == 'Australia' || $continent == 'Europe' || $continent == 'Indian' || $continent == 'Pacific' || $continent == 'General') 
 				{
 					if(!isset($selectcontinent)) 
 					{
