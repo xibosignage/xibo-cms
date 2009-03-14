@@ -79,6 +79,17 @@ function Auth($hardwareKey)
  */
 function CheckVersion($version)
 {
+	global $db;
+	
+	// Look up the Service XMDS version from the Version table
+	$serverVersion = Config::Version($db, 'XmdsVersion');
+	
+	if ($version != $serverVersion)
+	{
+		Debug::LogEntry($db, 'audit', sprintf('A Client with an incorrect version connected. Client Version: [%s] Server Version [%s]', $version, $serverVersion));
+		return false;
+	}
+	
 	return true;
 }
 
@@ -99,7 +110,13 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 	$displayName 	= Kit::ValidateParam($displayName, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
 	
-	define('SERVER_KEY', Config::GetSetting($db,'SERVER_KEY'));
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
+	
+	define('SERVER_KEY', Config::GetSetting($db, 'SERVER_KEY'));
 	
 	Debug::LogEntry($db, "audit", "[IN]", "xmds", "RegisterDisplay");
 	Debug::LogEntry($db, "audit", "serverKey [$serverKey], hardwareKey [$hardwareKey], displayName [$displayName]", "xmds", "RegisterDisplay");
@@ -188,6 +205,12 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
+	
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
 
 	$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 	
@@ -220,6 +243,9 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	$SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
 	$SQL .= " INNER JOIN display ON schedule_detail.displayID = display.displayID ";
 	$SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
+	
+	$SQLBase = $SQL;
+	
 	//Do we include the default display
 	if ($displayInfo['inc_schedule'] == 1)
 	{
@@ -237,6 +263,21 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	{
 		trigger_error($db->error());
 		return new soap_fault("SOAP-ENV:Server", "", "Unable to get a list of files", $db->error());
+	}
+	
+	// Was there anything?
+	if ($db->num_rows($results) == 0)
+	{
+		// No rows, run the query for default layout
+		$SQL  = $SQLBase;
+		$SQL .= sprintf(" AND ((schedule_detail.starttime < '%s' AND schedule_detail.endtime > '%s' )", $plus4hours, $currentdate);
+		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+		
+		if (!$results = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
+		}
 	}
 	
 	while ($row = $db->get_row($results))
@@ -405,6 +446,12 @@ function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $
 	
 	$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 	
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
+	
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
 	{
@@ -467,6 +514,12 @@ function Schedule($serverKey, $hardwareKey, $version)
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
 	
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
+	
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
 	{
@@ -491,6 +544,10 @@ function Schedule($serverKey, $hardwareKey, $version)
 	$SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
 	$SQL .= " INNER JOIN display ON schedule_detail.displayID = display.displayID ";
 	$SQL .= " WHERE display.license = '$hardwareKey'  ";
+	
+	// Store the Base SQL for this display
+	$SQLBase = $SQL;
+	
 	//Do we include the default display
 	if ($displayInfo['inc_schedule'] == 1)
 	{
@@ -501,12 +558,29 @@ function Schedule($serverKey, $hardwareKey, $version)
 	{
 		$SQL .= " AND (schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
 	}
+	
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
 
+	// Run the query
 	if (!$results = $db->query($SQL))
 	{
 		trigger_error($db->error());
 		return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
+	}
+	
+	// Was there anything?
+	if ($db->num_rows($results) == 0)
+	{
+		// No rows, run the query for default layout
+		$SQL  = $SQLBase;
+		$SQL .= " AND ((schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
+		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+		
+		if (!$results = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
+		}
 	}
 	
 	while ($row = $db->get_row($results))
@@ -547,6 +621,12 @@ function RecieveXmlLog($serverKey, $hardwareKey, $xml, $version)
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
+	
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
 
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
@@ -614,12 +694,12 @@ function RecieveXmlLog($serverKey, $hardwareKey, $xml, $version)
 				break;
 				
 			default:
-				Debug::LogEntry($db, "audit", "Unknown entry in client log " . $node->nodeName, "xmds", "", "RecieveXmlLog", $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
+				Debug::LogEntry($db, "audit", "Unknown entry in client log " . $node->nodeName, "xmds", "RecieveXmlLog", $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
 				break;
 		}
 	}
 
-	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "[OUT]", "xmds", "", "RecieveXmlLog", "", $displayInfo['displayid']);
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "[OUT]", "xmds", "RecieveXmlLog", "", $displayInfo['displayid']);
 	
 	return true;
 }
@@ -644,6 +724,12 @@ function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
 	$type		 	= Kit::ValidateParam($type, _STRING);
 	$reason		 	= Kit::ValidateParam($reason, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
+	
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
 
 	// Auth this request...
 	if (!$displayInfo = Auth($hardwareKey))

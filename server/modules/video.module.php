@@ -261,6 +261,8 @@ FORM;
 		{
 			setSession('content','mediatype','image');
 			
+			$extraNotes = '<em>Note: Uploading a new media item here will replace it on this layout only.</em>';
+			
 			$save_button = <<<END
 			<input id="btnSave" type="submit" value="Save" />
 			<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
@@ -269,6 +271,8 @@ END;
 		}
 		else
 		{
+			$extraNotes = '<em>Note: As you editing from the library uploading a new media item will not replace the old one from any layouts. To do this nagivate to the layout and edit the media from there.</em>';
+			
 			$save_button = <<<END
 			<input id="btnSave" type="submit" value="Save" />
 			<input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
@@ -318,7 +322,11 @@ END;
 				</tr>
 				<tr>
 					<td></td>
-					<td>This form accepts: <span class="required">jpg, jpeg, png and gif</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+					<td>This form accepts: <span class="required">wmv, mpeg and mpg</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td colspan="2">$extraNotes</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -552,7 +560,7 @@ END;
 		
 		// All OK to insert this record
 		$SQL  = "INSERT INTO media (name, type, duration, originalFilename, permissionID, userID, retired ) ";
-		$SQL .= "VALUES ('%s', 'image', '%s', '%s', %d, %d, 0) ";
+		$SQL .= "VALUES ('%s', 'video', '%s', '%s', %d, %d, 0) ";
 		
 		$SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($duration), $db->escape_string($fileName), $permissionid, $userid);
 

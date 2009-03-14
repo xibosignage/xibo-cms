@@ -386,7 +386,10 @@ END;
 			<td>$inc_schedule</td>
 			<td>$loggedin</td>
 			<td>$lastaccessed</td>
-			<td><button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>Edit</span></a></td>
+			<td>
+				<button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>Edit</span></button>
+				<button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>Delete</span></button>
+			</td>
 END;
 		}
 		$output .= "</tbody></table></div>";
@@ -554,5 +557,55 @@ END;
             $db->query($SQL) or trigger_error($db->error(), E_USER_ERROR);
         }
     }
+	
+	function DeleteForm()
+	{
+		$db 		=& $this->db;
+		$response 	= new ResponseManager();
+		$displayid 	= Kit::GetParam('displayid', _REQUEST, _INT);
+		
+		// Output the delete form
+		$form = <<<END
+		<form class="XiboForm" method="post" action="index.php?p=display&q=Delete">
+			<input type="hidden" name="displayid" value="$displayid">
+			<p>You will only be able to delete this display if there is no associated information contained in Xibo.<br />
+			<p>Are you sure you want to delete this display?</p>
+			<input type="submit" value="Yes">
+			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
+		</form>
+END;
+		
+		$response->SetFormRequestResponse($form, 'Delete this Display?', '350px', '180px');
+		$response->Respond();
+	}
+	
+	function Delete()
+	{
+		$db 		=& $this->db;
+		$response	= new ResponseManager();
+		$displayid 	= Kit::GetParam('displayid', _POST, _INT, 0);
+		
+		if ($displayid == 0) 
+		{
+			$response->SetError("No Display selected for Deletion.");
+			$response->Respond();
+		}
+
+		// What SQL do we need.
+		$SQL = " ";
+		$SQL .= "DELETE FROM display ";
+		$SQL .= sprintf(" WHERE displayid = %d", $displayid);
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+
+		if (!$db->query($SQL)) 
+		{
+			$response->SetError("Cannot delete this display. You may unlicense it to hide it from view.");
+			$response->Respond();
+		}
+
+		$response->SetFormSubmitResponse("The Display has been Deleted");
+		$response->Respond();
+	}
 }
 ?>

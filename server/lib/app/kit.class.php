@@ -239,8 +239,7 @@ class Kit
 				break;
 				
 			case _URI :
-				$return = (string) str_replace(' ', '-', $return);
-				$return = (string) str_replace("'", '', $return);
+				$return = urlencode($return);
 				break;
 				
 			case _CHECKBOX:

@@ -279,8 +279,8 @@ END;
 		
 		$fdate 			= date("d/m/Y", time());
 		
-		$page_list 		= dropdownlist("SELECT 'All', 'All' UNION SELECT DISTINCT page, page FROM log","page",'All');
-		$function_list 	= dropdownlist("SELECT 'All', 'All' UNION SELECT DISTINCT function, function FROM log","function",'All');
+		$page_list 		= dropdownlist("SELECT 'All', 'All' UNION SELECT DISTINCT page, page FROM log ORDER BY 2","page",'All');
+		$function_list 	= dropdownlist("SELECT 'All', 'All' UNION SELECT DISTINCT function, function FROM log ORDER BY 2","function",'All');
 		$display_list 	= dropdownlist("SELECT 'All', 'All' UNION SELECT displayID, display FROM display WHERE licensed = 1 ORDER BY 2", "displayid");
 				
 		$xiboGrid = <<<END
