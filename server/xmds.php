@@ -328,13 +328,59 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 		
 		$blackList->appendChild($file);
 	}
-	
+
+	// PHONE_HOME if required.
+	if (Config::GetSetting($db,'PHONE_HOME') == 'On') {
+		// Find out when we last PHONED_HOME :D
+		// If it's been > 28 days since last PHONE_HOME then
+		if (Config::GetSetting($db,'PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
+
+			// Retrieve number of displays
+			$SQL = "SELECT COUNT(*)
+					FROM `display`
+					WHERE `licensed` = '1'";
+			if (!$results = $db->query($SQL))
+			{
+				trigger_error($db->error());
+			}
+			while ($row = $db->get_row($results))
+			{
+				$PHONE_HOME_CLIENTS = Kit::ValidateParam($row[0],_INT);
+			}
+			
+			// Retrieve version number
+			$PHONE_HOME_VERSION = Config::Version($db, 'app_ver');
+
+			$PHONE_HOME_URL = Config::GetSetting($db,'PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting($db,'PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
+
+			if ($displayInfo['isAuditing'] == 1) 
+			{
+				Debug::LogEntry($db, "audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");	
+			}
+		
+			@file_get_contents($PHONE_HOME_URL);
+			
+			// Set PHONE_HOME_TIME to NOW.
+			$SQL = "UPDATE `setting`
+					SET `value` = '" . time() . "'
+					WHERE `setting`.`setting` = 'PHONE_HOME_DATE' LIMIT 1";
+
+			if (!$results = $db->query($SQL))
+			{
+				trigger_error($db->error());
+			}
+		//endif
+		}
+	}
+	// END OF PHONE_HOME CODE
+
 	if ($displayInfo['isAuditing'] == 1) 
 	{
 		Debug::LogEntry($db, "audit", $requiredFilesXml->saveXML(), "xmds", "RequiredFiles");	
 		Debug::LogEntry($db, "audit", "[OUT]", "xmds", "RequiredFiles");	
 	}
 	
+	// Return the results of requiredFiles()
 	return $requiredFilesXml->saveXML();
 }
 

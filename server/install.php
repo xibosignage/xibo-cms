@@ -435,16 +435,21 @@ elseif ($xibo_step == 8) {
   ## server_key
   ?>
   <div class="info">
-    <p>Library Location</p>
+    <p><b>Library Location</b></p>
     <p>Xibo needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your webserver - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, Xibo will attempt to create it for you.</p>
     <form action="install.php" method="POST">
     <div class="install_table">
        <p><label for="library_location">Library Location: </label><input type="text" name="library_location" value="" /></p>
     </div>
-    <p>Server Key</p>
+    <p><b>Server Key</b></p>
     <p>Xibo needs you to choose a "key". This will be required each time you setup a new client. It should be complicated, and hard to remember. It is visible in the admin interface, so it need not be written down separately.</p>
     <div class="install_table">
       <p><label for="server_key">Server Key: </label><input type="text" name="server_key" value="" /></p>
+    </div>
+    <p><b>Statistics</b></p>
+    <p>We'd love to know you're running Xibo. If you're happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please untick the box if your server does not have direct access to the internet.</p>
+    <div class="install_table">
+      <p><label for="stats">Anonymous Statistics: </label><input type="checkbox" name="stats" value="true" checked /></p>
     </div>
       <input type="hidden" name="xibo_step" value="9" />
     </div>
@@ -456,6 +461,7 @@ elseif ($xibo_step == 9) {
 
   $server_key = Kit::GetParam('server_key',_POST,_WORD);
   $library_location = Kit::GetParam('library_location',_POST,_STRING);
+  $stats = Kit::GetParam('stats',_POST,_BOOL);
   
   // Remove trailing whitespace from the path given.
   $library_location = trim($library_location);
@@ -463,6 +469,13 @@ elseif ($xibo_step == 9) {
   // Check both fields were completed
   if (! ($server_key && $library_location)) {
     reportError("8","A field was blank. Please make sure you complete all fields");
+  }
+
+  if ($stats) {
+    $stats="On";
+  }
+  else {
+    $stats="Off";
   }
 
   // Does library_location exist already?
@@ -519,6 +532,16 @@ elseif ($xibo_step == 9) {
       reportError("8", "An error occured changing the server key.<br /><br />MySQL Error:<br />" . mysql_error());    
     }
  
+    $SQL = sprintf("UPDATE `setting` SET `value` = '%s' WHERE `setting`.`setting` = 'PHONE_HOME' LIMIT 1",
+                      mysql_real_escape_string($stats));
+    if (! @mysql_query($SQL, $db)) {
+      reportError("8", "An error occured setting SEND_STATS.<br /><br />MySQL Error:<br />" . mysql_error());
+    }
+    $SQL = "UPDATE `setting` SET `value` = '" . md5(uniqid(rand(), true)) . "' WHERE `setting`.`setting` = 'PHONE_HOME_KEY' LIMIT 1";
+    if (! @mysql_query($SQL, $db)) {
+      reportError("8", "An error occured setting SEND_STATS.<br /><br />MySQL Error:<br />" . mysql_error());
+    }
+    
     @mysql_close($db);
   
   ?>
