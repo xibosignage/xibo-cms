@@ -242,7 +242,10 @@ elseif ($_SESSION['step'] == 2) {
 # Calculate the upgrade
       
 	$_SESSION['upgradeFrom'] = Config::Version($db, 'DBVersion');
-	$_SESSION['upgradeFrom'] = 1;
+
+	if ($_SESSION['upgradeFrom'] < 1) {
+		$_SESSION['upgradeFrom'] = 1;
+	}
 
 	// Get a list of .sql and .php files for the upgrade
 	$sql_files = ls('*.sql','install/database',false,array('return_files'));
@@ -300,7 +303,7 @@ elseif ($_SESSION['step'] == 3) {
 	// $_SESSION['step'] = 0;
 	$fault = false;
 	$fault_string = "";
-	print_r($_POST);
+
 	foreach ($_POST as $key => $post) {
 		// $key should be like 1-2, 1-3 etc
 		// Split $key on - character.
@@ -553,42 +556,48 @@ function backup_tables($db,$tables = '*')
 	{
 		$tables = is_array($tables) ? $tables : explode(',',$tables);
 	}
+
+	// Open file for writing at length 0.
+	$handle = fopen(Config::GetSetting($db,'LIBRARY_LOCATION') . 'db-backup-'.time().'-'.(md5(implode(',',$tables))).'.sql','w+');
 	
 	//cycle through
 	foreach($tables as $table)
 	{
-		echo ' .';
+		echo '.';
 		flush();
 		$result = $db->query('SELECT * FROM `'.$table .'`');
 		$num_fields = $db->num_fields($result);
 		
-		$return.= 'DROP TABLE IF EXISTS `'.$table.'`;';
+		$return = 'DROP TABLE IF EXISTS `'.$table.'`;';
+		fwrite($handle, $return);
+
 		$row2 = $db->get_row($db->query('SHOW CREATE TABLE `'.$table.'`'));
-		$return.= "\n\n".$row2[1].";\n\n";
+		$return = "\n\n".$row2[1].";\n\n";
+		fwrite($handle,$return);
 		
 		for ($i = 0; $i < $num_fields; $i++) 
 		{
 			while($row = $db->get_row($result))
 			{
-				echo '.';
-				flush();
-				$return.= 'INSERT INTO `'.$table.'` VALUES(';
+				$return = 'INSERT INTO `'.$table.'` VALUES(';
+				fwrite($handle, $return);
 				for($j=0; $j<$num_fields; $j++) 
 				{
+					$return = '';
 					$row[$j] = addslashes($row[$j]);
 					$row[$j] = ereg_replace("\n","\\n",$row[$j]);
 					if (isset($row[$j])) { $return.= '"'.$row[$j].'"' ; } else { $return.= '""'; }
 					if ($j<($num_fields-1)) { $return.= ','; }
+					fwrite($handle, $return);
 				}
-				$return.= ");\n";
+				$return = ");\n";
+				fwrite($handle, $return);
 			}
 		}
-		$return.="\n\n\n";
+		$return ="\n\n\n";
+		fwrite ($handle, $return);
 	}
 	
-	//save file
-	$handle = fopen(Config::GetSetting($db,'LIBRARY_LOCATION') . 'db-backup-'.time().'-'.(md5(implode(',',$tables))).'.sql','w+');
-	fwrite($handle,$return);
 	fclose($handle);
 }
 
