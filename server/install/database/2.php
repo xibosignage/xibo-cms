@@ -5,6 +5,9 @@ class Step2 extends UpgradeStep
 
 	public function Boot()
 	{
+		$SQL = "UPDATE `setting` SET `value` = '" . md5(uniqid(rand(), true)) . "' WHERE `setting`.`setting` = 'PHONE_HOME_KEY' LIMIT 1";
+		$this->db->query($SQL);
+
 		if (! $this->a[0]) {
 			$SQL = "UPDATE `setting` SET `value` = 'Off' WHERE `setting`.`setting` = 'PHONE_HOME' LIMIT 1" ;
 			$this->db->query($SQL);
