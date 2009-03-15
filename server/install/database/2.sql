@@ -67,3 +67,5 @@ NULL , 'PHONE_HOME_DATE', '0', 'text', 'The last time we PHONED_HOME in seconds 
 );
 
 UPDATE `version` SET `app_ver` = '1.0.0';
+
+UPDATE `version` SET `DBVersion` = '2';
