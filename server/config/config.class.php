@@ -60,7 +60,7 @@ class Config {
 	 */
 	static function Version(database $db, $object = '') 
 	{
-		if (!$results = $db->query("SELECT app_ver, XlfVersion, XmdsVersion FROM version")) 
+		if (!$results = $db->query("SELECT app_ver, XlfVersion, XmdsVersion, DBVersion FROM version")) 
 		{
 			trigger_error("No Version information - please contact Xibo support", E_USER_WARNING);
 		}
