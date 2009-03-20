@@ -105,6 +105,8 @@ class Kit
 					}
 					else 
 					{
+						if ($_SESSION[$param] == '') return $default;
+						
 						$return = $_SESSION[$param];	
 					}
 				
@@ -118,6 +120,8 @@ class Kit
 					}
 					else 
 					{
+						if ($_REQUEST[$param] == '') return $default;
+						
 						$return = $_REQUEST[$param];	
 					}
 				
@@ -131,6 +135,8 @@ class Kit
 					}
 					else 
 					{
+						if ($_GET[$param] == '') return $default;
+						
 						$return = $_GET[$param];	
 					}
 				
@@ -149,6 +155,8 @@ class Kit
 					}
 					else 
 					{
+						if ($_POST[$param] == '') return $default;
+						
 						$return = $_POST[$param];	
 					}
 				

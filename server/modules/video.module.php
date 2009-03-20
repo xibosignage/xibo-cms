@@ -533,13 +533,6 @@ END;
 			return $this->response;
 		}
 		
-		if ($duration == 0)
-		{
-			$this->response->SetError('You must enter a duration.');
-			$this->response->keepOpen = true;
-			return $this->response;
-		}
-		
 		// Ensure the name is not already in the database
 		$SQL = sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d", $db->escape_string($name), $userid);
 
@@ -690,13 +683,6 @@ END;
 		if (strlen($name) > 100) 
 		{
 			$this->response->SetError('The name cannot be longer than 100 characters');
-			$this->response->keepOpen = true;
-			return $this->response;
-		}
-		
-		if ($duration == 0)
-		{
-			$this->response->SetError('You must enter a duration.');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
