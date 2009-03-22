@@ -74,7 +74,8 @@ class faultDAO
 		$output .= '<li><p>Recreate the Problem in a new window.</p>';		
 		$output .= '</li>';
 		
-		$output .= '<li><p>Automatically collect and export relevant information into a text file. Please save this file to your PC.</p>';		
+		$output .= '<li><p>Automatically collect and export relevant information into a text file. Please save this file to your PC.</p>';
+		$output .= '<a href="index.php?p=fault&q=CollectData" title="Collect Data">Collect and Save Data</a>';	
 		$output .= '</li>';
 
 		$output .= '<li><p>Turn full auditing and debugging OFF.</p>';	
@@ -85,6 +86,7 @@ class faultDAO
 		$output .= '</li>';
 		
 		$output .= '<li><p>Click on the below link to open the bug report page for this Xibo release. Describe the problem and upload the file you obtained earlier.</p>';		
+		$output .= '<a href="https://bugs.launchpad.net/xibo/+filebug" title="File a bug report" target="_blank">File a bug report in Launchpad</a>';
 		$output .= '</li>';
 		
 		$output .= '</ol>';
@@ -92,6 +94,110 @@ class faultDAO
 		
 		echo $output;	
 		return;
+	}
+	
+	function CollectData()
+	{
+		$db =& $this->db;
+		
+		// We want to output a load of stuff to the browser as a text file.
+		header('Content-Type: text/plain');
+		header('Content-Disposition: attachment; filename="troubleshoot.txt"');
+		header("Content-Transfer-Encoding: binary");
+		header('Accept-Ranges: bytes');
+		 
+		 		
+		$config = new Config($db);
+		echo '--------------------------------------\\n';
+		echo 'Environment Checks\\n';
+		echo '--------------------------------------\\n';
+		echo $config->CheckEnvironment();
+		
+		echo '\\n';
+		echo '--------------------------------------\\n';
+		echo 'PHP INFO\\n';
+		echo '--------------------------------------\\n';
+		$this->phpinfo_array();
+		
+		echo '\n';
+		echo '--------------------------------------\n';
+		echo 'LOG Dump\\n';
+		echo '--------------------------------------\n';
+		
+		// Get the last 10 minutes of log messages
+		$SQL  = "SELECT logdate, page, function, message FROM log ";
+		$SQL .= sprintf("WHERE logdate > '%s' ", date("Y-m-d H:i:s", time() - (60*10)));
+		$SQL .= "ORDER BY logdate DESC, logid ";
+
+		if(!$results = $db->query($SQL))  
+		{
+			trigger_error($db->error());
+			trigger_error("Can not query the log", E_USER_ERROR);
+		}
+		
+		while ($row = $db->get_row($results)) 
+		{
+			$logdate 	= Kit::ValidateParam($row[0], _STRING);
+			$page 		= Kit::ValidateParam($row[1], _STRING);
+			$function 	= Kit::ValidateParam($row[2], _STRING);
+			$message 	= htmlspecialchars($row[3]);
+			
+			$output = <<<END
+Date: $logdate \n
+Page: $page \n
+Function: $function \n
+Message: $message \n
+\n	
+END;
+			echo $output;
+		}
+		
+		exit;
+	}
+	
+	/**
+	 * Outputs PHP info as an array rather than HTML
+	 * Taken from: http://uk2.php.net/phpinfo
+	 * @return 
+	 * @param $return Object[optional]
+	 */
+	function phpinfo_array($return=false) 
+	{
+		ob_start();
+		phpinfo(-1);
+		
+		$pi = preg_replace(
+		array('#^.*<body>(.*)</body>.*$#ms', '#<h2>PHP License</h2>.*$#ms',
+		'#<h1>Configuration</h1>#',  "#\r?\n#", "#</(h1|h2|h3|tr)>#", '# +<#',
+		"#[ \t]+#", '#&nbsp;#', '#  +#', '# class=".*?"#', '%&#039;%',
+		'#<tr>(?:.*?)" src="(?:.*?)=(.*?)" alt="PHP Logo" /></a>'
+		.'<h1>PHP Version (.*?)</h1>(?:\n+?)</td></tr>#',
+		'#<h1><a href="(?:.*?)\?=(.*?)">PHP Credits</a></h1>#',
+		'#<tr>(?:.*?)" src="(?:.*?)=(.*?)"(?:.*?)Zend Engine (.*?),(?:.*?)</tr>#',
+		"# +#", '#<tr>#', '#</tr>#'),
+		array('$1', '', '', '', '</$1>' . "\n", '<', ' ', ' ', ' ', '', ' ',
+		'<h2>PHP Configuration</h2>'."\n".'<tr><td>PHP Version</td><td>$2</td></tr>'.
+		"\n".'<tr><td>PHP Egg</td><td>$1</td></tr>',
+		'<tr><td>PHP Credits Egg</td><td>$1</td></tr>',
+		'<tr><td>Zend Engine</td><td>$2</td></tr>' . "\n" .
+		'<tr><td>Zend Egg</td><td>$1</td></tr>', ' ', '%S%', '%E%'),
+		ob_get_clean());
+		
+		$sections = explode('<h2>', strip_tags($pi, '<h2><th><td>'));
+		unset($sections[0]);
+		
+		$pi = array();
+		foreach($sections as $section)
+		{
+			$n = substr($section, 0, strpos($section, '</h2>'));
+			preg_match_all(
+			'#%S%(?:<td>(.*?)</td>)?(?:<td>(.*?)</td>)?(?:<td>(.*?)</td>)?%E%#',
+			$section, $askapache, PREG_SET_ORDER);
+			foreach($askapache as $m)
+			$pi[$n][$m[1]]=(!isset($m[3])||$m[2]==$m[3])?$m[2]:array_slice($m,2);
+		}
+		
+		return ($return === false) ? print_r($pi) : $pi;
 	}
 }
 ?>
