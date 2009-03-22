@@ -96,6 +96,9 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 // Define the VERSION
 Config::Version($db);
 
+// What is the production mode of the server?
+if(Config::GetSetting($db, "SERVER_MODE")=="Test") ini_set('display_errors', 1);
+
 // Debugging?
 if(Config::GetSetting($db, "debug")=="On") error_reporting(E_ALL);
 

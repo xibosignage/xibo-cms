@@ -185,29 +185,6 @@ FORM;
 		return false;
 	}
 	
-	function detect_install_issues() 
-	{
-		$issues = "";
-
-		//Check that PHP modules are enabled... what do we need? MySQL, XSLT
-		$extensions = get_loaded_extensions();
-
-		if (!(array_search('mysql', $extensions) || array_search('mysqli', $extensions))) {
-			$issues .= "<p>MySQL must be enabled to Run Xibo</p>";
-		}
-
-		if (!array_search('SimpleXML', $extensions)) {
-			$issues .= "<p>SimpleXML must be enabled to Run Xibo</p>";
-		}
-		
-		$allow_url_fopen = ini_get("allow_url_fopen");
-		if ($allow_url_fopen != 1) {
-			$issues .= "<p>You must have allow_url_fopen = On in your PHP.ini file for RSS to function</p>";
-		}
-		
-		return $issues;
-	}
-	
 	function send_email() 
 	{
 		$db =& $this->db;

@@ -20,16 +20,40 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class Config {
-
-	static function Load() 
+class Config 
+{
+	private $db;
+	private $extensions;
+	private $envFault;
+	
+	public function __construct(database $db)
 	{
-			
-		include("settings.php");
+		$this->db			=& $db;
 		
+		// Populate an array of loaded extensions just in case we need it for something.
+		$this->extensions 	= get_loaded_extensions();
+		
+		// Assume the environment is OK
+		$this->envFault		= false;
+		
+		return;
 	}
 	
-	//Gets the required setting from the DB
+	/**
+	 * Loads the settings from file.
+	 * @return 
+	 */
+	static function Load() 
+	{
+		include("settings.php");
+	}
+	
+	/**
+	 * Gets the requested setting from the DB object given
+	 * @return 
+	 * @param $db Object
+	 * @param $setting Object[optional]
+	 */
 	static function GetSetting(database $db, $setting = "") 
 	{		
 		$SQL = "";
@@ -79,6 +103,231 @@ class Config {
 		}
 		
 		return $row;
+	}
+	
+	/**
+	 * Checks the Environment and Determines if it is suitable for Xibo
+	 * @return 
+	 */
+	public function CheckEnvironment()
+	{
+		$db 	 =& $this->db;
+		
+		$output  = '';
+		$imgGood = '<img src="install/dot_green.gif">';
+		$imgBad  = '<img src="install/dot_red.gif">';
+		
+		$output .= '<div class="checks">';
+		
+		// Check for PHP version
+		$message = 'PHP Version 5.0.2 or later';
+
+		if ($this->CheckPHP()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo requires PHP version 5.0.2 or later.</p>
+      		</div>
+END;
+		}
+		
+		// Check for file system permissions
+		$message = 'Filesystem Permissions';
+
+		if ($this->CheckFsPermissions()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo needs to be able to write to the following
+      			<ul>
+        			<li> settings.php
+        			<li> install.php
+					<li> upgrade.php
+      			</ul>
+      			Please fix this, and retest.</p>
+      		</div>
+END;
+		}
+		
+		// Check for MySQL
+		$message = 'MySQL';
+
+		if ($this->CheckMySQL()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo requires a MySQL database.</p>
+      		</div>
+END;
+		}
+		
+		// Check for JSON
+		$message = 'JSON Extension';
+
+		if ($this->CheckJson()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo needs the PHP JSON extension to function.</p>
+      		</div>
+END;
+		}
+		
+		// Check for GD (graphics)
+		$message = 'GD Extension';
+
+		if ($this->CheckGd()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo needs the PHP GD extension to function.</p>
+      		</div>
+END;
+		}
+		
+		
+		// Check for Calendar
+		$message = 'GD Extension';
+
+		if ($this->CheckCal()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo needs the PHP Calendar extension to function.</p>
+      		</div>
+END;
+		}
+		
+		
+		// Check to see if we are allowed to open remote URL's (homecall will not work otherwise)
+		$message = 'Allow PHP to open external URL\'s';
+
+		if ($this->CheckFsPermissions()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>You must have allow_url_fopen = On in your PHP.ini file for homecall to function.<br />
+				If you do not intend to enable homecall you need not worry about this problem.</p>
+      		</div>
+END;
+		}
+		
+				
+		$output .= '</div>';
+		
+		return $output;
+	}
+	
+	/**
+	 * Is there an environment fault
+	 * @return 
+	 */
+	public function EnvironmentFault()
+	{
+		return $this->envFault;
+	}
+	
+	/**
+	 * Check FileSystem Permissions
+	 * @return 
+	 */
+	function CheckFsPermissions() 
+	{
+	  return ((is_writable("../install.php") && (is_writable("../settings.php")) && (is_writable("../upgrade.php")) || is_writable("../.")));
+	}
+	
+	/**
+	 * Check PHP version > 5
+	 * @return 
+	 */
+	function CheckPHP() 
+	{
+		return (version_compare("5",phpversion(), "<="));
+	}
+	
+	/**
+	 * Check PHP has MySQL module installed
+	 * @return 
+	 */
+	function CheckMySQL() 
+	{
+		return extension_loaded("mysql");
+	}
+	
+	/**
+	 * Check PHP has JSON module installed
+	 * @return 
+	 */
+	function CheckJson() 
+	{
+		return extension_loaded("json");
+	}
+	
+	/** 
+	 * Check PHP has JSON module installed
+	 * @return 
+	 */
+	function CheckGd() 
+	{
+		return extension_loaded("gd");
+	}
+	
+	/**
+	 * Check PHP has JSON module installed
+	 * @return 
+	 */
+	function CheckCal() 
+	{
+		return extension_loaded("calendar");
 	}
 }
 
