@@ -54,11 +54,43 @@ class faultDAO
 	{
 		$db 	=& $this->db;
 		$user 	=& $this->user;
+		$output = '';
 		
 		$config = new Config($db);
+
+		$output .= '<div class="ReportFault">';		
+		$output .= '<ol>';		
+		$output .= '<li><p>Check that the Environment passes all the Xibo Environment checks.</p>';		
+		$output .= $config->CheckEnvironment();
+		$output .= '</li>';
+
+		$output .= '<li><p>Turn ON full auditing and debugging.</p>';
+		$output .= '	<form class="XiboForm" action="index.php?p=admin" method="post">';
+		$output .= '		<input type="hidden" name="q" value="SetMaxDebug" />';
+		$output .= '		<input type="submit" value="Turn ON Debugging" />';
+		$output .= '	</form>';
+		$output .= '</li>';
+
+		$output .= '<li><p>Recreate the Problem in a new window.</p>';		
+		$output .= '</li>';
 		
-		echo $config->CheckEnvironment();
+		$output .= '<li><p>Automatically collect and export relevant information into a text file. Please save this file to your PC.</p>';		
+		$output .= '</li>';
+
+		$output .= '<li><p>Turn full auditing and debugging OFF.</p>';	
+		$output .= '	<form class="XiboForm" action="index.php?p=admin" method="post">';
+		$output .= '		<input type="hidden" name="q" value="SetMinDebug" />';
+		$output .= '		<input type="submit" value="Turn OFF Debugging" />';
+		$output .= '	</form>';	
+		$output .= '</li>';
 		
+		$output .= '<li><p>Click on the below link to open the bug report page for this Xibo release. Describe the problem and upload the file you obtained earlier.</p>';		
+		$output .= '</li>';
+		
+		$output .= '</ol>';
+		$output .= '</div>';
+		
+		echo $output;	
 		return;
 	}
 }

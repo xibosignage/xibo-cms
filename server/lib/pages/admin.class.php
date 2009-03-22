@@ -30,6 +30,8 @@ class adminDAO
 	{
 		$this->db 	=& $db;
 		$this->user =& $user;
+		
+		require_once('lib/data/setting.data.class.php');
 	}
 	
 	function displayPage() 
@@ -414,6 +416,54 @@ END;
 		}
 		
 		return $output;
+	}
+	
+	/**
+	 * Sets all debugging to maximum
+	 * @return 
+	 */
+	public function SetMaxDebug()
+	{
+		$db			=& $this->db;
+		$response	= new ResponseManager();
+		$setting 	= new Setting($db);
+		
+		if (!$setting->Edit('debug', 'On'))
+		{
+			trigger_error('Cannot set debug to On');
+		}
+		
+		if (!$setting->Edit('audit', 'On'))
+		{
+			trigger_error('Cannot set audit to On');
+		}
+		
+		$response->SetFormSubmitResponse('Debugging switched On.');
+		$response->Respond();
+	}
+	
+	/**
+	 * Turns off all debugging
+	 * @return 
+	 */
+	public function SetMinDebug()
+	{
+		$db			=& $this->db;
+		$response	= new ResponseManager();
+		$setting 	= new Setting($db);
+		
+		if (!$setting->Edit('debug', 'Off'))
+		{
+			trigger_error('Cannot set debug to Off');
+		}
+		
+		if (!$setting->Edit('audit', 'Off'))
+		{
+			trigger_error('Cannot set audit to Off');
+		}
+		
+		$response->SetFormSubmitResponse('Debugging switched Off.');
+		$response->Respond();
 	}
 }
 ?>
