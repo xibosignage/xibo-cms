@@ -108,21 +108,21 @@ class faultDAO
 		 
 		 		
 		$config = new Config($db);
-		echo '--------------------------------------\\n';
-		echo 'Environment Checks\\n';
-		echo '--------------------------------------\\n';
+		echo "--------------------------------------\n";
+		echo 'Environment Checks' . "\n";
+		echo "--------------------------------------\n";
 		echo $config->CheckEnvironment();
 		
-		echo '\\n';
-		echo '--------------------------------------\\n';
-		echo 'PHP INFO\\n';
-		echo '--------------------------------------\\n';
+		echo "\n";
+		echo "--------------------------------------\n";
+		echo 'PHP INFO' . "\n";
+		echo "--------------------------------------\n";
 		$this->phpinfo_array();
 		
-		echo '\n';
-		echo '--------------------------------------\n';
-		echo 'LOG Dump\\n';
-		echo '--------------------------------------\n';
+		echo "\n";
+		echo "--------------------------------------\n";
+		echo 'LOG Dump' . "\n";
+		echo "--------------------------------------\n";
 		
 		// Get the last 10 minutes of log messages
 		$SQL  = "SELECT logdate, page, function, message FROM log ";
@@ -147,6 +147,53 @@ Date: $logdate \n
 Page: $page \n
 Function: $function \n
 Message: $message \n
+\n	
+END;
+			echo $output;
+		}
+		
+		echo "\n";
+		echo "--------------------------------------\n";
+		echo 'Display Dump' . "\n";
+		echo "--------------------------------------\n";
+		
+		$SQL = <<<SQL
+		SELECT  display.displayid, 
+				display.display, 
+				layout.layout, 
+				display.loggedin, 
+				display.lastaccessed, 
+				display.inc_schedule ,
+				display.licensed
+		FROM display
+		LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid
+		ORDER BY display.displayid
+SQL;
+
+		if(!($results = $db->query($SQL))) 
+		{
+			trigger_error($db->error());
+			trigger_error("Can not list displays", E_USER_ERROR);
+		}
+
+		while($aRow = $db->get_row($results)) 
+		{
+			$displayid 		= $aRow[0];
+			$display 		= $aRow[1];
+			$defaultlayoutid = $aRow[2];
+			$loggedin 		= $aRow[3];
+			$lastaccessed 	= $aRow[4];
+			$inc_schedule 	= $aRow[5];
+			$licensed 		= $aRow[6];
+			
+			$output = <<<END
+DisplayID: $displayid \n
+Display: $display \n
+Default Layout: $defaultlayoutid \n
+Logged In: $loggedin \n
+Last Accessed: $lastaccessed \n
+Interleave: $inc_schedule \n
+Licensed: $licensed \n
 \n	
 END;
 			echo $output;
