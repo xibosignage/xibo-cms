@@ -473,6 +473,9 @@
 		$db 		=& $this->db;
 		$userid		=& $this->userid;
 		$usertypeid = Kit::GetParam('usertype', _SESSION, _INT);
+		$groupid	= $this->getGroupFromID($userid, true);
+		
+		Debug::LogEntry($db, 'audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
 		
 		// Get some information about this menu
 		// I.e. get the Menu Items this user has access to
@@ -493,11 +496,13 @@
 			$SQL .= "         ON       lkmenuitemgroup.MenuItemID = menuitem.MenuItemID ";
 			$SQL .= "         INNER JOIN `group` ";
 			$SQL .= "         ON       lkmenuitemgroup.GroupID = group.GroupID ";
-			$SQL .= "         INNER JOIN `user` ";
-			$SQL .= "         ON       group.groupid = user.userid ";
 		}
 		$SQL .= sprintf("WHERE    menu.Menu              = '%s' ", $db->escape_string($menu));
-		$SQL .= "ORDER BY menuitem.Sequence";
+		if ($usertypeid != 1) 
+		{
+			$SQL .= sprintf(" AND group.groupid = %d", $groupid);
+		}
+		$SQL .= " ORDER BY menuitem.Sequence";
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 		
