@@ -541,7 +541,8 @@ END;
 	{
         $db =& $this->db;
 		
-		$timeout = date("Y-m-d H:i:s", time() -10);
+		// timeout after 10 minutes
+		$timeout = date("Y-m-d H:i:s", time() - (10 * 60) );
 
         $SQL  = "";
         $SQL .= "SELECT displayid FROM display WHERE loggedin = 1 ";
