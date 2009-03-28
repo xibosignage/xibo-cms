@@ -547,42 +547,63 @@ function Schedule($serverKey, $hardwareKey, $version)
 	
 	// Store the Base SQL for this display
 	$SQLBase = $SQL;
-	
-	//Do we include the default display
-	if ($displayInfo['inc_schedule'] == 1)
-	{
-		$SQL .= " AND ((schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
-		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
-	}
-	else
-	{
-		$SQL .= " AND (schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
-	}
-	
-	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
 
+	// Before we run the main query we should check to see if there are any priority layouts to deal with
+	$SQL .= " AND schedule_detail.is_priority = 1 ";
+	
 	// Run the query
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
+	
 	if (!$results = $db->query($SQL))
 	{
 		trigger_error($db->error());
 		return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
 	}
 	
-	// Was there anything?
+	// If there were no results then continue to get the full schedule
 	if ($db->num_rows($results) == 0)
 	{
-		// No rows, run the query for default layout
-		$SQL  = $SQLBase;
-		$SQL .= " AND ((schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
-		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+		// Continue to get the normal schedule (put the SQL back to base)
+		$SQL = $SQLBase;
+	
+		// Do we include the default display
+		if ($displayInfo['inc_schedule'] == 1)
+		{
+			$SQL .= " AND ((schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
+			$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+		}
+		else
+		{
+			$SQL .= " AND (schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
+		}
 		
+		if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
+	
+	
+		// Run the query
 		if (!$results = $db->query($SQL))
 		{
 			trigger_error($db->error());
 			return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
 		}
+		
+		// Was there anything?
+		if ($db->num_rows($results) == 0)
+		{
+			// No rows, run the query for default layout
+			$SQL  = $SQLBase;
+			$SQL .= " AND ((schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
+			$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+			
+			if (!$results = $db->query($SQL))
+			{
+				trigger_error($db->error());
+				return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
+			}
+		}
 	}
 	
+	// We must have some results in here by this point
 	while ($row = $db->get_row($results))
 	{
 		$layoutid 	= $row[0];
