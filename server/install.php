@@ -206,7 +206,7 @@ user for Xibo.</p>
 for Xibo to use. Xibo will create this automatically for you.</p>
 <form action="install.php" method="POST">
 <input type="hidden" name="xibo_step" value="5" />
-<input type="hidden" name="db_create" value="true" />
+<input type="hidden" name="db_create" value="On" />
 <div class="install_table">
   <p><label for="host">Host: </label><input class="username" type="text" id="host" name="host" size="12" value="localhost" /></p>
   <p><label for="admin_username">Admin Username: </label><input class="username" type="text" id="admin_username" name="admin_username" size="12" /></p>
@@ -228,7 +228,7 @@ elseif ($xibo_step == 4) {
 created for Xibo.</p>
 <form action="install.php" method="POST">
 <input type="hidden" name="xibo_step" value="5" />
-<input type="hidden" name="db_create" value="false" />
+<input type="hidden" name="db_create" value="Off" />
 <div class="install_table">
   <p><label for="host">Host: </label><input class="username" type="text" id="host" name="host" size="12" value="localhost" /></p>
   <p><label for="db_name">Xibo Database Name: </label><input class="username" type="text" id="db_name" name="db_name" size="12" value="xibo" /></p>
@@ -242,7 +242,7 @@ created for Xibo.</p>
 }
 elseif ($xibo_step == 5) {
 
-  $db_create = Kit::GetParam('db_create',_POST,_BOOL);
+  $db_create = Kit::GetParam('db_create',_POST,_STRING);
 
   if (!isset($db_create)) {
     reportError("2","Something went wrong");
@@ -255,7 +255,7 @@ elseif ($xibo_step == 5) {
     ?>
     <div class="info">
     <?php
-    if ($db_create == true) {  
+    if ($db_create == 'On') {  
       $db_admin_user = Kit::GetParam('admin_username',_POST,_USERNAME);
       $db_admin_pass = Kit::GetParam('admin_password',_POST,_PASSWORD);
       
@@ -320,7 +320,7 @@ elseif ($xibo_step == 5) {
       if (! ($db_host && $db_name && $db_user && $db_pass)) {
         # Something was blank
         # Throw an error.
-        reportError("4", "A field was blank. Please fill in all fields.");
+        reportError("4", "A field was blank. Please fill in all fields. " . $db_host . " " . $db_name . " " . $db_user . " " . $db_pass);
       }
     }
     ## Populate database
