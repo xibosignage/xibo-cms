@@ -140,14 +140,14 @@ class faultDAO
 			$logdate 	= Kit::ValidateParam($row[0], _STRING);
 			$page 		= Kit::ValidateParam($row[1], _STRING);
 			$function 	= Kit::ValidateParam($row[2], _STRING);
-			$message 	= htmlspecialchars($row[3]);
+			$message 	= Kit::ValidateParam($row[3], _HTMLSTRING);
 			
 			$output = <<<END
-Date: $logdate \n
-Page: $page \n
-Function: $function \n
-Message: $message \n
-\n	
+Date: $logdate
+Page: $page
+Function: $function
+Message: $message
+\n
 END;
 			echo $output;
 		}
@@ -187,14 +187,14 @@ SQL;
 			$licensed 		= $aRow[6];
 			
 			$output = <<<END
-DisplayID: $displayid \n
-Display: $display \n
-Default Layout: $defaultlayoutid \n
-Logged In: $loggedin \n
-Last Accessed: $lastaccessed \n
-Interleave: $inc_schedule \n
-Licensed: $licensed \n
-\n	
+DisplayID: $displayid
+Display: $display
+Default Layout: $defaultlayoutid
+Logged In: $loggedin
+Last Accessed: $lastaccessed
+Interleave: $inc_schedule
+Licensed: $licensed
+\n
 END;
 			echo $output;
 		}
@@ -222,9 +222,8 @@ SQL;
 			$value		= $row['value'];
 			
 			$output = <<<END
-Setting: $setting \n
-Value:   $value \n
-\n	
+Setting: $setting - Value:   $value
+\n
 END;
 			echo $output;
 		}
@@ -249,16 +248,16 @@ SQL;
 		while($row = $db->get_assoc_row($results)) 
 		{
 			$userAgent		= $row['UserAgent'];
-			$remoteAddress	= $row['RemoteAddress'];
+			$remoteAddress	= $row['RemoteAddr'];
 			$sessionData 	= $row['session_data'];
 			
 			$output = <<<END
-UserAgent: $userAgent \n
-RemoteAddress: $remoteAddress \n
-Session Data \n
+UserAgent: $userAgent
+RemoteAddress: $remoteAddress
+Session Data
 $sessionData
----- \n
-\n	
+----
+\n
 END;
 			echo $output;
 		}
