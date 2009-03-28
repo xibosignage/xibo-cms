@@ -198,7 +198,71 @@ Licensed: $licensed \n
 END;
 			echo $output;
 		}
+
+		echo "\n";
+		echo "--------------------------------------\n";
+		echo 'Settings Dump' . "\n";
+		echo "--------------------------------------\n";
 		
+		$SQL = <<<SQL
+		SELECT  *
+		FROM setting
+		WHERE setting NOT IN ('SERVER_KEY','PHONE_HOME_KEY')
+SQL;
+
+		if(!($results = $db->query($SQL))) 
+		{
+			trigger_error($db->error());
+			trigger_error("Can not list Settings", E_USER_ERROR);
+		}
+
+		while($row = $db->get_assoc_row($results)) 
+		{
+			$setting	= $row['setting'];
+			$value		= $row['value'];
+			
+			$output = <<<END
+Setting: $setting \n
+Value:   $value \n
+\n	
+END;
+			echo $output;
+		}
+
+		echo "\n";
+		echo "--------------------------------------\n";
+		echo 'Sessions Dump' . "\n";
+		echo "--------------------------------------\n";
+		
+		$SQL = <<<SQL
+		SELECT  *
+		FROM session
+		WHERE IsExpired = 0
+SQL;
+
+		if(!($results = $db->query($SQL))) 
+		{
+			trigger_error($db->error());
+			trigger_error("Can not list sessions", E_USER_ERROR);
+		}
+
+		while($row = $db->get_assoc_row($results)) 
+		{
+			$userAgent		= $row['UserAgent'];
+			$remoteAddress	= $row['RemoteAddress'];
+			$sessionData 	= $row['session_data'];
+			
+			$output = <<<END
+UserAgent: $userAgent \n
+RemoteAddress: $remoteAddress \n
+Session Data \n
+$sessionData
+---- \n
+\n	
+END;
+			echo $output;
+		}
+
 		exit;
 	}
 	
