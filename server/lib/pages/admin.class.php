@@ -30,6 +30,8 @@ class adminDAO
 	{
 		$this->db 	=& $db;
 		$this->user =& $user;
+		
+		require_once('lib/data/setting.data.class.php');
 	}
 	
 	function displayPage() 
@@ -183,29 +185,6 @@ FORM;
 		echo $form;
 		
 		return false;
-	}
-	
-	function detect_install_issues() 
-	{
-		$issues = "";
-
-		//Check that PHP modules are enabled... what do we need? MySQL, XSLT
-		$extensions = get_loaded_extensions();
-
-		if (!(array_search('mysql', $extensions) || array_search('mysqli', $extensions))) {
-			$issues .= "<p>MySQL must be enabled to Run Xibo</p>";
-		}
-
-		if (!array_search('SimpleXML', $extensions)) {
-			$issues .= "<p>SimpleXML must be enabled to Run Xibo</p>";
-		}
-		
-		$allow_url_fopen = ini_get("allow_url_fopen");
-		if ($allow_url_fopen != 1) {
-			$issues .= "<p>You must have allow_url_fopen = On in your PHP.ini file for RSS to function</p>";
-		}
-		
-		return $issues;
 	}
 	
 	function send_email() 
@@ -437,6 +416,54 @@ END;
 		}
 		
 		return $output;
+	}
+	
+	/**
+	 * Sets all debugging to maximum
+	 * @return 
+	 */
+	public function SetMaxDebug()
+	{
+		$db			=& $this->db;
+		$response	= new ResponseManager();
+		$setting 	= new Setting($db);
+		
+		if (!$setting->Edit('debug', 'On'))
+		{
+			trigger_error('Cannot set debug to On');
+		}
+		
+		if (!$setting->Edit('audit', 'On'))
+		{
+			trigger_error('Cannot set audit to On');
+		}
+		
+		$response->SetFormSubmitResponse('Debugging switched On.');
+		$response->Respond();
+	}
+	
+	/**
+	 * Turns off all debugging
+	 * @return 
+	 */
+	public function SetMinDebug()
+	{
+		$db			=& $this->db;
+		$response	= new ResponseManager();
+		$setting 	= new Setting($db);
+		
+		if (!$setting->Edit('debug', 'Off'))
+		{
+			trigger_error('Cannot set debug to Off');
+		}
+		
+		if (!$setting->Edit('audit', 'Off'))
+		{
+			trigger_error('Cannot set audit to Off');
+		}
+		
+		$response->SetFormSubmitResponse('Debugging switched Off.');
+		$response->Respond();
 	}
 }
 ?>

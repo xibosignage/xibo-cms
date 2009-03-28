@@ -37,6 +37,7 @@ require_once("lib/app/responsemanager.class.php");
 require_once("lib/app/app_functions.php");
 require_once("lib/modules/module.interface.php");
 require_once("lib/modules/module.class.php");
+require_once("lib/data/data.class.php");
 require_once("lib/app/session.class.php");
 
 // Required Config Files
@@ -95,6 +96,9 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 
 // Define the VERSION
 Config::Version($db);
+
+// What is the production mode of the server?
+if(Config::GetSetting($db, "SERVER_MODE")=="Test") ini_set('display_errors', 1);
 
 // Debugging?
 if(Config::GetSetting($db, "debug")=="On") error_reporting(E_ALL);

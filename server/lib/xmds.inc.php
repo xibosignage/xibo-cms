@@ -76,5 +76,8 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 
 date_default_timezone_set(Config::GetSetting($db, 'defaultTimezone'));
 
+// What is the production mode of the server?
+if(Config::GetSetting($db, "SERVER_MODE")=="Test") ini_set('display_errors', 1);
+
 require_once(Config::GetSetting($db, 'NUSOAP_PATH'));
 ?>
