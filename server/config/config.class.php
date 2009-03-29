@@ -95,7 +95,7 @@ class Config
 		$xlfVer		= Kit::ValidateParam($row['XlfVersion'], _INT);
 		$xmdsVer	= Kit::ValidateParam($row['XmdsVersion'], _INT);
 	
-		define('VERSION', $appVer);
+		if (!defined('VERSION')) define('VERSION', $appVer);
 		
 		if ($object != '')
 		{
@@ -222,7 +222,7 @@ END;
 		
 		
 		// Check for Calendar
-		$message = 'GD Extension';
+		$message = 'Calendar Extension';
 
 		if ($this->CheckCal()) 
 		{
@@ -244,7 +244,7 @@ END;
 		// Check to see if we are allowed to open remote URL's (homecall will not work otherwise)
 		$message = 'Allow PHP to open external URL\'s';
 
-		if ($this->CheckFsPermissions()) 
+		if (ini_get('allow_url_fopen')) 
 		{
 			$output .= $imgGood.$message.'<br />';
 		}
@@ -260,7 +260,6 @@ END;
       		</div>
 END;
 		}
-		
 				
 		$output .= '</div>';
 		
@@ -282,7 +281,7 @@ END;
 	 */
 	function CheckFsPermissions() 
 	{
-	  return ((is_writable("../install.php") && (is_writable("../settings.php")) && (is_writable("../upgrade.php")) || is_writable("../.")));
+	  return ((is_writable("install.php") && (is_writable("settings.php")) && (is_writable("upgrade.php")) || is_writable(".")));
 	}
 	
 	/**

@@ -429,7 +429,7 @@ END;
 			$form = <<<END
 			<form class="XiboForm" method="post" action="index.php?p=layout&q=delete">
 				<input type="hidden" name="layoutid" value="$layoutid">
-				<p>Are you sure you want to delete $this->name? All media will be unassigned. Any layout specific media such as text/rss will be lost.</p>
+				<p>Are you sure you want to delete $this->layout? All media will be unassigned. Any layout specific media such as text/rss will be lost.</p>
 				<input type="submit" value="Yes">
 				<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
 			</form>
@@ -441,7 +441,7 @@ END;
 			$form = <<<END
 			<form class="XiboForm" method="post" action="index.php?p=layout&q=retire">
 				<input type="hidden" name="layoutid" value="$layoutid">
-				<p>Sorry, unable to delete $this->name.</p>
+				<p>Sorry, unable to delete $this->layout.</p>
 				<p>Retire this layout instead?</p>
 				<input type="submit" value="Yes">
 				<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
