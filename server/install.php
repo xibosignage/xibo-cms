@@ -18,11 +18,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
+ 
+// Start default to fr_FR
+$locale = "fr_FR";
+if (isset($_GET["locale"])) $locale = $_GET["locale"];
+putenv("LC_ALL=$locale");
+setlocale(LC_ALL, $locale);
+bindtextdomain("default", "./locale");
+textdomain("default");
 
 DEFINE('XIBO', true);
 
 if (! checkPHP()) {
-  die('Xibo requires PHP 5.0.2 or later');
+  die(__("Xibo requires PHP 5.0.2 or later"));
 }
 
 include('lib/app/kit.class.php');
@@ -36,119 +44,119 @@ if (!isset($xibo_step) || $xibo_step == 0) {
   # First step of the process.
   # Show a welcome screen and next button
   ?>
-  Welcome to the Xibo Installer!<br /><br />
-  The installer will take you through setting up Xibo one step at a time.<br /><br />
-  Lets get started!<br /><br />
+  <?php echo __("Welcome to the Xibo Installer!"); ?><br /><br />
+  <?php echo __("The installer will take you through setting up Xibo one step at a time."); ?><br /><br />
+  <?php echo __("Lets get started!"); ?><br /><br />
   <form action="install.php" method="POST">
     <input type="hidden" name="xibo_step" value="1" />
-    <div class="loginbutton"><button type="submit">Next ></button></div>
+    <div class="loginbutton"><button type="submit"><?php echo __("Next"); ?> ></button></div>
   </form>
   <?php
 }
 elseif ($xibo_step == 1) {
   # Check environment
   ?>
-  <p>First we need to check if your server meets Xibo's requirements.</p>
+  <p><?php echo __("First we need to check if your server meets Xibo's requirements."); ?></p>
   <div class="checks">
   <?php
 ## Filesystem Permissions
     if (checkFsPermissions()) {
     ?>
-      <img src="install/dot_green.gif"> Filesystem Permissions<br />
+      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("Filesystem Permissions"); ?><br />
     <?php
     }
     else {
       $fault = true;
     ?>
-      <img src="install/dot_red.gif"> Filesystem Permissions</br>
+      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("Filesystem Permissions"); ?></br>
       <div class="check_explain">
-      Xibo needs to be able to write to the following
+      <?php echo __("Xibo needs to be able to write to the following"); ?>
       <ul>
         <li> settings.php
         <li> install.php
 	<li> upgrade.php
       </ul>
-      Please fix this, and retest.<br />
+      <?php echo __("Please fix this, and retest."); ?><br />
       </div>
     <?php
     }
 ## PHP5
     if (checkPHP()) {
     ?>
-      <img src="install/dot_green.gif"> PHP Version<br />
+      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP Version"); ?><br />
     <?php
     }
     else {
       $fault = true;
     ?>
-      <img src="install/dot_red.gif"> PHP Version<br />
+      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP Version"); ?><br />
       <div class="check_explain">
-      Xibo requires PHP version 5 or later.<br />
-      Please fix this, and retest.<br />
+      <?php echo __("Xibo requires PHP version 5 or later."); ?><br />
+      <?php echo __("Please fix this, and retest."); ?><br />
       </div>
     <?php
     }
 ## MYSQL
   if (checkMySQL()) {
     ?>
-      <img src="install/dot_green.gif"> PHP MySQL Extension<br />
+      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP MySQL Extension"); ?><br />
     <?php
     }
     else {
       $fault = true;
     ?>
-      <img src="install/dot_red.gif"> PHP MySQL Extension<br />
+      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP MySQL Extension"); ?><br />
       <div class="check_explain">
-      Xibo needs to access a MySQL database to function.<br />
-      Please install MySQL and the appropriate MySQL extension and retest.<br />
+      <?php echo __("Xibo needs to access a MySQL database to function."); ?><br />
+      <?php echo __("Please install MySQL and the appropriate MySQL extension and retest."); ?><br />
       </div>
     <?php
     }
 ## JSON
   if (checkJson()) {
     ?>
-      <img src="install/dot_green.gif"> PHP JSON Extension<br />
+      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP JSON Extension"); ?><br />
     <?php
     }
     else {
       $fault = true;
     ?>
-      <img src="install/dot_red.gif"> PHP JSON Extension<br />
+      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP JSON Extension"); ?><br />
       <div class="check_explain">
-      Xibo needs the PHP JSON extension to function.<br />
-      Please install the PHP JSON extension and retest.<br />
+      <?php echo __("Xibo needs the PHP JSON extension to function."); ?><br />
+      <?php echo __("Please install the PHP JSON extension and retest."); ?><br />
       </div>
     <?php
     }
 ## GD
   if (checkGd()) {
     ?>
-      <img src="install/dot_green.gif"> PHP GD Extension<br />
+      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP GD Extension"); ?><br />
     <?php
     }
     else {
       $fault = true;
     ?>
-      <img src="install/dot_red.gif"> PHP GD Extension<br />
+      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP GD Extension"); ?><br />
       <div class="check_explain">
-      Xibo needs to manipulate images to function.<br />
-      Please install the GD libraries and extension and retest.<br />
+      <?php echo __("Xibo needs to manipulate images to function."); ?><br />
+      <?php echo __("Please install the GD libraries and extension and retest."); ?><br />
       </div>
     <?php
     }
 ## Calendar
   if (checkCal()) {
     ?>
-      <img src="install/dot_green.gif"> PHP Calendar Extension<br />
+      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP Calendar Extension"); ?><br />
     <?php
     }
     else {
       $fault = true;
     ?>
-      <img src="install/dot_red.gif"> PHP Calendar Extension<br />
+      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP Calendar Extension"); ?><br />
       <div class="check_explain">
-      Xibo needs the calendar extension to function.<br />
-      Please install the calendar extension and retest.<br />
+      <?php echo __("Xibo needs the calendar extension to function."); ?><br />
+      <?php echo __("Please install the calendar extension and retest."); ?><br />
       </div>
     <?php
     }
@@ -160,7 +168,7 @@ elseif ($xibo_step == 1) {
     ?>
       <form action="install.php" method="POST">
         <input type="hidden" name="xibo_step" value="1" />
-        <div class="loginbutton"><button type="submit">Retest</button></div>
+        <div class="loginbutton"><button type="submit"><?php echo __("Retest"); ?></button></div>
       </form>
     <?php
     }
@@ -168,7 +176,7 @@ elseif ($xibo_step == 1) {
     ?>
       <form action="install.php" method="POST">
         <input type="hidden" name="xibo_step" value="2" />
-        <div class="loginbutton"><button type="submit">Next ></button></div>
+        <div class="loginbutton"><button type="submit"><?php echo __("Next"); ?> ></button></div>
       </form>
     <?php
     }    
@@ -179,19 +187,17 @@ elseif ($xibo_step == 2) {
 
   ?>
   <div class="info">
-    <p>Xibo needs to setup a new database.</p>
-    <p>If you have not yet created an empty database and database user for
-    Xibo to use, and know the username/password of a MySQL administrator,
-    click the "Create New" button, otherwise click "Use Existing".</p>
-    <p><i>Note that any existing database must be empty</i></p>
+    <p><?php echo __("Xibo needs to setup a new database."); ?></p>
+    <p><?php echo __("If you have not yet created an empty database and database user for Xibo to use, and know the username/password of a MySQL administrator, click the \"Create New\" button, otherwise click \"Use Existing\"."); ?></p>
+    <p><i><?php echo __("Note that any existing database must be empty"); ?></i></p>
   </div>
   <form action="install.php" method="POST">
     <input type="hidden" name="xibo_step" value="3" />
-    <button type="submit">Create New</button>
+    <button type="submit"><?php echo __("Create New"); ?></button>
   </form>
   <form action="install.php" method="POST">
     <input type="hidden" name="xibo_step" value="4" />
-    <button type="submit">Use Existing</button>
+    <button type="submit"><?php echo __("Use Existing"); ?></button>
   </form>
   <?php
 }
@@ -199,24 +205,21 @@ elseif ($xibo_step == 3) {
 ## If not, gather admin password and use to create empty db and new user.
 ?>
 <div class="info">
-<p>Since no empty database has been created for Xibo to use, we need the username
-and password of a MySQL administrator to create a new database, and database
-user for Xibo.</p>
-<p>Additionally, please give us a new username and password to create in MySQL
-for Xibo to use. Xibo will create this automatically for you.</p>
+<p><?php echo __("Since no empty database has been created for Xibo to use, we need the username and password of a MySQL administrator to create a new database, and database user for Xibo."); ?></p>
+<p><?php echo __("Additionally, please give us a new username and password to create in MySQL for Xibo to use. Xibo will create this automatically for you."); ?></p>
 <form action="install.php" method="POST">
 <input type="hidden" name="xibo_step" value="5" />
 <input type="hidden" name="db_create" value="On" />
 <div class="install_table">
-  <p><label for="host">Host: </label><input class="username" type="text" id="host" name="host" size="12" value="localhost" /></p>
-  <p><label for="admin_username">Admin Username: </label><input class="username" type="text" id="admin_username" name="admin_username" size="12" /></p>
-  <p><label for="admin_password">Admin Password: </label><input class="username" type="password" id="admin_password" name="admin_password" size="12" /></p>
-  <p><label for="db_name">Xibo Database Name: </label><input class="username" type="text" id="db_name" name="db_name" size="12" value="xibo" /></p>
-  <p><label for="db_username">Xibo Database Username: </label><input class="username" type="text" id="db_username" name="db_username" size="12" value="xibo" /></p>
-  <p><label for="db_password">Xibo Database Password: </label><input class="username" type="password" id="db_password" name="db_password" size="12" /></p>
+  <p><label for="host"><?php echo __("Host:"); ?>&nbsp;</label><input class="username" type="text" id="host" name="host" size="12" value="localhost" /></p>
+  <p><label for="admin_username"><?php echo __("Admin Username:"); ?>&nbsp;</label><input class="username" type="text" id="admin_username" name="admin_username" size="12" /></p>
+  <p><label for="admin_password"><?php echo __("Admin Password:"); ?>&nbsp;</label><input class="username" type="password" id="admin_password" name="admin_password" size="12" /></p>
+  <p><label for="db_name"><?php echo __("Xibo Database Name:"); ?>&nbsp;</label><input class="username" type="text" id="db_name" name="db_name" size="12" value="xibo" /></p>
+  <p><label for="db_username"><?php echo __("Xibo Database Username:"); ?>&nbsp;</label><input class="username" type="text" id="db_username" name="db_username" size="12" value="xibo" /></p>
+  <p><label for="db_password"><?php echo __("Xibo Database Password:"); ?>&nbsp;</label><input class="username" type="password" id="db_password" name="db_password" size="12" /></p>
 </div>
 </div>
-<button type="submit">Create</button>
+<button type="submit"><?php echo __("Create"); ?></button>
 </form>
 <?php
 }
@@ -224,19 +227,18 @@ elseif ($xibo_step == 4) {
 ## Get details of db that's been created already for us
 ?>
 <div class="info">
-<p>Please enter the details of the database and user you have
-created for Xibo.</p>
+<p><?php echo __("Please enter the details of the database and user you have created for Xibo."); ?></p>
 <form action="install.php" method="POST">
 <input type="hidden" name="xibo_step" value="5" />
 <input type="hidden" name="db_create" value="Off" />
 <div class="install_table">
-  <p><label for="host">Host: </label><input class="username" type="text" id="host" name="host" size="12" value="localhost" /></p>
-  <p><label for="db_name">Xibo Database Name: </label><input class="username" type="text" id="db_name" name="db_name" size="12" value="xibo" /></p>
-  <p><label for="db_username">Xibo Database Username: </label><input class="username" type="text" id="db_username" name="db_username" size="12" value="xibo" /></p>
-  <p><label for="db_password">Xibo Database Password: </label><input class="username" type="password" id="db_password" name="db_password" size="12" /></p>
+  <p><label for="host"><?php echo __("Host:"); ?>&nbsp;</label><input class="username" type="text" id="host" name="host" size="12" value="localhost" /></p>
+  <p><label for="db_name"><?php echo __("Xibo Database Name:"); ?>&nbsp;</label><input class="username" type="text" id="db_name" name="db_name" size="12" value="xibo" /></p>
+  <p><label for="db_username"><?php echo __("Xibo Database Username:"); ?>&nbsp;</label><input class="username" type="text" id="db_username" name="db_username" size="12" value="xibo" /></p>
+  <p><label for="db_password"><?php echo __("Xibo Database Password:"); ?>&nbsp;</label><input class="username" type="password" id="db_password" name="db_password" size="12" /></p>
 </div>
 </div>
-<button type="submit">Create</button>
+<button type="submit"><?php echo __("Create"); ?></button>
 </form>
 <?php
 }
@@ -245,7 +247,7 @@ elseif ($xibo_step == 5) {
   $db_create = Kit::GetParam('db_create',_POST,_STRING);
 
   if (!isset($db_create)) {
-    reportError("2","Something went wrong");
+    reportError("2",__("Something went wrong"));
   }
   else {
     $db_host = Kit::GetParam('host',_POST,_STRING,'localhost');
@@ -262,17 +264,17 @@ elseif ($xibo_step == 5) {
       if (! ($db_host && $db_name && $db_user && $db_pass && $db_admin_user && $db_admin_pass)) {
         # Something was blank.
         # Throw an error.
-        reportError("3", "A field was blank. Please fill in all fields.");
+        reportError("3", __("A field was blank. Please fill in all fields."));
       }
       
       $db = @mysql_connect($db_host,$db_admin_user,$db_admin_pass);
       
       if (! $db) {
-        reportError("3", "Could not connect to MySQL with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+        reportError("3", __("Could not connect to MySQL with the administrator details. Please check and try again.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());
       }
       
       ?>
-      <p>Creating new database.</p>
+      <p><?php echo __("Creating new database."); ?></p>
       <?php
       flush();
       
@@ -280,7 +282,7 @@ elseif ($xibo_step == 5) {
                       mysql_real_escape_string($db_name));
       if (! @mysql_query($SQL, $db)) {
         # Create database and user
-        reportError("3", "Could not create a new database with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+        reportError("3", __("Could not create a new database with the administrator details. Please check and try again.") . "<br /><br />" . "MySQL Error:" . "<br />" . mysql_error());
       }
       
       # Choose the MySQL DB to create a user
@@ -290,7 +292,7 @@ elseif ($xibo_step == 5) {
       $db_host = strtolower($db_host);
       
       ?>
-      <p>Creating new user</p>
+      <p><?php echo __("Creating new user"); ?></p>
       <?php
       flush();
       
@@ -308,7 +310,7 @@ elseif ($xibo_step == 5) {
                         mysql_real_escape_string($db_pass));
       }
       if (! @mysql_query($SQL, $db)) {
-          reportError("3", "Could not create a new user with the administrator details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+          reportError("3", __("Could not create a new user with the administrator details. Please check and try again.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());
       }
       
 
@@ -320,7 +322,7 @@ elseif ($xibo_step == 5) {
       if (! ($db_host && $db_name && $db_user && $db_pass)) {
         # Something was blank
         # Throw an error.
-        reportError("4", "A field was blank. Please fill in all fields. " . $db_host . " " . $db_name . " " . $db_user . " " . $db_pass);
+        reportError("4", __("A field was blank. Please fill in all fields.") . " " . $db_host . " " . $db_name . " " . $db_user . " " . $db_pass);
       }
     }
     ## Populate database
@@ -328,7 +330,7 @@ elseif ($xibo_step == 5) {
     $db = @mysql_connect($db_host,$db_user,$db_pass);
       
     if (! $db) {
-      reportError("4", "Could not connect to MySQL with the Xibo User account details. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+      reportError("4", __("Could not connect to MySQL with the Xibo User account details. Please check and try again.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());
     }
       
     @mysql_select_db($db_name,$db);
@@ -372,7 +374,7 @@ elseif ($xibo_step == 5) {
           print ".";
           flush();
           if (! @mysql_query($sql,$db)) {
-            reportError("4", "An error occured populating the database.<br /><br />MySQL Error:<br />" . mysql_error());
+            reportError("4", __("An error occured populating the database.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());
           }
         }
         print "</p>";
@@ -383,7 +385,7 @@ elseif ($xibo_step == 5) {
   $fh = fopen("settings.php", 'wt');
   
   if (! $fh) {
-    reportError("0", "Unable to write to settings.php. We already checked this was possible earlier, so something changed.");
+    reportError("0", __("Unable to write to settings.php. We already checked this was possible earlier, so something changed."));
   }
   
   settings_strings();
@@ -395,7 +397,7 @@ elseif ($xibo_step == 5) {
   $settings_content .= 'define(\'SECRET_KEY\',\'' . gen_secret() . '\');' . "\n";
   
   if (! fwrite($fh, $settings_header . $settings_content . $settings_footer)) {
-    reportError("0", "Unable to write to settings.php. We already checked this was possible earlier, so something changed.");
+    reportError("0", __("Unable to write to settings.php. We already checked this was possible earlier, so something changed."));
   }
     
   fclose($fh);
@@ -406,7 +408,7 @@ elseif ($xibo_step == 5) {
     <form action="install.php" method="POST">
       <input type="hidden" name="xibo_step" value="6" />
   </div>
-    <button type="submit">Next ></button>
+    <button type="submit"><?php echo __("Next"); ?> ></button>
   </form>
   <?php
 }
@@ -414,15 +416,15 @@ elseif ($xibo_step == 6) {
   # Form to get new admin password
   ?>
   <div class="info">
-  <p>Xibo needs to set the "xibo_admin" user password. Please enter a password for this account below.</p>
+  <p><?php echo __("Xibo needs to set the \"xibo_admin\" user password. Please enter a password for this account below."); ?></p>
   </div>
   <div class="install_table">
     <form action="install.php" method="POST">
       <input type="hidden" name="xibo_step" value="7" />
-      <p><label for="password1">Password: </label><input type="password" name="password1" size="12" /></p>
-      <p><label for="password2">Retype Password: </label><input type="password" name="password2" size="12" /></p>
+      <p><label for="password1"><?php echo __("Password:"); ?>&nbsp;</label><input type="password" name="password1" size="12" /></p>
+      <p><label for="password2"><?php echo __("Retype Password:"); ?>&nbsp;</label><input type="password" name="password2" size="12" /></p>
   </div>
-    <button type="submit">Next ></button>
+    <button type="submit"><?php echo __("Next"); ?> ></button>
   </form>
   <?php
 }
@@ -432,7 +434,7 @@ elseif ($xibo_step == 7) {
   $password2 = Kit::GetParam('password2',_POST,_PASSWORD);
   
   if (!(($password1 && $password2) && ($password1 == $password2))) {
-    reportError("6", "Please input a new password. Ensure both password fields are identical.");
+    reportError("6", __("Please input a new password. Ensure both password fields are identical."));
   }
   
   include('settings.php');
@@ -442,7 +444,7 @@ elseif ($xibo_step == 7) {
   $db = @mysql_connect($dbhost,$dbuser,$dbpass);
       
     if (! $db) {
-      reportError("6", "Could not connect to MySQL with the Xibo User account details saved in settings.php. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+      reportError("6", __("Could not connect to MySQL with the Xibo User account details saved in settings.php. Please check and try again.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());
     }
       
     @mysql_select_db($dbname,$db);
@@ -450,18 +452,18 @@ elseif ($xibo_step == 7) {
     $SQL = sprintf("UPDATE `user` SET UserPassword = '%s' WHERE UserID = 1 LIMIT 1",
                     mysql_real_escape_string($password_hash));
     if (! @mysql_query($SQL, $db)) {
-      reportError("6", "An error occured changing the xibo_admin password.<br /><br />MySQL Error:<br />" . mysql_error());    
+      reportError("6", __("An error occured changing the xibo_admin password.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());    
     }
  
     @mysql_close($db);
     
     ?>
     <div class="info">
-      Successfully changed the xibo_admin password. We're nearly there now. Just a couple more steps!
+      <?php echo __("Successfully changed the xibo_admin password. We're nearly there now. Just a couple more steps!"); ?>
     </div>
     <form action="install.php" method="POST">
       <input type="hidden" name="xibo_step" value="8" />
-      <button type="submit">Next ></button>
+      <button type="submit"><?php echo __("Next"); ?> ></button>
     </form>
     <?php
 }
@@ -472,25 +474,25 @@ elseif ($xibo_step == 8) {
   ## server_key
   ?>
   <div class="info">
-    <p><b>Library Location</b></p>
-    <p>Xibo needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your webserver - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, Xibo will attempt to create it for you.</p>
+    <p><b><?php echo __("Library Location"); ?></b></p>
+    <p><?php echo __("Xibo needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your webserver - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, Xibo will attempt to create it for you."); ?></p>
     <form action="install.php" method="POST">
     <div class="install_table">
-       <p><label for="library_location">Library Location: </label><input type="text" name="library_location" value="" /></p>
+       <p><label for="library_location"><?php echo __("Library Location:"); ?>&nbsp;</label><input type="text" name="library_location" value="" /></p>
     </div>
-    <p><b>Server Key</b></p>
-    <p>Xibo needs you to choose a "key". This will be required each time you setup a new client. It should be complicated, and hard to remember. It is visible in the admin interface, so it need not be written down separately.</p>
+    <p><b><?php echo __("Server Key"); ?></b></p>
+    <p><?php echo __("Xibo needs you to choose a \"key\". This will be required each time you setup a new client. It should be complicated, and hard to remember. It is visible in the admin interface, so it need not be written down separately."); ?></p>
     <div class="install_table">
-      <p><label for="server_key">Server Key: </label><input type="text" name="server_key" value="" /></p>
+      <p><label for="server_key"><?php echo __("Server Key:"); ?> </label><input type="text" name="server_key" value="" /></p>
     </div>
-    <p><b>Statistics</b></p>
-    <p>We'd love to know you're running Xibo. If you're happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please untick the box if your server does not have direct access to the internet.</p>
+    <p><b><?php echo __("Statistics"); ?></b></p>
+    <p><?php echo __("We'd love to know you're running Xibo. If you're happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please untick the box if your server does not have direct access to the internet."); ?></p>
     <div class="install_table">
-      <p><label for="stats">Anonymous Statistics: </label><input type="checkbox" name="stats" value="true" checked /></p>
+      <p><label for="stats"><?php echo __("Anonymous Statistics:"); ?>&nbsp;</label><input type="checkbox" name="stats" value="true" checked /></p>
     </div>
       <input type="hidden" name="xibo_step" value="9" />
     </div>
-      <button type="submit">Next ></button>
+      <button type="submit"><?php echo __("Next"); ?> ></button>
     </form>
   <?php
 }
@@ -505,27 +507,27 @@ elseif ($xibo_step == 9) {
 
   // Check both fields were completed
   if (! ($server_key && $library_location)) {
-    reportError("8","A field was blank. Please make sure you complete all fields");
+    reportError("8", __("A field was blank. Please make sure you complete all fields"));
   }
 
   if ($stats) {
-    $stats="On";
+    $stats="On"; // Fixme: translate ?
   }
   else {
-    $stats="Off";
+    $stats="Off"; //Fixme : translate ?
   }
 
   // Does library_location exist already?
   if (! is_dir($library_location)) {
     if (is_file($library_location)) {
-      reportError("8", "A file exists with the name you gave for the Library Location. Please choose another location");
+      reportError("8", __("A file exists with the name you gave for the Library Location. Please choose another location"));
     }
 
     // Directory does not exist. Attempt to make it
     // Using mkdir recursively, so it will attempt to make any
     // intermediate folders required.
     if (! mkdir($library_location,0755,true)) {
-      reportError("8", "Could not create the Library Location directory for you. Please ensure the webserver has permission to create a folder in this location, or create the folder manually and grant permission for the webserver to write to the folder.");
+      reportError("8", __("Could not create the Library Location directory for you. Please ensure the webserver has permission to create a folder in this location, or create the folder manually and grant permission for the webserver to write to the folder."));
     }
     
   }
@@ -533,12 +535,12 @@ elseif ($xibo_step == 9) {
   // Is library_location writable?
   if (! is_writable($library_location)) {
     // Directory is not writable.
-    reportError("8","The Library Location you gave is not writable by the webserver. Please fix the permissions and try again.");
+    reportError("8", __("The Library Location you gave is not writable by the webserver. Please fix the permissions and try again."));
   }
   
   // Is library_location empty?
   if (count(ls("*",$library_location,true)) > 0) {
-    reportError("8","The Library Location you gave is not empty. Please give the location of an empty folder");
+    reportError("8", __("The Library Location you gave is not empty. Please give the location of an empty folder"));
   }
   
   // Check if the user has added a trailing slash.
@@ -552,7 +554,7 @@ elseif ($xibo_step == 9) {
   $db = @mysql_connect($dbhost,$dbuser,$dbpass);
       
     if (! $db) {
-      reportError("8", "Could not connect to MySQL with the Xibo User account details saved in settings.php. Please check and try again.<br /><br />MySQL Error:<br />" . mysql_error());
+      reportError("8", __("Could not connect to MySQL with the Xibo User account details saved in settings.php. Please check and try again.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());
     }
       
     @mysql_select_db($dbname,$db);
@@ -560,40 +562,40 @@ elseif ($xibo_step == 9) {
     $SQL = sprintf("UPDATE `setting` SET `value` = '%s' WHERE `setting`.`setting` = 'LIBRARY_LOCATION' LIMIT 1",
                     mysql_real_escape_string($library_location));
     if (! @mysql_query($SQL, $db)) {
-      reportError("8", "An error occured changing the library location.<br /><br />MySQL Error:<br />" . mysql_error());    
+      reportError("8", __("An error occured changing the library location.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());    
     }
     
     $SQL = sprintf("UPDATE `setting` SET `value` = '%s' WHERE `setting`.`setting` = 'SERVER_KEY' LIMIT 1",
                       mysql_real_escape_string($server_key));
     if (! @mysql_query($SQL, $db)) {
-      reportError("8", "An error occured changing the server key.<br /><br />MySQL Error:<br />" . mysql_error());    
+      reportError("8", __("An error occured changing the server key.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());    
     }
     
     $SQL = sprintf("UPDATE `setting` SET `value` = '%s' WHERE `setting`.`setting` = 'defaultTimezone' LIMIT 1",
                       mysql_real_escape_string(date_default_timezone_get()));
     if (! @mysql_query($SQL, $db)) {
-      reportError("8", "An error occured setting the default timezone.<br /><br />MySQL Error:<br />" . mysql_error());    
+      reportError("8", __("An error occured setting the default timezone.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());    
     }
  
     $SQL = sprintf("UPDATE `setting` SET `value` = '%s' WHERE `setting`.`setting` = 'PHONE_HOME' LIMIT 1",
                       mysql_real_escape_string($stats));
     if (! @mysql_query($SQL, $db)) {
-      reportError("8", "An error occured setting SEND_STATS.<br /><br />MySQL Error:<br />" . mysql_error());
+      reportError("8", __("An error occured setting anonymous statistics.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());
     }
     $SQL = "UPDATE `setting` SET `value` = '" . md5(uniqid(rand(), true)) . "' WHERE `setting`.`setting` = 'PHONE_HOME_KEY' LIMIT 1";
     if (! @mysql_query($SQL, $db)) {
-      reportError("8", "An error occured setting SEND_STATS.<br /><br />MySQL Error:<br />" . mysql_error());
+      reportError("8", __("An error occured setting anonymous statistics.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());
     }
     
     @mysql_close($db);
   
   ?>
   <div class="info">
-    <p>Successfully set LIBRARY_LOCATION and SERVER_KEY.</p>
+    <p><?php echo __("Successfully set library location and server key."); ?></p>
   </div>
     <form action="install.php" method="POST">
       <input type="hidden" name="xibo_step" value="10" />
-      <button type="submit">Next ></button>
+      <button type="submit"><?php echo __("Next"); ?> ></button>
     </form>
   <?php
 }
@@ -601,20 +603,20 @@ elseif ($xibo_step == 10) {
 # Delete install.php
 # Redirect to login page.
   if (! unlink('install.php')) {
-    reportError("10", "Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry", "Retry");
+    reportError("10", __("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"), __("Retry")); // Fixme : translate "Retry" ?
   }
   if (! unlink('upgrade.php')) {
-    reportError("10", "Unable to delete upgrade.php. Please ensure the webserver has permission to unlink this file and retry", "Retry");
+    reportError("10", __("Unable to delete upgrade.php. Please ensure the webserver has permission to unlink this file and retry"), __("Retry")); // Fixme : translate "Retry" ?
   }
   ?>
   <div class="info">
-    <p><b>Xibo was successfully installed.</b></p>
-    <p>Please click <a href="index.php">here</a> to logon to Xibo as "xibo_admin" with the password you chose earlier.</p>
+    <p><b><?php echo __("Xibo was successfully installed."); ?></b></p>
+    <p><?php echo __("Please click"); ?>&nbsp;<a href="index.php"><?php echo __("here"); ?></a>&nbsp;<?php echo __("to logon to Xibo as \"xibo_admin\" with the password you chose earlier."); ?></p>
   </div>
   <?php
 }
 else {
-  reportError("0","A required parameter was missing. Please go through the installer sequentially!","Start Again");
+  reportError("0", __("A required parameter was missing. Please go through the installer sequentially!"), __("Start Again")); // Fixme : translate "Start Again" ?
 }
  
 include('install/footer.inc');
@@ -651,7 +653,7 @@ function checkCal() {
   return extension_loaded("calendar");
 }
  
-function reportError($step, $message, $button_text="&lt; Back") {
+function reportError($step, $message, $button_text="&lt; Back") { // fixme : translate ?
 ?>
     <div class="info">
       <?php print $message; ?>
@@ -792,7 +794,7 @@ global $settings_footer;
  * You should not need to edit this file, unless your SQL connection details have changed.
  */
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+defined('XIBO') or die(__("Sorry, you are not allowed to directly access this page.") . "<br />" . __("Please press the back button in your browser."));
 
 global \$dbhost;
 global \$dbuser;
