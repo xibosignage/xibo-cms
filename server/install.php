@@ -678,4 +678,7 @@ END;
   return;
 }
 
+function checkPHP() {
+  return (version_compare("5",phpversion(), "<="));
+}
 ?>
