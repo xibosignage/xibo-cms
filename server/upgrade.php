@@ -19,6 +19,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 
+// Start default to fr_FR
+$locale = "fr_FR";
+if (isset($_GET["locale"])) $locale = $_GET["locale"];
+putenv("LC_ALL=$locale");
+setlocale(LC_ALL, $locale);
+bindtextdomain("default", "./locale");
+textdomain("default");
+
 DEFINE('XIBO', true);
 
 include('lib/app/kit.class.php');
@@ -57,8 +65,8 @@ define('_PASSWORDBOX', "password");
 // create a database class instance
 $db = new database();
 
-if (!$db->connect_db($dbhost, $dbuser, $dbpass)) reportError(0, "Unable to connect to the MySQL database using the settings stored in settings.php.<br /><br />MySQL Error:<br />" . $db->error());
-if (!$db->select_db($dbname)) reportError(0, "Unable to select the MySQL database using the settings stored in settings.php.<br /><br />MySQL Error:<br />" . $db->error());
+if (!$db->connect_db($dbhost, $dbuser, $dbpass)) reportError(0, __("Unable to connect to the MySQL database using the settings stored in settings.php.") . "<br /><br />" . __("MySQL Error:") . "<br />" . $db->error());
+if (!$db->select_db($dbname)) reportError(0, __("Unable to select the MySQL database using the settings stored in settings.php.") . "<br /><br />" . __("MySQL Error:") . "<br />" . $db->error());
 
 include('install/header_upgrade.inc');
 
@@ -73,15 +81,15 @@ if ($_SESSION['step'] == 0) {
   # First step of the process.
   # Show a welcome screen and authenticate the user
   ?>
-  Welcome to the Xibo Upgrade!<br /><br />
-  The upgrade program will take you through the process one step at a time.<br /><br />
-  Lets get started!<br /><br />
-  Please enter your xibo_admin password:<br /><br />
+  <?php echo __("Welcome to the Xibo Upgrade!"); ?><br /><br />
+  <?php echo __("The upgrade program will take you through the process one step at a time."); ?><br /><br />
+  <?php echo __("Lets get started!"); ?><br /><br />
+  <?php echo __("Please enter your xibo_admin password:"); ?><br /><br />
   <form action="upgrade.php" method="POST">
     <div class="install_table">
 	<input type="password" name="password" length="12" />
     </div>
-    <div class="loginbutton"><button type="submit">Next ></button></div>
+    <div class="loginbutton"><button type="submit"><?php echo __("Next"); ?> ></button></div>
   </form>
   <?php
 }
@@ -98,12 +106,12 @@ elseif ($_SESSION['step'] == 1) {
 	$SQL = sprintf("SELECT `UserID` FROM `user` WHERE UserPassword='%s' AND UserName='xibo_admin'",
         	            $db->escape_string($password_hash));
     	if (! $result = $db->query($SQL)) {
-      	reportError("0", "An error occured checking your password.<br /><br />MySQL Error:<br />" . mysql_error());    
+      	reportError("0", __("An error occured checking your password.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());    
     	}
  
 	if ($db->num_rows($result) == 0) {	
       		$_SESSION['auth'] = false;
-       		reportError("0", "Password incorrect. Please try again.");
+       		reportError("0", __("Password incorrect. Please try again."));
    	}
    	else {
 		$_SESSION['auth'] = true;
@@ -113,107 +121,107 @@ elseif ($_SESSION['step'] == 1) {
    }
 ## Check server meets specs (as specs might have changed in this release)
   ?>
-  <p>First we need to check if your server meets Xibo's requirements.</p>
+  <p><?php echo __("First we need to check if your server meets Xibo's requirements."); ?></p>
   <div class="checks">
   <?php
 ## Filesystem Permissions
     if (checkFsPermissions()) {
     ?>
-      <img src="install/dot_green.gif"> Filesystem Permissions<br />
+      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("Filesystem Permissions"); ?><br />
     <?php
     }
     else {
       $fault = true;
     ?>
-      <img src="install/dot_red.gif"> Filesystem Permissions</br>
+      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("Filesystem Permissions"); ?></br>
       <div class="check_explain">
-      Xibo needs to be able to write to the following
+      <?php echo __("Xibo needs to be able to write to the following"); ?>
       <ul>
         <li> settings.php
         <li> install.php
 	<li> upgrade.php
       </ul>
-      Please fix this, and retest.<br />
+      <?php echo __("Please fix this, and retest."); ?><br />
       </div>
     <?php
     }
 ## PHP5
     if (checkPHP()) {
     ?>
-      <img src="install/dot_green.gif"> PHP Version<br />
+      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP Version"); ?><br />
     <?php
     }
     else {
       $fault = true;
     ?>
-      <img src="install/dot_red.gif"> PHP Version<br />
+      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP Version"); ?><br />
       <div class="check_explain">
-      Xibo requires PHP version 5.02 or later.<br />
-      Please fix this, and retest.<br />
+      <?php echo __("Xibo requires PHP version 5.02 or later."); ?><br />
+      <?php echo __("Please fix this, and retest."); ?><br />
       </div>
     <?php
     }
 ## MYSQL
   if (checkMySQL()) {
     ?>
-      <img src="install/dot_green.gif"> PHP MySQL Extension<br />
+      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP MySQL Extension"); ?><br />
     <?php
     }
     else {
       $fault = true;
     ?>
-      <img src="install/dot_red.gif"> PHP MySQL Extension<br />
+      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP MySQL Extension"); ?><br />
       <div class="check_explain">
-      Xibo needs to access a MySQL database to function.<br />
-      Please install MySQL and the appropriate MySQL extension and retest.<br />
+      <?php echo __("Xibo needs to access a MySQL database to function."); ?><br />
+      <?php echo __("Please install MySQL and the appropriate MySQL extension and retest."); ?><br />
       </div>
     <?php
     }
 ## JSON
   if (checkJson()) {
     ?>
-      <img src="install/dot_green.gif"> PHP JSON Extension<br />
+      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP JSON Extension"); ?><br />
     <?php
     }
     else {
       $fault = true;
     ?>
-      <img src="install/dot_red.gif"> PHP JSON Extension<br />
+      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP JSON Extension"); ?><br />
       <div class="check_explain">
-      Xibo needs the PHP JSON extension to function.<br />
-      Please install the PHP JSON extension and retest.<br />
+      <?php echo __("Xibo needs the PHP JSON extension to function."); ?><br />
+      <?php echo __("Please install the PHP JSON extension and retest."); ?><br />
       </div>
     <?php
     }
 ## GD
   if (checkGd()) {
     ?>
-      <img src="install/dot_green.gif"> PHP GD Extension<br />
+      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP GD Extension"); ?><br />
     <?php
     }
     else {
       $fault = true;
     ?>
-      <img src="install/dot_red.gif"> PHP GD Extension<br />
+      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP GD Extension"); ?><br />
       <div class="check_explain">
-      Xibo needs to manipulate images to function.<br />
-      Please install the GD libraries and extension and retest.<br />
+      <?php echo __("Xibo needs to manipulate images to function."); ?><br />
+      <?php echo __("Please install the GD libraries and extension and retest."); ?><br />
       </div>
     <?php
     }
 ## Calendar
   if (checkCal()) {
     ?>
-      <img src="install/dot_green.gif"> PHP Calendar Extension<br />
+      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP Calendar Extension"); ?><br />
     <?php
     }
     else {
       $fault = true;
     ?>
-      <img src="install/dot_red.gif"> PHP Calendar Extension<br />
+      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP Calendar Extension"); ?><br />
       <div class="check_explain">
-      Xibo needs the calendar extension to function.<br />
-      Please install the calendar extension and retest.<br />
+      <?php echo __("Xibo needs the calendar extension to function."); ?><br />
+      <?php echo __("Please install the calendar extension and retest."); ?><br />
       </div>
     <?php
     }
@@ -225,14 +233,14 @@ elseif ($_SESSION['step'] == 1) {
 	$_SESSION['step'] = 1;
     ?>
       <form action="upgrade.php" method="POST">
-        <div class="loginbutton"><button type="submit">Retest</button></div>
+        <div class="loginbutton"><button type="submit"><?php echo __("Retest"); ?></button></div>
       </form>
     <?php
     }
     else {
     ?>
       <form action="upgrade.php" method="POST">
-        <div class="loginbutton"><button type="submit">Next ></button></div>
+        <div class="loginbutton"><button type="submit"><?php echo __("Next"); ?> ></button></div>
       </form>
     <?php
     }    
@@ -263,7 +271,7 @@ elseif ($_SESSION['step'] == 2) {
 	$_SESSION['upgradeTo'] = max($max_sql, $max_php);
 
 	if (! $_SESSION['upgradeTo']) {
-		reportError("2", "Unable to calculate the upgradeTo value. Check for non-numeric SQL and PHP files in the 'install/datbase' directory.", "Retry");
+		reportError("2", __("Unable to calculate the upgradeTo value. Check for non-numeric SQL and PHP files in the 'install/database' directory."), "Retry"); // Fixme : translate Retry ?
 	}
 
 	echo '<div class="info">';
@@ -286,14 +294,14 @@ elseif ($_SESSION['step'] == 2) {
 				createQuestions($i, $_SESSION['Step' . $i]->Questions());
 			}
 			else {
-				print "Warning: We included $i.php, but it did not include a class of appropriate name.";
+				print __("Warning: We included ") . $i . ".php, " . __("but it did not include a class of appropriate name.");
 			}						
 		}
 	}
 
 	$_SESSION['step'] = 3;
 	echo '<input type="hidden" name="includes" value="true" />';
-	echo '<p><input type="submit" value="Next >" /></p>';
+	echo '<p><input type="submit" value="' . __("Next") . ' >" /></p>';
 	echo '</form>';
 
 ?>
@@ -325,12 +333,12 @@ elseif ($_SESSION['step'] == 3) {
 
 	if ($fault) {
 		// Report the error, and a back button
-		echo "FAIL: " . $fault_string;
+		echo __("FAIL:") . " " . $fault_string;
 	}
 	else {
 		// Backup the database
 		echo '<div class="info">';
-		echo '<p>Backing up your database';
+		echo '<p>' . __("Backing up your database");
 		backup_tables($db, '*');
 		echo '</p>';
 
@@ -349,13 +357,13 @@ elseif ($_SESSION['step'] == 3) {
 			          flush();
 			          if (! $db->query($sql)) {
 			 	    $fault = true;
-			            reportError("0", "An error occured populating the database.<br /><br />MySQL Error:<br />" . $db->error());
+			            reportError("0", __("An error occured populating the database.") . "<br /><br />" . __("MySQL Error:") . "<br />" . $db->error());
 			          }
 			        }
 				echo '</p>';
 			}
 			if (file_exists('install/database/' . $i . '.php')) {
-				$stepName = 'Step' . $i;
+				$stepName = __("Step") . $i;
 				echo '<p>' . $i . '.php ';
 				flush();
 				if (! $_SESSION[$stepName]->Boot()) {
@@ -367,25 +375,25 @@ elseif ($_SESSION['step'] == 3) {
 		echo '</div>';
 		if (! $fault) {
 			if (! unlink('install.php')) {
-    				echo "Unable to delete install.php. Please remove this file manually.";
+    				echo __("Unable to delete install.php. Please remove this file manually.");
   			}
 			if (! unlink('upgrade.php')) {
-				echo "Unable to delete upgrade.php. Please remove this file manually.";
+				echo __("Unable to delete upgrade.php. Please remove this file manually.");
 			}
 
-			echo '<b>Upgrade is complete!</b><br /><br />';
+			echo '<b>' . __("Upgrade is complete!") . '</b><br /><br />';
 			echo '<form method="POST" action="index.php">';
-			echo '<input type="submit" value="Login" />';
+			echo '<input type="submit" value="' . __("Login") . '" />';
 			echo '</form>';
 		}
 		else {
-			echo '<b>There was an error during the upgrade. Please take a screenshot of this page and seek help!</b>';
+			echo '<b>' . __("There was an error during the upgrade. Please take a screenshot of this page and seek help!") . '</b>';
 		}
 		session_destroy();
 	}
 }
 else {
-  reportError("0","A required parameter was missing. Please go through the installer sequentially!","Start Again");
+  reportError("0", __("A required parameter was missing. Please go through the installer sequentially!"),"Start Again"); // Fixme : Translate Start Again ?
 }
  
 include('install/footer.inc');
@@ -422,7 +430,7 @@ function checkCal() {
   return extension_loaded("calendar");
 }
  
-function reportError($step, $message, $button_text="&lt; Back") {
+function reportError($step, $message, $button_text="&lt; Back") { // Fixme : Translate Back ?
 	$_SESSION['step'] = $step;
 ?>
     <div class="info">
@@ -438,7 +446,7 @@ function reportError($step, $message, $button_text="&lt; Back") {
 
 function checkAuth() {
 	if (! $_SESSION['auth']) {
-		reportError(1, "You must authenticate to run the upgrade.");
+		reportError(1, __("You must authenticate to run the upgrade."));
 	}
 }
 
