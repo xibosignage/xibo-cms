@@ -114,8 +114,8 @@ class Config
 		$db 	 =& $this->db;
 		
 		$output  = '';
-		$imgGood = '<img src="install/dot_green.gif">';
-		$imgBad  = '<img src="install/dot_red.gif">';
+		$imgGood = '<img src="install/dot_green.gif"> ';
+		$imgBad  = '<img src="install/dot_red.gif"> ';
 		
 		$output .= '<div class="checks">';
 		
