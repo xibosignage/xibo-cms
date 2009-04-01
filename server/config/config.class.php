@@ -240,6 +240,43 @@ END;
 END;
 		}
 		
+		// Check for DOM
+		$message = 'DOM Extension';
+
+		if ($this->CheckDom()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo needs the PHP DOM core functionality enabled.</p>
+      		</div>
+END;
+		}
+		
+		// Check for DOM XML
+		$message = 'DOM XML Extension';
+
+		if ($this->CheckDomXml()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo needs the PHP DOM XML extension to function.</p>
+      		</div>
+END;
+		}
 		
 		// Check to see if we are allowed to open remote URL's (homecall will not work otherwise)
 		$message = 'Allow PHP to open external URL\'s';
@@ -327,6 +364,24 @@ END;
 	function CheckCal() 
 	{
 		return extension_loaded("calendar");
+	}
+	
+	/**
+	 * Check PHP has the DOM XML functionality installed
+	 * @return 
+	 */
+	function CheckDomXml()
+	{
+		return extension_loaded("dom");
+	}
+	
+	/**
+	 * Check PHP has the DOM functionality installed
+	 * @return 
+	 */
+	function CheckDom()
+	{
+		return class_exists("DOMDocument");
 	}
 }
 
