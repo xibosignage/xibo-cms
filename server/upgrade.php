@@ -115,7 +115,8 @@ elseif ($_SESSION['step'] == 1) {
   ?>
   <p>First we need to check if your server meets Xibo's requirements.</p>
   <?php
-    $cObj = new Config();
+    $db = new Database();
+    $cObj = new Config($db);
     $cObj->CheckEnvironment();
     if ($cObj->EnvironmentFault()) {
 	$_SESSION['step'] = 1;

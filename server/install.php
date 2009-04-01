@@ -27,6 +27,8 @@ if (! checkPHP()) {
 
 include('lib/app/kit.class.php');
 include('install/header.inc');
+include('config/config.class.php');
+include('config/db_config.php');
 
 $fault = false;
 
@@ -47,7 +49,8 @@ if (!isset($xibo_step) || $xibo_step == 0) {
 }
 elseif ($xibo_step == 1) {
   # Check environment
-  $cObj = new Config();
+  $db = new Database();
+  $cObj = new Config($db);
   ?>
   <p>First we need to check if your server meets Xibo's requirements.</p>
   <?php
