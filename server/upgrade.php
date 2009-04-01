@@ -117,7 +117,7 @@ elseif ($_SESSION['step'] == 1) {
   <?php
     $db = new Database();
     $cObj = new Config($db);
-    $cObj->CheckEnvironment();
+    echo $cObj->CheckEnvironment();
     if ($cObj->EnvironmentFault()) {
 	$_SESSION['step'] = 1;
     ?>

@@ -54,7 +54,7 @@ elseif ($xibo_step == 1) {
   ?>
   <p>First we need to check if your server meets Xibo's requirements.</p>
   <?php
-    $cObj->CheckEnvironment();
+    echo $cObj->CheckEnvironment();
     if ($cObj->EnvironmentFault()) {
     ?>
       <form action="install.php" method="POST">
