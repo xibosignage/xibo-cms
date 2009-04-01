@@ -143,7 +143,7 @@ class layoutDAO
 		$db 	=& $this->db;
 		
 		$layout = ""; //3
-		if (isset($_SESSION['layout']['layout'])) $layout = $_SESSION['layout']['layout'];
+		if (isset($_SESSION['layout']['filter_layout'])) $layout = $_SESSION['layout']['filter_layout'];
 		
 		//sharing list
 		$shared = "All";
@@ -173,7 +173,7 @@ class layoutDAO
 			<table class="layout_filterform">
 				<tr>
 					<td>Name</td>
-					<td><input type="text" name="layout"></td>
+					<td><input type="text" name="filter_layout"></td>
 					<td>Owner</td>
 					<td>$user_list</td>
 					<td>Shared</td>
@@ -532,19 +532,18 @@ END;
 		$user		=& $this->user;
 		$response	= new ResponseManager();
 		
-		$name = "";
-		if (isset($_REQUEST['layout'])) $name = clean_input($_REQUEST['layout'], VAR_FOR_SQL, $db);
-		setSession('layout', 'layout', $name);
+		$name = Kit::GetParam('filter_layout', _POST, _STRING, '');
+		setSession('layout', 'filter_layout', $name);
 		
-		//Sharing
-		$permissionid = $_REQUEST['permissionid'];
+		// Sharing
+		$permissionid = Kit::GetParam('permissionid', _POST, _STRING, 'all');
 		setSession('layout', 'permissionid', $permissionid);
 		
-		//User ID
-		$filter_userid = $_REQUEST['filter_userid'];
+		// User ID
+		$filter_userid = Kit::GetParam('filter_userid', _POST, _STRING, 'all');
 		setSession('layout', 'filter_userid', $filter_userid);
 		
-		//Show retired
+		// Show retired
 		$filter_retired = $_REQUEST['filter_retired'];
 		setSession('layout', 'filter_userid', $filter_userid);
 		
