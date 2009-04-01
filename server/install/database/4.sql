@@ -42,5 +42,5 @@ INSERT INTO `template` (`template`, `xml`, `permissionID`, `userID`, `createdDT`
 
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 
-
+UPDATE `version` SET `app_ver` = '1.0.0-final';
 UPDATE `version` SET `DBVersion` = '4';
