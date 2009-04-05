@@ -95,7 +95,7 @@ class Config
 		$xlfVer		= Kit::ValidateParam($row['XlfVersion'], _INT);
 		$xmdsVer	= Kit::ValidateParam($row['XmdsVersion'], _INT);
 	
-		define('VERSION', $appVer);
+		if (!defined('VERSION')) define('VERSION', $appVer);
 		
 		if ($object != '')
 		{
@@ -114,8 +114,8 @@ class Config
 		$db 	 =& $this->db;
 		
 		$output  = '';
-		$imgGood = '<img src="install/dot_green.gif">';
-		$imgBad  = '<img src="install/dot_red.gif">';
+		$imgGood = '<img src="install/dot_green.gif"> ';
+		$imgBad  = '<img src="install/dot_red.gif"> ';
 		
 		$output .= '<div class="checks">';
 		
@@ -222,7 +222,7 @@ END;
 		
 		
 		// Check for Calendar
-		$message = 'GD Extension';
+		$message = 'Calendar Extension';
 
 		if ($this->CheckCal()) 
 		{
@@ -240,11 +240,48 @@ END;
 END;
 		}
 		
+		// Check for DOM
+		$message = 'DOM Extension';
+
+		if ($this->CheckDom()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo needs the PHP DOM core functionality enabled.</p>
+      		</div>
+END;
+		}
+		
+		// Check for DOM XML
+		$message = 'DOM XML Extension';
+
+		if ($this->CheckDomXml()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo needs the PHP DOM XML extension to function.</p>
+      		</div>
+END;
+		}
 		
 		// Check to see if we are allowed to open remote URL's (homecall will not work otherwise)
 		$message = 'Allow PHP to open external URL\'s';
 
-		if ($this->CheckFsPermissions()) 
+		if (ini_get('allow_url_fopen')) 
 		{
 			$output .= $imgGood.$message.'<br />';
 		}
@@ -260,7 +297,6 @@ END;
       		</div>
 END;
 		}
-		
 				
 		$output .= '</div>';
 		
@@ -282,7 +318,7 @@ END;
 	 */
 	function CheckFsPermissions() 
 	{
-	  return ((is_writable("../install.php") && (is_writable("../settings.php")) && (is_writable("../upgrade.php")) || is_writable("../.")));
+	  return ((is_writable("install.php") && (is_writable("settings.php")) && (is_writable("upgrade.php")) || is_writable(".")));
 	}
 	
 	/**
@@ -337,6 +373,24 @@ END;
 	function CheckCal() 
 	{
 		return extension_loaded("calendar");
+	}
+	
+	/**
+	 * Check PHP has the DOM XML functionality installed
+	 * @return 
+	 */
+	function CheckDomXml()
+	{
+		return extension_loaded("dom");
+	}
+	
+	/**
+	 * Check PHP has the DOM functionality installed
+	 * @return 
+	 */
+	function CheckDom()
+	{
+		return class_exists("DOMDocument");
 	}
 }
 

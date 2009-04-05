@@ -27,6 +27,8 @@ if (! checkPHP()) {
 
 include('lib/app/kit.class.php');
 include('install/header.inc');
+include('config/config.class.php');
+include('config/db_config.php');
 
 $fault = false;
 
@@ -47,116 +49,13 @@ if (!isset($xibo_step) || $xibo_step == 0) {
 }
 elseif ($xibo_step == 1) {
   # Check environment
+  $db = new Database();
+  $cObj = new Config($db);
   ?>
   <p>First we need to check if your server meets Xibo's requirements.</p>
-  <div class="checks">
   <?php
-## Filesystem Permissions
-    if (checkFsPermissions()) {
-    ?>
-      <img src="install/dot_green.gif"> Filesystem Permissions<br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif"> Filesystem Permissions</br>
-      <div class="check_explain">
-      Xibo needs to be able to write to the following
-      <ul>
-        <li> settings.php
-        <li> install.php
-	<li> upgrade.php
-      </ul>
-      Please fix this, and retest.<br />
-      </div>
-    <?php
-    }
-## PHP5
-    if (checkPHP()) {
-    ?>
-      <img src="install/dot_green.gif"> PHP Version<br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif"> PHP Version<br />
-      <div class="check_explain">
-      Xibo requires PHP version 5 or later.<br />
-      Please fix this, and retest.<br />
-      </div>
-    <?php
-    }
-## MYSQL
-  if (checkMySQL()) {
-    ?>
-      <img src="install/dot_green.gif"> PHP MySQL Extension<br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif"> PHP MySQL Extension<br />
-      <div class="check_explain">
-      Xibo needs to access a MySQL database to function.<br />
-      Please install MySQL and the appropriate MySQL extension and retest.<br />
-      </div>
-    <?php
-    }
-## JSON
-  if (checkJson()) {
-    ?>
-      <img src="install/dot_green.gif"> PHP JSON Extension<br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif"> PHP JSON Extension<br />
-      <div class="check_explain">
-      Xibo needs the PHP JSON extension to function.<br />
-      Please install the PHP JSON extension and retest.<br />
-      </div>
-    <?php
-    }
-## GD
-  if (checkGd()) {
-    ?>
-      <img src="install/dot_green.gif"> PHP GD Extension<br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif"> PHP GD Extension<br />
-      <div class="check_explain">
-      Xibo needs to manipulate images to function.<br />
-      Please install the GD libraries and extension and retest.<br />
-      </div>
-    <?php
-    }
-## Calendar
-  if (checkCal()) {
-    ?>
-      <img src="install/dot_green.gif"> PHP Calendar Extension<br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif"> PHP Calendar Extension<br />
-      <div class="check_explain">
-      Xibo needs the calendar extension to function.<br />
-      Please install the calendar extension and retest.<br />
-      </div>
-    <?php
-    }
-    ?>
-    <br /><br />
-    </div>
-    <?php
-    if ($fault) {
+    echo $cObj->CheckEnvironment();
+    if ($cObj->EnvironmentFault()) {
     ?>
       <form action="install.php" method="POST">
         <input type="hidden" name="xibo_step" value="1" />
@@ -620,36 +519,6 @@ else {
 include('install/footer.inc');
 
 # Functions
-
-function checkFsPermissions() {
-  # Check for appropriate filesystem permissions
-  return ((is_writable("install.php") && (is_writable("settings.php")) && (is_writable("upgrade.php")) || is_writable(".")));
-}
-
-function checkPHP() {
-  # Check PHP version > 5
-  return (version_compare("5",phpversion(), "<="));
-}
-
-function checkMySQL() {
-  # Check PHP has MySQL module installed
-  return extension_loaded("mysql");
-}
-
-function checkJson() {
-  # Check PHP has JSON module installed
-  return extension_loaded("json");
-}
-
-function checkGd() {
-  # Check PHP has JSON module installed
-  return extension_loaded("gd");
-}
-
-function checkCal() {
-  # Check PHP has JSON module installed
-  return extension_loaded("calendar");
-}
  
 function reportError($step, $message, $button_text="&lt; Back") {
 ?>
@@ -809,4 +678,7 @@ END;
   return;
 }
 
+function checkPHP() {
+  return (version_compare("5",phpversion(), "<="));
+}
 ?>

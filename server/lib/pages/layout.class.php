@@ -143,7 +143,7 @@ class layoutDAO
 		$db 	=& $this->db;
 		
 		$layout = ""; //3
-		if (isset($_SESSION['layout']['layout'])) $layout = $_SESSION['layout']['layout'];
+		if (isset($_SESSION['layout']['filter_layout'])) $layout = $_SESSION['layout']['filter_layout'];
 		
 		//sharing list
 		$shared = "All";
@@ -173,7 +173,7 @@ class layoutDAO
 			<table class="layout_filterform">
 				<tr>
 					<td>Name</td>
-					<td><input type="text" name="layout"></td>
+					<td><input type="text" name="filter_layout"></td>
 					<td>Owner</td>
 					<td>$user_list</td>
 					<td>Shared</td>
@@ -429,7 +429,7 @@ END;
 			$form = <<<END
 			<form class="XiboForm" method="post" action="index.php?p=layout&q=delete">
 				<input type="hidden" name="layoutid" value="$layoutid">
-				<p>Are you sure you want to delete $this->name? All media will be unassigned. Any layout specific media such as text/rss will be lost.</p>
+				<p>Are you sure you want to delete $this->layout? All media will be unassigned. Any layout specific media such as text/rss will be lost.</p>
 				<input type="submit" value="Yes">
 				<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
 			</form>
@@ -441,7 +441,7 @@ END;
 			$form = <<<END
 			<form class="XiboForm" method="post" action="index.php?p=layout&q=retire">
 				<input type="hidden" name="layoutid" value="$layoutid">
-				<p>Sorry, unable to delete $this->name.</p>
+				<p>Sorry, unable to delete $this->layout.</p>
 				<p>Retire this layout instead?</p>
 				<input type="submit" value="Yes">
 				<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
@@ -532,19 +532,18 @@ END;
 		$user		=& $this->user;
 		$response	= new ResponseManager();
 		
-		$name = "";
-		if (isset($_REQUEST['layout'])) $name = clean_input($_REQUEST['layout'], VAR_FOR_SQL, $db);
-		setSession('layout', 'layout', $name);
+		$name = Kit::GetParam('filter_layout', _POST, _STRING, '');
+		setSession('layout', 'filter_layout', $name);
 		
-		//Sharing
-		$permissionid = $_REQUEST['permissionid'];
+		// Sharing
+		$permissionid = Kit::GetParam('permissionid', _POST, _STRING, 'all');
 		setSession('layout', 'permissionid', $permissionid);
 		
-		//User ID
-		$filter_userid = $_REQUEST['filter_userid'];
+		// User ID
+		$filter_userid = Kit::GetParam('filter_userid', _POST, _STRING, 'all');
 		setSession('layout', 'filter_userid', $filter_userid);
 		
-		//Show retired
+		// Show retired
 		$filter_retired = $_REQUEST['filter_retired'];
 		setSession('layout', 'filter_userid', $filter_userid);
 		

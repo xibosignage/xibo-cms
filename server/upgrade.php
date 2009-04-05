@@ -114,114 +114,11 @@ elseif ($_SESSION['step'] == 1) {
 ## Check server meets specs (as specs might have changed in this release)
   ?>
   <p>First we need to check if your server meets Xibo's requirements.</p>
-  <div class="checks">
   <?php
-## Filesystem Permissions
-    if (checkFsPermissions()) {
-    ?>
-      <img src="install/dot_green.gif"> Filesystem Permissions<br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif"> Filesystem Permissions</br>
-      <div class="check_explain">
-      Xibo needs to be able to write to the following
-      <ul>
-        <li> settings.php
-        <li> install.php
-	<li> upgrade.php
-      </ul>
-      Please fix this, and retest.<br />
-      </div>
-    <?php
-    }
-## PHP5
-    if (checkPHP()) {
-    ?>
-      <img src="install/dot_green.gif"> PHP Version<br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif"> PHP Version<br />
-      <div class="check_explain">
-      Xibo requires PHP version 5.02 or later.<br />
-      Please fix this, and retest.<br />
-      </div>
-    <?php
-    }
-## MYSQL
-  if (checkMySQL()) {
-    ?>
-      <img src="install/dot_green.gif"> PHP MySQL Extension<br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif"> PHP MySQL Extension<br />
-      <div class="check_explain">
-      Xibo needs to access a MySQL database to function.<br />
-      Please install MySQL and the appropriate MySQL extension and retest.<br />
-      </div>
-    <?php
-    }
-## JSON
-  if (checkJson()) {
-    ?>
-      <img src="install/dot_green.gif"> PHP JSON Extension<br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif"> PHP JSON Extension<br />
-      <div class="check_explain">
-      Xibo needs the PHP JSON extension to function.<br />
-      Please install the PHP JSON extension and retest.<br />
-      </div>
-    <?php
-    }
-## GD
-  if (checkGd()) {
-    ?>
-      <img src="install/dot_green.gif"> PHP GD Extension<br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif"> PHP GD Extension<br />
-      <div class="check_explain">
-      Xibo needs to manipulate images to function.<br />
-      Please install the GD libraries and extension and retest.<br />
-      </div>
-    <?php
-    }
-## Calendar
-  if (checkCal()) {
-    ?>
-      <img src="install/dot_green.gif"> PHP Calendar Extension<br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif"> PHP Calendar Extension<br />
-      <div class="check_explain">
-      Xibo needs the calendar extension to function.<br />
-      Please install the calendar extension and retest.<br />
-      </div>
-    <?php
-    }
-    ?>
-    <br /><br />
-    </div>
-    <?php
-    if ($fault) {
+    $db = new Database();
+    $cObj = new Config($db);
+    echo $cObj->CheckEnvironment();
+    if ($cObj->EnvironmentFault()) {
 	$_SESSION['step'] = 1;
     ?>
       <form action="upgrade.php" method="POST">

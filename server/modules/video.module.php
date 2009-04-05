@@ -120,7 +120,7 @@ class video extends Module
 		//Save button is different depending on if we are on a region or not
 		if ($regionid != "")
 		{
-			setSession('content','mediatype','image');
+			setSession('content','mediatype','video');
 			
 			$save_button = <<<END
 			<input id="btnSave" type="submit" value="Save" disabled />
