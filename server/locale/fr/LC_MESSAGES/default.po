@@ -1,0 +1,27 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Xibo 1.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2009-04-01 23:36-0000\n"
+"PO-Revision-Date: \n"
+"Last-Translator: Dan Garner <mail@dangarner.co.uk>\n"
+"Language-Team: Xibo Developers <info@xibo.org.uk>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: French\n"
+"X-Poedit-Country: FRANCE\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-Basepath: C:\\Intranet\\htdocs\\1.1\\server\\\n"
+"X-Poedit-KeywordsList: __\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPath-1: lib\\app\n"
+
+#: lib/app/pagemanager.class.php:105
+msgid "You do not have permission to access this page."
+msgstr ""
+
+#: lib/pages/report.class.php:388
+msgid "Log Date"
+msgstr "Lahg"
+

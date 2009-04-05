@@ -304,6 +304,15 @@ END;
 	}
 	
 	/**
+	 * Check PHP has the GetText module installed
+	 * @return 
+	 */
+	function CheckGettext() 
+	{
+		return extension_loaded("gettext");
+	}
+	
+	/**
 	 * Check PHP has JSON module installed
 	 * @return 
 	 */

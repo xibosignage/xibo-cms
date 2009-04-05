@@ -26,6 +26,7 @@ ini_set('display_errors', 0);
 ini_set('gd.jpeg_ignore_warning', 1);
 
 // Required Library Files
+require_once("lib/app/translationengine.class.php");
 require_once("lib/app/debug.class.php");
 require_once("lib/app/kit.class.php");
 require_once("lib/app/pagemanager.class.php");
@@ -102,6 +103,9 @@ if(Config::GetSetting($db, "SERVER_MODE")=="Test") ini_set('display_errors', 1);
 
 // Debugging?
 if(Config::GetSetting($db, "debug")=="On") error_reporting(E_ALL);
+
+// Setup the translations for gettext
+TranslationEngine::InitLocale($db);
 
 // Create login control system
 require_once('modules/' . Config::GetSetting($db, "userModule"));

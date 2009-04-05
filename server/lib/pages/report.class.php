@@ -385,12 +385,14 @@ END;
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 		
+		$logDate_t = __('Log Date');
+		
 		$output = <<<END
 		<div class="info_table">
 			<table style="width:100%">
 				<thead>
 					<tr>
-						<th>Log Date</th>
+						<th>$logDate_t</th>
 						<th>Page</th>
 						<th>Function</th>
 						<th>Message</th>
