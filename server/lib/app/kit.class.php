@@ -214,7 +214,7 @@ class Kit
 
 			case _STRING :
 			case _PASSWORD :
-				$return = htmlentities($return);
+				$return = htmlspecialchars($return, ENT_COMPAT, 'UTF-8', false);
 				$return = preg_replace('/&#(\d+);/me', "chr(\\1)", $return); // decimal notation
 				// convert hex
 				$return = preg_replace('/&#x([a-f0-9]+);/mei', "chr(0x\\1)", $return); // hex notation
