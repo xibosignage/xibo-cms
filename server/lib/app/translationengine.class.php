@@ -67,7 +67,7 @@ class TranslationEngine
 				}
 			}
 			
-			$lang = 'fr';
+			//$lang = 'fr';
 			
 			// For windows
 			putenv('LANG='.$lang.'.'.$encoding);

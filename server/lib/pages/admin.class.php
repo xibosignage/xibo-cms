@@ -67,7 +67,7 @@ class adminDAO
 		
 		if ($usertype != 1) 
 		{
-			setMessage("Only admin users are allowed to modify settings");
+			setMessage(__("Only admin users are allowed to modify settings"));
 			return $refer;
 		}
 		
@@ -77,12 +77,12 @@ class adminDAO
 		if (!$result = $db->query($SQL))
 		{
 			trigger_error($db->error());
-			trigger_error('Cannot find the Library Location Setting - this is serious.', E_USER_ERROR);
+			trigger_error(__('Cannot find the Library Location Setting - this is serious.'), E_USER_ERROR);
 		}
 		
 		if ($db->num_rows($result) == 0)
 		{
-			trigger_error('Cannot find the Library Location Setting - this is serious.', E_USER_ERROR);
+			trigger_error(__('Cannot find the Library Location Setting - this is serious.'), E_USER_ERROR);
 		}
 		
 		$row 				= $db->get_row($result);
@@ -109,7 +109,7 @@ class adminDAO
 				
 				if (!is_writable($value . 'temp'))
 				{
-					trigger_error('The Library Location you have picked is not writable to the Xibo Server.', E_USER_ERROR);
+					trigger_error(__('The Library Location you have picked is not writable to the Xibo Server.'), E_USER_ERROR);
 				}
 			}
 			
@@ -118,7 +118,7 @@ class adminDAO
 			if(!$db->query($SQL)) trigger_error("Update of settings failed".$db->error(), E_USER_ERROR);
 		}
 
-		setMessage("Settings changed!");
+		setMessage(__("Settings changed"));
 
 		return $refer;
 	}
@@ -186,33 +186,6 @@ FORM;
 		
 		return false;
 	}
-	
-	function send_email() 
-	{
-		$db =& $this->db;
-		
-		$to = Config::GetSetting($db, "mail_to");
-		if ($to == "") return true; //they might not have an email recipient set
-		
-		$from = Config::GetSetting($db, "mail_from");
-		if ($from == "") return true;
-
-		$headers = "From: $from" . "\r\n" . "Reply-To: $from" . "\r\n" .
-			"X-Mailer: PHP/" . phpversion();
-		
-		if(mail("$to", "Test Email from Xibo", "This is a test email sent from the Xibo Settings page.", $headers)) 
-		{
-			//success
-			echo "1|The email was accepted for sending";
-		}
-		else 
-		{
-			//failure
-			echo "0|The email failed to send. To[$to] From[$from]";
-		}
-		
-		exit;
-	}
 
 	function display_cat($cat) 
 	{
@@ -252,7 +225,8 @@ END;
 				$selected = "";
 				if($file == $value) $selected = "selected";
 				
-				if(preg_match("^module_user^", $file)) {
+				if(preg_match("^module_user^", $file)) 
+				{
 					//var for drop down
 					$select.= "<option value='$file' $selected>$file</option>";	
 				}
