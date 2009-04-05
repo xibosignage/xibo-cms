@@ -81,7 +81,7 @@ class faultDAO
 		$output .= '<li><p>' . __('Turn full auditing and debugging OFF.') . '</p>';	
 		$output .= '	<form class="XiboForm" action="index.php?p=admin" method="post">';
 		$output .= '		<input type="hidden" name="q" value="SetMinDebug" />';
-		$output .= '		<input type="submit" value="' . __('Turn OFF Debugging') . ' />';
+		$output .= '		<input type="submit" value="' . __('Turn OFF Debugging') . '" />';
 		$output .= '	</form>';	
 		$output .= '</li>';
 		
