@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+defined('XIBO') or die(__("Sorry, you are not allowed to directly access this page.") . '<br />' . __("Please press the back button in your browser."));
 
 class faultDAO
 {
@@ -46,7 +46,7 @@ class faultDAO
 	
 	function echo_page_heading() 
 	{
-		echo 'Report a Fault';
+		echo __('Report a Fault');
 		return true;
 	}
 	
@@ -60,33 +60,33 @@ class faultDAO
 
 		$output .= '<div class="ReportFault">';		
 		$output .= '<ol>';		
-		$output .= '<li><p>Check that the Environment passes all the Xibo Environment checks.</p>';		
+		$output .= '<li><p>' . __('Check that the Environment passes all the Xibo Environment checks.') . '</p>';		
 		$output .= $config->CheckEnvironment();
 		$output .= '</li>';
 
-		$output .= '<li><p>Turn ON full auditing and debugging.</p>';
+		$output .= '<li><p>' . __('Turn ON full auditing and debugging.') . '</p>';
 		$output .= '	<form class="XiboForm" action="index.php?p=admin" method="post">';
 		$output .= '		<input type="hidden" name="q" value="SetMaxDebug" />';
-		$output .= '		<input type="submit" value="Turn ON Debugging" />';
+		$output .= '		<input type="submit" value="' . __('Turn ON Debugging') . '" />';
 		$output .= '	</form>';
 		$output .= '</li>';
 
-		$output .= '<li><p>Recreate the Problem in a new window.</p>';		
+		$output .= '<li><p>' . __('Recreate the Problem in a new window.') . '</p>';		
 		$output .= '</li>';
 		
-		$output .= '<li><p>Automatically collect and export relevant information into a text file. Please save this file to your PC.</p>';
-		$output .= '<a href="index.php?p=fault&q=CollectData" title="Collect Data">Collect and Save Data</a>';	
+		$output .= '<li><p>' . __('Automatically collect and export relevant information into a text file.') . ' ' . __('Please save this file to your PC.') . '</p>';
+		$output .= '<a href="index.php?p=fault&q=CollectData" title="Collect Data">' . __('Collect and Save Data') . '</a>';	
 		$output .= '</li>';
 
-		$output .= '<li><p>Turn full auditing and debugging OFF.</p>';	
+		$output .= '<li><p>' . __('Turn full auditing and debugging OFF.') . '</p>';	
 		$output .= '	<form class="XiboForm" action="index.php?p=admin" method="post">';
 		$output .= '		<input type="hidden" name="q" value="SetMinDebug" />';
-		$output .= '		<input type="submit" value="Turn OFF Debugging" />';
+		$output .= '		<input type="submit" value="' . __('Turn OFF Debugging') . ' />';
 		$output .= '	</form>';	
 		$output .= '</li>';
 		
-		$output .= '<li><p>Click on the below link to open the bug report page for this Xibo release. Describe the problem and upload the file you obtained earlier.</p>';		
-		$output .= '<a href="https://bugs.launchpad.net/xibo/1.0/+filebug" title="File a bug report" target="_blank">File a bug report in Launchpad</a>';
+		$output .= '<li><p>' . __('Click on the below link to open the bug report page for this Xibo release.') . ' ' . __(' Describe the problem and upload the file you obtained earlier.') . '</p>';		
+		$output .= '<a href="https://bugs.launchpad.net/xibo/1.0/+filebug" title="File a bug report" target="_blank">' . __('File a bug report in Launchpad') . '</a>';
 		$output .= '</li>';
 		
 		$output .= '</ol>';
