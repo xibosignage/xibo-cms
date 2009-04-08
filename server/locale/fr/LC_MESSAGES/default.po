@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Xibo 1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-04-01 23:36-0000\n"
+"POT-Creation-Date: 2009-04-05 22:22-0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Dan Garner <mail@dangarner.co.uk>\n"
 "Language-Team: Xibo Developers <info@xibo.org.uk>\n"
@@ -21,7 +21,84 @@ msgstr ""
 msgid "You do not have permission to access this page."
 msgstr ""
 
+#: lib/pages/admin.class.php:70
+msgid "Only admin users are allowed to modify settings"
+msgstr ""
+
+#: lib/pages/admin.class.php:80
+#: lib/pages/admin.class.php:85
+msgid "Cannot find the Library Location Setting - this is serious."
+msgstr ""
+
+#: lib/pages/admin.class.php:112
+msgid "The Library Location you have picked is not writable to the Xibo Server."
+msgstr ""
+
+#: lib/pages/admin.class.php:121
+msgid "Settings changed"
+msgstr ""
+
+#: lib/pages/fault.class.php:21
+msgid "Sorry, you are not allowed to directly access this page."
+msgstr ""
+
+#: lib/pages/fault.class.php:21
+msgid "Please press the back button in your browser."
+msgstr ""
+
+#: lib/pages/fault.class.php:49
+msgid "Report a Fault"
+msgstr ""
+
+#: lib/pages/fault.class.php:63
+msgid "Check that the Environment passes all the Xibo Environment checks."
+msgstr ""
+
+#: lib/pages/fault.class.php:67
+msgid "Turn ON full auditing and debugging."
+msgstr ""
+
+#: lib/pages/fault.class.php:70
+msgid "Turn ON Debugging"
+msgstr ""
+
+#: lib/pages/fault.class.php:74
+msgid "Recreate the Problem in a new window."
+msgstr ""
+
+#: lib/pages/fault.class.php:77
+msgid "Automatically collect and export relevant information into a text file."
+msgstr ""
+
+#: lib/pages/fault.class.php:77
+msgid "Please save this file to your PC."
+msgstr ""
+
+#: lib/pages/fault.class.php:78
+msgid "Collect and Save Data"
+msgstr ""
+
+#: lib/pages/fault.class.php:81
+msgid "Turn full auditing and debugging OFF."
+msgstr ""
+
+#: lib/pages/fault.class.php:84
+msgid "Turn OFF Debugging"
+msgstr ""
+
+#: lib/pages/fault.class.php:88
+msgid "Click on the below link to open the bug report page for this Xibo release."
+msgstr ""
+
+#: lib/pages/fault.class.php:88
+msgid "Describe the problem and upload the file you obtained earlier."
+msgstr ""
+
+#: lib/pages/fault.class.php:89
+msgid "File a bug report in Launchpad"
+msgstr ""
+
 #: lib/pages/report.class.php:388
 msgid "Log Date"
-msgstr "Lahg"
+msgstr ""
 
