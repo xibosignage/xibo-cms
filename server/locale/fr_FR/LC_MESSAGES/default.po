@@ -2,9 +2,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Xibo 1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-04-01 15:50+0100\n"
-"PO-Revision-Date: 2009-04-01 16:35+0100\n"
-"Last-Translator: Damien Laureaux <d.laureaux@gmail.com>\n"
+"POT-Creation-Date: 2009-04-08 19:58-0000\n"
+"PO-Revision-Date: 2009-04-08 20:00-0000\n"
+"Last-Translator: Dan Garner <mail@dangarner.co.uk>\n"
 "Language-Team: Xibo\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -12,32 +12,424 @@ msgstr ""
 "X-Poedit-Language: French\n"
 "X-Poedit-Country: FRANCE\n"
 "X-Poedit-SourceCharset: utf-8\n"
-"X-Poedit-Basepath: /home/damien/Private/sites/xibo/sources/translate-xibo-updater/server/\n"
+"X-Poedit-Basepath: C:\\Intranet\\htdocs\\1.1\\server\n"
 "X-Poedit-KeywordsList: __\n"
 "X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPath-1: lib\\pages\n"
+"X-Poedit-SearchPath-2: lib\\app\n"
+
+#: install.php:33
+msgid "Xibo requires PHP 5.0.2 or later"
+msgstr "Xibo requiert PHP 5.0.2 ou supérieur"
+
+#: install.php:49
+msgid "Welcome to the Xibo Installer!"
+msgstr "Bienvenue dans l'installation de Xibo !"
+
+#: install.php:50
+msgid "The installer will take you through setting up Xibo one step at a time."
+msgstr "Le programme d'installation va vous permettre de configurer Xibo par étape."
+
+#: install.php:51
+#: upgrade.php:86
+msgid "Lets get started!"
+msgstr "C'est parti !"
+
+#: install.php:54
+#: install.php:186
+#: install.php:418
+#: install.php:434
+#: install.php:473
+#: install.php:502
+#: install.php:605
+#: upgrade.php:92
+#: upgrade.php:248
+#: upgrade.php:309
+msgid "Next"
+msgstr "Suivant"
+
+#: install.php:63
+#: upgrade.php:125
+msgid "First we need to check if your server meets Xibo's requirements."
+msgstr "Nous devons tout d'abord vérifier si votre serveur réponds aux exigences de Xibo."
+
+#: install.php:71
+#: install.php:77
+#: upgrade.php:135
+#: upgrade.php:141
+msgid "Filesystem Permissions"
+msgstr "Permissions sur les fichiers"
+
+#: install.php:79
+#: upgrade.php:143
+msgid "Xibo needs to be able to write to the following"
+msgstr "Xibo doit être en mesure d'écrire dans les fichiers suivants"
+
+#: install.php:85
+#: install.php:101
+#: upgrade.php:149
+#: upgrade.php:165
+msgid "Please fix this, and retest."
+msgstr "Merci de corriger ceci, et relancer le test."
+
+#: install.php:92
+#: install.php:98
+#: upgrade.php:156
+#: upgrade.php:162
+msgid "PHP Version"
+msgstr "Version de PHP"
+
+#: install.php:100
+msgid "Xibo requires PHP version 5 or later."
+msgstr "Xibo a besoin d'une version PHP 5 ou supérieur."
+
+#: install.php:108
+#: install.php:114
+#: upgrade.php:172
+#: upgrade.php:178
+msgid "PHP MySQL Extension"
+msgstr "Extension MySQL pour PHP"
+
+#: install.php:116
+#: upgrade.php:180
+msgid "Xibo needs to access a MySQL database to function."
+msgstr "Xibo a besoin d'accéder à la base de données MySQL pour fonctionner."
+
+#: install.php:117
+#: upgrade.php:181
+msgid "Please install MySQL and the appropriate MySQL extension and retest."
+msgstr "Merci d'installer MySQL et l'extension appropriée et relancer le test."
+
+#: install.php:124
+#: install.php:130
+#: upgrade.php:188
+#: upgrade.php:194
+msgid "PHP JSON Extension"
+msgstr "Extension JSON pour PHP"
+
+#: install.php:132
+#: upgrade.php:196
+msgid "Xibo needs the PHP JSON extension to function."
+msgstr "Xibo a besoin de l'extension JSON pour PHP pour fonctionner."
+
+#: install.php:133
+#: upgrade.php:197
+msgid "Please install the PHP JSON extension and retest."
+msgstr "Merci d'installer l'extension JSON pour PHP et relancer le test."
+
+#: install.php:140
+#: install.php:146
+#: upgrade.php:204
+#: upgrade.php:210
+msgid "PHP GD Extension"
+msgstr "Extension GD pour PHP"
+
+#: install.php:148
+#: upgrade.php:212
+msgid "Xibo needs to manipulate images to function."
+msgstr "Xibo a besoin de manipuler des images pour fonctionner."
+
+#: install.php:149
+#: upgrade.php:213
+msgid "Please install the GD libraries and extension and retest."
+msgstr "Merci d'installer les librairies et l'extension GD et relancer le test."
+
+#: install.php:156
+#: install.php:162
+#: upgrade.php:220
+#: upgrade.php:226
+msgid "PHP Calendar Extension"
+msgstr "Extension PHP Calendar"
+
+#: install.php:164
+#: upgrade.php:228
+msgid "Xibo needs the calendar extension to function."
+msgstr "Xibo a besoin de l'extension PHP Calendar pour fonctionner."
+
+#: install.php:165
+#: upgrade.php:229
+msgid "Please install the calendar extension and retest."
+msgstr "Merci d'installer l'extension PHP Calendar et relancer le test."
+
+#: install.php:178
+#: upgrade.php:241
+msgid "Retest"
+msgstr "Réessayer"
+
+#: install.php:197
+msgid "Xibo needs to setup a new database."
+msgstr "Xibo a besoin de configurer une nouvelle base de données"
+
+#: install.php:198
+msgid "If you have not yet created an empty database and database user for Xibo to use, and know the username/password of a MySQL administrator, click the \"Create New\" button, otherwise click \"Use Existing\"."
+msgstr "Si vous n'avez pas créé de base de données et utilisateur pour Xibo et que vous connaissez l'utilisateur / mot de passe pour l'administration de Mysql, vous pouvez cliquer sur le bouton \"Créer nouveau\" ou sinon ciquer sur le bouton \"Utiliser existant\"."
+
+#: install.php:199
+msgid "Note that any existing database must be empty"
+msgstr "Noter que la base de données existante doit être vide"
+
+#: install.php:203
+msgid "Create New"
+msgstr "Créer un nouvelle base"
+
+#: install.php:207
+msgid "Use Existing"
+msgstr "Utiliser une base données existante"
+
+#: install.php:215
+msgid "Since no empty database has been created for Xibo to use, we need the username and password of a MySQL administrator to create a new database, and database user for Xibo."
+msgstr "Si aucune base de données vide n'as été créée pas Xibo, nous avons besoin de l'utilisateur et le mot de passe de l'administrateur MySQL pour créer une nouvelle base de données et l'utilisateur Xibo"
+
+#: install.php:216
+msgid "Additionally, please give us a new username and password to create in MySQL for Xibo to use. Xibo will create this automatically for you."
+msgstr "En plus, merci de nous donner un nouveau nom d'utilisateur et mot de passe pour créer l'utilisateur Xibo dans MySQL. Xibo le créera automatiquement pour vous."
+
+#: install.php:221
+#: install.php:242
+msgid "Host:"
+msgstr "Hôte :"
+
+#: install.php:222
+msgid "Admin Username:"
+msgstr "Nom de l'administrateur :"
+
+#: install.php:223
+msgid "Admin Password:"
+msgstr "Mot de passe de l'administrateur :"
+
+#: install.php:224
+#: install.php:243
+msgid "Xibo Database Name:"
+msgstr "Nom de la base Xibo :"
+
+#: install.php:225
+#: install.php:244
+msgid "Xibo Database Username:"
+msgstr "Nom d'utilisateur de la base Xibo :"
+
+#: install.php:226
+#: install.php:245
+msgid "Xibo Database Password:"
+msgstr "Mot de passe de la base Xibo :"
+
+#: install.php:229
+#: install.php:248
+msgid "Create"
+msgstr "Créer"
+
+#: install.php:237
+msgid "Please enter the details of the database and user you have created for Xibo."
+msgstr "Merci d'entrer les informations concernant la base de données et de l'utilisateur que vous avez créé pour Xibo."
+
+#: install.php:257
+msgid "Something went wrong"
+msgstr "Quelque chose ne marche pas"
+
+#: install.php:274
+#: install.php:332
+msgid "A field was blank. Please fill in all fields."
+msgstr "Un champ est vide. Merci de remplir tous les champs."
+
+#: install.php:280
+msgid "Could not connect to MySQL with the administrator details. Please check and try again."
+msgstr "Impossible de ce connecter à MySQL avec les informations administrateurs. Merci de vérifier et de réessayer."
+
+#: install.php:280
+#: install.php:320
+#: install.php:340
+#: install.php:384
+#: install.php:454
+#: install.php:462
+#: install.php:564
+#: install.php:572
+#: install.php:578
+#: install.php:584
+#: install.php:590
+#: install.php:594
+#: upgrade.php:68
+#: upgrade.php:69
+#: upgrade.php:109
+#: upgrade.php:365
+msgid "MySQL Error:"
+msgstr "Erreur MySQL"
+
+#: install.php:284
+msgid "Creating new database."
+msgstr "Création de la base de données"
+
+#: install.php:292
+msgid "Could not create a new database with the administrator details. Please check and try again."
+msgstr "Impossible de créer une nouvelle base de données avec les informations administrateur. Merci de vérifier et de réessayer."
+
+#: install.php:302
+msgid "Creating new user"
+msgstr "Création d'un nouvel utilisateur"
+
+#: install.php:320
+msgid "Could not create a new user with the administrator details. Please check and try again."
+msgstr "Impossible de créer une nouvelle base de données avec les informations administrateur. Merci de vérifier et de réessayer."
+
+#: install.php:340
+msgid "Could not connect to MySQL with the Xibo User account details. Please check and try again."
+msgstr "Impossible de se conencter à MySQL avec les informations du compte utilisateur Xibo. merci de vérifier et de réessayer."
+
+#: install.php:384
+#: upgrade.php:365
+msgid "An error occured populating the database."
+msgstr "Une erreur est apparue durant le remplissage de la base de données"
+
+#: install.php:395
+#: install.php:407
+msgid "Unable to write to settings.php. We already checked this was possible earlier, so something changed."
+msgstr "Impossible d'écrire dans le fichier settings.php . Nous avons déjà vérifier plus tôt, mais quelques chose à changer."
+
+#: install.php:426
+msgid "Xibo needs to set the \"xibo_admin\" user password. Please enter a password for this account below."
+msgstr "Xibo a besoin de définir le mot de passe de l'utilisateur \"xibo_admin\". Merci de rentrer un mot de passe pour ce compte ci-dessous."
+
+#: install.php:431
+msgid "Password:"
+msgstr "Mot de passe :"
+
+#: install.php:432
+msgid "Retype Password:"
+msgstr "Retaper le mot de passe :"
+
+#: install.php:444
+msgid "Please input a new password. Ensure both password fields are identical."
+msgstr "Merci d'entrer un nouveau mot de passe. Veiller à ce que le mot de passe des deux champs sont identiques."
+
+#: install.php:454
+#: install.php:564
+msgid "Could not connect to MySQL with the Xibo User account details saved in settings.php. Please check and try again."
+msgstr "Impossible de se connecter à MySQL avec les informations de l'utilisateur Xibo sauvées dans settings.php . Merci de vérifier et réessayer."
+
+#: install.php:462
+msgid "An error occured changing the xibo_admin password."
+msgstr "Une erreur est apparue durant le changement du mot de passe de xibo_admin"
+
+#: install.php:469
+msgid "Successfully changed the xibo_admin password. We're nearly there now. Just a couple more steps!"
+msgstr "Mot de passe de xibo_admin changé avec succès. Nous sommes pas loin maintenant. Juste quelques étapes de plus !"
+
+#: install.php:484
+msgid "Library Location"
+msgstr "Répertoire de la Librairie"
+
+#: install.php:485
+msgid "Xibo needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your webserver - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, Xibo will attempt to create it for you."
+msgstr "Xibo besoins de stocker quelque part les contenus à diffuser que vous téléchargez. Idéalement, ce devrait être quelque part en dehors de la racine de votre serveur web afin qu'il ne soit pas accessible par un navigateur Web. S'il vous plaît entrez le chemin d'accès complet à ce dossier. Si le dossier n'existe pas, Xibo va tenter de le créer pour vous."
+
+#: install.php:488
+msgid "Library Location:"
+msgstr "Répertoire de la Librairie :"
+
+#: install.php:490
+msgid "Server Key"
+msgstr "Clef du serveur"
+
+#: install.php:491
+msgid "Xibo needs you to choose a \"key\". This will be required each time you setup a new client. It should be complicated, and hard to remember. It is visible in the admin interface, so it need not be written down separately."
+msgstr "Xibo a besoin que vous choisissiez une \"clef\". elle sera nécessaire à chaque fois que vous installerez un nouveau client. Elle devrait être compliquée et difficile à mémoriser. Elle est visible dans l'interface d'administration, de sorte qu'il n'a pas besoin d'être écrites ailleurs."
+
+#: install.php:493
+msgid "Server Key:"
+msgstr "Clef du serveur :"
+
+#: install.php:495
+msgid "Statistics"
+msgstr "Statistiques"
+
+#: install.php:496
+msgid "We'd love to know you're running Xibo. If you're happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please untick the box if your server does not have direct access to the internet."
+msgstr "Nous serions ravis de savoir que vous utilisez Xibo. Si vous êtes heureux pour nous de recueillir des statistiques anonymes (numéro de version, nombre d'écrans) alors merci de laisser la case cochée. Merci de décochée la case si le serveur n'as pas de connexion direct à l'Internet."
+
+#: install.php:498
+msgid "Anonymous Statistics:"
+msgstr "Statistiques anonymes :"
+
+#: install.php:517
+msgid "A field was blank. Please make sure you complete all fields"
+msgstr "Un champ est vide. Merci de remplir tous les champs"
+
+#: install.php:530
+msgid "A file exists with the name you gave for the Library Location. Please choose another location"
+msgstr "Un fichier existe avec le nom que vous avez donné à la l'emplacement de la Bibliothèque. Merci de choisir un autre emplacement"
+
+#: install.php:537
+msgid "Could not create the Library Location directory for you. Please ensure the webserver has permission to create a folder in this location, or create the folder manually and grant permission for the webserver to write to the folder."
+msgstr "Impossible de créer l'emplacement pour la Bibliothèque. Merci de vérifier que le serveur web a bien les permissions pour créer un répertoire dans cet emplacement, ou sinon créé le répertoire manuellement et donnez lui les permissions d'écriture pour que le serveur web puisse écrire dans cet emplacement."
+
+#: install.php:545
+msgid "The Library Location you gave is not writable by the webserver. Please fix the permissions and try again."
+msgstr "Le serveur web ne peut écrire dans l'emplacement que vous avez donné pour la Bibliothèque. Merci de corriger les permissions et réessayer."
+
+#: install.php:550
+msgid "The Library Location you gave is not empty. Please give the location of an empty folder"
+msgstr "L'emplacement pour la Bibliothèque n'est pas vide. Merci de donner un répertoire vide pour l'emplacement"
+
+#: install.php:572
+msgid "An error occured changing the library location."
+msgstr "Une erreur est apparue durant le changement de l'emplacement de la Bibliothèque."
+
+#: install.php:578
+msgid "An error occured changing the server key."
+msgstr "Une erreur est apparue durant le changement de la clef serveur."
+
+#: install.php:584
+msgid "An error occured setting the default timezone."
+msgstr "Une erreur est apparue durant la configuration du fuseau horaire par défaut."
+
+#: install.php:590
+#: install.php:594
+msgid "An error occured setting anonymous statistics."
+msgstr "Une erreur est apparue lors de la configuration des statistiques anonymes."
+
+#: install.php:601
+msgid "Successfully set library location and server key."
+msgstr "L'emplacement de la Bibliothèque et la clef serveur ont été configuré avec succès"
+
+#: install.php:613
+msgid "Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"
+msgstr "Impossible de supprimer install.php . Merci de verifier que le serveur web a les permissions suffisante pour supprimer ce fichier et réessayer"
+
+#: install.php:613
+#: install.php:616
+msgid "Retry"
+msgstr "Réessayer"
+
+#: install.php:616
+msgid "Unable to delete upgrade.php. Please ensure the webserver has permission to unlink this file and retry"
+msgstr "Impossible de supprimer upgrade.php . Merci de vérifier que le serveur web a les permissions suffisante pour supprimer ce fichier et réessayer"
+
+#: install.php:620
+msgid "Xibo was successfully installed."
+msgstr "Xibo a été installer avec succès"
+
+#: install.php:621
+msgid "Please click"
+msgstr "Merci de cliquer"
+
+#: install.php:621
+msgid "here"
+msgstr "ici"
+
+#: install.php:621
+msgid "to logon to Xibo as \"xibo_admin\" with the password you chose earlier."
+msgstr "pour se connecter à Xibo avec \"xibo_admin\" avec le mot de passe choisit plus tôt"
+
+#: install.php:626
+#: upgrade.php:401
+msgid "A required parameter was missing. Please go through the installer sequentially!"
+msgstr "Un paramètre requis est manquant. Merci de passer par l'installation séquentiel !"
+
+#: install.php:626
+msgid "Start Again"
+msgstr "Recommencer"
 
 #: upgrade.php:68
 msgid "Unable to connect to the MySQL database using the settings stored in settings.php."
 msgstr "Impossible de se connecter à la base de données MySQL en utilisant les informations stockées dans le fichier settings.php"
-
-#: upgrade.php:68
-#: upgrade.php:69
-#: upgrade.php:109
-#: upgrade.php:360
-#: install.php:273
-#: install.php:313
-#: install.php:333
-#: install.php:377
-#: install.php:447
-#: install.php:455
-#: install.php:557
-#: install.php:565
-#: install.php:571
-#: install.php:577
-#: install.php:583
-#: install.php:587
-msgid "MySQL Error:"
-msgstr "Erreur MySQL"
 
 #: upgrade.php:69
 msgid "Unable to select the MySQL database using the settings stored in settings.php."
@@ -51,27 +443,9 @@ msgstr "Bienvenue dans la mise à jour de Xibo !"
 msgid "The upgrade program will take you through the process one step at a time."
 msgstr "Le programme de mise à jour va vous permettre de configurer Xibo par étape."
 
-#: upgrade.php:86
-#: install.php:49
-msgid "Lets get started!"
-msgstr "C'est parti !"
-
 #: upgrade.php:87
 msgid "Please enter your xibo_admin password:"
 msgstr "Merci d'entrer votre mot de passe xibo_admin :"
-
-#: upgrade.php:92
-#: upgrade.php:243
-#: upgrade.php:304
-#: install.php:52
-#: install.php:179
-#: install.php:411
-#: install.php:427
-#: install.php:466
-#: install.php:495
-#: install.php:598
-msgid "Next"
-msgstr "Suivant"
 
 #: upgrade.php:109
 msgid "An error occured checking your password."
@@ -81,429 +455,143 @@ msgstr "Une erreur est apparue durant la vérification de votre mot de passe."
 msgid "Password incorrect. Please try again."
 msgstr "Mot de passe incorrect. Merci de réessayer."
 
-#: upgrade.php:124
-#: install.php:59
-msgid "First we need to check if your server meets Xibo's requirements."
-msgstr "Nous devons tout d'abord vérifier si votre serveur réponds aux exigences de Xibo."
-
-#: upgrade.php:130
-#: upgrade.php:136
-#: install.php:65
-#: install.php:71
-msgid "Filesystem Permissions"
-msgstr "Permissions sur les fichiers"
-
-#: upgrade.php:138
-#: install.php:73
-msgid "Xibo needs to be able to write to the following"
-msgstr "Xibo doit être en mesure d'écrire dans les fichiers suivants"
-
-#: upgrade.php:144
-#: upgrade.php:160
-#: install.php:79
-#: install.php:95
-msgid "Please fix this, and retest."
-msgstr "Merci de corriger ceci, et relancer le test."
-
-#: upgrade.php:151
-#: upgrade.php:157
-#: install.php:86
-#: install.php:92
-msgid "PHP Version"
-msgstr "Version de PHP"
-
-#: upgrade.php:159
+#: upgrade.php:164
 msgid "Xibo requires PHP version 5.02 or later."
 msgstr "Xibo a besoin d'une version PHP 5.02 ou supérieur."
 
-#: upgrade.php:167
-#: upgrade.php:173
-#: install.php:102
-#: install.php:108
-msgid "PHP MySQL Extension"
-msgstr "Extension MySQL pour PHP"
-
-#: upgrade.php:175
-#: install.php:110
-msgid "Xibo needs to access a MySQL database to function."
-msgstr "Xibo a besoin d'accéder à la base de données MySQL pour fonctionner."
-
-#: upgrade.php:176
-#: install.php:111
-msgid "Please install MySQL and the appropriate MySQL extension and retest."
-msgstr "Merci d'installer MySQL et l'extension appropriée et relancer le test."
-
-#: upgrade.php:183
-#: upgrade.php:189
-#: install.php:118
-#: install.php:124
-msgid "PHP JSON Extension"
-msgstr "Extension JSON pour PHP"
-
-#: upgrade.php:191
-#: install.php:126
-msgid "Xibo needs the PHP JSON extension to function."
-msgstr "Xibo a besoin de l'extension JSON pour PHP pour fonctionner."
-
-#: upgrade.php:192
-#: install.php:127
-msgid "Please install the PHP JSON extension and retest."
-msgstr "Merci d'installer l'extension JSON pour PHP et relancer le test."
-
-#: upgrade.php:199
-#: upgrade.php:205
-#: install.php:134
-#: install.php:140
-msgid "PHP GD Extension"
-msgstr "Extension GD pour PHP"
-
-#: upgrade.php:207
-#: install.php:142
-msgid "Xibo needs to manipulate images to function."
-msgstr "Xibo a besoin de manipuler des images pour fonctionner."
-
-#: upgrade.php:208
-#: install.php:143
-msgid "Please install the GD libraries and extension and retest."
-msgstr "Merci d'installer les librairies et l'extension GD et relancer le test."
-
-#: upgrade.php:215
-#: upgrade.php:221
-#: install.php:150
-#: install.php:156
-msgid "PHP Calendar Extension"
-msgstr "Extension PHP Calendar"
-
-#: upgrade.php:223
-#: install.php:158
-msgid "Xibo needs the calendar extension to function."
-msgstr "Xibo a besoin de l'extension PHP Calendar pour fonctionner."
-
-#: upgrade.php:224
-#: install.php:159
-msgid "Please install the calendar extension and retest."
-msgstr "Merci d'installer l'extension PHP Calendar et relancer le test."
-
-#: upgrade.php:236
-#: install.php:171
-msgid "Retest"
-msgstr "Réessayer"
-
-#: upgrade.php:274
+#: upgrade.php:279
 msgid "Unable to calculate the upgradeTo value. Check for non-numeric SQL and PHP files in the 'install/database' directory."
 msgstr ""
 
-#: upgrade.php:297
+#: upgrade.php:302
 msgid "Warning: We included "
 msgstr "Attention : Nous avons inclus "
 
-#: upgrade.php:297
+#: upgrade.php:302
 msgid "but it did not include a class of appropriate name."
 msgstr "mais il n'inclus pas de classe avec un nom approprié."
 
-#: upgrade.php:336
+#: upgrade.php:341
 msgid "FAIL:"
 msgstr "ECHEC :"
 
-#: upgrade.php:341
+#: upgrade.php:346
 msgid "Backing up your database"
 msgstr "Sauvegarde de votre base de données"
 
-#: upgrade.php:360
-#: install.php:377
-msgid "An error occured populating the database."
-msgstr "Une erreur est apparue durant le remplissage de la base de données"
-
-#: upgrade.php:366
+#: upgrade.php:371
 msgid "Step"
 msgstr "Étape"
 
-#: upgrade.php:378
+#: upgrade.php:383
 msgid "Unable to delete install.php. Please remove this file manually."
 msgstr "Impossible de supprimer install.php . Merci de supprimer ce fichier manuellement."
 
-#: upgrade.php:381
+#: upgrade.php:386
 msgid "Unable to delete upgrade.php. Please remove this file manually."
 msgstr "Impossible de supprimer upgrade.php . Merci de supprimer ce fichier manuellement."
 
-#: upgrade.php:384
+#: upgrade.php:389
 msgid "Upgrade is complete!"
 msgstr "La mise à jour est complète !"
 
-#: upgrade.php:386
+#: upgrade.php:391
 msgid "Login"
 msgstr "Utilisateur"
 
-#: upgrade.php:390
+#: upgrade.php:395
 msgid "There was an error during the upgrade. Please take a screenshot of this page and seek help!"
 msgstr "Il y a une erreur durant la mise à jour. Merci de prendre une capture d'écran de cette page et chercher de l'aide !"
 
-#: upgrade.php:396
-#: install.php:619
-msgid "A required parameter was missing. Please go through the installer sequentially!"
-msgstr "Un paramètre requis est manquant. Merci de passer par l'installation séquentiel !"
-
-#: upgrade.php:449
+#: upgrade.php:454
 msgid "You must authenticate to run the upgrade."
 msgstr "Vous devez être authentifié pour effectuer la mise à jour."
 
-#: install.php:33
-msgid "Xibo requires PHP 5.0.2 or later"
-msgstr "Xibo requiert PHP 5.0.2 ou supérieur"
+#: lib/app/pagemanager.class.php:105
+msgid "You do not have permission to access this page."
+msgstr ""
 
-#: install.php:47
-msgid "Welcome to the Xibo Installer!"
-msgstr "Bienvenue dans l'installation de Xibo !"
+#: lib/pages/admin.class.php:70
+msgid "Only admin users are allowed to modify settings"
+msgstr ""
 
-#: install.php:48
-msgid "The installer will take you through setting up Xibo one step at a time."
-msgstr "Le programme d'installation va vous permettre de configurer Xibo par étape."
+#: lib/pages/admin.class.php:80
+#: lib/pages/admin.class.php:85
+msgid "Cannot find the Library Location Setting - this is serious."
+msgstr ""
 
-#: install.php:94
-msgid "Xibo requires PHP version 5 or later."
-msgstr "Xibo a besoin d'une version PHP 5 ou supérieur."
-
-#: install.php:190
-msgid "Xibo needs to setup a new database."
-msgstr "Xibo a besoin de configurer une nouvelle base de données"
-
-#: install.php:191
-msgid "If you have not yet created an empty database and database user for Xibo to use, and know the username/password of a MySQL administrator, click the \"Create New\" button, otherwise click \"Use Existing\"."
-msgstr "Si vous n'avez pas créé de base de données et utilisateur pour Xibo et que vous connaissez l'utilisateur / mot de passe pour l'administration de Mysql, vous pouvez cliquer sur le bouton \"Créer nouveau\" ou sinon ciquer sur le bouton \"Utiliser existant\"."
-
-#: install.php:192
-msgid "Note that any existing database must be empty"
-msgstr "Noter que la base de données existante doit être vide"
-
-#: install.php:196
-msgid "Create New"
-msgstr "Créer un nouvelle base"
-
-#: install.php:200
-msgid "Use Existing"
-msgstr "Utiliser une base données existante"
-
-#: install.php:208
-msgid "Since no empty database has been created for Xibo to use, we need the username and password of a MySQL administrator to create a new database, and database user for Xibo."
-msgstr "Si aucune base de données vide n'as été créée pas Xibo, nous avons besoin de l'utilisateur et le mot de passe de l'administrateur MySQL pour créer une nouvelle base de données et l'utilisateur Xibo"
-
-#: install.php:209
-msgid "Additionally, please give us a new username and password to create in MySQL for Xibo to use. Xibo will create this automatically for you."
-msgstr "En plus, merci de nous donner un nouveau nom d'utilisateur et mot de passe pour créer l'utilisateur Xibo dans MySQL. Xibo le créera automatiquement pour vous."
-
-#: install.php:214
-#: install.php:235
-msgid "Host:"
-msgstr "Hôte :"
-
-#: install.php:215
-msgid "Admin Username:"
-msgstr "Nom de l'administrateur :"
-
-#: install.php:216
-msgid "Admin Password:"
-msgstr "Mot de passe de l'administrateur :"
-
-#: install.php:217
-#: install.php:236
-msgid "Xibo Database Name:"
-msgstr "Nom de la base Xibo :"
-
-#: install.php:218
-#: install.php:237
-msgid "Xibo Database Username:"
-msgstr "Nom d'utilisateur de la base Xibo :"
-
-#: install.php:219
-#: install.php:238
-msgid "Xibo Database Password:"
-msgstr "Mot de passe de la base Xibo :"
-
-#: install.php:222
-#: install.php:241
-msgid "Create"
-msgstr "Créer"
-
-#: install.php:230
-msgid "Please enter the details of the database and user you have created for Xibo."
-msgstr "Merci d'entrer les informations concernant la base de données et de l'utilisateur que vous avez créé pour Xibo."
-
-#: install.php:250
-msgid "Something went wrong"
-msgstr "Quelque chose ne marche pas"
-
-#: install.php:267
-#: install.php:325
-msgid "A field was blank. Please fill in all fields."
-msgstr "Un champ est vide. Merci de remplir tous les champs."
-
-#: install.php:273
-msgid "Could not connect to MySQL with the administrator details. Please check and try again."
-msgstr "Impossible de ce connecter à MySQL avec les informations administrateurs. Merci de vérifier et de réessayer."
-
-#: install.php:277
-msgid "Creating new database."
-msgstr "Création de la base de données"
-
-#: install.php:285
-msgid "Could not create a new database with the administrator details. Please check and try again."
-msgstr "Impossible de créer une nouvelle base de données avec les informations administrateur. Merci de vérifier et de réessayer."
-
-#: install.php:295
-msgid "Creating new user"
-msgstr "Création d'un nouvel utilisateur"
-
-#: install.php:313
-msgid "Could not create a new user with the administrator details. Please check and try again."
-msgstr "Impossible de créer une nouvelle base de données avec les informations administrateur. Merci de vérifier et de réessayer."
-
-#: install.php:333
-msgid "Could not connect to MySQL with the Xibo User account details. Please check and try again."
-msgstr "Impossible de se conencter à MySQL avec les informations du compte utilisateur Xibo. merci de vérifier et de réessayer."
-
-#: install.php:388
-#: install.php:400
-msgid "Unable to write to settings.php. We already checked this was possible earlier, so something changed."
-msgstr "Impossible d'écrire dans le fichier settings.php . Nous avons déjà vérifier plus tôt, mais quelques chose à changer."
-
-#: install.php:419
-msgid "Xibo needs to set the \"xibo_admin\" user password. Please enter a password for this account below."
-msgstr "Xibo a besoin de définir le mot de passe de l'utilisateur \"xibo_admin\". Merci de rentrer un mot de passe pour ce compte ci-dessous."
-
-#: install.php:424
-msgid "Password:"
-msgstr "Mot de passe :"
-
-#: install.php:425
-msgid "Retype Password:"
-msgstr "Retaper le mot de passe :"
-
-#: install.php:437
-msgid "Please input a new password. Ensure both password fields are identical."
-msgstr "Merci d'entrer un nouveau mot de passe. Veiller à ce que le mot de passe des deux champs sont identiques."
-
-#: install.php:447
-#: install.php:557
-msgid "Could not connect to MySQL with the Xibo User account details saved in settings.php. Please check and try again."
-msgstr "Impossible de se connecter à MySQL avec les informations de l'utilisateur Xibo sauvées dans settings.php . Merci de vérifier et réessayer."
-
-#: install.php:455
-msgid "An error occured changing the xibo_admin password."
-msgstr "Une erreur est apparue durant le changement du mot de passe de xibo_admin"
-
-#: install.php:462
-msgid "Successfully changed the xibo_admin password. We're nearly there now. Just a couple more steps!"
-msgstr "Mot de passe de xibo_admin changé avec succès. Nous sommes pas loin maintenant. Juste quelques étapes de plus !"
-
-#: install.php:477
-msgid "Library Location"
-msgstr "Répertoire de la Librairie"
-
-#: install.php:478
-msgid "Xibo needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your webserver - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, Xibo will attempt to create it for you."
-msgstr "Xibo besoins de stocker quelque part les contenus à diffuser que vous téléchargez. Idéalement, ce devrait être quelque part en dehors de la racine de votre serveur web afin qu'il ne soit pas accessible par un navigateur Web. S'il vous plaît entrez le chemin d'accès complet à ce dossier. Si le dossier n'existe pas, Xibo va tenter de le créer pour vous."
-
-#: install.php:481
-msgid "Library Location:"
-msgstr "Répertoire de la Librairie :"
-
-#: install.php:483
-msgid "Server Key"
-msgstr "Clef du serveur"
-
-#: install.php:484
-msgid "Xibo needs you to choose a \"key\". This will be required each time you setup a new client. It should be complicated, and hard to remember. It is visible in the admin interface, so it need not be written down separately."
-msgstr "Xibo a besoin que vous choisissiez une \"clef\". elle sera nécessaire à chaque fois que vous installerez un nouveau client. Elle devrait être compliquée et difficile à mémoriser. Elle est visible dans l'interface d'administration, de sorte qu'il n'a pas besoin d'être écrites ailleurs."
-
-#: install.php:486
-msgid "Server Key:"
-msgstr "Clef du serveur :"
-
-#: install.php:488
-msgid "Statistics"
-msgstr "Statistiques"
-
-#: install.php:489
-msgid "We'd love to know you're running Xibo. If you're happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please untick the box if your server does not have direct access to the internet."
-msgstr "Nous serions ravis de savoir que vous utilisez Xibo. Si vous êtes heureux pour nous de recueillir des statistiques anonymes (numéro de version, nombre d'écrans) alors merci de laisser la case cochée. Merci de décochée la case si le serveur n'as pas de connexion direct à l'Internet."
-
-#: install.php:491
-msgid "Anonymous Statistics:"
-msgstr "Statistiques anonymes :"
-
-#: install.php:510
-msgid "A field was blank. Please make sure you complete all fields"
-msgstr "Un champ est vide. Merci de remplir tous les champs"
-
-#: install.php:523
-msgid "A file exists with the name you gave for the Library Location. Please choose another location"
-msgstr "Un fichier existe avec le nom que vous avez donné à la l'emplacement de la Bibliothèque. Merci de choisir un autre emplacement"
-
-#: install.php:530
-msgid "Could not create the Library Location directory for you. Please ensure the webserver has permission to create a folder in this location, or create the folder manually and grant permission for the webserver to write to the folder."
-msgstr "Impossible de créer l'emplacement pour la Bibliothèque. Merci de vérifier que le serveur web a bien les permissions pour créer un répertoire dans cet emplacement, ou sinon créé le répertoire manuellement et donnez lui les permissions d'écriture pour que le serveur web puisse écrire dans cet emplacement."
-
-#: install.php:538
-msgid "The Library Location you gave is not writable by the webserver. Please fix the permissions and try again."
+#: lib/pages/admin.class.php:112
+#, fuzzy
+msgid "The Library Location you have picked is not writable to the Xibo Server."
 msgstr "Le serveur web ne peut écrire dans l'emplacement que vous avez donné pour la Bibliothèque. Merci de corriger les permissions et réessayer."
 
-#: install.php:543
-msgid "The Library Location you gave is not empty. Please give the location of an empty folder"
-msgstr "L'emplacement pour la Bibliothèque n'est pas vide. Merci de donner un répertoire vide pour l'emplacement"
+#: lib/pages/admin.class.php:121
+msgid "Settings changed"
+msgstr ""
 
-#: install.php:565
-msgid "An error occured changing the library location."
-msgstr "Une erreur est apparue durant le changement de l'emplacement de la Bibliothèque."
+#: lib/pages/fault.class.php:21
+msgid "Sorry, you are not allowed to directly access this page."
+msgstr ""
 
-#: install.php:571
-msgid "An error occured changing the server key."
-msgstr "Une erreur est apparue durant le changement de la clef serveur."
+#: lib/pages/fault.class.php:21
+msgid "Please press the back button in your browser."
+msgstr ""
 
-#: install.php:577
-msgid "An error occured setting the default timezone."
-msgstr "Une erreur est apparue durant la configuration du fuseau horaire par défaut."
+#: lib/pages/fault.class.php:49
+msgid "Report a Fault"
+msgstr ""
 
-#: install.php:583
-#: install.php:587
-msgid "An error occured setting anonymous statistics."
-msgstr "Une erreur est apparue lors de la configuration des statistiques anonymes."
+#: lib/pages/fault.class.php:63
+msgid "Check that the Environment passes all the Xibo Environment checks."
+msgstr ""
 
-#: install.php:594
-msgid "Successfully set library location and server key."
-msgstr "L'emplacement de la Bibliothèque et la clef serveur ont été configuré avec succès"
+#: lib/pages/fault.class.php:67
+msgid "Turn ON full auditing and debugging."
+msgstr ""
 
-#: install.php:606
-msgid "Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"
-msgstr "Impossible de supprimer install.php . Merci de verifier que le serveur web a les permissions suffisante pour supprimer ce fichier et réessayer"
+#: lib/pages/fault.class.php:70
+msgid "Turn ON Debugging"
+msgstr ""
 
-#: install.php:606
-#: install.php:609
-msgid "Retry"
-msgstr "Réessayer"
+#: lib/pages/fault.class.php:74
+msgid "Recreate the Problem in a new window."
+msgstr ""
 
-#: install.php:609
-msgid "Unable to delete upgrade.php. Please ensure the webserver has permission to unlink this file and retry"
-msgstr "Impossible de supprimer upgrade.php . Merci de vérifier que le serveur web a les permissions suffisante pour supprimer ce fichier et réessayer"
+#: lib/pages/fault.class.php:77
+msgid "Automatically collect and export relevant information into a text file."
+msgstr ""
 
-#: install.php:613
-msgid "Xibo was successfully installed."
-msgstr "Xibo a été installer avec succès"
+#: lib/pages/fault.class.php:77
+msgid "Please save this file to your PC."
+msgstr ""
 
-#: install.php:614
-msgid "Please click"
-msgstr "Merci de cliquer"
+#: lib/pages/fault.class.php:78
+msgid "Collect and Save Data"
+msgstr ""
 
-#: install.php:614
-msgid "here"
-msgstr "ici"
+#: lib/pages/fault.class.php:81
+msgid "Turn full auditing and debugging OFF."
+msgstr ""
 
-#: install.php:614
-msgid "to logon to Xibo as \"xibo_admin\" with the password you chose earlier."
-msgstr "pour se connecter à Xibo avec \"xibo_admin\" avec le mot de passe choisit plus tôt"
+#: lib/pages/fault.class.php:84
+msgid "Turn OFF Debugging"
+msgstr ""
 
-#: install.php:619
-msgid "Start Again"
-msgstr "Recommencer"
+#: lib/pages/fault.class.php:88
+msgid "Click on the below link to open the bug report page for this Xibo release."
+msgstr ""
+
+#: lib/pages/fault.class.php:88
+msgid "Describe the problem and upload the file you obtained earlier."
+msgstr ""
+
+#: lib/pages/fault.class.php:89
+msgid "File a bug report in Launchpad"
+msgstr ""
+
+#: lib/pages/report.class.php:388
+msgid "Log Date"
+msgstr ""
 
 #~ msgid "Back"
 #~ msgstr "Retour"
