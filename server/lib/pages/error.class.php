@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+defined('XIBO') or die(__("Sorry, you are not allowed to directly access this page.") . '<br />' . __("Please press the back button in your browser."));
 
 class errorDAO 
 {
@@ -38,7 +38,7 @@ class errorDAO
 	
 	function echo_page_heading() 
 	{
-		echo "Application Error";
+		echo __("Application Error");
 		return true;
 	} 
 	
@@ -46,9 +46,9 @@ class errorDAO
 	{
 		$db 	=& $this->db;
 		$user 	=& $this->user;
-		$error	= Kit::GetParam('ErrorMessage', _SESSION, _HTMLSTRING, 'Unknown Error');
+		$error	= Kit::GetParam('ErrorMessage', _SESSION, _HTMLSTRING, __('Unknown Error'));
 		
-		echo 'There has been an application error.';
+		echo __('There has been an application error.');
 		echo $error;
 		
 		exit;
