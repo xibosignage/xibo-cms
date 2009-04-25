@@ -52,12 +52,12 @@ class FormManager
 		if (!$result = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			return "Query Error";
+			return __("Query Error");
 		}
 		
 		if ($db->num_rows($result)==0) 
 		{
-			$list = "No selections available";
+			$list = __("No selections available");
 			return $list;
 		}
 		

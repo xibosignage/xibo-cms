@@ -93,7 +93,7 @@ class Module implements ModuleInterface
 		
 		if ($type == '')
 		{
-			$this->response->SetError('Unable to create Module [No type given] - please refer to the Module Documentation.');
+			$this->response->SetError(__('Unable to create Module [No type given] - please refer to the Module Documentation.'));
 			$this->response->Respond();
 		}
 		
@@ -101,13 +101,13 @@ class Module implements ModuleInterface
 		
 		if (!$result = $db->query($SQL)) 
 		{
-			$this->response->SetError('Unable to create Module [Cannot find type in the database] - please refer to the Module Documentation.');
+			$this->response->SetError(__('Unable to create Module [Cannot find type in the database] - please refer to the Module Documentation.'));
 			$this->response->Respond();
 		}
 		
 		if ($db->num_rows($result) != 1)
 		{
-			$this->response->SetError('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.');
+			$this->response->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
 			$this->response->Respond();
 		}
 		
@@ -158,7 +158,7 @@ class Module implements ModuleInterface
 			}
 			else
 			{
-				$this->response->SetError('Cannot find this media item. Please refresh the region options.');
+				$this->response->SetError(__('Cannot find this media item. Please refresh the region options.'));
 				$this->response->Respond();
 			}
 			
@@ -378,7 +378,7 @@ XML;
 			// We call region delete
 			if (!$this->region->RemoveMedia($layoutid, $regionid, $this->lkid, $this->mediaid))
 			{
-				$this->message = "Unable to Remove this media from the Layout";
+				$this->message = __("Unable to Remove this media from the Layout");
 				return false;
 			}
 		}
@@ -389,7 +389,7 @@ XML;
 				// We call region swap with the same media id
 				if (!$this->region->SwapMedia($layoutid, $regionid, $this->lkid, $this->mediaid, $this->mediaid, $this->AsXml()))
 				{
-					$this->message = "Unable to assign to the Region";
+					$this->message = __("Unable to assign to the Region");
 					return false;
 				}
 			}
@@ -398,7 +398,7 @@ XML;
 				// We call region add
 				if (!$this->region->AddMedia($layoutid, $regionid, $this->regionSpecific, $this->AsXml()))
 				{
-					$this->message = "Error adding this media to the library";
+					$this->message = __("Error adding this media to the library");
 					return false;
 				}
 			}
@@ -419,6 +419,11 @@ XML;
 		$layoutid 	= $this->layoutid;
 		$regionid 	= $this->regionid;
 		$mediaid	= $this->mediaid;
+		
+		// Messages
+		$msgTitle 		= __('Return to the Region Options');
+		$msgWarn		= __('Are you sure you want to remove this item from Xibo?');
+		$msgWarnLost 	= __('It will be lost');
 
 		//we can delete
 		$form = <<<END
@@ -426,14 +431,14 @@ XML;
 			<input type="hidden" name="mediaid" value="$mediaid">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="regionid" value="$regionid">
-			<p>Are you sure you want to remove this item from Xibo? <span class="required">It will be lost</span>.</p>
+			<p>$msgWarn <span class="required">$msgWarnLost</span>.</p>
 			<input id="btnSave" type="submit" value="Yes"  />
-			<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="No" />
+			<input class="XiboFormButton" id="btnCancel" type="button" title="$msgTitle" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="No" />
 		</form>
 END;
 		
 		$this->response->html 		 	= $form;
-		$this->response->dialogTitle 	= 'Delete Item';
+		$this->response->dialogTitle 	= __('Delete Item');
 		$this->response->dialogSize 	= true;
 		$this->response->dialogWidth 	= '450px';
 		$this->response->dialogHeight 	= '150px';
@@ -470,12 +475,11 @@ END;
 	 */
 	public function AddForm()
 	{
-		$form = <<<END
-		<p>Not yet implemented by this module.</p>
+		$form = '<p>' . __('Not yet implemented by this module.') . '</p>';
 END;
 		
 		$this->response->html 		 	= $form;
-		$this->response->dialogTitle 	= 'Add Item';
+		$this->response->dialogTitle 	= __('Add Item');
 		$this->response->dialogSize 	= true;
 		$this->response->dialogWidth 	= '450px';
 		$this->response->dialogHeight 	= '150px';
@@ -489,12 +493,10 @@ END;
 	 */
 	public function EditForm()
 	{
-		$form = <<<END
-		<p>Not yet implemented by this module.</p>
-END;
+		$form = '<p>' . __('Not yet implemented by this module.') . '</p>';
 		
 		$this->response->html 		 	= $form;
-		$this->response->dialogTitle 	= 'Add Item';
+		$this->response->dialogTitle 	= __('Add Item');
 		$this->response->dialogSize 	= true;
 		$this->response->dialogWidth 	= '450px';
 		$this->response->dialogHeight 	= '150px';
@@ -509,7 +511,7 @@ END;
 	public function AddMedia()
 	{
 		// We want to load a new form
-		$this->response->message	= 'Add Media has not been implemented for this module.';
+		$this->response->message = __('Add Media has not been implemented for this module.');
 		
 		return $this->response;	
 	}
@@ -521,7 +523,7 @@ END;
 	public function EditMedia()
 	{
 		// We want to load a new form
-		$this->response->message	= 'Edit Media has not been implemented for this module.';
+		$this->response->message = __('Edit Media has not been implemented for this module.');
 		
 		return $this->response;	
 	}

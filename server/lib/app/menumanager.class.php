@@ -46,13 +46,13 @@ class MenuManager
 		
 		if ($menu == '')
 		{
-			$this->message = 'No menu provided';
+			$this->message = __('No menu provided');
 			return false;
 		}
 		
 		if (!$this->theMenu = $user->MenuAuth($menu))
 		{
-			$this->message = 'No permissions for this menu.';
+			$this->message = __('No permissions for this menu.');
 			return false;
 		}
 
