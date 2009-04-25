@@ -31,7 +31,7 @@ class Setting extends Data
 		if(!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$this->SetError(25000, 'Update of settings failed');
+			$this->SetError(25000, __('Update of settings failed'));
 			
 			return false;
 		}

@@ -49,7 +49,7 @@ class adminDAO
 	
 	function echo_page_heading() 
 	{
-		echo "Settings";
+		echo __('Settings');
 		return true;
 	}
 
@@ -115,7 +115,11 @@ class adminDAO
 			
 			$SQL = sprintf("UPDATE setting SET value = '%s' WHERE settingid = %d ", $db->escape_string($value), $id);
 
-			if(!$db->query($SQL)) trigger_error("Update of settings failed".$db->error(), E_USER_ERROR);
+			if(!$db->query($SQL)) 
+			{
+				trigger_error($db->error());
+				trigger_error(__('Update of settings failed.'), E_USER_ERROR);
+			}
 		}
 
 		setMessage(__("Settings changed"));
@@ -143,7 +147,7 @@ class adminDAO
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error("Can't get the setting catagories", E_USER_ERROR);
+			trigger_error(__('Can\'t get the setting catagories'), E_USER_ERROR);
 		}
 		
 		while ($row = $db->get_row($results)) 
@@ -152,10 +156,10 @@ class adminDAO
 			$ucat = ucfirst($cat);
 			$cat_tab = $cat."_tab";
 			
-			//generate the li and a for this tab
+			// generate the li and a for this tab
 			$tabs .= "<li><a href='#$cat_tab'><span>$ucat</span></a></li>";
 		
-			//for each one, call display_cat to get the settings specific to that cat
+			// for each one, call display_cat to get the settings specific to that cat
 			$cat_page = $this->display_cat($cat);
 			
 			$pages .= <<<PAGES
@@ -164,8 +168,10 @@ class adminDAO
 			</div>
 PAGES;
 		}
+		
+		$msgSave = __('Save');
 
-		//output it all
+		// Output it all
 		$form .= <<<FORM
 		<div id="tabs">
 			<ul class="tabs-nav">
@@ -175,7 +181,7 @@ PAGES;
 		</div>
 		<input type="hidden" name="location" value="index.php?p=admin&q=modify">
 		<input type="hidden" name="refer" value="index.php?p=admin">
-		<input type="submit" value="Save" />
+		<input type="submit" value="$msgSave" />
 		$helpButton
 FORM;
 	
@@ -193,21 +199,25 @@ FORM;
 		
 		$output = "";
 		
-		$title = ucfirst($cat);
-		$output .= "<h3>$title Settings</h3>";
+		$title 	 = ucfirst($cat);
+		$output .= '<h3>' . $title . __('Settings') . '</h3>';
 			
 		/*
 			Firstly we want to individually get the user module
 		*/
-		if($cat=='user') 
+		if ($cat == 'user')
 		{
 		
 			$SQL = "";
 			$SQL.= "SELECT settingid, setting, value, helptext FROM setting WHERE setting = 'userModule'";
 	
-			if(!$results = $db->query($SQL)) trigger_error("Can not get settings:".$db->error(), E_USER_ERROR);
+			if(!$results = $db->query($SQL))
+			{
+				trigger_error($db->error());
+				trigger_error(__('Can not get settings'), E_USER_ERROR);				
+			}
 	
-			$row = $db->get_row($results);
+			$row 		= $db->get_row($results);
 			$settingid 	= Kit::ValidateParam($row[0], _INT);
 			$setting 	= Kit::ValidateParam($row[1], _STRING);
 			$value 		= Kit::ValidateParam($row[2], _STRING);
@@ -218,10 +228,12 @@ FORM;
 			<p>$helptext</p>
 END;
 
-			//we need to make a drop down out of the files that match a string, in a directory
-			$files = scandir("modules/");
+			// we need to make a drop down out of the files that match a string, in a directory
+			$files 	= scandir("modules/");
 			$select = "";
-			foreach ($files as $file) {
+			
+			foreach ($files as $file) 
+			{
 				$selected = "";
 				if($file == $value) $selected = "selected";
 				
@@ -240,14 +252,15 @@ END;
 END;
 		}
 		
-		/* 
-		 * Need to now get all the Misc settings 
-		 *
-		 */
+		// Need to now get all the Misc settings 
 		$SQL = "";
 		$SQL.= sprintf("SELECT settingid, setting, value, helptext FROM setting WHERE type = 'text' AND cat='%s' AND userChange = 1", $cat);
 
-		if(!$results = $db->query($SQL)) trigger_error("Can not get settings:".$db->error(), E_USER_ERROR);
+		if (!$results = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Can not get settings'), E_USER_ERROR);				
+		}
 
 		while($row = $db->get_row($results)) 
 		{
@@ -264,18 +277,23 @@ END;
 END;
 			if($setting == "mail_to") 
 			{
+				$msgTestEmail = __('Test Email');
 				//show another form here, for test
 				$output .= <<<END
-				<a id="test_email" href="index.php?p=admin&q=send_email">Test Email </a>
+				<a id="test_email" href="index.php?p=admin&q=send_email">$msgTestEmail</a>
 END;
 			}
 		}	
 			
-		//Drop downs
+		// Drop downs
 		$SQL = "";
 		$SQL.= sprintf("SELECT settingid, setting, value, helptext, options FROM setting WHERE type = 'dropdown' AND cat='%s' AND userChange = 1", $cat);
 
-		if(!$results = $db->query($SQL)) trigger_error("Can not get settings:".$db->error(), E_USER_ERROR);
+		if (!$results = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Can not get settings'), E_USER_ERROR);				
+		}
 
 		while($row = $db->get_row($results)) 
 		{
@@ -312,7 +330,11 @@ END;
 		$SQL = "";
 		$SQL.= sprintf("SELECT settingid, setting, value, helptext FROM setting WHERE type = 'timezone' AND cat='%s' AND userChange = 1", $cat);
 
-		if(!$results = $db->query($SQL)) trigger_error("Can not get settings:".$db->error(), E_USER_ERROR);
+		if (!$results = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Can not get settings'), E_USER_ERROR);				
+		}
 
 		while($row = $db->get_row($results)) 
 		{
