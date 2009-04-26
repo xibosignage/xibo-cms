@@ -77,7 +77,7 @@ class indexDAO
 				$_SESSION['message'] = "";
 				
 				//send the failed info
-				$response->SetError('Incorrect Login Information.');
+				$response->SetError(__('Incorrect Login Information.'));
 				$response->Respond();
 			}
 			
@@ -86,7 +86,7 @@ class indexDAO
 		
 		if (!CheckFormToken($_POST['token'])) 
 		{
-			setMessage("Form expired. Please refresh and try again.");
+			setMessage(__("Form expired. Please refresh and try again."));
 			
 			header("Location:index.php");
 			exit;
@@ -125,14 +125,7 @@ class indexDAO
 		
 		$username 	= Kit::GetParam('username', _SESSION, _USERNAME);
 
-		if($referingpage == "client") 
-		{
-			setMessage($username . " logged out. You have to be a Display User to access this page!");
-		}
-		else 
-		{
-			setMessage($username . " logged out. You have to be an Admin or User Type to access this page!");
-		}
+		setMessage($username . __("Please Login to access this page."));
 
 		//logs the user out -- true if ok
 		$user->logout();

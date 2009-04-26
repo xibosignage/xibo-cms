@@ -65,7 +65,7 @@ END;
 			if (!$results = $db->query($SQL)) 
 			{
 				trigger_error($db->error());
-				trigger_error("Can not get Group information.", E_USER_ERROR);
+				trigger_error(__("Can not get Group information."), E_USER_ERROR);
 			}
 			
 			$aRow = $db->get_assoc_row($results);
@@ -81,7 +81,7 @@ END;
 	
 	function echo_page_heading() 
 	{
-		echo "Group Admin";
+		echo __("Group Admin");
 		return true;
 	}
 	
@@ -97,6 +97,8 @@ END;
 		$filter_name = "";
 		if (isset($_SESSION['group']['name'])) $filter_name = $_SESSION['group']['name'];
 		
+		$msgName	= __('Name');
+		
 		$filterForm = <<<END
 		<div id="GroupFilter" class="FilterDiv">
 			<form>
@@ -104,7 +106,7 @@ END;
 				<input type="hidden" name="q" value="group_view">
 				<table>
 					<tr>
-						<td>Name</td>
+						<td>$msgName</td>
 						<td><input type="text" name="name" value="$filter_name"></td>
 					</tr>
 				</table>
@@ -158,16 +160,23 @@ END;
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error("Can not get group information.", E_USER_ERROR);
+			trigger_error(__("Can not get group information."), E_USER_ERROR);
 		}
+		
+		$msgName	= __('Name');
+		$msgAction	= __('Action');
+		$msgEdit	= __('Edit');
+		$msgPageSec	= __('Page Security');
+		$msgMenuSec	= __('Menu Security');
+		$msgDel		= __('Delete');
 		
 		$table = <<<END
 		<div class="info_table">
 		<table style="width:100%;">
 			<thead>
 				<tr>
-					<th>Name</th>
-					<th>Action</th>
+					<th>$msgName</th>
+					<th>$msgAction</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -184,15 +193,15 @@ END;
 			if ($user->GetUserTypeID() != 1) 
 			{
 				//dont any actions
-				$buttons = "No available Actions";
+				$buttons = __("No available Actions");
 			}
 			else 
 			{
 				$buttons = <<<END
-				<button class="XiboFormButton" href="index.php?p=group&q=GroupForm&groupid=$groupid"><span>Edit</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=PageSecurityForm&groupid=$groupid"><span>Page Security</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=MenuItemSecurityForm&groupid=$groupid"><span>Menu Security</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=delete_form&groupid=$groupid"><span>Delete</span></button>
+				<button class="XiboFormButton" href="index.php?p=group&q=GroupForm&groupid=$groupid"><span>$msgEdit</span></button>
+				<button class="XiboFormButton" href="index.php?p=group&q=PageSecurityForm&groupid=$groupid"><span>$msgPageSec</span></button>
+				<button class="XiboFormButton" href="index.php?p=group&q=MenuItemSecurityForm&groupid=$groupid"><span>$msgMenuSec</span></button>
+				<button class="XiboFormButton" href="index.php?p=group&q=delete_form&groupid=$groupid"><span>$msgDel</span></button>
 END;
 			}
 			
@@ -221,12 +230,6 @@ END;
 	 */
 	function displayPage() 
 	{
-		if (!$this->has_permissions) 
-		{
-			displayMessage(MSG_MODE_MANUAL, "You do not have permissions to access this page");
-			return false;
-		}
-		
 		switch ($this->sub_page) 
 		{
 				
@@ -264,14 +267,16 @@ END;
 		
 		// Help UI
 		$helpButton 	= $helpManager->HelpButton("content/users/groups", true);
-		$nameHelp		= $helpManager->HelpIcon("The Name of this Group.", true);
+		$nameHelp		= $helpManager->HelpIcon(__("The Name of this Group."), true);
+		
+		$msgName		= __('Name');
 		
 		$form = <<<END
 		<form class="XiboForm" action="$action" method="post">
 			<input type="hidden" name="groupid" value="$this->groupid">
 			<table>
 				<tr>
-					<td>Name<span class="required">*</span></td>
+					<td>$msgName<span class="required">*</span></td>
 					<td>$nameHelp <input type="text" name="group" value="$this->group"></td>
 				</tr>
 				<tr>
@@ -293,7 +298,7 @@ END;
 		$response['dialogSize']		= true;
 		$response['dialogWidth']	= '400px';
 		$response['dialogHeight'] 	= '180px';
-		$response['dialogTitle']	= 'Add/Edit Group';
+		$response['dialogTitle']	= __('Add/Edit Group');
 		
 		Kit::Redirect($response);
 
@@ -306,6 +311,8 @@ END;
 	 */
 	function PageSecurityForm()
 	{
+		$msgName	= __('Name');
+		
 		$form = <<<HTML
 		<form>
 			<input type="hidden" name="p" value="group">
@@ -313,7 +320,7 @@ END;
 			<input type="hidden" name="groupid" value="$this->groupid">
 			<table style="display:none;" id="group_filterform" class="filterform">
 				<tr>
-					<td>Name</td>
+					<td>$msgName</td>
 					<td><input type="text" name="name" id="name"></td>
 				</tr>
 			</table>
@@ -340,7 +347,7 @@ HTML;
 		$response['dialogSize']		= true;
 		$response['dialogWidth']	= '500px';
 		$response['dialogHeight'] 	= '380px';
-		$response['dialogTitle']	= 'Page Security';
+		$response['dialogTitle']	= __('Page Security');
 		
 		Kit::Redirect($response);
 
@@ -379,7 +386,7 @@ END;
 		if(!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error("Can't get this groups information", E_USER_ERROR);
+			trigger_error(__("Can't get this groups information"), E_USER_ERROR);
 		}
 		
 		if ($db->num_rows($results) == 0) 
@@ -387,6 +394,10 @@ END;
 			echo "";
 			exit;
 		}
+		
+		$msgSecGroup	= __('Security Group');
+		$msgAssigned	= __('Assigned');
+		$msgSumbit		= __('Assign / Unassign');
 		
 		//some table headings
 		$form = <<<END
@@ -396,9 +407,9 @@ END;
 			<table style="width:100%">
 				<thead>
 					<tr>
-					<th></th>
-					<th>Security Group</th>
-					<th>Assigned</th>
+						<th></th>
+						<th>$msgSecGroup</th>
+						<th>$msgAssigned</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -424,7 +435,7 @@ END;
 			</tbody>
 		</table>
 		</div>
-		<input type='submit' value="Assign / Unassign" / >
+		<input type='submit' value="$msgSumbit" / >
 	</form>
 END;
 		
@@ -447,11 +458,13 @@ END;
 		$db 		=& $this->db;
 		$groupid 	= $this->groupid;
 		
+		$msgWarn	= __('Are you sure you want to delete');
+		
 		//we can delete
 		$form = <<<END
 		<form class="XiboForm" method="post" action="index.php?p=group&q=delete">
 			<input type="hidden" name="groupid" value="$groupid">
-			<p>Are you sure you want to delete $this->group?</p>
+			<p>$msgWarn $this->group?</p>
 			<input type="submit" value="Yes">
 			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
@@ -464,7 +477,7 @@ END;
 		$response['dialogSize']		= true;
 		$response['dialogWidth']	= '400px';
 		$response['dialogHeight'] 	= '180px';
-		$response['dialogTitle']	= 'Delete Group';
+		$response['dialogTitle']	= __('Delete Group');
 		
 		Kit::Redirect($response);
 	}
@@ -482,7 +495,7 @@ END;
 		//check on required fields
 		if ($group == "") 
 		{
-			Kit::Redirect(array('success'=>false, 'message' => 'Group Name cannot be empty.'));
+			Kit::Redirect(array('success'=>false, 'message' => __('Group Name cannot be empty.')));
 		}
 		
 		//add the group record
@@ -492,13 +505,13 @@ END;
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			Kit::Redirect(array('success'=>false, 'message' => 'Error adding a new group.'));
+			Kit::Redirect(array('success'=>false, 'message' => __('Error adding a new group.')));
 		}
 		
 		// Construct the Response
 		$response 					= array();
 		$response['success']		= true;
-		$response['message']		= 'Added the Group';
+		$response['message']		= __('Added the Group');
 		
 		Kit::Redirect($response);		
 	}
@@ -519,7 +532,7 @@ END;
 		//check on required fields
 		if ($group == "") 
 		{
-			Kit::Redirect(array('success'=>false, 'message' => 'Group Name cannot be empty.'));
+			Kit::Redirect(array('success'=>false, 'message' => __('Group Name cannot be empty.')));
 		}
 		
 		$SQL = sprintf("UPDATE `group` SET `group` = '%s' WHERE groupid = %d ", $db->escape_string($group), $groupid);
@@ -527,13 +540,13 @@ END;
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			Kit::Redirect(array('success'=>false, 'message' => 'Unexpected error editing the Group'));
+			Kit::Redirect(array('success'=>false, 'message' => __('Unexpected error editing the Group')));
 		}
 
 		// Construct the Response
 		$response 					= array();
 		$response['success']		= true;
-		$response['message']		= 'Edited the Group';
+		$response['message']		= __('Edited the Group');
 		
 		Kit::Redirect($response);	
 	}
@@ -552,13 +565,13 @@ END;
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			Kit::Redirect(array('success'=>false, 'message' => 'You can not delete this group. There are either page permissions assigned, or users with this group.'));
+			Kit::Redirect(array('success'=>false, 'message' => __('You can not delete this group. There are either page permissions assigned, or users with this group.')));
 		}
 		
 		// Construct the Response
 		$response 					= array();
 		$response['success']		= true;
-		$response['message']		= 'Deleted the Group';
+		$response['message']		= __('Deleted the Group');
 		
 		Kit::Redirect($response);	
 	}
@@ -585,7 +598,7 @@ END;
 			if(!$results = $db->query($SQL))
 			{
 				trigger_error($db->error());
-				Kit::Redirect(array('success'=>false, 'message' => 'Can\'t assign this page to this group [error getting pages]'));
+				Kit::Redirect(array('success'=>false, 'message' => __('Can\'t assign this page to this group') . ' [error getting pages]'));
 			}
 			
 			while ($page_row = $db->get_row($results)) 
@@ -600,7 +613,7 @@ END;
 					if(!$db->query($SQL)) 
 					{
 						trigger_error($db->error());
-						Kit::Redirect(array('success'=>false, 'message' => 'Can\'t assign this page to this group'));
+						Kit::Redirect(array('success'=>false, 'message' => __('Can\'t assign this page to this group')));
 					}
 				}
 				else 
@@ -611,7 +624,7 @@ END;
 					if(!$db->query($SQL)) 
 					{
 						trigger_error($db->error());
-						Kit::Redirect(array('success'=>false, 'message' => 'Can\'t remove this page from this group'));
+						Kit::Redirect(array('success'=>false, 'message' => __('Can\'t remove this page from this group')));
 					}
 				}	
 			}
@@ -620,7 +633,7 @@ END;
 		// Construct the Response
 		$response 					= array();
 		$response['success']		= true;
-		$response['message']		= 'Edited the Group Page Security';
+		$response['message']		= __('Edited the Group Page Security');
 		$response['keepOpen']		= true;
 		
 		Kit::Redirect($response);
@@ -637,6 +650,8 @@ END;
 		$formMgr 		= new FormManager($db, $user);
 		$filterMenuList = $formMgr->DropDown("SELECT MenuID, Menu FROM menu", 'filterMenu');
 		
+		$msgMenu	= __('Menu');
+		
 		$form = <<<HTML
 		<form>
 			<input type="hidden" name="p" value="group">
@@ -644,7 +659,7 @@ END;
 			<input type="hidden" name="groupid" value="$this->groupid">
 			<table>
 				<tr>
-					<td>Menu</td>
+					<td>$msgMenu</td>
 					<td>$filterMenuList</td>
 				</tr>
 			</table>
@@ -671,7 +686,7 @@ HTML;
 		$response['dialogSize']		= true;
 		$response['dialogWidth']	= '500px';
 		$response['dialogHeight'] 	= '380px';
-		$response['dialogTitle']	= 'Menu Item Security';
+		$response['dialogTitle']	= __('Menu Item Security');
 		
 		Kit::Redirect($response);
 
@@ -720,13 +735,17 @@ END;
 		if(!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			Kit::Redirect(array('success' => false, 'message' => 'Cannot get the menu items for this Group.'));
+			Kit::Redirect(array('success' => false, 'message' => __('Cannot get the menu items for this Group.')));
 		}
 		
 		if ($db->num_rows($results) == 0) 
 		{
-			Kit::Redirect(array('success' => false, 'message' => 'Cannot get the menu items for this Group.'));
+			Kit::Redirect(array('success' => false, 'message' => __('Cannot get the menu items for this Group.')));
 		}
+		
+		$msgMenu	= __('Menu Item');
+		$msgAssign	= __('Assigned');
+		$msgSubmit	= __('Assign / Unassign');
 		
 		//some table headings
 		$form = <<<END
@@ -737,8 +756,8 @@ END;
 				<thead>
 					<tr>
 					<th></th>
-					<th>Menu Item</th>
-					<th>Assigned</th>
+					<th>$msgMenu</th>
+					<th>$msgAssign</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -764,7 +783,7 @@ END;
 		$form .= <<<END
 				</tbody>
 			</table>
-			<input type='submit' value="Assign / Unassign" / >
+			<input type='submit' value="$msgSubmit" / >
 		</div>
 	</form>
 END;
@@ -805,7 +824,7 @@ END;
 				if(!$db->query($SQL)) 
 				{
 					trigger_error($db->error());
-					Kit::Redirect(array('success'=>false, 'message' => 'Can\'t assign this menu item to this group'));
+					Kit::Redirect(array('success'=>false, 'message' => __('Can\'t assign this menu item to this group')));
 				}
 			}
 			else 
@@ -816,7 +835,7 @@ END;
 				if(!$db->query($SQL)) 
 				{
 					trigger_error($db->error());
-					Kit::Redirect(array('success'=>false, 'message' => 'Can\'t remove this menu item from this group'));
+					Kit::Redirect(array('success'=>false, 'message' => __('Can\'t remove this menu item from this group')));
 				}
 			}
 		}
@@ -824,7 +843,7 @@ END;
 		// Construct the Response
 		$response 					= array();
 		$response['success']		= true;
-		$response['message']		= 'Edited the MenuItem Group Security';
+		$response['message']		= __('Edited the MenuItem Group Security');
 		$response['keepOpen']		= true;
 		
 		Kit::Redirect($response);
