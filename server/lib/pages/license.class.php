@@ -17,7 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
 class licenseDAO 
 {
 	private $db;
@@ -38,7 +40,7 @@ class licenseDAO
 	
 	function echo_page_heading() 
 	{
-		echo "License Management";
+		echo __("License Management");
 		return true;
 	}
 	
@@ -46,27 +48,15 @@ class licenseDAO
 	{
 		$db =& $this->db;
 		
-		if (!$this->has_permissions) 
-		{
-			displayMessage(MSG_MODE_MANUAL, "You do not have permissions to access this page");
-			return false;
-		}
-		
 		include("template/pages/license_view.php");
 	}
 	
 	function license_info() 
 	{
-		/**
-		 * If we are on this page we must assume that the user already has a license
-		 * as getting here is protected by a license.
-		 * 
-		 * Inputting a license from first principles will have to be done somewhere else
-		 */
 		$output = <<<END
 		<h1>License Information</h1>
 		Xibo - Digitial Signage - http://www.xibo.org.uk
-		Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+		Copyright (C) 2006,2007,2008,2009 Daniel Garner, James Packer and Alex Harrington
 		 
 		Xibo is free software: you can redistribute it and/or modify
 		it under the terms of the GNU Affero General Public License as published by

@@ -43,7 +43,7 @@ class mediamanagerDAO
 		$userid = Kit::GetParam('userid', _SESSION, _INT);
 		$uid 	= $user->getNameFromID($userid);
 		
-		echo "$uid's Dashboard";
+		echo "$uid's " . __('Dashboard');
 		return true;
 	}
 
@@ -59,7 +59,7 @@ class mediamanagerDAO
 		
 		if (!$result = $db->query($SQL))
 		{
-			trigger_error("Incorrect home page setting, please contact your system admin.", E_USER_ERROR);
+			trigger_error(__("Incorrect home page setting, please contact your system admin."), E_USER_ERROR);
 		}
 		
 		$row = $db->get_row($result);
