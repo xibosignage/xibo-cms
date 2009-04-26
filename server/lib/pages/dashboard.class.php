@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
-defined('XIBO') or die(__("Sorry, you are not allowed to directly access this page.") . '<br />' . __("Please press the back button in your browser."));
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
 class dashboardDAO 
 {
@@ -44,7 +44,7 @@ class dashboardDAO
 		
 		$uid = $user->getNameFromID($userid);
 		
-		echo $uid.'\'s Dashboard';
+		echo $uid.'\'s ' . __('Dashboard');
 		return true;
 	}
 
