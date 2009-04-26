@@ -136,6 +136,9 @@ elseif ($_SESSION['step'] == 1) {
       </form>
     <?php
     }
+    else if ($cObj->EnvironmentWarning()) {
+
+    }
     else {
     ?>
       <form action="upgrade.php" method="POST">
