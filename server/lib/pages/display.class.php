@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-defined('XIBO') or die(__("Sorry, you are not allowed to directly access this page.") . '<br />' . __("Please press the back button in your browser."));
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class displayDAO 
 {
@@ -57,8 +57,7 @@ class displayDAO
 			
 			if (!$this->has_permissions && $this->ajax == 'true') 
 			{
-				//ajax request handler
-				trigger_error("You do not have permissions to edit this display", E_USER_ERROR);
+				trigger_error(__("You do not have permissions to edit this display"), E_USER_ERROR);
 			}
 
 			$SQL = <<<SQL
@@ -80,7 +79,7 @@ SQL;
 			if(!$results = $db->query($SQL)) 
 			{
 				trigger_error($db->error());
-				trigger_error("Can not get the display information for display [$this->displayid]", E_USER_ERROR);
+				trigger_error(__("Can not get the display information for display") . '[$this->displayid]', E_USER_ERROR);
 			}
 
 			while($row = $db->get_row($results)) 
@@ -105,7 +104,7 @@ SQL;
 
 	function echo_page_heading() 
 	{
-		echo "Display Administration";
+		echo __("Display Administration");
 		return true;
 	}
 	
@@ -137,7 +136,7 @@ SQL;
 		//Validation
 		if ($display == "") 
 		{
-			trigger_error("Can not have a display with no name", E_USER_ERROR);
+			trigger_error(__("Can not have a display with no name"), E_USER_ERROR);
 		}
 		
 		//Update the display record
@@ -155,7 +154,7 @@ SQL;
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error("Could not update display - stage 1", E_USER_ERROR);
+			trigger_error(__('Could not update display') . '-' . __('Stage 1'), E_USER_ERROR);
 		}
 		
 		//check that we have a default layout display record to update
@@ -172,7 +171,7 @@ SQL;
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error("Could not update display - stage 1", E_USER_ERROR);
+			trigger_error(__('Could not update display') . '-' . __('Stage 1'), E_USER_ERROR);
 		}
 		
 		if ($db->num_rows($results) == 0) 
@@ -199,10 +198,10 @@ SQL;
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error("Could not update display - stage 2 (default layout)", E_USER_ERROR);
+			trigger_error(__('Could not update display') . '-' . __('Stage 2'), E_USER_ERROR);
 		}
 		
-		$response->SetFormSubmitResponse('Display Saved.');
+		$response->SetFormSubmitResponse(__('Display Saved.'));
 		$response->Respond();
 	}
 
@@ -228,11 +227,11 @@ SQL;
 		$auditing			= $this->auditing;
 		
 		// Help UI
-		$nameHelp		= $helpManager->HelpIcon("The Name of the Display - (1 - 50 characters).", true);
-		$defaultHelp	= $helpManager->HelpIcon("The Default Layout to Display where there is no other content.", true);
-		$interleveHelp	= $helpManager->HelpIcon("Whether to always put the default into the cycle.", true);
-		$licenseHelp	= $helpManager->HelpIcon("Control the licensing on this display.", true);
-		$auditHelp		= $helpManager->HelpIcon("Collect auditing from this client. Should only be used if there is a problem with the display.", true);
+		$nameHelp		= $helpManager->HelpIcon(__("The Name of the Display - (1 - 50 characters)."), true);
+		$defaultHelp	= $helpManager->HelpIcon(__("The Default Layout to Display where there is no other content."), true);
+		$interleveHelp	= $helpManager->HelpIcon(__("Whether to always put the default into the cycle."), true);
+		$licenseHelp	= $helpManager->HelpIcon(__("Control the licensing on this display."), true);
+		$auditHelp		= $helpManager->HelpIcon(__("Collect auditing from this client. Should only be used if there is a problem with the display."), true);
 		
 		$layout_list = dropdownlist("SELECT layoutid, layout FROM layout ORDER by layout", "defaultlayoutid", $layoutid);
 		$inc_schedule_list = listcontent("1|Yes,0|No","inc_schedule",$inc_schedule);
@@ -244,51 +243,60 @@ SQL;
 		if ($licensed == 0)
 		{
 			//There are licenses to take, shall we take them?
-			$license_list = "<td><label for='takeLicense' title='Will use one of the available licenses for this display'>License Display</label></td>";
+			$license_list = '<td><label for="takeLicense" title="' . __('Will use one of the available licenses for this display"') . '>' . __('License Display') . '</label></td>';
 			$license_list .= "<td>" . listcontent("1|Yes,0|No", "takeLicense", "1") . "</td>";
 		}
 		else
 		{
-			//Give an option to revoke
-			$license_list = "<td><label for='revokeLicense' title='Will revoke this license. This will make the license available for another display.'>Revoke License</label></td>";
+			// Give an option to revoke
+			$license_list = '<td><label for="revokeLicense" title="' . __('Revoke License') . '. ' . __('Make the license available for another display.') . '">' . __('Revoke License') . '</label></td>';
 			$license_list .= "<td>" . listcontent("0|Yes,1|No", "revokeLicense", "1") . "</td>";
 		}
+		
+		// Messages
+		$msgDisplay	= __('Display');
+		$msgDefault	= __('Default Layout');
+		$msgInterL	= __('Interleave Default');
+		$msgAudit	= __('Auditing');
+		$msgLicense	= __('License');
+		$msgSave	= __('Save');
+		$msgCancel	= __('Cancel');
 		
 		$form = <<<END
 		<form class="XiboForm" method="post" action="index.php?p=display&q=modify&id=$displayid">
 			<input type="hidden" name="displayid" value="$displayid">
 			<table>
 				<tr>
-					<td>Display<span class="required">*</span></td>
+					<td>$msgDisplay<span class="required">*</span></td>
 					<td>$nameHelp <input name="display" type="text" value="$display"></td>
-					<td>Default Layout<span class="required">*</span></td>
+					<td>$msgDefault<span class="required">*</span></td>
 					<td>$defaultHelp $layout_list</td>
 				</tr>
 				<tr>
-					<td>Interleave Default<span class="required">*</span></td>
+					<td>$msgInterL<span class="required">*</span></td>
 					<td>$interleveHelp $inc_schedule_list</td>
 				</tr>
 				<tr>
-					<td>Is Auditing?<span class="required">*</span></td>
+					<td>$msgAudit?<span class="required">*</span></td>
 					<td>$auditHelp $auditing_list</td>
 				</tr>
 				<tr>
-					<td>License</td>
+					<td>$msgLicense</td>
 					<td>$licenseHelp <input type="text" readonly value="$license"></td>
 					$license_list
 				</tr>
 				<tr>
 					<td></td>
 					<td>
-						<input type='submit' value="Save" / >
-						<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />	
+						<input type='submit' value="$msgSave" / >
+						<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="$msgCancel" />	
 					</td>
 				</tr>
 			</table>
 		</form>		
 END;
 		
-		$response->SetFormRequestResponse($form, 'Edit a Display.', '650px', '250px');
+		$response->SetFormRequestResponse($form, __('Edit a Display'), '650px', '250px');
 		$response->Respond();
 	}
 	
@@ -345,22 +353,36 @@ SQL;
 		if(!($results = $db->query($SQL))) 
 		{
 			trigger_error($db->error());
-			trigger_error("Can not list displays", E_USER_ERROR);
+			trigger_error(__("Can not list displays"), E_USER_ERROR);
 		}
+		
+		// Messages
+		$msgDisplay	= __('Display');
+		$msgDefault	= __('Default Layout');
+		$msgInterL	= __('Interleave Default');
+		$msgAudit	= __('Auditing');
+		$msgLicense	= __('License');
+		$msgSave	= __('Save');
+		$msgCancel	= __('Cancel');
+		$msgAction	= __('Action');
+		$msgLastA	= __('Last Accessed');
+		$msgLogIn	= __('Logged In');
+		$msgEdit	= __('Edit');
+		$msgDelete	= __('Delete');
 
 		$output = <<<END
 		<div class="info_table">
 		<table style="width:100%">
 			<thead>
 			<tr>
-				<th>Display ID</th>
-				<th>Licensed</th>
-				<th>Display</th>
-				<th>Default</th>
-				<th>Interleave</th>
-				<th>Logged In</th>
-				<th>Last Accessed</th>
-				<th>Actions</th>
+				<th>$msgDisplay ID</th>
+				<th>$msgLicense</th>
+				<th>$msgDisplay</th>
+				<th>$msgDefault</th>
+				<th>$msgInterL</th>
+				<th>$msgLogIn</th>
+				<th>$msgLastA</th>
+				<th>$msgAction</th>
 			</tr>
 			</thead>
 			<tbody>
@@ -387,8 +409,8 @@ END;
 			<td>$loggedin</td>
 			<td>$lastaccessed</td>
 			<td>
-				<button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>Edit</span></button>
-				<button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>Delete</span></button>
+				<button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>$msgEdit</span></button>
+				<button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
 			</td>
 END;
 		}
@@ -408,7 +430,7 @@ END;
 		
 		if (!$this->has_permissions) 
 		{
-			displayMessage(MSG_MODE_MANUAL, "You do not have permissions to access this page");
+			trigger_error(__("You do not have permissions to access this page"), E_USER_ERROR);
 			return false;
 		}
 		
@@ -445,7 +467,11 @@ END;
 		$SQL .= "  FROM display ";
 		$SQL .= " WHERE display.licensed = 1 ";
 		
-		if(!$results = $db->query($SQL)) trigger_error("Can not list displays".$db->error(), E_USER_ERROR);
+		if(!$results = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__("Can not list displays"), E_USER_ERROR);
+		} 
 
 		$output .= "<div class='buttons'>";
 		
@@ -478,7 +504,7 @@ END;
 	{
 		$db =& $this->db;
 		$currentdate = date("Y-m-d H:i:s");
-		$return = "<div class='display_info'>Currently Playing: "; //return string
+		$return = "<div class='display_info'>" . __('Currently Playing'); //return string
 		/*
 		  * Generates the currently playing list, defaulted to the display ID given
 		  */
@@ -514,7 +540,7 @@ END;
 
 			if($db->num_rows($results)==0) 
 			{
-				$return .= "Nothing.</div>";
+				$return .= __('Nothing') . "</div>";
 				return $return;
 			}
 		}
@@ -566,17 +592,22 @@ END;
 		$displayid 	= Kit::GetParam('displayid', _REQUEST, _INT);
 		
 		// Output the delete form
+		$msgInfo	= __('You will only be able to delete this display if there is no associated information contained in Xibo.');
+		$msgWarn	= __('Are you sure you want to delete this display?');
+		$msgYes		= __('Yes');
+		$msgNo		= __('No');
+		
 		$form = <<<END
 		<form class="XiboForm" method="post" action="index.php?p=display&q=Delete">
 			<input type="hidden" name="displayid" value="$displayid">
-			<p>You will only be able to delete this display if there is no associated information contained in Xibo.<br />
-			<p>Are you sure you want to delete this display?</p>
-			<input type="submit" value="Yes">
-			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
+			<p>$msgInfo<br />
+			<p>$msgWarn</p>
+			<input type="submit" value="$msgYes">
+			<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
 END;
 		
-		$response->SetFormRequestResponse($form, 'Delete this Display?', '350px', '180px');
+		$response->SetFormRequestResponse($form, __('Delete this Display?'), '350px', '180px');
 		$response->Respond();
 	}
 	
@@ -588,7 +619,7 @@ END;
 		
 		if ($displayid == 0) 
 		{
-			$response->SetError("No Display selected for Deletion.");
+			$response->SetError(__("No Display selected for Deletion."));
 			$response->Respond();
 		}
 
@@ -601,11 +632,11 @@ END;
 
 		if (!$db->query($SQL)) 
 		{
-			$response->SetError("Cannot delete this display. You may unlicense it to hide it from view.");
+			$response->SetError(__("Cannot delete this display. You may unlicense it to hide it from view."));
 			$response->Respond();
 		}
 
-		$response->SetFormSubmitResponse("The Display has been Deleted");
+		$response->SetFormSubmitResponse(__("The Display has been Deleted"));
 		$response->Respond();
 	}
 }
