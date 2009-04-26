@@ -21,10 +21,6 @@
 
 DEFINE('XIBO', true);
 
-if (! checkPHP()) {
-  die(__("Xibo requires PHP 5.0.2 or later"));
-}
-
 include('lib/app/kit.class.php');
 include('config/db_config.php');
 include('config/config.class.php');
@@ -33,6 +29,10 @@ require('settings.php');
 // Setup the translations for gettext
 require_once("lib/app/translationengine.class.php");
 TranslationEngine::InitLocale($db);
+
+if (! checkPHP()) {
+  die(__("Xibo requires PHP 5.0.2 or later"));
+}
 
 // Once we've calculated the upgrade in step 2 below, we need
 // to have included the appropriate upgrade php files
@@ -220,7 +220,7 @@ elseif ($_SESSION['step'] == 3) {
 			$step_num = 'Step' . $parts[0];
 			include_once('install/database/' . $parts[0] . '.php');
 			// $_SESSION['q'][$step_num] = unserialize($_SESSION['q'][$step_num]);
-;
+
 			$response = $_SESSION[$step_num]->ValidateQuestion($parts[1], $post);
 			if (! $response == true) {
 				// The upgrade routine for this step wasn't happy.

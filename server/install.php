@@ -22,10 +22,6 @@
 
 DEFINE('XIBO', true);
 
-if (! checkPHP()) {
-  die(__("Xibo requires PHP 5.0.2 or later"));
-}
-
 include('lib/app/kit.class.php');
 include('install/header.inc');
 include('config/config.class.php');
@@ -34,6 +30,10 @@ include('config/db_config.php');
 // Setup the translations for gettext
 require_once("lib/app/translationengine.class.php");
 TranslationEngine::InitLocale($db);
+
+if (! checkPHP()) {
+  die(__("Xibo requires PHP 5.0.2 or later"));
+}
 
 $fault = false;
 
@@ -519,9 +519,6 @@ else {
 include('install/footer.inc');
 
 # Functions
-<<<<<<< TREE
-=======
-
 function checkFsPermissions() {
   # Check for appropriate filesystem permissions
   return ((is_writable("install.php") && (is_writable("settings.php")) && (is_writable("upgrade.php")) || is_writable(".")));
@@ -551,7 +548,6 @@ function checkCal() {
   # Check PHP has JSON module installed
   return extension_loaded("calendar");
 }
->>>>>>> MERGE-SOURCE
  
 function reportError($step, $message, $button_text="&lt; Back") { // fixme : translate ?
 ?>
@@ -711,11 +707,7 @@ END;
   return;
 }
 
-<<<<<<< TREE
 function checkPHP() {
   return (version_compare("5",phpversion(), "<="));
 }
 ?>
-=======
-?>
->>>>>>> MERGE-SOURCE
