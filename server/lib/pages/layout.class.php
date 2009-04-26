@@ -72,7 +72,7 @@ class layoutDAO
 			if(!$results = $db->query($sql)) 
 			{
 				trigger_error($db->error());
-				trigger_error("Cannot retrieve the Information relating to this layout. The layout may be corrupt.", E_USER_ERROR);
+				trigger_error(__("Cannot retrieve the Information relating to this layout. The layout may be corrupt."), E_USER_ERROR);
 			}
 
 			if ($db->num_rows($results) == 0) $this->has_permissions = false;
@@ -94,7 +94,7 @@ class layoutDAO
 				// check on permissions
 				if ($ajax == "true" && (!$this->has_permissions)) 
 				{
-					trigger_error("You do not have permissions to edit this layout", E_USER_ERROR);
+					trigger_error(__("You do not have permissions to edit this layout"), E_USER_ERROR);
 				}
 			}
 		}
@@ -107,7 +107,7 @@ class layoutDAO
 
 	function echo_page_heading() 
 	{
-		echo "Layouts";
+		echo __("Layouts");
 		return true;
 	}
 	
@@ -115,12 +115,6 @@ class layoutDAO
 	{
 		$db =& $this->db;
 		
-		if (!$this->has_permissions) 
-		{
-			displayMessage(MSG_MODE_MANUAL, "You do not have permissions to access this page");
-			return false;
-		}
-
 		switch ($this->sub_page) 
 		{	
 			case 'view':
@@ -164,6 +158,12 @@ class layoutDAO
 		$filter_tags = "";
 		if(isset($_SESSION['layout']['filter_tags'])) $filter_tags = $_SESSION['layout']['filter_tags'];
 
+		$msgName	= __('Name');
+		$msgOwner	= __('Owner');
+		$msgShared	= __('Shared');
+		$msgTags	= __('Tags');
+		$msgRetired	= __('Retired');
+
 		$filterForm = <<<END
 		<div class="FilterDiv" id="LayoutFilter">
 			<form onsubmit="return false">
@@ -172,17 +172,17 @@ class layoutDAO
 		
 			<table class="layout_filterform">
 				<tr>
-					<td>Name</td>
+					<td>$msgName</td>
 					<td><input type="text" name="filter_layout"></td>
-					<td>Owner</td>
+					<td>$msgOwner</td>
 					<td>$user_list</td>
-					<td>Shared</td>
+					<td>$msgShared</td>
 					<td>$shared_list</td>
 				</tr>
 				<tr>
-					<td>Tags</td>
+					<td>$msgTags</td>
 					<td><input type="text" name="filter_tags" value="$filter_tags" /></td>
-					<td>Retired</td>
+					<td>$msgRetired</td>
 					<td>$retired_list</td>
 				</tr>
 			</table>
@@ -226,19 +226,19 @@ HTML;
 		//validation
 		if (strlen($layout) > 50 || strlen($layout) < 1) 
 		{
-			$response->SetError("Layout Name must be between 1 and 50 characters");
+			$response->SetError(__("Layout Name must be between 1 and 50 characters"));
 			$response->Respond();
 		}
 		
 		if (strlen($description) > 254) 
 		{
-			$response->SetError("Description can not be longer than 254 characters");
+			$response->SetError(__("Description can not be longer than 254 characters"));
 			$response->Respond();
 		}
 		
 		if (strlen($tags) > 254) 
 		{
-			$response->SetError("Tags can not be longer than 254 characters");
+			$response->SetError(__("Tags can not be longer than 254 characters"));
 			$response->Respond();
 		}
 		
@@ -248,7 +248,7 @@ HTML;
 		//Layouts with the same name?
 		if($db->num_rows($result) != 0) 
 		{
-			$response->SetError(sprintf("You already own a layout called '%s'. Please choose another.", $layout));
+			$response->SetError(sprintf(__("You already own a layout called '%s'.") .  __("Please choose another.", $layout)));
 			$response->Respond();
 		}
 		//end validation
@@ -275,7 +275,7 @@ HTML;
 			$SQL = sprintf("SELECT xml FROM template WHERE templateID = %d ", $templateid);
 			if (!$result = $db->query($SQL))
 			{
-				$response->SetError("Error getting this template.");
+				$response->SetError(__("Error getting this template."));
 				$response->Respond();
 			}
 			
@@ -286,11 +286,11 @@ HTML;
 		if(!$id = $this->db_add($layout, $description, $permissionid, $tags, $userid, $xml)) 
 		{
 			//otherwise we need to take them back and tell them why the playlist has failed.
-			$response->SetError("Unknown error adding layout.");
+			$response->SetError(__("Unknown error adding layout."));
 			$response->Respond();
 		}
 
-		$response->SetFormSubmitResponse('Layout Details Changed.', true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $id));
+		$response->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $id));
 		$response->Respond();
 	}
 
@@ -315,7 +315,7 @@ END;
 
 		if(!$id = $db->insert_query($query)) 
 		{
-			trigger_error("Error, insert query failed: ".$db->error());
+			trigger_error($db->error());
 			return false;
 		}
 
@@ -345,19 +345,19 @@ END;
 		//validation
 		if (strlen($layout) > 50 || strlen($layout) < 1) 
 		{
-			$response->SetError("Layout Name must be between 1 and 50 characters");
+			$response->SetError(__("Layout Name must be between 1 and 50 characters"));
 			$response->Respond();
 		}
 		
 		if (strlen($description) > 254) 
 		{
-			$response->SetError("Description can not be longer than 254 characters");
+			$response->SetError(__("Description can not be longer than 254 characters"));
 			$response->Respond();
 		}
 		
 		if (strlen($tags) > 254) 
 		{
-			$response->SetError("Tags can not be longer than 254 characters");
+			$response->SetError(__("Tags can not be longer than 254 characters"));
 			$response->Respond();
 		}
 		
@@ -367,7 +367,7 @@ END;
 		//Layouts with the same name?
 		if($db->num_rows($result) != 0) 
 		{
-			$$response->SetError(sprintf("You already own a layout called '%s'. Please choose another.", $layout));
+			$response->SetError(sprintf(__("You already own a layout called '%s'.") .  __("Please choose another.", $layout)));
 			$response->Respond();
 		}
 		//end validation
@@ -396,11 +396,11 @@ END;
 		if(!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$response->SetError(sprintf("Unknown error editing %s", $layout));
+			$response->SetError(sprintf(__("Unknown error editing %s"), $layout));
 			$response->Respond();
 		}
 
-		$response->SetFormSubmitResponse('Layout Details Changed.');
+		$response->SetFormSubmitResponse(__('Layout Details Changed.'));
 		$response->Respond();
 	}
 	
@@ -420,36 +420,44 @@ END;
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error("Can not get layout information", E_USER_ERROR);
+			trigger_error(__("Can not get layout information"), E_USER_ERROR);
 		}
+
+		$msgYes		= __('Yes');
+		$msgNo		= __('No');
 		
 		if ($db->num_rows($results) == 0) 
 		{
 			//we can delete
+			$msgWarn	= __('Are you sure you want to delete this layout? All media will be unassigned. Any layout specific media such as text/rss will be lost.');
+			
 			$form = <<<END
 			<form class="XiboForm" method="post" action="index.php?p=layout&q=delete">
 				<input type="hidden" name="layoutid" value="$layoutid">
-				<p>Are you sure you want to delete $this->layout? All media will be unassigned. Any layout specific media such as text/rss will be lost.</p>
-				<input type="submit" value="Yes">
-				<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
+				<p>$msgWarn</p>
+				<input type="submit" value="$msgYes">
+				<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
 			</form>
 END;
 		}
 		else 
 		{
 			//we can only retire
+			$msgWarn	= __('Sorry, unable to delete this layout.');
+			$msgWarn2	= __('Retire this layout instead?');
+			
 			$form = <<<END
 			<form class="XiboForm" method="post" action="index.php?p=layout&q=retire">
 				<input type="hidden" name="layoutid" value="$layoutid">
-				<p>Sorry, unable to delete $this->layout.</p>
-				<p>Retire this layout instead?</p>
-				<input type="submit" value="Yes">
-				<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
+				<p>$msgWarn</p>
+				<p>$msgWarn2</p>
+				<input type="submit" value="$msgYes">
+				<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
 			</form>
 END;
 		}
 		
-		$response->SetFormRequestResponse($form, 'Delete this layout?', '260px', '180px');
+		$response->SetFormRequestResponse($form, __('Delete this layout?'), '260px', '180px');
 		$response->Respond();
 	}
 
@@ -464,7 +472,7 @@ END;
 		
 		if ($layoutid == 0) 
 		{
-			$response->SetError("No Layout selected");
+			$response->SetError(__("No Layout selected"));
 			$response->Respond();
 		}
 		
@@ -473,7 +481,7 @@ END;
 		
 		if (!$db->query($SQL)) 
 		{
-			$response->SetError("Cannot unassign this layouts media. Please manually unassign.");
+			$response->SetError(__("Cannot unassign this layouts media. Please manually unassign."));
 			$response->Respond();
 		}
 
@@ -483,11 +491,11 @@ END;
 
 		if (!$db->query($SQL)) 
 		{
-			$response->SetError("Cannot delete this layout. You may retire it from the Edit form.");
+			$response->SetError(__("Cannot delete this layout. You may retire it from the Edit form."));
 			$response->Respond();
 		}
 
-		$response->SetFormSubmitResponse("The Layout has been Deleted");
+		$response->SetFormSubmitResponse(__("The Layout has been Deleted"));
 		$response->Respond();
 	}
 	
@@ -514,11 +522,11 @@ END;
 		{
 			trigger_error($db->error());
 			
-			$response->SetError("Failed to retire, Unknown Error.");
+			$response->SetError(__("Failed to retire, Unknown Error."));
 			$response->Respond();
 		}
 
-		$response->SetFormSubmitResponse('Layout Retired.');
+		$response->SetFormSubmitResponse(__('Layout Retired.'));
 		$response->Respond();
 	}
 	
