@@ -74,6 +74,12 @@ if (! $_SESSION['step']) {
 	$_SESSION['step'] = 0;
 }
 
+if (Kit::GetParam('skipstep',_POST,_INT) == 1) {
+	// Cheat the $_SESSION['step'] variable if required
+	// Used if there are environment warnings and we want to retest.
+	$_SESSION['step'] = 1;
+}
+
 if ($_SESSION['step'] == 0) {
 
   $_SESSION['step'] = 1;
@@ -133,6 +139,17 @@ elseif ($_SESSION['step'] == 1) {
     ?>
       <form action="upgrade.php" method="POST">
         <div class="loginbutton"><button type="submit"><?php echo __("Retest"); ?></button></div>
+      </form>
+    <?php
+    }
+    else if ($cObj->EnvironmentWarning()) {
+    ?>
+      <form action="upgrade.php" method="POST">
+	<input type="hidden" name="stepskip" value="1">
+        <div class="loginbutton"><button type="submit"><?php echo __("Retest"); ?></button></div>
+      </form>
+      <form action="upgrade.php" method="POST">
+        <div class="loginbutton"><button type="submit"><?php echo __("Next"); ?> ></button></div>
       </form>
     <?php
     }

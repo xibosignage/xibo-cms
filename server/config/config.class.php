@@ -24,7 +24,9 @@ class Config
 {
 	private $db;
 	private $extensions;
+	private $envTested;
 	private $envFault;
+	private $envWarning;
 	
 	public function __construct(database $db)
 	{
@@ -35,6 +37,8 @@ class Config
 		
 		// Assume the environment is OK
 		$this->envFault		= false;
+		$this->envWarning	= false;
+		$this->envTested	= false;
 		
 		return;
 	}
@@ -116,6 +120,7 @@ class Config
 		$output  = '';
 		$imgGood = '<img src="install/dot_green.gif"> ';
 		$imgBad  = '<img src="install/dot_red.gif"> ';
+		$imgWarn = '<img src="install/dot_amber.gif"> ';
 		
 		$output .= '<div class="checks">';
 		
@@ -124,13 +129,13 @@ class Config
 
 		if ($this->CheckPHP()) 
 		{
-			$output .= $imgGood.' '.$message.'<br />';
+			$output .= $imgGood.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.' '.$message.'<br />';
+			$output .= $imgBad.$message.'<br />';
 			$output .= '<div class="check_explain"> <p>' . __("Xibo requires PHP version 5.0.2 or later.") . '</p></div>';
 		}
 		
@@ -139,13 +144,13 @@ class Config
 
 		if ($this->CheckFsPermissions()) 
 		{
-			$output .= $imgGood.' '.$message.'<br />';
+			$output .= $imgGood.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.' '.$message.'<br />';
+			$output .= $imgBad.$message.'<br />';
 			$output .= '<div class="check_explain"><p>' . __("Xibo needs to be able to write to the following:");
 			$output .= <<<END
       			<ul>
@@ -162,13 +167,13 @@ END;
 
 		if ($this->CheckMySQL()) 
 		{
-			$output .= $imgGood.' '.$message.'<br />';
+			$output .= $imgGood.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.' '.$message.'<br />';
+			$output .= $imgBad.$message.'<br />';
 			$output .= '<div class="check_explain"><p>' . __('Xibo requires a MySQL database. Ensure PHP MySQL client extension is installed') . '</p></div>';
 		}
 		
@@ -177,13 +182,13 @@ END;
 
 		if ($this->CheckJson()) 
 		{
-			$output .= $imgGood.' '.$message.'<br />';
+			$output .= $imgGood.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.' '.$message.'<br />';
+			$output .= $imgBad.$message.'<br />';
 			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP JSON extension to function.') . '</p></div>';
 		}
 		
@@ -192,13 +197,13 @@ END;
 
 		if ($this->CheckGd()) 
 		{
-			$output .= $imgGood.' '.$message.'<br />';
+			$output .= $imgGood.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.' '.$message.'<br />';
+			$output .= $imgBad.$message.'<br />';
 			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP GD extension to function.') . '</p></div>';
 		}
 		
@@ -208,13 +213,13 @@ END;
 
 		if ($this->CheckCal()) 
 		{
-			$output .= $imgGood.' '.$message.'<br />';
+			$output .= $imgGood.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.' '.$message.'<br />';
+			$output .= $imgBad.$message.'<br />';
 			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP Calendar extension to function.') . '</p></div>';
 		}
 		
@@ -223,13 +228,13 @@ END;
 
 		if ($this->CheckDom()) 
 		{
-			$output .= $imgGood.' '.$message.'<br />';
+			$output .= $imgGood.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.' '.$message.'<br />';
+			$output .= $imgBad.$message.'<br />';
 			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP DOM core functionality enabled.') . '</p></div>';
 		}
 		
@@ -238,13 +243,13 @@ END;
 
 		if ($this->CheckDomXml()) 
 		{
-			$output .= $imgGood.' '.$message.'<br />';
+			$output .= $imgGood.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.' '.$message.'<br />';
+			$output .= $imgBad.$message.'<br />';
 			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP DOM XML extension to function.') . '</p></div>';
 		}
 		
@@ -253,20 +258,20 @@ END;
 
 		if (ini_get('allow_url_fopen')) 
 		{
-			$output .= $imgGood.' '.$message.'<br />';
+			$output .= $imgGood.$message.'<br />';
 		}
 		else
-		{
-			// Not a fault as this will not block installation/upgrade. Informational.
-			$this->envFault = false;
+		{			// Not a fault as this will not block installation/upgrade. Informational.
+			$this->envWarning = true;
 			
-			$output .= $imgBad.' '.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('You must have allow_url_fopen = On in your PHP.ini file for statistics gathering to function.') . '<br />';
-			$output .= __('If you do not intend to enable homecall you need not worry about this problem.') . '</p></div>';
+			$output .= $imgWarn.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('You must have allow_url_fopen = On in your PHP.ini file for anonymous statistics gathering to function.') . '<br />';
+			$output .= __('If you do not intend to enable anonymous statistics gathering you need not worry about this problem.') . '</p></div>';
 		}
 				
 		$output .= '</div>';
 		
+		this->envTested = true;
 		return $output;
 	}
 	
@@ -276,9 +281,27 @@ END;
 	 */
 	public function EnvironmentFault()
 	{
+		if (! $this->envTested) {
+			$this->CheckEnvironment();
+		}
+
 		return $this->envFault;
 	}
 	
+	/**
+	 * Is there an environment warning
+	 * @return 
+	 */
+	public function EnvironmentWarning()
+	{
+		if (! $this->envTested) {
+			$this->CheckEnvironment();
+		}
+
+		return $this->envWarning;
+	}
+
+
 	/**
 	 * Check FileSystem Permissions
 	 * @return 
