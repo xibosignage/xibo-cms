@@ -18,9 +18,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
- 
-
 DEFINE('XIBO', true);
+
+if (! checkPHP()) {
+  die("Xibo requires PHP 5.0.2 or later");
+}
 
 include('lib/app/kit.class.php');
 include('install/header.inc');
@@ -30,10 +32,6 @@ include('config/db_config.php');
 // Setup the translations for gettext
 require_once("lib/app/translationengine.class.php");
 TranslationEngine::InitLocale($db);
-
-if (! checkPHP()) {
-  die(__("Xibo requires PHP 5.0.2 or later"));
-}
 
 $fault = false;
 

@@ -18,8 +18,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-
 DEFINE('XIBO', true);
+
+if (! checkPHP()) {
+  die("Xibo requires PHP 5.0.2 or later");
+}
 
 include('lib/app/kit.class.php');
 include('config/db_config.php');
@@ -30,9 +33,6 @@ require('settings.php');
 require_once("lib/app/translationengine.class.php");
 TranslationEngine::InitLocale($db);
 
-if (! checkPHP()) {
-  die(__("Xibo requires PHP 5.0.2 or later"));
-}
 
 // Once we've calculated the upgrade in step 2 below, we need
 // to have included the appropriate upgrade php files
