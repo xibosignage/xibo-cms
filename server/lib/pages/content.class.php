@@ -60,30 +60,13 @@ class contentDAO
 	
 	function on_page_load() 
 	{
-		return "";
+		return '';
 	}
 	
 	function echo_page_heading() 
 	{
-		switch ($this->sub_page) 
-		{
-				
-			case 'view':
-				echo "Library";
-				break;
-				
-			case 'scanner':
-				echo "Scanner";
-				break;
-				
-			case 'scanner_results';
-				echo "Scanner Results";
-				break;
-				
-			default:
-				echo "Content View";
-				break;
-		}
+		echo __("Library");
+		
 		return true;
 	}
 	
@@ -128,6 +111,13 @@ class contentDAO
 		$sql .= "GROUP BY type ";
 		
 		$type_list =  dropdownlist($sql,"mediatype",$mediatype);
+		
+		// Messages
+		$msgName	= __('Name');
+		$msgType	= __('Type');
+		$msgRetired	= __('Retired');
+		$msgOwner	= __('Owner');
+		$msgShared	= __('Shared');
 
 		$filterForm = <<<END
 			<div class="FilterDiv" id="LibraryFilter">
@@ -138,21 +128,20 @@ class contentDAO
 					
 					<table id="content_filterform" class="filterform">
 						<tr>
-							<td>Name</td>
+							<td>$msgName</td>
 							<td><input type='text' name='2' id='2' value="$name" /></td>
-							<td>Type</td>
+							<td>$msgType</td>
 							<td>$type_list</td>
-							<td>Retired</td>
+							<td>$msgRetired</td>
 							<td>$retired_list</td>
 						</tr>
 						<tr>
-							<td>Owner</td>
+							<td>$msgOwner</td>
 							<td>$user_list</td>
 							<td></td>
 							<td></td>
-							<td>Shared</td>
+							<td>$msgShared</td>
 							<td>$shared_list</td>
-							
 						</tr>
 					</table>
 			</form>
@@ -240,20 +229,28 @@ HTML;
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error("Cant get content list", E_USER_ERROR);			
+			trigger_error(__('Cant get content list'), E_USER_ERROR);			
 		}
+		
+		// Messages
+		$msgName	= __('Name');
+		$msgType	= __('Type');
+		$msgRetired	= __('Retired');
+		$msgOwner	= __('Owner');
+		$msgShared	= __('Shared');
+		$msgAction	= __('Action');
 
     	$output = <<<END
 			<div class="info_table">
 		    <table style="width:100%">
 			<thead>
 			    <tr>
-			        <th>Name</th>
-			        <th>Type</th>
+			        <th>$msgName</th>
+			        <th>$msgType</th>
 			        <th>h:mi:ss</th>            
-			        <th>Shared</th>       
-					<th>Owner</th>
-			        <th>Action</th>     
+			        <th>$msgShared</th>       
+					<th>$msgOwner</th>
+			        <th>$msgAction</th>     
 			    </tr>
 			</thead>
 			<tbody>
@@ -288,9 +285,7 @@ END;
 				}
 				else 
 				{
-					$output .= <<<END
-					<tr ondblclick="alert('You do not have permission to edit this media')">
-END;
+					$output .= '<tr ondblclick="alert(' . __('You do not have permission to edit this media') . ')">';
 				}
 				
 				$output .= "<td>$media</td>\n";
@@ -302,13 +297,15 @@ END;
 				// ACTION buttons
 		    	if ($edit_permissions) 
 				{
+					$msgEdit	= __('Edit');
+					$msgDelete	= __('Delete');
 					
-			   		$buttons = "<button class='XiboFormButton' href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid'><span>Edit</span></button>";					
-	    			$buttons .= "<button class='XiboFormButton' href='index.php?p=module&mod=$mediatype&q=Exec&method=DeleteForm&mediaid=$mediaid'><span>Delete</span></button>";
+			   		$buttons 	= "<button class='XiboFormButton' title='$msgEdit' href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid'><span>$msgEdit</span></button>";					
+	    			$buttons 	.= "<button class='XiboFormButton' title='$msgDelete' href='index.php?p=module&mod=$mediatype&q=Exec&method=DeleteForm&mediaid=$mediaid'><span>$msgDelete</span></button>";
 		    	}
 		    	else 
 				{
-		    		$buttons = "No available actions.";
+		    		$buttons = __("No available actions.");
 		    	}
 				
 				$output .= <<<END
@@ -350,7 +347,7 @@ END;
 		while ($modulesItem = $enabledModules->GetNextModule())
 		{
 			$mod 		= Kit::ValidateParam($modulesItem['Module'], _STRING);
-			$caption 	= 'Add ' . $mod;
+			$caption 	= __('Add') . ' ' . $mod;
 			$mod		= strtolower($mod);
 			$title 		= Kit::ValidateParam($modulesItem['Description'], _STRING);
 			$img 		= Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
@@ -375,7 +372,7 @@ HTML;
 END;
 		
 		$response->html 		= $options;
-		$response->dialogTitle 	= 'Add Media to the Library.';
+		$response->dialogTitle 	= __('Add Media to the Library');
 		$response->dialogSize 	= true;
 		$response->dialogWidth 	= '650px';
 		$response->dialogHeight = '280px';
@@ -394,7 +391,7 @@ END;
 		
 		if (!$this->has_permissions) 
 		{
-			displayMessage(MSG_MODE_MANUAL, "You do not have permissions to access this page");
+			trigger_error(__("You do not have permissions to access this page"), E_USER_ERROR);
 			return false;
 		}
 		
@@ -438,6 +435,10 @@ END;
 		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
 		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
 		
+		// Messages
+		$msgName	= __('Name');
+		$msgType	= __('Type');
+		
 		$form = <<<HTML
 		<form>
 			<input type="hidden" name="p" value="content">
@@ -446,9 +447,9 @@ END;
 			<input type="hidden" name="regionid" value="$regionid" />
 			<table>
 				<tr>
-					<td>Name</td>
+					<td>$msgName</td>
 					<td><input type="text" name="name" id="name" value="$name"></td>
-					<td>Media Type</td>
+					<td>$msgType</td>
 					<td>$type_list</td>
 				</tr>
 			</table>
@@ -474,7 +475,7 @@ HTML;
 		$response->dialogSize	= true;
 		$response->dialogWidth	= '500px';
 		$response->dialogHeight = '380px';
-		$response->dialogTitle	= 'Assign an item from the Library';
+		$response->dialogTitle	= __('Assign an item from the Library');
 		
 		$response->Respond();	
 	}
@@ -523,8 +524,17 @@ HTML;
 		if(!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error("Cant get content list", E_USER_ERROR);			
+			trigger_error(__("Cant get content list"), E_USER_ERROR);			
 		}
+		
+		// Messages
+		$msgName	= __('Name');
+		$msgType	= __('Type');
+		$msgLen		= __('Duration');
+		$msgOwner	= __('Owner');
+		$msgShared	= __('Shared');
+		$msgSelect	= __('Select');
+		$msgAssign	= __('Assign');
 		
 		//some table headings
 		$form = <<<END
@@ -535,11 +545,11 @@ HTML;
 			<table style="width:100%">
 				<thead>
 			    <tr>
-			        <th>Name</th>
-		            <th>Type</th>
-		            <th>Duration</th>
-		            <th>Shared</th>
-			        <th>Select</th>
+			        <th>$msgName</th>
+		            <th>$msgType</th>
+		            <th>$msgLen</th>
+		            <th>$msgShared</th>
+			        <th>$msgSelect</th>
 			    </tr>
 				</thead>
 				<tbody>
@@ -581,7 +591,7 @@ END;
 		$form .= <<<END
 				</tbody>
 			</table>
-			<input type='submit' value="Assign" / >
+			<input type='submit' value="$msgAssign" / >
 		</div>
 	</form>
 END;
@@ -625,7 +635,7 @@ END;
 		
 		if (!is_writable($libraryFolder . 'temp'))
 		{
-			trigger_error('The Library Location you have picked is not writable to the Xibo Server.', E_USER_ERROR);
+			trigger_error(__('The Library Location you have picked is not writable to the Xibo Server.'), E_USER_ERROR);
 		}
 		
 		// Save this file in a random place
