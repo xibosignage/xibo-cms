@@ -120,182 +120,149 @@ class Config
 		$output .= '<div class="checks">';
 		
 		// Check for PHP version
-		$message = 'PHP Version 5.0.2 or later';
+		$message = __('PHP Version 5.0.2 or later');
 
 		if ($this->CheckPHP()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$output .= $imgGood.' '.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= <<<END
-			<div class="check_explain">
-      			<p>Xibo requires PHP version 5.0.2 or later.</p>
-      		</div>
-END;
+			$output .= $imgBad.' '.$message.'<br />';
+			$output .= '<div class="check_explain"> <p>' . __("Xibo requires PHP version 5.0.2 or later.") . '</p></div>';
 		}
 		
 		// Check for file system permissions
-		$message = 'Filesystem Permissions';
+		$message = __('Filesystem Permissions');
 
 		if ($this->CheckFsPermissions()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$output .= $imgGood.' '.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
+			$output .= $imgBad.' '.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __("Xibo needs to be able to write to the following:");
 			$output .= <<<END
-			<div class="check_explain">
-      			<p>Xibo needs to be able to write to the following
       			<ul>
         			<li> settings.php
         			<li> install.php
-					<li> upgrade.php
+				<li> upgrade.php
       			</ul>
-      			Please fix this, and retest.</p>
-      		</div>
 END;
+      			$output .= __('Please fix this, and retest.') . '</p></div>';
 		}
 		
 		// Check for MySQL
-		$message = 'MySQL';
+		$message = __('MySQL Extension');
 
 		if ($this->CheckMySQL()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$output .= $imgGood.' '.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= <<<END
-			<div class="check_explain">
-      			<p>Xibo requires a MySQL database.</p>
-      		</div>
-END;
+			$output .= $imgBad.' '.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('Xibo requires a MySQL database. Ensure PHP MySQL client extension is installed') . '</p></div>';
 		}
 		
 		// Check for JSON
-		$message = 'JSON Extension';
+		$message = __('JSON Extension');
 
 		if ($this->CheckJson()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$output .= $imgGood.' '.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= <<<END
-			<div class="check_explain">
-      			<p>Xibo needs the PHP JSON extension to function.</p>
-      		</div>
-END;
+			$output .= $imgBad.' '.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP JSON extension to function.') . '</p></div>';
 		}
 		
 		// Check for GD (graphics)
-		$message = 'GD Extension';
+		$message = __('GD Extension');
 
 		if ($this->CheckGd()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$output .= $imgGood.' '.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= <<<END
-			<div class="check_explain">
-      			<p>Xibo needs the PHP GD extension to function.</p>
-      		</div>
-END;
+			$output .= $imgBad.' '.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP GD extension to function.') . '</p></div>';
 		}
 		
 		
 		// Check for Calendar
-		$message = 'Calendar Extension';
+		$message = __('Calendar Extension');
 
 		if ($this->CheckCal()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$output .= $imgGood.' '.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= <<<END
-			<div class="check_explain">
-      			<p>Xibo needs the PHP Calendar extension to function.</p>
-      		</div>
-END;
+			$output .= $imgBad.' '.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP Calendar extension to function.') . '</p></div>';
 		}
 		
 		// Check for DOM
-		$message = 'DOM Extension';
+		$message = __('DOM Extension');
 
 		if ($this->CheckDom()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$output .= $imgGood.' '.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= <<<END
-			<div class="check_explain">
-      			<p>Xibo needs the PHP DOM core functionality enabled.</p>
-      		</div>
-END;
+			$output .= $imgBad.' '.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP DOM core functionality enabled.') . '</p></div>';
 		}
 		
 		// Check for DOM XML
-		$message = 'DOM XML Extension';
+		$message = __('DOM XML Extension');
 
 		if ($this->CheckDomXml()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$output .= $imgGood.' '.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= <<<END
-			<div class="check_explain">
-      			<p>Xibo needs the PHP DOM XML extension to function.</p>
-      		</div>
-END;
+			$output .= $imgBad.' '.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP DOM XML extension to function.') . '</p></div>';
 		}
 		
-		// Check to see if we are allowed to open remote URL's (homecall will not work otherwise)
-		$message = 'Allow PHP to open external URL\'s';
+		// Check to see if we are allowed to open remote URLs (homecall will not work otherwise)
+		$message = __("Allow PHP to open external URLs");
 
 		if (ini_get('allow_url_fopen')) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$output .= $imgGood.' '.$message.'<br />';
 		}
 		else
 		{
-			$this->envFault = true;
+			// Not a fault as this will not block installation/upgrade. Informational.
+			$this->envFault = false;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= <<<END
-			<div class="check_explain">
-      			<p>You must have allow_url_fopen = On in your PHP.ini file for homecall to function.<br />
-				If you do not intend to enable homecall you need not worry about this problem.</p>
-      		</div>
-END;
+			$output .= $imgBad.' '.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('You must have allow_url_fopen = On in your PHP.ini file for statistics gathering to function.') . '<br />';
+			$output .= __('If you do not intend to enable homecall you need not worry about this problem.') . '</p></div>';
 		}
 				
 		$output .= '</div>';

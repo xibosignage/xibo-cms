@@ -19,20 +19,20 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 
-// Start default to fr_FR
-$locale = "fr_FR";
-if (isset($_GET["locale"])) $locale = $_GET["locale"];
-putenv("LC_ALL=$locale");
-setlocale(LC_ALL, $locale);
-bindtextdomain("default", "./locale");
-textdomain("default");
-
 DEFINE('XIBO', true);
+
+if (! checkPHP()) {
+  die(__("Xibo requires PHP 5.0.2 or later"));
+}
 
 include('lib/app/kit.class.php');
 include('config/db_config.php');
 include('config/config.class.php');
 require('settings.php');
+
+// Setup the translations for gettext
+require_once("lib/app/translationengine.class.php");
+TranslationEngine::InitLocale($db);
 
 // Once we've calculated the upgrade in step 2 below, we need
 // to have included the appropriate upgrade php files
@@ -129,112 +129,6 @@ elseif ($_SESSION['step'] == 1) {
     $cObj = new Config($db);
     echo $cObj->CheckEnvironment();
     if ($cObj->EnvironmentFault()) {
-## Filesystem Permissions
-    if (checkFsPermissions()) {
-    ?>
-      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("Filesystem Permissions"); ?><br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("Filesystem Permissions"); ?></br>
-      <div class="check_explain">
-      <?php echo __("Xibo needs to be able to write to the following"); ?>
-      <ul>
-        <li> settings.php
-        <li> install.php
-	<li> upgrade.php
-      </ul>
-      <?php echo __("Please fix this, and retest."); ?><br />
-      </div>
-    <?php
-    }
-## PHP5
-    if (checkPHP()) {
-    ?>
-      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP Version"); ?><br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP Version"); ?><br />
-      <div class="check_explain">
-      <?php echo __("Xibo requires PHP version 5.02 or later."); ?><br />
-      <?php echo __("Please fix this, and retest."); ?><br />
-      </div>
-    <?php
-    }
-## MYSQL
-  if (checkMySQL()) {
-    ?>
-      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP MySQL Extension"); ?><br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP MySQL Extension"); ?><br />
-      <div class="check_explain">
-      <?php echo __("Xibo needs to access a MySQL database to function."); ?><br />
-      <?php echo __("Please install MySQL and the appropriate MySQL extension and retest."); ?><br />
-      </div>
-    <?php
-    }
-## JSON
-  if (checkJson()) {
-    ?>
-      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP JSON Extension"); ?><br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP JSON Extension"); ?><br />
-      <div class="check_explain">
-      <?php echo __("Xibo needs the PHP JSON extension to function."); ?><br />
-      <?php echo __("Please install the PHP JSON extension and retest."); ?><br />
-      </div>
-    <?php
-    }
-## GD
-  if (checkGd()) {
-    ?>
-      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP GD Extension"); ?><br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP GD Extension"); ?><br />
-      <div class="check_explain">
-      <?php echo __("Xibo needs to manipulate images to function."); ?><br />
-      <?php echo __("Please install the GD libraries and extension and retest."); ?><br />
-      </div>
-    <?php
-    }
-## Calendar
-  if (checkCal()) {
-    ?>
-      <img src="install/dot_green.gif" align="absmiddle">&nbsp;<?php echo __("PHP Calendar Extension"); ?><br />
-    <?php
-    }
-    else {
-      $fault = true;
-    ?>
-      <img src="install/dot_red.gif" align="absmiddle">&nbsp;<?php echo __("PHP Calendar Extension"); ?><br />
-      <div class="check_explain">
-      <?php echo __("Xibo needs the calendar extension to function."); ?><br />
-      <?php echo __("Please install the calendar extension and retest."); ?><br />
-      </div>
-    <?php
-    }
-    ?>
-    <br /><br />
-    </div>
-    <?php
-    if ($fault) {
 	$_SESSION['step'] = 1;
     ?>
       <form action="upgrade.php" method="POST">
