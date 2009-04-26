@@ -101,7 +101,7 @@ class moduleDAO
 		{
 			// Set the error to display
 			$response = new ResponseManager();
-			$response->SetError('This Module does not exist');
+			$response->SetError(__('This Module does not exist'));
 		}
 		
 		$response->Respond();
