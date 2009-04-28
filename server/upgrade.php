@@ -225,6 +225,7 @@ elseif ($_SESSION['step'] == 3) {
 		echo "FAIL: " . $fault_string;
 	}
 	else {
+		set_time_limit(0);
 		// Backup the database
 		echo '<div class="info">';
 		echo '<p>Backing up your database';
