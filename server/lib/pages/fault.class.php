@@ -92,6 +92,33 @@ class faultDAO
 		$output .= '</ol>';
 		$output .= '</div>';
 		
+		$output .= '<div class="ReportFault">';
+		$output .= ' <h2>Further Action</h2>';
+		$output .= ' <p>' . __('We will do our best to use the information collected above to solve your issue.');
+		$output .= ' ' . __('However sometimes this will not be enough and you will be asked to put your Xibo installation into "Test" mode.') . '</p>';
+		
+		$output .= '<ol>';
+		
+		$output .= '<li><p>' . __('Switch to Test Mode.') . '</p>';
+		$output .= '	<form class="XiboForm" action="index.php?p=admin" method="post">';
+		$output .= '		<input type="hidden" name="q" value="SetServerTestMode" />';
+		$output .= '		<input type="submit" value="' . __('Switch to Test Mode') . '" />';
+		$output .= '	</form>';
+		$output .= '</li>';
+		
+		$output .= '<li><p>' . __('Recreate the Problem in a new window and Capture a screenshot.') . ' ' . __('You should send your screenshot to info@xibo.org.uk with a reference to the Launchpad Question/Bug you have created previously.') . '</p>';		
+		$output .= '</li>';
+		
+		$output .= '<li><p>' . __('Switch to Production Mode.') . '</p>';
+		$output .= '	<form class="XiboForm" action="index.php?p=admin" method="post">';
+		$output .= '		<input type="hidden" name="q" value="SetServerProductionMode" />';
+		$output .= '		<input type="submit" value="' . __('Switch to Production Mode') . '" />';
+		$output .= '	</form>';
+		$output .= '</li>';
+			
+		$output .= '</ol>';
+		$output .= '</div>';
+
 		echo $output;	
 		return;
 	}

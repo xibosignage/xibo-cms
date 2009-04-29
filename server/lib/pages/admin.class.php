@@ -461,5 +461,43 @@ END;
 		$response->SetFormSubmitResponse('Debugging switched Off.');
 		$response->Respond();
 	}
+	
+	/**
+	 * Puts the Server in Production Mode
+	 * @return 
+	 */
+	public function SetServerProductionMode()
+	{
+		$db			=& $this->db;
+		$response	= new ResponseManager();
+		$setting 	= new Setting($db);
+		
+		if (!$setting->Edit('SERVER_MODE', 'Production'))
+		{
+			trigger_error('Cannot switch modes.');
+		}
+		
+		$response->SetFormSubmitResponse('Server switched to Production Mode');
+		$response->Respond();
+	}
+	
+	/**
+	 * Puts the Server in Test Mode
+	 * @return 
+	 */
+	public function SetServerTestMode()
+	{
+		$db			=& $this->db;
+		$response	= new ResponseManager();
+		$setting 	= new Setting($db);
+		
+		if (!$setting->Edit('SERVER_MODE', 'Test'))
+		{
+			trigger_error('Cannot switch modes.');
+		}
+		
+		$response->SetFormSubmitResponse('Server switched to Test Mode');
+		$response->Respond();
+	}
 }
 ?>
