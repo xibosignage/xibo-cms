@@ -63,6 +63,18 @@ elseif ($xibo_step == 1) {
       </form>
     <?php
     }
+    else if ($cObj->EnvironmentWarning()) {
+    ?>
+      <form action="install.php" method="POST">
+        <input type="hidden" name="xibo_step" value="1" />
+        <div class="loginbutton"><button type="submit"><?php echo __("Retest"); ?></button></div>
+      </form>
+      <form action="install.php" method="POST">
+        <input type="hidden" name="xibo_step" value="2" />
+        <div class="loginbutton"><button type="submit"><?php echo __("Next"); ?> ></button></div>
+      </form>
+    <?php
+    }
     else {
     ?>
       <form action="install.php" method="POST">

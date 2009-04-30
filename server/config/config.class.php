@@ -24,7 +24,9 @@ class Config
 {
 	private $db;
 	private $extensions;
+	private $envTested;
 	private $envFault;
+	private $envWarning;
 	
 	public function __construct(database $db)
 	{
@@ -35,6 +37,8 @@ class Config
 		
 		// Assume the environment is OK
 		$this->envFault		= false;
+		$this->envWarning	= false;
+		$this->envTested	= false;
 		
 		return;
 	}
@@ -116,6 +120,7 @@ class Config
 		$output  = '';
 		$imgGood = '<img src="install/dot_green.gif"> ';
 		$imgBad  = '<img src="install/dot_red.gif"> ';
+		$imgWarn = '<img src="install/dot_amber.gif"> ';
 		
 		$output .= '<div class="checks">';
 		
@@ -287,19 +292,20 @@ END;
 		}
 		else
 		{
-			$this->envFault = true;
-			
-			$output .= $imgBad.$message.'<br />';
+			// Not a fault as this will not block installation/upgrade. Informational.
+			$this->envWarning = true;
+			$output .= $imgWarn.$message.'<br />';
 			$output .= <<<END
 			<div class="check_explain">
       			<p>You must have allow_url_fopen = On in your PHP.ini file for homecall to function.<br />
 				If you do not intend to enable homecall you need not worry about this problem.</p>
-      		</div>
+	      		</div>
 END;
 		}
 				
 		$output .= '</div>';
 		
+		this->envTested = true;
 		return $output;
 	}
 	
@@ -309,9 +315,27 @@ END;
 	 */
 	public function EnvironmentFault()
 	{
+		if (! $this->envTested) {
+			$this->CheckEnvironment();
+		}
+
 		return $this->envFault;
 	}
 	
+	/**
+	 * Is there an environment warning
+	 * @return 
+	 */
+	public function EnvironmentWarning()
+	{
+		if (! $this->envTested) {
+			$this->CheckEnvironment();
+		}
+
+		return $this->envWarning;
+	}
+
+
 	/**
 	 * Check FileSystem Permissions
 	 * @return 
