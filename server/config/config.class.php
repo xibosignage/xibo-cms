@@ -335,7 +335,7 @@ END;
 				
 		$output .= '</div>';
 		
-		this->envTested = true;
+		$this->envTested = true;
 		return $output;
 	}
 	
