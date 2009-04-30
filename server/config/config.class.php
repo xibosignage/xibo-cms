@@ -120,7 +120,7 @@ class Config
 		$output .= '<div class="checks">';
 		
 		// Check for PHP version
-		$message = 'PHP Version 5.0.2 or later';
+		$message = 'PHP Version 5.2.4 or later';
 
 		if ($this->CheckPHP()) 
 		{
@@ -133,7 +133,7 @@ class Config
 			$output .= $imgBad.$message.'<br />';
 			$output .= <<<END
 			<div class="check_explain">
-      			<p>Xibo requires PHP version 5.0.2 or later.</p>
+      			<p>Xibo requires PHP version 5.2.4 or later.</p>
       		</div>
 END;
 		}
@@ -327,7 +327,7 @@ END;
 	 */
 	function CheckPHP() 
 	{
-		return (version_compare("5",phpversion(), "<="));
+		return (version_compare("5.2.4",phpversion(), "<="));
 	}
 	
 	/**

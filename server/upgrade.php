@@ -289,36 +289,11 @@ include('install/footer.inc');
 
 # Functions
 
-function checkFsPermissions() {
-  # Check for appropriate filesystem permissions
-  return (is_writable("install.php") && (is_writable("settings.php") || is_writable(".")));
-}
-
 function checkPHP() {
   # Check PHP version > 5
-  return (version_compare("5",phpversion(), "<="));
+  return (version_compare("5.2.4",phpversion(), "<="));
 }
 
-function checkMySQL() {
-  # Check PHP has MySQL module installed
-  return extension_loaded("mysql");
-}
-
-function checkJson() {
-  # Check PHP has JSON module installed
-  return extension_loaded("json");
-}
-
-function checkGd() {
-  # Check PHP has JSON module installed
-  return extension_loaded("gd");
-}
-
-function checkCal() {
-  # Check PHP has JSON module installed
-  return extension_loaded("calendar");
-}
- 
 function reportError($step, $message, $button_text="&lt; Back") {
 	$_SESSION['step'] = $step;
 ?>
@@ -551,13 +526,6 @@ function createQuestions($step, $questions) {
 		echo '</div><hr width="25%" />';
 	}
 }
-
-//function __autoload($class_name) {
-//    if (substr($class_name,0,4) == "Step") {
-//	    $class_name = substr($class_name,4);
-//	    require_once install/database/$class_name . '.php';
-//    }
-//}
 
 class UpgradeStep 
 {
