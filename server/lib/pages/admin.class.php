@@ -346,7 +346,8 @@ END;
 			$setting 	= Kit::ValidateParam($row[1], _STRING);
 			$selectedzone = Kit::ValidateParam($row[2], _STRING);
 			$helptext	= Kit::ValidateParam($row[3], _HTMLSTRING);
-			$options	= timezone_identifiers_list();
+			$options	= $this->TimeZoneIdentifiersList();
+			
 			$structure 	= '';
 			$i 			= 0;
 			
@@ -416,6 +417,24 @@ END;
 		}
 		
 		return $output;
+	}
+	
+	/**
+	 * Timezone functionality
+	 * @return 
+	 */
+	private function TimeZoneIdentifiersList()
+	{
+		if (function_exists('timezone_identifiers_list')) 
+		{
+			return timezone_identifiers_list();
+		}
+
+		$list[0] = 'Europe/London';
+		$list[1] = 'Europe/Oslo';
+		$list[2] = 'Europe/Paris';
+		
+		return $list;
 	}
 	
 	/**
