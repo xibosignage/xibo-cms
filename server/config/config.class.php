@@ -125,11 +125,21 @@ class Config
 		$output .= '<div class="checks">';
 		
 		// Check for PHP version
-		$message = 'PHP Version 5.0.2 or later';
+		$message = 'PHP Version 5.2.0 or later';
 
-		if ($this->CheckPHP()) 
+		if ($this->CheckPHP() == 1) 
 		{
 			$output .= $imgGood.$message.'<br />';
+		}
+		else if ($this->CheckPHP() == 2)
+		{
+			$output .= $imgWarn.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+			<p>Xibo requires PHP version 5.2.0 or later. It may run on PHP 5.1.0 and we have provided compatibility functions to enable that.</p>
+			<p>However, we recommend upgrading your version of PHP to 5.2.0 or later.</p>
+			</div>
+END;
 		}
 		else
 		{
@@ -138,7 +148,7 @@ class Config
 			$output .= $imgBad.$message.'<br />';
 			$output .= <<<END
 			<div class="check_explain">
-      			<p>Xibo requires PHP version 5.0.2 or later.</p>
+      			<p>Xibo requires PHP version 5.2.0 or later.</p>
       		</div>
 END;
 		}
@@ -297,9 +307,29 @@ END;
 			$output .= $imgWarn.$message.'<br />';
 			$output .= <<<END
 			<div class="check_explain">
-      			<p>You must have allow_url_fopen = On in your PHP.ini file for homecall to function.<br />
-				If you do not intend to enable homecall you need not worry about this problem.</p>
+      			<p>You must have allow_url_fopen = On in your php.ini file for anonymous statistics gathering to function.<br />
+				If you do not intend to enable anonymous statistics gathering you need not worry about this problem.</p>
 	      		</div>
+END;
+		}
+
+		// Check to see if timezone_identifiers_list exists
+		$message = 'DateTimeZone';
+
+		if (function_exists('timezone_idenitfiers_list')) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envWarning = true;
+			
+			$output .= $imgWarn.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo needs to be able to get a list of timezones. Your version of PHP does not support this<br />
+			We have provided a compatibility function so that Xibo still works, but you are advised to upgrade to PHP > 5.2.0</p>
+      		</div>
 END;
 		}
 				
@@ -351,7 +381,15 @@ END;
 	 */
 	function CheckPHP() 
 	{
-		return (version_compare("5",phpversion(), "<="));
+		if (phpversion() >= '5.2.0') {
+			return 1;
+		}
+	
+		if (phpversion() >= '5.1.0') {
+			return 2;
+		}
+
+		return 0;
 	}
 	
 	/**
