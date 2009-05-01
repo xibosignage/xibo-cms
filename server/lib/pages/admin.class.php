@@ -430,9 +430,23 @@ END;
 			return timezone_identifiers_list();
 		}
 
-		$list[0] = 'Europe/London';
-		$list[1] = 'Europe/Oslo';
-		$list[2] = 'Europe/Paris';
+		$list[] = 'Europe/London';
+		$list[] = 'America/New_York';
+		$list[] = 'Europe/Paris';
+		$list[] = 'America/Los_Angeles';
+		$list[] = 'America/Puerto_Rico';
+		$list[] = 'Europe/Moscow';
+		$list[] = 'Europe/Helsinki';
+		$list[] = 'Europe/Warsaw';
+		$list[] = 'Asia/Singapore';
+		$list[] = 'Asia/Dubai';
+		$list[] = 'Asia/Baghdad';
+		$list[] = 'Asia/Shanghai';
+		$list[] = 'Indian/Mauritius';
+		$list[] = 'Australia/Melbourne';
+		$list[] = 'Australia/Sydney';
+		$list[] = 'Arctic/Longyearbyen';
+		$list[] = 'Antarctica/South_Pole';
 		
 		return $list;
 	}
