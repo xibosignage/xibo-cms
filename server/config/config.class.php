@@ -316,7 +316,7 @@ END;
 		// Check to see if timezone_identifiers_list exists
 		$message = 'DateTimeZone';
 
-		if (function_exists('timezone_idenitfiers_list')) 
+		if (function_exists('timezone_identifiers_list')) 
 		{
 			$output .= $imgGood.$message.'<br />';
 		}
