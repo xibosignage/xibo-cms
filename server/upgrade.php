@@ -135,7 +135,7 @@ elseif ($_SESSION['step'] == 1) {
     else if ($cObj->EnvironmentWarning()) {
     ?>
       <form action="upgrade.php" method="POST">
-	<input type="hidden" name="stepskip" value="1">
+	<input type="hidden" name="skipstep" value="1">
         <div class="loginbutton"><button type="submit">Retest</button></div>
       </form>
       <form action="upgrade.php" method="POST">
