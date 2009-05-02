@@ -346,7 +346,8 @@ END;
 			$setting 	= Kit::ValidateParam($row[1], _STRING);
 			$selectedzone = Kit::ValidateParam($row[2], _STRING);
 			$helptext	= Kit::ValidateParam($row[3], _HTMLSTRING);
-			$options	= timezone_identifiers_list();
+			$options	= $this->TimeZoneIdentifiersList();
+			
 			$structure 	= '';
 			$i 			= 0;
 			
@@ -416,6 +417,38 @@ END;
 		}
 		
 		return $output;
+	}
+	
+	/**
+	 * Timezone functionality
+	 * @return 
+	 */
+	private function TimeZoneIdentifiersList()
+	{
+		if (function_exists('timezone_identifiers_list')) 
+		{
+			return timezone_identifiers_list();
+		}
+
+		$list[] = 'Europe/London';
+		$list[] = 'America/New_York';
+		$list[] = 'Europe/Paris';
+		$list[] = 'America/Los_Angeles';
+		$list[] = 'America/Puerto_Rico';
+		$list[] = 'Europe/Moscow';
+		$list[] = 'Europe/Helsinki';
+		$list[] = 'Europe/Warsaw';
+		$list[] = 'Asia/Singapore';
+		$list[] = 'Asia/Dubai';
+		$list[] = 'Asia/Baghdad';
+		$list[] = 'Asia/Shanghai';
+		$list[] = 'Indian/Mauritius';
+		$list[] = 'Australia/Melbourne';
+		$list[] = 'Australia/Sydney';
+		$list[] = 'Arctic/Longyearbyen';
+		$list[] = 'Antarctica/South_Pole';
+		
+		return $list;
 	}
 	
 	/**
