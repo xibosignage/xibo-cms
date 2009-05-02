@@ -66,6 +66,12 @@ if (! $_SESSION['step']) {
 	$_SESSION['step'] = 0;
 }
 
+if (Kit::GetParam('skipstep',_POST,_INT) == 1) {
+	// Cheat the $_SESSION['step'] variable if required
+	// Used if there are environment warnings and we want to retest.
+	$_SESSION['step'] = 1;
+}
+
 if ($_SESSION['step'] == 0) {
 
   $_SESSION['step'] = 1;
@@ -123,6 +129,17 @@ elseif ($_SESSION['step'] == 1) {
     ?>
       <form action="upgrade.php" method="POST">
         <div class="loginbutton"><button type="submit">Retest</button></div>
+      </form>
+    <?php
+    }
+    else if ($cObj->EnvironmentWarning()) {
+    ?>
+      <form action="upgrade.php" method="POST">
+	<input type="hidden" name="stepskip" value="1">
+        <div class="loginbutton"><button type="submit">Retest</button></div>
+      </form>
+      <form action="upgrade.php" method="POST">
+        <div class="loginbutton"><button type="submit">Next ></button></div>
       </form>
     <?php
     }
@@ -289,37 +306,11 @@ else {
 include('install/footer.inc');
 
 # Functions
-
-function checkFsPermissions() {
-  # Check for appropriate filesystem permissions
-  return (is_writable("install.php") && (is_writable("settings.php") || is_writable(".")));
-}
-
 function checkPHP() {
   # Check PHP version > 5
-  return (version_compare("5",phpversion(), "<="));
+  return (version_compare("5.1.0",phpversion(), "<="));
 }
 
-function checkMySQL() {
-  # Check PHP has MySQL module installed
-  return extension_loaded("mysql");
-}
-
-function checkJson() {
-  # Check PHP has JSON module installed
-  return extension_loaded("json");
-}
-
-function checkGd() {
-  # Check PHP has JSON module installed
-  return extension_loaded("gd");
-}
-
-function checkCal() {
-  # Check PHP has JSON module installed
-  return extension_loaded("calendar");
-}
- 
 function reportError($step, $message, $button_text="&lt; Back") {
 	$_SESSION['step'] = $step;
 ?>

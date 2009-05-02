@@ -22,7 +22,7 @@
 DEFINE('XIBO', true);
 
 if (! checkPHP()) {
-  die('Xibo requires PHP 5.0.2 or later');
+  die('Xibo requires PHP 5.1.0 or later');
 }
 
 include('lib/app/kit.class.php');
@@ -60,6 +60,18 @@ elseif ($xibo_step == 1) {
       <form action="install.php" method="POST">
         <input type="hidden" name="xibo_step" value="1" />
         <div class="loginbutton"><button type="submit">Retest</button></div>
+      </form>
+    <?php
+    }
+    else if ($cObj->EnvironmentWarning()) {
+    ?>
+      <form action="install.php" method="POST">
+        <input type="hidden" name="xibo_step" value="1" />
+        <div class="loginbutton"><button type="submit">Retest</button></div>
+      </form>
+      <form action="install.php" method="POST">
+        <input type="hidden" name="xibo_step" value="2" />
+        <div class="loginbutton"><button type="submit">Next ></button></div>
       </form>
     <?php
     }
@@ -679,6 +691,6 @@ END;
 }
 
 function checkPHP() {
-  return (version_compare("5",phpversion(), "<="));
+  return (version_compare("5.1.0",phpversion(), "<="));
 }
 ?>
