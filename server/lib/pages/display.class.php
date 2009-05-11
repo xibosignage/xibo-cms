@@ -243,7 +243,7 @@ SQL;
 		if ($licensed == 0)
 		{
 			//There are licenses to take, shall we take them?
-			$license_list = '<td><label for="takeLicense" title="' . __('Will use one of the available licenses for this display"') . '>' . __('License Display') . '</label></td>';
+			$license_list = '<td><label for="takeLicense" title="' . __('Will use one of the available licenses for this display') . '">' . __('License Display') . '</label></td>';
 			$license_list .= "<td>" . listcontent("1|Yes,0|No", "takeLicense", "1") . "</td>";
 		}
 		else

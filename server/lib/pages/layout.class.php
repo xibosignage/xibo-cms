@@ -511,7 +511,7 @@ END;
 		
 		if ($layoutid == 0) 
 		{
-			$response->SetError("No Layout selected");
+			$response->SetError(__("No Layout selected"));
 			$response->Respond();
 		}
 		
@@ -601,7 +601,7 @@ END;
 		if(!$results = $db->query($SQL))
 		{
 			trigger_error($db->error());
-			trigger_error("An Unknown error occured when listing the layouts.", E_USER_ERROR);			
+			trigger_error(__("An Unknown error occured when listing the layouts."), E_USER_ERROR);			
 		}
 
 		$output = <<<END
@@ -649,8 +649,10 @@ END;
 				}
 				else 
 				{
+					$msgNoPermission = __('You do not have permission to design this layout');
+					
 					$title = <<<END
-					<tr ondblclick="alert('You do not have permission to design this layout')">
+					<tr ondblclick="alert('$msgNoPermission')">
 END;
 				}
 				
@@ -673,7 +675,7 @@ END;
 				}
 				else 
 				{
-					$output .= '<td class="centered">None</td>';
+					$output .= '<td class="centered">' . __('None') . '</td>';
 				}
 				
 				$output .= '</tr>';
@@ -707,12 +709,12 @@ END;
 		
 		// Help icons for the form
 		$helpButton 	= $helpManager->HelpButton("content/layout/adding", true);
-		$nameHelp		= $helpManager->HelpIcon("The Name of the Layout - (1 - 50 characters)", true);
-		$descHelp		= $helpManager->HelpIcon("An optional description of the Layout. (1 - 250 characters)", true);
-		$tagsHelp		= $helpManager->HelpIcon("Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)", true);
-		$sharedHelp		= $helpManager->HelpIcon("The permissions to associate with this Layout", true);
-		$retireHelp		= $helpManager->HelpIcon("Retire this layout or not? It will no longer be visible in lists", true);
-		$templateHelp	= $helpManager->HelpIcon("Template to create this layout with.", true);
+		$nameHelp		= $helpManager->HelpIcon(__("The Name of the Layout - (1 - 50 characters)"), true);
+		$descHelp		= $helpManager->HelpIcon(__("An optional description of the Layout. (1 - 250 characters)"), true);
+		$tagsHelp		= $helpManager->HelpIcon(__("Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)"), true);
+		$sharedHelp		= $helpManager->HelpIcon(__("The permissions to associate with this Layout"), true);
+		$retireHelp		= $helpManager->HelpIcon(__("Retire this layout or not? It will no longer be visible in lists"), true);
+		$templateHelp	= $helpManager->HelpIcon(__("Template to create this layout with."), true);
 		
 		//init the retired option
 		$retired_option 	= '';
@@ -757,24 +759,36 @@ END;
 		
 		$shared_list = dropdownlist("SELECT permissionID, permission FROM permission", "permissionid", $default);
 		
+		$msgName	= __('Name');
+		$msgName2	= __('The Name of the Layout - (1 - 50 characters)');
+		$msgDesc	= __('Description');
+		$msgDesc2	= __('An optional description of the Layout. (1 - 250 characters)');
+		$msgTags	= __('Tags');
+		$msgTags2	= __('Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)');
+		$msgShared	= __('Shared');
+		$msgShared2	= __('The permissions to associate with this Layout');
+		
+		$msgSave	= __('Save');
+		$msgCancel	= __('Cancel');
+		
 		$form = <<<END
 		<form class="XiboForm" method="post" action="$action">
 			<input type="hidden" name="layoutid" value="$this->layoutid">
 		<table>
 			<tr>
-				<td><label for="layout" accesskey="n" title="The Name of the Layout - (1 - 50 characters)">Name<span class="required">*</span></label></td>
+				<td><label for="layout" accesskey="n" title="$msgName2">$msgName<span class="required">*</span></label></td>
 				<td>$nameHelp <input name="layout" type="text" id="layout" value="$layout" tabindex="1" /></td>
 			</tr>
 			<tr>
-				<td><label for="description" accesskey="d" title="An optional description of the Layout. (1 - 250 characters)">Description</label></td>
+				<td><label for="description" accesskey="d" title="$msgDesc2">$msgDesc</label></td>
 				<td>$descHelp <input name="description" type="text" id="description" value="$description" tabindex="2" /></td>
 			</tr>
 			<tr>
-				<td><label for="tags" accesskey="d" title="Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)">Tags</label></td>
+				<td><label for="tags" accesskey="d" title="$msgTags2">$msgTags</label></td>
 				<td>$tagsHelp <input name="tags" type="text" id="tags" value="$tags" tabindex="3" /></td>
 			</tr>
 			<tr>
-				<td><label for='permissionid' title="The permissions to associate with this Layout">Shared<span class="required">*</span></label></td>
+				<td><label for='permissionid' title="$msgShared2">$msgShared<span class="required">*</span></label></td>
 				<td>$sharedHelp $shared_list</td>
 			</tr>
 			$retired_option
@@ -783,8 +797,8 @@ END;
 				<td>
 				</td>
 				<td>
-					<input type="submit" value="Save" />
-					<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />	
+					<input type="submit" value="$msgSave" />
+					<input id="btnCancel" type="button" title="$msgCancel" onclick="$('#div_dialog').dialog('close');return false; " value="$msgCancel" />	
 					$helpButton
 				</td>
 			</tr>
@@ -792,7 +806,7 @@ END;
 		</form>
 END;
 
-		$response->SetFormRequestResponse($form, 'Add/Edit a Layout.', '350px', '275px');
+		$response->SetFormRequestResponse($form, __('Add/Edit a Layout.'), '350px', '275px');
 		$response->Respond();
 	}
 	
