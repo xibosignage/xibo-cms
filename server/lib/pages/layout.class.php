@@ -860,7 +860,7 @@ END;
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error("Unable to get the Resolution information", E_USER_ERROR);
+			trigger_error(__("Unable to get the Resolution information"), E_USER_ERROR);
 		}
 		
 		$row 			= $db->get_row($results) ;
@@ -870,12 +870,22 @@ END;
 		$resolution_list = dropdownlist("SELECT resolutionID, resolution FROM resolution ORDER BY width", "resolutionid", $resolutionid);
 		
 		// Help text for fields
-		$resolutionHelp = $helpManager->HelpIcon("Pick the resolution", true);
-		$bgImageHelp	= $helpManager->HelpIcon("Select the background image from the library.", true);
-		$bgColorHelp	= $helpManager->HelpIcon("Use the color picker to select the background color.", true);
+		$resolutionHelp = $helpManager->HelpIcon(__("Pick the resolution"), true);
+		$bgImageHelp	= $helpManager->HelpIcon(__("Select the background image from the library."), true);
+		$bgColorHelp	= $helpManager->HelpIcon(__("Use the color picker to select the background color."), true);
 		
 		$helpButton 	= $helpManager->HelpButton("content/layout/layouteditor", true);
 		
+		
+		$msgBg				= __('Background Color');
+		$msgBgTitle			= __('Use the color picker to select the background color');
+		$msgBgImage			= __('Background Image');
+		$msgBgImageTitle	= __('Select the background image from the library');
+		$msgRes				= __('Resolution');
+		$msgResTitle		= __('Pick the resolution');
+		
+		$msgSave			= __('Save');
+		$msgCancel			= __('Cancel');
 		//
 		// Begin the form output
 		//
@@ -885,16 +895,16 @@ END;
 			<input type="hidden" id="layoutid" name="layoutid" value="$this->layoutid">
 			<table>
 				<tr>
-					<td><label for="bg_color" title="Use the color picker to select the background color">Background Color</label></td>
+					<td><label for="bg_color" title="$msgBgTitle">$msgBg</label></td>
 					<td>$bgColorHelp $webSafeColors</td>
 				</tr>
 				<tr>
-					<td><label for="bg_image" title="Select the background image from the library.">Background Image</label></td>
+					<td><label for="bg_image" title="$msgBgImageTitle">$msgBgImage</label></td>
 					<td>$bgImageHelp $backgroundList</td>
 					<td rowspan="3"><img id="bg_image_image" src="$thumbBgImage" alt="Thumb" />
 				</tr>
 				<tr>
-					<td><label for="resolutionid" title="Pick the resolution">Resolution<span class="required">*</span></label></td>
+					<td><label for="resolutionid" title="$msgResTitle">$msgRes<span class="required">*</span></label></td>
 					<td>$resolutionHelp $resolution_list</td>
 				</tr>
 				<tr>
@@ -903,8 +913,8 @@ END;
 				<tr>
 					<td></td>
 					<td>
-						<input type="submit" value="Save" />
-						<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />
+						<input type="submit" value="$msgSave" />
+						<input id="btnCancel" type="button" title="$msgCancel" onclick="$('#div_dialog').dialog('close');return false; " value="$msgCancel" />
 						$helpButton
 					</td>
 				</tr>
@@ -912,7 +922,7 @@ END;
 		</form>
 FORM;
 		
-		$response->SetFormRequestResponse($form, 'Change the Background Properties', '550px', '240px');
+		$response->SetFormRequestResponse($form, __('Change the Background Properties'), '550px', '240px');
 		$response->Respond();
 	}
 	
@@ -941,7 +951,7 @@ FORM;
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$response->SetError("Unable to get the Resolution information");
+			$response->SetError(__("Unable to get the Resolution information"));
 			$response->Respond();
 		}
 		
@@ -979,11 +989,11 @@ FORM;
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$response->SetError("Unable to update background information");
+			$response->SetError(__("Unable to update background information"));
 			$response->Respond();
 		}
 		
-		$response->SetFormSubmitResponse('Layout Details Changed.', true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
+		$response->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
 		$response->Respond();
 	}
 	
@@ -1003,7 +1013,7 @@ FORM;
 		
 		if ($layoutid == 0)
 		{
-			trigger_error("No layout information available, please refresh the page.", E_USER_ERROR);
+			trigger_error(__("No layout information available, please refresh the page."), E_USER_ERROR);
 		}
 		
 		include_once("lib/pages/region.class.php");
@@ -1016,7 +1026,7 @@ FORM;
 			trigger_error($region->errorMsg, E_USER_ERROR);
 		}
 		
-		$response->SetFormSubmitResponse('Region Added.', true, "index.php?p=layout&modify=true&layoutid=$layoutid");
+		$response->SetFormSubmitResponse(__('Region Added.'), true, "index.php?p=layout&modify=true&layoutid=$layoutid");
 		$response->Respond();
 	}
 	
@@ -1035,7 +1045,7 @@ FORM;
 		
 		if ($layoutid == 0 || $regionid == '')
 		{
-			$response->SetError("No layout/region information available, please refresh the page and try again.");
+			$response->SetError(__("No layout/region information available, please refresh the page and try again."));
 			$response->Respond();
 		}
 		
@@ -1050,7 +1060,7 @@ FORM;
 			$response->Respond();
 		}
 		
-		$response->SetFormSubmitResponse('Region Deleted.', true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
+		$response->SetFormSubmitResponse(__('Region Deleted.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
 		$response->Respond();
 	}
 	
@@ -1134,7 +1144,7 @@ FORM;
 			$url = "index.php?p=layout&layoutid=$this->layoutid&modify=true&regionid=$regionid&trigger=tRegionOptions";
 		}
 		
-		$response->SetFormSubmitResponse('Order Changed', true, $url);
+		$response->SetFormSubmitResponse(__('Order Changed'), true, $url);
 		$response->Respond();
 	}
 	
@@ -1149,18 +1159,24 @@ FORM;
 		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
 		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
 		
+		// Translate messages
+		$msgDelete		= __('Are you sure you want to remove this region?');
+		$msgDelete2		= __('All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.');
+		$msgYes			= __('Yes');
+		$msgNo			= __('No');
+		
 		//we can delete
 		$form = <<<END
 		<form class="XiboForm" method="post" action="index.php?p=layout&q=DeleteRegion">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="regionid" value="$regionid">
-			<p>Are you sure you want to remove this region. All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.</p>
-			<input type="submit" value="Yes">
-			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
+			<p>$msgDelete $msgDelete2</p>
+			<input type="submit" value="$msgYes">
+			<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
 END;
 		
-		$response->SetFormRequestResponse($form, 'Delete this region?', '260px', '180px');
+		$response->SetFormRequestResponse($form, __('Delete this region?'), '260px', '180px');
 		$response->Respond();
 	}
 	
