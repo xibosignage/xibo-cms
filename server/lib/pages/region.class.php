@@ -48,7 +48,7 @@ class region
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$this->errorMsg = "Unable to Query for that layout, there is a database error.";
+			$this->errorMsg = __("Unable to Query for that layout, there is a database error.");
 			return false;
 		}
 		
@@ -73,7 +73,7 @@ class region
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$this->errMsg = "Unable to Update that layouts XML with a new Media Node ";
+			$this->errMsg = __("Unable to Update that layouts XML with a new Media Node");
 			return false;
 		}
 		
@@ -126,7 +126,7 @@ class region
 		//Do we have a region ID provided?
 		if ($regionid == "")
 		{
-			$this->errMsg = "No region ID provided, cannot delete";
+			$this->errMsg = __("No region ID provided, cannot delete");
 			return false;
 		}
 		
@@ -231,7 +231,7 @@ class region
 		if (!$id = $db->insert_query($SQL))
 		{
 			trigger_error($db->error());
-			$this->errorMsg = "Database error adding this link record.";
+			$this->errorMsg = __("Database error adding this link record.");
 			return false;
 		}
 		
@@ -253,7 +253,7 @@ class region
 		if (!$db->query($SQL))
 		{
 			trigger_error($db->error());
-			$this->errorMsg = "Database error updating this link record.";
+			$this->errorMsg = __("Database error updating this link record.");
 			return false;
 		}
 		
@@ -273,7 +273,7 @@ class region
 		if (!$db->query($SQL))
 		{
 			trigger_error($db->error());
-			$this->errorMsg = "Database error deleting this link record.";
+			$this->errorMsg = __("Database error deleting this link record.");
 			return false;
 		}
 		
@@ -481,7 +481,7 @@ class region
 		//Do a little error checking on the widths given
 		if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))
 		{
-			$this->errorMsg = "Non numerics, try refreshing the browser";
+			$this->errorMsg = __("Non numerics, try refreshing the browser");
 			return false;
 		}
 		
