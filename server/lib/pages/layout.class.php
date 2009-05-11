@@ -1241,6 +1241,16 @@ END;
 							</div>";
 		}
 		
+		// Translate messages
+		$msgOptions			= __('Options');
+		$msgDelete			= __('Delete');
+		$msgSetAsHome		= __('Set as Home');
+		
+		$msgAddRegion		= __('Add Region');
+		$msgEditBg			= __('Edit Background');
+		$msgProperties		= __('Properties');
+		$msgSaveTemplate	= __('Save Template');
+		
 		//render the view pane
 		$surface = <<<HTML
 		<div id="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; border: 1px solid #000; background:$background_css;">
@@ -1248,17 +1258,17 @@ END;
 		</div>
 		<div class="contextMenu" id="regionMenu">
 			<ul>
-				<li id="options">Options</li>
-				<li id="deleteRegion">Delete</li>
-				<li id="setAsHomepage">Set as Homepage</li>
+				<li id="options">$msgOptions</li>
+				<li id="deleteRegion">$msgDelete</li>
+				<li id="setAsHomepage">$msgSetAsHome</li>
 			</ul>
 		</div>
 		<div class="contextMenu" id="layoutMenu">
 			<ul>
-				<li id="addRegion">Add Region</li>
-				<li id="editBackground">Edit Background</li>
-				<li id="layoutProperties">Properties</li>
-				<li id="templateSave">Save as Template</li>
+				<li id="addRegion">$msgAddRegion</li>
+				<li id="editBackground">$msgEditBg</li>
+				<li id="layoutProperties">$msgProperties</li>
+				<li id="templateSave">$msgSaveTemplate</li>
 			</ul>
 		</div>
 HTML;
@@ -1377,7 +1387,7 @@ HTML;
 			if ($mediaDuration == 0)
 			{
 				$mediaDuration = 30;
-				$mediaDurationText = "Media Controlled";
+				$mediaDurationText = __("Media Controlled");
 			}
 			else
 			{
@@ -1411,6 +1421,14 @@ END;
 			$leftClass = "timebar_".$mediaType."_left";
 			$rightClass = "timebar_".$mediaType."_right";
 			
+			//
+			// Translate Messages
+			//
+			$msgDelete		= __('Delete');
+			$msgType		= __('Type');
+			$msgName		= __('Name');
+			$msgDuration	= __('Duration');
+			
 			$mediaHtml .= <<<BUTTON
 			<div class="timebar_ctl" style="position:absolute; top:$top; left:$leftVal; width:$thumbWidthVal;" mediaid="$mediaid">
 				<div class="timebar">
@@ -1419,7 +1437,7 @@ END;
 						<br />
 						$editLink
 						<a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=DeleteForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to delete this media">
-							Delete
+							$msgDelete
 						</a>
 					</div>
 				</div>
@@ -1427,9 +1445,9 @@ END;
 					<div class="thumbnail">$mediaList</div>
 					<div class="info">
 						<ul>
-							<li>Type: $mediaType</li>
-							<li>Name: $mediaName</li>
-							<li>Duration: $mediaDurationText</li>
+							<li>$msgType: $mediaType</li>
+							<li>$msgName: $mediaName</li>
+							<li>$msgDuration: $mediaDurationText</li>
 						</ul>
 					</div>
 				</div>
@@ -1478,13 +1496,16 @@ BUTTON;
 HTML;
 		}
 		
+		// Translate Messages
+		$msgLibrary		= __('Library');
+		
 		$options = <<<END
 		<div id="canvas">
 			<div id="buttons">
 				<div class="regionicons">
 					<a class="XiboFormButton" href="index.php?p=content&q=LibraryAssignForm&layoutid=$this->layoutid&regionid=$regionid" title="Library">
 					<img class="region_button" src="img/forms/library.gif"/>
-					<span class="region_text">Library</span></a>
+					<span class="region_text">$msgLibrary</span></a>
 				</div>
 				$buttons
 			</div>
@@ -1499,12 +1520,12 @@ HTML;
 		</div>
 END;
 		
-		$arh->html 		= $options;
-		$arh->callBack 	= 'region_options_callback';
-		$arh->dialogTitle = 'Region Options';
-		$arh->dialogSize = true;
-		$arh->dialogWidth = '830px';
-		$arh->dialogHeight = '450px';
+		$arh->html 			= $options;
+		$arh->callBack 		= 'region_options_callback';
+		$arh->dialogTitle 	= __('Region Options');
+		$arh->dialogSize 	= true;
+		$arh->dialogWidth 	= '830px';
+		$arh->dialogHeight 	= '450px';
 		
 		$arh->Respond();
 	}
@@ -1552,7 +1573,7 @@ END;
 			if (!$result = $db->query($SQL))
 			{
 				trigger_error($db->error());
-				$response->SetError('Error getting type from a media item.');
+				$response->SetError(__('Error getting type from a media item.'));
 				$response->keepOpen = false;
 				return $response;
 			}
@@ -1571,7 +1592,7 @@ END;
 			}
 			else
 			{
-				$response->SetError('Cannot set region information.');
+				$response->SetError(__('Cannot set region information.'));
 				$response->keepOpen = true;
 				return $response;
 			}
@@ -1650,7 +1671,7 @@ END;
 		if ($nodeList->length == 0)
 		{
 			// No media to preview
-			$return .= "<h1>Empty Region</h1>";
+			$return .= "<h1>" . __('Empty Region') . "</h1>";
 			
 			$response->html = $return;
 			$response->Respond();
@@ -1665,8 +1686,8 @@ END;
 		$return .= "<div class='info' style='display:none; position:absolute; top: 15px; left: 150px; background-color:#FFF; z-index: 50;'>
 						<h5>Media Information</h5>
 						<ul>
-							<li>Type: $type</li>
-							<li>Duration: $mediaDurationText</li>
+							<li>" . __('Type') . ": $type</li>
+							<li>" . __('Duration') . ": $mediaDurationText</li>
 						</ul>
 					</div>";
 		
