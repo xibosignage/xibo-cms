@@ -1368,9 +1368,15 @@ HTML;
 			$lkid 			= $mediaNode->getAttribute('lkid');
 			$mediaType 		= $mediaNode->getAttribute('type');
 			$mediaFileName 	= $mediaNode->getAttribute('filename');
-			$mediaName		= $mediaNode->getAttribute('name');
 			$mediaDuration  = $mediaNode->getAttribute('duration');
+
+			//Get media name
+			require_once("modules/$mediaType.module.php");
 			
+			// Create the media object without any region and layout information
+			$tmpModule = new $mediaType($db, $user, $mediaid);
+			$mediaName = $tmpModule->GetName();
+						
 			//Do we have a thumbnail for this media?
 			if ($mediaType == "image" && file_exists($libraryLocation."tn_$mediaFileName"))
 			{
@@ -1446,7 +1452,12 @@ END;
 					<div class="info">
 						<ul>
 							<li>$msgType: $mediaType</li>
-							<li>$msgName: $mediaName</li>
+BUTTON;
+			if ($mediaName != "")
+			{
+				$mediaHtml .= "<li>$msgName: $mediaName</li>";
+			}
+			$mediaHtml .= <<<BUTTON
 							<li>$msgDuration: $mediaDurationText</li>
 						</ul>
 					</div>

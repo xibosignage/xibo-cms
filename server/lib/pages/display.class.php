@@ -233,7 +233,7 @@ SQL;
 		$licenseHelp	= $helpManager->HelpIcon(__("Control the licensing on this display."), true);
 		$auditHelp		= $helpManager->HelpIcon(__("Collect auditing from this client. Should only be used if there is a problem with the display."), true);
 		
-		$layout_list = dropdownlist("SELECT layoutid, layout FROM layout ORDER by layout", "defaultlayoutid", $layoutid);
+		$layout_list = dropdownlist("SELECT layoutid, layout FROM layout WHERE retired = 0 ORDER by layout", "defaultlayoutid", $layoutid);
 		$inc_schedule_list = listcontent("1|Yes,0|No","inc_schedule",$inc_schedule);
 		$auditing_list = listcontent("1|Yes,0|No","auditing",$auditing);
 

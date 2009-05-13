@@ -53,6 +53,9 @@ interface ModuleInterface
 	public function AddMedia();
 	public function EditMedia();
 	public function DeleteMedia();
+
+	// Return the name of the media as input by the user
+	public function GetName();
 }
 
 ?>

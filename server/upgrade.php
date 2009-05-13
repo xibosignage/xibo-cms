@@ -145,11 +145,20 @@ elseif ($_SESSION['step'] == 1) {
     else if ($cObj->EnvironmentWarning()) {
     ?>
       <form action="upgrade.php" method="POST">
+<<<<<<< TREE
 	<input type="hidden" name="stepskip" value="1">
         <div class="loginbutton"><button type="submit"><?php echo __("Retest"); ?></button></div>
+=======
+	<input type="hidden" name="skipstep" value="1">
+        <div class="loginbutton"><button type="submit">Retest</button></div>
+>>>>>>> MERGE-SOURCE
       </form>
       <form action="upgrade.php" method="POST">
+<<<<<<< TREE
         <div class="loginbutton"><button type="submit"><?php echo __("Next"); ?> ></button></div>
+=======
+        <div class="loginbutton"><button type="submit">Next ></button></div>
+>>>>>>> MERGE-SOURCE
       </form>
     <?php
     }
@@ -252,6 +261,7 @@ elseif ($_SESSION['step'] == 3) {
 		echo __("FAIL:") . " " . $fault_string;
 	}
 	else {
+		set_time_limit(0);
 		// Backup the database
 		echo '<div class="info">';
 		echo '<p>' . __("Backing up your database");
@@ -263,6 +273,7 @@ elseif ($_SESSION['step'] == 3) {
 			if (file_exists('install/database/' . $i . '.sql')) {
 				echo '<p>' . $i . '.sql ';
 				flush();
+
 				$delimiter = ';';
 			        $sql_file = @file_get_contents('install/database/' . $i . '.sql');
 			        $sql_file = remove_remarks($sql_file);
@@ -315,12 +326,6 @@ else {
 include('install/footer.inc');
 
 # Functions
-
-function checkFsPermissions() {
-  # Check for appropriate filesystem permissions
-  return (is_writable("install.php") && (is_writable("settings.php") || is_writable(".")));
-}
-
 function checkPHP() {
   # Check PHP version > 5
   return (version_compare("5.2.4",phpversion(), "<="));

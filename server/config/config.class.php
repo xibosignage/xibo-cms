@@ -126,11 +126,20 @@ class Config
 		
 		// Check for PHP version
 		$message = __('PHP Version 5.2.4 or later');
-		$message = 'PHP Version 5.2.4 or later';
 
-		if ($this->CheckPHP()) 
+		if ($this->CheckPHP() == 1) 
 		{
 			$output .= $imgGood.$message.'<br />';
+		}
+		else if ($this->CheckPHP() == 2)
+		{
+			$output .= $imgWarn.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+			<p>Xibo requires PHP version 5.2.0 or later. It may run on PHP 5.1.0 and we have provided compatibility functions to enable that.</p>
+			<p>However, we recommend upgrading your version of PHP to 5.2.0 or later.</p>
+			</div>
+END;
 		}
 		else
 		{
@@ -262,12 +271,26 @@ END;
 			$output .= $imgGood.$message.'<br />';
 		}
 		else
-		{			// Not a fault as this will not block installation/upgrade. Informational.
+		{
+			// Not a fault as this will not block installation/upgrade. Informational.
 			$this->envWarning = true;
-			
 			$output .= $imgWarn.$message.'<br />';
 			$output .= '<div class="check_explain"><p>' . __('You must have allow_url_fopen = On in your PHP.ini file for anonymous statistics gathering to function.') . '<br />';
 			$output .= __('If you do not intend to enable anonymous statistics gathering you need not worry about this problem.') . '</p></div>';
+		}
+
+		// Check to see if timezone_identifiers_list exists
+		$message = 'DateTimeZone';
+
+		if (function_exists('timezone_identifiers_list')) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envWarning = true;
+			
+			$output .= $imgWarn.$message.'<br />';
 		}
 				
 		$output .= '</div>';
@@ -318,7 +341,17 @@ END;
 	 */
 	function CheckPHP() 
 	{
-		return (version_compare("5.2.4",phpversion(), "<="));
+		if (phpversion() >= '5.2.0') 
+		{
+			return 1;
+		}
+	
+		if (phpversion() >= '5.1.0') 
+		{
+			return 2;
+		}
+
+		return 0;
 	}
 	
 	/**

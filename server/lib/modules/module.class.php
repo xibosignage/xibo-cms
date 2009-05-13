@@ -32,6 +32,7 @@ class Module implements ModuleInterface
 	protected $regionid;
 	
 	protected $mediaid;
+	protected $name;
 	protected $type;
 	private   $schemaVersion;
 	protected $regionSpecific;
@@ -60,6 +61,7 @@ class Module implements ModuleInterface
 		$this->user 	=& $user;
 		
 		$this->mediaid 	= $mediaid;
+		$this->name 	= "";
 		$this->layoutid = $layoutid;
 		$this->regionid = $regionid;
 		
@@ -181,7 +183,7 @@ class Module implements ModuleInterface
 				$this->existingMedia = true;
 				
 				// Load what we know about this media into the object
-				$SQL = "SELECT duration FROM media WHERE mediaID = $mediaid ";
+				$SQL = "SELECT duration,name FROM media WHERE mediaID = '$mediaid'";
 				
 				if (!$result = $db->query($SQL))
 				{
@@ -192,6 +194,7 @@ class Module implements ModuleInterface
 				{
 					$row 				= $db->get_row($result);
 					$this->duration		= $row[0];
+					$this->name		= $row[1];
 				}
 			}
 			
@@ -527,5 +530,15 @@ END;
 		
 		return $this->response;	
 	}
+
+	/**
+	 * Default GetName
+	 * @return
+	 */
+	public function GetName()
+	{
+		return $this->name;
+	}
+	 
 }
 ?>
