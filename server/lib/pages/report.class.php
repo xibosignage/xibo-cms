@@ -85,6 +85,9 @@ class reportDAO
 		
 		$type_list = listcontent("all|All,active|Active,guest|Guest,expired|Expired", "type", $type);
 		
+		$msgType		= __('Type');
+		$msgFromDT		= __('From Date');
+		
 		$output = <<<END
 		<div class="FilterDiv" id="SessionFilter">
 			<form>
@@ -92,7 +95,7 @@ class reportDAO
 				<input type="hidden" name="p" value="report">
 				<input type="hidden" name="q" value="SessionGrid">
 				<tr>
-					<td>Type</td>
+					<td>$msgType</td>
 					<td>
 						<select name="type">
 							<option value="all" >All</option>
@@ -101,7 +104,7 @@ class reportDAO
 							<option value="expired">Expired</option>
 						</select>
 					</td>
-					<td>From DT</td>
+					<td>$msgFromDT</td>
 					<td><input id="fromdt" class="date-pick" name="fromdt" value="$fdate" /></td>
 				</tr>
 			</table>
@@ -171,21 +174,30 @@ HTML;
 		if(!$results = $db->query($SQL))  
 		{
 			trigger_error($db->error());
-			trigger_error("Can not query the sessions", E_USER_ERROR);
+			trigger_error(__("Can not query for current sessions"), E_USER_ERROR);
 		}	
+		
+		// Translation Messages
+		$msgLastAccessed		= __('Last Accessed');
+		$msgActive				= __('Active');
+		$msgUser				= __('User Name');
+		$msgLastPage			= __('Last Page');
+		$msgIP					= __('IP Address');
+		$msgBrowser				= __('Browser');
+		$msgAction				= __('Action');
 			
 		$output = <<<END
 		<div class="info_table">
 			<table style="width:100%">
 				<thead>
 					<tr>
-						<th>Last Accessed</th>
-						<th>Active</th>
-						<th>User Name</th>
-						<th>Last Page</th>
-						<th>IP Address</th>
-						<th>Browser</th>
-						<th>Action</th>
+						<th>$msgLastAccessed</th>
+						<th>$msgActive</th>
+						<th>$msgUser</th>
+						<th>$msgLastPage</th>
+						<th>$msgIP</th>
+						<th>$msgBrowser</th>
+						<th>$msgAction</th>
 					</tr>	
 				</thead>
 				<tbody>
@@ -226,19 +238,23 @@ END;
 	
 	function ConfirmLogout()
 	{
-		$db =& $this->db;
+		$db 	=& $this->db;
 		
 		//ajax request handler
 		$arh 	= new ResponseManager();
 		
 		$userID = Kit::GetParam('userid', _GET, _INT);
 		
+		$msgLogout	= __('Are you sure you want to logout this user?');
+		$msgYes		= __('Yes');
+		$msgNo		= __('No');
+		
 		$form = <<<END
 		<form class="dialog_form" method="post" action="index.php?p=report&q=LogoutUser">
 			<input type="hidden" name="userid" value="userid" />
-			<p>Are you sure you want to logout this user?</p>
-			<input type="submit" value="Yes">
-			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
+			<p>$msgLogout</p>
+			<input type="submit" value="$msgYes">
+			<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
 END;
 		$arh->SetFormSubmitResponse($form);
@@ -262,10 +278,10 @@ END;
 		if (!$db->query($SQL))
 		{
 			trigger_error($db->error());
-			trigger_error("Unable to log out this user", E_USER_ERROR);
+			trigger_error(__("Unable to log out this user"), E_USER_ERROR);
 		}
 		
-		$arh->SetFormSubmitResponse('User Logged Out.');
+		$arh->SetFormSubmitResponse(__('User Logged Out.'));
 		$arh->Respond();
 	}
 	
@@ -380,12 +396,15 @@ END;
 		if(!$results = $db->query($SQL))  
 		{
 			trigger_error($db->error());
-			trigger_error("Can not query the log", E_USER_ERROR);
+			trigger_error(__("Can not query the log"), E_USER_ERROR);
 		}
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 		
-		$logDate_t = __('Log Date');
+		$logDate_t 		= __('Log Date');
+		$msgPage		= __('Page');
+		$msgFunction	= __('Function');
+		$msgMessage		= __('Message');
 		
 		$output = <<<END
 		<div class="info_table">
@@ -393,9 +412,9 @@ END;
 				<thead>
 					<tr>
 						<th>$logDate_t</th>
-						<th>Page</th>
-						<th>Function</th>
-						<th>Message</th>
+						<th>$msgPage</th>
+						<th>$msgFunction</th>
+						<th>$msgMessage</th>
 					</tr>	
 				</thead>
 				<tbody>
