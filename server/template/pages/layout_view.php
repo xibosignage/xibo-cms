@@ -30,7 +30,7 @@
 			<!-- Maybe at a later date we could have these buttons generated from the DB - and therefore passed through the security system ? -->
 			<ul>
 				<li><a title="Add a new Layout" class="XiboFormButton" href="index.php?p=layout&q=displayForm" ><span>Add Layout</span></a></li>
-				<li><a title="Show Layout Help" href="#" onclick="toggle_div_view('notes')"><span>Help</span></a></li>
+				<li><a title="Show Layout Help" class="XiboFormButton" href="index.php?p=help&q=Display&Topic=Layout&Category=General"><span>Help</span></a></li>
 				<li><a title="Show Filter" href="#" onclick="ToggleFilterView('LayoutFilter')"><span>Filter</span></a></li>
 			</ul>
 		</div>
