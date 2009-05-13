@@ -20,8 +20,9 @@
  */ 
 DEFINE('XIBO', true);
 
-if (! checkPHP()) {
-  die("Xibo requires PHP 5.0.2 or later");
+if (! checkPHP()) 
+{
+	die('Xibo requires PHP 5.2.4 or later');
 }
 
 include('lib/app/kit.class.php');
@@ -718,6 +719,6 @@ END;
 }
 
 function checkPHP() {
-  return (version_compare("5",phpversion(), "<="));
+  return (version_compare("5.2.4",phpversion(), "<="));
 }
 ?>

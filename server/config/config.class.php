@@ -125,7 +125,8 @@ class Config
 		$output .= '<div class="checks">';
 		
 		// Check for PHP version
-		$message = __('PHP Version 5.0.2 or later');
+		$message = __('PHP Version 5.2.4 or later');
+		$message = 'PHP Version 5.2.4 or later';
 
 		if ($this->CheckPHP()) 
 		{
@@ -136,7 +137,7 @@ class Config
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"> <p>' . __("Xibo requires PHP version 5.0.2 or later.") . '</p></div>';
+			$output .= '<div class="check_explain"> <p>' . __("Xibo requires PHP version 5.2.4 or later.") . '</p></div>';
 		}
 		
 		// Check for file system permissions
@@ -317,7 +318,7 @@ END;
 	 */
 	function CheckPHP() 
 	{
-		return (version_compare("5",phpversion(), "<="));
+		return (version_compare("5.2.4",phpversion(), "<="));
 	}
 	
 	/**

@@ -323,7 +323,7 @@ function checkFsPermissions() {
 
 function checkPHP() {
   # Check PHP version > 5
-  return (version_compare("5",phpversion(), "<="));
+  return (version_compare("5.2.4",phpversion(), "<="));
 }
 
 function checkMySQL() {
@@ -578,13 +578,6 @@ function createQuestions($step, $questions) {
 		echo '</div><hr width="25%" />';
 	}
 }
-
-//function __autoload($class_name) {
-//    if (substr($class_name,0,4) == "Step") {
-//	    $class_name = substr($class_name,4);
-//	    require_once install/database/$class_name . '.php';
-//    }
-//}
 
 class UpgradeStep 
 {
