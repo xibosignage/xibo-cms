@@ -31,19 +31,32 @@ class helpDAO
 		$this->db 	=& $db;
 		$this->user =& $user;
 		
-		$helpPage 	= Kit::GetParam('Topic', _REQUEST, _WORD);
+		$topic	 	= Kit::GetParam('Topic', _REQUEST, _WORD);
 		$category 	= Kit::GetParam('Category', _REQUEST, _WORD, 'General');
 		
-		if ($helpPage != '') 
+		if ($topic != '') 
 		{
-			Debug::LogEntry($db, 'audit', 'Help requested for Topic = ' . $helpPage);
+			Debug::LogEntry($db, 'audit', 'Help requested for Topic = ' . $topic);
 			
 			// Look up this help topic / category in the db
+			$SQL = "SELECT Link FROM help WHERE Topic = '%s' and Category = '%s'";
+			$SQL = sprintf($SQL, $db->escape_string($topic), $db->escape_string($category));
 			
-			if (1 == 1)
-			{	
+			Debug::LogEntry($db, 'audit', $SQL);
+	
+			if(!$results = $db->query($SQL)) 
+			{
+				trigger_error($db->error());
+				trigger_error(__('Error getting Help Link'), E_USER_ERROR);
+			}
+			
+			if ($db->num_rows($results) != 0)
+			{
+				$row 	= $db->get_row($results);
+				$link 	= $row[0];
+				
 				// Store the link for the requested help page
-				$this->helpLink = 'http://wiki.xibo.org.uk/index.php?title=Release_Notes:Upgrade_Paths&printable=yes';
+				$this->helpLink = $link;
 			}
 			else 
 			{

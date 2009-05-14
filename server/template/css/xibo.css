@@ -41,3 +41,12 @@
 .ReportFault ol li {
 	display: list-item;
 }
+
+.HelpLink {
+	float:right;
+}
+
+.HelpLink a {
+	padding-left: 10px;
+	padding-right: 10px;
+}

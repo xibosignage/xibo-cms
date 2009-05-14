@@ -36,6 +36,9 @@ else
 {
 	$homepageName = substr($homepage, 0, strpos($homepage, '&'));	
 }
+
+$help 		= new HelpManager($db, $user);
+$helpLink 	= $help->Link();
  
 ?>
 <!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -87,8 +90,14 @@ else
 	<div id="container">
 		<div id="headercontainer">
 	  		<div id="header"></div>
+			<div class="HelpLink">
+				<a title="Logout" href="index.php?q=logout"><img src="img/logout.gif" alt="Logout" /></a>
+			</div>
+			<div class="HelpLink">
+				<a title="Show <?php echo ucfirst($p); ?> Help" class="XiboFormButton" href="<?php echo $helpLink; ?>"><img src="img/help.png" alt="Help" /></a>
+			</div>
 			<div id="headerback">
-				<h5>Welcome back <?php echo $username; ?>.</h5>
+				<h5><?php echo $username; ?>  | </h5>
 			</div>
 			<?php displayMessage(); ?>
 		</div>
@@ -146,7 +155,6 @@ else
 						}
 					}
 				?>
-				<li><a href="index.php?q=logout">Log out</a></li>
 			</ul>
 		</div>
 		<div id="contentwrap">
