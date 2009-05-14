@@ -31,6 +31,17 @@ $(document).ready(function(){
 		autoOpen: false
     }).parent().parent().css("z-index", "300");
 	
+	// Setup the dialogs
+    $('#help_dialog').dialog({
+        title: "Xibo Help",
+        width: "500px",
+        height: "240px",
+        draggable: true,
+        resizable: false,
+        bgiframe: true,
+		autoOpen: false
+    }).parent().parent().css("z-index", "300");
+	
     $('#system_message').dialog({
         title: "Application Message",
         width: "320px",
@@ -117,6 +128,16 @@ function XiboInitialise(scope){
         
         return false;
     });
+	
+	// Search for any help enabled elements
+	$(scope + " .XiboHelpButton").click(function(){
+		
+		var formUrl = $(this).attr("href");
+		
+		XiboHelpRender(formUrl);
+		
+		return false;
+	});
 }
 
 /**
@@ -339,6 +360,80 @@ function XiboSubmitResponse(response) {
         }
 	}
 	
+	return false;
+}
+
+/**
+ * Renders the formid provided
+ * @param {String} formId
+ */
+function XiboHelpRender(formUrl) {
+	
+	// Prepare the Dialog
+	$('#help_dialog').dialog("close");
+	$('#help_dialog').html("");
+	
+	// Call with AJAX
+    $.ajax({
+        type: "get",
+        url: formUrl + "&ajax=true",
+        cache: false,
+        dataType: "json",
+        success: function(response){
+        
+			// Was the Call successful
+            if (response.success) {
+				// Set the dialog HTML to be the response HTML
+                $('#help_dialog').html(response.html);
+				
+				// Is there a title for the dialog?
+				if (response.dialogTitle != undefined && response.dialogTitle != "") {
+					// Set the dialog title
+					$('#help_dialog').parent().children().each(function(){
+						$(".ui-dialog-title", this).html(response.dialogTitle);
+					});
+				}
+				
+				// Do we need to alter the dialog size?
+				if (response.dialogSize) {
+					$('#help_dialog').parent().parent().width(response.dialogWidth).height(response.dialogHeight);
+				}
+				
+                // Do we have to call any functions due to this success?
+                if (response.callBack != "" && response.callBack != undefined) {
+                    eval(response.callBack)(name);
+                }
+
+				$('#help_dialog').dialog("open");
+                             
+                // Focus in the first form element
+                $('input[@type=text]', '#help_dialog').eq(0).focus();
+				
+				// Call Xibo Init for this form
+				XiboInitialise("#help_dialog");
+            }
+			else {
+				// Login Form needed?
+	            if (response.login) {
+	                LoginBox(response.message);
+	                return false;
+	            }
+	            else {
+	                // Just an error we dont know about
+					if (response.message == undefined) {
+						SystemMessage(response);
+					}
+					else {
+		                SystemMessage(response.message);
+					}
+	            }
+			}
+            
+            return false;
+        }
+    });
+	
+	// Dont then submit the link/button	
 	return false;
 }
 

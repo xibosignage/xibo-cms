@@ -51,7 +51,9 @@ class HelpManager
 		$topic		= ucfirst($location[0]);
 		$category	= ucfirst($location[1]);
 		
-		$button = '<input type="button" class="XiboFormButton" href="' . 'index.php?p=help&q=Display&Topic=' . $topic . '&Category=' . $category . '" value="Help" />';
+		$msgHelp	= __('Help');
+		
+		$button = '<input type="button" class="XiboHelpButton" href="' . 'index.php?p=help&q=Display&Topic=' . $topic . '&Category=' . $category . '" value="'. $msgHelp .'" />';
 	
 		if ($return)
 		{

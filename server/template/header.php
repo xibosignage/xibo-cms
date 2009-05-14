@@ -94,7 +94,7 @@ $helpLink 	= $help->Link();
 				<a title="Logout" href="index.php?q=logout"><img src="img/logout.gif" alt="Logout" /></a>
 			</div>
 			<div class="HelpLink">
-				<a title="Show <?php echo ucfirst($p); ?> Help" class="XiboFormButton" href="<?php echo $helpLink; ?>"><img src="img/help.png" alt="Help" /></a>
+				<a title="Show <?php echo ucfirst($p); ?> Help" class="XiboHelpButton" href="<?php echo $helpLink; ?>"><img src="img/help.png" alt="Help" /></a>
 			</div>
 			<div id="headerback">
 				<h5><?php echo $username; ?>  | </h5>
