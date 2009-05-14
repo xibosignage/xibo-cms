@@ -45,15 +45,13 @@ class HelpManager
 	 */
 	public function HelpButton($location, $return = false) 
 	{
-		$db 	=& $this->db;
+		$db 		=& $this->db;
 		
-		$helpBase = Config::GetSetting($db, 'HELP_BASE');
+		$location	= split('/', $location);
+		$topic		= ucfirst($location[0]);
+		$category	= ucfirst($location[1]);
 		
-		$link = $helpBase . "?p=$location";
-		
-		$button = <<<END
-		<input type="button" onclick="window.open('$link')" value="Help" />
-END;
+		$button = '<input type="button" class="XiboFormButton" href="' . 'index.php?p=help&q=Display&Topic=' . $topic . '&Category=' . $category . '" value="Help" />';
 	
 		if ($return)
 		{

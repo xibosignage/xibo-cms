@@ -42,5 +42,4 @@
 		<div id="form_footer_right">
 		</div>
 	</div>
-</div>	
-			
+</div>
