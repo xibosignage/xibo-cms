@@ -39,6 +39,8 @@ else
 
 $help 		= new HelpManager($db, $user);
 $helpLink 	= $help->Link();
+
+$datemanager	= new DateManager($db);
  
 ?>
 <!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -96,10 +98,15 @@ $helpLink 	= $help->Link();
 			<div class="HelpLink">
 				<a title="Show <?php echo ucfirst($p); ?> Help" class="XiboHelpButton" href="<?php echo $helpLink; ?>"><img src="img/help.png" alt="Help" /></a>
 			</div>
-			<div id="headerback">
-				<h5><?php echo $username; ?>  | </h5>
+			<div class="HelpLink">
+				<h5><?php displayMessage(); ?></h5>
 			</div>
-			<?php displayMessage(); ?>
+			<div id="headerback">
+				<h5><?php echo $username; ?>  |</h5>
+			</div>
+			<div class="HelpLink">
+				<h5><a class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo __('Click to show more time information'); ?>"><?php echo $datemanager->GetClock(); ?></a>  |</h5>
+			</div>
 		</div>
 		<div id="navigation">
 			<ul id="nav">
