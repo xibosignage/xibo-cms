@@ -17,7 +17,13 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
+$msgLayout		= __('Add Layout');
+$msgFilter		= __('Filter');
+$msgShowFilter	= __('Show Filter');
+
 ?>
 <div id="form_container">
 	<div id="form_header">
@@ -29,8 +35,8 @@
 		<div class="SecondNav">
 			<!-- Maybe at a later date we could have these buttons generated from the DB - and therefore passed through the security system ? -->
 			<ul>
-				<li><a title="Add a new Layout" class="XiboFormButton" href="index.php?p=layout&q=displayForm" ><span>Add Layout</span></a></li>
-				<li><a title="Show Filter" href="#" onclick="ToggleFilterView('LayoutFilter')"><span>Filter</span></a></li>
+				<li><a title="<?php echo $msgLayout; ?>" class="XiboFormButton" href="index.php?p=layout&q=displayForm" ><span><?php echo $msgLayout; ?></span></a></li>
+				<li><a title="<?php echo $msgShowFilter; ?>" href="#" onclick="ToggleFilterView('LayoutFilter')"><span><?php echo $msgFilter; ?></span></a></li>
 			</ul>
 		</div>
 		<?php $this->LayoutFilter(); ?>	

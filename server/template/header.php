@@ -92,20 +92,14 @@ $datemanager	= new DateManager($db);
 	<div id="container">
 		<div id="headercontainer">
 	  		<div id="header"></div>
-			<div class="HelpLink">
-				<a title="Logout" href="index.php?q=logout"><img src="img/logout.gif" alt="Logout" /></a>
-			</div>
-			<div class="HelpLink">
-				<a title="Show <?php echo ucfirst($p); ?> Help" class="XiboHelpButton" href="<?php echo $helpLink; ?>"><img src="img/help.png" alt="Help" /></a>
-			</div>
-			<div class="HelpLink">
-				<h5><?php displayMessage(); ?></h5>
-			</div>
-			<div id="headerback">
-				<h5><?php echo $username; ?>  |</h5>
-			</div>
-			<div class="HelpLink">
-				<h5><a class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo __('Click to show more time information'); ?>"><?php echo $datemanager->GetClock(); ?></a>  |</h5>
+			<div class="SecondNav" id="headerback">
+				<ul>
+					<?php displayMessage(); ?>
+					<li><?php echo $username; ?></li>
+					<li><a class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo __('Click to show more time information'); ?>"><?php echo $datemanager->GetClock(); ?></a></li>
+					<li><a title="Show <?php echo ucfirst($p); ?> Help" class="XiboHelpButton" href="<?php echo $helpLink; ?>">Help</a></li>
+					<li><a title="Logout" href="index.php?q=logout">Logout</a></li>
+				</ul>
 			</div>
 		</div>
 		<div id="navigation">

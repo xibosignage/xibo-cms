@@ -61,8 +61,8 @@ class clockDAO
 		$output .= '<ul>';
 		$output .= '<li>' . __('Local Time') . ': ' . $datemanager->GetClock() . '</li>';
 		$output .= '<li>' . __('System Time') . ': ' . $datemanager->GetSystemClock() . '</li>';
-		$output .= '<li>' . __('Local Date') . ': ' . $datemanager->GetLocalDate('Y-m-d H:i:s', 1242843060) . '</li>';
-		$output .= '<li>' . __('System Date') . ': ' . $datemanager->GetSystemDate('Y-m-d H:i:s', 1242843060) . '</li>';
+		$output .= '<li>' . __('Local Date') . ': ' . $datemanager->GetLocalDate('Y-m-d H:i:s') . '</li>';
+		$output .= '<li>' . __('System Date') . ': ' . $datemanager->GetSystemDate('Y-m-d H:i:s') . '</li>';
 		$output .= '</ul>';
 		
 		$response->SetFormRequestResponse($output, __('Date / Time Information'), '480px', '240px');

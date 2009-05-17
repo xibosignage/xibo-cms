@@ -19,7 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
- 
+
+$msgUser		= __('Add User');
+$msgFilter		= __('Filter');
+$msgShowFilter	= __('Show Filter');
 ?>
 <div id="form_container">
 	<div id="form_header">
@@ -36,10 +39,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<?php
 					if ($_SESSION['usertype']==1)
 					{
-						echo '<li><a title="Add User" class="XiboFormButton" href="index.php?p=user&q=DisplayForm"><span>Add User</span></a></li>';
+						echo '<li><a title="' . $msgUser . '" class="XiboFormButton" href="index.php?p=user&q=DisplayForm"><span>' . $msgUser . '</span></a></li>';
 					}
 				?>
-				<li><a title="Show Filter" href="#" onclick="ToggleFilterView('UserFilter')"><span>Filter</span></a></li>
+				<li><a title="<?php echo $msgShowFilter; ?>" href="#" onclick="ToggleFilterView('UserFilter')"><span><?php echo $msgFilter; ?></span></a></li>
 			</ul>
 		</div>
 		<?php $this->UserFilter(); ?>

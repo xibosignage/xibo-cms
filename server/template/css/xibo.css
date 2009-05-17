@@ -34,6 +34,10 @@
 	padding-right: 15px;
 }
 
+#headerback, #headerback a {
+	color: #003399;
+}
+
 .FilterDiv {
 	display: none;
 }

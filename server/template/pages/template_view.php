@@ -20,6 +20,8 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
+$msgFilter		= __('Filter');
+$msgShowFilter	= __('Show Filter');
 ?>
 <div id="form_container">
 	<div id="form_header">
@@ -33,7 +35,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<div class="SecondNav">
 			<!-- Maybe at a later date we could have these buttons generated from the DB - and therefore passed through the security system ? -->
 			<ul>
-				<li><a title="Show Filter" href="#" onclick="ToggleFilterView('TemplateFilter')"><span>Filter</span></a></li>
+				<li><a title="<?php echo $msgShowFilter; ?>" href="#" onclick="ToggleFilterView('TemplateFilter')"><span><?php echo $msgFilter; ?></span></a></li>
 			</ul>
 		</div>
 		<?php $this->TemplateFilter(); ?>
