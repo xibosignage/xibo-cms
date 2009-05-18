@@ -37,7 +37,7 @@ define('AJAX_LOAD_FORM',6);
  */
 function setMessage($message) {
 	if (!isset($_SESSION['message'])) $_SESSION['message'] = "";
-	$_SESSION['message'] .= $message . ' | ';
+	$_SESSION['message'] .= $message;
 }
 
 function displayMessage($mode = MSG_MODE_AUTO, $msg="", $show_back = true, $template = "template/pages/message_page.php") 

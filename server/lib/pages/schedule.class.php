@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
 class scheduleDAO 
 {
 	private $db;
@@ -452,7 +454,7 @@ END;
 		} 
 		else 
 		{
-		   $date = clean_input($_REQUEST['date'], VAR_FOR_SQL, $db);
+		   $date = $_REQUEST['date'];
 		}
 		
 		$day	= date('d', $date);
@@ -677,11 +679,9 @@ END;
 		// This is a view of a single day (with all events listed in a table)
 		$SQL = "";
         $SQL.= "SELECT schedule_detail.schedule_detailID, ";
-        $SQL.= "       schedule_detail.starttime, ";
-        $SQL.= "       schedule_detail.endtime,";
+        $SQL.= "       schedule_detail.FromDT, ";
+        $SQL.= "       schedule_detail.ToDT,";
         $SQL.= "       layout.layout, ";
-        $SQL.= "       UNIX_TIMESTAMP(schedule_detail.starttime) as timestart,";
-        $SQL.= "       UNIX_TIMESTAMP(schedule_detail.endtime) as timeend,";
         $SQL.= "       schedule_detail.userid, ";
         $SQL.= "       schedule_detail.is_priority ";
         $SQL.= "  FROM schedule_detail ";
@@ -690,8 +690,8 @@ END;
         $SQL.= "   AND schedule_detail.displayid = $this->displayid ";
         
         //Events that fall inside the two dates
-        $SQL.= "   AND schedule_detail.starttime < '$query_next_day' ";
-        $SQL.= "   AND schedule_detail.endtime   >  '$query_date'";
+        $SQL.= "   AND schedule_detail.FromDT < $date ";
+        $SQL.= "   AND schedule_detail.ToDT   >  $next_day";
         
         //Ordering
         $SQL.= " ORDER BY 2,3";
@@ -725,21 +725,21 @@ END;
         while($row = $db->get_row($result))
 		{
             $schedule_detailid 	= $row[0];
-            $starttime 			= date("H:i",$row[4]);
-            $endtime 			= date("H:i",$row[5]);
+            $starttime 			= date("H:i",$row[2]);
+            $endtime 			= date("H:i",$row[3]);
             $name 				= $row[3];
-            $times 				= date("H:i",$row[4])."-".date("H:i",$row[5]);
-            $userid 			= $row[6];
-            $is_priority 		= $row[7];
+            $times 				= date("H:i",$row[2])."-".date("H:i",$row[3]);
+            $userid 			= $row[4];
+            $is_priority 		= $row[5];
             
 			$start_row = $starttime;
-			if($row[4]<$date) 
+			if($row[2]<$date) 
 			{
 				$start_row = "Earlier Day";
 			}
 			
 			$end_row = $endtime;
-			if ($row[5]>$next_day) 
+			if ($row[3]>$next_day) 
 			{
 				$end_row = "Later Day";
 			}
@@ -758,21 +758,21 @@ END;
 			 * 3. how many cols are left
 			 */
 			$total_cols = 24;
-			$start_hour = date("H",$row[4]);
-			$end_hour   = date("H",$row[5]);
+			$start_hour = date("H",$row[2]);
+			$end_hour   = date("H",$row[3]);
 			
 			/*
 	         * We need to work out:
 	         * 1. whether the record we've got is within the dates supplied (OR)
 	         * 2. whether the record is outside of these dates
 	         */
-            if ($row[4] < $date) 
+            if ($row[2] < $date) 
 			{ //if 'the event start date' < 'the we are on'
             	$start_hour = 0;
             }
             
 			//if the event goes over this day, then the end hour will be the total_cols shown
-            if ($row[5] >= $next_day) 
+            if ($row[3] >= $next_day) 
 			{
             	$end_hour = $total_cols;
             }
@@ -839,25 +839,24 @@ END;
 	 */
 	function get_events_between_dates($date_start, $date_end, $day_number_in_week) 
 	{
-		$db =& $this->db;
+		$db 					=& $this->db;
+		$datemanager			= new DateManager($db);
+		$mysqlDateMask			= 'Y-m-d H:i:s';
 		
-		$last_day = $this->last_day;
+		$last_day 				= $this->last_day;
 		
-		$date = date("Y-m-d H:i:s", $date_start);
-		$next_day = date("Y-m-d H:i:s", $date_end);
-		$prev_day = date("Y-m-d H:i:s",mktime(0,0,0,date("m",$date_start),date("d", $date_start)-1,date("Y",$date_start)));
+		$date 					= $datemanager->GetLocalDate("Y-m-d", $date_start);
+		$next_day 				= $datemanager->GetLocalDate("Y-m-d", $date_end);
 	
 		$html_events_string = "";
 		
 		$SQL = "";
         $SQL.= "SELECT schedule_detail.schedule_detailID, ";
-        $SQL.= "       schedule_detail.starttime, ";
-        $SQL.= "       schedule_detail.endtime,";
+        $SQL.= "       schedule_detail.FromDT, ";
+        $SQL.= "       schedule_detail.ToDT,";
         $SQL.= "       layout.layout, ";
-        $SQL.= "       UNIX_TIMESTAMP(schedule_detail.starttime) as timestart,";
-        $SQL.= "       UNIX_TIMESTAMP(schedule_detail.endtime) as timeend, ";
-        $SQL.= "       CASE WHEN schedule_detail.starttime < '$date' OR schedule_detail.endtime" .
-        		" > '$next_day' THEN 1 ELSE 0 END AS Prev_day, ";
+        $SQL.= "       CASE WHEN schedule_detail.FromDT < $date_start OR schedule_detail.ToDT" .
+        		" > $date_end THEN 1 ELSE 0 END AS Prev_day, ";
         $SQL.= "       schedule_detail.userid ";
         $SQL.= "  FROM schedule_detail ";
         $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
@@ -865,13 +864,14 @@ END;
         $SQL.= "   AND schedule_detail.displayid = $this->displayid ";
         
         //Events that fall inside the two dates
-        $SQL.= "   AND schedule_detail.starttime < '$next_day' ";
-        $SQL.= "   AND schedule_detail.endtime   >  '$date'";
+        $SQL.= "   AND schedule_detail.FromDT < $date_end ";
+        $SQL.= "   AND schedule_detail.ToDT   >  $date_start";
         
         //Ordering
-        $SQL.= " ORDER BY 7 DESC, 2,3";
+        $SQL.= " ORDER BY 5 DESC, 2,3";
 
-		//echo $SQL;
+		Debug::LogEntry($db, 'audit', 'Getting events for the day: ' . $date . ' to ' . $next_day);
+		Debug::LogEntry($db, 'audit', $SQL);
 		
         $result = $db->query($SQL) or trigger_error($db->error(), E_USER_ERROR);
         
@@ -886,21 +886,18 @@ END;
         $count = 1;
 		$pad = true;
 		
-		//debug
-		/*if ($date == '2007-06-16 00:00:00') {
-		echo "<pre>";print_r($last_day);echo "</pre>";}*/
 		
         while(($row = $db->get_row($result)) && $count < 4) 
 		{
 			/* Info for this day */
-            $schedule_detailid = $row[0];
-            $starttime = $row[4];
-            $endtime = $row[5];
-            $name = $row[3];
-            $times = date("H:i",$row[4])."-".date("H:i",$row[5]);
-			$multi_day = $row[6];
-			$userid = $row[7];
-			$event_text = $name;
+            $schedule_detailid 	= $row[0];
+            $starttime 			= $datemanager->GetLocalDate($mysqlDateMask, $row[1]);
+            $endtime 			= $datemanager->GetLocalDate($mysqlDateMask, $row[2]);
+            $name 				= $row[3];
+            $times 				= $datemanager->GetLocalDate('H:i', $row[1]) . '-' . $datemanager->GetLocalDate('H:i', $row[2]);
+			$multi_day 			= $row[4];
+			$userid 			= $row[5];
+			$event_text 		= $name;
 			
 			/* Are our events spanning multiple days?*/
             if ($multi_day == 1) 
@@ -919,11 +916,6 @@ END;
 					  * If we have events spanning multiple days We want to look back one day, for any events that span multiple days that ended on the last day
 					  * - if there were any, we will need to pad out our current event (so that they line up again)
 					  */
-					
-					/*if ($last_day[$count]['layoutdisplayid']==$layoutdisplayid && $count <= $last_day['multi_day_count']) {
-						//do nothing
-						$event_text = "-";
-					}*/
 					
 					if ($count < $last_day['multi_day_count']) 
 					{
@@ -985,7 +977,7 @@ END;
 				{
 					$html_events_string .= "<a class='XiboFormButton event' $link>";
 				}
-            	$html_events_string .= date("H:i",$row[4])." - ".$name;
+            	$html_events_string .= $datemanager->GetLocalDate('H:i', $row[1]) . " - " . $name;
             }
 			$html_events_string .= "</a>";
             
@@ -1109,13 +1101,15 @@ END;
 	{
 		$db 					=& $this->db;
 		$response				= new ResponseManager();
+		$datemanager			= new DateManager($db);
+		$mysqlDateMask			= 'Y-m-d H:i:s';
 
 		$userid 				= $_SESSION['userid'];
-		$layoutid				= clean_input($_POST['layoutid'], VAR_FOR_SQL, $db);
+		$layoutid				= Kit::GetParam('layoutid', _POST, _INT, 0);
 		$_SESSION['layoutid']	= $layoutid; //set the session to default layout forms to this layout
 		
 		//Validate layout
-		if ($layoutid == "") 
+		if ($layoutid == 0) 
 		{
 			trigger_error("No layout selected", E_USER_ERROR);
 		}
@@ -1129,19 +1123,19 @@ END;
 		$displayid_array = $_POST['displayids'];
 		
 		//get the dates and times
-		$start_date = explode("/",$_POST['starttime_date']); //		dd/mm/yyyy
-		$start_h	= $_POST['starttime_h'];
-		$start_i	= $_POST['starttime_i'];
+		$start_date 			= explode("/",$_POST['starttime_date']); //		dd/mm/yyyy
+		$start_h				= $_POST['starttime_h'];
+		$start_i				= $_POST['starttime_i'];
 		
-		$starttime_timestamp = strtotime($start_date[1] . "/" . $start_date[0] . "/" . $start_date[2] . " ".$start_h.":".$start_i);
-		$starttime = date("Y-m-d H:i:s", $starttime_timestamp);
+		$starttime_timestamp 	= mktime($start_h, $start_i, 0, $start_date[1], $start_date[0], $start_date[2]);
+		$starttime 				= $datemanager->GetSystemDate($mysqlDateMask, $starttime_timestamp);
 
-		$end_date = explode("/",$_POST['endtime_date']); //			dd/mm/yyyy
-		$end_h = $_POST['endtime_h'];
-		$end_i = $_POST['endtime_i'];
+		$end_date 				= explode("/",$_POST['endtime_date']); //			dd/mm/yyyy
+		$end_h 					= $_POST['endtime_h'];
+		$end_i 					= $_POST['endtime_i'];
 		
-		$endtime_timestamp = strtotime($end_date[1] . "/" . $end_date[0] . "/" . $end_date[2] . " ".$end_h.":".$end_i);
-		$endtime = date("Y-m-d H:i:s", $endtime_timestamp);
+		$endtime_timestamp 		= mktime($end_h, $end_i, 0, $end_date[1], $end_date[0], $end_date[2]);
+		$endtime 				= $datemanager->GetSystemDate($mysqlDateMask, $endtime_timestamp);
 		
 		//validate the dates
 		if ($endtime_timestamp < $starttime_timestamp) 
@@ -1174,13 +1168,13 @@ END;
 		//if there is no recurrence then NULL those fields for this insert
 		if ($rec_type == "null")
 		{
-			$SQL = "INSERT INTO schedule (layoutid, displayID_list, start, end, userID, is_priority) ";
-			$SQL .= " VALUES ($layoutid, '$displayid_list', '$starttime', '$endtime', $userid, 0) ";
+			$SQL = "INSERT INTO schedule (layoutid, displayID_list, userID, is_priority, FromDT, ToDT) ";
+			$SQL .= " VALUES ($layoutid, '$displayid_list', $userid, 0, $starttime_timestamp, $endtime_timestamp) ";
 		}
 		else 
 		{
-			$SQL = "INSERT INTO schedule (layoutid, displayID_list, start, end, userID, is_priority, recurrence_type, recurrence_detail, recurrence_range) ";
-			$SQL .= " VALUES ($layoutid, '$displayid_list', '$starttime', '$endtime', $userid, 0, '$rec_type', '$rec_detail', '$rec_range') ";
+			$SQL = "INSERT INTO schedule (layoutid, displayID_list, userID, is_priority, recurrence_type, recurrence_detail, recurrence_range, FromDT, ToDT) ";
+			$SQL .= " VALUES ($layoutid, '$displayid_list', $userid, 0, '$rec_type', '$rec_detail', '$rec_range', $starttime_timestamp, $endtime_timestamp) ";
 		}
 		
 		if (!$eventid = $db->insert_query($SQL)) 
@@ -1482,14 +1476,16 @@ END;
 	
 	function setlayoutDisplayRecords($eventid) 
 	{
-		$db =& $this->db;
+		$db 				=& $this->db;
+		$datemanager		= new DateManager($db);
+		$mysqlDateMask		= 'Y-m-d H:i:s';
 		
 		//run a query to get info about this particular event
 		$SQL = <<<END
 		SELECT layoutID,
 			displayID_list,
-			UNIX_TIMESTAMP(start) AS start,
-			UNIX_TIMESTAMP(end) AS end,
+			FromDT,
+			ToDT,
 			userID,
 			is_priority,
 			recurrence_type,
@@ -1528,13 +1524,13 @@ END;
 		foreach ($displayid_array as $displayid) 
 		{
 
-			//we have no recurrence and therefore set the dates and enter one schedule_detail per display
-			$start 	= date("Y-m-d H:i:s", $t_start);
-			$end 	= date("Y-m-d H:i:s", $t_end);
+			// we have no recurrence and therefore set the dates and enter one schedule_detail per display
+			$start 	= $datemanager->GetSystemDate($mysqlDateMask, $t_start);
+			$end 	= $datemanager->GetSystemDate($mysqlDateMask, $t_end);
 			
 			//do the insert
-			$sql = "INSERT INTO schedule_detail (displayID, layoutID, starttime, endtime, userID, is_priority, eventID)";
-			$sql .= "VALUES ($displayid, $layoutid, '$start', '$end', $userid, $ispriority, $eventid)";
+			$sql = "INSERT INTO schedule_detail (displayID, layoutID, FromDT, ToDT, userID, is_priority, eventID)";
+			$sql .= "VALUES ($displayid, $layoutid, $t_start, $t_end, $userid, $ispriority, $eventid)";
 
 			$db->query($sql) or trigger_error($db->error(),E_USER_ERROR);
 				
