@@ -30,9 +30,27 @@ include('install/header.inc');
 include('config/config.class.php');
 include('config/db_config.php');
 
+/**
+ * Check PHP has the GetText module installed
+ * @return 
+ */
+function CheckGettext() 
+{
+	return extension_loaded("gettext");
+}
+
 // Setup the translations for gettext
-require_once("lib/app/translationengine.class.php");
-TranslationEngine::InitLocale($db);
+function __($string)
+{
+	if (CheckGettext())
+	{
+		return _($string);
+	}
+	else
+	{
+		return $string;
+	}
+}
 
 $fault = false;
 
@@ -533,11 +551,6 @@ include('install/footer.inc');
 function checkFsPermissions() {
   # Check for appropriate filesystem permissions
   return ((is_writable("install.php") && (is_writable("settings.php")) && (is_writable("upgrade.php")) || is_writable(".")));
-}
-
-function checkPHP() {
-  # Check PHP version > 5
-  return (version_compare("5",phpversion(), "<="));
 }
 
 function checkMySQL() {

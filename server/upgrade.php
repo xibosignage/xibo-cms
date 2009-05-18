@@ -31,8 +31,6 @@ require('settings.php');
 
 // Setup the translations for gettext
 require_once("lib/app/translationengine.class.php");
-TranslationEngine::InitLocale($db);
-
 
 // Once we've calculated the upgrade in step 2 below, we need
 // to have included the appropriate upgrade php files
@@ -67,6 +65,9 @@ $db = new database();
 
 if (!$db->connect_db($dbhost, $dbuser, $dbpass)) reportError(0, __("Unable to connect to the MySQL database using the settings stored in settings.php.") . "<br /><br />" . __("MySQL Error:") . "<br />" . $db->error());
 if (!$db->select_db($dbname)) reportError(0, __("Unable to select the MySQL database using the settings stored in settings.php.") . "<br /><br />" . __("MySQL Error:") . "<br />" . $db->error());
+
+// Initialise the Translations
+TranslationEngine::InitLocale($db);
 
 include('install/header_upgrade.inc');
 
