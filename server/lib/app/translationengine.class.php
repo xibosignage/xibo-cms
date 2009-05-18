@@ -29,7 +29,7 @@ class TranslationEngine
 	public static function InitLocale(database $db)
 	{
 		$domain		= 'default';
-		$encoding	= 'UTF8';
+		$encoding	= ''; // We dont seem to need an encoding
 		$config 	= new Config($db);
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'TranslationEngine', 'InitLocal');
@@ -68,8 +68,6 @@ class TranslationEngine
 					Debug::LogEntry($db, 'audit', 'Obtained the Language from HTTP_ACCEPT_LANGUAGE [' . $lang . ']', 'TranslationEngine', 'InitLocal');
 				}
 			}
-			
-			//$lang = 'fr';
 			
 			// For windows
 			putenv('LANG='.$lang.'.'.$encoding);
