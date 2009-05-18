@@ -20,14 +20,15 @@
  */ 
 DEFINE('XIBO', true);
 
+
 if (! checkPHP()) {
   die("Xibo requires PHP 5.0.2 or later");
 }
 
 include('lib/app/kit.class.php');
+include('lib/app/debug.class.php');
 include('config/db_config.php');
 include('config/config.class.php');
-require('settings.php');
 
 // Setup the translations for gettext
 require_once("lib/app/translationengine.class.php");
@@ -60,6 +61,8 @@ define('_CHECKBOX', "checkbox");
 define('_INPUTBOX', "inputbox");
 define('_PASSWORDBOX', "password");
 
+Config::Load();
+
 // create a database class instance
 $db = new database();
 
@@ -67,6 +70,8 @@ if (!$db->connect_db($dbhost, $dbuser, $dbpass)) reportError(0, __("Unable to co
 if (!$db->select_db($dbname)) reportError(0, __("Unable to select the MySQL database using the settings stored in settings.php.") . "<br /><br />" . __("MySQL Error:") . "<br />" . $db->error());
 
 // Initialise the Translations
+set_error_handler(array(new Debug(), "ErrorHandler"));
+
 TranslationEngine::InitLocale($db);
 
 include('install/header_upgrade.inc');
