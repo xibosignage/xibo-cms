@@ -34,10 +34,23 @@
 	padding-right: 15px;
 }
 
+#headerback, #headerback a {
+	color: #003399;
+}
+
 .FilterDiv {
 	display: none;
 }
 
 .ReportFault ol li {
 	display: list-item;
+}
+
+.HelpLink {
+	float:right;
+}
+
+.HelpLink a {
+	padding-left: 10px;
+	padding-right: 10px;
 }

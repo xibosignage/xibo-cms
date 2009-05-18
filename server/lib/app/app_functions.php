@@ -37,7 +37,7 @@ define('AJAX_LOAD_FORM',6);
  */
 function setMessage($message) {
 	if (!isset($_SESSION['message'])) $_SESSION['message'] = "";
-	$_SESSION['message'] .= "$message<br />";
+	$_SESSION['message'] .= $message . ' | ';
 }
 
 function displayMessage($mode = MSG_MODE_AUTO, $msg="", $show_back = true, $template = "template/pages/message_page.php") 
@@ -48,7 +48,7 @@ function displayMessage($mode = MSG_MODE_AUTO, $msg="", $show_back = true, $temp
 		case MSG_MODE_AUTO:
 			if (isset($_SESSION['message'])) 
 			{
-				echo "<div class=\"highlight\">" . $_SESSION['message'] . "</div>";
+				echo $_SESSION['message'];
 				unset($_SESSION['message']);
 			}
 		break;
@@ -258,39 +258,6 @@ function setSession($page, $var, $value)
 
 	return true;
 }
-
-/**
- * Depricate
- * @return 
- * @param $var Object
- * @param $purpose Object
- * @param $db Object[optional]
- */
-function clean_input($var, $purpose, $db = false) 
-{
-	/*Cleans the $var depending on the $purpose*/
-	
-	switch ($purpose) 
-	{
-	
-	case VAR_FOR_SQL:
-		if (!$db) 
-		{
-			trigger_error("Trying to clean a var for SQL, but no DB passed", E_USER_ERROR);
-		}
-		
-		if (!get_magic_quotes_gpc())
-		{
-			$var = $db->escape_string($var);	
-		}
-		
-		break;
-	
-	}
-	
-	return $var;
-}
-
 
 function sec2hms($sec, $padHours = false) 
 {
@@ -603,66 +570,6 @@ function ResizeImage( $file, $target = "", $width = 0, $height = 0, $proportiona
     }
 
     return true;
-}
-
-/**
- * Cleans a file name
- * @return 
- * @param $filename String
- */
-function cleanFilename($name)
-{
-	$name = strtolower($name); 
-	$code_entities_match = array( '&quot;' ,'!' ,'@' ,'#' ,'$' ,'%' ,'^' ,'&' ,'*' ,'(' ,')' ,'+' ,'{' ,'}' ,'|' ,':' ,'"' ,'<' ,'>' ,'?' ,'[' ,']' ,'' ,';' ,"'" ,',' ,'_' ,'/' ,'*' ,'+' ,'~' ,'`' ,'=' ,' ' ,'---' ,'--','--'); 
-	$code_entities_replace = array('' ,'-' ,'-' ,'' ,'' ,'' ,'-' ,'-' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'-' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'-' ,'-' ,'-' ,'' ,'' ,'' ,'' ,'' ,'-' ,'-' ,'-','-'); 
-	
-	$name = str_replace($code_entities_match, $code_entities_replace, $name); 
-	return $name;
-}
-
-/**
- * Depricate
- * @return 
- * @param $number Object
- */
-function CleanNumber($number)
-{
-	if (!is_numeric($number))
-	{
-		header("HTTP/1.1 404 Not Found");
-		// How do I send the default apache 404 message
-		// instead of the message below?
-		print("<html><body>HTTP 404 - Possible Hack.</body></html>");
-		exit;
-	}
-	return $number;
-}
-
-/**
- * Depricate
- * @return 
- * @param $var Object
- */
-function validate($var)
-{
-	$valid = true;
-	
-	// Validate against XSS
-	if (strstr($var, "http")) $valid = false;
-	if (strstr($var, "www")) $valid = false;
-	
-	if (eregi('[^A-Za-z0-9_]', $var)) $valid = false;
-	
-	if (!$valid) 
-	{
-		header("HTTP/1.1 404 Not Found");
-		// How do I send the default apache 404 message
-		// instead of the message below?
-		print("<html><body>HTTP 404 - Possible Hack.</body></html>");
-		exit;
-	}
-	
-	return $var;
 }
 
 /**

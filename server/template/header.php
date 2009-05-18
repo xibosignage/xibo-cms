@@ -36,6 +36,11 @@ else
 {
 	$homepageName = substr($homepage, 0, strpos($homepage, '&'));	
 }
+
+$help 		= new HelpManager($db, $user);
+$helpLink 	= $help->Link();
+
+$datemanager	= new DateManager($db);
  
 ?>
 <!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -87,10 +92,15 @@ else
 	<div id="container">
 		<div id="headercontainer">
 	  		<div id="header"></div>
-			<div id="headerback">
-				<h5>Welcome back <?php echo $username; ?>.</h5>
+			<div class="SecondNav" id="headerback">
+				<ul>
+					<?php displayMessage(); ?>
+					<li><?php echo $username; ?></li>
+					<li><a class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo __('Click to show more time information'); ?>"><?php echo $datemanager->GetClock(); ?></a></li>
+					<li><a title="Show <?php echo ucfirst($p); ?> Help" class="XiboHelpButton" href="<?php echo $helpLink; ?>">Help</a></li>
+					<li><a title="Logout" href="index.php?q=logout">Logout</a></li>
+				</ul>
 			</div>
-			<?php displayMessage(); ?>
 		</div>
 		<div id="navigation">
 			<ul id="nav">
@@ -146,7 +156,6 @@ else
 						}
 					}
 				?>
-				<li><a href="index.php?q=logout">Log out</a></li>
 			</ul>
 		</div>
 		<div id="contentwrap">

@@ -22,7 +22,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Debug
 {
-
 	public function __construct()
 	{
 		global $db;

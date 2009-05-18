@@ -57,6 +57,9 @@ class faultDAO
 		$output = '';
 		
 		$config = new Config($db);
+		
+		$output .= '<h2>' . __('Report a fault with Xibo') . '</h2>';
+		$output .= '<p>' . __('Before reporting a fault it would be appreciated if you follow the below steps.') . '</p>';
 
 		$output .= '<div class="ReportFault">';		
 		$output .= '<ol>';		

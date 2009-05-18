@@ -30,9 +30,29 @@ include('install/header.inc');
 include('config/config.class.php');
 include('config/db_config.php');
 
-// Setup the translations for gettext
-require_once("lib/app/translationengine.class.php");
-TranslationEngine::InitLocale($db);
+// Setup for the Translations using Gettext.
+// There is normally a class that will do this for us - but it requires a DB object (which we do not have at install time)
+// Would be nice to include a method on the TranslationEngine that did this for us - but without the debugging
+// The actual translation function __() is included later in this file.
+$langs 		= Kit::GetParam('HTTP_ACCEPT_LANGUAGE', $_SERVER, _STRING);
+$lang		= 'en-gb'; 		// Default language
+$encoding 	= '';			// We do not seem to need an encoding, but I read somewhere that we might - left as a reminder of this.
+
+if ($langs != '') 
+{
+	$langs 	= explode(',', $langs);
+	$lang 	= $langs[0];
+}
+
+// For windows
+putenv('LANG='.$lang.'.'.$encoding);
+putenv('LANGUAGE='.$lang.'.'.$encoding); 
+putenv('LC_ALL='.$lang.'.'.$encoding); 
+
+// Set local
+setlocale(LC_ALL, $lang.'.'.$encoding);
+
+// Translations have been setup.
 
 $fault = false;
 
@@ -535,11 +555,6 @@ function checkFsPermissions() {
   return ((is_writable("install.php") && (is_writable("settings.php")) && (is_writable("upgrade.php")) || is_writable(".")));
 }
 
-function checkPHP() {
-  # Check PHP version > 5
-  return (version_compare("5",phpversion(), "<="));
-}
-
 function checkMySQL() {
   # Check PHP has MySQL module installed
   return extension_loaded("mysql");
@@ -686,6 +701,29 @@ function gen_secret() {
   return $key;
 }
 
+function checkPHP() 
+{
+	return (version_compare("5.2.4",phpversion(), "<="));
+}
+
+function CheckGettext() 
+{
+	return extension_loaded("gettext");
+}
+
+// Setup the translations for gettext
+function __($string)
+{
+	if (CheckGettext())
+	{
+		return _($string);
+	}
+	else
+	{
+		return $string;
+	}
+}
+
 function settings_strings() {
 global $settings_header;
 global $settings_footer;
@@ -716,9 +754,5 @@ $settings_footer = <<<END
 END;
 
   return;
-}
-
-function checkPHP() {
-  return (version_compare("5.2.4",phpversion(), "<="));
 }
 ?>

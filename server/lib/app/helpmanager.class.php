@@ -45,15 +45,15 @@ class HelpManager
 	 */
 	public function HelpButton($location, $return = false) 
 	{
-		$db 	=& $this->db;
+		$db 		=& $this->db;
 		
-		$helpBase = Config::GetSetting($db, 'HELP_BASE');
+		$location	= split('/', $location);
+		$topic		= ucfirst($location[0]);
+		$category	= ucfirst($location[1]);
 		
-		$link = $helpBase . "?p=$location";
+		$msgHelp	= __('Help');
 		
-		$button = <<<END
-		<input type="button" onclick="window.open('$link')" value="Help" />
-END;
+		$button = '<input type="button" class="XiboHelpButton" href="' . 'index.php?p=help&q=Display&Topic=' . $topic . '&Category=' . $category . '" value="'. $msgHelp .'" />';
 	
 		if ($return)
 		{
@@ -89,6 +89,26 @@ END;
 			echo $button;
 			return true;
 		}
+	}
+	
+	/**
+	 * Outputs a help link
+	 * @return 
+	 * @param $topic Object[optional]
+	 * @param $category Object[optional]
+	 */
+	public function Link($topic = "", $category = "General")
+	{
+		$db 		=& $this->db;		
+		$user 		=& $this->user;		
+		
+		// if topic is empty use the page name
+		$topic	= Kit::GetParam('p', _REQUEST, _WORD, $topic);
+		$topic	= ucfirst($topic);
+		
+		$link	= 'index.php?p=help&q=Display&Topic=' . $topic . '&Category=' . $category . '';
+		
+		return $link;		
 	}
 }
 ?>

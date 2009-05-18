@@ -35,6 +35,7 @@ require_once("lib/app/modulemanager.class.php");
 require_once("lib/app/formmanager.class.php");
 require_once("lib/app/helpmanager.class.php");
 require_once("lib/app/responsemanager.class.php");
+require_once("lib/app/datemanager.class.php");
 require_once("lib/app/app_functions.php");
 require_once("lib/modules/module.interface.php");
 require_once("lib/modules/module.class.php");

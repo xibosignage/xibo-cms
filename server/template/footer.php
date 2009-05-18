@@ -32,6 +32,7 @@
 </div>
 
 <div id="div_dialog"></div>
+<div id="help_dialog"></div>
 
 </div> <!-- Ends the content div -->
 </div> <!-- Ends contentwrap div -->

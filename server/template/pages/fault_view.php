@@ -30,8 +30,6 @@
 		<div class="SecondNav">
 			
 		</div>
-		<h2>Report a fault with Xibo</h2>
-		<p>Before reporting a fault it would be appreciated if you follow the below steps.</p>
 		<?php $this->ReportForm(); ?>
 	</div>
 		

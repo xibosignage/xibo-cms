@@ -113,7 +113,7 @@ class moduleDAO
 	 */
 	function GetImage()
 	{
-		$db =& $this->db;
+		$db 		=& $this->db;
 		
 		$file 		= Kit::GetParam('file', _REQUEST, _STRING);
 		$dynamic	= isset($_REQUEST['dynamic']);
