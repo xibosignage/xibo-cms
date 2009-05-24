@@ -300,7 +300,8 @@ END;
 			<img src="img/loading.gif"><span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
 		</div>
 		<form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
-			<input type="hidden" name="MAX_FILE_SIZE" value="1048576000">
+			<input type="hidden" name="hidFileID" id="hidFileID" value="" />
+			<input type="hidden" id="txtFileName" name="txtFileName" readonly="true" />
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="regionid" value="$regionid">
 			<input type="hidden" name="mediaid" value="$mediaid">
@@ -729,9 +730,18 @@ END;
 			$SQL .= "VALUES ('%s', 'image', '%s', '%s', %d, %d, 0) ";
 			
 			$SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($duration), $db->escape_string($fileName), $permissionid, $userid);
+			
+			if (!$new_mediaid = $db->insert_query($SQL))
+			{
+				trigger_error($db->error());
+				trigger_error('Error inserting replacement media record.', E_USER_ERROR);
+			}
 	
 			//What are we going to store this media as...
 			$storedAs = $new_mediaid.".".$ext;
+			
+			// File upload directory.. get this from the settings object
+			$databaseDir = Config::GetSetting($db, "LIBRARY_LOCATION");
 			 
 			//Now we need to move the file
 			if (!$result = rename($databaseDir."/temp/".$tmpName, $databaseDir.$storedAs))
@@ -764,9 +774,11 @@ END;
 				ResizeImage($databaseDir.$storedAs, $databaseDir."tn_".$storedAs, 80, 80);
 			}
 			
-			//Update the existing record with the new record's id
-			$SQL =  "UPDATE media SET isEdited = 1, editedMediaID = $mediaid ";
-			$SQL .= " WHERE editedMediaID = $mediaid and mediaID <> $new_mediaid ";
+			// Update the existing record with the new record's id
+			$SQL =  "UPDATE media SET isEdited = 1, editedMediaID = $new_mediaid ";
+			$SQL .= " WHERE IFNULL(editedMediaID,0) <> $new_mediaid AND mediaID = $mediaid ";
+			
+			Debug::LogEntry($db, 'audit', $SQL);
 	
 			if (!$db->query($SQL))
 			{
