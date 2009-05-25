@@ -41,6 +41,8 @@ class displayDAO
 		$this->db 	=& $db;
 		$this->user =& $user;
 		
+		include_once('lib/data/display.data.class.php');
+		
 		$this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
 		$this->ajax		= Kit::GetParam('ajax', _REQUEST, _WORD, 'false');
 		$displayid 		= Kit::GetParam('displayid', _REQUEST, _INT, 0);
@@ -136,69 +138,14 @@ SQL;
 		//Validation
 		if ($display == "") 
 		{
-			trigger_error(__("Can not have a display with no name"), E_USER_ERROR);
+			trigger_error(__("Can not have a display without a name"), E_USER_ERROR);
 		}
 		
-		//Update the display record
-		$SQL  = "UPDATE display SET display = '%s', ";
-		$SQL .= "		defaultlayoutid = %d, ";
-		$SQL .= "		inc_schedule = %d, ";
-		$SQL .= " 		licensed = %d, ";
-		$SQL .= "		isAuditing = %d ";
-		$SQL .= "WHERE displayid = ".$displayid;
+		$displayObject 	= new Display($db);
 		
-		$SQL = sprintf($SQL, $db->escape_string($display), $layoutid, $inc_schedule, $licensed, $auditing, $displayid);
-		
-		Debug::LogEntry($db, 'audit', $SQL);
-		
-		if (!$db->query($SQL)) 
+		if (!$displayObject->Edit($displayid, $auditing, $layoutid, $licensed, $inc_schedule))
 		{
-			trigger_error($db->error());
-			trigger_error(__('Could not update display') . '-' . __('Stage 1'), E_USER_ERROR);
-		}
-		
-		//check that we have a default layout display record to update
-		//we might not and should be able to resolve it by editing the display
-		$SQL = "SELECT schedule_detailID FROM schedule_detail ";
-		$SQL .= " WHERE displayid = %d ";
-		$SQL .= "   AND starttime = '2050-12-31 00:00:00' ";
-		$SQL .= "   AND endtime = '2050-12-31 00:00:00' ";
-		
-		$SQL = sprintf($SQL, $displayid);
-		
-		Debug::LogEntry($db, 'audit', $SQL);
-		
-		if (!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error(__('Could not update display') . '-' . __('Stage 1'), E_USER_ERROR);
-		}
-		
-		if ($db->num_rows($results) == 0) 
-		{
-			//INSERT one
-			$SQL  = " INSERT INTO schedule_detail (displayid, layoutid, starttime, endtime) ";
-			$SQL .= " VALUES (%d, %d, '2050-12-31 00:00:00','2050-12-31 00:00:00') ";
-			
-			$SQL = sprintf($SQL, $displayid, $layoutid);
-		}
-		else 
-		{
-			//Update the default layoutdisplay record
-			$SQL = " UPDATE schedule_detail SET layoutid = %d ";
-			$SQL .= " WHERE displayid = %d ";
-			$SQL .= "   AND starttime = '2050-12-31 00:00:00' ";
-			$SQL .= "   AND endtime = '2050-12-31 00:00:00'";
-			
-			$SQL = sprintf($SQL, $layoutid, $displayid);
-		}
-		
-		Debug::LogEntry($db, 'audit', $SQL);
-			
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error(__('Could not update display') . '-' . __('Stage 2'), E_USER_ERROR);
+			trigger_error(__('Cannot Edit this Display'));
 		}
 		
 		$response->SetFormSubmitResponse(__('Display Saved.'));

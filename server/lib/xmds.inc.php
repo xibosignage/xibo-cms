@@ -29,7 +29,7 @@ require_once("lib/app/debug.class.php");
 require_once("lib/app/kit.class.php");
 
 require_once("config/db_config.php");
-require_once("config/config.class.php");
+require_once("config/config.class.php");require_once('lib/data/display.data.class.php');
 
 // Sort out magic quotes
 if (get_magic_quotes_gpc()) 

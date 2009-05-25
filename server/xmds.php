@@ -55,14 +55,9 @@ function Auth($hardwareKey)
 		}
 		else 
 		{
-			$time = date("Y-m-d H:i:s", time());
+			$displayObject = new Display($db);
 			
-			//Set the last accessed flag on the display
-			$SQL = "UPDATE display SET lastaccessed = '$time', loggedin = 1 WHERE license = '$hardwareKey' ";
-			if (!$result = $db->query($SQL)) 
-			{
-				trigger_error("Display update access failure: " .$db->error());
-			}
+			$displayObject->Touch($hardwareKey);
 			
 			//It is licensed
 			return array("licensed" => true, "inc_schedule" => $row[1], "isAuditing" => $row[2], "displayid" => $row[3]);

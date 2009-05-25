@@ -459,15 +459,15 @@ END;
 		
 		if (!$setting->Edit('debug', 'On'))
 		{
-			trigger_error('Cannot set debug to On');
+			trigger_error(__('Cannot set debug to On'));
 		}
 		
 		if (!$setting->Edit('audit', 'On'))
 		{
-			trigger_error('Cannot set audit to On');
+			trigger_error(__('Cannot set audit to On'));
 		}
 		
-		$response->SetFormSubmitResponse('Debugging switched On.');
+		$response->SetFormSubmitResponse(__('Debugging switched On.'));
 		$response->Respond();
 	}
 	
@@ -483,15 +483,15 @@ END;
 		
 		if (!$setting->Edit('debug', 'Off'))
 		{
-			trigger_error('Cannot set debug to Off');
+			trigger_error(__('Cannot set debug to Off'), E_USER_ERROR);
 		}
 		
 		if (!$setting->Edit('audit', 'Off'))
 		{
-			trigger_error('Cannot set audit to Off');
+			trigger_error(__('Cannot set audit to Off'), E_USER_ERROR);
 		}
 		
-		$response->SetFormSubmitResponse('Debugging switched Off.');
+		$response->SetFormSubmitResponse(__('Debugging switched Off.'));
 		$response->Respond();
 	}
 	
@@ -507,10 +507,10 @@ END;
 		
 		if (!$setting->Edit('SERVER_MODE', 'Production'))
 		{
-			trigger_error('Cannot switch modes.');
+			trigger_error(__('Cannot switch modes.'), E_USER_ERROR);
 		}
 		
-		$response->SetFormSubmitResponse('Server switched to Production Mode');
+		$response->SetFormSubmitResponse(__('Server switched to Production Mode'));
 		$response->Respond();
 	}
 	
@@ -526,10 +526,10 @@ END;
 		
 		if (!$setting->Edit('SERVER_MODE', 'Test'))
 		{
-			trigger_error('Cannot switch modes.');
+			trigger_error(__('Cannot switch modes.'), E_USER_ERROR);
 		}
 		
-		$response->SetFormSubmitResponse('Server switched to Test Mode');
+		$response->SetFormSubmitResponse(__('Server switched to Test Mode'));
 		$response->Respond();
 	}
 }
