@@ -128,30 +128,31 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 		return new soap_fault("SOAP-ENV:Client", "", "The Hardware Key you sent was too long. Only 40 characters are allowed (SHA1).", $hardwareKey);
 	}
 	
-	//check in the database for this hardwareKey
+	// Check in the database for this hardwareKey
 	$SQL = "SELECT licensed, display FROM display WHERE license = '$hardwareKey'";
+	
 	if (!$result = $db->query($SQL)) 
 	{
 		trigger_error("License key query failed:" .$db->error());
 		return new soap_fault("SOAP-ENV:Server", "", "License Key Query Failed, see server errorlog", $db->error());
 	}
 	
-	//Is it there?
+	// Use a display object to Add or Edit the display
+	$displayObject = new Display($db);		
+	
+	// Is it there?
 	if ($db->num_rows($result) == 0) 
 	{
-		//Add this display record
-		$SQL = sprintf("INSERT INTO display (display, defaultlayoutid, license, licensed) VALUES ('%s', 1, '%s', 0)", $displayName, $hardwareKey);
-		if (!$displayid = $db->insert_query($SQL)) 
-		{
-			trigger_error($db->error());
-			return new soap_fault("SOAP-ENV:Server", "", "Error adding display");
-		}
+		// Add this display record
+		if (!$displayid = $displayObject->Add($displayName, 0, 1, $hardwareKey, 0, 0)) return new soap_fault("SOAP-ENV:Server", "", "Error adding display");
+		
 		$active = "Display added and is awaiting licensing approval from an Administrator";
 	}
 	else 
 	{
 		//we have seen this display before, so check the licensed value
 		$row = $db->get_row($result);
+		
 		if ($row[0] == 0) 
 		{
 			//Its Not licensed
@@ -167,12 +168,9 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 			}
 			else
 			{
-				//Update the name
-				$SQL = sprintf("UPDATE display SET display = '%s' WHERE license = '%s' ", $displayName, $hardwareKey);
-				
-				if (!$db->query($SQL)) 
+				// Update the name
+				if (!$displayObject->EditDisplayName($hardwareKey, $displayName))
 				{
-					trigger_error($db->error());
 					return new soap_fault("SOAP-ENV:Server", "", "Error editing the display name");
 				}
 				

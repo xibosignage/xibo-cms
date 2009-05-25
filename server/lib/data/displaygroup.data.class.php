@@ -22,6 +22,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class DisplayGroup extends Data
 {
+	public function __construct(database $db)
+	{
+		include_once('lib/data/schedule.data.class.php');
+		
+		parent::__construct($db);
+	}
+	
 	/**
 	 * Adds a Display Group to Xibo
 	 * @return 
@@ -33,7 +40,35 @@ class DisplayGroup extends Data
 	{
 		$db	=& $this->db;
 		
-		return true;
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Add');
+		
+		// Create the SQL
+		$SQL  = "";
+		$SQL .= "INSERT ";
+		$SQL .= "INTO   displaygroup ";
+		$SQL .= "       ( ";
+		$SQL .= "              DisplayGroup     , ";
+		$SQL .= "              IsDisplaySpecific, ";
+		$SQL .= "              Description ";
+		$SQL .= "       ) ";
+		$SQL .= "       VALUES ";
+		$SQL .= "       ( ";
+		$SQL .= sprintf("              '%s', ", $db->escape_string($displayGroup));
+		$SQL .= sprintf("              %d  , ", $isDisplaySpecific);
+		$SQL .= sprintf("              '%s'  ", $db->escape_string($description));
+		$SQL .= "       )";
+				
+		if (!$displayGroupID = $db->insert_query($SQL)) 
+		{
+			trigger_error($db->error());
+			$this->SetError(25000, __('Could not add Display Group'));
+			
+			return false;
+		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Add');
+		
+		return $displayGroupID;
 	}
 	
 	/**
@@ -47,6 +82,25 @@ class DisplayGroup extends Data
 	{
 		$db	=& $this->db;
 		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Edit');
+		
+		// Create the SQL
+		$SQL  = "";
+		$SQL .= "UPDATE displaygroup ";
+		$SQL .= sprintf("SET    DisplayGroup   = '%s', ", $db->escape_string($displayGroup));
+		$SQL .= sprintf("       Description    = '%s' ", $db->escape_string($description));
+		$SQL .= sprintf("WHERE  DisplayGroupID = %d", $displayGroupID);
+		
+		if (!$db->query($SQL)) 
+		{
+			trigger_error($db->error());
+			$this->SetError(25005, __('Could not edit Display Group'));
+			
+			return false;
+		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Edit');		
+		
 		return true;
 	}
 	
@@ -58,6 +112,90 @@ class DisplayGroup extends Data
 	public function Delete($displayGroupID)
 	{
 		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Delete');
+		
+		$SQL = sprintf("DELETE FROM displaygroup WHERE DisplayGroupID = %d", $displayGroupID);
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+
+		if (!$db->query($SQL)) 
+		{
+			$this->SetError(25015,__('Unable to delete Display Group.'));
+			
+			return false;
+		}
+
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Delete');
+		
+		return true;
+	}
+	
+	/**
+	 * Deletes all Display Group records associated with a display.
+	 * @return 
+	 * @param $displayID Object
+	 */
+	public function DeleteDisplay($displayID)
+	{
+		$db	=& $this->db;
+		
+		// Get the DisplaySpecific Group for this Display
+		$SQL  = "";
+		$SQL .= "SELECT DisplayGroup.DisplayGroupID ";
+		$SQL .= "FROM   displaygroup ";
+		$SQL .= "       INNER JOIN lkdisplaydg ";
+		$SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+		$SQL .= "WHERE  displaygroup.IsDisplaySpecific    = 1 ";
+		$SQL .= sprintf("   AND lkdisplaydg.DisplayID             = %d", $displayID);
+		
+		if (!$result = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			$this->SetError(25005, __('Unable to get the DisplayGroup for this Display'));
+			
+			return false;
+		}
+		
+		$row 			= $db->get_assoc_row($result);
+		$displayGroupID	= $row['DisplayGroupID'];
+		
+		if ($displayGroupID == '')
+		{
+			// If there is no region specific display record... what do we do?
+			$this->SetError(25006, __('Unable to get the DisplayGroup for this Display'));
+			
+			return false;
+		}
+		
+		// Delete the Schedule for this Display Group
+		$scheduleObject = new Schedule($db);
+		
+		if (!$scheduleObject->DeleteScheduleForDisplayGroup($displayGroupID))
+		{
+			$this->SetError(25006, __('Unable to delete Schedule records for this DisplayGroup.'));
+			
+			return false;
+		}
+		
+		// Unlink all Display Groups from this Display
+		$SQL = sprintf("DELETE FROM lkdisplaydg WHERE DisplayID = %d", $displayID);
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+
+		if (!$db->query($SQL)) 
+		{
+			$this->SetError(25015,__('Unable to delete Display Group Links.'));
+			
+			return false;
+		}
+		
+		// Delete the Display Group Itself
+		if (!$this->Delete($displayGroupID))
+		{
+			// An error will already be set - so just drop out
+			return false;
+		}
 		
 		return true;
 	}
@@ -72,6 +210,30 @@ class DisplayGroup extends Data
 	{
 		$db	=& $this->db;
 		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Link');
+		
+		$SQL  = "";
+		$SQL .= "INSERT ";
+		$SQL .= "INTO   lkdisplaydg ";
+		$SQL .= "       ( ";
+		$SQL .= "              DisplayGroupID, ";
+		$SQL .= "              DisplayID ";
+		$SQL .= "       ) ";
+		$SQL .= "       VALUES ";
+		$SQL .= "       ( ";
+		$SQL .= sprintf("              %d, %d ", $displayGroupID, $displayID);
+		$SQL .= "       )";
+		
+		if (!$db->query($SQL)) 
+		{
+			trigger_error($db->error());
+			$this->SetError(25005, __('Could not Link Display Group to Display'));
+			
+			return false;
+		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Link');
+		
 		return true;
 	}
 	
@@ -84,6 +246,97 @@ class DisplayGroup extends Data
 	public function Unlink($displayGroupID, $displayID)
 	{
 		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Unlink');
+		
+		$SQL  = "";
+		$SQL .= "DELETE FROM ";
+		$SQL .= "   lkdisplaydg ";
+		$SQL .= sprintf("  WHERE DisplayGroupID = %d AND DisplayID = %d ", $displayGroupID, $displayID);
+		
+		if (!$db->query($SQL)) 
+		{
+			trigger_error($db->error());
+			$this->SetError(25007, __('Could not Unlink Display Group from Display'));
+			
+			return false;
+		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Unlink');
+		
+		return true;
+	}
+	
+	/**
+	 * Edits the Display Group associated with a Display
+	 * @return 
+	 * @param $displayID Object
+	 * @param $display Object
+	 */
+	public function EditDisplayGroup($displayID, $display)
+	{
+		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'EditDisplayGroup');
+		
+		// Get the DisplayGroupID for this DisplayID
+		$SQL  = "";
+		$SQL .= "SELECT DisplayGroup.DisplayGroupID ";
+		$SQL .= "FROM   displaygroup ";
+		$SQL .= "       INNER JOIN lkdisplaydg ";
+		$SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+		$SQL .= "WHERE  displaygroup.IsDisplaySpecific    = 1 ";
+		$SQL .= sprintf("   AND lkdisplaydg.DisplayID             = %d", $displayID);
+		
+		if (!$result = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			$this->SetError(25005, __('Unable to get the DisplayGroup for this Display'));
+			
+			return false;
+		}
+		
+		$row 			= $db->get_assoc_row($result);
+		$displayGroupID	= $row['DisplayGroupID'];
+		
+		if ($displayGroupID == '')
+		{
+			// We should always have 1 display specific DisplayGroup for a display.
+			// Do we a) Error here and give up?
+			//		 b) Create one and link it up?
+			// $this->SetError(25006, __('Unable to get the DisplayGroup for this Display'));
+			
+			if (!$displayGroupID = $this->Add($display, 1))
+			{
+				$this->SetError(25001, __('Could not add a display group for the new display.'));
+				
+				return false;
+			}
+			
+			// Link the Two together
+			if (!$this->Link($displayGroupID, $displayID))
+			{
+				$this->SetError(25001, __('Could not link the new display with its group.'));
+				
+				return false;
+			}
+		}
+		
+		// Update SQL
+		$SQL  = "";
+		$SQL .= "UPDATE displaygroup ";
+		$SQL .= sprintf("SET    DisplayGroup   = '%s' ", $db->escape_string($display));
+		$SQL .= sprintf("WHERE  DisplayGroupID = %d", $displayGroupID);
+		
+		if (!$db->query($SQL))
+		{
+			trigger_error($db->error());
+			$this->SetError(25005, __('Unable to update the DisplayGroup for this Display'));
+			
+			return false;
+		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'EditDisplayGroup');
 		
 		return true;
 	}
@@ -98,15 +351,41 @@ class DisplayGroup extends Data
 	{
 		$db	=& $this->db;
 		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'SetDefaultLayout');
+		
+		// Get the DisplayGroupID for this DisplayID
+		$SQL  = "";
+		$SQL .= "SELECT DisplayGroup.DisplayGroupID ";
+		$SQL .= "FROM   displaygroup ";
+		$SQL .= "       INNER JOIN lkdisplaydg ";
+		$SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+		$SQL .= "WHERE  displaygroup.IsDisplaySpecific    = 1 ";
+		$SQL .= sprintf("   AND lkdisplaydg.DisplayID             = %d", $displayID);
+		
+		if (!$result = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			$this->SetError(25005, __('Unable to get the DisplayGroup for this Display'));
+			
+			return false;
+		}
+		
+		$row 			= $db->get_assoc_row($result);
+		$displayGroupID	= $row['DisplayGroupID'];
+		
+		if ($displayGroupID == '')
+		{
+			$this->SetError(25006, __('Unable to get the DisplayGroup for this Display'));
+			
+			return false;
+		}
+		
+		// Check that we have a default layout display record to update
 		// Build some TimeStamps for the Default Schedule Record
 		$fromDT		= mktime(0,0,0,1,1,2000);
 		$toDT		= mktime(0,0,0,12,31,2050);
 		
-		// Get the DisplayGroupID for this DisplayID
-		
-		
-		// check that we have a default layout display record to update
-		// we might not and should be able to resolve it by editing the display
+		// We might not and should be able to resolve it by editing the display
 		$SQL = "SELECT schedule_detailID FROM schedule_detail ";
 		$SQL .= " WHERE DisplayGroupID = %d ";
 		$SQL .= "   AND FromDT = %d ";
@@ -124,37 +403,35 @@ class DisplayGroup extends Data
 			return false;
 		}
 		
+		$scheduleObject = new Schedule($db);
+		
 		if ($db->num_rows($results) == 0) 
 		{
 			// For some reason we do not have a default layout record for this display
 			// We should add one now
-			$SQL  = " INSERT INTO schedule_detail (DisplayGroupID, layoutid, starttime, endtime) ";
-			$SQL .= " VALUES (%d, %d, %d, %d) ";
-			
-			$SQL = sprintf($SQL, $displayGroupID, $layoutid);
+			if (!$scheduleObject->AddDetail($displayGroupID, $layoutID, $fromDT, $toDT, 1, 0))
+			{
+				$this->SetError(25001, __('Could not update display') . '-' . __('Stage 2'));
+				
+				return false;
+			}
 		}
 		else 
 		{
 			$row		= $db->get_row($results);
 			$scheduleID	= $row[0];
 			
-			//Update the default layoutdisplay record
-			$SQL = " UPDATE schedule_detail SET layoutid = %d ";
-			$SQL .= " WHERE DisplayGroupID = %d ";
-			$SQL .= "   AND schedule_detailID = %d ";
-			
-			$SQL = sprintf($SQL, $layoutid, $displayGroupID, $scheduleID);
+			if (!$scheduleObject->EditDetailLayoutID($scheduleID, $layoutID))
+			{
+				$this->SetError(25002, __('Could not update display') . '-' . __('Stage 2'));
+				
+				return false;
+			}
 		}
 		
-		Debug::LogEntry($db, 'audit', $SQL);
-			
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25002, __('Could not update display') . '-' . __('Stage 2'));
-			
-			return false;
-		}
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'SetDefaultLayout');
+		
+		return true;
 	}
 }
 ?>

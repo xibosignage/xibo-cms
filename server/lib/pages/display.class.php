@@ -143,9 +143,9 @@ SQL;
 		
 		$displayObject 	= new Display($db);
 		
-		if (!$displayObject->Edit($displayid, $auditing, $layoutid, $licensed, $inc_schedule))
+		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule))
 		{
-			trigger_error(__('Cannot Edit this Display'));
+			trigger_error(__('Cannot Edit this Display'), E_USER_ERROR);
 		}
 		
 		$response->SetFormSubmitResponse(__('Display Saved.'));
@@ -570,17 +570,11 @@ END;
 			$response->Respond();
 		}
 
-		// What SQL do we need.
-		$SQL = " ";
-		$SQL .= "DELETE FROM display ";
-		$SQL .= sprintf(" WHERE displayid = %d", $displayid);
+		$displayObject = new Display($db);
 		
-		Debug::LogEntry($db, 'audit', $SQL);
-
-		if (!$db->query($SQL)) 
+		if (!$displayObject->Delete($displayid))
 		{
-			$response->SetError(__("Cannot delete this display. You may unlicense it to hide it from view."));
-			$response->Respond();
+			trigger_error(__("Cannot delete this display. You may unlicense it to hide it from view."), E_USER_ERROR);
 		}
 
 		$response->SetFormSubmitResponse(__("The Display has been Deleted"));

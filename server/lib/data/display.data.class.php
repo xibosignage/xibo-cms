@@ -22,6 +22,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Display extends Data
 {
+	public function __construct(database $db)
+	{
+		include_once('lib/data/displaygroup.data.class.php');
+		
+		parent::__construct($db);
+	}
+	
 	/**
 	 * Adds a Display
 	 * @return 
@@ -35,6 +42,68 @@ class Display extends Data
 	public function Add($display, $isAuditing, $defaultLayoutID, $license, $licensed, $incSchedule)
 	{
 		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Add');
+		
+		// Create the SQL
+		$SQL  = "";
+		$SQL .= "INSERT ";
+		$SQL .= "INTO   display ";
+		$SQL .= "       ( ";
+		$SQL .= "              display        , ";
+		$SQL .= "              isAuditing     , ";
+		$SQL .= "              defaultlayoutid, ";
+		$SQL .= "              license        , ";
+		$SQL .= "              licensed       , ";
+		$SQL .= "              inc_schedule ";
+		$SQL .= "       ) ";
+		$SQL .= "       VALUES ";
+		$SQL .= "       ( ";
+		$SQL .= sprintf("      '%s', ", $display);
+		$SQL .= "              0   , ";
+		$SQL .= "              1   , ";
+		$SQL .= sprintf("      '%s', ", $license);
+		$SQL .= "              0   , ";
+		$SQL .= "              0 ";
+		$SQL .= "       )";
+		
+		if (!$displayID = $db->insert_query($SQL)) 
+		{
+			trigger_error($db->error());
+			$this->SetError(25000, __('Could not add display'));
+			
+			return false;
+		}
+		
+		// Also want to add the DisplayGroup associated with this Display.
+		$displayGroupObject = new DisplayGroup($db);
+		
+		if (!$displayGroupID = $displayGroupObject->Add($display, 1, ''))
+		{
+			$this->SetError(25001, __('Could not add a display group for the new display.'));
+			
+			return false;
+		}
+		
+		// Link the Two together
+		if (!$displayGroupObject->Link($displayGroupID, $displayID))
+		{
+			$this->SetError(25001, __('Could not link the new display with its group.'));
+			
+			return false;
+		}
+		
+		// Set the default layout
+		if (!$displayGroupObject->SetDefaultLayout($displayID, $defaultLayoutID))
+		{
+			$this->SetError(25000, __('Could not update display with default layout.'));
+			
+			return false;
+		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Add');
+		
+		return $displayID;
 	}
 	
 	/**
@@ -46,9 +115,11 @@ class Display extends Data
 	 * @param $licensed Object
 	 * @param $incSchedule Object
 	 */
-	public function Edit($displayID, $isAuditing, $defaultLayoutID, $licensed, $incSchedule)
+	public function Edit($displayID, $display, $isAuditing, $defaultLayoutID, $licensed, $incSchedule)
 	{
 		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Edit');
 		
 		// Update the display record
 		$SQL  = "UPDATE display SET display = '%s', ";
@@ -56,9 +127,9 @@ class Display extends Data
 		$SQL .= "		inc_schedule = %d, ";
 		$SQL .= " 		licensed = %d, ";
 		$SQL .= "		isAuditing = %d ";
-		$SQL .= "WHERE displayid = ".$displayid;
+		$SQL .= "WHERE displayid = %d ";
 		
-		$SQL = sprintf($SQL, $db->escape_string($display), $layoutid, $inc_schedule, $licensed, $auditing, $displayid);
+		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $displayID);
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 		
@@ -71,18 +142,25 @@ class Display extends Data
 		}
 		
 		// Use a DisplayGroup to handle the default layout and displaygroup name for this display
-		include_once('lib/data/displaygroup.data.class.php');
 		$displayGroupObject = new DisplayGroup($db);
 		
+		// Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
+		if (!$displayGroupObject->EditDisplayGroup($displayID, $display))
+		{
+			$this->SetError(25002, __('Could not update this display with a new name.'));
+			
+			return false;
+		}
+
 		// Set the default layout
 		if (!$displayGroupObject->SetDefaultLayout($displayID, $defaultLayoutID))
 		{
-			$this->SetError(25000, __('Could not update display with default layout.'));
+			$this->SetError(25001, __('Could not update display with default layout.'));
 			
 			return false;
 		}
 		
-		// Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Edit');
 		
 		return true;
 	}
@@ -95,6 +173,38 @@ class Display extends Data
 	public function Delete($displayID)
 	{
 		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Delete');
+		
+		// Pass over to the DisplayGroup data class so that it can try and delete the
+		// display specific group first (it is that group which is linked to schedules)
+		$displayGroupObject = new DisplayGroup($db);
+		
+		// Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
+		if (!$displayGroupObject->DeleteDisplay($displayID))
+		{
+			$this->SetError(25002, __('Could not delete this display.'));
+			
+			return false;
+		}
+		
+		// Now we know the Display Group is gone - and so are any links
+		// delete the display
+		$SQL = " ";
+		$SQL .= "DELETE FROM display ";
+		$SQL .= sprintf(" WHERE displayid = %d", $displayID);
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+
+		if (!$db->query($SQL)) 
+		{
+			trigger_error($db->error());
+			$this->SetError(25015,__('Unable to delete display record. However it is no longer usable.'));
+			
+			return false;
+		}
+
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Delete');
 		
 		return true;
 	}
@@ -109,6 +219,31 @@ class Display extends Data
 	{
 		$db	=& $this->db;
 		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'EditDisplayName');
+	
+		$SQL = sprintf("UPDATE display SET display = '%s' WHERE license = '%s' ", $display, $license);
+				
+		if (!$db->query($SQL)) 
+		{
+			trigger_error($db->error());
+			$this->SetError(25010, __("Error updating this displays last accessed information."));
+			
+			return false;
+		}
+		
+		// Also need to update the display group name here.
+		$displayGroupObject = new DisplayGroup($db);
+		
+		// Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
+		if (!$displayGroupObject->EditDisplayGroup($displayID, $display))
+		{
+			$this->SetError(25015, __('Could not update this display with a new name.'));
+			
+			return false;
+		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'EditDisplayName');
+		
 		return true;
 	}
 	
@@ -122,6 +257,8 @@ class Display extends Data
 	{
 		$db		=& $this->db;
 		$time 	= time();
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Touch');
 			
 		// Set the last accessed flag on the display
 		$SQL 	= sprintf("UPDATE display SET lastaccessed = %d, loggedin = 1 WHERE license = '%s' ", $time, $license);
@@ -133,6 +270,8 @@ class Display extends Data
 			
 			return false;
 		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Touch');
 		
 		return true;
 	}
