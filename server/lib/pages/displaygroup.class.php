@@ -97,6 +97,7 @@ HTML;
 		$SQL = <<<SQL
 		SELECT DisplayGroupID, DisplayGroup
 		FROM displaygroup
+		WHERE IsDisplaySpecific = 0
 		ORDER BY DisplayGroup
 SQL;
 
@@ -129,11 +130,110 @@ END;
 		{
 			$displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
 			$displayGroup	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
+			
+			$output .= <<<END
+			<tr>
+				<td>$displayGroup</td>
+				<td></td>
+			</tr>
+END;
 		}
 		
 		$output .= "</tbody></table></div>";
 		
 		$response->SetGridResponse($output);
+		$response->Respond();
+	}
+	
+	/**
+	 * Shows an add form for a display group
+	 * @return 
+	 */
+	public function AddForm()
+	{
+		$db				=& $this->db;
+		$user			=& $this->user;
+		$response		= new ResponseManager();
+		$helpManager	= new HelpManager($db, $user);
+		
+		// Help UI
+		$helpButton 	= $helpManager->HelpButton("displays/groups", true);
+		$nameHelp		= $helpManager->HelpIcon(__("The Name of this Group."), true);
+		$descHelp		= $helpManager->HelpIcon(__("A short description of this Group."), true);
+		
+		$msgName		= __('Name');
+		$msgDesc		= __('Description');
+		$msgSave		= __('Save');
+		$msgCancel		= __('Cancel');
+		
+		$form = <<<END
+		<form class="XiboForm" action="index.php?p=displaygroup&q=Add" method="post">
+			<table>
+				<tr>
+					<td>$msgName<span class="required">*</span></td>
+					<td>$nameHelp <input type="text" name="group" value=""></td>
+				</tr>
+				<tr>
+					<td>$msgDesc<span class="required">*</span></td>
+					<td>$descHelp <input type="text" name="desc" value=""></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<input type='submit' value="$msgSave" / >
+						<input id="btnCancel" type="button" title="$msgCancel" onclick="$('#div_dialog').dialog('close');return false; " value="$msgCancel" />	
+						$helpButton
+					</td>
+				</tr>
+			</table>
+		</form>
+END;
+
+		$response->SetFormRequestResponse($form, __('Add Display Group'), '350px', '275px');
+		$response->Respond();
+	}
+	
+	/**
+	 * Adds a Display Group
+	 * @return 
+	 */
+	public function Add()
+	{
+		$db 			=& $this->db;
+		$response		= new ResponseManager();
+
+		$displayGroup	= Kit::GetParam('group', _POST, _STRING);
+		$description 	= Kit::GetParam('desc', _POST, _STRING);
+		
+		// Validation
+		if ($displayGroup == '')
+		{
+			trigger_error(__('Please enter a display group name'), E_USER_ERROR);
+		}
+		
+		if (strlen($description) > 254) 
+		{
+			trigger_error(__("Description can not be longer than 254 characters"), E_USER_ERROR);
+		}
+		
+		$check 	= sprintf("SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = '%s' AND IsDisplaySpecific = 0", $displayGroup);
+		$result = $db->query($check) or trigger_error($db->error());
+		
+		// Check for groups with the same name?
+		if($db->num_rows($result) != 0) 
+		{
+			$response->SetError(sprintf(__("You already own a display group called '%s'.") .  __("Please choose another.", $displayGroup)));
+			$response->Respond();
+		}
+		
+		$displayGroupObject = new DisplayGroup($db);
+		
+		if (!$displayGroupObject->Add($displayGroup, 0, $description))
+		{
+			trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
+		}
+		
+		$response->SetFormSubmitResponse(__('Display Group Added'), false);
 		$response->Respond();
 	}
 }  
