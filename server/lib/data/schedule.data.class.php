@@ -116,6 +116,11 @@ class Schedule extends Data
 		return false;
 	}
 	
+	/**
+	 * Deletes all the Schedule records for a display group
+	 * @return 
+	 * @param $displayGroupID Object
+	 */
 	public function DeleteScheduleForDisplayGroup($displayGroupID)
 	{
 		$db	=& $this->db;

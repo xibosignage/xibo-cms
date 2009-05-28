@@ -43,3 +43,27 @@ ALTER TABLE `schedule_detail` ADD FOREIGN KEY ( `eventID` ) REFERENCES `schedule
  
 ALTER TABLE `schedule_detail` DROP INDEX `displayid` ,
 ADD INDEX `DisplayGroupID` ( `DisplayGroupID` ) 
+
+
+INSERT INTO `pages` (
+`pageID` ,
+`name` ,
+`pagegroupID`
+)
+VALUES (
+NULL , 'displaygroup', '7'
+);
+
+INSERT INTO `menuitem` (
+`MenuItemID` ,
+`MenuID` ,
+`PageID` ,
+`Args` ,
+`Text` ,
+`Class` ,
+`Img` ,
+`Sequence`
+)
+VALUES (
+NULL , '4', '29', NULL , 'Display Groups', NULL , NULL , '2'
+);

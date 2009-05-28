@@ -20,6 +20,11 @@
 
 $(document).ready(function(){
 	
+	// Set up the Logout Timer
+	setInterval("XiboPing('index.php?p=clock&q=GetClock')", 1000 * 60);
+	
+	setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes
+	
 	// Setup the dialogs
     $('#div_dialog').dialog({
         title: "Xibo",
@@ -274,6 +279,52 @@ function XiboFormRender(formUrl) {
 	
 	// Dont then submit the link/button	
 	return false;
+}
+
+/**
+ * Xibo Ping
+ * @param {String} formId
+ */
+function XiboPing(url) {
+	
+	// Call with AJAX
+    $.ajax({
+        type: "get",
+        url: url + "&ajax=true",
+        cache: false,
+        dataType: "json",
+        success: function(response){
+        
+			// Was the Call successful
+            if (!response.success) {
+				// Login Form needed?
+	            if (response.login) {
+	                LoginBox(response.message);
+	                return false;
+	            }
+				
+				if (response.clockUpdate) {
+					XiboClockUpdate(response.html);
+				}
+			}
+            
+            return false;
+        }
+    });
+	
+	// Dont then submit the link/button	
+	return false;
+}
+
+/**
+ * Updates the Clock with the latest time
+ * @param {Object} time
+ */
+function XiboClockUpdate(time)
+{
+	$('#XiboClock').html(time);
+	
+	return;
 }
 
 /**

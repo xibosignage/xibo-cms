@@ -74,7 +74,7 @@ class Session
 		
 		if(isset($_POST['SecurityToken'])) 
 		{		
-			$securityToken = validate($_POST['SecurityToken']);
+			$securityToken = Kit::GetParam('SecurityToken', _POST, _STRING);
 			
 			if (!$securityToken)
 			{
@@ -127,17 +127,18 @@ class Session
 			
 			return($row[0]);
 		}
-		else {
+		else 
+		{
 			$empty = '';
 			return settype($empty, "string");
 		}
 	}
 	
-	function write($key, $val) {
+	function write($key, $val) 
+	{
+		$db 			=& $this->db;
 		
-		$db =& $this->db;
-		
-		$val = addslashes($val);
+		$val 			= addslashes($val);
 		
 		$newExp 		= time() + $this->max_lifetime;
 		$lastaccessed 	= date("Y-m-d H:i:s");
@@ -155,6 +156,15 @@ class Session
 		else 
 		{
 			//UPDATE
+			
+			// Punch a very small hole in the authentication system
+			// we do not want to update the expiry time of a session if it is the Clock Timer going off
+			$page	= Kit::GetParam('p', _REQUEST, _WORD);
+			$query	= Kit::GetParam('q', _REQUEST, _WORD);
+			
+			if ($page == 'clock' && $query == 'GetClock') return true;
+			if ($page == 'index' && $query == 'PingPong') return true;
+			
 			$SQL = "UPDATE session SET ";
 			$SQL .= " session_data = '$val', ";
 			$SQL .= " session_expiration = '$newExp', ";
@@ -162,7 +172,8 @@ class Session
 			$SQL .= " WHERE session_id = '$key' ";
 		}
 		
-		if(!$db->query($SQL)) {
+		if(!$db->query($SQL)) 
+		{
 			log_entry($db, "error", $db->error());
 			return(false);
 		}

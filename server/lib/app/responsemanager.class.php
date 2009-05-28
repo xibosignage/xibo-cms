@@ -45,7 +45,7 @@ class ResponseManager
 	public $refreshLocation;
 	
 	public $login;
-	
+	public $clockUpdate;
 	
 	public function __construct()
 	{		
@@ -53,7 +53,8 @@ class ResponseManager
 		$this->ajax	= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
 		
 		// Assume success
-		$this->success = true;
+		$this->success 		= true;
+		$this->clockUpdate 	= false;
 		
 		return true;
 	}
@@ -181,6 +182,7 @@ class ResponseManager
 			$response['success']		= $this->success;
 			$response['callBack']		= $this->callBack;
 			$response['message']		= $this->message;
+			$response['clockUpdate']	= $this->clockUpdate;
 			
 			// Grids
 			$response['sortable']		= $this->sortable;

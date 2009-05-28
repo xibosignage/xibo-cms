@@ -241,6 +241,17 @@ class indexDAO
 		
 		exit;
 	}
+	
+	/**
+	 * Ping Pong
+	 * @return 
+	 */
+	public function PingPong()
+	{
+		$response = new ResponseManager();
+		
+		$response->success = true;
+		$response->Respond();
+	}
 }
-
 ?>

@@ -54,3 +54,10 @@
 	padding-left: 10px;
 	padding-right: 10px;
 }
+
+.footer {
+	font-size:0.8em;
+	text-align:right;
+	padding-top: 15px;
+	padding-right: 5px;
+}

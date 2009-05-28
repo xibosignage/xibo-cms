@@ -34,6 +34,8 @@
 <div id="div_dialog"></div>
 <div id="help_dialog"></div>
 
+<div class="footer" style="display:block;">Copyright &copy; 2009 Daniel Garner et al, <a href="www.xibo.org.uk" title="Xibo Digital Signage">Xibo Digital Signage</a></div>
+
 </div> <!-- Ends the content div -->
 </div> <!-- Ends contentwrap div -->
 </div> <!-- Ends the container div -->

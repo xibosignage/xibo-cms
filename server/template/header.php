@@ -96,7 +96,7 @@ $datemanager	= new DateManager($db);
 				<ul>
 					<?php displayMessage(); ?>
 					<li><?php echo $username; ?></li>
-					<li><a class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo __('Click to show more time information'); ?>"><?php echo $datemanager->GetClock(); ?></a></li>
+					<li><a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo __('Click to show more time information'); ?>"><?php echo $datemanager->GetClock(); ?></a></li>
 					<li><a title="Show <?php echo ucfirst($p); ?> Help" class="XiboHelpButton" href="<?php echo $helpLink; ?>">Help</a></li>
 					<li><a title="Logout" href="index.php?q=logout">Logout</a></li>
 				</ul>
