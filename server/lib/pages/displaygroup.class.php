@@ -171,7 +171,7 @@ END;
 			<table>
 				<tr>
 					<td>$msgName<span class="required">*</span></td>
-					<td>$nameHelp <input type="text" name="group" value=""></td>
+					<td>$nameHelp <input class="required" type="text" name="group" value=""></td>
 				</tr>
 				<tr>
 					<td>$msgDesc<span class="required">*</span></td>

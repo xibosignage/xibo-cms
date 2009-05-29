@@ -117,11 +117,9 @@ function XiboInitialise(scope){
 	});
 	
 	// Search for any forms that will need submitting
-    $(scope + ' .XiboForm').submit(function(){
-        XiboFormSubmit(this);
-        
-        return false;
-    });
+    $(scope + ' .XiboForm').validate({
+   		submitHandler: XiboFormSubmit
+	});
     
     // Search for any text forms that will need submitting
     $(scope + ' .XiboTextForm').submit(function(){
