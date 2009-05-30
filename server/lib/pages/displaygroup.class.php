@@ -170,12 +170,75 @@ END;
 		<form class="XiboForm" action="index.php?p=displaygroup&q=Add" method="post">
 			<table>
 				<tr>
-					<td>$msgName<span class="required">*</span></td>
-					<td>$nameHelp <input class="required" type="text" name="group" value=""></td>
+					<td>$msgName</td>
+					<td>$nameHelp <input class="required" type="text" name="group" value="" maxlength="50"></td>
 				</tr>
 				<tr>
-					<td>$msgDesc<span class="required">*</span></td>
-					<td>$descHelp <input type="text" name="desc" value=""></td>
+					<td>$msgDesc</span></td>
+					<td>$descHelp <input type="text" name="desc" value="" maxlength="254"></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<input type='submit' value="$msgSave" / >
+						<input id="btnCancel" type="button" title="$msgCancel" onclick="$('#div_dialog').dialog('close');return false; " value="$msgCancel" />	
+						$helpButton
+					</td>
+				</tr>
+			</table>
+		</form>
+END;
+
+		$response->SetFormRequestResponse($form, __('Add Display Group'), '350px', '275px');
+		$response->Respond();
+	}
+	
+	/**
+	 * Shows an edit form for a display group
+	 * @return 
+	 */
+	public function EditForm()
+	{
+		$db				=& $this->db;
+		$user			=& $this->user;
+		$response		= new ResponseManager();
+		$helpManager	= new HelpManager($db, $user);
+		
+		$displayGroupID	= Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+		
+		// Pull the currently known info from the DB
+		$SQL = "SELECT DisplayGroupID, DisplayGroup, Description FROM displaygroup WHERE DisplayGroupID = %d AND IsDisplaySpecific = 0";
+		$SQL = sprintf($SQL, $displayGroupID);
+		
+		if ($result = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Error getting Display Group'));
+		}
+		
+		//TODO: The rest
+		
+		// Help UI
+		$helpButton 	= $helpManager->HelpButton("displays/groups", true);
+		$nameHelp		= $helpManager->HelpIcon(__("The Name of this Group."), true);
+		$descHelp		= $helpManager->HelpIcon(__("A short description of this Group."), true);
+		
+		$msgName		= __('Name');
+		$msgDesc		= __('Description');
+		$msgSave		= __('Save');
+		$msgCancel		= __('Cancel');
+		
+		$form = <<<END
+		<form class="XiboForm" action="index.php?p=displaygroup&q=Edit" method="post">
+			<input type="hidden" name="DisplayGroupID" value="$displayGroupID" />
+			<table>
+				<tr>
+					<td>$msgName</td>
+					<td>$nameHelp <input class="required" type="text" name="group" value="" maxlength="50"></td>
+				</tr>
+				<tr>
+					<td>$msgDesc</span></td>
+					<td>$descHelp <input type="text" name="desc" value="" maxlength="254"></td>
 				</tr>
 				<tr>
 					<td></td>

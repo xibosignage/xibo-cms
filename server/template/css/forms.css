@@ -290,3 +290,18 @@ table.popup_table{
 .ui-dialog-title {
 	font-size:14px;
 }
+
+label.error {
+	color: #FF0000;
+	padding-left: 25px;
+	margin-top: 4px;
+	display: block;
+}
+
+span.required {
+	color: #FF0000;
+}
+
+input.required {
+	color: #000000;
+}
