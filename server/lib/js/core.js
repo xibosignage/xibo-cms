@@ -71,7 +71,6 @@ $(document).ready(function(){
     }).ajaxComplete(function(){
         $(this).dialog("close");
     }).parent().parent().css("z-index", "300");
-
 	
 	XiboInitialise();
 });
@@ -85,6 +84,24 @@ function XiboInitialise(scope){
 	// If the scope isnt defined then assume the entire page
 	if (scope == undefined || scope == "") {
 		scope = " ";
+	}
+	
+		// Parse the langid out of the url
+	if (gup("lang") != "")
+	{
+		// Add this lang to all the urls on the page
+		// TODO: this might be slow - maybe we need a more efficient way of doing this
+		$(scope + ' a').each(function(){
+			$(this).attr('href', $(this).attr('href') + '&lang=' + gup("lang"));
+		});
+		
+		$(scope + ' form').each(function(){
+			$(this).attr('href', $(this).attr('href') + '&lang=' + gup("lang"));
+		});
+		
+		$(scope + ' button').each(function(){
+			$(this).attr('href', $(this).attr('href') + '&lang=' + gup("lang"));
+		});
 	}
 
 	// Search for any grids on the page and render them 

@@ -47,7 +47,7 @@ $datemanager	= new DateManager($db);
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<title>Xibo: Digital Signage</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<link rel="shortcut icon" href="img/favicon.ico" />
 		<!-- Javascript Libraries -->
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
