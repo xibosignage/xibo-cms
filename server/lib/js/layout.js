@@ -77,7 +77,8 @@ var text_callback = function()
 	width = width + 50;
 	height = height + 220;	
 	
-	$('#div_dialog').parent().parent().width(width).height(height);
+	$('#div_dialog').dialog('option', 'width', width);
+	$('#div_dialog').dialog('option', 'height', height);
 	
 	return false; //prevent submit
 }

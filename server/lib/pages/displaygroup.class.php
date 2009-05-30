@@ -113,6 +113,7 @@ SQL;
 		$msgEdit	= __('Edit');
 		$msgDelete	= __('Delete');
 		$msgDisplayGroup = __('Display Group');
+		$msgMembers	= __('Group Members');
 		
 		$output = <<<END
 		<div class="info_table">
@@ -131,10 +132,25 @@ END;
 			$displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
 			$displayGroup	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
 			
+			// we only want to show certain buttons, depending on the user logged in
+			if ($user->GetUserTypeID() != 1) 
+			{
+				//dont any actions
+				$buttons = __("No available Actions");
+			}
+			else 
+			{
+				$buttons = <<<END
+				<button class="XiboFormButton" href="index.php?p=displaygroup&q=MembersForm&DisplayGroupID=$displayGroupID"><span>$msgMembers</span></button>
+				<button class="XiboFormButton" href="index.php?p=displaygroup&q=EditForm&DisplayGroupID=$displayGroupID"><span>$msgEdit</span></button>
+				<button class="XiboFormButton" href="index.php?p=displaygroup&q=DeleteForm&DisplayGroupID=$displayGroupID"><span>$msgDelete</span></button>
+END;
+			}
+			
 			$output .= <<<END
 			<tr>
 				<td>$displayGroup</td>
-				<td></td>
+				<td>$buttons</td>
 			</tr>
 END;
 		}
@@ -210,13 +226,22 @@ END;
 		$SQL = "SELECT DisplayGroupID, DisplayGroup, Description FROM displaygroup WHERE DisplayGroupID = %d AND IsDisplaySpecific = 0";
 		$SQL = sprintf($SQL, $displayGroupID);
 		
-		if ($result = $db->query($SQL))
+		if (!$result = $db->query($SQL))
 		{
 			trigger_error($db->error());
 			trigger_error(__('Error getting Display Group'));
 		}
 		
-		//TODO: The rest
+		// Pull out these columns
+		if ($db->num_rows($result) == 0)
+		{
+			trigger_error(__('No display group found.'), E_USER_ERROR);
+		}
+		
+		$row 			= $db->get_assoc_row($result);
+		
+		$displayGroup	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
+		$description	= Kit::ValidateParam($row['Description'], _STRING);
 		
 		// Help UI
 		$helpButton 	= $helpManager->HelpButton("displays/groups", true);
@@ -234,11 +259,11 @@ END;
 			<table>
 				<tr>
 					<td>$msgName</td>
-					<td>$nameHelp <input class="required" type="text" name="group" value="" maxlength="50"></td>
+					<td>$nameHelp <input class="required" type="text" name="group" value="$displayGroup" maxlength="50"></td>
 				</tr>
 				<tr>
 					<td>$msgDesc</span></td>
-					<td>$descHelp <input type="text" name="desc" value="" maxlength="254"></td>
+					<td>$descHelp <input type="text" name="desc" value="$description" maxlength="254"></td>
 				</tr>
 				<tr>
 					<td></td>
@@ -252,7 +277,110 @@ END;
 		</form>
 END;
 
-		$response->SetFormRequestResponse($form, __('Add Display Group'), '350px', '275px');
+		$response->SetFormRequestResponse($form, __('Edit Display Group'), '350px', '275px');
+		$response->Respond();
+	}
+	
+	/**
+	 * Shows the Delete Group Form
+	 * @return 
+	 */
+	function DeleteForm() 
+	{
+		$db 			=& $this->db;
+		$response		= new ResponseManager();
+		$displayGroupID	= Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+		
+		$msgWarn		= __('Are you sure you want to delete?');
+		
+		//we can delete
+		$form = <<<END
+		<form class="XiboForm" method="post" action="index.php?p=displaygroup&q=Delete">
+			<input type="hidden" name="DisplayGroupID" value="$displayGroupID" />
+			<p>$msgWarn</p>
+			<input type="submit" value="Yes">
+			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
+		</form>
+END;
+		
+		$response->SetFormRequestResponse($form, __('Delete Display Group'), '350px', '175px');
+		$response->Respond();
+	}
+	
+	public function MembersForm()
+	{
+		$db 			=& $this->db;
+		$response		= new ResponseManager();
+		$displayGroupID	= Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+		
+		// There needs to be two lists here.
+		// One of which is the Displays currently assigned to this group
+		// The other is a list of displays that are available to be assigned (i.e. the opposite of the first list)
+
+		// Displays in group
+		$SQL  = "";
+		$SQL .= "SELECT display.DisplayID, ";
+		$SQL .= "       display.Display ";
+		$SQL .= "FROM   display ";
+		$SQL .= "       INNER JOIN lkdisplaydg ";
+		$SQL .= "       ON     lkdisplaydg.DisplayID = display.DisplayID ";
+		$SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
+		
+		if(!$resultIn = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Error getting Displays'));
+		}
+		
+		// Displays not in group
+		$SQL  = "";
+		$SQL .= "SELECT display.DisplayID, ";
+		$SQL .= "       display.Display ";
+		$SQL .= "FROM   display ";
+		$SQL .= " WHERE Display.DisplayID NOT       IN ";
+		$SQL .= "       (SELECT display.DisplayID ";
+		$SQL .= "       FROM    display ";
+		$SQL .= "               INNER JOIN lkdisplaydg ";
+		$SQL .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
+		$SQL .= sprintf("	WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
+		$SQL .= "       )";
+		
+		if(!$resultOut = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Error getting Displays'));
+		}
+		
+		// Now we have an IN and an OUT results object which we can use to build our lists
+		$listIn 	= '<ul id="displaysIn" class="connectedSortable">';
+		
+		while($row = $db->get_assoc_row($resultIn))
+		{
+			// For each item output a LI
+			$displayID	= Kit::ValidateParam($row['DisplayID'], _INT);
+			$display	= Kit::ValidateParam($row['Display'], _STRING);
+			
+			$listIn		.= '<li class="li-sortable">' . $display . '</li>';
+		}
+		$listIn		.= '<li class="li-sortable">not empty</li>';
+		$listIn		.= '</ul>';
+		
+		$listOut 	= '<ul id="displaysOut" class="connectedSortable">';
+		
+		while($row = $db->get_assoc_row($resultOut))
+		{
+			// For each item output a LI
+			$displayID	= Kit::ValidateParam($row['DisplayID'], _INT);
+			$display	= Kit::ValidateParam($row['Display'], _STRING);
+			
+			$listOut	.= '<li class="li-sortable">' . $display . '</li>';
+		}
+		$listOut 	.= '</ul>';
+		
+		// Build the final form.
+		$form		= $listIn . ' ' . $listOut;
+		
+		$response->SetFormRequestResponse($form, __('Manage Membership'), '450px', '375px', 'ManageMembersCallBack');
 		$response->Respond();
 	}
 	
@@ -285,7 +413,7 @@ END;
 		// Check for groups with the same name?
 		if($db->num_rows($result) != 0) 
 		{
-			$response->SetError(sprintf(__("You already own a display group called '%s'.") .  __("Please choose another.", $displayGroup)));
+			$response->SetError(sprintf(__("You already own a display group called '%s'.") .  __("Please choose another."), $displayGroup));
 			$response->Respond();
 		}
 		
@@ -297,6 +425,75 @@ END;
 		}
 		
 		$response->SetFormSubmitResponse(__('Display Group Added'), false);
+		$response->Respond();
+	}
+	
+	/**
+	 * Edits a Display Group
+	 * @return 
+	 */
+	public function Edit()
+	{
+		$db 			=& $this->db;
+		$response		= new ResponseManager();
+
+		$displayGroupID	= Kit::GetParam('DisplayGroupID', _POST, _INT);
+		$displayGroup	= Kit::GetParam('group', _POST, _STRING);
+		$description 	= Kit::GetParam('desc', _POST, _STRING);
+		
+		// Validation
+		if ($displayGroup == '')
+		{
+			trigger_error(__('Please enter a display group name'), E_USER_ERROR);
+		}
+		
+		if (strlen($description) > 254) 
+		{
+			trigger_error(__("Description can not be longer than 254 characters"), E_USER_ERROR);
+		}
+		
+		$check 	= sprintf("SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = '%s' AND IsDisplaySpecific = 0 AND DisplayGroupID <> %d ", $displayGroup, $displayGroupID);
+		$result = $db->query($check) or trigger_error($db->error());
+		
+		// Check for groups with the same name?
+		if($db->num_rows($result) != 0) 
+		{
+			$response->SetError(sprintf(__("You already own a display group called '%s'.") .  __("Please choose another.", $displayGroup)));
+			$response->Respond();
+		}
+		
+		// Deal with the Edit
+		$displayGroupObject = new DisplayGroup($db);
+		
+		if (!$displayGroupObject->Edit($displayGroupID, $displayGroup, $description))
+		{
+			trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
+		}
+		
+		$response->SetFormSubmitResponse(__('Display Group Edited'), false);
+		$response->Respond();
+	}
+	
+	/**
+	 * Deletes a Group
+	 * @return 
+	 */
+	function Delete() 
+	{
+		$db 			=& $this->db;	
+		$response		= new ResponseManager();
+	
+		$displayGroupID	= Kit::GetParam('DisplayGroupID', _POST, _INT);
+		
+		// Deal with the Edit
+		$displayGroupObject = new DisplayGroup($db);
+		
+		if (!$displayGroupObject->Delete($displayGroupID))
+		{
+			trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
+		}
+		
+		$response->SetFormSubmitResponse(__('Display Group Deleted'), false);
 		$response->Respond();
 	}
 }  

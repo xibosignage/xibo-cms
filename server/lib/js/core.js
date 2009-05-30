@@ -26,7 +26,7 @@ $(document).ready(function(){
 	setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes
 	
 	// Setup the dialogs
-    $('#div_dialog').dialog({
+	$('#div_dialog').dialog({
         title: "Xibo",
         width: "500px",
         height: "240px",
@@ -34,9 +34,8 @@ $(document).ready(function(){
         resizable: false,
         bgiframe: true,
 		autoOpen: false
-    }).parent().parent().css("z-index", "300");
+    });
 	
-	// Setup the dialogs
     $('#help_dialog').dialog({
         title: "Xibo Help",
         width: "500px",
@@ -45,7 +44,7 @@ $(document).ready(function(){
         resizable: false,
         bgiframe: true,
 		autoOpen: false
-    }).parent().parent().css("z-index", "300");
+    });
 	
     $('#system_message').dialog({
         title: "Application Message",
@@ -56,7 +55,7 @@ $(document).ready(function(){
         bgiframe: true,
 		autoOpen: false,
 		modal: true
-    }).parent().parent().css("z-index", "300");
+    });
 	
     $('#system_working').dialog({
         title: "Progress...",
@@ -70,7 +69,7 @@ $(document).ready(function(){
     	$(this).dialog("open");
     }).ajaxComplete(function(){
         $(this).dialog("close");
-    }).parent().parent().css("z-index", "300");
+    });
 	
 	XiboInitialise();
 });
@@ -248,25 +247,26 @@ function XiboFormRender(formUrl) {
 				// Is there a title for the dialog?
 				if (response.dialogTitle != undefined && response.dialogTitle != "") {
 					// Set the dialog title
-					$('#div_dialog').parent().children().each(function(){
-						$(".ui-dialog-title", this).html(response.dialogTitle);
-					});
+					$('#div_dialog').dialog('option', 'title', response.dialogTitle);
 				}
 				
+				$('#div_dialog').dialog("open").dialog('moveToTop');
+
 				// Do we need to alter the dialog size?
 				if (response.dialogSize) {
-					$('#div_dialog').parent().parent().width(response.dialogWidth).height(response.dialogHeight);
+					$('#div_dialog').dialog('option', 'width', response.dialogWidth);
+				    $('#div_dialog').dialog('option', 'height', response.dialogHeight);
 				}
+				
+				$('#div_dialog').dialog('option', 'position', 'center');
 				
                 // Do we have to call any functions due to this success?
                 if (response.callBack != "" && response.callBack != undefined) {
                     eval(response.callBack)(name);
                 }
-
-				$('#div_dialog').dialog("open");
                              
                 // Focus in the first form element
-                $('input[@type=text]', '#div_dialog').eq(0).focus();
+                $('input[type=text]', '#div_dialog').eq(0).focus();
 				
 				// Call Xibo Init for this form
 				XiboInitialise("#div_dialog");
@@ -460,17 +460,21 @@ function XiboHelpRender(formUrl) {
 					});
 				}
 				
+				$('#help_dialog').dialog("open");
+				
 				// Do we need to alter the dialog size?
-				if (response.dialogSize) {
-					$('#help_dialog').parent().parent().width(response.dialogWidth).height(response.dialogHeight);
+				if (response.dialogSize) 
+				{
+					$('#help_dialog').dialog('option', 'width', response.dialogWidth);
+				    $('#help_dialog').dialog('option', 'height', response.dialogHeight);
 				}
+				
+				$('#help_dialog').dialog('option', 'position', 'center');
 				
                 // Do we have to call any functions due to this success?
                 if (response.callBack != "" && response.callBack != undefined) {
                     eval(response.callBack)(name);
                 }
-
-				$('#help_dialog').dialog("open");
                              
                 // Focus in the first form element
                 $('input[@type=text]', '#help_dialog').eq(0).focus();
@@ -521,11 +525,13 @@ function LoginBox(message) {
         $(".ui-dialog-title", this).html("Please Login");
     });
 	
-    $('#div_dialog').parent().parent().width("400px").height("200px");
+    $('#div_dialog').dialog('option', 'width', '400px');
+    $('#div_dialog').dialog('option', 'height', '200px');
     
     $('#div_dialog').dialog("open");
     
-    $('#username', '#div_dialog').focus();
+    // Focus in the first form element
+    $('input[type=text]', '#div_dialog').eq(0).focus();
     
     return;
 }

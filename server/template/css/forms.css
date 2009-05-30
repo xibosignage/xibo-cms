@@ -305,3 +305,20 @@ span.required {
 input.required {
 	color: #000000;
 }
+
+.ui-sortable {
+	width: 150px;
+	padding: 5px;
+	margin: 5px;
+	float: left;
+	background-color: #EEEEEE;
+}
+
+.li-sortable {
+	padding: 5px;
+	margin: 5px;
+	border: 1px solid #8080ff;
+	background-color: #E5F0FF;
+	width: 130px;
+	cursor: pointer;
+}
