@@ -183,7 +183,7 @@ END;
 		$msgCancel		= __('Cancel');
 		
 		$form = <<<END
-		<form id="" class="XiboForm" action="index.php?p=displaygroup&q=Add" method="post">
+		<form id="DisplayGroupAddForm" class="XiboForm" action="index.php?p=displaygroup&q=Add" method="post">
 			<table>
 				<tr>
 					<td>$msgName</td>
@@ -193,19 +193,14 @@ END;
 					<td>$msgDesc</span></td>
 					<td>$descHelp <input type="text" name="desc" value="" maxlength="254"></td>
 				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input type='submit' value="$msgSave" / >
-						<input id="btnCancel" type="button" title="$msgCancel" onclick="$('#div_dialog').dialog('close');return false; " value="$msgCancel" />	
-						$helpButton
-					</td>
-				</tr>
 			</table>
 		</form>
 END;
 
-		$response->SetFormRequestResponse($form, __('Add Display Group'), '350px', '275px', '', array('Help' => "XiboHelpRender('index.php?p=help&q=Display&Topic=Displays&Category=Groups')", "$msgCancel" => 'XiboDialogClose'));
+		$response->SetFormRequestResponse($form, __('Add Display Group'), '350px', '275px');
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Displays&Category=Groups')");
+		$response->AddButton($msgCancel, 'XiboDialogClose()');
+		$response->AddButton($msgSave, '$("#DisplayGroupAddForm").submit()');
 		$response->Respond();
 	}
 	
@@ -380,6 +375,9 @@ END;
 		$form		= '<div class="connectedlist"><h3>Members</h3>' . $listIn . '</div><div class="connectedlist"><h3>Non-members</h3>' . $listOut . '</div>';
 		
 		$response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Displays&Category=Groups')");
+		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Save'), 'MembersSubmit()');
 		$response->Respond();
 	}
 	

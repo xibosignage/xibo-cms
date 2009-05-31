@@ -56,6 +56,7 @@ class ResponseManager
 		// Assume success
 		$this->success 		= true;
 		$this->clockUpdate 	= false;
+		$this->buttons		= '';
 		
 		return true;
 	}
@@ -118,10 +119,9 @@ class ResponseManager
 	 * @param $height Object[optional]
 	 * @param $callBack Object[optional]
 	 */
-	public function SetFormRequestResponse($form, $title, $width = '', $height = '', $callBack = '', $buttons = '')
+	public function SetFormRequestResponse($form, $title, $width = '', $height = '', $callBack = '')
 	{
 		$this->html 					= $form;
-		$this->buttons 					= $buttons;
 		$this->dialogTitle 				= $title;
 		$this->callBack 				= $callBack;
 		
@@ -166,6 +166,19 @@ class ResponseManager
 		$this->refreshLocation 	= $refreshLocation;
 		
 		return;
+	}
+	
+	/**
+	 * Adds a button to the form
+	 * @return 
+	 * @param $name Object
+	 * @param $function Object
+	 */
+	public function AddButton($name, $function)
+	{
+		$this->buttons[$name] = $function;
+		
+		return true;
 	}
 	
 	/**

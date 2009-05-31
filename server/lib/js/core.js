@@ -256,12 +256,13 @@ function XiboFormRender(formUrl) {
 						response.buttons,
 						function(index, value) {
 							var extrabutton = {};
-							extrabutton[index] = value;
+							extrabutton[index] = function(){
+								eval(value);
+							}
 														
 							buttons 		= $.extend(buttons, extrabutton);
 						}
 					);
-					console.log(buttons);
 				}
 				
 				// Create the dialog with our parameters
@@ -554,7 +555,10 @@ function LoginBox(message) {
         resizable: false,
         bgiframe: true,
 		autoOpen: true,
-		position: 'center'
+		position: 'center',
+		buttons: {"Login": function(){
+			XiboFormSubmit($('#XiboLoginForm').submit())
+		}}
     });
     
     // Focus in the first form element
