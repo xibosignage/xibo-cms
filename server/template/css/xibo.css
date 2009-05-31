@@ -61,3 +61,9 @@
 	padding-top: 15px;
 	padding-right: 5px;
 }
+
+#system_working {
+	position: absolute;
+	left: 20px;
+	top: 100px;
+}

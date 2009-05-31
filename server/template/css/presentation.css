@@ -1252,10 +1252,6 @@ td.error {
 	z-index:15;
 }
 
-.ui-dialog{
-	border: 2px solid #DCE4F5;
-}
-
 .scrollingWindow 
 {
 	overflow-y: scroll;

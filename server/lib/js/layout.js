@@ -79,6 +79,7 @@ var text_callback = function()
 	
 	$('#div_dialog').dialog('option', 'width', width);
 	$('#div_dialog').dialog('option', 'height', height);
+	$('#div_dialog').dialog('option', 'position', 'center');
 	
 	return false; //prevent submit
 }

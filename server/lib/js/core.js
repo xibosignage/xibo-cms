@@ -26,20 +26,10 @@ $(document).ready(function(){
 	setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes
 	
 	// Setup the dialogs
-	$('#div_dialog').dialog({
-        title: "Xibo",
-        width: "500px",
-        height: "240px",
-        draggable: true,
-        resizable: false,
-        bgiframe: true,
-		autoOpen: false
-    });
-	
     $('#help_dialog').dialog({
         title: "Xibo Help",
-        width: "500px",
-        height: "240px",
+        width: "500",
+        height: "240",
         draggable: true,
         resizable: false,
         bgiframe: true,
@@ -48,27 +38,24 @@ $(document).ready(function(){
 	
     $('#system_message').dialog({
         title: "Application Message",
-        width: "320px",
-        height: "120px",
+        width: "320",
+        height: "120",
         draggable: false,
         resizable: false,
         bgiframe: true,
 		autoOpen: false,
-		modal: true
+		modal: true,
+		buttons: {
+				Ok: function() {
+					$(this).dialog('close');
+				}
+			}
     });
 	
-    $('#system_working').dialog({
-        title: "Progress...",
-        width: "240px",
-        height: "90px",
-        draggable: false,
-        resizable: false,
-        bgiframe: true,
-		autoOpen: false
-    }).ajaxStart(function(){
-    	$(this).dialog("open");
+    $('#system_working').ajaxStart(function(){
+    	$(this).show();
     }).ajaxComplete(function(){
-        $(this).dialog("close");
+        $(this).fadeOut("slow");
     });
 	
 	XiboInitialise();
@@ -228,7 +215,7 @@ function XiboGridRender(gridId){
 function XiboFormRender(formUrl) {
 	
 	// Prepare the Dialog
-	$('#div_dialog').dialog("close");
+	$('#div_dialog').dialog('destroy');
 	$('#div_dialog').html("");
 	
 	// Call with AJAX
@@ -241,25 +228,54 @@ function XiboFormRender(formUrl) {
         
 			// Was the Call successful
             if (response.success) {
+				
 				// Set the dialog HTML to be the response HTML
                 $('#div_dialog').html(response.html);
+				
+				var dialogTitle = "Xibo";
+				var dialogWidth = "500";
+				var dialogHeight = "500";
 				
 				// Is there a title for the dialog?
 				if (response.dialogTitle != undefined && response.dialogTitle != "") {
 					// Set the dialog title
-					$('#div_dialog').dialog('option', 'title', response.dialogTitle);
+					dialogTitle =  response.dialogTitle;
 				}
-				
-				$('#div_dialog').dialog("open").dialog('moveToTop');
 
 				// Do we need to alter the dialog size?
 				if (response.dialogSize) {
-					$('#div_dialog').dialog('option', 'width', response.dialogWidth);
-				    $('#div_dialog').dialog('option', 'height', response.dialogHeight);
+					dialogWidth 	= response.dialogWidth;
+					dialogHeight	= response.dialogHeight;
 				}
 				
-				$('#div_dialog').dialog('option', 'position', 'center');
+				// Buttons?
+				var buttons = '';
 				
+				if (response.buttons != '') {
+					$.each(
+						response.buttons,
+						function(index, value) {
+							var extrabutton = {};
+							extrabutton[index] = value;
+														
+							buttons 		= $.extend(buttons, extrabutton);
+						}
+					);
+					console.log(buttons);
+				}
+				
+				// Create the dialog with our parameters
+				$('#div_dialog').dialog({
+			        title: dialogTitle,
+			        width: dialogWidth,
+			        height: dialogHeight,
+			        draggable: true,
+			        resizable: false,
+			        bgiframe: true,
+					autoOpen: true,
+					buttons: buttons
+			    });
+
                 // Do we have to call any functions due to this success?
                 if (response.callBack != "" && response.callBack != undefined) {
                     eval(response.callBack)(name);
@@ -314,6 +330,8 @@ function XiboPing(url) {
             if (!response.success) {
 				// Login Form needed?
 	            if (response.login) {
+					$('#div_dialog').dialog('destroy');
+					
 	                LoginBox(response.message);
 	                return false;
 	            }
@@ -508,6 +526,13 @@ function XiboHelpRender(formUrl) {
 }
 
 /**
+ * Closes the dialog window
+ */
+function XiboDialogClose() {
+	$('#div_dialog').dialog('close');
+}
+
+/**
  * Display a login box
  * @param {String} message
  */
@@ -519,16 +544,18 @@ function LoginBox(message) {
         XiboFormSubmit(this);
         return false;
     });
-    
-    //do any changes to the dialog form here
-    $('#div_dialog').parent().children().each(function(){
-        $(".ui-dialog-title", this).html("Please Login");
-    });
 	
-    $('#div_dialog').dialog('option', 'width', '400px');
-    $('#div_dialog').dialog('option', 'height', '200px');
-    
-    $('#div_dialog').dialog("open");
+	// Create the dialog with our parameters
+	$('#div_dialog').dialog({
+        title: 'Please Login to Proceed',
+        width: 300,
+        height: 300,
+        draggable: true,
+        resizable: false,
+        bgiframe: true,
+		autoOpen: true,
+		position: 'center'
+    });
     
     // Focus in the first form element
     $('input[type=text]', '#div_dialog').eq(0).focus();

@@ -541,7 +541,7 @@ HTML;
 		<form class="XiboForm" method="post" action="index.php?p=layout&q=AddFromLibrary">
 			<input type="hidden" name="layoutid" value="$layoutid" />
 			<input type="hidden" name="regionid" value="$regionid" />
-			<div class="dialog_table" style="overflow-y: scroll; height: 300px;">
+			<div class="dialog_table">
 			<table style="width:100%">
 				<thead>
 			    <tr>

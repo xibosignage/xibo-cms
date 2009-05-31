@@ -183,7 +183,7 @@ END;
 		$msgCancel		= __('Cancel');
 		
 		$form = <<<END
-		<form class="XiboForm" action="index.php?p=displaygroup&q=Add" method="post">
+		<form id="" class="XiboForm" action="index.php?p=displaygroup&q=Add" method="post">
 			<table>
 				<tr>
 					<td>$msgName</td>
@@ -205,7 +205,7 @@ END;
 		</form>
 END;
 
-		$response->SetFormRequestResponse($form, __('Add Display Group'), '350px', '275px');
+		$response->SetFormRequestResponse($form, __('Add Display Group'), '350px', '275px', '', array('Help' => "XiboHelpRender('index.php?p=help&q=Display&Topic=Displays&Category=Groups')", "$msgCancel" => 'XiboDialogClose'));
 		$response->Respond();
 	}
 	
@@ -352,7 +352,7 @@ END;
 		}
 		
 		// Now we have an IN and an OUT results object which we can use to build our lists
-		$listIn 	= '<ul id="displaysIn" class="connectedSortable">';
+		$listIn 	= '<ul id="displaysIn" href="index.php?p=displaygroup&q=SetMembers&DisplayGroupID=' . $displayGroupID . '" class="connectedSortable">';
 		
 		while($row = $db->get_assoc_row($resultIn))
 		{
@@ -360,9 +360,8 @@ END;
 			$displayID	= Kit::ValidateParam($row['DisplayID'], _INT);
 			$display	= Kit::ValidateParam($row['Display'], _STRING);
 			
-			$listIn		.= '<li class="li-sortable">' . $display . '</li>';
+			$listIn		.= '<li id="DisplayID_' . $displayID . '"class="li-sortable">' . $display . '</li>';
 		}
-		$listIn		.= '<li class="li-sortable">not empty</li>';
 		$listIn		.= '</ul>';
 		
 		$listOut 	= '<ul id="displaysOut" class="connectedSortable">';
@@ -373,14 +372,14 @@ END;
 			$displayID	= Kit::ValidateParam($row['DisplayID'], _INT);
 			$display	= Kit::ValidateParam($row['Display'], _STRING);
 			
-			$listOut	.= '<li class="li-sortable">' . $display . '</li>';
+			$listOut	.= '<li id="DisplayID_' . $displayID . '" class="li-sortable">' . $display . '</li>';
 		}
 		$listOut 	.= '</ul>';
 		
 		// Build the final form.
-		$form		= $listIn . ' ' . $listOut;
+		$form		= '<div class="connectedlist"><h3>Members</h3>' . $listIn . '</div><div class="connectedlist"><h3>Non-members</h3>' . $listOut . '</div>';
 		
-		$response->SetFormRequestResponse($form, __('Manage Membership'), '450px', '375px', 'ManageMembersCallBack');
+		$response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
 		$response->Respond();
 	}
 	
@@ -494,6 +493,70 @@ END;
 		}
 		
 		$response->SetFormSubmitResponse(__('Display Group Deleted'), false);
+		$response->Respond();
+	}
+	
+	/**
+	 * Sets the Members of a group
+	 * @return 
+	 */
+	public function SetMembers()
+	{
+		$db 			=& $this->db;	
+		$response		= new ResponseManager();
+		$displayGroupObject = new DisplayGroup($db);
+	
+		$displayGroupID	= Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+		$displays		= Kit::GetParam('DisplayID', _POST, _ARRAY, array());
+		$members		= array();
+		
+		// Get a list of current members
+		$SQL  = "";
+		$SQL .= "SELECT display.DisplayID ";
+		$SQL .= "FROM   display ";
+		$SQL .= "       INNER JOIN lkdisplaydg ";
+		$SQL .= "       ON     lkdisplaydg.DisplayID = display.DisplayID ";
+		$SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
+		
+		if(!$resultIn = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Error getting Displays'));
+		}
+		
+		while($row = $db->get_assoc_row($resultIn))
+		{
+			// Test whether this ID is in the array or not
+			$displayID	= Kit::ValidateParam($row['DisplayID'], _INT);
+			
+			if(!in_array($displayID, $displays))
+			{
+				// Its currently assigned but not in the $displays array
+				//  so we unassign
+				if (!$displayGroupObject->Unlink($displayGroupID, $displayID))
+				{
+					trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
+				}
+			}
+			else
+			{
+				$members[] = $displayID;
+			}
+		}
+		
+		foreach($displays as $displayID)
+		{
+			// Add any that are missing
+			if(!in_array($displayID, $members))
+			{
+				if (!$displayGroupObject->Link($displayGroupID, $displayID))
+				{
+					trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
+				}
+			}
+		}
+		
+		$response->SetFormSubmitResponse(__('Group membership set'), false);
 		$response->Respond();
 	}
 }  

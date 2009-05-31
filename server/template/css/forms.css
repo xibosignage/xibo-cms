@@ -287,10 +287,6 @@ table.popup_table{
 	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 }
 
-.ui-dialog-title {
-	font-size:14px;
-}
-
 label.error {
 	color: #FF0000;
 	padding-left: 25px;
@@ -306,12 +302,20 @@ input.required {
 	color: #000000;
 }
 
+.connectedlist {
+	float: left;
+	width: 160px;
+	margin: 5px;
+}
+
+.connectedlist h3 {
+	padding: 5px;
+}
+
 .ui-sortable {
 	width: 150px;
-	padding: 5px;
-	margin: 5px;
-	float: left;
 	background-color: #EEEEEE;
+	padding: 5px;
 }
 
 .li-sortable {
@@ -321,4 +325,8 @@ input.required {
 	background-color: #E5F0FF;
 	width: 130px;
 	cursor: pointer;
+}
+
+.listsubmit {
+	clear:both;
 }

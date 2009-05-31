@@ -28,6 +28,7 @@ class ResponseManager
 	public $success;
 	public $html;
 	public $callBack;
+	public $buttons;
 	
 	public $sortable;
 	public $sortingDiv;
@@ -117,9 +118,10 @@ class ResponseManager
 	 * @param $height Object[optional]
 	 * @param $callBack Object[optional]
 	 */
-	public function SetFormRequestResponse($form, $title, $width = '', $height = '', $callBack = '')
+	public function SetFormRequestResponse($form, $title, $width = '', $height = '', $callBack = '', $buttons = '')
 	{
 		$this->html 					= $form;
+		$this->buttons 					= $buttons;
 		$this->dialogTitle 				= $title;
 		$this->callBack 				= $callBack;
 		
@@ -179,6 +181,8 @@ class ResponseManager
 			
 			// General
 			$response['html'] 			= $this->html;
+			$response['buttons']		= $this->buttons;
+			
 			$response['success']		= $this->success;
 			$response['callBack']		= $this->callBack;
 			$response['message']		= $this->message;
@@ -193,6 +197,10 @@ class ResponseManager
 			$response['dialogWidth']	= $this->dialogWidth;
 			$response['dialogHeight'] 	= $this->dialogHeight;
 			$response['dialogTitle']	= $this->dialogTitle;
+			
+			// Tweak the width and height
+			$response['dialogWidth'] 	= (int) str_replace('px', '', $response['dialogWidth']);
+			$response['dialogHeight'] 	= (int) str_replace('px', '', $response['dialogHeight']);
 			
 			// Form Submits
 			$response['keepOpen']		= $this->keepOpen;

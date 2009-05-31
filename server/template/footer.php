@@ -22,13 +22,10 @@
 ?>
 
 
-<div id="system_working">
-	<img src="img/loading.gif"><span style="padding-left:10px">Please Wait ...</span>
-</div>
+<div id="system_working"><img src="img/loading.gif"></div>
 
 <div id="system_message" style="text-align: center;">
 	<span>Message</span>
-	<p><input type="submit" value="OK" onclick="$('#system_message').dialog('close')" /></p>
 </div>
 
 <div id="div_dialog"></div>

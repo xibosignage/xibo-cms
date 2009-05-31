@@ -23,4 +23,23 @@ function ManageMembersCallBack()
 		connectWith: '.connectedSortable',
 		dropOnEmpty: true
 	}).disableSelection();
+	
+	$('#div_dialog').dialog('option','buttons', {"Cancel": function() { $('#div_dialog').dialog('close'); }, "Save": function(){
+		// Serialise the form and then submit it via Ajax.
+		var href = $("#displaysIn").attr('href') + "&ajax=true";
+		
+		// Get the two lists		
+		serializedData = $("#displaysIn").sortable('serialize');
+		
+		$.ajax({
+			type: "post",
+			url: href,
+			cache: false,
+			dataType: "json",
+			data: serializedData,
+			success: XiboSubmitResponse
+		});
+		
+		return;
+	} });
 }

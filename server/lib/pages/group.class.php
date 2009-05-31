@@ -345,8 +345,8 @@ HTML;
 		$response['html'] 			= $xiboGrid;
 		$response['success']		= true;
 		$response['dialogSize']		= true;
-		$response['dialogWidth']	= '500px';
-		$response['dialogHeight'] 	= '380px';
+		$response['dialogWidth']	= '500';
+		$response['dialogHeight'] 	= '380';
 		$response['dialogTitle']	= __('Page Security');
 		
 		Kit::Redirect($response);
@@ -684,8 +684,8 @@ HTML;
 		$response['html'] 			= $xiboGrid;
 		$response['success']		= true;
 		$response['dialogSize']		= true;
-		$response['dialogWidth']	= '500px';
-		$response['dialogHeight'] 	= '380px';
+		$response['dialogWidth']	= '500';
+		$response['dialogHeight'] 	= '280';
 		$response['dialogTitle']	= __('Menu Item Security');
 		
 		Kit::Redirect($response);
@@ -751,7 +751,7 @@ END;
 		$form = <<<END
 		<form class="XiboForm" method="post" action="index.php?p=group&q=MenuItemSecurityAssign">
 			<input type="hidden" name="groupid" value="$groupid">
-			<div class="dialog_table" style="overflow-y: scroll; height: 300px;">
+			<div class="dialog_table">
 			<table style="width:100%">
 				<thead>
 					<tr>
