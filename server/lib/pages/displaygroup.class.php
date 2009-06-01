@@ -249,7 +249,7 @@ END;
 		$msgCancel		= __('Cancel');
 		
 		$form = <<<END
-		<form class="XiboForm" action="index.php?p=displaygroup&q=Edit" method="post">
+		<form id="DisplayGroupEditForm" class="XiboForm" action="index.php?p=displaygroup&q=Edit" method="post">
 			<input type="hidden" name="DisplayGroupID" value="$displayGroupID" />
 			<table>
 				<tr>
@@ -260,19 +260,14 @@ END;
 					<td>$msgDesc</span></td>
 					<td>$descHelp <input type="text" name="desc" value="$description" maxlength="254"></td>
 				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input type='submit' value="$msgSave" / >
-						<input id="btnCancel" type="button" title="$msgCancel" onclick="$('#div_dialog').dialog('close');return false; " value="$msgCancel" />	
-						$helpButton
-					</td>
-				</tr>
 			</table>
 		</form>
 END;
 
 		$response->SetFormRequestResponse($form, __('Edit Display Group'), '350px', '275px');
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Displays&Category=Groups')");
+		$response->AddButton($msgCancel, 'XiboDialogClose()');
+		$response->AddButton($msgSave, '$("#DisplayGroupEditForm").submit()');
 		$response->Respond();
 	}
 	
@@ -290,15 +285,16 @@ END;
 		
 		//we can delete
 		$form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=displaygroup&q=Delete">
+		<form id="DisplayGroupDeleteForm" class="XiboForm" method="post" action="index.php?p=displaygroup&q=Delete">
 			<input type="hidden" name="DisplayGroupID" value="$displayGroupID" />
 			<p>$msgWarn</p>
-			<input type="submit" value="Yes">
-			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
 END;
 		
 		$response->SetFormRequestResponse($form, __('Delete Display Group'), '350px', '175px');
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Displays&Category=Groups')");
+		$response->AddButton(__('No'), 'XiboDialogClose()');
+		$response->AddButton(__('Yes'), '$("#DisplayGroupDeleteForm").submit()');
 		$response->Respond();
 	}
 	

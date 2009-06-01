@@ -253,5 +253,49 @@ class indexDAO
 		$response->success = true;
 		$response->Respond();
 	}
+	
+	/**
+	 * Shows information about Xibo
+	 * @return 
+	 */
+	function About()
+	{
+		$response = new ResponseManager();
+		
+		$output = <<<END
+		<h1>License Information</h1>
+		<p>Xibo - Digitial Signage - <a href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>
+		Copyright &copy 2009 Daniel Garner et al</p>
+		 
+		<p>Xibo is free software: you can redistribute it and/or modify
+		it under the terms of the GNU Affero General Public License as published by
+		the Free Software Foundation, either version 3 of the License, or
+		any later version. </p>
+		 
+		<p>Xibo is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+		GNU Affero General Public License for more details.</p>
+		 
+		<p>You should have received a copy of the GNU Affero General Public License
+		along with Xibo.  If not, see <a href="http://www.gnu.org/licenses/">www.gnu.org/licenses</a>. </p>
+		
+		<h2>Third Party Licenses</h2>
+		<p>Xibo uses some third party libraries and tools - these are provided to you along with Xibo under the following licenses:</p>
+		
+		<h3>jQuery</h3>
+		<p><a href="http://jquery.com/">Jquery</a> (and plugins) are provided under the <a href="http://dev.jquery.com/browser/trunk/jquery/MIT-LICENSE.txt">MIT license.</a></p>
+		
+		<h3>FCK Editor</h3>
+		<p><a href="http://www.fckeditor.net/license">FCK Editor</a> is provided as the text editor, and is made available under GPL/LGPL/MPL</p>
+
+		<h3>nuSOAP</h3>
+		<p>The NuSOAP Library is used for the Web Service, and used on the Xibo Server under the GPL license.</p>
+END;
+		
+		$response->SetFormRequestResponse($output, __('About Xibo'), '500', '500');
+		$response->AddButton(__('Close'), 'XiboDialogClose()');
+		$response->Respond();
+	}
 }
 ?>

@@ -22,7 +22,7 @@
 ?>
 
 
-<div id="system_working"><img src="img/loading.gif"></div>
+<div id="system_working" style="display:none;"><img src="img/loading.gif"></div>
 
 <div id="system_message" style="text-align: center;">
 	<span>Message</span>

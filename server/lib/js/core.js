@@ -20,11 +20,6 @@
 
 $(document).ready(function(){
 	
-	// Set up the Logout Timer
-	setInterval("XiboPing('index.php?p=clock&q=GetClock')", 1000 * 60);
-	
-	setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes
-	
 	// Setup the dialogs
     $('#help_dialog').dialog({
         title: "Xibo Help",

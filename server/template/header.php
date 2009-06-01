@@ -65,6 +65,7 @@ $datemanager	= new DateManager($db);
 		<!-- Our own -->
 		<link rel="stylesheet" type="text/css" href="template/css/presentation.css" />
 		<script type="text/javascript" src="lib/js/functions.js"></script>
+		<script type="text/javascript" src="lib/js/ping.js"></script>
 		<script type="text/javascript" src="lib/js/core.js"></script>
         <?php
 		if ($p != '') 
@@ -98,7 +99,8 @@ $datemanager	= new DateManager($db);
 					<?php displayMessage(); ?>
 					<li><?php echo $username; ?></li>
 					<li><a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo __('Click to show more time information'); ?>"><?php echo $datemanager->GetClock(); ?></a></li>
-					<li><a title="Show <?php echo ucfirst($p); ?> Help" class="XiboHelpButton" href="<?php echo $helpLink; ?>">Help</a></li>
+					<li><a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo __('About Xibo'); ?>"><?php echo __('About'); ?></a></li>
+					<li><a title="Show <?php echo ucfirst($p); ?> Help" class="XiboHelpButton" href="<?php echo $helpLink; ?>"><?php echo __('Help'); ?></a></li>
 					<li><a title="Logout" href="index.php?q=logout">Logout</a></li>
 				</ul>
 			</div>

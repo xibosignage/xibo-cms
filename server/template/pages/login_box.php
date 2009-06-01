@@ -26,9 +26,17 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<title>Xibo Admin - Please Login</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<link rel="stylesheet" type="text/css" href="template/css/login_box.css" />
+	<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/ui-elements.css" />
 	
 	<link rel="shortcut icon" href="img/favicon.ico" />
 	<script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
+	<script type="text/javascript" src="3rdparty/jQuery/jquery-ui.packed.js"></script>
+	<script type="text/javascript" src="3rdparty/jQuery/jquery.form.js"></script>
+	<script type="text/javascript" src="3rdparty/jQuery/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="3rdparty/jQuery/jquery.bgiframe.min.js"></script>
+	
+	<script type="text/javascript" src="lib/js/functions.js"></script>
+	<script type="text/javascript" src="lib/js/core.js"></script>
 	
 	<script type="text/javascript">
 		$(document).ready(function(){
@@ -77,15 +85,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<?php displayMessage(); ?>
 				<br />
 				<p><a href="http://www.xibo.org.uk"><img src='img/login/complogo.png'></a></p>
-				<p><a href="https://code.launchpad.net/xibo/1.0.0">Source</a></p>
-				
-				<div id="forgotten_details" style="display:none">
-					<?php
-						/*global $user;
-						
-						$user->forget_details();*/
-					?>
-				</div>				
+				<p><a href="https://code.launchpad.net/xibo/1.0.0">Source</a> | <a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo __('About Xibo'); ?>"><?php echo __('About'); ?></a></p>			
 			</div>
 			
 			<div class="login_foot">
@@ -97,7 +97,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		</div>
 		
 </div>
+<div id="system_working" style="display:none;"><img src="img/loading.gif"></div>
 
+<div id="system_message" style="text-align: center;">
+	<span>Message</span>
+</div>
+
+<div id="div_dialog"></div>
 </body>
 </html>
 
