@@ -94,7 +94,7 @@ $datemanager	= new DateManager($db);
 	<div id="container">
 		<div id="headercontainer">
 	  		<div id="header"></div>
-			<div class="SecondNav" id="headerback">
+			<div id="headerback">
 				<ul>
 					<?php displayMessage(); ?>
 					<li><?php echo $username; ?></li>

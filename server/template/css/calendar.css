@@ -1,0 +1,150 @@
+#CalendarTable {
+	width: 100%;
+	table-layout:fixed;
+}
+
+#Nav {
+	width: 19em;
+	vertical-align: top;
+}
+
+tr.WeekDays {
+	height: 3px;
+}
+
+.WeekDays th {
+	height: 3px;
+	text-align: center;
+	vertical-align: middle;
+}
+
+table.calendar {
+	margin: 0 0 0 5px;
+	padding: 0;
+	width: 100%;
+	height: 600px;
+}
+
+.calendar td {
+	vertical-align:top;
+	width:14.2%;
+	padding:0;
+}
+
+.calendar_inner {
+	width:100%;
+	height:30px;
+	text-align:center;
+}
+
+table.calendar_inner  {
+	margin:0;
+}
+
+.calendar_inner tr {
+	height:5px;
+}
+
+.calendar_inner td {
+	vertical-align:middle;
+	margin:0;
+}
+
+.calendar td.today {
+	background: #FFFFCC;
+}
+
+.calendar td.nonmonthdays {
+	background: #DDDDDD;
+}
+
+.calendar tr.heading {
+	vertical-align:middle;
+	text-align:center;
+	height:8px;
+}
+
+.calendar tr.month_nav , .calendar tr.month_nav td {
+	height:5px;
+	margin:0;
+	vertical-align:middle;
+}
+
+.calendar a.day_label, .calendar a.day_label:link {
+	width: 100%;
+	background: url(../../img/tabs/tabbackground.png) repeat-x #E5F0FF;
+	display:block;
+	margin-bottom:2px;
+	cursor:pointer;
+}
+
+.calendar a.event, .calendar a.event:link {
+	width:100%;
+	display:block;
+}
+
+.calendar a.long_event, .calendar a.long_event:link {
+	width:100%;
+	background: grey;
+	color:white;
+	display:block;
+	padding-bottom:2px;
+	padding-top:2px;
+	margin-bottom:1px;
+}
+
+.calendar a.pad, .calendar a.pad:link {
+	width:100%;
+	background: #fff;
+	color: #fff;
+	display:block;
+	padding-bottom:2px;
+	padding-top:2px;
+	margin-bottom:1px;
+}
+
+.inner_day {
+
+}
+
+.day_view {
+	clear:both;
+}
+
+.day_view td.busy {
+	background: #A5C4E7;
+}
+
+.day_view td.busy_no_edit {
+	background: #B6B6BF;
+}
+
+.day_view td.busy_has_priority {
+	background: red;
+}
+
+.day_view td.busy_no_edit a.event {
+	color: #B6B6BF;
+}
+
+.day_view td.busy_has_priority a.event {
+	color: red;
+}
+
+.day_view a.event {
+	display:block;
+	color:#A5C4E7;
+}
+
+.day_view td.add {
+	background: red;
+}
+
+.add_new_event {
+	cursor:pointer;
+	color: #006699;
+}
+
+.date {
+	margin-right: 5px;
+}

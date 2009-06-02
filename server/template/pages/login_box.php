@@ -41,7 +41,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<script type="text/javascript">
 		$(document).ready(function(){
 		
-			document.getElementById('username').focus();
+			$('input[type=text]').eq(0).focus();
 			
 			$('#forgotten').click(function() {
 				$('#forgotten_details').toggle();
@@ -96,16 +96,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			</div>
 		</div>
 		
-</div>
-<div id="system_working" style="display:none;"><img src="img/loading.gif"></div>
-
-<div id="system_message" style="text-align: center;">
-	<span>Message</span>
-</div>
-
-<div id="div_dialog"></div>
-</body>
+	</div>
+	<div id="system_working" style="display:none;"><img src="img/loading.gif"></div>
+	
+	<div id="system_message" style="text-align: center;">
+		<span>Message</span>
+	</div>
+	
+	<div id="div_dialog"></div>
+	</body>
 </html>
-
-<!--<h4>Would you like to Create a New Account?</h4>
-<p>Please click <a href="index.php?p=user&q=addFormFromIndex">here</a> to setup a new user.</p>-->

@@ -1,6 +1,6 @@
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2009 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -16,7 +16,74 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+
+$(document).ready(function() {
+	
+	// Store the default view for first load
+	$('#Calendar').data('view', 'month');
+	
+	//CallGenerateCalendar();
+	
+	// Navigational Calendar
+	$('#NavCalendar').datepicker({
+		onChangeMonthYear: function(year, month) {
+			// Store the date on our hidden form (or in the data object)
+			$('#Calendar').data('view', 'month').data("date", { year: year, month: month });
+			
+			// Call the AJAX to refresh
+			CallGenerateCalendar();
+		}
+	});
+	
+	
+});
+
+function CallGenerateCalendar() {
+	
+	// Pull the data out
+	var url			= 'index.php?p=schedule&q=GenerateCalendar&ajax=true';
+	var calendar 	= $('#Calendar');
+	var view 		= calendar.data('view') || 'month';
+	var date		= calendar.data('date') || {year:'', month:''};
+	
+	var data 		= $.extend(date, {view: view});
+	
+	$.ajax({
+        type: "post",
+        url: url,
+		data: data,
+        dataType: "json",
+        success: function(response) {
+        
+            var respHtml;
+            
+            if (response.success) {
+                respHtml = response.html;
+            }
+            else {
+                // Login Form needed?
+                if (response.login) {
+                    LoginBox(response.message);
+                    return false;
+                }
+                else {
+                    // Just an error we dont know about
+                    respHtml = response.message;
+                }
+            }
+            
+            $('#Calendar').html(respHtml);
+			
+			// Call XiboInitialise for this form
+			XiboInitialise('#Calendar');
+            
+            return false;
+        }
+    });
+}
+
+
 function set_time(hour_period) {
 	/* The form fields */
 	var form_start = document.getElementById("form_starttime");

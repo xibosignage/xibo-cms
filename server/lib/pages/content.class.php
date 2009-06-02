@@ -376,6 +376,7 @@ END;
 		$response->dialogSize 	= true;
 		$response->dialogWidth 	= '650px';
 		$response->dialogHeight = '280px';
+		$response->AddButton(__('Close'), 'XiboDialogClose()');
 
 		$response->Respond();
 	}

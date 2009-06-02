@@ -264,7 +264,7 @@ class indexDAO
 		
 		$output = <<<END
 		<h1>License Information</h1>
-		<p>Xibo - Digitial Signage - <a href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>
+		<p>Xibo - Digitial Signage - <a href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>.<br />
 		Copyright &copy 2009 Daniel Garner et al</p>
 		 
 		<p>Xibo is free software: you can redistribute it and/or modify
