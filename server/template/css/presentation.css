@@ -146,7 +146,7 @@ h5 {
 
 
 /* Default tables and forms */
-table,td,th {
+table, td, th {
     background:#fff;
     border:1px solid #DCE4F5;
 	border-collapse:collapse;
@@ -162,6 +162,7 @@ tr.hover td {
 th {
 	background: #E0E9F6;
 }
+
 .centered {
 	text-align:center;
 }
@@ -172,7 +173,6 @@ th {
 }
 
 /*tabs*/
-
 .tabs{
 	display: block;
 	text-align: center;

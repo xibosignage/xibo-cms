@@ -192,6 +192,11 @@ function XiboGridRender(gridId){
                 };
 			}
 			
+			// Do we have to call any functions due to this success?
+            if (response.callBack != "" && response.callBack != undefined) {
+                eval(response.callBack)(name);
+            }
+			
 			// Call XiboInitialise for this form
 			XiboInitialise(gridDiv);
             

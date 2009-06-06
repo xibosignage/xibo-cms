@@ -42,12 +42,15 @@ $(document).ready(function() {
 function CallGenerateCalendar() {
 	
 	// Pull the data out
-	var url			= 'index.php?p=schedule&q=GenerateCalendar&ajax=true';
-	var calendar 	= $('#Calendar');
-	var view 		= calendar.data('view') || 'month';
-	var date		= calendar.data('date') || {year:'', month:''};
+	var url				= 'index.php?p=schedule&q=GenerateCalendar&ajax=true';
+	var calendar 		= $('#Calendar');
+	var view 			= calendar.data('view') || 'month';
+	var date			= calendar.data('date') || {year:'', month:''};
+	var displayGroups	= $('#DisplayList').serialize();
 	
-	var data 		= $.extend(date, {view: view});
+	var data 			= $.extend(date, {view: view});
+	
+	if (displayGroups != '') url += '&' + displayGroups;
 	
 	$.ajax({
         type: "post",
@@ -81,6 +84,13 @@ function CallGenerateCalendar() {
             return false;
         }
     });
+}
+
+function DisplayListRender() {
+	// Bind a click event to all the display list checkboxes
+	$('#DisplayList input[type=checkbox]').click(function(){
+		CallGenerateCalendar();
+	});
 }
 
 

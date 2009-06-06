@@ -119,22 +119,23 @@ class scheduleDAO
 	 */
 	function GenerateMonth() 
 	{
-		$db 		=& $this->db;
-		$response	= new ResponseManager();
+		$db 				=& $this->db;
+		$response			= new ResponseManager();
 		
-		$year		= Kit::GetParam('year', _POST, _INT, date('Y', time()));
-		$month		= Kit::GetParam('month', _POST, _INT, date('m', time()));
-		$day		= Kit::GetParam('day', _POST, _INT, date('d', time()));
-		$date 		= mktime(0, 0, 0, $month, $day, $year);
+		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
+		$year				= Kit::GetParam('year', _POST, _INT, date('Y', time()));
+		$month				= Kit::GetParam('month', _POST, _INT, date('m', time()));
+		$day				= Kit::GetParam('day', _POST, _INT, date('d', time()));
+		$date 				= mktime(0, 0, 0, $month, $day, $year);
 		
 		// Get the first day of the month
-		$month_start = mktime(0, 0, 0, $month, 1, $year);
+		$month_start 		= mktime(0, 0, 0, $month, 1, $year);
 		
 		// Get friendly month name
-		$month_name = date('M', $month_start);
+		$month_name 		= date('M', $month_start);
 		
 		// Figure out which day of the week the month starts on.
-		$month_start_day = date('D', $month_start);
+		$month_start_day 	= date('D', $month_start);
 		
 		switch($month_start_day)
 		{
@@ -252,6 +253,7 @@ class scheduleDAO
 		$calendar .= '   <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>';
 		$calendar .= '  </tr>';
 		$calendar .= ' </thead>';
+    	$calendar .= ' <tbody>';
 		
 		// Now we break each key of the array  into a week and create a new table row for each
 		// week with the days of that week in the table data
@@ -259,49 +261,68 @@ class scheduleDAO
 		
 		foreach($weeks AS $week) 
 		{
-	    	$calendar .= "<tr>\n";
-			$count = 0; //so we know which day we are on
+	    	$calendar .= '<tr>';
+	    	$calendar .= ' <td colspan="7">';
+	    	$calendar .= '  <div class="WeekRow">';
+	    	$calendar .= '   <table cellpadding="0" cellspacing="0">';
+	    	$calendar .= '    <tr>';
+			
+			// So we know which day we are on
+			$count = 0; 
 			
 	    	foreach($week as $d) 
 			{
+            	// This is each day
 	    		$count++;
+				$events		=	'';
+				$currentDay = mktime(date("H"), 0, 0, $month, $d, $year);
 				
 	        	if($i < $offset_count) 
 				{
-	            	$calendar .= "<td class=\"nonmonthdays\">$d</td>\n";
+	            	$calendar .= "<td class=\"nonmonthdays\">$d</td>";
 	        	}
 	        	
 	        	if(($i >= $offset_count) && ($i < ($num_weeks * 7) - $outset)) 
 				{
-	            	/*Prepare the day link*/
-					$day_clicked = mktime(date("H"),date("i"),0,$month,$d,$year);
-					
-					$day_link  = "<a class='day_label' onclick=\"XiboFormRender('index.php?p=schedule&sp=add&q=display_form&date=$day_clicked&starttime=$day_clicked&endtime=$day_clicked&displayid=$this->displayid')\">$d</a>";
-	           		//$day_link .= $this->get_events_between_dates(mktime(0,0,0,$month,$d,$year),mktime(0,0,0,$month,$d+1,$year),$count);
-	           		
-					// add the double click listeners					
-	           		if(mktime(0,0,0,date("m"),date("d"),date("Y")) == mktime(0,0,0,$month,$d,$year)) 
+					// Link for Heading and Cell
+					$linkClass	= 'days';
+					$link		= "index.php?p=schedule&q=AddEventForm&date=$currentDay";
+					$dayLink  	= '<a class="day_label XiboFormButton" href="' . $link . '">' . $d . '</a>';
+										
+	           		if(mktime(0,0,0,date("m"),date("d"),date("Y")) == mktime(0, 0, 0, $month, $d, $year)) 
 					{
-	               		$calendar .= "<td ondblclick=\"XiboFormRender('index.php?p=schedule&sp=add&q=display_form&date=$day_clicked&starttime=$day_clicked&endtime=$day_clicked&displayid=$this->displayid')\" class=\"today\">$day_link</a></td>\n";
+						$linkClass = 'today';
 	           		} 
-	           		else 
-					{
-	               		$calendar .= "<td ondblclick=\"XiboFormRender('index.php?p=schedule&sp=add&q=display_form&date=$day_clicked&starttime=$day_clicked&endtime=$day_clicked&displayid=$this->displayid')\" class=\"days\">$day_link</td>\n";
-	           		}
+
+               		$calendar .= '<td href="' . $link . '" class="' . $linkClass . ' XiboFormButton">';
+					$calendar .= $dayLink;
+					$calendar .= '</td>';
+
 	        	} 
 	        	elseif($outset > 0) 
 				{
+					// Days that do not belond in this month
 	            	if(($i >= ($num_weeks * 7) - $outset))
 					{
-	               		$calendar .= "<td class=\"nonmonthdays\">$d</td>\n";
+	               		$calendar .= "<td class=\"nonmonthdays\">$d</td>";
 	           		}
 	        	}
+
+				$events .= $this->GetEventsStartingOnDay($currentDay, $count, $displayGroupIDs);
+
 	        	$i++;
 	      	}
-	      	$calendar .= "</tr>\n";   
+			
+	    	$calendar .= '    </tr>';
+			$calendar .= $events;   
+	    	$calendar .= '   </table>';
+			$calendar .= '  </div>';
+	      	$calendar .= " </td>";   
+	      	$calendar .= "</tr>";
 		}
 		
-		// Close out your table and that's it!
+		// Close the calendar table
+      	$calendar .= "</tbody>";   
 		$calendar .= '</table>';
 		
 		$response->SetGridResponse($calendar);
@@ -315,6 +336,194 @@ class scheduleDAO
 	public function GenerateDay()
 	{
 		
+	}
+	
+	/**
+	 * Gets all the events starting on a date for the given displaygroups
+	 * @return 
+	 * @param $date Object
+	 * @param $displayGroupIDs Object
+	 */
+	function GetEventsStartingOnDay($date, $currentWeekDayNo, $displayGroupIDs)
+	{
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		$events 		= '';
+		$nextDay		= $date + (60 * 60 * 24);
+		$displayGroups	= implode(',', $displayGroupIDs);
+
+		// Query for all events between the dates
+		$SQL = "";
+        $SQL.= "SELECT schedule_detail.schedule_detailID, ";
+        $SQL.= "       schedule_detail.FromDT, ";
+        $SQL.= "       schedule_detail.ToDT,";
+        $SQL.= "       layout.layout, ";
+        $SQL.= "       schedule_detail.userid, ";
+        $SQL.= "       schedule_detail.is_priority ";
+        $SQL.= "  FROM schedule_detail ";
+        $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
+        $SQL.= " WHERE 1=1 ";
+        $SQL.= sprintf("   AND schedule_detail.DisplayGroupID IN (%s) ", $db->escape_string($displayGroups));
+        
+        // Events that fall inside the two dates
+        $SQL.= "   AND schedule_detail.FromDT >= $date ";
+        $SQL.= "   AND schedule_detail.FromDT < $nextDay ";
+        
+        //Ordering
+        $SQL.= " ORDER BY 2,3";	
+		
+		if (!$result = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Error getting events for date.'));
+		}
+		
+		// Define some colors:
+		$color[1] = "style='background:#09A4F8;border-left: 1px solid #09A4F8'";
+		$color[2] = "style='background:#8AB9BA;border-left: 1px solid #8AB9BA'";
+		$color[3] = "style='background:#86A2BA;border-left: 1px solid #86A2BA'";
+		
+        $count = 1;
+		
+		while($row = $db->get_assoc_row($result))
+		{
+			$eventID	= Kit::ValidateParam($row['schedule_detailID'], _INT);
+			$fromDT		= Kit::ValidateParam($row['FromDT'], _INT);
+			$toDT		= Kit::ValidateParam($row['ToDT'], _INT);
+			$layout		= Kit::ValidateParam($row['layout'], _STRING);
+			
+			
+			$events 	.= '<tr><td class="Event" style="' . $color[$count] . '">' . $layout . '</td></tr>';
+		}
+		
+		
+		$count++;
+		
+		return $events;
+	}
+	
+	/**
+	 * Shows a list of display groups and displays
+	 * @return 
+	 */
+	public function DisplayFilter()
+	{
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		
+		$filterForm = <<<END
+		<div id="DisplayListFilter">
+			<form onsubmit="return false">
+				<input type="hidden" name="p" value="schedule">
+				<input type="hidden" name="q" value="DisplayList">
+				<input type="text" name="name" />
+			</form>
+		</div>
+END;
+		
+		$id = uniqid();
+		
+		$xiboGrid = <<<HTML
+		<div class="XiboGrid" id="$id">
+			<div class="XiboFilter">
+				$filterForm
+			</div>
+			<div class="XiboData">
+			
+			</div>
+		</div>
+HTML;
+		echo $xiboGrid;
+	}
+	
+	/**
+	 * Shows a list of displays
+	 * @return 
+	 */
+	public function DisplayList()
+	{
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		
+		$response		= new ResponseManager();
+		$output			= '';
+		
+		$name			= Kit::GetParam('name', _POST, _STRING);
+					
+		//display the display table
+		$SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
+		$SQL .= "  FROM displaygroup ";
+		if ($name != '')
+		{
+			$SQL .= sprintf(" WHERE displaygroup.DisplayGroup LIKE '%%%s%%' ", $db->escape_string($name));
+		}
+		$SQL .= " ORDER BY IsDisplaySpecific, displaygroup.DisplayGroup ";
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+
+		if(!($results = $db->query($SQL))) 
+		{
+			trigger_error($db->error());
+			trigger_error(__("Can not list Display Groups"), E_USER_ERROR);
+		}
+		
+		if ($db->num_rows($results) == 0)
+		{
+			$output = __('No Display Groups');
+			$response->SetGridResponse($output);
+			$response->Respond();
+			
+			return;
+		}
+		
+		$output .= '<form id="DisplayList">';
+		$output .= '<ul class="DisplayList>';
+		$nested = false;
+		
+		while($row = $db->get_assoc_row($results))
+		{
+			$displayGroupID		= Kit::ValidateParam($row['DisplayGroupID'], _INT);
+			$isDisplaySpecific	= Kit::ValidateParam($row['IsDisplaySpecific'], _INT);
+			$displayGroup		= Kit::ValidateParam($row['DisplayGroup'], _STRING);
+			
+			if ($isDisplaySpecific == 1 && !$nested)
+			{
+				// Start a new UL to display these
+				$output .= '<li>Non-group<ul>';
+				
+				$nested = true;
+			}
+			
+			$output .= '<li>';
+			$output .= '<label>' . $displayGroup . '</label><input type="checkbox" name="DisplayGroupIDs[]" value="' . $displayGroupID . '" />';
+			$output .= '</li>';
+		}
+		
+		if ($nested) $output .= '  </ul></li>';
+		$output .= '</ul>';
+		$output .= '</form>';
+		
+		$response->SetGridResponse($output);
+		$response->callBack = 'DisplayListRender';
+		$response->Respond();
+	}
+	
+	/**
+	 * Shows a form to add an event
+	 *  will default to the current date if non is provided
+	 * @return 
+	 */
+	function AddEventForm()
+	{
+		$db 		=& $this->db;
+		$user		=& $this->user;
+		$response	= new ResponseManager();
+		
+		$date		= Kit::GetParam('date', _POST, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
+		
+		$response->SetFormRequestResponse($date, 'Schedule an Event', '900px', '600px');
+		$response->callBack = 'setupScheduleForm';
+		$response->Respond();
 	}
 	
 	function display_form () 
