@@ -24,34 +24,6 @@ class scheduleDAO
 {
 	private $db;
 	private $user;
-	private $sub_page;
-	private $ret_page;
-	private $start_date;
-	
-	private $has_permission = true;
-	
-	private $displayid;
-	private $display;
-	private $layoutid;
-	private $schedule_detailid;
-	private $is_priority;
-	private $eventid;
-	
-	private $last_day;
-	private $last_day_pad = 0;
-	
-	/* For edit */
-	private $starttime;
-	private $endtime;
-	private $total_length;
-	
-	//recurrence vars
-	private $rec_type;
-	private $rec_detail;
-	private $rec_range;
-	
-	//report class
-	private $report;
 
 	/**
 	 * Constructor
@@ -217,34 +189,7 @@ class scheduleDAO
 		}
 		
 		// Now let's "chunk" the $all_days array into weeks. Each week has 7 days so we will array_chunk it into 7 days.
-		$weeks = array_chunk($new_count, 7);
-		
-		
-		// Build Previous and Next Links
-		$previous_link = "<a href=\"index.php?p=schedule&sp=month&displayid=$this->displayid&date=";
-		
-		if($month == 1)
-		{
-		   $previous_link .= mktime(0,0,0,12,$day,($year -1));
-		} 
-		else 
-		{
-		   $previous_link .= mktime(0,0,0,($month -1),$day,$year);
-		}
-		
-		$previous_link .= "\"><< Prev</a>";
-		
-		$next_link = "<a href=\"index.php?p=schedule&sp=month&displayid=$this->displayid&date=";
-		
-		if($month == 12)
-		{
-		   $next_link .= mktime(0,0,0,1,$day,($year + 1));
-		} 
-		else 
-		{
-		   $next_link .= mktime(0,0,0,($month +1),$day,$year);
-		}
-		$next_link .= "\">Next >></a>";
+		$weeks 		= array_chunk($new_count, 7);
 		
 		// Build the heading portion of the calendar table
 		$calendar  = '<table class="calendar">';
@@ -350,6 +295,11 @@ class scheduleDAO
 		$user			=& $this->user;
 		$events 		= '';
 		$nextDay		= $date + (60 * 60 * 24);
+		
+		if ($displayGroupIDs == '')
+		{
+			return '';			
+		}
 		$displayGroups	= implode(',', $displayGroupIDs);
 
 		// Query for all events between the dates
@@ -372,11 +322,16 @@ class scheduleDAO
         //Ordering
         $SQL.= " ORDER BY 2,3";	
 		
+		Debug::LogEntry($db, 'audit', $SQL);
+		
 		if (!$result = $db->query($SQL))
 		{
 			trigger_error($db->error());
 			trigger_error(__('Error getting events for date.'));
 		}
+
+		// Number of events
+		Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
 		
 		// Define some colors:
 		$color[1] = "style='background:#09A4F8;border-left: 1px solid #09A4F8'";
@@ -447,9 +402,26 @@ HTML;
 		
 		$response		= new ResponseManager();
 		$output			= '';
-		
-		$name			= Kit::GetParam('name', _POST, _STRING);
 					
+		$output			= $this->UnorderedListofDisplays(true);
+		
+		$response->SetGridResponse($output);
+		$response->callBack = 'DisplayListRender';
+		$response->Respond();
+	}
+	
+	/**
+	 * Outputs an unordered list of displays optionally with a form
+	 * @return 
+	 * @param $outputForm Object
+	 */
+	private function UnorderedListofDisplays($outputForm)
+	{
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		$output			= '';
+		$name			= Kit::GetParam('name', _POST, _STRING);
+		
 		//display the display table
 		$SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
 		$SQL .= "  FROM displaygroup ";
@@ -476,7 +448,7 @@ HTML;
 			return;
 		}
 		
-		$output .= '<form id="DisplayList">';
+		if ($outputForm) $output .= '<form id="DisplayList">';
 		$output .= '<ul class="DisplayList>';
 		$nested = false;
 		
@@ -501,11 +473,9 @@ HTML;
 		
 		if ($nested) $output .= '  </ul></li>';
 		$output .= '</ul>';
-		$output .= '</form>';
+		if ($outputForm) $output .= '</form>';
 		
-		$response->SetGridResponse($output);
-		$response->callBack = 'DisplayListRender';
-		$response->Respond();
+		return $output;
 	}
 	
 	/**
@@ -521,8 +491,148 @@ HTML;
 		
 		$date		= Kit::GetParam('date', _POST, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
 		
-		$response->SetFormRequestResponse($date, 'Schedule an Event', '900px', '600px');
+		// need to do some user checking here
+		$sql  = "SELECT layoutID, layout, permissionID, userID ";
+		$sql .= "  FROM layout WHERE retired = 0";
+		$sql .= " ORDER BY layout ";
+		
+		$layout_list 	= dropdownlist($sql, "layoutid", 0, "", false, true);
+		
+		$outputForm		= false;
+		$displayList	= $this->UnorderedListofDisplays($outputForm);
+		
+		$form 		= <<<END
+			<form id="AddEventForm" class="XiboForm" action="index.php?p=schedule&q=AddEvent" method="post">
+				<input type="hidden" id="fromdt" name="fromdt" value="" />
+				<input type="hidden" id="todt" name="todt" value="" />
+				<input type="hidden" id="rectodt" name="rectodt" value="" />
+				<table style="width:100%;">
+					<tr>
+						<td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
+						<td><input id="starttime" class="date-pick required" type="text" name="starttime" value="" /></td>
+						<td rowspan="4">
+							Displays: <br />
+							$displayList
+						</td>
+					</tr>
+					<tr>
+						<td><label for="endtime" title="Select the end time for this event">End Time<span class="required">*</span></label></td>
+						<td><input id="endtime" class="date-pick required" type="text" name="endtime" value="" /></td>
+					</tr>
+					<tr>
+						<td><label for="layoutid" title="Select which layout this event will show.">Layout<span class="required">*</span></label></td>
+						<td>$layout_list</td>
+					</tr>
+					<tr>
+						<td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
+						<td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preferance to other events."></td>
+					</tr>
+END;
+
+		//recurrance part of the form
+		$days 		= 60*60*24;
+		$rec_type 	= listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type");
+		$rec_detail	= listcontent("1|1,2|2,3|3,4|4,5|5,6|6,7|7,8|8,9|9,10|10,11|11,12|12,13|13,14|14", "rec_detail");
+		$rec_range 	= '<input class="date-pick" type="text" id="rec_range" name="rec_range" />';
+		
+		$form .= <<<END
+		<tr>
+			<td colspan="4">
+				<fieldset title="If this event occurs again (e.g. repeats) on a schedule">
+					<legend>Recurrence Information</label>
+					<table>
+						<tr>
+							<td><label for="rec_type" title="What type of repeating is required">Repeats</label></td>
+							<td>$rec_type</td>
+						</tr>
+						<tr>
+							<td><label for="rec_detail" title="How often does this event repeat">Repeat every</label></td>
+							<td>$rec_detail</td>
+						</tr>
+						<tr>
+							<td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
+							<td>$rec_range</td>
+						</tr>
+					</table>
+				</fieldset>
+			</td>
+		</tr>
+END;
+
+		$form .= <<<END
+				</table>
+			</form>
+END;
+		
+		$response->SetFormRequestResponse($form, 'Schedule an Event', '700px', '400px');
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Save'), '$("#AddEventForm").submit()');
 		$response->callBack = 'setupScheduleForm';
+		$response->Respond();
+	}
+	
+	/**
+	 * Add Event
+	 * @return 
+	 */
+	public function AddEvent() 
+	{
+		$db 				=& $this->db;
+		$user				=& $this->user;
+		$response			= new ResponseManager();
+		$datemanager		= new DateManager($db);
+
+		$layoutid			= Kit::GetParam('layoutid', _POST, _INT, 0);
+		$fromDT				= Kit::GetParam('fromdt', _POST, _STRING);
+		$toDT				= Kit::GetParam('todt', _POST, _STRING);
+		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
+		$isPriority			= Kit::GetParam('is_priority', _POST, _CHECKBOX);
+
+		$rec_type			= Kit::GetParam('rec_type', _POST, _STRING);
+		$rec_detail			= Kit::GetParam('rec_detail', _POST, _INT);
+		$recToDT			= Kit::GetParam('rectodt', _POST, _INT);
+		
+		$userid 			= Kit::GetParam('userid', _SESSION, _INT);
+		
+		Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
+		Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
+		
+		$fromDT				= (int) strtotime($fromDT);
+		$toDT				= (int) strtotime($toDT);
+		
+		// Validate layout
+		if ($layoutid == 0) 
+		{
+			trigger_error(__("No layout selected"), E_USER_ERROR);
+		}
+		
+		// check that at least one display has been selected
+		if ($displayGroupIDs == '') 
+		{
+			trigger_error(__("No displays selected"), E_USER_ERROR);
+		}
+		
+		// validate the dates
+		if ($toDT < $fromDT) 
+		{
+			trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);	
+		}
+		if ($fromDT < (time()- 86400)) 
+		{
+			trigger_error(__("Your start time is in the past. Cannot schedule events in the past"), E_USER_ERROR);
+		}
+		
+		// Ready to do the add 
+		$scheduleObject = new Schedule($db);
+		
+		if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $layoutid, $rec_type, $rec_detail, $recToDT, $isPriority, $userid)) 
+		{
+			trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
+		}
+		
+		$response->SetFormSubmitResponse(__("The Event has been Added."));
+		$response->callBack = 'CallGenerateCalendar';
 		$response->Respond();
 	}
 	
@@ -563,26 +673,26 @@ HTML;
 		$display_select = $this->display_boxes($this->eventid);
 		
 		$form = <<<END
-	<form class="XiboForm" action="$action" method="post">
-		<input type="hidden" name="displayid" value="$this->displayid">
-		<input type="hidden" name="schedule_detailid" value="$this->schedule_detailid">
-		<table style="width:100%;">
-			<tr>
-				<td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
-				<td>$start_time_select</td>
-				<td rowspan="3">
-					Displays: <br />
-					$display_select
-				</td>
-			</tr>
-			<tr>
-				<td><label for="endtime" title="Select the end time for this event">End Time<span class="required">*</span></label></td>
-				<td>$end_time_select</td>
-			</tr>
-			<tr>
-				<td><label for="layoutid" title="Select which layout this event will show.">Layout<span class="required">*</span></label></td>
-				<td>$layout_list</td>
-			</tr>
+			<form class="XiboForm" action="$action" method="post">
+				<input type="hidden" name="displayid" value="$this->displayid">
+				<input type="hidden" name="schedule_detailid" value="$this->schedule_detailid">
+				<table style="width:100%;">
+					<tr>
+						<td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
+						<td>$start_time_select</td>
+						<td rowspan="3">
+							Displays: <br />
+							$display_select
+						</td>
+					</tr>
+					<tr>
+						<td><label for="endtime" title="Select the end time for this event">End Time<span class="required">*</span></label></td>
+						<td>$end_time_select</td>
+					</tr>
+					<tr>
+						<td><label for="layoutid" title="Select which layout this event will show.">Layout<span class="required">*</span></label></td>
+						<td>$layout_list</td>
+					</tr>
 END;
 		
 		//Admin ability to set events to be priority events
@@ -943,365 +1053,6 @@ END;
 		$table_html .= "</table></div>";
         
         return $table_html;
-	}
-	
-	/**
-	 * Gets the events for a specified date (returned as HTML string)
-	 */
-	function get_events_between_dates($date_start, $date_end, $day_number_in_week) 
-	{
-		$db 					=& $this->db;
-		$datemanager			= new DateManager($db);
-		$mysqlDateMask			= 'Y-m-d H:i:s';
-		
-		$last_day 				= $this->last_day;
-		
-		$date 					= $datemanager->GetLocalDate("Y-m-d", $date_start);
-		$next_day 				= $datemanager->GetLocalDate("Y-m-d", $date_end);
-	
-		$html_events_string = "";
-		
-		$SQL = "";
-        $SQL.= "SELECT schedule_detail.schedule_detailID, ";
-        $SQL.= "       schedule_detail.FromDT, ";
-        $SQL.= "       schedule_detail.ToDT,";
-        $SQL.= "       layout.layout, ";
-        $SQL.= "       CASE WHEN schedule_detail.FromDT < $date_start OR schedule_detail.ToDT" .
-        		" > $date_end THEN 1 ELSE 0 END AS Prev_day, ";
-        $SQL.= "       schedule_detail.userid ";
-        $SQL.= "  FROM schedule_detail ";
-        $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
-        $SQL.= " WHERE 1=1 ";
-        $SQL.= "   AND schedule_detail.DisplayGroupID = $this->displayid ";
-        
-        //Events that fall inside the two dates
-        $SQL.= "   AND schedule_detail.FromDT < $date_end ";
-        $SQL.= "   AND schedule_detail.ToDT   >  $date_start";
-        
-        //Ordering
-        $SQL.= " ORDER BY 5 DESC, 2,3";
-
-		Debug::LogEntry($db, 'audit', 'Getting events for the day: ' . $date . ' to ' . $next_day);
-		Debug::LogEntry($db, 'audit', $SQL);
-		
-        $result = $db->query($SQL) or trigger_error($db->error(), E_USER_ERROR);
-        
-		/*
-		 * Define some colors:
-		 */
-		$color[1] = "style='background:#09A4F8;border-left: 1px solid #09A4F8'";
-		$color[2] = "style='background:#8AB9BA;border-left: 1px solid #8AB9BA'";
-		$color[3] = "style='background:#86A2BA;border-left: 1px solid #86A2BA'";
-		
-		$multi_day_count = 0;
-        $count = 1;
-		$pad = true;
-		
-		
-        while(($row = $db->get_row($result)) && $count < 4) 
-		{
-			/* Info for this day */
-            $schedule_detailid 	= $row[0];
-            $starttime 			= $datemanager->GetLocalDate($mysqlDateMask, $row[1]);
-            $endtime 			= $datemanager->GetLocalDate($mysqlDateMask, $row[2]);
-            $name 				= $row[3];
-            $times 				= $datemanager->GetLocalDate('H:i', $row[1]) . '-' . $datemanager->GetLocalDate('H:i', $row[2]);
-			$multi_day 			= $row[4];
-			$userid 			= $row[5];
-			$event_text 		= $name;
-			
-			/* Are our events spanning multiple days?*/
-            if ($multi_day == 1) 
-			{
-				$multi_day_count++;
-
-				if ($day_number_in_week != 1 && $pad) 
-				{
-					/*
-					 * How can we tell if the last day had any padding on it!
-					 * If it did, we want to add however much padding the last day had, again - we can make use of a class variable here i think
-					 * otherwise we would have to re-run the query again
-					 */
-					if (!isset($last_day['multi_day_count'])) $last_day['multi_day_count'] = 0;
-					 /*
-					  * If we have events spanning multiple days We want to look back one day, for any events that span multiple days that ended on the last day
-					  * - if there were any, we will need to pad out our current event (so that they line up again)
-					  */
-					
-					if ($count < $last_day['multi_day_count']) 
-					{
-					
-						if (isset($last_day[$count]['schedule_detailid'])) 
-						{							
-							//we now know that there was an event in this slot last time around!
-							if ($last_day[$count]['schedule_detailid']==$schedule_detailid) 
-							{
-								//do nothing
-								//$event_text = "-";
-							}
-							elseif ($last_day[$count]['end'] < $date_start) 
-							{
-								//if it ended, we want to pad out this event
-								//unless the current event does not belong to the next one down!
-								if ($last_day[$count]['schedule_detailid']==0) 
-								{
-									$html_events_string .= "<a class='pad'>Pad</a>";
-									
-									//$event_text = "-";
-									
-									$this->last_day[$count]['schedule_detailid'] = 0;
-									$count++;
-								}
-								
-								if ($layoutdisplayid == $last_day[$count+1]['schedule_detailid']) 
-								{
-									$html_events_string .= "<a class='pad'>Pad</a>";
-									
-									$this->last_day[$count]['schedule_detailid'] = 0;
-									$count++;
-								}
-							}
-						}	
-					}
-				}
-				
-				$link = "href='index.php?p=schedule&sp=edit&q=display_form&id=$schedule_detailid&date=$date_start&displayid=$this->displayid'";
-				
-				if ($userid == $_SESSION['userid'] || $_SESSION['usertype'] == 1) 
-				{
-					$html_events_string .= "<a class='XiboFormButton long_event' ".$color[$count]." $link>";
-				}
-				$html_events_string .= "$event_text";
-			
-				//record the current days events
-				$this->last_day[$count]['schedule_detailid'] = $schedule_detailid;
-				$this->last_day[$count]['start'] = $starttime;
-				$this->last_day[$count]['end'] = $endtime;
-				
-				$this->last_day['multi_day_count']=$multi_day_count;
-            }
-            else 
-			{ //no spanning, event is contained within this day
-				$link = "href='index.php?p=schedule&sp=edit&q=display_form&id=$schedule_detailid&date=$date_start&displayid=$this->displayid'";
-				
-				if ($userid == $_SESSION['userid'] || $_SESSION['usertype'] == 1) 
-				{
-					$html_events_string .= "<a class='XiboFormButton event' $link>";
-				}
-            	$html_events_string .= $datemanager->GetLocalDate('H:i', $row[1]) . " - " . $name;
-            }
-			$html_events_string .= "</a>";
-            
-            $count++;
-        }
-
-        $num_rows = $db->num_rows($result);
-		
-        if ($num_rows > 3) 
-		{
-        	$num_rows = $num_rows - 3;	
-        
-        	$html_events_string .= "+$num_rows More";
-        }
-
-		return $html_events_string;
-	}
-	
-	/**
-	 * Displays a Date Time selector
-	 *  params:
-	 * 		datetime = the default datetime
-	 * 		selectName = the select name
-	 */
-	function datetime_select($datetime, $selectName, $dropdowns = false) 
-	{
-        //$datetime is in TIMESTAMP format
-
-        $y = date("Y", $datetime);
-        $m = date("m", $datetime);
-        $d = date("d", $datetime);
-        $h = date("H", $datetime);
-        $mi = date("i", $datetime);
-        $s = date("s", $datetime);
-		
-		$date = date("d/m/Y", $datetime);
-		$date_name = $selectName . "_date";
-        
-        $d_name = $selectName . "_d";
-        $m_name = $selectName . "_m";
-        $y_name = $selectName . "_y";
-        $h_name = $selectName . "_h";
-        $i_name = $selectName . "_i";
-
-		$return ="";
-		
-		if ($dropdowns) 
-		{
-			/* Days */
-			$return.= "<select class='date' name=".$d_name.">";
-	        for ($i = 1; $i <= 31; $i++) 
-			{
-	        	
-	        	$value = $i;
-	        	if ($value < 10) $value = "0$value";
-	        		
-	        	if ($i == $d) 
-				{
-	        		$return.= "<option value=$i selected>$value</option>";
-	        	}
-	        	else 
-				{
-	        		$return.= "<option value=$i>$value</option>";
-	        	}
-	        }
-	        $return.= "</select>";
-			
-			/* Months */
-			$return.= "<select class='date' name=".$m_name.">";
-	        for ($i = 1; $i <= 12; $i++) 
-			{
-	        	
-	        	$value = $i;
-	        	if ($value < 10) $value = "0$value";
-	        		
-	        	if ($i == $m) 
-				{
-	        		$return.= "<option value=$i selected>$value</option>";
-	        	}
-	        	else 
-				{
-	        		$return.= "<option value=$i>$value</option>";
-	        	}
-	        }
-	        $return.= "</select>";
-	        
-	        /* Years */
-			$return.= "<select class='date' name=".$y_name.">";
-			$count = 1; $i = $y;
-	        while ($count < 3) 
-			{
-	        	if ($i == $y) 
-				{
-	        		$return.= "<option value=$i selected>$i</option>";
-	        	}
-	        	else 
-				{
-	        		$return.= "<option value=$i>$i</option>";
-	        	}
-	        	
-	        	$i++;
-	        	$count++;
-	        }
-	        $return.= "</select>";
-		}
-		else 
-		{
-			$return .= '<input type="text" id="'.$selectName.'" class="date-pick" value="'.$date.'" name="'.$date_name.'">';
-			//$return .= '<input type="text" id="'.$selectName.'" class="date-pick" value="" name="'.$date_name.'">';
-		}
-			
-		//$return .= '<div class="hour_select">';
-		$return .= '<input class="date" type="text" value="'.$h.'" name="'.$h_name.'">: ';
-		$return .= '<input class="date" type="text" value="'.$mi.'" name="'.$i_name.'">';
-		//$return .= '</div>';
-
-        return $return;
-    }
-    
-    function add() 
-	{
-		$db 					=& $this->db;
-		$response				= new ResponseManager();
-		$datemanager			= new DateManager($db);
-		$mysqlDateMask			= 'Y-m-d H:i:s';
-
-		$userid 				= $_SESSION['userid'];
-		$layoutid				= Kit::GetParam('layoutid', _POST, _INT, 0);
-		$_SESSION['layoutid']	= $layoutid; //set the session to default layout forms to this layout
-		
-		//Validate layout
-		if ($layoutid == 0) 
-		{
-			trigger_error("No layout selected", E_USER_ERROR);
-		}
-		
-		//check that at least one display has been selected
-		if (!isset($_POST['displayids'])) 
-		{
-			trigger_error("No display selected", E_USER_ERROR);
-		}
-		
-		$displayid_array = $_POST['displayids'];
-		
-		//get the dates and times
-		$start_date 			= explode("/",$_POST['starttime_date']); //		dd/mm/yyyy
-		$start_h				= $_POST['starttime_h'];
-		$start_i				= $_POST['starttime_i'];
-		
-		$starttime_timestamp 	= mktime($start_h, $start_i, 0, $start_date[1], $start_date[0], $start_date[2]);
-		$starttime 				= $datemanager->GetSystemDate($mysqlDateMask, $starttime_timestamp);
-
-		$end_date 				= explode("/",$_POST['endtime_date']); //			dd/mm/yyyy
-		$end_h 					= $_POST['endtime_h'];
-		$end_i 					= $_POST['endtime_i'];
-		
-		$endtime_timestamp 		= mktime($end_h, $end_i, 0, $end_date[1], $end_date[0], $end_date[2]);
-		$endtime 				= $datemanager->GetSystemDate($mysqlDateMask, $endtime_timestamp);
-		
-		//validate the dates
-		if ($endtime_timestamp < $starttime_timestamp) 
-		{
-			trigger_error('Can not have an end time earlier than your start time', E_USER_ERROR);	
-		}
-		if ($starttime_timestamp < (time()- 86400)) 
-		{
-			trigger_error("$starttime is in the past. <br/>Can not schedule events in the past", E_USER_ERROR);
-		}
-		
-		//
-		//recurrence
-		//
-		$rec_type 	= $_REQUEST['rec_type'];
-		$rec_detail	= $_REQUEST['rec_detail'];
-		$rec_range_array = explode("/",$_REQUEST['rec_range_date']); // dd/mm/yyyy
-		$rec_range_h = $_REQUEST['rec_range_h'];
-		$rec_range_i = $_REQUEST['rec_range_i'];
-		
-		$rec_range_timestamp = strtotime($rec_range_array[1] . "/" . $rec_range_array[0] . "/" . $rec_range_array[2] . " ".$rec_range_h.":".$rec_range_i);
-		$rec_range = date("Y-m-d H:i:s", $rec_range_timestamp);
-		
-		//
-		// we are all set to enter this record into the schedule table
-		//
-		$displayid_list = implode(",",$displayid_array); //make the displayid_list from the selected displays.
-		$count 			= count($displayid_array); //count how many there are for the message
-		
-		//if there is no recurrence then NULL those fields for this insert
-		if ($rec_type == "null")
-		{
-			$SQL = "INSERT INTO schedule (layoutid, displayID_list, userID, is_priority, FromDT, ToDT) ";
-			$SQL .= " VALUES ($layoutid, '$displayid_list', $userid, 0, $starttime_timestamp, $endtime_timestamp) ";
-		}
-		else 
-		{
-			$SQL = "INSERT INTO schedule (layoutid, displayID_list, userID, is_priority, recurrence_type, recurrence_detail, recurrence_range, FromDT, ToDT) ";
-			$SQL .= " VALUES ($layoutid, '$displayid_list', $userid, 0, '$rec_type', '$rec_detail', '$rec_range', $starttime_timestamp, $endtime_timestamp) ";
-		}
-		
-		if (!$eventid = $db->insert_query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error("Cant insert into the schedule", E_USER_ERROR);
-		}
-		
-		//
-		// assign the relevent layoutdisplay records for this event
-		//
-		$this->setlayoutDisplayRecords($eventid);
-		
-		$response->SetFormSubmitResponse("The layout has been assigned on $count displays at ".$starttime);
-		$response->refresh = true;
-		$response->Respond();
 	}
 	
 	function edit() 

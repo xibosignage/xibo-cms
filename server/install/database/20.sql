@@ -39,7 +39,7 @@ ALTER TABLE `schedule_detail` ADD FOREIGN KEY ( `eventID` ) REFERENCES `schedule
 `eventID`
 );
 
- ALTER TABLE `schedule_detail` CHANGE `displayID` `DisplayGroupID` INT( 11 ) NOT NULL  ;
+ALTER TABLE `schedule_detail` CHANGE `displayID` `DisplayGroupID` INT( 11 ) NOT NULL  ;
  
 ALTER TABLE `schedule_detail` DROP INDEX `displayid` ,
 ADD INDEX `DisplayGroupID` ( `DisplayGroupID` ) 
@@ -67,3 +67,5 @@ INSERT INTO `menuitem` (
 VALUES (
 NULL , '4', '29', NULL , 'Display Groups', NULL , NULL , '2'
 );
+
+ALTER TABLE `schedule` CHANGE `displayID_list` `DisplayGroupIDs` VARCHAR( 254 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'A list of the display group ids for this event' ;

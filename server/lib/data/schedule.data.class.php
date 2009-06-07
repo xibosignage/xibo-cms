@@ -22,6 +22,105 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
  
 class Schedule extends Data
 {
+	public function Add($displayGroupIDs, $fromDT, $toDT, $layoutID, $recType, $recDetail, $recToDT, $isPriority, $userID)
+	{
+		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Add');
+		
+		// make the displayid_list from the selected displays.
+		$displayGroupIDList = implode(",", $displayGroupIDs); 
+		
+		// count how many there are
+		$displayGroupIDs = count($displayGroupIDs); 
+		
+		$SQL  = "";
+		$SQL .= "INSERT ";
+		$SQL .= "INTO   `schedule` ";
+		$SQL .= "       ( ";
+		$SQL .= "              layoutid         , ";
+		$SQL .= "              DisplayGroupIDs  , ";
+		$SQL .= "              userID           , ";
+		$SQL .= "              is_priority      , ";
+		if ($recType == '')
+		{
+			$SQL .= "              recurrence_type  , ";
+			$SQL .= "              recurrence_detail, ";
+			$SQL .= "              recurrence_range , ";
+		}
+		$SQL .= "              FromDT           , ";
+		$SQL .= "              ToDT ";
+		$SQL .= "       ) ";
+		$SQL .= "       VALUES ";
+		$SQL .= "       ( ";
+		$SQL .= sprintf("              %d              , ", $layoutID);
+		$SQL .= sprintf("              '%s'            , ", $db->escape_string($displayGroupIDList));
+		$SQL .= sprintf("              %d              , ", $userID);
+		$SQL .= sprintf("              %d              , ", $isPriority);
+		if ($recType == '')
+		{
+			$SQL .= sprintf("              '%s'            , ", $db->escape_string($recType));
+			$SQL .= sprintf("              '%s'            , ", $db->escape_string($recDetail));
+			$SQL .= sprintf("              %d              , ", $recToDT);
+		}
+		$SQL .= sprintf("              %d              , ", $fromDT);
+		$SQL .= sprintf("              %d                ", $toDT);
+		$SQL .= "       )";
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+		
+		if (!$eventID = $db->insert_query($SQL)) 
+		{
+			trigger_error($db->error());
+			$this->SetError(25001, __('Could not INSERT a new Schedule'));
+			
+			return false;
+		}
+		
+		// Make sure we dont just have one...
+		if (!is_array($displayGroupIDs)) $displayGroupIDs = array($displayGroupIDs);
+		
+		// Create a detail record for each display group
+		foreach($displayGroupIDs as $displayGroupID)
+		{
+			Debug::LogEntry($db, 'audit', 'Calling AddDetail for new Schedule record', 'DisplayGroup', 'Add');
+			
+			if (!$this->AddDetail($displayGroupID, $layoutID, $fromDT, $toDT, $userID, $isPriority, $eventID))
+			{
+				Debug::LogEntry($db, 'audit', 'Failure in AddDetail - aborting partially done', 'DisplayGroup', 'Add');
+				return false;
+			}
+
+			Debug::LogEntry($db, 'audit', 'Success Calling AddDetail for new Schedule record', 'DisplayGroup', 'Add');
+		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Add');
+		
+		return true;
+	}
+	
+	public function Edit()
+	{
+		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Edit');
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Edit');
+		
+		return true;
+	}
+	
+	public function Delete()
+	{
+		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Delete');
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Delete');
+		
+		return true;
+	}
+	
 	/**
 	 * Adds a Schedule Detail record. This can optionally be linked to a Schedule Event record.
 	 * @return 
