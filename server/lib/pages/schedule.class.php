@@ -199,32 +199,29 @@ class scheduleDAO
 		$calendar .= '  </tr>';
 		$calendar .= ' </thead>';
     	$calendar .= ' <tbody>';
+		$calendar .= '<tr>';
+	    $calendar .= ' <td colspan="7">';	
 		
 		// Now we break each key of the array  into a week and create a new table row for each
 		// week with the days of that week in the table data
 		$i = 0;
 		
 		foreach($weeks AS $week) 
-		{
-	    	$calendar .= '<tr>';
-	    	$calendar .= ' <td colspan="7">';
-	    	$calendar .= '  <div class="WeekRow">';
-	    	$calendar .= '   <table cellpadding="0" cellspacing="0">';
-	    	$calendar .= '    <tr>';
-			
+		{			
 			// So we know which day we are on
-			$count = 0; 
+			$count 		= 0; 
+			$events		= '';
+			$weekRow 	= '';
 			
 	    	foreach($week as $d) 
 			{
             	// This is each day
 	    		$count++;
-				$events		=	'';
 				$currentDay = mktime(date("H"), 0, 0, $month, $d, $year);
 				
 	        	if($i < $offset_count) 
 				{
-	            	$calendar .= "<td class=\"nonmonthdays\">$d</td>";
+	            	$weekRow .= "<td class=\"nonmonthdays\">$d</td>";
 	        	}
 	        	
 	        	if(($i >= $offset_count) && ($i < ($num_weeks * 7) - $outset)) 
@@ -239,9 +236,9 @@ class scheduleDAO
 						$linkClass = 'today';
 	           		} 
 
-               		$calendar .= '<td href="' . $link . '" class="' . $linkClass . ' XiboFormButton">';
-					$calendar .= $dayLink;
-					$calendar .= '</td>';
+               		$weekRow .= '<td href="' . $link . '" class="' . $linkClass . ' XiboFormButton">';
+					$weekRow .= $dayLink;
+					$weekRow .= '</td>';
 
 	        	} 
 	        	elseif($outset > 0) 
@@ -249,7 +246,7 @@ class scheduleDAO
 					// Days that do not belond in this month
 	            	if(($i >= ($num_weeks * 7) - $outset))
 					{
-	               		$calendar .= "<td class=\"nonmonthdays\">$d</td>";
+	               		$weekRow .= "<td class=\"nonmonthdays\">$d</td>";
 	           		}
 	        	}
 
@@ -258,15 +255,21 @@ class scheduleDAO
 	        	$i++;
 	      	}
 			
+	    	$calendar .= '  <div class="WeekRow">';
+			$calendar .= '   <table class="EventsTable" cellpadding="0" cellspacing="0">';
+			$calendar .= $events;
+	    	$calendar .= '   </table>';			
+			$calendar .= '   <table cellpadding="0" cellspacing="0">';
+	    	$calendar .= '    <tr>';
+			$calendar .= $weekRow;
 	    	$calendar .= '    </tr>';
-			$calendar .= $events;   
 	    	$calendar .= '   </table>';
 			$calendar .= '  </div>';
-	      	$calendar .= " </td>";   
-	      	$calendar .= "</tr>";
 		}
 		
 		// Close the calendar table
+      	$calendar .= " </td>";   
+      	$calendar .= "</tr>";
       	$calendar .= "</tbody>";   
 		$calendar .= '</table>';
 		
@@ -289,7 +292,7 @@ class scheduleDAO
 	 * @param $date Object
 	 * @param $displayGroupIDs Object
 	 */
-	function GetEventsStartingOnDay($date, $currentWeekDayNo, $displayGroupIDs)
+	private function GetEventsStartingOnDay($date, $currentWeekDayNo, $displayGroupIDs)
 	{
 		$db 			=& $this->db;
 		$user			=& $this->user;
@@ -316,8 +319,8 @@ class scheduleDAO
         $SQL.= sprintf("   AND schedule_detail.DisplayGroupID IN (%s) ", $db->escape_string($displayGroups));
         
         // Events that fall inside the two dates
-        $SQL.= "   AND schedule_detail.FromDT >= $date ";
-        $SQL.= "   AND schedule_detail.FromDT < $nextDay ";
+        $SQL.= "   AND schedule_detail.FromDT > $date ";
+        $SQL.= "   AND schedule_detail.FromDT <= $nextDay ";
         
         //Ordering
         $SQL.= " ORDER BY 2,3";	
@@ -342,17 +345,18 @@ class scheduleDAO
 		
 		while($row = $db->get_assoc_row($result))
 		{
+			if ($count > 3) $count = 1;
+			
 			$eventID	= Kit::ValidateParam($row['schedule_detailID'], _INT);
 			$fromDT		= Kit::ValidateParam($row['FromDT'], _INT);
 			$toDT		= Kit::ValidateParam($row['ToDT'], _INT);
 			$layout		= Kit::ValidateParam($row['layout'], _STRING);
 			
 			
-			$events 	.= '<tr><td class="Event" style="' . $color[$count] . '">' . $layout . '</td></tr>';
+			$events 	.= '<tr><td class="Event" ' . $color[$count] . '>' . $layout . '</td></tr>';
+	
+			$count++;
 		}
-		
-		
-		$count++;
 		
 		return $events;
 	}
@@ -1452,98 +1456,6 @@ END;
 				}
 			}
 		}
-	}
-	
-	/**
-	 * Shows whats currently on (i.e. which layouts are currently being send to which displays
-	 * @return 
-	 */
-	function WhatsOn() 
-	{
-		$db 		=& $this->db;
-		$user 		=& $this->user;
-		$response 	= new ResponseManager();
-		
-		//validate displays so we get a realistic view of the table
-		include_once("lib/pages/display.class.php");
-		
-		$display = new displayDAO($db, $user);
-		$display->validateDisplays();
-		
-		$currentdate = date("Y-m-d H:i:s");
-		
-		$SQL  = "SELECT display.display, ";
-		$SQL .= "	layout.layout, ";
-		$SQL .= "	UNIX_TIMESTAMP(schedule_detail.starttime) AS starttime, ";
-		$SQL .= "   UNIX_TIMESTAMP(schedule_detail.endtime) 	AS endtime, ";
-		$SQL .= "	schedule_detail.userid, ";
-		$SQL .= "	display.loggedin	AS loggedin ";
-		$SQL .= "FROM schedule_detail ";
-		$SQL .= " INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
-		$SQL .= " INNER JOIN display ON display.displayid = schedule_detail.displayid ";
-		$SQL .= "WHERE display.licensed = 1 ";
-		$SQL.= "   AND schedule_detail.starttime < '$currentdate' ";
-        $SQL.= "   AND schedule_detail.endtime   >  '$currentdate'";
-		$SQL .= " ORDER BY display.display, layout.layout ";
-		
-		if(!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error("Cannot get current schedule information", E_USER_ERROR);
-		} 
-		
-		$output = <<<END
-		<div class="scrollingWindow" style="height:400px;">
-		<table style="width:98%;">
-			<tr>
-				<th>Display</th>
-				<th>Active</th>
-				<th>Layout</th>
-				<th>Event Start</th>
-				<th>Event End</th>
-				<th>Scheduled By</th>
-			</tr>
-END;
-		
-		while ($row = $db->get_row($results)) 
-		{
-			$display = $row[0];
-			$layout = $row[1];
-			
-			$starttime = $row[2];
-			if ($starttime!="") $starttime = date("d-m-y H:i",$starttime);
-			
-			$endtime = $row[3];
-			if ($endtime != "") $endtime = date("d-m-y H:i",$endtime);
-			
-			$loggedin = $row[5];
-			if($loggedin==1) 
-			{
-				$loggedin="<img src=\"img/act.gif\">";
-			}
-			else 
-			{
-				$loggedin="<img src=\"img/disact.gif\">";
-			}
-			
-			$username = $user->getNameFromID($row[4]);
-			
-			$output .= <<<END
-			<tr>
-				<td>$display</td>
-				<td>$loggedin</td>
-				<td>$layout</td>
-				<td>$starttime</td>
-				<td>$endtime</td>
-				<td>$username</td>
-			</tr>
-END;
-		}
-		
-		$output .= "</table></div>";
-	
-		$response->SetFormRequestResponse($output, 'Currently Scheduled to Play.', '900px', '480px');
-		$response->Respond();
 	}
 	
 	function getDisplaysForEvent($eventid) 

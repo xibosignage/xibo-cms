@@ -31,9 +31,6 @@ class Schedule extends Data
 		// make the displayid_list from the selected displays.
 		$displayGroupIDList = implode(",", $displayGroupIDs); 
 		
-		// count how many there are
-		$displayGroupIDs = count($displayGroupIDs); 
-		
 		$SQL  = "";
 		$SQL .= "INSERT ";
 		$SQL .= "INTO   `schedule` ";

@@ -61,10 +61,20 @@ table.calendar {
 	table-layout: fixed;
 	margin: 0;
 	height: 120px;
+	position: relative;
 }
 
 .WeekRow table.Event {
 	height: 5px;
+}
+
+.WeekRow table.EventsTable {
+	position: relative;
+	table-layout: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
 }
 
 .calendar_inner {
