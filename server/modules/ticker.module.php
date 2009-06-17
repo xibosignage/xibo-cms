@@ -70,8 +70,8 @@ class ticker extends Module
 				<tr>
 		    		<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span></label></td>
 		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="1"></td>		
-		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval<span class="required">*</span></label></td>
-		    		<td><input id="updateInterval" name="updateInterval" type="text" value="1"></td>
+		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval (mins)<span class="required">*</span></label></td>
+		    		<td><input id="updateInterval" name="updateInterval" type="text" value="6"></td>
 				</tr>
 				<tr>
 					<td colspan="4">
@@ -151,7 +151,7 @@ FORM;
 				<tr>
 		    		<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span></label></td>
 		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>		
-		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval<span class="required">*</span></label></td>
+		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval (mins)<span class="required">*</span></label></td>
 		    		<td><input id="updateInterval" name="updateInterval" type="text" value="$updateInterval"></td>
 				</tr>
 				<tr>
@@ -194,7 +194,7 @@ FORM;
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 1);
-		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 1);
+		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 6);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
 		
@@ -268,7 +268,7 @@ FORM;
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 1);
-		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 1);
+		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 6);
 		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
