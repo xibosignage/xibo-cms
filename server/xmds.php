@@ -376,6 +376,11 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 		// If it's been > 28 days since last PHONE_HOME then
 		if (Config::GetSetting($db,'PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
 
+			if ($displayInfo['isAuditing'] == 1) 
+			{
+				Debug::LogEntry($db, "audit", "PHONE_HOME [IN]", "xmds", "RequiredFiles");	
+			}
+
 			// Retrieve number of displays
 			$SQL = "SELECT COUNT(*)
 					FROM `display`
@@ -398,8 +403,6 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 			{
 				Debug::LogEntry($db, "audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");	
 			}
-		
-			@file_get_contents($PHONE_HOME_URL);
 			
 			// Set PHONE_HOME_TIME to NOW.
 			$SQL = "UPDATE `setting`
@@ -409,6 +412,13 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 			if (!$results = $db->query($SQL))
 			{
 				trigger_error($db->error());
+			}
+			
+			@file_get_contents($PHONE_HOME_URL);
+
+			if ($displayInfo['isAuditing'] == 1) 
+			{
+				Debug::LogEntry($db, "audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");	
 			}
 		//endif
 		}
