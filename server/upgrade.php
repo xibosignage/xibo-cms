@@ -249,6 +249,7 @@ elseif ($_SESSION['step'] == 3) {
 		backup_tables($db, '*');
 		echo '</p>';
 
+		$sqlStatementCount = 0;
 		// Now loop over the entire upgrade. Run the SQLs and PHP interleaved.
 		for ($i=$_SESSION['upgradeFrom'] + 1; (($i <= $_SESSION['upgradeTo']) && ($fault==false)) ; $i++) {
 			if (file_exists('install/database/' . $i . '.sql')) {
@@ -261,10 +262,11 @@ elseif ($_SESSION['step'] == 3) {
     
 			        foreach ($sql_file as $sql) {
 			          print ".";
+				  $sqlStatementCount++;
 			          flush();
 			          if (! $db->query($sql)) {
 			 	    $fault = true;
-			            reportError("0", "An error occured populating the database.<br /><br />MySQL Error:<br />" . $db->error());
+			            reportError("0", "An error occured populating the database.<br /><br />MySQL Error:<br />" . $db->error() . "<br /><br />SQL executed:<br />" . $sql . "<br /><br />Statement number: " . $sqlStatementCount);
 			          }
 			        }
 				echo '</p>';
