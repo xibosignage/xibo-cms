@@ -41,3 +41,12 @@
 .ReportFault ol li {
 	display: list-item;
 }
+
+.moduleButtonImage {
+	width: 65px;
+}
+
+#embedHtml {
+	width: 500px;
+	height: 310px;
+}
