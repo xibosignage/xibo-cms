@@ -153,7 +153,7 @@ FORM;
 		$mediaid	= $this->mediaid;
 		
 		//Other properties
-		$embedHtml	  = Kit::GetParam('embedHtml', _POST, _HTML);
+		$embedHtml	  = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
@@ -207,7 +207,7 @@ FORM;
 		$mediaid	= $this->mediaid;
 		
 		//Other properties
-		$embedHtml	  = Kit::GetParam('embedHtml', _POST, _HTML);
+		$embedHtml	  = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
