@@ -192,7 +192,7 @@ END;
 			$output .= $imgBad.$message.'<br />';
 			$output .= <<<END
 			<div class="check_explain">
-      			<p>Xibo requires a MySQL database.</p>
+      			<p>Xibo requires the PHP MySQL Extension to function.</p>
       		</div>
 END;
 		}
