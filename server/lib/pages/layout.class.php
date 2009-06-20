@@ -1435,7 +1435,7 @@ BUTTON;
 		while ($modulesItem = $enabledModules->GetNextModule())
 		{
 			$mod 		= Kit::ValidateParam($modulesItem['Module'], _STRING);
-			$caption 	= 'Add ' . $mod;
+			$caption 	= '+ ' . $mod;
 			$mod		= strtolower($mod);
 			$title 		= Kit::ValidateParam($modulesItem['Description'], _STRING);
 			$img 		= Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
@@ -1445,7 +1445,7 @@ BUTTON;
 			$buttons .= <<<HTML
 			<div class="regionicons">
 				<a class="XiboFormButton" title="$title" href="$uri">
-				<img class="dash_button" src="$img" />
+				<img class="dash_button moduleButtonImage" src="$img" />
 				<span class="dash_text">$caption</span></a>
 			</div>
 HTML;
@@ -1456,7 +1456,7 @@ HTML;
 			<div id="buttons">
 				<div class="regionicons">
 					<a class="XiboFormButton" href="index.php?p=content&q=LibraryAssignForm&layoutid=$this->layoutid&regionid=$regionid" title="Library">
-					<img class="region_button" src="img/forms/library.gif"/>
+					<img class="region_button moduleButtonImage" src="img/forms/library.gif"/>
 					<span class="region_text">Library</span></a>
 				</div>
 				$buttons
