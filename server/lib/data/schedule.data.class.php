@@ -26,7 +26,7 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Add');
+		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'Add');
 		
 		// make the displayid_list from the selected displays.
 		$displayGroupIDList = implode(",", $displayGroupIDs); 
@@ -80,18 +80,71 @@ class Schedule extends Data
 		// Create a detail record for each display group
 		foreach($displayGroupIDs as $displayGroupID)
 		{
-			Debug::LogEntry($db, 'audit', 'Calling AddDetail for new Schedule record', 'DisplayGroup', 'Add');
+			// Add the parent detail record for this event
+			Debug::LogEntry($db, 'audit', 'Calling AddDetail for new Schedule record', 'Schedule', 'Add');
 			
 			if (!$this->AddDetail($displayGroupID, $layoutID, $fromDT, $toDT, $userID, $isPriority, $eventID))
 			{
-				Debug::LogEntry($db, 'audit', 'Failure in AddDetail - aborting partially done', 'DisplayGroup', 'Add');
+				Debug::LogEntry($db, 'audit', 'Failure in AddDetail - aborting partially done', 'Schedule', 'Add');
 				return false;
 			}
 
-			Debug::LogEntry($db, 'audit', 'Success Calling AddDetail for new Schedule record', 'DisplayGroup', 'Add');
+			Debug::LogEntry($db, 'audit', 'Success Calling AddDetail for new Schedule record', 'Schedule', 'Add');
+			
+			// Is there any recurrance to take care of?
+			if ($recType != '') 
+			{
+				// Set the temp starts
+				$t_start_temp 	= $fromDT;
+				$t_end_temp 	= $toDT;
+				
+				Debug::LogEntry($db, 'audit', sprintf('Recurrence detected until %d', $recToDT), 'Schedule', 'Add');
+				
+				//loop until we have added the recurring events for the schedule
+				while ($t_start_temp < $recToDT) 
+				{
+					// add the appropriate time to the start and end
+					switch ($recType) 
+					{
+						case 'Hour':
+							$t_start_temp 	= mktime(date("H", $t_start_temp) + $recDetail, date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp) ,date("d", $t_start_temp), date("Y", $t_start_temp));
+							$t_end_temp 	= mktime(date("H", $t_end_temp) + $recDetail, date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp) ,date("d", $t_end_temp), date("Y", $t_end_temp));
+							break;
+							
+						case 'Day':
+							$t_start_temp 	= mktime(date("H", $t_start_temp), date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp) ,date("d", $t_start_temp)+$recDetail, date("Y", $t_start_temp));
+							$t_end_temp 	= mktime(date("H", $t_end_temp), date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp) ,date("d", $t_end_temp)+$recDetail, date("Y", $t_end_temp));
+							break;
+							
+						case 'Week':
+							$t_start_temp 	= mktime(date("H", $t_start_temp), date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp) ,date("d", $t_start_temp)+($recDetail*7), date("Y", $t_start_temp));
+							$t_end_temp 	= mktime(date("H", $t_end_temp), date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp) ,date("d", $t_end_temp)+($recDetail*7), date("Y", $t_end_temp));
+							break;
+							
+						case 'Month':
+							$t_start_temp 	= mktime(date("H", $t_start_temp), date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp)+$recDetail ,date("d", $t_start_temp), date("Y", $t_start_temp));
+							$t_end_temp 	= mktime(date("H", $t_end_temp), date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp)+$recDetail ,date("d", $t_end_temp), date("Y", $t_end_temp));
+							break;
+							
+						case 'Year':
+							$t_start_temp 	= mktime(date("H", $t_start_temp), date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp) ,date("d", $t_start_temp), date("Y", $t_start_temp)+$recDetail);
+							$t_end_temp 	= mktime(date("H", $t_end_temp), date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp) ,date("d", $t_end_temp), date("Y", $t_end_temp)+$recDetail);
+							break;
+					}
+					
+					// after we have added the appropriate amount, are we still valid
+					if ($t_start_temp > $recToDT) break;
+					
+					if (!$this->AddDetail($displayGroupID, $layoutID, $t_start_temp, $t_end_temp, $userID, $isPriority, $eventID))
+					{
+						Debug::LogEntry($db, 'audit', 'Failure in AddDetail - aborting partially done', 'Schedule', 'Add');
+						return false;
+					}
+				}
+			}
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Add');
+		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'Add');
 		
 		return true;
 	}
@@ -100,9 +153,9 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Edit');
+		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'Edit');
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Edit');
+		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'Edit');
 		
 		return true;
 	}
@@ -111,9 +164,9 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Delete');
+		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'Delete');
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Delete');
+		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'Delete');
 		
 		return true;
 	}
@@ -133,7 +186,7 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'AddDetail');
+		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'AddDetail');
 		
 		$SQL  = "";
 		$SQL .= "INSERT ";
@@ -174,7 +227,7 @@ class Schedule extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'AddDetail');
+		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'AddDetail');
 		
 		return true;	
 	}
@@ -236,6 +289,34 @@ class Schedule extends Data
 		}
 		
 		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
+		
+		return true;
+	}
+	
+	/**
+	 * Deletes all the Schedule records for an EventID
+	 * @return 
+	 * @param $displayGroupID Object
+	 */
+	public function DeleteScheduleForEvent($eventID)
+	{
+		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'DeleteScheduleForEvent');
+		
+		// Delete all Schedule records for this DisplayGroupID
+		$SQL = sprintf("DELETE FROM schedule_detail WHERE EventID = %d", $eventID);
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+
+		if (!$db->query($SQL)) 
+		{
+			$this->SetError(25016,__('Unable to delete schedule records for this Event.'));
+			
+			return false;
+		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForEvent');
 		
 		return true;
 	}

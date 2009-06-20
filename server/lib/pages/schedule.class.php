@@ -67,13 +67,14 @@ class scheduleDAO
 	 */
 	function GenerateCalendar()
 	{
-		$view	= Kit::GetParam('view', _POST, _WORD, 'month');
+		$view				= Kit::GetParam('view', _POST, _WORD, 'month');
+		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
 		
 		if ($view == 'month')
 		{
 			$this->GenerateMonth();
 		}
-		else if ($viee == 'day')
+		else if ($view == 'day')
 		{
 			$this->GenerateDay();
 		}
@@ -81,6 +82,8 @@ class scheduleDAO
 		{
 			trigger_error(__('The Calendar doesnt support this view.'), E_USER_ERROR);
 		}
+		
+		Session::Set('DisplayGroupIDs', $displayGroupIDs);
 		
 		return true;
 	}
@@ -199,8 +202,6 @@ class scheduleDAO
 		$calendar .= '  </tr>';
 		$calendar .= ' </thead>';
     	$calendar .= ' <tbody>';
-		$calendar .= '<tr>';
-	    $calendar .= ' <td colspan="7">';	
 		
 		// Now we break each key of the array  into a week and create a new table row for each
 		// week with the days of that week in the table data
@@ -255,21 +256,17 @@ class scheduleDAO
 	        	$i++;
 	      	}
 			
-	    	$calendar .= '  <div class="WeekRow">';
-			$calendar .= '   <table class="EventsTable" cellpadding="0" cellspacing="0">';
+			$calendar .= '   <tr class="EventsRow">';
+			$calendar .= '   	<td colspan="7">';
 			$calendar .= $events;
-	    	$calendar .= '   </table>';			
-			$calendar .= '   <table cellpadding="0" cellspacing="0">';
-	    	$calendar .= '    <tr>';
+	    	$calendar .= '   	</td>';
+	    	$calendar .= '   </tr>';
+	    	$calendar .= '    <tr class="WeekRow">';
 			$calendar .= $weekRow;
 	    	$calendar .= '    </tr>';
-	    	$calendar .= '   </table>';
-			$calendar .= '  </div>';
 		}
 		
 		// Close the calendar table
-      	$calendar .= " </td>";   
-      	$calendar .= "</tr>";
       	$calendar .= "</tbody>";   
 		$calendar .= '</table>';
 		
@@ -298,12 +295,11 @@ class scheduleDAO
 		$user			=& $this->user;
 		$events 		= '';
 		$nextDay		= $date + (60 * 60 * 24);
+		$leftOffset		= 14.06 * ($currentWeekDayNo - 1);
 		
-		if ($displayGroupIDs == '')
-		{
-			return '';			
-		}
 		$displayGroups	= implode(',', $displayGroupIDs);
+		
+		if ($displayGroups == '') return '';			
 
 		// Query for all events between the dates
 		$SQL = "";
@@ -330,16 +326,16 @@ class scheduleDAO
 		if (!$result = $db->query($SQL))
 		{
 			trigger_error($db->error());
-			trigger_error(__('Error getting events for date.'));
+			trigger_error(__('Error getting events for date.'), E_USER_ERROR);
 		}
 
 		// Number of events
 		Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
 		
 		// Define some colors:
-		$color[1] = "style='background:#09A4F8;border-left: 1px solid #09A4F8'";
-		$color[2] = "style='background:#8AB9BA;border-left: 1px solid #8AB9BA'";
-		$color[3] = "style='background:#86A2BA;border-left: 1px solid #86A2BA'";
+		$color[1] = 'CalEvent1';
+		$color[2] = 'CalEvent2';
+		$color[3] = 'CalEvent3';
 		
         $count = 1;
 		
@@ -347,13 +343,14 @@ class scheduleDAO
 		{
 			if ($count > 3) $count = 1;
 			
+			$top		= 20 * $count;
+			
 			$eventID	= Kit::ValidateParam($row['schedule_detailID'], _INT);
 			$fromDT		= Kit::ValidateParam($row['FromDT'], _INT);
 			$toDT		= Kit::ValidateParam($row['ToDT'], _INT);
 			$layout		= Kit::ValidateParam($row['layout'], _STRING);
 			
-			
-			$events 	.= '<tr><td class="Event" ' . $color[$count] . '>' . $layout . '</td></tr>';
+			$events 	.= '<div class="Event ' . $color[$count] . '" style="left:' . $leftOffset . '%; top: ' . $top . 'px; display:block;" >' . $layout . '</div>';
 	
 			$count++;
 		}
@@ -421,10 +418,11 @@ HTML;
 	 */
 	private function UnorderedListofDisplays($outputForm)
 	{
-		$db 			=& $this->db;
-		$user			=& $this->user;
-		$output			= '';
-		$name			= Kit::GetParam('name', _POST, _STRING);
+		$db 				=& $this->db;
+		$user				=& $this->user;
+		$output				= '';
+		$name				= Kit::GetParam('name', _POST, _STRING);
+		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
 		
 		//display the display table
 		$SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
@@ -435,7 +433,7 @@ HTML;
 		}
 		$SQL .= " ORDER BY IsDisplaySpecific, displaygroup.DisplayGroup ";
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry($db, 'audit', $SQL, 'Schedule', 'UnorderedListofDisplays');
 
 		if(!($results = $db->query($SQL))) 
 		{
@@ -453,14 +451,15 @@ HTML;
 		}
 		
 		if ($outputForm) $output .= '<form id="DisplayList">';
-		$output .= '<ul class="DisplayList>';
-		$nested = false;
+		$output 	.= '<ul class="DisplayList>';
+		$nested 	= false;
 		
 		while($row = $db->get_assoc_row($results))
 		{
 			$displayGroupID		= Kit::ValidateParam($row['DisplayGroupID'], _INT);
 			$isDisplaySpecific	= Kit::ValidateParam($row['IsDisplaySpecific'], _INT);
 			$displayGroup		= Kit::ValidateParam($row['DisplayGroup'], _STRING);
+			$checked 			= (in_array($displayGroupID, $displayGroupIDs)) ? 'checked' : '';
 			
 			if ($isDisplaySpecific == 1 && !$nested)
 			{
@@ -471,7 +470,7 @@ HTML;
 			}
 			
 			$output .= '<li>';
-			$output .= '<label>' . $displayGroup . '</label><input type="checkbox" name="DisplayGroupIDs[]" value="' . $displayGroupID . '" />';
+			$output .= '<label>' . $displayGroup . '</label><input type="checkbox" name="DisplayGroupIDs[]" value="' . $displayGroupID . '" ' . $checked . '/>';
 			$output .= '</li>';
 		}
 		
@@ -595,7 +594,7 @@ END;
 
 		$rec_type			= Kit::GetParam('rec_type', _POST, _STRING);
 		$rec_detail			= Kit::GetParam('rec_detail', _POST, _INT);
-		$recToDT			= Kit::GetParam('rectodt', _POST, _INT);
+		$recToDT			= Kit::GetParam('rectodt', _POST, _STRING);
 		
 		$userid 			= Kit::GetParam('userid', _SESSION, _INT);
 		
@@ -604,6 +603,7 @@ END;
 		
 		$fromDT				= (int) strtotime($fromDT);
 		$toDT				= (int) strtotime($toDT);
+		$recToDT			= (int) strtotime($recToDT);
 		
 		// Validate layout
 		if ($layoutid == 0) 
@@ -794,15 +794,15 @@ END;
 		$response->Respond();
 	}
 	
-	function delete_form() 
+	function DeleteForm() 
 	{
 		$db 		=& $this->db;
 		$response 	= new ResponseManager();
 		
 		$form = <<<END
-		<form class="XiboForm" action="index.php?p=schedule&q=remove">
+		<form class="XiboForm" action="index.php?p=schedule&q=Delete">
 			<input type="hidden" name="schedule_detailid" value="$this->schedule_detailid" />
-			<input type="hidden" name="displayid" value="$this->displayid" />
+			<input type="hidden" name="displaygrouoid" value="$this->displayid" />
 			<table>
 				<tr>
 					<td>Are you sure you want to delete this event?</td>
@@ -1338,124 +1338,6 @@ END;
 		$response->SetFormSubmitResponse('The Event has been removed.');
 		$response->refresh = true;
 		$response->Respond();
-	}
-	
-	function setlayoutDisplayRecords($eventid) 
-	{
-		$db 				=& $this->db;
-		$datemanager		= new DateManager($db);
-		$mysqlDateMask		= 'Y-m-d H:i:s';
-		
-		//run a query to get info about this particular event
-		$SQL = <<<END
-		SELECT layoutID,
-			displayID_list,
-			FromDT,
-			ToDT,
-			userID,
-			is_priority,
-			recurrence_type,
-			recurrence_detail,
-			UNIX_TIMESTAMP(recurrence_range) AS recurrence_range
-		FROM schedule
-		WHERE eventID = $eventid
-END;
-
-		if (!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error("Cant get Event Information", E_USER_ERROR);
-		}
-		
-		//get the rows
-		$row = $db->get_row($results);
-		
-		$layoutid = $row[0];
-		$displayid_list = $row[1];
-		$t_start	= $row[2];
-		$t_end		= $row[3];
-		$userid 	= $row[4];
-		$ispriority = $row[5];
-		$rec_type	= $row[6];
-		$rec_detail = $row[7];
-		$t_rec_range= $row[8];
-		
-		$displayid_array = explode(",", $displayid_list);
-		
-		//first delete all the schedule_detail records for this event
-		$SQL = "DELETE FROM schedule_detail WHERE eventID = $eventid ";
-		$db->query($SQL) or trigger_error($db->error(),E_USER_ERROR);
-
-		//we now need to deal with inserting the schedule_detail records, one for each display / recurrence
-		foreach ($displayid_array as $displayid) 
-		{
-
-			// we have no recurrence and therefore set the dates and enter one schedule_detail per display
-			$start 	= $datemanager->GetSystemDate($mysqlDateMask, $t_start);
-			$end 	= $datemanager->GetSystemDate($mysqlDateMask, $t_end);
-			
-			//do the insert
-			$sql = "INSERT INTO schedule_detail (displayID, layoutID, FromDT, ToDT, userID, is_priority, eventID)";
-			$sql .= "VALUES ($displayid, $layoutid, $t_start, $t_end, $userid, $ispriority, $eventid)";
-
-			$db->query($sql) or trigger_error($db->error(),E_USER_ERROR);
-				
-			if ($rec_type != "") 
-			{
-				//set the temp starts
-				$t_start_temp 	= $t_start;
-				$t_end_temp 	= $t_end;
-				
-				//loop until we have added the recurring events for the schedule
-				while ($t_start_temp < $t_rec_range) 
-				{
-					//add the appropriate time to the start and end
-					switch ($rec_type) 
-					{
-						case 'Hour':
-							$t_start_temp = mktime(date("H", $t_start_temp)+$rec_detail, date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp) ,date("d", $t_start_temp), date("Y", $t_start_temp));
-							$t_end_temp = mktime(date("H", $t_end_temp)+$rec_detail, date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp) ,date("d", $t_end_temp), date("Y", $t_end_temp));
-							break;
-							
-						case 'Day':
-							$t_start_temp = mktime(date("H", $t_start_temp), date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp) ,date("d", $t_start_temp)+$rec_detail, date("Y", $t_start_temp));
-							$t_end_temp = mktime(date("H", $t_end_temp), date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp) ,date("d", $t_end_temp)+$rec_detail, date("Y", $t_end_temp));
-							break;
-							
-						case 'Week':
-							$t_start_temp = mktime(date("H", $t_start_temp), date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp) ,date("d", $t_start_temp)+($rec_detail*7), date("Y", $t_start_temp));
-							$t_end_temp = mktime(date("H", $t_end_temp), date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp) ,date("d", $t_end_temp)+($rec_detail*7), date("Y", $t_end_temp));
-							break;
-							
-						case 'Month':
-							$t_start_temp = mktime(date("H", $t_start_temp), date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp)+$rec_detail ,date("d", $t_start_temp), date("Y", $t_start_temp));
-							$t_end_temp = mktime(date("H", $t_end_temp), date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp)+$rec_detail ,date("d", $t_end_temp), date("Y", $t_end_temp));
-							break;
-							
-						case 'Year':
-							$t_start_temp = mktime(date("H", $t_start_temp), date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp) ,date("d", $t_start_temp), date("Y", $t_start_temp)+$rec_detail);
-							$t_end_temp = mktime(date("H", $t_end_temp), date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp) ,date("d", $t_end_temp), date("Y", $t_end_temp)+$rec_detail);
-							break;
-					}
-					
-					//after we have added the appropriate amount, are we still valid
-					if ($t_start_temp > $t_rec_range) 
-					{
-						break;
-					}
-					
-					//convert them to dates for the insert
-					$start 	= date("Y-m-d H:i:s", $t_start_temp);
-					$end 	= date("Y-m-d H:i:s", $t_end_temp);
-					
-					//do the insert
-					$sql = "INSERT INTO schedule_detail (displayid, layoutID, starttime, endtime, userID, is_priority, eventID)";
-					$sql .= "VALUES ($displayid, $layoutid, '$start', '$end', $userid, $ispriority, $eventid)";
-		
-					$db->query($sql) or trigger_error($db->error(),E_USER_ERROR);
-				}
-			}
-		}
 	}
 	
 	function getDisplaysForEvent($eventid) 

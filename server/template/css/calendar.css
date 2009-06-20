@@ -51,36 +51,45 @@ table.calendar {
 	cursor: hand;
 }
 
-.WeekRow {
-	height: 20%;
+#Calendar tr.EventsRow {
+	position: absolute;
 }
 
-.WeekRow table {
-	width: 100%;
-	height: 100%;
-	table-layout: fixed;
-	margin: 0;
-	height: 120px;
+#Calendar tr.EventsRow td {
 	position: relative;
 }
 
-.WeekRow table.Event {
-	height: 5px;
+#Calendar tr.EventsRow td div.Event {
+	width: 12.97%;
+	position: absolute;
+	margin-left: 2px;
+	margin-top: 1px;
+	padding: 2px;
 }
 
-.WeekRow table.EventsTable {
-	position: relative;
-	table-layout: fixed;
-	top: 0;
-	left: 0;
-	height: 100%;
-	width: 100%;
+#Calendar tr.WeekRow td {
+	width: 14%;
 }
 
 .calendar_inner {
 	width:100%;
 	height:30px;
 	text-align:center;
+}
+
+.CalEvent1 {
+	background:#09A4F8;
+	border-left: 1px solid #09A4F8;
+}
+
+.CalEvent2 {
+	background:#8AB9BA;
+	border-left: 1px solid #8AB9BA;
+}
+
+.CalEvent3 {
+	background:#86A2BA;
+	border-left: 1px solid #86A2BA;
 }
 
 table.calendar_inner  {

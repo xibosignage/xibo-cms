@@ -79,6 +79,8 @@ function CallGenerateCalendar() {
 			
 			// Call XiboInitialise for this form
 			XiboInitialise('#Calendar');
+			
+			$('tr.EventsRow').width($('#Calendar table').width() + 19);
             
             return false;
         }
