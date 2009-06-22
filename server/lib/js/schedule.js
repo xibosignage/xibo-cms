@@ -104,9 +104,6 @@ function setupScheduleForm() {
     //set up any date fields we have with the date picker
     $('.date-pick').datepicker({
 		dateFormat: "dd/mm/yy",
-		showOn: "both", 
-    	buttonImage: "img/calendar.png", 
-    	buttonImageOnly: true,
 		beforeShow: customRange,
 		onSelect: function(dateText, datePicker) {
 			console.log('Selected Date: ' + dateText);

@@ -265,7 +265,7 @@ class indexDAO
 		$output = <<<END
 		<h1>License Information</h1>
 		<p>Xibo - Digitial Signage - <a href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>.<br />
-		Copyright &copy 2009 Daniel Garner et al</p>
+		Copyright &copy 2009 Daniel Garner and the <a href="https://launchpad.net/~xibo-developers/+members" title="Xibo Developers">Xibo Developers</a>.</p>
 		 
 		<p>Xibo is free software: you can redistribute it and/or modify
 		it under the terms of the GNU Affero General Public License as published by

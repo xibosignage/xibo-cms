@@ -308,7 +308,8 @@ class scheduleDAO
         $SQL.= "       schedule_detail.ToDT,";
         $SQL.= "       layout.layout, ";
         $SQL.= "       schedule_detail.userid, ";
-        $SQL.= "       schedule_detail.is_priority ";
+        $SQL.= "       schedule_detail.is_priority, ";
+        $SQL.= "       schedule_detail.EventID ";
         $SQL.= "  FROM schedule_detail ";
         $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
         $SQL.= " WHERE 1=1 ";
@@ -345,10 +346,11 @@ class scheduleDAO
 			
 			$top		= 20 * $count;
 			
-			$eventID	= Kit::ValidateParam($row['schedule_detailID'], _INT);
+			$eventID	= Kit::ValidateParam($row['EventID'], _INT);
 			$fromDT		= Kit::ValidateParam($row['FromDT'], _INT);
 			$toDT		= Kit::ValidateParam($row['ToDT'], _INT);
 			$layout		= Kit::ValidateParam($row['layout'], _STRING);
+			$layout		= sprintf('<a class="XiboFormButton" href="index.php?p=schedule&q=EditEventForm&EventID=%d" title="%s">%s</a>', $eventID, __('Edit Event'), $layout);
 			
 			$events 	.= '<div class="Event ' . $color[$count] . '" style="left:' . $leftOffset . '%; top: ' . $top . 'px; display:block;" >' . $layout . '</div>';
 	
@@ -398,13 +400,14 @@ HTML;
 	 */
 	public function DisplayList()
 	{
-		$db 			=& $this->db;
-		$user			=& $this->user;
+		$db 				=& $this->db;
+		$user				=& $this->user;
 		
-		$response		= new ResponseManager();
-		$output			= '';
+		$response			= new ResponseManager();
+		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
+		$output				= '';
 					
-		$output			= $this->UnorderedListofDisplays(true);
+		$output				= $this->UnorderedListofDisplays(true, $displayGroupIDs);
 		
 		$response->SetGridResponse($output);
 		$response->callBack = 'DisplayListRender';
@@ -416,13 +419,12 @@ HTML;
 	 * @return 
 	 * @param $outputForm Object
 	 */
-	private function UnorderedListofDisplays($outputForm)
+	private function UnorderedListofDisplays($outputForm, $displayGroupIDs)
 	{
 		$db 				=& $this->db;
 		$user				=& $this->user;
 		$output				= '';
 		$name				= Kit::GetParam('name', _POST, _STRING);
-		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
 		
 		//display the display table
 		$SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
@@ -488,11 +490,13 @@ HTML;
 	 */
 	function AddEventForm()
 	{
-		$db 		=& $this->db;
-		$user		=& $this->user;
-		$response	= new ResponseManager();
+		$db 				=& $this->db;
+		$user				=& $this->user;
+		$response			= new ResponseManager();
 		
-		$date		= Kit::GetParam('date', _POST, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
+		$date				= Kit::GetParam('date', _GET, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
+		$dateText			= date("d/m/Y", $date);
+		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
 		
 		// need to do some user checking here
 		$sql  = "SELECT layoutID, layout, permissionID, userID ";
@@ -502,7 +506,7 @@ HTML;
 		$layout_list 	= dropdownlist($sql, "layoutid", 0, "", false, true);
 		
 		$outputForm		= false;
-		$displayList	= $this->UnorderedListofDisplays($outputForm);
+		$displayList	= $this->UnorderedListofDisplays($outputForm, $displayGroupIDs);
 		
 		$form 		= <<<END
 			<form id="AddEventForm" class="XiboForm" action="index.php?p=schedule&q=AddEvent" method="post">
@@ -512,7 +516,10 @@ HTML;
 				<table style="width:100%;">
 					<tr>
 						<td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
-						<td><input id="starttime" class="date-pick required" type="text" name="starttime" value="" /></td>
+						<td>
+							<input id="starttime" class="date-pick required" type="text" size="12" name="starttime" value="$dateText" />
+							<input id="sTime" class="required" type="text" size="12" name="sTime" value="00:00" />
+						</td>
 						<td rowspan="4">
 							Displays: <br />
 							$displayList
@@ -520,7 +527,10 @@ HTML;
 					</tr>
 					<tr>
 						<td><label for="endtime" title="Select the end time for this event">End Time<span class="required">*</span></label></td>
-						<td><input id="endtime" class="date-pick required" type="text" name="endtime" value="" /></td>
+						<td>
+							<input id="endtime" class="date-pick required" type="text" size="12" name="endtime" value="" />
+							<input id="eTime" class="required" type="text" size="12" name="eTime" value="00:00" />
+						</td>
 					</tr>
 					<tr>
 						<td><label for="layoutid" title="Select which layout this event will show.">Layout<span class="required">*</span></label></td>
@@ -567,10 +577,164 @@ END;
 			</form>
 END;
 		
-		$response->SetFormRequestResponse($form, 'Schedule an Event', '700px', '400px');
+		$response->SetFormRequestResponse($form, __('Schedule an Event'), '700px', '400px');
 		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#AddEventForm").submit()');
+		$response->callBack = 'setupScheduleForm';
+		$response->Respond();
+	}
+	
+	/**
+	 * Shows a form to add an event
+	 *  will default to the current date if non is provided
+	 * @return 
+	 */
+	function EditEventForm()
+	{
+		$db 		=& $this->db;
+		$user		=& $this->user;
+		$response	= new ResponseManager();
+		
+		$eventID	= Kit::GetParam('EventID', _GET, _INT, 0);
+		
+		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
+		
+		// Get the relevant details for this event
+		$SQL = "";
+        $SQL.= "SELECT schedule.FromDT, ";
+        $SQL.= "       schedule.ToDT,";
+        $SQL.= "       schedule.LayoutID, ";
+        $SQL.= "       schedule.userid, ";
+        $SQL.= "       schedule.is_priority, ";
+        $SQL.= "       schedule.DisplayGroupIDs, ";
+        $SQL.= "       schedule.recurrence_type, ";
+        $SQL.= "       schedule.recurrence_detail, ";
+        $SQL.= "       schedule.recurrence_range, ";
+        $SQL.= "       schedule.EventID ";
+        $SQL.= "  FROM schedule ";
+        $SQL.= "  INNER JOIN schedule_detail ON schedule.EventID = schedule_detail.EventID ";
+        $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule.layoutID ";
+        $SQL.= " WHERE 1=1 ";
+        $SQL.= sprintf("   AND schedule.EventID = %d", $eventID);
+        
+		Debug::LogEntry($db, 'audit', $SQL);
+		
+		if (!$result = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Error getting details for this event.'), E_USER_ERROR);
+		}
+		
+		$row 				= $db->get_assoc_row($result);
+		
+		$eventID			= Kit::ValidateParam($row['EventID'], _INT);
+		$fromDT				= Kit::ValidateParam($row['FromDT'], _INT);
+		$toDT				= Kit::ValidateParam($row['ToDT'], _INT);
+		$displayGroupIDs	= Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
+		$recType			= Kit::ValidateParam($row['recurrence_type'], _STRING);
+		$recDetail			= Kit::ValidateParam($row['recurrence_detail'], _STRING);
+		$recToDT			= Kit::ValidateParam($row['recurrence_range'], _STRING);
+		$displayGroupIDs 	= explode(',', $displayGroupIDs);
+		$layoutID			= Kit::ValidateParam($row['LayoutID'], _STRING);
+		
+		$fromDtText			= date("d/m/Y", $fromDT);
+		$fromTimeText		= date("H:i", $fromDT);
+		$toDtText			= date("d/m/Y", $toDT);
+		$toTimeText			= date("H:i", $toDT);
+		
+		// need to do some user checking here
+		$sql  = "SELECT layoutID, layout, permissionID, userID ";
+		$sql .= "  FROM layout WHERE retired = 0";
+		$sql .= " ORDER BY layout ";
+		
+		$layout_list 	= dropdownlist($sql, "layoutid", $layoutID, "", false, true);
+		
+		$outputForm		= false;
+		$displayList	= $this->UnorderedListofDisplays($outputForm, $displayGroupIDs);
+		
+		$form 		= <<<END
+			<form id="AddEventForm" class="XiboForm" action="index.php?p=schedule&q=AddEvent" method="post">
+				<input type="hidden" id="fromdt" name="fromdt" value="" />
+				<input type="hidden" id="todt" name="todt" value="" />
+				<input type="hidden" id="rectodt" name="rectodt" value="" />
+				<table style="width:100%;">
+					<tr>
+						<td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
+						<td>
+							<input id="starttime" class="date-pick required" type="text" size="12" name="starttime" value="$fromDtText" />
+							<input id="sTime" class="required" type="text" size="12" name="sTime" value="$fromTimeText" />
+						</td>
+						<td rowspan="4">
+							Displays: <br />
+							$displayList
+						</td>
+					</tr>
+					<tr>
+						<td><label for="endtime" title="Select the end time for this event">End Time<span class="required">*</span></label></td>
+						<td>
+							<input id="endtime" class="date-pick required" type="text" size="12" name="endtime" value="$toDtText" />
+							<input id="eTime" class="required" type="text" size="12" name="eTime" value="$toTimeText" />
+						</td>
+					</tr>
+					<tr>
+						<td><label for="layoutid" title="Select which layout this event will show.">Layout<span class="required">*</span></label></td>
+						<td>$layout_list</td>
+					</tr>
+					<tr>
+						<td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
+						<td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preferance to other events."></td>
+					</tr>
+END;
+
+		// Recurrance part of the form
+		$days 		= 60*60*24;
+		$rec_type 	= listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type", $recType);
+		$rec_detail	= listcontent("1|1,2|2,3|3,4|4,5|5,6|6,7|7,8|8,9|9,10|10,11|11,12|12,13|13,14|14", "rec_detail", $recDetail);
+		$rec_range 	= '<input class="date-pick" type="text" id="rec_range" name="rec_range" value="' . $recToDT . '" />';
+		
+		$form .= <<<END
+		<tr>
+			<td colspan="4">
+				<fieldset title="If this event occurs again (e.g. repeats) on a schedule">
+					<legend>Recurrence Information</label>
+					<table>
+						<tr>
+							<td><label for="rec_type" title="What type of repeating is required">Repeats</label></td>
+							<td>$rec_type</td>
+						</tr>
+						<tr>
+							<td><label for="rec_detail" title="How often does this event repeat">Repeat every</label></td>
+							<td>$rec_detail</td>
+						</tr>
+						<tr>
+							<td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
+							<td>$rec_range</td>
+						</tr>
+					</table>
+				</fieldset>
+			</td>
+		</tr>
+END;
+
+		$form .= <<<END
+					<tr>
+						<td colspan="2">
+							<input id="radio_all" type="radio" name="linkupdate" value="all" checked>
+							<label for="radio_all">Update events for all displays in this series</label>
+							<input id="radio_single" type="radio" name="linkupdate" value="single">
+							<label for="radio_single">Update event only for this display</label>
+						</td>
+					</tr>
+				</table>
+			</form>
+END;
+		
+		$response->SetFormRequestResponse($form, __('Edit Scheduled Event'), '700px', '400px');
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+		$response->AddButton(__('Delete'), sprintf('XiboFormRender("index.php?p=schedule&q=DeleteForm&EventID=%d")', $eventID));
+		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Save'), '$("#EditEventForm").submit()');
 		$response->callBack = 'setupScheduleForm';
 		$response->Respond();
 	}
@@ -589,6 +753,8 @@ END;
 		$layoutid			= Kit::GetParam('layoutid', _POST, _INT, 0);
 		$fromDT				= Kit::GetParam('fromdt', _POST, _STRING);
 		$toDT				= Kit::GetParam('todt', _POST, _STRING);
+		$fromTime			= Kit::GetParam('sTime', _POST, _STRING, '00:00');
+		$toTime				= Kit::GetParam('eTime', _POST, _STRING, '00:00');
 		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
 		$isPriority			= Kit::GetParam('is_priority', _POST, _CHECKBOX);
 
@@ -601,8 +767,14 @@ END;
 		Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
 		Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
 		
-		$fromDT				= (int) strtotime($fromDT);
-		$toDT				= (int) strtotime($toDT);
+		// Validate the times
+		if (!strstr($fromTime, ':') || !strstr($toTime, ':'))
+		{
+			trigger_error(__('Times must be in the format 00:00'), E_USER_ERROR);
+		}
+		
+		$fromDT				= (int) strtotime($fromDT . ' ' . $fromTime);
+		$toDT				= (int) strtotime($toDT . ' ' . $toTime);
 		$recToDT			= (int) strtotime($recToDT);
 		
 		// Validate layout
@@ -640,169 +812,21 @@ END;
 		$response->Respond();
 	}
 	
-	function display_form () 
-	{
-		$db 			=& $this->db;
-		$user			=& $this->user;
-		$end			= $this->endtime;
-		$start			= $this->starttime;
-		$helpManager	= new HelpManager($db, $user);
-		$response		= new ResponseManager();
-		
-		//set the action for the form
-		$action = "index.php?p=schedule&q=add";			
-		
-		if ($this->schedule_detailid != "") 
-		{
-			//assume an edit
-			$action = "index.php?p=schedule&q=edit";
-		}
-		
-		// Help icons for the form
-		$helpButton 	= $helpManager->HelpButton("content/schedule/adding", true);
-		$nameHelp		= $helpManager->HelpIcon("The Name of the Layout - (1 - 50 characters)", true);
-		
-		// Params		
-		$start_time_select	= $this->datetime_select($start, 'starttime');
-		$end_time_select	= $this->datetime_select($end, 'endtime');
-		
-		$userid = $_SESSION['userid'];
-		
-		//need to do some user checking here
-		$sql  = "SELECT layoutID, layout, permissionID, userID ";
-		$sql .= "  FROM layout WHERE retired = 0";
-		$sql .= " ORDER BY layout ";
-		
-		$layout_list 	= dropdownlist($sql, "layoutid", $this->layoutid, "", false, true);
-		$display_select = $this->display_boxes($this->eventid);
-		
-		$form = <<<END
-			<form class="XiboForm" action="$action" method="post">
-				<input type="hidden" name="displayid" value="$this->displayid">
-				<input type="hidden" name="schedule_detailid" value="$this->schedule_detailid">
-				<table style="width:100%;">
-					<tr>
-						<td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
-						<td>$start_time_select</td>
-						<td rowspan="3">
-							Displays: <br />
-							$display_select
-						</td>
-					</tr>
-					<tr>
-						<td><label for="endtime" title="Select the end time for this event">End Time<span class="required">*</span></label></td>
-						<td>$end_time_select</td>
-					</tr>
-					<tr>
-						<td><label for="layoutid" title="Select which layout this event will show.">Layout<span class="required">*</span></label></td>
-						<td>$layout_list</td>
-					</tr>
-END;
-		
-		//Admin ability to set events to be priority events
-		if ($_SESSION['usertype']==1 && $this->sub_page == 'edit') 
-		{
-			//do we check the box or not
-			$checked = "";
-			if ($this->is_priority == 1) 
-			{
-				$checked = "checked";
-			}
-		
-			$form .= <<<END
-			<tr>
-				<td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
-				<td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" $checked title="Sets whether or not this event has priority. If set the event will be show in preferance to other events."></td>
-			</tr>
-END;
-		}
-		
-		//
-		//recurrance part of the form
-		//
-		$days 		= 60*60*24;
-		$rec_type 	= listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type", $this->rec_type);
-		$rec_detail	= listcontent("1|1,2|2,3|3,4|4,5|5,6|6,7|7,8|8,9|9,10|10,11|11,12|12,13|13,14|14", "rec_detail", $this->rec_detail);
-		$rec_range 	= $this->datetime_select($this->rec_range,"rec_range");
-		
-		$form .= <<<END
-		<tr>
-			<td colspan="4">
-				<fieldset title="If this event occurs again (e.g. repeats) on a schedule">
-					<legend>Recurrence Information</label>
-					<table>
-						<tr>
-							<td><label for="rec_type" title="What type of repeating is required">Repeats</label></td>
-							<td>$rec_type</td>
-						</tr>
-						<tr>
-							<td><label for="rec_detail" title="How often does this event repeat">Repeat every</label></td>
-							<td>$rec_detail</td>
-						</tr>
-						<tr>
-							<td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
-							<td>$rec_range</td>
-						</tr>
-					</table>
-				</fieldset>
-			</td>
-		</tr>
-END;
-		
-		//
-		// Sort out the extra things we need for an edit
-		//
-		$edit_link = "";
-		if ($this->schedule_detailid != "") 
-		{
-			//edit specific output
-			$edit_link = <<<END
-			<input class="XiboFormButton" title="Opens up the delete options for this event." href="index.php?p=schedule&q=delete_form&schedule_detailid=$this->schedule_detailid&displayid=$this->displayid" type="button" value="Delete" />
-END;
-			
-			$form .= <<<END
-			<tr>
-				<td colspan="2">
-					<input id="radio_all" type="radio" name="linkupdate" value="all" checked>
-					<label for="radio_all">Update events for all displays in this series</label>
-					<input id="radio_single" type="radio" name="linkupdate" value="single">
-					<label for="radio_single">Update event only for this display</label>
-				</td>
-			</tr>
-END;
-		}
-
-		$form .= <<<END
-			<tr>
-				<td></td>
-				<td>
-					<input type="submit" value="Save" />
-					$edit_link
-					<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close'); return false;" value="Cancel" />	
-					$helpButton
-				</td>
-			</tr>
-		</table>
-	</form>
-END;
-		
-		//also output the day view (will need to be made to return a string)
-		$form .= $this->generate_day_view();
-		
-		$response->SetFormRequestResponse($form, 'Schedule an Event', '900px', '600px');
-		$response->callBack = 'setupScheduleForm';
-		$response->Respond();
-	}
-	
 	function DeleteForm() 
 	{
-		$db 		=& $this->db;
-		$response 	= new ResponseManager();
+		$db 				=& $this->db;
+		$user				=& $this->user;
+		$response			= new ResponseManager();
+		
+		$eventID			= Kit::GetParam('EventID', _GET, _INT, 0);
+		$scheduleDetailID	= Kit::GetParam('ScheduleDetailID', _GET, _INT, 0);
+		
+		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
 		
 		$form = <<<END
 		<form class="XiboForm" action="index.php?p=schedule&q=Delete">
-			<input type="hidden" name="schedule_detailid" value="$this->schedule_detailid" />
-			<input type="hidden" name="displaygrouoid" value="$this->displayid" />
+			<input type="hidden" name="eventID" value="$eventID" />
+			<input type="hidden" name="schedule_detailid" value="$scheduleDetailID" />
 			<table>
 				<tr>
 					<td>Are you sure you want to delete this event?</td>
@@ -823,6 +847,35 @@ END;
 END;
 
 		$response->SetFormRequestResponse($form, 'Delete an Event.', '480px', '240px');
+		$response->Respond();
+	}
+	
+	/**
+	 * Deletes an Event
+	 * @return 
+	 */
+	public function DeleteEvent()
+	{
+		$db 				=& $this->db;
+		$user				=& $this->user;
+		$response			= new ResponseManager();
+		
+		$eventID			= Kit::GetParam('EventID', _POST, _INT, 0);
+		$eventID			= Kit::GetParam('ScheduleDetailID', _POST, _INT, 0);
+		$linkedEvents		= Kit::GetParam('linkupdate', _POST, _STRING, 0);
+		
+		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
+		
+		// Ready to do the add 
+		$scheduleObject = new Schedule($db);
+		
+		if (!$scheduleObject->Delete($eventID)) 
+		{
+			trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
+		}
+		
+		$response->SetFormSubmitResponse(__("The Event has been Deleted."));
+		$response->callBack = 'CallGenerateCalendar';
 		$response->Respond();
 	}
 	

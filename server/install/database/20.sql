@@ -69,3 +69,6 @@ NULL , '4', '29', NULL , 'Display Groups', NULL , NULL , '2'
 );
 
 ALTER TABLE `schedule` CHANGE `displayID_list` `DisplayGroupIDs` VARCHAR( 254 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'A list of the display group ids for this event' ;
+
+-- Will need to write some PHP to convert all the dates to TIMESTAMPS
+ALTER TABLE `schedule` MODIFY COLUMN `recurrence_range` BIGINT(20);
