@@ -70,6 +70,12 @@ class scheduleDAO
 		$view				= Kit::GetParam('view', _POST, _WORD, 'month');
 		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
 		
+		// if we have some displaygroupids then add them to the session info so we can default everything else.
+		if (count($displayGroupIDs) > 0)
+		{
+			Session::Set('DisplayGroupIDs', $displayGroupIDs);
+		}
+		
 		if ($view == 'month')
 		{
 			$this->GenerateMonth();
@@ -83,8 +89,6 @@ class scheduleDAO
 			trigger_error(__('The Calendar doesnt support this view.'), E_USER_ERROR);
 		}
 		
-		Session::Set('DisplayGroupIDs', $displayGroupIDs);
-		
 		return true;
 	}
 	
@@ -97,7 +101,7 @@ class scheduleDAO
 		$db 				=& $this->db;
 		$response			= new ResponseManager();
 		
-		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
+		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY, Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY));
 		$year				= Kit::GetParam('year', _POST, _INT, date('Y', time()));
 		$month				= Kit::GetParam('month', _POST, _INT, date('m', time()));
 		$day				= Kit::GetParam('day', _POST, _INT, date('d', time()));
