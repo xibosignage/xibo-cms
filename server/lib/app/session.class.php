@@ -77,9 +77,9 @@ class Session
 		// Get this session		
 		$SQL  = " SELECT session_data, IsExpired, SecurityToken FROM session ";
 		$SQL .= " WHERE session_id = '%s' ";
-		$SQL .= " AND RemoteAddr = '%s' ";
+		$SQL .= " AND UserAgent = '%s' ";
 		
-		$SQL 	= sprintf($SQL, $db->escape_string($key), $db->escape_string($remoteAddr));
+		$SQL 	= sprintf($SQL, $db->escape_string($key), $db->escape_string($userAgent));
 		
 		$result = $db->query($SQL);
 		
@@ -199,18 +199,21 @@ class Session
 		return true;
 	}
 	
-	// Update the session (after login)
-	static function RegenerateSessionID() 
+	/**
+	 * Updates the session ID with a new one
+	 * @return 
+	 */
+	public function RegenerateSessionID($oldSessionID) 
 	{
-		global $db;
-		
-	    $old_sess_id = session_id();
+		$db =& $this->db;
 		
 	    session_regenerate_id(false);
 		
 	    $new_sess_id = session_id();
+		
+		$this->key = $new_sess_id;
 	       
-	    $query = sprintf("UPDATE session SET session_id = '%s' WHERE session_id = '%s'", $db->escape_string($new_sess_id), $db->escape_string($old_sess_id));
+	    $query = sprintf("UPDATE session SET session_id = '%s' WHERE session_id = '%s'", $db->escape_string($new_sess_id), $db->escape_string($oldSessionID));
 	    $db->query($query);
 	}
 	

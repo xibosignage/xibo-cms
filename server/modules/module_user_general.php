@@ -120,6 +120,7 @@
 		$db->query($SQL) or trigger_error("Can not write last accessed info.", E_USER_ERROR);
 
 		$session->setIsExpired(0);
+		$session->RegenerateSessionID(session_id());
 
 		return true;
 	}
