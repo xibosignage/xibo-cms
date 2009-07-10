@@ -42,7 +42,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 						<?php echo $this->DisplayFilter(); ?>
 					</div>
 				</td>
-				<td>
+				<td valign="top" style="vertical-align: top;">
 					<div id="Calendar">
 			
 					</div>

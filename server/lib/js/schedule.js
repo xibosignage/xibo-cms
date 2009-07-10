@@ -111,8 +111,6 @@ function setupScheduleForm() {
 			var date 			= $.datepicker.parseDate('dd/mm/yy', dateText);
 			var formattedDate 	= $.datepicker.formatDate('mm/dd/yy', date);
 			
-			console.log('UNIX date: ' + formattedDate);
-			
 			if (this.id == 'starttime') {
 				$('#fromdt').attr('value', formattedDate);
 			}

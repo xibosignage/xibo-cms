@@ -168,6 +168,7 @@ END;
 		$msgEdit	= __('Edit');
 		$msgPageSec	= __('Page Security');
 		$msgMenuSec	= __('Menu Security');
+		$msgDispSec	= __('Display Security');
 		$msgDel		= __('Delete');
 		
 		$table = <<<END
@@ -201,6 +202,7 @@ END;
 				<button class="XiboFormButton" href="index.php?p=group&q=GroupForm&groupid=$groupid"><span>$msgEdit</span></button>
 				<button class="XiboFormButton" href="index.php?p=group&q=PageSecurityForm&groupid=$groupid"><span>$msgPageSec</span></button>
 				<button class="XiboFormButton" href="index.php?p=group&q=MenuItemSecurityForm&groupid=$groupid"><span>$msgMenuSec</span></button>
+				<button class="XiboFormButton" href="index.php?p=group&q=DisplayGroupSecurityForm&groupid=$groupid"><span>$msgDispSec</span></button>
 				<button class="XiboFormButton" href="index.php?p=group&q=delete_form&groupid=$groupid"><span>$msgDel</span></button>
 END;
 			}
@@ -254,6 +256,7 @@ END;
 		$user			=& $this->user;
 		
 		$helpManager	= new HelpManager($db, $user);
+		$response		= new ResponseManager();
 				
 		// alter the action variable depending on which form we are after
 		if ($this->groupid == "") 
@@ -266,41 +269,28 @@ END;
 		}
 		
 		// Help UI
-		$helpButton 	= $helpManager->HelpButton("content/users/groups", true);
 		$nameHelp		= $helpManager->HelpIcon(__("The Name of this Group."), true);
 		
 		$msgName		= __('Name');
 		
 		$form = <<<END
-		<form class="XiboForm" action="$action" method="post">
+		<form id="GroupForm" class="XiboForm" action="$action" method="post">
 			<input type="hidden" name="groupid" value="$this->groupid">
 			<table>
 				<tr>
 					<td>$msgName<span class="required">*</span></td>
 					<td>$nameHelp <input type="text" name="group" value="$this->group"></td>
 				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input type='submit' value="Save" / >
-						<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />	
-						$helpButton
-					</td>
-				</tr>
 			</table>
 		</form>
 END;
 
-		// Construct the Response
-		$response 					= array();
-		$response['html'] 			= $form;
-		$response['success']		= true;
-		$response['dialogSize']		= true;
-		$response['dialogWidth']	= '400px';
-		$response['dialogHeight'] 	= '180px';
-		$response['dialogTitle']	= __('Add/Edit Group');
-		
-		Kit::Redirect($response);
+		// Construct the Response		
+		$response->SetFormRequestResponse($form, __('Add/Edit Group'), '400', '180');
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Groups&Category=General')");
+		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Save'), '$("#GroupForm").submit()');
+		$response->Respond();
 
 		return true;
 	}
@@ -311,6 +301,8 @@ END;
 	 */
 	function PageSecurityForm()
 	{
+		$response	= new ResponseManager();
+
 		$msgName	= __('Name');
 		
 		$form = <<<HTML
@@ -339,17 +331,13 @@ HTML;
 			</div>
 		</div>
 HTML;
-		
-		// Construct the Response
-		$response 					= array();
-		$response['html'] 			= $xiboGrid;
-		$response['success']		= true;
-		$response['dialogSize']		= true;
-		$response['dialogWidth']	= '500';
-		$response['dialogHeight'] 	= '380';
-		$response['dialogTitle']	= __('Page Security');
-		
-		Kit::Redirect($response);
+			
+		// Construct the Response		
+		$response->SetFormRequestResponse($xiboGrid, __('Page Security'), '500', '380');
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Groups&Category=General')");
+		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Assign / Unassign'), '$("#GroupForm").submit()');
+		$response->Respond();
 
 		return true;
 	}
@@ -397,11 +385,10 @@ END;
 		
 		$msgSecGroup	= __('Security Group');
 		$msgAssigned	= __('Assigned');
-		$msgSumbit		= __('Assign / Unassign');
-		
+
 		//some table headings
 		$form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=group&q=assign">
+		<form id="GroupForm" class="XiboForm" method="post" action="index.php?p=group&q=assign">
 			<input type="hidden" name="groupid" value="$groupid">
 			<div class="dialog_table">
 			<table style="width:100%">
@@ -435,7 +422,6 @@ END;
 			</tbody>
 		</table>
 		</div>
-		<input type='submit' value="$msgSumbit" / >
 	</form>
 END;
 		
@@ -457,29 +443,26 @@ END;
 	{
 		$db 		=& $this->db;
 		$groupid 	= $this->groupid;
+		$response	= new ResponseManager();
 		
 		$msgWarn	= __('Are you sure you want to delete');
 		
 		//we can delete
 		$form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=group&q=delete">
+		<form id="GroupForm" class="XiboForm" method="post" action="index.php?p=group&q=delete">
 			<input type="hidden" name="groupid" value="$groupid">
 			<p>$msgWarn $this->group?</p>
-			<input type="submit" value="Yes">
-			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
 END;
-		
-		// Construct the Response
-		$response 					= array();
-		$response['html'] 			= $form;
-		$response['success']		= true;
-		$response['dialogSize']		= true;
-		$response['dialogWidth']	= '400px';
-		$response['dialogHeight'] 	= '180px';
-		$response['dialogTitle']	= __('Delete Group');
-		
-		Kit::Redirect($response);
+				
+		// Construct the Response		
+		$response->SetFormRequestResponse($form, __('Delete Group'), '400', '180');
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Groups&Category=General')");
+		$response->AddButton(__('No'), 'XiboDialogClose()');
+		$response->AddButton(__('Yes'), '$("#GroupForm").submit()');
+		$response->Respond();
+
+		return true;
 	}
 	
 	/**
@@ -648,6 +631,8 @@ END;
 		$db 			=& $this->db;
 		$user 			=& $this->user;
 		$formMgr 		= new FormManager($db, $user);
+		$response		= new ResponseManager();
+		
 		$filterMenuList = $formMgr->DropDown("SELECT MenuID, Menu FROM menu", 'filterMenu');
 		
 		$msgMenu	= __('Menu');
@@ -679,16 +664,12 @@ HTML;
 		</div>
 HTML;
 		
-		// Construct the Response
-		$response 					= array();
-		$response['html'] 			= $xiboGrid;
-		$response['success']		= true;
-		$response['dialogSize']		= true;
-		$response['dialogWidth']	= '500';
-		$response['dialogHeight'] 	= '280';
-		$response['dialogTitle']	= __('Menu Item Security');
-		
-		Kit::Redirect($response);
+		// Construct the Response		
+		$response->SetFormRequestResponse($xiboGrid, __('Menu Item Security'), '500', '380');
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Groups&Category=General')");
+		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Assign / Unassign'), '$("#GroupForm").submit()');
+		$response->Respond();
 
 		return true;
 	}
@@ -749,7 +730,7 @@ END;
 		
 		//some table headings
 		$form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=group&q=MenuItemSecurityAssign">
+		<form id="GroupForm" class="XiboForm" method="post" action="index.php?p=group&q=MenuItemSecurityAssign">
 			<input type="hidden" name="groupid" value="$groupid">
 			<div class="dialog_table">
 			<table style="width:100%">
@@ -783,7 +764,6 @@ END;
 		$form .= <<<END
 				</tbody>
 			</table>
-			<input type='submit' value="$msgSubmit" / >
 		</div>
 	</form>
 END;

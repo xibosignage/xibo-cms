@@ -149,22 +149,75 @@ class Schedule extends Data
 		return true;
 	}
 	
-	public function Edit()
+	/**
+	 * Edits a Schedule
+	 * @return 
+	 * @param $eventID Object
+	 * @param $eventDetailID Object
+	 * @param $displayGroupIDs Object
+	 * @param $fromDT Object
+	 * @param $toDT Object
+	 * @param $layoutid Object
+	 * @param $rec_type Object
+	 * @param $rec_detail Object
+	 * @param $recToDT Object
+	 * @param $isPriority Object
+	 * @param $userid Object
+	 */
+	public function Edit($eventID, $eventDetailID, $displayGroupIDs, $fromDT, $toDT, $layoutid, $rec_type, $rec_detail, $recToDT, $isPriority, $userid)
 	{
 		$db	=& $this->db;
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'Edit');
+		
+		// What we are really going to do here is delete and re-add... just because it is easier to get the logic right
+		// and it means the same logic will be applied across both functions.
+		
+		// Delete the old schedule
+		if (!$this->Delete($eventID))
+		{
+			return false;
+		}
+		
+		// Add the new one
+		if (!$this->Add($displayGroupIDs, $fromDT, $toDT, $layoutid, $rec_type, $rec_detail, $recToDT, $isPriority, $userid)) 
+		{
+			return false;
+		}
 		
 		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'Edit');
 		
 		return true;
 	}
 	
-	public function Delete()
+	/**
+	 * Deletes a scheduled event
+	 * @return 
+	 * @param $eventID Object
+	 */
+	public function Delete($eventID)
 	{
 		$db	=& $this->db;
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'Delete');
+		
+		if(!$this->DeleteScheduleForEvent($eventID))
+		{
+			// Error will already be set
+			return false;
+		}
+		
+		// Delete all Schedule records for this DisplayGroupID
+		$SQL = sprintf("DELETE FROM schedule WHERE eventID = %d", $eventID);
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+
+		if (!$db->query($SQL)) 
+		{
+			$this->SetError(25016,__('Unable to delete schedule record for this Event.'));
+			
+			return false;
+		}
 		
 		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'Delete');
 		
@@ -317,6 +370,62 @@ class Schedule extends Data
 		}
 		
 		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForEvent');
+		
+		return true;
+	}
+	
+	/**
+	 * Deletes all the Schedule records for an EventID and DisplayGroupID
+	 * @return 
+	 * @param $displayGroupID Object
+	 */
+	public function DeleteScheduleForEventAndGroup($eventID, $displayGroupID)
+	{
+		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
+		
+		// Delete all Schedule records for this DisplayGroupID
+		$SQL = sprintf("DELETE FROM schedule_detail WHERE EventID = %d AND DisplayGroupID = %d ", $eventID, $displayGroupID);
+		
+		Debug::LogEntry($db, 'audit', $SQL, 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
+
+		if (!$db->query($SQL)) 
+		{
+			$this->SetError(25016,__('Unable to delete schedule records for this Event and DisplayGroup.'));
+			
+			return false;
+		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
+		
+		return true;
+	}
+	
+	/**
+	 * Deletes the event detail record provided
+	 * @return 
+	 * @param $eventDetailID Object
+	 */
+	public function DeleteEventDetail($eventDetailID)
+	{
+		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'DeleteEventDetail');
+		
+		// Delete all Schedule records for this EventDetail
+		$SQL = sprintf("DELETE FROM schedule_detail WHERE schedule_detailID = %d", $eventDetailID);
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+
+		if (!$db->query($SQL)) 
+		{
+			$this->SetError(25016,__('Unable to delete schedule records for this Event.'));
+			
+			return false;
+		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'DeleteEventDetail');
 		
 		return true;
 	}

@@ -199,17 +199,20 @@ class scheduleDAO
 		$weeks 		= array_chunk($new_count, 7);
 		
 		// Build the heading portion of the calendar table
-		$calendar  = '<table class="calendar">';
-		$calendar .= ' <thead>';
-		$calendar .= '  <tr class="WeekDays">';
-		$calendar .= '   <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>';
-		$calendar .= '  </tr>';
-		$calendar .= ' </thead>';
-    	$calendar .= ' <tbody>';
+		$calendar  = '<div class="gridContainer">';
+		$calendar .= ' <div class="calendarContainer">';
+		$calendar .= '  <div class="eventsContainer">';
+		$calendar .= '  <table class="WeekDays">';
+		$calendar .= '   <tr>';
+		$calendar .= '    <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>';
+		$calendar .= '   </tr>';
+		$calendar .= '  </table>';
+		$calendar .= '  <div class="monthContainer">';
 		
 		// Now we break each key of the array  into a week and create a new table row for each
 		// week with the days of that week in the table data
-		$i = 0;
+		$i 		= 0;
+		$weekNo	= 0;
 		
 		foreach($weeks AS $week) 
 		{			
@@ -217,6 +220,8 @@ class scheduleDAO
 			$count 		= 0; 
 			$events		= '';
 			$weekRow 	= '';
+			$weekGrid 	= '';
+			$monthTop	= $weekNo * 20;
 			
 	    	foreach($week as $d) 
 			{
@@ -226,7 +231,8 @@ class scheduleDAO
 				
 	        	if($i < $offset_count) 
 				{
-	            	$weekRow .= "<td class=\"nonmonthdays\">$d</td>";
+	            	$weekRow  .= "<td class=\"DayTitle nonmonthdays\">$d</td>";
+	            	$weekGrid .= "<td class=\"DayGrid nonmonthdays\"></td>";
 	        	}
 	        	
 	        	if(($i >= $offset_count) && ($i < ($num_weeks * 7) - $outset)) 
@@ -241,9 +247,8 @@ class scheduleDAO
 						$linkClass = 'today';
 	           		} 
 
-               		$weekRow .= '<td href="' . $link . '" class="' . $linkClass . ' XiboFormButton">';
-					$weekRow .= $dayLink;
-					$weekRow .= '</td>';
+					$weekRow 	.= '<td class="DayTitle">' . $dayLink . '</td>';
+               		$weekGrid 	.= '<td class="DayGrid XiboFormButton" href="' . $link . '"></td>';
 
 	        	} 
 	        	elseif($outset > 0) 
@@ -251,7 +256,8 @@ class scheduleDAO
 					// Days that do not belond in this month
 	            	if(($i >= ($num_weeks * 7) - $outset))
 					{
-	               		$weekRow .= "<td class=\"nonmonthdays\">$d</td>";
+	            		$weekRow  .= "<td class=\"DayTitle nonmonthdays\">$d</td>";
+	               		$weekGrid .= "<td class=\"DayGrid nonmonthdays\"></td>";
 	           		}
 	        	}
 
@@ -260,19 +266,29 @@ class scheduleDAO
 	        	$i++;
 	      	}
 			
-			$calendar .= '   <tr class="EventsRow">';
-			$calendar .= '   	<td colspan="7">';
-			$calendar .= $events;
-	    	$calendar .= '   	</td>';
-	    	$calendar .= '   </tr>';
-	    	$calendar .= '    <tr class="WeekRow">';
+			$weekNo++;
+			
+			$calendar .= '   <div class="MonthRow" style="top:' . $monthTop . '%; height:20%">';
+			$calendar .= '    <table class="WeekRow" cellspacing="0" cellpadding="0">';
+	    	$calendar .= '     <tr>';
+			$calendar .= $weekGrid;
+	    	$calendar .= '     </tr>';
+			$calendar .= '    </table>';
+			$calendar .= '    <table class="EventsRow" cellspacing="0" cellpadding="0">';
+			$calendar .= '     <tr>';
 			$calendar .= $weekRow;
-	    	$calendar .= '    </tr>';
+	    	$calendar .= '     </tr>';
+			$calendar .= $events;
+	    	$calendar .= '    </table>';
+	    	$calendar .= '   </div>';
 		}
 		
-		// Close the calendar table
-      	$calendar .= "</tbody>";   
-		$calendar .= '</table>';
+		// Close the calendar table 
+		$calendar .= '  </div>';
+		$calendar .= '  </div>';
+		$calendar .= ' </table>';
+		$calendar .= '</div>';
+		$calendar .= '</div>';
 		
 		$response->SetGridResponse($calendar);
 		$response->Respond();
@@ -288,6 +304,86 @@ class scheduleDAO
 	}
 	
 	/**
+	 * Gets all the events for a week for the given displaygroups
+	 * @return 
+	 * @param $date Timestamp The starting day of the week
+	 * @param $displayGroupIDs Object
+	 */
+	private function GetEventsForWeek($date, $currentWeekDayNo, $displayGroupIDs)
+	{
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		$events 		= '';
+		$nextWeek		= $date + (60 * 60 * 24 * 7);
+		
+		$displayGroups	= implode(',', $displayGroupIDs);
+		
+		// Query for all events between the dates
+		$SQL = "";
+        $SQL.= "SELECT schedule_detail.schedule_detailID, ";
+        $SQL.= "       schedule_detail.FromDT, ";
+        $SQL.= "       schedule_detail.ToDT,";
+        $SQL.= "       layout.layout, ";
+        $SQL.= "       schedule_detail.userid, ";
+        $SQL.= "       schedule_detail.is_priority, ";
+        $SQL.= "       schedule_detail.EventID ";
+        $SQL.= "  FROM schedule_detail ";
+        $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
+        $SQL.= " WHERE 1=1 ";
+        $SQL.= sprintf("   AND schedule_detail.DisplayGroupID IN (%s) ", $db->escape_string($displayGroups));
+        
+        // Events that fall inside the two dates
+        $SQL.= "   AND schedule_detail.FromDT > $date ";
+        $SQL.= "   AND schedule_detail.FromDT <= $nextWeek ";
+        
+        //Ordering
+        $SQL.= " ORDER BY 2,3";	
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+		
+		if (!$result = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Error getting events for date.'), E_USER_ERROR);
+		}
+
+		// Number of events
+		Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
+		
+		// Define some colors:
+		$color[1] 	= 'CalEvent1';
+		$color[2] 	= 'CalEvent2';
+		$color[3] 	= 'CalEvent3';
+		
+        $count 		= 1;
+		$rows 		= array();
+		
+		while($row = $db->get_assoc_row($result))
+		{
+			if ($count > 3) $count = 1;
+			
+			$eventDetailID	= Kit::ValidateParam($row['schedule_detailID'], _INT);
+			$eventID		= Kit::ValidateParam($row['EventID'], _INT);
+			$fromDT			= Kit::ValidateParam($row['FromDT'], _INT);
+			$toDT			= Kit::ValidateParam($row['ToDT'], _INT);
+			$layout			= Kit::ValidateParam($row['layout'], _STRING);
+			$layout			= sprintf('<a class="XiboFormButton" href="index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d" title="%s">%s</a>', $eventID, $eventDetailID, __('Edit Event'), $layout);
+			
+			// How many days does this event span?
+			
+			$row[$count]	.= '<td colspan="' . $spanningDays . '"><div class="Event ' . $color[$count] . '">' . $layout . '</div></td>';
+			
+			$count++;
+		}
+		
+		$events	.= '<tr></tr>';
+		$events	.= '<tr></tr>';
+		$events	.= '<tr></tr>';
+		
+		return $events;
+	}
+	
+	/**
 	 * Gets all the events starting on a date for the given displaygroups
 	 * @return 
 	 * @param $date Object
@@ -299,12 +395,9 @@ class scheduleDAO
 		$user			=& $this->user;
 		$events 		= '';
 		$nextDay		= $date + (60 * 60 * 24);
-		$leftOffset		= 14.06 * ($currentWeekDayNo - 1);
 		
 		$displayGroups	= implode(',', $displayGroupIDs);
 		
-		if ($displayGroups == '') return '';			
-
 		// Query for all events between the dates
 		$SQL = "";
         $SQL.= "SELECT schedule_detail.schedule_detailID, ";
@@ -350,15 +443,28 @@ class scheduleDAO
 			
 			$top		= 20 * $count;
 			
-			$eventID	= Kit::ValidateParam($row['EventID'], _INT);
-			$fromDT		= Kit::ValidateParam($row['FromDT'], _INT);
-			$toDT		= Kit::ValidateParam($row['ToDT'], _INT);
-			$layout		= Kit::ValidateParam($row['layout'], _STRING);
-			$layout		= sprintf('<a class="XiboFormButton" href="index.php?p=schedule&q=EditEventForm&EventID=%d" title="%s">%s</a>', $eventID, __('Edit Event'), $layout);
+			$eventDetailID	= Kit::ValidateParam($row['schedule_detailID'], _INT);
+			$eventID		= Kit::ValidateParam($row['EventID'], _INT);
+			$fromDT			= Kit::ValidateParam($row['FromDT'], _INT);
+			$toDT			= Kit::ValidateParam($row['ToDT'], _INT);
+			$layout			= Kit::ValidateParam($row['layout'], _STRING);
+			$layout			= sprintf('<a class="XiboFormButton" href="index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d" title="%s">%s</a>', $eventID, $eventDetailID, __('Edit Event'), $layout);
 			
-			$events 	.= '<div class="Event ' . $color[$count] . '" style="left:' . $leftOffset . '%; top: ' . $top . 'px; display:block;" >' . $layout . '</div>';
+			if($currentWeekDayNo == 1) $events .= '<tr>';
+			
+			$events 		.= '<td><div class="Event ' . $color[$count] . '">' . $layout . '</div></td>';
+			
+			if($currentWeekDayNo == 7) $events .= '</tr>';
 	
 			$count++;
+		}
+		
+		// Did we add any?
+		if ($db->num_rows($result) == 0)
+		{
+			if($currentWeekDayNo == 1) $events .= '<tr>';
+			$events .= '<td></td>';
+			if($currentWeekDayNo == 7) $events .= '</tr>';
 		}
 		
 		return $events;
@@ -600,7 +706,8 @@ END;
 		$user		=& $this->user;
 		$response	= new ResponseManager();
 		
-		$eventID	= Kit::GetParam('EventID', _GET, _INT, 0);
+		$eventID		= Kit::GetParam('EventID', _GET, _INT, 0);
+		$eventDetailID	= Kit::GetParam('EventDetailID', _GET, _INT, 0);
 		
 		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
 		
@@ -658,7 +765,8 @@ END;
 		$displayList	= $this->UnorderedListofDisplays($outputForm, $displayGroupIDs);
 		
 		$form 		= <<<END
-			<form id="AddEventForm" class="XiboForm" action="index.php?p=schedule&q=AddEvent" method="post">
+			<form id="AddEventForm" class="XiboForm" action="index.php?p=schedule&q=EditEvent" method="post">
+				<input type="hidden" id="eventDetailID" name="eventDetailID" value="$eventDetailID" />
 				<input type="hidden" id="fromdt" name="fromdt" value="" />
 				<input type="hidden" id="todt" name="todt" value="" />
 				<input type="hidden" id="rectodt" name="rectodt" value="" />
@@ -816,6 +924,88 @@ END;
 		$response->Respond();
 	}
 	
+	/**
+	 * Edits an event
+	 * @return 
+	 */
+	public function EditEvent()
+	{
+		$db 				=& $this->db;
+		$user				=& $this->user;
+		$response			= new ResponseManager();
+		$datemanager		= new DateManager($db);
+
+		$eventID			= Kit::GetParam('EventID', _GET, _INT, 0);
+		$eventDetailID		= Kit::GetParam('EventDetailID', _GET, _INT, 0);
+		$linkedEvents		= Kit::GetParam('linkupdate', _POST, _STRING, 'all');
+		$layoutid			= Kit::GetParam('layoutid', _POST, _INT, 0);
+		$fromDT				= Kit::GetParam('fromdt', _POST, _STRING);
+		$toDT				= Kit::GetParam('todt', _POST, _STRING);
+		$fromTime			= Kit::GetParam('sTime', _POST, _STRING, '00:00');
+		$toTime				= Kit::GetParam('eTime', _POST, _STRING, '00:00');
+		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
+		$isPriority			= Kit::GetParam('is_priority', _POST, _CHECKBOX);
+
+		$rec_type			= Kit::GetParam('rec_type', _POST, _STRING);
+		$rec_detail			= Kit::GetParam('rec_detail', _POST, _INT);
+		$recToDT			= Kit::GetParam('rectodt', _POST, _STRING);
+		
+		$userid 			= Kit::GetParam('userid', _SESSION, _INT);
+		
+		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
+		
+		Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
+		Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
+		
+		// Validate the times
+		if (!strstr($fromTime, ':') || !strstr($toTime, ':'))
+		{
+			trigger_error(__('Times must be in the format 00:00'), E_USER_ERROR);
+		}
+		
+		$fromDT				= (int) strtotime($fromDT . ' ' . $fromTime);
+		$toDT				= (int) strtotime($toDT . ' ' . $toTime);
+		$recToDT			= (int) strtotime($recToDT);
+		
+		// Validate layout
+		if ($layoutid == 0) 
+		{
+			trigger_error(__("No layout selected"), E_USER_ERROR);
+		}
+		
+		// check that at least one display has been selected
+		if ($displayGroupIDs == '') 
+		{
+			trigger_error(__("No displays selected"), E_USER_ERROR);
+		}
+		
+		// validate the dates
+		if ($toDT < $fromDT) 
+		{
+			trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);	
+		}
+		if ($fromDT < (time()- 86400)) 
+		{
+			trigger_error(__("Your start time is in the past. Cannot schedule events in the past"), E_USER_ERROR);
+		}
+		
+		// Ready to do the edit 
+		$scheduleObject = new Schedule($db);
+		
+		if (!$scheduleObject->Edit($eventID, $eventDetailID, $displayGroupIDs, $fromDT, $toDT, $layoutid, $rec_type, $rec_detail, $recToDT, $isPriority, $userid)) 
+		{
+			trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
+		}
+		
+		$response->SetFormSubmitResponse(__("The Event has been Modified."));
+		$response->callBack = 'CallGenerateCalendar';
+		$response->Respond();
+	}
+	
+	/**
+	 * Shows the DeleteEvent form
+	 * @return 
+	 */
 	function DeleteForm() 
 	{
 		$db 				=& $this->db;
@@ -823,14 +1013,14 @@ END;
 		$response			= new ResponseManager();
 		
 		$eventID			= Kit::GetParam('EventID', _GET, _INT, 0);
-		$scheduleDetailID	= Kit::GetParam('ScheduleDetailID', _GET, _INT, 0);
+		$eventDetailID		= Kit::GetParam('EventDetailID', _GET, _INT, 0);
 		
 		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
 		
 		$form = <<<END
-		<form class="XiboForm" action="index.php?p=schedule&q=Delete">
-			<input type="hidden" name="eventID" value="$eventID" />
-			<input type="hidden" name="schedule_detailid" value="$scheduleDetailID" />
+		<form id="DeleteEventForm" class="XiboForm" action="index.php?p=schedule&q=DeleteEvent">
+			<input type="hidden" name="EventID" value="$eventID" />
+			<input type="hidden" name="EventDetailID" value="$eventDetailID" />
 			<table>
 				<tr>
 					<td>Are you sure you want to delete this event?</td>
@@ -838,19 +1028,20 @@ END;
 				<tr>
 					<td colspan="2">
 						<input id="radio_all" type="radio" name="linkupdate" value="all" checked>
-						<label for="radio_all">Delete event for all displays in this series</label>
+						<label for="radio_all">Delete event for all display groups in this series</label><br />
 						<input id="radio_single" type="radio" name="linkupdate" value="single">
-						<label for="radio_single">Delete event for this display only</label>
+						<label for="radio_single">Delete event for this display group only</label>
 					</td>
-				</tr>
-				<tr>
-					<td><input type="submit" value="Delete"></td>
-				</tr>		
+				</tr>	
 			</table>	
 		</form>
 END;
 
-		$response->SetFormRequestResponse($form, 'Delete an Event.', '480px', '240px');
+		$response->SetFormRequestResponse($form, __('Delete Event.'), '480px', '240px');
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+		$response->AddButton(__('No'), 'XiboDialogClose()');
+		$response->AddButton(__('Yes'), '$("#DeleteEventForm").submit()');
+		$response->callBack = 'setupScheduleForm';
 		$response->Respond();
 	}
 	
@@ -865,82 +1056,50 @@ END;
 		$response			= new ResponseManager();
 		
 		$eventID			= Kit::GetParam('EventID', _POST, _INT, 0);
-		$eventID			= Kit::GetParam('ScheduleDetailID', _POST, _INT, 0);
-		$linkedEvents		= Kit::GetParam('linkupdate', _POST, _STRING, 0);
+		$eventDetailID		= Kit::GetParam('EventDetailID', _POST, _INT, 0);
+		$linkedEvents		= Kit::GetParam('linkupdate', _POST, _STRING, 'all');
 		
 		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
 		
 		// Ready to do the add 
 		$scheduleObject = new Schedule($db);
 		
-		if (!$scheduleObject->Delete($eventID)) 
+		// Are we deleting a detail - or the entire event
+		if ($linkedEvents == 'single')
 		{
-			trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
+			// Just delete this one
+			if (!$scheduleObject->DeleteEventDetail($eventDetailID)) 
+			{
+				trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
+			}
+			
+			// Test to see if this was the last one
+			$SQL = sprintf("SELECT * FROM schedule_detail WHERE eventID = %d", $eventID);
+			
+			$result = $db->query($SQL);
+			
+			if ($db->num_rows($result) == 0)
+			{
+				// Also delete the event
+				if (!$scheduleObject->Delete($eventID)) 
+				{
+					trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
+				}
+			}
+		}
+		else
+		{
+			// Delete everything
+			if (!$scheduleObject->Delete($eventID)) 
+			{
+				trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
+			}
 		}
 		
 		$response->SetFormSubmitResponse(__("The Event has been Deleted."));
 		$response->callBack = 'CallGenerateCalendar';
 		$response->Respond();
 	}
-	
-	function display_boxes($linked_events) 
-	{
-		$db =& $this->db;
-		
-		if ($linked_events != "") 
-		{ //if there is a linked event given (i.e. we are on an edit)
-			$linked_displayids = $this->getDisplaysForEvent($linked_events);
-		}
-		else 
-		{
-			$linked_displayids[] = $this->displayid;
-		}
-			
-		$SQL = <<<SQL
-		SELECT	displayid, 
-				display 
-		FROM	display 
-		WHERE	licensed = 1
-		ORDER BY display	
-SQL;
-	
-		//get the displays
-		if (!$result = $db->query($SQL)) 
-		{
-			trigger_error("Can not get the displays from the database.", E_USER_ERROR);
-		}
-	
-		if($db->num_rows($result) < 1) 
-		{
-			$boxes = "No displays available";
-			return $boxes;
-		}
-		
-		$input_fields = "";
-		
-		while ($row = $db->get_row($result)) 
-		{
-			$displayid = $row[0];
-			$display = $row[1];
-			
-			if (in_array($displayid, $linked_displayids)) 
-			{
-				$input_fields .= "<option value='$displayid' selected>$display</option>";
-			}
-			else 
-			{
-				$input_fields .= "<option value='$displayid'>$display</option>";
-			}
-		}
-		
-		$boxes = <<<END
-		<select name='displayids[]' MULTIPLE SIZE=6>
-		$input_fields
-END;
-		return $boxes;
-	}
-	
-	
 	
 	function generate_day_view() 
 	{
@@ -1305,119 +1464,6 @@ END;
 		$response->SetFormSubmitResponse('The Event has been edited.');
 		$response->refresh = true;
 		$response->Respond();
-	}
-
-	/**
-	 * Removes an event
-	 * @return 
-	 */
-	function remove() 
-	{
-		$db 				=& $this->db;
-		$response			= new ResponseManager();
-
-		$schedule_detailid	= Kit::GetParam('schedule_detailid', _POST, _INT);
-		$displayid			= Kit::GetParam('displayid', _POST, _INT);
-		
-		$linkupdate			= $_REQUEST['linkupdate']; //this is either all or single
-		
-		//get the linked_event id for this record
-		$SQL =  "SELECT schedule_detail.eventID, displayID_list FROM schedule_detail INNER JOIN schedule ON schedule_detail.eventID = schedule.eventID ";
-		$SQL .= "WHERE schedule_detailid = $schedule_detailid ";
-		
-		if(!$res_dups = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error("Can not get duplicate events", E_USER_ERROR);			
-		}
-		
-		$row = $db->get_row($res_dups);
-		
-		$linked_event_id = $row[0]; //the event id to update with
-		$displayid_list	 = explode(",",$row[1]);
-		
-		switch ($linkupdate) 
-		{
-			case "all":
-				//we want to delete all the layout display records with the linked_events of $linked_event_id
-				$SQL = "DELETE FROM schedule_detail WHERE eventID = $linked_event_id ";
-				if (!$db->query($SQL)) 
-				{
-					trigger_error($db->error());
-					trigger_error("Error removing this event", E_USER_ERROR);
-				}
-				
-				//and then we want to delete the schedule record itself
-				$SQL = "DELETE FROM schedule WHERE eventID = $linked_event_id ";
-				if (!$db->query($SQL)) 
-				{
-					trigger_error($db->error());
-					trigger_error("Error removing this event", E_USER_ERROR);
-				}
-				
-				break;
-				
-			case "single":
-				//we want to update the schedule record, but remove this display from the list
-				//remove $displayid from $displayid_list
-				foreach($displayid_list as $displayid_orig) 
-				{
-					if ($displayid != $displayid_orig) 
-					{
-						$displayid_list_new[] = $displayid_orig;
-					}
-				}
-				
-				//make a new list from the altered array
-				$displayid_list_new = implode(",", $displayid_list_new);
-				
-				//might leave a bogus schedule record - should really split the schedule when any recurrance is happening...
-				
-				//run the update
-				$SQL = "UPDATE schedule SET displayID_list = '$displayid_list_new' WHERE eventID = $linked_event_id ";
-				if (!$db->query($SQL)) 
-				{
-					trigger_error($db->error());
-					trigger_error("Error removing this event", E_USER_ERROR);
-				}
-				
-				//then delete the layoutdisplay record with this schedule_detailid
-				$SQL = "DELETE FROM schedule_detail WHERE schedule_detailid = $schedule_detailid ";
-				if (!$db->query($SQL)) 
-				{
-					trigger_error($db->error());
-					trigger_error("Error removing this event", E_USER_ERROR);
-				}
-			
-				break;
-		}
-
-		$response->SetFormSubmitResponse('The Event has been removed.');
-		$response->refresh = true;
-		$response->Respond();
-	}
-	
-	function getDisplaysForEvent($eventid) 
-	{
-		$db =& $this->db;
-		
-		//we need to get all the displayid's that are assigned to this linked event
-		$SQL = <<<SQL
-			SELECT DISTINCT displayID FROM schedule_detail WHERE eventID = $eventid
-SQL;
-		//get all the displays ids that are for this linked event
-		if (!$result = $db->query($SQL)) 
-		{
-			trigger_error("Can not get the displays from the database.", E_USER_ERROR);
-		}
-		
-		while ($row = $db->get_row($result)) 
-		{
-			//make a comma seperated list of display ids
-			$linked_displayids[] = $row[0];
-		}
-		
-		return $linked_displayids;
 	}
 }
 ?>
