@@ -223,6 +223,8 @@ class scheduleDAO
 			$weekGrid 	= '';
 			$monthTop	= $weekNo * 20;
 			
+			$events   .= $this->GetEventsForWeek(mktime(0, 0, 0, $month, $week[0], $year), $weekNo, $displayGroupIDs);
+			
 	    	foreach($week as $d) 
 			{
             	// This is each day
@@ -261,7 +263,6 @@ class scheduleDAO
 	           		}
 	        	}
 
-				$events .= $this->GetEventsStartingOnDay($currentDay, $count, $displayGroupIDs);
 
 	        	$i++;
 	      	}
@@ -318,6 +319,8 @@ class scheduleDAO
 		
 		$displayGroups	= implode(',', $displayGroupIDs);
 		
+		if ($displayGroups == '') return;
+		
 		// Query for all events between the dates
 		$SQL = "";
         $SQL.= "SELECT schedule_detail.schedule_detailID, ";
@@ -356,7 +359,8 @@ class scheduleDAO
 		$color[3] 	= 'CalEvent3';
 		
         $count 		= 1;
-		$rows 		= array();
+		$rows 		= array('', '', '', '');
+		$day		= 1;
 		
 		while($row = $db->get_assoc_row($result))
 		{
@@ -370,15 +374,22 @@ class scheduleDAO
 			$layout			= sprintf('<a class="XiboFormButton" href="index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d" title="%s">%s</a>', $eventID, $eventDetailID, __('Edit Event'), $layout);
 			
 			// How many days does this event span?
+			$spanningDays	= ($toDT - $fromDT) / (60 * 60 * 24);
+			$spanningDays	= $spanningDays < 1 ? 1 : $spanningDays;
 			
-			$row[$count]	.= '<td colspan="' . $spanningDays . '"><div class="Event ' . $color[$count] . '">' . $layout . '</div></td>';
+			$dayNo			= ($fromDT - $date) / (60 * 60 * 24);
+			$dayNo			= $dayNo < 1 ? 1 : $dayNo;
+			
+			// Fill in the days with no events?
+			
+			$rows[$count]	.= '<td colspan="' . $spanningDays . '"><div class="Event ' . $color[$count] . '">' . $layout . '</div></td>';
 			
 			$count++;
 		}
 		
-		$events	.= '<tr></tr>';
-		$events	.= '<tr></tr>';
-		$events	.= '<tr></tr>';
+		$events	.= '<tr>' . $rows[1] . '</tr>';
+		$events	.= '<tr>' . $rows[2] . '</tr>';
+		$events	.= '<tr>' . $rows[3] . '</tr>';
 		
 		return $events;
 	}
@@ -397,6 +408,8 @@ class scheduleDAO
 		$nextDay		= $date + (60 * 60 * 24);
 		
 		$displayGroups	= implode(',', $displayGroupIDs);
+		
+		if ($displayGroups == '') return;
 		
 		// Query for all events between the dates
 		$SQL = "";
