@@ -4,8 +4,9 @@ INSERT INTO `pages` (
 `pagegroupID`
 )
 VALUES (
-NULL, 'help', '2',
-NULL, 'clock', 2
+'help', '2',
+),(
+'clock', 2
 );
 
 CREATE TABLE IF NOT EXISTS `help` (
@@ -42,7 +43,7 @@ ALTER TABLE `schedule_detail` ADD FOREIGN KEY ( `eventID` ) REFERENCES `schedule
 ALTER TABLE `schedule_detail` CHANGE `displayID` `DisplayGroupID` INT( 11 ) NOT NULL  ;
  
 ALTER TABLE `schedule_detail` DROP INDEX `displayid` ,
-ADD INDEX `DisplayGroupID` ( `DisplayGroupID` ) 
+ADD INDEX `DisplayGroupID` ( `DisplayGroupID` ) ;
 
 
 INSERT INTO `pages` (
@@ -70,5 +71,30 @@ NULL , '4', '29', NULL , 'Display Groups', NULL , NULL , '2'
 
 ALTER TABLE `schedule` CHANGE `displayID_list` `DisplayGroupIDs` VARCHAR( 254 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'A list of the display group ids for this event' ;
 
--- Will need to write some PHP to convert all the dates to TIMESTAMPS
+--TODO: Will need to write some PHP to convert all the dates to TIMESTAMPS
+--TODO: Will need to write some PHP to add FromDT & TODT columns
 ALTER TABLE `schedule` MODIFY COLUMN `recurrence_range` BIGINT(20);
+
+
+CREATE TABLE IF NOT EXISTS `displaygroup` (
+  `DisplayGroupID` int(11) NOT NULL auto_increment,
+  `DisplayGroup` varchar(50) NOT NULL,
+  `Description` varchar(254) default NULL,
+  `IsDisplaySpecific` tinyint(4) NOT NULL default '0',
+  PRIMARY KEY  (`DisplayGroupID`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=10 ;
+
+CREATE TABLE IF NOT EXISTS `lkdisplaydg` (
+  `LkDisplayDGID` int(11) NOT NULL auto_increment,
+  `DisplayGroupID` int(11) NOT NULL,
+  `DisplayID` int(11) NOT NULL,
+  PRIMARY KEY  (`LkDisplayDGID`),
+  KEY `DisplayGroupID` (`DisplayGroupID`),
+  KEY `DisplayID` (`DisplayID`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=10 ;
+
+ALTER TABLE `lkdisplaydg`
+  ADD CONSTRAINT `lkdisplaydg_ibfk_1` FOREIGN KEY (`DisplayGroupID`) REFERENCES `displaygroup` (`DisplayGroupID`),
+  ADD CONSTRAINT `lkdisplaydg_ibfk_2` FOREIGN KEY (`DisplayID`) REFERENCES `display` (`displayid`);
+
+--TODO: Will need to add some upgrade PHP to create a DisplayGroup (+ link record) for every Currently existing display.
