@@ -281,7 +281,7 @@ class scheduleDAO
 							$layoutUri		= sprintf('<a class="XiboFormButton" href="%s" title="%s">%s %s</a>', $event->layoutUri, $event->layout, $timePrefix, $event->layout);
 							
 							// We should subtract any days ahead of the start date from the spanning days
-							$spanningDays 	= $d - $event->startDayNo > 0 ? $spanningDays - $d - $event->startDayNo : $spanningDays;
+							$spanningDays 	= $d - $event->startDayNo > 0 ? $spanningDays - ($d - $event->startDayNo) : $spanningDays;
 							$spanningDays 	= $spanningDays > $count ? $count : $spanningDays;
 							
 							$events1 		.= sprintf('<td colspan="%d" class="%s %s">%s</td>', $spanningDays, 'CalEvent1', $tdClass, $layoutUri);
@@ -506,8 +506,8 @@ class scheduleDAO
 			$event->toDT			= $toDT;
 			$event->layout			= $layout;
 			$event->layoutUri		= $layoutUri;
-			$event->spanningDays	= $spanningDays;
-			$event->startDayNo		= $dayNo;
+			$event->spanningDays	= ceil($spanningDays);
+			$event->startDayNo		= floor($dayNo);
 			
 			// Store this event in the lowest slot it will fit in.
 			// only look from the start day of this event
