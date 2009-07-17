@@ -143,7 +143,11 @@
 }
 
 .Event {
-	padding: 2px;
+	background: none !important;
+}
+
+.LongEvent, .Event {
+	padding: 4px;
 }
 
 #Displays {

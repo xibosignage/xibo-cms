@@ -214,27 +214,36 @@ class scheduleDAO
 		$i 		= 0;
 		$weekNo	= 0;
 		
+		// Load this months events into an array
+		$monthEvents	= $this->GetEventsForMonth($month, $year, $displayGroupIDs);
+		
 		foreach($weeks AS $week) 
 		{			
 			// So we know which day we are on
-			$count 		= 0; 
-			$events		= '';
+			$count 		= 7; 
+			$events1	= '';
+			$events2	= '';
+			$events3	= '';
 			$weekRow 	= '';
 			$weekGrid 	= '';
+			$lastEvent1ID = 0;
+			$lastEvent2ID = 0;
+			$lastEvent3ID = 0;
 			$monthTop	= $weekNo * 20;
-			
-			$events   .= $this->GetEventsForWeek(mktime(0, 0, 0, $month, $week[0], $year), $weekNo, $displayGroupIDs);
 			
 	    	foreach($week as $d) 
 			{
             	// This is each day
-	    		$count++;
-				$currentDay = mktime(date("H"), 0, 0, $month, $d, $year);
+	    		$currentDay = mktime(date("H"), 0, 0, $month, $d, $year);
 				
 	        	if($i < $offset_count) 
 				{
 	            	$weekRow  .= "<td class=\"DayTitle nonmonthdays\">$d</td>";
 	            	$weekGrid .= "<td class=\"DayGrid nonmonthdays\"></td>";
+					
+					$events1  .= '<td class="nonmonthdays" colspan="1"></td>';
+					$events2  .= '<td class="nonmonthdays" colspan="1"></td>';
+					$events3  .= '<td class="nonmonthdays" colspan="1"></td>';
 	        	}
 	        	
 	        	if(($i >= $offset_count) && ($i < ($num_weeks * 7) - $outset)) 
@@ -251,6 +260,108 @@ class scheduleDAO
 
 					$weekRow 	.= '<td class="DayTitle">' . $dayLink . '</td>';
                		$weekGrid 	.= '<td class="DayGrid XiboFormButton" href="' . $link . '"></td>';
+					
+					// These days belong in this month, so see if we have any events for day
+					if (isset($monthEvents[0][$d]))
+					{
+						// Is this the same event as one we have already added
+						$event	= $monthEvents[0][$d];
+						
+						if ($lastEvent1ID != $event->eventDetailID)
+						{
+							Debug::LogEntry($db, 'audit', sprintf('Last Event ID %d New Event ID %d.', $lastEvent1ID, $event->eventDetailID));
+							
+							// We should only go up to the max number of days left in the week.
+							$spanningDays 	= $event->spanningDays;
+							
+							// Now we know if this is a single day event or not we need to set up some styles
+							$tdClass		= $spanningDays == 1 ? 'Event' : 'LongEvent';
+							$timePrefix		= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
+							
+							$layoutUri		= sprintf('<a class="XiboFormButton" href="%s" title="%s">%s %s</a>', $event->layoutUri, $event->layout, $timePrefix, $event->layout);
+							
+							// We should subtract any days ahead of the start date from the spanning days
+							$spanningDays 	= $d - $event->startDayNo > 0 ? $spanningDays - $d - $event->startDayNo : $spanningDays;
+							$spanningDays 	= $spanningDays > $count ? $count : $spanningDays;
+							
+							$events1 		.= sprintf('<td colspan="%d" class="%s %s">%s</td>', $spanningDays, 'CalEvent1', $tdClass, $layoutUri);
+							
+						}
+						
+						// Make sure we dont try to add this one again
+						$lastEvent1ID = $event->eventDetailID;
+					}
+					else
+					{
+						// Put in an empty TD for this event
+						$events1 .= '<td colspan="1"></td>';
+					}
+					
+					if (isset($monthEvents[1][$d]))
+					{
+						// Is this the same event as one we have already added
+						$event	= $monthEvents[1][$d];
+						
+						if ($lastEvent2ID != $event->eventDetailID)
+						{
+							// We should only go up to the max number of days left in the week.
+							$spanningDays = $event->spanningDays;
+							
+							// Now we know if this is a single day event or not we need to set up some styles
+							$tdClass		= $spanningDays == 1 ? 'Event' : 'LongEvent';
+							$timePrefix		= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
+							
+							$layoutUri		= sprintf('<a class="XiboFormButton" href="%s" title="%s">%s %s</a>', $event->layoutUri, $event->layout, $timePrefix, $event->layout);
+							
+							// We should subtract any days ahead of the start date from the spanning days
+							$spanningDays = $event->startDayNo - $d;
+							$spanningDays = $spanningDays > $count ? $count : $spanningDays;
+							
+							$events2 .= sprintf('<td colspan="%d" class="%s %s">%s</td>', $spanningDays, 'CalEvent2', $tdClass, $layoutUri);
+							
+						}
+						
+						// Make sure we dont try to add this one again
+						$lastEvent2ID = $event->eventDetailID;
+					}
+					else
+					{
+						// Put in an empty TD for this event
+						$events2 .= '<td colspan="1"></td>';
+					}
+					
+					if (isset($monthEvents[2][$d]))
+					{
+						// Is this the same event as one we have already added
+						$event	= $monthEvents[2][$d];
+						
+						if ($lastEvent3ID != $event->eventDetailID)
+						{
+							// We should only go up to the max number of days left in the week.
+							$spanningDays = $event->spanningDays;
+							
+							// Now we know if this is a single day event or not we need to set up some styles
+							$tdClass		= $spanningDays == 1 ? 'Event' : 'LongEvent';
+							$timePrefix		= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
+							
+							$layoutUri		= sprintf('<a class="XiboFormButton" href="%s" title="%s">%s %s</a>', $event->layoutUri, $event->layout, $timePrefix, $event->layout);
+							
+							// We should subtract any days ahead of the start date from the spanning days
+							$spanningDays = $event->startDayNo - $d;
+							$spanningDays = $spanningDays > $count ? $count : $spanningDays;
+							
+							$events3 .= sprintf('<td colspan="%d" class="%s %s">%s</td>', $spanningDays, 'CalEvent3', $tdClass, $layoutUri);
+							
+						}
+						
+						// Make sure we dont try to add this one again
+						$lastEvent3ID = $event->eventDetailID;
+					}
+					else
+					{
+						// Put in an empty TD for this event
+						$events3 .= '<td colspan="1"></td>';
+					}
 
 	        	} 
 	        	elseif($outset > 0) 
@@ -260,11 +371,14 @@ class scheduleDAO
 					{
 	            		$weekRow  .= "<td class=\"DayTitle nonmonthdays\">$d</td>";
 	               		$weekGrid .= "<td class=\"DayGrid nonmonthdays\"></td>";
+						$events1  .= '<td class="nonmonthdays" colspan="1"></td>';
+						$events2  .= '<td class="nonmonthdays" colspan="1"></td>';
+						$events3  .= '<td class="nonmonthdays" colspan="1"></td>';
 	           		}
 	        	}
 
-
 	        	$i++;
+				$count--;
 	      	}
 			
 			$weekNo++;
@@ -279,7 +393,15 @@ class scheduleDAO
 			$calendar .= '     <tr>';
 			$calendar .= $weekRow;
 	    	$calendar .= '     </tr>';
-			$calendar .= $events;
+			$calendar .= '     <tr>';
+			$calendar .= $events1;
+	    	$calendar .= '     </tr>';
+			$calendar .= '     <tr>';
+			$calendar .= $events2;
+	    	$calendar .= '     </tr>';
+			$calendar .= '     <tr>';
+			$calendar .= $events3;
+	    	$calendar .= '     </tr>';
 	    	$calendar .= '    </table>';
 	    	$calendar .= '   </div>';
 		}
@@ -302,6 +424,191 @@ class scheduleDAO
 	public function GenerateDay()
 	{
 		
+	}
+	
+	/**
+	 * Gets all the events for a months. Returns an array of days in the month / event ID's
+	 * @return 
+	 * @param $month Object
+	 * @param $year Object
+	 * @param $displayGroupIDs Object
+	 */
+	private function GetEventsForMonth($month, $year, $displayGroupIDs)
+	{
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		$events 		= '';
+		$thisMonth		= mktime(0, 0, 0, $month, 1, $year);
+		$nextMonth		= mktime(0, 0, 0, $month + 1, 1, $year);
+		$daysInMonth	= cal_days_in_month(0, $month, $year);
+		
+		$displayGroups	= implode(',', $displayGroupIDs);
+		
+		if ($displayGroups == '') return;
+		
+		// Query for all events between the dates
+		$SQL = "";
+        $SQL.= "SELECT schedule_detail.schedule_detailID, ";
+        $SQL.= "       schedule_detail.FromDT, ";
+        $SQL.= "       schedule_detail.ToDT,";
+        $SQL.= "       layout.layout, ";
+        $SQL.= "       schedule_detail.userid, ";
+        $SQL.= "       schedule_detail.is_priority, ";
+        $SQL.= "       schedule_detail.EventID, ";
+        $SQL.= "       schedule_detail.ToDT - schedule_detail.FromDT AS duration ";
+        $SQL.= "  FROM schedule_detail ";
+        $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
+        $SQL.= " WHERE 1=1 ";
+        $SQL.= sprintf("   AND schedule_detail.DisplayGroupID IN (%s) ", $db->escape_string($displayGroups));
+        
+        // Events that fall inside the two dates
+        $SQL.= "   AND schedule_detail.FromDT > $thisMonth ";
+        $SQL.= "   AND schedule_detail.FromDT <= $nextMonth ";
+        
+        //Ordering
+        $SQL.= " ORDER BY schedule_detail.ToDT - schedule_detail.FromDT DESC, 2,3";	
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+		
+		if (!$result = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Error getting events for date.'), E_USER_ERROR);
+		}
+
+		// Number of events
+		Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
+		
+        
+		while($row = $db->get_assoc_row($result))
+		{
+			$eventDetailID	= Kit::ValidateParam($row['schedule_detailID'], _INT);
+			$eventID		= Kit::ValidateParam($row['EventID'], _INT);
+			$fromDT			= Kit::ValidateParam($row['FromDT'], _INT);
+			$toDT			= Kit::ValidateParam($row['ToDT'], _INT);
+			$layout			= Kit::ValidateParam($row['layout'], _STRING);
+			
+			// How many days does this event span?
+			$spanningDays	= ($toDT - $fromDT) / (60 * 60 * 24);
+			$spanningDays	= $spanningDays < 1 ? 1 : $spanningDays;
+			
+			$dayNo			= ($fromDT - $thisMonth) / (60 * 60 * 24);
+			$dayNo			= $dayNo < 1 ? 1 : $dayNo;
+			$layoutUri		= sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
+			
+			Debug::LogEntry($db, 'audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
+			
+			// Create a new Event from these details
+			$event					= new Event();
+			$event->eventID			= $eventID;
+			$event->eventDetailID	= $eventDetailID;
+			$event->fromDT			= $fromDT;
+			$event->toDT			= $toDT;
+			$event->layout			= $layout;
+			$event->layoutUri		= $layoutUri;
+			$event->spanningDays	= $spanningDays;
+			$event->startDayNo		= $dayNo;
+			
+			// Store this event in the lowest slot it will fit in.
+			// only look from the start day of this event
+			$located	= false;
+			$locatedOn	= 0;
+			
+			if (!isset($events[$locatedOn][$dayNo]))
+			{
+				// Start day empty on event row 1
+				$located 	= true;
+				
+				// Look to see if there are enough free slots to cover the event duration
+				for ($i = $dayNo; $i <= $spanningDays; $i++)
+				{
+					if (isset($events[$locatedOn][$i]))
+					{
+						$located	= false;
+						break;
+					}
+				}
+				
+				// If we are located by this point, that means we can fill in these blocks
+				if ($located)
+				{
+					Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
+				
+					for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
+					{
+						$events[$locatedOn][$i] = $event;
+					}
+				}
+			}
+
+			$locatedOn	= 1;
+			
+			if (!$located && !isset($events[$locatedOn][$dayNo]))
+			{
+				// Start day empty on event row 2
+				$located 	= true;
+				
+				// Look to see if there are enough free slots to cover the event duration
+				for ($i = $dayNo; $i <= $spanningDays; $i++)
+				{
+					if (isset($events[0][$i]))
+					{
+						$located	= false;
+						break;
+					}
+				}
+				
+				// If we are located by this point, that means we can fill in these blocks
+				if ($located)
+				{
+					Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
+				
+					for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
+					{
+						$events[$locatedOn][$i] = $event;
+					}
+				}
+			}
+			
+			$locatedOn	= 2;
+			
+			if (!$located && !isset($events[$locatedOn][$dayNo]))
+			{
+				// Start day empty on event row 3
+				$located 	= true;
+				
+				// Look to see if there are enough free slots to cover the event duration
+				for ($i = $dayNo; $i <= $spanningDays; $i++)
+				{
+					if (isset($events[0][$i]))
+					{
+						$located	= false;
+						break;
+					}
+				}
+				
+				// If we are located by this point, that means we can fill in these blocks
+				if ($located)
+				{
+					Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
+				
+					for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
+					{
+						$events[$locatedOn][$i] = $event;
+					}
+				}
+			}
+			
+			if (!$located)
+			{
+				Debug::LogEntry($db, 'audit', sprintf('No space for event with start day no %d and spanning days %d', $dayNo, $spanningDays));
+			}
+		}
+		
+		Debug::LogEntry($db, 'audit', 'Built Month Array');
+		Debug::LogEntry($db, 'audit', var_export($events, true));
+		
+		return $events;
 	}
 	
 	/**
@@ -778,8 +1085,9 @@ END;
 		$displayList	= $this->UnorderedListofDisplays($outputForm, $displayGroupIDs);
 		
 		$form 		= <<<END
-			<form id="AddEventForm" class="XiboForm" action="index.php?p=schedule&q=EditEvent" method="post">
-				<input type="hidden" id="eventDetailID" name="eventDetailID" value="$eventDetailID" />
+			<form id="EditEventForm" class="XiboForm" action="index.php?p=schedule&q=EditEvent" method="post">
+				<input type="hidden" id="EventID" name="EventID" value="$eventID" />
+				<input type="hidden" id="EventDetailID" name="EventDetailID" value="$eventDetailID" />
 				<input type="hidden" id="fromdt" name="fromdt" value="" />
 				<input type="hidden" id="todt" name="todt" value="" />
 				<input type="hidden" id="rectodt" name="rectodt" value="" />
@@ -948,8 +1256,8 @@ END;
 		$response			= new ResponseManager();
 		$datemanager		= new DateManager($db);
 
-		$eventID			= Kit::GetParam('EventID', _GET, _INT, 0);
-		$eventDetailID		= Kit::GetParam('EventDetailID', _GET, _INT, 0);
+		$eventID			= Kit::GetParam('EventID', _POST, _INT, 0);
+		$eventDetailID		= Kit::GetParam('EventDetailID', _POST, _INT, 0);
 		$linkedEvents		= Kit::GetParam('linkupdate', _POST, _STRING, 'all');
 		$layoutid			= Kit::GetParam('layoutid', _POST, _INT, 0);
 		$fromDT				= Kit::GetParam('fromdt', _POST, _STRING);
