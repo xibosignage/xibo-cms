@@ -24,6 +24,8 @@ class scheduleDAO
 {
 	private $db;
 	private $user;
+	
+	private $lastEventID;
 
 	/**
 	 * Constructor
@@ -219,16 +221,17 @@ class scheduleDAO
 		
 		foreach($weeks AS $week) 
 		{			
-			// So we know which day we are on
-			$count 		= 7; 
+			// Count of the available days in this week.
+			$count		= 7;
+						
 			$events1	= '';
 			$events2	= '';
 			$events3	= '';
 			$weekRow 	= '';
 			$weekGrid 	= '';
-			$lastEvent1ID = 0;
-			$lastEvent2ID = 0;
-			$lastEvent3ID = 0;
+			$this->lastEventID[0] = 0;
+			$this->lastEventID[1] = 0;
+			$this->lastEventID[2] = 0;
 			$monthTop	= $weekNo * 20;
 			
 	    	foreach($week as $d) 
@@ -262,107 +265,9 @@ class scheduleDAO
                		$weekGrid 	.= '<td class="DayGrid XiboFormButton" href="' . $link . '"></td>';
 					
 					// These days belong in this month, so see if we have any events for day
-					if (isset($monthEvents[0][$d]))
-					{
-						// Is this the same event as one we have already added
-						$event	= $monthEvents[0][$d];
-						
-						if ($lastEvent1ID != $event->eventDetailID)
-						{
-							Debug::LogEntry($db, 'audit', sprintf('Last Event ID %d New Event ID %d.', $lastEvent1ID, $event->eventDetailID));
-							
-							// We should only go up to the max number of days left in the week.
-							$spanningDays 	= $event->spanningDays;
-							
-							// Now we know if this is a single day event or not we need to set up some styles
-							$tdClass		= $spanningDays == 1 ? 'Event' : 'LongEvent';
-							$timePrefix		= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
-							
-							$layoutUri		= sprintf('<a class="XiboFormButton" href="%s" title="%s">%s %s</a>', $event->layoutUri, $event->layout, $timePrefix, $event->layout);
-							
-							// We should subtract any days ahead of the start date from the spanning days
-							$spanningDays 	= $d - $event->startDayNo > 0 ? $spanningDays - ($d - $event->startDayNo) : $spanningDays;
-							$spanningDays 	= $spanningDays > $count ? $count : $spanningDays;
-							
-							$events1 		.= sprintf('<td colspan="%d" class="%s %s">%s</td>', $spanningDays, 'CalEvent1', $tdClass, $layoutUri);
-							
-						}
-						
-						// Make sure we dont try to add this one again
-						$lastEvent1ID = $event->eventDetailID;
-					}
-					else
-					{
-						// Put in an empty TD for this event
-						$events1 .= '<td colspan="1"></td>';
-					}
-					
-					if (isset($monthEvents[1][$d]))
-					{
-						// Is this the same event as one we have already added
-						$event	= $monthEvents[1][$d];
-						
-						if ($lastEvent2ID != $event->eventDetailID)
-						{
-							// We should only go up to the max number of days left in the week.
-							$spanningDays = $event->spanningDays;
-							
-							// Now we know if this is a single day event or not we need to set up some styles
-							$tdClass		= $spanningDays == 1 ? 'Event' : 'LongEvent';
-							$timePrefix		= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
-							
-							$layoutUri		= sprintf('<a class="XiboFormButton" href="%s" title="%s">%s %s</a>', $event->layoutUri, $event->layout, $timePrefix, $event->layout);
-							
-							// We should subtract any days ahead of the start date from the spanning days
-							$spanningDays = $event->startDayNo - $d;
-							$spanningDays = $spanningDays > $count ? $count : $spanningDays;
-							
-							$events2 .= sprintf('<td colspan="%d" class="%s %s">%s</td>', $spanningDays, 'CalEvent2', $tdClass, $layoutUri);
-							
-						}
-						
-						// Make sure we dont try to add this one again
-						$lastEvent2ID = $event->eventDetailID;
-					}
-					else
-					{
-						// Put in an empty TD for this event
-						$events2 .= '<td colspan="1"></td>';
-					}
-					
-					if (isset($monthEvents[2][$d]))
-					{
-						// Is this the same event as one we have already added
-						$event	= $monthEvents[2][$d];
-						
-						if ($lastEvent3ID != $event->eventDetailID)
-						{
-							// We should only go up to the max number of days left in the week.
-							$spanningDays = $event->spanningDays;
-							
-							// Now we know if this is a single day event or not we need to set up some styles
-							$tdClass		= $spanningDays == 1 ? 'Event' : 'LongEvent';
-							$timePrefix		= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
-							
-							$layoutUri		= sprintf('<a class="XiboFormButton" href="%s" title="%s">%s %s</a>', $event->layoutUri, $event->layout, $timePrefix, $event->layout);
-							
-							// We should subtract any days ahead of the start date from the spanning days
-							$spanningDays = $event->startDayNo - $d;
-							$spanningDays = $spanningDays > $count ? $count : $spanningDays;
-							
-							$events3 .= sprintf('<td colspan="%d" class="%s %s">%s</td>', $spanningDays, 'CalEvent3', $tdClass, $layoutUri);
-							
-						}
-						
-						// Make sure we dont try to add this one again
-						$lastEvent3ID = $event->eventDetailID;
-					}
-					else
-					{
-						// Put in an empty TD for this event
-						$events3 .= '<td colspan="1"></td>';
-					}
-
+					$events1	.= $this->BuildEventTdForDay($monthEvents, 0, $d, $count);
+					$events2	.= $this->BuildEventTdForDay($monthEvents, 1, $d, $count);
+					$events3	.= $this->BuildEventTdForDay($monthEvents, 2, $d, $count);
 	        	} 
 	        	elseif($outset > 0) 
 				{
@@ -378,6 +283,8 @@ class scheduleDAO
 	        	}
 
 	        	$i++;
+				
+				// Decrement the Available Days
 				$count--;
 	      	}
 			
@@ -418,6 +325,56 @@ class scheduleDAO
 	}
 	
 	/**
+	 * BuildEventTdForDay
+	 * @return 
+	 * @param $monthEvents Object
+	 * @param $index Object
+	 * @param $d Object
+	 * @param $count Object
+	 */
+	private function BuildEventTdForDay($monthEvents, $index, $d, $count)
+	{
+		$events 		= '';
+		$calEvent[0]	= 'CalEvent1';
+		$calEvent[1]	= 'CalEvent2';
+		$calEvent[2]	= 'CalEvent3';
+		
+		if (isset($monthEvents[$index][$d]))
+		{
+			// Is this the same event as one we have already added
+			$event	= $monthEvents[$index][$d];
+			
+			if ($this->lastEventID[$index] != $event->eventDetailID)
+			{
+				// We should only go up to the max number of days left in the week.
+				$spanningDays 	= $event->spanningDays;
+				
+				// Now we know if this is a single day event or not we need to set up some styles
+				$tdClass		= $spanningDays == 1 ? 'Event' : 'LongEvent';
+				$timePrefix		= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
+				
+				$layoutUri		= sprintf('<div class="%s %s"><a class="XiboFormButton" href="%s" title="%s">%s %s</a></div>', $tdClass, $calEvent[$index], $event->layoutUri, $event->layout, $timePrefix, $event->layout);
+				
+				// We should subtract any days ahead of the start date from the spanning days
+				$spanningDays 	= $d - $event->startDayNo > 0 ? $spanningDays - ($d - $event->startDayNo) : $spanningDays;
+				$spanningDays 	= $spanningDays > $count ? $count : $spanningDays;
+				
+				$events 		= sprintf('<td colspan="%d">%s</td>', $spanningDays, $layoutUri);
+			}
+			
+			// Make sure we dont try to add this one again
+			$this->lastEventID[$index] = $event->eventDetailID;
+		}
+		else
+		{
+			// Put in an empty TD for this event
+			$events = '<td colspan="1"></td>';
+		}
+		
+		return $events;
+	}
+	
+	/**
 	 * Generates a single day of the schedule
 	 * @return 
 	 */
@@ -451,11 +408,13 @@ class scheduleDAO
         $SQL.= "SELECT schedule_detail.schedule_detailID, ";
         $SQL.= "       schedule_detail.FromDT, ";
         $SQL.= "       schedule_detail.ToDT,";
+        $SQL.= "       LEAST(schedule_detail.ToDT, $nextMonth) AS AdjustedToDT,";
         $SQL.= "       layout.layout, ";
         $SQL.= "       schedule_detail.userid, ";
         $SQL.= "       schedule_detail.is_priority, ";
         $SQL.= "       schedule_detail.EventID, ";
-        $SQL.= "       schedule_detail.ToDT - schedule_detail.FromDT AS duration ";
+        $SQL.= "       schedule_detail.ToDT - schedule_detail.FromDT AS duration, ";
+        $SQL.= "       (LEAST(schedule_detail.ToDT, $nextMonth)) - schedule_detail.FromDT AS AdjustedDuration ";
         $SQL.= "  FROM schedule_detail ";
         $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
         $SQL.= " WHERE 1=1 ";
@@ -485,15 +444,14 @@ class scheduleDAO
 			$eventDetailID	= Kit::ValidateParam($row['schedule_detailID'], _INT);
 			$eventID		= Kit::ValidateParam($row['EventID'], _INT);
 			$fromDT			= Kit::ValidateParam($row['FromDT'], _INT);
-			$toDT			= Kit::ValidateParam($row['ToDT'], _INT);
+			$toDT			= Kit::ValidateParam($row['AdjustedToDT'], _INT);
 			$layout			= Kit::ValidateParam($row['layout'], _STRING);
 			
 			// How many days does this event span?
 			$spanningDays	= ($toDT - $fromDT) / (60 * 60 * 24);
 			$spanningDays	= $spanningDays < 1 ? 1 : $spanningDays;
 			
-			$dayNo			= ($fromDT - $thisMonth) / (60 * 60 * 24);
-			$dayNo			= $dayNo < 1 ? 1 : $dayNo;
+			$dayNo			= date('d', $fromDT);
 			$layoutUri		= sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
 			
 			Debug::LogEntry($db, 'audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));

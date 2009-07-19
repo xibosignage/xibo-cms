@@ -59,6 +59,7 @@ $datemanager	= new DateManager($db);
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.tablesorter.pager.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.ifixpng.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.contextmenu.r2.packed.js"></script>
+		<script type="text/javascript" src="3rdparty/jQuery/jquery.corner.js"></script>
 		<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/datePicker.css" />
 		<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/ui-elements.css" />
 		
