@@ -451,7 +451,7 @@ class scheduleDAO
 			$spanningDays	= ($toDT - $fromDT) / (60 * 60 * 24);
 			$spanningDays	= $spanningDays < 1 ? 1 : $spanningDays;
 			
-			$dayNo			= date('d', $fromDT);
+			$dayNo			= (int) date('d', $fromDT);
 			$layoutUri		= sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
 			
 			Debug::LogEntry($db, 'audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
@@ -465,7 +465,7 @@ class scheduleDAO
 			$event->layout			= $layout;
 			$event->layoutUri		= $layoutUri;
 			$event->spanningDays	= ceil($spanningDays);
-			$event->startDayNo		= floor($dayNo);
+			$event->startDayNo		= $dayNo;
 			
 			// Store this event in the lowest slot it will fit in.
 			// only look from the start day of this event
@@ -1006,6 +1006,7 @@ END;
         $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule.layoutID ";
         $SQL.= " WHERE 1=1 ";
         $SQL.= sprintf("   AND schedule.EventID = %d", $eventID);
+        $SQL.= sprintf("   AND schedule_detail.schedule_detailID = %d", $eventDetailID);
         
 		Debug::LogEntry($db, 'audit', $SQL);
 		
@@ -1028,9 +1029,19 @@ END;
 		$layoutID			= Kit::ValidateParam($row['LayoutID'], _STRING);
 		
 		$fromDtText			= date("d/m/Y", $fromDT);
+		$fromDtTextUS		= date("m/d/Y", $fromDT);
 		$fromTimeText		= date("H:i", $fromDT);
 		$toDtText			= date("d/m/Y", $toDT);
+		$toDtTextUS			= date("m/d/Y", $toDT);
 		$toTimeText			= date("H:i", $toDT);
+		$recToDtText		= '';
+		$recToDtTextUS		= '';
+		
+		if ($recType != '')
+		{
+			$recToDtText		= date("d/m/Y", $recToDT);
+			$recToDtTextUS		= date("m/d/Y", $recToDT);
+		}
 		
 		// need to do some user checking here
 		$sql  = "SELECT layoutID, layout, permissionID, userID ";
@@ -1046,9 +1057,9 @@ END;
 			<form id="EditEventForm" class="XiboForm" action="index.php?p=schedule&q=EditEvent" method="post">
 				<input type="hidden" id="EventID" name="EventID" value="$eventID" />
 				<input type="hidden" id="EventDetailID" name="EventDetailID" value="$eventDetailID" />
-				<input type="hidden" id="fromdt" name="fromdt" value="" />
-				<input type="hidden" id="todt" name="todt" value="" />
-				<input type="hidden" id="rectodt" name="rectodt" value="" />
+				<input type="hidden" id="fromdt" name="fromdt" value="$fromDtTextUS" />
+				<input type="hidden" id="todt" name="todt" value="$toDtTextUS" />
+				<input type="hidden" id="rectodt" name="rectodt" value="$recToDtTextUS" />
 				<table style="width:100%;">
 					<tr>
 						<td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
@@ -1082,7 +1093,7 @@ END;
 		$days 		= 60*60*24;
 		$rec_type 	= listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type", $recType);
 		$rec_detail	= listcontent("1|1,2|2,3|3,4|4,5|5,6|6,7|7,8|8,9|9,10|10,11|11,12|12,13|13,14|14", "rec_detail", $recDetail);
-		$rec_range 	= '<input class="date-pick" type="text" id="rec_range" name="rec_range" value="' . $recToDT . '" />';
+		$rec_range 	= '<input class="date-pick" type="text" id="rec_range" name="rec_range" value="' . $recToDtText . '" />';
 		
 		$form .= <<<END
 		<tr>

@@ -98,7 +98,7 @@ class Schedule extends Data
 				$t_start_temp 	= $fromDT;
 				$t_end_temp 	= $toDT;
 				
-				Debug::LogEntry($db, 'audit', sprintf('Recurrence detected until %d', $recToDT), 'Schedule', 'Add');
+				Debug::LogEntry($db, 'audit', sprintf('Recurrence detected until %d. Recurrence period is %s and interval is %s.', $recToDT, $recDetail, $recType), 'Schedule', 'Add');
 				
 				//loop until we have added the recurring events for the schedule
 				while ($t_start_temp < $recToDT) 
@@ -117,8 +117,8 @@ class Schedule extends Data
 							break;
 							
 						case 'Week':
-							$t_start_temp 	= mktime(date("H", $t_start_temp), date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp) ,date("d", $t_start_temp)+($recDetail*7), date("Y", $t_start_temp));
-							$t_end_temp 	= mktime(date("H", $t_end_temp), date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp) ,date("d", $t_end_temp)+($recDetail*7), date("Y", $t_end_temp));
+							$t_start_temp 	= $t_start_temp + (60 * 60 * 24 * 7);
+							$t_end_temp 	= $t_end_temp + (60 * 60 * 24 * 7);
 							break;
 							
 						case 'Month':
