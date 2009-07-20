@@ -22,6 +22,19 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
  
 class Schedule extends Data
 {
+	/**
+	 * Add
+	 * @return 
+	 * @param $displayGroupIDs Object
+	 * @param $fromDT Object
+	 * @param $toDT Object
+	 * @param $layoutID Object
+	 * @param $recType Object
+	 * @param $recDetail Object
+	 * @param $recToDT Object
+	 * @param $isPriority Object
+	 * @param $userID Object
+	 */
 	public function Add($displayGroupIDs, $fromDT, $toDT, $layoutID, $recType, $recDetail, $recToDT, $isPriority, $userID)
 	{
 		$db	=& $this->db;
@@ -429,6 +442,59 @@ class Schedule extends Data
 		
 		return true;
 	}
+	
+	public function DeleteDisplayGroupFromEvent($eventID, $displayGroupID)
+	{
+		$db	=& $this->db;
+		
+		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'EditDisplayGroupsForEvent');
+		
+		// Read the display groups from the event
+		$SQL = sprintf('SELECT DisplayGroupIDs FROM schedule WHERE EventID = %d', $eventID);
+		
+		if (!$result = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			$this->SetError(25034,__('Error retriving information necessary to delete this event'));
+			return false;
+		}
+		
+		$row 				= $db->get_assoc_row($result);
+		$displayGroupIDs 	= $row['DisplayGroupIDs'];
+		
+		// Load into an array and remove the one in $displayGroupID
+		$displayGroupIDs	= explode(',', $displayGroupIDs);
+		$key				= array_search($displayGroupID, $displayGroupIDs);
+		
+		if ($key !== true)
+		{
+			unset($displayGroupIDs[$key]);
+		}
+		else
+		{
+			Debug::LogEntry($db, 'audit', 'Display Group ID is already removed from the Event - this is strange.', 'Schedule', 'EditDisplayGroupsForEvent');
+			return true;
+		}
+		
+		// Save the list back to the event
+		$displayGroupIDList = implode(',', $displayGroupIDs);
+		
+		// Delete all Schedule records for this EventDetail
+		$SQL = sprintf("UPDATE schedule SET DisplayGroupIDs = '%d' WHERE EventID = %d", $db->escape_string($displayGroupIDList), $eventID);
+		
+		Debug::LogEntry($db, 'audit', $SQL);
+
+		if (!$db->query($SQL)) 
+		{
+			$this->SetError(25036,__('Unable to edit the display groups for this Event.'));
+			
+			return false;
+		}
+		
+		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'EditDisplayGroupsForEvent');
+		
+		return true;
+	}
 }
 
 /*
@@ -460,6 +526,7 @@ class Event
 	public $layoutUri;
 	public $spanningDays;
 	public $startDayNo;
+	public $displayGroup;
 	
 	public function __construct()
 	{

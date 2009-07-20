@@ -353,7 +353,7 @@ class scheduleDAO
 				$tdClass		= $spanningDays == 1 ? 'Event' : 'LongEvent';
 				$timePrefix		= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
 				
-				$layoutUri		= sprintf('<div class="%s %s"><a class="XiboFormButton" href="%s" title="%s">%s %s</a></div>', $tdClass, $calEvent[$index], $event->layoutUri, $event->layout, $timePrefix, $event->layout);
+				$layoutUri		= sprintf('<div class="%s %s" title="Display Group: %s"><a class="XiboFormButton" href="%s" title="%s">%s %s</a></div>', $tdClass, $calEvent[$index], $event->displayGroup, $event->layoutUri, $event->layout, $timePrefix, $event->layout);
 				
 				// We should subtract any days ahead of the start date from the spanning days
 				$spanningDays 	= $d - $event->startDayNo > 0 ? $spanningDays - ($d - $event->startDayNo) : $spanningDays;
@@ -414,9 +414,11 @@ class scheduleDAO
         $SQL.= "       schedule_detail.is_priority, ";
         $SQL.= "       schedule_detail.EventID, ";
         $SQL.= "       schedule_detail.ToDT - schedule_detail.FromDT AS duration, ";
-        $SQL.= "       (LEAST(schedule_detail.ToDT, $nextMonth)) - schedule_detail.FromDT AS AdjustedDuration ";
+        $SQL.= "       (LEAST(schedule_detail.ToDT, $nextMonth)) - schedule_detail.FromDT AS AdjustedDuration, ";
+        $SQL.= "       displaygroup.DisplayGroup ";
         $SQL.= "  FROM schedule_detail ";
         $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
+        $SQL.= "  INNER JOIN displaygroup ON displaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
         $SQL.= " WHERE 1=1 ";
         $SQL.= sprintf("   AND schedule_detail.DisplayGroupID IN (%s) ", $db->escape_string($displayGroups));
         
@@ -446,6 +448,7 @@ class scheduleDAO
 			$fromDT			= Kit::ValidateParam($row['FromDT'], _INT);
 			$toDT			= Kit::ValidateParam($row['AdjustedToDT'], _INT);
 			$layout			= Kit::ValidateParam($row['layout'], _STRING);
+			$displayGroup	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
 			
 			// How many days does this event span?
 			$spanningDays	= ($toDT - $fromDT) / (60 * 60 * 24);
@@ -463,6 +466,7 @@ class scheduleDAO
 			$event->fromDT			= $fromDT;
 			$event->toDT			= $toDT;
 			$event->layout			= $layout;
+			$event->displayGroup	= $displayGroup;
 			$event->layoutUri		= $layoutUri;
 			$event->spanningDays	= ceil($spanningDays);
 			$event->startDayNo		= $dayNo;
@@ -1134,7 +1138,7 @@ END;
 		
 		$response->SetFormRequestResponse($form, __('Edit Scheduled Event'), '700px', '400px');
 		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
-		$response->AddButton(__('Delete'), sprintf('XiboFormRender("index.php?p=schedule&q=DeleteForm&EventID=%d")', $eventID));
+		$response->AddButton(__('Delete'), sprintf('XiboFormRender("index.php?p=schedule&q=DeleteForm&EventID=%d&EventDetailID=%d")', $eventID, $eventDetailID));
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#EditEventForm").submit()');
 		$response->callBack = 'setupScheduleForm';
@@ -1351,12 +1355,23 @@ END;
 		
 		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
 		
-		// Ready to do the add 
+		// Create an object to use for the delete
 		$scheduleObject = new Schedule($db);
 		
 		// Are we deleting a detail - or the entire event
 		if ($linkedEvents == 'single')
 		{
+			// Get the display group ID for the schedule detail we are about to delete
+			$SQL = sprintf('SELECT DisplayGroupID FROM schedule_detail WHERE schedule_detailID = %d', $eventDetailID);
+			
+			if (!$result = $db->query($SQL))
+			{
+				trigger_error(__('Error retriving information necessary to delete this event'), E_USER_ERROR);
+			}
+			
+			$row 			= $db->get_assoc_row($result);
+			$displayGroupID = $row['DisplayGroupID'];
+			
 			// Just delete this one
 			if (!$scheduleObject->DeleteEventDetail($eventDetailID)) 
 			{
@@ -1372,6 +1387,14 @@ END;
 			{
 				// Also delete the event
 				if (!$scheduleObject->Delete($eventID)) 
+				{
+					trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
+				}
+			}
+			else
+			{
+				// Edit the event to exclude the Schedule Detail we just deleted.
+				if (!$scheduleObject->DeleteDisplayGroupFromEvent($eventID, $displayGroupID))
 				{
 					trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
 				}
