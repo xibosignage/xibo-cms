@@ -283,7 +283,9 @@ function XiboFormRender(formUrl) {
                 }
                              
                 // Focus in the first form element
-                $('input[type=text]', '#div_dialog').eq(0).focus();
+				if (response.focusInFirstInput) {
+	                $('input[type=text]', '#div_dialog').eq(0).focus();
+				}
 				
 				// Call Xibo Init for this form
 				XiboInitialise("#div_dialog");

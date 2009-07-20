@@ -44,6 +44,7 @@ class ResponseManager
 	public $loadFormUri;
 	public $refresh;
 	public $refreshLocation;
+	public $focusInFirstInput;
 	
 	public $login;
 	public $clockUpdate;
@@ -54,9 +55,10 @@ class ResponseManager
 		$this->ajax	= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
 		
 		// Assume success
-		$this->success 		= true;
-		$this->clockUpdate 	= false;
-		$this->buttons		= '';
+		$this->success 				= true;
+		$this->clockUpdate 			= false;
+		$this->focusInFirstInput	= true;
+		$this->buttons				= '';
 		
 		return true;
 	}
@@ -222,6 +224,7 @@ class ResponseManager
 			$response['loadFormUri']	= $this->loadFormUri;
 			$response['refresh']		= $this->refresh;
 			$response['refreshLocation']= $this->refreshLocation;
+			$response['focusInFirstInput']= $this->focusInFirstInput;
 			
 			// Login
 			$response['login']			= $this->login;

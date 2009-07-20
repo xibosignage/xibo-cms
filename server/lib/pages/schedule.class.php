@@ -1137,6 +1137,7 @@ END;
 END;
 		
 		$response->SetFormRequestResponse($form, __('Edit Scheduled Event'), '700px', '400px');
+		$response->focusInFirstInput = false;
 		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
 		$response->AddButton(__('Delete'), sprintf('XiboFormRender("index.php?p=schedule&q=DeleteForm&EventID=%d&EventDetailID=%d")', $eventID, $eventDetailID));
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
