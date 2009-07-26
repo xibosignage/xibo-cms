@@ -899,6 +899,7 @@ function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
 		$tag		= $node->getAttribute('tag');
 		
 		// Write the stat record with the information we have available to us.
+		// TODO: Stat class to handle this insertion.
 		StatRecord($type, $date, $scheduleID, $displayInfo['displayid'], $layoutID, $mediaID, $date, $date);
 	}
 
