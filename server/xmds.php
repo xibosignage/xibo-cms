@@ -751,7 +751,7 @@ function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
-	$logXml 		= Kit::ValidateParam($logXml, _STRING);
+	$logXml 		= Kit::ValidateParam($logXml, _HTMLSTRING);
 	
 	// Make sure we are talking the same language
 	if (!CheckVersion($version))
@@ -851,7 +851,7 @@ function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
-	$statXml 		= Kit::ValidateParam($logXml, _STRING);
+	$statXml 		= Kit::ValidateParam($statXml, _HTMLSTRING);
 	
 	// Make sure we are talking the same language
 	if (!CheckVersion($version))
@@ -866,6 +866,20 @@ function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
 	}
 		
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "IN", "xmds", "SubmitStats", "", $displayInfo['displayid']);
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "StatXml: [" . $statXml . "]", "xmds", "SubmitStats", "", $displayInfo['displayid']);
+	
+	if ($statXml == "")
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Stat XML is empty.", $hardwareKey);
+	}
+	
+	// Log
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "About to create Stat Object.", "xmds", "SubmitStats", "", $displayInfo['displayid']);
+	
+	$statObject = new Stat($db);
+	
+	// Log
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "About to Create DOMDocument.", "xmds", "SubmitStats", "", $displayInfo['displayid']);
 	
 	// Load the XML into a DOMDocument
 	$document = new DOMDocument("1.0");
@@ -899,8 +913,7 @@ function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
 		$tag		= $node->getAttribute('tag');
 		
 		// Write the stat record with the information we have available to us.
-		// TODO: Stat class to handle this insertion.
-		StatRecord($type, $date, $scheduleID, $displayInfo['displayid'], $layoutID, $mediaID, $date, $date);
+		$statObject->Add($type, $fromdt, $todt, $scheduleID, $displayInfo['displayid'], $layoutID, $mediaID);
 	}
 
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "OUT", "xmds", "SubmitStats", "", $displayInfo['displayid']);
@@ -998,6 +1011,6 @@ $service->register("SubmitStats",
 $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';
 $service->service($HTTP_RAW_POST_DATA);
 
-Debug::LogEntry($db, 'audit',$service->debug_str);
+Debug::LogEntry($db, 'audit', $service->debug_str, "xmds", "NuSOAP");
 
 ?>
