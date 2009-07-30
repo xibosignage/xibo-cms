@@ -404,7 +404,7 @@ class region
 			$mediaNodeList = $xpath->query("//region[@id='$regionid']/media[@lkid='$lkid']");
 		}
 		
-		//Get the old media node (the one we are to replace)
+		// Get the old media node (the one we are to replace)
 		$oldMediaNode = $mediaNodeList->item(0);
 		
 		//Get the LkId of the current record... if its not blank we want to update this link with the new id
