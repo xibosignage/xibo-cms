@@ -151,20 +151,11 @@ elseif ($_SESSION['step'] == 1) {
     else if ($cObj->EnvironmentWarning()) {
     ?>
       <form action="upgrade.php" method="POST">
-<<<<<<< TREE
 	<input type="hidden" name="stepskip" value="1">
         <div class="loginbutton"><button type="submit"><?php echo __("Retest"); ?></button></div>
-=======
-	<input type="hidden" name="skipstep" value="1">
-        <div class="loginbutton"><button type="submit">Retest</button></div>
->>>>>>> MERGE-SOURCE
       </form>
       <form action="upgrade.php" method="POST">
-<<<<<<< TREE
         <div class="loginbutton"><button type="submit"><?php echo __("Next"); ?> ></button></div>
-=======
-        <div class="loginbutton"><button type="submit">Next ></button></div>
->>>>>>> MERGE-SOURCE
       </form>
     <?php
     }
@@ -267,6 +258,7 @@ elseif ($_SESSION['step'] == 3) {
 		echo __("FAIL:") . " " . $fault_string;
 	}
 	else {
+
 		set_time_limit(0);
 		// Backup the database
 		echo '<div class="info">';
@@ -287,10 +279,12 @@ elseif ($_SESSION['step'] == 3) {
     
 			        foreach ($sql_file as $sql) {
 			          print ".";
+				  $sqlStatementCount++;
 			          flush();
+
 			          if (! $db->query($sql)) {
 			 	    $fault = true;
-			            reportError("0", __("An error occured populating the database.") . "<br /><br />" . __("MySQL Error:") . "<br />" . $db->error());
+			            reportError("0", __("An error occured populating the database.") . "<br /><br />" . __("MySQL Error:") . "<br />" . $db->error() . "<br /><br />SQL executed:<br />" . $sql . "<br /><br />Statement number: " . $sqlStatementCount);
 			          }
 			        }
 				echo '</p>';

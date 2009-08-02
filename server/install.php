@@ -285,6 +285,7 @@ elseif ($xibo_step == 5) {
     // NB this is broken for 0 padded files
     // eg 01.sql would be incorrectly sorted in the above example.
     
+    $sqlStatementCount = 0;
     natcasesort($sql_files);
 
     foreach ($sql_files as $filename) {
@@ -300,9 +301,10 @@ elseif ($xibo_step == 5) {
     
         foreach ($sql_file as $sql) {
           print ".";
+	  $sqlStatementCount++;
           flush();
           if (! @mysql_query($sql,$db)) {
-            reportError("4", __("An error occured populating the database.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());
+            reportError("4", __("An error occured populating the database.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error() . "<br /><br />SQL executed:<br />" . $sql . "<br /><br />Statement number: " . $sqlStatementCount);
           }
         }
         print "</p>";
