@@ -65,3 +65,10 @@
 	height: 310px;
 
 }
+
+.regionTransparency {
+	position: absolute;
+	background-color: #FFF; 
+	opacity: .75; 
+	filter: alpha(opacity=75);
+}

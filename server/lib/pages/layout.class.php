@@ -1232,8 +1232,12 @@ END;
 			$paddingTop		= $regionHeight / 2 - 16;
 			$paddingTop		= $paddingTop . "px";
 
+			$regionTransparency  = '<div class="regionTransparency" style="width:100%; height:100%;">';
+			$regionTransparency .= '</div>';
+
 			$doubleClickLink = "XiboFormRender($(this).attr('href'))";
-			$regionHtml .= "<div id='region_$regionid' regionid='$regionid' layoutid='$this->layoutid' href='index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions' ondblclick=\"$doubleClickLink\"' class='region' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft; background-color: #FFF; opacity: .75; filter: alpha(opacity=75); border: 1px dashed #000\">
+			$regionHtml .= "<div id='region_$regionid' regionid='$regionid' layoutid='$this->layoutid' href='index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions' ondblclick=\"$doubleClickLink\"' class='region' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft; border: 1px dashed #000\">
+								$regionTransparency							
 								<div class='preview' style='$previewStyle'>
 									<div class='previewContent'></div>
 									<div class='previewNav' style='display:none;'></div>
@@ -1694,7 +1698,7 @@ END;
 		$type 				= (string) $node->getAttribute("type");
 		$mediaDurationText 	= (string) $node->getAttribute("duration");
 		
-		$return .= "<div class='info' style='display:none; position:absolute; top: 15px; left: 150px; background-color:#FFF; z-index: 50;'>
+		$return .= "<div class='info regionTransparency' style='display:none; position:absolute; top: 15px; left: 150px; background-color:#FFF; z-index: 50;'>
 						<h5>Media Information</h5>
 						<ul>
 							<li>" . __('Type') . ": $type</li>
