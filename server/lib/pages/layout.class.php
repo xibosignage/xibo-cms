@@ -57,6 +57,9 @@ class layoutDAO
 		$ajax			= Kit::GetParam('ajax', _GET, _WORD, 'false');
 		
 		$this->layoutid	= Kit::GetParam('layoutid', _REQUEST, _INT);
+
+		// Include the layout data class		
+		include_once("lib/data/layout.data.class.php");
 		
 		//set the information that we know
 		if ($usertype == 1) $this->isadmin = true;
@@ -289,6 +292,18 @@ HTML;
 			$response->SetError("Unknown error adding layout.");
 			$response->Respond();
 		}
+		
+		// Create an array out of the tags
+		$tagsArray = split(' ', $tags);
+		
+		// Add the tags XML to the layout
+		$layoutObject = new Layout($db);
+		
+		if (!$layoutObject->EditTags($id, $tagsArray))
+		{
+			//there was an ERROR
+			trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+		}
 
 		$response->SetFormSubmitResponse('Layout Details Changed.', true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $id));
 		$response->Respond();
@@ -398,6 +413,18 @@ END;
 			trigger_error($db->error());
 			$response->SetError(sprintf("Unknown error editing %s", $layout));
 			$response->Respond();
+		}
+		
+		// Create an array out of the tags
+		$tagsArray = split(' ', $tags);
+		
+		// Add the tags XML to the layout
+		$layoutObject = new Layout($db);
+		
+		if (!$layoutObject->EditTags($this->layoutid, $tagsArray))
+		{
+			//there was an ERROR
+			trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 		}
 
 		$response->SetFormSubmitResponse('Layout Details Changed.');

@@ -30,8 +30,6 @@ function Auth($hardwareKey)
 {
 	global $db;
 	
-	if (eregi('[^A-Za-z0-9]', $hardwareKey)) return false;
-	
 	//check in the database for this hardwareKey
 	$SQL = "SELECT licensed, inc_schedule, isAuditing, displayID FROM display WHERE license = '$hardwareKey'";
 	if (!$result = $db->query($SQL)) 
@@ -554,6 +552,7 @@ function Schedule($serverKey, $hardwareKey, $version)
 	$SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
 	$SQL .= " INNER JOIN display ON schedule_detail.displayID = display.displayID ";
 	$SQL .= " WHERE display.license = '$hardwareKey'  ";
+	$SQL .= "   AND layout.retired = 0  ";
 	
 	// Store the Base SQL for this display
 	$SQLBase = $SQL;
@@ -648,105 +647,7 @@ function RecieveXmlLog($serverKey, $hardwareKey, $xml, $version)
 {
 	global $db;
 	
-	// Sanitize
-	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
-	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
-	$version 		= Kit::ValidateParam($version, _STRING);
-	
-	// Make sure we are talking the same language
-	if (!CheckVersion($version))
-	{
-		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
-	}
-
-	//auth this request...
-	if (!$displayInfo = Auth($hardwareKey))
-	{
-		return new soap_fault("SOAP-ENV:Client", "", "This display client is not licensed", $hardwareKey);
-	}
-		
-	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "[IN]", "xmds", "RecieveXmlLog", "", $displayInfo['displayid']);
-	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "$xml", "xmds", "RecieveXmlLog", "", $displayInfo['displayid']);
-	
-	$document = new DOMDocument("1.0");
-	$document->loadXML("<log>".$xml."</log>");
-	
-	foreach ($document->documentElement->childNodes as $node)
-	{
-		//Zero out the common vars
-		$date 		= "";
-		$message 	= "";
-		$scheduleID = "";
-		$layoutID 	= "";
-		$mediaID 	= "";
-		$type		= "";
-		$cat		= '';
-			
-		// Get the date and the message (all log types have these)
-		foreach ($node->childNodes as $nodeElements)
-		{			
-			if ($nodeElements->nodeName == "date")
-			{
-				$date = $nodeElements->textContent;
-			}
-			else if ($nodeElements->nodeName == "message")
-			{
-				$message = $nodeElements->textContent;
-			}
-			else if ($nodeElements->nodeName == "scheduleID")
-			{
-				$scheduleID = $nodeElements->textContent;
-			}
-			else if ($nodeElements->nodeName == "layoutID")
-			{
-				$layoutID = $nodeElements->textContent;
-			}
-			else if ($nodeElements->nodeName == "mediaID")
-			{
-				$mediaID = $nodeElements->textContent;
-			}
-			else if ($nodeElements->nodeName == "type")
-			{
-				$type = $nodeElements->textContent;
-			}
-			else if ($nodeElements->nodeName == "category")
-			{
-				$cat = $nodeElements->textContent;
-			}
-		}
-		
-		switch ($node->nodeName)
-		{
-			case "stat":
-				if ($mediaID == '') $mediaID = 0;
-			
-				StatRecord($type, $date, $scheduleID, $displayInfo['displayid'], $layoutID, $mediaID, $date, $date);
-				break;
-				
-			case "trace":
-				
-				// We have a trace message
-				// Either Audit or Error (if *)
-				if (substr($message, 0, 3) == '[*]')
-				{
-					Debug::LogEntry($db, "error", $message, ".NET Client", $cat, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
-				}
-				else
-				{
-					Debug::LogEntry($db, "audit", $message, ".NET Client", $cat, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
-				}
-				
-				break;
-				
-			default:
-				Debug::LogEntry($db, "audit", "Unknown entry in client log " . $node->nodeName, "xmds", "RecieveXmlLog", $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
-				break;
-		}
-	}
-
-	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "[OUT]", "xmds", "RecieveXmlLog", "", $displayInfo['displayid']);
-	
-	return true;
+	return new soap_fault("SOAP-ENV:Client", "", "This is a depricated service call. You should instead call either SubmitLog or SubmitStats", $serverKey);
 }
 
 define('BLACKLIST_ALL', "All");
@@ -835,6 +736,198 @@ function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
 	return true;
 }
 
+/**
+ * Submit client logging
+ * @return 
+ * @param $version Object
+ * @param $serverKey Object
+ * @param $hardwareKey Object
+ * @param $logXml Object
+ */
+function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
+{
+	global $db;
+	
+	// Sanitize
+	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
+	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
+	$version 		= Kit::ValidateParam($version, _STRING);
+	$logXml 		= Kit::ValidateParam($logXml, _HTMLSTRING);
+	
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
+
+	// Auth this request...
+	if (!$displayInfo = Auth($hardwareKey))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "This display client is not licensed", $hardwareKey);
+	}
+		
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "IN", "xmds", "SubmitLog", "", $displayInfo['displayid']);
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", 'XML [' . $logXml . ']', "xmds", "SubmitLog", "", $displayInfo['displayid']);
+	
+	// Load the XML into a DOMDocument
+	$document = new DOMDocument("1.0");
+	
+	if (!$document->loadXML($logXml))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "XML Cannot be loaded into DOM Document.", $hardwareKey);
+	}
+	
+	foreach ($document->documentElement->childNodes as $node)
+	{	
+		//Zero out the common vars
+		$date 		= "";
+		$message 	= "";
+		$scheduleID = "";
+		$layoutID 	= "";
+		$mediaID 	= "";
+		$cat		= '';
+		$method		= '';
+		
+		// This will be a bunch of trace nodes
+		$message = $node->textContent;
+		
+		// Each element should have a category and a date 
+		$date	= $node->getAttribute('date');
+		$cat	= $node->getAttribute('category');
+		
+		if ($date == '' || $cat == '') 
+		{
+			trigger_error('Log submitted without a date or category attribute');
+			continue;
+		}
+			
+		// Get the date and the message (all log types have these)
+		foreach ($node->childNodes as $nodeElements)
+		{			
+			if ($nodeElements->nodeName == "scheduleID")
+			{
+				$scheduleID = $nodeElements->textContent;
+			}
+			else if ($nodeElements->nodeName == "layoutID")
+			{
+				$layoutID = $nodeElements->textContent;
+			}
+			else if ($nodeElements->nodeName == "mediaID")
+			{
+				$mediaID = $nodeElements->textContent;
+			}
+			else if ($nodeElements->nodeName == "type")
+			{
+				$type = $nodeElements->textContent;
+			}
+			else if ($nodeElements->nodeName == "method")
+			{
+				$method	= $nodeElements->textContent;
+			}
+		}
+		
+		// We should have enough information to log this now.
+		if ($cat == 'error' || $cat == 'Error')
+		{
+			Debug::LogEntry($db, $cat, $message, 'Client', $method, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);						
+		}
+		else
+		{
+			Debug::LogEntry($db, 'audit', $message, 'Client', $method, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);			
+		}
+	}
+
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "OUT", "xmds", "SubmitLog", "", $displayInfo['displayid']);
+	
+	return true;
+}
+
+/**
+ * Submit display statistics to the server
+ * @return 
+ * @param $version Object
+ * @param $serverKey Object
+ * @param $hardwareKey Object
+ * @param $statXml Object
+ */
+function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
+{
+	global $db;
+	
+	// Sanitize
+	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
+	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
+	$version 		= Kit::ValidateParam($version, _STRING);
+	$statXml 		= Kit::ValidateParam($statXml, _HTMLSTRING);
+	
+	// Make sure we are talking the same language
+	if (!CheckVersion($version))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+	}
+
+	// Auth this request...
+	if (!$displayInfo = Auth($hardwareKey))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "This display client is not licensed", $hardwareKey);
+	}
+		
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "IN", "xmds", "SubmitStats", "", $displayInfo['displayid']);
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "StatXml: [" . $statXml . "]", "xmds", "SubmitStats", "", $displayInfo['displayid']);
+	
+	if ($statXml == "")
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "Stat XML is empty.", $hardwareKey);
+	}
+	
+	// Log
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "About to create Stat Object.", "xmds", "SubmitStats", "", $displayInfo['displayid']);
+	
+	$statObject = new Stat($db);
+	
+	// Log
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "About to Create DOMDocument.", "xmds", "SubmitStats", "", $displayInfo['displayid']);
+	
+	// Load the XML into a DOMDocument
+	$document = new DOMDocument("1.0");
+	$document->loadXML($statXml);
+	
+	foreach ($document->documentElement->childNodes as $node)
+	{	
+		//Zero out the common vars
+		$fromdt		= '';
+		$todt		= '';
+		$type		= '';
+		
+		$scheduleID = "";
+		$layoutID 	= "";
+		$mediaID 	= "";
+		
+		// Each element should have these attributes
+		$fromdt	= $node->getAttribute('fromdt');
+		$todt	= $node->getAttribute('todt');
+		$type	= $node->getAttribute('type');
+		
+		if ($fromdt == '' || $todt == '' || $type == '') 
+		{
+			trigger_error('Stat submitted without the fromdt, todt or type attributes.');
+			continue;
+		}
+			
+		$scheduleID	= $node->getAttribute('scheduleid');
+		$layoutID	= $node->getAttribute('layoutid');
+		$mediaID	= $node->getAttribute('mediaid');
+		$tag		= $node->getAttribute('tag');
+		
+		// Write the stat record with the information we have available to us.
+		$statObject->Add($type, $fromdt, $todt, $scheduleID, $displayInfo['displayid'], $layoutID, $mediaID);
+	}
+
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "OUT", "xmds", "SubmitStats", "", $displayInfo['displayid']);
+	
+	return true;
+}
+
 //$debug = 1;
 $service = new soap_server();
 
@@ -899,10 +992,32 @@ $service->register("BlackList",
 		'encoded',
 		'Set media to be blacklisted'
 	);
+	
+$service->register("SubmitLog",
+		array('version' => 'xsd:string', 'serverKey' => 'xsd:string', 'hardwareKey' => 'xsd:string', 'logXml' => 'xsd:string'),
+		array('success' => 'xsd:boolean'),
+		'urn:xmds',
+		'urn:xmds#SubmitLog',
+		'rpc',
+		'encoded',
+		'Submit Logging from the Client'
+	);
+	
+$service->register("SubmitStats",
+		array('version' => 'xsd:string', 'serverKey' => 'xsd:string', 'hardwareKey' => 'xsd:string', 'statXml' => 'xsd:string'),
+		array('success' => 'xsd:boolean'),
+		'urn:xmds',
+		'urn:xmds#SubmitLog',
+		'rpc',
+		'encoded',
+		'Submit Display statistics from the Client'
+	);
+	
+
 		
 $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';
 $service->service($HTTP_RAW_POST_DATA);
 
-Debug::LogEntry($db, 'audit',$service->debug_str);
+Debug::LogEntry($db, 'audit', $service->debug_str, "xmds", "NuSOAP");
 
 ?>
