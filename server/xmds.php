@@ -766,10 +766,15 @@ function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
 	}
 		
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "IN", "xmds", "SubmitLog", "", $displayInfo['displayid']);
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", 'XML [' . $logXml . ']', "xmds", "SubmitLog", "", $displayInfo['displayid']);
 	
 	// Load the XML into a DOMDocument
 	$document = new DOMDocument("1.0");
-	$document->loadXML("<log>".$logXml."</log>");
+	
+	if (!$document->loadXML($logXml))
+	{
+		return new soap_fault("SOAP-ENV:Client", "", "XML Cannot be loaded into DOM Document.", $hardwareKey);
+	}
 	
 	foreach ($document->documentElement->childNodes as $node)
 	{	
@@ -780,9 +785,10 @@ function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
 		$layoutID 	= "";
 		$mediaID 	= "";
 		$cat		= '';
+		$method		= '';
 		
 		// This will be a bunch of trace nodes
-		$message = $node->innerText;
+		$message = $node->textContent;
 		
 		// Each element should have a category and a date 
 		$date	= $node->getAttribute('date');
@@ -820,13 +826,13 @@ function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
 		}
 		
 		// We should have enough information to log this now.
-		if ($cat == 'error')
+		if ($cat == 'error' || $cat == 'Error')
 		{
-			Debug::LogEntry($db, $cat, $message, ".NET Client", $method, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);						
+			Debug::LogEntry($db, $cat, $message, 'Client', $method, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);						
 		}
 		else
 		{
-			Debug::LogEntry($db, "audit", $message, ".NET Client", $method, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);			
+			Debug::LogEntry($db, 'audit', $message, 'Client', $method, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);			
 		}
 	}
 
@@ -883,7 +889,7 @@ function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
 	
 	// Load the XML into a DOMDocument
 	$document = new DOMDocument("1.0");
-	$document->loadXML("<log>".$statXml."</log>");
+	$document->loadXML($statXml);
 	
 	foreach ($document->documentElement->childNodes as $node)
 	{	
