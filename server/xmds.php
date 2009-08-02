@@ -552,6 +552,7 @@ function Schedule($serverKey, $hardwareKey, $version)
 	$SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
 	$SQL .= " INNER JOIN display ON schedule_detail.displayID = display.displayID ";
 	$SQL .= " WHERE display.license = '$hardwareKey'  ";
+	$SQL .= "   AND layout.retired = 0  ";
 	
 	// Store the Base SQL for this display
 	$SQLBase = $SQL;
