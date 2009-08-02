@@ -48,7 +48,7 @@ class ticker extends Module
 		$rWidth		= Kit::GetParam('rWidth', _REQUEST, _STRING);
 		$rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 		
-		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
+		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down,single|Single", "direction");
 		
 		$form = <<<FORM
 		<form class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=AddMedia">
@@ -66,6 +66,12 @@ class ticker extends Module
 		    		<td>$direction_list</td>
 		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
 		    		<td><input id="duration" name="duration" type="text"></td>		
+				</tr>
+				<tr>
+		    		<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
+		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="30"></td>		
+		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval (mins)<span class="required">*</span></label></td>
+		    		<td><input id="updateInterval" name="updateInterval" type="text" value="360"></td>
 				</tr>
 				<tr>
 					<td colspan="4">
@@ -104,9 +110,11 @@ FORM;
 		$regionid	= $this->regionid;
 		$mediaid  	= $this->mediaid;
 		
-		$direction	= $this->GetOption('direction');
-		$copyright	= $this->GetOption('copyright');
-		$uri		= urldecode($this->GetOption('uri'));
+		$direction		= $this->GetOption('direction');
+		$copyright		= $this->GetOption('copyright');
+		$scrollSpeed 	= $this->GetOption('scrollSpeed');
+		$updateInterval = $this->GetOption('updateInterval');
+		$uri			= urldecode($this->GetOption('uri'));
 		
 		// Get the text out of RAW
 		$rawXml = new DOMDocument();
@@ -119,7 +127,7 @@ FORM;
 		$textNode 	= $textNodes->item(0);
 		$text 		= $textNode->nodeValue;
 		
-		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
+		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down,single|Single", "direction", $direction);
 		
 		//Output the form
 		$form = <<<FORM
@@ -139,6 +147,12 @@ FORM;
 		    		<td>$direction_list</td>
 		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
 		    		<td><input id="duration" name="duration" value="$this->duration" type="text"></td>		
+				</tr>
+				<tr>
+		    		<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
+		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>		
+		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval (mins)<span class="required">*</span></label></td>
+		    		<td><input id="updateInterval" name="updateInterval" type="text" value="$updateInterval"></td>
 				</tr>
 				<tr>
 					<td colspan="4">
@@ -179,6 +193,8 @@ FORM;
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
+		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 360);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
 		
@@ -214,6 +230,8 @@ FORM;
 		// Any Options
 		$this->SetOption('direction', $direction);
 		$this->SetOption('copyright', $copyright);
+		$this->SetOption('scrollSpeed', $scrollSpeed);
+		$this->SetOption('updateInterval', $updateInterval);
 		$this->SetOption('uri', $uri);
 
 		$this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
@@ -249,6 +267,8 @@ FORM;
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 360);
 		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
@@ -282,6 +302,8 @@ FORM;
 		// Any Options
 		$this->SetOption('direction', $direction);
 		$this->SetOption('copyright', $copyright);
+		$this->SetOption('scrollSpeed', $scrollSpeed);
+		$this->SetOption('updateInterval', $updateInterval);
 		$this->SetOption('uri', $uri);
 
 		$this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
