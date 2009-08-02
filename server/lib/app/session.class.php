@@ -29,7 +29,8 @@ class Session
 	
 	public $isExpired = 1;
 
-	function __construct(database $db) {
+	function __construct(database $db) 
+	{
 		$this->db =& $db;
 		
 		session_set_save_handler(array(&$this, 'open'),
@@ -64,38 +65,27 @@ class Session
 	{
 		$db =& $this->db;
 		
-		$userAgent		= $_SERVER['HTTP_USER_AGENT'];
-		$remoteAddr		= $_SERVER['REMOTE_ADDR'];
+		$userAgent		= Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent');
+		$remoteAddr		= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
+		$securityToken	= Kit::GetParam('SecurityToken', _POST, _STRING, null);
 		
 		$this->key 		= $key;
 		$newExp 		= time() + $this->max_lifetime;
 		
 		$this->gc($this->max_lifetime);
 		
-		if(isset($_POST['SecurityToken'])) 
-		{		
-			$securityToken = validate($_POST['SecurityToken']);
-			
-			if (!$securityToken)
-			{
-				log_entry($db, "error", "Invalid Security Token");
-				$securityToken = null;
-			}
-		}
-		else
-		{
-			$securityToken = null;
-		}
-		
+		// Get this session		
 		$SQL  = " SELECT session_data, IsExpired, SecurityToken FROM session ";
-		$SQL .= " WHERE session_id = '$key' ";
-		$SQL .= " AND RemoteAddr = '$remoteAddr' ";
+		$SQL .= " WHERE session_id = '%s' ";
+		$SQL .= " AND UserAgent = '%s' ";
 		
-		if (!$result = $db->query($SQL));
+		$SQL 	= sprintf($SQL, $db->escape_string($key), $db->escape_string($userAgent));
+		
+		$result = $db->query($SQL);
 		
 		if ($db->num_rows($result) != 0) 
 		{
-			
+			// Get the row
 			$row = $db->get_row($result);
 			
 			// We have the Key and the Remote Address.
@@ -109,10 +99,10 @@ class Session
 				// We have a security token, so dont require a login
 				$this->isExpired = 0;
 				
-				if (!$db->query("UPDATE session SET session_expiration = $newExp, isExpired = 0 WHERE session_id = '$key' "))
+				if (!$db->query(sprintf("UPDATE session SET session_expiration = $newExp, isExpired = 0 WHERE session_id = '%s' ", $db->escape_string($key))))
 				{
 					log_entry($db, "error", $db->error());
-				}			
+				}
 			}
 			else
 			{
@@ -123,49 +113,55 @@ class Session
 			}
 			
 			// Either way - update this SESSION so that the security token is NULL
-			$db->query("UPDATE session SET SecurityToken = NULL WHERE session_id = '$key' ");
+			$db->query(sprintf("UPDATE session SET SecurityToken = NULL WHERE session_id = '%s' ", $db->escape_string($key)));
 			
 			return($row[0]);
 		}
-		else {
+		else 
+		{
 			$empty = '';
 			return settype($empty, "string");
 		}
 	}
 	
-	function write($key, $val) {
-		
-		$db =& $this->db;
-		
-		$val = addslashes($val);
+	function write($key, $val) 
+	{
+		$db 			=& $this->db;
 		
 		$newExp 		= time() + $this->max_lifetime;
 		$lastaccessed 	= date("Y-m-d H:i:s");
-		$userAgent		= $_SERVER['HTTP_USER_AGENT'];
-		$remoteAddr		= $_SERVER['REMOTE_ADDR'];
+		$userAgent		= Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent');
+		$remoteAddr		= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
 		
-		$result = $db->query("SELECT session_id FROM session WHERE session_id = '$key'");
+		$result = $db->query(sprintf("SELECT session_id FROM session WHERE session_id = '%s'", $db->escape_string($key)));
 		
 		if ($db->num_rows($result) == 0) 
 		{
 			//INSERT
 			$SQL = "INSERT INTO session (session_id, session_data, session_expiration, LastAccessed, LastPage, userID, IsExpired, UserAgent, RemoteAddr) 
-					VALUES ('$key','$val',$newExp,'$lastaccessed','login', NULL, 0, '$userAgent', '$remoteAddr')";
+					VALUES ('%s', '%s', %d, '%s', 'login', NULL, 0, '%s', '%s')";
+					
+			$SQL = sprintf($SQL, $db->escape_string($key), $db->escape_string($val), $newExp, $db->escape_string($lastaccessed), $db->escape_string($userAgent), $db->escape_string($remoteAddr));
 		}
 		else 
 		{
 			//UPDATE
 			$SQL = "UPDATE session SET ";
-			$SQL .= " session_data = '$val', ";
-			$SQL .= " session_expiration = '$newExp', ";
-			$SQL .= " lastaccessed 	= '$lastaccessed' ";
-			$SQL .= " WHERE session_id = '$key' ";
+			$SQL .= " session_data = '%s', ";
+			$SQL .= " session_expiration = %d, ";
+			$SQL .= " lastaccessed 	= '%s', ";
+			$SQL .= " RemoteAddr 	= '%s' ";
+			$SQL .= " WHERE session_id = '%s' ";
+			
+			$SQL = sprintf($SQL, $db->escape_string($val), $newExp, $db->escape_string($lastaccessed), $db->escape_string($remoteAddr), $db->escape_string($key));
 		}
 		
-		if(!$db->query($SQL)) {
+		if(!$db->query($SQL)) 
+		{
 			log_entry($db, "error", $db->error());
 			return(false);
 		}
+		
 		return true;
 	}
 
@@ -173,7 +169,7 @@ class Session
 	{
 		$db =& $this->db;
 		
-		$SQL = "UPDATE session SET IsExpired = 1 WHERE session_id = '$key'";
+		$SQL = sprintf("UPDATE session SET IsExpired = 1 WHERE session_id = '%s'", $db->escape_string($key));
 		
 		$result = $db->query("$SQL"); 
 		
@@ -193,26 +189,32 @@ class Session
 	{
 		$db =& $this->db;
 		
-		$SQL = "UPDATE session SET userID = $userid WHERE session_id = '$key' ";
+		$SQL = sprintf("UPDATE session SET userID = %d WHERE session_id = '%s' ",$userid, $db->escape_string($key));
 		
-		if(!$db->query($SQL)) {
+		if(!$db->query($SQL)) 
+		{
 			trigger_error($db->error(), E_USER_NOTICE);
 			return(false);
 		}
 		return true;
 	}
 	
-	// Update the session (after login)
-	static function RegenerateSessionID() 
+	/**
+	 * Updates the session ID with a new one
+	 * @return 
+	 */
+	public function RegenerateSessionID($oldSessionID) 
 	{
-	    $old_sess_id = session_id();
+		$db =& $this->db;
 		
 	    session_regenerate_id(false);
 		
 	    $new_sess_id = session_id();
+		
+		$this->key = $new_sess_id;
 	       
-	    $query = "UPDATE `session` SET `session_id` = '$new_sess_id' WHERE session_id = '$old_sess_id'";
-	        mysql_query($query);
+	    $query = sprintf("UPDATE session SET session_id = '%s' WHERE session_id = '%s'", $db->escape_string($new_sess_id), $db->escape_string($oldSessionID));
+	    $db->query($query);
 	}
 	
 	function set_page($key, $lastpage) 
@@ -221,9 +223,10 @@ class Session
 		
 		$_SESSION['pagename'] = $lastpage;
 		
-		$SQL = "UPDATE session SET LastPage = '$lastpage' WHERE session_id = '$key' ";
+		$SQL = sprintf("UPDATE session SET LastPage = '%s' WHERE session_id = '%s' ", $db->escape_string($lastpage), $db->escape_string($key));
 		
-		if(!$db->query($SQL)) {
+		if(!$db->query($SQL)) 
+		{
 			trigger_error($db->error(), E_USER_NOTICE);
 			return(false);
 		}
@@ -236,7 +239,7 @@ class Session
 
 		$this->isExpired = $isExpired;
 		
-		$SQL = "UPDATE session SET IsExpired = $this->isExpired WHERE session_id = '$this->key'";
+		$SQL = sprintf("UPDATE session SET IsExpired = $this->isExpired WHERE session_id = '%s'", $db->escape_string($this->key));
 		
 		if (!$db->query($SQL))
 		{
@@ -248,7 +251,7 @@ class Session
 	{
 		$db =& $this->db;
 		
-		$SQL = "UPDATE session SET securityToken = '$token' WHERE session_id = '$this->key'";
+		$SQL = sprintf("UPDATE session SET securityToken = '%s' WHERE session_id = '%s'", $db->escape_string($token), $db->escape_string($this->key));
 		
 		if (!$db->query($SQL))
 		{

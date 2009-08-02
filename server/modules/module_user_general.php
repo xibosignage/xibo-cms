@@ -89,8 +89,6 @@
 		
 		$sql = sprintf("SELECT UserID, UserName, UserPassword, usertypeid, groupID FROM user WHERE UserName = '%s' AND UserPassword = '%s'", $db->escape_string($username), $db->escape_string($password));
 		
-		Debug::LogEntry($db, 'audit', $sql);
-		
 		if(!$result = $db->query($sql)) trigger_error('A database error occurred while checking your login details.', E_USER_ERROR);
 
 		if ($db->num_rows($result)==0) 
@@ -122,6 +120,7 @@
 		$db->query($SQL) or trigger_error("Can not write last accessed info.", E_USER_ERROR);
 
 		$session->setIsExpired(0);
+		$session->RegenerateSessionID(session_id());
 
 		return true;
 	}

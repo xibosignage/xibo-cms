@@ -210,9 +210,7 @@ END;
 			<td>$ip</td>
 			<td>$browser</td>
 			<td>
-				<div class="buttons">
-					<a class="neutral" href="index.php?p=report&q=ConfirmLogout&userid=$userID" onclick="return init_button(this,'Logout User', exec_filter_callback, set_form_size(450,150))"><span>Logout</span></a>
-				</div>
+				<button class="XiboFormButton" href="index.php?p=report&q=ConfirmLogout&userid=$userID"><span>Logout</span></a>
 			</td>
 			</tr>
 END;
@@ -234,14 +232,15 @@ END;
 		$userID = Kit::GetParam('userid', _GET, _INT);
 		
 		$form = <<<END
-		<form class="dialog_form" method="post" action="index.php?p=report&q=LogoutUser">
+		<form class="XiboForm" method="post" action="index.php?p=report&q=LogoutUser">
 			<input type="hidden" name="userid" value="userid" />
 			<p>Are you sure you want to logout this user?</p>
 			<input type="submit" value="Yes">
 			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
 END;
-		$arh->SetFormSubmitResponse($form);
+
+		$arh->SetFormRequestResponse($form, 'Logout User', '450px', '300px');
 		$arh->Respond();
 	}
 	
