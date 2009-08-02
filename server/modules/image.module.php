@@ -794,8 +794,11 @@ END;
 			// Editing the existing record
 			$new_mediaid = $mediaid;
 			
-			$SQL =  "UPDATE media SET name = '$name', duration = '$duration', permissionID = $permissionid";
-			$SQL .= " WHERE mediaID = $mediaid ";
+			$SQL =  "UPDATE media SET name = '%s', duration = %d, permissionID = %d";
+			$SQL .= " WHERE mediaID = %d ";
+			$SQL = sprintf($SQL, $db->escape_string($name), $duration, $permissionid, $mediaid);
+			
+			Debug::LogEntry($db, 'audit', $SQL);
 	
 			if (!$db->query($SQL))
 			{
