@@ -1491,7 +1491,7 @@ BUTTON;
 		while ($modulesItem = $enabledModules->GetNextModule())
 		{
 			$mod 		= Kit::ValidateParam($modulesItem['Module'], _STRING);
-			$caption 	= 'Add ' . $mod;
+			$caption 	= '+ ' . $mod;
 			$mod		= strtolower($mod);
 			$title 		= Kit::ValidateParam($modulesItem['Description'], _STRING);
 			$img 		= Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
@@ -1501,7 +1501,7 @@ BUTTON;
 			$buttons .= <<<HTML
 			<div class="regionicons">
 				<a class="XiboFormButton" title="$title" href="$uri">
-				<img class="dash_button" src="$img" />
+				<img class="dash_button moduleButtonImage" src="$img" />
 				<span class="dash_text">$caption</span></a>
 			</div>
 HTML;

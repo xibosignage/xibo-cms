@@ -46,11 +46,22 @@
 	display: list-item;
 }
 
+
 .HelpLink {
 	float:right;
+}
+
+.moduleButtonImage {
+	width: 65px;
 }
 
 .HelpLink a {
 	padding-left: 10px;
 	padding-right: 10px;
+}
+
+#embedHtml {
+	width: 500px;
+	height: 310px;
+
 }
