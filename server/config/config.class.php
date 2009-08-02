@@ -173,7 +173,7 @@ END;
 		}
 		
 		// Check for MySQL
-		$message = __('MySQL Extension');
+		$message = __('Xibo requires a MySQL database. Ensure PHP MySQL client extension is installed');
 
 		if ($this->CheckMySQL()) 
 		{
@@ -184,7 +184,11 @@ END;
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('Xibo requires a MySQL database. Ensure PHP MySQL client extension is installed') . '</p></div>';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo requires the PHP MySQL Extension to function.</p>
+      		</div>
+END;
 		}
 		
 		// Check for JSON
