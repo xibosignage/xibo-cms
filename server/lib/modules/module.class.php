@@ -262,7 +262,10 @@ XML;
 	 */
 	final protected function SetOption($name, $value)
 	{
-		if ($name == '' || $value == '') return;
+		$db =& $this->db;
+		if ($name == '') return;
+		
+		Debug::LogEntry($db, 'audit', sprintf('IN with Name=%s and value=%s', $name, $value), 'module', 'Set Option');		
 		
 		// Get the options node from this document
 		$optionNodes = $this->xml->getElementsByTagName('options');
@@ -272,6 +275,7 @@ XML;
 		// Create a new option node
 		$newNode = $this->xml->createElement($name, $value);
 		
+		Debug::LogEntry($db, 'audit', sprintf('Created a new Option Node with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
 		
 		// Check to see if we already have this option or not
 		$xpath = new DOMXPath($this->xml);

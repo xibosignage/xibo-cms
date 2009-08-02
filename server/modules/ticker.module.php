@@ -272,7 +272,7 @@ FORM;
 		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-						
+		
 		//validation
 		if ($text == '')
 		{
