@@ -52,12 +52,29 @@ class embedded extends Module
 			<table>
 				<tr>
 		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
-		    		<td><input id="duration" name="duration" type="text"></td>		
+		    		<td><input id="duration" name="duration" type="text"></td>	
 				</tr>
 				<tr>
 		    		<td colspan="2">
 						<label for="embedHtml" title="The HTML you want to Embed in this Layout.">Embed HTML<span class="required">*</span></label><br />
-		    			<textarea id="embedHtml" name="embedHtml"></textarea>
+<textarea id="embedHtml" name="embedHtml">
+
+</textarea>
+					</td>
+				</tr>
+				<tr>
+		    		<td colspan="2">
+						<label for="embedScript" title="The JavaScript you want to Embed in this Layout.">Embed Script<span class="required">*</span></label><br />
+<textarea id="embedScript" name="embedScript">
+<script type="text/javascript">
+function EmbedInit()
+{
+	// Init will be called when this page is loaded in the client.
+	
+	return;
+}
+</script>
+</textarea>
 					</td>
 				</tr>
 				<tr>
@@ -103,6 +120,10 @@ FORM;
 		$textNode 	= $textNodes->item(0);
 		$embedHtml	= $textNode->nodeValue;
 		
+		$textNodes 	= $rawXml->getElementsByTagName('embedScript');
+		$textNode 	= $textNodes->item(0);
+		$embedScript= $textNode->nodeValue;
+		
 		//Output the form
 		$form = <<<FORM
 		<form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
@@ -120,6 +141,12 @@ FORM;
 		    			<textarea id="embedHtml" name="embedHtml">$embedHtml</textarea>
 					</td>
 				</tr>
+				<tr>
+		    		<td colspan="2">
+						<label for="embedScript" title="The JavaScript you want to Embed in this Layout.">Embed Script<span class="required">*</span></label><br />
+						<textarea id="embedScript" name="embedScript">$embedScript</textarea>
+					</td>
+				</tr>				
 				<tr>
 					<td></td>
 					<td>
@@ -154,6 +181,7 @@ FORM;
 		
 		//Other properties
 		$embedHtml	  = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
+		$embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
@@ -178,7 +206,7 @@ FORM;
 		$this->duration = $duration;
 		
 		// Any Options
-		$this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml>');
+		$this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml><embedScript><![CDATA[' . $embedScript . ']]></embedScript>');
 
 		// Should have built the media object entirely by this time
 		// This saves the Media Object to the Region
@@ -208,11 +236,12 @@ FORM;
 		
 		//Other properties
 		$embedHtml	  = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
+		$embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
-		//Validate the URL?
+		// Validate the URL?
 		if ($embedHtml == "")
 		{
 			$this->response->SetError('Please enter some HTML to embed.');
@@ -231,7 +260,7 @@ FORM;
 		$this->duration = $duration;
 		
 		// Any Options
-		$this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml>');
+		$this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml><embedScript><![CDATA[' . $embedScript . ']]></embedScript>');
 
 		// Should have built the media object entirely by this time
 		// This saves the Media Object to the Region
