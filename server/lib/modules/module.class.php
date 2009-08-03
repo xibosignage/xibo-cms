@@ -61,7 +61,7 @@ class Module implements ModuleInterface
 		$this->user 	=& $user;
 		
 		$this->mediaid 	= $mediaid;
-		$this->name 	= "";
+		$this->name 	= '';
 		$this->layoutid = $layoutid;
 		$this->regionid = $regionid;
 		
@@ -175,7 +175,7 @@ class Module implements ModuleInterface
 		}
 		else
 		{
-			if ($this->mediaid != '')
+			if ($this->mediaid != '' && $this->regionSpecific == 0)
 			{
 				// We do not have a region or a layout
 				// But this is some existing media
@@ -183,7 +183,9 @@ class Module implements ModuleInterface
 				$this->existingMedia = true;
 				
 				// Load what we know about this media into the object
-				$SQL = "SELECT duration,name FROM media WHERE mediaID = '$mediaid'";
+				$SQL = "SELECT duration, name FROM media WHERE mediaID = '$mediaid'";
+				
+				Debug::LogEntry($db, 'audit', $SQL, 'Module', 'SetMediaInformation');
 				
 				if (!$result = $db->query($SQL))
 				{
@@ -194,7 +196,7 @@ class Module implements ModuleInterface
 				{
 					$row 				= $db->get_row($result);
 					$this->duration		= $row[0];
-					$this->name		= $row[1];
+					$this->name			= $row[1];
 				}
 			}
 			
@@ -539,8 +541,11 @@ END;
 	 */
 	public function GetName()
 	{
+		$db =& $this->db;
+		
+		Debug::LogEntry($db, 'audit', sprintf('Module name returned for MediaID: %s is %s', $this->mediaid, $this->name), 'Module', 'GetName');
+		
 		return $this->name;
 	}
-	 
 }
 ?>

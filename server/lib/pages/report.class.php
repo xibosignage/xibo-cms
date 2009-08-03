@@ -423,6 +423,7 @@ END;
 		$output .=  '</tbody></table></div>';
 		
 		$response->SetGridResponse($output);
+		$response->sortable = false;
 		$response->Respond();
 	}
 	
