@@ -48,7 +48,12 @@
 
 #embedHtml {
 	width: 500px;
-	height: 310px;
+	height: 140px;
+}
+
+#embedScript {
+	width: 500px;
+	height: 140px;
 }
 
 .regionTransparency {
