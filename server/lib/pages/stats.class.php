@@ -84,6 +84,10 @@ class statsDAO
 		echo $output;
 	}
 	
+	/**
+	 * Outputs a CSV of stats
+	 * @return 
+	 */
 	public function OutputCSV()
 	{
 		$db 		=& $this->db;
@@ -123,18 +127,20 @@ class statsDAO
 		}
 		
 		// Header row
-		$output		.= "FromDT, ToDT, Layout, Display, Media\n";
+		$output		.= "Type, FromDT, ToDT, Layout, Display, Media, Tag\n";
 		
-		while($row = $db->get_assoc_row($result)) 
+		while($row = $db->get_assoc_row($result))
 		{
 			// Read the columns
+			$type		= Kit::ValidateParam($row['type'], _STRING);
 			$fromdt		= Kit::ValidateParam($row['start'], _STRING);
 			$todt		= Kit::ValidateParam($row['end'], _STRING);
 			$layout		= Kit::ValidateParam($row['Layout'], _STRING);
 			$display	= Kit::ValidateParam($row['Display'], _STRING);
 			$media		= Kit::ValidateParam($row['MediaName'], _STRING);
+			$tag		= Kit::ValidateParam($row['Tag'], _STRING);
 			
-			$output		.= "$fromdt, $todt, $layout, $display, $media\n";
+			$output		.= "$type, $fromdt, $todt, $layout, $display, $media, $tag\n";
 		}
 		
 		//Debug::LogEntry($db, 'audit', 'Output: ' . $output, 'Stats', 'OutputCSV');
