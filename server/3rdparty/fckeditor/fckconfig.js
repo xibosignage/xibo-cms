@@ -148,7 +148,7 @@ FCKConfig.FontColors = '000000,993300,333300,003300,003366,000080,333399,333333,
 FCKConfig.FontFormats	= 'p;h1;h2;h3;h4;h5;h6;pre;address;div' ;
 FCKConfig.FontNames		= 'Arial;Comic Sans MS;Courier New;Tahoma;Times New Roman;Verdana' ;
 //FCKConfig.FontSizes		= 'smaller;larger;xx-small;x-small;small;medium;large;x-large;xx-large' ;
-FCKConfig.FontSizes		= '0.8em;1em;1.2em;1.4em;1.6em;1.8em;2.0em;2.2em;2.4em;2.5em;2.7em;3.0em;3.5em;4.0em;4.5em;5em;5.5em;6.0em;6.5em;7em;8.0em;10.0em' ;
+FCKConfig.FontSizes		= '0.8em;1em;1.2em;1.4em;1.6em;1.8em;2.0em;2.2em;2.4em;2.5em;2.7em;3.0em;3.3em;3.5em;4.0em;4.5em;5em;5.5em;6.0em;6.5em;7em;8.0em;10.0em' ;
 
 FCKConfig.StylesXmlPath		= FCKConfig.EditorPath + 'fckstyles.xml' ;
 FCKConfig.TemplatesXmlPath	= FCKConfig.EditorPath + 'fcktemplates.xml' ;
