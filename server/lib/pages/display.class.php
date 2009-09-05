@@ -341,7 +341,7 @@ END;
 			$display 		= $aRow[1];
 			$defaultlayoutid = $aRow[2];
 			$loggedin 		= $aRow[3];
-			$lastaccessed 	= $aRow[4];
+			$lastaccessed 	= date('Y-m-d H:i:s', $aRow[4]);
 			$inc_schedule 	= $aRow[5];
 			$licensed 		= $aRow[6];
 			
