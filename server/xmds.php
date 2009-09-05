@@ -225,16 +225,18 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	
 	$requiredFilesXml->appendChild($fileElements);
 	
-	$currentdate = date("Y-m-d H:i:s");
-	$time = time();
-	$plus4hours = date("Y-m-d H:i:s",$time + 86400);
+	$currentdate 	= date();
+	$infinityFromDT = mktime(0,0,0,1,1,2000);
+	$infinityToDT	= mktime(0,0,0,12,31,2050);
+	$plus4hours 	= $currentdate + 86400;
 	
 	//Add file nodes to the $fileElements
 	//Firstly get all the scheduled layouts
 	$SQL  = " SELECT layout.layoutID, schedule_detail.starttime, schedule_detail.endtime, layout.xml, layout.background ";
 	$SQL .= " FROM layout ";
 	$SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
-	$SQL .= " INNER JOIN display ON schedule_detail.displayID = display.displayID ";
+	$SQL .= " INNER JOIN lkdisplaygroup ON lkdisplaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
+	$SQL .= " INNER JOIN display ON lkdisplaygroup.DisplayID = display.displayID ";
 	$SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
 	
 	$SQLBase = $SQL;
@@ -242,12 +244,12 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	//Do we include the default display
 	if ($displayInfo['inc_schedule'] == 1)
 	{
-		$SQL .= sprintf(" AND ((schedule_detail.starttime < '%s' AND schedule_detail.endtime > '%s' )", $plus4hours, $currentdate);
-		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+		$SQL .= sprintf(" AND ((schedule_detail.starttime < %d AND schedule_detail.endtime > %d )", $plus4hours, $currentdate);
+		$SQL .= sprintf(" OR (schedule_detail.starttime = %d AND schedule_detail.endtime = %d ))", $infinityFromDT, $infinityToDT);
 	}
 	else
 	{
-		$SQL .= sprintf(" AND (schedule_detail.starttime < '%s' AND schedule_detail.endtime > '%s' )", $plus4hours, $currentdate);
+		$SQL .= sprintf(" AND (schedule_detail.starttime < %d AND schedule_detail.endtime > %d )", $plus4hours, $currentdate);
 	}
 	
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "RequiredFiles");	
@@ -263,8 +265,8 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	{
 		// No rows, run the query for default layout
 		$SQL  = $SQLBase;
-		$SQL .= sprintf(" AND ((schedule_detail.starttime < '%s' AND schedule_detail.endtime > '%s' )", $plus4hours, $currentdate);
-		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+		$SQL .= sprintf(" AND ((schedule_detail.starttime < %d AND schedule_detail.endtime > %d )", $plus4hours, $currentdate);
+		$SQL .= sprintf(" OR (schedule_detail.starttime = %d AND schedule_detail.endtime = %d ))", $infinityFromDT, $infinityToDT);
 		
 		if (!$results = $db->query($SQL))
 		{
@@ -526,17 +528,19 @@ function Schedule($serverKey, $hardwareKey, $version)
 	
 	$scheduleXml->appendChild($layoutElements);
 	
-	$currentdate = date("Y-m-d H:i:s");
-	$time = time();
-	$plus4hours = date("Y-m-d H:i:s",$time + 86400);
+	$currentdate 	= date();
+	$infinityFromDT = mktime(0,0,0,1,1,2000);
+	$infinityToDT	= mktime(0,0,0,12,31,2050);
+	$plus4hours 	= $currentdate + 86400;
 	
 	//Add file nodes to the $fileElements
 	//Firstly get all the scheduled layouts
-	$SQL  = " SELECT layout.layoutID, schedule_detail.starttime, schedule_detail.endtime, schedule_detail.eventID ";
+	$SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.endtime, schedule_detail.eventID ";
 	$SQL .= " FROM layout ";
 	$SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
-	$SQL .= " INNER JOIN display ON schedule_detail.displayID = display.displayID ";
-	$SQL .= " WHERE display.license = '$hardwareKey'  ";
+	$SQL .= " INNER JOIN lkdisplaygroup ON lkdisplaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
+	$SQL .= " INNER JOIN display ON lkdisplaygroup.DisplayID = display.displayID ";
+	$SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
 	
 	// Store the Base SQL for this display
 	$SQLBase = $SQL;
@@ -549,12 +553,12 @@ function Schedule($serverKey, $hardwareKey, $version)
 	// Do we include the default display
 	if ($displayInfo['inc_schedule'] == 1)
 	{
-		$SQL .= " AND ((schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
-		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+		$SQL .= " AND ((schedule_detail.FromDT < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
+		$SQL .= sprintf(" OR (schedule_detail.FromDT = '%d' AND schedule_detail.endtime = '%d' ))", $infinityFromDT, $infinityToDT);
 	}
 	else
 	{
-		$SQL .= " AND (schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
+		$SQL .= sprintf(" AND (schedule_detail.FromDT < '%d' AND schedule_detail.endtime > '%d' )", $currentdate);
 	}
 	
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
@@ -586,7 +590,7 @@ function Schedule($serverKey, $hardwareKey, $version)
 			// No rows, run the query for default layout
 			$SQL  = $SQLBase;
 			$SQL .= " AND ((schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
-			$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+			$SQL .= " OR (schedule_detail.starttime = '$infinityFromDT' AND schedule_detail.endtime = '$infinityToDT' ))";
 			
 			if (!$results = $db->query($SQL))
 			{
