@@ -308,13 +308,13 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'EditDetail');
+		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'EditDetailLayoutID');
 		
-		//Update the default layoutdisplay record
+		// Update the default layoutdisplay record
 		$SQL = " UPDATE schedule_detail SET layoutid = %d ";
 		$SQL .= " WHERE schedule_detailID = %d ";
 		
-		$SQL = sprintf($SQL, $layoutID, $displayGroupID, $scheduleID);
+		$SQL = sprintf($SQL, $layoutID, $scheduleDetailID);
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 			
@@ -326,9 +326,9 @@ class Schedule extends Data
 			return false;
 		}
 
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'EditDetail');
+		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'EditDetailLayoutID');
 		
-		return false;
+		return true;
 	}
 	
 	/**

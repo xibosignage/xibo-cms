@@ -355,7 +355,7 @@ class DisplayGroup extends Data
 		
 		// Get the DisplayGroupID for this DisplayID
 		$SQL  = "";
-		$SQL .= "SELECT gisplaygroup.DisplayGroupID ";
+		$SQL .= "SELECT displaygroup.DisplayGroupID ";
 		$SQL .= "FROM   displaygroup ";
 		$SQL .= "       INNER JOIN lkdisplaydg ";
 		$SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";

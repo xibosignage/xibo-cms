@@ -72,7 +72,7 @@ NULL , '4', '29', NULL , 'Display Groups', NULL , NULL , '2'
 ALTER TABLE `schedule` CHANGE `displayID_list` `DisplayGroupIDs` VARCHAR( 254 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'A list of the display group ids for this event' ;
 
 --TODO: Will need to write some PHP to convert all the dates to TIMESTAMPS
---TODO: Will need to write some PHP to add FromDT & TODT columns
+--TODO: Will need to write some PHP to add FromDT & TODT columns and to remove the starttime/endtime columns
 ALTER TABLE `schedule` MODIFY COLUMN `recurrence_range` BIGINT(20);
 
 
@@ -96,5 +96,9 @@ CREATE TABLE IF NOT EXISTS `lkdisplaydg` (
 ALTER TABLE `lkdisplaydg`
   ADD CONSTRAINT `lkdisplaydg_ibfk_1` FOREIGN KEY (`DisplayGroupID`) REFERENCES `displaygroup` (`DisplayGroupID`),
   ADD CONSTRAINT `lkdisplaydg_ibfk_2` FOREIGN KEY (`DisplayID`) REFERENCES `display` (`displayid`);
+  
+UPDATE display SET lastaccessed = NULL;
+ALTER TABLE `display` CHANGE `lastaccessed` `lastaccessed` INT NULL DEFAULT NULL;
+UPDATE display SET lastaccessed = UNIX_TIMESTAMP() - 86400;
 
 --TODO: Will need to add some upgrade PHP to create a DisplayGroup (+ link record) for every Currently existing display.
