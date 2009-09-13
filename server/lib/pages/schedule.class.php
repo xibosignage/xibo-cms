@@ -766,7 +766,7 @@ class scheduleDAO
 			<form onsubmit="return false">
 				<input type="hidden" name="p" value="schedule">
 				<input type="hidden" name="q" value="DisplayList">
-				<input type="text" name="name" />
+				<input class="DisplayListInput" type="text" name="name" />
 			</form>
 		</div>
 END;
@@ -844,8 +844,8 @@ HTML;
 			return;
 		}
 		
-		if ($outputForm) $output .= '<form id="DisplayList">';
-		$output 	.= '<ul class="DisplayList>';
+		if ($outputForm) $output .= '<form id="DisplayList" class="DisplayListForm">';
+		$output 	.= '<ul class="DisplayList">';
 		$nested 	= false;
 		
 		while($row = $db->get_assoc_row($results))

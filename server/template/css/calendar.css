@@ -155,3 +155,22 @@
 	clear: both;
 	padding-top: 15px;
 }
+
+.DisplayListForm {
+	width: 220px;
+}
+
+/* Make sure each list appears on a new line */
+ul.DisplayList li {
+	clear:both;
+}
+
+/* Push the checkboxes out to the right */
+ul.DisplayList li input {
+	float:right;
+}
+
+/* Ensure the input for the display list box is as wide as the left hand pane */
+input.DisplayListInput {
+	width: 215px;
+}
