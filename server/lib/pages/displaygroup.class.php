@@ -31,8 +31,7 @@ class displaygroupDAO
 		$this->user =& $user;
 	
 		include_once('lib/data/displaygroup.data.class.php');
-		
-		
+		include_once('lib/data/displaygroupsecurity.data.class.php');		
 	}
 	
 	function on_page_load() 
@@ -107,13 +106,14 @@ SQL;
 			trigger_error(__("Can not list Display Groups"), E_USER_ERROR);
 		}
 		
-		$msgSave	= __('Save');
-		$msgCancel	= __('Cancel');
-		$msgAction	= __('Action');
-		$msgEdit	= __('Edit');
-		$msgDelete	= __('Delete');
-		$msgDisplayGroup = __('Display Group');
-		$msgMembers	= __('Group Members');
+		$msgSave			= __('Save');
+		$msgCancel			= __('Cancel');
+		$msgAction			= __('Action');
+		$msgEdit			= __('Edit');
+		$msgDelete			= __('Delete');
+		$msgDisplayGroup 	= __('Display Group');
+		$msgMembers			= __('Group Members');
+		$msgGroupSecurity	= __('Group Security');
 		
 		$output = <<<END
 		<div class="info_table">
@@ -142,6 +142,7 @@ END;
 			{
 				$buttons = <<<END
 				<button class="XiboFormButton" href="index.php?p=displaygroup&q=MembersForm&DisplayGroupID=$displayGroupID"><span>$msgMembers</span></button>
+				<button class="XiboFormButton" href="index.php?p=displaygroup&q=DisplayGroupSecurity&DisplayGroupID=$displayGroupID"><span>$msgGroupSecurity</span></button>
 				<button class="XiboFormButton" href="index.php?p=displaygroup&q=EditForm&DisplayGroupID=$displayGroupID"><span>$msgEdit</span></button>
 				<button class="XiboFormButton" href="index.php?p=displaygroup&q=DeleteForm&DisplayGroupID=$displayGroupID"><span>$msgDelete</span></button>
 END;
@@ -328,7 +329,7 @@ END;
 		$SQL .= "SELECT display.DisplayID, ";
 		$SQL .= "       display.Display ";
 		$SQL .= "FROM   display ";
-		$SQL .= " WHERE Display.DisplayID NOT       IN ";
+		$SQL .= " WHERE display.DisplayID NOT       IN ";
 		$SQL .= "       (SELECT display.DisplayID ";
 		$SQL .= "       FROM    display ";
 		$SQL .= "               INNER JOIN lkdisplaydg ";
@@ -374,6 +375,87 @@ END;
 		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Displays&Category=Groups')");
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), 'MembersSubmit()');
+		$response->Respond();
+	}
+	
+	/**
+	 * Shows a list of groups that have permission on a particular display.
+	 * @return 
+	 */
+	public function DisplayGroupSecurity()
+	{
+		$db 			=& $this->db;
+		$response		= new ResponseManager();
+		$displayGroupID	= Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+		
+		// There needs to be two lists here.
+
+		// Groups allowed access
+		$SQL  = "";
+		$SQL .= "SELECT group.GroupID, ";
+		$SQL .= "       group.Group ";
+		$SQL .= "FROM   `group` ";
+		$SQL .= "       INNER JOIN lkgroupdg ";
+		$SQL .= "       ON     lkgroupdg.GroupID = group.GroupID ";
+		$SQL .= sprintf("WHERE  lkgroupdg.DisplayGroupID   = %d", $displayGroupID);
+		
+		if(!$resultIn = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Error getting Displays'));
+		}
+		
+		// Displays not in group
+		$SQL  = "";
+		$SQL .= "SELECT group.GroupID, ";
+		$SQL .= "       group.Group ";
+		$SQL .= "FROM   `group` ";
+		$SQL .= " WHERE group.GroupID NOT  IN ( ";
+		$SQL .= "		SELECT group.GroupID ";
+		$SQL .= "		FROM   `group` ";
+		$SQL .= "		       INNER JOIN lkgroupdg ";
+		$SQL .= "		       ON     lkgroupdg.GroupID = group.GroupID ";
+		$SQL .= sprintf("	WHERE  lkgroupdg.DisplayGroupID   = %d", $displayGroupID);
+		$SQL .= "       )";
+		
+		if(!$resultOut = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Error getting Displays'));
+		}
+		
+		// Now we have an IN and an OUT results object which we can use to build our lists
+		$listIn 	= '<ul id="groupsIn" href="index.php?p=displaygroup&q=SetGroupSecurity&DisplayGroupID=' . $displayGroupID . '" class="connectedSortable">';
+		
+		while($row = $db->get_assoc_row($resultIn))
+		{
+			// For each item output a LI
+			$groupID	= Kit::ValidateParam($row['GroupID'], _INT);
+			$group		= Kit::ValidateParam($row['Group'], _STRING);
+			
+			$listIn		.= '<li id="GroupID_' . $groupID . '"class="li-sortable">' . $group . '</li>';
+		}
+		$listIn		.= '</ul>';
+		
+		$listOut 	= '<ul id="groupsOut" class="connectedSortable">';
+		
+		while($row = $db->get_assoc_row($resultOut))
+		{
+			// For each item output a LI
+			$groupID	= Kit::ValidateParam($row['GroupID'], _INT);
+			$group		= Kit::ValidateParam($row['Group'], _STRING);
+			
+			$listOut	.= '<li id="GroupID_' . $groupID . '" class="li-sortable">' . $group . '</li>';
+		}
+		$listOut 	.= '</ul>';
+		
+		// Build the final form.
+		$form		= '<div class="connectedlist"><h3>Members</h3>' . $listIn . '</div><div class="connectedlist"><h3>Non-members</h3>' . $listOut . '</div>';
+		
+		$response->SetFormRequestResponse($form, __('Manage Group Security'), '400', '375', 'GroupSecurityCallBack');
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Displays&Category=Groups')");
+		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Save'), 'GroupSecuritySubmit()');
 		$response->Respond();
 	}
 	
@@ -551,6 +633,71 @@ END;
 		}
 		
 		$response->SetFormSubmitResponse(__('Group membership set'), false);
+		$response->Respond();
+	}
+	
+	/**
+	 * Sets the Group Security
+	 * @return 
+	 */
+	public function SetGroupSecurity()
+	{
+		$db 			=& $this->db;	
+		$response		= new ResponseManager();
+		$displayGroupSecurityObject = new DisplayGroupSecurity($db);
+	
+		$displayGroupID	= Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+		$groups			= Kit::GetParam('GroupID', _POST, _ARRAY, array());
+		$members		= array();
+		
+		// Current Members
+		$SQL  = "";
+		$SQL .= "SELECT group.GroupID, ";
+		$SQL .= "       group.Group ";
+		$SQL .= "FROM   `group` ";
+		$SQL .= "       INNER JOIN lkgroupdg ";
+		$SQL .= "       ON     lkgroupdg.GroupID = group.GroupID ";
+		$SQL .= sprintf("WHERE  lkgroupdg.DisplayGroupID   = %d", $displayGroupID);
+		
+		if(!$resultIn = $db->query($SQL))
+		{
+			trigger_error($db->error());
+			trigger_error(__('Error getting Groups with Security permissions for this Display Group.'));
+		}
+		
+		while($row = $db->get_assoc_row($resultIn))
+		{
+			// Test whether this ID is in the array or not
+			$groupID	= Kit::ValidateParam($row['GroupID'], _INT);
+			
+			if(!in_array($groupID, $groups))
+			{
+				// Its currently assigned but not in the $displays array
+				//  so we unassign
+				if (!$displayGroupSecurityObject->Unlink($displayGroupID, $groupID))
+				{
+					trigger_error($displayGroupSecurityObject->GetErrorMessage(), E_USER_ERROR);
+				}
+			}
+			else
+			{
+				$members[] = $displayID;
+			}
+		}
+		
+		foreach($groups as $groupID)
+		{
+			// Add any that are missing
+			if(!in_array($groupID, $members))
+			{
+				if (!$displayGroupSecurityObject->Link($displayGroupID, $groupID))
+				{
+					trigger_error($displayGroupSecurityObject->GetErrorMessage(), E_USER_ERROR);
+				}
+			}
+		}
+		
+		$response->SetFormSubmitResponse(__('Group security set'), false);
 		$response->Respond();
 	}
 }  

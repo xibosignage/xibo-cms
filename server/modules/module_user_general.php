@@ -591,6 +591,8 @@
 		$SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
 		$SQL .= "  FROM displaygroup ";
 		
+		// If the usertype is not 1 (admin) then we need to include the link table for display groups.
+		
 		Debug::LogEntry($db, 'audit', $SQL, 'Schedule', 'UnorderedListofDisplays');
 
 		if(!($results = $db->query($SQL))) 
@@ -598,6 +600,18 @@
 			trigger_error($db->error());
 			return false;
 		}
+		
+		$ids = array();
+		
+		// For each display that is returned - add it to the array
+		while ($row = $db->fetch_assoc_row($results))
+		{
+			$displayGroupID = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+			
+			$ids[] 			= $displayGroupID;
+		}
+		
+		return $ids;
 	}
 	
 	/**

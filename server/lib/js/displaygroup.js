@@ -43,3 +43,30 @@ function MembersSubmit() {
 	
 	return;
 }
+
+function GroupSecurityCallBack()
+{
+	$("#groupsIn, #groupsOut").sortable({
+		connectWith: '.connectedSortable',
+		dropOnEmpty: true
+	}).disableSelection();
+}
+
+function GroupSecuritySubmit() {
+	// Serialise the form and then submit it via Ajax.
+	var href = $("#groupsIn").attr('href') + "&ajax=true";
+	
+	// Get the two lists		
+	serializedData = $("#groupsIn").sortable('serialize');
+	
+	$.ajax({
+		type: "post",
+		url: href,
+		cache: false,
+		dataType: "json",
+		data: serializedData,
+		success: XiboSubmitResponse
+	});
+	
+	return;
+}
