@@ -576,6 +576,31 @@
 	}
 	
 	/**
+	 * Authenticates the current user against the given displaygroupid,
+	 * otherwise returns an array of display group ID's this user is authenticated on
+	 * @return 
+	 */
+	public function DisplayGroupAuth($displayGroupID = '')
+	{
+		$db 		=& $this->db;
+		$userid		=& $this->userid;
+		
+		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT, 0);
+		$groupid	= $this->getGroupFromID($userid, true);
+		
+		$SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
+		$SQL .= "  FROM displaygroup ";
+		
+		Debug::LogEntry($db, 'audit', $SQL, 'Schedule', 'UnorderedListofDisplays');
+
+		if(!($results = $db->query($SQL))) 
+		{
+			trigger_error($db->error());
+			return false;
+		}
+	}
+	
+	/**
 	 * Returns the usertypeid for this user object.
 	 * @return 
 	 */

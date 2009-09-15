@@ -102,3 +102,24 @@ ALTER TABLE `display` CHANGE `lastaccessed` `lastaccessed` INT NULL DEFAULT NULL
 UPDATE display SET lastaccessed = UNIX_TIMESTAMP() - 86400;
 
 --TODO: Will need to add some upgrade PHP to create a DisplayGroup (+ link record) for every Currently existing display.
+
+
+ CREATE TABLE `lkgroupdg` (
+`LkGroupDGID` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+`GroupID` INT NOT NULL ,
+`DisplayGroupID` INT NOT NULL
+) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci 
+
+ALTER TABLE `lkgroupdg` ADD INDEX ( `GroupID` )  ;
+ 
+ALTER TABLE `lkgroupdg` ADD INDEX ( `DisplayGroupID` )  ;
+
+ALTER TABLE `lkgroupdg` ADD FOREIGN KEY ( `GroupID` ) REFERENCES `group` (
+`groupID`
+);
+
+ALTER TABLE `lkgroupdg` ADD FOREIGN KEY ( `DisplayGroupID` ) REFERENCES `displaygroup` (
+`DisplayGroupID`
+);
+
+--TODO: Will need to create a permission record for each display group against each display - so it remains as it is now (all users have permission to assign to all displays).
