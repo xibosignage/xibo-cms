@@ -352,8 +352,9 @@ class scheduleDAO
 				// Now we know if this is a single day event or not we need to set up some styles
 				$tdClass		= $spanningDays == 1 ? 'Event' : 'LongEvent';
 				$timePrefix		= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
+				$editLink		= $event->editPermission == true ? sprintf('class="XiboFormButton" href="%s"',$event->layoutUri) : 'class="UnEditableEvent"';
 				
-				$layoutUri		= sprintf('<div class="%s %s" title="Display Group: %s"><a class="XiboFormButton" href="%s" title="%s">%s %s</a></div>', $tdClass, $calEvent[$index], $event->displayGroup, $event->layoutUri, $event->layout, $timePrefix, $event->layout);
+				$layoutUri		= sprintf('<div class="%s %s" title="Display Group: %s"><a %s title="%s">%s %s</a></div>', $tdClass, $calEvent[$index], $event->displayGroup, $editLink, $event->layout, $timePrefix, $event->layout);
 				
 				// We should subtract any days ahead of the start date from the spanning days
 				$spanningDays 	= $d - $event->startDayNo > 0 ? $spanningDays - ($d - $event->startDayNo) : $spanningDays;
@@ -415,10 +416,13 @@ class scheduleDAO
         $SQL.= "       schedule_detail.EventID, ";
         $SQL.= "       schedule_detail.ToDT - schedule_detail.FromDT AS duration, ";
         $SQL.= "       (LEAST(schedule_detail.ToDT, $nextMonth)) - schedule_detail.FromDT AS AdjustedDuration, ";
-        $SQL.= "       displaygroup.DisplayGroup ";
+        $SQL.= "       displaygroup.DisplayGroup, ";
+        $SQL.= "       displaygroup.DisplayGroupID, ";
+	    $SQL.= "       schedule.DisplayGroupIDs ";
         $SQL.= "  FROM schedule_detail ";
         $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
         $SQL.= "  INNER JOIN displaygroup ON displaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
+        $SQL.= "  INNER JOIN schedule ON schedule_detail.EventID = schedule.EventID ";
         $SQL.= " WHERE 1=1 ";
         $SQL.= sprintf("   AND schedule_detail.DisplayGroupID IN (%s) ", $db->escape_string($displayGroups));
         
@@ -449,6 +453,11 @@ class scheduleDAO
 			$toDT			= Kit::ValidateParam($row['AdjustedToDT'], _INT);
 			$layout			= Kit::ValidateParam($row['layout'], _STRING);
 			$displayGroup	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
+			$displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
+			$eventDGIDs		= Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
+			$eventDGIDs 	= explode(',', $eventDGIDs);
+			
+			if (!in_array($displayGroupID, $user->DisplayGroupAuth())) continue;
 			
 			// How many days does this event span?
 			$spanningDays	= ($toDT - $fromDT) / (60 * 60 * 24);
@@ -470,6 +479,18 @@ class scheduleDAO
 			$event->layoutUri		= $layoutUri;
 			$event->spanningDays	= ceil($spanningDays);
 			$event->startDayNo		= $dayNo;
+			$event->editPermission	= true;
+						
+			// Work out if this event is editable or not. To do this we need to compare the permissions
+			// of each display group this event is associated with
+			foreach ($eventDGIDs as $dgID)
+			{
+				if (!in_array($dgID, $user->DisplayGroupAuth()))
+				{
+					$event->editPermission = false;
+					break; // We only need on not to be in there to cause it to not be editable.
+				}
+			}
 			
 			// Store this event in the lowest slot it will fit in.
 			// only look from the start day of this event
@@ -818,7 +839,7 @@ HTML;
 		$output				= '';
 		$name				= Kit::GetParam('name', _POST, _STRING);
 		
-		//display the display table
+		// Get a list of display groups
 		$SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
 		$SQL .= "  FROM displaygroup ";
 		if ($name != '')
@@ -855,6 +876,10 @@ HTML;
 			$displayGroup		= Kit::ValidateParam($row['DisplayGroup'], _STRING);
 			$checked 			= (in_array($displayGroupID, $displayGroupIDs)) ? 'checked' : '';
 			
+			// Determine if we are authed against this group.
+			if (!in_array($displayGroupID, $user->DisplayGroupAuth())) continue;
+			
+			// Do we need to nest yet? We only nest display specific groups
 			if ($isDisplaySpecific == 1 && !$nested)
 			{
 				// Start a new UL to display these

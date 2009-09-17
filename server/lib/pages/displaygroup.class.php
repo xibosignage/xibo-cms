@@ -141,8 +141,8 @@ END;
 			else 
 			{
 				$buttons = <<<END
-				<button class="XiboFormButton" href="index.php?p=displaygroup&q=MembersForm&DisplayGroupID=$displayGroupID"><span>$msgMembers</span></button>
-				<button class="XiboFormButton" href="index.php?p=displaygroup&q=DisplayGroupSecurity&DisplayGroupID=$displayGroupID"><span>$msgGroupSecurity</span></button>
+				<button class="XiboFormButton" href="index.php?p=displaygroup&q=MembersForm&DisplayGroupID=$displayGroupID&DisplayGroup=$displayGroup"><span>$msgMembers</span></button>
+				<button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$displayGroup"><span>$msgGroupSecurity</span></button>
 				<button class="XiboFormButton" href="index.php?p=displaygroup&q=EditForm&DisplayGroupID=$displayGroupID"><span>$msgEdit</span></button>
 				<button class="XiboFormButton" href="index.php?p=displaygroup&q=DeleteForm&DisplayGroupID=$displayGroupID"><span>$msgDelete</span></button>
 END;
@@ -382,11 +382,12 @@ END;
 	 * Shows a list of groups that have permission on a particular display.
 	 * @return 
 	 */
-	public function DisplayGroupSecurity()
+	public function GroupSecurityForm()
 	{
 		$db 			=& $this->db;
 		$response		= new ResponseManager();
 		$displayGroupID	= Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+		$displayGroup	= Kit::GetParam('DisplayGroup', _REQUEST, _STRING);
 		
 		// There needs to be two lists here.
 
@@ -452,7 +453,7 @@ END;
 		// Build the final form.
 		$form		= '<div class="connectedlist"><h3>Members</h3>' . $listIn . '</div><div class="connectedlist"><h3>Non-members</h3>' . $listOut . '</div>';
 		
-		$response->SetFormRequestResponse($form, __('Manage Group Security'), '400', '375', 'GroupSecurityCallBack');
+		$response->SetFormRequestResponse($form, __('Manage Group Security for' . ' ' . $displayGroup), '400', '375', 'GroupSecurityCallBack');
 		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Displays&Category=Groups')");
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), 'GroupSecuritySubmit()');

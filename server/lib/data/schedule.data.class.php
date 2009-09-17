@@ -527,6 +527,7 @@ class Event
 	public $spanningDays;
 	public $startDayNo;
 	public $displayGroup;
+	public $editPermission;
 	
 	public function __construct()
 	{
