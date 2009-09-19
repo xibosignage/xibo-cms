@@ -45,7 +45,7 @@ ALTER TABLE `schedule_detail` CHANGE `displayID` `DisplayGroupID` INT( 11 ) NOT 
 ALTER TABLE `schedule_detail` DROP INDEX `displayid` ,
 ADD INDEX `DisplayGroupID` ( `DisplayGroupID` ) ;
 
-
+/* New page for display groups */
 INSERT INTO `pages` (
 `pageID` ,
 `name` ,
@@ -55,6 +55,7 @@ VALUES (
 NULL , 'displaygroup', '7'
 );
 
+/* New menu item for display groups */
 INSERT INTO `menuitem` (
 `MenuItemID` ,
 `MenuID` ,
@@ -71,11 +72,9 @@ NULL , '4', '29', NULL , 'Display Groups', NULL , NULL , '2'
 
 ALTER TABLE `schedule` CHANGE `displayID_list` `DisplayGroupIDs` VARCHAR( 254 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'A list of the display group ids for this event' ;
 
---TODO: Will need to write some PHP to convert all the dates to TIMESTAMPS
---TODO: Will need to write some PHP to add FromDT & TODT columns and to remove the starttime/endtime columns
-ALTER TABLE `schedule` MODIFY COLUMN `recurrence_range` BIGINT(20);
+ALTER TABLE `schedule` MODIFY COLUMN `recurrence_range` INT;
 
-
+/* Create display groups. 20.php will handle adding a IsDisplaySpecific group for each display and linking it. */
 CREATE TABLE IF NOT EXISTS `displaygroup` (
   `DisplayGroupID` int(11) NOT NULL auto_increment,
   `DisplayGroup` varchar(50) NOT NULL,
@@ -96,15 +95,14 @@ CREATE TABLE IF NOT EXISTS `lkdisplaydg` (
 ALTER TABLE `lkdisplaydg`
   ADD CONSTRAINT `lkdisplaydg_ibfk_1` FOREIGN KEY (`DisplayGroupID`) REFERENCES `displaygroup` (`DisplayGroupID`),
   ADD CONSTRAINT `lkdisplaydg_ibfk_2` FOREIGN KEY (`DisplayID`) REFERENCES `display` (`displayid`);
-  
+
+/* Last accessed date on display table need to be a timestamp */
 UPDATE display SET lastaccessed = NULL;
 ALTER TABLE `display` CHANGE `lastaccessed` `lastaccessed` INT NULL DEFAULT NULL;
 UPDATE display SET lastaccessed = UNIX_TIMESTAMP() - 86400;
 
---TODO: Will need to add some upgrade PHP to create a DisplayGroup (+ link record) for every Currently existing display.
-
-
- CREATE TABLE `lkgroupdg` (
+/* Permissions for Display Groups against Groups */
+CREATE TABLE `lkgroupdg` (
 `LkGroupDGID` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 `GroupID` INT NOT NULL ,
 `DisplayGroupID` INT NOT NULL
@@ -122,4 +120,13 @@ ALTER TABLE `lkgroupdg` ADD FOREIGN KEY ( `DisplayGroupID` ) REFERENCES `display
 `DisplayGroupID`
 );
 
---TODO: Will need to create a permission record for each display group against each display - so it remains as it is now (all users have permission to assign to all displays).
+/* Will need to create a permission record for each display group against each display - so it remains as it is now (all users have permission to assign to all displays). */
+INSERT INTO lkgroupdg (DisplayGroupID, GroupID)
+SELECT displaygroup.DisplayGroupID, `group`.GroupID
+FROM displaygroup
+CROSS JOIN `group`;
+
+/* Set the version table, etc */
+UPDATE `version` SET `app_ver` = '1.1.0';
+UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
+UPDATE `version` SET `DBVersion` = '20';
