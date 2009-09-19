@@ -291,9 +291,13 @@ HTML;
 				CASE WHEN display.loggedin = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS loggedin, 
 				display.lastaccessed, 
 				CASE WHEN display.inc_schedule = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS loggedin,
-				CASE WHEN display.licensed = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS licensed
+				CASE WHEN display.licensed = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS licensed,
+				displaygroup.DisplayGroupID
 		FROM display
+		INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID
+		INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
 		LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid
+		WHERE displaygroup.IsDisplaySpecific = 1
 		ORDER BY display.displayid
 SQL;
 
@@ -316,6 +320,7 @@ SQL;
 		$msgLogIn	= __('Logged In');
 		$msgEdit	= __('Edit');
 		$msgDelete	= __('Delete');
+		$msgGroupSecurity	= __('Group Security');
 
 		$output = <<<END
 		<div class="info_table">
@@ -344,6 +349,7 @@ END;
 			$lastaccessed 	= date('Y-m-d H:i:s', $aRow[4]);
 			$inc_schedule 	= $aRow[5];
 			$licensed 		= $aRow[6];
+			$displayGroupID = $aRow[7];
 			
 			$output .= <<<END
 			
@@ -358,6 +364,7 @@ END;
 			<td>
 				<button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>$msgEdit</span></button>
 				<button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
+				<button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$display"><span>$msgGroupSecurity</span></button>
 			</td>
 END;
 		}
