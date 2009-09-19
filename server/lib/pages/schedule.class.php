@@ -479,18 +479,7 @@ class scheduleDAO
 			$event->layoutUri		= $layoutUri;
 			$event->spanningDays	= ceil($spanningDays);
 			$event->startDayNo		= $dayNo;
-			$event->editPermission	= true;
-						
-			// Work out if this event is editable or not. To do this we need to compare the permissions
-			// of each display group this event is associated with
-			foreach ($eventDGIDs as $dgID)
-			{
-				if (!in_array($dgID, $user->DisplayGroupAuth()))
-				{
-					$event->editPermission = false;
-					break; // We only need on not to be in there to cause it to not be editable.
-				}
-			}
+			$event->editPermission	= $this->IsEventEditable($eventDGIDs);
 			
 			// Store this event in the lowest slot it will fit in.
 			// only look from the start day of this event
@@ -1072,6 +1061,13 @@ END;
 			$recToDtTextUS		= date("m/d/Y", $recToDT);
 		}
 		
+		// Check that we have permission to edit this event.
+		if (!$this->IsEventEditable($displayGroupIDs))
+		{
+			trigger_error(__('You do not have permission to edit this event.'));
+			return;
+		}
+		
 		// need to do some user checking here
 		$sql  = "SELECT layoutID, layout, permissionID, userID ";
 		$sql .= "  FROM layout WHERE retired = 0";
@@ -1146,19 +1142,8 @@ END;
 				</fieldset>
 			</td>
 		</tr>
-END;
-
-		$form .= <<<END
-					<tr>
-						<td colspan="2">
-							<input id="radio_all" type="radio" name="linkupdate" value="all" checked>
-							<label for="radio_all">Update events for all displays in this series</label>
-							<input id="radio_single" type="radio" name="linkupdate" value="single">
-							<label for="radio_single">Update event only for this display</label>
-						</td>
-					</tr>
-				</table>
-			</form>
+		</table>
+	</form>
 END;
 		
 		$response->SetFormRequestResponse($form, __('Edit Scheduled Event'), '700px', '400px');
@@ -1257,7 +1242,6 @@ END;
 
 		$eventID			= Kit::GetParam('EventID', _POST, _INT, 0);
 		$eventDetailID		= Kit::GetParam('EventDetailID', _POST, _INT, 0);
-		$linkedEvents		= Kit::GetParam('linkupdate', _POST, _STRING, 'all');
 		$layoutid			= Kit::GetParam('layoutid', _POST, _INT, 0);
 		$fromDT				= Kit::GetParam('fromdt', _POST, _STRING);
 		$toDT				= Kit::GetParam('todt', _POST, _STRING);
@@ -1614,195 +1598,27 @@ END;
         return $table_html;
 	}
 	
-	function edit() 
+	/**
+	 * Is this event editable?
+	 * @return 
+	 * @param $eventDGIDs Object
+	 */
+	private function IsEventEditable($eventDGIDs)
 	{
-		$db 					=& $this->db;
-		$response				= new ResponseManager();
+		$db 			=& $this->db;
+		$user			=& $this->user;
 		
-		$userid 				= $_SESSION['userid'];
-		
-		//check that at least one display has been selected
-		if (!isset($_POST['displayids'])) 
+		// Work out if this event is editable or not. To do this we need to compare the permissions
+		// of each display group this event is associated with
+		foreach ($eventDGIDs as $dgID)
 		{
-			trigger_error("No display selected", E_USER_ERROR);
-		}
-		
-		$displayid_array	= $_POST['displayids'];
-		$schedule_detailid	= Kit::GetParam('schedule_detailid', _POST, _INT);
-		$layoutid			= Kit::GetParam('layoutid', _POST, _INT);
-
-		//
-		// Get the link update setting, this is quite important as it effects how we edit the event
-		//
-		$linkupdate			= $_REQUEST['linkupdate']; //this is either all or single
-		
-		$is_priority = 0;
-		if (isset($_POST['is_priority'])) 
-		{
-			$is_priority = 1;
-		}
-		
-		//Validation
-		if ($layoutid == "") 
-		{
-			trigger_error("No layout selected", E_USER_ERROR);
-		}
-		
-		$_SESSION['layoutid'] = $layoutid;
-		
-		//get the dates and times
-		$start_date = explode("/",$_POST['starttime_date']); //		dd/mm/yyyy
-		$start_h = $_POST['starttime_h'];
-		$start_i = $_POST['starttime_i'];
-		
-		$starttime_timestamp = strtotime($start_date[1] . "/" . $start_date[0] . "/" . $start_date[2] . " ".$start_h.":".$start_i);
-		$starttime = date("Y-m-d H:i:s", $starttime_timestamp);
-		
-		$end_date = explode("/",$_POST['endtime_date']); //			dd/mm/yyyy
-		$end_h = $_POST['endtime_h'];
-		$end_i = $_POST['endtime_i'];
-		
-		$endtime_timestamp = strtotime($end_date[1] . "/" . $end_date[0] . "/" . $end_date[2] . " ".$end_h.":".$end_i);
-		$endtime = date("Y-m-d H:i:s", $endtime_timestamp);
-		
-		//Validation
-		if ($endtime_timestamp < $starttime_timestamp) 
-		{
-			trigger_error("Can not have an end time earlier than your start time");	
-		}
-		
-		//we only want to check this if the starttime has been edited
-		$SQL = "SELECT UNIX_TIMESTAMP(starttime), displayid FROM schedule_detail WHERE schedule_detailid = $schedule_detailid ";
-		if (!$results = $db->query($SQL)) trigger_error($db->error(),E_USER_ERROR);
-		
-		$row = $db->get_row($results);
-		$original_start 	= $row[0];
-		$pd_displayid 		= $row[1];
-		
-		if ($starttime_timestamp < (time()- 86400) && $original_start != $starttime_timestamp) 
-		{
-			trigger_error("Can not schedule events in the past", E_USER_ERROR);
-		}
-		
-		//
-		//get the linked_event id for this record
-		//
-		$SQL =  "SELECT schedule_detail.eventID, UNIX_TIMESTAMP(schedule.start) AS start, schedule.start, schedule.end ";
-		$SQL .= " FROM schedule_detail INNER JOIN schedule ON schedule.eventID = schedule_detail.eventID ";
-		$SQL .= " WHERE schedule_detailid = $schedule_detailid ";
-		
-		if(!$res_dups = $db->query($SQL)) 
-		{
-			trigger_error("Can not get duplicate events", E_USER_ERROR);			
-		}
-		
-		$row = $db->get_row($res_dups);
-		$linked_event_id 	= $row[0]; //the event id to update with
-		$t_schedule_start 	= $row[1]; //the event id to update with
-		$schedule_start 	= $row[2]; //the event id to update with
-		$schedule_end 		= $row[3]; //the event id to update with
-		
-		$displayid_list = implode(",",$displayid_array); //make the displayid_list from the selected displays.
-		
-		//
-		//recurrence
-		//
-		$rec_type 	= $_REQUEST['rec_type'];
-		$rec_detail	= $_REQUEST['rec_detail'];
-		$rec_range_array = explode("/",$_REQUEST['rec_range_date']); // dd/mm/yyyy
-		$rec_range_h = $_REQUEST['rec_range_h'];
-		$rec_range_i = $_REQUEST['rec_range_i'];
-		
-		$rec_range_timestamp = strtotime($rec_range_array[1] . "/" . $rec_range_array[0] . "/" . $rec_range_array[2] . " ".$rec_range_h.":".$rec_range_i);
-		$rec_range = date("Y-m-d H:i:s", $rec_range_timestamp);
-		
-		//
-		//Construct the update
-		// We have some choices: $linkupdate is either all or single
-		//		all: we can just update the schedule
-		//		single: Clone the schedule for only this layoutdisplays display id,
-		//				update the old schedule - removing this displayid from it
-		
-		
-		// If the starttime from the layoutdisplay is the same as the start time for this schedule
-		if ($original_start != $t_schedule_start || $linkupdate == "single") 
-		{
-			//we split the record
-			if ($linkupdate == "single") 
+			if (!in_array($dgID, $user->DisplayGroupAuth()))
 			{
-				//we want to update the schedule record, but remove this display from the list
-				//remove $displayid from $displayid_list
-				foreach($displayid_list as $displayid_orig) 
-				{
-					if ($pd_displayid != $displayid_orig) 
-					{
-						$displayid_list_new[] = $displayid_orig;
-					}
-				}
-				
-				//make a new list from the altered array
-				$displayid_list_new = implode(",", $displayid_list_new);
-			}
-			else 
-			{
-				$pd_displayid = $displayid_list;
-			}
-			
-			$SQL = "INSERT INTO schedule (layoutID, displayID_list, start, end, userID, is_priority, recurrence_type, recurrence_detail, recurrence_range) ";
-			$SQL .= " VALUES ($layoutid, '$pd_displayid', '$starttime', '$endtime', $userid, $is_priority, '$rec_type', '$rec_detail', '$rec_range') ";
-			
-			if (!$eventid = $db->insert_query($SQL)) 
-			{
-				trigger_error($db->error());
-				trigger_error("Cant insert into the schedule", E_USER_ERROR);
-			}
-			
-			//
-			// assign the relevent layoutdisplay records for this event
-			//
-			$this->setlayoutDisplayRecords($eventid);
-			
-			if ($linkupdate == "single") 
-			{
-				//update the old record with the new display list
-				$displayid_list == $displayid_list_new;
-			}
-			if ($original_start != $t_schedule_start) 
-			{
-				//update the old record with the range of this records start date and the orignial start and end times
-				$rec_range = $starttime;
-				$starttime = $schedule_start;
-				$endtime = $schedule_end;								
+				return false;
 			}
 		}
 		
-		//we should be all set to update the original record now
-		$SQL = " UPDATE schedule SET start = '$starttime', end = '$endtime', displayID_list = '$displayid_list', layoutID = $layoutid, ";
-		$SQL .= " is_priority = $is_priority, ";
-		if ($rec_type == "null") 
-		{
-			$SQL .= " recurrence_type = NULL, recurrence_detail = NULL, recurrence_range = NULL";
-		}
-		else 
-		{
-			$SQL .= " recurrence_type = '$rec_type', recurrence_detail = '$rec_detail', recurrence_range = '$rec_range'";
-		}
-		$SQL .= " WHERE eventID = $linked_event_id ";			
-		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error("Cant update the schedule", E_USER_ERROR);
-		}
-		
-		//
-		// assign the relevent layoutdisplay records for this event
-		//
-		$this->setlayoutDisplayRecords($linked_event_id);
-				
-		$response->SetFormSubmitResponse('The Event has been edited.');
-		$response->refresh = true;
-		$response->Respond();
+		return true;
 	}
 }
 ?>
