@@ -205,6 +205,12 @@ elseif ($_SESSION['step'] == 2) {
 		}
 	}
 
+    echo '<div class="info"><p>';
+	echo "Perform automatic database upgrade?";
+	echo '</p></div><div class="install-table">';
+    echo '<input type="checkbox" name="doBackup" checked />';
+	echo '</div><hr width="25%" />';
+
 	$_SESSION['step'] = 3;
 	echo '<input type="hidden" name="includes" value="true" />';
 	echo '<p><input type="submit" value="Next >" /></p>';
@@ -242,11 +248,18 @@ elseif ($_SESSION['step'] == 3) {
 		echo "FAIL: " . $fault_string;
 	}
 	else {
+        $doBackup = Kit::GetParam("doBackup", $_POST, _BOOL)
+
 		set_time_limit(0);
 		// Backup the database
-		echo '<div class="info">';
-		echo '<p>Backing up your database';
-		backup_tables($db, '*');
+		echo '<div class="info"><p>';
+        if ($doBackup) {
+		    echo 'Backing up your database';
+		    backup_tables($db, '*');
+        }
+        else {
+            echo 'Skipping database backup';
+        }
 		echo '</p>';
 
 		$sqlStatementCount = 0;
