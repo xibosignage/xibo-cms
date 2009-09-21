@@ -248,7 +248,7 @@ elseif ($_SESSION['step'] == 3) {
 		echo "FAIL: " . $fault_string;
 	}
 	else {
-        $doBackup = Kit::GetParam("doBackup", $_POST, _BOOL)
+        $doBackup = Kit::GetParam("doBackup", $_POST, _BOOL);
 
 		set_time_limit(0);
 		// Backup the database
