@@ -24,11 +24,11 @@
 	width: 100%;
 }
 
-.SecondNav {
+.SecondNav, #headerback {
 	text-align: center;
 }
 
-.SecondNav ul li {
+.SecondNav ul li, #headerback ul li {
 	display: inline;
 	padding-left: 15px;
 	padding-right: 15px;
