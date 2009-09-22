@@ -26,25 +26,6 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (7, 'Report', 'General', 'http://wiki.xibo.org.uk/index.php?title=Reports_-_General_Help&printable=true');
 
 
-ALTER TABLE `schedule_detail` DROP FOREIGN KEY `schedule_detail_ibfk_3` ;
-
-ALTER TABLE `schedule_detail` DROP FOREIGN KEY `schedule_detail_ibfk_4` ;
-
-ALTER TABLE `schedule_detail` ADD FOREIGN KEY ( `layoutID` ) REFERENCES `layout` (
-`layoutID`
-);
-
-ALTER TABLE `schedule_detail` DROP FOREIGN KEY `schedule_detail_ibfk_5` ;
-
-ALTER TABLE `schedule_detail` ADD FOREIGN KEY ( `eventID` ) REFERENCES `schedule` (
-`eventID`
-);
-
-ALTER TABLE `schedule_detail` CHANGE `displayID` `DisplayGroupID` INT( 11 ) NOT NULL  ;
- 
-ALTER TABLE `schedule_detail` DROP INDEX `displayid` ,
-ADD INDEX `DisplayGroupID` ( `DisplayGroupID` ) ;
-
 /* New page for display groups */
 INSERT INTO `pages` (
 `pageID` ,
@@ -69,10 +50,6 @@ INSERT INTO `menuitem` (
 VALUES (
 NULL , '4', '29', NULL , 'Display Groups', NULL , NULL , '2'
 );
-
-ALTER TABLE `schedule` CHANGE `displayID_list` `DisplayGroupIDs` VARCHAR( 254 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'A list of the display group ids for this event' ;
-
-ALTER TABLE `schedule` MODIFY COLUMN `recurrence_range` INT;
 
 /* Create display groups. 20.php will handle adding a IsDisplaySpecific group for each display and linking it. */
 CREATE TABLE IF NOT EXISTS `displaygroup` (
@@ -126,6 +103,65 @@ SELECT displaygroup.DisplayGroupID, `group`.GroupID
 FROM displaygroup
 CROSS JOIN `group`;
 
+/* SCHEDULE */
+/* Change the display list to a display group list */
+ALTER TABLE `schedule` CHANGE `displayID_list` `DisplayGroupIDs` VARCHAR( 254 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'A list of the display group ids for this event' ;
+
+ALTER TABLE `schedule` 
+		ADD `FromDT` BIGINT NOT NULL DEFAULT '0',
+		ADD `ToDT` BIGINT NOT NULL DEFAULT '0',
+		ADD `recurrence_range_temp` BIGINT NULL ;
+
+UPDATE schedule SET 
+	FromDT = UNIX_TIMESTAMP(start), 
+	ToDT = UNIX_TIMESTAMP(end), 
+	recurrence_range_temp = CASE WHEN recurrence_range IS NULL THEN NULL ELSE UNIX_TIMESTAMP(recurrence_range) END
+
+ALTER TABLE `schedule`
+  DROP `recurrence_range`,
+  DROP `start`,
+  DROP `end`;
+  
+ ALTER TABLE `schedule` CHANGE `recurrence_range_temp` `recurrence_range` BIGINT( 20 ) NULL DEFAULT NULL  ;
+
+/* Schedule Detail */ 
+ALTER TABLE `schedule_detail` DROP FOREIGN KEY `schedule_detail_ibfk_3` ;
+
+ALTER TABLE `schedule_detail` DROP FOREIGN KEY `schedule_detail_ibfk_4` ;
+
+ALTER TABLE `schedule_detail` ADD FOREIGN KEY ( `layoutID` ) REFERENCES `layout` (
+`layoutID`
+);
+
+ALTER TABLE `schedule_detail` DROP FOREIGN KEY `schedule_detail_ibfk_5` ;
+
+ALTER TABLE `schedule_detail` ADD FOREIGN KEY ( `eventID` ) REFERENCES `schedule` (
+`eventID`
+);
+
+ALTER TABLE `schedule_detail` CHANGE `displayID` `DisplayGroupID` INT( 11 ) NOT NULL  ;
+ 
+ALTER TABLE `schedule_detail` DROP INDEX `displayid` ,
+ADD INDEX `DisplayGroupID` ( `DisplayGroupID` ) ;
+
+ALTER TABLE `schedule_detail` 
+	ADD `FromDT` BIGINT NOT NULL DEFAULT '0',
+	ADD `ToDT` BIGINT NOT NULL DEFAULT '0';
+
+UPDATE `schedule_detail` SET 
+	FromDT = UNIX_TIMESTAMP( starttime ) ,
+	ToDT = UNIX_TIMESTAMP( endtime ) ;
+	
+ALTER TABLE `schedule_detail`
+  DROP `starttime`,
+  DROP `endtime`;
+  
+UPDATE schedule_detail SET FromDT = 946684800 WHERE FromDT = 0;  
+  
+ALTER TABLE `schedule_detail` DROP INDEX `schedule_detail_ibfk_3`;
+ALTER TABLE `schedule_detail` DROP INDEX `IM_SDT_DisplayID`;  
+
+/* VERSION UPDATE */
 /* Set the version table, etc */
 UPDATE `version` SET `app_ver` = '1.1.0';
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
