@@ -1,6 +1,6 @@
-/*
+/**
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006,2007,2008 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -17,3 +17,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
+function GroupSecurityCallBack()
+{
+	$("#groupsIn, #groupsOut").sortable({
+		connectWith: '.connectedSortable',
+		dropOnEmpty: true
+	}).disableSelection();
+}
+
+function GroupSecuritySubmit() {
+	// Serialise the form and then submit it via Ajax.
+	var href = $("#groupsIn").attr('href') + "&ajax=true";
+	
+	// Get the two lists		
+	serializedData = $("#groupsIn").sortable('serialize');
+	
+	$.ajax({
+		type: "post",
+		url: href,
+		cache: false,
+		dataType: "json",
+		data: serializedData,
+		success: XiboSubmitResponse
+	});
+	
+	return;
+}

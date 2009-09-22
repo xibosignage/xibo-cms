@@ -24,10 +24,7 @@ class rssreader
 {
 	private $mXml;
 	private $mXsl;
-	private $length;//total play length of this rss object
-	
-	private $xsltdisplaymodeid;//number of items to show
-	private $javascript;
+	private $length; //total play length of this rss object
 
 	// Constructor - creates an XML object based on the specified feed
 	function __construct($feed, $xsl, $length, $javascript) 
@@ -36,15 +33,13 @@ class rssreader
 		
 		if ($allow_url_fopen != 1) 
 		{
-			trigger_error("You must have allow_url_fopen = On in your PHP.ini file for RSS to function", E_USER_ERROR);
+			trigger_error('You must have "allow_url_fopen = On" in your PHP.ini file for RSS to function', E_USER_ERROR);
 		}
-		
-		ini_set("user_agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)"); //pretend we are Mozilla
 	
 		// retrieve the RSS feed in a SimpleXML object
 		if (!$this->mXml = simplexml_load_file($feed)) 
 		{
-			trigger_error("This RSS feed [$feed] can not be located, please check it in the admin interface.",E_USER_ERROR);
+			trigger_error("This RSS feed [$feed] can not be located", E_USER_ERROR);
 		}
 
 		$this->mXsl = simplexml_load_string($xsl);// retrieve the XSL contents in a SimpleXML object
@@ -55,6 +50,7 @@ class rssreader
 		return true;
 	}
 
+	// Extracts a single item from the RSS
 	function extract_item($itemnumber) 
 	{
 		$xml = &$this->mXml;
@@ -88,7 +84,7 @@ class rssreader
 			return $proc->transformToXML($xml);
 	}
 
-	function display_feed() 
+	function DisplayFeed() 
 	{
 		/**
 		 * We need to decide what to display (obviously)

@@ -53,14 +53,9 @@ function Auth($hardwareKey)
 		}
 		else 
 		{
-			$time = date("Y-m-d H:i:s", time());
+			$displayObject = new Display($db);
 			
-			//Set the last accessed flag on the display
-			$SQL = "UPDATE display SET lastaccessed = '$time', loggedin = 1 WHERE license = '$hardwareKey' ";
-			if (!$result = $db->query($SQL)) 
-			{
-				trigger_error("Display update access failure: " .$db->error());
-			}
+			$displayObject->Touch($hardwareKey);
 			
 			//It is licensed
 			return array("licensed" => true, "inc_schedule" => $row[1], "isAuditing" => $row[2], "displayid" => $row[3]);
@@ -131,30 +126,31 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 		return new soap_fault("SOAP-ENV:Client", "", "The Hardware Key you sent was too long. Only 40 characters are allowed (SHA1).", $hardwareKey);
 	}
 	
-	//check in the database for this hardwareKey
+	// Check in the database for this hardwareKey
 	$SQL = "SELECT licensed, display FROM display WHERE license = '$hardwareKey'";
+	
 	if (!$result = $db->query($SQL)) 
 	{
 		trigger_error("License key query failed:" .$db->error());
 		return new soap_fault("SOAP-ENV:Server", "", "License Key Query Failed, see server errorlog", $db->error());
 	}
 	
-	//Is it there?
+	// Use a display object to Add or Edit the display
+	$displayObject = new Display($db);		
+	
+	// Is it there?
 	if ($db->num_rows($result) == 0) 
 	{
-		//Add this display record
-		$SQL = sprintf("INSERT INTO display (display, defaultlayoutid, license, licensed) VALUES ('%s', 1, '%s', 0)", $displayName, $hardwareKey);
-		if (!$displayid = $db->insert_query($SQL)) 
-		{
-			trigger_error($db->error());
-			return new soap_fault("SOAP-ENV:Server", "", "Error adding display");
-		}
+		// Add this display record
+		if (!$displayid = $displayObject->Add($displayName, 0, 1, $hardwareKey, 0, 0)) return new soap_fault("SOAP-ENV:Server", "", "Error adding display");
+		
 		$active = "Display added and is awaiting licensing approval from an Administrator";
 	}
 	else 
 	{
 		//we have seen this display before, so check the licensed value
 		$row = $db->get_row($result);
+		
 		if ($row[0] == 0) 
 		{
 			//Its Not licensed
@@ -170,12 +166,9 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 			}
 			else
 			{
-				//Update the name
-				$SQL = sprintf("UPDATE display SET display = '%s' WHERE license = '%s' ", $displayName, $hardwareKey);
-				
-				if (!$db->query($SQL)) 
+				// Update the name
+				if (!$displayObject->EditDisplayName($hardwareKey, $displayName))
 				{
-					trigger_error($db->error());
 					return new soap_fault("SOAP-ENV:Server", "", "Error editing the display name");
 				}
 				
@@ -226,20 +219,22 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	}
 	
 	$requiredFilesXml = new DOMDocument("1.0");
-	$fileElements = $requiredFilesXml->createElement("files");
+	$fileElements 	= $requiredFilesXml->createElement("files");
 	
 	$requiredFilesXml->appendChild($fileElements);
 	
-	$currentdate = date("Y-m-d H:i:s");
-	$time = time();
-	$plus4hours = date("Y-m-d H:i:s",$time + 86400);
+	$currentdate 	= time();
+	$infinityFromDT = mktime(0,0,0,1,1,2000);
+	$infinityToDT	= mktime(0,0,0,12,31,2050);
+	$plus4hours 	= $currentdate + 86400;
 	
 	//Add file nodes to the $fileElements
 	//Firstly get all the scheduled layouts
-	$SQL  = " SELECT layout.layoutID, schedule_detail.starttime, schedule_detail.endtime, layout.xml, layout.background ";
+	$SQL  = " SELECT DISTINCT layout.layoutID, layout.xml, layout.background ";
 	$SQL .= " FROM layout ";
 	$SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
-	$SQL .= " INNER JOIN display ON schedule_detail.displayID = display.displayID ";
+	$SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
+	$SQL .= " INNER JOIN display ON lkdisplaydg.DisplayID = display.displayID ";
 	$SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
 	
 	$SQLBase = $SQL;
@@ -247,12 +242,12 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	//Do we include the default display
 	if ($displayInfo['inc_schedule'] == 1)
 	{
-		$SQL .= sprintf(" AND ((schedule_detail.starttime < '%s' AND schedule_detail.endtime > '%s' )", $plus4hours, $currentdate);
-		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+		$SQL .= sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $plus4hours, $currentdate);
+		$SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
 	}
 	else
 	{
-		$SQL .= sprintf(" AND (schedule_detail.starttime < '%s' AND schedule_detail.endtime > '%s' )", $plus4hours, $currentdate);
+		$SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $plus4hours, $currentdate);
 	}
 	
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "RequiredFiles");	
@@ -268,8 +263,8 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	{
 		// No rows, run the query for default layout
 		$SQL  = $SQLBase;
-		$SQL .= sprintf(" AND ((schedule_detail.starttime < '%s' AND schedule_detail.endtime > '%s' )", $plus4hours, $currentdate);
-		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+		$SQL .= sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $plus4hours, $currentdate);
+		$SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
 		
 		if (!$results = $db->query($SQL))
 		{
@@ -281,8 +276,8 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	while ($row = $db->get_row($results))
 	{
 		$layoutid = $row[0];
-		$layoutXml = $row[3];
-		$background = $row[4];
+		$layoutXml = $row[1];
+		$background = $row[2];
 		
 		// Add all the associated media first
 		$SQL = "SELECT storedAs, media.mediaID 
@@ -433,6 +428,8 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	}
 	
 	// Return the results of requiredFiles()
+	$requiredFilesXml->formatOutput = true;
+	
 	return $requiredFilesXml->saveXML();
 }
 
@@ -544,18 +541,19 @@ function Schedule($serverKey, $hardwareKey, $version)
 	
 	$scheduleXml->appendChild($layoutElements);
 	
-	$currentdate = date("Y-m-d H:i:s");
-	$time = time();
-	$plus4hours = date("Y-m-d H:i:s",$time + 86400);
+	$currentdate 	= time();
+	$infinityFromDT = mktime(0,0,0,1,1,2000);
+	$infinityToDT	= mktime(0,0,0,12,31,2050);
+	$plus4hours 	= $currentdate + 86400;
 	
 	//Add file nodes to the $fileElements
 	//Firstly get all the scheduled layouts
-	$SQL  = " SELECT layout.layoutID, schedule_detail.starttime, schedule_detail.endtime, schedule_detail.eventID ";
+	$SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID ";
 	$SQL .= " FROM layout ";
 	$SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
-	$SQL .= " INNER JOIN display ON schedule_detail.displayID = display.displayID ";
-	$SQL .= " WHERE display.license = '$hardwareKey'  ";
-	$SQL .= "   AND layout.retired = 0  ";
+	$SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
+	$SQL .= " INNER JOIN display ON lkdisplaydg.DisplayID = display.displayID ";
+	$SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
 	
 	// Store the Base SQL for this display
 	$SQLBase = $SQL;
@@ -568,12 +566,12 @@ function Schedule($serverKey, $hardwareKey, $version)
 	// Do we include the default display
 	if ($displayInfo['inc_schedule'] == 1)
 	{
-		$SQL .= " AND ((schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
-		$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+		$SQL .= " AND ((schedule_detail.FromDT < $currentdate AND schedule_detail.ToDT > $currentdate )";
+		$SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
 	}
 	else
 	{
-		$SQL .= " AND (schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
+		$SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $currentdate, $currentdate);
 	}
 	
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
@@ -604,8 +602,8 @@ function Schedule($serverKey, $hardwareKey, $version)
 		{
 			// No rows, run the query for default layout
 			$SQL  = $SQLBase;
-			$SQL .= " AND ((schedule_detail.starttime < '$currentdate' AND schedule_detail.endtime > '$currentdate' )";
-			$SQL .= " OR (schedule_detail.starttime = '2050-12-31 00:00:00' AND schedule_detail.endtime = '2050-12-31 00:00:00' ))";
+			$SQL .= " AND ((schedule_detail.FromDT < $currentdate AND schedule_detail.ToDT > $currentdate )";
+			$SQL .= " OR (schedule_detail.FromDT = $infinityFromDT AND schedule_detail.ToDT = $infinityToDT ))";
 			
 			if (!$results = $db->query($SQL))
 			{
@@ -619,8 +617,8 @@ function Schedule($serverKey, $hardwareKey, $version)
 	while ($row = $db->get_row($results))
 	{
 		$layoutid 	= $row[0];
-		$fromdt 	= $row[1];
-		$todt		= $row[2];
+		$fromdt 	= date('Y-m-d h:i:s', $row[1]);
+		$todt		= date('Y-m-d h:i:s', $row[2]);
 		$scheduleid = $row[3];
 			
 		//firstly add this as a node
@@ -636,6 +634,8 @@ function Schedule($serverKey, $hardwareKey, $version)
 	
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", $scheduleXml->saveXML(), "xmds", "Schedule");
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "[OUT]", "xmds", "Schedule");
+	
+	$scheduleXml->formatOutput = true;
 	
 	return $scheduleXml->saveXML();
 }

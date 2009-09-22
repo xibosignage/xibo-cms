@@ -26,10 +26,16 @@
 	private $userid;
 	private $usertypeid;
 	
+	private $displayGroupIDs;
+	private $authedDisplayGroupIDs;
+	
  	public function __construct(database $db)
 	{
 		$this->db 		=& $db;
 		$this->userid 	= Kit::GetParam('userid', _SESSION, _INT);
+		
+		// We havent authed yet
+		$this->authedDisplayGroupIDs = false;
 	}
 	
 	/**
@@ -574,6 +580,60 @@
 		
 		// Return this array		
 		return $modules;
+	}
+	
+	/**
+	 * Authenticates the current user and returns an array of display group ID's this user is authenticated on
+	 * @return 
+	 */
+	public function DisplayGroupAuth()
+	{
+		$db 		=& $this->db;
+		$userid		=& $this->userid;
+		
+		// If it is already set then just return it
+		if ($this->authedDisplayGroupIDs) return $this->displayGroupIDs;
+		
+		// Populate the array of display group ids we are authed against
+		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT, 0);
+		$groupid	= $this->getGroupFromID($userid, true);
+		
+		$SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
+		$SQL .= "  FROM displaygroup ";
+		
+		// If the usertype is not 1 (admin) then we need to include the link table for display groups.
+		if ($usertype != 1)
+		{
+			$SQL .= " INNER JOIN lkgroupdg ON lkgroupdg.DisplayGroupID = displaygroup.DisplayGroupID ";
+			$SQL .= sprintf(" WHERE lkgroupdg.GroupID = %d ", $groupid);
+		}
+		
+		Debug::LogEntry($db, 'audit', $SQL, 'User', 'DisplayGroupAuth');
+
+		if(!$results = $db->query($SQL)) 
+		{
+			trigger_error($db->error());
+			return false;
+		}
+		
+		$ids = array();
+		
+		
+		// For each display that is returned - add it to the array
+		while ($row = $db->get_assoc_row($results))
+		{
+			$displayGroupID = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+			
+			$ids[] 			= $displayGroupID;
+		}
+		
+		Debug::LogEntry($db, 'audit', count($ids) . ' authenticated displays.', 'User', 'DisplayGroupAuth');
+		
+		// Set this for later (incase we call this again from the same session)
+		$this->displayGroupIDs 			= $ids;
+		$this->authedDisplayGroupIDs 	= true;
+		
+		return $ids;
 	}
 	
 	/**

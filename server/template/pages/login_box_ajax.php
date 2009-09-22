@@ -1,6 +1,6 @@
 <div>
 	<p style="text-align:center">Xibo requires a valid user login to proceed.</p>
-	<form class="XiboForm" method="post" action="index.php?q=login">
+	<form id="XiboLoginForm" class="XiboForm" method="post" action="index.php?q=login">
 		<div class="login_table">
 			<table>
 				<tr>
@@ -10,12 +10,6 @@
 				<tr>
 					<td><label for="password">Password </label></td>
 					<td><input class="password" id="password" type="password" name="password" tabindex="2" size="12" /></td>
-				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input type="submit" tabindex="3" value="Login" />
-					</td>
 				</tr>
 			</table>
 		</div>

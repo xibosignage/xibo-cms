@@ -41,6 +41,8 @@ class displayDAO
 		$this->db 	=& $db;
 		$this->user =& $user;
 		
+		include_once('lib/data/display.data.class.php');
+		
 		$this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
 		$this->ajax		= Kit::GetParam('ajax', _REQUEST, _WORD, 'false');
 		$displayid 		= Kit::GetParam('displayid', _REQUEST, _INT, 0);
@@ -136,69 +138,14 @@ SQL;
 		//Validation
 		if ($display == "") 
 		{
-			trigger_error(__("Can not have a display with no name"), E_USER_ERROR);
+			trigger_error(__("Can not have a display without a name"), E_USER_ERROR);
 		}
 		
-		//Update the display record
-		$SQL  = "UPDATE display SET display = '%s', ";
-		$SQL .= "		defaultlayoutid = %d, ";
-		$SQL .= "		inc_schedule = %d, ";
-		$SQL .= " 		licensed = %d, ";
-		$SQL .= "		isAuditing = %d ";
-		$SQL .= "WHERE displayid = ".$displayid;
+		$displayObject 	= new Display($db);
 		
-		$SQL = sprintf($SQL, $db->escape_string($display), $layoutid, $inc_schedule, $licensed, $auditing, $displayid);
-		
-		Debug::LogEntry($db, 'audit', $SQL);
-		
-		if (!$db->query($SQL)) 
+		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule))
 		{
-			trigger_error($db->error());
-			trigger_error(__('Could not update display') . '-' . __('Stage 1'), E_USER_ERROR);
-		}
-		
-		//check that we have a default layout display record to update
-		//we might not and should be able to resolve it by editing the display
-		$SQL = "SELECT schedule_detailID FROM schedule_detail ";
-		$SQL .= " WHERE displayid = %d ";
-		$SQL .= "   AND starttime = '2050-12-31 00:00:00' ";
-		$SQL .= "   AND endtime = '2050-12-31 00:00:00' ";
-		
-		$SQL = sprintf($SQL, $displayid);
-		
-		Debug::LogEntry($db, 'audit', $SQL);
-		
-		if (!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error(__('Could not update display') . '-' . __('Stage 1'), E_USER_ERROR);
-		}
-		
-		if ($db->num_rows($results) == 0) 
-		{
-			//INSERT one
-			$SQL  = " INSERT INTO schedule_detail (displayid, layoutid, starttime, endtime) ";
-			$SQL .= " VALUES (%d, %d, '2050-12-31 00:00:00','2050-12-31 00:00:00') ";
-			
-			$SQL = sprintf($SQL, $displayid, $layoutid);
-		}
-		else 
-		{
-			//Update the default layoutdisplay record
-			$SQL = " UPDATE schedule_detail SET layoutid = %d ";
-			$SQL .= " WHERE displayid = %d ";
-			$SQL .= "   AND starttime = '2050-12-31 00:00:00' ";
-			$SQL .= "   AND endtime = '2050-12-31 00:00:00'";
-			
-			$SQL = sprintf($SQL, $layoutid, $displayid);
-		}
-		
-		Debug::LogEntry($db, 'audit', $SQL);
-			
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error(__('Could not update display') . '-' . __('Stage 2'), E_USER_ERROR);
+			trigger_error(__('Cannot Edit this Display'), E_USER_ERROR);
 		}
 		
 		$response->SetFormSubmitResponse(__('Display Saved.'));
@@ -344,9 +291,13 @@ HTML;
 				CASE WHEN display.loggedin = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS loggedin, 
 				display.lastaccessed, 
 				CASE WHEN display.inc_schedule = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS loggedin,
-				CASE WHEN display.licensed = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS licensed
+				CASE WHEN display.licensed = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS licensed,
+				displaygroup.DisplayGroupID
 		FROM display
+		INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID
+		INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
 		LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid
+		WHERE displaygroup.IsDisplaySpecific = 1
 		ORDER BY display.displayid
 SQL;
 
@@ -369,6 +320,7 @@ SQL;
 		$msgLogIn	= __('Logged In');
 		$msgEdit	= __('Edit');
 		$msgDelete	= __('Delete');
+		$msgGroupSecurity	= __('Group Security');
 
 		$output = <<<END
 		<div class="info_table">
@@ -394,9 +346,10 @@ END;
 			$display 		= $aRow[1];
 			$defaultlayoutid = $aRow[2];
 			$loggedin 		= $aRow[3];
-			$lastaccessed 	= $aRow[4];
+			$lastaccessed 	= date('Y-m-d H:i:s', $aRow[4]);
 			$inc_schedule 	= $aRow[5];
 			$licensed 		= $aRow[6];
+			$displayGroupID = $aRow[7];
 			
 			$output .= <<<END
 			
@@ -411,6 +364,7 @@ END;
 			<td>
 				<button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>$msgEdit</span></button>
 				<button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
+				<button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$display"><span>$msgGroupSecurity</span></button>
 			</td>
 END;
 		}
@@ -623,17 +577,11 @@ END;
 			$response->Respond();
 		}
 
-		// What SQL do we need.
-		$SQL = " ";
-		$SQL .= "DELETE FROM display ";
-		$SQL .= sprintf(" WHERE displayid = %d", $displayid);
+		$displayObject = new Display($db);
 		
-		Debug::LogEntry($db, 'audit', $SQL);
-
-		if (!$db->query($SQL)) 
+		if (!$displayObject->Delete($displayid))
 		{
-			$response->SetError(__("Cannot delete this display. You may unlicense it to hide it from view."));
-			$response->Respond();
+			trigger_error(__("Cannot delete this display. You may unlicense it to hide it from view."), E_USER_ERROR);
 		}
 
 		$response->SetFormSubmitResponse(__("The Display has been Deleted"));

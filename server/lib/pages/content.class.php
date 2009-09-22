@@ -376,6 +376,7 @@ END;
 		$response->dialogSize 	= true;
 		$response->dialogWidth 	= '650px';
 		$response->dialogHeight = '280px';
+		$response->AddButton(__('Close'), 'XiboDialogClose()');
 
 		$response->Respond();
 	}
@@ -541,7 +542,7 @@ HTML;
 		<form class="XiboForm" method="post" action="index.php?p=layout&q=AddFromLibrary">
 			<input type="hidden" name="layoutid" value="$layoutid" />
 			<input type="hidden" name="regionid" value="$regionid" />
-			<div class="dialog_table" style="overflow-y: scroll; height: 300px;">
+			<div class="dialog_table">
 			<table style="width:100%">
 				<thead>
 			    <tr>

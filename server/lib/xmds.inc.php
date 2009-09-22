@@ -24,12 +24,15 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0); //we never want to display errors on the screen
 
 // Required Library Files
+require_once("lib/app/translationengine.class.php");
 require_once("lib/app/app_functions.php");
 require_once("lib/app/debug.class.php");
 require_once("lib/app/kit.class.php");
 require_once("lib/data/data.class.php");
 require_once("config/db_config.php");
-require_once("config/config.class.php");include_once('lib/data/stat.data.class.php');
+require_once("config/config.class.php");
+include_once('lib/data/stat.data.class.php');
+require_once("lib/data/data.class.php");require_once('lib/data/display.data.class.php');
 
 // Sort out magic quotes
 if (get_magic_quotes_gpc()) 
@@ -80,4 +83,7 @@ date_default_timezone_set(Config::GetSetting($db, 'defaultTimezone'));
 if(Config::GetSetting($db, "SERVER_MODE")=="Test") ini_set('display_errors', 1);
 
 require_once(Config::GetSetting($db, 'NUSOAP_PATH'));
+
+// Setup the translations for gettext
+TranslationEngine::InitLocale($db);
 ?>

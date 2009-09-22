@@ -105,9 +105,14 @@ class Kit
 					}
 					else 
 					{
-						if ($_SESSION[$param] == '') return $default;
-						
-						$return = $_SESSION[$param];	
+						if ($_SESSION[$param] == '')
+						{
+							$return = $default;
+						} 
+						else
+						{
+							$return = $_SESSION[$param];
+						}
 					}
 				
 					break;
@@ -120,9 +125,14 @@ class Kit
 					}
 					else 
 					{
-						if ($_REQUEST[$param] == '') return $default;
-						
-						$return = $_REQUEST[$param];	
+						if ($_REQUEST[$param] == '')
+						{
+							$return = $default;
+						} 
+						else
+						{
+							$return = $_REQUEST[$param];
+						}	
 					}
 				
 					break;
@@ -135,9 +145,14 @@ class Kit
 					}
 					else 
 					{
-						if ($_GET[$param] == '') return $default;
-						
-						$return = $_GET[$param];	
+						if ($_GET[$param] == '')
+						{
+							$return = $default;
+						} 
+						else
+						{
+							$return = $_GET[$param];
+						}		
 					}
 				
 					break;
@@ -155,9 +170,14 @@ class Kit
 					}
 					else 
 					{
-						if ($_POST[$param] == '') return $default;
-						
-						$return = $_POST[$param];	
+						if ($_POST[$param] == '')
+						{
+							$return = $default;
+						} 
+						else
+						{
+							$return = $_POST[$param];
+						}		
 					}
 				
 					break;
@@ -181,8 +201,6 @@ class Kit
 	static function ValidateParam($param, $type)
 	{
 		// If we are a NULL always return a null
-		if ($param == "") return "";
-		
 		$return = $param;
 		
 		// Validate
@@ -191,11 +209,23 @@ class Kit
 		{
 			case _INT :
 				// Only use the first integer value
+				if ($return == '')
+				{
+					$return = 0;
+					break;	
+				}
+				
 				@ preg_match('/-?[0-9]+/', $return, $matches);
 				$return = @ (int) $matches[0];
 				break;
 
 			case _DOUBLE :
+				if ($return == '')
+				{
+					$return = 0;
+					break;	
+				}
+				
 				// Only use the first floating point value
 				@ preg_match('/-?[0-9]+(\.[0-9]+)?/', $return, $matches);
 				$return = @ (float) $matches[0];
@@ -206,6 +236,12 @@ class Kit
 				break;
 
 			case _ARRAY :
+				if ($return == '')
+				{
+					$return = array();
+					break;	
+				}
+				
 				if (!is_array($return)) 
 				{
 					$return = array ($return);
@@ -214,6 +250,12 @@ class Kit
 
 			case _STRING :
 			case _PASSWORD :
+				if ($return == '')
+				{
+					$return = '';
+					break;	
+				}
+				
 				$return = htmlentities($return);
 				$return = preg_replace('/&#(\d+);/me', "chr(\\1)", $return); // decimal notation
 				// convert hex
@@ -222,6 +264,12 @@ class Kit
 				break;
 				
 			case _HTMLSTRING :
+				if ($return == '')
+				{
+					$return = '';
+					break;	
+				}
+				
 				$return = preg_replace('/&#(\d+);/me', "chr(\\1)", $return); // decimal notation
 				// convert hex
 				$return = preg_replace('/&#x([a-f0-9]+);/mei', "chr(0x\\1)", $return); // hex notation
@@ -229,15 +277,32 @@ class Kit
 				break;
 
 			case _WORD :
+				if ($return == '')
+				{
+					$return = '';
+					break;	
+				}
+				
 				$return = (string) preg_replace( '/[^A-Z_]\\-/i', '', $return );
 				break;
 				
 			case _USERNAME :
+				if ($return == '')
+				{
+					$return = '';
+					break;	
+				}
+				
 				$return = (string) preg_replace( '/[\x00-\x1F\x7F<>"\'%&]/', '', $return );
 				$return	= strtolower($return);
 				break;
 				
 			case _FILENAME :
+				if ($return == '')
+				{
+					$return = '';
+					break;	
+				}
 				// Remove non alphanumerics
 				$return = strtolower($return); 
 				$code_entities_match 	= array('&quot;' ,'!' ,'@' ,'#' ,'$' ,'%' ,'^' ,'&' ,'*' ,'(' ,')' ,'+' ,'{' ,'}' ,'|' ,':' ,'"' ,'<' ,'>' ,'?' ,'[' ,']' ,'' ,';' ,"'" ,',' ,'_' ,'/' ,'*' ,'+' ,'~' ,'`' ,'=' ,' ' ,'---' ,'--','--'); 
@@ -247,12 +312,17 @@ class Kit
 				break;
 				
 			case _URI :
+				if ($return == '')
+				{
+					$return = '';
+					break;	
+				}
 				$return = urlencode($return);
 				break;
 				
 			case _CHECKBOX:
 				if ($return == 'on') $return = 1;
-				if ($return == 'off') $return = 0;
+				if ($return == 'off' || $return == '') $return = 0;
 
 			default :
 				// No casting necessary

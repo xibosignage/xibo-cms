@@ -28,6 +28,7 @@ class ResponseManager
 	public $success;
 	public $html;
 	public $callBack;
+	public $buttons;
 	
 	public $sortable;
 	public $sortingDiv;
@@ -43,9 +44,10 @@ class ResponseManager
 	public $loadFormUri;
 	public $refresh;
 	public $refreshLocation;
+	public $focusInFirstInput;
 	
 	public $login;
-	
+	public $clockUpdate;
 	
 	public function __construct()
 	{		
@@ -53,7 +55,10 @@ class ResponseManager
 		$this->ajax	= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
 		
 		// Assume success
-		$this->success = true;
+		$this->success 				= true;
+		$this->clockUpdate 			= false;
+		$this->focusInFirstInput	= true;
+		$this->buttons				= '';
 		
 		return true;
 	}
@@ -166,6 +171,19 @@ class ResponseManager
 	}
 	
 	/**
+	 * Adds a button to the form
+	 * @return 
+	 * @param $name Object
+	 * @param $function Object
+	 */
+	public function AddButton($name, $function)
+	{
+		$this->buttons[$name] = $function;
+		
+		return true;
+	}
+	
+	/**
 	 * Outputs the Response to the browser
 	 * @return 
 	 */
@@ -178,9 +196,12 @@ class ResponseManager
 			
 			// General
 			$response['html'] 			= $this->html;
+			$response['buttons']		= $this->buttons;
+			
 			$response['success']		= $this->success;
 			$response['callBack']		= $this->callBack;
 			$response['message']		= $this->message;
+			$response['clockUpdate']	= $this->clockUpdate;
 			
 			// Grids
 			$response['sortable']		= $this->sortable;
@@ -192,6 +213,10 @@ class ResponseManager
 			$response['dialogHeight'] 	= $this->dialogHeight;
 			$response['dialogTitle']	= $this->dialogTitle;
 			
+			// Tweak the width and height
+			$response['dialogWidth'] 	= (int) str_replace('px', '', $response['dialogWidth']);
+			$response['dialogHeight'] 	= (int) str_replace('px', '', $response['dialogHeight']);
+			
 			// Form Submits
 			$response['keepOpen']		= $this->keepOpen;
 			$response['hideMessage']	= $this->hideMessage;
@@ -199,6 +224,7 @@ class ResponseManager
 			$response['loadFormUri']	= $this->loadFormUri;
 			$response['refresh']		= $this->refresh;
 			$response['refreshLocation']= $this->refreshLocation;
+			$response['focusInFirstInput']= $this->focusInFirstInput;
 			
 			// Login
 			$response['login']			= $this->login;

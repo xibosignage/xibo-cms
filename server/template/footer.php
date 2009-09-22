@@ -22,17 +22,16 @@
 ?>
 
 
-<div id="system_working">
-	<img src="img/loading.gif"><span style="padding-left:10px">Please Wait ...</span>
-</div>
+<div id="system_working" style="display:none;"><img src="img/loading.gif"></div>
 
 <div id="system_message" style="text-align: center;">
 	<span>Message</span>
-	<p><input type="submit" value="OK" onclick="$('#system_message').dialog('close')" /></p>
 </div>
 
 <div id="div_dialog"></div>
 <div id="help_dialog"></div>
+
+<div class="footer" style="display:block;">Copyright &copy; 2009 Daniel Garner et al, <a href="http://www.xibo.org.uk" title="Xibo Digital Signage">Xibo Digital Signage</a></div>
 
 </div> <!-- Ends the content div -->
 </div> <!-- Ends contentwrap div -->

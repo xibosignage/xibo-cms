@@ -74,6 +74,8 @@ class Data
 		$this->errorNo 		= $errNo;
 		$this->errorMessage	= $errMessage;
 		
+		Debug::LogEntry($this->db, 'audit', sprintf('Data Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage));
+		
 		return;
 	}
 } 

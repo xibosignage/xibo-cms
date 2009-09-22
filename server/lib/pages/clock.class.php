@@ -68,5 +68,23 @@ class clockDAO
 		$response->SetFormRequestResponse($output, __('Date / Time Information'), '480px', '240px');
 		$response->Respond();
 	}
+	
+	/**
+	 * Gets the Time
+	 * @return 
+	 */
+	function GetClock()
+	{
+		$db				=& $this->db;
+		$response		= new ResponseManager();
+		$datemanager 	= new DateManager($db);
+		
+		$output = $datemanager->GetClock();
+		
+		$response->SetFormRequestResponse($output, __('Date / Time Information'), '480px', '240px');
+		$response->clockUpdate 	= true;
+		$response->success		= false;
+		$response->Respond();
+	}
 }
 ?>
