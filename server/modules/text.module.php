@@ -62,6 +62,10 @@ class text extends Module
 		    		<td><input id="duration" name="duration" type="text"></td>		
 				</tr>
 				<tr>
+					<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
+		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="30"></td>
+				</tr>
+				<tr>
 					<td colspan="4">
 						<textarea id="ta_text" name="ta_text"></textarea>
 					</td>
@@ -95,11 +99,12 @@ FORM;
 	{
 		$db 		=& $this->db;
 		
-		$layoutid	= $this->layoutid;
-		$regionid	= $this->regionid;
-		$mediaid  	= $this->mediaid;
+		$layoutid		= $this->layoutid;
+		$regionid		= $this->regionid;
+		$mediaid  		= $this->mediaid;
 		
-		$direction	= $this->GetOption('direction');
+		$direction		= $this->GetOption('direction');
+		$scrollSpeed 	= $this->GetOption('scrollSpeed');
 		
 		// Get the text out of RAW
 		$rawXml = new DOMDocument();
@@ -126,6 +131,10 @@ FORM;
 		    		<td>$direction_list</td>
 		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
 		    		<td><input id="duration" name="duration" value="$this->duration" type="text"></td>		
+				</tr>
+				<tr>
+					<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
+		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>
 				</tr>
 				<tr>
 					<td colspan="4">
@@ -169,6 +178,7 @@ FORM;
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -193,6 +203,7 @@ FORM;
 		
 		// Any Options
 		$this->SetOption('direction', $direction);
+		$this->SetOption('scrollSpeed', $scrollSpeed);
 		$this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 		
 		// Should have built the media object entirely by this time
@@ -225,6 +236,7 @@ FORM;
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -248,6 +260,7 @@ FORM;
 		
 		// Any Options
 		$this->SetOption('direction', $direction);
+		$this->SetOption('scrollSpeed', $scrollSpeed);
 		$this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 		
 		// Should have built the media object entirely by this time
