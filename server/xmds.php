@@ -902,9 +902,10 @@ function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
 		$todt		= '';
 		$type		= '';
 		
-		$scheduleID = "";
-		$layoutID 	= "";
-		$mediaID 	= "";
+		$scheduleID = 0;
+		$layoutID 	= 0;
+		$mediaID 	= '';
+		$tag		= '';
 		
 		// Each element should have these attributes
 		$fromdt	= $node->getAttribute('fromdt');
@@ -923,7 +924,11 @@ function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
 		$tag		= $node->getAttribute('tag');
 		
 		// Write the stat record with the information we have available to us.
-		$statObject->Add($type, $fromdt, $todt, $scheduleID, $displayInfo['displayid'], $layoutID, $mediaID);
+		if (!$statObject->Add($type, $fromdt, $todt, $scheduleID, $displayInfo['displayid'], $layoutID, $mediaID, $tag))
+		{
+			trigger_error(sprintf('Stat Add failed with error: %s', $statObject->GetErrorMessage()));
+			continue;
+		}
 	}
 
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "OUT", "xmds", "SubmitStats", "", $displayInfo['displayid']);
@@ -1021,6 +1026,6 @@ $service->register("SubmitStats",
 $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';
 $service->service($HTTP_RAW_POST_DATA);
 
-Debug::LogEntry($db, 'audit', $service->debug_str, "xmds", "NuSOAP");
+//Debug::LogEntry($db, 'audit', $service->debug_str, "xmds", "NuSOAP");
 
 ?>
