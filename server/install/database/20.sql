@@ -1,13 +1,5 @@
-INSERT INTO `pages` (
-`pageID` ,
-`name` ,
-`pagegroupID`
-)
-VALUES (
-'help', '2',
-),(
-'clock', 2
-);
+INSERT INTO `pages` (`name`, `pagegroupID`)
+VALUES ('help', '2'), ('clock', 2);
 
 CREATE TABLE IF NOT EXISTS `help` (
   `HelpID` int(11) NOT NULL auto_increment,
@@ -83,7 +75,7 @@ CREATE TABLE `lkgroupdg` (
 `LkGroupDGID` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 `GroupID` INT NOT NULL ,
 `DisplayGroupID` INT NOT NULL
-) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci 
+) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci ;
 
 ALTER TABLE `lkgroupdg` ADD INDEX ( `GroupID` )  ;
  
@@ -115,7 +107,7 @@ ALTER TABLE `schedule`
 UPDATE schedule SET 
 	FromDT = UNIX_TIMESTAMP(start), 
 	ToDT = UNIX_TIMESTAMP(end), 
-	recurrence_range_temp = CASE WHEN recurrence_range IS NULL THEN NULL ELSE UNIX_TIMESTAMP(recurrence_range) END
+	recurrence_range_temp = CASE WHEN recurrence_range IS NULL THEN NULL ELSE UNIX_TIMESTAMP(recurrence_range) END ;
 
 ALTER TABLE `schedule`
   DROP `recurrence_range`,
@@ -156,10 +148,10 @@ ALTER TABLE `schedule_detail`
   DROP `starttime`,
   DROP `endtime`;
   
-UPDATE schedule_detail SET FromDT = 946684800 WHERE FromDT = 0;  
+UPDATE schedule_detail SET FromDT = 946684800 WHERE FromDT = 0;
   
 ALTER TABLE `schedule_detail` DROP INDEX `schedule_detail_ibfk_3`;
-ALTER TABLE `schedule_detail` DROP INDEX `IM_SDT_DisplayID`;  
+ALTER TABLE `schedule_detail` DROP INDEX `IM_SDT_DisplayID`;
 
 /* VERSION UPDATE */
 /* Set the version table, etc */
