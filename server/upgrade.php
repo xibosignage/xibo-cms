@@ -41,16 +41,9 @@ require_once("lib/app/translationengine.class.php");
 // to include those classes.
 
 if (Kit::GetParam("includes", _POST, _BOOL)) {
-	foreach ($_POST as $key => $post) {
-		// $key should be like 1-2, 1-3 etc
-		// Split $key on - character.
-
-		$parts = explode('-', $key);
-		if (count($parts) == 2) {
-			$step = Kit::ValidateParam($parts[0], _INT);
-			if (file_exists('install/database/' . $step . '.php')) {
-				include_once('install/database/' . $step . '.php');
-			}
+	for ($i=$_POST['upgradeFrom'] + 1; $i <= $_POST['upgradeTo']; $i++) {
+		if (file_exists('install/database/' . $i . '.php')) {
+			include_once('install/database/' . $i . '.php');
 		}
 	}
 }
@@ -133,7 +126,6 @@ elseif ($_SESSION['step'] == 1) {
    }
 ## Check server meets specs (as specs might have changed in this release)
   ?>
-  <p>First we need to check if your server meets Xibo's requirements.</p>
   <p><?php echo __("First we need to check if your server meets Xibo's requirements."); ?></p>
   <div class="checks">
   <?php
@@ -222,13 +214,15 @@ elseif ($_SESSION['step'] == 2) {
 	}
 
     echo '<div class="info"><p>';
-	echo __("Perform automatic database upgrade?");
+	echo __("Perform automatic database backup?");
 	echo '</p></div><div class="install-table">';
     echo '<input type="checkbox" name="doBackup" checked />';
 	echo '</div><hr width="25%" />';
 
 	$_SESSION['step'] = 3;
 	echo '<input type="hidden" name="includes" value="true" />';
+	echo '<input type="hidden" name="upgradeFrom" value="' . $_SESSION['upgradeFrom'] . '" />';
+	echo '<input type="hidden" name="upgradeTo" value="' . $_SESSION['upgradeTo'] . '" />';
 	echo '<p><input type="submit" value="' . __("Next") . ' >" /></p>';
 	echo '</form>';
 
