@@ -19,29 +19,13 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 
 
 /* New page for display groups */
-INSERT INTO `pages` (
-`pageID` ,
-`name` ,
-`pagegroupID`
-)
-VALUES (
-NULL , 'displaygroup', '7'
-);
+INSERT INTO `pages` (`name` , `pagegroupID`)
+VALUES ('displaygroup', '7');
 
 /* New menu item for display groups */
-INSERT INTO `menuitem` (
-`MenuItemID` ,
-`MenuID` ,
-`PageID` ,
-`Args` ,
-`Text` ,
-`Class` ,
-`Img` ,
-`Sequence`
-)
-VALUES (
-NULL , '4', '29', NULL , 'Display Groups', NULL , NULL , '2'
-);
+INSERT INTO `menuitem` ( `MenuID` , `PageID` , `Args` , `Text` , `Class` , `Img` , `Sequence`)
+SELECT 4, PageID, NULL, 'Display Groups', NULL, NULL, 2 FROM pages WHERE `name` = 'displaygroup';
+
 
 /* Create display groups. 20.php will handle adding a IsDisplaySpecific group for each display and linking it. */
 CREATE TABLE IF NOT EXISTS `displaygroup` (
@@ -88,12 +72,6 @@ ALTER TABLE `lkgroupdg` ADD FOREIGN KEY ( `GroupID` ) REFERENCES `group` (
 ALTER TABLE `lkgroupdg` ADD FOREIGN KEY ( `DisplayGroupID` ) REFERENCES `displaygroup` (
 `DisplayGroupID`
 );
-
-/* Will need to create a permission record for each display group against each display - so it remains as it is now (all users have permission to assign to all displays). */
-INSERT INTO lkgroupdg (DisplayGroupID, GroupID)
-SELECT displaygroup.DisplayGroupID, `group`.GroupID
-FROM displaygroup
-CROSS JOIN `group`;
 
 /* SCHEDULE */
 /* Change the display list to a display group list */
