@@ -496,6 +496,9 @@ function backup_tables($db,$tables = '*')
 	// Open file for writing at length 0.
 	$handle = fopen(Config::GetSetting($db,'LIBRARY_LOCATION') . 'db-backup-'.time().'-'.(md5(implode(',',$tables))).'.sql','w+');
 	
+	fwrite($handle,"SET FOREIGN_KEY_CHECKS=0;\n");
+	fwrite($handle,"SET UNIQUE_CHECKS=0;\n");
+	
 	//cycle through
 	foreach($tables as $table)
 	{
@@ -522,7 +525,7 @@ function backup_tables($db,$tables = '*')
 					$return = '';
 					$row[$j] = addslashes($row[$j]);
 					$row[$j] = ereg_replace("\n","\\n",$row[$j]);
-					if (isset($row[$j])) { $return.= '"'.$row[$j].'"' ; } else { $return.= '""'; }
+					if (isset($row[$j])) { $return.= '"'.$row[$j].'"' ; } else { $return.= 'NULL'; }
 					if ($j<($num_fields-1)) { $return.= ','; }
 					fwrite($handle, $return);
 				}
@@ -533,6 +536,10 @@ function backup_tables($db,$tables = '*')
 		$return ="\n\n\n";
 		fwrite ($handle, $return);
 	}
+	
+	
+	fwrite($handle,"SET FOREIGN_KEY_CHECKS=1;\n");
+	fwrite($handle,"SET UNIQUE_CHECKS=1;\n");
 	
 	fclose($handle);
 }
