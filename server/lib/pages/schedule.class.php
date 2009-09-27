@@ -846,14 +846,8 @@ HTML;
 		}
 		
 		if ($db->num_rows($results) == 0)
-		{
-			$output = __('No Display Groups');
-			$response->SetGridResponse($output);
-			$response->Respond();
+			trigger_error(__('No Display Groups'), E_USER_ERROR);
 			
-			return;
-		}
-		
 		if ($outputForm) $output .= '<form id="DisplayList" class="DisplayListForm">';
 		$output 	.= '<ul class="DisplayList">';
 		$nested 	= false;

@@ -1,13 +1,5 @@
-INSERT INTO `pages` (
-`pageID` ,
-`name` ,
-`pagegroupID`
-)
-VALUES (
-'help', '2',
-),(
-'clock', 2
-);
+INSERT INTO `pages` (`name`, `pagegroupID`)
+VALUES ('help', '2'), ('clock', 2);
 
 CREATE TABLE IF NOT EXISTS `help` (
   `HelpID` int(11) NOT NULL auto_increment,
@@ -27,29 +19,13 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 
 
 /* New page for display groups */
-INSERT INTO `pages` (
-`pageID` ,
-`name` ,
-`pagegroupID`
-)
-VALUES (
-NULL , 'displaygroup', '7'
-);
+INSERT INTO `pages` (`name` , `pagegroupID`)
+VALUES ('displaygroup', '7');
 
 /* New menu item for display groups */
-INSERT INTO `menuitem` (
-`MenuItemID` ,
-`MenuID` ,
-`PageID` ,
-`Args` ,
-`Text` ,
-`Class` ,
-`Img` ,
-`Sequence`
-)
-VALUES (
-NULL , '4', '29', NULL , 'Display Groups', NULL , NULL , '2'
-);
+INSERT INTO `menuitem` ( `MenuID` , `PageID` , `Args` , `Text` , `Class` , `Img` , `Sequence`)
+SELECT 4, PageID, NULL, 'Display Groups', NULL, NULL, 2 FROM pages WHERE `name` = 'displaygroup';
+
 
 /* Create display groups. 20.php will handle adding a IsDisplaySpecific group for each display and linking it. */
 CREATE TABLE IF NOT EXISTS `displaygroup` (
@@ -83,7 +59,7 @@ CREATE TABLE `lkgroupdg` (
 `LkGroupDGID` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 `GroupID` INT NOT NULL ,
 `DisplayGroupID` INT NOT NULL
-) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci 
+) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci ;
 
 ALTER TABLE `lkgroupdg` ADD INDEX ( `GroupID` )  ;
  
@@ -97,12 +73,6 @@ ALTER TABLE `lkgroupdg` ADD FOREIGN KEY ( `DisplayGroupID` ) REFERENCES `display
 `DisplayGroupID`
 );
 
-/* Will need to create a permission record for each display group against each display - so it remains as it is now (all users have permission to assign to all displays). */
-INSERT INTO lkgroupdg (DisplayGroupID, GroupID)
-SELECT displaygroup.DisplayGroupID, `group`.GroupID
-FROM displaygroup
-CROSS JOIN `group`;
-
 /* SCHEDULE */
 /* Change the display list to a display group list */
 ALTER TABLE `schedule` CHANGE `displayID_list` `DisplayGroupIDs` VARCHAR( 254 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'A list of the display group ids for this event' ;
@@ -115,7 +85,7 @@ ALTER TABLE `schedule`
 UPDATE schedule SET 
 	FromDT = UNIX_TIMESTAMP(start), 
 	ToDT = UNIX_TIMESTAMP(end), 
-	recurrence_range_temp = CASE WHEN recurrence_range IS NULL THEN NULL ELSE UNIX_TIMESTAMP(recurrence_range) END
+	recurrence_range_temp = CASE WHEN recurrence_range IS NULL THEN NULL ELSE UNIX_TIMESTAMP(recurrence_range) END ;
 
 ALTER TABLE `schedule`
   DROP `recurrence_range`,
@@ -156,10 +126,10 @@ ALTER TABLE `schedule_detail`
   DROP `starttime`,
   DROP `endtime`;
   
-UPDATE schedule_detail SET FromDT = 946684800 WHERE FromDT = 0;  
+UPDATE schedule_detail SET FromDT = 946684800 WHERE FromDT = 0;
   
 ALTER TABLE `schedule_detail` DROP INDEX `schedule_detail_ibfk_3`;
-ALTER TABLE `schedule_detail` DROP INDEX `IM_SDT_DisplayID`;  
+ALTER TABLE `schedule_detail` DROP INDEX `IM_SDT_DisplayID`;
 
 /* VERSION UPDATE */
 /* Set the version table, etc */

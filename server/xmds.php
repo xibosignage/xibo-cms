@@ -141,8 +141,11 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 	// Is it there?
 	if ($db->num_rows($result) == 0) 
 	{
+		// Get the default layout id
+		$defaultLayoutId = 4;
+		
 		// Add this display record
-		if (!$displayid = $displayObject->Add($displayName, 0, 1, $hardwareKey, 0, 0)) return new soap_fault("SOAP-ENV:Server", "", "Error adding display");
+		if (!$displayid = $displayObject->Add($displayName, 0, $defaultLayoutId, $hardwareKey, 0, 0)) return new soap_fault("SOAP-ENV:Server", "", "Error adding display");
 		
 		$active = "Display added and is awaiting licensing approval from an Administrator";
 	}

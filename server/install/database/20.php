@@ -5,11 +5,12 @@ class Step20 extends UpgradeStep
 
 	public function Boot()
 	{
+		$db = &$this->db;
+		
 		// Will need to include the Data classes.
 		require_once("lib/data/data.class.php");
 		require_once('lib/data/displaygroup.data.class.php');
-		
-		
+
 		// Will need to add some upgrade PHP to create a DisplayGroup (+ link record) for every Currently existing display.
 		$dg = new DisplayGroup($db);
 
