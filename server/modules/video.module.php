@@ -745,16 +745,6 @@ END;
 				}
 			}
 
-			// Update the media record to include this information
-			$SQL = "UPDATE media SET storedAs = '$storedAs' WHERE mediaid = $new_mediaid";
-			if (!$db->query($SQL))
-			{
-				trigger_error($db->error());
-				$this->response->SetError('Error updating media with Library location.');
-				$this->response->keepOpen = true;
-				return $this->response;
-			}
-
 			// Calculate the MD5 and the file size
 			$md5 		= md5_file($databaseDir.$storedAs);
 			$fileSize 	= filesize($databaseDir.$storedAs);
@@ -765,7 +755,6 @@ END;
 			if (!$db->query($SQL))
 			{
 				trigger_error($db->error());
-
 				$this->response->SetError('Database error editing this media record.');
 				$this->response->keepOpen = true;
 				return $this->response;
