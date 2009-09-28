@@ -770,6 +770,21 @@ END;
 				$this->response->keepOpen = true;
 				return $this->response;
 			}
+
+			// Update the existing record with the new record's id
+			$SQL =  "UPDATE media SET isEdited = 1, editedMediaID = $new_mediaid ";
+			$SQL .= " WHERE IFNULL(editedMediaID,0) <> $new_mediaid AND mediaID = $mediaid ";
+
+			Debug::LogEntry($db, 'audit', $SQL);
+
+			if (!$db->query($SQL))
+			{
+				trigger_error($db->error());
+
+				$this->response->SetError('Database error editing this media record.');
+				$this->response->keepOpen = true;
+				return $this->response;
+			}
 		}
 		else
 		{
