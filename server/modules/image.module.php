@@ -761,8 +761,13 @@ END;
 				}
 			}
 
-			//Update the media record to include this information
-			$SQL = "UPDATE media SET storedAs = '$storedAs' WHERE mediaid = $new_mediaid";
+			// Calculate the MD5 and the file size
+			$md5 		= md5_file($databaseDir.$storedAs);
+			$fileSize 	= filesize($databaseDir.$storedAs);
+
+			// Update the media record to include this information
+			$SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $storedAs, $md5, $fileSize, $new_mediaid);
+
 			if (!$db->query($SQL))
 			{
 				trigger_error($db->error());
