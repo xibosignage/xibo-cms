@@ -8,7 +8,7 @@
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,12 +20,12 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class displayDAO 
+class displayDAO
 {
 	private $db;
 	private $user;
 	private $has_permissions = true;
-	
+
 	//display table fields
 	private $displayid;
 	private $display;
@@ -36,28 +36,25 @@ class displayDAO
 	private $auditing;
 	private $ajax;
 
-	function __construct(database $db, user $user) 
+	function __construct(database $db, user $user)
 	{
 		$this->db 	=& $db;
 		$this->user =& $user;
-		
+
 		include_once('lib/data/display.data.class.php');
-		
+
 		$this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
 		$this->ajax		= Kit::GetParam('ajax', _REQUEST, _WORD, 'false');
 		$displayid 		= Kit::GetParam('displayid', _REQUEST, _INT, 0);
 
-		if ($this->sub_page == 'view') 
-		{
-			// validate displays so we get a realistic view of the table
-			$this->validateDisplays();
-		}
-				
-		if(isset($_GET['modify']) || $displayid != 0) 
+		// validate displays so we get a realistic view of the table
+		$this->validateDisplays();
+
+		if(isset($_GET['modify']) || $displayid != 0)
 		{
 			$this->sub_page = 'edit';
-			
-			if (!$this->has_permissions && $this->ajax == 'true') 
+
+			if (!$this->has_permissions && $this->ajax == 'true')
 			{
 				trigger_error(__("You do not have permissions to edit this display"), E_USER_ERROR);
 			}
@@ -75,16 +72,16 @@ class displayDAO
 SQL;
 
 			$SQL = sprintf($SQL, $displayid);
-			
+
 			Debug::LogEntry($db, 'audit', $SQL);
 
-			if(!$results = $db->query($SQL)) 
+			if(!$results = $db->query($SQL))
 			{
 				trigger_error($db->error());
 				trigger_error(__("Can not get the display information for display") . '[$this->displayid]', E_USER_ERROR);
 			}
 
-			while($row = $db->get_row($results)) 
+			while($row = $db->get_row($results))
 			{
 				$this->displayid 		= Kit::ValidateParam($row[0], _INT);
 				$this->display 			= Kit::ValidateParam($row[1], _STRING);
@@ -99,22 +96,22 @@ SQL;
 		return true;
 	}
 
-	function on_page_load() 
+	function on_page_load()
 	{
 		return "";
 	}
 
-	function echo_page_heading() 
+	function echo_page_heading()
 	{
 		echo __("Display Administration");
 		return true;
 	}
-	
+
 	/**
 	 * Modifies the selected display record
-	 * @return 
+	 * @return
 	 */
-	function modify() 
+	function modify()
 	{
 		$db 			=& $this->db;
 		$response		= new ResponseManager();
@@ -124,46 +121,46 @@ SQL;
 		$layoutid 		= Kit::GetParam('defaultlayoutid', _POST, _INT);
 		$inc_schedule 	= Kit::GetParam('inc_schedule', _POST, _INT);
 		$auditing 		= Kit::GetParam('auditing', _POST, _INT);
-		
+
 		// Do we take, or revoke a license
-		if (isset($_POST['takeLicense'])) 
+		if (isset($_POST['takeLicense']))
 		{
 			$licensed = Kit::GetParam('takeLicense', _POST, _INT);
 		}
-		if (isset($_POST['revokeLicense'])) 
+		if (isset($_POST['revokeLicense']))
 		{
 			$licensed = Kit::GetParam('revokeLicense', _POST, _INT);
 		}
-		
+
 		//Validation
-		if ($display == "") 
+		if ($display == "")
 		{
 			trigger_error(__("Can not have a display without a name"), E_USER_ERROR);
 		}
-		
+
 		$displayObject 	= new Display($db);
-		
+
 		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule))
 		{
 			trigger_error(__('Cannot Edit this Display'), E_USER_ERROR);
 		}
-		
+
 		$response->SetFormSubmitResponse(__('Display Saved.'));
 		$response->Respond();
 	}
 
 	/**
 	 * Modify Display form
-	 * @return 
+	 * @return
 	 */
-	function displayForm() 
+	function displayForm()
 	{
 		$db 			=& $this->db;
 		$user			=& $this->user;
 		$response		= new ResponseManager();
-		
+
 		$helpManager	= new HelpManager($db, $user);
-		
+
 		//get some vars
 		$displayid 			= $this->displayid;
 		$display 			= $this->display;
@@ -172,20 +169,20 @@ SQL;
 		$licensed		 	= $this->licensed;
 		$inc_schedule		= $this->inc_schedule;
 		$auditing			= $this->auditing;
-		
+
 		// Help UI
 		$nameHelp		= $helpManager->HelpIcon(__("The Name of the Display - (1 - 50 characters)."), true);
 		$defaultHelp	= $helpManager->HelpIcon(__("The Default Layout to Display where there is no other content."), true);
 		$interleveHelp	= $helpManager->HelpIcon(__("Whether to always put the default into the cycle."), true);
 		$licenseHelp	= $helpManager->HelpIcon(__("Control the licensing on this display."), true);
 		$auditHelp		= $helpManager->HelpIcon(__("Collect auditing from this client. Should only be used if there is a problem with the display."), true);
-		
+
 		$layout_list = dropdownlist("SELECT layoutid, layout FROM layout WHERE retired = 0 ORDER by layout", "defaultlayoutid", $layoutid);
 		$inc_schedule_list = listcontent("1|Yes,0|No","inc_schedule",$inc_schedule);
 		$auditing_list = listcontent("1|Yes,0|No","auditing",$auditing);
 
-		$license_list = "";		
-		
+		$license_list = "";
+
 		//Are we licensed
 		if ($licensed == 0)
 		{
@@ -199,7 +196,7 @@ SQL;
 			$license_list = '<td><label for="revokeLicense" title="' . __('Revoke License') . '. ' . __('Make the license available for another display.') . '">' . __('Revoke License') . '</label></td>';
 			$license_list .= "<td>" . listcontent("0|Yes,1|No", "revokeLicense", "1") . "</td>";
 		}
-		
+
 		// Messages
 		$msgDisplay	= __('Display');
 		$msgDefault	= __('Default Layout');
@@ -208,7 +205,7 @@ SQL;
 		$msgLicense	= __('License');
 		$msgSave	= __('Save');
 		$msgCancel	= __('Cancel');
-		
+
 		$form = <<<END
 		<form class="XiboForm" method="post" action="index.php?p=display&q=modify&id=$displayid">
 			<input type="hidden" name="displayid" value="$displayid">
@@ -236,17 +233,17 @@ SQL;
 					<td></td>
 					<td>
 						<input type='submit' value="$msgSave" / >
-						<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="$msgCancel" />	
+						<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="$msgCancel" />
 					</td>
 				</tr>
 			</table>
-		</form>		
+		</form>
 END;
-		
+
 		$response->SetFormRequestResponse($form, __('Edit a Display'), '650px', '250px');
 		$response->Respond();
 	}
-	
+
 	public function DisplayFilter()
 	{
 		$filterForm = <<<END
@@ -257,39 +254,39 @@ END;
 			</form>
 		</div>
 END;
-		
+
 		$id = uniqid();
-		
+
 		$xiboGrid = <<<HTML
 		<div class="XiboGrid" id="$id">
 			<div class="XiboFilter">
 				$filterForm
 			</div>
 			<div class="XiboData">
-			
+
 			</div>
 		</div>
 HTML;
 		echo $xiboGrid;
 	}
-	
+
 	/**
 	 * Grid of Displays
-	 * @return 
+	 * @return
 	 */
-	function DisplayGrid() 
+	function DisplayGrid()
 	{
 		$db 		=& $this->db;
 		$user		=& $this->user;
-		$response	= new ResponseManager();	
-					
+		$response	= new ResponseManager();
+
 		//display the display table
 		$SQL = <<<SQL
-		SELECT  display.displayid, 
-				display.display, 
-				layout.layout, 
-				CASE WHEN display.loggedin = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS loggedin, 
-				display.lastaccessed, 
+		SELECT  display.displayid,
+				display.display,
+				layout.layout,
+				CASE WHEN display.loggedin = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS loggedin,
+				display.lastaccessed,
 				CASE WHEN display.inc_schedule = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS loggedin,
 				CASE WHEN display.licensed = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS licensed,
 				displaygroup.DisplayGroupID
@@ -301,12 +298,12 @@ HTML;
 		ORDER BY display.displayid
 SQL;
 
-		if(!($results = $db->query($SQL))) 
+		if(!($results = $db->query($SQL)))
 		{
 			trigger_error($db->error());
 			trigger_error(__("Can not list displays"), E_USER_ERROR);
 		}
-		
+
 		// Messages
 		$msgDisplay	= __('Display');
 		$msgDefault	= __('Default Layout');
@@ -340,7 +337,7 @@ SQL;
 			<tbody>
 END;
 
-		while($aRow = $db->get_row($results)) 
+		while($aRow = $db->get_row($results))
 		{
 			$displayid 		= $aRow[0];
 			$display 		= $aRow[1];
@@ -350,9 +347,9 @@ END;
 			$inc_schedule 	= $aRow[5];
 			$licensed 		= $aRow[6];
 			$displayGroupID = $aRow[7];
-			
+
 			$output .= <<<END
-			
+
 			<tr>
 			<td>$displayid</td>
 			<td>$licensed</td>
@@ -369,92 +366,92 @@ END;
 END;
 		}
 		$output .= "</tbody></table></div>";
-		
+
 		$response->SetGridResponse($output);
 		$response->Respond();
 	}
 
 	/**
 	 * Include display page template page based on sub page selected
-	 * @return 
+	 * @return
 	 */
-	function displayPage() 
+	function displayPage()
 	{
 		$db =& $this->db;
-		
-		if (!$this->has_permissions) 
+
+		if (!$this->has_permissions)
 		{
 			trigger_error(__("You do not have permissions to access this page"), E_USER_ERROR);
 			return false;
 		}
-		
-		switch ($this->sub_page) 
+
+		switch ($this->sub_page)
 		{
-			
+
 			case 'view':
 				require("template/pages/display_view.php");
 				break;
-				
+
 			default:
 				break;
 		}
-		
+
 		return false;
 	}
-	
+
 	/**
 	 * Output some display tabs based on displays that are licensed
-	 * @return 
+	 * @return
 	 * @param $defaulted_displayid Object
 	 * @param $link Object
 	 * @param $currently_playing Object[optional]
 	 */
-	function display_tabs($defaulted_displayid, $link, $currently_playing = true) 
+	function display_tabs($defaulted_displayid, $link, $currently_playing = true)
 	{
 		$db =& $this->db;
 		$output = "";
 
-		
+
 		//get the number of displays allowed in the license
 		$SQL  = "SELECT display.displayid, ";
 		$SQL .= "       display.display ";
 		$SQL .= "  FROM display ";
 		$SQL .= " WHERE display.licensed = 1 ";
-		
+
 		if(!$results = $db->query($SQL))
 		{
 			trigger_error($db->error());
 			trigger_error(__("Can not list displays"), E_USER_ERROR);
-		} 
+		}
 
 		$output .= "<div class='buttons'>";
-		
-		while ($row = $db->get_row($results)) 
+
+		while ($row = $db->get_row($results))
 		{
 			$displayid = $row[0];
 			$display = substr($row[1], 0, 8);
-			
-			if ($displayid == $defaulted_displayid) 
+
+			if ($displayid == $defaulted_displayid)
 			{
 				$output .= "<a class='defaulted_tab' href='$link&displayid=$displayid'><div class='button_text'>$display</div></a>";
 			}
-			else 
+			else
 			{
 				$output .= "<a class='normal_tab' href='$link&displayid=$displayid'><div class='button_text'>$display</div></a>";
 			}
 		}
 
 		$output .= "</div>";
-		
+
 		return $output;
 	}
-	
+
 	/**
 	 * Display what is currently playing on this display
-	 * @return 
+	 * @return
 	 * @param $displayid Object
 	 */
-	function currently_playing($displayid) 
+	function currently_playing($displayid)
 	{
 		$db =& $this->db;
 		$currentdate = date("Y-m-d H:i:s");
@@ -479,7 +476,7 @@ END;
 
 		if(!$results = $db->query($SQL))  trigger_error($db->error(), E_USER_ERROR);
 
-		if($db->num_rows($results)==0) 
+		if($db->num_rows($results)==0)
 		{
 			//check to see if there is a default layout assigned instead
 			$SQL  = "";
@@ -492,65 +489,73 @@ END;
 
 			if(!$results = $db->query($SQL))  trigger_error($db->error(), E_USER_ERROR);
 
-			if($db->num_rows($results)==0) 
+			if($db->num_rows($results)==0)
 			{
 				$return .= __('Nothing') . "</div>";
 				return $return;
 			}
 		}
-		
+
 		$count = 1;
-		
-		while ($row = $db->get_row($results)) 
+
+		while ($row = $db->get_row($results))
 		{
 			$name = $row[1];
-			
+
 			$return .= "$count. $name.   ";
 			$count++;
 		}
 		$return .= "</div>";
-		
+
 		return $return;
 	}
-	
+
 	/**
 	 * Assess each Display to correctly set the logged in flag based on last accessed time
-	 * @return 
+	 * @return
 	 */
-    function validateDisplays() 
+    function validateDisplays()
 	{
-        $db =& $this->db;
-		
+    	$db =& $this->db;
+
 		// timeout after 10 minutes
-		$timeout = date("Y-m-d H:i:s", time() - (10 * 60) );
+		$timeout = time() + (60*10);
 
         $SQL  = "";
-        $SQL .= "SELECT displayid FROM display WHERE loggedin = 1 ";
-        $SQL .= "AND lastaccessed < '$timeout' ";
+        $SQL .= "SELECT displayid FROM display ";
+        $SQL .= sprintf("WHERE lastaccessed < %d ", $timeout);
 
-        $result = $db->query($SQL) or trigger_error($db->error(), E_USER_ERROR);
+        if (!$result =$db->query($SQL))
+        {
+        	trigger_error($db->error());
+        	trigger_error(__('Unable to access displays'), E_USER_ERROR);
+        }
 
-        while($row = $db->get_row($result)) 
-		{
+        while($row = $db->get_row($result))
+        {
             $displayid = $row[0];
 
             $SQL = "UPDATE display SET loggedin = 0 WHERE displayid = " . $displayid;
-            $db->query($SQL) or trigger_error($db->error(), E_USER_ERROR);
+
+        	if ((!$db->query($SQL)))
+        	{
+        		trigger_error($db->error());
+        	}
         }
     }
-	
+
 	function DeleteForm()
 	{
 		$db 		=& $this->db;
 		$response 	= new ResponseManager();
 		$displayid 	= Kit::GetParam('displayid', _REQUEST, _INT);
-		
+
 		// Output the delete form
 		$msgInfo	= __('You will only be able to delete this display if there is no associated information contained in Xibo.');
 		$msgWarn	= __('Are you sure you want to delete this display?');
 		$msgYes		= __('Yes');
 		$msgNo		= __('No');
-		
+
 		$form = <<<END
 		<form class="XiboForm" method="post" action="index.php?p=display&q=Delete">
 			<input type="hidden" name="displayid" value="$displayid">
@@ -560,25 +565,25 @@ END;
 			<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
 END;
-		
+
 		$response->SetFormRequestResponse($form, __('Delete this Display?'), '350px', '180px');
 		$response->Respond();
 	}
-	
+
 	function Delete()
 	{
 		$db 		=& $this->db;
 		$response	= new ResponseManager();
 		$displayid 	= Kit::GetParam('displayid', _POST, _INT, 0);
-		
-		if ($displayid == 0) 
+
+		if ($displayid == 0)
 		{
 			$response->SetError(__("No Display selected for Deletion."));
 			$response->Respond();
 		}
 
 		$displayObject = new Display($db);
-		
+
 		if (!$displayObject->Delete($displayid))
 		{
 			trigger_error(__("Cannot delete this display. You may unlicense it to hide it from view."), E_USER_ERROR);
