@@ -899,6 +899,9 @@ function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
 	
 	foreach ($document->documentElement->childNodes as $node)
 	{	
+		// Make sure we dont consider any text nodes
+		if ($node->nodeType == XML_TEXT_NODE) continue;
+	
 		//Zero out the common vars
 		$fromdt		= '';
 		$todt		= '';
