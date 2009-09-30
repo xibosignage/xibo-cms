@@ -220,8 +220,52 @@ END;
 			$output .= $imgBad.$message.'<br />';
 			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP GD extension to function.') . '</p></div>';
 		}
+
+		// Check for PHP Session
+		$message = __('Session');
+
+		if ($this->CheckSession()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP session support to function.') . '</p></div>';
+		}
 		
+		// Check for PHP PCRE
+		$message = __('PCRE');
+
+		if ($this->CheckPCRE()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('Xibo needs PHP PCRE support to function.') . '</p></div>';
+		}
 		
+		// Check for PHP Gettext
+		$message = __('Gettext');
+
+		if ($this->CheckGettext()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('Xibo needs PHP Gettext support to function.') . '</p></div>';
+		}
+	
 		// Check for Calendar
 		$message = __('Calendar Extension');
 
@@ -420,6 +464,34 @@ END;
 	{
 		return class_exists("DOMDocument");
 	}
+
+	/**
+	 * Check PHP has session functionality installed
+	 * @return 
+	 */
+	function CheckSession()
+	{
+		return extension_loaded("session");
+	}
+	
+	/**
+	 * Check PHP has PCRE functionality installed
+	 * @return 
+	 */
+	function CheckPCRE()
+	{
+		return extension_loaded("pcre");
+	}
+	
+	/**
+	 * Check PHP has Gettext functionality installed
+	 * @return 
+	 */
+	function CheckGettext()
+	{
+		return extension_loaded("gettext");
+	}
+	
 }
 
 ?>
