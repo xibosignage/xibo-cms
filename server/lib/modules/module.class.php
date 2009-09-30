@@ -8,7 +8,7 @@
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,10 +27,10 @@ class Module implements ModuleInterface
 	protected $user;
 	protected $region;
 	protected $response;
-	
+
 	protected $layoutid;
 	protected $regionid;
-	
+
 	protected $mediaid;
 	protected $name;
 	protected $type;
@@ -38,15 +38,16 @@ class Module implements ModuleInterface
 	protected $regionSpecific;
 	protected $duration;
 	protected $lkid;
+	protected $validExtensions;
 
 	protected $xml;
-	
+
 	protected $existingMedia;
 	protected $deleteFromRegion;
-	
+
 	/**
 	 * Constructor - sets up this media object with all the available information
-	 * @return 
+	 * @return
 	 * @param $db database
 	 * @param $user user
 	 * @param $mediaid String[optional]
@@ -56,74 +57,75 @@ class Module implements ModuleInterface
 	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
 	{
 		include_once("lib/pages/region.class.php");
-		
+
 		$this->db 		=& $db;
 		$this->user 	=& $user;
-		
+
 		$this->mediaid 	= $mediaid;
 		$this->name 	= '';
 		$this->layoutid = $layoutid;
 		$this->regionid = $regionid;
-		
+
 		$this->region 	= new region($db, $user);
 		$this->response = new ResponseManager();
-		
+
 		$this->existingMedia 	= false;
 		$this->deleteFromRegion = false;
 		$this->lkid				= '';
 		$this->duration 		= '';
-		
+
 		// Determine which type this module is
 		$this->SetModuleInformation();
-		
+
 		Debug::LogEntry($db, 'audit', 'New module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
-		
+
 		// Either the information from the region - or some blanks
 		$this->SetMediaInformation($this->layoutid, $this->regionid, $mediaid);
-		
+
 		return true;
 	}
-	
+
 	/**
 	 * Sets the module information
-	 * @return 
+	 * @return
 	 */
 	final private function SetModuleInformation()
 	{
 		$db 		=& $this->db;
 		$type		= $this->type;
-		
+
 		if ($type == '')
 		{
 			$this->response->SetError('Unable to create Module [No type given] - please refer to the Module Documentation.');
 			$this->response->Respond();
 		}
-		
+
 		$SQL = sprintf("SELECT * FROM module WHERE Module = '%s'", $db->escape_string($type));
-		
-		if (!$result = $db->query($SQL)) 
+
+		if (!$result = $db->query($SQL))
 		{
 			$this->response->SetError('Unable to create Module [Cannot find type in the database] - please refer to the Module Documentation.');
 			$this->response->Respond();
 		}
-		
+
 		if ($db->num_rows($result) != 1)
 		{
 			$this->response->SetError('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.');
 			$this->response->Respond();
 		}
-		
+
 		$row = $db->get_assoc_row($result);
-		
+
 		$this->schemaVersion 	= Kit::ValidateParam($row['SchemaVersion'], _INT);
 		$this->regionSpecific 	= Kit::ValidateParam($row['RegionSpecific'], _INT);
-		
+		$this->validExtensions 	= explode(',', Kit::ValidateParam($row['ValidExtensions'], _STRING));
+
 		return true;
 	}
-	
+
 	/**
 	 * Gets the information about this Media on this region on this layout
-	 * @return 
+	 * @return
 	 * @param $layoutid Object
 	 * @param $regionid Object
 	 * @param $mediaid Object
@@ -133,28 +135,28 @@ class Module implements ModuleInterface
 		$db 		=& $this->db;
 		$region 	=& $this->region;
 		$xmlDoc 	= new DOMDocument();
-		
+
 		if ($this->mediaid != '' && $this->regionid != '' && $this->layoutid != '')
 		{
 			$this->existingMedia = true;
-			
+
 			// Set the layout Xml
 			$layoutXml = $region->GetLayoutXml($layoutid);
-			
+
 			Debug::LogEntry($db, 'audit', 'Layout XML retrieved: ' . $layoutXml);
-			
+
 			$layoutDoc = new DOMDocument();
 			$layoutDoc->loadXML($layoutXml);
-			
+
 			$layoutXpath = new DOMXPath($layoutDoc);
-			
+
 			// Get the media node and extract the info
 			$mediaNodeXpath = $layoutXpath->query("//region[@id='$regionid']/media[@id='$mediaid']");
-			
+
 			if ($mediaNodeXpath->length > 0)
 			{
 				Debug::LogEntry($db, 'audit', 'Media Node Found.');
-				
+
 				// Create a Media node in the DOMDocument for us to replace
 				$xmlDoc->loadXML('<root/>');
 			}
@@ -163,13 +165,13 @@ class Module implements ModuleInterface
 				$this->response->SetError('Cannot find this media item. Please refresh the region options.');
 				$this->response->Respond();
 			}
-			
+
 			$mediaNode = $mediaNodeXpath->item(0);
 			$mediaNode->setAttribute('schemaVersion', $this->schemaVersion);
-			
+
 			$this->duration = $mediaNode->getAttribute('duration');
 			$this->lkid	 	= $mediaNode->getAttribute('lkid');
-			
+
 			$mediaNode = $xmlDoc->importNode($mediaNode, true);
 			$xmlDoc->documentElement->appendChild($mediaNode);
 		}
@@ -181,17 +183,17 @@ class Module implements ModuleInterface
 				// But this is some existing media
 				// Therefore make sure we get the bare minimum!
 				$this->existingMedia = true;
-				
+
 				// Load what we know about this media into the object
 				$SQL = "SELECT duration, name FROM media WHERE mediaID = '$mediaid'";
-				
+
 				Debug::LogEntry($db, 'audit', $SQL, 'Module', 'SetMediaInformation');
-				
+
 				if (!$result = $db->query($SQL))
 				{
 					trigger_error($db->error()); //log the error
 				}
-				
+
 				if ($db->num_rows($result) != 0)
 				{
 					$row 				= $db->get_row($result);
@@ -199,7 +201,7 @@ class Module implements ModuleInterface
 					$this->name			= $row[1];
 				}
 			}
-			
+
 			$xml = <<<XML
 			<root>
 				<media id="" type="$this->type" duration="" lkid="" schemaVersion="$this->schemaVersion">
@@ -210,32 +212,32 @@ class Module implements ModuleInterface
 XML;
 			$xmlDoc->loadXML($xml);
 		}
-		
+
 		$this->xml = $xmlDoc;
-		
+
 		Debug::LogEntry($db, 'audit', 'XML is: ' . $this->xml->saveXML());
-		
+
 		return true;
 	}
-	
+
 	/**
 	 * Sets the Layout and Region Information
-	 * @return 
+	 * @return
 	 * @param $layoutid Object
 	 * @param $regionid Object
 	 * @param $mediaid Object
 	 */
 	public function SetRegionInformation($layoutid, $regionid)
-	{	
+	{
 		$this->layoutid = $layoutid;
 		$this->regionid = $regionid;
-		
+
 		return true;
 	}
-	
+
 	/**
 	 * This Media item represented as XML
-	 * @return 
+	 * @return
 	 */
 	final public function AsXml()
 	{
@@ -248,17 +250,17 @@ XML;
 		// LkID is done by the region code (where applicable - otherwise it will be left blank)
 		$mediaNodes = $this->xml->getElementsByTagName('media');
 		$mediaNode	= $mediaNodes->item(0);
-		
+
 		$mediaNode->setAttribute('id', $this->mediaid);
 		$mediaNode->setAttribute('duration', $this->duration);
 		$mediaNode->setAttribute('type', $this->type);
-		
+
 		return $this->xml->saveXML($mediaNode);
 	}
-	
+
 	/**
-	 * Adds the name/value element to the XML Options sequence 
-	 * @return 
+	 * Adds the name/value element to the XML Options sequence
+	 * @return
 	 * @param $name String
 	 * @param $value String
 	 */
@@ -266,25 +268,25 @@ XML;
 	{
 		$db =& $this->db;
 		if ($name == '') return;
-		
-		Debug::LogEntry($db, 'audit', sprintf('IN with Name=%s and value=%s', $name, $value), 'module', 'Set Option');		
-		
+
+		Debug::LogEntry($db, 'audit', sprintf('IN with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
+
 		// Get the options node from this document
 		$optionNodes = $this->xml->getElementsByTagName('options');
 		// There is only 1
 		$optionNode = $optionNodes->item(0);
-		
+
 		// Create a new option node
 		$newNode = $this->xml->createElement($name, $value);
-		
+
 		Debug::LogEntry($db, 'audit', sprintf('Created a new Option Node with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
-		
+
 		// Check to see if we already have this option or not
 		$xpath = new DOMXPath($this->xml);
-		
+
 		// Xpath for it
 		$userOptions = $xpath->query('//options/' . $name);
-		
+
 		if ($userOptions->length == 0)
 		{
 			// Append the new node to the list
@@ -293,28 +295,28 @@ XML;
 		else
 		{
 			// Replace the old node we found with XPath with the new node we just created
-			$optionNode->replaceChild($newNode, $userOptions->item(0));	
+			$optionNode->replaceChild($newNode, $userOptions->item(0));
 		}
 	}
-	
+
 	/**
 	 * Gets the value for the option in Parameter 1
-	 * @return 
+	 * @return
 	 * @param $name String The Option Name
 	 * @param $default Object[optional] The Default Value
 	 */
 	final protected function GetOption($name, $default = false)
 	{
 		$db =& $this->db;
-		
+
 		if ($name == '') return false;
-		
+
 		// Check to see if we already have this option or not
 		$xpath = new DOMXPath($this->xml);
-		
+
 		// Xpath for it
 		$userOptions = $xpath->query('//options/' . $name);
-		
+
 		if ($userOptions->length == 0)
 		{
 			// We do not have an option - return the default
@@ -328,37 +330,37 @@ XML;
 			return $userOptions->item(0)->nodeValue;
 		}
 	}
-	
+
 	/**
 	 * Sets the RAW XML string that is given as the content for Raw
-	 * @return 
+	 * @return
 	 * @param $xml String
 	 * @param $replace Boolean[optional]
 	 */
 	final protected function SetRaw($xml, $replace = false)
 	{
 		if ($xml == '') return;
-		
+
 		// Load the XML we are given into its own document
 		$rawNode = new DOMDocument();
 		$rawNode->loadXML('<raw>' . $xml . '</raw>');
-		
+
 		// Import the Raw node into this document (with all sub nodes)
 		$importedNode = $this->xml->importNode($rawNode->documentElement, true);
-		
+
 		// Get the Raw Xml node from our document
 		$rawNodes = $this->xml->getElementsByTagName('raw');
 
 		// There is only 1
 		$rawNode = $rawNodes->item(0);
-		
+
 		// Append the imported node (at the end of whats already there)
 		$rawNode->parentNode->replaceChild($importedNode, $rawNode);
 	}
-	
+
 	/**
 	 * Gets the XML string from RAW
-	 * @return 
+	 * @return
 	 */
 	final protected function GetRaw()
 	{
@@ -367,21 +369,21 @@ XML;
 
 		// There is only 1
 		$rawNode = $rawNodes->item(0);
-		
+
 		// Return it as a XML string
 		return $this->xml->saveXML($rawNode);
 	}
-	
+
 	/**
 	 * Updates the region information with this media record
-	 * @return 
+	 * @return
 	 */
 	final public function UpdateRegion()
 	{
 		// By this point we expect to have a MediaID, duration
 		$layoutid = $this->layoutid;
 		$regionid = $this->regionid;
-		
+
 		if ($this->deleteFromRegion)
 		{
 			// We call region delete
@@ -412,18 +414,27 @@ XML;
 				}
 			}
 		}
-		
+
 		return true;
 	}
-	
+
+	/**
+	* Determines whether or not the provided file extension is valid for this module
+	*
+	*/
+	final protected function IsValidExtension($extension)
+	{
+		return in_array($extension, $this->validExtensions);
+	}
+
 	/**
 	 * Return the Delete Form as HTML
-	 * @return 
+	 * @return
 	 */
 	public function DeleteForm()
 	{
 		$db =& $this->db;
-		
+
 		//Parameters
 		$layoutid 	= $this->layoutid;
 		$regionid 	= $this->regionid;
@@ -440,99 +451,99 @@ XML;
 			<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="No" />
 		</form>
 END;
-		
+
 		$this->response->html 		 	= $form;
 		$this->response->dialogTitle 	= 'Delete Item';
 		$this->response->dialogSize 	= true;
 		$this->response->dialogWidth 	= '450px';
 		$this->response->dialogHeight 	= '150px';
 
-		return $this->response;	
+		return $this->response;
 	}
-	
+
 	/**
 	 * Delete Media from the Database
-	 * @return 
+	 * @return
 	 */
-	public function DeleteMedia() 
+	public function DeleteMedia()
 	{
 		$db 		=& $this->db;
-		
+
 		$layoutid 	= $this->layoutid;
 		$regionid 	= $this->regionid;
-		
+
 		$url 		= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-		
+
 		$this->deleteFromRegion = true;
 		$this->UpdateRegion();
-		
+
 		// We want to load a new form
 		$this->response->loadForm	= true;
 		$this->response->loadFormUri= $url;
-		
-		return $this->response;	
+
+		return $this->response;
 	}
-	
+
 	/**
 	 * Default AddForm
-	 * @return 
+	 * @return
 	 */
 	public function AddForm()
 	{
 		$form = <<<END
 		<p>Not yet implemented by this module.</p>
 END;
-		
+
 		$this->response->html 		 	= $form;
 		$this->response->dialogTitle 	= 'Add Item';
 		$this->response->dialogSize 	= true;
 		$this->response->dialogWidth 	= '450px';
 		$this->response->dialogHeight 	= '150px';
 
-		return $this->response;	
+		return $this->response;
 	}
-	
+
 	/**
 	 * Default Edit Form
-	 * @return 
+	 * @return
 	 */
 	public function EditForm()
 	{
 		$form = <<<END
 		<p>Not yet implemented by this module.</p>
 END;
-		
+
 		$this->response->html 		 	= $form;
 		$this->response->dialogTitle 	= 'Add Item';
 		$this->response->dialogSize 	= true;
 		$this->response->dialogWidth 	= '450px';
 		$this->response->dialogHeight 	= '150px';
 
-		return $this->response;	
+		return $this->response;
 	}
-	
+
 	/**
 	 * Default Add Media
-	 * @return 
+	 * @return
 	 */
 	public function AddMedia()
 	{
 		// We want to load a new form
 		$this->response->message	= 'Add Media has not been implemented for this module.';
-		
-		return $this->response;	
+
+		return $this->response;
 	}
-	
+
 	/**
 	 * Default EditMedia
-	 * @return 
+	 * @return
 	 */
 	public function EditMedia()
 	{
 		// We want to load a new form
 		$this->response->message	= 'Edit Media has not been implemented for this module.';
-		
-		return $this->response;	
+
+		return $this->response;
 	}
 
 	/**
@@ -542,9 +553,9 @@ END;
 	public function GetName()
 	{
 		$db =& $this->db;
-		
+
 		Debug::LogEntry($db, 'audit', sprintf('Module name returned for MediaID: %s is %s', $this->mediaid, $this->name), 'Module', 'GetName');
-		
+
 		return $this->name;
 	}
 }
