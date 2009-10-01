@@ -39,6 +39,7 @@ class Module implements ModuleInterface
 	protected $duration;
 	protected $lkid;
 	protected $validExtensions;
+	protected $validExtensionsText;
 
 	protected $xml;
 
@@ -116,9 +117,11 @@ class Module implements ModuleInterface
 
 		$row = $db->get_assoc_row($result);
 
-		$this->schemaVersion 	= Kit::ValidateParam($row['SchemaVersion'], _INT);
-		$this->regionSpecific 	= Kit::ValidateParam($row['RegionSpecific'], _INT);
-		$this->validExtensions 	= explode(',', Kit::ValidateParam($row['ValidExtensions'], _STRING));
+		$this->schemaVersion 		= Kit::ValidateParam($row['SchemaVersion'], _INT);
+		$this->regionSpecific 		= Kit::ValidateParam($row['RegionSpecific'], _INT);
+		$this->validExtensionsText 	= Kit::ValidateParam($row['ValidExtensions'], _STRING);
+		$this->validExtensions 		= explode(',', $this->validExtensionsText);
+		$this->validExtensionsText	= str_replace(',', ', ', $this->validExtensionsText);
 
 		return true;
 	}
