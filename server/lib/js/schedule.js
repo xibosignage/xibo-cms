@@ -106,8 +106,6 @@ function setupScheduleForm() {
 		dateFormat: "dd/mm/yy",
 		beforeShow: customRange,
 		onSelect: function(dateText, datePicker) {
-			console.log('Selected Date: ' + dateText);
-			
 			var date 			= $.datepicker.parseDate('dd/mm/yy', dateText);
 			var formattedDate 	= $.datepicker.formatDate('mm/dd/yy', date);
 			
