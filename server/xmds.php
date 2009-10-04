@@ -8,7 +8,7 @@
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,30 +29,31 @@
 function Auth($hardwareKey)
 {
 	global $db;
-	
+
 	//check in the database for this hardwareKey
 	$SQL = "SELECT licensed, inc_schedule, isAuditing, displayID FROM display WHERE license = '$hardwareKey'";
-	if (!$result = $db->query($SQL)) 
+	if (!$result = $db->query($SQL))
 	{
 		trigger_error("License key query failed:" .$db->error());
 		return false;
 	}
-	
+
 	//Is it there?
-	if ($db->num_rows($result) == 0) 
+	if ($db->num_rows($result) == 0)
 	{
 		return false;
 	}
-	else 
+	else
 	{
 		//we have seen this display before, so check the licensed value
 		$row = $db->get_row($result);
-		if ($row[0] == 0) 
+		if ($row[0] == 0)
 		{
 			return false;
 		}
-		else 
+		else
 		{
+
 			$displayObject = new Display($db);
 			
 			$displayObject->Touch($hardwareKey);
@@ -61,34 +62,34 @@ function Auth($hardwareKey)
 			return array("licensed" => true, "inc_schedule" => $row[1], "isAuditing" => $row[2], "displayid" => $row[3]);
 		}
 	}
-	
+
 	return false;
 }
 
 /**
  * Checks that the calling service is talking the correct version
- * @return 
+ * @return
  * @param $version Object
  */
 function CheckVersion($version)
 {
 	global $db;
-	
+
 	// Look up the Service XMDS version from the Version table
 	$serverVersion = Config::Version($db, 'XmdsVersion');
-	
+
 	if ($version != $serverVersion)
 	{
 		Debug::LogEntry($db, 'audit', sprintf('A Client with an incorrect version connected. Client Version: [%s] Server Version [%s]', $version, $serverVersion));
 		return false;
 	}
-	
+
 	return true;
 }
 
 /**
  * Registers the Display with the server - if there is an available slot
- * @return 
+ * @return
  * @param $serverKey Object
  * @param $hardwareKey Object
  * @param $displayName Object
@@ -96,50 +97,51 @@ function CheckVersion($version)
 function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 {
 	global $db;
-	
+
 	// Sanitize
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$displayName 	= Kit::ValidateParam($displayName, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
-	
+
 	// Make sure we are talking the same language
 	if (!CheckVersion($version))
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
 	}
-	
+
 	define('SERVER_KEY', Config::GetSetting($db, 'SERVER_KEY'));
-	
+
 	Debug::LogEntry($db, "audit", "[IN]", "xmds", "RegisterDisplay");
 	Debug::LogEntry($db, "audit", "serverKey [$serverKey], hardwareKey [$hardwareKey], displayName [$displayName]", "xmds", "RegisterDisplay");
-	
+
 	//Check the serverKey matches the one we have stored in this servers lic.txt file
 	if ($serverKey != SERVER_KEY)
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "The Server key you entered does not match with the server key at this address", $serverKey);
 	}
-	
+
 	// Check the Length of the hardwareKey
 	if (strlen($hardwareKey) > 40)
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "The Hardware Key you sent was too long. Only 40 characters are allowed (SHA1).", $hardwareKey);
 	}
-	
+
 	// Check in the database for this hardwareKey
+
 	$SQL = "SELECT licensed, display FROM display WHERE license = '$hardwareKey'";
-	
-	if (!$result = $db->query($SQL)) 
+
+	if (!$result = $db->query($SQL))
 	{
 		trigger_error("License key query failed:" .$db->error());
 		return new soap_fault("SOAP-ENV:Server", "", "License Key Query Failed, see server errorlog", $db->error());
 	}
-	
+
 	// Use a display object to Add or Edit the display
 	$displayObject = new Display($db);		
 	
 	// Is it there?
-	if ($db->num_rows($result) == 0) 
+	if ($db->num_rows($result) == 0)
 	{
 		// Get the default layout id
 		$defaultLayoutId = 4;
@@ -149,17 +151,17 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 		
 		$active = "Display added and is awaiting licensing approval from an Administrator";
 	}
-	else 
+	else
 	{
 		//we have seen this display before, so check the licensed value
 		$row = $db->get_row($result);
-		
-		if ($row[0] == 0) 
+
+		if ($row[0] == 0)
 		{
 			//Its Not licensed
 			$active = "Display is awaiting licensing approval from an Administrator.";
 		}
-		else 
+		else
 		{
 			//It is licensed
 			//Now check the names
@@ -174,15 +176,15 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 				{
 					return new soap_fault("SOAP-ENV:Server", "", "Error editing the display name");
 				}
-				
+
 				$active = "Changed display name from '{$row[1]}' to '$displayName' Display is active and ready to start.";
 			}
 		}
 	}
-	
-	Debug::LogEntry($db, "audit", "$active", "xmds", "RegisterDisplay");	
-	Debug::LogEntry($db, "audit", "[OUT]", "xmds", "RegisterDisplay");	
-	
+
+	Debug::LogEntry($db, "audit", "$active", "xmds", "RegisterDisplay");
+	Debug::LogEntry($db, "audit", "[OUT]", "xmds", "RegisterDisplay");
+
 	return $active;
 }
 
@@ -194,12 +196,12 @@ function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
 function RequiredFiles($serverKey, $hardwareKey, $version)
 {
 	global $db;
-	
+
 	// Sanitize
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
-	
+
 	// Make sure we are talking the same language
 	if (!CheckVersion($version))
 	{
@@ -207,20 +209,20 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	}
 
 	$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
-	
+
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
 	{
 		trigger_error("This display is not licensed [$hardwareKey]");
 		return new soap_fault("SOAP-ENV:Client", "", "This display client is not licensed");
 	}
-	
-	if ($displayInfo['isAuditing'] == 1) 
+
+	if ($displayInfo['isAuditing'] == 1)
 	{
-		Debug::LogEntry($db, "audit", "[IN]", "xmds", "RequiredFiles");	
-		Debug::LogEntry($db, "audit", "$hardwareKey", "xmds", "RequiredFiles");	
+		Debug::LogEntry($db, "audit", "[IN]", "xmds", "RequiredFiles");
+		Debug::LogEntry($db, "audit", "$hardwareKey", "xmds", "RequiredFiles");
 	}
-	
+
 	$requiredFilesXml = new DOMDocument("1.0");
 	$fileElements 	= $requiredFilesXml->createElement("files");
 	
@@ -239,9 +241,9 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	$SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
 	$SQL .= " INNER JOIN display ON lkdisplaydg.DisplayID = display.displayID ";
 	$SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
-	
+
 	$SQLBase = $SQL;
-	
+
 	//Do we include the default display
 	if ($displayInfo['inc_schedule'] == 1)
 	{
@@ -252,15 +254,15 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	{
 		$SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $plus4hours, $currentdate);
 	}
-	
-	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "RequiredFiles");	
+
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "RequiredFiles");
 
 	if (!$results = $db->query($SQL))
 	{
 		trigger_error($db->error());
 		return new soap_fault("SOAP-ENV:Server", "", "Unable to get a list of files", $db->error());
 	}
-	
+
 	// Was there anything?
 	if ($db->num_rows($results) == 0)
 	{
@@ -275,94 +277,113 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 			return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
 		}
 	}
-	
+
 	while ($row = $db->get_row($results))
 	{
 		$layoutid = $row[0];
 		$layoutXml = $row[1];
 		$background = $row[2];
-		
+
 		// Add all the associated media first
-		$SQL = "SELECT storedAs, media.mediaID 
-				FROM media 
-				INNER JOIN lklayoutmedia ON lklayoutmedia.mediaID = media.mediaID 
-				WHERE storedAs IS NOT NULL 
+		$SQL = "SELECT storedAs, media.mediaID, media.`MD5`, media.FileSize
+				FROM media
+				INNER JOIN lklayoutmedia ON lklayoutmedia.mediaID = media.mediaID
+				WHERE storedAs IS NOT NULL
 					AND lklayoutmedia.layoutID = $layoutid
-					AND media.mediaID NOT IN (SELECT MediaID 
-											  FROM blacklist 
-											  WHERE DisplayID = " . $displayInfo['displayid'] . " 
+					AND media.mediaID NOT IN (SELECT MediaID
+											  FROM blacklist
+											  WHERE DisplayID = " . $displayInfo['displayid'] . "
 											  AND isIgnored = 0 )";
-											  
+
 		if (!$mediaResults = $db->query($SQL))
 		{
 			trigger_error($db->error());
 			return new soap_fault("SOAP-ENV:Server", "", "Unable to get a list of media for the layout [$layoutid]");
 		}
-		
+
 		while ($row = $db->get_row($mediaResults))
 		{
+			$storedAs	= Kit::ValidateParam($row[0], _STRING);
+			$mediaId	= Kit::ValidateParam($row[1], _INT);
+			$md5		= Kit::ValidateParam($row[2], _STRING);
+			$fileSize	= Kit::ValidateParam($row[3], _INT);
+
+			// If they are empty calculate them and save them back to the media.
+			if ($md5 == '' || $fileSize == 0)
+			{
+
+				$md5 		= md5_file($libraryLocation.$row[0]);
+				$fileSize	= filesize($libraryLocation.$row[0]);
+
+				// Update the media record with this information
+				$SQL = sprintf("UPDATE media SET `MD5` = '%s', FileSize = %d WHERE MediaID = %d", $md5, $fileSize, $mediaId);
+
+				if (!$db->query($SQL))
+					trigger_error($db->error());
+			}
+
 			//Add the file node
 			$file = $requiredFilesXml->createElement("file");
-			
+
 			$file->setAttribute("type", "media");
-			$file->setAttribute("path", $row[0]);
-			$file->setAttribute("id",	$row[1]);
-			$file->setAttribute("size", filesize($libraryLocation.$row[0]));
-			$file->setAttribute("md5", md5_file($libraryLocation.$row[0]));
-			
+			$file->setAttribute("path", $storedAs);
+			$file->setAttribute("id",	$mediaId);
+			$file->setAttribute("size", $fileSize);
+			$file->setAttribute("md5", $md5);
+
 			$fileElements->appendChild($file);
 		}
-		
+
 		//Also append another file node for the background image (if there is one)
 		if ($background != "")
 		{
 			//firstly add this as a node
 			$file = $requiredFilesXml->createElement("file");
-			
+
 			$file->setAttribute("type", "media");
 			$file->setAttribute("path", $background);
 			$file->setAttribute("md5", md5_file($libraryLocation.$background));
 			$file->setAttribute("size", filesize($libraryLocation.$background));
-			
+
 			$fileElements->appendChild($file);
 		}
-		
+
 		// Add this layout as node
 		$file = $requiredFilesXml->createElement("file");
-		
+
 		$file->setAttribute("type", "layout");
 		$file->setAttribute("path", $layoutid);
 		$file->setAttribute("md5", md5($layoutXml . "\n"));
-		
+
 		$fileElements->appendChild($file);
 	}
-	
+
 	//
 	// Add a blacklist node
 	//
 	$blackList = $requiredFilesXml->createElement("file");
 	$blackList->setAttribute("type", "blacklist");
-	
+
 	$fileElements->appendChild($blackList);
-	
+
 	// Populate
-	$SQL = "SELECT MediaID 
-			FROM blacklist 
-			WHERE DisplayID = " . $displayInfo['displayid'] . " 
+	$SQL = "SELECT MediaID
+			FROM blacklist
+			WHERE DisplayID = " . $displayInfo['displayid'] . "
 			AND isIgnored = 0";
-			
+
 	if (!$results = $db->query($SQL))
 	{
 		trigger_error($db->error());
 		return new soap_fault("SOAP-ENV:Server", "", "Unable to get a list of blacklisted files", $db->error());
 	}
-	
+
 	// Add a black list element for each file
 	while ($row = $db->get_row($results))
 	{
 		$file = $requiredFilesXml->createElement("file");
 		$file->setAttribute("id", $row[0]);
-		
+
 		$blackList->appendChild($file);
 	}
 
@@ -370,10 +391,9 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	if (Config::GetSetting($db,'PHONE_HOME') == 'On') {
 		// Find out when we last PHONED_HOME :D
 		// If it's been > 28 days since last PHONE_HOME then
-
 		if (Config::GetSetting($db,'PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
 
-			if ($displayInfo['isAuditing'] == 1) 
+			if ($displayInfo['isAuditing'] == 1)
 			{
 				Debug::LogEntry($db, "audit", "PHONE_HOME [IN]", "xmds", "RequiredFiles");	
 			}
@@ -391,18 +411,17 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 			{
 				$PHONE_HOME_CLIENTS = Kit::ValidateParam($row[0],_INT);
 			}
-			
+
 			// Retrieve version number
 			$PHONE_HOME_VERSION = Config::Version($db, 'app_ver');
 
 			$PHONE_HOME_URL = Config::GetSetting($db,'PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting($db,'PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 
-			if ($displayInfo['isAuditing'] == 1) 
+			if ($displayInfo['isAuditing'] == 1)
 			{
-				Debug::LogEntry($db, "audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");	
+				Debug::LogEntry($db, "audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");
 			}
 
-			
 			// Set PHONE_HOME_TIME to NOW.
 			$SQL = "UPDATE `setting`
 					SET `value` = '" . time() . "'
@@ -412,24 +431,24 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 			{
 				trigger_error($db->error());
 			}
-			
+
 			@file_get_contents($PHONE_HOME_URL);
 
-			if ($displayInfo['isAuditing'] == 1) 
+			if ($displayInfo['isAuditing'] == 1)
 			{
-				Debug::LogEntry($db, "audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");	
+				Debug::LogEntry($db, "audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
 			}
 		//endif
 		}
 	}
 	// END OF PHONE_HOME CODE
 
-	if ($displayInfo['isAuditing'] == 1) 
+	if ($displayInfo['isAuditing'] == 1)
 	{
-		Debug::LogEntry($db, "audit", $requiredFilesXml->saveXML(), "xmds", "RequiredFiles");	
-		Debug::LogEntry($db, "audit", "[OUT]", "xmds", "RequiredFiles");	
+		Debug::LogEntry($db, "audit", $requiredFilesXml->saveXML(), "xmds", "RequiredFiles");
+		Debug::LogEntry($db, "audit", "[OUT]", "xmds", "RequiredFiles");
 	}
-	
+
 	// Return the results of requiredFiles()
 	$requiredFilesXml->formatOutput = true;
 	
@@ -438,7 +457,7 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 
 /**
  * Gets the specified file
- * @return 
+ * @return
  * @param $hardwareKey Object
  * @param $filePath Object
  * @param $fileType Object
@@ -446,7 +465,7 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $chunkSize, $version)
 {
 	global $db;
-	
+
 	// Sanitize
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
@@ -454,83 +473,83 @@ function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $
 	$chunkOffset 	= Kit::ValidateParam($chunkOffset, _INT);
 	$chunkSize 		= Kit::ValidateParam($chunkSize, _INT);
 	$version 		= Kit::ValidateParam($version, _STRING);
-	
+
 	$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
-	
+
 	// Make sure we are talking the same language
 	if (!CheckVersion($version))
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
 	}
-	
+
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "This display client is not licensed");
 	}
-	
-	if ($displayInfo['isAuditing'] == 1) 
+
+	if ($displayInfo['isAuditing'] == 1)
 	{
-		Debug::LogEntry($db, "audit", "[IN]", "xmds", "GetFile");	
-		Debug::LogEntry($db, "audit", "Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]", "xmds", "GetFile");	
+		Debug::LogEntry($db, "audit", "[IN]", "xmds", "GetFile");
+		Debug::LogEntry($db, "audit", "Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]", "xmds", "GetFile");
 	}
 
 	if ($fileType == "layout")
 	{
 		$filePath = Kit::ValidateParam($filePath, _INT);
-		
+
 		$SQL = sprintf("SELECT xml FROM layout WHERE layoutid = %d", $filePath);
 		if (!$results = $db->query($SQL))
 		{
 			trigger_error($db->error());
 			return new soap_fault("SOAP-ENV:Server", "", "Unable to get a list of files", $db->error());
 		}
-		
+
 		$row = $db->get_row($results);
-		
+
 		$file = $row[0];
 	}
 	elseif ($fileType == "media")
 	{
 		$filePath = Kit::ValidateParam($filePath, _STRING);
-		
+
 		//Return the Chunk size specified
 		$f = fopen($libraryLocation.$filePath,"r");
-		
+
 		fseek($f, $chunkOffset);
-		
+
 		$file = fread($f, $chunkSize);
 	}
-	else 
+	else
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "Unknown FileType Requested.");
 	}
-	
-	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "[OUT]", "xmds", "GetFile");	
-	
+
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "[OUT]", "xmds", "GetFile");
+
 	return base64_encode($file);
 }
 
 /**
  * Returns the schedule for the hardware key specified
- * @return 
+ * @return
  * @param $hardwareKey Object
  */
 function Schedule($serverKey, $hardwareKey, $version)
 {
 	global $db;
-	
+
 	// Sanitize
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
-	
+
 	// Make sure we are talking the same language
 	if (!CheckVersion($version))
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
 	}
-	
+
 	//auth this request...
 	if (!$displayInfo = Auth($hardwareKey))
 	{
@@ -538,17 +557,17 @@ function Schedule($serverKey, $hardwareKey, $version)
 	}
 
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "[IN] $hardwareKey", "xmds", "Schedule");
-	
+
 	$scheduleXml = new DOMDocument("1.0");
 	$layoutElements = $scheduleXml->createElement("schedule");
-	
+
 	$scheduleXml->appendChild($layoutElements);
 	
 	$currentdate 	= time();
 	$infinityFromDT = mktime(0,0,0,1,1,2000);
 	$infinityToDT	= mktime(0,0,0,12,31,2050);
 	$plus4hours 	= $currentdate + 86400;
-	
+
 	//Add file nodes to the $fileElements
 	//Firstly get all the scheduled layouts
 	$SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID ";
@@ -557,15 +576,14 @@ function Schedule($serverKey, $hardwareKey, $version)
 	$SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
 	$SQL .= " INNER JOIN display ON lkdisplaydg.DisplayID = display.displayID ";
 	$SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
-	
+	$SQL .= "   AND layout.retired = 0  ";
+
 	// Store the Base SQL for this display
 	$SQLBase = $SQL;
-	
+
 	// Run the query
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
-	
 
-	
 	// Do we include the default display
 	if ($displayInfo['inc_schedule'] == 1)
 	{
@@ -576,20 +594,20 @@ function Schedule($serverKey, $hardwareKey, $version)
 	{
 		$SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $currentdate, $currentdate);
 	}
-	
+
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
-	
-	
+
+
 	// Before we run the main query we should check to see if there are any priority layouts to deal with
 	$SQLp = " AND schedule_detail.is_priority = 1 ";
-	
+
 	// Run the query
 	if (!$results = $db->query($SQL . $SQLp))
 	{
 		trigger_error($db->error());
 		return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
 	}
-	
+
 	// If there were no results then continue to get the full schedule
 	if ($db->num_rows($results) == 0)
 	{
@@ -599,7 +617,7 @@ function Schedule($serverKey, $hardwareKey, $version)
 			trigger_error($db->error());
 			return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
 		}
-		
+
 		// Was there anything?
 		if ($db->num_rows($results) == 0)
 		{
@@ -607,7 +625,7 @@ function Schedule($serverKey, $hardwareKey, $version)
 			$SQL  = $SQLBase;
 			$SQL .= " AND ((schedule_detail.FromDT < $currentdate AND schedule_detail.ToDT > $currentdate )";
 			$SQL .= " OR (schedule_detail.FromDT = $infinityFromDT AND schedule_detail.ToDT = $infinityToDT ))";
-			
+
 			if (!$results = $db->query($SQL))
 			{
 				trigger_error($db->error());
@@ -615,7 +633,7 @@ function Schedule($serverKey, $hardwareKey, $version)
 			}
 		}
 	}
-	
+
 	// We must have some results in here by this point
 	while ($row = $db->get_row($results))
 	{
@@ -623,44 +641,43 @@ function Schedule($serverKey, $hardwareKey, $version)
 		$fromdt 	= date('Y-m-d h:i:s', $row[1]);
 		$todt		= date('Y-m-d h:i:s', $row[2]);
 		$scheduleid = $row[3];
-			
+
 		//firstly add this as a node
 		$layout = $scheduleXml->createElement("layout");
-		
+
 		$layout->setAttribute("file", $layoutid);
 		$layout->setAttribute("fromdt", $fromdt);
 		$layout->setAttribute("todt", $todt);
 		$layout->setAttribute("scheduleid", $scheduleid);
-		
+
 		$layoutElements->appendChild($layout);
 	}
-	
+
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", $scheduleXml->saveXML(), "xmds", "Schedule");
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "[OUT]", "xmds", "Schedule");
 	
 	$scheduleXml->formatOutput = true;
-	
 	return $scheduleXml->saveXML();
 }
 
 /**
  * Recieves the XmlLog from the display
- * @return 
+ * @return
  * @param $hardwareKey String
  * @param $xml String
  */
 function RecieveXmlLog($serverKey, $hardwareKey, $xml, $version)
 {
 	global $db;
-	
+
 	return new soap_fault("SOAP-ENV:Client", "", "This is a depricated service call. You should instead call either SubmitLog or SubmitStats", $serverKey);
 }
 
 define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 /**
- * 
- * @return 
+ *
+ * @return
  * @param $hardwareKey Object
  * @param $mediaId Object
  * @param $type Object
@@ -668,7 +685,7 @@ define('BLACKLIST_SINGLE', "Single");
 function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
 {
 	global $db;
-	
+
 	// Sanitize
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
@@ -676,7 +693,7 @@ function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
 	$type		 	= Kit::ValidateParam($type, _STRING);
 	$reason		 	= Kit::ValidateParam($reason, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
-	
+
 	// Make sure we are talking the same language
 	if (!CheckVersion($version))
 	{
@@ -688,19 +705,19 @@ function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "This display client is not licensed", $hardwareKey);
 	}
-		
+
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "[IN]", "xmds", "BlackList", "", $displayInfo['displayid']);
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "$xml", "xmds", "BlackList", "", $displayInfo['displayid']);
-		
+
 	// Check to see if this media/display is already blacklisted (and not ignored)
 	$SQL = "SELECT BlackListID FROM blacklist WHERE MediaID = $mediaId AND isIgnored = 0 AND DisplayID = " . $displayInfo['displayid'];
-	
+
 	if (!$results = $db->query($SQL))
 	{
 		trigger_error($db->error());
 		return new soap_fault("SOAP-ENV:Server", "", "Unable to query for BlackList records.", $db->error());
 	}
-	
+
 	if ($db->num_rows($results) == 0)
 	{
 		// Insert the black list record
@@ -711,20 +728,20 @@ function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
 			// Only the current display
 			$SQL .= " WHERE displayID = " . $displayInfo['displayid'];
 		}
-		
+
 		if (!$displays = $db->query($SQL))
 		{
 			trigger_error($db->error());
 			return new soap_fault("SOAP-ENV:Server", "", "Unable to query for BlackList Displays.", $db->error());
 		}
-		
+
 		while ($row = $db->get_row($displays))
 		{
 			$displayId = $row[0];
-			
+
 			$SQL = "INSERT INTO blacklist (MediaID, DisplayID, ReportingDisplayID, Reason)
 						VALUES ($mediaId, $displayId, " . $displayInfo['displayid'] . ", '$reason') ";
-						
+
 			if (!$db->query($SQL))
 			{
 				trigger_error($db->error());
@@ -736,15 +753,15 @@ function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
 	{
 		if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "Media Already BlackListed [$mediaId]", "xmds", "BlackList", "", $displayInfo['displayid']);
 	}
-	
+
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "[OUT]", "xmds", "BlackList", "", $displayInfo['displayid']);
-	
+
 	return true;
 }
 
 /**
  * Submit client logging
- * @return 
+ * @return
  * @param $version Object
  * @param $serverKey Object
  * @param $hardwareKey Object
@@ -753,13 +770,13 @@ function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
 function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
 {
 	global $db;
-	
+
 	// Sanitize
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
 	$logXml 		= Kit::ValidateParam($logXml, _HTMLSTRING);
-	
+
 	// Make sure we are talking the same language
 	if (!CheckVersion($version))
 	{
@@ -771,20 +788,20 @@ function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "This display client is not licensed", $hardwareKey);
 	}
-		
+
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "IN", "xmds", "SubmitLog", "", $displayInfo['displayid']);
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", 'XML [' . $logXml . ']', "xmds", "SubmitLog", "", $displayInfo['displayid']);
-	
+
 	// Load the XML into a DOMDocument
 	$document = new DOMDocument("1.0");
-	
+
 	if (!$document->loadXML($logXml))
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "XML Cannot be loaded into DOM Document.", $hardwareKey);
 	}
-	
+
 	foreach ($document->documentElement->childNodes as $node)
-	{	
+	{
 		//Zero out the common vars
 		$date 		= "";
 		$message 	= "";
@@ -793,23 +810,23 @@ function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
 		$mediaID 	= "";
 		$cat		= '';
 		$method		= '';
-		
+
 		// This will be a bunch of trace nodes
 		$message = $node->textContent;
-		
-		// Each element should have a category and a date 
+
+		// Each element should have a category and a date
 		$date	= $node->getAttribute('date');
 		$cat	= $node->getAttribute('category');
-		
-		if ($date == '' || $cat == '') 
+
+		if ($date == '' || $cat == '')
 		{
 			trigger_error('Log submitted without a date or category attribute');
 			continue;
 		}
-			
+
 		// Get the date and the message (all log types have these)
 		foreach ($node->childNodes as $nodeElements)
-		{			
+		{
 			if ($nodeElements->nodeName == "scheduleID")
 			{
 				$scheduleID = $nodeElements->textContent;
@@ -831,26 +848,26 @@ function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
 				$method	= $nodeElements->textContent;
 			}
 		}
-		
+
 		// We should have enough information to log this now.
 		if ($cat == 'error' || $cat == 'Error')
 		{
-			Debug::LogEntry($db, $cat, $message, 'Client', $method, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);						
+			Debug::LogEntry($db, $cat, $message, 'Client', $method, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
 		}
 		else
 		{
-			Debug::LogEntry($db, 'audit', $message, 'Client', $method, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);			
+			Debug::LogEntry($db, 'audit', $message, 'Client', $method, $date, $displayInfo['displayid'], $scheduleID, $layoutID, $mediaID);
 		}
 	}
 
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "OUT", "xmds", "SubmitLog", "", $displayInfo['displayid']);
-	
+
 	return true;
 }
 
 /**
  * Submit display statistics to the server
- * @return 
+ * @return
  * @param $version Object
  * @param $serverKey Object
  * @param $hardwareKey Object
@@ -859,13 +876,13 @@ function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
 function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
 {
 	global $db;
-	
+
 	// Sanitize
 	$serverKey 		= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$version 		= Kit::ValidateParam($version, _STRING);
 	$statXml 		= Kit::ValidateParam($statXml, _HTMLSTRING);
-	
+
 	// Make sure we are talking the same language
 	if (!CheckVersion($version))
 	{
@@ -877,55 +894,55 @@ function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "This display client is not licensed", $hardwareKey);
 	}
-		
+
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "IN", "xmds", "SubmitStats", "", $displayInfo['displayid']);
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "StatXml: [" . $statXml . "]", "xmds", "SubmitStats", "", $displayInfo['displayid']);
-	
+
 	if ($statXml == "")
 	{
 		return new soap_fault("SOAP-ENV:Client", "", "Stat XML is empty.", $hardwareKey);
 	}
-	
+
 	// Log
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "About to create Stat Object.", "xmds", "SubmitStats", "", $displayInfo['displayid']);
-	
+
 	$statObject = new Stat($db);
-	
+
 	// Log
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "About to Create DOMDocument.", "xmds", "SubmitStats", "", $displayInfo['displayid']);
-	
+
 	// Load the XML into a DOMDocument
 	$document = new DOMDocument("1.0");
 	$document->loadXML($statXml);
-	
+
 	foreach ($document->documentElement->childNodes as $node)
-	{	
+	{
 		//Zero out the common vars
 		$fromdt		= '';
 		$todt		= '';
 		$type		= '';
-		
+
 		$scheduleID = 0;
 		$layoutID 	= 0;
 		$mediaID 	= '';
 		$tag		= '';
-		
+
 		// Each element should have these attributes
 		$fromdt	= $node->getAttribute('fromdt');
 		$todt	= $node->getAttribute('todt');
 		$type	= $node->getAttribute('type');
-		
-		if ($fromdt == '' || $todt == '' || $type == '') 
+
+		if ($fromdt == '' || $todt == '' || $type == '')
 		{
 			trigger_error('Stat submitted without the fromdt, todt or type attributes.');
 			continue;
 		}
-			
+
 		$scheduleID	= $node->getAttribute('scheduleid');
 		$layoutID	= $node->getAttribute('layoutid');
 		$mediaID	= $node->getAttribute('mediaid');
 		$tag		= $node->getAttribute('tag');
-		
+
 		// Write the stat record with the information we have available to us.
 		if (!$statObject->Add($type, $fromdt, $todt, $scheduleID, $displayInfo['displayid'], $layoutID, $mediaID, $tag))
 		{
@@ -935,7 +952,7 @@ function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
 	}
 
 	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", "OUT", "xmds", "SubmitStats", "", $displayInfo['displayid']);
-	
+
 	return true;
 }
 
@@ -944,7 +961,7 @@ $service = new soap_server();
 
 $service->configureWSDL("xmds", "urn:xmds");
 
-$service->register("RegisterDisplay", 
+$service->register("RegisterDisplay",
 		array('serverKey' => 'xsd:string', 'hardwareKey' => 'xsd:string', 'displayName' => 'xsd:string', 'version' => 'xsd:string'),
 		array('ActivationMessage' => 'xsd:string'),
 		'urn:xmds',
@@ -953,8 +970,8 @@ $service->register("RegisterDisplay",
 		'encoded',
 		'Registered the Display on the Xibo Network'
 		);
-		
-$service->register("RequiredFiles", 
+
+$service->register("RequiredFiles",
 		array('serverKey' => 'xsd:string', 'hardwareKey' => 'xsd:string', 'version' => 'xsd:string'),
 		array('RequiredFilesXml' => 'xsd:string'),
 		'urn:xmds',
@@ -963,8 +980,8 @@ $service->register("RequiredFiles",
 		'encoded',
 		'The files required by the requesting display'
 		);
-		
-$service->register("GetFile", 
+
+$service->register("GetFile",
 		array('serverKey' => 'xsd:string', 'hardwareKey' => 'xsd:string', 'filePath' => 'xsd:string', 'fileType' => 'xsd:string', 'chunkOffset' => 'xsd:int', 'chuckSize' => 'xsd:int', 'version' => 'xsd:string'),
 		array('file' => 'xsd:base64Binary'),
 		'urn:xmds',
@@ -972,9 +989,9 @@ $service->register("GetFile",
 		'rpc',
 		'encoded',
 		'Gets the file requested'
-		);	
-		
-$service->register("Schedule", 
+		);
+
+$service->register("Schedule",
 		array('serverKey' => 'xsd:string', 'hardwareKey' => 'xsd:string', 'version' => 'xsd:string'),
 		array('ScheduleXml' => 'xsd:string'),
 		'urn:xmds',
@@ -982,8 +999,8 @@ $service->register("Schedule",
 		'rpc',
 		'encoded',
 		'Gets the schedule'
-		);	
-		
+		);
+
 $service->register("RecieveXmlLog",
 		array('serverKey' => 'xsd:string', 'hardwareKey' => 'xsd:string', 'xml' => 'xsd:string', 'version' => 'xsd:string'),
 		array('success' => 'xsd:boolean'),
@@ -1003,7 +1020,7 @@ $service->register("BlackList",
 		'encoded',
 		'Set media to be blacklisted'
 	);
-	
+
 $service->register("SubmitLog",
 		array('version' => 'xsd:string', 'serverKey' => 'xsd:string', 'hardwareKey' => 'xsd:string', 'logXml' => 'xsd:string'),
 		array('success' => 'xsd:boolean'),
@@ -1013,7 +1030,7 @@ $service->register("SubmitLog",
 		'encoded',
 		'Submit Logging from the Client'
 	);
-	
+
 $service->register("SubmitStats",
 		array('version' => 'xsd:string', 'serverKey' => 'xsd:string', 'hardwareKey' => 'xsd:string', 'statXml' => 'xsd:string'),
 		array('success' => 'xsd:boolean'),
@@ -1023,9 +1040,9 @@ $service->register("SubmitStats",
 		'encoded',
 		'Submit Display statistics from the Client'
 	);
-	
 
-		
+
+
 $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';
 $service->service($HTTP_RAW_POST_DATA);
 
