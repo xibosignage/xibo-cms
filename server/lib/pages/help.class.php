@@ -60,7 +60,7 @@ class helpDAO
 			}
 			else
 			{
-				trigger_error(__('No such help file found'), E_USER_ERROR);
+				trigger_error(sprintf(__('No help file found for Topic %s and Category %s.'), $topic, $category), E_USER_ERROR);
 			}
 		}
 		else

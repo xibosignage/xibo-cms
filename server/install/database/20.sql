@@ -10,12 +10,17 @@ CREATE TABLE IF NOT EXISTS `help` (
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=8 ;
 
 INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
-(1, 'Layout', 'General', 'http://wiki.xibo.org.uk/index.php?title=Layouts_-_General_Help&printable=true'),
-(2, 'Content', 'General', 'http://wiki.xibo.org.uk/index.php?title=Content_-_General_Help&printable=true'),
-(4, 'Schedule', 'General', 'http://wiki.xibo.org.uk/index.php?title=Schedule_-_General_Help&printable=true'),
-(5, 'Group', 'General', 'http://wiki.xibo.org.uk/index.php?title=Group_-_General_Help&printable=true'),
-(6, 'Admin', 'General', 'http://wiki.xibo.org.uk/index.php?title=Admin_-_Settings_Help&printable=true'),
-(7, 'Report', 'General', 'http://wiki.xibo.org.uk/index.php?title=Reports_-_General_Help&printable=true');
+(1, 'Layout', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Layouts'),
+(2, 'Content', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Media#The_Library'),
+(4, 'Schedule', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Scheduling'),
+(5, 'Group', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Administration:Users#Groups'),
+(6, 'Admin', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Administration:Settings'),
+(7, 'Report', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Administration:Log'),
+(8, 'Dashboard', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Overview#Dashboard'),
+(9, 'User', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Administration:Users'),
+(10, 'Display', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Administration:Displays'),
+(11, 'Displaygroup', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Administration:Displays#Groups'),
+(12, 'Layout', 'Add', 'http://wiki.xibo.org.uk/wiki/Manual:Layouts:Design#Adding_Layouts');
 
 
 /* New page for display groups */

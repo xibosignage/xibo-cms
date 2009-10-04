@@ -735,7 +735,7 @@ END;
 		//check on permissions
 		
 		// Help icons for the form
-		$helpButton 	= $helpManager->HelpButton("content/layout/adding", true);
+		$helpButton 	= $helpManager->HelpButton("layout/add", true);
 		$nameHelp		= $helpManager->HelpIcon(__("The Name of the Layout - (1 - 50 characters)"), true);
 		$descHelp		= $helpManager->HelpIcon(__("An optional description of the Layout. (1 - 250 characters)"), true);
 		$tagsHelp		= $helpManager->HelpIcon(__("Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)"), true);

@@ -56,7 +56,7 @@ END;
 					}
 				?>
 				<div class="dashicons">
-					<a id="help_button" target="_blank" alt="The Manual" href="http://www.xibo.org.uk/manual/index.php?p=content/dashboard/overview">
+					<a id="help_button" target="_blank" alt="The Manual" href="http://wiki.xibo.org.uk/wiki/Manual:TOC">
 					<img class="dash_button" src="img/dashboard/help.png"/>
 					<span class="dash_text">Manual</span></a>
 				</div>
