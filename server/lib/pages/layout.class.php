@@ -720,27 +720,23 @@ END;
 		$user			=& $this->user;
 		$response		= new ResponseManager();
 		
-		$helpManager	= new HelpManager($db, $user);
+		$helpManager            = new HelpManager($db, $user);
 
 		$action 		= "index.php?p=layout&q=add";
 		
 		$layoutid 		= $this->layoutid; 
 		$layout 		= $this->layout;
-		$description	= $this->description;
-		$permissionid	= $this->permissionid;
+		$description            = $this->description;
+		$permissionid           = $this->permissionid;
 		$retired		= $this->retired;
 		$tags			= $this->tags;
 		
-		
-		//check on permissions
-		
 		// Help icons for the form
-		$helpButton 	= $helpManager->HelpButton("layout/add", true);
-		$nameHelp		= $helpManager->HelpIcon(__("The Name of the Layout - (1 - 50 characters)"), true);
-		$descHelp		= $helpManager->HelpIcon(__("An optional description of the Layout. (1 - 250 characters)"), true);
-		$tagsHelp		= $helpManager->HelpIcon(__("Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)"), true);
-		$sharedHelp		= $helpManager->HelpIcon(__("The permissions to associate with this Layout"), true);
-		$retireHelp		= $helpManager->HelpIcon(__("Retire this layout or not? It will no longer be visible in lists"), true);
+		$nameHelp	= $helpManager->HelpIcon(__("The Name of the Layout - (1 - 50 characters)"), true);
+		$descHelp	= $helpManager->HelpIcon(__("An optional description of the Layout. (1 - 250 characters)"), true);
+		$tagsHelp	= $helpManager->HelpIcon(__("Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)"), true);
+		$sharedHelp	= $helpManager->HelpIcon(__("The permissions to associate with this Layout"), true);
+		$retireHelp	= $helpManager->HelpIcon(__("Retire this layout or not? It will no longer be visible in lists"), true);
 		$templateHelp	= $helpManager->HelpIcon(__("Template to create this layout with."), true);
 		
 		//init the retired option
@@ -748,10 +744,11 @@ END;
 		$template_option 	= '';
 		
 		if ($this->layoutid != "") 
-		{ //assume an edit
+		{ 
+                        // assume an edit
 			$action = "index.php?p=layout&q=modify";
 			
-			//build the retired option
+			// build the retired option
 			$retired_list = listcontent("1|Yes,0|No","retired",$retired);
 			$retired_option = <<<END
 			<tr>
@@ -795,11 +792,8 @@ END;
 		$msgShared	= __('Shared');
 		$msgShared2	= __('The permissions to associate with this Layout');
 		
-		$msgSave	= __('Save');
-		$msgCancel	= __('Cancel');
-		
 		$form = <<<END
-		<form class="XiboForm" method="post" action="$action">
+		<form id="LayoutForm" class="XiboForm" method="post" action="$action">
 			<input type="hidden" name="layoutid" value="$this->layoutid">
 		<table>
 			<tr>
@@ -820,20 +814,14 @@ END;
 			</tr>
 			$retired_option
 			$template_option
-			<tr>
-				<td>
-				</td>
-				<td>
-					<input type="submit" value="$msgSave" />
-					<input id="btnCancel" type="button" title="$msgCancel" onclick="$('#div_dialog').dialog('close');return false; " value="$msgCancel" />	
-					$helpButton
-				</td>
-			</tr>
 		</table>
 		</form>
 END;
 
 		$response->SetFormRequestResponse($form, __('Add/Edit a Layout.'), '350px', '275px');
+                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Add') . '")');
+		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Save'), '$("#LayoutForm").submit()');
 		$response->Respond();
 	}
 	

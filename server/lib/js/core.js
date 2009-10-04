@@ -307,7 +307,7 @@ function XiboFormRender(formUrl) {
 
 /**
  * Xibo Ping
- * @param {String} formId
+ * @param {String} url
  */
 function XiboPing(url) {
 

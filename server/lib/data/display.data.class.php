@@ -175,6 +175,8 @@ class Display extends Data
 		$db	=& $this->db;
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Delete');
+
+                //TODO: Need to put some logic in here that tests whether or not we ought to be able to delete this display.
 		
 		// Pass over to the DisplayGroup data class so that it can try and delete the
 		// display specific group first (it is that group which is linked to schedules)

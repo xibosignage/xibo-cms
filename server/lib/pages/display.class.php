@@ -203,11 +203,9 @@ SQL;
 		$msgInterL	= __('Interleave Default');
 		$msgAudit	= __('Auditing');
 		$msgLicense	= __('License');
-		$msgSave	= __('Save');
-		$msgCancel	= __('Cancel');
 
 		$form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=display&q=modify&id=$displayid">
+		<form id="DisplayEditForm" class="XiboForm" method="post" action="index.php?p=display&q=modify&id=$displayid">
 			<input type="hidden" name="displayid" value="$displayid">
 			<table>
 				<tr>
@@ -229,18 +227,14 @@ SQL;
 					<td>$licenseHelp <input type="text" readonly value="$license"></td>
 					$license_list
 				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input type='submit' value="$msgSave" / >
-						<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="$msgCancel" />
-					</td>
-				</tr>
 			</table>
 		</form>
 END;
 
 		$response->SetFormRequestResponse($form, __('Edit a Display'), '650px', '250px');
+                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Display', 'Edit') . '")');
+		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Save'), '$("#DisplayEditForm").submit()');
 		$response->Respond();
 	}
 
@@ -547,8 +541,11 @@ END;
 	function DeleteForm()
 	{
 		$db 		=& $this->db;
+                $user           =& $this->user;
+                
 		$response 	= new ResponseManager();
 		$displayid 	= Kit::GetParam('displayid', _REQUEST, _INT);
+                $helpManager    = new HelpManager($db, $user);
 
 		// Output the delete form
 		$msgInfo	= __('You will only be able to delete this display if there is no associated information contained in Xibo.');
@@ -557,16 +554,17 @@ END;
 		$msgNo		= __('No');
 
 		$form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=display&q=Delete">
+		<form id="DisplayDeleteForm" class="XiboForm" method="post" action="index.php?p=display&q=Delete">
 			<input type="hidden" name="displayid" value="$displayid">
 			<p>$msgInfo<br />
 			<p>$msgWarn</p>
-			<input type="submit" value="$msgYes">
-			<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
 		</form>
 END;
 
-		$response->SetFormRequestResponse($form, __('Delete this Display?'), '350px', '180px');
+		$response->SetFormRequestResponse($form, __('Delete this Display?'), '350px', '210');
+                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Display', 'Delete') . '")');
+		$response->AddButton(__('No'), 'XiboDialogClose()');
+		$response->AddButton(__('Yes'), '$("#DisplayDeleteForm").submit()');
 		$response->Respond();
 	}
 
