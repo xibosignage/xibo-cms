@@ -176,7 +176,7 @@ END;
 				</tr>
 				<tr>
 					<td></td>
-					<td>This form accepts: <span class="required">ppt/pps</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+					<td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -323,7 +323,7 @@ END;
 				</tr>
 				<tr>
 					<td></td>
-					<td>This form accepts: <span class="required">ppt/pps</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+					<td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -519,9 +519,9 @@ END;
 		if ($name == '') $name = Kit::ValidateParam($fileName, _FILENAME);
 
 		// Validation
-		if ($ext != "ppt")
+		if (!$this->IsValidExtension($ext))
 		{
-			$this->response->SetError('Only PPT files are accepted - Are you sure this is an powerpoint?');
+			$this->response->SetError('Your file has an extension not supported by this Media Type.');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
@@ -599,6 +599,7 @@ END;
 		$fileSize 	= filesize($databaseDir.$storedAs);
 
 		// Update the media record to include this information
+
 		$SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $storedAs, $md5, $fileSize, $mediaid);
 
 		if (!$db->query($SQL))
@@ -663,9 +664,9 @@ END;
 			$fileName 		= basename($fileName);
 			$ext 			= strtolower(substr(strrchr($fileName, "."), 1));
 
-			if ($ext != "ppt")
+			if (!$this->IsValidExtension($ext))
 			{
-				$this->response->SetError('Only PPT files are accepted - Are you sure this is a powerpoint?');
+				$this->response->SetError('Your file has an extension not supported by this Media Type.');
 				$this->response->keepOpen = true;
 				return $this->response;
 			}
