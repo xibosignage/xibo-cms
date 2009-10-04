@@ -802,6 +802,9 @@ function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
 
 	foreach ($document->documentElement->childNodes as $node)
 	{
+		// Make sure we dont consider any text nodes
+		if ($node->nodeType == XML_TEXT_NODE) continue;
+			
 		//Zero out the common vars
 		$date 		= "";
 		$message 	= "";
@@ -814,7 +817,10 @@ function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
 		// This will be a bunch of trace nodes
 		$message = $node->textContent;
 
-		// Each element should have a category and a date
+		if ($displayInfo['isAuditing'] == 1) Debug::LogEntry ($db, "audit", 'Trace Message: [' . $message . ']', "xmds", "SubmitLog", "", $displayInfo['displayid']);
+		
+		// Each element should have a category and a date 
+
 		$date	= $node->getAttribute('date');
 		$cat	= $node->getAttribute('category');
 
@@ -916,7 +922,10 @@ function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
 	$document->loadXML($statXml);
 
 	foreach ($document->documentElement->childNodes as $node)
-	{
+	{	
+		// Make sure we dont consider any text nodes
+		if ($node->nodeType == XML_TEXT_NODE) continue;
+	
 		//Zero out the common vars
 		$fromdt		= '';
 		$todt		= '';
