@@ -200,7 +200,7 @@ function XiboGridRender(gridId){
 
 /**
  * Renders the formid provided
- * @param {String} formId
+ * @param {String} formUrl
  */
 function XiboFormRender(formUrl) {
 

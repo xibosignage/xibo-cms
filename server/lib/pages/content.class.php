@@ -419,6 +419,10 @@ END;
 		$user			=& $this->user;
 		$response		= new ResponseManager();
 		$formMgr 		= new FormManager($db, $user);
+                $helpManager            = new HelpManager($db, $user);
+
+                $mediatype              = '';
+                $name                   = '';
 		
 		if (isset($_SESSION['content']['mediatype'])) $mediatype = $_SESSION['content']['mediatype'];
 		if (isset($_SESSION['content']['name'])) $name = $_SESSION['content']['name'];
@@ -471,12 +475,16 @@ HTML;
 HTML;
 		
 		// Construct the Response
-		$response->html			= $xiboGrid;
-		$response->success		= true;
+		$response->html         = $xiboGrid;
+		$response->success	= true;
 		$response->dialogSize	= true;
 		$response->dialogWidth	= '500px';
 		$response->dialogHeight = '380px';
 		$response->dialogTitle	= __('Assign an item from the Library');
+
+                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Library', 'Assign') . '")');
+		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Assign'), '$("#LibraryAssignForm").submit()');
 		
 		$response->Respond();	
 	}
@@ -491,6 +499,7 @@ HTML;
 		$user		=& $this->user;
 		$userid 	= Kit::GetParam('userid', _SESSION, _INT);
 		$response	= new ResponseManager();
+                $helpManager    = new HelpManager($db, $user);
 		
 		//Input vars
 		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT);
@@ -535,11 +544,10 @@ HTML;
 		$msgOwner	= __('Owner');
 		$msgShared	= __('Shared');
 		$msgSelect	= __('Select');
-		$msgAssign	= __('Assign');
 		
 		//some table headings
 		$form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=layout&q=AddFromLibrary">
+		<form id="LibraryAssignForm" class="XiboForm" method="post" action="index.php?p=layout&q=AddFromLibrary">
 			<input type="hidden" name="layoutid" value="$layoutid" />
 			<input type="hidden" name="regionid" value="$regionid" />
 			<div class="dialog_table">
@@ -592,7 +600,6 @@ END;
 		$form .= <<<END
 				</tbody>
 			</table>
-			<input type='submit' value="$msgAssign" / >
 		</div>
 	</form>
 END;
