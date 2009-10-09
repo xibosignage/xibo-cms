@@ -251,7 +251,7 @@ class userDAO
 		}
 
 		// We should delete this users sessions record.
-		$SQL = "DELETE FROM session WHERE userID = $userID ";
+		$SQL = "DELETE FROM session WHERE userID = $userid ";
 		
 		if (!$db->query($sqldel)) 
 		{
@@ -463,28 +463,30 @@ HTML;
 		$user			=& $this->user;
 		$response 		= new ResponseManager();
 		
-		$helpManager	= new HelpManager($db, $user);
+		$helpManager            = new HelpManager($db, $user);
 		
 		//ajax request handler
 		
 		$userid		= $this->userid;
 		$username 	= $this->username;
 		$password 	= $this->password;
-		$usertypeid = $this->usertypeid;
+		$usertypeid     = $this->usertypeid;
 		$email 		= $this->email;
 		$homepage	= $this->homepage;
 		$groupid	= $this->groupid;
 		
 		// Help UI
-		$helpButton 	= $helpManager->HelpButton("content/users/overview", true);
-		$nameHelp		= $helpManager->HelpIcon("The Login Name of the user.", true);
-		$passHelp		= $helpManager->HelpIcon("The Password for this user.", true);
-		$emailHelp		= $helpManager->HelpIcon("Users email address. E.g. user@example.com", true);
+		$nameHelp	= $helpManager->HelpIcon("The Login Name of the user.", true);
+		$passHelp	= $helpManager->HelpIcon("The Password for this user.", true);
+		$emailHelp	= $helpManager->HelpIcon("Users email address. E.g. user@example.com", true);
 		$homepageHelp	= $helpManager->HelpIcon("The users Homepage. This should not be changed until you want to reset their homepage.", true);
 		$overpassHelp	= $helpManager->HelpIcon("Do you want to override this users password with the one entered here.", true);
 		$usertypeHelp	= $helpManager->HelpIcon("What is this users type? This would usually be set to 'User'", true);
-		$groupHelp		= $helpManager->HelpIcon("Which group does this user belong to? User groups control media sharing and access to functional areas of Xibo.", true);
-		
+		$groupHelp	= $helpManager->HelpIcon("Which group does this user belong to? User groups control media sharing and access to functional areas of Xibo.", true);
+
+                $homepageOption = '';
+                $override_option = '';
+
 		//What form are we displaying
 		if ($userid == "")
 		{
@@ -559,12 +561,12 @@ END;
 		
 				
 		$form = <<<END
-		<form class="XiboForm" method='post' action='$action'>
+		<form id="UserForm" class="XiboForm" method='post' action='$action'>
 			<input type='hidden' name='userid' value='$userid'>
 			<table>
 				<tr>
 					<td><label for="username">User Name<span class="required">*</span></label></td>
-					<td>$nameHelp <input type="text" id="" name="username" value="$username" /></td>
+					<td>$nameHelp <input type="text" id="" name="username" value="$username" class="required" /></td>
 				</tr>
 				<tr>
 					<td><label for="password">Password<span class="required">*</span></label></td>
@@ -577,19 +579,14 @@ END;
 				</tr>
 				$homepageOption
 				$usertypeOption
-				<tr>
-					<td></td>
-					<td>
-						<input type='submit' value="Save" / >
-						<input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />	
-						$helpButton
-					</td>
-				</tr>
 			</table>
 		</form>
 END;
 
 		$response->SetFormRequestResponse($form, 'Add/Edit a User.', '550px', '320px');
+                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('User', 'Add') . '")');
+		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Save'), '$("#UserForm").submit()');
 		$response->Respond();
 	}
 	
@@ -600,22 +597,25 @@ END;
 	function DeleteForm() 
 	{
 		$db 		=& $this->db;
+                $user           =& $this->user;
 		$response 	= new ResponseManager();
+                $helpManager    = new HelpManager($db, $user);
 		
 		//expect the $userid to be set
-		$userid 	= $this->userid;
+		$userid 	= Kit::GetParam('userID', _REQUEST, _INT);
 		
 		//we can delete
 		$form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=user&q=DeleteUser">
+		<form id="UserDeleteForm" class="XiboForm" method="post" action="index.php?p=user&q=DeleteUser">
 			<input type="hidden" name="userid" value="$userid">
-			<p>Are you sure you want to delete $this->name?</p>
-			<input type="submit" value="Yes">
-			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
+			<p>Are you sure you want to delete this user?</p>
 		</form>
 END;
 
-		$response->SetFormRequestResponse($form, 'Delete this User?', '260px', '180px');
+		$response->SetFormRequestResponse($form, __('Delete this User?'), '260px', '180px');
+                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('User', 'Delete') . '")');
+		$response->AddButton(__('No'), 'XiboDialogClose()');
+		$response->AddButton(__('Yes'), '$("#UserDeleteForm").submit()');
 		$response->Respond();
 	}
 	

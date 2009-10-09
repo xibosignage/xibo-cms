@@ -50,7 +50,6 @@ var region_options_callback = function(outputDiv)
 var background_button_callback = function()
 {
 	//Want to attach an onchange event to the drop down for the bg-image
-	var libraryloc = $('#libraryloc').val();
 	var fileUrl = $('#bg_image').val();
 	
 	$('#bg_image_image').attr("src", "index.php?p=module&q=GetImage&file="+"tn_" + fileUrl);
@@ -73,10 +72,12 @@ var text_callback = function()
 	
 	$('#ta_text___Frame').attr("width",width+"px");
 	$('#ta_text___Frame').attr("height",height+"px");
+
 	
 	width = width + 50;
 	height = height + 220;	
 	
+        $('#div_dialog').height(height+"px");
 	$('#div_dialog').dialog('option', 'width', width);
 	$('#div_dialog').dialog('option', 'height', height);
 	$('#div_dialog').dialog('option', 'position', 'center');
