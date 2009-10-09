@@ -482,16 +482,6 @@ END;
 	{
 		return extension_loaded("pcre");
 	}
-	
-	/**
-	 * Check PHP has Gettext functionality installed
-	 * @return 
-	 */
-	function CheckGettext()
-	{
-		return extension_loaded("gettext");
-	}
-	
 }
 
 ?>
