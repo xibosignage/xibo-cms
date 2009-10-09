@@ -831,11 +831,11 @@ END;
 	 */
 	function BackgroundForm() 
 	{
-		$db 			=& $this->db;
-		$user			=& $this->user;
+		$db 		=& $this->db;
+		$user		=& $this->user;
 		
-		$helpManager	= new HelpManager($db, $user);
-		$response		= new ResponseManager();
+		$helpManager    = new HelpManager($db, $user);
+		$response	= new ResponseManager();
 		
 
 		//load the XML into a SimpleXML OBJECT
@@ -891,7 +891,6 @@ END;
 		
 		$helpButton 	= $helpManager->HelpButton("content/layout/layouteditor", true);
 		
-		
 		$msgBg				= __('Background Color');
 		$msgBgTitle			= __('Use the color picker to select the background color');
 		$msgBgImage			= __('Background Image');
@@ -899,13 +898,9 @@ END;
 		$msgRes				= __('Resolution');
 		$msgResTitle		= __('Pick the resolution');
 		
-		$msgSave			= __('Save');
-		$msgCancel			= __('Cancel');
-		//
 		// Begin the form output
-		//
 		$form = <<<FORM
-		<form class="XiboForm" method="post" action="index.php?p=layout&q=EditBackground">
+		<form id="LayoutBackgroundForm" class="XiboForm" method="post" action="index.php?p=layout&q=EditBackground">
 			<input type="hidden" id="libraryloc" value="$databaseDir">
 			<input type="hidden" id="layoutid" name="layoutid" value="$this->layoutid">
 			<table>
@@ -925,19 +920,14 @@ END;
 				<tr>
 					<td></td>
 				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input type="submit" value="$msgSave" />
-						<input id="btnCancel" type="button" title="$msgCancel" onclick="$('#div_dialog').dialog('close');return false; " value="$msgCancel" />
-						$helpButton
-					</td>
-				</tr>
 			</table>
 		</form>
 FORM;
 		
 		$response->SetFormRequestResponse($form, __('Change the Background Properties'), '550px', '240px');
+                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Background') . '")');
+		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Save'), '$("#LayoutBackgroundForm").submit()');
 		$response->Respond();
 	}
 	
@@ -1305,6 +1295,7 @@ HTML;
 	{
 		$db 	=& $this->db;
 		$user 	=& $this->user;
+                $helpManager    = new HelpManager($db, $user);
 		
 		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
 		
@@ -1538,7 +1529,7 @@ HTML;
 			<div id="buttons">
 				<div class="regionicons">
 					<a class="XiboFormButton" href="index.php?p=content&q=LibraryAssignForm&layoutid=$this->layoutid&regionid=$regionid" title="Library">
-					<img class="region_button" src="img/forms/library.gif"/>
+					<img class="dash_button moduleButtonImage region_button" src="img/forms/library.gif"/>
 					<span class="region_text">$msgLibrary</span></a>
 				</div>
 				$buttons
@@ -1554,12 +1545,14 @@ HTML;
 		</div>
 END;
 		
-		$arh->html 			= $options;
+		$arh->html 		= $options;
 		$arh->callBack 		= 'region_options_callback';
 		$arh->dialogTitle 	= __('Region Options');
 		$arh->dialogSize 	= true;
 		$arh->dialogWidth 	= '830px';
 		$arh->dialogHeight 	= '450px';
+                $arh->AddButton(__('Close'), 'XiboDialogClose()');
+                $arh->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'RegionOptions') . '")');
 		
 		$arh->Respond();
 	}

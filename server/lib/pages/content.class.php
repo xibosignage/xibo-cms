@@ -79,12 +79,10 @@ class contentDAO
 		$db =& $this->db;
 		
 		$mediatype = ""; //1
-		$name = ""; //2
 		$usertype = 0; //3
 		$playlistid = ""; //4
 		
 		if (isset($_SESSION['content']['mediatype'])) $mediatype = $_SESSION['content']['mediatype'];
-		if (isset($_SESSION['content']['name'])) $name = $_SESSION['content']['name'];
 		if (isset($_SESSION['content']['usertype'])) $usertype = $_SESSION['content']['usertype'];
 		if (isset($_SESSION['content']['playlistid'])) $playlistid = $_SESSION['content']['playlistid'];
 		
@@ -129,7 +127,7 @@ class contentDAO
 					<table id="content_filterform" class="filterform">
 						<tr>
 							<td>$msgName</td>
-							<td><input type='text' name='2' id='2' value="$name" /></td>
+							<td><input type='text' name='2' id='2' /></td>
 							<td>$msgType</td>
 							<td>$type_list</td>
 							<td>$msgRetired</td>
@@ -334,6 +332,7 @@ END;
 	{
 		$db 	=& $this->db;
 		$user 	=& $this->user;
+                $helpManager    = new HelpManager($db, $user);
 		
 		//displays all the content add forms - tabbed.
 		$response = new ResponseManager();
@@ -376,6 +375,7 @@ END;
 		$response->dialogSize 	= true;
 		$response->dialogWidth 	= '650px';
 		$response->dialogHeight = '280px';
+                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Content', 'AddtoLibrary') . '")');
 		$response->AddButton(__('Close'), 'XiboDialogClose()');
 
 		$response->Respond();

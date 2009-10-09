@@ -48,7 +48,7 @@ $(document).ready(function(){
 
 /**
  * Initialises the page/form
- * @param {Object} Optional: scope (the form or page)
+ * @param {Object} scope (the form or page)
  */
 function XiboInitialise(scope){
 
@@ -179,8 +179,8 @@ function XiboGridRender(gridId){
                         sortList: [[1, 0]],
                         widthFixed: true
                     })
-                };
-			}
+                }
+            }
 
 			// Do we have to call any functions due to this success?
             if (response.callBack != "" && response.callBack != undefined) {
@@ -216,72 +216,72 @@ function XiboFormRender(formUrl) {
         dataType: "json",
         success: function(response){
 
-			// Was the Call successful
+            // Was the Call successful
             if (response.success) {
 
-				// Set the dialog HTML to be the response HTML
-                $('#div_dialog').html(response.html);
+            // Set the dialog HTML to be the response HTML
+            $('#div_dialog').html(response.html);
 
-				var dialogTitle = "Xibo";
-				var dialogWidth = "500";
-				var dialogHeight = "500";
+            var dialogTitle = "Xibo";
+            var dialogWidth = "500";
+            var dialogHeight = "500";
 
-				// Is there a title for the dialog?
-				if (response.dialogTitle != undefined && response.dialogTitle != "") {
-					// Set the dialog title
-					dialogTitle =  response.dialogTitle;
-				}
-
-				// Do we need to alter the dialog size?
-				if (response.dialogSize) {
-					dialogWidth 	= response.dialogWidth;
-					dialogHeight	= response.dialogHeight;
-				}
-
-				// Buttons?
-				var buttons = '';
-
-				if (response.buttons != '') {
-					$.each(
-						response.buttons,
-						function(index, value) {
-							var extrabutton = {};
-							extrabutton[index] = function(){
-								eval(value);
-							}
-
-							buttons 		= $.extend(buttons, extrabutton);
-						}
-					);
-				}
-
-				// Create the dialog with our parameters
-				$('#div_dialog').dialog({
-			        title: dialogTitle,
-			        width: dialogWidth,
-			        height: dialogHeight,
-			        draggable: true,
-			        resizable: false,
-			        bgiframe: true,
-					autoOpen: true,
-					buttons: buttons
-			    });
-
-                // Do we have to call any functions due to this success?
-                if (response.callBack != "" && response.callBack != undefined) {
-                    eval(response.callBack)(name);
-                }
-
-                // Focus in the first form element
-				if (response.focusInFirstInput) {
-	                $('input[type=text]', '#div_dialog').eq(0).focus();
-				}
-
-				// Call Xibo Init for this form
-				XiboInitialise("#div_dialog");
+            // Is there a title for the dialog?
+            if (response.dialogTitle != undefined && response.dialogTitle != "") {
+                // Set the dialog title
+		dialogTitle =  response.dialogTitle;
             }
-			else {
-				// Login Form needed?
+
+            // Do we need to alter the dialog size?
+            if (response.dialogSize) {
+		dialogWidth 	= response.dialogWidth;
+		dialogHeight	= response.dialogHeight;
+            }
+
+            // Buttons?
+            var buttons = '';
+
+            if (response.buttons != '') {
+            	$.each(
+                	response.buttons,
+			function(index, value) {
+				var extrabutton = {};
+				extrabutton[index] = function(){
+					eval(value);
+				}
+
+				buttons 		= $.extend(buttons, extrabutton);
+			}
+		);
+            }
+
+            // Create the dialog with our parameters
+            $('#div_dialog').dialog({
+                title: dialogTitle,
+		width: dialogWidth,
+		height: dialogHeight,
+		draggable: true,
+		resizable: false,
+		bgiframe: true,
+		autoOpen: true,
+		buttons: buttons
+            });
+
+            // Do we have to call any functions due to this success?
+            if (response.callBack != "" && response.callBack != undefined) {
+                eval(response.callBack)(name);
+            }
+
+            // Focus in the first form element
+            if (response.focusInFirstInput) {
+	               $('input[type=text]', '#div_dialog').eq(0).focus();
+            }
+
+            // Call Xibo Init for this form
+            XiboInitialise("#div_dialog");
+      }
+	else {
+		// Login Form needed?
 	            if (response.login) {
 	                LoginBox(response.message);
 	                return false;
