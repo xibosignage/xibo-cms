@@ -574,8 +574,8 @@ END;
 					$override_option
 				</tr>
 				<tr>
-					<td><label for="email">Email Address</label></td>
-					<td>$emailHelp <input type="text" id="email" name="email" value="$email" /></td>
+					<td><label for="email">Email Address<span class="required">*</span></label></td>
+					<td>$emailHelp <input type="text" id="email" name="email" value="$email" class="required" /></td>
 				</tr>
 				$homepageOption
 				$usertypeOption
