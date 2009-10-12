@@ -382,7 +382,7 @@ END;
 		//Layouts with the same name?
 		if($db->num_rows($result) != 0) 
 		{
-			$response->SetError(sprintf(__("You already own a layout called '%s'.") .  __("Please choose another.", $layout)));
+			$response->SetError(sprintf(__("You already own a layout called '%s'. Please choose another."), $layout);
 			$response->Respond();
 		}
 		//end validation
