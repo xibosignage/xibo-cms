@@ -598,15 +598,19 @@
 		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT, 0);
 		$groupid	= $this->getGroupFromID($userid, true);
 		
-		$SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
+		$SQL  = "SELECT DISTINCT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
 		$SQL .= "  FROM displaygroup ";
+                $SQL .= "  INNER JOIN lkdisplaydg ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID ";
+                $SQL .= " INNER JOIN display ON display.DisplayID = lkdisplaydg.DisplayID ";
 		
 		// If the usertype is not 1 (admin) then we need to include the link table for display groups.
 		if ($usertype != 1)
 		{
 			$SQL .= " INNER JOIN lkgroupdg ON lkgroupdg.DisplayGroupID = displaygroup.DisplayGroupID ";
 			$SQL .= sprintf(" WHERE lkgroupdg.GroupID = %d ", $groupid);
-		}
+                }
+
+                $SQL .= " WHERE display.licensed = 1 ";
 		
 		Debug::LogEntry($db, 'audit', $SQL, 'User', 'DisplayGroupAuth');
 
