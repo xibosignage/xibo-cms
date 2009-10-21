@@ -176,7 +176,7 @@ END;
 				</tr>
 				<tr>
 					<td></td>
-					<td>This form accepts: <span class="required">jpg, jpeg, png and gif</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+					<td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -323,7 +323,7 @@ END;
 				</tr>
 				<tr>
 					<td></td>
-					<td>This form accepts: <span class="required">jpg, jpeg, png and gif</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+					<td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -519,9 +519,9 @@ END;
 		if ($name == '') $name = Kit::ValidateParam($fileName, _FILENAME);
 
 		// Validation
-		if ($ext != "jpeg" && $ext != "jpg" && $ext != "png" && $ext != "gif")
+		if (!$this->IsValidExtension($ext))
 		{
-			$this->response->SetError('Only images are accepted - Are you sure this is an image?');
+			$this->response->SetError('Your file has an extension not supported by Media Type.');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
@@ -666,9 +666,9 @@ END;
 			$fileName 		= basename($fileName);
 			$ext 			= strtolower(substr(strrchr($fileName, "."), 1));
 
-			if ($ext != "jpeg" && $ext != "jpg" && $ext != "png" && $ext != "gif")
+			if (!$this->IsValidExtension($ext))
 			{
-				$this->response->SetError('Only images are accepted - Are you sure this is an image?');
+				$this->response->SetError('Your file has an extension not supported by this Media Type.');
 				$this->response->keepOpen = true;
 				return $this->response;
 			}

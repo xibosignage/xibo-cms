@@ -176,7 +176,7 @@ END;
 				</tr>
 				<tr>
 					<td></td>
-					<td>This form accepts: <span class="required">wmv, mpeg and mpg</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+					<td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -323,7 +323,7 @@ END;
 				</tr>
 				<tr>
 					<td></td>
-					<td>This form accepts: <span class="required">wmv, mpeg and mpg</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+					<td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -519,9 +519,9 @@ END;
 		if ($name == '') $name = Kit::ValidateParam($fileName, _FILENAME);
 
 		// Validation
-		if ($ext != "wmv" && $ext != "mpeg" && $ext != "mpg")
+		if (!$this->IsValidExtension($ext))
 		{
-			$this->response->SetError('Only Vidoes are accepted - wmv, mpeg, mpg [this is ' . $ext . ']');
+			$this->response->SetError('Your file has an extension not supported by this Media Type.');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
@@ -657,9 +657,9 @@ END;
 			$ext 			= strtolower(substr(strrchr($fileName, "."), 1));
 
 			// Validation
-			if ($ext != "wmv" && $ext != "mpeg" && $ext != "mpg")
+			if (!$this->IsValidExtension($ext))
 			{
-				$this->response->SetError('Only Vidoes are accepted - wmv, mpeg, mpg [this is ' . $ext . ']');
+				$this->response->SetError('Your file has an extension not supported by this Media Type.');
 				$this->response->keepOpen = true;
 				return $this->response;
 			}
