@@ -509,8 +509,13 @@ function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $
 	elseif ($fileType == "media")
 	{
 		$filePath = Kit::ValidateParam($filePath, _STRING);
+		
+		if (strstr($filePath, '/') || strstr($filePath, '\\'))
+		{
+			return new soap_fault("SOAP-ENV:Client", "", "Invalid file path.", $serverKey);
+		}
 
-		//Return the Chunk size specified
+		// Return the Chunk size specified
 		$f = fopen($libraryLocation.$filePath,"r");
 
 		fseek($f, $chunkOffset);
