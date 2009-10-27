@@ -101,229 +101,294 @@ class scheduleDAO
 	 */
 	function GenerateMonth() 
 	{
-		$db 				=& $this->db;
-		$response			= new ResponseManager();
-		
-		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY, Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY));
-		$year				= Kit::GetParam('year', _POST, _INT, date('Y', time()));
-		$month				= Kit::GetParam('month', _POST, _INT, date('m', time()));
-		$day				= Kit::GetParam('day', _POST, _INT, date('d', time()));
-		$date 				= mktime(0, 0, 0, $month, $day, $year);
-		
-		// Get the first day of the month
-		$month_start 		= mktime(0, 0, 0, $month, 1, $year);
-		
-		// Get friendly month name
-		$month_name 		= date('M', $month_start);
-		
-		// Figure out which day of the week the month starts on.
-		$month_start_day 	= date('D', $month_start);
-		
-		switch($month_start_day)
-		{
-		    case "Sun": $offset = 0; break;
-		    case "Mon": $offset = 1; break;
-		    case "Tue": $offset = 2; break;
-		    case "Wed": $offset = 3; break;
-		    case "Thu": $offset = 4; break;
-		    case "Fri": $offset = 5; break;
-		    case "Sat": $offset = 6; break;
-		}
-		
-		// determine how many days are in the last month.
-		if($month == 1)
-		{
-		   $num_days_last = cal_days_in_month(0, 12, ($year -1));
-		} 
-		else 
-		{
-		   $num_days_last = cal_days_in_month(0, ($month -1), $year);
-		}
-		
-		// determine how many days are in the current month.
-		$num_days_current = cal_days_in_month(0, $month, $year);
-		
-		// Build an array for the current days in the month
-		for($i = 1; $i <= $num_days_current; $i++)
-		{
-		    $num_days_array[] = $i;
-		}
-		
-		// Build an array for the number of days in last month
-		for($i = 1; $i <= $num_days_last; $i++)
-		{
-		    $num_days_last_array[] = $i;
-		}
-		
-		// If the $offset from the starting day of the week happens to be Sunday, $offset would be 0,
-		// so don't need an offset correction.
-		if($offset > 0)
-		{
-		    $offset_correction	= array_slice($num_days_last_array, -$offset, $offset);
-		    $new_count			= array_merge($offset_correction, $num_days_array);
-		    $offset_count		= count($offset_correction);
-		}
-		else 
-		{ 
-			// The else statement is to prevent building the $offset array.
-		    $offset_count	= 0;
-		    $new_count		= $num_days_array;
-		}
-		
-		// count how many days we have with the two previous arrays merged together
-		$current_num = count($new_count);
-		
-		// Since we will have 5 HTML table rows (TR) with 7 table data entries (TD) we need to fill in 35 TDs
-		// so, we will have to figure out how many days to appened to the end of the final array to make it 35 days.
-		if($current_num > 35)
-		{
-		   $num_weeks = 6;
-		   $outset = (42 - $current_num);
-		} 
-		elseif($current_num < 35)
-		{
-		   $num_weeks = 5;
-		   $outset = (35 - $current_num);
-		}
-		
-		if($current_num == 35)
-		{
-		   $num_weeks = 5;
-		   $outset = 0;
-		}
-		
-		// Outset Correction
-		for($i = 1; $i <= $outset; $i++)
-		{
-		   $new_count[] = $i;
-		}
-		
-		// Now let's "chunk" the $all_days array into weeks. Each week has 7 days so we will array_chunk it into 7 days.
-		$weeks 		= array_chunk($new_count, 7);
-		
-		// Build the heading portion of the calendar table
-		$calendar  = '<div class="gridContainer">';
-		$calendar .= ' <div class="calendarContainer">';
-		$calendar .= '  <div class="eventsContainer">';
-		$calendar .= '  <table class="WeekDays">';
-		$calendar .= '   <tr>';
-		$calendar .= '    <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>';
-		$calendar .= '   </tr>';
-		$calendar .= '  </table>';
-		$calendar .= '  <div class="monthContainer">';
-		
-		// Now we break each key of the array  into a week and create a new table row for each
-		// week with the days of that week in the table data
-		$i 		= 0;
-		$weekNo	= 0;
-		
-		// Load this months events into an array
-		$monthEvents	= $this->GetEventsForMonth($month, $year, $displayGroupIDs);
-		
-		foreach($weeks AS $week) 
-		{			
-			// Count of the available days in this week.
-			$count		= 7;
-						
-			$events1	= '';
-			$events2	= '';
-			$events3	= '';
-			$weekRow 	= '';
-			$weekGrid 	= '';
-			$this->lastEventID[0] = 0;
-			$this->lastEventID[1] = 0;
-			$this->lastEventID[2] = 0;
-			$monthTop	= $weekNo * 20;
-			
-	    	foreach($week as $d) 
-			{
-            	// This is each day
-	    		$currentDay = mktime(date("H"), 0, 0, $month, $d, $year);
-				
-	        	if($i < $offset_count) 
-				{
-	            	$weekRow  .= "<td class=\"DayTitle nonmonthdays\">$d</td>";
-	            	$weekGrid .= "<td class=\"DayGrid nonmonthdays\"></td>";
-					
-					$events1  .= '<td class="nonmonthdays" colspan="1"></td>';
-					$events2  .= '<td class="nonmonthdays" colspan="1"></td>';
-					$events3  .= '<td class="nonmonthdays" colspan="1"></td>';
-	        	}
-	        	
-	        	if(($i >= $offset_count) && ($i < ($num_weeks * 7) - $outset)) 
-				{
-					// Link for Heading and Cell
-					$linkClass	= 'days';
-					$link		= "index.php?p=schedule&q=AddEventForm&date=$currentDay";
-					$dayLink  	= '<a class="day_label XiboFormButton" href="' . $link . '">' . $d . '</a>';
-										
-	           		if(mktime(0,0,0,date("m"),date("d"),date("Y")) == mktime(0, 0, 0, $month, $d, $year)) 
-					{
-						$linkClass = 'today';
-	           		} 
+            $db                 =& $this->db;
+            $response           = new ResponseManager();
 
-					$weekRow 	.= '<td class="DayTitle">' . $dayLink . '</td>';
-               		$weekGrid 	.= '<td class="DayGrid XiboFormButton" href="' . $link . '"></td>';
-					
-					// These days belong in this month, so see if we have any events for day
-					$events1	.= $this->BuildEventTdForDay($monthEvents, 0, $d, $count);
-					$events2	.= $this->BuildEventTdForDay($monthEvents, 1, $d, $count);
-					$events3	.= $this->BuildEventTdForDay($monthEvents, 2, $d, $count);
-	        	} 
-	        	elseif($outset > 0) 
-				{
-					// Days that do not belond in this month
-	            	if(($i >= ($num_weeks * 7) - $outset))
-					{
-	            		$weekRow  .= "<td class=\"DayTitle nonmonthdays\">$d</td>";
-	               		$weekGrid .= "<td class=\"DayGrid nonmonthdays\"></td>";
-						$events1  .= '<td class="nonmonthdays" colspan="1"></td>';
-						$events2  .= '<td class="nonmonthdays" colspan="1"></td>';
-						$events3  .= '<td class="nonmonthdays" colspan="1"></td>';
-	           		}
-	        	}
+            $displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY, Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY));
+            $year		= Kit::GetParam('year', _POST, _INT, date('Y', time()));
+            $month		= Kit::GetParam('month', _POST, _INT, date('m', time()));
+            $day		= Kit::GetParam('day', _POST, _INT, date('d', time()));
+            $date 		= mktime(0, 0, 0, $month, $day, $year);
 
-	        	$i++;
-				
-				// Decrement the Available Days
-				$count--;
-	      	}
-			
-			$weekNo++;
-			
-			$calendar .= '   <div class="MonthRow" style="top:' . $monthTop . '%; height:20%">';
-			$calendar .= '    <table class="WeekRow" cellspacing="0" cellpadding="0">';
-	    	$calendar .= '     <tr>';
-			$calendar .= $weekGrid;
-	    	$calendar .= '     </tr>';
-			$calendar .= '    </table>';
-			$calendar .= '    <table class="EventsRow" cellspacing="0" cellpadding="0">';
-			$calendar .= '     <tr>';
-			$calendar .= $weekRow;
-	    	$calendar .= '     </tr>';
-			$calendar .= '     <tr>';
-			$calendar .= $events1;
-	    	$calendar .= '     </tr>';
-			$calendar .= '     <tr>';
-			$calendar .= $events2;
-	    	$calendar .= '     </tr>';
-			$calendar .= '     <tr>';
-			$calendar .= $events3;
-	    	$calendar .= '     </tr>';
-	    	$calendar .= '    </table>';
-	    	$calendar .= '   </div>';
-		}
-		
-		// Close the calendar table 
-		$calendar .= '  </div>';
-		$calendar .= '  </div>';
-		$calendar .= ' </table>';
-		$calendar .= '</div>';
-		$calendar .= '</div>';
-		
-		$response->SetGridResponse($calendar);
-		$response->Respond();
+            // Get the first day of the month
+            $month_start 	= mktime(0, 0, 0, $month, 1, $year);
+
+            // Get friendly month name
+            $month_name 	= date('M', $month_start);
+
+            // Figure out which day of the week the month starts on.
+            $month_start_day 	= date('D', $month_start);
+
+            switch($month_start_day)
+            {
+                case "Sun": $offset = 0; break;
+                case "Mon": $offset = 1; break;
+                case "Tue": $offset = 2; break;
+                case "Wed": $offset = 3; break;
+                case "Thu": $offset = 4; break;
+                case "Fri": $offset = 5; break;
+                case "Sat": $offset = 6; break;
+            }
+
+            // determine how many days are in the last month.
+            if($month == 1)
+            {
+               $num_days_last = cal_days_in_month(0, 12, ($year -1));
+            }
+            else
+            {
+               $num_days_last = cal_days_in_month(0, ($month -1), $year);
+            }
+
+            // determine how many days are in the current month.
+            $num_days_current = cal_days_in_month(0, $month, $year);
+
+            // Build an array for the current days in the month
+            for($i = 1; $i <= $num_days_current; $i++)
+            {
+                $num_days_array[] = $i;
+            }
+
+            // Build an array for the number of days in last month
+            for($i = 1; $i <= $num_days_last; $i++)
+            {
+                $num_days_last_array[] = $i;
+            }
+
+            // If the $offset from the starting day of the week happens to be Sunday, $offset would be 0,
+            // so don't need an offset correction.
+            if($offset > 0)
+            {
+                $offset_correction	= array_slice($num_days_last_array, -$offset, $offset);
+                $new_count		= array_merge($offset_correction, $num_days_array);
+                $offset_count		= count($offset_correction);
+            }
+            else
+            {
+                    // The else statement is to prevent building the $offset array.
+                $offset_count           = 0;
+                $new_count		= $num_days_array;
+            }
+
+            // count how many days we have with the two previous arrays merged together
+            $current_num = count($new_count);
+
+            // Since we will have 5 HTML table rows (TR) with 7 table data entries (TD) we need to fill in 35 TDs
+            // so, we will have to figure out how many days to appened to the end of the final array to make it 35 days.
+            if($current_num > 35)
+            {
+               $num_weeks = 6;
+               $outset = (42 - $current_num);
+            }
+            elseif($current_num < 35)
+            {
+               $num_weeks = 5;
+               $outset = (35 - $current_num);
+            }
+
+            if($current_num == 35)
+            {
+               $num_weeks = 5;
+               $outset = 0;
+            }
+
+            // Outset Correction
+            for($i = 1; $i <= $outset; $i++)
+            {
+               $new_count[] = $i;
+            }
+
+            // Now let's "chunk" the $all_days array into weeks. Each week has 7 days so we will array_chunk it into 7 days.
+            $weeks 		= array_chunk($new_count, 7);
+
+            // Build the heading portion of the calendar table
+            $calendar  = '<div class="gridContainer">';
+            $calendar .= ' <div class="calendarContainer">';
+            $calendar .= '  <div class="eventsContainer">';
+            $calendar .= '  <table class="WeekDays">';
+            $calendar .= '   <tr>';
+            $calendar .= '    <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>';
+            $calendar .= '   </tr>';
+            $calendar .= '  </table>';
+            $calendar .= '  <div class="monthContainer">';
+
+            // Now we break each key of the array  into a week and create a new table row for each
+            // week with the days of that week in the table data
+            $i 		= 0;
+            $weekNo	= 0;
+
+            // Load this months events into an array
+            $monthEvents	= $this->GetEventsForMonth($month, $year, $displayGroupIDs);
+
+            foreach($weeks AS $week)
+            {
+                // Count of the available days in this week.
+                $count		= 7;
+
+                $events1	= '';
+                $events2	= '';
+                $events3	= '';
+                $events4	= '';
+                $weekRow 	= '';
+                $weekGrid 	= '';
+                $this->lastEventID[0] = 0;
+                $this->lastEventID[1] = 0;
+                $this->lastEventID[2] = 0;
+                $monthTop	= $weekNo * 20;
+
+                foreach($week as $d)
+                {
+                    // This is each day
+                    $currentDay = mktime(date("H"), 0, 0, $month, $d, $year);
+
+                    if($i < $offset_count)
+                    {
+                        $weekRow  .= "<td class=\"DayTitle nonmonthdays\">$d</td>";
+                        $weekGrid .= "<td class=\"DayGrid nonmonthdays\"></td>";
+
+                        $events1  .= '<td class="nonmonthdays" colspan="1"></td>';
+                        $events2  .= '<td class="nonmonthdays" colspan="1"></td>';
+                        $events3  .= '<td class="nonmonthdays" colspan="1"></td>';
+                        $events4  .= '<td class="nonmonthdays" colspan="1"></td>';
+                    }
+
+                    if(($i >= $offset_count) && ($i < ($num_weeks * 7) - $outset))
+                    {
+                        // Link for Heading and Cell
+                        $linkClass	= 'days';
+                        $link		= "index.php?p=schedule&q=AddEventForm&date=$currentDay";
+                        $dayLink  	= '<a class="day_label XiboFormButton" href="' . $link . '">' . $d . '</a>';
+
+                        if(mktime(0,0,0,date("m"),date("d"),date("Y")) == mktime(0, 0, 0, $month, $d, $year))
+                        {
+                            $linkClass = 'today';
+                        }
+
+                        $weekRow 	.= '<td class="DayTitle">' . $dayLink . '</td>';
+                        $weekGrid 	.= '<td class="DayGrid XiboFormButton" href="' . $link . '"></td>';
+
+                        // These days belong in this month, so see if we have any events for day
+                        $events1	.= $this->BuildEventTdForDay($monthEvents, 0, $d, $count);
+                        $events2	.= $this->BuildEventTdForDay($monthEvents, 1, $d, $count);
+                        $events3	.= $this->BuildEventTdForDay($monthEvents, 2, $d, $count);
+
+                        // Are there any extra events to fit into this day that didnt have a space
+                        if (isset($monthEvents[3][$d]))
+                        {
+                            $events4	.= '<td colspan="1"><a href="index.php?p=schedule&q=DayHover&date=' . $currentDay . '" class="XiboFormButton XiboMoreLink">' . sprintf(__('+ %d more'), $monthEvents[3][$d]) . '</a></td>';
+                        }
+                        else
+                        {
+                            $events4	.= '<td colspan="1"></td>';
+                        }
+                    }
+                    elseif($outset > 0)
+                    {
+                        // Days that do not belond in this month
+                        if(($i >= ($num_weeks * 7) - $outset))
+                        {
+                            $weekRow  .= "<td class=\"DayTitle nonmonthdays\">$d</td>";
+                            $weekGrid .= "<td class=\"DayGrid nonmonthdays\"></td>";
+                            $events1  .= '<td class="nonmonthdays" colspan="1"></td>';
+                            $events2  .= '<td class="nonmonthdays" colspan="1"></td>';
+                            $events3  .= '<td class="nonmonthdays" colspan="1"></td>';
+                            $events4  .= '<td class="nonmonthdays" colspan="1"></td>';
+                        }
+                    }
+
+                    $i++;
+
+                    // Decrement the Available Days
+                    $count--;
+                }
+
+                $weekNo++;
+
+                $calendar .= '   <div class="MonthRow" style="top:' . $monthTop . '%; height:20%">';
+                $calendar .= '    <table class="WeekRow" cellspacing="0" cellpadding="0">';
+                $calendar .= '     <tr>';
+                $calendar .= $weekGrid;
+                $calendar .= '     </tr>';
+                $calendar .= '    </table>';
+                $calendar .= '    <table class="EventsRow" cellspacing="0" cellpadding="0">';
+                $calendar .= '     <tr>';
+                $calendar .= $weekRow;
+                $calendar .= '     </tr>';
+                $calendar .= '     <tr>';
+                $calendar .= $events1;
+                $calendar .= '     </tr>';
+                $calendar .= '     <tr>';
+                $calendar .= $events2;
+                $calendar .= '     </tr>';
+                $calendar .= '     <tr>';
+                $calendar .= $events3;
+                $calendar .= '     </tr>';
+                $calendar .= '     <tr>';
+                $calendar .= $events4;
+                $calendar .= '     </tr>';
+                $calendar .= '    </table>';
+                $calendar .= '   </div>';
+            }
+
+            // Close the calendar table
+            $calendar .= '  </div>';
+            $calendar .= '  </div>';
+            $calendar .= ' </table>';
+            $calendar .= '</div>';
+            $calendar .= '</div>';
+
+            $response->SetGridResponse($calendar);
+            $response->Respond();
 	}
+
+        /**
+         * Day Hover
+         * @return
+         */
+        public function DayHover()
+        {
+            $db                 =& $this->db;
+            $response           = new ResponseManager();
+
+            $displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY, Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY));
+            $date		= Kit::GetParam('date', _GET, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
+            $output             = '';
+
+            // Query for all events that sit in this day
+            $events = $this->GetEventsForDay($date, $displayGroupIDs);
+
+            $output .= '<div class="info_table">';
+            $output .= '    <table style="width:100%">';
+            $output .= '        <thead>';
+            $output .= '            <th>From DT</th>';
+            $output .= '            <th>To DT</th>';
+            $output .= '            <th>Layout</th>';
+            $output .= '            <th></th>';
+            $output .= '        </thead>';
+            $output .= '        <tbody>';
+
+            foreach($events as $event)
+            {
+                // We just want a list.
+                $editLink = $event->editPermission == true ? sprintf('class="XiboFormButton" href="%s"', $event->layoutUri) : 'class="UnEditableEvent"';
+
+                $output .= '<tr>';
+                $output .= '<td>' . date('Y-m-d H:m:s', $event->fromDT) . '</td>';
+                $output .= '<td>' . date('Y-m-d H:m:s', $event->toDT) . '</td>';
+                $output .= '<td>' . $event->layout . '</td>';
+                $output .= sprintf('<td><button %s>%s</button></td>', $editLink, __('Edit'));
+                $output .= '</tr>';
+            }
+
+            $output .= '        </tbody>';
+            $output .= '    </table>';
+            $output .= '</div>';
+
+            $response->SetFormRequestResponse($output, __('Events for Day'), '550px', '350px');
+            $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+            $response->AddButton(__('Close'), 'XiboDialogClose()');
+            $response->Respond();
+        }
 	
 	/**
 	 * BuildEventTdForDay
@@ -335,45 +400,45 @@ class scheduleDAO
 	 */
 	private function BuildEventTdForDay($monthEvents, $index, $d, $count)
 	{
-		$events 		= '';
-		$calEvent[0]	= 'CalEvent1';
-		$calEvent[1]	= 'CalEvent2';
-		$calEvent[2]	= 'CalEvent3';
-		
-		if (isset($monthEvents[$index][$d]))
-		{
-			// Is this the same event as one we have already added
-			$event	= $monthEvents[$index][$d];
-			
-			if ($this->lastEventID[$index] != $event->eventDetailID)
-			{
-				// We should only go up to the max number of days left in the week.
-				$spanningDays 	= $event->spanningDays;
-				
-				// Now we know if this is a single day event or not we need to set up some styles
-				$tdClass		= $spanningDays == 1 ? 'Event' : 'LongEvent';
-				$timePrefix		= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
-				$editLink		= $event->editPermission == true ? sprintf('class="XiboFormButton" href="%s"',$event->layoutUri) : 'class="UnEditableEvent"';
-				
-				$layoutUri		= sprintf('<div class="%s %s" title="Display Group: %s"><a %s title="%s">%s %s</a></div>', $tdClass, $calEvent[$index], $event->displayGroup, $editLink, $event->layout, $timePrefix, $event->layout);
-				
-				// We should subtract any days ahead of the start date from the spanning days
-				$spanningDays 	= $d - $event->startDayNo > 0 ? $spanningDays - ($d - $event->startDayNo) : $spanningDays;
-				$spanningDays 	= $spanningDays > $count ? $count : $spanningDays;
-				
-				$events 		= sprintf('<td colspan="%d">%s</td>', $spanningDays, $layoutUri);
-			}
-			
-			// Make sure we dont try to add this one again
-			$this->lastEventID[$index] = $event->eventDetailID;
-		}
-		else
-		{
-			// Put in an empty TD for this event
-			$events = '<td colspan="1"></td>';
-		}
-		
-		return $events;
+            $events 		= '';
+            $calEvent[0]	= 'CalEvent1';
+            $calEvent[1]	= 'CalEvent2';
+            $calEvent[2]	= 'CalEvent3';
+
+            if (isset($monthEvents[$index][$d]))
+            {
+                // Is this the same event as one we have already added
+                $event	= $monthEvents[$index][$d];
+
+                if ($this->lastEventID[$index] != $event->eventDetailID)
+                {
+                    // We should only go up to the max number of days left in the week.
+                    $spanningDays 	= $event->spanningDays;
+
+                    // Now we know if this is a single day event or not we need to set up some styles
+                    $tdClass    = $spanningDays == 1 ? 'Event' : 'LongEvent';
+                    $timePrefix	= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
+                    $editLink	= $event->editPermission == true ? sprintf('class="XiboFormButton" href="%s"',$event->layoutUri) : 'class="UnEditableEvent"';
+
+                    $layoutUri	= sprintf('<div class="%s %s" title="Display Group: %s"><a %s title="%s">%s %s</a></div>', $tdClass, $calEvent[$index], $event->displayGroup, $editLink, $event->layout, $timePrefix, $event->layout);
+
+                    // We should subtract any days ahead of the start date from the spanning days
+                    $spanningDays 	= $d - $event->startDayNo > 0 ? $spanningDays - ($d - $event->startDayNo) : $spanningDays;
+                    $spanningDays 	= $spanningDays > $count ? $count : $spanningDays;
+
+                    $events 	= sprintf('<td colspan="%d">%s</td>', $spanningDays, $layoutUri);
+                }
+
+                // Make sure we dont try to add this one again
+                $this->lastEventID[$index] = $event->eventDetailID;
+            }
+            else
+            {
+                // Put in an empty TD for this event
+                $events = '<td colspan="1"></td>';
+            }
+
+            return $events;
 	}
 	
 	/**
@@ -569,7 +634,7 @@ class scheduleDAO
 
                         for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
                         {
-                                $events[$locatedOn][$i] = $event;
+                            $events[$locatedOn][$i] = $event;
                         }
                     }
                 }
@@ -577,7 +642,10 @@ class scheduleDAO
                 if (!$located)
                 {
                     // Record a +1 event for this day
-                    $events[3][$i] = $events[3][$i] + 1;
+                    if (!isset($events[3][$dayNo]))
+                        $events[3][$dayNo] = 0;
+                        
+                    $events[3][$dayNo] = $events[3][$dayNo] + 1;
 
                     Debug::LogEntry($db, 'audit', sprintf('No space for event with start day no %d and spanning days %d', $dayNo, $spanningDays));
                 }
@@ -687,7 +755,97 @@ class scheduleDAO
          */
         private function GetEventsForDay($date, $displayGroupIDs)
         {
-            $events = array();
+            $db 		=& $this->db;
+            $user		=& $this->user;
+            $events 		= array();
+            $fromDt		= $date;
+            $toDt		= $date + (60 * 60 * 24);
+
+            $displayGroups	= implode(',', $displayGroupIDs);
+
+            if ($displayGroups == '') return;
+
+            // Query for all events between the dates
+            $SQL = "";
+            $SQL.= "SELECT schedule_detail.schedule_detailID, ";
+            $SQL.= "       schedule_detail.FromDT, ";
+            $SQL.= "       schedule_detail.ToDT,";
+            $SQL.= "       GREATEST(schedule_detail.FromDT, $fromDt) AS AdjustedFromDT,";
+            $SQL.= "       LEAST(schedule_detail.ToDT, $toDt) AS AdjustedToDT,";
+            $SQL.= "       layout.layout, ";
+            $SQL.= "       schedule_detail.userid, ";
+            $SQL.= "       schedule_detail.is_priority, ";
+            $SQL.= "       schedule_detail.EventID, ";
+            $SQL.= "       schedule_detail.ToDT - schedule_detail.FromDT AS duration, ";
+            $SQL.= "       (LEAST(schedule_detail.ToDT, $toDt)) - (GREATEST(schedule_detail.FromDT, $fromDt)) AS AdjustedDuration, ";
+            $SQL.= "       displaygroup.DisplayGroup, ";
+            $SQL.= "       displaygroup.DisplayGroupID, ";
+	    $SQL.= "       schedule.DisplayGroupIDs ";
+            $SQL.= "  FROM schedule_detail ";
+            $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
+            $SQL.= "  INNER JOIN displaygroup ON displaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
+            $SQL.= "  INNER JOIN schedule ON schedule_detail.EventID = schedule.EventID ";
+            $SQL.= " WHERE 1=1 ";
+            $SQL.= sprintf("   AND schedule_detail.DisplayGroupID IN (%s) ", $db->escape_string($displayGroups));
+
+            // Events that fall inside the two dates
+            $SQL.= "   AND schedule_detail.ToDT > $fromDt ";
+            $SQL.= "   AND schedule_detail.FromDT <= $toDt ";
+
+            //Ordering
+            $SQL.= " ORDER BY schedule_detail.ToDT - schedule_detail.FromDT DESC, 2,3";
+
+            Debug::LogEntry($db, 'audit', $SQL);
+
+            if (!$result = $db->query($SQL))
+            {
+                    trigger_error($db->error());
+                    trigger_error(__('Error getting events for date.'), E_USER_ERROR);
+            }
+
+            // Number of events
+            Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
+
+            while($row = $db->get_assoc_row($result))
+            {
+                $eventDetailID	= Kit::ValidateParam($row['schedule_detailID'], _INT);
+                $eventID	= Kit::ValidateParam($row['EventID'], _INT);
+                $fromDT		= Kit::ValidateParam($row['AdjustedFromDT'], _INT);
+                $toDT		= Kit::ValidateParam($row['AdjustedToDT'], _INT);
+                $layout		= Kit::ValidateParam($row['layout'], _STRING);
+                $displayGroup	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
+                $displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
+                $eventDGIDs	= Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
+                $eventDGIDs 	= explode(',', $eventDGIDs);
+
+                if (!in_array($displayGroupID, $user->DisplayGroupAuth())) continue;
+
+                // How many days does this event span?
+                $spanningDays	= ($toDT - $fromDT) / (60 * 60 * 24);
+                $spanningDays	= $spanningDays < 1 ? 1 : $spanningDays;
+
+                $dayNo		= (int) date('d', $fromDT);
+                $layoutUri	= sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
+
+                Debug::LogEntry($db, 'audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
+
+                // Create a new Event from these details
+                $event			= new Event();
+                $event->eventID		= $eventID;
+                $event->eventDetailID	= $eventDetailID;
+                $event->fromDT		= $fromDT;
+                $event->toDT		= $toDT;
+                $event->layout		= $layout;
+                $event->displayGroup	= $displayGroup;
+                $event->layoutUri	= $layoutUri;
+                $event->spanningDays	= ceil($spanningDays);
+                $event->startDayNo	= $dayNo;
+                $event->editPermission	= $this->IsEventEditable($eventDGIDs);
+                $events[]               = $event;
+            }
+
+            Debug::LogEntry($db, 'audit', 'Built Day Array');
+            Debug::LogEntry($db, 'audit', var_export($events, true));
 
             return $events;
         }
@@ -909,12 +1067,12 @@ HTML;
 	 */
 	function AddEventForm()
 	{
-		$db 				=& $this->db;
-		$user				=& $this->user;
-		$response			= new ResponseManager();
+		$db 			=& $this->db;
+		$user			=& $this->user;
+		$response		= new ResponseManager();
 		
-		$date				= Kit::GetParam('date', _GET, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
-		$dateText			= date("d/m/Y", $date);
+		$date			= Kit::GetParam('date', _GET, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
+		$dateText		= date("d/m/Y", $date);
 		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
 		
 		// need to do some user checking here
