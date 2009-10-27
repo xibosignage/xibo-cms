@@ -294,7 +294,7 @@ HTML;
 		}
 		
 		// Create an array out of the tags
-		$tagsArray = split(' ', $tags);
+		$tagsArray = explode(' ', $tags);
 		
 		// Add the tags XML to the layout
 		$layoutObject = new Layout($db);

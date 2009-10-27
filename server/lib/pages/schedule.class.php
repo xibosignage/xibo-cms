@@ -26,6 +26,7 @@ class scheduleDAO
 	private $user;
 	
 	private $lastEventID;
+        private $eventsList;
 
 	/**
 	 * Constructor
@@ -393,194 +394,199 @@ class scheduleDAO
 	 */
 	private function GetEventsForMonth($month, $year, $displayGroupIDs)
 	{
-		$db 			=& $this->db;
-		$user			=& $this->user;
-		$events 		= '';
-		$thisMonth		= mktime(0, 0, 0, $month, 1, $year);
-		$nextMonth		= mktime(0, 0, 0, $month + 1, 1, $year);
-		$daysInMonth	= cal_days_in_month(0, $month, $year);
-		
-		$displayGroups	= implode(',', $displayGroupIDs);
-		
-		if ($displayGroups == '') return;
-		
-		// Query for all events between the dates
-		$SQL = "";
-        $SQL.= "SELECT schedule_detail.schedule_detailID, ";
-        $SQL.= "       schedule_detail.FromDT, ";
-        $SQL.= "       schedule_detail.ToDT,";
-        $SQL.= "       LEAST(schedule_detail.ToDT, $nextMonth) AS AdjustedToDT,";
-        $SQL.= "       layout.layout, ";
-        $SQL.= "       schedule_detail.userid, ";
-        $SQL.= "       schedule_detail.is_priority, ";
-        $SQL.= "       schedule_detail.EventID, ";
-        $SQL.= "       schedule_detail.ToDT - schedule_detail.FromDT AS duration, ";
-        $SQL.= "       (LEAST(schedule_detail.ToDT, $nextMonth)) - schedule_detail.FromDT AS AdjustedDuration, ";
-        $SQL.= "       displaygroup.DisplayGroup, ";
-        $SQL.= "       displaygroup.DisplayGroupID, ";
+            $db 		=& $this->db;
+            $user		=& $this->user;
+            $events 		= array();
+            $this->eventsList   = array();
+            $thisMonth		= mktime(0, 0, 0, $month, 1, $year);
+            $nextMonth		= mktime(0, 0, 0, $month + 1, 1, $year);
+            $daysInMonth	= cal_days_in_month(0, $month, $year);
+
+            $displayGroups	= implode(',', $displayGroupIDs);
+
+            if ($displayGroups == '') return;
+
+            // Query for all events between the dates
+            $SQL = "";
+            $SQL.= "SELECT schedule_detail.schedule_detailID, ";
+            $SQL.= "       schedule_detail.FromDT, ";
+            $SQL.= "       schedule_detail.ToDT,";
+            $SQL.= "       GREATEST(schedule_detail.FromDT, $thisMonth) AS AdjustedFromDT,";
+            $SQL.= "       LEAST(schedule_detail.ToDT, $nextMonth) AS AdjustedToDT,";
+            $SQL.= "       layout.layout, ";
+            $SQL.= "       schedule_detail.userid, ";
+            $SQL.= "       schedule_detail.is_priority, ";
+            $SQL.= "       schedule_detail.EventID, ";
+            $SQL.= "       schedule_detail.ToDT - schedule_detail.FromDT AS duration, ";
+            $SQL.= "       (LEAST(schedule_detail.ToDT, $nextMonth)) - (GREATEST(schedule_detail.FromDT, $thisMonth)) AS AdjustedDuration, ";
+            $SQL.= "       displaygroup.DisplayGroup, ";
+            $SQL.= "       displaygroup.DisplayGroupID, ";
 	    $SQL.= "       schedule.DisplayGroupIDs ";
-        $SQL.= "  FROM schedule_detail ";
-        $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
-        $SQL.= "  INNER JOIN displaygroup ON displaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
-        $SQL.= "  INNER JOIN schedule ON schedule_detail.EventID = schedule.EventID ";
-        $SQL.= " WHERE 1=1 ";
-        $SQL.= sprintf("   AND schedule_detail.DisplayGroupID IN (%s) ", $db->escape_string($displayGroups));
-        
-        // Events that fall inside the two dates
-        $SQL.= "   AND schedule_detail.FromDT > $thisMonth ";
-        $SQL.= "   AND schedule_detail.FromDT <= $nextMonth ";
-        
-        //Ordering
-        $SQL.= " ORDER BY schedule_detail.ToDT - schedule_detail.FromDT DESC, 2,3";	
-		
-		Debug::LogEntry($db, 'audit', $SQL);
-		
-		if (!$result = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			trigger_error(__('Error getting events for date.'), E_USER_ERROR);
-		}
+            $SQL.= "  FROM schedule_detail ";
+            $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
+            $SQL.= "  INNER JOIN displaygroup ON displaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
+            $SQL.= "  INNER JOIN schedule ON schedule_detail.EventID = schedule.EventID ";
+            $SQL.= " WHERE 1=1 ";
+            $SQL.= sprintf("   AND schedule_detail.DisplayGroupID IN (%s) ", $db->escape_string($displayGroups));
 
-		// Number of events
-		Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
-		
-        
-		while($row = $db->get_assoc_row($result))
-		{
-			$eventDetailID	= Kit::ValidateParam($row['schedule_detailID'], _INT);
-			$eventID		= Kit::ValidateParam($row['EventID'], _INT);
-			$fromDT			= Kit::ValidateParam($row['FromDT'], _INT);
-			$toDT			= Kit::ValidateParam($row['AdjustedToDT'], _INT);
-			$layout			= Kit::ValidateParam($row['layout'], _STRING);
-			$displayGroup	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
-			$displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
-			$eventDGIDs		= Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
-			$eventDGIDs 	= explode(',', $eventDGIDs);
-			
-			if (!in_array($displayGroupID, $user->DisplayGroupAuth())) continue;
-			
-			// How many days does this event span?
-			$spanningDays	= ($toDT - $fromDT) / (60 * 60 * 24);
-			$spanningDays	= $spanningDays < 1 ? 1 : $spanningDays;
-			
-			$dayNo			= (int) date('d', $fromDT);
-			$layoutUri		= sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
-			
-			Debug::LogEntry($db, 'audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
-			
-			// Create a new Event from these details
-			$event					= new Event();
-			$event->eventID			= $eventID;
-			$event->eventDetailID	= $eventDetailID;
-			$event->fromDT			= $fromDT;
-			$event->toDT			= $toDT;
-			$event->layout			= $layout;
-			$event->displayGroup	= $displayGroup;
-			$event->layoutUri		= $layoutUri;
-			$event->spanningDays	= ceil($spanningDays);
-			$event->startDayNo		= $dayNo;
-			$event->editPermission	= $this->IsEventEditable($eventDGIDs);
-			
-			// Store this event in the lowest slot it will fit in.
-			// only look from the start day of this event
-			$located	= false;
-			$locatedOn	= 0;
-			
-			if (!isset($events[$locatedOn][$dayNo]))
-			{
-				// Start day empty on event row 1
-				$located 	= true;
-				
-				// Look to see if there are enough free slots to cover the event duration
-				for ($i = $dayNo; $i <= $spanningDays; $i++)
-				{
-					if (isset($events[$locatedOn][$i]))
-					{
-						$located	= false;
-						break;
-					}
-				}
-				
-				// If we are located by this point, that means we can fill in these blocks
-				if ($located)
-				{
-					Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
-				
-					for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
-					{
-						$events[$locatedOn][$i] = $event;
-					}
-				}
-			}
+            // Events that fall inside the two dates
+            $SQL.= "   AND schedule_detail.ToDT > $thisMonth ";
+            $SQL.= "   AND schedule_detail.FromDT <= $nextMonth ";
 
-			$locatedOn	= 1;
-			
-			if (!$located && !isset($events[$locatedOn][$dayNo]))
-			{
-				// Start day empty on event row 2
-				$located 	= true;
-				
-				// Look to see if there are enough free slots to cover the event duration
-				for ($i = $dayNo; $i <= $spanningDays; $i++)
-				{
-					if (isset($events[0][$i]))
-					{
-						$located	= false;
-						break;
-					}
-				}
-				
-				// If we are located by this point, that means we can fill in these blocks
-				if ($located)
-				{
-					Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
-				
-					for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
-					{
-						$events[$locatedOn][$i] = $event;
-					}
-				}
-			}
-			
-			$locatedOn	= 2;
-			
-			if (!$located && !isset($events[$locatedOn][$dayNo]))
-			{
-				// Start day empty on event row 3
-				$located 	= true;
-				
-				// Look to see if there are enough free slots to cover the event duration
-				for ($i = $dayNo; $i <= $spanningDays; $i++)
-				{
-					if (isset($events[0][$i]))
-					{
-						$located	= false;
-						break;
-					}
-				}
-				
-				// If we are located by this point, that means we can fill in these blocks
-				if ($located)
-				{
-					Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
-				
-					for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
-					{
-						$events[$locatedOn][$i] = $event;
-					}
-				}
-			}
-			
-			if (!$located)
-			{
-				Debug::LogEntry($db, 'audit', sprintf('No space for event with start day no %d and spanning days %d', $dayNo, $spanningDays));
-			}
-		}
+            //Ordering
+            $SQL.= " ORDER BY schedule_detail.ToDT - schedule_detail.FromDT DESC, 2,3";
 		
-		Debug::LogEntry($db, 'audit', 'Built Month Array');
-		Debug::LogEntry($db, 'audit', var_export($events, true));
-		
-		return $events;
+            Debug::LogEntry($db, 'audit', $SQL);
+
+            if (!$result = $db->query($SQL))
+            {
+                    trigger_error($db->error());
+                    trigger_error(__('Error getting events for date.'), E_USER_ERROR);
+            }
+
+            // Number of events
+            Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
+
+            while($row = $db->get_assoc_row($result))
+            {
+                $eventDetailID	= Kit::ValidateParam($row['schedule_detailID'], _INT);
+                $eventID	= Kit::ValidateParam($row['EventID'], _INT);
+                $fromDT		= Kit::ValidateParam($row['AdjustedFromDT'], _INT);
+                $toDT		= Kit::ValidateParam($row['AdjustedToDT'], _INT);
+                $layout		= Kit::ValidateParam($row['layout'], _STRING);
+                $displayGroup	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
+                $displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
+                $eventDGIDs	= Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
+                $eventDGIDs 	= explode(',', $eventDGIDs);
+
+                if (!in_array($displayGroupID, $user->DisplayGroupAuth())) continue;
+
+                // How many days does this event span?
+                $spanningDays	= ($toDT - $fromDT) / (60 * 60 * 24);
+                $spanningDays	= $spanningDays < 1 ? 1 : $spanningDays;
+
+                $dayNo		= (int) date('d', $fromDT);
+                $layoutUri		= sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
+
+                Debug::LogEntry($db, 'audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
+
+                // Create a new Event from these details
+                $event			= new Event();
+                $event->eventID		= $eventID;
+                $event->eventDetailID	= $eventDetailID;
+                $event->fromDT		= $fromDT;
+                $event->toDT		= $toDT;
+                $event->layout		= $layout;
+                $event->displayGroup	= $displayGroup;
+                $event->layoutUri	= $layoutUri;
+                $event->spanningDays	= ceil($spanningDays);
+                $event->startDayNo	= $dayNo;
+                $event->editPermission	= $this->IsEventEditable($eventDGIDs);
+                $this->eventsList[]     = $event;
+
+                // Store this event in the lowest slot it will fit in.
+                // only look from the start day of this event
+                $located	= false;
+                $locatedOn	= 0;
+
+                if (!isset($events[$locatedOn][$dayNo]))
+                {
+                    // Start day empty on event row 1
+                    $located 	= true;
+
+                    // Look to see if there are enough free slots to cover the event duration
+                    for ($i = $dayNo; $i <= $spanningDays; $i++)
+                    {
+                        if (isset($events[$locatedOn][$i]))
+                        {
+                            $located	= false;
+                            break;
+                        }
+                    }
+
+                    // If we are located by this point, that means we can fill in these blocks
+                    if ($located)
+                    {
+                        Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
+
+                        for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
+                        {
+                                $events[$locatedOn][$i] = $event;
+                        }
+                    }
+                }
+
+                $locatedOn	= 1;
+
+                if (!$located && !isset($events[$locatedOn][$dayNo]))
+                {
+                    // Start day empty on event row 2
+                    $located 	= true;
+
+                    // Look to see if there are enough free slots to cover the event duration
+                    for ($i = $dayNo; $i <= $spanningDays; $i++)
+                    {
+                        if (isset($events[$locatedOn][$i]))
+                        {
+                            $located	= false;
+                            break;
+                        }
+                    }
+
+                    // If we are located by this point, that means we can fill in these blocks
+                    if ($located)
+                    {
+                        Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
+
+                        for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
+                        {
+                            $events[$locatedOn][$i] = $event;
+                        }
+                    }
+                }
+
+                $locatedOn	= 2;
+
+                if (!$located && !isset($events[$locatedOn][$dayNo]))
+                {
+                    // Start day empty on event row 3
+                    $located 	= true;
+
+                    // Look to see if there are enough free slots to cover the event duration
+                    for ($i = $dayNo; $i <= $spanningDays; $i++)
+                    {
+                        if (isset($events[$locatedOn][$i]))
+                        {
+                            $located	= false;
+                            break;
+                        }
+                    }
+
+                    // If we are located by this point, that means we can fill in these blocks
+                    if ($located)
+                    {
+                        Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
+
+                        for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
+                        {
+                                $events[$locatedOn][$i] = $event;
+                        }
+                    }
+                }
+
+                if (!$located)
+                {
+                    // Record a +1 event for this day
+                    $events[3][$i] = $events[3][$i] + 1;
+
+                    Debug::LogEntry($db, 'audit', sprintf('No space for event with start day no %d and spanning days %d', $dayNo, $spanningDays));
+                }
+            }
+
+            Debug::LogEntry($db, 'audit', 'Built Month Array');
+            Debug::LogEntry($db, 'audit', var_export($events, true));
+
+            return $events;
 	}
 	
 	/**
@@ -672,6 +678,19 @@ class scheduleDAO
 		
 		return $events;
 	}
+
+        /**
+         * GetEventsForDay
+         * returns an array of events for the provided date.
+         * @param date $date
+         * @param array $displayGroupIDs
+         */
+        private function GetEventsForDay($date, $displayGroupIDs)
+        {
+            $events = array();
+
+            return $events;
+        }
 	
 	/**
 	 * Gets all the events starting on a date for the given displaygroups

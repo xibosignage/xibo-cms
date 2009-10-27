@@ -32,7 +32,8 @@ require_once("lib/data/data.class.php");
 require_once("config/db_config.php");
 require_once("config/config.class.php");
 include_once('lib/data/stat.data.class.php');
-require_once("lib/data/data.class.php");require_once('lib/data/display.data.class.php');
+require_once("lib/data/data.class.php");
+require_once('lib/data/display.data.class.php');
 
 // Sort out magic quotes
 if (get_magic_quotes_gpc()) 
@@ -80,7 +81,8 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 date_default_timezone_set(Config::GetSetting($db, 'defaultTimezone'));
 
 // What is the production mode of the server?
-if(Config::GetSetting($db, "SERVER_MODE")=="Test") ini_set('display_errors', 1);
+// I dont think we ever want to show errors through the XML webservice.
+// if(Config::GetSetting($db, "SERVER_MODE")=="Test") ini_set('display_errors', 1);
 
 require_once(Config::GetSetting($db, 'NUSOAP_PATH'));
 
