@@ -275,7 +275,7 @@ class scheduleDAO
                         // Are there any extra events to fit into this day that didnt have a space
                         if (isset($monthEvents[3][$d]))
                         {
-                            $events4	.= '<td colspan="1"><a href="index.php?p=schedule&q=DayHover&date=' . $currentDay . '" class="XiboFormButton XiboMoreLink">' . sprintf(__('+ %d more'), $monthEvents[3][$d]) . '</a></td>';
+                            $events4	.= '<td colspan="1"><a href="index.php?p=schedule&q=DayHover&date=' . $currentDay . '" class="XiboFormButton XiboHoverButton">' . sprintf(__('+ %d more'), $monthEvents[3][$d]) . '</a></td>';
                         }
                         else
                         {
@@ -384,7 +384,7 @@ class scheduleDAO
             $output .= '    </table>';
             $output .= '</div>';
 
-            $response->SetFormRequestResponse($output, __('Events for Day'), '550px', '350px');
+            $response->SetFormRequestResponse($output, __('Events for Day'), '550px', '250px');
             $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
             $response->AddButton(__('Close'), 'XiboDialogClose()');
             $response->Respond();

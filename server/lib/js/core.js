@@ -104,6 +104,24 @@ function XiboInitialise(scope){
 		return false;
 	});
 
+        // Search for any Buttons / Linkson the page that are used to load hover tooltips
+	$(scope + " .XiboHoverButton").hover(
+            function(e){
+
+		var formUrl = $(this).attr("href");
+
+		XiboHoverRender(formUrl, e.pageX, e.pageY);
+
+		return false;
+            },
+             function(){
+
+               // Dont do anything on hover off - the hover on deals with
+               // destroying itself.
+               return false;
+            }
+        );
+
 	// Search for any forms that will need submitting
     $(scope + ' .XiboForm').validate({
    		submitHandler: XiboFormSubmit
@@ -209,97 +227,97 @@ function XiboFormRender(formUrl) {
 	$('#div_dialog').html("");
 
 	// Call with AJAX
-    $.ajax({
-        type: "get",
-        url: formUrl + "&ajax=true",
-        cache: false,
-        dataType: "json",
-        success: function(response){
+        $.ajax({
+            type: "get",
+            url: formUrl + "&ajax=true",
+            cache: false,
+            dataType: "json",
+            success: function(response){
 
-            // Was the Call successful
-            if (response.success) {
+                // Was the Call successful
+                if (response.success) {
 
-            // Set the dialog HTML to be the response HTML
-            $('#div_dialog').html(response.html);
+                // Set the dialog HTML to be the response HTML
+                $('#div_dialog').html(response.html);
 
-            var dialogTitle = "Xibo";
-            var dialogWidth = "500";
-            var dialogHeight = "500";
+                var dialogTitle = "Xibo";
+                var dialogWidth = "500";
+                var dialogHeight = "500";
 
-            // Is there a title for the dialog?
-            if (response.dialogTitle != undefined && response.dialogTitle != "") {
-                // Set the dialog title
-		dialogTitle =  response.dialogTitle;
+                // Is there a title for the dialog?
+                if (response.dialogTitle != undefined && response.dialogTitle != "") {
+                    // Set the dialog title
+                    dialogTitle =  response.dialogTitle;
+                }
+
+                // Do we need to alter the dialog size?
+                if (response.dialogSize) {
+                    dialogWidth 	= response.dialogWidth;
+                    dialogHeight	= response.dialogHeight;
+                }
+
+                // Buttons?
+                var buttons = '';
+
+                if (response.buttons != '') {
+                    $.each(
+                            response.buttons,
+                            function(index, value) {
+                                var extrabutton = {};
+                                extrabutton[index] = function(){
+                                        eval(value);
+                                }
+
+                                buttons = $.extend(buttons, extrabutton);
+                            }
+                    );
+                }
+
+                // Create the dialog with our parameters
+                $('#div_dialog').dialog({
+                    title: dialogTitle,
+                    width: dialogWidth,
+                    height: dialogHeight,
+                    draggable: true,
+                    resizable: false,
+                    bgiframe: true,
+                    autoOpen: true,
+                    buttons: buttons
+                });
+
+                // Do we have to call any functions due to this success?
+                if (response.callBack != "" && response.callBack != undefined) {
+                    eval(response.callBack)(name);
+                }
+
+                // Focus in the first form element
+                if (response.focusInFirstInput) {
+                   $('input[type=text]', '#div_dialog').eq(0).focus();
+                }
+
+                // Call Xibo Init for this form
+                XiboInitialise("#div_dialog");
             }
-
-            // Do we need to alter the dialog size?
-            if (response.dialogSize) {
-		dialogWidth 	= response.dialogWidth;
-		dialogHeight	= response.dialogHeight;
+            else {
+                // Login Form needed?
+                if (response.login) {
+                    LoginBox(response.message);
+                    return false;
+                }
+                else {
+                    // Just an error we dont know about
+                    if (response.message == undefined) {
+                        SystemMessage(response);
+                    }
+                    else {
+                        SystemMessage(response.message);
+                    }
+                }
             }
-
-            // Buttons?
-            var buttons = '';
-
-            if (response.buttons != '') {
-            	$.each(
-                	response.buttons,
-			function(index, value) {
-				var extrabutton = {};
-				extrabutton[index] = function(){
-					eval(value);
-				}
-
-				buttons 		= $.extend(buttons, extrabutton);
-			}
-		);
-            }
-
-            // Create the dialog with our parameters
-            $('#div_dialog').dialog({
-                title: dialogTitle,
-		width: dialogWidth,
-		height: dialogHeight,
-		draggable: true,
-		resizable: false,
-		bgiframe: true,
-		autoOpen: true,
-		buttons: buttons
-            });
-
-            // Do we have to call any functions due to this success?
-            if (response.callBack != "" && response.callBack != undefined) {
-                eval(response.callBack)(name);
-            }
-
-            // Focus in the first form element
-            if (response.focusInFirstInput) {
-	               $('input[type=text]', '#div_dialog').eq(0).focus();
-            }
-
-            // Call Xibo Init for this form
-            XiboInitialise("#div_dialog");
-      }
-	else {
-		// Login Form needed?
-	            if (response.login) {
-	                LoginBox(response.message);
-	                return false;
-	            }
-	            else {
-	                // Just an error we dont know about
-					if (response.message == undefined) {
-						SystemMessage(response);
-					}
-					else {
-		                SystemMessage(response.message);
-					}
-	            }
-			}
 
             return false;
         }
-    });
+        });
 
 	// Dont then submit the link/button
 	return false;
@@ -542,6 +560,90 @@ function XiboHelpRender(formUrl) {
 
 	// Dont then submit the link/button
 	return false;
+}
+
+/**
+ * Renders a Hover window and sets up events to destroy the window.
+ */
+function XiboHoverRender(url, x, y)
+{
+    // Call some AJAX
+    // TODO: Change this to be hover code
+    $.ajax({
+            type: "get",
+            url: url + "&ajax=true",
+            cache: false,
+            dataType: "json",
+            success: function(response){
+
+                // Was the Call successful
+                if (response.success) {
+
+                    var dialogWidth = "500";
+                    var dialogHeight = "500";
+
+                    // Do we need to alter the dialog size?
+                    if (response.dialogSize) {
+                        dialogWidth 	= response.dialogWidth;
+                        dialogHeight	= response.dialogHeight;
+                    }
+
+                    // Create the the popup bubble with our parameters
+                    $("body").append("<div class=\"XiboHover\"></div>");
+
+                    $(".XiboHover").css("position", "absolute").css(
+                        {
+                            display: "none",
+                            width:dialogWidth,
+                            height:dialogHeight,
+                            top: y,
+                            left: x
+                        }
+                    ).fadeIn("slow").hover(
+                        function(){
+                            return false
+                        },
+                        function(){
+                           $(".XiboHover").hide().remove();
+                           return false;
+                        }
+                    );
+
+                    // Set the dialog HTML to be the response HTML
+                    $('.XiboHover').html(response.html);
+
+                    // Do we have to call any functions due to this success?
+                    if (response.callBack != "" && response.callBack != undefined) {
+                        eval(response.callBack)(name);
+                    }
+
+                    // Call Xibo Init for this form
+                    XiboInitialise(".XiboHover");
+
+                }
+                else {
+                    // Login Form needed?
+                    if (response.login) {
+                        LoginBox(response.message);
+                        return false;
+                    }
+                    else {
+                        // Just an error we dont know about
+                        if (response.message == undefined) {
+                            SystemMessage(response);
+                        }
+                        else {
+                            SystemMessage(response.message);
+                        }
+                    }
+                }
+
+                return false;
+            }
+        });
+
+    // Dont then submit the link/button
+    return false;
 }
 
 /**
