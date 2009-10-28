@@ -1,15 +1,14 @@
 <?php
 
+// Will need to include the Data classes.
+require_once("lib/data/data.class.php");
+require_once('lib/data/displaygroup.data.class.php');
+
 class Step20 extends UpgradeStep
 {
-
 	public function Boot()
 	{
 		$db = &$this->db;
-		
-		// Will need to include the Data classes.
-		require_once("lib/data/data.class.php");
-		require_once('lib/data/displaygroup.data.class.php');
 
 		// Will need to add some upgrade PHP to create a DisplayGroup (+ link record) for every Currently existing display.
 		$dg = new DisplayGroup($db);
@@ -24,16 +23,111 @@ class Step20 extends UpgradeStep
 		
 		while ($row = $db->get_assoc_row($result))
 		{
-			// For each display create a display group and link it to the display
-			$displayID		= Kit::ValidateParam($row['DisplayID'], _INT);
-			$display		= Kit::ValidateParam($row['Display'], _STRING);
-			
-			$displayGroupID	= $dg->Add($display, 1);
-			
-			$dg->Link($displayGroupID, $displayID);
+                    // For each display create a display group and link it to the display
+                    $displayID		= Kit::ValidateParam($row['DisplayID'], _INT);
+                    $display		= Kit::ValidateParam($row['Display'], _STRING);
+
+                    $displayGroupID	= $dg->Add($display, 1);
+
+                    $dg->Link($displayGroupID, $displayID);
 		}
-		
+
+                // We also need to do a number on the schedule records
+                // Each schedule record needs to be altered so that the displayID_list now reflects the displayGroupIDs
+                $this->UpdateSchedules();
+
 		return true;
 	}
+
+        /**
+         * Updates all schedule records with the correct display group id
+         */
+        private function UpdateSchedules()
+        {
+            $db =& $this->db;
+
+            // Get all schedules
+            $SQL = "SELECT EventID, DisplayGroupIDs FROM schedule";
+
+            if (!$result = $db->query($SQL))
+            {
+                trigger_error("Error getting Schedules", E_USER_ERROR);
+            }
+
+            while ($row = $db->get_assoc_row($result))
+            {
+                // For each display create a display group and link it to the display
+                $eventID		= Kit::ValidateParam($row['EventID'], _INT);
+                $displayGroupIDs	= Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
+
+                // For the display ids in the list make us up a comma seperated list of display groups
+                $SQL = "SELECT displaygroup.DisplayGroupID FROM displaygroup ";
+                $SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+                $SQL .= sprintf("WHERE lkdisplaydg.DisplayID IN (%s)", $displayGroupIDs);
+                $SQL .= " AND IsDisplaySpecific = 1";
+
+                if (!$dgResult = $db->query($SQL))
+                {
+                    trigger_error("Error getting Display Groups", E_USER_ERROR);
+                }
+
+                $displayGroupIDs = array();
+
+                while ($row = $db->get_assoc_row($dgResult))
+                {
+                    $displayGroupIDs[] = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+                }
+
+                $displayGroupIDs = implode(',', $displayGroupIDs);
+
+                // Update the schedule with the new IDs
+                $SQL = "UPDATE schedule SET DisplayGroupIDs = '%s' WHERE EventID = %d";
+                $SQL = sprintf($SQL, $displayGroupIDs, $eventID);
+
+                if (!$db->query($SQL))
+                {
+                    trigger_error("Error updating schedules.", E_USER_ERROR);
+                }
+            }
+
+            // Get all schedule details
+            $SQL = "SELECT Schedule_DetailID, DisplayGroupID FROM schedule_detail";
+
+            if (!$result = $db->query($SQL))
+            {
+                trigger_error("Error getting Schedule Details", E_USER_ERROR);
+            }
+
+            while ($row = $db->get_assoc_row($result))
+            {
+                // For each display create a display group and link it to the display
+                $eventID		= Kit::ValidateParam($row['Schedule_DetailID'], _INT);
+                $displayGroupID 	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
+
+                // For the display ids in the list make us up a comma seperated list of display groups
+                $SQL = "SELECT displaygroup.DisplayGroupID FROM displaygroup ";
+                $SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+                $SQL .= sprintf("WHERE lkdisplaydg.DisplayID = %d", $displayGroupID);
+                $SQL .= " AND IsDisplaySpecific = 1";
+
+                if (!$dgResult = $db->query($SQL))
+                {
+                    trigger_error("Error getting Display Groups", E_USER_ERROR);
+                }
+
+                $row = $db->get_assoc_row($dgResult);
+
+                $displayGroupID = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+
+                // Update the schedule with the new IDs
+                $SQL = "UPDATE schedule_detail SET DisplayGroupID = %d WHERE schedule_detailID = %d";
+                $SQL = sprintf($SQL, $displayGroupID, $eventID);
+
+                if (!$db->query($SQL))
+                {
+                    trigger_error("Error updating schedule_detail.", E_USER_ERROR);
+                }
+            }
+        }
 }
 ?>

@@ -79,10 +79,12 @@ class helpDAO
 	{
 		$response	= new ResponseManager();
 		$helpLink 	= $this->helpLink;
+                $width          = 1000;
+                $height         = 650;
 
-		$out 		= '<iframe src="' . $helpLink . '" width="765" height="595"></iframe>';
+		$out 		= '<iframe src="' . $helpLink . '" width="' . ($width - 35) . '" height="' . ($height - 60) . '"></iframe>';
 
-		$response->SetFormRequestResponse($out, __('Help'), '800px', '650px');
+		$response->SetFormRequestResponse($out, __('Help'), $width, $height);
 		$response->Respond();
 
 		return true;
