@@ -45,8 +45,7 @@ class TranslationEngine
             $lang = Kit::GetParam('lang', _REQUEST, _WORD, '');
 
             // Build an array of supported languages
-            // TODO: Would be nice to build this from the contents of the local directory
-            $supportedLangs = array('ar', 'en_GB');
+            $supportedLangs = scandir($localeDir);
 
             if ($lang != '')
             {
@@ -55,7 +54,7 @@ class TranslationEngine
 
                 // Is this language supported?
                 // if not just use the default (eb_GB).
-                if (!in_array($lang, $supportedLangs))
+                if (!in_array($lang . '.mo', $supportedLangs))
                 {
                     trigger_error(sprintf('Language not supported. %s', $lang));
 
@@ -78,7 +77,7 @@ class TranslationEngine
                         $rawLang = explode(';', $lang);
                         $lang = $rawLang[0];
 
-                        if (in_array($lang, $supportedLangs))
+                        if (in_array($lang . '.mo', $supportedLangs))
                         {
                             Debug::LogEntry($db, 'audit', 'Obtained the Language from HTTP_ACCEPT_LANGUAGE [' . $lang . ']', 'TranslationEngine', 'InitLocal');
                             break;
