@@ -254,7 +254,10 @@ END;
 		// Check for PHP Gettext
 		$message = __('Gettext');
 
-		if ($this->CheckGettext()) 
+		/**
+                 * we now use PHP-Gettext which is shipped.
+                 * 
+                 * if ($this->CheckGettext())
 		{
 			$output .= $imgGood.$message.'<br />';
 		}
@@ -264,7 +267,7 @@ END;
 			
 			$output .= $imgBad.$message.'<br />';
 			$output .= '<div class="check_explain"><p>' . __('Xibo needs PHP Gettext support to function.') . '</p></div>';
-		}
+		}*/
 	
 		// Check for Calendar
 		$message = __('Calendar Extension');
