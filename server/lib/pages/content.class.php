@@ -93,85 +93,83 @@ class contentDAO
 	 */	
 	function LibraryFilter() 
 	{
-		$db =& $this->db;
-		
-		$mediatype = ""; //1
-		$name = ""; //2
-		$usertype = 0; //3
-		$playlistid = ""; //4
-		
-		if (isset($_SESSION['content']['mediatype'])) $mediatype = $_SESSION['content']['mediatype'];
-		if (isset($_SESSION['content']['name'])) $name = $_SESSION['content']['name'];
-		if (isset($_SESSION['content']['usertype'])) $usertype = $_SESSION['content']['usertype'];
-		if (isset($_SESSION['content']['playlistid'])) $playlistid = $_SESSION['content']['playlistid'];
-		
-		//shared list
-		$shared = "All";
-		if (isset($_SESSION['content']['shared'])) $shared = $_SESSION['content']['shared'];
-		$shared_list = dropdownlist("SELECT 'all','All' UNION SELECT permissionID, permission FROM permission", "shared", $shared);
-		
-		$filter_userid = "";
-		if (isset($_SESSION['content']['filter_userid'])) $filter_userid = $_SESSION['content']['filter_userid'];
-		
-		$user_list = listcontent("all|All,".userlist("SELECT DISTINCT userid FROM layout"),"filter_userid", $filter_userid);
-		
-		//retired list
-		$retired = "0";
-		if(isset($_SESSION['playlist']['filter_retired'])) $retired = $_SESSION['playlist']['retired'];
-		$retired_list = listcontent("all|All,1|Yes,0|No","filter_retired",$retired);
+            $db =& $this->db;
 
-		//type list query to get all playlists that are in the database which have NOT been assigned to the display
-		$sql = "SELECT 'all', 'all' ";
-		$sql .= "UNION ";
-		$sql .= "SELECT type, type ";
-		$sql .= "FROM media ";
-		$sql .= "GROUP BY type ";
-		
-		$type_list =  dropdownlist($sql,"mediatype",$mediatype);
+            $mediatype = ""; //1
+            $usertype = 0; //3
+            $playlistid = ""; //4
 
-		$filterForm = <<<END
-			<div class="FilterDiv" id="LibraryFilter">
-				<form>
-					<input type="hidden" name="p" value="content">
-					<input type="hidden" name="q" value="LibraryGrid">
-					<input type="hidden" name="pages" id="pages">
-					
-					<table id="content_filterform" class="filterform">
-						<tr>
-							<td>Name</td>
-							<td><input type='text' name='2' id='2' value="$name" /></td>
-							<td>Type</td>
-							<td>$type_list</td>
-							<td>Retired</td>
-							<td>$retired_list</td>
-						</tr>
-						<tr>
-							<td>Owner</td>
-							<td>$user_list</td>
-							<td></td>
-							<td></td>
-							<td>Shared</td>
-							<td>$shared_list</td>
-							
-						</tr>
-					</table>
-			</form>
-		</div>
+            if (isset($_SESSION['content']['mediatype'])) $mediatype = $_SESSION['content']['mediatype'];
+            if (isset($_SESSION['content']['usertype'])) $usertype = $_SESSION['content']['usertype'];
+            if (isset($_SESSION['content']['playlistid'])) $playlistid = $_SESSION['content']['playlistid'];
+
+            //shared list
+            $shared = "All";
+            if (isset($_SESSION['content']['shared'])) $shared = $_SESSION['content']['shared'];
+            $shared_list = dropdownlist("SELECT 'all','All' UNION SELECT permissionID, permission FROM permission", "shared", $shared);
+
+            $filter_userid = "";
+            if (isset($_SESSION['content']['filter_userid'])) $filter_userid = $_SESSION['content']['filter_userid'];
+
+            $user_list = listcontent("all|All,".userlist("SELECT DISTINCT userid FROM layout"),"filter_userid", $filter_userid);
+
+            //retired list
+            $retired = "0";
+            if(isset($_SESSION['playlist']['filter_retired'])) $retired = $_SESSION['playlist']['retired'];
+            $retired_list = listcontent("all|All,1|Yes,0|No","filter_retired",$retired);
+
+            //type list query to get all playlists that are in the database which have NOT been assigned to the display
+            $sql = "SELECT 'all', 'all' ";
+            $sql .= "UNION ";
+            $sql .= "SELECT type, type ";
+            $sql .= "FROM media ";
+            $sql .= "GROUP BY type ";
+
+            $type_list =  dropdownlist($sql,"mediatype",$mediatype);
+
+            $filterForm = <<<END
+                <div class="FilterDiv" id="LibraryFilter">
+                    <form>
+                        <input type="hidden" name="p" value="content">
+                        <input type="hidden" name="q" value="LibraryGrid">
+                        <input type="hidden" name="pages" id="pages">
+
+                        <table id="content_filterform" class="filterform">
+                                <tr>
+                                        <td>Name</td>
+                                        <td><input type='text' name='2' id='2' /></td>
+                                        <td>Type</td>
+                                        <td>$type_list</td>
+                                        <td>Retired</td>
+                                        <td>$retired_list</td>
+                                </tr>
+                                <tr>
+                                        <td>Owner</td>
+                                        <td>$user_list</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td>Shared</td>
+                                        <td>$shared_list</td>
+
+                                </tr>
+                        </table>
+                    </form>
+                </div>
 END;
-		
-		$id = uniqid();
-		
-		$xiboGrid = <<<HTML
-		<div class="XiboGrid" id="$id">
-			<div class="XiboFilter">
-				$filterForm
-			</div>
-			<div class="XiboData">
-			
-			</div>
-		</div>
+
+            $id = uniqid();
+
+            $xiboGrid = <<<HTML
+            <div class="XiboGrid" id="$id">
+                <div class="XiboFilter">
+                        $filterForm
+                </div>
+                <div class="XiboData">
+
+                </div>
+            </div>
 HTML;
-		echo $xiboGrid;
+            echo $xiboGrid;
 	}
 	
 	/**
