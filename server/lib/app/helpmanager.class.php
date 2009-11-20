@@ -33,8 +33,8 @@ class HelpManager
 	 */
 	public function __construct(database $db, User $user)
 	{
-		$this->db 		=& $db;
-		$this->user 	=& $user;
+            $this->db       =& $db;
+            $this->user 	=& $user;
 	}
 	
 	/**
@@ -47,7 +47,7 @@ class HelpManager
 	{
 		$db 		=& $this->db;
 		
-		$location	= split('/', $location);
+		$location	= explode('/', $location);
 		$topic		= ucfirst($location[0]);
 		$category	= ucfirst($location[1]);
 		

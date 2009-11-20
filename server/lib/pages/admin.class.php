@@ -24,7 +24,6 @@ class adminDAO
 {
 	private $db;
 	private $user;
-	private $display_page = true;
 
 	function __construct(database $db, user $user) 
 	{
@@ -200,7 +199,7 @@ FORM;
 		$output = "";
 		
 		$title 	 = ucfirst($cat);
-		$output .= '<h3>' . $title . __('Settings') . '</h3>';
+		$output .= '<h3>' . __($title) . ' ' . __('Settings') . '</h3>';
 			
 		/*
 			Firstly we want to individually get the user module
@@ -220,6 +219,7 @@ FORM;
 			$row 		= $db->get_row($results);
 			$settingid 	= Kit::ValidateParam($row[0], _INT);
 			$setting 	= Kit::ValidateParam($row[1], _STRING);
+			$setting 	= __($setting);
 			$value 		= Kit::ValidateParam($row[2], _STRING);
 			$helptext	= Kit::ValidateParam($row[3], _HTMLSTRING);
 			
@@ -234,14 +234,14 @@ END;
 			
 			foreach ($files as $file) 
 			{
-				$selected = "";
-				if($file == $value) $selected = "selected";
-				
-				if(preg_match("^module_user^", $file)) 
-				{
-					//var for drop down
-					$select.= "<option value='$file' $selected>$file</option>";	
-				}
+                            $selected = "";
+                            if($file == $value) $selected = "selected";
+
+                            if(preg_match("^module_user^", $file))
+                            {
+                                    //var for drop down
+                                    $select.= "<option value='$file' $selected>$file</option>";
+                            }
 			}
 				
 			$output .=  <<<END

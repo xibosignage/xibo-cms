@@ -42,5 +42,26 @@ echo __('Edit your Display');
 echo __('Report Fault');
 echo __('Statistics');
 echo __('Display Groups');
+echo __('Content');
+echo __('Default');
+echo __('Error');
+echo __('General');
+echo __('Path');
+
+// Settings translations
+echo __('jpg_length');
+echo __('ppt_length');
+echo __('swf_length');
+echo __('defaultMedia');
+echo __('defaultPlaylist');
+echo __('defaultUsertype');
+echo __('defaultTimezone');
+echo __('debug');
+echo __('audit');
+echo __('SERVER_MODE');
+echo __('SERVER_KEY');
+echo __('PHONE_HOME');
+echo __('NUSOAP_PATH');
+echo __('LIBRARY_LOCATION');
 
 ?>
