@@ -40,8 +40,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 						$args 	= Kit::ValidateParam($menuItem['Args'], _STRING);
 						$class 	= Kit::ValidateParam($menuItem['Class'], _WORD);
 						$title 	= Kit::ValidateParam($menuItem['Text'], _STRING);
+						$title 	= __($title);
 						$img 	= Kit::ValidateParam($menuItem['Img'], _STRING);
-						
 						
 						$href = 'index.php?p=' . $uri . '&' . $args;
 						
@@ -57,7 +57,7 @@ END;
 				?>
 				<div class="dashicons">
 					<a id="help_button" target="_blank" alt="The Manual" href="http://wiki.xibo.org.uk/wiki/Manual:TOC">
-					<img class="dash_button" src="img/dashboard/help.png"/>
+                                            <img class="dash_button" src="img/dashboard/help.png" alt="Manual"/>
 					<span class="dash_text">Manual</span></a>
 				</div>
 			</div>	

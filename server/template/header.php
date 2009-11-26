@@ -121,6 +121,7 @@ $datemanager	= new DateManager($db);
 						$args 	= Kit::ValidateParam($menuItem['Args'], _STRING);
 						$class 	= Kit::ValidateParam($menuItem['Class'], _WORD);
 						$title 	= Kit::ValidateParam($menuItem['Text'], _STRING);
+						$title 	= __($title);
 						
 						// Extra style for the current one
 						if ($p == $uri) $class = 'current ' . $class;
@@ -141,6 +142,7 @@ $datemanager	= new DateManager($db);
 								$args 	= Kit::ValidateParam($menuItem['Args'], _STRING);
 								$class 	= Kit::ValidateParam($menuItem['Class'], _WORD);
 								$title 	= Kit::ValidateParam($menuItem['Text'], _STRING);
+								$title 	= __($title);
 								
 								// Extra style for the current one
 								if ($p == $uri) $class = 'current ' . $class;

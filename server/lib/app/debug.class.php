@@ -56,7 +56,7 @@ class Debug
 				E_CORE_WARNING => 'Core Warning', E_COMPILE_ERROR => 'Compile Error',
 				E_COMPILE_WARNING => 'Compile Warning', E_USER_ERROR => 'User Error',
 				E_USER_WARNING => 'User Warning', E_USER_NOTICE => 'User Notice', E_STRICT =>
-				'Runtime Notice', E_RECOVERABLE_ERROR => 'Recoverable Error');
+				'Runtime Notice', E_RECOVERABLE_ERROR => 'Recoverable Error', 8192 => 'Deprecated Call');
 
 		// set of errors for which a var trace will be saved
 		$user_errors_halt = array(E_USER_ERROR);
