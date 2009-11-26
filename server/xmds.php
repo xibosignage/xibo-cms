@@ -586,31 +586,27 @@ function Schedule($serverKey, $hardwareKey, $version)
 	// Store the Base SQL for this display
 	$SQLBase = $SQL;
 
-	// Run the query
-	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
-
 	// Do we include the default display
 	if ($displayInfo['inc_schedule'] == 1)
 	{
-		$SQL .= " AND ((schedule_detail.FromDT < $currentdate AND schedule_detail.ToDT > $currentdate )";
-		$SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
+            $SQL .= " AND ((schedule_detail.FromDT < $currentdate AND schedule_detail.ToDT > $currentdate )";
+            $SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
 	}
 	else
 	{
 		$SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $currentdate, $currentdate);
 	}
 
-	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
-
-
 	// Before we run the main query we should check to see if there are any priority layouts to deal with
 	$SQLp = " AND schedule_detail.is_priority = 1 ";
+
+	if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
 
 	// Run the query
 	if (!$results = $db->query($SQL . $SQLp))
 	{
-		trigger_error($db->error());
-		return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
+            trigger_error($db->error());
+            return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the priority schedule", $db->error());
 	}
 
 	// If there were no results then continue to get the full schedule
@@ -619,23 +615,25 @@ function Schedule($serverKey, $hardwareKey, $version)
 		// Run the query
 		if (!$results = $db->query($SQL))
 		{
-			trigger_error($db->error());
-			return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
+                    trigger_error($db->error());
+                    return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
 		}
 
 		// Was there anything?
 		if ($db->num_rows($results) == 0)
 		{
-			// No rows, run the query for default layout
-			$SQL  = $SQLBase;
-			$SQL .= " AND ((schedule_detail.FromDT < $currentdate AND schedule_detail.ToDT > $currentdate )";
-			$SQL .= " OR (schedule_detail.FromDT = $infinityFromDT AND schedule_detail.ToDT = $infinityToDT ))";
+                    // No rows, run the query for default layout
+                    $SQL  = $SQLBase;
+                    $SQL .= " AND ((schedule_detail.FromDT < $currentdate AND schedule_detail.ToDT > $currentdate )";
+                    $SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
 
-			if (!$results = $db->query($SQL))
-			{
-				trigger_error($db->error());
-				return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the schedule", $db->error());
-			}
+                    if ($displayInfo['isAuditing'] == 1) Debug::LogEntry($db, "audit", "TTTT: $SQL", "xmds", "Schedule");
+
+                    if (!$results = $db->query($SQL))
+                    {
+                        trigger_error($db->error());
+                        return new soap_fault("SOAP-ENV:Server", "", "Unable to get A list of layouts for the last chance schedule", $db->error());
+                    }
 		}
 	}
 
