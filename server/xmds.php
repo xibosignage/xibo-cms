@@ -281,7 +281,7 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 	while ($row = $db->get_row($results))
 	{
 		$layoutid = $row[0];
-		$layoutXml = $row[3];
+		$layoutXml = Kit::ValidateParam($row[3], _HTMLSTRING);
 		$background = $row[4];
 
 		// Add all the associated media first
@@ -353,7 +353,7 @@ function RequiredFiles($serverKey, $hardwareKey, $version)
 
 		$file->setAttribute("type", "layout");
 		$file->setAttribute("path", $layoutid);
-		$file->setAttribute("md5", md5($layoutXml . "\n"));
+		$file->setAttribute("md5", md5($layoutXml));
 
 		$fileElements->appendChild($file);
 	}
