@@ -127,7 +127,7 @@ class moduleDAO
 		// Get the info for this new temporary file
 		$info 		= getimagesize($uid);
 		
-		if ($dynamic && $info[2] != IMAGETYPE_GIF)
+		if ($dynamic && $info[2])
 		{
 			$width 	= Kit::GetParam('width', _GET, _INT);
 			$height = Kit::GetParam('height', _GET, _INT);
