@@ -85,7 +85,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<?php displayMessage(); ?>
 				<br />
 				<p><a href="http://www.xibo.org.uk"><img src='img/login/complogo.png'></a></p>
-				<p><a href="https://code.launchpad.net/~xibo-maintainers/xibo/encke">Source</a> | <a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo __('About Xibo'); ?>"><?php echo __('About'); ?></a></p>
+				<p>Version <?php echo VERSION; ?> | <a href="https://code.launchpad.net/~xibo-maintainers/xibo/encke">Source</a> | <a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo __('About Xibo'); ?>"><?php echo __('About'); ?></a></p>
 			</div>
 			
 			<div class="login_foot">
