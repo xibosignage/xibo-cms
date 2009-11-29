@@ -77,7 +77,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<?php displayMessage(); ?>
 				<br />
 				<p><a href="http://www.xibo.org.uk"><img src='img/login/complogo.png'></a></p>
-				<p>Version 1.0.5 | <a href="https://code.launchpad.net/~xibo-maintainers/xibo/halley">Source</a></p>
+				<p>Version <?php echo VERSION; ?> | <a href="https://code.launchpad.net/~xibo-maintainers/xibo/halley">Source</a></p>
                                 
 				<div id="forgotten_details" style="display:none">
 					<?php
