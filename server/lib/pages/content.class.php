@@ -27,22 +27,6 @@ class contentDAO
 	private $isadmin = false;
 	private $has_permissions = true;
 	private $sub_page = "";
-	
-	//Table Fields
-	private $mediaid;
-	private $name = ""; 
-	private $filepath = ""; 
-	private $type = "";
-	private $length = "";
-	private $width = "";
-	private $height = "";
-	private $permissionid;
-	private $media_class = "";
-	private $retired;
-	
-	//are we redirecting to another page once we are done?
-	private $redirect = false;
-	private $redirect_addr = "";
 
 	function __construct(database $db, user $user) 
 	{
@@ -633,8 +617,8 @@ END;
 		
 		if (isset($_FILES["media_file"]) && is_uploaded_file($_FILES["media_file"]["tmp_name"]) && $_FILES["media_file"]["error"] == 0) 
 		{
-			$error 			= 0;
-			$fileName 		= $_FILES["media_file"]["name"];
+			$error 		= 0;
+			$fileName 	= Kit::ValidateParam($_FILES["media_file"]["name"], _FILENAME);
 			$fileLocation 	= $libraryFolder."temp/".$fileId;
 			
 			// Save the FILE
@@ -677,6 +661,7 @@ HTML;
 		
 		echo $complete_page;
 		
+		Debug::LogEntry($db, "audit", $complete_page, "FileUpload");
 		Debug::LogEntry($db, "audit", "[OUT]", "FileUpload");
 		exit;
 	}

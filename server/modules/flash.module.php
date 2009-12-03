@@ -706,7 +706,7 @@ END;
 		}
 
 		// Ensure the name is not already in the database
-		$SQL = sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d AND mediaid <> %d ", $db->escape_string($name), $userid, $mediaid);
+		$SQL = sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d AND mediaid <> %d AND IsEdited = 0 ", $db->escape_string($name), $userid, $mediaid);
 
 		if(!$result = $db->query($SQL))
 		{
