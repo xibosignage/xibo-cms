@@ -42,8 +42,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 						$title 	= Kit::ValidateParam($menuItem['Text'], _STRING);
 						$img 	= Kit::ValidateParam($menuItem['Img'], _STRING);
 						
-						
-						$href = 'index.php?p=' . $uri . '&' . $args;
+                                                
+                                                $href = 'index.php?p=' . $uri . '&' . $args;
+                                                
+                                                // Override the HREF for the Manual Button
+                                                if ($uri == 'manual')
+                                                    $href = $args;
 						
 						$out = <<<END
 							<div class="dashicons">
@@ -55,11 +59,6 @@ END;
 						echo $out;
 					}
 				?>
-				<div class="dashicons">
-					<a id="help_button" target="_blank" alt="The Manual" href="http://www.xibo.org.uk/manual/index.php?p=content/dashboard/overview">
-					<img class="dash_button" src="img/dashboard/help.png"/>
-					<span class="dash_text">Manual</span></a>
-				</div>
 			</div>	
 	</div>
 	
