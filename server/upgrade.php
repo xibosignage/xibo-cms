@@ -206,7 +206,7 @@ elseif ($_SESSION['step'] == 2) {
 	}
 
     echo '<div class="info"><p>';
-	echo "Perform automatic database upgrade?";
+	echo "Perform automatic database backup?";
 	echo '</p></div><div class="install-table">';
     echo '<input type="checkbox" name="doBackup" checked />';
 	echo '</div><hr width="25%" />';
