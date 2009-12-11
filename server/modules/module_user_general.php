@@ -230,7 +230,7 @@
 
 	function getGroupFromID($id, $returnID = false) 
 	{
-		$db 		=& $this->db;
+            $db =& $this->db;
 		
             $SQL  = "";
             $SQL .= "SELECT group.group, ";
@@ -240,31 +240,29 @@
             $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
             $SQL .= "       INNER JOIN `group` ";
             $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
-            $SQL .= sprintf("WHERE  userid                     = %d ", $id);
-            $SQL .= "AND    lkusergroup.IsUserSpecific = 1";
+            $SQL .= sprintf("WHERE  `user`.userid                     = %d ", $id);
+            $SQL .= "AND    `group`.IsUserSpecific = 1";
 		
-		if(!$results = $db->query($SQL)) 
-		{
-			trigger_error("Error looking up user information (group)");
-			trigger_error($db->error());
-		}
+            if(!$results = $db->query($SQL))
+            {
+                trigger_error($db->error());
+                trigger_error("Error looking up user information (group)", E_USER_ERROR);
+            }
 		
-		if ($db->num_rows($results)==0) 
-		{
-			if ($returnID) 
-			{
-				return "1";
-			}
-			return "Users";
-		}
-		
-		$row = $db->get_row($results);
+            if ($db->num_rows($results) == 0)
+            {
+                // Every user should have a group?
+                // Error
+                trigger_error(__('This user does not have a group. Please resave their user information.'), E_USER_ERROR);
+            }
 
-		if ($returnID) 
-		{
-			return $row[1];
-		}
-		return $row[0];
+            $row = $db->get_row($results);
+
+            if ($returnID)
+            {
+                return $row[1];
+            }
+            return $row[0];
 	}
 	
 	function getUserTypeFromID($id, $returnID = false) 

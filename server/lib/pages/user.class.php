@@ -117,7 +117,7 @@ class userDAO
             // Add the user group
             $userGroupObject = new UserGroup($db);
 
-            if (!$userGroupObject->Add($username, 1))
+            if (!$groupID = $userGroupObject->Add($username, 1))
             {
                 // We really want to delete the new user...
                 //TODO: Delete the new user
@@ -125,6 +125,8 @@ class userDAO
                 // And then error
                 trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
             }
+
+            $userGroupObject->Link($groupID, $id);
 
             $response->SetFormSubmitResponse('User Saved.');
             $response->Respond();
@@ -231,30 +233,44 @@ class userDAO
 	 */
 	function DeleteUser() 
 	{
-		$db 			=& $this->db;
-		$response		= new ResponseManager();
-		$userid 		= Kit::GetParam('userid', _POST, _INT, 0);
+            $db 	=& $this->db;
+            $user       =& $this->user;
 
-		$sqldel = "DELETE FROM user";
-		$sqldel .= " WHERE UserID = ". $userid . "";
+            $response	= new ResponseManager();
+            $userid 	= Kit::GetParam('userid', _POST, _INT, 0);
+            $groupID    = $user->getGroupFromID($userid, true);
 
-		if (!$db->query($sqldel)) 
-		{
-			trigger_error($db->error());
-			trigger_error("This user has been active, you may only retire them.", E_USER_ERROR);
-		}
+            // Firstly delete the group for this user
+            $userGroupObject = new UserGroup($db);
 
-		// We should delete this users sessions record.
-		$SQL = "DELETE FROM session WHERE userID = $userid ";
-		
-		if (!$db->query($sqldel)) 
-		{
-			trigger_error($db->error());
-			trigger_error("If logged in, this user will be deleted once they log out.", E_USER_ERROR);
-		}
-		
-		$response->SetFormSubmitResponse('User Deleted.');
-		$response->Respond();
+            $userGroupObject->Unlink($groupID, $userid);
+
+            if (!$userGroupObject->Delete($groupID))
+            {
+                trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
+            }
+
+            // Delete the user
+            $sqldel = "DELETE FROM user";
+            $sqldel .= " WHERE UserID = ". $userid . "";
+
+            if (!$db->query($sqldel))
+            {
+                trigger_error($db->error());
+                trigger_error(__("This user has been active, you may only retire them."), E_USER_ERROR);
+            }
+
+            // We should delete this users sessions record.
+            $SQL = "DELETE FROM session WHERE userID = $userid ";
+
+            if (!$db->query($sqldel))
+            {
+                trigger_error($db->error());
+                trigger_error(__("If logged in, this user will be deleted once they log out."), E_USER_ERROR);
+            }
+
+            $response->SetFormSubmitResponse(__('User Deleted.'));
+            $response->Respond();
 	}
 
 	/**

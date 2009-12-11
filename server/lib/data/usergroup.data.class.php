@@ -99,7 +99,7 @@ class UserGroup extends Data
     }
 
     /**
-     * Deletes an Xibo Display Group
+     * Deletes an Xibo User Group
      * @return
      * @param $userGroupID Object
      */
@@ -115,9 +115,9 @@ class UserGroup extends Data
 
         if (!$db->query($SQL))
         {
-                $this->SetError(25015,__('Unable to delete User Group.'));
-
-                return false;
+            trigger_error($db->error());
+            $this->SetError(25015,__('Unable to delete User Group.'));
+            return false;
         }
 
         Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'Delete');
@@ -181,10 +181,10 @@ class UserGroup extends Data
 
         if (!$db->query($SQL))
         {
-                trigger_error($db->error());
-                $this->SetError(25007, __('Could not Unlink User from User Group'));
+            trigger_error($db->error());
+            $this->SetError(25007, __('Could not Unlink User from User Group'));
 
-                return false;
+            return false;
         }
 
         Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'Unlink');
