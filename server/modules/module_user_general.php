@@ -252,8 +252,21 @@
             if ($db->num_rows($results) == 0)
             {
                 // Every user should have a group?
-                // Error
-                trigger_error(__('This user does not have a group. Please resave their user information.'), E_USER_ERROR);
+                // Add one in!
+                include_once('lib/data/usergroup.data.class.php');
+
+                $userGroupObject = new UserGroup($db);
+                if (!$groupID = $userGroupObject->Add('Unknown user id: ' . $id, 1))
+                {
+                    // Error
+                    trigger_error(__('User does not have a group and Xibo is unable to add one.'), E_USER_ERROR);
+                }
+
+                // Link the two
+                $userGroupObject->Link($groupID, $id);
+
+                if ($returnID) return $groupID;
+                return 'Unknown';
             }
 
             $row = $db->get_row($results);
@@ -433,7 +446,6 @@
 		$userid		=& $this->userid;
 		
 		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT, 0);
-		$groupid	= $this->getGroupFromID($userid, true);
 		
 		// Check the security
 		if ($usertype == 1) 
@@ -454,14 +466,16 @@
 		
 		// we have access to only the pages assigned to this group
 		$SQL = "SELECT pages.pageID FROM pages INNER JOIN lkpagegroup ON lkpagegroup.pageid = pages.pageid ";
-		$SQL .= sprintf(" WHERE lkpagegroup.groupid = %d AND pages.name = '%s' ", $groupid, $db->escape_string($page));
+                $SQL .= "       INNER JOIN lkusergroup ";
+                $SQL .= "       ON     lkpagegroup.groupID       = lkusergroup.GroupID ";
+		$SQL .= sprintf(" WHERE lkusergroup.UserID = %d AND pages.name = '%s' ", $userid, $db->escape_string($page));
 	
 		Debug::LogEntry($db, 'audit', $SQL);
 	
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error('Can not get the page security for this group [' . $groupid . '] and page [' . $page . ']');
+			trigger_error('Can not get the page security for this user [' . $userid . '] and page [' . $page . ']');
 		}
 		
 		if ($db->num_rows($results) < 1)
@@ -484,8 +498,7 @@
 	{
 		$db 		=& $this->db;
 		$userid		=& $this->userid;
-		$usertypeid = Kit::GetParam('usertype', _SESSION, _INT);
-		$groupid	= $this->getGroupFromID($userid, true);
+		$usertypeid     = Kit::GetParam('usertype', _SESSION, _INT);
 		
 		Debug::LogEntry($db, 'audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
 		
@@ -504,15 +517,17 @@
 		$SQL .= "         ON       pages.pageID = menuitem.PageID ";
 		if ($usertypeid != 1) 
 		{
-			$SQL .= "         INNER JOIN lkmenuitemgroup ";
-			$SQL .= "         ON       lkmenuitemgroup.MenuItemID = menuitem.MenuItemID ";
-			$SQL .= "         INNER JOIN `group` ";
-			$SQL .= "         ON       lkmenuitemgroup.GroupID = group.GroupID ";
+			$SQL .= "       INNER JOIN lkmenuitemgroup ";
+			$SQL .= "       ON       lkmenuitemgroup.MenuItemID = menuitem.MenuItemID ";
+			$SQL .= "       INNER JOIN `group` ";
+			$SQL .= "       ON       lkmenuitemgroup.GroupID = group.GroupID ";
+                        $SQL .= "       INNER JOIN lkusergroup ";
+                        $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
 		}
 		$SQL .= sprintf("WHERE    menu.Menu              = '%s' ", $db->escape_string($menu));
 		if ($usertypeid != 1) 
 		{
-			$SQL .= sprintf(" AND group.groupid = %d", $groupid);
+			$SQL .= sprintf(" AND lkusergroup.UserID = %d", $userid);
 		}
 		$SQL .= " ORDER BY menuitem.Sequence";
 		

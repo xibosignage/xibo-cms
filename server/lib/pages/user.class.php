@@ -329,11 +329,12 @@ END;
 		{
 			$userID 	= $aRow[0];
 			$userName 	= $aRow[1];
-			$usertypeid = $aRow[2];
+			$usertypeid     = $aRow[2];
 			$loggedin 	= $aRow[3];
-			$lastaccessed = $aRow[4];
+			$lastaccessed   = $aRow[4];
 			$email 		= $aRow[5];
 			$homepage	= $aRow[6];
+                        $groupid        = $user->getGroupFromID($userID, true);
 
 			if($loggedin==1) 
 			{
@@ -383,13 +384,15 @@ END;
 			
 			if($_SESSION['usertype'] == 1 ||($userID == $_SESSION['userid'])) 
 			{
-				$table .= '<button class="XiboFormButton" href="index.php?p=user&q=DisplayForm&userID=' . $userID . '"><span>Edit</span></button>';
-				$table .= '<button class="XiboFormButton" href="index.php?p=user&q=DeleteForm&userID=' . $userID . '" ><span>Delete</span></button></div></td>';
+                            $msgPageSec	= __('Page Security');
+                            $msgMenuSec	= __('Menu Security');
+
+                            $table .= '<button class="XiboFormButton" href="index.php?p=user&q=DisplayForm&userID=' . $userID . '"><span>Edit</span></button>';
+                            $table .= '<button class="XiboFormButton" href="index.php?p=user&q=DeleteForm&userID=' . $userID . '" ><span>Delete</span></button>';
+                            $table .= '<button class="XiboFormButton" href="index.php?p=group&q=PageSecurityForm&groupid=' . $groupid . '"><span>' . $msgPageSec . '</span></button>';
+                            $table .= '<button class="XiboFormButton" href="index.php?p=group&q=MenuItemSecurityForm&groupid=' . $groupid . '"><span>' . $msgMenuSec . '</span></button>';
 			}
-			else 
-			{
-				$table .= "</td>";
-			}
+                        $table .= "</td>";
 			$table .= "</tr>";
 		}
 		$table .= "</tbody></table></div>";
