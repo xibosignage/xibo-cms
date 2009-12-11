@@ -232,7 +232,16 @@
 	{
 		$db 		=& $this->db;
 		
-		$SQL = sprintf("SELECT group.group, group.groupID FROM user INNER JOIN `group` ON group.groupID = user.groupID WHERE userid = %d", $id);
+            $SQL  = "";
+            $SQL .= "SELECT group.group, ";
+            $SQL .= "       group.groupID ";
+            $SQL .= "FROM   `user` ";
+            $SQL .= "       INNER JOIN lkusergroup ";
+            $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
+            $SQL .= "       INNER JOIN `group` ";
+            $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
+            $SQL .= sprintf("WHERE  userid                     = %d ", $id);
+            $SQL .= "AND    lkusergroup.IsUserSpecific = 1";
 		
 		if(!$results = $db->query($SQL)) 
 		{

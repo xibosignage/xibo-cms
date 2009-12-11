@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006,2007,2008,2009 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -25,7 +25,6 @@ class groupDAO
 	private $db;
 	private $user;
 	private $isadmin = false;
-	private $has_permissions = true;
 	
 	private $sub_page = "";
 	
@@ -33,9 +32,6 @@ class groupDAO
 	private $groupid;
 	private $group = "";
 	
-	//lkpage group
-	private $lkpagegroupid;
-	private $pageid;
 	
 	//init
 	function __construct(database $db, user $user) 
@@ -72,6 +68,9 @@ END;
 			
 			$this->group = $aRow['Group'];
 		}
+                
+            // Include the group data classes
+            include_once('lib/data/usergroup.data.class.php');
 	}
 	
 	function on_page_load() 
@@ -146,7 +145,7 @@ HTML;
 		SELECT 	group.group,
 				group.groupID
 		FROM `group`
-		WHERE 1 = 1
+		WHERE IsUserSpecific = 0
 END;
 		if ($filter_name != '') 
 		{
@@ -202,7 +201,6 @@ END;
 				<button class="XiboFormButton" href="index.php?p=group&q=GroupForm&groupid=$groupid"><span>$msgEdit</span></button>
 				<button class="XiboFormButton" href="index.php?p=group&q=PageSecurityForm&groupid=$groupid"><span>$msgPageSec</span></button>
 				<button class="XiboFormButton" href="index.php?p=group&q=MenuItemSecurityForm&groupid=$groupid"><span>$msgMenuSec</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=DisplayGroupSecurityForm&groupid=$groupid"><span>$msgDispSec</span></button>
 				<button class="XiboFormButton" href="index.php?p=group&q=delete_form&groupid=$groupid"><span>$msgDel</span></button>
 END;
 			}
@@ -471,32 +469,27 @@ END;
 	 */
 	function add() 
 	{
-		$db 		=& $this->db;
-		$group 		= Kit::GetParam('group', _POST, _STRING);
-		$userid 	= $_SESSION['userid'];
-		
-		//check on required fields
-		if ($group == "") 
-		{
-			Kit::Redirect(array('success'=>false, 'message' => __('Group Name cannot be empty.')));
-		}
-		
-		//add the group record
-		$SQL  = "INSERT INTO `group` (`group`) ";
-		$SQL .= sprintf(" VALUES ('%s') ", $db->escape_string($group));
-		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			Kit::Redirect(array('success'=>false, 'message' => __('Error adding a new group.')));
-		}
-		
-		// Construct the Response
-		$response 					= array();
-		$response['success']		= true;
-		$response['message']		= __('Added the Group');
-		
-		Kit::Redirect($response);		
+            $db 	=& $this->db;
+            $response	= new ResponseManager();
+
+            $group 	= Kit::GetParam('group', _POST, _STRING);
+            $userid 	= $_SESSION['userid'];
+
+            //check on required fields
+            if ($group == '')
+            {
+                trigger_error(__('Group Name cannot be empty.'), E_USER_ERROR);
+            }
+
+            $userGroupObject = new UserGroup($db);
+
+            if (!$userGroupObject->Add($group, 0))
+            {
+                trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
+            }
+
+            $response->SetFormSubmitResponse(__('Added the Group'), false);
+            $response->Respond();
 	}
 	
 	/**

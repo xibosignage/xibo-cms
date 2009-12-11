@@ -147,6 +147,31 @@ UPDATE schedule_detail SET FromDT = 946684800 WHERE FromDT = 0;
 ALTER TABLE `schedule_detail` DROP INDEX `schedule_detail_ibfk_3`;
 ALTER TABLE `schedule_detail` DROP INDEX `IM_SDT_DisplayID`;
 
+
+/* Users and Groups */
+CREATE TABLE IF NOT EXISTS `lkusergroup` (
+  `LkUserGroupID` int(11) NOT NULL auto_increment,
+  `GroupID` int(11) NOT NULL,
+  `UserID` int(11) NOT NULL,
+  PRIMARY KEY  (`LkUserGroupID`),
+  KEY `GroupID` (`GroupID`),
+  KEY `UserID` (`UserID`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=10 ;
+
+/* Add the user specific flag to groups */
+ALTER TABLE `group` ADD `IsUserSpecific` TINYINT NOT NULL DEFAULT '0';
+
+
+/* Add contraints to the new table */
+ALTER TABLE `lkusergroup` ADD FOREIGN KEY ( `GroupID` ) REFERENCES `group` (
+`groupID`
+);
+
+ALTER TABLE `lkusergroup` ADD FOREIGN KEY ( `UserID` ) REFERENCES `user` (
+`UserID`
+);
+
+
 /* VERSION UPDATE */
 /* Set the version table, etc */
 UPDATE `version` SET `app_ver` = '1.1.0';
