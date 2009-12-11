@@ -1073,6 +1073,7 @@ HTML;
 		
 		$date			= Kit::GetParam('date', _GET, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
 		$dateText		= date("d/m/Y", $date);
+		$hiddenDateText		= date("m/d/Y", $date);
 		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
 		
 		// need to do some user checking here
@@ -1087,7 +1088,7 @@ HTML;
 		
 		$form 		= <<<END
 			<form id="AddEventForm" class="XiboForm" action="index.php?p=schedule&q=AddEvent" method="post">
-				<input type="hidden" id="fromdt" name="fromdt" value="" />
+				<input type="hidden" id="fromdt" name="fromdt" value="$hiddenDateText" />
 				<input type="hidden" id="todt" name="todt" value="" />
 				<input type="hidden" id="rectodt" name="rectodt" value="" />
 				<table style="width:100%;">
