@@ -93,7 +93,7 @@
 		$db 		=& $this->db;
 		global $session;
 		
-		$sql = sprintf("SELECT UserID, UserName, UserPassword, usertypeid, groupID FROM user WHERE UserName = '%s' AND UserPassword = '%s'", $db->escape_string($username), $db->escape_string($password));
+		$sql = sprintf("SELECT UserID, UserName, UserPassword, usertypeid FROM user WHERE UserName = '%s' AND UserPassword = '%s'", $db->escape_string($username), $db->escape_string($password));
 		
 		if(!$result = $db->query($sql)) trigger_error('A database error occurred while checking your login details.', E_USER_ERROR);
 
@@ -114,7 +114,6 @@
 		$_SESSION['userid']		= Kit::ValidateParam($results[0], _INT);
 		$_SESSION['username']	= Kit::ValidateParam($results[1], _USERNAME);
 		$_SESSION['usertype']	= Kit::ValidateParam($results[3], _INT);
-		$_SESSION['groupid']	= Kit::ValidateParam($results[4], _INT);
 		
 		$this->usertypeid		= $_SESSION['usertype'];
 		$this->userid			= $_SESSION['userid'];
