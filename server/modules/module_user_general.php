@@ -617,7 +617,6 @@
 		
 		// Populate the array of display group ids we are authed against
 		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT, 0);
-		$groupid	= $this->getGroupFromID($userid, true);
 		
 		$SQL  = "SELECT DISTINCT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
 		$SQL .= "  FROM displaygroup ";
@@ -628,10 +627,15 @@
 		if ($usertype != 1)
 		{
 			$SQL .= " INNER JOIN lkgroupdg ON lkgroupdg.DisplayGroupID = displaygroup.DisplayGroupID ";
-			$SQL .= sprintf(" WHERE lkgroupdg.GroupID = %d ", $groupid);
+			$SQL .= " INNER JOIN lkusergroup ON lkgroupdg.GroupID = lkusergroup.GroupID ";
                 }
-
+                
                 $SQL .= " WHERE display.licensed = 1 ";
+
+                if ($usertype != 1)
+                {
+                    $SQL .= sprintf(" AND lkusergroup.UserID = %d ", $userid);
+                }
 		
 		Debug::LogEntry($db, 'audit', $SQL, 'User', 'DisplayGroupAuth');
 
