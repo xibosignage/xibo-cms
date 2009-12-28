@@ -1241,7 +1241,7 @@ END;
 			$regionTransparency .= '</div>';
 
 			$doubleClickLink = "XiboFormRender($(this).attr('href'))";
-			$regionHtml .= "<div id='region_$regionid' regionid='$regionid' layoutid='$this->layoutid' href='index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions' ondblclick=\"$doubleClickLink\"' class='region' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft; border: 1px dashed #000\">
+			$regionHtml .= "<div id='region_$regionid' regionid='$regionid' layoutid='$this->layoutid' href='index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions' ondblclick=\"$doubleClickLink\"' class='region' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
 								$regionTransparency							
 								<div class='preview' style='$previewStyle'>
 									<div class='previewContent'></div>
