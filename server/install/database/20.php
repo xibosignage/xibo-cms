@@ -36,6 +36,9 @@ class Step20 extends UpgradeStep
                 // Each schedule record needs to be altered so that the displayID_list now reflects the displayGroupIDs
                 $this->UpdateSchedules();
 
+                // Create groups for all current users
+                $this->UpdateUserGroups();
+
 		return true;
 	}
 
@@ -127,6 +130,44 @@ class Step20 extends UpgradeStep
                 {
                     trigger_error("Error updating schedule_detail.", E_USER_ERROR);
                 }
+            }
+        }
+
+        /**
+         * We need to update the user groups
+         */
+        private function UpdateUserGroups()
+        {
+            $db =& $this->db;
+
+            // Get all the current users in the system
+            $SQL = "SELECT UserID, groupID, UserName FROM `user`";
+
+            if (!$result = $db->query($SQL))
+            {
+                trigger_error("Error creating user groups", E_USER_ERROR);
+            }
+
+            while ($row = $db->get_assoc_row($result))
+            {
+                // For each display create a display group and link it to the display
+                $ugid           = 0;
+                $userID		= Kit::ValidateParam($row['UserID'], _INT);
+                $groupID	= Kit::ValidateParam($row['groupID'], _INT);
+                $username  	= Kit::ValidateParam($row['UserName'], _STRING);
+
+                $ug = new UserGroup($db);
+
+                // For each one create a user specific group
+                if (!$ugId = $ug->Add($username, 1))
+                {
+                    trigger_error("Error creating user groups", E_USER_ERROR);
+                }
+
+                // Link to the users own userspecific group and also to the one they were already on
+                $ug->Link($ugId, $userID);
+
+                $ug->Link($groupID, $userID);
             }
         }
 }

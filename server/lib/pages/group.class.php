@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006,2007,2008,2009 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -25,7 +25,6 @@ class groupDAO
 	private $db;
 	private $user;
 	private $isadmin = false;
-	private $has_permissions = true;
 	
 	private $sub_page = "";
 	
@@ -33,9 +32,6 @@ class groupDAO
 	private $groupid;
 	private $group = "";
 	
-	//lkpage group
-	private $lkpagegroupid;
-	private $pageid;
 	
 	//init
 	function __construct(database $db, user $user) 
@@ -72,6 +68,9 @@ END;
 			
 			$this->group = $aRow['Group'];
 		}
+                
+            // Include the group data classes
+            include_once('lib/data/usergroup.data.class.php');
 	}
 	
 	function on_page_load() 
@@ -146,7 +145,7 @@ HTML;
 		SELECT 	group.group,
 				group.groupID
 		FROM `group`
-		WHERE 1 = 1
+		WHERE IsUserSpecific = 0
 END;
 		if ($filter_name != '') 
 		{
@@ -166,6 +165,7 @@ END;
 		$msgName	= __('Name');
 		$msgAction	= __('Action');
 		$msgEdit	= __('Edit');
+		$msgMembers	= __('Group Members');
 		$msgPageSec	= __('Page Security');
 		$msgMenuSec	= __('Menu Security');
 		$msgDispSec	= __('Display Security');
@@ -200,9 +200,9 @@ END;
 			{
 				$buttons = <<<END
 				<button class="XiboFormButton" href="index.php?p=group&q=GroupForm&groupid=$groupid"><span>$msgEdit</span></button>
+				<button class="XiboFormButton" href="index.php?p=group&q=MembersForm&groupid=$groupid"><span>$msgMembers</span></button>
 				<button class="XiboFormButton" href="index.php?p=group&q=PageSecurityForm&groupid=$groupid"><span>$msgPageSec</span></button>
 				<button class="XiboFormButton" href="index.php?p=group&q=MenuItemSecurityForm&groupid=$groupid"><span>$msgMenuSec</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=DisplayGroupSecurityForm&groupid=$groupid"><span>$msgDispSec</span></button>
 				<button class="XiboFormButton" href="index.php?p=group&q=delete_form&groupid=$groupid"><span>$msgDel</span></button>
 END;
 			}
@@ -471,32 +471,27 @@ END;
 	 */
 	function add() 
 	{
-		$db 		=& $this->db;
-		$group 		= Kit::GetParam('group', _POST, _STRING);
-		$userid 	= $_SESSION['userid'];
-		
-		//check on required fields
-		if ($group == "") 
-		{
-			Kit::Redirect(array('success'=>false, 'message' => __('Group Name cannot be empty.')));
-		}
-		
-		//add the group record
-		$SQL  = "INSERT INTO `group` (`group`) ";
-		$SQL .= sprintf(" VALUES ('%s') ", $db->escape_string($group));
-		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			Kit::Redirect(array('success'=>false, 'message' => __('Error adding a new group.')));
-		}
-		
-		// Construct the Response
-		$response 					= array();
-		$response['success']		= true;
-		$response['message']		= __('Added the Group');
-		
-		Kit::Redirect($response);		
+            $db 	=& $this->db;
+            $response	= new ResponseManager();
+
+            $group 	= Kit::GetParam('group', _POST, _STRING);
+            $userid 	= $_SESSION['userid'];
+
+            //check on required fields
+            if ($group == '')
+            {
+                trigger_error(__('Group Name cannot be empty.'), E_USER_ERROR);
+            }
+
+            $userGroupObject = new UserGroup($db);
+
+            if (!$userGroupObject->Add($group, 0))
+            {
+                trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
+            }
+
+            $response->SetFormSubmitResponse(__('Added the Group'), false);
+            $response->Respond();
 	}
 	
 	/**
@@ -827,6 +822,151 @@ END;
 		$response['keepOpen']		= true;
 		
 		Kit::Redirect($response);
+	}
+
+        /**
+         * Shows the Members of a Group
+         */
+        public function MembersForm()
+	{
+            $db 	=& $this->db;
+            $response	= new ResponseManager();
+            $groupID	= Kit::GetParam('groupid', _REQUEST, _INT);
+
+            // There needs to be two lists here.
+
+            // Users in group
+            $SQL  = "";
+            $SQL .= "SELECT user.UserID, ";
+            $SQL .= "       user.UserName ";
+            $SQL .= "FROM   `user` ";
+            $SQL .= "       INNER JOIN lkusergroup ";
+            $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
+            $SQL .= sprintf("WHERE  lkusergroup.GroupID   = %d", $groupID);
+
+            if(!$resultIn = $db->query($SQL))
+            {
+                trigger_error($db->error());
+                trigger_error(__('Error getting Groups'), E_USER_ERROR);
+            }
+
+            // Users not in group
+            $SQL  = "";
+            $SQL .= "SELECT user.UserID, ";
+            $SQL .= "       user.UserName ";
+            $SQL .= "FROM   `user` ";
+            $SQL .= " WHERE user.UserID NOT       IN ( ";
+            $SQL .= "   SELECT user.UserID ";
+            $SQL .= "  FROM   `user` ";
+            $SQL .= "  INNER JOIN lkusergroup ";
+            $SQL .= "  ON     lkusergroup.UserID = user.UserID ";
+            $SQL .= sprintf("WHERE  lkusergroup.GroupID   = %d", $groupID);
+            $SQL .= "       )";
+
+            if(!$resultOut = $db->query($SQL))
+            {
+                trigger_error($db->error());
+                trigger_error(__('Error getting Users'), E_USER_ERROR);
+            }
+
+            // Now we have an IN and an OUT results object which we can use to build our lists
+            $listIn 	= '<ul id="usersIn" href="index.php?p=group&q=SetMembers&GroupID=' . $groupID . '" class="connectedSortable">';
+
+            while($row = $db->get_assoc_row($resultIn))
+            {
+                // For each item output a LI
+                $userID     = Kit::ValidateParam($row['UserID'], _INT);
+                $userName   = Kit::ValidateParam($row['UserName'], _STRING);
+
+                $listIn		.= '<li id="UserID_' . $userID . '"class="li-sortable">' . $userName . '</li>';
+            }
+            $listIn		.= '</ul>';
+
+            $listOut 	= '<ul id="usersOut" class="connectedSortable">';
+
+            while($row = $db->get_assoc_row($resultOut))
+            {
+                // For each item output a LI
+                $userID     = Kit::ValidateParam($row['UserID'], _INT);
+                $userName   = Kit::ValidateParam($row['UserName'], _STRING);
+
+                $listOut    .= '<li id="UserID_' . $userID . '" class="li-sortable">' . $userName . '</li>';
+            }
+            $listOut 	.= '</ul>';
+
+            // Build the final form.
+            $form = '<div class="connectedlist"><h3>Members</h3>' . $listIn . '</div><div class="connectedlist"><h3>Non-members</h3>' . $listOut . '</div>';
+
+            $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
+            $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Users&Category=Groups')");
+            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+            $response->AddButton(__('Save'), 'MembersSubmit()');
+            $response->Respond();
+	}
+
+        /**
+	 * Sets the Members of a group
+	 * @return
+	 */
+	public function SetMembers()
+	{
+            $db             =& $this->db;
+            $response       = new ResponseManager();
+            $groupObject    = new UserGroup($db);
+
+            $groupID	= Kit::GetParam('GroupID', _REQUEST, _INT);
+            $users	= Kit::GetParam('UserID', _POST, _ARRAY, array());
+            $members	= array();
+
+            // Users in group
+            $SQL  = "";
+            $SQL .= "SELECT user.UserID, ";
+            $SQL .= "       user.UserName ";
+            $SQL .= "FROM   `user` ";
+            $SQL .= "       INNER JOIN lkusergroup ";
+            $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
+            $SQL .= sprintf("WHERE  lkusergroup.GroupID   = %d", $groupID);
+
+            if(!$resultIn = $db->query($SQL))
+            {
+                trigger_error($db->error());
+                trigger_error(__('Error getting Users'));
+            }
+
+            while($row = $db->get_assoc_row($resultIn))
+            {
+                // Test whether this ID is in the array or not
+                $userID	= Kit::ValidateParam($row['UserID'], _INT);
+
+                if(!in_array($userID, $users))
+                {
+                    // Its currently assigned but not in the $displays array
+                    //  so we unassign
+                    if (!$groupObject->Unlink($groupID, $userID))
+                    {
+                        trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
+                    }
+                }
+                else
+                {
+                    $members[] = $userID;
+                }
+            }
+
+            foreach($users as $userID)
+            {
+                    // Add any that are missing
+                    if(!in_array($userID, $members))
+                    {
+                        if (!$groupObject->Link($groupID, $userID))
+                        {
+                            trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
+                        }
+                    }
+            }
+
+            $response->SetFormSubmitResponse(__('Group membership set'), false);
+            $response->Respond();
 	}
 }
 ?>

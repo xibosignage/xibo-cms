@@ -26,15 +26,6 @@ class userDAO
 	private $user;
 	private $sub_page;
 	
-	//database fields
-	private $userid;
-	private $username;
-	private $password;
-	private $usertypeid;
-	private $email;
-	private $homepage;
-	private $groupid;
-
 	/**
 	 * Contructor
 	 *
@@ -43,33 +34,11 @@ class userDAO
 	 */
 	function __construct(database $db, user $user) 
 	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-		
-		$this->sub_page = Kit::GetParam('sp', _REQUEST, _WORD, 'view');
-		$userid 		= Kit::GetParam('userID', _REQUEST, _INT, 0);
+            $this->db   =& $db;
+            $this->user =& $user;
 
-		if($userid != 0) 
-		{
-			$this->sub_page = "edit";
-			
-			$this->userid = $userid;
-
-			$sql = " SELECT UserName, UserPassword, usertypeid, email, groupID, homepage FROM user";
-			$sql .= sprintf(" WHERE userID = %d", $userid);
-
-			if(!$results = $db->query($sql)) trigger_error("Error excuting query".$db->error(), E_USER_ERROR);
-
-			while($aRow = $db->get_row($results)) 
-			{
-				$this->username 	= Kit::ValidateParam($aRow[0], _USERNAME);
-				$this->password 	= Kit::ValidateParam($aRow[1], _PASSWORD);
-				$this->usertypeid 	= Kit::ValidateParam($aRow[2], _INT);
-				$this->email 		= Kit::ValidateParam($aRow[3], _STRING);
-				$this->groupid 		= Kit::ValidateParam($aRow[4], _INT);
-				$this->homepage 	= Kit::ValidateParam($aRow[5], _STRING);
-			}
-		}
+            // Include the group data classes
+            include_once('lib/data/usergroup.data.class.php');
 	}
 
 	function on_page_load() 
@@ -90,61 +59,77 @@ class userDAO
 	 */
 	function AddUser () 
 	{
-		$db 		=& $this->db;
-		$response	= new ResponseManager();
+            $db 	=& $this->db;
+            $response	= new ResponseManager();
 
-		$user		= Kit::GetParam('username', _POST, _USERNAME);
-		$password 	= md5(Kit::GetParam('password', _POST, _USERNAME));
-		$usertypeid = Kit::GetParam('usertypeid', _POST, _INT);
-		$email 		= Kit::GetParam('email', _POST, _STRING);
-		$groupid	= Kit::GetParam('groupid', _POST, _INT);
-		
-		// Construct the Homepage
-		$homepage	= "dashboard";
+            $username   = Kit::GetParam('username', _POST, _STRING);
+            $password   = Kit::GetParam('password', _POST, _STRING);
+            $password   = md5($password);
+            $email      = Kit::GetParam('email', _POST, _STRING);
+            $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT, 0);
+            $homepage   = Kit::GetParam('homepage', _POST, _STRING);
+            $pass_change = isset($_POST['pass_change']);
 
-		// Validation
-		if ($user=="")
-		{
-			trigger_error("Please enter a User Name.", E_USER_ERROR);
-		} 
-		if ($password=="") 
-		{
-			trigger_error("Please enter a Password.", E_USER_ERROR);
-		}
-		if ($email == "") 
-		{
-			trigger_error("Please enter an Email Address.", E_USER_ERROR);
-		} 
-		
-		if ($homepage == "") $homepage = "dashboard";
+            // Construct the Homepage
+            $homepage	= "dashboard";
 
-		//Check for duplicate user name
-		$sqlcheck = " ";
-		$sqlcheck .= sprintf("SELECT UserName FROM user WHERE UserName = '%s'", $db->escape_string($user));
+            // Validation
+            if ($username=="")
+            {
+                trigger_error("Please enter a User Name.", E_USER_ERROR);
+            }
+            if ($password=="")
+            {
+                trigger_error("Please enter a Password.", E_USER_ERROR);
+            }
+            if ($email == "")
+            {
+                trigger_error("Please enter an Email Address.", E_USER_ERROR);
+            }
 
-		if(!$sqlcheckresult = $db->query($sqlcheck)) 
-		{
-			trigger_error($db->error());
-			trigger_error("Cant get this user's name. Please try another.", E_USER_ERROR);			
-		}
-		
-		if($db->num_rows($sqlcheckresult) != 0) 
-		{
-			trigger_error("Could Not Complete, Duplicate User Name Exists", E_USER_ERROR);
-		}
-		
-		//Ready to enter the user into the database
-		$query = "INSERT INTO user (UserName, UserPassword, usertypeid, email, homepage, groupid)";
-		$query .= " VALUES ('$user', '$password', $usertypeid, '$email', '$homepage', $groupid)";
-		
-		if(!$id = $db->insert_query($query)) 
-		{
-			trigger_error($db->error());
-			trigger_error("Error adding that user", E_USER_ERROR);
-		}
+            if ($homepage == "") $homepage = "dashboard";
 
-		$response->SetFormSubmitResponse('User Saved.');
-		$response->Respond();
+            //Check for duplicate user name
+            $sqlcheck = " ";
+            $sqlcheck .= sprintf("SELECT UserName FROM user WHERE UserName = '%s'", $db->escape_string($username));
+
+            if(!$sqlcheckresult = $db->query($sqlcheck))
+            {
+                trigger_error($db->error());
+                trigger_error("Cant get this user's name. Please try another.", E_USER_ERROR);
+            }
+
+            if($db->num_rows($sqlcheckresult) != 0)
+            {
+                trigger_error("Could Not Complete, Duplicate User Name Exists", E_USER_ERROR);
+            }
+
+            //Ready to enter the user into the database
+            $query = "INSERT INTO user (UserName, UserPassword, usertypeid, email, homepage)";
+            $query .= " VALUES ('$username', '$password', $usertypeid, '$email', '$homepage')";
+
+            if(!$id = $db->insert_query($query))
+            {
+                trigger_error($db->error());
+                trigger_error("Error adding that user", E_USER_ERROR);
+            }
+
+            // Add the user group
+            $userGroupObject = new UserGroup($db);
+
+            if (!$groupID = $userGroupObject->Add($username, 1))
+            {
+                // We really want to delete the new user...
+                //TODO: Delete the new user
+                
+                // And then error
+                trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
+            }
+
+            $userGroupObject->Link($groupID, $id);
+
+            $response->SetFormSubmitResponse('User Saved.');
+            $response->Respond();
 	}
 
 	/**
@@ -154,79 +139,90 @@ class userDAO
 	 */
 	function EditUser() 
 	{
-		$db 		=& $this->db;
-		$response	= new ResponseManager();
-			
-		$error = "";
+            $db 	=& $this->db;
+            $response	= new ResponseManager();
 
-		$userID		= Kit::GetParam('userid', _POST, _INT, 0);
-		$username 	= $_POST['username'];
-		$password 	= md5($_POST['password']);
-		$email 		= $_POST['email'];
-		$usertypeid = $_POST['usertypeid'];
-		$homepage 	= $_POST['homepage'];
-		$groupid	= $_POST['groupid'];
-		$pass_change = isset($_POST['pass_change']);
+            $userID	= Kit::GetParam('userid', _POST, _INT, 0);
+            $username   = Kit::GetParam('username', _POST, _STRING);
+            $password   = Kit::GetParam('password', _POST, _STRING);
+            $password   = md5($password);
+            $email      = Kit::GetParam('email', _POST, _STRING);
+            $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT, 0);
+            $homepage   = Kit::GetParam('homepage', _POST, _STRING);
+            $pass_change = isset($_POST['pass_change']);
 
-		// Validation
-		if ($username == "")
-		{
-			trigger_error("Please enter a User Name.", E_USER_ERROR);
-		} 
-		if ($password == "") 
-		{
-			trigger_error("Please enter a Password.", E_USER_ERROR);
-		}
-		if ($email == "") 
-		{
-			trigger_error("Please enter an Email Address.", E_USER_ERROR);
-		} 
-		
-		if ($homepage == "") $homepage = "dashboard";
+            // Validation
+            if ($username == "")
+            {
+                trigger_error("Please enter a User Name.", E_USER_ERROR);
+            }
+            if ($password == "")
+            {
+                trigger_error("Please enter a Password.", E_USER_ERROR);
+            }
+            if ($email == "")
+            {
+                trigger_error("Please enter an Email Address.", E_USER_ERROR);
+            }
 
-		//Check for duplicate user name
-		$sqlcheck = " ";
-		$sqlcheck .= "SELECT UserName FROM user WHERE UserName = '" . $username . "' AND userID <> $userID ";
+            if ($homepage == "") $homepage = "dashboard";
 
-		if (!$sqlcheckresult = $db->query($sqlcheck)) 
-		{
-			trigger_error($db->error());
-			trigger_error("Cant get this user's name. Please try another.", E_USER_ERROR);			
-		}
-		
-		if ($db->num_rows($sqlcheckresult) != 0) 
-		{
-			trigger_error("Could Not Complete, Duplicate User Name Exists", E_USER_ERROR);
-		}
+            //Check for duplicate user name
+            $sqlcheck = " ";
+            $sqlcheck .= "SELECT UserName FROM user WHERE UserName = '" . $username . "' AND userID <> $userID ";
 
-		//Everything is ok - run the update
-		$sql = "UPDATE user SET UserName = '$username'";
-		if ($pass_change) 
-		{
-			$sql .= ", UserPassword = '$password'";
-		}
-		
-		$sql .= ", email = '$email' ";
-		if ($homepage == 'dashboard')
-		{
-			//acts as a reset
-			$sql .= ", homepage='$homepage' ";
-		}
-		
-		if ($usertypeid != "")
-		{
-			$sql .= ", usertypeid =  " . $usertypeid . ", groupID = $groupid ";
-		}
-		$sql .= " WHERE UserID = ". $userID . "";
+            if (!$sqlcheckresult = $db->query($sqlcheck))
+            {
+                trigger_error($db->error());
+                trigger_error(__("Cant get this user's name. Please try another."), E_USER_ERROR);
+            }
 
-		if (!$db->query($sql)) 
-		{
-			trigger_error($db->error());
-			trigger_error("Error updating that user", E_USER_ERROR);
-		}
+            if ($db->num_rows($sqlcheckresult) != 0)
+            {
+                trigger_error(__("Could Not Complete, Duplicate User Name Exists"), E_USER_ERROR);
+            }
 
-		$response->SetFormSubmitResponse('User Saved.');
-		$response->Respond();
+            //Everything is ok - run the update
+            $sql = "UPDATE user SET UserName = '$username'";
+            if ($pass_change)
+            {
+                $sql .= ", UserPassword = '$password'";
+            }
+
+            $sql .= ", email = '$email' ";
+            if ($homepage == 'dashboard')
+            {
+                //acts as a reset
+                $sql .= ", homepage='$homepage' ";
+            }
+
+            if ($usertypeid != "")
+            {
+                $sql .= ", usertypeid =  " . $usertypeid;
+            }
+
+            $sql .= " WHERE UserID = ". $userID . "";
+
+            if (!$db->query($sql))
+            {
+                trigger_error($db->error());
+                trigger_error("Error updating that user", E_USER_ERROR);
+            }
+
+            // Update the group to follow suit
+            $userGroupObject = new UserGroup($db);
+
+            if (!$userGroupObject->EditUserGroup($userID, $username))
+            {
+                // We really want to delete the new user...
+                //TODO: Delete the new user
+
+                // And then error
+                trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
+            }
+
+            $response->SetFormSubmitResponse('User Saved.');
+            $response->Respond();
 	}
 
 	/**
@@ -237,30 +233,44 @@ class userDAO
 	 */
 	function DeleteUser() 
 	{
-		$db 			=& $this->db;
-		$response		= new ResponseManager();
-		$userid 		= Kit::GetParam('userid', _POST, _INT, 0);
+            $db 	=& $this->db;
+            $user       =& $this->user;
 
-		$sqldel = "DELETE FROM user";
-		$sqldel .= " WHERE UserID = ". $userid . "";
+            $response	= new ResponseManager();
+            $userid 	= Kit::GetParam('userid', _POST, _INT, 0);
+            $groupID    = $user->getGroupFromID($userid, true);
 
-		if (!$db->query($sqldel)) 
-		{
-			trigger_error($db->error());
-			trigger_error("This user has been active, you may only retire them.", E_USER_ERROR);
-		}
+            // Firstly delete the group for this user
+            $userGroupObject = new UserGroup($db);
 
-		// We should delete this users sessions record.
-		$SQL = "DELETE FROM session WHERE userID = $userid ";
-		
-		if (!$db->query($sqldel)) 
-		{
-			trigger_error($db->error());
-			trigger_error("If logged in, this user will be deleted once they log out.", E_USER_ERROR);
-		}
-		
-		$response->SetFormSubmitResponse('User Deleted.');
-		$response->Respond();
+            $userGroupObject->Unlink($groupID, $userid);
+
+            if (!$userGroupObject->Delete($groupID))
+            {
+                trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
+            }
+
+            // Delete the user
+            $sqldel = "DELETE FROM user";
+            $sqldel .= " WHERE UserID = ". $userid . "";
+
+            if (!$db->query($sqldel))
+            {
+                trigger_error($db->error());
+                trigger_error(__("This user has been active, you may only retire them."), E_USER_ERROR);
+            }
+
+            // We should delete this users sessions record.
+            $SQL = "DELETE FROM session WHERE userID = $userid ";
+
+            if (!$db->query($sqldel))
+            {
+                trigger_error($db->error());
+                trigger_error(__("If logged in, this user will be deleted once they log out."), E_USER_ERROR);
+            }
+
+            $response->SetFormSubmitResponse(__('User Deleted.'));
+            $response->Respond();
 	}
 
 	/**
@@ -276,21 +286,20 @@ class userDAO
 		$itemName = $_REQUEST['usertypeid'];
 		$username = $_REQUEST['username'];
 
-		$sql = "SELECT user.UserID, user.UserName, user.usertypeid, user.loggedin, user.lastaccessed, user.email, user.homepage, group.group ";
+		$sql = "SELECT user.UserID, user.UserName, user.usertypeid, user.loggedin, user.lastaccessed, user.email, user.homepage ";
 		$sql .= " FROM user ";
-		$sql .= " INNER JOIN `group` ON user.groupid = group.groupID ";
 		$sql .= " WHERE 1=1 ";
 		if ($_SESSION['usertype']==3) 
 		{
-			$sql .= " AND usertypeid=3 AND userid = " . $_SESSION['userid'] . " ";
+                    $sql .= " AND usertypeid=3 AND userid = " . $_SESSION['userid'] . " ";
 		}
 		if($itemName!="all") 
 		{
-			$sql .= " AND usertypeid=\"" . $itemName . "\"";
+                    $sql .= " AND usertypeid=\"" . $itemName . "\"";
 		}
 		if ($username != "") 
 		{
-			$sql .= " AND UserName LIKE '%$username%' ";	
+                    $sql .= " AND UserName LIKE '%$username%' ";
 		}
 		$sql .= " ORDER by UserName";
 		
@@ -310,7 +319,6 @@ class userDAO
 						<th>Homepage</th>
 						<th>Layout</th>
 						<th>Email</th>
-						<th>Group</th>
 						<th>Action</th>
 					</tr>
 				</thead>
@@ -321,12 +329,12 @@ END;
 		{
 			$userID 	= $aRow[0];
 			$userName 	= $aRow[1];
-			$usertypeid = $aRow[2];
+			$usertypeid     = $aRow[2];
 			$loggedin 	= $aRow[3];
-			$lastaccessed = $aRow[4];
+			$lastaccessed   = $aRow[4];
 			$email 		= $aRow[5];
 			$homepage	= $aRow[6];
-			$group		= $aRow[7];
+                        $groupid        = $user->getGroupFromID($userID, true);
 
 			if($loggedin==1) 
 			{
@@ -372,18 +380,19 @@ END;
 			$table .= "<td>" . $homepageArray[0] . "</td>";
 			$table .= "<td>" . $layout . "</td>";
 			$table .= "<td>" . $email . "</td>";
-			$table .= "<td>" . $group . "</td>";
 			$table .= "<td>";
 			
 			if($_SESSION['usertype'] == 1 ||($userID == $_SESSION['userid'])) 
 			{
-				$table .= '<button class="XiboFormButton" href="index.php?p=user&q=DisplayForm&userID=' . $userID . '"><span>Edit</span></button>';
-				$table .= '<button class="XiboFormButton" href="index.php?p=user&q=DeleteForm&userID=' . $userID . '" ><span>Delete</span></button></div></td>';
+                            $msgPageSec	= __('Page Security');
+                            $msgMenuSec	= __('Menu Security');
+
+                            $table .= '<button class="XiboFormButton" href="index.php?p=user&q=DisplayForm&userID=' . $userID . '"><span>Edit</span></button>';
+                            $table .= '<button class="XiboFormButton" href="index.php?p=user&q=DeleteForm&userID=' . $userID . '" ><span>Delete</span></button>';
+                            $table .= '<button class="XiboFormButton" href="index.php?p=group&q=PageSecurityForm&groupid=' . $groupid . '"><span>' . $msgPageSec . '</span></button>';
+                            $table .= '<button class="XiboFormButton" href="index.php?p=group&q=MenuItemSecurityForm&groupid=' . $groupid . '"><span>' . $msgMenuSec . '</span></button>';
 			}
-			else 
-			{
-				$table .= "</td>";
-			}
+                        $table .= "</td>";
 			$table .= "</tr>";
 		}
 		$table .= "</tbody></table></div>";
@@ -398,18 +407,8 @@ END;
 	 */
 	function displayPage() 
 	{
-		$db =& $this->db;
-
-		switch ($this->sub_page) 
-		{
-			
-			case 'view':
-				include('template/pages/user_view.php');
-				break;
-				
-			default:
-				break;
-		}
+            $db =& $this->db;
+            include('template/pages/user_view.php');
 	}
 	
 	/**
@@ -454,140 +453,148 @@ HTML;
 	}
 
 	/**
-	 * Displays the Add user form (from Ajax)
+	 * Displays the User form (from Ajax)
 	 * @return 
 	 */
 	function DisplayForm() 
 	{
-		$db 			=& $this->db;
-		$user			=& $this->user;
-		$response 		= new ResponseManager();
-		
-		$helpManager            = new HelpManager($db, $user);
-		
-		//ajax request handler
-		
-		$userid		= $this->userid;
-		$username 	= $this->username;
-		$password 	= $this->password;
-		$usertypeid     = $this->usertypeid;
-		$email 		= $this->email;
-		$homepage	= $this->homepage;
-		$groupid	= $this->groupid;
-		
-		// Help UI
-		$nameHelp	= $helpManager->HelpIcon("The Login Name of the user.", true);
-		$passHelp	= $helpManager->HelpIcon("The Password for this user.", true);
-		$emailHelp	= $helpManager->HelpIcon("Users email address. E.g. user@example.com", true);
-		$homepageHelp	= $helpManager->HelpIcon("The users Homepage. This should not be changed until you want to reset their homepage.", true);
-		$overpassHelp	= $helpManager->HelpIcon("Do you want to override this users password with the one entered here.", true);
-		$usertypeHelp	= $helpManager->HelpIcon("What is this users type? This would usually be set to 'User'", true);
-		$groupHelp	= $helpManager->HelpIcon("Which group does this user belong to? User groups control media sharing and access to functional areas of Xibo.", true);
+            $db             =& $this->db;
+            $user           =& $this->user;
+            $response       = new ResponseManager();
+            $helpManager    = new HelpManager($db, $user);
 
-                $homepageOption = '';
-                $override_option = '';
+            $userid         = Kit::GetParam('userID', _GET, _INT);
 
-		//What form are we displaying
-		if ($userid == "")
-		{
-			//add form
-			$action = "index.php?p=user&q=AddUser";
-		}
-		else
-		{
-			//edit form
-			$action = "index.php?p=user&q=EditUser";
-			
-			//split the homepage into its component parts (if it needs to be)
-			if (strpos($homepage,'&') !== false) 
-			{
-				$homepage = substr($homepage, 0, strpos($homepage,'&'));
-			}
-		
-			//make the homepage dropdown
-			$homepage_list = listcontent("dashboard|dashboard,mediamanager|mediamanager", "homepage", $homepage);
-			
-			$homepageOption = <<<END
-			<tr>
-				<td><label for="homepage">Homepage<span class="required">*</span></label></td>
-				<td>$homepageHelp $homepage_list</td>
-			</tr>
+            $SQL  = "";
+            $SQL .= "SELECT UserName    , ";
+            $SQL .= "       UserPassword, ";
+            $SQL .= "       usertypeid  , ";
+            $SQL .= "       email       , ";
+            $SQL .= "       homepage ";
+            $SQL .= "FROM   `user`";
+            $SQL .= sprintf(" WHERE userID = %d", $userid);
+
+            if(!$results = $db->query($SQL))
+            {
+                trigger_error($db->error());
+                trigger_error(__('Error getting user information.'), E_USER_ERROR);
+            }
+
+            while($aRow = $db->get_row($results))
+            {
+                $username 	= Kit::ValidateParam($aRow[0], _USERNAME);
+                $password 	= Kit::ValidateParam($aRow[1], _PASSWORD);
+                $usertypeid 	= Kit::ValidateParam($aRow[2], _INT);
+                $email 		= Kit::ValidateParam($aRow[3], _STRING);
+                $homepage 	= Kit::ValidateParam($aRow[4], _STRING);
+            }
+
+            // Help UI
+            $nameHelp       = $helpManager->HelpIcon("The Login Name of the user.", true);
+            $passHelp       = $helpManager->HelpIcon("The Password for this user.", true);
+            $emailHelp      = $helpManager->HelpIcon("Users email address. E.g. user@example.com", true);
+            $homepageHelp   = $helpManager->HelpIcon("The users Homepage. This should not be changed until you want to reset their homepage.", true);
+            $overpassHelp   = $helpManager->HelpIcon("Do you want to override this users password with the one entered here.", true);
+            $usertypeHelp   = $helpManager->HelpIcon("What is this users type? This would usually be set to 'User'", true);
+
+            $homepageOption = '';
+            $override_option = '';
+
+            //What form are we displaying
+            if ($userid == "")
+            {
+                    //add form
+                    $action = "index.php?p=user&q=AddUser";
+            }
+            else
+            {
+                    //edit form
+                    $action = "index.php?p=user&q=EditUser";
+
+                    //split the homepage into its component parts (if it needs to be)
+                    if (strpos($homepage,'&') !== false)
+                    {
+                            $homepage = substr($homepage, 0, strpos($homepage,'&'));
+                    }
+
+                    //make the homepage dropdown
+                    $homepage_list = listcontent("dashboard|dashboard,mediamanager|mediamanager", "homepage", $homepage);
+
+                    $homepageOption = <<<END
+                    <tr>
+                            <td><label for="homepage">Homepage<span class="required">*</span></label></td>
+                            <td>$homepageHelp $homepage_list</td>
+                    </tr>
 END;
-			
-			$override_option = <<<FORM
-			<td>Override Password?</td>
-			<td>$overpassHelp <input type="checkbox" name="pass_change" value="0"></td>
+
+                    $override_option = <<<FORM
+                    <td>Override Password?</td>
+                    <td>$overpassHelp <input type="checkbox" name="pass_change" value="0"></td>
 FORM;
-		}
+            }
 
-		//get us the user type if we dont have it (for the default value)
-		if($usertypeid=="") 
-		{
-			$usertype = Config::GetSetting($db,"defaultUsertype");
+            //get us the user type if we dont have it (for the default value)
+            if($usertypeid=="")
+            {
+                    $usertype = Config::GetSetting($db,"defaultUsertype");
 
-			$SQL = "SELECT usertypeid FROM usertype WHERE usertype = '$usertype'";
-			if(!$results = $db->query($SQL)) 
-			{
-				trigger_error($db->error());
-				trigger_error("Can not get Usertype information", E_USER_ERROR);
-			}
-			$row = $db->get_row($results);
-			$usertypeid = $row['0'];
-		}
-		
-		//group list
-		$group_list = dropdownlist("SELECT groupID, `group` FROM `group` ORDER BY `group`", "groupid", $groupid);
-		
-		if ($_SESSION['usertype']==1)
-		{
-			//usertype list
-			$usertype_list = dropdownlist("SELECT usertypeid, usertype FROM usertype", "usertypeid", $usertypeid);
-			
-			$usertypeOption = <<<END
-			<tr>
-				<td><label for="usertypeid">User Type <span class="required">*</span></label></td>
-				<td>$usertypeHelp $usertype_list</td>
-			</tr>
-			<tr>
-				<td><label for="groupid">Group <span class="required">*</span></label></td>
-				<td>$groupHelp $group_list</td>
-			</tr>	
+                    $SQL = "SELECT usertypeid FROM usertype WHERE usertype = '$usertype'";
+                    if(!$results = $db->query($SQL))
+                    {
+                            trigger_error($db->error());
+                            trigger_error("Can not get Usertype information", E_USER_ERROR);
+                    }
+                    $row = $db->get_row($results);
+                    $usertypeid = $row['0'];
+            }
+
+
+            if ($_SESSION['usertype']==1)
+            {
+                    //usertype list
+                    $usertype_list = dropdownlist("SELECT usertypeid, usertype FROM usertype", "usertypeid", $usertypeid);
+
+                    $usertypeOption = <<<END
+                    <tr>
+                            <td><label for="usertypeid">User Type <span class="required">*</span></label></td>
+                            <td>$usertypeHelp $usertype_list</td>
+                    </tr>
 END;
-		}
-		else
-		{
-			$usertypeOption = "";
-		}
-		
-				
-		$form = <<<END
-		<form id="UserForm" class="XiboForm" method='post' action='$action'>
-			<input type='hidden' name='userid' value='$userid'>
-			<table>
-				<tr>
-					<td><label for="username">User Name<span class="required">*</span></label></td>
-					<td>$nameHelp <input type="text" id="" name="username" value="$username" class="required" /></td>
-				</tr>
-				<tr>
-					<td><label for="password">Password<span class="required">*</span></label></td>
-					<td>$passHelp <input type="password" id="password" name="password" value="$password" /></td>
-					$override_option
-				</tr>
-				<tr>
-					<td><label for="email">Email Address<span class="required">*</span></label></td>
-					<td>$emailHelp <input type="text" id="email" name="email" value="$email" class="required" /></td>
-				</tr>
-				$homepageOption
-				$usertypeOption
-			</table>
-		</form>
+            }
+            else
+            {
+                    $usertypeOption = "";
+            }
+
+
+            $form = <<<END
+            <form id="UserForm" class="XiboForm" method='post' action='$action'>
+                    <input type='hidden' name='userid' value='$userid'>
+                    <table>
+                            <tr>
+                                    <td><label for="username">User Name<span class="required">*</span></label></td>
+                                    <td>$nameHelp <input type="text" id="" name="username" value="$username" class="required" /></td>
+                            </tr>
+                            <tr>
+                                    <td><label for="password">Password<span class="required">*</span></label></td>
+                                    <td>$passHelp <input type="password" id="password" name="password" value="$password" /></td>
+                                    $override_option
+                            </tr>
+                            <tr>
+                                    <td><label for="email">Email Address<span class="required email">*</span></label></td>
+                                    <td>$emailHelp <input type="text" id="email" name="email" value="$email" class="required" /></td>
+                            </tr>
+                            $homepageOption
+                            $usertypeOption
+                    </table>
+            </form>
 END;
 
-		$response->SetFormRequestResponse($form, 'Add/Edit a User.', '550px', '320px');
-                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('User', 'Add') . '")');
-		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
-		$response->AddButton(__('Save'), '$("#UserForm").submit()');
-		$response->Respond();
+            $response->SetFormRequestResponse($form, 'Add/Edit a User.', '550px', '320px');
+            $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('User', 'Add') . '")');
+            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+            $response->AddButton(__('Save'), '$("#UserForm").submit()');
+            $response->Respond();
 	}
 	
 	/**

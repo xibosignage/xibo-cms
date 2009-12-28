@@ -88,8 +88,15 @@ Config::Load();
 // create a database class instance
 $db = new database();
 
-if (!$db->connect_db($dbhost, $dbuser, $dbpass)) trigger_error($db->error(), E_USER_WARNING);
-if (!$db->select_db($dbname)) trigger_error($db->error(), E_USER_WARNING);
+if (!$db->connect_db($dbhost, $dbuser, $dbpass))
+{
+    die('Xibo has a database connection problem.');
+}
+
+if (!$db->select_db($dbname))
+{
+    die('Xibo has a database connection problem.');
+}
 
 date_default_timezone_set(Config::GetSetting($db, "defaultTimezone"));
 

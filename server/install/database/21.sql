@@ -8,6 +8,11 @@ CROSS JOIN `group`;
 /* Request URI is too short of passing a lot of parameters in GET. Maybe we should use POST more? */
 ALTER TABLE `log` CHANGE `RequestUri` `RequestUri` VARCHAR( 2000 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
 
+/* Remove the groupID from the user record. */
+ALTER TABLE `user` DROP FOREIGN KEY `user_ibfk_3` ;
+
+ALTER TABLE `user` DROP `groupID` ;
+
 /* VERSION UPDATE */
 /* Set the version table, etc */
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

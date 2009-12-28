@@ -321,7 +321,7 @@ END;
 		if(!$resultIn = $db->query($SQL))
 		{
 			trigger_error($db->error());
-			trigger_error(__('Error getting Displays'));
+			trigger_error(__('Error getting Displays'), E_USER_ERROR);
 		}
 		
 		// Displays not in group
@@ -340,7 +340,7 @@ END;
 		if(!$resultOut = $db->query($SQL))
 		{
 			trigger_error($db->error());
-			trigger_error(__('Error getting Displays'));
+			trigger_error(__('Error getting Displays'), E_USER_ERROR);
 		}
 		
 		// Now we have an IN and an OUT results object which we can use to build our lists
@@ -598,7 +598,7 @@ END;
 		if(!$resultIn = $db->query($SQL))
 		{
 			trigger_error($db->error());
-			trigger_error(__('Error getting Displays'));
+			trigger_error(__('Error getting Displays'), E_USER_ERROR);
 		}
 		
 		while($row = $db->get_assoc_row($resultIn))

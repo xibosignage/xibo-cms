@@ -93,7 +93,7 @@
 		$db 		=& $this->db;
 		global $session;
 		
-		$sql = sprintf("SELECT UserID, UserName, UserPassword, usertypeid, groupID FROM user WHERE UserName = '%s' AND UserPassword = '%s'", $db->escape_string($username), $db->escape_string($password));
+		$sql = sprintf("SELECT UserID, UserName, UserPassword, usertypeid FROM user WHERE UserName = '%s' AND UserPassword = '%s'", $db->escape_string($username), $db->escape_string($password));
 		
 		if(!$result = $db->query($sql)) trigger_error('A database error occurred while checking your login details.', E_USER_ERROR);
 
@@ -114,7 +114,6 @@
 		$_SESSION['userid']		= Kit::ValidateParam($results[0], _INT);
 		$_SESSION['username']	= Kit::ValidateParam($results[1], _USERNAME);
 		$_SESSION['usertype']	= Kit::ValidateParam($results[3], _INT);
-		$_SESSION['groupid']	= Kit::ValidateParam($results[4], _INT);
 		
 		$this->usertypeid		= $_SESSION['usertype'];
 		$this->userid			= $_SESSION['userid'];
@@ -230,32 +229,52 @@
 
 	function getGroupFromID($id, $returnID = false) 
 	{
-		$db 		=& $this->db;
+            $db =& $this->db;
 		
-		$SQL = sprintf("SELECT group.group, group.groupID FROM user INNER JOIN `group` ON group.groupID = user.groupID WHERE userid = %d", $id);
+            $SQL  = "";
+            $SQL .= "SELECT group.group, ";
+            $SQL .= "       group.groupID ";
+            $SQL .= "FROM   `user` ";
+            $SQL .= "       INNER JOIN lkusergroup ";
+            $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
+            $SQL .= "       INNER JOIN `group` ";
+            $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
+            $SQL .= sprintf("WHERE  `user`.userid                     = %d ", $id);
+            $SQL .= "AND    `group`.IsUserSpecific = 1";
 		
-		if(!$results = $db->query($SQL)) 
-		{
-			trigger_error("Error looking up user information (group)");
-			trigger_error($db->error());
-		}
+            if(!$results = $db->query($SQL))
+            {
+                trigger_error($db->error());
+                trigger_error("Error looking up user information (group)", E_USER_ERROR);
+            }
 		
-		if ($db->num_rows($results)==0) 
-		{
-			if ($returnID) 
-			{
-				return "1";
-			}
-			return "Users";
-		}
-		
-		$row = $db->get_row($results);
+            if ($db->num_rows($results) == 0)
+            {
+                // Every user should have a group?
+                // Add one in!
+                include_once('lib/data/usergroup.data.class.php');
 
-		if ($returnID) 
-		{
-			return $row[1];
-		}
-		return $row[0];
+                $userGroupObject = new UserGroup($db);
+                if (!$groupID = $userGroupObject->Add('Unknown user id: ' . $id, 1))
+                {
+                    // Error
+                    trigger_error(__('User does not have a group and Xibo is unable to add one.'), E_USER_ERROR);
+                }
+
+                // Link the two
+                $userGroupObject->Link($groupID, $id);
+
+                if ($returnID) return $groupID;
+                return 'Unknown';
+            }
+
+            $row = $db->get_row($results);
+
+            if ($returnID)
+            {
+                return $row[1];
+            }
+            return $row[0];
 	}
 	
 	function getUserTypeFromID($id, $returnID = false) 
@@ -426,7 +445,6 @@
 		$userid		=& $this->userid;
 		
 		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT, 0);
-		$groupid	= $this->getGroupFromID($userid, true);
 		
 		// Check the security
 		if ($usertype == 1) 
@@ -447,14 +465,16 @@
 		
 		// we have access to only the pages assigned to this group
 		$SQL = "SELECT pages.pageID FROM pages INNER JOIN lkpagegroup ON lkpagegroup.pageid = pages.pageid ";
-		$SQL .= sprintf(" WHERE lkpagegroup.groupid = %d AND pages.name = '%s' ", $groupid, $db->escape_string($page));
+                $SQL .= "       INNER JOIN lkusergroup ";
+                $SQL .= "       ON     lkpagegroup.groupID       = lkusergroup.GroupID ";
+		$SQL .= sprintf(" WHERE lkusergroup.UserID = %d AND pages.name = '%s' ", $userid, $db->escape_string($page));
 	
 		Debug::LogEntry($db, 'audit', $SQL);
 	
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error('Can not get the page security for this group [' . $groupid . '] and page [' . $page . ']');
+			trigger_error('Can not get the page security for this user [' . $userid . '] and page [' . $page . ']');
 		}
 		
 		if ($db->num_rows($results) < 1)
@@ -477,8 +497,7 @@
 	{
 		$db 		=& $this->db;
 		$userid		=& $this->userid;
-		$usertypeid = Kit::GetParam('usertype', _SESSION, _INT);
-		$groupid	= $this->getGroupFromID($userid, true);
+		$usertypeid     = Kit::GetParam('usertype', _SESSION, _INT);
 		
 		Debug::LogEntry($db, 'audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
 		
@@ -497,15 +516,17 @@
 		$SQL .= "         ON       pages.pageID = menuitem.PageID ";
 		if ($usertypeid != 1) 
 		{
-			$SQL .= "         INNER JOIN lkmenuitemgroup ";
-			$SQL .= "         ON       lkmenuitemgroup.MenuItemID = menuitem.MenuItemID ";
-			$SQL .= "         INNER JOIN `group` ";
-			$SQL .= "         ON       lkmenuitemgroup.GroupID = group.GroupID ";
+			$SQL .= "       INNER JOIN lkmenuitemgroup ";
+			$SQL .= "       ON       lkmenuitemgroup.MenuItemID = menuitem.MenuItemID ";
+			$SQL .= "       INNER JOIN `group` ";
+			$SQL .= "       ON       lkmenuitemgroup.GroupID = group.GroupID ";
+                        $SQL .= "       INNER JOIN lkusergroup ";
+                        $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
 		}
 		$SQL .= sprintf("WHERE    menu.Menu              = '%s' ", $db->escape_string($menu));
 		if ($usertypeid != 1) 
 		{
-			$SQL .= sprintf(" AND group.groupid = %d", $groupid);
+			$SQL .= sprintf(" AND lkusergroup.UserID = %d", $userid);
 		}
 		$SQL .= " ORDER BY menuitem.Sequence";
 		
@@ -596,7 +617,6 @@
 		
 		// Populate the array of display group ids we are authed against
 		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT, 0);
-		$groupid	= $this->getGroupFromID($userid, true);
 		
 		$SQL  = "SELECT DISTINCT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
 		$SQL .= "  FROM displaygroup ";
@@ -607,10 +627,15 @@
 		if ($usertype != 1)
 		{
 			$SQL .= " INNER JOIN lkgroupdg ON lkgroupdg.DisplayGroupID = displaygroup.DisplayGroupID ";
-			$SQL .= sprintf(" WHERE lkgroupdg.GroupID = %d ", $groupid);
+			$SQL .= " INNER JOIN lkusergroup ON lkgroupdg.GroupID = lkusergroup.GroupID ";
                 }
-
+                
                 $SQL .= " WHERE display.licensed = 1 ";
+
+                if ($usertype != 1)
+                {
+                    $SQL .= sprintf(" AND lkusergroup.UserID = %d ", $userid);
+                }
 		
 		Debug::LogEntry($db, 'audit', $SQL, 'User', 'DisplayGroupAuth');
 
