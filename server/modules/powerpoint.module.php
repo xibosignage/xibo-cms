@@ -599,7 +599,10 @@ END;
 		$fileSize 	= filesize($databaseDir.$storedAs);
 
 		// Update the media record to include this information
+<<<<<<< TREE
 
+=======
+>>>>>>> MERGE-SOURCE
 		$SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $storedAs, $md5, $fileSize, $mediaid);
 
 		if (!$db->query($SQL))
@@ -664,6 +667,10 @@ END;
 			$fileName 		= basename($fileName);
 			$ext 			= strtolower(substr(strrchr($fileName, "."), 1));
 
+<<<<<<< TREE
+=======
+
+>>>>>>> MERGE-SOURCE
 			if (!$this->IsValidExtension($ext))
 			{
 				$this->response->SetError('Your file has an extension not supported by this Media Type.');
