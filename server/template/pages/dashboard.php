@@ -45,6 +45,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 						
 						$href = 'index.php?p=' . $uri . '&' . $args;
 						
+						// Override the HREF for the Manual Button
+						if ($uri == 'manual')
+							$href = $args;
+						
 						$out = <<<END
 							<div class="dashicons">
 								<a id="$class" alt="$title" href="$href">
@@ -55,11 +59,6 @@ END;
 						echo $out;
 					}
 				?>
-				<div class="dashicons">
-					<a id="help_button" target="_blank" alt="The Manual" href="http://wiki.xibo.org.uk/wiki/Manual:TOC">
-                                            <img class="dash_button" src="img/dashboard/help.png" alt="Manual"/>
-					<span class="dash_text">Manual</span></a>
-				</div>
 			</div>	
 	</div>
 	
