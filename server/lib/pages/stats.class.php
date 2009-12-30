@@ -132,7 +132,7 @@ class statsDAO
 		while($row = $db->get_assoc_row($result))
 		{
 			// Read the columns
-			$type		= Kit::ValidateParam($row['type'], _STRING);
+			$type		= Kit::ValidateParam($row['Type'], _STRING);
 			$fromdt		= Kit::ValidateParam($row['start'], _STRING);
 			$todt		= Kit::ValidateParam($row['end'], _STRING);
 			$layout		= Kit::ValidateParam($row['Layout'], _STRING);
