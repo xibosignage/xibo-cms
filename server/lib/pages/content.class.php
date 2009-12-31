@@ -129,20 +129,20 @@ class contentDAO
 			</form>
 		</div>
 END;
-		
-		$id = uniqid();
-		
-		$xiboGrid = <<<HTML
-		<div class="XiboGrid" id="$id">
-			<div class="XiboFilter">
-				$filterForm
-			</div>
-			<div class="XiboData">
-			
-			</div>
-		</div>
+
+            $id = uniqid();
+
+            $xiboGrid = <<<HTML
+            <div class="XiboGrid" id="$id">
+                <div class="XiboFilter">
+                        $filterForm
+                </div>
+                <div class="XiboData">
+
+                </div>
+            </div>
 HTML;
-		echo $xiboGrid;
+            echo $xiboGrid;
 	}
 	
 	/**
