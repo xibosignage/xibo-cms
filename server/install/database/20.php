@@ -3,6 +3,7 @@
 // Will need to include the Data classes.
 require_once("lib/data/data.class.php");
 require_once('lib/data/displaygroup.data.class.php');
+require_once('lib/data/usergroup.data.class.php');
 
 class Step20 extends UpgradeStep
 {
