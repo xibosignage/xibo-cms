@@ -52,21 +52,23 @@ class database
         return true;
     }
 
-    //performs a query lookup and returns the result object
-    function query($SQL, $nolog = false) 
-	{
-		//if (!$nolog) Debug::LogEntry($this, 'audit', 'Running SQL: [' . $SQL . ']', '', 'query');
-		// creates a loop!
-		  			
+    /**
+     * Runs a query on the database
+     * @param <string> $SQL
+     * @return <type>
+     */
+    function query($SQL) 
+    {
         if(!$result = mysql_query($SQL)) 
-		{
-            $this->error_text="The query [".$SQL."] failed to execute";
+	{
+            $this->error_text = 'The query [' . $SQL . '] failed to execute';
             return false;
         }
-        else 
-		{
-            return $result;
-        }
+        /*else
+	{
+            Debug::LogEntry($this, 'audit', 'Running SQL: [' . $SQL . ']', '', 'query');
+        }*/
+        return $result;
     }
     
     function insert_query($SQL) 
@@ -110,6 +112,54 @@ class database
     function escape_string($string) 
 	{
     	return mysql_real_escape_string($string);
+    }
+
+    /**
+     * Gets a Single row using the provided SQL
+     * Returns false if SQL error or no records found
+     * @param <string> $SQL
+     * @param <bool> $assoc
+     */
+    public function GetSingleRow($SQL, $assoc = true)
+    {
+        if (!$result = $this->query($SQL))
+            return false;
+
+        if ($this->num_rows($result) == 0)
+        {
+            $this->error_text = 'No results returned';
+            return false;
+        }
+
+        if ($assoc)
+        {
+            return $this->get_assoc_row($result);
+        }
+        else
+        {
+            return $this->get_row($result);
+        }
+    }
+
+    /**
+     * Gets a single value from the provided SQL
+     * @param <string> $SQL
+     * @param <string> $columnName
+     * @param <int> $dataType
+     * @return <type>
+     */
+    public function GetSingleValue($SQL, $columnName, $dataType)
+    {
+        if (!$row = $this->GetSingleRow($SQL))
+            return false;
+
+        if (!isset($row[$columnName]))
+        {
+            $this->error_text = 'No such column';
+            return false;
+        }
+
+        return Kit::ValidateParam($row[$columnName], $dataType);
     }
 
     //returns the error text to display

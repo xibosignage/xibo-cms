@@ -80,11 +80,6 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 
 date_default_timezone_set(Config::GetSetting($db, 'defaultTimezone'));
 
-// What is the production mode of the server?
-// I dont think we ever want to show errors through the XML webservice.
-// if(Config::GetSetting($db, "SERVER_MODE")=="Test") ini_set('display_errors', 1);
-
-require_once(Config::GetSetting($db, 'NUSOAP_PATH'));
 
 // Setup the translations for gettext
 TranslationEngine::InitLocale($db);
