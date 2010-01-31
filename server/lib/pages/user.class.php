@@ -24,7 +24,6 @@ class userDAO
 {
 	private $db;
 	private $user;
-	private $sub_page;
 	
 	/**
 	 * Contructor
@@ -48,7 +47,7 @@ class userDAO
 	
 	function echo_page_heading() 
 	{
-		echo "Users";
+		echo 'Users';
 		return true;
 	}
 
@@ -465,28 +464,45 @@ HTML;
 
             $userid         = Kit::GetParam('userID', _GET, _INT);
 
-            $SQL  = "";
-            $SQL .= "SELECT UserName    , ";
-            $SQL .= "       UserPassword, ";
-            $SQL .= "       usertypeid  , ";
-            $SQL .= "       email       , ";
-            $SQL .= "       homepage ";
-            $SQL .= "FROM   `user`";
-            $SQL .= sprintf(" WHERE userID = %d", $userid);
-
-            if(!$results = $db->query($SQL))
+            if ($userid != 0)
             {
-                trigger_error($db->error());
-                trigger_error(__('Error getting user information.'), E_USER_ERROR);
-            }
+                // We are editing a user
+                $SQL  = "";
+                $SQL .= "SELECT UserName    , ";
+                $SQL .= "       UserPassword, ";
+                $SQL .= "       usertypeid  , ";
+                $SQL .= "       email       , ";
+                $SQL .= "       homepage ";
+                $SQL .= "FROM   `user`";
+                $SQL .= sprintf(" WHERE userID = %d", $userid);
 
-            while($aRow = $db->get_row($results))
-            {
+                if(!$aRow = $db->GetSingleRow($SQL))
+                {
+                    trigger_error($db->error());
+                    trigger_error(__('Error getting user information.'), E_USER_ERROR);
+                }
+
                 $username 	= Kit::ValidateParam($aRow[0], _USERNAME);
                 $password 	= Kit::ValidateParam($aRow[1], _PASSWORD);
-                $usertypeid 	= Kit::ValidateParam($aRow[2], _INT);
-                $email 		= Kit::ValidateParam($aRow[3], _STRING);
+                $usertypeid	= Kit::ValidateParam($aRow[2], _INT);
+                $email          = Kit::ValidateParam($aRow[3], _STRING);
                 $homepage 	= Kit::ValidateParam($aRow[4], _STRING);
+            }
+            else
+            {
+                // We are adding a new user
+                $usertype = Config::GetSetting($db, 'defaultUsertype');
+                $username = '';
+                $password = '';
+                $email    = '';
+
+                $SQL = sprintf("SELECT usertypeid FROM usertype WHERE usertype = '%s'", $db->escape_string($usertype));
+
+                if(!$usertypeid = $db->GetSingleValue($SQL, 'usertypeid', _INT))
+                {
+                    trigger_error($db->error());
+                    trigger_error("Can not get Usertype information", E_USER_ERROR);
+                }
             }
 
             // Help UI
@@ -532,22 +548,6 @@ END;
                     <td>$overpassHelp <input type="checkbox" name="pass_change" value="0"></td>
 FORM;
             }
-
-            //get us the user type if we dont have it (for the default value)
-            if($usertypeid=="")
-            {
-                    $usertype = Config::GetSetting($db,"defaultUsertype");
-
-                    $SQL = "SELECT usertypeid FROM usertype WHERE usertype = '$usertype'";
-                    if(!$results = $db->query($SQL))
-                    {
-                            trigger_error($db->error());
-                            trigger_error("Can not get Usertype information", E_USER_ERROR);
-                    }
-                    $row = $db->get_row($results);
-                    $usertypeid = $row['0'];
-            }
-
 
             if ($_SESSION['usertype']==1)
             {

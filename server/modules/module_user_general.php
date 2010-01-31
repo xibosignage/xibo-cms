@@ -504,7 +504,7 @@
 		// Get some information about this menu
 		// I.e. get the Menu Items this user has access to
 		$SQL  = "";
-		$SQL .= "SELECT   pages.name     , ";
+		$SQL .= "SELECT DISTINCT pages.name     , ";
 		$SQL .= "         menuitem.Args , ";
 		$SQL .= "         menuitem.Text , ";
 		$SQL .= "         menuitem.Class, ";
