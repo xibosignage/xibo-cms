@@ -20,7 +20,7 @@
 
 $(document).ready(function(){
 
-	// Setup the dialogs
+    // Setup the dialogs
     $('#system_message').dialog({
         title: "Application Message",
         width: "320",
@@ -28,22 +28,22 @@ $(document).ready(function(){
         draggable: false,
         resizable: false,
         bgiframe: true,
-		autoOpen: false,
-		modal: true,
-		buttons: {
-				Ok: function() {
-					$(this).dialog('close');
-				}
-			}
+        autoOpen: false,
+        modal: true,
+        buttons: {
+            Ok: function() {
+                $(this).dialog('close');
+            }
+        }
     });
 
     $('#system_working').ajaxStart(function(){
-    	$(this).show();
+        $(this).show();
     }).ajaxComplete(function(){
         $(this).fadeOut("slow");
     });
 
-	XiboInitialise();
+    XiboInitialise();
 });
 
 /**
@@ -52,80 +52,88 @@ $(document).ready(function(){
  */
 function XiboInitialise(scope){
 
-	// If the scope isnt defined then assume the entire page
-	if (scope == undefined || scope == "") {
-		scope = " ";
-	}
+    // If the scope isnt defined then assume the entire page
+    if (scope == undefined || scope == "") {
+        scope = " ";
+    }
 
-		// Parse the langid out of the url
-	if (gup("lang") != "")
-	{
-		// Add this lang to all the urls on the page
-		// TODO: this might be slow - maybe we need a more efficient way of doing this
-		$(scope + ' a').each(function(){
-			$(this).attr('href', $(this).attr('href') + '&lang=' + gup("lang"));
-		});
+    // Parse the langid out of the url
+    if (gup("lang") != "")
+    {
+        // Add this lang to all the urls on the page
+        // TODO: this might be slow - maybe we need a more efficient way of doing this
+        $(scope + ' a').each(function(){
+            $(this).attr('href', $(this).attr('href') + '&lang=' + gup("lang"));
+        });
 
-		$(scope + ' form').each(function(){
-			$(this).attr('href', $(this).attr('href') + '&lang=' + gup("lang"));
-		});
+        $(scope + ' form').each(function(){
+            $(this).attr('href', $(this).attr('href') + '&lang=' + gup("lang"));
+        });
 
-		$(scope + ' button').each(function(){
-			$(this).attr('href', $(this).attr('href') + '&lang=' + gup("lang"));
-		});
-	}
+        $(scope + ' button').each(function(){
+            $(this).attr('href', $(this).attr('href') + '&lang=' + gup("lang"));
+        });
+    }
 
-	// Search for any grids on the page and render them
-	$(scope + " .XiboGrid").each(function(){
+    // Search for any grids on the page and render them
+    $(scope + " .XiboGrid").each(function(){
 
-		var gridId = $(this).attr("id");
+        var gridId = $(this).attr("id");
 
-		// For each one setup the filter form bindings
-		$('.XiboFilter form :input', this).change(function(){
-			XiboGridRender(gridId);
-		});
+        // For each one setup the filter form bindings
+        $('.XiboFilter form :input', this).change(function(){
+            XiboGridRender(gridId);
+        });
 
-		$('.XiboFilter form', this).submit(function(){
-			// We dont actually want the form to be submittable (just in case)
-			return false;
-		});
+        $('.XiboFilter form', this).submit(function(){
+            // We dont actually want the form to be submittable (just in case)
+            return false;
+        });
 
-		// Render
-		XiboGridRender(gridId);
-	});
+        // Render
+        XiboGridRender(gridId);
+    });
 
-	// Search for any Buttons / Links on the page that are used to load forms
-	$(scope + " .XiboFormButton").click(function(){
+    // Search for any Buttons / Links on the page that are used to load forms
+    $(scope + " .XiboFormButton").click(function(){
 
-		var formUrl = $(this).attr("href");
+        var formUrl = $(this).attr("href");
 
-		XiboFormRender(formUrl);
+        XiboFormRender(formUrl);
 
-		return false;
-	});
+        return false;
+    });
 
-        // Search for any Buttons / Linkson the page that are used to load hover tooltips
-	$(scope + " .XiboHoverButton").hover(
-            function(e){
+    // Search for any Buttons / Linkson the page that are used to load hover tooltips
+    $(scope + " .XiboHoverButton").hover(
+        function(e){
 
-		var formUrl = $(this).attr("href");
+            var formUrl = $(this).attr("href");
 
-		XiboHoverRender(formUrl, e.pageX, e.pageY);
+            XiboHoverRender(formUrl, e.pageX, e.pageY);
 
-		return false;
-            },
-             function(){
+            return false;
+        },
+        function(){
 
-               // Dont do anything on hover off - the hover on deals with
-               // destroying itself.
-               return false;
-            }
+            // Dont do anything on hover off - the hover on deals with
+            // destroying itself.
+            return false;
+        }
         );
 
-	// Search for any forms that will need submitting
+    // Search for any forms that will need submitting
+    // NOTE: The validation plugin does not like binding to multiple forms at once.
     $(scope + ' .XiboForm').validate({
-   		submitHandler: XiboFormSubmit
-	});
+        submitHandler: XiboFormSubmit
+    });
+
+    // Forms that we want to be submitted without validation.
+    $(scope + ' .XiboAutoForm').submit( function() {
+        XiboFormSubmit(this);
+
+        return false;
+    });
 
     // Search for any text forms that will need submitting
     $(scope + ' .XiboTextForm').submit(function(){
@@ -138,15 +146,15 @@ function XiboInitialise(scope){
         return false;
     });
 
-	// Search for any help enabled elements
-	$(scope + " .XiboHelpButton").click(function(){
+    // Search for any help enabled elements
+    $(scope + " .XiboHelpButton").click(function(){
 
-		var formUrl = $(this).attr("href");
+        var formUrl = $(this).attr("href");
 
-		XiboHelpRender(formUrl);
+        XiboHelpRender(formUrl);
 
-		return false;
-	});
+        return false;
+    });
 }
 
 /**
@@ -156,7 +164,7 @@ function XiboInitialise(scope){
 function XiboGridRender(gridId){
 
     // Grid ID tells us which grid we need to render
-	var gridDiv 	= '#' + gridId;
+    var gridDiv 	= '#' + gridId;
     var filter 		= $('#' + gridId + ' .XiboFilter form');
     var outputDiv 	= $('#' + gridId + ' .XiboData ');
 
@@ -200,13 +208,13 @@ function XiboGridRender(gridId){
                 }
             }
 
-			// Do we have to call any functions due to this success?
+            // Do we have to call any functions due to this success?
             if (response.callBack != "" && response.callBack != undefined) {
                 eval(response.callBack)(name);
             }
 
-			// Call XiboInitialise for this form
-			XiboInitialise(gridDiv);
+            // Call XiboInitialise for this form
+            XiboInitialise(gridDiv);
 
             return false;
         }
@@ -222,20 +230,20 @@ function XiboGridRender(gridId){
  */
 function XiboFormRender(formUrl) {
 
-	// Prepare the Dialog
-	$('#div_dialog').dialog('destroy');
-	$('#div_dialog').html("");
+    // Prepare the Dialog
+    $('#div_dialog').dialog('destroy');
+    $('#div_dialog').html("");
 
-	// Call with AJAX
-        $.ajax({
-            type: "get",
-            url: formUrl + "&ajax=true",
-            cache: false,
-            dataType: "json",
-            success: function(response){
+    // Call with AJAX
+    $.ajax({
+        type: "get",
+        url: formUrl + "&ajax=true",
+        cache: false,
+        dataType: "json",
+        success: function(response){
 
-                // Was the Call successful
-                if (response.success) {
+            // Was the Call successful
+            if (response.success) {
 
                 // Set the dialog HTML to be the response HTML
                 $('#div_dialog').html(response.html);
@@ -261,16 +269,16 @@ function XiboFormRender(formUrl) {
 
                 if (response.buttons != '') {
                     $.each(
-                            response.buttons,
-                            function(index, value) {
-                                var extrabutton = {};
-                                extrabutton[index] = function(){
-                                        eval(value);
-                                }
-
-                                buttons = $.extend(buttons, extrabutton);
+                        response.buttons,
+                        function(index, value) {
+                            var extrabutton = {};
+                            extrabutton[index] = function(){
+                                eval(value);
                             }
-                    );
+
+                            buttons = $.extend(buttons, extrabutton);
+                        }
+                        );
                 }
 
                 // Create the dialog with our parameters
@@ -292,7 +300,7 @@ function XiboFormRender(formUrl) {
 
                 // Focus in the first form element
                 if (response.focusInFirstInput) {
-                   $('input[type=text]', '#div_dialog').eq(0).focus();
+                    $('input[type=text]', '#div_dialog').eq(0).focus();
                 }
 
                 // Call Xibo Init for this form
@@ -317,10 +325,10 @@ function XiboFormRender(formUrl) {
 
             return false;
         }
-        });
+    });
 
-	// Dont then submit the link/button
-	return false;
+    // Dont then submit the link/button
+    return false;
 }
 
 /**
@@ -329,7 +337,7 @@ function XiboFormRender(formUrl) {
  */
 function XiboPing(url) {
 
-	// Call with AJAX
+    // Call with AJAX
     $.ajax({
         type: "get",
         url: url + "&ajax=true",
@@ -337,27 +345,27 @@ function XiboPing(url) {
         dataType: "json",
         success: function(response){
 
-			// Was the Call successful
+            // Was the Call successful
             if (!response.success) {
-				// Login Form needed?
-	            if (response.login) {
-					$('#div_dialog').dialog('destroy');
+                // Login Form needed?
+                if (response.login) {
+                    $('#div_dialog').dialog('destroy');
 
-	                LoginBox(response.message);
-	                return false;
-	            }
+                    LoginBox(response.message);
+                    return false;
+                }
 
-				if (response.clockUpdate) {
-					XiboClockUpdate(response.html);
-				}
-			}
+                if (response.clockUpdate) {
+                    XiboClockUpdate(response.html);
+                }
+            }
 
             return false;
         }
     });
 
-	// Dont then submit the link/button
-	return false;
+    // Dont then submit the link/button
+    return false;
 }
 
 /**
@@ -366,9 +374,9 @@ function XiboPing(url) {
  */
 function XiboClockUpdate(time)
 {
-	$('#XiboClock').html(time);
+    $('#XiboClock').html(time);
 
-	return;
+    return;
 }
 
 /**
@@ -376,12 +384,19 @@ function XiboClockUpdate(time)
  * @param {Object} form
  */
 function XiboFormSubmit(form) {
-	// Get the URL from the action part of the form)
-	var url = $(form).attr("action") + "&ajax=true";
+    // Get the URL from the action part of the form)
+    var url = $(form).attr("action") + "&ajax=true";
 
-	$.ajax({type:"post", url:url, cache:false, dataType:"json", data:$(form).serialize(), success: XiboSubmitResponse});
+    $.ajax({
+        type:"post",
+        url:url,
+        cache:false,
+        dataType:"json",
+        data:$(form).serialize(),
+        success: XiboSubmitResponse
+    });
 
-	return;
+    return;
 }
 
 /**
@@ -389,63 +404,63 @@ function XiboFormSubmit(form) {
  * @param {Object} response
  */
 function XiboSubmitResponse(response) {
-	// Did we actually succeed
-	if (response.success) {
-		// Success - what do we do now?
+    // Did we actually succeed
+    if (response.success) {
+        // Success - what do we do now?
 
-		// We might need to keep the form open
-		if (!response.keepOpen) {
-			$('#div_dialog').dialog("close");
-		}
+        // We might need to keep the form open
+        if (!response.keepOpen) {
+            $('#div_dialog').dialog("close");
+        }
 
-		// Should we display the message?
-		if (!response.hideMessage || response.message != '') {
-			SystemMessage(response.message);
-		}
+        // Should we display the message?
+        if (!response.hideMessage || response.message != '') {
+            SystemMessage(response.message);
+        }
 
-		// Do we need to fire a callback function?
-		if (response.callBack != null && response.callBack != "") {
+        // Do we need to fire a callback function?
+        if (response.callBack != null && response.callBack != "") {
             eval(response.callBack)(name);
         }
 
-		// Do we need to load a new form?
-		if (response.loadForm) {
-			// We need: uri, callback, onsubmit
-			var uri = response.loadFormUri;
+        // Do we need to load a new form?
+        if (response.loadForm) {
+            // We need: uri, callback, onsubmit
+            var uri = response.loadFormUri;
 
-			// File forms give the URI back with &amp's in it
-			uri = unescape(uri);
+            // File forms give the URI back with &amp's in it
+            uri = unescape(uri);
 
-			XiboFormRender(uri);
-		}
+            XiboFormRender(uri);
+        }
 
-		// Should we refresh the window or refresh the Grids?
-		if (response.refresh) {
-			// We need to refresh - check to see if there is a new location provided
-			if (response.refreshLocation == undefined || response.refreshLocation == "") {
-				// If not refresh the current location
-		    	window.location.reload();
-			}
-			else {
-				// Refresh to the new location
-				window.location = response.refreshLocation;
-			}
-		}
-		else {
-			// We should refresh the grids (this is a global refresh)
-			$(" .XiboGrid").each(function(){
+        // Should we refresh the window or refresh the Grids?
+        if (response.refresh) {
+            // We need to refresh - check to see if there is a new location provided
+            if (response.refreshLocation == undefined || response.refreshLocation == "") {
+                // If not refresh the current location
+                window.location.reload();
+            }
+            else {
+                // Refresh to the new location
+                window.location = response.refreshLocation;
+            }
+        }
+        else {
+            // We should refresh the grids (this is a global refresh)
+            $(" .XiboGrid").each(function(){
 
-				var gridId = $(this).attr("id");
+                var gridId = $(this).attr("id");
 
-				// Render
-				XiboGridRender(gridId);
-			});
-		}
-	}
-	else {
-		// Why did we fail?
-		if (response.login) {
-			// We were logged out
+                // Render
+                XiboGridRender(gridId);
+            });
+        }
+    }
+    else {
+        // Why did we fail?
+        if (response.login) {
+            // We were logged out
             LoginBox(response.message);
             return false;
         }
@@ -453,9 +468,9 @@ function XiboSubmitResponse(response) {
             // Likely just an error that we want to report on
             SystemMessage(response.message);
         }
-	}
+    }
 
-	return false;
+    return false;
 }
 
 /**
@@ -464,11 +479,11 @@ function XiboSubmitResponse(response) {
  */
 function XiboHelpRender(formUrl) {
 
-	// Prepare the Dialog
-	$('#help_dialog').dialog("destroy");
-	$('#help_dialog').html("");
+    // Prepare the Dialog
+    $('#help_dialog').dialog("destroy");
+    $('#help_dialog').html("");
 
-	// Call with AJAX
+    // Call with AJAX
     $.ajax({
         type: "get",
         url: formUrl + "&ajax=true",
@@ -476,55 +491,55 @@ function XiboHelpRender(formUrl) {
         dataType: "json",
         success: function(response){
 
-			// Was the Call successful
+            // Was the Call successful
             if (response.success) {
-				// Set the dialog HTML to be the response HTML
+                // Set the dialog HTML to be the response HTML
                 $('#help_dialog').html(response.html);
 
                 var dialogTitle = "Xibo Help";
-				var dialogWidth = "500";
-				var dialogHeight = "500";
+                var dialogWidth = "500";
+                var dialogHeight = "500";
 
-				// Is there a title for the dialog?
-				if (response.dialogTitle != undefined && response.dialogTitle != "") {
-					// Set the dialog title
-					dialogTitle =  response.dialogTitle;
-				}
+                // Is there a title for the dialog?
+                if (response.dialogTitle != undefined && response.dialogTitle != "") {
+                    // Set the dialog title
+                    dialogTitle =  response.dialogTitle;
+                }
 
-				// Do we need to alter the dialog size?
-				if (response.dialogSize) {
-					dialogWidth 	= response.dialogWidth;
-					dialogHeight	= response.dialogHeight;
-				}
+                // Do we need to alter the dialog size?
+                if (response.dialogSize) {
+                    dialogWidth 	= response.dialogWidth;
+                    dialogHeight	= response.dialogHeight;
+                }
 
-				// Buttons?
-				var buttons = '';
+                // Buttons?
+                var buttons = '';
 
-				if (response.buttons != '') {
-					$.each(
-						response.buttons,
-						function(index, value) {
-							var extrabutton = {};
-							extrabutton[index] = function(){
-								eval(value);
-							}
+                if (response.buttons != '') {
+                    $.each(
+                        response.buttons,
+                        function(index, value) {
+                            var extrabutton = {};
+                            extrabutton[index] = function(){
+                                eval(value);
+                            }
 
-							buttons 		= $.extend(buttons, extrabutton);
-						}
-					);
-				}
+                            buttons 		= $.extend(buttons, extrabutton);
+                        }
+                        );
+                }
 
-				// Create the dialog with our parameters
-				$('#help_dialog').dialog({
-			        title: dialogTitle,
-			        width: dialogWidth,
-			        height: dialogHeight,
-			        draggable: true,
-			        resizable: false,
-			        bgiframe: true,
-					autoOpen: true,
-					buttons: buttons
-			    });
+                // Create the dialog with our parameters
+                $('#help_dialog').dialog({
+                    title: dialogTitle,
+                    width: dialogWidth,
+                    height: dialogHeight,
+                    draggable: true,
+                    resizable: false,
+                    bgiframe: true,
+                    autoOpen: true,
+                    buttons: buttons
+                });
 
                 // Do we have to call any functions due to this success?
                 if (response.callBack != "" && response.callBack != undefined) {
@@ -534,32 +549,32 @@ function XiboHelpRender(formUrl) {
                 // Focus in the first form element
                 $('input[@type=text]', '#help_dialog').eq(0).focus();
 
-				// Call Xibo Init for this form
-				XiboInitialise("#help_dialog");
+                // Call Xibo Init for this form
+                XiboInitialise("#help_dialog");
             }
-			else {
-				// Login Form needed?
-	            if (response.login) {
-	                LoginBox(response.message);
-	                return false;
-	            }
-	            else {
-	                // Just an error we dont know about
-					if (response.message == undefined) {
-						SystemMessage(response);
-					}
-					else {
-		                SystemMessage(response.message);
-					}
-	            }
-			}
+            else {
+                // Login Form needed?
+                if (response.login) {
+                    LoginBox(response.message);
+                    return false;
+                }
+                else {
+                    // Just an error we dont know about
+                    if (response.message == undefined) {
+                        SystemMessage(response);
+                    }
+                    else {
+                        SystemMessage(response.message);
+                    }
+                }
+            }
 
             return false;
         }
     });
 
-	// Dont then submit the link/button
-	return false;
+    // Dont then submit the link/button
+    return false;
 }
 
 /**
@@ -570,77 +585,77 @@ function XiboHoverRender(url, x, y)
     // Call some AJAX
     // TODO: Change this to be hover code
     $.ajax({
-            type: "get",
-            url: url + "&ajax=true",
-            cache: false,
-            dataType: "json",
-            success: function(response){
+        type: "get",
+        url: url + "&ajax=true",
+        cache: false,
+        dataType: "json",
+        success: function(response){
 
-                // Was the Call successful
-                if (response.success) {
+            // Was the Call successful
+            if (response.success) {
 
-                    var dialogWidth = "500";
-                    var dialogHeight = "500";
+                var dialogWidth = "500";
+                var dialogHeight = "500";
 
-                    // Do we need to alter the dialog size?
-                    if (response.dialogSize) {
-                        dialogWidth 	= response.dialogWidth;
-                        dialogHeight	= response.dialogHeight;
-                    }
-
-                    // Create the the popup bubble with our parameters
-                    $("body").append("<div class=\"XiboHover\"></div>");
-
-                    $(".XiboHover").css("position", "absolute").css(
-                        {
-                            display: "none",
-                            width:dialogWidth,
-                            height:dialogHeight,
-                            top: y,
-                            left: x
-                        }
-                    ).fadeIn("slow").hover(
-                        function(){
-                            return false
-                        },
-                        function(){
-                           $(".XiboHover").hide().remove();
-                           return false;
-                        }
-                    );
-
-                    // Set the dialog HTML to be the response HTML
-                    $('.XiboHover').html(response.html);
-
-                    // Do we have to call any functions due to this success?
-                    if (response.callBack != "" && response.callBack != undefined) {
-                        eval(response.callBack)(name);
-                    }
-
-                    // Call Xibo Init for this form
-                    XiboInitialise(".XiboHover");
-
+                // Do we need to alter the dialog size?
+                if (response.dialogSize) {
+                    dialogWidth 	= response.dialogWidth;
+                    dialogHeight	= response.dialogHeight;
                 }
-                else {
-                    // Login Form needed?
-                    if (response.login) {
-                        LoginBox(response.message);
+
+                // Create the the popup bubble with our parameters
+                $("body").append("<div class=\"XiboHover\"></div>");
+
+                $(".XiboHover").css("position", "absolute").css(
+                {
+                    display: "none",
+                    width:dialogWidth,
+                    height:dialogHeight,
+                    top: y,
+                    left: x
+                }
+                ).fadeIn("slow").hover(
+                    function(){
+                        return false
+                    },
+                    function(){
+                        $(".XiboHover").hide().remove();
                         return false;
                     }
-                    else {
-                        // Just an error we dont know about
-                        if (response.message == undefined) {
-                            SystemMessage(response);
-                        }
-                        else {
-                            SystemMessage(response.message);
-                        }
-                    }
+                    );
+
+                // Set the dialog HTML to be the response HTML
+                $('.XiboHover').html(response.html);
+
+                // Do we have to call any functions due to this success?
+                if (response.callBack != "" && response.callBack != undefined) {
+                    eval(response.callBack)(name);
                 }
 
-                return false;
+                // Call Xibo Init for this form
+                XiboInitialise(".XiboHover");
+
             }
-        });
+            else {
+                // Login Form needed?
+                if (response.login) {
+                    LoginBox(response.message);
+                    return false;
+                }
+                else {
+                    // Just an error we dont know about
+                    if (response.message == undefined) {
+                        SystemMessage(response);
+                    }
+                    else {
+                        SystemMessage(response.message);
+                    }
+                }
+            }
+
+            return false;
+        }
+    });
 
     // Dont then submit the link/button
     return false;
@@ -650,7 +665,7 @@ function XiboHoverRender(url, x, y)
  * Closes the dialog window
  */
 function XiboDialogClose() {
-	$('#div_dialog').dialog('close');
+    $('#div_dialog').dialog('close');
 }
 
 /**
@@ -666,20 +681,22 @@ function LoginBox(message) {
         return false;
     });
 
-	// Create the dialog with our parameters
-	$('#div_dialog').dialog({
+    // Create the dialog with our parameters
+    $('#div_dialog').dialog({
         title: 'Please Login to Proceed',
         width: 300,
         height: 300,
         draggable: true,
         resizable: false,
         bgiframe: true,
-		autoOpen: true,
-		position: 'center',
-		modal: true,
-		buttons: {"Login": function(){
-			XiboFormSubmit($('#XiboLoginForm').submit())
-		}}
+        autoOpen: true,
+        position: 'center',
+        modal: true,
+        buttons: {
+            "Login": function(){
+                XiboFormSubmit($('#XiboLoginForm').submit())
+            }
+            }
     });
 
     // Focus in the first form element
@@ -694,12 +711,12 @@ function LoginBox(message) {
  */
 function SystemMessage(messageText) {
 
-	if (messageText == '' || messageText == null) return;
+    if (messageText == '' || messageText == null) return;
 
-	var message = $('#system_message');
+    var message = $('#system_message');
 
-	$('span', message).html(messageText);
-	message.dialog('open');
+    $('span', message).html(messageText);
+    message.dialog('open');
 }
 
 /**
@@ -707,12 +724,12 @@ function SystemMessage(messageText) {
  */
 function ToggleFilterView(div)
 {
-	if ($('#'+div).css("display") == "none") {
-    	$('#'+div).fadeIn("slow");
+    if ($('#'+div).css("display") == "none") {
+        $('#'+div).fadeIn("slow");
     }
     else {
-    	$('#'+div).fadeOut("slow");
+        $('#'+div).fadeOut("slow");
     }
 
-	return false;
+    return false;
 }
