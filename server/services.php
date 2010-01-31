@@ -38,11 +38,12 @@ if (isset($_GET['wsdl']))
     $wsdl = str_replace('{{XMDS_LOCATION}}', $serviceLocation, $wsdl);
     echo $wsdl;
 
+    // Get the contents of the buffer and work out its length
     $buffer = ob_get_contents();
     $length = strlen($buffer);
 
     // Output the headers
-    header("Content-Type: text/xml; charset=ISO-8859-1\r\n");
+    header('Content-Type: text/xml; charset=ISO-8859-1\r\n');
     header('Content-Length: ' . $length);
 
     // Flush the buffer

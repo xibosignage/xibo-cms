@@ -36,7 +36,6 @@
 			<h2>Third Party Licenses</h2>
 			<p><a href="http://jquery.com/">Jquery</a> is provided under the <a href="http://dev.jquery.com/browser/trunk/jquery/MIT-LICENSE.txt">MIT license.</a></p>
 			<p><a href="http://www.fckeditor.net/license">FCK Editor</a> is provided as the text editor, and is made available under GPL/LGPL/MPL</p>
-			<p>The NuSOAP Library is used for the Web Service, and used on the Xibo Server under the GPL license.</p>
 			<p>RSS feeds and other media is the sole property of the provider and their terms and conditions should be adhered too.</p>
 		</div>
 	</div>	

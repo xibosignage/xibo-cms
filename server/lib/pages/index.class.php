@@ -289,9 +289,6 @@ class indexDAO
 		
 		<h3>FCK Editor</h3>
 		<p><a href="http://www.fckeditor.net/license">FCK Editor</a> is provided as the text editor, and is made available under GPL/LGPL/MPL</p>
-
-		<h3>nuSOAP</h3>
-		<p>The NuSOAP Library is used for the Web Service, and used on the Xibo Server under the GPL license.</p>
 END;
 		
 		$response->SetFormRequestResponse($output, __('About Xibo'), '500', '500');
