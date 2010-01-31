@@ -227,6 +227,71 @@
 		return $row[0];
 	}
 
+        /**
+         * Get an array of user groups for the given user id
+         * @param <type> $id User ID
+         * @param <type> $returnID Whether to return ID's or Names
+         * @return <array>
+         */
+        function GetUserGroups($id, $returnID = false)
+	{
+            $db =& $this->db;
+
+            $groupIDs = array();
+            $groups = array();
+
+            $SQL  = "";
+            $SQL .= "SELECT group.group, ";
+            $SQL .= "       group.groupID ";
+            $SQL .= "FROM   `user` ";
+            $SQL .= "       INNER JOIN lkusergroup ";
+            $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
+            $SQL .= "       INNER JOIN `group` ";
+            $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
+            $SQL .= sprintf("WHERE  `user`.userid                     = %d ", $id);
+
+            if(!$results = $db->query($SQL))
+            {
+                trigger_error($db->error());
+                trigger_error("Error looking up user information (group)", E_USER_ERROR);
+            }
+
+            if ($db->num_rows($results) == 0)
+            {
+                // Every user should have a group?
+                // Add one in!
+                include_once('lib/data/usergroup.data.class.php');
+
+                $userGroupObject = new UserGroup($db);
+                if (!$groupID = $userGroupObject->Add('Unknown user id: ' . $id, 1))
+                {
+                    // Error
+                    trigger_error(__('User does not have a group and Xibo is unable to add one.'), E_USER_ERROR);
+                }
+
+                // Link the two
+                $userGroupObject->Link($groupID, $id);
+
+                if ($returnID)
+                    return array($groupID);
+
+                return array('Unknown');
+            }
+
+            // Build an array of the groups to return
+            while($row = $db->get_assoc_row($results))
+            {
+                $groupIDs[] = Kit::ValidateParam($row['groupID'], _INT);
+                $groups[] = Kit::ValidateParam($row['group'], _STRING);
+            }
+
+            if ($returnID)
+                return $groupIDs;
+
+
+            return $groups;
+	}
+
 	function getGroupFromID($id, $returnID = false) 
 	{
             $db =& $this->db;
@@ -264,7 +329,9 @@
                 // Link the two
                 $userGroupObject->Link($groupID, $id);
 
-                if ($returnID) return $groupID;
+                if ($returnID)
+                    return $groupID;
+
                 return 'Unknown';
             }
 
@@ -357,80 +424,80 @@
 	 * @param $permissionid Object
 	 * @param $userid Object[optional]
 	 */
-	function eval_permission($ownerid, $permissionid, $userid = "") 
+	function eval_permission($ownerid, $permissionid, $userid = '')
 	{
-		$db 		=& $this->db;
-		
-		if ($userid != "") 
-		{
-			//use the userid provided
-			$groupid 		= $this->getGroupFromID($userid, true);
-			$usertypeid		= $this->getUserTypeFromID($userid, true);
-		}
-		else 
-		{
-			$userid 	= Kit::GetParam('userid', _SESSION, _INT);		//the logged in user
-			$groupid 	= Kit::GetParam('groupid', _SESSION, _INT);		//the logged in users group
-			$usertypeid = Kit::GetParam('usertype', _SESSION, _INT);	//the logged in users group (admin, group admin, user)			
-		}
-		
-		$ownerGroupID 	= $this->getGroupFromID($ownerid, true); 		//the owners groupid
-		
-		//if we are a super admin we can view/edit anything we like regardless of settings
-		if ($usertypeid == 1) 
-		{
-			return array(true,true);
-		}
-		
-		//set both the flags to false
-		$see = false;
-		$edit = false;
-		
-		switch ($permissionid) 
-		{
-			//the permission options
-			case '1': //Private
-				//to see we need to be a--- group admin in this group OR the owner
-				//to edit we need to be: a group admin in this group - or the owner
-				if (($groupid == $ownerGroupID && $usertypeid == 2) || $ownerid == $userid) 
-				{
-					$see = true;
-					$edit = true;
-				}
-				break;
-				
-			case '2': //Group
-				//to see we need to be in this group
-				if ($groupid == $ownerGroupID) 
-				{
-					$see = true;
-					
-					//to edit we need to be a group admin in this group (or the owner)
-					if ($usertypeid == 2 || ($ownerid == $userid)) 
-					{
-						$edit = true;
-					}
-				}
-			
-				break;
-				
-			case '3': //Public
-					$see = true; //everyone can see it
-					
-					//group admins (and owners) can edit
-					if ($groupid == $ownerGroupID) 
-					{				
-						//to edit we need to be a group admin in this group (or the owner)
-						if ($usertypeid == 2 || ($ownerid == $userid)) 
-						{
-							$edit = true;
-						}
-					}
-			
-				break;
-		}
-		
-		return array($see,$edit);
+            $db =& $this->db;
+
+            // If a user ID is provided with the call then evaluate against that, otherwise use the logged in user
+            if ($userid != '')
+            {
+                // Use the userid provided
+                $groupids    = $this->GetUserGroups($userid, true);
+                $usertypeid  = $this->getUserTypeFromID($userid, true);
+            }
+            else
+            {
+                // Use the logged in user
+                $userid     = Kit::GetParam('userid', _SESSION, _INT);	// the logged in user
+                $groupids   = $this->GetUserGroups($userid, true);	// the logged in users groups
+                $usertypeid = Kit::GetParam('usertype', _SESSION, _INT);// the logged in users group (admin, group admin, user)
+            }
+
+            // If we are a super admin we can view/edit anything we like regardless of settings
+            if ($usertypeid == 1)
+                return array(true,true);
+
+            // Get the groups that the owner belongs to
+            $ownerGroupIDs  = $this->GetUserGroups($ownerid, true); 	// the owners groupid
+
+            // set both the flags to false
+            $see = false;
+            $edit = false;
+
+            switch ($permissionid)
+            {
+                case '1': // Private
+                    // to see we need to be a group admin in this group OR the owner
+                    // to edit we need to be: a group admin in this group - or the owner
+                    if ((count(array_intersect($ownerGroupIDs, $groupids)) > 0 && $usertypeid == 2) || $ownerid == $userid)
+                    {
+                        $see = true;
+                        $edit = true;
+                    }
+                    break;
+
+                case '2': // Group
+                    // to see we need to be in this group
+                    if (count(array_intersect($ownerGroupIDs, $groupids)) > 0)
+                    {
+                        $see = true;
+
+                        //to edit we need to be a group admin in this group (or the owner)
+                        if ($usertypeid == 2 || ($ownerid == $userid))
+                        {
+                            $edit = true;
+                        }
+                    }
+
+                    break;
+
+                case '3': //Public
+                    $see = true; //everyone can see it
+
+                    // group admins (and owners) can edit
+                    if (count(array_intersect($ownerGroupIDs, $groupids)) > 0)
+                    {
+                        // to edit we need to be a group admin in this group (or the owner)
+                        if ($usertypeid == 2 || ($ownerid == $userid))
+                        {
+                            $edit = true;
+                        }
+                    }
+
+                    break;
+            }
+
+            return array($see,$edit);
 	}
 	
 	/**

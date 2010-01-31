@@ -482,11 +482,11 @@ HTML;
                     trigger_error(__('Error getting user information.'), E_USER_ERROR);
                 }
 
-                $username 	= Kit::ValidateParam($aRow[0], _USERNAME);
-                $password 	= Kit::ValidateParam($aRow[1], _PASSWORD);
-                $usertypeid	= Kit::ValidateParam($aRow[2], _INT);
-                $email          = Kit::ValidateParam($aRow[3], _STRING);
-                $homepage 	= Kit::ValidateParam($aRow[4], _STRING);
+                $username 	= Kit::ValidateParam($aRow['UserName'], _USERNAME);
+                $password 	= Kit::ValidateParam($aRow['UserPassword'], _PASSWORD);
+                $usertypeid	= Kit::ValidateParam($aRow['usertypeid'], _INT);
+                $email          = Kit::ValidateParam($aRow['email'], _STRING);
+                $homepage 	= Kit::ValidateParam($aRow['homepage'], _STRING);
             }
             else
             {
