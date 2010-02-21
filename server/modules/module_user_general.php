@@ -45,23 +45,25 @@
 	 */
 	function attempt_login($ajax = false) 
 	{
-		$db 			=& $this->db;
-		$referingPage 	= Kit::GetParam('pagename', _SESSION, _WORD);
+		$db 		=& $this->db;
+
+                // Referring Page is anything after the ?
+		$requestUri = rawurlencode(Kit::GetCurrentPage());
 		
 		if(!$this->checkforUserid()) 
 		{
 			//print out the login form
 			if ($ajax) 
 			{
-				//create the AJAX request object
-				$response = new ResponseManager();
-				
-				$response->Login();
-				$response->Respond();
+                            //create the AJAX request object
+                            $response = new ResponseManager();
+
+                            $response->Login();
+                            $response->Respond();
 			}
 			else 
 			{
-				$this->printLoginBox($referingPage);
+                            $this->printLoginBox($requestUri);
 			}
 			
 			return false;

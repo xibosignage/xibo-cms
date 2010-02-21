@@ -412,9 +412,17 @@ class Kit
      */
     public static function GetXiboRoot()
     {
-        // Work out the location of the services.
         $request = explode('?', $_SERVER['REQUEST_URI']);
         return 'http://' . $_SERVER['SERVER_NAME'] . $request[0];
+    }
+
+    /**
+     * Gets the Current page, optionally with arguments.
+     */
+    public static function GetCurrentPage()
+    {
+        $request = explode('?', $_SERVER['REQUEST_URI']);
+        return $request[1];
     }
 }
 ?>

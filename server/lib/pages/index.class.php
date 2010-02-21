@@ -53,7 +53,7 @@ class indexDAO
 		$password 		= Kit::GetParam('password', _POST, _PASSWORD);
 		$password		= md5($password);
 		
-		$referingpage 	= Kit::GetParam('referingPage', _GET, _WORD, 'index');
+		$referingpage 	= Kit::GetParam('referingPage', _GET, _WORD);
 		
 		if (isset($_REQUEST['ajax'])) 
 		{
@@ -100,19 +100,17 @@ class indexDAO
 			setMessage($username . ' logged in');
 			$session->set_user(session_id(), $userid, 'user');
 			
-			//if the referingpage is blank, then use the users homepage
-			if ($referingpage == 'index') $referingpage = $user->homepage($userid);
 		}
 		
 		Debug::LogEntry($db, 'audit', 'Login with refering page: ' . $referingpage);
 		
-		if ($referingpage == 'index') 
+		if ($referingpage == '') 
 		{
-			header("Location:index.php?p=dashboard");
+                    header('Location:index.php?p=dashboard');
 		}
 		else 
 		{
-			header("Location:index.php?p=".$referingpage);			
+                    header('Location:index.php?' . rawurldecode($referingpage));
 		}
 
 		exit;
