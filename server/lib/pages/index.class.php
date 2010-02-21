@@ -110,7 +110,7 @@ class indexDAO
 		}
 		else 
 		{
-                    header('Location:index.php?' . rawurldecode($referingpage));
+                    header('Location:index.php?' . $referingpage);
 		}
 
 		exit;

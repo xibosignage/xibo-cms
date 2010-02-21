@@ -48,7 +48,7 @@ class oauthDAO
 
         try
         {
-            $server->authorizeVerify();
+            $consumerDetails = $server->authorizeVerify();
 
             if ($_SERVER['REQUEST_METHOD'] == 'POST')
             {
@@ -63,10 +63,13 @@ class oauthDAO
                 $server->authorizeFinish(true, $userid);
 
                 // No oauth_callback, show the user the result of the authorization
-                echo __('Please return to your application.');
+                echo __('Request authorized. Please return to your application.');
            }
            else
            {
+               $store = OAuthStore::instance();
+               $consumer = $store->getConsumer($consumerDetails['consumer_key'], $userid);
+               
                include('template/pages/oauth_verify.php');
            }
         }
