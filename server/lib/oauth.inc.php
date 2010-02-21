@@ -24,10 +24,12 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
+DEFINE('OAUTH_LOG_REQUEST', true);
+
 // Work out the location of the XRDS file.
 $serviceLocation = Kit::GetXiboRoot();
 
-header('X-XRDS-Location: http://' . $serviceLocation . '/service.php?xrds');
+header('X-XRDS-Location:' . $serviceLocation . '/service.php?xrds');
 
 
 require_once('3rdparty/oauth-php/library/OAuthServer.php');

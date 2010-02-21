@@ -25,7 +25,7 @@
 	    <Type>http://oauth.net/core/1.0/parameters/uri-query</Type>
 	    <Type>http://oauth.net/core/1.0/signature/HMAC-SHA1</Type>
 	    <Type>http://oauth.net/core/1.0/signature/PLAINTEXT</Type>
-	    <URI>http://{{XRDS_LOCATION}}/index.php?p=oauth&q=access_token</URI>
+	    <URI>http://{{XRDS_LOCATION}}/services.php?service=oauth&method=access_token</URI>
 	</Service>
     </XRD>
 </XRDS>

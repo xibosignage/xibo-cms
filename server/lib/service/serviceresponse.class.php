@@ -21,6 +21,13 @@
 
 class XiboServiceResponse
 {
+    private $serviceLocation;
+
+    public function __construct()
+    {
+        $this->serviceLocation = Kit::GetXiboRoot();
+    }
+
     /**
      * Outputs the WSDL
      */
@@ -29,7 +36,7 @@ class XiboServiceResponse
         // We need to buffer the output so that we can send a Content-Length header with the WSDL
         ob_start();
         $wsdl = file_get_contents('lib/service/service.wsdl');
-        $wsdl = str_replace('{{XMDS_LOCATION}}', $serviceLocation, $wsdl);
+        $wsdl = str_replace('{{XMDS_LOCATION}}', $this->serviceLocation, $wsdl);
         echo $wsdl;
 
         // Get the contents of the buffer and work out its length
@@ -53,7 +60,7 @@ class XiboServiceResponse
         header('Content-Type: application/xrds+xml');
     
         $xrds = file_get_contents('lib/service/services.xrds.xml');
-        $xrds = str_replace('{{XRDS_LOCATION}}', $serviceLocation, $xrds);
+        $xrds = str_replace('{{XRDS_LOCATION}}', $this->serviceLocation, $xrds);
         echo $xrds;
 
         die();
@@ -77,6 +84,16 @@ class XiboServiceResponse
         header('HTTP/1.1 500 Internal Server Error');
         header('Content-Type: text/plain');
         die($message);
+    }
+
+    /**
+     * Success
+     * @param <string> $response
+     */
+    public function Success($response)
+    {
+        echo $response;
+        die();
     }
 }
 ?>

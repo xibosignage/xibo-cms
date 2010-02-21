@@ -33,8 +33,47 @@ class oauthDAO
 
     function displayPage()
     {
+        // Just a normal call to this page.
         include('template/pages/oauth_view.php');
+
         return false;
+    }
+
+    public function authorize()
+    {
+        // Do we have an OAuth signed request?
+        $userid = Kit::GetParam('userid', _SESSION, _INT);
+
+        $server = new OAuthServer();
+
+        try
+        {
+            $server->authorizeVerify();
+
+            if ($_SERVER['REQUEST_METHOD'] == 'POST')
+            {
+                // See if the user clicked the 'allow' submit button (or whatever you choose)
+                if (isset($_POST['Allow']))
+                    $authorized = true;
+                else
+                    $authorized = false;
+
+                // Set the request token to be authorized or not authorized
+                // When there was a oauth_callback then this will redirect to the consumer
+                $server->authorizeFinish(true, $userid);
+
+                // No oauth_callback, show the user the result of the authorization
+                echo __('Please return to your application.');
+           }
+           else
+           {
+               include('template/pages/oauth_verify.php');
+           }
+        }
+        catch (OAuthException $e)
+        {
+            echo $e->getMessage();
+        }
     }
 
     public function RegisterForm()

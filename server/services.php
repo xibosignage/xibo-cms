@@ -21,13 +21,9 @@
 DEFINE('XIBO', true);
 include_once("lib/xmds.inc.php");
 
-$method     = Kit::GetParam('method', _GET, _WORD, '');
-$service    = Kit::GetParam('service', _GET, _WORD, 'soap');
-$response   = Kit::GetParam('response', _GET, _WORD, 'xml');
-
-// Work out the location of the services.
-$serviceLocation = Kit::GetXiboRoot();
-
+$method     = Kit::GetParam('method', _REQUEST, _WORD, '');
+$service    = Kit::GetParam('service', _REQUEST, _WORD, 'soap');
+$response   = Kit::GetParam('response', _REQUEST, _WORD, 'xml');
 $serviceResponse = new XiboServiceResponse();
 
 // Is the WSDL being requested.
@@ -85,14 +81,13 @@ if (defined('XMDS') || $method != '')
             }
             catch (OauthException $e)
             {
-
+                // Was authorization successful?
+                if (!$authorized)
+                    $serviceResponse->ErrorServerError('OAuth Verification Failed: ' . $e->getMessage());
             }
-
-            // Was authorization successful?
-            if (!$authorized)
-                $serviceResponse->ErrorServerError('OAuth Verification Failed: ' . $e->getMessage());
                 
             // Authenticated with OAuth.
+
 
             // Detect response type requested.
             switch ($response)
@@ -116,7 +111,7 @@ if (defined('XMDS') || $method != '')
             }
 
             if (method_exists($rest, $method))
-                $rest->$method();
+                $serviceResponse->Success($rest->$method());
             else
                 $serviceResponse->ErrorServerError('Unknown Method');
 
