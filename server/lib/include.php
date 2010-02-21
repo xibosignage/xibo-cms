@@ -121,6 +121,9 @@ require_once('modules/' . Config::GetSetting($db, "userModule"));
 $user 		= new User($db);
 $session 	= new Session($db);
 
+// OAuth
+require_once('lib/oauth.inc.php');
+
 // Page variable set? Otherwise default to index
 $page 		= Kit::GetParam('p', _REQUEST, _WORD, 'index');
 

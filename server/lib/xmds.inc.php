@@ -24,16 +24,17 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0); //we never want to display errors on the screen
 
 // Required Library Files
-require_once("lib/app/translationengine.class.php");
-require_once("lib/app/app_functions.php");
-require_once("lib/app/debug.class.php");
-require_once("lib/app/kit.class.php");
-require_once("lib/data/data.class.php");
-require_once("config/db_config.php");
-require_once("config/config.class.php");
+require_once('lib/app/translationengine.class.php');
+require_once('lib/app/app_functions.php');
+require_once('lib/app/debug.class.php');
+require_once('lib/app/kit.class.php');
+require_once('lib/data/data.class.php');
+require_once('config/db_config.php');
+require_once('config/config.class.php');
 include_once('lib/data/stat.data.class.php');
-require_once("lib/data/data.class.php");
+require_once('lib/data/data.class.php');
 require_once('lib/data/display.data.class.php');
+require_once('lib/service/serviceresponse.class.php');
 
 // Sort out magic quotes
 if (get_magic_quotes_gpc()) 
@@ -80,6 +81,8 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 
 date_default_timezone_set(Config::GetSetting($db, 'defaultTimezone'));
 
+// OAuth
+require_once('lib/oauth.inc.php');
 
 // Setup the translations for gettext
 TranslationEngine::InitLocale($db);

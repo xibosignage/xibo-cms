@@ -26,30 +26,17 @@ $service    = Kit::GetParam('service', _GET, _WORD, 'soap');
 $response   = Kit::GetParam('response', _GET, _WORD, 'xml');
 
 // Work out the location of the services.
-$request = explode('?', $_SERVER['REQUEST_URI']);
-$serviceLocation = 'http://' . $_SERVER['SERVER_NAME'] . $request[0];
+$serviceLocation = Kit::GetXiboRoot();
+
+$serviceResponse = new XiboServiceResponse();
 
 // Is the WSDL being requested.
 if (isset($_GET['wsdl']))
-{
-    // We need to buffer the output so that we can send a Content-Length header with the WSDL
-    ob_start();
-    $wsdl = file_get_contents('lib/service/service.wsdl');
-    $wsdl = str_replace('{{XMDS_LOCATION}}', $serviceLocation, $wsdl);
-    echo $wsdl;
+    $serviceResponse->WSDL();
 
-    // Get the contents of the buffer and work out its length
-    $buffer = ob_get_contents();
-    $length = strlen($buffer);
-
-    // Output the headers
-    header('Content-Type: text/xml; charset=ISO-8859-1\r\n');
-    header('Content-Length: ' . $length);
-
-    // Flush the buffer
-    ob_end_flush();
-    exit;
-}
+// Is the XRDS being requested
+if (isset($_GET['xrds']))
+    $serviceResponse->XRDS();
 
 // Check to see if we are going to consume a service (if we came from xmds.php then we will always use the SOAP service)
 if (defined('XMDS') || $method != '')
@@ -69,14 +56,74 @@ if (defined('XMDS') || $method != '')
             }
             catch (Exception $e)
             {
-                echo 'Unable to create a SOAP server';
-                exit;
+                $serviceResponse->ErrorServerError('Unable to create SOAP Server');
             }
 
             break;
 
+        case 'oauth':
+
+            Kit::ClassLoader('ServiceOAuth');
+
+            $oauth = new ServiceOAuth();
+
+            if (method_exists($oauth, $method))
+                $oauth->$method();
+            else
+                $serviceResponse->ErrorServerError('Unknown Request.');
+
+            break;
+
+        case 'rest':
+            $authorized = false;
+            $oauthServer = new OAuthServer();
+
+            try
+            {
+                if ($oauthServer->verifyIfSigned())
+                    $authourized = true;
+            }
+            catch (OauthException $e)
+            {
+
+            }
+
+            // Was authorization successful?
+            if (!$authorized)
+                $serviceResponse->ErrorServerError('OAuth Verification Failed: ' . $e->getMessage());
+                
+            // Authenticated with OAuth.
+
+            // Detect response type requested.
+            switch ($response)
+            {
+                case 'json':
+                    Kit::ClassLoader('RESTJson');
+
+                    $rest = new RESTJson();
+
+                    break;
+
+                case 'xml':
+                    Kit::ClassLoader('RESTXml');
+
+                    $rest = new RESTXml();
+
+                    break;
+
+                default:
+                    $serviceResponse->ErrorServerError('Unknown response type');
+            }
+
+            if (method_exists($rest, $method))
+                $rest->$method();
+            else
+                $serviceResponse->ErrorServerError('Unknown Method');
+
+            break;
+
         default:
-            echo 'Not implemented';
+            $serviceResponse->ErrorServerError('Not implemented.');
     }
     exit;
 }

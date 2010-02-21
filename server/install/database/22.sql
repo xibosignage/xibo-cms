@@ -1,3 +1,7 @@
+INSERT INTO `pagegroup` (`pagegroupID`, `pagegroup`) VALUES (NULL, 'Web Services');
+
+INSERT INTO `pages` (`name`, `pagegroupID`)
+SELECT 'oauth', pagegroupID FROM pagegroup WHERE pagegroup = 'Web Services';
 
 /* VERSION UPDATE */
 /* Set the version table, etc */

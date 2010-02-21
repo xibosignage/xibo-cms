@@ -405,5 +405,16 @@ class Kit
 
             return true;
 	}
+
+    /**
+     * GetXiboRoot
+     * @return <string> The Root of the Xibo installation
+     */
+    public static function GetXiboRoot()
+    {
+        // Work out the location of the services.
+        $request = explode('?', $_SERVER['REQUEST_URI']);
+        return 'http://' . $_SERVER['SERVER_NAME'] . $request[0];
+    }
 }
 ?>
