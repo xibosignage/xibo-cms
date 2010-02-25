@@ -18,11 +18,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-class RestJson extends Rest
+class Rest
 {
-    public function Respond($array)
+    protected $db;
+
+    public function __construct()
     {
-        return json_encode($array);
+        global $db;
+        $this->db =& $db;
+    }
+
+    public function version()
+    {
+        $version = Config::Version($this->db);
+
+        $xmlDoc = new DOMDocument();
+        $xmlElement = $xmlDoc->createElement('version');
+
+        foreach ($version as $key => $value)
+        {
+            $xmlElement->setAttribute($key, $value);
+        }
+
+        return $this->Respond($xmlElement);
     }
 }
 ?>

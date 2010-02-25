@@ -87,22 +87,22 @@ if (defined('XMDS') || $method != '')
             }
                 
             // Authenticated with OAuth.
-
+            Kit::ClassLoader('Rest');
 
             // Detect response type requested.
             switch ($response)
             {
                 case 'json':
-                    Kit::ClassLoader('RESTJson');
+                    Kit::ClassLoader('RestJson');
 
-                    $rest = new RESTJson();
+                    $rest = new RestJson();
 
                     break;
 
                 case 'xml':
-                    Kit::ClassLoader('RESTXml');
+                    Kit::ClassLoader('RestXml');
 
-                    $rest = new RESTXml();
+                    $rest = new RestXml();
 
                     break;
 
