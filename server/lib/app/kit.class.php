@@ -394,6 +394,10 @@ class Kit
             {
                 include_once('modules/' . $class . '.module.php');
             }
+            elseif (file_exists('modules/' . $class . '.php'))
+            {
+                include_once('modules/' . $class . '.php');
+            }
             elseif (file_exists('lib/service/' . $class . '.class.php'))
             {
                 include_once('lib/service/' . $class . '.class.php');

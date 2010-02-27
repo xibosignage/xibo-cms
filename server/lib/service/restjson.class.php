@@ -20,8 +20,19 @@
  */
 class RestJson extends Rest
 {
-    public function Respond($array)
+    public function Respond(DOMElement $xmlElement)
     {
+        // Prepare an array to be JSON encoded
+        return '';
+    }
+
+    public function Error($errorNo)
+    {
+        // Error array
+        $errorMessage = '';
+
+        $array = array('resp' => array('status'));
+
         return json_encode($array);
     }
 }

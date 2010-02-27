@@ -71,19 +71,44 @@ if (defined('XMDS') || $method != '')
             break;
 
         case 'rest':
-            $authorized = false;
-            $oauthServer = new OAuthServer();
+            // OAuth authorization
+            if (OAuthRequestVerifier::requestIsSigned())
+            {
+                try
+                {
+                    $request = new OAuthRequestVerifier();
+                    $userID = $request->verify();
 
-            try
-            {
-                if ($oauthServer->verifyIfSigned())
-                    $authourized = true;
+                    if ($userID)
+                    {
+                        // Create the login control system
+                        $userClass = Config::GetSetting($db, 'userModule');
+                        $userClass = explode('.', $userClass);
+
+                        Kit::ClassLoader($userClass[0]);
+
+                        // Create a user
+                        $user = new User($db);
+
+                        // Log this user in
+                        if (!$user->LoginServices($userID))
+                        {
+                            $serviceResponse->ErrorServerError('Unknown User.');
+                        }
+                    }
+                    else
+                    {
+                        $serviceResponse->ErrorServerError('No user id.');
+                    }
+                }
+                catch (OAuthException $e)
+                {
+                    $serviceResponse->ErrorServerError('Request signed but Unauthorized.');
+                }
             }
-            catch (OauthException $e)
+            else
             {
-                // Was authorization successful?
-                if (!$authorized)
-                    $serviceResponse->ErrorServerError('OAuth Verification Failed: ' . $e->getMessage());
+                $serviceResponse->ErrorServerError('Not signed.');
             }
                 
             // Authenticated with OAuth.
@@ -95,14 +120,14 @@ if (defined('XMDS') || $method != '')
                 case 'json':
                     Kit::ClassLoader('RestJson');
 
-                    $rest = new RestJson();
+                    $rest = new RestJson($db, $user);
 
                     break;
 
                 case 'xml':
                     Kit::ClassLoader('RestXml');
 
-                    $rest = new RestXml();
+                    $rest = new RestXml($db, $user);
 
                     break;
 

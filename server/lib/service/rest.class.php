@@ -21,11 +21,12 @@
 class Rest
 {
     protected $db;
+    protected $user;
 
-    public function __construct()
+    public function __construct(database $db, User $user)
     {
-        global $db;
         $this->db =& $db;
+        $this->user =& $user;
     }
 
     public function version()

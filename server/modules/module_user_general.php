@@ -23,8 +23,10 @@
  class User 
  {
  	private $db;
-	private $userid;
-	private $usertypeid;
+        
+	public $userid;
+	public $usertypeid;
+        public $userName;
 	
 	private $displayGroupIDs;
 	private $authedDisplayGroupIDs;
@@ -131,6 +133,26 @@
 
 		return true;
 	}
+
+        /**
+         * Logs in a specific userID
+         * @param <int> $userID
+         */
+        function LoginServices($userID)
+        {
+            $db =& $this->db;
+
+            $SQL = sprintf("SELECT UserName, usertypeid FROM user WHERE userID = '%d'", $userID);
+
+            if (!$results = $this->db->GetSingleRow($SQL))
+                return false;
+
+            $this->userName     = Kit::ValidateParam($results['UserName'], _USERNAME);
+            $this->usertypeid	= Kit::ValidateParam($results['usertypeid'], _INT);
+            $this->userid	= $userID;
+
+            return true;
+        }
 
 	/**
 	 * Logout the user associated with this user object
