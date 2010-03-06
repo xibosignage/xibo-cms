@@ -76,7 +76,7 @@ class RestXml extends Rest
         $errorNode->setAttribute('message', $errorMessage);
 
         // Add the error node to the document
-        $xmlDoc->appendChild($errorNode);
+        $rootNode->appendChild($errorNode);
 
         // Log it
         Debug::LogEntry($this->db, 'audit', $xmlDoc->saveXML());

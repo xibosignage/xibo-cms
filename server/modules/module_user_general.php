@@ -808,7 +808,45 @@ END;
      */
     public function MediaList()
     {
-        
+        $SQL  = "";
+        $SQL .= "SELECT  media.mediaID, ";
+        $SQL .= "        media.name, ";
+        $SQL .= "        media.type, ";
+        $SQL .= "        media.duration, ";
+        $SQL .= "        media.userID, ";
+        $SQL .= "        media.permissionID ";
+        $SQL .= "FROM    media ";
+        $SQL .= "WHERE   1 = 1  AND isEdited = 0 ";
+
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $media = array();
+
+        while($row = $this->db->get_assoc_row($result))
+        {
+            $mediaItem = array();
+
+            // Validate each param and add it to the array.
+            $mediaItem['mediaid']   = Kit::ValidateParam($row['mediaID'], _INT);
+            $mediaItem['media']     = Kit::ValidateParam($row['name'], _STRING);
+            $mediaItem['mediatype'] = Kit::ValidateParam($row['type'], _WORD);
+            $mediaItem['length']    = Kit::ValidateParam($row['duration'], _DOUBLE);
+            $mediaItem['ownerid']   = Kit::ValidateParam($row['userID'], _INT);
+
+            list($see, $edit) = $this->eval_permission($mediaItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
+
+            $mediaItem['read']      = (int) $see;
+            $mediaItem['write']     = (int) $edit;
+
+            $media[] = $mediaItem;
+        }
+
+        return $media;
     }
 }
 ?>

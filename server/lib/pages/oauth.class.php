@@ -39,6 +39,9 @@ class oauthDAO
         return false;
     }
 
+    /**
+     * Authorize an OAuth request OR display the Authorize form.
+     */
     public function authorize()
     {
         // Do we have an OAuth signed request?
@@ -46,10 +49,12 @@ class oauthDAO
 
         $server = new OAuthServer();
 
+        // Request must be signed
         try
         {
             $consumerDetails = $server->authorizeVerify();
 
+            // Has the user submitted the form?
             if ($_SERVER['REQUEST_METHOD'] == 'POST')
             {
                 // See if the user clicked the 'allow' submit button (or whatever you choose)
@@ -67,6 +72,7 @@ class oauthDAO
            }
            else
            {
+               // Not submitted the form, therefore we must show the login box.
                $store = OAuthStore::instance();
                $consumer = $store->getConsumer($consumerDetails['consumer_key'], $userid, true);
                
@@ -75,10 +81,15 @@ class oauthDAO
         }
         catch (OAuthException $e)
         {
-            echo $e->getMessage();
+            // Unsigned request is not allowed.
+            trigger_error($e->getMessage());
+            trigger_error(__('Unsigned requests are not allowed to the authorize page.'), E_USER_ERROR);
         }
     }
 
+    /**
+     * Form to register a new application.
+     */
     public function RegisterForm()
     {
         $db 		=& $this->db;
@@ -129,6 +140,9 @@ END;
         $response->Respond();
     }
 
+    /**
+     * Register a new application with OAuth
+     */
     public function Register()
     {
         $db 		=& $this->db;

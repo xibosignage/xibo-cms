@@ -31,7 +31,25 @@ class Rest
 
     public function MediaList()
     {
+        if (!$media = $this->user->MediaList())
+            return $this->Error(1);
 
+        $xmlDoc = new DOMDocument();
+        $xmlElement = $xmlDoc->createElement('mediaItems');
+        $xmlElement->setAttribute('length', count($media));
+        
+        // Create the XML nodes
+        foreach($media as $mediaItem)
+        {
+            $mediaNode = $xmlDoc->createElement('media');
+            foreach($mediaItem as $key => $value)
+            {
+                $mediaNode->setAttribute($key, $value);
+            }
+            $xmlElement->appendChild($mediaNode);
+        }
+
+        return $this->Respond($xmlElement);
     }
 
     /**
