@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
@@ -63,7 +62,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                             </p>
                         </div>
                         <form method="post">
-                            <input type="submit" value="Allow">
+                            <input type="submit" name="Allow" value="Allow">
                         </form>
                         <p><a href="http://www.xibo.org.uk"><img src='img/login/complogo.png'></a></p>
                     </div>

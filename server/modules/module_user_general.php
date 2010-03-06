@@ -33,11 +33,12 @@
 	
  	public function __construct(database $db)
 	{
-		$this->db 		=& $db;
-		$this->userid 	= Kit::GetParam('userid', _SESSION, _INT);
-		
-		// We havent authed yet
-		$this->authedDisplayGroupIDs = false;
+            $this->db           =& $db;
+            $this->userid 	= Kit::GetParam('userid', _SESSION, _INT);
+            $this->usertypeid   = Kit::GetParam('usertype', _SESSION, _INT);
+
+            // We havent authed yet
+            $this->authedDisplayGroupIDs = false;
 	}
 	
 	/**
@@ -462,9 +463,9 @@
             else
             {
                 // Use the logged in user
-                $userid     = Kit::GetParam('userid', _SESSION, _INT);	// the logged in user
+                $userid     =& $this->userid;	// the logged in user
+                $usertypeid =& $this->usertypeid; // the logged in users group (admin, group admin, user)
                 $groupids   = $this->GetUserGroups($userid, true);	// the logged in users groups
-                $usertypeid = Kit::GetParam('usertype', _SESSION, _INT);// the logged in users group (admin, group admin, user)
             }
 
             // If we are a super admin we can view/edit anything we like regardless of settings
@@ -534,8 +535,7 @@
 	{
 		$db 		=& $this->db;
 		$userid		=& $this->userid;
-		
-		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT, 0);
+		$usertype 	=& $this->usertypeid;
 		
 		// Check the security
 		if ($usertype == 1) 
@@ -588,7 +588,7 @@
 	{
 		$db 		=& $this->db;
 		$userid		=& $this->userid;
-		$usertypeid     = Kit::GetParam('usertype', _SESSION, _INT);
+		$usertypeid     =& $this->usertypeid;
 		
 		Debug::LogEntry($db, 'audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
 		
@@ -707,7 +707,7 @@
 		if ($this->authedDisplayGroupIDs) return $this->displayGroupIDs;
 		
 		// Populate the array of display group ids we are authed against
-		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT, 0);
+		$usertype 	= $this->usertypeid;
 		
 		$SQL  = "SELECT DISTINCT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
 		$SQL .= "  FROM displaygroup ";
@@ -793,5 +793,22 @@
 END;
 		echo $output;
 	}
+
+    /**
+     * Authorizes a user against a media ID
+     * @param <int> $mediaID
+     */
+    public function MediaAuth($mediaID)
+    {
+        return false;
+    }
+
+    /**
+     * Returns an array of Media the current user has access to
+     */
+    public function MediaList()
+    {
+        
+    }
 }
 ?>

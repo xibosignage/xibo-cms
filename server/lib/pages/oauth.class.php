@@ -60,7 +60,7 @@ class oauthDAO
 
                 // Set the request token to be authorized or not authorized
                 // When there was a oauth_callback then this will redirect to the consumer
-                $server->authorizeFinish(true, $userid);
+                $server->authorizeFinish($authorized, $userid);
 
                 // No oauth_callback, show the user the result of the authorization
                 echo __('Request authorized. Please return to your application.');
@@ -68,7 +68,7 @@ class oauthDAO
            else
            {
                $store = OAuthStore::instance();
-               $consumer = $store->getConsumer($consumerDetails['consumer_key'], $userid);
+               $consumer = $store->getConsumer($consumerDetails['consumer_key'], $userid, true);
                
                include('template/pages/oauth_verify.php');
            }

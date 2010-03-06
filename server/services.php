@@ -22,7 +22,7 @@ DEFINE('XIBO', true);
 include_once("lib/xmds.inc.php");
 
 $method     = Kit::GetParam('method', _REQUEST, _WORD, '');
-$service    = Kit::GetParam('service', _REQUEST, _WORD, 'soap');
+$service    = Kit::GetParam('service', _REQUEST, _WORD, 'rest');
 $response   = Kit::GetParam('response', _REQUEST, _WORD, 'xml');
 $serviceResponse = new XiboServiceResponse();
 
@@ -33,6 +33,9 @@ if (isset($_GET['wsdl']))
 // Is the XRDS being requested
 if (isset($_GET['xrds']))
     $serviceResponse->XRDS();
+
+if (defined('XMDS'))
+    $service = 'soap';
 
 // Check to see if we are going to consume a service (if we came from xmds.php then we will always use the SOAP service)
 if (defined('XMDS') || $method != '')
@@ -71,7 +74,7 @@ if (defined('XMDS') || $method != '')
             break;
 
         case 'rest':
-            // OAuth authorization
+            // OAuth authorization.
             if (OAuthRequestVerifier::requestIsSigned())
             {
                 try
@@ -81,16 +84,16 @@ if (defined('XMDS') || $method != '')
 
                     if ($userID)
                     {
-                        // Create the login control system
+                        // Create the login control system.
                         $userClass = Config::GetSetting($db, 'userModule');
                         $userClass = explode('.', $userClass);
 
                         Kit::ClassLoader($userClass[0]);
 
-                        // Create a user
+                        // Create a user.
                         $user = new User($db);
 
-                        // Log this user in
+                        // Log this user in.
                         if (!$user->LoginServices($userID))
                         {
                             $serviceResponse->ErrorServerError('Unknown User.');
@@ -108,6 +111,7 @@ if (defined('XMDS') || $method != '')
             }
             else
             {
+                // Only signed requests allowed.
                 $serviceResponse->ErrorServerError('Not signed.');
             }
                 
@@ -135,6 +139,7 @@ if (defined('XMDS') || $method != '')
                     $serviceResponse->ErrorServerError('Unknown response type');
             }
 
+            // Run the method requested.
             if (method_exists($rest, $method))
                 $serviceResponse->Success($rest->$method());
             else

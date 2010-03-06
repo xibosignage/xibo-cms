@@ -29,7 +29,16 @@ class Rest
         $this->user =& $user;
     }
 
-    public function version()
+    public function MediaList()
+    {
+
+    }
+
+    /**
+     * Returns the Xibo Server version information
+     * @return <type>
+     */
+    public function Version()
     {
         $version = Config::Version($this->db);
 
