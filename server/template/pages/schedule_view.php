@@ -38,7 +38,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 						
 					</div>
 					<div id="Displays">
-						<h3>Displays</h3>
 						<?php echo $this->DisplayFilter(); ?>
 					</div>
 				</td>

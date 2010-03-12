@@ -1026,6 +1026,7 @@ HTML;
 			trigger_error(__('No Display Groups'), E_USER_ERROR);
 			
 		if ($outputForm) $output .= '<form id="DisplayList" class="DisplayListForm">';
+                $output         .= __('Groups');
 		$output 	.= '<ul class="DisplayList">';
 		$nested 	= false;
 		
@@ -1043,7 +1044,7 @@ HTML;
 			if ($isDisplaySpecific == 1 && !$nested)
 			{
 				// Start a new UL to display these
-				$output .= '<li>Non-group<ul>';
+				$output .= '</ul>' . __('Displays') . '<br/><ul class="DisplayList">';
 				
 				$nested = true;
 			}
@@ -1099,8 +1100,9 @@ HTML;
 							<input id="sTime" class="required" type="text" size="12" name="sTime" value="00:00" />
 						</td>
 						<td rowspan="4">
-							Displays: <br />
+                                                        <div class="FormDisplayList">
 							$displayList
+                                                        </div>
 						</td>
 					</tr>
 					<tr>
@@ -1128,7 +1130,7 @@ END;
 		
 		$form .= <<<END
 		<tr>
-			<td colspan="4">
+			<td colspan="3">
 				<fieldset title="If this event occurs again (e.g. repeats) on a schedule">
 					<legend>Recurrence Information</label>
 					<table>
