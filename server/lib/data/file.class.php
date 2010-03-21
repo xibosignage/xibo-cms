@@ -59,6 +59,10 @@ class File extends Data
     {
         $db =& $this->db;
 
+        // Need to check this user has permission to upload this file (i.e. is it theirs)
+        if ($db->GetSingleValue(sprintf("SELECT UserID FROM file WHERE FileID = %d", $fileId), 'UserID', _INT) != $userId)
+            return $this->SetError(7);
+
         // Directory location
 	$libraryFolder 	= Config::GetSetting($db, "LIBRARY_LOCATION");
         $libraryFolder = $libraryFolder . 'temp';

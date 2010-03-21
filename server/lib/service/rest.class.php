@@ -58,6 +58,8 @@ class Rest
 
     public function MediaFileUpload()
     {
+        // TODO: Does this user have permission to call this webservice method? Do via PageAuth?
+
         Kit::ClassLoader('file');
 
         $file           = new File($this->db);
@@ -65,9 +67,11 @@ class Rest
         $checkSum       = $this->GetParam('checkSum', _STRING);
         $payload        = $this->GetParam('payload', _STRING);
 
+        // Checksum the payload
         if (md5($payload) != $checkSum)
             return $this->Error(2);
 
+        // Payload will be encoded in base64. Need to decode before handing to File class
         $payload = base64_decode($payload);
 
         if ($fileId == 0)
