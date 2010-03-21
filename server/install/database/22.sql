@@ -189,7 +189,17 @@ CREATE TABLE IF NOT EXISTS oauth_server_token (
 ) engine=InnoDB default charset=utf8;
 
 
+CREATE TABLE `file` (
+`FileID` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+`CreatedDT` INT NOT NULL ,
+`UserID` INT NOT NULL
+) ENGINE = INNODB;
 
+ALTER TABLE  `file` ADD INDEX (  `UserID` );
+
+ALTER TABLE  `file` ADD FOREIGN KEY (  `UserID` ) REFERENCES  `user` (
+`UserID`
+);
 
 
 /* VERSION UPDATE */

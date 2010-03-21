@@ -68,7 +68,7 @@ class Data
 	 * @param $errNo Object
 	 * @param $errMessage Object
 	 */
-	protected function SetError($errNo, $errMessage)
+	protected function SetError($errNo, $errMessage = '')
 	{
 		$this->error		= true;
 		$this->errorNo 		= $errNo;
