@@ -56,6 +56,11 @@ class Rest
         return $this->Respond($xmlElement);
     }
 
+    /**
+     * Media File Upload
+     * Upload a media file in parts
+     * @return <XiboAPIResponse>
+     */
     public function MediaFileUpload()
     {
         // TODO: Does this user have permission to call this webservice method? Do via PageAuth?
@@ -88,28 +93,52 @@ class Rest
         }
 
         // Return the fileId
-        $xmlDoc = new DOMDocument();
-        $fileElement = $xmlDoc->createElement('file');
-        $fileElement->setAttribute('id', $fileId);
-
-        return $this->Respond($fileElement);
+        return $this->Respond($this->ReturnId('file', $fileId));
     }
 
+    /**
+     * Add a media file to the library
+     */
     public function MediaAdd()
     {
+        // TODO: Does this user have permission to call this webservice method? Do via PageAuth?
+        Kit::ClassLoader('Media');
 
+        // Create a media object and gather the required parameters.
+        $media          = new Media($this->db);
+        $type           = $this->GetParam('type', _WORD);
+        $name           = $this->GetParam('name', _STRING);
+        $duration       = $this->GetParam('duration', _INT);
+        $fileName       = $this->GetParam('fileName', _FILENAME);
+        $permissionId   = $this->GetParam('permissionID', _INT);
+
+        // Add the media.
+        if (!$mediaId = $media->Add($type, $name, $duration, $fileName, $permissionId, $this->user->userid))
+            return $this->Error($media->GetErrorNumber());
+
+        // Return the mediaId.
+        return $this->Respond($this->ReturnId('media', $mediaId));
     }
 
+    /**
+     * Edit a media file in the library
+     */
     public function MediaEdit()
     {
 
     }
 
+    /**
+     * Retire a media file in the library
+     */
     public function MediaRetire()
     {
 
     }
-    
+
+    /**
+     * Delete a Media file from the library
+     */
     public function MediaDelete()
     {
 
@@ -144,6 +173,22 @@ class Rest
     protected function GetParam($param, $type, $default = '')
     {
         return Kit::GetParam($param, $this->POST, $type, $default);
+    }
+
+    /**
+     * Returns an ID only response
+     * @param <string> $nodeName
+     * @param <string> $id
+     * @param <string> $idAttributeName
+     * @return <DOMDocument::XmlElement>
+     */
+    protected function ReturnId($nodeName, $id, $idAttributeName = 'id')
+    {
+        $xmlDoc = new DOMDocument();
+        $xmlElement = $xmlDoc->createElement($nodeName);
+        $xmlElement->setAttribute($idAttributeName, $id);
+
+        return $xmlElement;
     }
 }
 ?>
