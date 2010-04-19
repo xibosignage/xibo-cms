@@ -1340,7 +1340,7 @@ END;
                                            </div>
 								<div class='preview'>
 									<div class='previewContent'></div>
-									<div class='previewNav' style='display:none;'></div>
+									<div class='previewNav'></div>
 								</div>
 							</div>";
 		}
