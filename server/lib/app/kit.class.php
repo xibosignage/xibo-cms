@@ -366,5 +366,67 @@ class Kit
 		
 		return $fullUrl;
 	}
+
+        /**
+         * Ensures a the relevant file for a class is inclued
+         * @param <string> $class
+         * @return <boolean> False on failure
+         */
+        static function ClassLoader($class)
+	{
+            if (class_exists($class))
+            {
+                return true;
+            }
+
+            $class = strtolower($class);
+
+            // It doesnt already exist - so lets look in some places to try and find it
+            if (file_exists('lib/pages/' . $class . '.class.php'))
+            {
+                include_once('lib/pages/' . $class . '.class.php');
+            }
+            elseif (file_exists('lib/data/' . $class . '.data.class.php'))
+            {
+                include_once('lib/data/' . $class . '.data.class.php');
+            }
+            elseif (file_exists('modules/' . $class . '.module.php'))
+            {
+                include_once('modules/' . $class . '.module.php');
+            }
+            elseif (file_exists('modules/' . $class . '.php'))
+            {
+                include_once('modules/' . $class . '.php');
+            }
+            elseif (file_exists('lib/service/' . $class . '.class.php'))
+            {
+                include_once('lib/service/' . $class . '.class.php');
+            }
+            else
+            {
+                return false;
+            }
+
+            return true;
+	}
+
+    /**
+     * GetXiboRoot
+     * @return <string> The Root of the Xibo installation
+     */
+    public static function GetXiboRoot()
+    {
+        $request = explode('?', $_SERVER['REQUEST_URI']);
+        return 'http://' . $_SERVER['SERVER_NAME'] . $request[0];
+    }
+
+    /**
+     * Gets the Current page, optionally with arguments.
+     */
+    public static function GetCurrentPage()
+    {
+        $request = explode('?', $_SERVER['REQUEST_URI']);
+        return $request[1];
+    }
 }
 ?>

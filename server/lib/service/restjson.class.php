@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2010 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -18,7 +18,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-define('XMDS', true);
+class RestJson extends Rest
+{
+    public function Respond(DOMElement $xmlElement)
+    {
+        // Prepare an array to be JSON encoded
+        return '';
+    }
 
-include('services.php');
+    public function Error($errorNo)
+    {
+        // Error array
+        $errorMessage = '';
+
+        $array = array('resp' => array('status'));
+
+        return json_encode($array);
+    }
+}
 ?>

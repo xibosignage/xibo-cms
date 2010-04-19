@@ -23,19 +23,22 @@
  class User 
  {
  	private $db;
-	private $userid;
-	private $usertypeid;
+        
+	public $userid;
+	public $usertypeid;
+        public $userName;
 	
 	private $displayGroupIDs;
 	private $authedDisplayGroupIDs;
 	
  	public function __construct(database $db)
 	{
-		$this->db 		=& $db;
-		$this->userid 	= Kit::GetParam('userid', _SESSION, _INT);
-		
-		// We havent authed yet
-		$this->authedDisplayGroupIDs = false;
+            $this->db           =& $db;
+            $this->userid 	= Kit::GetParam('userid', _SESSION, _INT);
+            $this->usertypeid   = Kit::GetParam('usertype', _SESSION, _INT);
+
+            // We havent authed yet
+            $this->authedDisplayGroupIDs = false;
 	}
 	
 	/**
@@ -45,23 +48,25 @@
 	 */
 	function attempt_login($ajax = false) 
 	{
-		$db 			=& $this->db;
-		$referingPage 	= Kit::GetParam('pagename', _SESSION, _WORD);
+		$db 		=& $this->db;
+
+                // Referring Page is anything after the ?
+		$requestUri = rawurlencode(Kit::GetCurrentPage());
 		
 		if(!$this->checkforUserid()) 
 		{
 			//print out the login form
 			if ($ajax) 
 			{
-				//create the AJAX request object
-				$response = new ResponseManager();
-				
-				$response->Login();
-				$response->Respond();
+                            //create the AJAX request object
+                            $response = new ResponseManager();
+
+                            $response->Login();
+                            $response->Respond();
 			}
 			else 
 			{
-				$this->printLoginBox($referingPage);
+                            $this->printLoginBox($requestUri);
 			}
 			
 			return false;
@@ -129,6 +134,26 @@
 
 		return true;
 	}
+
+        /**
+         * Logs in a specific userID
+         * @param <int> $userID
+         */
+        function LoginServices($userID)
+        {
+            $db =& $this->db;
+
+            $SQL = sprintf("SELECT UserName, usertypeid FROM user WHERE userID = '%d'", $userID);
+
+            if (!$results = $this->db->GetSingleRow($SQL))
+                return false;
+
+            $this->userName     = Kit::ValidateParam($results['UserName'], _USERNAME);
+            $this->usertypeid	= Kit::ValidateParam($results['usertypeid'], _INT);
+            $this->userid	= $userID;
+
+            return true;
+        }
 
 	/**
 	 * Logout the user associated with this user object
@@ -227,6 +252,71 @@
 		return $row[0];
 	}
 
+        /**
+         * Get an array of user groups for the given user id
+         * @param <type> $id User ID
+         * @param <type> $returnID Whether to return ID's or Names
+         * @return <array>
+         */
+        function GetUserGroups($id, $returnID = false)
+	{
+            $db =& $this->db;
+
+            $groupIDs = array();
+            $groups = array();
+
+            $SQL  = "";
+            $SQL .= "SELECT group.group, ";
+            $SQL .= "       group.groupID ";
+            $SQL .= "FROM   `user` ";
+            $SQL .= "       INNER JOIN lkusergroup ";
+            $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
+            $SQL .= "       INNER JOIN `group` ";
+            $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
+            $SQL .= sprintf("WHERE  `user`.userid                     = %d ", $id);
+
+            if(!$results = $db->query($SQL))
+            {
+                trigger_error($db->error());
+                trigger_error("Error looking up user information (group)", E_USER_ERROR);
+            }
+
+            if ($db->num_rows($results) == 0)
+            {
+                // Every user should have a group?
+                // Add one in!
+                include_once('lib/data/usergroup.data.class.php');
+
+                $userGroupObject = new UserGroup($db);
+                if (!$groupID = $userGroupObject->Add('Unknown user id: ' . $id, 1))
+                {
+                    // Error
+                    trigger_error(__('User does not have a group and Xibo is unable to add one.'), E_USER_ERROR);
+                }
+
+                // Link the two
+                $userGroupObject->Link($groupID, $id);
+
+                if ($returnID)
+                    return array($groupID);
+
+                return array('Unknown');
+            }
+
+            // Build an array of the groups to return
+            while($row = $db->get_assoc_row($results))
+            {
+                $groupIDs[] = Kit::ValidateParam($row['groupID'], _INT);
+                $groups[] = Kit::ValidateParam($row['group'], _STRING);
+            }
+
+            if ($returnID)
+                return $groupIDs;
+
+
+            return $groups;
+	}
+
 	function getGroupFromID($id, $returnID = false) 
 	{
             $db =& $this->db;
@@ -264,7 +354,9 @@
                 // Link the two
                 $userGroupObject->Link($groupID, $id);
 
-                if ($returnID) return $groupID;
+                if ($returnID)
+                    return $groupID;
+
                 return 'Unknown';
             }
 
@@ -357,80 +449,80 @@
 	 * @param $permissionid Object
 	 * @param $userid Object[optional]
 	 */
-	function eval_permission($ownerid, $permissionid, $userid = "") 
+	function eval_permission($ownerid, $permissionid, $userid = '')
 	{
-		$db 		=& $this->db;
-		
-		if ($userid != "") 
-		{
-			//use the userid provided
-			$groupid 		= $this->getGroupFromID($userid, true);
-			$usertypeid		= $this->getUserTypeFromID($userid, true);
-		}
-		else 
-		{
-			$userid 	= Kit::GetParam('userid', _SESSION, _INT);		//the logged in user
-			$groupid 	= Kit::GetParam('groupid', _SESSION, _INT);		//the logged in users group
-			$usertypeid = Kit::GetParam('usertype', _SESSION, _INT);	//the logged in users group (admin, group admin, user)			
-		}
-		
-		$ownerGroupID 	= $this->getGroupFromID($ownerid, true); 		//the owners groupid
-		
-		//if we are a super admin we can view/edit anything we like regardless of settings
-		if ($usertypeid == 1) 
-		{
-			return array(true,true);
-		}
-		
-		//set both the flags to false
-		$see = false;
-		$edit = false;
-		
-		switch ($permissionid) 
-		{
-			//the permission options
-			case '1': //Private
-				//to see we need to be a--- group admin in this group OR the owner
-				//to edit we need to be: a group admin in this group - or the owner
-				if (($groupid == $ownerGroupID && $usertypeid == 2) || $ownerid == $userid) 
-				{
-					$see = true;
-					$edit = true;
-				}
-				break;
-				
-			case '2': //Group
-				//to see we need to be in this group
-				if ($groupid == $ownerGroupID) 
-				{
-					$see = true;
-					
-					//to edit we need to be a group admin in this group (or the owner)
-					if ($usertypeid == 2 || ($ownerid == $userid)) 
-					{
-						$edit = true;
-					}
-				}
-			
-				break;
-				
-			case '3': //Public
-					$see = true; //everyone can see it
-					
-					//group admins (and owners) can edit
-					if ($groupid == $ownerGroupID) 
-					{				
-						//to edit we need to be a group admin in this group (or the owner)
-						if ($usertypeid == 2 || ($ownerid == $userid)) 
-						{
-							$edit = true;
-						}
-					}
-			
-				break;
-		}
-		
-		return array($see,$edit);
+            $db =& $this->db;
+
+            // If a user ID is provided with the call then evaluate against that, otherwise use the logged in user
+            if ($userid != '')
+            {
+                // Use the userid provided
+                $groupids    = $this->GetUserGroups($userid, true);
+                $usertypeid  = $this->getUserTypeFromID($userid, true);
+            }
+            else
+            {
+                // Use the logged in user
+                $userid     =& $this->userid;	// the logged in user
+                $usertypeid =& $this->usertypeid; // the logged in users group (admin, group admin, user)
+                $groupids   = $this->GetUserGroups($userid, true);	// the logged in users groups
+            }
+
+            // If we are a super admin we can view/edit anything we like regardless of settings
+            if ($usertypeid == 1)
+                return array(true,true);
+
+            // Get the groups that the owner belongs to
+            $ownerGroupIDs  = $this->GetUserGroups($ownerid, true); 	// the owners groupid
+
+            // set both the flags to false
+            $see = false;
+            $edit = false;
+
+            switch ($permissionid)
+            {
+                case '1': // Private
+                    // to see we need to be a group admin in this group OR the owner
+                    // to edit we need to be: a group admin in this group - or the owner
+                    if ((count(array_intersect($ownerGroupIDs, $groupids)) > 0 && $usertypeid == 2) || $ownerid == $userid)
+                    {
+                        $see = true;
+                        $edit = true;
+                    }
+                    break;
+
+                case '2': // Group
+                    // to see we need to be in this group
+                    if (count(array_intersect($ownerGroupIDs, $groupids)) > 0)
+                    {
+                        $see = true;
+
+                        //to edit we need to be a group admin in this group (or the owner)
+                        if ($usertypeid == 2 || ($ownerid == $userid))
+                        {
+                            $edit = true;
+                        }
+                    }
+
+                    break;
+
+                case '3': //Public
+                    $see = true; //everyone can see it
+
+                    // group admins (and owners) can edit
+                    if (count(array_intersect($ownerGroupIDs, $groupids)) > 0)
+                    {
+                        // to edit we need to be a group admin in this group (or the owner)
+                        if ($usertypeid == 2 || ($ownerid == $userid))
+                        {
+                            $edit = true;
+                        }
+                    }
+
+                    break;
+            }
+
+            return array($see,$edit);
 	}
 	
 	/**
@@ -443,8 +535,7 @@
 	{
 		$db 		=& $this->db;
 		$userid		=& $this->userid;
-		
-		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT, 0);
+		$usertype 	=& $this->usertypeid;
 		
 		// Check the security
 		if ($usertype == 1) 
@@ -497,14 +588,14 @@
 	{
 		$db 		=& $this->db;
 		$userid		=& $this->userid;
-		$usertypeid     = Kit::GetParam('usertype', _SESSION, _INT);
+		$usertypeid     =& $this->usertypeid;
 		
 		Debug::LogEntry($db, 'audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
 		
 		// Get some information about this menu
 		// I.e. get the Menu Items this user has access to
 		$SQL  = "";
-		$SQL .= "SELECT   pages.name     , ";
+		$SQL .= "SELECT DISTINCT pages.name     , ";
 		$SQL .= "         menuitem.Args , ";
 		$SQL .= "         menuitem.Text , ";
 		$SQL .= "         menuitem.Class, ";
@@ -616,7 +707,7 @@
 		if ($this->authedDisplayGroupIDs) return $this->displayGroupIDs;
 		
 		// Populate the array of display group ids we are authed against
-		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT, 0);
+		$usertype 	= $this->usertypeid;
 		
 		$SQL  = "SELECT DISTINCT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
 		$SQL .= "  FROM displaygroup ";
@@ -702,5 +793,60 @@
 END;
 		echo $output;
 	}
+
+    /**
+     * Authorizes a user against a media ID
+     * @param <int> $mediaID
+     */
+    public function MediaAuth($mediaID)
+    {
+        return false;
+    }
+
+    /**
+     * Returns an array of Media the current user has access to
+     */
+    public function MediaList()
+    {
+        $SQL  = "";
+        $SQL .= "SELECT  media.mediaID, ";
+        $SQL .= "        media.name, ";
+        $SQL .= "        media.type, ";
+        $SQL .= "        media.duration, ";
+        $SQL .= "        media.userID, ";
+        $SQL .= "        media.permissionID ";
+        $SQL .= "FROM    media ";
+        $SQL .= "WHERE   1 = 1  AND isEdited = 0 ";
+
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $media = array();
+
+        while($row = $this->db->get_assoc_row($result))
+        {
+            $mediaItem = array();
+
+            // Validate each param and add it to the array.
+            $mediaItem['mediaid']   = Kit::ValidateParam($row['mediaID'], _INT);
+            $mediaItem['media']     = Kit::ValidateParam($row['name'], _STRING);
+            $mediaItem['mediatype'] = Kit::ValidateParam($row['type'], _WORD);
+            $mediaItem['length']    = Kit::ValidateParam($row['duration'], _DOUBLE);
+            $mediaItem['ownerid']   = Kit::ValidateParam($row['userID'], _INT);
+
+            list($see, $edit) = $this->eval_permission($mediaItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
+
+            $mediaItem['read']      = (int) $see;
+            $mediaItem['write']     = (int) $edit;
+
+            $media[] = $mediaItem;
+        }
+
+        return $media;
+    }
 }
 ?>

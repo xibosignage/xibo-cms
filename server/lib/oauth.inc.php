@@ -1,14 +1,14 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2010 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,42 +17,23 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *
+ * OAuth-php include file.
+ * Here we setup the XRDS header and initialize OAuth.
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
+if(Config::GetSetting($db, 'debug') == 'On') DEFINE('OAUTH_LOG_REQUEST', true);
+
+// Work out the location of the XRDS file.
+$serviceLocation = Kit::GetXiboRoot();
+
+header('X-XRDS-Location:' . $serviceLocation . '/service.php?xrds');
+
+require_once('3rdparty/oauth-php/library/OAuthServer.php');
+require_once('3rdparty/oauth-php/library/OAuthStore.php');
+
+OAuthStore::instance('MySQL', array('server' => $dbhost, 'username' => $dbuser, 'password' => $dbpass, 'database' => $dbname));
+
 ?>
-<div id="form_container">
-	<div id="form_header">
-		<div id="form_header_left">
-		</div>
-		<div id="form_header_right">
-		</div>
-	</div>
-	
-	<div id="form_body">
-		
-		<table id="CalendarTable" width="100%" cellpadding=0 cellspacing=0>
-			<tr>
-				<td id="Nav">
-					<div id="NavCalendar">
-						
-					</div>
-					<div id="Displays">
-						<?php echo $this->DisplayFilter(); ?>
-					</div>
-				</td>
-				<td valign="top" style="vertical-align: top;">
-					<div id="Calendar">
-			
-					</div>
-				</td>
-			</tr>
-		</table>
-	</div>
-	<div id="form_footer">
-		<div id="form_footer_left">
-		</div>
-		<div id="form_footer_right">
-		</div>
-	</div>
-</div>	

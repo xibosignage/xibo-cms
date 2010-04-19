@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2010 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,37 +22,21 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 ?>
 <div id="form_container">
-	<div id="form_header">
-		<div id="form_header_left">
-		</div>
-		<div id="form_header_right">
-		</div>
-	</div>
-	
-	<div id="form_body">
-		
-		<table id="CalendarTable" width="100%" cellpadding=0 cellspacing=0>
-			<tr>
-				<td id="Nav">
-					<div id="NavCalendar">
-						
-					</div>
-					<div id="Displays">
-						<?php echo $this->DisplayFilter(); ?>
-					</div>
-				</td>
-				<td valign="top" style="vertical-align: top;">
-					<div id="Calendar">
-			
-					</div>
-				</td>
-			</tr>
-		</table>
-	</div>
-	<div id="form_footer">
-		<div id="form_footer_left">
-		</div>
-		<div id="form_footer_right">
-		</div>
-	</div>
-</div>	
+    <div id="form_header">
+        <div id="form_header_left"></div>
+        <div id="form_header_right"></div>
+    </div>
+
+    <div id="form_body">
+
+        <div >
+        <h1>Authorized Web Services</h1>
+        <p>If you would like to register for a consumer key / secret please click <a class="XiboFormButton" href="index.php?p=oauth&q=RegisterForm" title="Click to register for a key">here.</a></p>
+        </div>
+    </div>
+
+    <div id="form_footer">
+        <div id="form_footer_left"></div>
+        <div id="form_footer_right"></div>
+    </div>
+</div>

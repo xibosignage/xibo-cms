@@ -662,8 +662,8 @@ END;
 		
 		if(!$resultIn = $db->query($SQL))
 		{
-			trigger_error($db->error());
-			trigger_error(__('Error getting Groups with Security permissions for this Display Group.'));
+                    trigger_error($db->error());
+                    trigger_error(__('Error getting Groups with Security permissions for this Display Group.'));
 		}
 		
 		while($row = $db->get_assoc_row($resultIn))
@@ -682,7 +682,7 @@ END;
 			}
 			else
 			{
-				$members[] = $displayID;
+				$members[] = $groupID;
 			}
 		}
 		

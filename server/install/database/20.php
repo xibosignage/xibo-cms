@@ -19,7 +19,7 @@ class Step20 extends UpgradeStep
 		
 		if (!$result = $db->query($SQL))
 		{
-			trigger_error("Error creating display groups", E_USER_ERROR);
+			reportError('20.php', "Error creating display groups");
 		}
 		
 		while ($row = $db->get_assoc_row($result))
@@ -51,11 +51,11 @@ class Step20 extends UpgradeStep
             $db =& $this->db;
 
             // Get all schedules
-            $SQL = "SELECT EventID, DisplayGroupIDs FROM schedule";
+            $SQL = "SELECT EventID, DisplayGroupIDs FROM schedule WHERE DisplayGroupIDs <> ''";
 
             if (!$result = $db->query($SQL))
             {
-                trigger_error("Error getting Schedules", E_USER_ERROR);
+                reportError('20.php', "Error getting Schedules" . $db->error());
             }
 
             while ($row = $db->get_assoc_row($result))
@@ -72,7 +72,7 @@ class Step20 extends UpgradeStep
 
                 if (!$dgResult = $db->query($SQL))
                 {
-                    trigger_error("Error getting Display Groups", E_USER_ERROR);
+                    reportError('20.php', "Error getting Display Groups" . $db->error());
                 }
 
                 $displayGroupIDs = array();
@@ -90,7 +90,7 @@ class Step20 extends UpgradeStep
 
                 if (!$db->query($SQL))
                 {
-                    trigger_error("Error updating schedules.", E_USER_ERROR);
+                    reportError('20.php', "Error updating schedules." . $db->error());
                 }
             }
 
@@ -99,7 +99,7 @@ class Step20 extends UpgradeStep
 
             if (!$result = $db->query($SQL))
             {
-                trigger_error("Error getting Schedule Details", E_USER_ERROR);
+                reportError('20.php', "Error getting Schedule Details" . $db->error());
             }
 
             while ($row = $db->get_assoc_row($result))
@@ -116,7 +116,7 @@ class Step20 extends UpgradeStep
 
                 if (!$dgResult = $db->query($SQL))
                 {
-                    trigger_error("Error getting Display Groups", E_USER_ERROR);
+                    reportError('20.php', "Error getting Display Groups. " . $db->error());
                 }
 
                 $row = $db->get_assoc_row($dgResult);
@@ -129,7 +129,7 @@ class Step20 extends UpgradeStep
 
                 if (!$db->query($SQL))
                 {
-                    trigger_error("Error updating schedule_detail.", E_USER_ERROR);
+                    reportError('20.php', "Error updating schedule_detail." . $db->error());
                 }
             }
         }
@@ -146,7 +146,7 @@ class Step20 extends UpgradeStep
 
             if (!$result = $db->query($SQL))
             {
-                trigger_error("Error creating user groups", E_USER_ERROR);
+                reportError('20.php', "Error creating user groups" . $db->error());
             }
 
             while ($row = $db->get_assoc_row($result))
@@ -162,7 +162,7 @@ class Step20 extends UpgradeStep
                 // For each one create a user specific group
                 if (!$ugId = $ug->Add($username, 1))
                 {
-                    trigger_error("Error creating user groups", E_USER_ERROR);
+                    reportError('20.php', "Error creating user groups" . $db->error());
                 }
 
                 // Link to the users own userspecific group and also to the one they were already on

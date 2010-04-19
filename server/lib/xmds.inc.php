@@ -21,19 +21,20 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
 error_reporting(E_ALL);
-ini_set('display_errors', 0); //we never want to display errors on the screen
+ini_set('display_errors', 1); //we never want to display errors on the screen
 
 // Required Library Files
-require_once("lib/app/translationengine.class.php");
-require_once("lib/app/app_functions.php");
-require_once("lib/app/debug.class.php");
-require_once("lib/app/kit.class.php");
-require_once("lib/data/data.class.php");
-require_once("config/db_config.php");
-require_once("config/config.class.php");
+require_once('lib/app/translationengine.class.php');
+require_once('lib/app/app_functions.php');
+require_once('lib/app/debug.class.php');
+require_once('lib/app/kit.class.php');
+require_once('lib/data/data.class.php');
+require_once('config/db_config.php');
+require_once('config/config.class.php');
 include_once('lib/data/stat.data.class.php');
-require_once("lib/data/data.class.php");
+require_once('lib/data/data.class.php');
 require_once('lib/data/display.data.class.php');
+require_once('lib/service/serviceresponse.class.php');
 
 // Sort out magic quotes
 if (get_magic_quotes_gpc()) 
@@ -80,11 +81,8 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 
 date_default_timezone_set(Config::GetSetting($db, 'defaultTimezone'));
 
-// What is the production mode of the server?
-// I dont think we ever want to show errors through the XML webservice.
-// if(Config::GetSetting($db, "SERVER_MODE")=="Test") ini_set('display_errors', 1);
-
-require_once(Config::GetSetting($db, 'NUSOAP_PATH'));
+// OAuth
+require_once('lib/oauth.inc.php');
 
 // Setup the translations for gettext
 TranslationEngine::InitLocale($db);

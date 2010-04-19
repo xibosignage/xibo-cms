@@ -68,7 +68,7 @@ class faultDAO
 		$output .= '</li>';
 
 		$output .= '<li><p>' . __('Turn ON full auditing and debugging.') . '</p>';
-		$output .= '	<form class="XiboForm" action="index.php?p=admin" method="post">';
+		$output .= '	<form id="1" class="XiboAutoForm" action="index.php?p=admin" method="post">';
 		$output .= '		<input type="hidden" name="q" value="SetMaxDebug" />';
 		$output .= '		<input type="submit" value="' . __('Turn ON Debugging') . '" />';
 		$output .= '	</form>';
@@ -82,7 +82,7 @@ class faultDAO
 		$output .= '</li>';
 
 		$output .= '<li><p>' . __('Turn full auditing and debugging OFF.') . '</p>';	
-		$output .= '	<form class="XiboForm" action="index.php?p=admin" method="post">';
+		$output .= '	<form id="2" class="XiboAutoForm" action="index.php?p=admin" method="post">';
 		$output .= '		<input type="hidden" name="q" value="SetMinDebug" />';
 		$output .= '		<input type="submit" value="' . __('Turn OFF Debugging') . '" />';
 		$output .= '	</form>';	
@@ -103,7 +103,7 @@ class faultDAO
 		$output .= '<ol>';
 		
 		$output .= '<li><p>' . __('Switch to Test Mode.') . '</p>';
-		$output .= '	<form class="XiboForm" action="index.php?p=admin" method="post">';
+		$output .= '	<form class="XiboAutoForm" action="index.php?p=admin" method="post">';
 		$output .= '		<input type="hidden" name="q" value="SetServerTestMode" />';
 		$output .= '		<input type="submit" value="' . __('Switch to Test Mode') . '" />';
 		$output .= '	</form>';
@@ -113,7 +113,7 @@ class faultDAO
 		$output .= '</li>';
 		
 		$output .= '<li><p>' . __('Switch to Production Mode.') . '</p>';
-		$output .= '	<form class="XiboForm" action="index.php?p=admin" method="post">';
+		$output .= '	<form class="XiboAutoForm" action="index.php?p=admin" method="post">';
 		$output .= '		<input type="hidden" name="q" value="SetServerProductionMode" />';
 		$output .= '		<input type="submit" value="' . __('Switch to Production Mode') . '" />';
 		$output .= '	</form>';

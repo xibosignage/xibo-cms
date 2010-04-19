@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2010 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -18,7 +18,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-define('XMDS', true);
+class ServiceOAuth
+{
+    private $server;
 
-include('services.php');
+    public function __construct()
+    {
+        $this->server = new OAuthServer();
+    }
+
+    public function request_token()
+    {
+        $this->server->requestToken();
+    }
+
+    public function access_token()
+    {
+        $this->server->accessToken();
+    }
+}
 ?>

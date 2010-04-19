@@ -145,13 +145,22 @@ class Session
 		}
 		else 
 		{
-			//UPDATE
+			// UPDATE
+                        //
+                        // Punch a very small hole in the authentication system
+			// we do not want to update the expiry time of a session if it is the Clock Timer going off
+			$page	= Kit::GetParam('p', _REQUEST, _WORD);
+			$query	= Kit::GetParam('q', _REQUEST, _WORD);
+
+			if ($page == 'clock' && $query == 'GetClock') return true;
+			if ($page == 'index' && $query == 'PingPong') return true;
+
 			$SQL = "UPDATE session SET ";
 			$SQL .= " session_data = '%s', ";
 			$SQL .= " session_expiration = %d, ";
 			$SQL .= " lastaccessed 	= '%s', ";
 			$SQL .= " RemoteAddr 	= '%s' ";
-			$SQL .= " WHERE session_id = '%s' ";
+			$SQL .= " WHERE session_id = '%s'";
 			
 			$SQL = sprintf($SQL, $db->escape_string($val), $newExp, $db->escape_string($lastaccessed), $db->escape_string($remoteAddr), $db->escape_string($key));
 		}
