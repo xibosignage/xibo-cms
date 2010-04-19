@@ -572,7 +572,7 @@ ALTER TABLE `media`
 -- Constraints for table `pages`
 --
 ALTER TABLE `pages`
-  ADD CONSTRAINT `pages_ibfk_1` FOREIGN KEY (`pagegroupID`) REFERENCES `pages` (`pagegroupID`);
+  ADD CONSTRAINT `pages_ibfk_1` FOREIGN KEY (`pagegroupID`) REFERENCES `pagegroup` (`pagegroupID`);
 
 --
 -- Constraints for table `schedule`

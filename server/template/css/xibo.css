@@ -101,3 +101,41 @@ button, .SecondNav a {
 	cursor: pointer;
 	margin-left: 2px;
 }
+
+
+.regionInfo {
+    color:#FFF;
+    background-color:#000;
+    z-index:50;
+    padding: 5px;
+    position:absolute;
+    right:15px;
+    font-family: Verdana;
+}
+
+.seqInfo, .previewInfo {
+    font-family: Verdana;
+}
+
+.seqInfo span, .previewInfo span {
+    font-family: Verdana;
+}
+
+#aspectRatioOption {
+    padding-bottom: 2px;
+}
+
+
+.preview {
+    position:absolute;
+    top:0px;
+    left:0px;
+    width: 100%;
+    height: 100%;
+}
+
+.preview div, .preview span, .preview object,.preview h1,.preview h2, .preview h3, .preview h4, .preview h5, .preview h6, .preview p, .preview blockquote, .preview pre, .preview a, .preview abbr, .preview acronym, .preview address, .preview big, .preview cite, .preview code, .preview del, .preview dfn, .preview em, .preview img, .preview ins, .preview kbd, .preview q, .preview samp, .preview small, .preview strong, .preview sub, .preview sup, .preview tt, .preview var, .preview dl, .preview dt, .preview dd, .preview ol, .preview ul, .preview li, .preview fieldset, .preview form, .preview label, .preview legend, .preview table, .preview caption, .preview tbody, .preview tfoot,.preview thead, .preview tr, .preview th,.preview td{margin:0;padding:0;vertical-align:baseline;outline:none;font-size:100%;background:transparent;border:none;text-decoration:none}
+.preview b, .preview i, .preview hr, .preview u, .preview center, .preview menu, .preview layer, .preview s, .preview strike, .preview font, .preview xmp{margin:0;padding:0;vertical-align:baseline;outline:none;font-size:100%;font-weight:normal;font-style:normal;background:transparent;border:none;text-decoration:none}
+.preview font{color:#333}
+.preview center{text-align:left}
+.preview p, .preview span {font-family: "Times New Roman"}

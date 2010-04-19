@@ -101,6 +101,7 @@ class image extends Module
 		// Set the Session / Security information
 		$sessionId 		= session_id();
 		$securityToken 	= CreateFormToken();
+                $backgroundImage        = Kit::GetParam('backgroundImage', _GET, _BOOL, false);
 
 		$session->setSecurityToken($securityToken);
 
@@ -128,6 +129,14 @@ class image extends Module
 			<input class="XiboFormButton" type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" title="Library" value="Library" />
 END;
 		}
+                elseif ($backgroundImage)
+                {
+                    // Show the save button, and make cancel go back to the background form
+                    $save_button = <<<END
+                    <input id="btnSave" type="submit" value="Save" disabled />
+                    <input class="XiboFormButton" id="btnCancel" type="button" title="Close" href="index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid" value="Cancel" />
+END;
+                }
 		else
 		{
 			$save_button = <<<END
@@ -159,7 +168,8 @@ END;
 		<form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="regionid" value="$regionid">
-			<input type="hidden" id="txtFileName" name="txtFileName" readonly="true" />
+                        <input type="hidden" name="backgroundImage" value="$backgroundImage" />
+                        <input type="hidden" id="txtFileName" name="txtFileName" readonly="true" />
 			<input type="hidden" name="hidFileID" id="hidFileID" value="" />
 			<table width="100%">
 				<tr>
@@ -495,6 +505,8 @@ END;
 		$regionid 	= $this->regionid;
 		$mediaid	= $this->mediaid;
 		$userid		= Kit::GetParam('userid', _SESSION, _INT);
+                $backgroundImage = Kit::GetParam('backgroundImage', _POST, _BOOL, false);
+
 
 		// File data
 		$tmpName	= Kit::GetParam('hidFileID', _POST, _STRING);
@@ -607,9 +619,6 @@ END;
 			return true;
 		}
 
-		// Create the thumb nail
-		ResizeImage($databaseDir.$storedAs, $databaseDir."tn_".$storedAs, 80, 80);
-
 		// Required Attributes
 		$this->mediaid	= $mediaid;
 		$this->duration = $duration;
@@ -631,6 +640,12 @@ END;
 
 		// We want to load a new form
 		$this->response->loadForm	= true;
+
+                // If we just added a background we should load the background form
+                if ($backgroundImage)
+                {
+                    $this->response->loadFormUri = "index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid&backgroundOveride=$storedAs";
+                }
 
 		return $this->response;
 	}
@@ -774,13 +789,6 @@ END;
 				$this->response->SetError('Error updating media with Library location.');
 				$this->response->keepOpen = true;
 				return $this->response;
-			}
-
-			//Thumb
-			if ($ext == "jpeg" || $ext == "jpg" || $ext == "png")
-			{
-				//Create the thumbnail
-				ResizeImage($databaseDir.$storedAs, $databaseDir."tn_".$storedAs, 80, 80);
 			}
 
 			// Update the existing record with the new record's id
@@ -940,6 +948,11 @@ END;
 
 		return true;
 	}
-}
 
+        public function Preview($width, $height)
+        {
+            // Show the image - scaled to the aspect ratio of this region (get from GET)
+            return sprintf('<div style="text-align:center;"><img src="index.php?p=module&q=GetImage&id=%d&width=%d&height=%d&dynamic" /></div>', $this->mediaid, $width, $height);
+        }
+}
 ?>

@@ -101,13 +101,13 @@ class Session
 				
 				if (!$db->query(sprintf("UPDATE session SET session_expiration = $newExp, isExpired = 0 WHERE session_id = '%s' ", $db->escape_string($key))))
 				{
-					log_entry($db, "error", $db->error());
+					Debug::LogEntry($db, "error", $db->error());
 				}
 			}
 			else
 			{
 				// Its set - but its wrong - not good
-				log_entry($db, "error", "Incorrect SecurityToken from " . $remoteAddr);
+				Debug::LogEntry($db, "error", "Incorrect SecurityToken from " . $remoteAddr);
 				
 				$this->isExpired = 1;
 			}
@@ -126,12 +126,12 @@ class Session
 	
 	function write($key, $val) 
 	{
-		$db 			=& $this->db;
-		
-		$newExp 		= time() + $this->max_lifetime;
+		$db 		=& $this->db;
+
+		$newExp 	= time() + $this->max_lifetime;
 		$lastaccessed 	= date("Y-m-d H:i:s");
-		$userAgent		= Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent');
-		$remoteAddr		= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
+		$userAgent	= Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent');
+		$remoteAddr	= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
 		
 		$result = $db->query(sprintf("SELECT session_id FROM session WHERE session_id = '%s'", $db->escape_string($key)));
 		
@@ -167,7 +167,7 @@ class Session
 		
 		if(!$db->query($SQL)) 
 		{
-			log_entry($db, "error", $db->error());
+			Debug::LogEntry($db, "error", $db->error());
 			return(false);
 		}
 		
@@ -182,16 +182,20 @@ class Session
 		
 		$result = $db->query("$SQL"); 
 		
-		if (!$result) log_entry($db,'audit',$db->error());
+		if (!$result) Debug::LogEntry($db,'audit',$db->error());
 		
 		return $result;
 	}
 
-	function gc($max_lifetime) 
+	function gc($max_lifetime)
 	{
-		$db =& $this->db;
-		
-		return $db->query("UPDATE session SET IsExpired = 1 WHERE session_expiration < ".time());
+            $db =& $this->db;
+
+            // Delete sessions older than 10 times the max lifetime
+            $SQL = sprintf("DELETE FROM session WHERE IsExpired = 1 AND session_expiration < %d", time() - ($max_lifetime * 10));
+            $db->query($SQL);
+
+            return $db->query(sprintf("UPDATE session SET IsExpired = 1 WHERE session_expiration < %d", time()));
 	}
 	
 	function set_user($key, $userid) 
@@ -212,19 +216,19 @@ class Session
 	 * Updates the session ID with a new one
 	 * @return 
 	 */
-	public function RegenerateSessionID($oldSessionID) 
-	{
-		$db =& $this->db;
-		
-	    session_regenerate_id(false);
-		
-	    $new_sess_id = session_id();
-		
-		$this->key = $new_sess_id;
-	       
-	    $query = sprintf("UPDATE session SET session_id = '%s' WHERE session_id = '%s'", $db->escape_string($new_sess_id), $db->escape_string($oldSessionID));
-	    $db->query($query);
-	}
+	public function RegenerateSessionID($oldSessionID)
+        {
+            $db =& $this->db;
+
+            session_regenerate_id(false);
+
+            $new_sess_id = session_id();
+
+            $this->key = $new_sess_id;
+
+            $query = sprintf("UPDATE session SET session_id = '%s' WHERE session_id = '%s'", $db->escape_string($new_sess_id), $db->escape_string($oldSessionID));
+            $db->query($query);
+        }
 	
 	function set_page($key, $lastpage) 
 	{
@@ -252,7 +256,7 @@ class Session
 		
 		if (!$db->query($SQL))
 		{
-			log_entry($db, "error", $db->error());
+			Debug::LogEntry($db, "error", $db->error());
 		}
 	}
 	
@@ -264,7 +268,7 @@ class Session
 		
 		if (!$db->query($SQL))
 		{
-			log_entry($db, "error", $db->error());
+			Debug::LogEntry($db, "error", $db->error());
 		}
 	}
 	

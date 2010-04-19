@@ -563,5 +563,15 @@ END;
 
 		return $this->name;
 	}
+
+        /**
+         * Preview code for a module
+         * @param <type> $width
+         * @param <type> $height
+         */
+        public function Preview($width, $height)
+        {
+            return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="img/forms/' . $this->type . '.png" /></div>';
+        }
 }
 ?>

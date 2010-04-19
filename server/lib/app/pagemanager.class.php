@@ -70,7 +70,7 @@ class PageManager
 		// create a user object (will try to login)
 		// we must do this after executing any functions otherwise we will be logged
 		// out again before exec any log in function calls		
-		if ($this->q != 'login' && $this->q != 'forgotten' && $this->q != 'GetClock' && $this->q != 'About') 
+		if ($this->q != 'login' && $this->q != 'logout' && $this->q != 'GetClock' && $this->q != 'About')
 		{ 
 			// Attempt a user login
 			if (!$user->attempt_login($this->ajax))

@@ -833,35 +833,42 @@ END;
 	{
 		$db 		=& $this->db;
 		$user		=& $this->user;
-		
-		$helpManager    = new HelpManager($db, $user);
+
+		$helpManager	= new HelpManager($db, $user);
 		$response	= new ResponseManager();
-		
+
 
 		//load the XML into a SimpleXML OBJECT
-		$xml 				= simplexml_load_string($this->xml);
-				
-		$backgroundImage 	= (string) $xml['background'];
-		$backgroundColor 	= (string) $xml['bgcolor'];
-		$width				= (string) $xml['width'];
-		$height				= (string) $xml['height'];
+		$xml                = simplexml_load_string($this->xml);
+
+		$backgroundImage    = (string) $xml['background'];
+		$backgroundColor    = (string) $xml['bgcolor'];
+		$width              = (string) $xml['width'];
+		$height             = (string) $xml['height'];
+                $bgImageId          = 0;
+
+                // Do we need to override the background with one passed in?
+                $bgOveride          = Kit::GetParam('backgroundOveride', _GET, _STRING);
+
+                if ($bgOveride != '')
+                    $backgroundImage = $bgOveride;
 		
-		//File upload directory.. get this from the settings object
-		$databaseDir = Config::GetSetting($db, "LIBRARY_LOCATION");
-		
-		//Manipulate the images slightly
+		// Manipulate the images slightly
 		if ($backgroundImage != "")
 		{
-			$backgroundImage = str_replace("bg_".$width."x".$height."_", "", $backgroundImage);
-			$thumbBgImage = "index.php?p=module&q=GetImage&file=tn_".$backgroundImage;
+                    // Get the ID for the background image
+                    $bgImageInfo = explode('.', $backgroundImage);
+                    $bgImageId = $bgImageInfo[0];
+
+                    $thumbBgImage = "index.php?p=module&q=GetImage&id=$bgImageId&width=80&height=80&dynamic";
 		}
 		else
 		{
-			$thumbBgImage = "img/forms/filenotfound.png";
+                    $thumbBgImage = "img/forms/filenotfound.png";
 		}
-		
+
 		//A list of available backgrounds
-		$backgroundList = dropdownlist("SELECT '', 'None', 3, 1 AS name, 0 As sort_order UNION SELECT storedAs, name, permissionID, userID, 1 AS sort_order FROM media WHERE type = 'image' AND IsEdited = 0 AND retired = 0 AND storedAs IS NOT NULL ORDER BY sort_order, 1","bg_image", $backgroundImage, "onchange=\"background_button_callback()\"", false, true);
+		$backgroundList = dropdownlist("SELECT '0', 'None', 3, 1 AS name, 0 As sort_order UNION SELECT mediaID, name, permissionID, userID, 1 AS sort_order FROM media WHERE type = 'image' AND IsEdited = 0 AND retired = 0 AND storedAs IS NOT NULL ORDER BY sort_order, 1","bg_image", $bgImageId, "onchange=\"background_button_callback()\"", false, true);
 		
 		//A list of web safe colors
 		//Strip the # from the currently set color
@@ -878,7 +885,7 @@ END;
 			trigger_error(__("Unable to get the Resolution information"), E_USER_ERROR);
 		}
 		
-		$row 			= $db->get_row($results) ;
+		$row 		= $db->get_row($results) ;
 		$resolutionid 	=  Kit::ValidateParam($row[0], _INT);
 		
 		//Make up the list
@@ -901,7 +908,6 @@ END;
 		// Begin the form output
 		$form = <<<FORM
 		<form id="LayoutBackgroundForm" class="XiboForm" method="post" action="index.php?p=layout&q=EditBackground">
-			<input type="hidden" id="libraryloc" value="$databaseDir">
 			<input type="hidden" id="layoutid" name="layoutid" value="$this->layoutid">
 			<table>
 				<tr>
@@ -926,6 +932,7 @@ FORM;
 		
 		$response->SetFormRequestResponse($form, __('Change the Background Properties'), '550px', '240px');
                 $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Background') . '")');
+                $response->AddButton(__('Add Image'), 'XiboFormRender("index.php?p=module&q=Exec&mod=image&method=AddForm&backgroundImage=true&layoutid=' . $this->layoutid . '"');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#LayoutBackgroundForm").submit()');
 		$response->Respond();
@@ -937,20 +944,22 @@ FORM;
 	 */
 	function EditBackground()
 	{
-		$db 				=& $this->db;
-		$user 				=& $this->user;
-		$response			= new ResponseManager();
-		
-		$layoutid 			= Kit::GetParam('layoutid', _POST, _INT);
-		$bg_color 			= '#'.Kit::GetParam('bg_color', _POST, _STRING);
-		$bg_image 			= Kit::GetParam('bg_image', _POST, _STRING);
-		$bg_image_original 	= Kit::GetParam('bg_image', _POST, _STRING);
+		$db 			=& $this->db;
+		$user 			=& $this->user;
+		$response		= new ResponseManager();
+
+		$layoutid 		= Kit::GetParam('layoutid', _POST, _INT);
+		$bg_color 		= '#'.Kit::GetParam('bg_color', _POST, _STRING);
+		$mediaID 		= Kit::GetParam('bg_image', _POST, _INT);
 		$resolutionid		= Kit::GetParam('resolutionid', _POST, _INT);
-		
-		//File upload directory.. get this from the settings object
-		$libraryLocation 	= Config::GetSetting($db, "LIBRARY_LOCATION");
-		
-		//Look up the width and the height
+
+                // Get the file URI
+                $SQL = sprintf("SELECT StoredAs FROM media WHERE MediaID = %d", $mediaID);
+
+                if (!$bg_image = $db->GetSingleValue($SQL, 'StoredAs', _STRING))
+                    trigger_error('No media found for that media ID', E_USER_ERROR);
+
+		// Look up the width and the height
 		$SQL = sprintf("SELECT width, height FROM resolution WHERE resolutionID = %d ", $resolutionid);
 		
 		if (!$results = $db->query($SQL)) 
@@ -964,24 +973,11 @@ FORM;
 		$width  =  Kit::ValidateParam($row[0], _INT);
 		$height =  Kit::ValidateParam($row[1], _INT);
 		
-		//If we have a background image we need to create one of the appropriate size
-		if ($bg_image != "")
-		{
-			//Create the appropriate file name
-			$bg_image = "bg_" . $width . "x" . $height . "_" . $bg_image;
-			
-			//Make sure we have an appropriately sized image
-			if (!file_exists($libraryLocation . $bg_image))
-			{
-				ResizeImage($libraryLocation.$bg_image_original, $libraryLocation . $bg_image, $width, $height);
-			}
-		}
-		
 		include_once("lib/pages/region.class.php");
 		
 		$region = new region($db, $user);
 		
-		if (!$region->EditBackground($layoutid, $bg_color, $bg_image_original, $width, $height))
+		if (!$region->EditBackground($layoutid, $bg_color, $bg_image, $width, $height))
 		{
 			//there was an ERROR
 			$response->SetError($region->errorMsg);
@@ -989,7 +985,7 @@ FORM;
 		}
 		
 		// Update the layout record with the new background
-		$SQL = sprintf("UPDATE layout SET background = '%s' WHERE layoutid = %d ", $bg_image_original, $layoutid);
+		$SQL = sprintf("UPDATE layout SET background = '%s' WHERE layoutid = %d ", $bg_image, $layoutid);
 		
 		if (!$db->query($SQL)) 
 		{
@@ -1068,6 +1064,95 @@ FORM;
 		$response->SetFormSubmitResponse(__('Region Deleted.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
 		$response->Respond();
 	}
+
+        /*
+         * Form called by the layout which shows a manual positioning/sizing form.
+         */
+        function ManualRegionPositionForm()
+        {
+            $db 	=& $this->db;
+            $user 	=& $this->user;
+            $response = new ResponseManager();
+
+            $regionid 	= Kit::GetParam('regionid', _GET, _STRING);
+            $layoutid 	= Kit::GetParam('layoutid', _GET, _INT);
+            $top 	= Kit::GetParam('top', _GET, _INT);
+            $left 	= Kit::GetParam('left', _GET, _INT);
+            $width 	= Kit::GetParam('width', _GET, _INT);
+            $height 	= Kit::GetParam('height', _GET, _INT);
+            $layoutWidth = Kit::GetParam('layoutWidth', _GET, _INT);
+            $layoutHeight = Kit::GetParam('layoutHeight', _GET, _INT);
+
+            $form = <<<END
+		<form class="XiboForm" method="post" action="index.php?p=layout&q=ManualRegionPosition">
+                    <input type="hidden" name="layoutid" value="$layoutid">
+                    <input type="hidden" name="regionid" value="$regionid">
+                    <input id="layoutWidth" type="hidden" name="layoutWidth" value="$layoutWidth">
+                    <input id="layoutHeight" type="hidden" name="layoutHeight" value="$layoutHeight">
+                    <table>
+			<tr>
+                            <td><label for="top" title="Offset from the Top Corner">Top Offset</label></td>
+                            <td><input name="top" type="text" id="top" value="$top" tabindex="1" /></td>
+			</tr>
+			<tr>
+                            <td><label for="left" title="Offset from the Left Corner">Left Offset</label></td>
+                            <td><input name="left" type="text" id="left" value="$left" tabindex="2" /></td>
+			</tr>
+			<tr>
+                            <td><label for="width" title="Width of the Region">Width</label></td>
+                            <td><input name="width" type="text" id="width" value="$width" tabindex="3" /></td>
+			</tr>
+			<tr>
+                            <td><label for="height" title="Height of the Region">Height</label></td>
+                            <td><input name="height" type="text" id="height" value="$height" tabindex="4" /></td>
+			</tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <input type='submit' value="Save" / >
+                                <input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />
+                                <input id="btnFullScreen" type='button' value="Full Screen" / >
+                            </td>
+                        </tr>
+                    </table>
+		</form>
+END;
+
+            $response->SetFormRequestResponse($form, 'Manual Region Positioning', '350px', '275px', 'manualPositionCallback');
+            $response->Respond();
+        }
+
+        function ManualRegionPosition()
+        {
+            $db 	=& $this->db;
+            $user 	=& $this->user;
+            $response   = new ResponseManager();
+
+            $layoutid   = Kit::GetParam('layoutid', _POST, _INT);
+            $regionid   = Kit::GetParam('regionid', _POST, _STRING);
+            $top        = Kit::GetParam('top', _POST, _INT);
+            $left       = Kit::GetParam('left', _POST, _INT);
+            $width      = Kit::GetParam('width', _POST, _INT);
+            $height 	= Kit::GetParam('height', _POST, _INT);
+
+            Debug::LogEntry($db, 'audit', sprintf('Layoutid [%d] Regionid [%s]', $layoutid, $regionid), 'layout', 'ManualRegionPosition');
+
+            // Remove the "px" from them
+            $width  = str_replace('px', '', $width);
+            $height = str_replace('px', '', $height);
+            $top    = str_replace('px', '', $top);
+            $left   = str_replace('px', '', $left);
+
+            include_once("lib/pages/region.class.php");
+
+            $region = new region($db, $user);
+
+            if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
+                trigger_error($region->errorMsg, E_USER_ERROR);
+
+            $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid");
+            $response->Respond();
+        }
 	
 	/**
 	 * Edits the region information
@@ -1083,12 +1168,12 @@ FORM;
 		
 		//Vars
 		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
-		$width 		= $_POST['width'];
-		$height 	= $_POST['height'];
-		$top 		= $_POST['top'];
-		$left 		= $_POST['left'];
-		
-		//Remove the "px" from them
+		$top            = Kit::GetParam('top', _POST, _INT);
+                $left           = Kit::GetParam('left', _POST, _INT);
+                $width          = Kit::GetParam('width', _POST, _INT);
+                $height 	= Kit::GetParam('height', _POST, _INT);
+
+		// Remove the "px" from them
 		$width 	= str_replace("px", '', $width);
 		$height = str_replace("px", '', $height);
 		$top 	= str_replace("px", '', $top);
@@ -1124,16 +1209,17 @@ FORM;
 		//Vars
 		$regionid 		= Kit::GetParam('regionid', _POST, _STRING);
 		$mediaid 		= Kit::GetParam('mediaid', _POST, _STRING);
+		$lkid        		= Kit::GetParam('lkid', _POST, _STRING, '');
 		$sequence 		= Kit::GetParam('sequence', _POST, _INT);
-		$callingPage 	= Kit::GetParam('callingpage', _POST, _STRING);
-		
+		$callingPage            = Kit::GetParam('callingpage', _POST, _STRING);
+
 		$sequence--; //zero based
-		
+
 		include_once("lib/pages/region.class.php");
-		
+
 		$region = new region($db, $user);
-		
-		if (!$region->ReorderMedia($this->layoutid, $regionid, $mediaid, $sequence))
+
+		if (!$region->ReorderMedia($this->layoutid, $regionid, $mediaid, $sequence, $lkid))
 		{
 			//there was an ERROR
 			trigger_error($region->errorMsg, E_USER_ERROR);
@@ -1208,12 +1294,14 @@ END;
 		//Fix up the background css
 		if ($bgImage == "")
 		{
-			$background_css = "$bgColor";
+                    $background_css = "$bgColor";
 		}
-		else
 		{
-			$bgImage = "bg_" . $width . "x" . $height . "_" . $bgImage; 
-			$background_css = "url('index.php?p=module&q=GetImage&file=$bgImage') top center no-repeat; background-color:$bgColor";
+                    // Get the ID for the background image
+                    $bgImageInfo = explode('.', $bgImage);
+                    $bgImageId = $bgImageInfo[0];
+
+                    $background_css = "url('index.php?p=module&q=GetImage&id=$bgImageId&width=$width&height=$height&dynamic&proportional=0') top center no-repeat; background-color:$bgColor";
 		}
 		
 		$width 	= $width . "px";
@@ -1226,24 +1314,31 @@ END;
 		//get the regions
 		foreach ($regionNodeList as $region)
 		{
-			//get dimensions
+			// get dimensions
+                        $tipWidth       = $region->getAttribute('width');
+                        $tipHeight      = $region->getAttribute('height');
+                        $tipTop         = $region->getAttribute('top');
+                        $tipLeft        = $region->getAttribute('left');
+
 			$regionWidth 	= $region->getAttribute('width') . "px";
 			$regionHeight 	= $region->getAttribute('height') . "px";
-			$regionLeft		= $region->getAttribute('left') . "px";
-			$regionTop		= $region->getAttribute('top') . "px";
-			$regionid		= $region->getAttribute('id');
-			
-			$previewStyle	= "position:absolute; top:0px; left:0px; width: 100%; height: 100%;";
-			$paddingTop		= $regionHeight / 2 - 16;
-			$paddingTop		= $paddingTop . "px";
+			$regionLeft	= $region->getAttribute('left') . "px";
+			$regionTop	= $region->getAttribute('top') . "px";
+			$regionid	= $region->getAttribute('id');
+
+			$paddingTop	= $regionHeight / 2 - 16;
+			$paddingTop	= $paddingTop . "px";
 
 			$regionTransparency  = '<div class="regionTransparency" style="width:100%; height:100%;">';
 			$regionTransparency .= '</div>';
 
 			$doubleClickLink = "XiboFormRender($(this).attr('href'))";
 			$regionHtml .= "<div id='region_$regionid' regionid='$regionid' layoutid='$this->layoutid' href='index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions' ondblclick=\"$doubleClickLink\"' class='region' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
-								$regionTransparency							
-								<div class='preview' style='$previewStyle'>
+					  $regionTransparency
+                                           <div class='regionInfo'>
+                                                $tipWidth x $tipHeight ($tipLeft,$tipTop)
+                                           </div>
+								<div class='preview'>
 									<div class='previewContent'></div>
 									<div class='previewNav' style='display:none;'></div>
 								</div>
@@ -1251,6 +1346,7 @@ END;
 		}
 		
 		// Translate messages
+		$msgTimeLine			= __('Timeline');
 		$msgOptions			= __('Options');
 		$msgDelete			= __('Delete');
 		$msgSetAsHome		= __('Set as Home');
@@ -1262,11 +1358,15 @@ END;
 		
 		//render the view pane
 		$surface = <<<HTML
+                <div id="aspectRatioOption">
+                    <input id="lockAspectRatio" type="checkbox" /><label for="lockAspectRatio">Lock Aspect Ratio?</label>
+                </div>
 		<div id="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; border: 1px solid #000; background:$background_css;">
 		$regionHtml
 		</div>
 		<div class="contextMenu" id="regionMenu">
 			<ul>
+                                <li id="btnTimeline">$msgTimeLine</li>
 				<li id="options">$msgOptions</li>
 				<li id="deleteRegion">$msgDelete</li>
 				<li id="setAsHomepage">$msgSetAsHome</li>
@@ -1450,7 +1550,7 @@ END;
 			$msgDuration	= __('Duration');
 			
 			$mediaHtml .= <<<BUTTON
-			<div class="timebar_ctl" style="position:absolute; top:$top; left:$leftVal; width:$thumbWidthVal;" mediaid="$mediaid">
+			<div class="timebar_ctl" style="position:absolute; top:$top; left:$leftVal; width:$thumbWidthVal;" mediaid="$mediaid" lkid="$lkid">
 				<div class="timebar">
 					<div class="$rightClass">
 					<div class="$leftClass"></div>
@@ -1681,7 +1781,7 @@ END;
 		
 		if (!$xmlString = $region->GetLayoutXml($layoutid))
 		{
-			trigger_error($region->errorMsg, E_USER_ERROR);
+                    trigger_error($region->errorMsg, E_USER_ERROR);
 		}
 		
 		$xml->loadXML($xmlString);
@@ -1691,9 +1791,9 @@ END;
 		$nodeList 	= $xpath->query("//region[@id='$regionid']/media");
 		
 		$return = "<input type='hidden' id='maxSeq' value='{$nodeList->length}' />";
-		$return .= "<div class='seqInfo' style='position:absolute; right:15px; top:1px; color:#FFF; background-color:#000; z-index:50; padding: 5px;'>
-						<span>$seqGiven / {$nodeList->length}</span>
-					</div>";
+		$return .= "<div class='seqInfo' style='position:absolute; right:15px; top:31px; color:#FFF; background-color:#000; z-index:50; padding: 5px;'>
+                                <span style='font-family: Verdana;'>$seqGiven / {$nodeList->length}</span>
+                            </div>";
 		
 		if ($nodeList->length == 0)
 		{
@@ -1707,112 +1807,28 @@ END;
 		$node = $nodeList->item($seq);
 			
 		// We have our node.
-		$type 				= (string) $node->getAttribute("type");
+		$type 			= (string) $node->getAttribute("type");
 		$mediaDurationText 	= (string) $node->getAttribute("duration");
-		
-		$return .= "<div class='info regionTransparency' style='display:none; position:absolute; top: 15px; left: 150px; background-color:#FFF; z-index: 50;'>
-						<h5>Media Information</h5>
-						<ul>
-							<li>" . __('Type') . ": $type</li>
-							<li>" . __('Duration') . ": $mediaDurationText</li>
-						</ul>
-					</div>";
-		
-		if ($type == "text")
-		{
-			$direction = (string) $node->getAttribute("direction");
-			
-			$textNode = $node->getElementsByTagName("text");
-			$textNode = $textNode->item(0);
-			
-			$textId 	= $regionid."_text";
-			$innerId 	= $regionid."_innerText";
-			$timerId	= $regionid."_timer";
-			$widthPx	= $width."px";
-			$heightPx	= $height."px";
-			
-			$textWrap = "";
-			if ($direction == "left" || $direction == "right") $textWrap = "white-space:nowrap;";
-			
-			//Show the contents of text accordingly
-			$return .= <<<END
-			<div id="$textId" style="position:relative;overflow:hidden;width:$widthPx; height:$heightPx;">
-				<div id="$innerId" style="position:absolute; left: 0px; top: 0px; $textWrap">
-					<div class="article">
-						$textNode->textContent
-					</div>
-				</div>
-			</div>
-			<script type="text/javascript">
-				var tr = new TextRender("$textId", "$innerId", "$direction");
-				
-				clearInterval(timer);
-				
-				var timer = 0;
-				timer = setInterval("tr.TimerTick()", 30);
-			</script>
-END;
-		}
-		elseif ($type == "ticker")
-		{
-			$direction = (string) $node->getAttribute("direction");
-			
-			//Show the contents of template accordingly
-			$templateNode = $node->getElementsByTagName("template");
-			$templateNode = $templateNode->item(0);
-			
-			$textId 	= $regionid."_text";
-			$innerId 	= $regionid."_innerText";
-			$timerId	= $regionid."_timer";
-			$widthPx	= $width."px";
-			$heightPx	= $height."px";
-			
-			$textWrap = "";
-			if ($direction == "left" || $direction == "right") $textWrap = "white-space:nowrap;";
-			
-			//Show the contents of text accordingly
-			$return .= <<<END
-			<div id="$textId" style="position:relative;overflow:hidden;width:$widthPx; height:$heightPx;">
-				<div id="$innerId" style="position:absolute; left: 0px; top: 0px; $textWrap">
-					<div class="article">
-						$templateNode->textContent
-					</div>
-				</div>
-			</div>
-			<script type="text/javascript">
-				var tr = new TextRender("$textId", "$innerId", "$direction");
-				
-				clearInterval(timer);
-				
-				var timer = 0;
-				timer = setInterval("tr.TimerTick()", 30);
-			</script>
-END;
-		}
-		elseif ($type == "image")
-		{
-			// Call the ratio width / height
-			$ratioWidth = $width;
-			$ratioHeight = $height;
-						
-			// We need to get the URI from <options>
-			$optionsNode = $node->getElementsByTagName("uri");
-			$uri		 = $optionsNode->item(0)->textContent;
+                $mediaid                = (string) $node->getAttribute("id");
 
-			Debug::LogEntry($db, 'audit', 'The Uri is:' . $uri);
-			
-			// Show the image - scaled to the aspect ratio of this region (get from GET)
-			$return .= "<div style='text-align:center;'><img alt='$type thumbnail' src='index.php?p=module&q=GetImage&file=$uri&width=$ratioWidth&height=$ratioHeight&dynamic' /></div>";
-		}
-		else
-		{
-			// Show a thumbnail (centered) - will need the width/height of the region from get again
-			$centerHeight = $height / 2 - 40;
-			$centerHeight = $centerHeight . "px";
-			
-			$return .= "<div style='text-align:center;'><img alt='$type thumbnail' src='img/forms/$type.png' /></div>";
-		}
-		
+		$return .= "
+                   <div class='previewInfo' style='position:absolute; right:15px; top:61px; color:#FFF; background-color:#000; z-index:50; padding: 5px; font-family: Verdana;'>
+                        <span style='font-family: Verdana;'>Type: $type <br />
+                        Duration: $mediaDurationText (s)</span>
+                    </div>";
+
+		// Create a module to deal with this
+                if (!file_exists('modules/' . $type . '.module.php'))
+                {
+                    $return .= 'Unknow module type';
+                }
+
+                require_once("modules/$type.module.php");
+
+                $moduleObject = new $type($db, $user, $mediaid, $layoutid, $regionid);
+
+                $return .= $moduleObject->Preview($width, $height);
+
 		$response->html = $return;
 		$response->Respond();
 	}

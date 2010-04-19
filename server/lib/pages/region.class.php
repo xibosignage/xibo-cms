@@ -326,17 +326,24 @@ class region
 	 * @param $mediaid Object
 	 * @param $sequence Object
 	 */
-	public function ReorderMedia($layoutid, $regionid, $mediaid, $sequence) 
+	public function ReorderMedia($layoutid, $regionid, $mediaid, $sequence, $lkid = '')
 	{
 		$db =& $this->db;
-		
+
+                Debug::LogEntry($db, 'audit', 'LkID = ' . $lkid, 'region', 'ReorderMedia');
+
 		//Load the XML for this layout
 		$xml = new DOMDocument("1.0");
 		$xml->loadXML($this->GetLayoutXml($layoutid));
-		
+
 		//Get the Media Node in question in a DOMNode using Xpath
 		$xpath = new DOMXPath($xml);
-		$mediaNodeList = $xpath->query("//region[@id='$regionid']/media[@id='$mediaid']");
+
+                if ($lkid == '')
+                    $mediaNodeList = $xpath->query("//region[@id='$regionid']/media[@id='$mediaid']");
+                else
+                    $mediaNodeList = $xpath->query("//region[@id='$regionid']/media[@lkid='$lkid']");
+
 		$mediaNode = $mediaNodeList->item(0);
 		
 		//Remove this node from its parent

@@ -65,6 +65,9 @@ $datemanager	= new DateManager($db);
 		
 		<!-- Our own -->
 		<link rel="stylesheet" type="text/css" href="template/css/presentation.css" />
+                <!--[if gte IE 8]>
+                <link rel="stylesheet" type="text/css" href="template/css/ie8.css" />
+                <![endif]-->
 		<script type="text/javascript" src="lib/js/functions.js"></script>
 		<script type="text/javascript" src="lib/js/ping.js"></script>
 		<script type="text/javascript" src="lib/js/core.js"></script>

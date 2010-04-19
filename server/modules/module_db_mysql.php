@@ -59,6 +59,13 @@ class database
      */
     function query($SQL) 
     {
+        if ($SQL == '')
+        {
+            $this->error_text = 'No SQL provided';
+            return false;
+        }
+
+        
         if(!$result = mysql_query($SQL)) 
 	{
             $this->error_text = 'The query [' . $SQL . '] failed to execute';

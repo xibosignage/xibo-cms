@@ -276,6 +276,41 @@ FORM;
 		
 		return $this->response;		
 	}
-}
 
+        public function Preview($width, $height)
+        {
+            $regionid   = $this->regionid;
+            $direction  = $this->GetOption('direction');
+
+            // Get the text out of RAW
+            $rawXml = new DOMDocument();
+            $rawXml->loadXML($this->GetRaw());
+
+            // Get the Text Node out of this
+            $textNodes 	= $rawXml->getElementsByTagName('text');
+            $textNode 	= $textNodes->item(0);
+            $text 	= $textNode->nodeValue;
+
+            $textId 	= $regionid.'_text';
+            $innerId 	= $regionid.'_innerText';
+            $timerId	= $regionid.'_timer';
+            $widthPx	= $width.'px';
+            $heightPx	= $height.'px';
+
+            $textWrap = '';
+            if ($direction == "left" || $direction == "right") $textWrap = "white-space:nowrap;";
+
+            //Show the contents of text accordingly
+            $return = <<<END
+            <div id="$textId" style="position:relative; overflow:hidden ;width:$widthPx; height:$heightPx; font-size: 1em;">
+                <div id="$innerId" style="position:absolute; left: 0px; top: 0px; $textWrap">
+                    <div class="article">
+                            $text
+                    </div>
+                </div>
+            </div>
+END;
+            return $return;
+        }
+}
 ?>

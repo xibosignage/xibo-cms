@@ -113,48 +113,59 @@ class moduleDAO
 	 */
 	function GetImage()
 	{
-		$db 		=& $this->db;
-		
-		$file 		= Kit::GetParam('file', _REQUEST, _STRING);
-		$dynamic	= isset($_REQUEST['dynamic']);
-		
-		//File upload directory.. get this from the settings object
-		$library 	= Config::GetSetting($db, "LIBRARY_LOCATION");
-		
-		$fileName 	= $library . $file;
-		$uid 		= $fileName;
-		
-		// Get the info for this new temporary file
-		$info 		= getimagesize($uid);
-		
-		if ($dynamic && $info[2])
-		{
-			$width 	= Kit::GetParam('width', _GET, _INT);
-			$height = Kit::GetParam('height', _GET, _INT);
-			
-			// dynamically create an image of the correct size - used for previews
-			ResizeImage($uid, "", $width, $height, true, 'browser');
-			
-			exit;
-		}
+            $db         =& $this->db;
 
-		if (!$image = file_get_contents($uid))
-		{
-			//not sure
-			Debug::LogEntry($db, "audit", "Cant find: $uid", "module", "GetImage");
-			
-			$uid 	= "img/forms/filenotfound.png";
-			$image 	= file_get_contents($uid);
-		}
-		
-		$size = getimagesize($uid);
-		
-		//Output the image header
-		header("Content-type: {$size['mime']}");
-		
-		echo $image;
-		
-		exit;
+            $mediaID 	= Kit::GetParam('id', _GET, _INT, 0);
+            $proportional = Kit::GetParam('proportional', _GET, _BOOL, true);
+            $dynamic	= isset($_REQUEST['dynamic']);
+
+            if ($mediaID == 0)
+                die ('No media ID provided');
+
+            // Get the file URI
+            $SQL = sprintf("SELECT StoredAs FROM media WHERE MediaID = %d", $mediaID);
+
+            if (!$file = $db->GetSingleValue($SQL, 'StoredAs', _STRING))
+                die ('No media found for that media ID');
+
+            //File upload directory.. get this from the settings object
+            $library 	= Config::GetSetting($db, "LIBRARY_LOCATION");
+            $fileName 	= $library . $file;
+
+            // Get the info for this new temporary file
+            if (!$info = getimagesize($fileName))
+            {
+                echo $fileName . ' is not an image';
+                exit;
+            }
+
+            if ($dynamic && $info[2])
+            {
+                $width  = Kit::GetParam('width', _GET, _INT);
+                $height = Kit::GetParam('height', _GET, _INT);
+
+                // dynamically create an image of the correct size - used for previews
+                ResizeImage($fileName, '', $width, $height, $proportional, 'browser');
+
+                exit;
+            }
+
+            if (!$image = file_get_contents($fileName))
+            {
+                //not sure
+                Debug::LogEntry($db, 'audit', "Cant find: $uid", 'module', 'GetImage');
+
+                $fileName = 'img/forms/filenotfound.png';
+                $image 	= file_get_contents($fileName);
+            }
+
+            $size = getimagesize($fileName);
+
+            //Output the image header
+            header("Content-type: {$size['mime']}");
+
+            echo $image;
+            exit;
 	}
 }
 ?>

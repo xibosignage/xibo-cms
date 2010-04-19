@@ -116,12 +116,13 @@
 		$results = $db->get_row($result);
 		
 		// there is a result so we store the userID in the session variable
-		$_SESSION['userid']		= Kit::ValidateParam($results[0], _INT);
+		$_SESSION['userid']	= Kit::ValidateParam($results[0], _INT);
 		$_SESSION['username']	= Kit::ValidateParam($results[1], _USERNAME);
 		$_SESSION['usertype']	= Kit::ValidateParam($results[3], _INT);
-		
-		$this->usertypeid		= $_SESSION['usertype'];
-		$this->userid			= $_SESSION['userid'];
+		$_SESSION['groupid']	= Kit::ValidateParam($results[4], _INT);
+
+		$this->usertypeid	= $_SESSION['usertype'];
+		$this->userid           = $_SESSION['userid'];
 
 		// update the db
 		// write out to the db that the logged in user has accessed the page

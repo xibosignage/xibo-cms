@@ -145,7 +145,7 @@ END;
 				<input type="hidden" name="MAX_FILE_SIZE" value="$this->maxFileSizeBytes" />
 				<table>
 					<tr>
-						<td><label for="file">Powerpoint File<span class="required">*</span></label></td>
+						<td><label for="file">PowerPoint File<span class="required">*</span></label></td>
 						<td colspan="3">
 							<input type="file" name="media_file" onchange="fileFormSubmit();this.form.submit();" />
 						</td>
