@@ -89,6 +89,40 @@ var text_callback = function()
 	return false; //prevent submit
 }
 
+function microblog_callback()
+{
+    // Create the FCK editor
+    var oFCKeditor = new FCKeditor( 'template' ) ;
+    oFCKeditor.BasePath = "3rdparty/fckeditor/" ;
+    oFCKeditor.ReplaceTextarea();
+
+    // Create the FCK editor
+    var oFCKeditor2 = new FCKeditor( 'nocontent' ) ;
+    oFCKeditor2.BasePath = "3rdparty/fckeditor/" ;
+    oFCKeditor2.ReplaceTextarea();
+
+    var regionid = $("#iRegionId").val();
+    var width = $("#region_"+regionid).width();
+    var height = $("#region_"+regionid).height();
+
+    //Min width
+    if (width < 800) width = 800;
+    height = height - 170;
+
+    // Min height
+    if (height < 300) height = 300;
+
+    $('#template___Frame').attr("width",width+"px");
+    $('#template___Frame').attr("height",height+"px");
+
+    width = width + 50;
+    height = height + 480;
+
+    $('#div_dialog').parent().parent().width(width).height(height);
+
+    return false; //prevent submit
+}
+
 $(document).ready(function() {
 	
 	var container = document.getElementById('layout');

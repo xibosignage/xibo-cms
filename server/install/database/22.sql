@@ -3,6 +3,9 @@ INSERT INTO `pagegroup` (`pagegroupID`, `pagegroup`) VALUES (NULL, 'Web Services
 INSERT INTO `pages` (`name`, `pagegroupID`)
 SELECT 'oauth', pagegroupID FROM pagegroup WHERE pagegroup = 'Web Services';
 
+INSERT INTO `module` (`ModuleID`, `Module`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`) VALUES (NULL, 'MicroBlog', '1', '1', NULL, 'img/forms/webpage.gif', '1', NULL);
+
+
 #
 # Log table to hold all OAuth request when you enabled logging
 #

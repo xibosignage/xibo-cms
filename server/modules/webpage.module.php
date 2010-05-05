@@ -51,25 +51,35 @@ class webpage extends Module
 		
 		$form = <<<FORM
 		<form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
-			<input type="hidden" name="layoutid" value="$layoutid">
-			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-			<table>
-				<tr>
-		    		<td><label for="uri" title="The Location (URL) of the webpage. E.g. http://www.xibo.org.uk">Link<span class="required">*</span></label></td>
-		    		<td><input id="uri" name="uri" type="text"></td>
-				</tr>
-				<tr>
-		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
-		    		<td><input id="duration" name="duration" type="text"></td>		
-				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input id="btnSave" type="submit" value="Save"  />
-						<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-					</td>
-				</tr>
-			</table>
+                    <input type="hidden" name="layoutid" value="$layoutid">
+                    <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                    <table>
+                        <tr>
+                            <td><label for="uri" title="The Location (URL) of the webpage. E.g. http://www.xibo.org.uk">Link<span class="required">*</span></label></td>
+                            <td><input id="uri" name="uri" type="text"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration (s)<span class="required">*</span></label></td>
+                            <td><input id="duration" name="duration" type="text"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="scaling" title="">Scale Percentage</label></td>
+                            <td><input id="scaling" name="scaling" type="text" /></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <input id="transparency" name="transparency" type="checkbox">
+                                <label for="transparency" title="Make webpage background transparent?">Background transparency (python only)</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <input id="btnSave" type="submit" value="Save"  />
+                                <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
+                            </td>
+                        </tr>
+                    </table>
 		</form>
 FORM;
 
@@ -77,7 +87,7 @@ FORM;
 		$this->response->dialogTitle = 'Add New Webpage';
 		$this->response->dialogSize 	= true;
 		$this->response->dialogWidth 	= '450px';
-		$this->response->dialogHeight 	= '150px';
+		$this->response->dialogHeight 	= '250px';
 
 		return $this->response;
 	}
@@ -96,7 +106,14 @@ FORM;
 		
 		$direction	= $this->GetOption('direction');
 		$copyright	= $this->GetOption('copyright');
+		$scaling	= $this->GetOption('scaling');
+		$transparency	= $this->GetOption('transparency');
+                $transparencyChecked = '';
 		$uri		= urldecode($this->GetOption('uri'));
+
+                // Is the transparency option set?
+                if ($transparency)
+                    $transparencyChecked = 'checked';
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
 		
@@ -115,6 +132,16 @@ FORM;
 		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
 		    		<td><input id="duration" name="duration" value="$this->duration" type="text"></td>		
 				</tr>
+                        <tr>
+                            <td><label for="scaling" title="">Scale Percentage</label></td>
+                            <td><input id="scaling" name="scaling" type="text" value="$scaling"/></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <input id="transparency" name="transparency" type="checkbox" $transparencyChecked>
+                                <label for="transparency" title="Make webpage background transparent?">Background transparency (python only)</label>
+                            </td>
+                        </tr>
 				<tr>
 					<td></td>
 					<td>
@@ -130,7 +157,7 @@ FORM;
 		$this->response->dialogTitle = 'Edit Webpage';
 		$this->response->dialogSize 	= true;
 		$this->response->dialogWidth 	= '450px';
-		$this->response->dialogHeight 	= '150px';
+		$this->response->dialogHeight 	= '250px';
 
 		return $this->response;		
 	}
@@ -150,6 +177,8 @@ FORM;
 		//Other properties
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
+                $scaling	  = Kit::GetParam('scaling', _POST, _INT, 100);
+		$transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -174,6 +203,9 @@ FORM;
 		
 		// Any Options
 		$this->SetOption('uri', $uri);
+                $this->SetOption('scaling', $scaling);
+                $this->SetOption('transparency', $transparency);
+
 
 		// Should have built the media object entirely by this time
 		// This saves the Media Object to the Region
@@ -204,6 +236,8 @@ FORM;
 		//Other properties
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
+                $scaling	  = Kit::GetParam('scaling', _POST, _INT, 100);
+		$transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -227,6 +261,8 @@ FORM;
 		
 		// Any Options
 		$this->SetOption('uri', $uri);
+                $this->SetOption('scaling', $scaling);
+                $this->SetOption('transparency', $transparency);
 
 		// Should have built the media object entirely by this time
 		// This saves the Media Object to the Region

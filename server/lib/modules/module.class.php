@@ -383,42 +383,45 @@ XML;
 	 */
 	final public function UpdateRegion()
 	{
-		// By this point we expect to have a MediaID, duration
-		$layoutid = $this->layoutid;
-		$regionid = $this->regionid;
+            Debug::LogEntry($this->db, 'audit', 'Updating Region');
 
-		if ($this->deleteFromRegion)
-		{
-			// We call region delete
-			if (!$this->region->RemoveMedia($layoutid, $regionid, $this->lkid, $this->mediaid))
-			{
-				$this->message = __("Unable to Remove this media from the Layout");
-				return false;
-			}
-		}
-		else
-		{
-			if ($this->existingMedia)
-			{
-				// We call region swap with the same media id
-				if (!$this->region->SwapMedia($layoutid, $regionid, $this->lkid, $this->mediaid, $this->mediaid, $this->AsXml()))
-				{
-					$this->message = __("Unable to assign to the Region");
-					return false;
-				}
-			}
-			else
-			{
-				// We call region add
-				if (!$this->region->AddMedia($layoutid, $regionid, $this->regionSpecific, $this->AsXml()))
-				{
-					$this->message = __("Error adding this media to the library");
-					return false;
-				}
-			}
-		}
+            // By this point we expect to have a MediaID, duration
+            $layoutid = $this->layoutid;
+            $regionid = $this->regionid;
 
-		return true;
+            if ($this->deleteFromRegion)
+            {
+                    // We call region delete
+                    if (!$this->region->RemoveMedia($layoutid, $regionid, $this->lkid, $this->mediaid))
+                    {
+                            $this->message = __("Unable to Remove this media from the Layout");
+                            return false;
+                    }
+            }
+            else
+            {
+                    if ($this->existingMedia)
+                    {
+                            // We call region swap with the same media id
+                            if (!$this->region->SwapMedia($layoutid, $regionid, $this->lkid, $this->mediaid, $this->mediaid, $this->AsXml()))
+                            {
+                                    $this->message = __("Unable to assign to the Region");
+                                    return false;
+                            }
+                    }
+                    else
+                    {
+                            // We call region add
+                            if (!$this->region->AddMedia($layoutid, $regionid, $this->regionSpecific, $this->AsXml()))
+                            {
+                                    $this->message = __("Error adding this media to the library");
+                                    return false;
+                            }
+                    }
+            }
+            Debug::LogEntry($this->db, 'audit', 'Finished Updating Region');
+
+            return true;
 	}
 
 	/**
