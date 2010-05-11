@@ -152,7 +152,8 @@ class Debug
 		$currentdate 		= date("Y-m-d H:i:s");
 		$requestUri			= Kit::GetParam('REQUEST_URI', $_SERVER, _STRING, 'Not Supplied');
 		$requestIp			= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING, 'Not Supplied');
-		$requestUserAgent 	= Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'Not Supplied');
+		$requestUserAgent   = Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'Not Supplied');
+                $requestUserAgent   = substr($requestUserAgent, 0, 253);
 		$userid 			= Kit::GetParam('userid', _SESSION, _INT, 0);
 		$message			= Kit::ValidateParam($message, _HTMLSTRING);
 		

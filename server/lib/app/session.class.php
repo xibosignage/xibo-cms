@@ -65,8 +65,9 @@ class Session
 	{
 		$db =& $this->db;
 		
-		$userAgent		= Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent');
-		$remoteAddr		= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
+		$userAgent	= Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent');
+                $userAgent      = substr($userAgent, 0, 253);
+		$remoteAddr	= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
 		$securityToken	= Kit::GetParam('SecurityToken', _POST, _STRING, null);
 		
 		$this->key 		= $key;
@@ -131,6 +132,7 @@ class Session
 		$newExp 	= time() + $this->max_lifetime;
 		$lastaccessed 	= date("Y-m-d H:i:s");
 		$userAgent	= Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent');
+                $userAgent      = substr($userAgent, 0, 253);
 		$remoteAddr	= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
 		
 		$result = $db->query(sprintf("SELECT session_id FROM session WHERE session_id = '%s'", $db->escape_string($key)));
