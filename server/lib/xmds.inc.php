@@ -21,7 +21,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
 error_reporting(E_ALL);
-ini_set('display_errors', 1); //we never want to display errors on the screen
+ini_set('display_errors', 0); //we never want to display errors on the screen
 
 // Required Library Files
 require_once('lib/app/translationengine.class.php');
