@@ -40,6 +40,10 @@ class Schedule extends Data
 		$db	=& $this->db;
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'Add');
+
+                // Cant have a 0 increment as it creates a loop
+                if ($recDetail ==0)
+                    $recDetail = 1;
 		
 		// make the displayid_list from the selected displays.
 		$displayGroupIDList = implode(",", $displayGroupIDs); 
@@ -182,6 +186,10 @@ class Schedule extends Data
 		$db	=& $this->db;
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'Edit');
+
+                // Cant have a 0 increment as it creates a loop
+                if ($recDetail ==0)
+                    $recDetail = 1;
 		
 		// What we are really going to do here is delete and re-add... just because it is easier to get the logic right
 		// and it means the same logic will be applied across both functions.
