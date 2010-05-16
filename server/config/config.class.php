@@ -194,16 +194,31 @@ END;
 		// Check for JSON
 		$message = __('JSON Extension');
 
-		if ($this->CheckJson()) 
+		if ($this->CheckJson())
 		{
 			$output .= $imgGood.$message.'<br />';
 		}
 		else
 		{
 			$this->envFault = true;
-			
+
 			$output .= $imgBad.$message.'<br />';
 			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP JSON extension to function.') . '</p></div>';
+		}
+
+                // Check for SOAP
+		$message = __('SOAP Extension');
+
+		if ($this->CheckSoap())
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+
+			$output .= $imgBad.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP SOAP extension to function.') . '</p></div>';
 		}
 		
 		// Check for GD (graphics)
@@ -430,6 +445,15 @@ END;
 	function CheckJson() 
 	{
 		return extension_loaded("json");
+	}
+	/**
+         *
+	 * Check PHP has SOAP module installed
+	 * @return
+	 */
+	function CheckSoap()
+	{
+		return extension_loaded("soap");
 	}
 	
 	/** 
