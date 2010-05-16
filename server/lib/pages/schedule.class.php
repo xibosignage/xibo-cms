@@ -70,14 +70,11 @@ class scheduleDAO
 	 */
 	function GenerateCalendar()
 	{
-		$view				= Kit::GetParam('view', _POST, _WORD, 'month');
-		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
+		$view               = Kit::GetParam('view', _POST, _WORD, 'month');
+		$displayGroupIDs    = Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
 		
 		// if we have some displaygroupids then add them to the session info so we can default everything else.
-		if (count($displayGroupIDs) > 0)
-		{
-			Session::Set('DisplayGroupIDs', $displayGroupIDs);
-		}
+                Session::Set('DisplayGroupIDs', $displayGroupIDs);
 		
 		if ($view == 'month')
 		{

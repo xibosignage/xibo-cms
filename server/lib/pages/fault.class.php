@@ -89,7 +89,7 @@ class faultDAO
 		$output .= '</li>';
 		
 		$output .= '<li><p>' . __('Click on the below link to open the bug report page for this Xibo release.') . ' ' . __('Describe the problem and upload the file you obtained earlier.') . '</p>';		
-		$output .= '<a href="https://bugs.launchpad.net/xibo/1.0/+filebug" title="File a bug report" target="_blank">' . __('File a bug report in Launchpad') . '</a>';
+		$output .= '<a href="https://bugs.launchpad.net/xibo/1.1/+filebug" title="File a bug report" target="_blank">' . __('File a bug report in Launchpad') . '</a>';
 		$output .= '</li>';
 		
 		$output .= '</ol>';

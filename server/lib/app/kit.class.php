@@ -426,7 +426,11 @@ class Kit
     public static function GetCurrentPage()
     {
         $request = explode('?', $_SERVER['REQUEST_URI']);
-        return $request[1];
+
+        if (isset($request[1]))
+            return $request[1];
+
+        return '';
     }
 }
 ?>
