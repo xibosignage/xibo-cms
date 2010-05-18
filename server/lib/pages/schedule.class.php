@@ -70,14 +70,11 @@ class scheduleDAO
 	 */
 	function GenerateCalendar()
 	{
-		$view				= Kit::GetParam('view', _POST, _WORD, 'month');
-		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
+		$view               = Kit::GetParam('view', _POST, _WORD, 'month');
+		$displayGroupIDs    = Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
 		
 		// if we have some displaygroupids then add them to the session info so we can default everything else.
-		if (count($displayGroupIDs) > 0)
-		{
-			Session::Set('DisplayGroupIDs', $displayGroupIDs);
-		}
+                Session::Set('DisplayGroupIDs', $displayGroupIDs);
 		
 		if ($view == 'month')
 		{
@@ -1140,7 +1137,7 @@ END;
 						</tr>
 						<tr>
 							<td><label for="rec_detail" title="How often does this event repeat">Repeat every</label></td>
-							<td>$rec_detail</td>
+							<td><input class="number" type="text" name="rec_detail" value="1" /></td>
 						</tr>
 						<tr>
 							<td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
@@ -1267,8 +1264,9 @@ END;
 							<input id="sTime" class="required" type="text" size="12" name="sTime" value="$fromTimeText" />
 						</td>
 						<td rowspan="4">
-							Displays: <br />
-							$displayList
+                                                    <div class="FormDisplayList">
+                                                    $displayList
+                                                    </div>
 						</td>
 					</tr>
 					<tr>
@@ -1291,7 +1289,6 @@ END;
 		// Recurrance part of the form
 		$days 		= 60*60*24;
 		$rec_type 	= listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type", $recType);
-		$rec_detail	= listcontent("1|1,2|2,3|3,4|4,5|5,6|6,7|7,8|8,9|9,10|10,11|11,12|12,13|13,14|14", "rec_detail", $recDetail);
 		$rec_range 	= '<input class="date-pick" type="text" id="rec_range" name="rec_range" value="' . $recToDtText . '" />';
 		
 		$form .= <<<END
@@ -1306,7 +1303,7 @@ END;
 						</tr>
 						<tr>
 							<td><label for="rec_detail" title="How often does this event repeat">Repeat every</label></td>
-							<td>$rec_detail</td>
+							<td><input class="number" type="text" name="rec_detail" value="$recDetail" /></td>
 						</tr>
 						<tr>
 							<td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>

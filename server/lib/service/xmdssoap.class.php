@@ -170,18 +170,9 @@ class XMDSSoap
         $SQL .= " INNER JOIN display ON lkdisplaydg.DisplayID = display.displayID ";
         $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
 
-        $SQLBase = $SQL;
-
-        // Do we include the default display
-        if ($this->includeSchedule == 1)
-        {
-            $SQL .= sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $plus4hours, $currentdate);
-            $SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
-        }
-        else
-        {
-            $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $plus4hours, $currentdate);
-        }
+        // Include the default layout in required files AND any layouts that are scheduled
+        $SQL .= sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $plus4hours, $currentdate);
+        $SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
 
         if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "RequiredFiles");
 
@@ -458,8 +449,8 @@ class XMDSSoap
         }
 
         if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "[OUT]", "xmds", "GetFile");
-
-        return base64_encode($file);
+        
+        return $file;
     }
 
     /**

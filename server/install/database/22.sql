@@ -3,6 +3,9 @@ INSERT INTO `pagegroup` (`pagegroupID`, `pagegroup`) VALUES (NULL, 'Web Services
 INSERT INTO `pages` (`name`, `pagegroupID`)
 SELECT 'oauth', pagegroupID FROM pagegroup WHERE pagegroup = 'Web Services';
 
+INSERT INTO `module` (`ModuleID`, `Module`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`) VALUES (NULL, 'MicroBlog', '1', '1', NULL, 'img/forms/webpage.gif', '1', NULL);
+
+
 #
 # Log table to hold all OAuth request when you enabled logging
 #
@@ -206,4 +209,4 @@ ALTER TABLE  `file` ADD FOREIGN KEY (  `UserID` ) REFERENCES  `user` (
 /* Set the version table, etc */
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 
-UPDATE  `version` SET  `app_ver` =  '1.1.1', `XmdsVersion` =  '2', `DBVersion` =  '22';
+UPDATE  `version` SET  `app_ver` =  '1.1.1', `XmdsVersion` =  '1', `DBVersion` =  '22';

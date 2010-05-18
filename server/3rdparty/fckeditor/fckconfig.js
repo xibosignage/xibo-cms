@@ -94,7 +94,7 @@ FCKConfig.TemplateReplaceCheckbox = true ;
 FCKConfig.ToolbarLocation = 'In' ;
 
 FCKConfig.ToolbarSets["Default"] = [
-	['DocProps','-','NewPage','Preview','-','Templates'],
+	['DocProps','-','NewPage','Preview','-','Templates','Source'],
 	['Cut','Copy','Paste','PasteText','PasteWord','-','Print','SpellCheck'],
 	['Undo','Redo','-','Find','Replace','-','SelectAll','RemoveFormat'],
 //	['Form','Checkbox','Radio','TextField','Textarea','Select','Button','ImageButton','HiddenField'],

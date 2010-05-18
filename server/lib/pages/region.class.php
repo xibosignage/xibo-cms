@@ -412,7 +412,8 @@ class region
 		}
 		
 		// Get the old media node (the one we are to replace)
-		$oldMediaNode = $mediaNodeList->item(0);
+		if (!$oldMediaNode = $mediaNodeList->item(0))
+                    return false;
 		
 		//Get the LkId of the current record... if its not blank we want to update this link with the new id
 		$currentLkid = $oldMediaNode->getAttribute("lkid");

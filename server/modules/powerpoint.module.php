@@ -271,7 +271,7 @@ END;
 		}
 		else
 		{
-			$extraNotes = '<em>Note: Uploading a new media item here will replace it on this layout only.</em>';
+			$extraNotes = '<em>Note: As you are editing from the library uploading a new media item will not replace the old one from any layouts. To do this navigate to the layout and edit the media from there.</em>';
 
 			$save_button = <<<END
 			<input id="btnSave" type="submit" value="Save" />

@@ -182,6 +182,21 @@ class ResponseManager
 		
 		return true;
 	}
+
+        /**
+         * Responds with an Error
+         * @param <string> $message
+         * @param <bool> $keepOpen
+         * @return <type>
+         */
+        public function Error($message, $keepOpen = false)
+        {
+            $this->SetError($message);
+            $this->keepOpen = $keepOpen;
+            $this->Respond();
+
+            return false;
+        }
 	
 	/**
 	 * Outputs the Response to the browser

@@ -220,7 +220,7 @@ END;
         $user 	=& $this->user;
         $response = new ResponseManager();
 
-        $resolutionID   = Kit::GetParam('resolutionid', _GET, _INT);
+        $resolutionid   = Kit::GetParam('resolutionid', _GET, _INT);
 
         // Output the delete form
         $form = <<<END
@@ -231,6 +231,9 @@ END;
             <input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
         </form>
 END;
+
+        $response->SetFormRequestResponse($form, 'Confirm Delete', '250px', '150px');
+        $response->Respond();
     }
 
     function Add()

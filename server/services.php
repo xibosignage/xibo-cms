@@ -60,6 +60,7 @@ if (defined('XMDS') || $method != '')
 
             break;
 
+        /* DISABLED IN 1.1
         case 'oauth':
 
             Kit::ClassLoader('ServiceOAuth');
@@ -74,6 +75,7 @@ if (defined('XMDS') || $method != '')
             break;
 
         case 'rest':
+
             // OAuth authorization.
             if (OAuthRequestVerifier::requestIsSigned())
             {
@@ -146,6 +148,7 @@ if (defined('XMDS') || $method != '')
                 $serviceResponse->ErrorServerError('Unknown Method');
 
             break;
+        */
 
         default:
             $serviceResponse->ErrorServerError('Not implemented.');

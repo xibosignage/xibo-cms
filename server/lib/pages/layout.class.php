@@ -956,8 +956,17 @@ FORM;
                 // Get the file URI
                 $SQL = sprintf("SELECT StoredAs FROM media WHERE MediaID = %d", $mediaID);
 
-                if (!$bg_image = $db->GetSingleValue($SQL, 'StoredAs', _STRING))
-                    trigger_error('No media found for that media ID', E_USER_ERROR);
+                // Allow for the 0 media idea (no background image)
+                if ($mediaID == 0)
+                {
+                    $bg_image = '';
+                }
+                else
+                {
+                    // Look up the bg image from the media id given
+                    if (!$bg_image = $db->GetSingleValue($SQL, 'StoredAs', _STRING))
+                        trigger_error('No media found for that media ID', E_USER_ERROR);
+                }
 
 		// Look up the width and the height
 		$SQL = sprintf("SELECT width, height FROM resolution WHERE resolutionID = %d ", $resolutionid);
