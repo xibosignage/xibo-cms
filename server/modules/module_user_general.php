@@ -119,7 +119,6 @@
 		$_SESSION['userid']	= Kit::ValidateParam($results[0], _INT);
 		$_SESSION['username']	= Kit::ValidateParam($results[1], _USERNAME);
 		$_SESSION['usertype']	= Kit::ValidateParam($results[3], _INT);
-		$_SESSION['groupid']	= Kit::ValidateParam($results[4], _INT);
 
 		$this->usertypeid	= $_SESSION['usertype'];
 		$this->userid           = $_SESSION['userid'];

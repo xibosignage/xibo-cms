@@ -201,9 +201,9 @@ class XMDSSoap
 
         while ($row = $db->get_row($results))
         {
-            $layoutid = $row[0];
-            $layoutXml = $row[1];
-            $background = $row[2];
+            $layoutid = Kit::ValidateParam($row[0], _INT);
+            $layoutXml = Kit::ValidateParam($row[1], _HTMLSTRING);
+            $background = Kit::ValidateParam($row[2], _STRING);
 
             // Add all the associated media first
             $SQL = "SELECT storedAs, media.mediaID, media.`MD5`, media.FileSize
@@ -273,7 +273,7 @@ class XMDSSoap
 
             $file->setAttribute("type", "layout");
             $file->setAttribute("path", $layoutid);
-            $file->setAttribute("md5", md5($layoutXml . "\n"));
+            $file->setAttribute("md5", md5($layoutXml));
 
             $fileElements->appendChild($file);
         }

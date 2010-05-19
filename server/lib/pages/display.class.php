@@ -516,8 +516,8 @@ END;
 		$timeout = time() + (60*10);
 
         $SQL  = "";
-        $SQL .= "SELECT displayid FROM display ";
-        $SQL .= sprintf("WHERE lastaccessed < %d ", $timeout);
+        $SQL .= "SELECT displayid, lastaccessed FROM display ";
+        $SQL .= sprintf("WHERE lastaccessed >= %d ", $timeout);
 
         if (!$result =$db->query($SQL))
         {
@@ -527,7 +527,10 @@ END;
 
         while($row = $db->get_row($result))
         {
-            $displayid = $row[0];
+            $displayid    = $row[0];
+            $lastAccessed = $row[1];
+			
+			Debug::LogEntry($db, 'audit', sprintf('LastAccessed = %d, Timeout = %d for displayId %d', $lastAccessed, $timeout, $displayid));
 
             $SQL = "UPDATE display SET loggedin = 0 WHERE displayid = " . $displayid;
 

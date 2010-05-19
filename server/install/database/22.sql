@@ -5,6 +5,7 @@ SELECT 'oauth', pagegroupID FROM pagegroup WHERE pagegroup = 'Web Services';
 
 INSERT INTO `module` (`ModuleID`, `Module`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`) VALUES (NULL, 'MicroBlog', '1', '1', NULL, 'img/forms/webpage.gif', '1', NULL);
 
+DELETE FROM `setting` WHERE `setting` = 'NUSOAP_PATH';
 
 #
 # Log table to hold all OAuth request when you enabled logging

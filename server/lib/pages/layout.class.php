@@ -416,7 +416,7 @@ END;
 		}
 		
 		// Create an array out of the tags
-		$tagsArray = split(' ', $tags);
+		$tagsArray = explode(' ', $tags);
 		
 		// Add the tags XML to the layout
 		$layoutObject = new Layout($db);
@@ -1367,9 +1367,9 @@ END;
 		
 		//render the view pane
 		$surface = <<<HTML
-                <div id="aspectRatioOption">
+                <!--<div id="aspectRatioOption">
                     <input id="lockAspectRatio" type="checkbox" /><label for="lockAspectRatio">Lock Aspect Ratio?</label>
-                </div>
+                </div>-->
 		<div id="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; border: 1px solid #000; background:$background_css;">
 		$regionHtml
 		</div>

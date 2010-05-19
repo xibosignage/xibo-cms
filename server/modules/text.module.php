@@ -238,6 +238,8 @@ FORM;
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
 		
+		Debug::LogEntry($db, 'audit', 'Text received: ' . $_POST['ta_text'], 'text');
+		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
 		//validation
