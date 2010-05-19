@@ -317,6 +317,7 @@ END;
 		$SQL .= "       INNER JOIN lkdisplaydg ";
 		$SQL .= "       ON     lkdisplaydg.DisplayID = display.DisplayID ";
 		$SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
+		$SQL .= " ORDER BY display.Display ";
 		
 		if(!$resultIn = $db->query($SQL))
 		{
@@ -336,6 +337,7 @@ END;
 		$SQL .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
 		$SQL .= sprintf("	WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
 		$SQL .= "       )";
+		$SQL .= " ORDER BY display.Display ";
 		
 		if(!$resultOut = $db->query($SQL))
 		{
