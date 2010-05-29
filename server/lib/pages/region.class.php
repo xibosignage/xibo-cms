@@ -388,13 +388,14 @@ class region
 		$xml = new DOMDocument("1.0");
 		$xml->loadXML($this->GetLayoutXml($layoutid));
 			
-		Debug::LogEntry($db, "audit", $mediaXmlString, "region", "SwapMedia");
+		Debug::LogEntry($db, "audit", 'Media String Given: ' . $mediaXmlString, "region", "SwapMedia");
 		
 		//Get the media's Xml
 		$mediaXml = new DOMDocument("1.0");
 		
 		//Load the Media's XML into a SimpleXML object
 		$mediaXml->loadXML($mediaXmlString);
+		
 		
 		//Find the current media node
 		$xpath = new DOMXPath($xml);

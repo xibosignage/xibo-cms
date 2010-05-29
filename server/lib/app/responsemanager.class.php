@@ -245,8 +245,8 @@ class ResponseManager
 			$response['login']			= $this->login;
 
                         // Log the response if we are auditing
-                        global $db;
-                        Debug::LogEntry($db, 'audit', json_encode($response), 'Response Manager', 'Respond');
+                        //global $db;
+                        //Debug::LogEntry($db, 'audit', json_encode($response), 'Response Manager', 'Respond');
 			
 			echo json_encode($response);
 			

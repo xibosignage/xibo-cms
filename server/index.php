@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
  DEFINE('XIBO', true);
- 
+
 // Include the Program Logic
 include_once("lib/include.php");
 

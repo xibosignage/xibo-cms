@@ -122,7 +122,8 @@ $user 		= new User($db);
 $session 	= new Session($db);
 
 // OAuth
-require_once('lib/oauth.inc.php');
+// TODO: Disabled due to headers it sends causing utf8 encoding to go nuts
+//require_once('lib/oauth.inc.php');
 
 // Page variable set? Otherwise default to index
 $page 		= Kit::GetParam('p', _REQUEST, _WORD, 'index');
