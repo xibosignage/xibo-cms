@@ -81,8 +81,11 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 
 date_default_timezone_set(Config::GetSetting($db, 'defaultTimezone'));
 
+// Work out the location of this service
+$serviceLocation = Kit::GetXiboRoot();
+
 // OAuth
-require_once('lib/oauth.inc.php');
+//require_once('lib/oauth.inc.php');
 
 // Setup the translations for gettext
 TranslationEngine::InitLocale($db);

@@ -339,7 +339,7 @@ class Kit
 	 */
 	public static function GetURL($page = "")
 	{
-		$page = ValidateParam($page, _WORD);
+		$page = $this->ValidateParam($page, _WORD);
 		$fullUrl = 'http';
 		
 		if($_SERVER['HTTPS']=='on')
