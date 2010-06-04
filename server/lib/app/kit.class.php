@@ -418,23 +418,23 @@ class Kit
     {
         $request = explode('?', $_SERVER['REQUEST_URI']);
 
-		$fullUrl = 'http';
-		
-		if($_SERVER['HTTPS']=='on')
-		{
-			$fullUrl .=  's';
-		}
-		
-		$fullUrl .=  '://';
-		
-		if($_SERVER['SERVER_PORT']!='80')
-		{
-			$fullUrl .=  $_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT'];
-		}
-		else
-		{
-			$fullUrl .=  $_SERVER['SERVER_NAME'];
-		}
+        $fullUrl = 'http';
+        
+        if($_SERVER['HTTPS']=='on')
+        {
+            $fullUrl .=  's';
+        }
+
+        $fullUrl .=  '://';
+
+        if($_SERVER['SERVER_PORT']!='80')
+        {
+            $fullUrl .=  $_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT'];
+        }
+        else
+        {
+            $fullUrl .=  $_SERVER['SERVER_NAME'];
+        }
 
         return $fullUrl . $request[0];
     }
