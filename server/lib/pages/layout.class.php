@@ -646,7 +646,9 @@ END;
 			</thead>
 			<tbody>
 END;
-		
+
+                $msgCopy = __('Copy');
+
 		while($aRow = $db->get_row($results)) 
 		{
 			//get the query results
@@ -697,6 +699,7 @@ END;
 					$output .= '<td>';
 					$output .= '<button href="index.php?p=layout&modify=true&layoutid=' . $layoutid . '" onclick="window.location = $(this).attr(\'href\')"><span>Design</span></button>';
 					$output .= '<button class="XiboFormButton" href="index.php?p=layout&q=displayForm&modify=true&layoutid=' . $layoutid . '"><span>Edit</span></button>';
+					$output .= '<button class="XiboFormButton" href="index.php?p=layout&q=CopyForm&layoutid=' . $layoutid . '&oldlayout=' . $layout . '"><span>' . $msgCopy . '</span></button>';
 					$output .= '<button class="XiboFormButton" href="index.php?p=layout&q=delete_form&layoutid=' . $layoutid . '"><span>Delete</span></button>';
 					$output .= '</td>';
 				}
@@ -1841,5 +1844,41 @@ END;
 		$response->html = $return;
 		$response->Respond();
 	}
+
+    /**
+     * Copys a layout
+     */
+    public function CopyForm()
+    {
+        $db             =& $this->db;
+        $user		=& $this->user;
+        $response	= new ResponseManager();
+
+        $helpManager    = new HelpManager($db, $user);
+
+        $layoutid       = Kit::GetParam('layoutid', _REQUEST, _INT);
+        $oldLayout      = Kit::GetParam('oldlayout', _REQUEST, _STRING);
+
+        $msgName        = __('New Name');
+        $msgName2       = __('The name for the new layout');
+
+        $form = <<<END
+        <form id="LayoutCopyForm" class="XiboForm" method="post" action="index.php?p=layout&q=Copy">
+            <input type="hidden" name="layoutid" value="$layoutid">
+            <table>
+                <tr>
+                    <td><label for="layout" accesskey="n" title="$msgName2">$msgName<span class="required">*</span></label></td>
+                    <td>$nameHelp <input name="layout" class="required" type="text" id="layout" value="$oldLayout 2" tabindex="1" /></td>
+                </tr>
+            </table>
+        </form>
+END;
+
+        $response->SetFormRequestResponse($form, __('Copy a Layout.'), '350px', '275px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Copy') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Copy'), '$("#LayoutCopyForm").submit()');
+        $response->Respond();
+    }
 }
 ?>
