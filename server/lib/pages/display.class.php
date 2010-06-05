@@ -34,6 +34,7 @@ class displayDAO
 	private $licensed;
 	private $inc_schedule;
 	private $auditing;
+    private $email_alert;
 	private $ajax;
 
 	function __construct(database $db, user $user)
@@ -66,7 +67,8 @@ class displayDAO
 				display.license,
 				display.licensed,
 				display.inc_schedule,
-				display.isAuditing
+				display.isAuditing,
+                display.email_alert
 		FROM display
 		WHERE display.displayid = %d
 SQL;
@@ -90,6 +92,7 @@ SQL;
 				$this->licensed		 	= Kit::ValidateParam($row[4], _INT);
 				$this->inc_schedule 	= Kit::ValidateParam($row[5], _INT);
 				$this->auditing			= Kit::ValidateParam($row[6], _INT);
+                $this->email_alert      = Kit::ValidateParam($row[7], _INT);
 			}
 		}
 
@@ -121,6 +124,7 @@ SQL;
 		$layoutid 		= Kit::GetParam('defaultlayoutid', _POST, _INT);
 		$inc_schedule 	= Kit::GetParam('inc_schedule', _POST, _INT);
 		$auditing 		= Kit::GetParam('auditing', _POST, _INT);
+        $email_alert    = Kit::GetParam('email_alert', _POST, _INT);
 
 		// Do we take, or revoke a license
 		if (isset($_POST['takeLicense']))
@@ -140,7 +144,7 @@ SQL;
 
 		$displayObject 	= new Display($db);
 
-		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule))
+		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert))
 		{
 			trigger_error(__('Cannot Edit this Display'), E_USER_ERROR);
 		}
@@ -169,6 +173,7 @@ SQL;
 		$licensed		 	= $this->licensed;
 		$inc_schedule		= $this->inc_schedule;
 		$auditing			= $this->auditing;
+        $email_alert        = $this->email_alert;
 
 		// Help UI
 		$nameHelp		= $helpManager->HelpIcon(__("The Name of the Display - (1 - 50 characters)."), true);
@@ -176,10 +181,12 @@ SQL;
 		$interleveHelp	= $helpManager->HelpIcon(__("Whether to always put the default into the cycle."), true);
 		$licenseHelp	= $helpManager->HelpIcon(__("Control the licensing on this display."), true);
 		$auditHelp		= $helpManager->HelpIcon(__("Collect auditing from this client. Should only be used if there is a problem with the display."), true);
+        $emailHelp      = $helpManager->HelpIcon(__("Do you want to be notified by email if there is a problem with this display?"), true);
 
 		$layout_list = dropdownlist("SELECT layoutid, layout FROM layout WHERE retired = 0 ORDER by layout", "defaultlayoutid", $layoutid);
 		$inc_schedule_list = listcontent("1|Yes,0|No","inc_schedule",$inc_schedule);
 		$auditing_list = listcontent("1|Yes,0|No","auditing",$auditing);
+        $email_alert_list = listcontent("1|Yes,0|No","email_alert",$email_alert);
 
 		$license_list = "";
 
@@ -203,6 +210,7 @@ SQL;
 		$msgInterL	= __('Interleave Default');
 		$msgAudit	= __('Auditing');
 		$msgLicense	= __('License');
+        $msgAlert   = __('Email Alerts');
 
 		$form = <<<END
 		<form id="DisplayEditForm" class="XiboForm" method="post" action="index.php?p=display&q=modify&id=$displayid">
@@ -222,6 +230,10 @@ SQL;
 					<td>$msgAudit?<span class="required">*</span></td>
 					<td>$auditHelp $auditing_list</td>
 				</tr>
+                <tr>
+                    <td>$msgAlert<span class="required">*</span></td>
+                    <td>$emailHelp $email_alert_list</td>
+                </tr>
 				<tr>
 					<td>$msgLicense</td>
 					<td>$licenseHelp <input type="text" readonly value="$license"></td>
@@ -231,7 +243,7 @@ SQL;
 		</form>
 END;
 
-		$response->SetFormRequestResponse($form, __('Edit a Display'), '650px', '250px');
+		$response->SetFormRequestResponse($form, __('Edit a Display'), '650px', '300px');
                 $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Display', 'Edit') . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#DisplayEditForm").submit()');
@@ -283,6 +295,7 @@ HTML;
 				display.lastaccessed,
 				CASE WHEN display.inc_schedule = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS inc_schedule,
 				CASE WHEN display.licensed = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS licensed,
+				CASE WHEN display.email_alert = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS email_alert,
 				displaygroup.DisplayGroupID
 		FROM display
 		INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID
@@ -304,6 +317,7 @@ SQL;
 		$msgInterL	= __('Interleave Default');
 		$msgAudit	= __('Auditing');
 		$msgLicense	= __('License');
+        $msgAlert   = __('Email Alert');
 		$msgSave	= __('Save');
 		$msgCancel	= __('Cancel');
 		$msgAction	= __('Action');
@@ -323,6 +337,7 @@ SQL;
 				<th>$msgDisplay</th>
 				<th>$msgDefault</th>
 				<th>$msgInterL</th>
+                <th>$msgAlert</th>
 				<th>$msgLogIn</th>
 				<th>$msgLastA</th>
 				<th>$msgAction</th>
@@ -340,7 +355,8 @@ END;
 			$lastaccessed 	= date('Y-m-d H:i:s', $aRow[4]);
 			$inc_schedule 	= $aRow[5];
 			$licensed 		= $aRow[6];
-			$displayGroupID = $aRow[7];
+            $email_alert    = $aRow[7];
+			$displayGroupID = $aRow[8];
 
 			$output .= <<<END
 
@@ -350,6 +366,7 @@ END;
 			<td>$display</td>
 			<td>$defaultlayoutid</td>
 			<td>$inc_schedule</td>
+            <td>$email_alert</td>
 			<td>$loggedin</td>
 			<td>$lastaccessed</td>
 			<td>
