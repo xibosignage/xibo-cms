@@ -1880,5 +1880,25 @@ END;
         $response->AddButton(__('Copy'), '$("#LayoutCopyForm").submit()');
         $response->Respond();
     }
+
+    public function Copy()
+    {
+        $db             =& $this->db;
+        $user		=& $this->user;
+        $response	= new ResponseManager();
+
+        $layoutid       = Kit::GetParam('layoutid', _POST, _INT);
+        $layout         = Kit::GetParam('layout', _POST, _STRING);
+
+        Kit::ClassLoader('Layout');
+
+        $layoutObject = new Layout($db);
+
+        if (!$layoutObject->Copy($layoutid, $layout, $user->userid))
+            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Layout Copied'));
+        $response->Respond();
+    }
 }
 ?>
