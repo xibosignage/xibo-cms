@@ -161,20 +161,38 @@ class XMDSSoap
         $infinityToDT	= mktime(0,0,0,12,31,2050);
         $plus4hours 	= $currentdate + 86400;
 
-        //Add file nodes to the $fileElements
-        //Firstly get all the scheduled layouts
-        $SQL  = " SELECT DISTINCT layout.layoutID, layout.xml, layout.background ";
-        $SQL .= " FROM layout ";
-        $SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
-        $SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
-        $SQL .= " INNER JOIN display ON lkdisplaydg.DisplayID = display.displayID ";
+        $scheduleWhere = sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $plus4hours, $currentdate);
+        $scheduleWhere .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
+
+        // Add file nodes to the $fileElements
+        $SQL  = " SELECT 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, layout.xml AS `MD5`, NULL AS FileSize, layout.background ";
+        $SQL .= "   FROM layout ";
+        $SQL .= " 	INNER JOIN schedule_detail ";
+        $SQL .= " 	ON schedule_detail.layoutID = layout.layoutID ";
+        $SQL .= " 	INNER JOIN lkdisplaydg ";
+        $SQL .= "	ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
+        $SQL .= " 	INNER JOIN display ";
+        $SQL .= "	ON lkdisplaydg.DisplayID = display.displayID ";
         $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
+        $SQL .= $scheduleWhere;
+        $SQL .= " UNION ";
+        $SQL .= " SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS background ";
+        $SQL .= "   FROM media ";
+        $SQL .= " 	INNER JOIN lklayoutmedia ";
+        $SQL .= " 	ON lklayoutmedia.MediaID = media.MediaID ";
+        $SQL .= " 	INNER JOIN layout ";
+        $SQL .= " 	ON layout.LayoutID = lklayoutmedia.LayoutID";
+        $SQL .= " 	INNER JOIN schedule_detail ";
+        $SQL .= "	ON schedule_detail.layoutID = layout.layoutID ";
+        $SQL .= " 	INNER JOIN lkdisplaydg ";
+        $SQL .= "	ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
+        $SQL .= " 	INNER JOIN display ";
+        $SQL .= "	ON lkdisplaydg.DisplayID = display.displayID ";
+        $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
+        $SQL .= $scheduleWhere;
+        $SQL .= " ORDER BY RecordType";
 
-        // Include the default layout in required files AND any layouts that are scheduled
-        $SQL .= sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $plus4hours, $currentdate);
-        $SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
-
-        if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "RequiredFiles");
+        if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", $SQL, "xmds", "RequiredFiles");
 
         if (!$results = $db->query($SQL))
         {
@@ -182,102 +200,67 @@ class XMDSSoap
             return new SoapFault('Sender', 'Unable to get a list of files');
         }
 
-        // Was there anything?
-        if ($db->num_rows($results) == 0)
+        while ($row = $db->get_assoc_row($results))
         {
-            // No rows, run the query for default layout
-            $SQL  = $SQLBase;
-            $SQL .= sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $plus4hours, $currentdate);
-            $SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
+            $recordType	= Kit::ValidateParam($row['RecordType'], _WORD);
+            $path		= Kit::ValidateParam($row['path'], _STRING);
+            $id		    = Kit::ValidateParam($row['id'], _STRING);
+            $md5		= Kit::ValidateParam($row['MD5'], _HTMLSTRING);
+            $fileSize	= Kit::ValidateParam($row['FileSize'], _INT);
+            $background	= Kit::ValidateParam($row['background'], _STRING);
 
-            if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "RequiredFiles");
-
-            if (!$results = $db->query($SQL))
+            if ($recordType == 'layout')
             {
-                trigger_error($db->error());
-                return new SoapFault('Sender', 'Unable to get A list of layouts for the schedule');
+                // For layouts the MD5 column is the layout xml
+                $fileSize 	= strlen($md5);
+                $md5 		= md5($md5);
             }
-        }
-
-        while ($row = $db->get_row($results))
-        {
-            $layoutid = Kit::ValidateParam($row[0], _INT);
-            $layoutXml = Kit::ValidateParam($row[1], _HTMLSTRING);
-            $background = Kit::ValidateParam($row[2], _STRING);
-
-            // Add all the associated media first
-            $SQL = "SELECT storedAs, media.mediaID, media.`MD5`, media.FileSize
-                FROM media
-                INNER JOIN lklayoutmedia ON lklayoutmedia.mediaID = media.mediaID
-                WHERE storedAs IS NOT NULL
-                AND lklayoutmedia.layoutID = $layoutid
-                AND media.mediaID NOT IN (SELECT MediaID
-                      FROM blacklist
-                      WHERE DisplayID = " . $this->displayId . "
-                      AND isIgnored = 0 )";
-
-            if (!$mediaResults = $db->query($SQL))
+            else if ($recordType == 'media')
             {
-                trigger_error($db->error());
-                return new SoapFault('Sender', "Unable to get a list of media for the layout [$layoutid]");
-            }
-
-            while ($row = $db->get_row($mediaResults))
-            {
-                $storedAs	= Kit::ValidateParam($row[0], _STRING);
-                $mediaId	= Kit::ValidateParam($row[1], _INT);
-                $md5		= Kit::ValidateParam($row[2], _STRING);
-                $fileSize	= Kit::ValidateParam($row[3], _INT);
-
                 // If they are empty calculate them and save them back to the media.
                 if ($md5 == '' || $fileSize == 0)
                 {
-                    $md5 	= md5_file($libraryLocation.$row[0]);
-                    $fileSize	= filesize($libraryLocation.$row[0]);
+                    $md5 	= md5_file($libraryLocation.$path);
+                    $fileSize	= filesize($libraryLocation.$path);
 
                     // Update the media record with this information
-                    $SQL = sprintf("UPDATE media SET `MD5` = '%s', FileSize = %d WHERE MediaID = %d", $md5, $fileSize, $mediaId);
+                    $SQL = sprintf("UPDATE media SET `MD5` = '%s', FileSize = %d WHERE MediaID = %d", $md5, $fileSize, $id);
 
                     if (!$db->query($SQL))
-                            trigger_error($db->error());
-                }
-
-                //Add the file node
-                $file = $requiredFilesXml->createElement("file");
-
-                $file->setAttribute("type", "media");
-                $file->setAttribute("path", $storedAs);
-                $file->setAttribute("id",	$mediaId);
-                $file->setAttribute("size", $fileSize);
-                $file->setAttribute("md5", $md5);
-
-                $fileElements->appendChild($file);
+                        trigger_error($db->error());
+                    }
             }
-
-            //Also append another file node for the background image (if there is one)
-            if ($background != "")
+            else
             {
-                //firstly add this as a node
-                $file = $requiredFilesXml->createElement("file");
-
-                $file->setAttribute("type", "media");
-                $file->setAttribute("path", $background);
-                $file->setAttribute("md5", md5_file($libraryLocation.$background));
-                $file->setAttribute("size", filesize($libraryLocation.$background));
-
-                $fileElements->appendChild($file);
+                continue;
             }
 
-            // Add this layout as node
+            // Add the file node
             $file = $requiredFilesXml->createElement("file");
 
-            $file->setAttribute("type", "layout");
-            $file->setAttribute("path", $layoutid);
-            $file->setAttribute("md5", md5($layoutXml));
+            $file->setAttribute("type", $recordType);
+            $file->setAttribute("path", $path);
+            $file->setAttribute("id", $id);
+            $file->setAttribute("size", $fileSize);
+            $file->setAttribute("md5", $md5);
 
             $fileElements->appendChild($file);
-        }
 
+            // If this is a layout type and there is a background then add the background node
+            // TODO: We need to alter the layout table to have a background ID rather than a path
+            // TODO: We need to alter the background edit method to create a lklayoutmedia link for
+            // background images (and maintain it when they change)
+            if ($recordType == 'layout' && $background != '')
+            {
+                // Also append another file node for the background image (if there is one)
+                    $file = $requiredFilesXml->createElement("file");
+                    $file->setAttribute("type", "media");
+                    $file->setAttribute("path", $background);
+                    $file->setAttribute("md5", md5_file($libraryLocation.$background));
+                    $file->setAttribute("size", filesize($libraryLocation.$background));
+          	        $fileElements->appendChild($file);
+            }
+        }
         // Add a blacklist node
         $blackList = $requiredFilesXml->createElement("file");
         $blackList->setAttribute("type", "blacklist");
