@@ -281,7 +281,7 @@ HTML;
 				layout.layout,
 				CASE WHEN display.loggedin = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS loggedin,
 				display.lastaccessed,
-				CASE WHEN display.inc_schedule = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS loggedin,
+				CASE WHEN display.inc_schedule = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS inc_schedule,
 				CASE WHEN display.licensed = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS licensed,
 				displaygroup.DisplayGroupID
 		FROM display
@@ -513,11 +513,11 @@ END;
     	$db =& $this->db;
 
 		// timeout after 10 minutes
-		$timeout = time() + (60*10);
+		$timeout = time() - (60*10);
 
         $SQL  = "";
         $SQL .= "SELECT displayid, lastaccessed FROM display ";
-        $SQL .= sprintf("WHERE lastaccessed >= %d ", $timeout);
+        $SQL .= sprintf("WHERE lastaccessed < %d ", $timeout);
 
         if (!$result =$db->query($SQL))
         {
