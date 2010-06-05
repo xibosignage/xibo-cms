@@ -1846,7 +1846,7 @@ END;
 	}
 
     /**
-     * Copys a layout
+     * Copy layout form
      */
     public function CopyForm()
     {
@@ -1868,7 +1868,7 @@ END;
             <table>
                 <tr>
                     <td><label for="layout" accesskey="n" title="$msgName2">$msgName<span class="required">*</span></label></td>
-                    <td>$nameHelp <input name="layout" class="required" type="text" id="layout" value="$oldLayout 2" tabindex="1" /></td>
+                    <td><input name="layout" class="required" type="text" id="layout" value="$oldLayout 2" tabindex="1" /></td>
                 </tr>
             </table>
         </form>
@@ -1881,6 +1881,9 @@ END;
         $response->Respond();
     }
 
+    /**
+     * Copys a layout
+     */
     public function Copy()
     {
         $db             =& $this->db;

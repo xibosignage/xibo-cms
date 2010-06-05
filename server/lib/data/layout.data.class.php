@@ -211,9 +211,9 @@ class Layout extends Data
         // Need to also copy the link records from the old layout to the new one
         $SQL  = "";
         $SQL .= "INSERT INTO lklayoutmedia (mediaID, layoutID, regionID) ";
-        $SQL .= " SELECT mediaID, layoutID, regionID FROM lklayoutmedia WHERE layoutID = %d";
+        $SQL .= " SELECT mediaID, %d, regionID FROM lklayoutmedia WHERE layoutID = %d";
 
-        if (!$db->query(sprintf($SQL, $oldLayoutId)))
+        if (!$db->query(sprintf($SQL, $newLayoutId, $oldLayoutId)))
         {
             trigger_error($db->error());
             $this->SetError(25000, __('Unable to fully copy layout'));
