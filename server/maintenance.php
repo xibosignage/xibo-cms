@@ -88,18 +88,18 @@ if(Config::GetSetting($db, "debug")=="On") error_reporting(E_ALL);
 TranslationEngine::InitLocale($db);
 
 // Output HTML Headers
-print '<html>\n';
+print '<html>';
 print '  <head>';
 print '    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />';
 print '    <title>Xibo Open Source Digital Signage - Maintenance</title>';
-print '  </head>\n';
-print '<body>\n';
-print '  <!-- Copyright 2010 - Alex Harrington, part of Xibo Open Source Digital Signage -->\n';
+print '  </head>';
+print '<body>';
+print '  <!-- Copyright 2010 - Alex Harrington, part of Xibo Open Source Digital Signage -->';
 
 // Should the Scheduled Task script be running at all?
 if(Config::GetSetting($db, "MAINTENANCE_ENABLED")=="Off")
 {
-    print "<h1>" . __("Maintenance Disabled") . "</h1>\n";
+    print "<h1>" . __("Maintenance Disabled") . "</h1>";
     print __("Maintenance tasks are disabled at the moment. Please enable them in the &quot;Settings&quot; dialog.");
 }
 else
@@ -109,20 +109,102 @@ else
     flush();
     if(Config::GetSetting($db, "MAINTENANCE_EMAIL_ALERTS")=="On")
     {
+        // The time in the past that the last connection must be later than globally.
+        $globalTimeout = time() - (60 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENANCE_ALERT_TOUT"),_INT));
+        
+        // Get a list of all licensed displays
+        $SQL = "SELECT displayid, lastaccessed, email_alert, alert_timeout FROM `display` WHERE licensed = 1";
 
+        if (!$result =$db->query($SQL))
+        {
+        	trigger_error($db->error());
+        	trigger_error(__('Unable to access displays'), E_USER_ERROR);
+        }
+
+        while($row = $db->get_row($result))
+        {
+            $displayid     = $row[0];
+            $lastAccessed  = $row[1];
+            $email_alert   = $row[2];
+            $alert_timeout = $row[3];
+            $final_timeout = $globalTimeout;
+
+            // print $final_timeout . "|" . $lastAccessed;
+
+            if ($alert_timeout != 0)
+            {
+                $final_timeout = time() - (60 * Kit::ValidateParam($alert_timeout,_INT));
+            }
+
+            if (($final_timeout > $lastAccessed) || ($lastAccessed == ''))
+            {
+                // Alert
+                if ($email_alert == 1)
+                {
+                    print "A";
+                    // TODO: Actually send email!
+                }
+                else
+                {
+                    print "X";
+                }
+            }
+            else
+            {
+                print ".";
+            }
+            flush();
+        }
     }
     else
     {
-        print "-&gt;" . __("Disabled") . "<br/>\n" ;
+        print "-&gt;" . __("Disabled") . "<br/>\n";
     }
 
     // Log Tidy
     print "<h1>" . __("Tidy Logs") . "</h1>";
+    if(Config::GetSetting($db, "MAINTENANCE_LOG_MAXAGE")!=0)
+    {
+        $maxage = date("Y-m-d H:i:s",time() - 86400 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENTANCE_LOG_MAXAGE")));
+        
+        $SQL = sprintf("DELETE from `log` WHERE logdate < '%s'",$maxage);
+        if ((!$db->query($SQL)))
+        {
+            trigger_error($db->error());
+        }
+        else
+        {
+            print "Done.";
+        }
+    }
+    else
+    {
+        print "-&gt;" . __("Disabled") . "<br/>\n";
+    }
     flush();
 
     // Stats Tidy
     print "<h1>" . __("Tidy Stats") . "</h1>";
+    if(Config::GetSetting($db, "MAINTENANCE_STAT_MAXAGE")!=0)
+    {
+        $maxage = date("Y-m-d H:i:s",time() - 86400 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENTANCE_STAT_MAXAGE")));
+        
+        $SQL = sprintf("DELETE from `stat` WHERE statDate < '%s'",$maxage);
+        if ((!$db->query($SQL)))
+        {
+            trigger_error($db->error());
+        }
+        else
+        {
+            print "Done.";
+        }
+    }
+    else
+    {
+        print "-&gt;" . __("Disabled") . "<br/>\n";
+    }
     flush();
+
 }
 // Output HTML Footers
 print "\n  </body>\n";
