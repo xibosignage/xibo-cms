@@ -147,7 +147,7 @@ else
                 {
                     $subject  = sprintf("Xibo Email Alert for Display %s",$display_name);
                     $body     = sprintf("Display %s with ID %d was last seen at %s.",$display_name,$displayid,$last_seen);
-                    $headers  = sprintf("From: %s\r\nX-mailer: php", $msgFrom);
+                    $headers  = sprintf("From: %s\r\nX-Mailer: php", $msgFrom);
 
                     if (mail($msgTo, $subject, $body, $headers))
                     {
