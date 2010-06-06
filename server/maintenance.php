@@ -111,9 +111,11 @@ else
     {
         // The time in the past that the last connection must be later than globally.
         $globalTimeout = time() - (60 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENANCE_ALERT_TOUT"),_INT));
+        $msgTo         = Kit::ValidateParam(Config::GetSetting($db, "mail_to"),_PASSWORD);
+        $msgFrom       = Kit::ValidateParam(Config::GetSetting($db, "mail_from"),_PASSWORD);
         
         // Get a list of all licensed displays
-        $SQL = "SELECT displayid, lastaccessed, email_alert, alert_timeout FROM `display` WHERE licensed = 1";
+        $SQL = "SELECT `displayid`, `lastaccessed`, `email_alert`, `alert_timeout`, `display` FROM `display` WHERE licensed = 1";
 
         if (!$result =$db->query($SQL))
         {
@@ -123,17 +125,19 @@ else
 
         while($row = $db->get_row($result))
         {
-            $displayid     = $row[0];
-            $lastAccessed  = $row[1];
-            $email_alert   = $row[2];
-            $alert_timeout = $row[3];
+            $displayid     = Kit::ValidateParam($row[0],_INT);
+            $lastAccessed  = Kit::ValidateParam($row[1],_INT);
+            $email_alert   = Kit::ValidateParam($row[2],_INT);
+            $alert_timeout = Kit::ValidateParam($row[3],_INT);
+            $display_name  = Kit::ValidateParam($row[4],_STRING);
             $final_timeout = $globalTimeout;
+            $last_seen     = date("Y-m-d H:i:s", $lastAccessed);
 
             // print $final_timeout . "|" . $lastAccessed;
 
             if ($alert_timeout != 0)
             {
-                $final_timeout = time() - (60 * Kit::ValidateParam($alert_timeout,_INT));
+                $final_timeout = time() - (60 * $alert_timeout);
             }
 
             if (($final_timeout > $lastAccessed) || ($lastAccessed == ''))
@@ -141,8 +145,18 @@ else
                 // Alert
                 if ($email_alert == 1)
                 {
-                    print "A";
-                    // TODO: Actually send email!
+                    $subject  = sprintf("Xibo Email Alert for Display %s",$display_name);
+                    $body     = sprintf("Display %s with ID %d was last seen at %s.",$display_name,$displayid,$last_seen);
+                    $headers  = sprintf("From: %s\r\nX-mailer: php", $msgFrom);
+
+                    if (mail($msgTo, $subject, $body, $headers))
+                    {
+                        print "A";
+                    }
+                    else
+                    {
+                        print "E";
+                    }
                 }
                 else
                 {
