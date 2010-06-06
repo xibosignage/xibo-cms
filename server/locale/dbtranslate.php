@@ -66,6 +66,7 @@ echo __('MAINTENANCE_ENABLED');
 echo __('MAINTENANCE_EMAIL_ALERTS');
 echo __('MAINTENANCE_LOG_MAXAGE');
 echo __('MAINTENANCE_STAT_MAXAGE');
+echo __('MAINTENANCE_ALERT_TIMEOUT');
 echo __('mail_from');
 echo __('mail_to');
 

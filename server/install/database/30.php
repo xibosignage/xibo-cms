@@ -29,6 +29,10 @@ class Step30 extends UpgradeStep
         $SQL = sprintf($SQL, $this->db->escape_string($this->a[5]))
 		$this->db->query($SQL);
 
+        $SQL = "UPDATE `setting` SET `value` = '%d' WHERE `setting`.`setting` = 'MAINTENANCE_ALERT_TIMEOUT' LIMIT 1";
+        $SQL = sprintf($SQL, $this->db->escape_string($this->a[6]))
+		$this->db->query($SQL);
+
 		return true;
 	}
 
@@ -53,6 +57,9 @@ class Step30 extends UpgradeStep
         $this->q[5]['question'] = "Email address alerts should be sent from";
 		$this->q[5]['type'] = _INPUTBOX;
 		$this->q[5]['default'] = "xibo@yourdomain.com";
+        $this->q[6]['question'] = "How long in minutes after the last time a client connects should we send an alert? (Can be overridden on each display)";
+		$this->q[6]['type'] = _INPUTBOX;
+		$this->q[6]['default'] = "12";
 		return $this->q;
 	}
 
@@ -79,6 +86,8 @@ class Step30 extends UpgradeStep
                 // TODO: Teach Kit how to validate email addresses?
                 $this->a[5] = Kit::ValidateParam($response, _PASSWORD);
                 return true;
+            case 6:
+                $this->a[6] = Kit::ValidateParam($response, _INT, 12);
 		}
 
 		return false;

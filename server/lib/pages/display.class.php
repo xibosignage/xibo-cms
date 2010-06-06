@@ -35,6 +35,7 @@ class displayDAO
 	private $inc_schedule;
 	private $auditing;
     private $email_alert;
+    private $alert_timeout;
 	private $ajax;
 
 	function __construct(database $db, user $user)
@@ -68,7 +69,8 @@ class displayDAO
 				display.licensed,
 				display.inc_schedule,
 				display.isAuditing,
-                display.email_alert
+                display.email_alert,
+                display.alert_timeout
 		FROM display
 		WHERE display.displayid = %d
 SQL;
@@ -93,6 +95,7 @@ SQL;
 				$this->inc_schedule 	= Kit::ValidateParam($row[5], _INT);
 				$this->auditing			= Kit::ValidateParam($row[6], _INT);
                 $this->email_alert      = Kit::ValidateParam($row[7], _INT);
+                $this->alert_timeout    = Kit::ValidateParam($row[8], _INT);
 			}
 		}
 
@@ -125,6 +128,7 @@ SQL;
 		$inc_schedule 	= Kit::GetParam('inc_schedule', _POST, _INT);
 		$auditing 		= Kit::GetParam('auditing', _POST, _INT);
         $email_alert    = Kit::GetParam('email_alert', _POST, _INT);
+        $alert_timeout  = Kit::GetParam('alert_timeout', _POST, _INT);
 
 		// Do we take, or revoke a license
 		if (isset($_POST['takeLicense']))
@@ -144,7 +148,7 @@ SQL;
 
 		$displayObject 	= new Display($db);
 
-		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert))
+		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert, $alert_timeout))
 		{
 			trigger_error(__('Cannot Edit this Display'), E_USER_ERROR);
 		}
@@ -174,6 +178,7 @@ SQL;
 		$inc_schedule		= $this->inc_schedule;
 		$auditing			= $this->auditing;
         $email_alert        = $this->email_alert;
+        $alert_timeout      = $this->alert_timeout;
 
 		// Help UI
 		$nameHelp		= $helpManager->HelpIcon(__("The Name of the Display - (1 - 50 characters)."), true);
@@ -182,6 +187,7 @@ SQL;
 		$licenseHelp	= $helpManager->HelpIcon(__("Control the licensing on this display."), true);
 		$auditHelp		= $helpManager->HelpIcon(__("Collect auditing from this client. Should only be used if there is a problem with the display."), true);
         $emailHelp      = $helpManager->HelpIcon(__("Do you want to be notified by email if there is a problem with this display?"), true);
+        $alertHelp      = $helpManager->HelpIcon(__("How long in minutes after the display last connected to the webservice should we send an alert. Set this value higher than the collection interval on the client. Set to 0 to use global default."), true);
 
 		$layout_list = dropdownlist("SELECT layoutid, layout FROM layout WHERE retired = 0 ORDER by layout", "defaultlayoutid", $layoutid);
 		$inc_schedule_list = listcontent("1|Yes,0|No","inc_schedule",$inc_schedule);
@@ -211,6 +217,7 @@ SQL;
 		$msgAudit	= __('Auditing');
 		$msgLicense	= __('License');
         $msgAlert   = __('Email Alerts');
+        $msgTimeout = __('Alert Timeout');
 
 		$form = <<<END
 		<form id="DisplayEditForm" class="XiboForm" method="post" action="index.php?p=display&q=modify&id=$displayid">
@@ -233,6 +240,8 @@ SQL;
                 <tr>
                     <td>$msgAlert<span class="required">*</span></td>
                     <td>$emailHelp $email_alert_list</td>
+                    <td>$msgTimeout<span class="required">*</span></td>
+                    <td>$alertHelp <input name="alert_timeout" type="text" value="$alert_timeout"></td>
                 </tr>
 				<tr>
 					<td>$msgLicense</td>
