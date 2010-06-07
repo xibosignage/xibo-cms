@@ -6,31 +6,31 @@ class Step23 extends UpgradeStep
 	public function Boot()
 	{
 		$SQL = "UPDATE `setting` SET `value` = '%d' WHERE `setting`.`setting` = 'MAINTENANCE_ENABLED' LIMIT 1";
-        $SQL = sprintf($SQL, $this->db->escape_string($this->a[0]))
+        $SQL = sprintf($SQL, $this->db->escape_string($this->a[0]));
 		$this->db->query($SQL);
 
         $SQL = "UPDATE `setting` SET `value` = '%d' WHERE `setting`.`setting` = 'MAINTENANCE_LOG_MAXAGE' LIMIT 1";
-        $SQL = sprintf($SQL, $this->db->escape_string($this->a[1]))
+        $SQL = sprintf($SQL, $this->db->escape_string($this->a[1]));
 		$this->db->query($SQL);
 
         $SQL = "UPDATE `setting` SET `value` = '%d' WHERE `setting`.`setting` = 'MAINTENANCE_STAT_MAXAGE' LIMIT 1";
-        $SQL = sprintf($SQL, $this->db->escape_string($this->a[2]))
+        $SQL = sprintf($SQL, $this->db->escape_string($this->a[2]));
 		$this->db->query($SQL);
 
         $SQL = "UPDATE `setting` SET `value` = '%d' WHERE `setting`.`setting` = 'MAINTENANCE_EMAIL_ALERTS' LIMIT 1";
-        $SQL = sprintf($SQL, $this->db->escape_string($this->a[3]))
+        $SQL = sprintf($SQL, $this->db->escape_string($this->a[3]));
 		$this->db->query($SQL);
 
         $SQL = "UPDATE `setting` SET `value` = '%s' WHERE `setting`.`setting` = 'mail_to' LIMIT 1";
-        $SQL = sprintf($SQL, $this->db->escape_string($this->a[4]))
+        $SQL = sprintf($SQL, $this->db->escape_string($this->a[4]));
 		$this->db->query($SQL);
 
         $SQL = "UPDATE `setting` SET `value` = '%s' WHERE `setting`.`setting` = 'mail_from' LIMIT 1";
-        $SQL = sprintf($SQL, $this->db->escape_string($this->a[5]))
+        $SQL = sprintf($SQL, $this->db->escape_string($this->a[5]));
 		$this->db->query($SQL);
 
-        $SQL = "UPDATE `setting` SET `value` = '%d' WHERE `setting`.`setting` = 'MAINTENANCE_ALERT_TIMEOUT' LIMIT 1";
-        $SQL = sprintf($SQL, $this->db->escape_string($this->a[6]))
+        $SQL = "UPDATE `setting` SET `value` = '%d' WHERE `setting`.`setting` = 'MAINTENANCE_ALERT_TOUT' LIMIT 1";
+        $SQL = sprintf($SQL, $this->db->escape_string($this->a[6]));
 		$this->db->query($SQL);
 
 		return true;
@@ -91,6 +91,7 @@ class Step23 extends UpgradeStep
                 return true;
             case 6:
                 $this->a[6] = Kit::ValidateParam($response, _INT, 12);
+                return true;
 		}
 
 		return false;
