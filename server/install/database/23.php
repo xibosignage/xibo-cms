@@ -1,6 +1,6 @@
 <?php
 
-class Step30 extends UpgradeStep
+class Step23 extends UpgradeStep
 {
 
 	public function Boot()
@@ -39,7 +39,7 @@ class Step30 extends UpgradeStep
 	public function Questions()
 	{
         // TODO: Fix the "more info" URL to a page in the wiki
-		$this->q[0]['question'] = "Allow the periodic maintenance and alerts script to run if called. See <a href=\"http://wiki.xibo.org.uk/wiki/somepage\">here</a> for more information.";
+		$this->q[0]['question'] = "Allow the periodic maintenance and alerts script to run if called. See <a href=\"http://wiki.xibo.org.uk/wiki/Manual:Admin:Settings_Help#Maintenance\">here</a> for more information.";
 		$this->q[0]['type'] = _CHECKBOX;
 		$this->q[0]['default'] = true;
         $this->q[1]['question'] = "How long in days should we keep log data for? 0 keeps logs indefinitely. (Requires maintenance script to be run to work)";
@@ -68,6 +68,9 @@ class Step30 extends UpgradeStep
 		switch ($questionNumber) {
 			case 0:
 				$this->a[0] = Kit::ValidateParam($response, _BOOL);
+                if ($this->a[0]) {
+                    $this->a[0] = "Protected";
+                }
 				return true;
             case 1:
                 $this->a[1] = Kit::ValidateParam($response, _INT, 30);
