@@ -532,5 +532,33 @@ END;
 		$response->SetFormSubmitResponse(__('Server switched to Test Mode'));
 		$response->Respond();
 	}
+
+	public function send_email()
+	{
+		$db				=& $this->db;
+		$response		= new ResponseManager();
+        $mail_to        = Kit::ValidateParam(Config::GetSetting($db, "mail_to"),_PASSWORD);
+        $mail_from      = Kit::ValidateParam(Config::GetSetting($db, "mail_from"),_PASSWORD);
+        $subject        = __('Email Test');
+        $body           = __('Test email sent from Xibo');
+        $headers        = sprintf("From: %s",$mail_from);
+				
+		$output  = '<h3>' . __('Email Test') . '</h3>';
+        $output  .= sprintf(__('Sending test email to %s.'),$mail_to);
+        $output  .= "<br/>";
+        
+        if(mail($mail_to, $subject, $body, $headers))
+        {
+            $output .= __("Mail sent OK");
+        }
+        else
+        {
+            $output .= __("Mail sending FAILED");
+        }
+	
+		$response->SetFormRequestResponse($output, __('Email Test'), '480px', '240px');
+		$response->Respond();
+	}
+
 }
 ?>
