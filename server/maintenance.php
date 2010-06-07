@@ -163,8 +163,8 @@ else
                     // Alert
                     if ($email_alert == 1)
                     {
-                        $subject  = sprintf("Xibo Email Alert for Display %s",$display_name);
-                        $body     = sprintf("Display %s with ID %d was last seen at %s.",$display_name,$displayid,$last_seen);
+                        $subject  = sprintf(__("Xibo Email Alert for Display %s"),$display_name);
+                        $body     = sprintf(__("Display %s with ID %d was last seen at %s."),$display_name,$displayid,$last_seen);
                         $headers  = sprintf("From: %s\r\nX-Mailer: php", $msgFrom);
 
                         if (mail($msgTo, $subject, $body, $headers))
@@ -206,7 +206,7 @@ else
             }
             else
             {
-                print "Done.";
+                print __("Done.");
             }
         }
         else
@@ -228,7 +228,7 @@ else
             }
             else
             {
-                print "Done.";
+                print __("Done.");
             }
         }
         else
@@ -239,7 +239,7 @@ else
     }
     else
     {
-        print "Maintenance key invalid";
+        print __("Maintenance key invalid.");
     }
 }
 // Output HTML Footers
