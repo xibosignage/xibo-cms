@@ -373,7 +373,7 @@ END;
 			$clientAddress  = Kit::ValidateParam($aRow[9], _STRING);
 
                         // Do we want to make a VNC link out of the display name?
-                        if (Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK'))
+                        if (Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK') == 'On' && $clientAddress != '')
                         {
                             $display = '<a href="vnc://' . $clientAddress . '" title="VNC to ' . $display . '">' . $display . '</a>';
                         }

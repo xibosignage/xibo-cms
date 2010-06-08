@@ -22,7 +22,7 @@ ALTER TABLE  `display` ADD  `ClientAddress` VARCHAR( 100 ) NULL;
 
 /* Add a setting to turn the display name into a VNC link */
 INSERT INTO `setting` (`setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES
-  ('SHOW_DISPLAY_AS_VNCLINK', 'Off', 'dropdown', 'Turn the display name in display management into a VNC link using the IP address last collected','On|Off','maintenance','1');
+  ('SHOW_DISPLAY_AS_VNCLINK', 'Off', 'dropdown', 'Turn the display name in display management into a VNC link using the IP address last collected','On|Off','general','1');
 
 
 /* VERSION UPDATE */
