@@ -371,6 +371,7 @@ END;
                         $email_alert    = $aRow[7];
 			$displayGroupID = $aRow[8];
 			$clientAddress  = Kit::ValidateParam($aRow[9], _STRING);
+                        $displayName    = $display;
 
                         // Do we want to make a VNC link out of the display name?
                         if (Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK') == 'On' && $clientAddress != '')
@@ -393,7 +394,7 @@ END;
 			<td>
 				<button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>$msgEdit</span></button>
 				<button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
-				<button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$display"><span>$msgGroupSecurity</span></button>
+				<button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$displayName"><span>$msgGroupSecurity</span></button>
 			</td>
 END;
 		}
