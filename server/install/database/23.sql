@@ -17,6 +17,14 @@ UPDATE `setting` SET `value` = 'admin@yoursite.com' WHERE `setting` = 'mail_to' 
 ALTER TABLE `display` ADD `email_alert` TINYINT(1) NOT NULL DEFAULT '1';
 ALTER TABLE `display` ADD `alert_timeout` INT NOT NULL DEFAULT '0';
 
+/* Add column for client IP to the display table */
+ALTER TABLE  `display` ADD  `ClientAddress` VARCHAR( 100 ) NULL;
+
+/* Add a setting to turn the display name into a VNC link */
+INSERT INTO `setting` (`setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES
+  ('SHOW_DISPLAY_AS_VNCLINK', 'Off', 'dropdown', 'Turn the display name in display management into a VNC link using the IP address last collected','On|Off','maintenance','1');
+
+
 /* VERSION UPDATE */
 /* Set the version table, etc */
 UPDATE `version` SET `app_ver` = '1.2.0-rc1';

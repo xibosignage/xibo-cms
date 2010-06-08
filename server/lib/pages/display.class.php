@@ -62,17 +62,18 @@ class displayDAO
 			}
 
 			$SQL = <<<SQL
-		SELECT  display.displayid,
-				display.display,
-				display.defaultlayoutid,
-				display.license,
-				display.licensed,
-				display.inc_schedule,
-				display.isAuditing,
-                display.email_alert,
-                display.alert_timeout
-		FROM display
-		WHERE display.displayid = %d
+    SELECT display.displayid,
+            display.display,
+            display.defaultlayoutid,
+            display.license,
+            display.licensed,
+            display.inc_schedule,
+            display.isAuditing,
+            display.email_alert,
+            display.alert_timeout,
+            display.ClientAddress
+     FROM display
+    WHERE display.displayid = %d
 SQL;
 
 			$SQL = sprintf($SQL, $displayid);
@@ -297,20 +298,21 @@ HTML;
 
 		//display the display table
 		$SQL = <<<SQL
-		SELECT  display.displayid,
-				display.display,
-				layout.layout,
-				CASE WHEN display.loggedin = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS loggedin,
-				display.lastaccessed,
-				CASE WHEN display.inc_schedule = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS inc_schedule,
-				CASE WHEN display.licensed = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS licensed,
-				CASE WHEN display.email_alert = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS email_alert,
-				displaygroup.DisplayGroupID
-		FROM display
-		INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID
-		INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
-		LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid
-		WHERE displaygroup.IsDisplaySpecific = 1
+		SELECT display.displayid,
+                        display.display,
+                        layout.layout,
+                        CASE WHEN display.loggedin = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS loggedin,
+                        display.lastaccessed,
+                        CASE WHEN display.inc_schedule = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS inc_schedule,
+                        CASE WHEN display.licensed = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS licensed,
+                        CASE WHEN display.email_alert = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS email_alert,
+                        displaygroup.DisplayGroupID,
+                        display.ClientAddress
+		  FROM display
+                    INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID
+                    INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
+                    LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid
+		 WHERE displaygroup.IsDisplaySpecific = 1
 		ORDER BY display.displayid
 SQL;
 
@@ -326,7 +328,7 @@ SQL;
 		$msgInterL	= __('Interleave Default');
 		$msgAudit	= __('Auditing');
 		$msgLicense	= __('License');
-        $msgAlert   = __('Email Alert');
+                $msgAlert       = __('Email Alert');
 		$msgSave	= __('Save');
 		$msgCancel	= __('Cancel');
 		$msgAction	= __('Action');
@@ -334,38 +336,47 @@ SQL;
 		$msgLogIn	= __('Logged In');
 		$msgEdit	= __('Edit');
 		$msgDelete	= __('Delete');
-		$msgGroupSecurity	= __('Group Security');
+		$msgGroupSecurity = __('Group Security');
+                $msgClientAddress = __('IP Address');
 
 		$output = <<<END
 		<div class="info_table">
 		<table style="width:100%">
-			<thead>
-			<tr>
-				<th>$msgDisplay ID</th>
-				<th>$msgLicense</th>
-				<th>$msgDisplay</th>
-				<th>$msgDefault</th>
-				<th>$msgInterL</th>
-                <th>$msgAlert</th>
-				<th>$msgLogIn</th>
-				<th>$msgLastA</th>
-				<th>$msgAction</th>
-			</tr>
-			</thead>
-			<tbody>
+                    <thead>
+                    <tr>
+                        <th>$msgDisplay ID</th>
+                        <th>$msgLicense</th>
+                        <th>$msgDisplay</th>
+                        <th>$msgDefault</th>
+                        <th>$msgInterL</th>
+                        <th>$msgAlert</th>
+                        <th>$msgLogIn</th>
+                        <th>$msgLastA</th>
+                        <th>$msgClientAddress</th>
+                        <th>$msgAction</th>
+                    </tr>
+                    </thead>
+                    <tbody>
 END;
 
 		while($aRow = $db->get_row($results))
 		{
-			$displayid 		= $aRow[0];
-			$display 		= $aRow[1];
+			$displayid 	= $aRow[0];
+			$display 	= $aRow[1];
 			$defaultlayoutid = $aRow[2];
-			$loggedin 		= $aRow[3];
+			$loggedin 	= $aRow[3];
 			$lastaccessed 	= date('Y-m-d H:i:s', $aRow[4]);
 			$inc_schedule 	= $aRow[5];
-			$licensed 		= $aRow[6];
-            $email_alert    = $aRow[7];
+			$licensed 	= $aRow[6];
+                        $email_alert    = $aRow[7];
 			$displayGroupID = $aRow[8];
+			$clientAddress  = Kit::ValidateParam($aRow[9], _STRING);
+
+                        // Do we want to make a VNC link out of the display name?
+                        if (Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK'))
+                        {
+                            $display = '<a href="vnc://' . $clientAddress . '" title="VNC to ' . $display . '">' . $display . '</a>';
+                        }
 
 			$output .= <<<END
 
@@ -375,9 +386,10 @@ END;
 			<td>$display</td>
 			<td>$defaultlayoutid</td>
 			<td>$inc_schedule</td>
-            <td>$email_alert</td>
+                        <td>$email_alert</td>
 			<td>$loggedin</td>
 			<td>$lastaccessed</td>
+			<td>$clientAddress</td>
 			<td>
 				<button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>$msgEdit</span></button>
 				<button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
