@@ -55,7 +55,9 @@ class Display extends Data
 		$SQL .= "              defaultlayoutid, ";
 		$SQL .= "              license        , ";
 		$SQL .= "              licensed       , ";
-		$SQL .= "              inc_schedule ";
+		$SQL .= "              inc_schedule   , ";
+        $SQL .= "              email_alert    , ";
+        $SQL .= "              alert_timeout    ";
 		$SQL .= "       ) ";
 		$SQL .= "       VALUES ";
 		$SQL .= "       ( ";
@@ -64,7 +66,9 @@ class Display extends Data
 		$SQL .= "              1   , ";
 		$SQL .= sprintf("      '%s', ", $license);
 		$SQL .= "              0   , ";
-		$SQL .= "              0 ";
+		$SQL .= "              0   , ";
+        $SQL .= "              1   , ";
+        $SQL .= "              0 ";
 		$SQL .= "       )";
 		
 		if (!$displayID = $db->insert_query($SQL)) 
@@ -115,7 +119,7 @@ class Display extends Data
 	 * @param $licensed Object
 	 * @param $incSchedule Object
 	 */
-	public function Edit($displayID, $display, $isAuditing, $defaultLayoutID, $licensed, $incSchedule)
+	public function Edit($displayID, $display, $isAuditing, $defaultLayoutID, $licensed, $incSchedule, $email_alert, $alert_timeout)
 	{
 		$db	=& $this->db;
 		
@@ -126,10 +130,12 @@ class Display extends Data
 		$SQL .= "		defaultlayoutid = %d, ";
 		$SQL .= "		inc_schedule = %d, ";
 		$SQL .= " 		licensed = %d, ";
-		$SQL .= "		isAuditing = %d ";
+		$SQL .= "		isAuditing = %d, ";
+        $SQL .= "       email_alert = %d, ";
+        $SQL .= "       alert_timeout = %d ";
 		$SQL .= "WHERE displayid = %d ";
 		
-		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $displayID);
+		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $email_alert, $alert_timeout, $displayID);
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 		

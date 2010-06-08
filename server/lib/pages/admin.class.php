@@ -280,7 +280,7 @@ END;
 				$msgTestEmail = __('Test Email');
 				//show another form here, for test
 				$output .= <<<END
-				<a id="test_email" href="index.php?p=admin&q=send_email">$msgTestEmail</a>
+				<a id="test_email" href="index.php?p=admin&q=SendEmail" class="XiboFormButton">$msgTestEmail</a>
 END;
 			}
 		}	
@@ -531,6 +531,34 @@ END;
 		
 		$response->SetFormSubmitResponse(__('Server switched to Test Mode'));
 		$response->Respond();
-	}
+    }
+
+    public function SendEmail()
+    {
+        $db				=& $this->db;
+        $response		= new ResponseManager();
+        $mail_to        = Kit::ValidateParam(Config::GetSetting($db, "mail_to"),_PASSWORD);
+        $mail_from      = Kit::ValidateParam(Config::GetSetting($db, "mail_from"),_PASSWORD);
+        $subject        = __('Email Test');
+        $body           = __('Test email sent from Xibo');
+        $headers        = sprintf("From: %s",$mail_from);
+        		
+        $output  = sprintf(__('Sending test email to %s.'),$mail_to);
+        $output  .= "<br/><br/>";
+        
+        if(mail($mail_to, $subject, $body, $headers))
+        {
+            $output .= __("Mail sent OK");
+        }
+        else
+        {
+            $output .= __("Mail sending FAILED");
+        }
+	
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->SetFormRequestResponse($output, __('Email Test'), '280px', '140px');
+        $response->Respond();
+    }
+
 }
 ?>

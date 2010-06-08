@@ -61,7 +61,14 @@ echo __('audit');
 echo __('SERVER_MODE');
 echo __('SERVER_KEY');
 echo __('PHONE_HOME');
-echo __('NUSOAP_PATH');
 echo __('LIBRARY_LOCATION');
+echo __('MAINTENANCE_ENABLED');
+echo __('MAINTENANCE_EMAIL_ALERTS');
+echo __('MAINTENANCE_LOG_MAXAGE');
+echo __('MAINTENANCE_STAT_MAXAGE');
+echo __('MAINTENANCE_ALERT_TOUT');
+echo __('MAINTENANCE_KEY');
+echo __('mail_from');
+echo __('mail_to');
 
 ?>
