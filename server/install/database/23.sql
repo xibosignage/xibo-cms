@@ -21,8 +21,8 @@ ALTER TABLE `display` ADD `alert_timeout` INT NOT NULL DEFAULT '0';
 ALTER TABLE  `display` ADD  `ClientAddress` VARCHAR( 100 ) NULL;
 
 /* Add a setting to turn the display name into a VNC link */
-INSERT INTO `setting` (`setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES
-  ('SHOW_DISPLAY_AS_VNCLINK', 'Off', 'dropdown', 'Turn the display name in display management into a VNC link using the IP address last collected','On|Off','general','1');
+INSERT INTO `setting` (`setting`, `value`, `type`, `helptext`, `cat`, `userChange`) VALUES
+  ('SHOW_DISPLAY_AS_VNCLINK', '', 'text', 'Turn the display name in display management into a VNC link using the IP address last collected. The %s is replaced with the IP address. Leave blank to disable.','general','1');
 
 
 /* VERSION UPDATE */

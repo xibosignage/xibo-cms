@@ -374,9 +374,11 @@ END;
                         $displayName    = $display;
 
                         // Do we want to make a VNC link out of the display name?
-                        if (Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK') == 'On' && $clientAddress != '')
+                        $vncTemplate = Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK');
+
+                        if ($vncTemplate != '' && $clientAddress != '')
                         {
-                            $display = '<a href="vnc://' . $clientAddress . '" title="VNC to ' . $display . '">' . $display . '</a>';
+                            $display = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $display . '">' . $display . '</a>', $clientAddress);
                         }
 
 			$output .= <<<END
