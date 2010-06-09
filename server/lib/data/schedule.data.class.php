@@ -109,7 +109,7 @@ class Schedule extends Data
 			Debug::LogEntry($db, 'audit', 'Success Calling AddDetail for new Schedule record', 'Schedule', 'Add');
 			
 			// Is there any recurrance to take care of?
-			if ($recType != '') 
+			if ($recType != '' && $recType != 'null')
 			{
 				// Set the temp starts
 				$t_start_temp 	= $fromDT;

@@ -1071,7 +1071,6 @@ HTML;
 		
 		$date			= Kit::GetParam('date', _GET, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
 		$dateText		= date("d/m/Y", $date);
-		$hiddenDateText		= date("m/d/Y", $date);
 		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
 		
 		// need to do some user checking here
@@ -1086,9 +1085,6 @@ HTML;
 		
 		$form 		= <<<END
 			<form id="AddEventForm" class="XiboForm" action="index.php?p=schedule&q=AddEvent" method="post">
-				<input type="hidden" id="fromdt" name="fromdt" value="$hiddenDateText" />
-				<input type="hidden" id="todt" name="todt" value="" />
-				<input type="hidden" id="rectodt" name="rectodt" value="" />
 				<table style="width:100%;">
 					<tr>
 						<td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
@@ -1207,29 +1203,25 @@ END;
 		
 		$row 				= $db->get_assoc_row($result);
 		
-		$eventID			= Kit::ValidateParam($row['EventID'], _INT);
-		$fromDT				= Kit::ValidateParam($row['FromDT'], _INT);
-		$toDT				= Kit::ValidateParam($row['ToDT'], _INT);
+		$eventID	= Kit::ValidateParam($row['EventID'], _INT);
+		$fromDT		= Kit::ValidateParam($row['FromDT'], _INT);
+		$toDT		= Kit::ValidateParam($row['ToDT'], _INT);
 		$displayGroupIDs	= Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
-		$recType			= Kit::ValidateParam($row['recurrence_type'], _STRING);
-		$recDetail			= Kit::ValidateParam($row['recurrence_detail'], _STRING);
-		$recToDT			= Kit::ValidateParam($row['recurrence_range'], _STRING);
+		$recType	= Kit::ValidateParam($row['recurrence_type'], _STRING);
+		$recDetail	= Kit::ValidateParam($row['recurrence_detail'], _STRING);
+		$recToDT	= Kit::ValidateParam($row['recurrence_range'], _STRING);
 		$displayGroupIDs 	= explode(',', $displayGroupIDs);
-		$layoutID			= Kit::ValidateParam($row['LayoutID'], _STRING);
+		$layoutID	= Kit::ValidateParam($row['LayoutID'], _STRING);
 		
-		$fromDtText			= date("d/m/Y", $fromDT);
-		$fromDtTextUS		= date("m/d/Y", $fromDT);
-		$fromTimeText		= date("H:i", $fromDT);
-		$toDtText			= date("d/m/Y", $toDT);
-		$toDtTextUS			= date("m/d/Y", $toDT);
-		$toTimeText			= date("H:i", $toDT);
-		$recToDtText		= '';
-		$recToDtTextUS		= '';
+		$fromDtText	= date("d/m/Y", $fromDT);
+		$fromTimeText	= date("H:i", $fromDT);
+		$toDtText	= date("d/m/Y", $toDT);
+		$toTimeText	= date("H:i", $toDT);
+		$recToDtText	= '';
 		
 		if ($recType != '')
 		{
 			$recToDtText		= date("d/m/Y", $recToDT);
-			$recToDtTextUS		= date("m/d/Y", $recToDT);
 		}
 		
 		// Check that we have permission to edit this event.
@@ -1253,9 +1245,6 @@ END;
 			<form id="EditEventForm" class="XiboForm" action="index.php?p=schedule&q=EditEvent" method="post">
 				<input type="hidden" id="EventID" name="EventID" value="$eventID" />
 				<input type="hidden" id="EventDetailID" name="EventDetailID" value="$eventDetailID" />
-				<input type="hidden" id="fromdt" name="fromdt" value="$fromDtTextUS" />
-				<input type="hidden" id="todt" name="todt" value="$toDtTextUS" />
-				<input type="hidden" id="rectodt" name="rectodt" value="$recToDtTextUS" />
 				<table style="width:100%;">
 					<tr>
 						<td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
@@ -1333,24 +1322,24 @@ END;
 	 */
 	public function AddEvent() 
 	{
-		$db 				=& $this->db;
-		$user				=& $this->user;
-		$response			= new ResponseManager();
-		$datemanager		= new DateManager($db);
+		$db                 =& $this->db;
+		$user               =& $this->user;
+		$response           = new ResponseManager();
+		$datemanager        = new DateManager($db);
 
-		$layoutid			= Kit::GetParam('layoutid', _POST, _INT, 0);
-		$fromDT				= Kit::GetParam('fromdt', _POST, _STRING);
-		$toDT				= Kit::GetParam('todt', _POST, _STRING);
-		$fromTime			= Kit::GetParam('sTime', _POST, _STRING, '00:00');
-		$toTime				= Kit::GetParam('eTime', _POST, _STRING, '00:00');
-		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
-		$isPriority			= Kit::GetParam('is_priority', _POST, _CHECKBOX);
+		$layoutid           = Kit::GetParam('layoutid', _POST, _INT, 0);
+		$fromDT             = Kit::GetParam('starttime', _POST, _STRING);
+		$toDT               = Kit::GetParam('endtime', _POST, _STRING);
+		$fromTime           = Kit::GetParam('sTime', _POST, _STRING, '00:00');
+		$toTime             = Kit::GetParam('eTime', _POST, _STRING, '00:00');
+		$displayGroupIDs    = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
+		$isPriority         = Kit::GetParam('is_priority', _POST, _CHECKBOX);
 
-		$rec_type			= Kit::GetParam('rec_type', _POST, _STRING);
-		$rec_detail			= Kit::GetParam('rec_detail', _POST, _INT);
-		$recToDT			= Kit::GetParam('rectodt', _POST, _STRING);
+		$rec_type           = Kit::GetParam('rec_type', _POST, _STRING);
+		$rec_detail         = Kit::GetParam('rec_detail', _POST, _INT);
+		$recToDT            = Kit::GetParam('rec_range', _POST, _STRING);
 		
-		$userid 			= Kit::GetParam('userid', _SESSION, _INT);
+		$userid             = Kit::GetParam('userid', _SESSION, _INT);
 		
 		Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
 		Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
@@ -1361,9 +1350,9 @@ END;
 			trigger_error(__('Times must be in the format 00:00'), E_USER_ERROR);
 		}
 		
-		$fromDT				= (int) strtotime($fromDT . ' ' . $fromTime);
-		$toDT				= (int) strtotime($toDT . ' ' . $toTime);
-		$recToDT			= (int) strtotime($recToDT);
+		$fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
+		$toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
+		$recToDT    = $datemanager->GetDateFromUS($recToDT, '');
 		
 		// Validate layout
 		if ($layoutid == 0) 
@@ -1414,8 +1403,8 @@ END;
 		$eventID			= Kit::GetParam('EventID', _POST, _INT, 0);
 		$eventDetailID		= Kit::GetParam('EventDetailID', _POST, _INT, 0);
 		$layoutid			= Kit::GetParam('layoutid', _POST, _INT, 0);
-		$fromDT				= Kit::GetParam('fromdt', _POST, _STRING);
-		$toDT				= Kit::GetParam('todt', _POST, _STRING);
+		$fromDT				= Kit::GetParam('starttime', _POST, _STRING);
+		$toDT				= Kit::GetParam('endtime', _POST, _STRING);
 		$fromTime			= Kit::GetParam('sTime', _POST, _STRING, '00:00');
 		$toTime				= Kit::GetParam('eTime', _POST, _STRING, '00:00');
 		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
@@ -1423,7 +1412,7 @@ END;
 
 		$rec_type			= Kit::GetParam('rec_type', _POST, _STRING);
 		$rec_detail			= Kit::GetParam('rec_detail', _POST, _INT);
-		$recToDT			= Kit::GetParam('rectodt', _POST, _STRING);
+		$recToDT			= Kit::GetParam('rec_range', _POST, _STRING);
 		
 		$userid 			= Kit::GetParam('userid', _SESSION, _INT);
 		
@@ -1438,9 +1427,9 @@ END;
 			trigger_error(__('Times must be in the format 00:00'), E_USER_ERROR);
 		}
 		
-		$fromDT				= (int) strtotime($fromDT . ' ' . $fromTime);
-		$toDT				= (int) strtotime($toDT . ' ' . $toTime);
-		$recToDT			= (int) strtotime($recToDT);
+		$fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
+		$toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
+		$recToDT    = $datemanager->GetDateFromUS($recToDT, '');
 		
 		// Validate layout
 		if ($layoutid == 0) 

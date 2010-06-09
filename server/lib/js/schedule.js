@@ -21,8 +21,8 @@
 $(document).ready(function() {
 	// Store the default view for first load
 	$('#Calendar').data('view', 'month');
-	
-	//CallGenerateCalendar();
+
+        // The Calendar will be generated when the display list is loaded
 	
 	// Navigational Calendar
 	$('#NavCalendar').datepicker({
@@ -95,6 +95,8 @@ function DisplayListRender() {
 	$('#DisplayList input[type=checkbox]').click(function(){
 		CallGenerateCalendar();
 	});
+
+        CallGenerateCalendar();
 }
 
 /**
@@ -103,23 +105,9 @@ function DisplayListRender() {
 function setupScheduleForm() {
     //set up any date fields we have with the date picker
     $('.date-pick').datepicker({
-		dateFormat: "dd/mm/yy",
-		beforeShow: customRange,
-		onSelect: function(dateText, datePicker) {
-			var date 			= $.datepicker.parseDate('dd/mm/yy', dateText);
-			var formattedDate 	= $.datepicker.formatDate('mm/dd/yy', date);
-			
-			if (this.id == 'starttime') {
-				$('#fromdt').attr('value', formattedDate);
-			}
-			else if (this.id == 'endtime') {
-				$('#todt').attr('value', formattedDate);				
-			}
-			else if (this.id == 'rec_range') {
-				$('#rectodt').attr('value', formattedDate);				
-			}
-		}
-	});
+        dateFormat: "dd/mm/yy",
+        beforeShow: customRange
+    });
 
 	bindRecurrenceCtl();
 	
