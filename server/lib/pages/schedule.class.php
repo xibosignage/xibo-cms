@@ -767,14 +767,14 @@ class scheduleDAO
             $SQL.= "SELECT schedule_detail.schedule_detailID, ";
             $SQL.= "       schedule_detail.FromDT, ";
             $SQL.= "       schedule_detail.ToDT,";
-            $SQL.= "       GREATEST(schedule_detail.FromDT, $fromDt) AS AdjustedFromDT,";
-            $SQL.= "       LEAST(schedule_detail.ToDT, $toDt) AS AdjustedToDT,";
+            $SQL.= "       LEAST(schedule_detail.FromDT, $fromDt) AS AdjustedFromDT,";
+            $SQL.= "       GREATEST(schedule_detail.ToDT, $toDt) AS AdjustedToDT,";
             $SQL.= "       layout.layout, ";
             $SQL.= "       schedule_detail.userid, ";
             $SQL.= "       schedule_detail.is_priority, ";
             $SQL.= "       schedule_detail.EventID, ";
             $SQL.= "       schedule_detail.ToDT - schedule_detail.FromDT AS duration, ";
-            $SQL.= "       (LEAST(schedule_detail.ToDT, $toDt)) - (GREATEST(schedule_detail.FromDT, $fromDt)) AS AdjustedDuration, ";
+            $SQL.= "       (GREATEST(schedule_detail.ToDT, $toDt)) - (LEAST(schedule_detail.FromDT, $fromDt)) AS AdjustedDuration, ";
             $SQL.= "       displaygroup.DisplayGroup, ";
             $SQL.= "       displaygroup.DisplayGroupID, ";
 	    $SQL.= "       schedule.DisplayGroupIDs ";
