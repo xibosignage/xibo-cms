@@ -895,7 +895,8 @@ END;
             $listOut 	.= '</ul>';
 
             // Build the final form.
-            $form = '<div class="connectedlist"><h3>Members</h3>' . $listIn . '</div><div class="connectedlist"><h3>Non-members</h3>' . $listOut . '</div>';
+            $helpText   = '<center>' . __('Drag or double click to move items between lists') . '</center>';
+            $form       = $helpText . '<div class="connectedlist"><h3>Members</h3>' . $listIn . '</div><div class="connectedlist"><h3>Non-members</h3>' . $listOut . '</div>';
 
             $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
             $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Users&Category=Groups')");

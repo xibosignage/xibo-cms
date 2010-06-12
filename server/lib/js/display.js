@@ -23,6 +23,8 @@ function GroupSecurityCallBack()
 		connectWith: '.connectedSortable',
 		dropOnEmpty: true
 	}).disableSelection();
+
+        $(".li-sortable", "#div_dialog").dblclick(switchLists);
 }
 
 function GroupSecuritySubmit() {

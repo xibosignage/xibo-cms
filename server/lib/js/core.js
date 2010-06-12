@@ -733,3 +733,14 @@ function ToggleFilterView(div)
 
     return false;
 }
+
+/**
+ * Switches an item between 2 connected lists.
+ */
+function switchLists(e) {
+   // determine which list they are in
+   // http://www.remotesynthesis.com/post.cfm/working-with-related-sortable-lists-in-jquery-ui
+   var otherList = $($(e.currentTarget).parent().sortable("option","connectWith")).not($(e.currentTarget).parent());
+
+   otherList.append(e.currentTarget);
+}

@@ -54,6 +54,7 @@ class XMDSSoap
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
 	$displayName 	= Kit::ValidateParam($displayName, _STRING);
 	$version 	= Kit::ValidateParam($version, _STRING);
+        $clientAddress  = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
 
 	// Make sure we are talking the same language
 	if (!$this->CheckVersion($version))
@@ -99,6 +100,10 @@ class XMDSSoap
             // We have seen this display before, so check the licensed value
             $row = $db->get_row($result);
 
+            // Touch the display to update its last accessed and client address.
+            $displayObject->Touch($hardwareKey, $clientAddress);
+
+            // Determine if we are licensed or not
             if ($row[0] == 0)
             {
                 // It is not licensed
@@ -879,9 +884,12 @@ class XMDSSoap
         if ($row[0] == 0)
             return false;
 
+        // Pull the client IP address
+        $clientAddress = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
+
         // Last accessed date on the display
         $displayObject = new Display($db);
-        $displayObject->Touch($hardwareKey);
+        $displayObject->Touch($hardwareKey, $clientAddress);
 
         // It is licensed?
         $this->licensed = true;

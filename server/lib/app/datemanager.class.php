@@ -66,5 +66,18 @@ class DateManager
 		
 		return gmdate($format, $timestamp);
 	}
+
+        /**
+         * Gets an ISO date from a US formatted date string
+         * @param <string> $usDate
+         * @param <string> $time
+         */
+        public function GetDateFromUS($usDate, $time)
+        {
+            // Split the US date by /
+            $datePart = explode('/', $usDate);
+
+            return (int) strtotime($datePart[2] . '-' . $datePart[1] . '-' . $datePart[0] . ' ' . $time);
+        }
 } 
 ?>

@@ -41,69 +41,73 @@ class Display extends Data
 	 */
 	public function Add($display, $isAuditing, $defaultLayoutID, $license, $licensed, $incSchedule)
 	{
-		$db	=& $this->db;
+            $db	=& $this->db;
+
+            Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Add');
+
+            // Create the SQL
+            $SQL  = "";
+            $SQL .= "INSERT ";
+            $SQL .= "INTO   display ";
+            $SQL .= "       ( ";
+            $SQL .= "              display        , ";
+            $SQL .= "              isAuditing     , ";
+            $SQL .= "              defaultlayoutid, ";
+            $SQL .= "              license        , ";
+            $SQL .= "              licensed       , ";
+            $SQL .= "              inc_schedule   , ";
+            $SQL .= "              email_alert    , ";
+            $SQL .= "              alert_timeout    ";
+            $SQL .= "       ) ";
+            $SQL .= "       VALUES ";
+            $SQL .= "       ( ";
+            $SQL .= sprintf("      '%s', ", $display);
+            $SQL .= "              0   , ";
+            $SQL .= "              1   , ";
+            $SQL .= sprintf("      '%s', ", $license);
+            $SQL .= "              0   , ";
+            $SQL .= "              0   , ";
+            $SQL .= "              1   , ";
+            $SQL .= "              0 ";
+            $SQL .= "       )";
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Add');
-		
-		// Create the SQL
-		$SQL  = "";
-		$SQL .= "INSERT ";
-		$SQL .= "INTO   display ";
-		$SQL .= "       ( ";
-		$SQL .= "              display        , ";
-		$SQL .= "              isAuditing     , ";
-		$SQL .= "              defaultlayoutid, ";
-		$SQL .= "              license        , ";
-		$SQL .= "              licensed       , ";
-		$SQL .= "              inc_schedule ";
-		$SQL .= "       ) ";
-		$SQL .= "       VALUES ";
-		$SQL .= "       ( ";
-		$SQL .= sprintf("      '%s', ", $display);
-		$SQL .= "              0   , ";
-		$SQL .= "              1   , ";
-		$SQL .= sprintf("      '%s', ", $license);
-		$SQL .= "              0   , ";
-		$SQL .= "              0 ";
-		$SQL .= "       )";
-		
-		if (!$displayID = $db->insert_query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25000, __('Could not add display'));
-			
-			return false;
-		}
-		
-		// Also want to add the DisplayGroup associated with this Display.
-		$displayGroupObject = new DisplayGroup($db);
-		
-		if (!$displayGroupID = $displayGroupObject->Add($display, 1, ''))
-		{
-			$this->SetError(25001, __('Could not add a display group for the new display.'));
-			
-			return false;
-		}
-		
-		// Link the Two together
-		if (!$displayGroupObject->Link($displayGroupID, $displayID))
-		{
-			$this->SetError(25001, __('Could not link the new display with its group.'));
-			
-			return false;
-		}
-		
-		// Set the default layout
-		if (!$displayGroupObject->SetDefaultLayout($displayID, $defaultLayoutID))
-		{
-			$this->SetError(25000, __('Could not update display with default layout.'));
-			
-			return false;
-		}
-		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Add');
-		
-		return $displayID;
+            if (!$displayID = $db->insert_query($SQL))
+            {
+                trigger_error($db->error());
+                $this->SetError(25000, __('Could not add display'));
+
+                return false;
+            }
+
+            // Also want to add the DisplayGroup associated with this Display.
+            $displayGroupObject = new DisplayGroup($db);
+
+            if (!$displayGroupID = $displayGroupObject->Add($display, 1, ''))
+            {
+                $this->SetError(25001, __('Could not add a display group for the new display.'));
+
+                return false;
+            }
+
+            // Link the Two together
+            if (!$displayGroupObject->Link($displayGroupID, $displayID))
+            {
+                $this->SetError(25001, __('Could not link the new display with its group.'));
+
+                return false;
+            }
+
+            // Set the default layout
+            if (!$displayGroupObject->SetDefaultLayout($displayID, $defaultLayoutID))
+            {
+                $this->SetError(25000, __('Could not update display with default layout.'));
+
+                return false;
+            }
+
+            Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Add');
+
+            return $displayID;
 	}
 	
 	/**
@@ -115,7 +119,7 @@ class Display extends Data
 	 * @param $licensed Object
 	 * @param $incSchedule Object
 	 */
-	public function Edit($displayID, $display, $isAuditing, $defaultLayoutID, $licensed, $incSchedule)
+	public function Edit($displayID, $display, $isAuditing, $defaultLayoutID, $licensed, $incSchedule, $email_alert, $alert_timeout)
 	{
 		$db	=& $this->db;
 		
@@ -126,10 +130,12 @@ class Display extends Data
 		$SQL .= "		defaultlayoutid = %d, ";
 		$SQL .= "		inc_schedule = %d, ";
 		$SQL .= " 		licensed = %d, ";
-		$SQL .= "		isAuditing = %d ";
+		$SQL .= "		isAuditing = %d, ";
+        $SQL .= "       email_alert = %d, ";
+        $SQL .= "       alert_timeout = %d ";
 		$SQL .= "WHERE displayid = %d ";
 		
-		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $displayID);
+		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $email_alert, $alert_timeout, $displayID);
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 		
@@ -255,7 +261,7 @@ class Display extends Data
 	 * @return 
 	 * @param $license Object
 	 */
-	public function Touch($license)
+	public function Touch($license, $clientAddress = '')
 	{
 		$db		=& $this->db;
 		$time 	= time();
@@ -263,14 +269,23 @@ class Display extends Data
 		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Touch');
 			
 		// Set the last accessed flag on the display
-		$SQL 	= sprintf("UPDATE display SET lastaccessed = %d, loggedin = 1 WHERE license = '%s' ", $time, $license);
+		$SQL  = "";
+                $SQL .= "UPDATE display SET lastaccessed = %d, loggedin = 1 ";
 
-		if (!$result = $db->query($SQL)) 
+                // We will want to update the client Address if it is given
+                if ($clientAddress != '')
+                    $SQL .= sprintf(" , ClientAddress = '%s' ", $db->escape_string($clientAddress));
+
+                // Restrict to the display license
+                $SQL .= " WHERE license = '%s'";
+                $SQL = sprintf($SQL, $time, $license);
+
+                if (!$result = $db->query($SQL))
 		{
-			trigger_error($db->error());
-			$this->SetError(25002, __("Error updating this displays last accessed information."));
-			
-			return false;
+                    trigger_error($db->error());
+                    $this->SetError(25002, __("Error updating this displays last accessed information."));
+
+                    return false;
 		}
 		
 		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Touch');

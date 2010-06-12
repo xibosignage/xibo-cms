@@ -181,5 +181,50 @@ class Layout extends Data
 		
 		return true;
 	}
+
+    /**
+     * Copys a Layout
+     * @param <int> $oldLayoutId
+     * @param <string> $newLayoutName
+     * @param <int> $userId
+     * @return <int> 
+     */
+    public function Copy($oldLayoutId, $newLayoutName, $userId)
+    {
+        $db =& $this->db;
+
+        // The Layout ID is the old layout
+        $SQL  = "";
+        $SQL .= " INSERT INTO layout (layout, permissionID, xml, userID, description, tags, templateID, retired, duration, background) ";
+        $SQL .= " SELECT '%s', permissionID, xml, %d, description, tags, templateID, retired, duration, background ";
+        $SQL .= "  FROM layout ";
+        $SQL .= " WHERE layoutid = %d";
+        $SQL = sprintf($SQL, $db->escape_string($newLayoutName), $userId, $oldLayoutId);
+
+        if (!$newLayoutId = $db->insert_query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25000, __('Unable to Copy this Layout'));
+            return false;
+        }
+
+        // Need to also copy the link records from the old layout to the new one
+        $SQL  = "";
+        $SQL .= "INSERT INTO lklayoutmedia (mediaID, layoutID, regionID) ";
+        $SQL .= " SELECT mediaID, %d, regionID FROM lklayoutmedia WHERE layoutID = %d";
+
+        if (!$db->query(sprintf($SQL, $newLayoutId, $oldLayoutId)))
+        {
+            trigger_error($db->error());
+            $this->SetError(25000, __('Unable to fully copy layout'));
+
+            // Delete the old one...
+            $db->query(sprintf('DELETE FROM layout WHERE layoutid = %d', $newLayoutId));
+
+            return false;
+        }
+
+        return $newLayoutId;
+    }
 }
 ?>
