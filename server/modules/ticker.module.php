@@ -24,13 +24,13 @@ class ticker extends Module
 	private $text;
 	private $direction;
 	
-	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
+	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
 	{
 		// Must set the type of the class
 		$this->type = 'ticker';
 	
 		// Must call the parent class	
-		parent::__construct($db, $user, $mediaid, $layoutid, $regionid);
+		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
 	}
 	
 	/**

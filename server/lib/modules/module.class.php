@@ -46,45 +46,45 @@ class Module implements ModuleInterface
 	protected $existingMedia;
 	protected $deleteFromRegion;
 
-	/**
-	 * Constructor - sets up this media object with all the available information
-	 * @return
-	 * @param $db database
-	 * @param $user user
-	 * @param $mediaid String[optional]
-	 * @param $layoutid String[optional]
-	 * @param $regionid String[optional]
-	 */
-	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
-	{
-		include_once("lib/pages/region.class.php");
+    /**
+     * Constructor - sets up this media object with all the available information
+     * @return
+     * @param $db database
+     * @param $user user
+     * @param $mediaid String[optional]
+     * @param $layoutid String[optional]
+     * @param $regionid String[optional]
+     */
+    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
+    {
+        include_once("lib/pages/region.class.php");
 
-		$this->db 		=& $db;
-		$this->user 	=& $user;
+        $this->db 	=& $db;
+        $this->user 	=& $user;
 
-		$this->mediaid 	= $mediaid;
-		$this->name 	= '';
-		$this->layoutid = $layoutid;
-		$this->regionid = $regionid;
+        $this->mediaid 	= $mediaid;
+        $this->name 	= '';
+        $this->layoutid = $layoutid;
+        $this->regionid = $regionid;
+        $this->lkid     = $lkid;
 
-		$this->region 	= new region($db, $user);
-		$this->response = new ResponseManager();
+        $this->region 	= new region($db, $user);
+        $this->response = new ResponseManager();
 
-		$this->existingMedia 	= false;
-		$this->deleteFromRegion = false;
-		$this->lkid				= '';
-		$this->duration 		= '';
+        $this->existingMedia 	= false;
+        $this->deleteFromRegion = false;
+        $this->duration 		= '';
 
-		// Determine which type this module is
-		$this->SetModuleInformation();
+        // Determine which type this module is
+        $this->SetModuleInformation();
 
-		Debug::LogEntry($db, 'audit', 'New module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
+        Debug::LogEntry($db, 'audit', 'New module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 
-		// Either the information from the region - or some blanks
-		$this->SetMediaInformation($this->layoutid, $this->regionid, $mediaid);
+        // Either the information from the region - or some blanks
+        $this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid);
 
-		return true;
-	}
+        return true;
+    }
 
 	/**
 	 * Sets the module information
@@ -126,102 +126,102 @@ class Module implements ModuleInterface
 		return true;
 	}
 
-	/**
-	 * Gets the information about this Media on this region on this layout
-	 * @return
-	 * @param $layoutid Object
-	 * @param $regionid Object
-	 * @param $mediaid Object
-	 */
-	final private function SetMediaInformation($layoutid, $regionid, $mediaid)
-	{
-		$db 		=& $this->db;
-		$region 	=& $this->region;
-		$xmlDoc 	= new DOMDocument();
+    /**
+     * Gets the information about this Media on this region on this layout
+     * @return
+     * @param $layoutid Object
+     * @param $regionid Object
+     * @param $mediaid Object
+     */
+    final private function SetMediaInformation($layoutid, $regionid, $mediaid, $lkid)
+    {
+        $db 		=& $this->db;
+        $region 	=& $this->region;
+        $xmlDoc 	= new DOMDocument();
 
-		if ($this->mediaid != '' && $this->regionid != '' && $this->layoutid != '')
-		{
-			$this->existingMedia = true;
+        if ($this->mediaid != '' && $this->regionid != '' && $this->layoutid != '')
+        {
+            $this->existingMedia = true;
 
-			// Set the layout Xml
-			$layoutXml = $region->GetLayoutXml($layoutid);
+            // Set the layout Xml
+            $layoutXml = $region->GetLayoutXml($layoutid);
 
-			Debug::LogEntry($db, 'audit', 'Layout XML retrieved: ' . $layoutXml);
+            Debug::LogEntry($db, 'audit', 'Layout XML retrieved: ' . $layoutXml);
 
-			$layoutDoc = new DOMDocument();
-			$layoutDoc->loadXML($layoutXml);
+            $layoutDoc = new DOMDocument();
+            $layoutDoc->loadXML($layoutXml);
 
-			$layoutXpath = new DOMXPath($layoutDoc);
+            $layoutXpath = new DOMXPath($layoutDoc);
 
-			// Get the media node and extract the info
-			$mediaNodeXpath = $layoutXpath->query("//region[@id='$regionid']/media[@id='$mediaid']");
+            // Get the media node and extract the info
+            if ($lkid != '')
+                $mediaNodeXpath = $layoutXpath->query("//region[@id='$regionid']/media[@lkid='$lkid']");
+            else
+                $mediaNodeXpath = $layoutXpath->query("//region[@id='$regionid']/media[@id='$mediaid']");
 
-			if ($mediaNodeXpath->length > 0)
-			{
-				Debug::LogEntry($db, 'audit', 'Media Node Found.');
+            // Test to make sure we got a node
+            if ($mediaNodeXpath->length <= 0)
+                trigger_error(__('Cannot find this media item. Please refresh the region options.'), E_USER_ERROR);
 
-				// Create a Media node in the DOMDocument for us to replace
-				$xmlDoc->loadXML('<root/>');
-			}
-			else
-			{
-				$this->response->SetError(__('Cannot find this media item. Please refresh the region options.'));
-				$this->response->Respond();
-			}
+            // Create a Media node in the DOMDocument for us to replace
+            $xmlDoc->loadXML('<root/>');
 
-			$mediaNode = $mediaNodeXpath->item(0);
-			$mediaNode->setAttribute('schemaVersion', $this->schemaVersion);
+            $mediaNode = $mediaNodeXpath->item(0);
+            $mediaNode->setAttribute('schemaVersion', $this->schemaVersion);
 
-			$this->duration = $mediaNode->getAttribute('duration');
-			$this->lkid	 	= $mediaNode->getAttribute('lkid');
+            $this->duration = $mediaNode->getAttribute('duration');
+            
+            // Get the LK id if we do not have one provided
+            if ($lkid == '')
+                $this->lkid     = $mediaNode->getAttribute('lkid');
 
-			$mediaNode = $xmlDoc->importNode($mediaNode, true);
-			$xmlDoc->documentElement->appendChild($mediaNode);
-		}
-		else
-		{
-			if ($this->mediaid != '' && $this->regionSpecific == 0)
-			{
-				// We do not have a region or a layout
-				// But this is some existing media
-				// Therefore make sure we get the bare minimum!
-				$this->existingMedia = true;
+            $mediaNode = $xmlDoc->importNode($mediaNode, true);
+            $xmlDoc->documentElement->appendChild($mediaNode);
+        }
+        else
+        {
+            if ($this->mediaid != '' && $this->regionSpecific == 0)
+            {
+                // We do not have a region or a layout
+                // But this is some existing media
+                // Therefore make sure we get the bare minimum!
+                $this->existingMedia = true;
 
-				// Load what we know about this media into the object
-				$SQL = "SELECT duration, name FROM media WHERE mediaID = '$mediaid'";
+                // Load what we know about this media into the object
+                $SQL = "SELECT duration, name FROM media WHERE mediaID = '$mediaid'";
 
-				Debug::LogEntry($db, 'audit', $SQL, 'Module', 'SetMediaInformation');
+                Debug::LogEntry($db, 'audit', $SQL, 'Module', 'SetMediaInformation');
 
-				if (!$result = $db->query($SQL))
-				{
-					trigger_error($db->error()); //log the error
-				}
+                if (!$result = $db->query($SQL))
+                {
+                    trigger_error($db->error()); //log the error
+                }
 
-				if ($db->num_rows($result) != 0)
-				{
-					$row 				= $db->get_row($result);
-					$this->duration		= $row[0];
-					$this->name			= $row[1];
-				}
-			}
+                if ($db->num_rows($result) != 0)
+                {
+                    $row 				= $db->get_row($result);
+                    $this->duration		= $row[0];
+                    $this->name			= $row[1];
+                }
+            }
 
-			$xml = <<<XML
-			<root>
-				<media id="" type="$this->type" duration="" lkid="" schemaVersion="$this->schemaVersion">
-					<options />
-					<raw />
-				</media>
-			</root>
+            $xml = <<<XML
+            <root>
+                    <media id="" type="$this->type" duration="" lkid="" schemaVersion="$this->schemaVersion">
+                            <options />
+                            <raw />
+                    </media>
+            </root>
 XML;
-			$xmlDoc->loadXML($xml);
-		}
+            $xmlDoc->loadXML($xml);
+        }
 
-		$this->xml = $xmlDoc;
+        $this->xml = $xmlDoc;
 
-		Debug::LogEntry($db, 'audit', 'XML is: ' . $this->xml->saveXML());
+        Debug::LogEntry($db, 'audit', 'XML is: ' . $this->xml->saveXML());
 
-		return true;
-	}
+        return true;
+    }
 
 	/**
 	 * Sets the Layout and Region Information

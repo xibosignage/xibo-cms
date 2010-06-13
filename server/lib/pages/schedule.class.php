@@ -217,6 +217,12 @@ class scheduleDAO
             // Load this months events into an array
             $monthEvents	= $this->GetEventsForMonth($month, $year, $displayGroupIDs);
 
+            Debug::LogEntry($db, 'audit', 'Number of weeks to render: ' . count($weeks), '', 'GenerateMonth');
+
+            // Use the number of weeks in this month to work out how much space each week should get, and where to position it
+            $monthHeightOffsetPerWeek = 100 / count($weeks);
+
+            // Render a week at a time
             foreach($weeks AS $week)
             {
                 // Count of the available days in this week.
@@ -231,7 +237,7 @@ class scheduleDAO
                 $this->lastEventID[0] = 0;
                 $this->lastEventID[1] = 0;
                 $this->lastEventID[2] = 0;
-                $monthTop	= $weekNo * 20;
+                $monthTop	= $weekNo * $monthHeightOffsetPerWeek;
 
                 foreach($week as $d)
                 {
@@ -248,8 +254,7 @@ class scheduleDAO
                         $events3  .= '<td class="nonmonthdays" colspan="1"></td>';
                         $events4  .= '<td class="nonmonthdays" colspan="1"></td>';
                     }
-
-                    if(($i >= $offset_count) && ($i < ($num_weeks * 7) - $outset))
+                    else if(($i >= $offset_count) && ($i < ($num_weeks * 7) - $outset))
                     {
                         // Link for Heading and Cell
                         $linkClass	= 'days';
@@ -279,8 +284,10 @@ class scheduleDAO
                             $events4	.= '<td colspan="1"></td>';
                         }
                     }
-                    elseif($outset > 0)
+                    else if($outset > 0)
                     {
+                        Debug::LogEntry($db, 'audit', 'Outset is ' . $outset . ' and i is ' . $i, '', 'GenerateMonth');
+
                         // Days that do not belond in this month
                         if(($i >= ($num_weeks * 7) - $outset))
                         {
@@ -301,7 +308,7 @@ class scheduleDAO
 
                 $weekNo++;
 
-                $calendar .= '   <div class="MonthRow" style="top:' . $monthTop . '%; height:20%">';
+                $calendar .= '   <div class="MonthRow" style="top:' . $monthTop . '%; height:' . $monthHeightOffsetPerWeek . '%">';
                 $calendar .= '    <table class="WeekRow" cellspacing="0" cellpadding="0">';
                 $calendar .= '     <tr>';
                 $calendar .= $weekGrid;
