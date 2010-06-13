@@ -26,36 +26,37 @@ class moduleDAO
 	private $user;
 	private $module;
 
-	/**
-	 * Module constructor.
-	 * @return 
-	 * @param $db Object
-	 */
-	function __construct(database $db, user $user) 
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-		
-		$mod = Kit::GetParam('mod', _REQUEST, _WORD);
-		
-		// If we have the module - create an instance of the module class
-		// This will only be true when we are displaying the Forms
-		if ($mod != '') 
-		{			
-			require_once("modules/$mod.module.php");
-			
-			// Try to get the layout, region and media id's
-			$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
-			$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
-			$mediaid  = Kit::GetParam('mediaid', _REQUEST, _STRING);
-			
-			Debug::LogEntry($db, 'audit', 'Creating new module with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
-			
-			$this->module = new $mod($db, $user, $mediaid, $layoutid, $regionid);
-		}
-		
-		return true;
-	}
+    /**
+     * Module constructor.
+     * @return
+     * @param $db Object
+     */
+    function __construct(database $db, user $user)
+    {
+        $this->db 	=& $db;
+        $this->user =& $user;
+
+        $mod = Kit::GetParam('mod', _REQUEST, _WORD);
+
+        // If we have the module - create an instance of the module class
+        // This will only be true when we are displaying the Forms
+        if ($mod != '')
+        {
+            require_once("modules/$mod.module.php");
+
+            // Try to get the layout, region and media id's
+            $layoutid   = Kit::GetParam('layoutid', _REQUEST, _INT);
+            $regionid   = Kit::GetParam('regionid', _REQUEST, _STRING);
+            $mediaid    = Kit::GetParam('mediaid', _REQUEST, _STRING);
+            $lkid       = Kit::GetParam('lkid', _REQUEST, _INT);
+
+            Debug::LogEntry($db, 'audit', 'Creating new module with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
+
+            $this->module = new $mod($db, $user, $mediaid, $layoutid, $regionid, $lkid);
+        }
+
+        return true;
+    }
 	
 	/**
 	 * No display page functionaility

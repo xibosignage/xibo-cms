@@ -25,17 +25,17 @@ class image extends Module
 	private $maxFileSize;
 	private $maxFileSizeBytes;
 
-	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
+	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
 	{
 		// Must set the type of the class
-		$this->type 			= 'image';
+		$this->type 		= 'image';
 
 		// Get the max upload size from PHP
-		$this->maxFileSize 		= ini_get('upload_max_filesize');
+		$this->maxFileSize 	= ini_get('upload_max_filesize');
 		$this->maxFileSizeBytes = convertBytes($this->maxFileSize);
 
 		// Must call the parent class
-		parent::__construct($db, $user, $mediaid, $layoutid, $regionid);
+		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
 	}
 
 	/**
@@ -71,12 +71,8 @@ class image extends Module
 			return false;
 		}
 
-		$row 				= $db->get_row($result);
-		$duration			= $row[2];
-		$storedAs			= $row[7];
-
-		// Required Attributes
-		$this->duration = $duration;
+		$row        = $db->get_row($result);
+		$storedAs   = $row[7];
 
 		// Any Options
 		$this->SetOption('uri', $storedAs);
@@ -211,149 +207,149 @@ FORM;
 	 */
 	public function EditForm()
 	{
-		global $session;
-		$db 			=& $this->db;
-		$user			=& $this->user;
+            global $session;
+            $db 		=& $this->db;
+            $user		=& $this->user;
 
-		// Would like to get the regions width / height
-		$layoutid		= $this->layoutid;
-		$regionid		= $this->regionid;
-		$mediaid		= $this->mediaid;
-		$lkid			= $this->lkid;
-		$userid			= Kit::GetParam('userid', _SESSION, _INT);
+            // Would like to get the regions width / height
+            $layoutid		= $this->layoutid;
+            $regionid		= $this->regionid;
+            $mediaid		= $this->mediaid;
+            $lkid		= $this->lkid;
+            $userid		= Kit::GetParam('userid', _SESSION, _INT);
 
-		// Set the Session / Security information
-		$sessionId 		= session_id();
-		$securityToken 	= CreateFormToken();
+            // Set the Session / Security information
+            $sessionId 		= session_id();
+            $securityToken 	= CreateFormToken();
 
-		$session->setSecurityToken($securityToken);
+            $session->setSecurityToken($securityToken);
 
-		// Load what we know about this media into the object
-		$SQL = "SELECT name, originalFilename, userID, permissionID, retired, storedAs, isEdited, editedMediaID FROM media WHERE mediaID = $mediaid ";
+            // Load what we know about this media into the object
+            $SQL = "SELECT name, originalFilename, userID, permissionID, retired, storedAs, isEdited, editedMediaID FROM media WHERE mediaID = $mediaid ";
 
-		if (!$result = $db->query($SQL))
-		{
-			trigger_error($db->error()); //log the error
+            if (!$result = $db->query($SQL))
+            {
+                trigger_error($db->error()); //log the error
 
-			$this->message = "Error querying for the Media information with media ID [$mediaid] ";
-			return false;
-		}
+                $this->message = "Error querying for the Media information with media ID [$mediaid] ";
+                return false;
+            }
 
-		if ($db->num_rows($result) != 1)
-		{
-			trigger_error("More than one row for mediaId [$mediaid] How can this be?");
+            if ($db->num_rows($result) != 1)
+            {
+                trigger_error("More than one row for mediaId [$mediaid] How can this be?");
 
-			$this->message = "Error querying for the Media information with media ID [$mediaid] ";
-			return false;
-		}
+                $this->message = "Error querying for the Media information with media ID [$mediaid] ";
+                return false;
+            }
 
-		$row 				= $db->get_row($result);
-		$name 				= $row[0];
-		$originalFilename 	= $row[1];
-		$userid 			= $row[2];
-		$permissionid 		= $row[3];
-		$retired 			= $row[4];
-		$storedAs			= $row[5];
-		$isEdited			= $row[6];
-		$editedMediaID		= $row[7];
+            $row 		= $db->get_row($result);
+            $name 		= $row[0];
+            $originalFilename 	= $row[1];
+            $userid 		= $row[2];
+            $permissionid 	= $row[3];
+            $retired 		= $row[4];
+            $storedAs		= $row[5];
+            $isEdited		= $row[6];
+            $editedMediaID	= $row[7];
 
-		// derive the ext
-		$ext				= strtolower(substr(strrchr($originalFilename, "."), 1));
+            // derive the ext
+            $ext		= strtolower(substr(strrchr($originalFilename, "."), 1));
 
-		//Calc the permissions on it aswell
-		list($see_permissions , $edit_permissions) = $user->eval_permission($userid, $permissionid);
+            //Calc the permissions on it aswell
+            list($see_permissions , $edit_permissions) = $user->eval_permission($userid, $permissionid);
 
-		//shared list
-		$shared_list = dropdownlist("SELECT permissionID, permission FROM permission", "permissionid", $permissionid);
+            //shared list
+            $shared_list = dropdownlist("SELECT permissionID, permission FROM permission", "permissionid", $permissionid);
 
-		//Save button is different depending on if we are on a region or not
-		if ($regionid != "")
-		{
-			setSession('content','mediatype','image');
+            //Save button is different depending on if we are on a region or not
+            if ($regionid != "")
+            {
+                    setSession('content','mediatype','image');
 
-			$extraNotes = '<em>Note: Uploading a new media item here will replace it on this layout only.</em>';
+                    $extraNotes = '<em>Note: Uploading a new media item here will replace it on this layout only.</em>';
 
-			$save_button = <<<END
-			<input id="btnSave" type="submit" value="Save" />
-			<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-			<input class="XiboFormButton" type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" title="Library" value="Library" />
+                    $save_button = <<<END
+                    <input id="btnSave" type="submit" value="Save" />
+                    <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
+                    <input class="XiboFormButton" type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" title="Library" value="Library" />
 END;
-		}
-		else
-		{
-			$extraNotes = '<em>Note: As you are editing from the library uploading a new media item will not replace the old one from any layouts. To do this navigate to the layout and edit the media from there.</em>';
+            }
+            else
+            {
+                    $extraNotes = '<em>Note: As you are editing from the library uploading a new media item will not replace the old one from any layouts. To do this navigate to the layout and edit the media from there.</em>';
 
-			$save_button = <<<END
-			<input id="btnSave" type="submit" value="Save" />
-			<input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
+                    $save_button = <<<END
+                    <input id="btnSave" type="submit" value="Save" />
+                    <input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
 END;
-		}
+            }
 
-		$form = <<<FORM
-		<div style="display:none"><iframe name="fileupload" width="1px" height="1px"></iframe></div>
-		<div>
-			<form id="file_upload" method="post" action="index.php?p=content&q=FileUpload" enctype="multipart/form-data" target="fileupload">
-				<input type="hidden" id="PHPSESSID" value="$sessionId" />
-				<input type="hidden" id="SecurityToken" value="$securityToken" />
-				<input type="hidden" name="MAX_FILE_SIZE" value="$this->maxFileSizeBytes" />
-				<table>
-					<tr>
-						<td><label for="file">New Image File<span class="required">*</span></label></td>
-						<td colspan="3">
-							<input type="file" name="media_file" onchange="fileFormSubmit();this.form.submit();" />
-						</td>
-					</tr>
-				</table>
-			</form>
-		</div>
-		<div id="uploadProgress" style="display:none">
-			<img src="img/loading.gif"><span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
-		</div>
-		<form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
-			<input type="hidden" name="hidFileID" id="hidFileID" value="" />
-			<input type="hidden" id="txtFileName" name="txtFileName" readonly="true" />
-			<input type="hidden" name="layoutid" value="$layoutid">
-			<input type="hidden" name="regionid" value="$regionid">
-			<input type="hidden" name="mediaid" value="$mediaid">
-			<input type="hidden" name="lkid" value="$lkid">
-			<input type="hidden" id="PHPSESSID" value="$sessionId" />
-			<input type="hidden" id="SecurityToken" value="$securityToken" />
-			<table>
-				<tr>
-		    		<td><label for="name" title="The name of the image. Leave this blank to use the file name">Name</label></td>
-		    		<td><input id="name" name="name" type="text" value="$name"></td>
-				</tr>
-				<tr>
-		    		<td><label for="duration" title="The duration in seconds this image should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
-		    		<td><input id="duration" name="duration" type="text" value="$this->duration"></td>
-					<td><label for="permissionid">Sharing<span class="required">*</span></label></td>
-					<td>
-					$shared_list
-					</td>
-				</tr>
-				<tr>
-					<td></td>
-					<td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
-				</tr>
-				<tr>
-					<td></td>
-					<td colspan="2">$extraNotes</td>
-				</tr>
-				<tr>
-					<td></td>
-					<td colspan="3">$save_button</td>
-				</tr>
-			</table>
-		</form>
+            $form = <<<FORM
+            <div style="display:none"><iframe name="fileupload" width="1px" height="1px"></iframe></div>
+            <div>
+                    <form id="file_upload" method="post" action="index.php?p=content&q=FileUpload" enctype="multipart/form-data" target="fileupload">
+                            <input type="hidden" id="PHPSESSID" value="$sessionId" />
+                            <input type="hidden" id="SecurityToken" value="$securityToken" />
+                            <input type="hidden" name="MAX_FILE_SIZE" value="$this->maxFileSizeBytes" />
+                            <table>
+                                    <tr>
+                                            <td><label for="file">New Image File<span class="required">*</span></label></td>
+                                            <td colspan="3">
+                                                    <input type="file" name="media_file" onchange="fileFormSubmit();this.form.submit();" />
+                                            </td>
+                                    </tr>
+                            </table>
+                    </form>
+            </div>
+            <div id="uploadProgress" style="display:none">
+                    <img src="img/loading.gif"><span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
+            </div>
+            <form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
+                    <input type="hidden" name="hidFileID" id="hidFileID" value="" />
+                    <input type="hidden" id="txtFileName" name="txtFileName" readonly="true" />
+                    <input type="hidden" name="layoutid" value="$layoutid">
+                    <input type="hidden" name="regionid" value="$regionid">
+                    <input type="hidden" name="mediaid" value="$mediaid">
+                    <input type="hidden" name="lkid" value="$lkid">
+                    <input type="hidden" id="PHPSESSID" value="$sessionId" />
+                    <input type="hidden" id="SecurityToken" value="$securityToken" />
+                    <table>
+                            <tr>
+                            <td><label for="name" title="The name of the image. Leave this blank to use the file name">Name</label></td>
+                            <td><input id="name" name="name" type="text" value="$name"></td>
+                            </tr>
+                            <tr>
+                            <td><label for="duration" title="The duration in seconds this image should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
+                            <td><input id="duration" name="duration" type="text" value="$this->duration"></td>
+                                    <td><label for="permissionid">Sharing<span class="required">*</span></label></td>
+                                    <td>
+                                    $shared_list
+                                    </td>
+                            </tr>
+                            <tr>
+                                    <td></td>
+                                    <td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+                            </tr>
+                            <tr>
+                                    <td></td>
+                                    <td colspan="2">$extraNotes</td>
+                            </tr>
+                            <tr>
+                                    <td></td>
+                                    <td colspan="3">$save_button</td>
+                            </tr>
+                    </table>
+            </form>
 FORM;
 
-		$this->response->html 			= $form;
-		$this->response->dialogTitle 	= 'Edit Image';
-		$this->response->dialogSize 	= true;
-		$this->response->dialogWidth 	= '450px';
-		$this->response->dialogHeight 	= '280px';
+            $this->response->html 		= $form;
+            $this->response->dialogTitle 	= 'Edit Image';
+            $this->response->dialogSize 	= true;
+            $this->response->dialogWidth 	= '450px';
+            $this->response->dialogHeight 	= '280px';
 
-		return $this->response;
+            return $this->response;
 	}
 
 	/**
@@ -811,9 +807,9 @@ END;
 			// Editing the existing record
 			$new_mediaid = $mediaid;
 
-			$SQL =  "UPDATE media SET name = '%s', duration = %d, permissionID = %d";
+			$SQL =  "UPDATE media SET name = '%s', permissionID = %d";
 			$SQL .= " WHERE mediaID = %d ";
-			$SQL = sprintf($SQL, $db->escape_string($name), $duration, $permissionid, $mediaid);
+			$SQL = sprintf($SQL, $db->escape_string($name), $permissionid, $mediaid);
 
 			Debug::LogEntry($db, 'audit', $SQL);
 

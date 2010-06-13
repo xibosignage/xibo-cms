@@ -23,13 +23,13 @@ class webpage extends Module
 	// Custom Media information
 	private $uri;
 	
-	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
+	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
 	{
 		// Must set the type of the class
 		$this->type = 'webpage';
 	
 		// Must call the parent class	
-		parent::__construct($db, $user, $mediaid, $layoutid, $regionid);
+		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
 	}
 	
 	/**

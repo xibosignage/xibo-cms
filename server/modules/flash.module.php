@@ -25,7 +25,7 @@ class flash extends Module
 	private $maxFileSize;
 	private $maxFileSizeBytes;
 
-	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '')
+	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
 	{
 		// Must set the type of the class
 		$this->type 			= 'flash';
@@ -35,7 +35,7 @@ class flash extends Module
 		$this->maxFileSizeBytes = convertBytes($this->maxFileSize);
 
 		// Must call the parent class
-		parent::__construct($db, $user, $mediaid, $layoutid, $regionid);
+		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
 	}
 
 	/**
@@ -74,9 +74,6 @@ class flash extends Module
 		$row 				= $db->get_row($result);
 		$duration			= $row[2];
 		$storedAs			= $row[7];
-
-		// Required Attributes
-		$this->duration = $duration;
 
 		// Any Options
 		$this->SetOption('uri', $storedAs);
@@ -793,9 +790,9 @@ END;
 			// Editing the existing record
 			$new_mediaid = $mediaid;
 
-			$SQL =  "UPDATE media SET name = '%s', duration = %d, permissionID = %d";
+			$SQL =  "UPDATE media SET name = '%s', permissionID = %d";
 			$SQL .= " WHERE mediaID = %d ";
-			$SQL = sprintf($SQL, $db->escape_string($name), $duration, $permissionid, $mediaid);
+			$SQL = sprintf($SQL, $db->escape_string($name), $permissionid, $mediaid);
 
 			Debug::LogEntry($db, 'audit', $SQL);
 
