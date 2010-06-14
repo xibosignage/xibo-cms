@@ -67,9 +67,11 @@ class Step23 extends UpgradeStep
 	{
 		switch ($questionNumber) {
 			case 0:
-				$this->a[0] = Kit::ValidateParam($response, _BOOL);
-                if ($this->a[0]) {
+                if (Kit::ValidateParam($response, _BOOL)) {
                     $this->a[0] = "Protected";
+                }
+                else {
+                    $this->a[0] = "Off";
                 }
 				return true;
             case 1:
