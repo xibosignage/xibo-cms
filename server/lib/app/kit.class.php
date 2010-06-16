@@ -341,7 +341,7 @@ class Kit
 		$page = $this->ValidateParam($page, _WORD);
 		$fullUrl = 'http';
 		
-		if($_SERVER['HTTPS']=='on')
+		if(isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on')
 		{
 			$fullUrl .=  's';
 		}
@@ -419,7 +419,7 @@ class Kit
 
         $fullUrl = 'http';
         
-        if($_SERVER['HTTPS']=='on')
+        if(isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on')
         {
             $fullUrl .=  's';
         }
