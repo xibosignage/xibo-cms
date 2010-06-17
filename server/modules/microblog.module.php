@@ -90,6 +90,7 @@ class microblog extends Module
                     <td>
                         <input id="btnSave" type="submit" value="Save"  />
                         <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
+                        <input class="XiboHelpButton" id="btnHelp" type="button" title="Help" href="index.php?p=help&q=Display&Topic=Microblog&Category=Media" value="Help" />
                     </td>
                 </tr>
             </table>
@@ -193,6 +194,7 @@ FORM;
                     <td>
                         <input id="btnSave" type="submit" value="Save"  />
                         <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
+                        <input class="XiboHelpButton" id="btnHelp" type="button" title="Help" href="index.php?p=help&q=Display&Topic=Microblog&Category=Media" value="Help" />
                     </td>
                 </tr>
             </table>
