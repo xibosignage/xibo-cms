@@ -102,6 +102,9 @@ button, .SecondNav a {
 	margin-left: 2px;
 }
 
+.nobr {
+    white-space: nowrap;
+}
 
 .regionInfo {
     color:#FFF;

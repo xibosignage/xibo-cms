@@ -696,7 +696,7 @@ END;
 				
 				if ($edit_permissions) 
 				{
-					$output .= '<td>';
+					$output .= '<td class="nobr">';
 					$output .= '<button href="index.php?p=layout&modify=true&layoutid=' . $layoutid . '" onclick="window.location = $(this).attr(\'href\')"><span>Design</span></button>';
 					$output .= '<button class="XiboFormButton" href="index.php?p=layout&q=displayForm&modify=true&layoutid=' . $layoutid . '"><span>Edit</span></button>';
 					$output .= '<button class="XiboFormButton" href="index.php?p=layout&q=CopyForm&layoutid=' . $layoutid . '&oldlayout=' . $layout . '"><span>' . $msgCopy . '</span></button>';
