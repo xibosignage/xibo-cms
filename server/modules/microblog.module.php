@@ -75,13 +75,13 @@ class microblog extends Module
                 </tr>
                 <tr>
                     <td colspan="4">
-                        <span>Template</span>
+                        <span>Message Template<span class="required">*</span></span>
                         <textarea id="template" name="template"></textarea>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="4">
-                        <span>Default no content</span>
+                        <span>Message to display when there are no messages</span>
                         <textarea id="nocontent" name="nocontent"></textarea>
                     </td>
                 </tr>
@@ -178,13 +178,13 @@ FORM;
                 </tr>
                 <tr>
                     <td colspan="4">
-                        <span>Template</span>
+                        <span>Message Template<span class="required">*</span></span>
                         <textarea id="template" name="template">$template</textarea>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="4">
-                        <span>Default no content</span>
+                        <span>Message to show when there are no messages</span>
                         <textarea id="nocontent" name="nocontent">$nocontent</textarea>
                     </td>
                 </tr>
@@ -235,7 +235,7 @@ FORM;
             $this->response->Error('You must enter a duration.', true);
 
         if ($template == '')
-            $this->response->Error('You must enter a template.', true);
+            $this->response->Error('You must enter a Message Template.', true);
 
         // Required Attributes
         $this->mediaid	= md5(uniqid());
@@ -296,7 +296,7 @@ FORM;
             $this->response->Error('You must enter a duration.', true);
 
         if ($template == '')
-            $this->response->Error('You must enter a template.', true);
+            $this->response->Error('You must enter a Message Template.', true);
 
         // Required Attributes
         $this->duration = $duration;
