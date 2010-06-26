@@ -199,7 +199,14 @@ class scheduleDAO
             $weeks 		= array_chunk($new_count, 7);
 
             // Build the heading portion of the calendar table
-            $calendar  = '<div class="gridContainer">';
+            if($num_weeks == 5)
+            {
+                $calendar  = '<div class="gridContainer">';
+            }
+            else
+            {
+                $calendar  = '<div class="gridContainer6Weeks">';
+            }
             $calendar .= ' <div class="calendarContainer">';
             $calendar .= '  <div class="eventsContainer">';
             $calendar .= '  <table class="WeekDays">';
@@ -207,7 +214,15 @@ class scheduleDAO
             $calendar .= '    <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>';
             $calendar .= '   </tr>';
             $calendar .= '  </table>';
-            $calendar .= '  <div class="monthContainer">';
+
+            if($num_weeks == 5)
+            {
+                $calendar .= '  <div class="monthContainer">';
+            }
+            else
+            {
+                $calendar  .= '  <div class="monthContainer6Weeks">';
+            }
 
             // Now we break each key of the array  into a week and create a new table row for each
             // week with the days of that week in the table data
