@@ -297,7 +297,7 @@ elseif ($_SESSION['step'] == 3) {
 				echo '</p>';
 			}
 			if (file_exists('install/database/' . $i . '.php')) {
-				$stepName = __("Step") . $i;
+				$stepName = 'Step' . $i;
 				echo '<p>' . $i . '.php ';
 				flush();
 				if (! $_SESSION[$stepName]->Boot()) {
