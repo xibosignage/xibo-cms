@@ -1235,6 +1235,15 @@ END;
 		$displayGroupIDs 	= explode(',', $displayGroupIDs);
 		$layoutID	= Kit::ValidateParam($row['LayoutID'], _STRING);
         $isPriority = Kit::ValidateParam($row['is_priority'], _CHECKBOX);
+
+        if ($isPriority == 1)
+        {
+            $isPriority = 'On';
+        }
+        else
+        {
+            $isPriority = 'Off';
+        }
 		
 		$fromDtText	= date("d/m/Y", $fromDT);
 		$fromTimeText	= date("H:i", $fromDT);
