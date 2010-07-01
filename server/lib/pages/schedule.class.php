@@ -1234,6 +1234,16 @@ END;
 		$recToDT	= Kit::ValidateParam($row['recurrence_range'], _STRING);
 		$displayGroupIDs 	= explode(',', $displayGroupIDs);
 		$layoutID	= Kit::ValidateParam($row['LayoutID'], _STRING);
+        $isPriority = Kit::ValidateParam($row['is_priority'], _CHECKBOX);
+
+        if ($isPriority == 1)
+        {
+            $isPriority = 'checked';
+        }
+        else
+        {
+            $isPriority = '';
+        }
 		
 		$fromDtText	= date("d/m/Y", $fromDT);
 		$fromTimeText	= date("H:i", $fromDT);
@@ -1293,7 +1303,7 @@ END;
 					</tr>
 					<tr>
 						<td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
-						<td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preferance to other events."></td>
+						<td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" $isPriority title="Sets whether or not this event has priority. If set the event will be show in preferance to other events."></td>
 					</tr>
 END;
 
