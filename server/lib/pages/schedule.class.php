@@ -1238,11 +1238,11 @@ END;
 
         if ($isPriority == 1)
         {
-            $isPriority = 'On';
+            $isPriority = 'checked';
         }
         else
         {
-            $isPriority = 'Off';
+            $isPriority = '';
         }
 		
 		$fromDtText	= date("d/m/Y", $fromDT);
@@ -1303,7 +1303,7 @@ END;
 					</tr>
 					<tr>
 						<td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
-						<td><input type="checkbox" id="cb_is_priority" name="is_priority" value="$isPriority" title="Sets whether or not this event has priority. If set the event will be show in preferance to other events."></td>
+						<td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" $isPriority title="Sets whether or not this event has priority. If set the event will be show in preferance to other events."></td>
 					</tr>
 END;
 
