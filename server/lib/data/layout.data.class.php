@@ -192,14 +192,15 @@ class Layout extends Data
     public function Copy($oldLayoutId, $newLayoutName, $userId)
     {
         $db =& $this->db;
+        $currentdate = date("Y-m-d H:i:s");
 
         // The Layout ID is the old layout
         $SQL  = "";
-        $SQL .= " INSERT INTO layout (layout, permissionID, xml, userID, description, tags, templateID, retired, duration, background) ";
-        $SQL .= " SELECT '%s', permissionID, xml, %d, description, tags, templateID, retired, duration, background ";
+        $SQL .= " INSERT INTO layout (layout, permissionID, xml, userID, description, tags, templateID, retired, duration, background, createdDT, modifiedDT) ";
+        $SQL .= " SELECT '%s', permissionID, xml, %d, description, tags, templateID, retired, duration, background, '%s', '%s' ";
         $SQL .= "  FROM layout ";
         $SQL .= " WHERE layoutid = %d";
-        $SQL = sprintf($SQL, $db->escape_string($newLayoutName), $userId, $oldLayoutId);
+        $SQL = sprintf($SQL, $db->escape_string($newLayoutName), $userId, $oldLayoutId, $db->escape_string($currentdate), $db->escape_string($currentdate));
 
         if (!$newLayoutId = $db->insert_query($SQL))
         {
