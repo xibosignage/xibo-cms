@@ -137,10 +137,6 @@ function XiboInitialise(scope){
 
     // Search for any text forms that will need submitting
     $(scope + ' .XiboTextForm').submit(function(){
-        var inst = FCKeditorAPI.GetInstance("ta_text");
-
-        $('#ta_text').val(inst.GetHTML());
-
         XiboFormSubmit(this);
 
         return false;

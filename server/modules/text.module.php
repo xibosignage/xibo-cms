@@ -51,7 +51,7 @@ class text extends Module
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
 		
 		$form = <<<FORM
-		<form class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=AddMedia">
+		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=AddMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
 			<table>
@@ -73,22 +73,17 @@ class text extends Module
 				<tr>
 					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.org.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
 				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input id="btnSave" type="submit" value="Save"  />
-						<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-					</td>
-				</tr>
 			</table>
 		</form>
 FORM;
 
-		$this->response->html 		= $form;
-		$this->response->callBack 	= 'text_callback';
-		$this->response->dialogTitle = 'Add new Text item';
+            $this->response->html 		= $form;
+            $this->response->callBack 	= 'text_callback';
+            $this->response->dialogTitle    = 'Add new Text item';
+            $this->response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
-		return $this->response;
+            return $this->response;
 	}
 	
 	/**
@@ -121,7 +116,7 @@ FORM;
 		
 		//Output the form
 		$form = <<<FORM
-		<form class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=EditMedia">
+		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=EditMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="mediaid" value="$mediaid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
@@ -144,13 +139,6 @@ FORM;
 				<tr>
 					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.org.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
 				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input id="btnSave" type="submit" value="Save"  />
-						<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-					</td>
-				</tr>
 			</table>
 		</form>
 FORM;
@@ -158,8 +146,10 @@ FORM;
 		$this->response->html 		= $form;
 		$this->response->callBack 	= 'text_callback';
 		$this->response->dialogTitle = 'Edit Text item';
+                $this->response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+                $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
-		return $this->response;		
+                return $this->response;
 	}
 	
 	/**

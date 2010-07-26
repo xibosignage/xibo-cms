@@ -60,46 +60,48 @@ var background_button_callback = function()
 }
 
 var text_callback = function()
-{	
-	//Create the FCK editor
-	var oFCKeditor = new FCKeditor( 'ta_text' ) ;
-	oFCKeditor.BasePath = "3rdparty/fckeditor/" ;
-	oFCKeditor.ReplaceTextarea();
+{
+    // Conjure up a text editor
+    var instance = CKEDITOR.instances["ta_text"];
+    if (instance)
+        CKEDITOR.remove(instance);
 
-	var regionid = $("#iRegionId").val();
-	var width = $("#region_"+regionid).width();
-	var height = $("#region_"+regionid).height();
-	
-	//Min width
-	if (width < 800) width = 800;
-	height = height + 75 //the width of the toolbar
-	
-	$('#ta_text___Frame').attr("width",width+"px");
-	$('#ta_text___Frame').attr("height",height+"px");
+    CKEDITOR.replace("ta_text");
 
-	
-	width = width + 50;
-	height = height + 220;	
-	
-        $('#div_dialog').height(height+"px");
-	$('#div_dialog').dialog('option', 'width', width);
-	$('#div_dialog').dialog('option', 'height', height);
-	$('#div_dialog').dialog('option', 'position', 'center');
-	
-	return false; //prevent submit
+    var regionid = $("#iRegionId").val();
+    var width = $("#region_"+regionid).width();
+    var height = $("#region_"+regionid).height();
+
+    // Min width
+    if (width < 800) width = 800;
+
+    // Adjust the width and height
+    width = width + 80;
+    height = height + 295;
+
+    $('#div_dialog').height(height+"px");
+    $('#div_dialog').dialog('option', 'width', width);
+    $('#div_dialog').dialog('option', 'height', height);
+    $('#div_dialog').dialog('option', 'position', 'center');
+
+    return false; //prevent submit
 }
 
 function microblog_callback()
 {
-    // Create the FCK editor
-    var oFCKeditor = new FCKeditor( 'template' ) ;
-    oFCKeditor.BasePath = "3rdparty/fckeditor/" ;
-    oFCKeditor.ReplaceTextarea();
+    // Conjure up a text editor
+    var instance = CKEDITOR.instances["template"];
+    if (instance)
+        CKEDITOR.remove(instance);
 
-    // Create the FCK editor
-    var oFCKeditor2 = new FCKeditor( 'nocontent' ) ;
-    oFCKeditor2.BasePath = "3rdparty/fckeditor/" ;
-    oFCKeditor2.ReplaceTextarea();
+    CKEDITOR.replace("template");
+
+    // Conjure up a text editor
+    var instance2 = CKEDITOR.instances["nocontent"];
+    if (instance2)
+        CKEDITOR.remove(instance2);
+
+    CKEDITOR.replace("nocontent");
 
     var regionid = $("#iRegionId").val();
     var width = $("#region_"+regionid).width();
@@ -112,10 +114,7 @@ function microblog_callback()
     // Min height
     if (height < 300) height = 300;
 
-    $('#template___Frame').attr("width",width+"px");
-    $('#template___Frame').attr("height",height+"px");
-
-    width = width + 50;
+    width = width + 80;
     height = height + 480;
 
     $('#div_dialog').height(height+"px");

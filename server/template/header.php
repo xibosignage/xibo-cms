@@ -79,8 +79,9 @@ $datemanager	= new DateManager($db);
 			if ($p == 'layout')
 			{
 				?>
-					<script type="text/javascript" src="3rdparty/fckeditor/fckeditor.js"></script>
 					<script type="text/javascript" src="lib/js/text-render.js"></script>
+                                        <script type="text/javascript" src="/ckeditor/ckeditor.js"></script>
+                                        <script type="text/javascript" src="/ckeditor/adapters/jquery.js"></script>
 				<?php
 			}
 		}

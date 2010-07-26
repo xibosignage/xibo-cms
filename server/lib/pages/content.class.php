@@ -584,6 +584,7 @@ END;
 		$form .= <<<END
 				</tbody>
 			</table>
+                       <div style="display:none"><input type="submit" /></div>
 		</div>
 	</form>
 END;

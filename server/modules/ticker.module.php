@@ -51,7 +51,7 @@ class ticker extends Module
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down,single|Single", "direction");
 		
 		$form = <<<FORM
-		<form class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=AddMedia">
+		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=AddMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
 			<table>
@@ -80,13 +80,6 @@ class ticker extends Module
 						</textarea>
 					</td>
 				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input id="btnSave" type="submit" value="Save"  />
-						<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-					</td>
-				</tr>
 			</table>
 		</form>
 FORM;
@@ -94,6 +87,8 @@ FORM;
 		$this->response->html 		= $form;
 		$this->response->callBack 	= 'text_callback';
 		$this->response->dialogTitle = 'Add New Ticker';
+                $this->response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+                $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
 		return $this->response;
 	}
@@ -131,7 +126,7 @@ FORM;
 		
 		//Output the form
 		$form = <<<FORM
-		<form class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=EditMedia">
+		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=EditMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="mediaid" value="$mediaid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
@@ -159,22 +154,17 @@ FORM;
 						<textarea id="ta_text" name="ta_text">$text</textarea>
 					</td>
 				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input id="btnSave" type="submit" value="Save"  />
-						<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-					</td>
-				</tr>
 			</table>
 		</form>
 FORM;
 		
-		$this->response->html 		= $form;
-		$this->response->callBack 	= 'text_callback';
-		$this->response->dialogTitle = 'Edit Ticker.';
+            $this->response->html 		= $form;
+            $this->response->callBack 	= 'text_callback';
+            $this->response->dialogTitle = 'Edit Ticker.';
+            $this->response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
-		return $this->response;		
+            return $this->response;
 	}
 	
 	/**
