@@ -368,17 +368,23 @@ END;
 			$lastaccessed 	= date('Y-m-d H:i:s', $aRow[4]);
 			$inc_schedule 	= $aRow[5];
 			$licensed 	= $aRow[6];
-                        $email_alert    = $aRow[7];
+            $email_alert    = $aRow[7];
 			$displayGroupID = $aRow[8];
 			$clientAddress  = Kit::ValidateParam($aRow[9], _STRING);
                         $displayName    = $display;
 
                         // Do we want to make a VNC link out of the display name?
                         $vncTemplate = Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK');
+                        $linkTarget = Kit::ValidateParam(Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
 
                         if ($vncTemplate != '' && $clientAddress != '')
                         {
-                            $display = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $display . '">' . $display . '</a>', $clientAddress);
+                            if ($linkTarget == '')
+                            {
+                                $linkTarget = '_top';
+                            }
+
+                            $display = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $display . '" target="' . $linkTarget . '">' . $display . '</a>', $clientAddress);
                         }
 
 			$output .= <<<END
