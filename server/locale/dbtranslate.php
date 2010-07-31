@@ -71,4 +71,5 @@ echo __('MAINTENANCE_KEY');
 echo __('mail_from');
 echo __('mail_to');
 echo __('SHOW_DISPLAY_AS_VNCLINK');
+echo __('SHOW_DISPLAY_AS_VNC_TGT');
 ?>
