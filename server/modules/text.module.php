@@ -80,7 +80,7 @@ FORM;
             $this->response->html 		= $form;
             $this->response->callBack 	= 'text_callback';
             $this->response->dialogTitle    = 'Add new Text item';
-            $this->response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
             $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
             return $this->response;
@@ -146,7 +146,7 @@ FORM;
 		$this->response->html 		= $form;
 		$this->response->callBack 	= 'text_callback';
 		$this->response->dialogTitle = 'Edit Text item';
-                $this->response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+                $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
                 $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
                 return $this->response;

@@ -62,11 +62,12 @@ var background_button_callback = function()
 var text_callback = function()
 {
     // Conjure up a text editor
-    var instance = CKEDITOR.instances["ta_text"];
-    if (instance)
-        CKEDITOR.remove(instance);
+    $("#ta_text").ckeditor();
 
-    CKEDITOR.replace("ta_text");
+    // Make sure when we close the dialog we also destroy the editor
+    $("#div_dialog").bind("dialogclose", function(event, ui){
+        $("#ta_text").ckeditorGet().destroy();
+    })
 
     var regionid = $("#iRegionId").val();
     var width = $("#region_"+regionid).width();
@@ -90,19 +91,15 @@ var text_callback = function()
 function microblog_callback()
 {
     // Conjure up a text editor
-    var instance = CKEDITOR.instances["template"];
-    if (instance)
-        CKEDITOR.remove(instance);
+    $("#ta_template").ckeditor();
+    $("#ta_nocontent").ckeditor();
 
-    CKEDITOR.replace("template");
-
-    // Conjure up a text editor
-    var instance2 = CKEDITOR.instances["nocontent"];
-    if (instance2)
-        CKEDITOR.remove(instance2);
-
-    CKEDITOR.replace("nocontent");
-
+    // Make sure when we close the dialog we also destroy the editor
+    $("#div_dialog").bind("dialogclose", function(event, ui){
+        $("#ta_template").ckeditorGet().destroy();
+        $("#ta_nocontent").ckeditorGet().destroy();
+    })
+    
     var regionid = $("#iRegionId").val();
     var width = $("#region_"+regionid).width();
     var height = $("#region_"+regionid).height();

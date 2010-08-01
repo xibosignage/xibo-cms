@@ -93,7 +93,7 @@ FORM;
         $this->response->dialogTitle    = 'Add Microblog';
         $this->response->callBack 	= 'microblog_callback';
         $this->response->AddButton(__('Help'), 'XiboHelpRender("index.php?p=help&q=Display&Topic=Microblog&Category=Media")');
-        $this->response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -175,13 +175,13 @@ FORM;
                 <tr>
                     <td colspan="4">
                         <span>Message Template<span class="required">*</span></span>
-                        <textarea id="template" name="template">$template</textarea>
+                        <textarea id="ta_template" name="template">$template</textarea>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="4">
                         <span>Message to show when there are no messages</span>
-                        <textarea id="nocontent" name="nocontent">$nocontent</textarea>
+                        <textarea id="ta_nocontent" name="nocontent">$nocontent</textarea>
                     </td>
                 </tr>
             </table>
@@ -192,7 +192,7 @@ FORM;
         $this->response->dialogTitle    = 'Edit MicroBlog';
         $this->response->callBack 	= 'microblog_callback';
         $this->response->AddButton(__('Help'), 'XiboHelpRender("index.php?p=help&q=Display&Topic=Microblog&Category=Media")');
-        $this->response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
         
         return $this->response;

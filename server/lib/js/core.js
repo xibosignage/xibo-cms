@@ -664,6 +664,11 @@ function XiboDialogClose() {
     $('#div_dialog').dialog('close');
 }
 
+function XiboSwapDialog(formUrl) {
+    $('#div_dialog').dialog('close');
+    XiboFormRender(formUrl);
+}
+
 /**
  * Display a login box
  * @param {String} message
