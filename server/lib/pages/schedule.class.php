@@ -548,6 +548,7 @@ class scheduleDAO
                 // How many days does this event span?
                 $spanningDays	= ($toDT - $fromDT) / (60 * 60 * 24);
                 $spanningDays	= $spanningDays < 1 ? 1 : $spanningDays;
+                $spanningDays   = $spanningDays > 31 ? 31 : $spanningDays;
 
                 $dayNo		= (int) date('d', $fromDT);
                 $layoutUri		= sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
