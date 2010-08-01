@@ -1494,6 +1494,10 @@ HTML;
 			$mediaFileName 	= $mediaNode->getAttribute('filename');
 			$mediaDuration  = $mediaNode->getAttribute('duration');
 
+                        // Artifically cap a duration so we dont break the timeline
+                        if ($mediaDuration > 350)
+                            $mediaDuration = 350;
+
 			// Get media name
 			require_once("modules/$mediaType.module.php");
 			
