@@ -811,6 +811,11 @@ END;
 		}
 		else
 		{
+                    // We are in the library so we therefore have to update the duration with the new value.
+                    // We could do this in the above code, but it is much simpler here until we rewrite
+                    // these classes to use a data base class.
+                    $db->query(sprintf("UPDATE media SET duration = %d WHERE mediaID = %d", $duration, $this->mediaid));
+                    
 			$this->response->loadFormUri = "index.php?p=content&q=displayForms&sp=add";
 			$this->response->message = 'Edited the Video.';
 
