@@ -183,18 +183,25 @@ else
                 // Send an email alert if either case is true:
                 //   * Email alerts are enabled for this display and we're set to always alert
                 //   * Email alerts are enabled for this display and the last time we saw this display it was logged in
-                if ((($email_alert == 1) && $alwaysAlert) || (($loggedin == 1) && ($email_alert == 1)))
+                if ($emailAlerts)
                 {
-                    $subject  = sprintf(__("Xibo Email Alert for Display %s"),$display_name);
-                    $body     = sprintf(__("Display %s with ID %d was last seen at %s."),$display_name,$displayid,$last_seen);
-                    $headers  = sprintf("From: %s\r\nX-Mailer: php", $msgFrom);
-                    if (mail($msgTo, $subject, $body, $headers))
+                    if ((($email_alert == 1) && $alwaysAlert) || (($loggedin == 1) && ($email_alert == 1)))
                     {
-                        print "A";
+                        $subject  = sprintf(__("Xibo Email Alert for Display %s"),$display_name);
+                        $body     = sprintf(__("Display %s with ID %d was last seen at %s."),$display_name,$displayid,$last_seen);
+                        $headers  = sprintf("From: %s\r\nX-Mailer: php", $msgFrom);
+                        if (mail($msgTo, $subject, $body, $headers))
+                        {
+                            print "A";
+                        }
+                        else
+                        {
+                            print "E";
+                        }
                     }
                     else
                     {
-                        print "E";
+                        print "D";
                     }
                 }
                 else
@@ -226,19 +233,25 @@ else
                     }
 
                     // Send an email alert if appropriate
-                    if ($email_alert == 1)
+                    if ($emailAlerts)
                     {
-                        $subject  = sprintf(__("Xibo Recovery for Display %s"),$display_name);
-                        $body     = sprintf(__("Display %s with ID %d has recovered."),$display_name,$displayid);
-                        $headers  = sprintf("From: %s\r\nX-Mailer: php", $msgFrom);
-                        if (mail($msgTo, $subject, $body, $headers))
+                        if ($email_alert == 1)
                         {
-                            print "G";
+                            $subject  = sprintf(__("Xibo Recovery for Display %s"),$display_name);
+                            $body     = sprintf(__("Display %s with ID %d has recovered."),$display_name,$displayid);
+                            $headers  = sprintf("From: %s\r\nX-Mailer: php", $msgFrom);
+                            if (mail($msgTo, $subject, $body, $headers))
+                            {
+                                print "G";
+                            }
+                            else
+                            {
+                                print "E";
+                            }    
                         }
-                        else
-                        {
-                            print "E";
-                        }    
+                    else
+                    {
+                        print ".";
                     }
                 }
                 else
