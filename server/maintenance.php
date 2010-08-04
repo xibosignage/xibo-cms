@@ -129,7 +129,7 @@ else
         $emailAlerts = Config::GetSetting($db, "MAINTENANCE_EMAIL_ALERTS");
         $alwaysAlert   = Config::GetSetting($db, "MAINTENANCE_ALWAYS_ALERT");
 
-        if ($emailAlerts = "On")
+        if ($emailAlerts == "On")
         {
             $emailAlerts = TRUE;
         }
@@ -138,7 +138,7 @@ else
             $emailAlerts = FALSE;
         }
         
-        if ($alwaysAlert = "On")
+        if ($alwaysAlert == "On")
         {
             $alwaysAlert = TRUE;
         }
@@ -185,6 +185,7 @@ else
                 //   * Email alerts are enabled for this display and the last time we saw this display it was logged in
                 if ($emailAlerts)
                 {
+                    // print "email_alert: $email_alert, alwaysAlert: $alwaysAlert, loggedin: $loggedin. ";
                     if ((($email_alert == 1) && $alwaysAlert) || (($loggedin == 1) && ($email_alert == 1)))
                     {
                         $subject  = sprintf(__("Xibo Email Alert for Display %s"),$display_name);
@@ -212,7 +213,7 @@ else
                 // Update the loggedin flag in the database:
                 $SQL = sprintf("UPDATE `display` SET `loggedin` = 0 WHERE `displayid` = %d",$displayid);
 
-                if (!$result =$db->query($SQL))
+                if (!$r =$db->query($SQL))
                 {
                     trigger_error($db->error());
                     trigger_error(__('Unable to update loggedin status for display.'), E_USER_ERROR);
@@ -226,29 +227,27 @@ else
                 {
                     $SQL = sprintf("UPDATE `display` SET `loggedin` = 1 WHERE `displayid` = %d",$displayid);
 
-                    if (!$result =$db->query($SQL))
+                    if (!$r =$db->query($SQL))
                     {
                         trigger_error($db->error());
                         trigger_error(__('Unable to update loggedin status for display.'), E_USER_ERROR);
                     }
 
                     // Send an email alert if appropriate
-                    if ($emailAlerts)
+                    if ($emailAlerts && ($email_alert == 1))
                     {
-                        if ($email_alert == 1)
+                        $subject  = sprintf(__("Xibo Recovery for Display %s"),$display_name);
+                        $body     = sprintf(__("Display %s with ID %d has recovered."),$display_name,$displayid);
+                        $headers  = sprintf("From: %s\r\nX-Mailer: php", $msgFrom);
+                        if (mail($msgTo, $subject, $body, $headers))
                         {
-                            $subject  = sprintf(__("Xibo Recovery for Display %s"),$display_name);
-                            $body     = sprintf(__("Display %s with ID %d has recovered."),$display_name,$displayid);
-                            $headers  = sprintf("From: %s\r\nX-Mailer: php", $msgFrom);
-                            if (mail($msgTo, $subject, $body, $headers))
-                            {
-                                print "G";
-                            }
-                            else
-                            {
-                                print "E";
-                            }    
+                            print "G";
                         }
+                        else
+                        {
+                            print "E";
+                        }    
+                    }
                     else
                     {
                         print ".";
