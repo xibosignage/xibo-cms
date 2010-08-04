@@ -68,6 +68,7 @@ echo __('MAINTENANCE_LOG_MAXAGE');
 echo __('MAINTENANCE_STAT_MAXAGE');
 echo __('MAINTENANCE_ALERT_TOUT');
 echo __('MAINTENANCE_KEY');
+echo __('MAINTENANCE_ALWAYS_ALERT');
 echo __('mail_from');
 echo __('mail_to');
 echo __('SHOW_DISPLAY_AS_VNCLINK');
