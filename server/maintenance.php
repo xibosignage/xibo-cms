@@ -125,48 +125,72 @@ else
         // Email Alerts
         print "<h1>" . __("Email Alerts") . "</h1>";
         flush();
-        if(Config::GetSetting($db, "MAINTENANCE_EMAIL_ALERTS")=="On")
-        {
-            // The time in the past that the last connection must be later than globally.
-            $globalTimeout = time() - (60 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENANCE_ALERT_TOUT"),_INT));
-            $msgTo         = Kit::ValidateParam(Config::GetSetting($db, "mail_to"),_PASSWORD);
-            $msgFrom       = Kit::ValidateParam(Config::GetSetting($db, "mail_from"),_PASSWORD);
-            
-            // Get a list of all licensed displays
-            $SQL = "SELECT `displayid`, `lastaccessed`, `email_alert`, `alert_timeout`, `display` FROM `display` WHERE licensed = 1";
 
-            if (!$result =$db->query($SQL))
+        $emailAlerts = Config::GetSetting($db, "MAINTENANCE_EMAIL_ALERTS");
+        $alwaysAlert   = Config::GetSetting($db, "MAINTENANCE_ALWAYS_ALERT");
+
+        if ($emailAlerts == "On")
+        {
+            $emailAlerts = TRUE;
+        }
+        else
+        {
+            $emailAlerts = FALSE;
+        }
+        
+        if ($alwaysAlert == "On")
+        {
+            $alwaysAlert = TRUE;
+        }
+        else
+        {
+            $alwaysAlert = FALSE;
+        }
+
+        // The time in the past that the last connection must be later than globally.
+        $globalTimeout = time() - (60 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENANCE_ALERT_TOUT"),_INT));
+        $msgTo         = Kit::ValidateParam(Config::GetSetting($db, "mail_to"),_PASSWORD);
+        $msgFrom       = Kit::ValidateParam(Config::GetSetting($db, "mail_from"),_PASSWORD);
+            
+        // Get a list of all licensed displays
+        $SQL = "SELECT `displayid`, `lastaccessed`, `email_alert`, `alert_timeout`, `display`, `loggedin` FROM `display` WHERE licensed = 1";
+
+        if (!$result =$db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to access displays'), E_USER_ERROR);
+        }
+
+        while($row = $db->get_row($result))
+        {
+            $displayid     = Kit::ValidateParam($row[0],_INT);
+            $lastAccessed  = Kit::ValidateParam($row[1],_INT);
+            $email_alert   = Kit::ValidateParam($row[2],_INT);
+            $alert_timeout = Kit::ValidateParam($row[3],_INT);
+            $display_name  = Kit::ValidateParam($row[4],_STRING);
+            $loggedin      = Kit::ValidateParam($row[5],_INT);
+            $final_timeout = $globalTimeout;
+            $last_seen     = date("Y-m-d H:i:s", $lastAccessed);
+
+            if ($alert_timeout != 0)
             {
-            	trigger_error($db->error());
-            	trigger_error(__('Unable to access displays'), E_USER_ERROR);
+                $final_timeout = time() - (60 * $alert_timeout);
             }
 
-            while($row = $db->get_row($result))
+            if (($final_timeout > $lastAccessed) || ($lastAccessed == ''))
             {
-                $displayid     = Kit::ValidateParam($row[0],_INT);
-                $lastAccessed  = Kit::ValidateParam($row[1],_INT);
-                $email_alert   = Kit::ValidateParam($row[2],_INT);
-                $alert_timeout = Kit::ValidateParam($row[3],_INT);
-                $display_name  = Kit::ValidateParam($row[4],_STRING);
-                $final_timeout = $globalTimeout;
-                $last_seen     = date("Y-m-d H:i:s", $lastAccessed);
-
-                // print $final_timeout . "|" . $lastAccessed;
-
-                if ($alert_timeout != 0)
+                // Alert
+                // Send an email alert if either case is true:
+                //   * Email alerts are enabled for this display and we're set to always alert
+                //   * Email alerts are enabled for this display and the last time we saw this display it was logged in
+                if ($emailAlerts)
                 {
-                    $final_timeout = time() - (60 * $alert_timeout);
-                }
-
-                if (($final_timeout > $lastAccessed) || ($lastAccessed == ''))
-                {
-                    // Alert
-                    if ($email_alert == 1)
+                    // print "email_alert: $email_alert, alwaysAlert: $alwaysAlert, loggedin: $loggedin. ";
+                    if ((($email_alert == 1) && $alwaysAlert) || (($loggedin == 1) && ($email_alert == 1)))
                     {
                         $subject  = sprintf(__("Xibo Email Alert for Display %s"),$display_name);
                         $body     = sprintf(__("Display %s with ID %d was last seen at %s."),$display_name,$displayid,$last_seen);
                         $headers  = sprintf("From: %s\r\nX-Mailer: php", $msgFrom);
-
                         if (mail($msgTo, $subject, $body, $headers))
                         {
                             print "A";
@@ -178,19 +202,63 @@ else
                     }
                     else
                     {
-                        print "X";
+                        print "D";
+                    }
+                }
+                else
+                {
+                    print "X";
+                }
+
+                // Update the loggedin flag in the database:
+                $SQL = sprintf("UPDATE `display` SET `loggedin` = 0 WHERE `displayid` = %d",$displayid);
+
+                if (!$r =$db->query($SQL))
+                {
+                    trigger_error($db->error());
+                    trigger_error(__('Unable to update loggedin status for display.'), E_USER_ERROR);
+                }
+                
+            }
+            else
+            {
+                // If we've transitioned back from loggedout to logged in, update the database
+                if ($loggedin == 0)
+                {
+                    $SQL = sprintf("UPDATE `display` SET `loggedin` = 1 WHERE `displayid` = %d",$displayid);
+
+                    if (!$r =$db->query($SQL))
+                    {
+                        trigger_error($db->error());
+                        trigger_error(__('Unable to update loggedin status for display.'), E_USER_ERROR);
+                    }
+
+                    // Send an email alert if appropriate
+                    if ($emailAlerts && ($email_alert == 1))
+                    {
+                        $subject  = sprintf(__("Xibo Recovery for Display %s"),$display_name);
+                        $body     = sprintf(__("Display %s with ID %d has recovered."),$display_name,$displayid);
+                        $headers  = sprintf("From: %s\r\nX-Mailer: php", $msgFrom);
+                        if (mail($msgTo, $subject, $body, $headers))
+                        {
+                            print "G";
+                        }
+                        else
+                        {
+                            print "E";
+                        }    
+                    }
+                    else
+                    {
+                        print ".";
                     }
                 }
                 else
                 {
                     print ".";
                 }
-                flush();
             }
-        }
-        else
-        {
-            print "-&gt;" . __("Disabled") . "<br/>\n";
+            flush();
         }
 
         // Log Tidy
