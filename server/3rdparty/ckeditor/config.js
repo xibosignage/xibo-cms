@@ -22,4 +22,6 @@ CKEDITOR.editorConfig = function( config )
                 ['TextColor','BGColor'],
                 ['Maximize', 'ShowBlocks','-','About']
         ];
+
+        config.removePlugins = 'scayt';
 };
