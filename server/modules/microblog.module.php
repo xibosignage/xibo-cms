@@ -47,7 +47,7 @@ class microblog extends Module
         $direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
 
         $form = <<<FORM
-        <form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
+        <form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
             <input type="hidden" name="layoutid" value="$layoutid">
             <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
             <table>
@@ -76,21 +76,13 @@ class microblog extends Module
                 <tr>
                     <td colspan="4">
                         <span>Message Template<span class="required">*</span></span>
-                        <textarea id="template" name="template"></textarea>
+                        <textarea id="ta_template" name="template"></textarea>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="4">
                         <span>Message to display when there are no messages</span>
-                        <textarea id="nocontent" name="nocontent"></textarea>
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>
-                        <input id="btnSave" type="submit" value="Save"  />
-                        <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-                        <input class="XiboHelpButton" id="btnHelp" type="button" title="Help" href="index.php?p=help&q=Display&Topic=Microblog&Category=Media" value="Help" />
+                        <textarea id="ta_nocontent" name="nocontent"></textarea>
                     </td>
                 </tr>
             </table>
@@ -100,6 +92,9 @@ FORM;
         $this->response->html 		= $form;
         $this->response->dialogTitle    = 'Add Microblog';
         $this->response->callBack 	= 'microblog_callback';
+        $this->response->AddButton(__('Help'), 'XiboHelpRender("index.php?p=help&q=Display&Topic=Microblog&Category=Media")');
+        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
     }
@@ -150,7 +145,7 @@ FORM;
 
         //Output the form
         $form = <<<FORM
-        <form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
+        <form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
             <input type="hidden" name="layoutid" value="$layoutid">
             <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
             <input type="hidden" name="mediaid" value="$mediaid">
@@ -180,21 +175,13 @@ FORM;
                 <tr>
                     <td colspan="4">
                         <span>Message Template<span class="required">*</span></span>
-                        <textarea id="template" name="template">$template</textarea>
+                        <textarea id="ta_template" name="template">$template</textarea>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="4">
                         <span>Message to show when there are no messages</span>
-                        <textarea id="nocontent" name="nocontent">$nocontent</textarea>
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>
-                        <input id="btnSave" type="submit" value="Save"  />
-                        <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-                        <input class="XiboHelpButton" id="btnHelp" type="button" title="Help" href="index.php?p=help&q=Display&Topic=Microblog&Category=Media" value="Help" />
+                        <textarea id="ta_nocontent" name="nocontent">$nocontent</textarea>
                     </td>
                 </tr>
             </table>
@@ -204,7 +191,10 @@ FORM;
         $this->response->html 		= $form;
         $this->response->dialogTitle    = 'Edit MicroBlog';
         $this->response->callBack 	= 'microblog_callback';
-
+        $this->response->AddButton(__('Help'), 'XiboHelpRender("index.php?p=help&q=Display&Topic=Microblog&Category=Media")');
+        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+        
         return $this->response;
     }
 

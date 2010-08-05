@@ -935,7 +935,7 @@ FORM;
 		
 		$response->SetFormRequestResponse($form, __('Change the Background Properties'), '550px', '240px');
                 $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Background') . '")');
-                $response->AddButton(__('Add Image'), 'XiboFormRender("index.php?p=module&q=Exec&mod=image&method=AddForm&backgroundImage=true&layoutid=' . $this->layoutid . '"');
+                $response->AddButton(__('Add Image'), 'XiboFormRender("index.php?p=module&q=Exec&mod=image&method=AddForm&backgroundImage=true&layoutid=' . $this->layoutid . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#LayoutBackgroundForm").submit()');
 		$response->Respond();
@@ -1493,6 +1493,10 @@ HTML;
 			$mediaType 		= $mediaNode->getAttribute('type');
 			$mediaFileName 	= $mediaNode->getAttribute('filename');
 			$mediaDuration  = $mediaNode->getAttribute('duration');
+
+                        // Artifically cap a duration so we dont break the timeline
+                        if ($mediaDuration > 350)
+                            $mediaDuration = 350;
 
 			// Get media name
 			require_once("modules/$mediaType.module.php");

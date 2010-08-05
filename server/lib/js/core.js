@@ -137,10 +137,6 @@ function XiboInitialise(scope){
 
     // Search for any text forms that will need submitting
     $(scope + ' .XiboTextForm').submit(function(){
-        var inst = FCKeditorAPI.GetInstance("ta_text");
-
-        $('#ta_text').val(inst.GetHTML());
-
         XiboFormSubmit(this);
 
         return false;
@@ -666,6 +662,11 @@ function XiboHoverRender(url, x, y)
  */
 function XiboDialogClose() {
     $('#div_dialog').dialog('close');
+}
+
+function XiboSwapDialog(formUrl) {
+    $('#div_dialog').dialog('close');
+    XiboFormRender(formUrl);
 }
 
 /**
