@@ -76,13 +76,13 @@ class microblog extends Module
                 <tr>
                     <td colspan="4">
                         <span>Message Template<span class="required">*</span></span>
-                        <textarea id="template" name="template"></textarea>
+                        <textarea id="ta_template" name="template"></textarea>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="4">
                         <span>Message to display when there are no messages</span>
-                        <textarea id="nocontent" name="nocontent"></textarea>
+                        <textarea id="ta_nocontent" name="nocontent"></textarea>
                     </td>
                 </tr>
             </table>

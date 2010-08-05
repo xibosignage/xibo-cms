@@ -65,8 +65,9 @@ var text_callback = function()
     $("#ta_text").ckeditor();
 
     // Make sure when we close the dialog we also destroy the editor
-    $("#div_dialog").bind("dialogclose", function(event, ui){
+    $("#div_dialog").bind("dialogclose.xibo", function(event, ui){
         $("#ta_text").ckeditorGet().destroy();
+        $("#div_dialog").unbind("dialogclose.xibo");
     })
 
     var regionid = $("#iRegionId").val();
@@ -95,9 +96,11 @@ function microblog_callback()
     $("#ta_nocontent").ckeditor();
 
     // Make sure when we close the dialog we also destroy the editor
-    $("#div_dialog").bind("dialogclose", function(event, ui){
+    $("#div_dialog").bind("dialogclose.xibo", function(event, ui){
         $("#ta_template").ckeditorGet().destroy();
         $("#ta_nocontent").ckeditorGet().destroy();
+
+        $("#div_dialog").unbind("dialogclose.xibo");
     })
     
     var regionid = $("#iRegionId").val();

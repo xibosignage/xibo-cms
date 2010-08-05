@@ -80,8 +80,8 @@ $datemanager	= new DateManager($db);
 			{
 				?>
 					<script type="text/javascript" src="lib/js/text-render.js"></script>
-                                        <script type="text/javascript" src="/ckeditor/ckeditor.js"></script>
-                                        <script type="text/javascript" src="/ckeditor/adapters/jquery.js"></script>
+                                        <script type="text/javascript" src="3rdparty/ckeditor/ckeditor.js"></script>
+                                        <script type="text/javascript" src="3rdparty/ckeditor/adapters/jquery.js"></script>
 				<?php
 			}
 		}
