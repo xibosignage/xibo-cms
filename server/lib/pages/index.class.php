@@ -285,8 +285,8 @@ class indexDAO
 		<h3>jQuery</h3>
 		<p><a href="http://jquery.com/">Jquery</a> (and plugins) are provided under the <a href="http://dev.jquery.com/browser/trunk/jquery/MIT-LICENSE.txt">MIT license.</a></p>
 		
-		<h3>FCK Editor</h3>
-		<p><a href="http://www.fckeditor.net/license">FCK Editor</a> is provided as the text editor, and is made available under GPL/LGPL/MPL</p>
+		<h3>CK Editor</h3>
+		<p><a href="http://ckeditor.com/">CK Editor</a> is provided as the text editor, and is made available under GPL/LGPL/MPL</p>
 END;
 		
 		$response->SetFormRequestResponse($output, __('About Xibo'), '500', '500');
