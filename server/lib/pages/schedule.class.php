@@ -1408,6 +1408,12 @@ END;
 		{
 			trigger_error(__("Your start time is in the past. Cannot schedule events in the past"), E_USER_ERROR);
 		}
+
+        // Check recurrance dT is in the future or empty
+        if (($recToDT != '') && ($recToDT < (time()- 86400))) 
+		{
+			trigger_error(__("Your repeat until date is in the past. Cannot schedule events to repeat in to the past"), E_USER_ERROR);
+		}
 		
 		// Ready to do the add 
 		$scheduleObject = new Schedule($db);
@@ -1482,11 +1488,11 @@ END;
 			trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);	
 		}
 		
-        // Uncomment to prevent edited events starting in the past
-        // if ($fromDT < (time()- 86400)) 
-		// {
-		//	trigger_error(__("Your start time is in the past. Cannot schedule events in the past"), E_USER_ERROR);
-		// }
+        // Check recurrance dT is in the future or empty
+        if (($recToDT != '') && ($recToDT < (time()-86400))) 
+		{
+			trigger_error(__("Your repeat until date is in the past. Cannot schedule events to repeat in to the past"), E_USER_ERROR);
+		}
 		
 		// Ready to do the edit 
 		$scheduleObject = new Schedule($db);
