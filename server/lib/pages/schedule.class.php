@@ -257,7 +257,7 @@ class scheduleDAO
                 foreach($week as $d)
                 {
                     // This is each day
-                    $currentDay = mktime(date("H"), 0, 0, $month, $d, $year);
+                    $currentDay = mktime(0, 0, 0, $month, $d, $year);
 
                     if($i < $offset_count)
                     {
@@ -292,7 +292,7 @@ class scheduleDAO
                         // Are there any extra events to fit into this day that didnt have a space
                         if (isset($monthEvents[3][$d]))
                         {
-                            $events4	.= '<td colspan="1"><a href="index.php?p=schedule&q=DayHover&date=' . $currentDay . '" class="XiboFormButton XiboHoverButton">' . sprintf(__('+ %d more'), $monthEvents[3][$d]) . '</a></td>';
+                            $events4	.= '<td colspan="1"><a href="index.php?p=schedule&q=DayHover&date=' . $currentDay . '" class="XiboFormButton">' . sprintf(__('+ %d more'), $monthEvents[3][$d]) . '</a></td>';
                         }
                         else
                         {
@@ -370,8 +370,11 @@ class scheduleDAO
             $response           = new ResponseManager();
 
             $displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY, Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY));
-            $date		= Kit::GetParam('date', _GET, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
+            $date		= Kit::GetParam('date', _GET, _INT, 0);
             $output             = '';
+
+            if ($date == 0)
+                trigger_error(__('You must supply a day'));
 
             // Query for all events that sit in this day
             $events = $this->GetEventsForDay($date, $displayGroupIDs);
@@ -392,8 +395,8 @@ class scheduleDAO
                 $editLink = $event->editPermission == true ? sprintf('class="XiboFormButton" href="%s"', $event->layoutUri) : 'class="UnEditableEvent"';
 
                 $output .= '<tr>';
-                $output .= '<td>' . date('Y-m-d H:m:s', $event->fromDT) . '</td>';
-                $output .= '<td>' . date('Y-m-d H:m:s', $event->toDT) . '</td>';
+                $output .= '<td>' . date('Y-m-d H:i:s', $event->fromDT) . '</td>';
+                $output .= '<td>' . date('Y-m-d H:i:s', $event->toDT) . '</td>';
                 $output .= '<td>' . $event->layout . '</td>';
                 $output .= sprintf('<td><button %s>%s</button></td>', $editLink, __('Edit'));
                 $output .= '</tr>';
@@ -403,7 +406,7 @@ class scheduleDAO
             $output .= '    </table>';
             $output .= '</div>';
 
-            $response->SetFormRequestResponse($output, __('Events for Day'), '550px', '250px');
+            $response->SetFormRequestResponse($output, __('Events for Day'), '650', '450');
             $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
             $response->AddButton(__('Close'), 'XiboDialogClose()');
             $response->Respond();
@@ -790,8 +793,8 @@ class scheduleDAO
             $SQL.= "SELECT schedule_detail.schedule_detailID, ";
             $SQL.= "       schedule_detail.FromDT, ";
             $SQL.= "       schedule_detail.ToDT,";
-            $SQL.= "       LEAST(schedule_detail.FromDT, $fromDt) AS AdjustedFromDT,";
-            $SQL.= "       GREATEST(schedule_detail.ToDT, $toDt) AS AdjustedToDT,";
+            $SQL.= "       GREATEST(schedule_detail.FromDT, $fromDt) AS AdjustedFromDT,";
+            $SQL.= "       LEAST(schedule_detail.ToDT, $toDt) AS AdjustedToDT,";
             $SQL.= "       layout.layout, ";
             $SQL.= "       schedule_detail.userid, ";
             $SQL.= "       schedule_detail.is_priority, ";
