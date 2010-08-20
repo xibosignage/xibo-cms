@@ -571,7 +571,7 @@ class XMDSSoap
             $layoutid    = $row[0];
             $default = $scheduleXml->createElement("default");
             $default->setAttribute("file", $layoutid);
-            $layoutElements->appendChild($layout);
+            $layoutElements->appendChild($default);
         }
 
         if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", $scheduleXml->saveXML(), "xmds", "Schedule");
