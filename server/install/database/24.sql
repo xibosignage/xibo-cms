@@ -6,6 +6,14 @@ INSERT INTO `setting` (`setting`, `value`, `type`, `helptext`, `cat`, `userChang
 INSERT INTO `setting` (`setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES
   ('MAINTENANCE_ALWAYS_ALERT', 'Off', 'dropdown', 'Should Xibo send an email if a display is in an error state every time the maintenance script runs?','On|Off','maintenance','1');
 
+/* Add a setting to enable schedule lookahead */
+INSERT INTO `setting` (`setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES
+  ('SCHEDULE_LOOKAHEAD','On','dropdown','Should Xibo send future schedule information to clients?','On|Off','general','0');
+
+/* Add a setting to configure how far in to the future RequiredFiles (and optionally Schedule) lookahead */
+INSERT INTO `setting` (`setting`, `value`, `type`, `helptext`, `cat`, `userChange`) VALUES
+  ('REQUIRED_FILES_LOOKAHEAD','172800','text','How many seconds in to the future should the calls to RequiredFiles look?','general','1');
+
 /* VERSION UPDATE */
 /* Set the version table, etc */
 UPDATE `version` SET `app_ver` = '1.2.0-rc2', `XmdsVersion` = 2;

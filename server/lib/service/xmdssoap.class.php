@@ -135,6 +135,7 @@ class XMDSSoap
         $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
         $version 	= Kit::ValidateParam($version, _STRING);
+        $rfLookahead = Kit::ValidateParam(Config::GetSetting($db,'REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -164,9 +165,9 @@ class XMDSSoap
         $currentdate 	= time();
         $infinityFromDT = mktime(0,0,0,1,1,2000);
         $infinityToDT	= mktime(0,0,0,12,31,2050);
-        $plus4hours 	= $currentdate + 86400;
+        $rfLookahead 	= $currentdate + $rfLookahead;
 
-        $scheduleWhere = sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $plus4hours, $currentdate);
+        $scheduleWhere = sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $rfLookahead, $currentdate);
         $scheduleWhere .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
 
         // Add file nodes to the $fileElements
@@ -454,6 +455,7 @@ class XMDSSoap
         $serverKey 		= Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
         $version 		= Kit::ValidateParam($version, _STRING);
+        $sLookahead     = Kit::ValidateParam(Config::GetSetting($db,'REQUIRED_FILES_LOOKAHEAD'),_INT);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -477,7 +479,14 @@ class XMDSSoap
         $currentdate 	= time();
         $infinityFromDT = mktime(0,0,0,1,1,2000);
         $infinityToDT	= mktime(0,0,0,12,31,2050);
-        $plus4hours 	= $currentdate + 86400;
+        if (Config::GetSetting($db,'SCHEDULE_LOOKAHEAD') == 'On')
+        {
+            $sLookahead = $currentdate + $sLookahead;
+        }
+        else
+        {
+            $sLookahead = $currentdate;
+        }
 
         //Add file nodes to the $fileElements
         //Firstly get all the scheduled layouts
@@ -495,12 +504,12 @@ class XMDSSoap
         // Do we include the default display
         if ($this->includeSchedule == 1)
         {
-            $SQL .= " AND ((schedule_detail.FromDT < $currentdate AND schedule_detail.ToDT > $currentdate )";
+            $SQL .= sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate);
             $SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
         }
         else
         {
-            $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $currentdate, $currentdate);
+            $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate);
         }
 
         // Before we run the main query we should check to see if there are any priority layouts to deal with
