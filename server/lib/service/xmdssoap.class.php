@@ -490,7 +490,7 @@ class XMDSSoap
 
         //Add file nodes to the $fileElements
         //Firstly get all the scheduled layouts
-        $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID ";
+        $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID, schedule_detail.is_priority ";
         $SQL .= " FROM layout ";
         $SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
         $SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
@@ -512,36 +512,23 @@ class XMDSSoap
             $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate);
         }
 
-        // Before we run the main query we should check to see if there are any priority layouts to deal with
-        $SQLp = " AND schedule_detail.is_priority = 1 ";
-
         if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
 
         // Run the query
-        if (!$results = $db->query($SQL . $SQLp))
+        if (!$results = $db->query($SQL))
         {
             trigger_error($db->error());
-            return new SoapFault('Unable to get A list of layouts for the priority schedule');
-        }
-
-        // If there were no results then continue to get the full schedule
-        if ($db->num_rows($results) == 0)
-        {
-            // Run the query
-            if (!$results = $db->query($SQL))
-            {
-                trigger_error($db->error());
-                return new SoapFault('Unable to get A list of layouts for the schedule');
-            }
+            return new SoapFault('Unable to get A list of layouts for the schedule');
         }
 
         // We must have some results in here by this point
         while ($row = $db->get_row($results))
         {
-            $layoutid 	= $row[0];
-            $fromdt 	= date('Y-m-d H:i:s', $row[1]);
-            $todt	= date('Y-m-d H:i:s', $row[2]);
-            $scheduleid = $row[3];
+            $layoutid 	 = $row[0];
+            $fromdt 	 = date('Y-m-d H:i:s', $row[1]);
+            $todt	     = date('Y-m-d H:i:s', $row[2]);
+            $scheduleid  = $row[3];
+            $is_priority = Kit::ValidateParam($row[4], _INT);
 
             //firstly add this as a node
             $layout = $scheduleXml->createElement("layout");
@@ -550,6 +537,7 @@ class XMDSSoap
             $layout->setAttribute("fromdt", $fromdt);
             $layout->setAttribute("todt", $todt);
             $layout->setAttribute("scheduleid", $scheduleid);
+            $layout->setAttribute("priority", $is_priority);
 
             $layoutElements->appendChild($layout);
         }
