@@ -455,7 +455,7 @@ class XMDSSoap
         $serverKey 		= Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
         $version 		= Kit::ValidateParam($version, _STRING);
-        $sLookahead     = Kit::ValidateParam(Config::GetSetting($db,'REQUIRED_FILES_LOOKAHEAD'),_INT);
+        $sLookahead     = Kit::ValidateParam(Config::GetSetting($db,'REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -533,23 +533,6 @@ class XMDSSoap
                 trigger_error($db->error());
                 return new SoapFault('Unable to get A list of layouts for the schedule');
             }
-
-            // Was there anything?
-            if ($db->num_rows($results) == 0)
-            {
-                // No rows, run the query for default layout
-                $SQL  = $SQLBase;
-                $SQL .= " AND ((schedule_detail.FromDT < $currentdate AND schedule_detail.ToDT > $currentdate )";
-                $SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
-
-                if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "TTTT: $SQL", "xmds", "Schedule");
-
-                if (!$results = $db->query($SQL))
-                {
-                    trigger_error($db->error());
-                    return new SoapFault("Unable to get A list of layouts for the last chance schedule");
-                }
-            }
         }
 
         // We must have some results in here by this point
@@ -568,6 +551,26 @@ class XMDSSoap
             $layout->setAttribute("todt", $todt);
             $layout->setAttribute("scheduleid", $scheduleid);
 
+            $layoutElements->appendChild($layout);
+        }
+
+        // Add on the default layout node
+        $SQL  = $SQLBase;
+        $SQL .= " AND (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d )", $infinityFromDT, $infinityToDT);
+
+        if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "TTTT: $SQL", "xmds", "Schedule");
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            return new SoapFault("Unable to get A list of layouts for the last chance schedule");
+        }
+
+        while ($row = $db->get_row($results))
+        {
+            $layoutid    = $row[0];
+            $default = $scheduleXml->createElement("default");
+            $default->setAttribute("file", $layoutid);
             $layoutElements->appendChild($layout);
         }
 
