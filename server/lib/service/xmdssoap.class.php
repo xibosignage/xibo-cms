@@ -556,7 +556,7 @@ class XMDSSoap
 
         // Add on the default layout node
         $SQL  = $SQLBase;
-        $SQL .= " AND (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d )", $infinityFromDT, $infinityToDT);
+        $SQL .= sprintf(" AND (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d )", $infinityFromDT, $infinityToDT);
 
         if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "TTTT: $SQL", "xmds", "Schedule");
 
