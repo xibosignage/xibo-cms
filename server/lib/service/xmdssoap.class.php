@@ -556,8 +556,8 @@ class XMDSSoap
         while ($row = $db->get_row($results))
         {
             $layoutid 	= $row[0];
-            $fromdt 	= date('Y-m-d h:i:s', $row[1]);
-            $todt	= date('Y-m-d h:i:s', $row[2]);
+            $fromdt 	= date('Y-m-d H:i:s', $row[1]);
+            $todt	= date('Y-m-d H:i:s', $row[2]);
             $scheduleid = $row[3];
 
             //firstly add this as a node
