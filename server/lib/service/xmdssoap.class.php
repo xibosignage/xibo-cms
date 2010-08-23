@@ -526,7 +526,7 @@ class XMDSSoap
         {
             $layoutid 	 = $row[0];
             $fromdt 	 = date('Y-m-d H:i:s', $row[1]);
-            if ($todt == $infinityToDT)
+            if ($row[2] == $infinityToDT)
             {
                 $todt        = '2030-01-19 00:00:00';
             }
