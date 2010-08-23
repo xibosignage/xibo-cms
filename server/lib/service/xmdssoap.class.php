@@ -526,7 +526,14 @@ class XMDSSoap
         {
             $layoutid 	 = $row[0];
             $fromdt 	 = date('Y-m-d H:i:s', $row[1]);
-            $todt	     = date('Y-m-d H:i:s', $row[2]);
+            if ($todt == $infinityToDT)
+            {
+                $todt        = '2030-01-19 00:00:00';
+            }
+            else
+            {
+                $todt	     = date('Y-m-d H:i:s', $row[2]);
+            }
             $scheduleid  = $row[3];
             $is_priority = Kit::ValidateParam($row[4], _INT);
 
