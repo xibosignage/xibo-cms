@@ -382,9 +382,9 @@ class scheduleDAO
             $output .= '<div class="info_table">';
             $output .= '    <table style="width:100%">';
             $output .= '        <thead>';
-            $output .= '            <th>From DT</th>';
-            $output .= '            <th>To DT</th>';
-            $output .= '            <th>Layout</th>';
+            $output .= sprintf('            <th>%s</th>', __('Start'));
+            $output .= sprintf('            <th>%s</th>', __('Finish'));
+            $output .= sprintf('            <th>%s</th>', __('Layout'));
             $output .= '            <th></th>';
             $output .= '        </thead>';
             $output .= '        <tbody>';
