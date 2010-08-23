@@ -816,7 +816,7 @@ class scheduleDAO
             $SQL.= "   AND schedule_detail.FromDT <= $toDt ";
 
             //Ordering
-            $SQL.= " ORDER BY schedule_detail.ToDT - schedule_detail.FromDT DESC, 2,3";
+            $SQL .= " ORDER BY schedule_detail.FromDT ASC, layout.layout ASC";
 
             Debug::LogEntry($db, 'audit', $SQL);
 
