@@ -524,7 +524,7 @@ function backup_tables($db,$tables = '*')
 				{
 					$return = '';
 					$row[$j] = addslashes($row[$j]);
-					$row[$j] = ereg_replace("\n","\\n",$row[$j]);
+					$row[$j] = preg_replace("/\n/","\\n",$row[$j]);
 					if (isset($row[$j])) { $return.= '"'.$row[$j].'"' ; } else { $return.= 'NULL'; }
 					if ($j<($num_fields-1)) { $return.= ','; }
 					fwrite($handle, $return);
