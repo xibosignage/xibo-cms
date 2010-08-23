@@ -70,9 +70,6 @@ class text extends Module
 						<textarea id="ta_text" name="ta_text"></textarea>
 					</td>
 				</tr>
-				<tr>
-					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.org.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
-				</tr>
 			</table>
 		</form>
 FORM;
@@ -135,9 +132,6 @@ FORM;
 					<td colspan="4">
 						<textarea id="ta_text" name="ta_text">$text</textarea>
 					</td>
-				</tr>
-				<tr>
-					<td colspan="4"><input type="checkbox" id="termsOfService" name="termsOfService" checked="checked"><label for="termsOfService">I certify I have the right to publish this media and that this media does not violate the terms of service stated in the <a href="http://www.xibo.org.uk/manual/index.php?p=content/license/termsofservice">manual</a>.</label></td>
 				</tr>
 			</table>
 		</form>
