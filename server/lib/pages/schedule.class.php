@@ -807,6 +807,7 @@ class scheduleDAO
             $SQL.= "  FROM schedule_detail ";
             $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
 
+
             $SQL.= "  INNER JOIN displaygroup ON displaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
             $SQL.= "  INNER JOIN schedule ON schedule_detail.EventID = schedule.EventID ";
             $SQL.= " WHERE 1=1 ";
@@ -1039,6 +1040,7 @@ HTML;
 		$SQL .= " ORDER BY IsDisplaySpecific, displaygroup.DisplayGroup ";
 		
 		Debug::LogEntry($db, 'audit', $SQL, 'Schedule', 'UnorderedListofDisplays');
+
 
 		if(!($results = $db->query($SQL))) 
 		{
@@ -1527,7 +1529,7 @@ END;
 		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
 		
         $strQuestion = __('Are you sure you want to delete this event from <b>all</b> displays?');
-        $strAdvice = __('If you only want to delete this item from certain displays, please untick the displays and click Save.');
+        $strAdvice = __('If you only want to delete this item from certain displays, please deselect the displays in the previous dialogue and click Save.');
 
 		$form = <<<END
 		<form id="DeleteEventForm" class="XiboForm" action="index.php?p=schedule&q=DeleteEvent">
