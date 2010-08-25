@@ -806,6 +806,7 @@ class scheduleDAO
 	    $SQL.= "       schedule.DisplayGroupIDs ";
             $SQL.= "  FROM schedule_detail ";
             $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
+
             $SQL.= "  INNER JOIN displaygroup ON displaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
             $SQL.= "  INNER JOIN schedule ON schedule_detail.EventID = schedule.EventID ";
             $SQL.= " WHERE 1=1 ";
@@ -1525,22 +1526,20 @@ END;
 		
 		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
 		
+        $strQuestion = __('Are you sure you want to delete this event from <b>all</b> displays?');
+        $strAdvice = __('If you only want to delete this item from certain displays, please untick the displays and click Save.');
+
 		$form = <<<END
 		<form id="DeleteEventForm" class="XiboForm" action="index.php?p=schedule&q=DeleteEvent">
 			<input type="hidden" name="EventID" value="$eventID" />
 			<input type="hidden" name="EventDetailID" value="$eventDetailID" />
 			<table>
 				<tr>
-					<td>Are you sure you want to delete this event?</td>
+					<td>$strQuestion</td>
 				</tr>
-				<tr>
-					<td colspan="2">
-						<input id="radio_all" type="radio" name="linkupdate" value="all" checked>
-						<label for="radio_all">Delete event for all display groups in this series</label><br />
-						<input id="radio_single" type="radio" name="linkupdate" value="single">
-						<label for="radio_single">Delete event for this display group only</label>
-					</td>
-				</tr>	
+                <tr>
+                    <td>$strAdvice</td>
+                </tr>
 			</table>	
 		</form>
 END;
@@ -1554,7 +1553,7 @@ END;
 	}
 	
 	/**
-	 * Deletes an Event
+	 * Deletes an Event from all displays
 	 * @return 
 	 */
 	public function DeleteEvent()
@@ -1565,63 +1564,17 @@ END;
 		
 		$eventID			= Kit::GetParam('EventID', _POST, _INT, 0);
 		$eventDetailID		= Kit::GetParam('EventDetailID', _POST, _INT, 0);
-		$linkedEvents		= Kit::GetParam('linkupdate', _POST, _STRING, 'all');
 		
 		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
 		
 		// Create an object to use for the delete
 		$scheduleObject = new Schedule($db);
 		
-		// Are we deleting a detail - or the entire event
-		if ($linkedEvents == 'single')
-		{
-			// Get the display group ID for the schedule detail we are about to delete
-			$SQL = sprintf('SELECT DisplayGroupID FROM schedule_detail WHERE schedule_detailID = %d', $eventDetailID);
-			
-			if (!$result = $db->query($SQL))
-			{
-				trigger_error(__('Error retriving information necessary to delete this event'), E_USER_ERROR);
-			}
-			
-			$row 			= $db->get_assoc_row($result);
-			$displayGroupID = $row['DisplayGroupID'];
-			
-			// Just delete this one
-			if (!$scheduleObject->DeleteEventDetail($eventDetailID)) 
-			{
-				trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
-			}
-			
-			// Test to see if this was the last one
-			$SQL = sprintf("SELECT * FROM schedule_detail WHERE eventID = %d", $eventID);
-			
-			$result = $db->query($SQL);
-			
-			if ($db->num_rows($result) == 0)
-			{
-				// Also delete the event
-				if (!$scheduleObject->Delete($eventID)) 
-				{
-					trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
-				}
-			}
-			else
-			{
-				// Edit the event to exclude the Schedule Detail we just deleted.
-				if (!$scheduleObject->DeleteDisplayGroupFromEvent($eventID, $displayGroupID))
-				{
-					trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
-				}
-			}
-		}
-		else
-		{
-			// Delete everything
-			if (!$scheduleObject->Delete($eventID)) 
-			{
-				trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
-			}
-		}
+		// Delete the entire schedule.
+		if (!$scheduleObject->Delete($eventID)) 
+    	{
+			trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
+    	}
 		
 		$response->SetFormSubmitResponse(__("The Event has been Deleted."));
 		$response->callBack = 'CallGenerateCalendar';
