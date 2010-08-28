@@ -390,7 +390,7 @@ END;
 		{
 			$SQL .= sprintf("AND displayID = '%s' ", $displayid);
 		}
-		$SQL .= "ORDER BY logdate DESC, logid ";
+		$SQL .= "ORDER BY logid DESC ";
 
 		if(!$results = $db->query($SQL))  
 		{

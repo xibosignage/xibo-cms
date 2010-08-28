@@ -576,5 +576,14 @@ END;
         {
             return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="img/forms/' . $this->type . '.png" /></div>';
         }
+
+    /**
+     * Is this media node region specific
+     * @return <bool>
+     */
+    public function IsRegionSpecific()
+    {
+        return $this->regionSpecific;
+    }
 }
 ?>
