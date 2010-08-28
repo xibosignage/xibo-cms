@@ -135,6 +135,7 @@ class XMDSSoap
         $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
         $version 	= Kit::ValidateParam($version, _STRING);
+        $rfLookahead = Kit::ValidateParam(Config::GetSetting($db,'REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -164,9 +165,9 @@ class XMDSSoap
         $currentdate 	= time();
         $infinityFromDT = mktime(0,0,0,1,1,2000);
         $infinityToDT	= mktime(0,0,0,12,31,2050);
-        $plus4hours 	= $currentdate + 86400;
+        $rfLookahead 	= $currentdate + $rfLookahead;
 
-        $scheduleWhere = sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $plus4hours, $currentdate);
+        $scheduleWhere = sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $rfLookahead, $currentdate);
         $scheduleWhere .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
 
         // Add file nodes to the $fileElements
@@ -454,6 +455,7 @@ class XMDSSoap
         $serverKey 		= Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
         $version 		= Kit::ValidateParam($version, _STRING);
+        $sLookahead     = Kit::ValidateParam(Config::GetSetting($db,'REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -477,11 +479,18 @@ class XMDSSoap
         $currentdate 	= time();
         $infinityFromDT = mktime(0,0,0,1,1,2000);
         $infinityToDT	= mktime(0,0,0,12,31,2050);
-        $plus4hours 	= $currentdate + 86400;
+        if (Config::GetSetting($db,'SCHEDULE_LOOKAHEAD') == 'On')
+        {
+            $sLookahead = $currentdate + $sLookahead;
+        }
+        else
+        {
+            $sLookahead = $currentdate;
+        }
 
         //Add file nodes to the $fileElements
         //Firstly get all the scheduled layouts
-        $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID ";
+        $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID, schedule_detail.is_priority ";
         $SQL .= " FROM layout ";
         $SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
         $SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
@@ -495,61 +504,38 @@ class XMDSSoap
         // Do we include the default display
         if ($this->includeSchedule == 1)
         {
-            $SQL .= " AND ((schedule_detail.FromDT < $currentdate AND schedule_detail.ToDT > $currentdate )";
+            $SQL .= sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate);
             $SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
         }
         else
         {
-            $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $currentdate, $currentdate);
+            $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate);
         }
-
-        // Before we run the main query we should check to see if there are any priority layouts to deal with
-        $SQLp = " AND schedule_detail.is_priority = 1 ";
 
         if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
 
         // Run the query
-        if (!$results = $db->query($SQL . $SQLp))
+        if (!$results = $db->query($SQL))
         {
             trigger_error($db->error());
-            return new SoapFault('Unable to get A list of layouts for the priority schedule');
-        }
-
-        // If there were no results then continue to get the full schedule
-        if ($db->num_rows($results) == 0)
-        {
-            // Run the query
-            if (!$results = $db->query($SQL))
-            {
-                trigger_error($db->error());
-                return new SoapFault('Unable to get A list of layouts for the schedule');
-            }
-
-            // Was there anything?
-            if ($db->num_rows($results) == 0)
-            {
-                // No rows, run the query for default layout
-                $SQL  = $SQLBase;
-                $SQL .= " AND ((schedule_detail.FromDT < $currentdate AND schedule_detail.ToDT > $currentdate )";
-                $SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
-
-                if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "TTTT: $SQL", "xmds", "Schedule");
-
-                if (!$results = $db->query($SQL))
-                {
-                    trigger_error($db->error());
-                    return new SoapFault("Unable to get A list of layouts for the last chance schedule");
-                }
-            }
+            return new SoapFault('Unable to get A list of layouts for the schedule');
         }
 
         // We must have some results in here by this point
         while ($row = $db->get_row($results))
         {
-            $layoutid 	= $row[0];
-            $fromdt 	= date('Y-m-d h:i:s', $row[1]);
-            $todt	= date('Y-m-d h:i:s', $row[2]);
-            $scheduleid = $row[3];
+            $layoutid 	 = $row[0];
+            $fromdt 	 = date('Y-m-d H:i:s', $row[1]);
+            if ($row[2] == $infinityToDT)
+            {
+                $todt        = '2030-01-19 00:00:00';
+            }
+            else
+            {
+                $todt	     = date('Y-m-d H:i:s', $row[2]);
+            }
+            $scheduleid  = $row[3];
+            $is_priority = Kit::ValidateParam($row[4], _INT);
 
             //firstly add this as a node
             $layout = $scheduleXml->createElement("layout");
@@ -558,8 +544,29 @@ class XMDSSoap
             $layout->setAttribute("fromdt", $fromdt);
             $layout->setAttribute("todt", $todt);
             $layout->setAttribute("scheduleid", $scheduleid);
+            $layout->setAttribute("priority", $is_priority);
 
             $layoutElements->appendChild($layout);
+        }
+
+        // Add on the default layout node
+        $SQL  = $SQLBase;
+        $SQL .= sprintf(" AND (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d )", $infinityFromDT, $infinityToDT);
+
+        if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "TTTT: $SQL", "xmds", "Schedule");
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            return new SoapFault("Unable to get A list of layouts for the last chance schedule");
+        }
+
+        while ($row = $db->get_row($results))
+        {
+            $layoutid    = $row[0];
+            $default = $scheduleXml->createElement("default");
+            $default->setAttribute("file", $layoutid);
+            $layoutElements->appendChild($default);
         }
 
         if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", $scheduleXml->saveXML(), "xmds", "Schedule");
