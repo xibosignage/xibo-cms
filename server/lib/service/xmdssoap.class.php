@@ -167,7 +167,7 @@ class XMDSSoap
         $infinityToDT	= mktime(0,0,0,12,31,2050);
         $rfLookahead 	= $currentdate + $rfLookahead;
 
-        $scheduleWhere = sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $rfLookahead, $currentdate);
+        $scheduleWhere = sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $rfLookahead, $currentdate - 3600);
         $scheduleWhere .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
 
         // Add file nodes to the $fileElements
@@ -504,12 +504,12 @@ class XMDSSoap
         // Do we include the default display
         if ($this->includeSchedule == 1)
         {
-            $SQL .= sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate);
+            $SQL .= sprintf(" AND ((schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate - 3600);
             $SQL .= sprintf(" OR (schedule_detail.FromDT = %d AND schedule_detail.ToDT = %d ))", $infinityFromDT, $infinityToDT);
         }
         else
         {
-            $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate);
+            $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate - 3600);
         }
 
         if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "$SQL", "xmds", "Schedule");
