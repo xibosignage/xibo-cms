@@ -25,6 +25,9 @@ if (! checkPHP())
 	die('Xibo requires PHP 5.2.4 or later');
 }
 
+error_reporting(0);
+ini_set('display_errors', 0);
+
 include('lib/app/kit.class.php');
 include('install/header.inc');
 include('config/config.class.php');
