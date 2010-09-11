@@ -50,10 +50,6 @@ if (Kit::GetParam("includes", _POST, _BOOL)) {
 
 session_start();
 
-define('_CHECKBOX', "checkbox");
-define('_INPUTBOX', "inputbox");
-define('_PASSWORDBOX', "password");
-
 Config::Load();
 
 // create a database class instance
