@@ -37,6 +37,8 @@ define('_USERNAME', "username");
 define('_CHECKBOX', "checkbox");
 define('_FILENAME', "filename");
 define('_URI', "uri");
+define('_INPUTBOX', "inputbox");
+define('_PASSWORDBOX', "password");
 
 class Kit 
 {
