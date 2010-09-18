@@ -160,7 +160,7 @@ class XMDSSoap
         $rfLookahead 	= $currentdate + $rfLookahead;
 
         // Get a list of all layout ids in the schedule right now.
-        $SQL  = " SELECT layout.layoutID ";
+        $SQL  = " SELECT DISTINCT layout.layoutID ";
         $SQL .= "   FROM layout ";
         $SQL .= " 	INNER JOIN schedule_detail ";
         $SQL .= " 	ON schedule_detail.layoutID = layout.layoutID ";
