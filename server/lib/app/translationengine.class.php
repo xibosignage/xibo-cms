@@ -39,7 +39,7 @@ class TranslationEngine
             global $transEngine;
             global $stream;
 
-            Debug::LogEntry($db, 'audit', 'IN', 'TranslationEngine', 'InitLocal');
+            //Debug::LogEntry($db, 'audit', 'IN', 'TranslationEngine', 'InitLocal');
 
             // Try to get the local firstly from _REQUEST (post then get)
             $lang = Kit::GetParam('lang', _REQUEST, _WORD, '');
@@ -68,7 +68,7 @@ class TranslationEngine
 
                 if ($langs != '')
                 {
-                    Debug::LogEntry($db, 'audit', ' HTTP_ACCEPT_LANGUAGE [' . $langs . ']', 'TranslationEngine', 'InitLocal');
+                    //Debug::LogEntry($db, 'audit', ' HTTP_ACCEPT_LANGUAGE [' . $langs . ']', 'TranslationEngine', 'InitLocal');
                     $langs = explode(',', $langs);
 
                     foreach ($langs as $lang)
@@ -79,7 +79,7 @@ class TranslationEngine
 
                         if (in_array($lang . '.mo', $supportedLangs))
                         {
-                            Debug::LogEntry($db, 'audit', 'Obtained the Language from HTTP_ACCEPT_LANGUAGE [' . $lang . ']', 'TranslationEngine', 'InitLocal');
+                            //Debug::LogEntry($db, 'audit', 'Obtained the Language from HTTP_ACCEPT_LANGUAGE [' . $lang . ']', 'TranslationEngine', 'InitLocal');
                             break;
                         }
 
@@ -94,7 +94,7 @@ class TranslationEngine
             }
 
             // We have the language
-            Debug::LogEntry($db, 'audit', 'Creating new file streamer for '. $localeDir . '/' . $lang . '.mo', 'TranslationEngine', 'InitLocal');
+            //Debug::LogEntry($db, 'audit', 'Creating new file streamer for '. $localeDir . '/' . $lang . '.mo', 'TranslationEngine', 'InitLocal');
 
             if (!$stream = new CachedFileReader($localeDir . '/' . $lang . '.mo'))
             {
@@ -107,7 +107,7 @@ class TranslationEngine
             $transEngine    = new gettext_reader($stream);
 
             
-            Debug::LogEntry($db, 'audit', 'OUT', 'TranslationEngine', 'InitLocal');
+            //Debug::LogEntry($db, 'audit', 'OUT', 'TranslationEngine', 'InitLocal');
 	}
 }
 
@@ -126,7 +126,7 @@ function __($string)
 	
 	$string = $transEngine->translate($string);
 
-        Debug::LogEntry($db, 'audit', 'Translating [' . $orignial .']  to [' . $string .']', '', '__');
+        //Debug::LogEntry($db, 'audit', 'Translating [' . $orignial .']  to [' . $string .']', '', '__');
         
         return $string;
 }
