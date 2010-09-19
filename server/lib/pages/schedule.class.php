@@ -518,7 +518,7 @@ class scheduleDAO
 
             // Events that fall inside the two dates
             $SQL.= "   AND schedule_detail.ToDT > $thisMonth ";
-            $SQL.= "   AND schedule_detail.FromDT <= $nextMonth ";
+            $SQL.= "   AND schedule_detail.FromDT < $nextMonth ";
 
             //Ordering
             $SQL.= " ORDER BY schedule_detail.ToDT - schedule_detail.FromDT DESC, 2,3";

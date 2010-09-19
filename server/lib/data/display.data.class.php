@@ -97,14 +97,6 @@ class Display extends Data
                 return false;
             }
 
-            // Set the default layout
-            if (!$displayGroupObject->SetDefaultLayout($displayID, $defaultLayoutID))
-            {
-                $this->SetError(25000, __('Could not update display with default layout.'));
-
-                return false;
-            }
-
             Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Add');
 
             return $displayID;
@@ -131,8 +123,8 @@ class Display extends Data
 		$SQL .= "		inc_schedule = %d, ";
 		$SQL .= " 		licensed = %d, ";
 		$SQL .= "		isAuditing = %d, ";
-        $SQL .= "       email_alert = %d, ";
-        $SQL .= "       alert_timeout = %d ";
+                $SQL .= "       email_alert = %d, ";
+                $SQL .= "       alert_timeout = %d ";
 		$SQL .= "WHERE displayid = %d ";
 		
 		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $email_alert, $alert_timeout, $displayID);
@@ -154,14 +146,6 @@ class Display extends Data
 		if (!$displayGroupObject->EditDisplayGroup($displayID, $display))
 		{
 			$this->SetError(25002, __('Could not update this display with a new name.'));
-			
-			return false;
-		}
-
-		// Set the default layout
-		if (!$displayGroupObject->SetDefaultLayout($displayID, $defaultLayoutID))
-		{
-			$this->SetError(25001, __('Could not update display with default layout.'));
 			
 			return false;
 		}

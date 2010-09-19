@@ -341,97 +341,18 @@ class DisplayGroup extends Data
 		return true;
 	}
 	
-	/**
-	 * Sets the Default Layout on display linked groups
-	 * @return 
-	 * @param $displayID Object
-	 * @param $layoutID Object
-	 */
-	public function SetDefaultLayout($displayID, $layoutID)
-	{
-		$db	=& $this->db;
-		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'SetDefaultLayout');
-		
-		// Get the DisplayGroupID for this DisplayID
-		$SQL  = "";
-		$SQL .= "SELECT displaygroup.DisplayGroupID ";
-		$SQL .= "FROM   displaygroup ";
-		$SQL .= "       INNER JOIN lkdisplaydg ";
-		$SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
-		$SQL .= "WHERE  displaygroup.IsDisplaySpecific    = 1 ";
-		$SQL .= sprintf("   AND lkdisplaydg.DisplayID             = %d", $displayID);
-		
-		if (!$result = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			$this->SetError(25005, __('Unable to get the DisplayGroup for this Display'));
-			
-			return false;
-		}
-		
-		$row 			= $db->get_assoc_row($result);
-		$displayGroupID	= $row['DisplayGroupID'];
-		
-		if ($displayGroupID == '')
-		{
-			$this->SetError(25006, __('Unable to get the DisplayGroup for this Display'));
-			
-			return false;
-		}
-		
-		// Check that we have a default layout display record to update
-		// Build some TimeStamps for the Default Schedule Record
-		$fromDT		= mktime(0,0,0,1,1,2000);
-		$toDT		= mktime(0,0,0,12,31,2050);
-		
-		// We might not and should be able to resolve it by editing the display
-		$SQL = "SELECT schedule_detailID FROM schedule_detail ";
-		$SQL .= " WHERE DisplayGroupID = %d ";
-		$SQL .= "   AND FromDT = %d ";
-		$SQL .= "   AND ToDT = %d ";
-		
-		$SQL = sprintf($SQL, $displayGroupID, $fromDT, $toDT);
-		
-		Debug::LogEntry($db, 'audit', $SQL);
-		
-		if (!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25001, __('Could not update display') . '-' . __('Stage 1'));
-			
-			return false;
-		}
-		
-		$scheduleObject = new Schedule($db);
-		
-		if ($db->num_rows($results) == 0) 
-		{
-			// For some reason we do not have a default layout record for this display
-			// We should add one now
-			if (!$scheduleObject->AddDetail($displayGroupID, $layoutID, $fromDT, $toDT, 1, 0))
-			{
-				$this->SetError(25001, __('Could not update display') . '-' . __('Stage 2'));
-				
-				return false;
-			}
-		}
-		else 
-		{
-			$row		= $db->get_row($results);
-			$scheduleID	= $row[0];
-			
-			if (!$scheduleObject->EditDetailLayoutID($scheduleID, $layoutID))
-			{
-				$this->SetError(25002, __('Could not update display') . '-' . __('Stage 2'));
-				
-				return false;
-			}
-		}
-		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'SetDefaultLayout');
-		
-		return true;
-	}
+    /**
+     * DEPRICATED: Removed in 1.2.0. Sets the Default Layout on display linked groups
+     * @return
+     * @param $displayID Object
+     * @param $layoutID Object
+     */
+    public function SetDefaultLayout($displayID, $layoutID)
+    {
+        $db	=& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'Depricated method called.', 'DisplayGroup', 'SetDefaultLayout');
+        return true;
+    }
 }
 ?>
