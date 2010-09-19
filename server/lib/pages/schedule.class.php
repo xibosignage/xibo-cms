@@ -442,7 +442,7 @@ class scheduleDAO
                     $timePrefix	= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
                     $editLink	= $event->editPermission == true ? sprintf('class="XiboFormButton" href="%s"',$event->layoutUri) : 'class="UnEditableEvent"';
 
-                    $layoutUri	= sprintf('<div class="%s %s" title="Display Group: %s"><a %s title="%s">%s %s</a></div>', $tdClass, $calEvent[$index], $event->displayGroup, $editLink, $event->layout, $timePrefix, $event->layout);
+                    $layoutUri	= sprintf('<div class="%s %s" title="Display Group: %s"><a %s title="%s">%s %s</a></div>', $tdClass, $calEvent[$index], $event->displayGroup, $editLink, $event->layout, $timePrefix, substr($event->layout, 0, 14));
 
                     // We should subtract any days ahead of the start date from the spanning days
                     $spanningDays 	= $d - $event->startDayNo > 0 ? $spanningDays - ($d - $event->startDayNo) : $spanningDays;

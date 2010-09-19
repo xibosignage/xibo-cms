@@ -191,7 +191,7 @@ class XMDSSoap
         // Add file nodes to the $fileElements
         $SQL  = " SELECT 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, layout.xml AS `MD5`, NULL AS FileSize, layout.background ";
         $SQL .= "   FROM layout ";
-        $SQL .= sprintf(" WHERE layout.layoutid IN ('%s')  ", $layoutIdList);
+        $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
         $SQL .= " UNION ";
         $SQL .= " SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS background ";
         $SQL .= "   FROM media ";
@@ -199,7 +199,7 @@ class XMDSSoap
         $SQL .= " 	ON lklayoutmedia.MediaID = media.MediaID ";
         $SQL .= " 	INNER JOIN layout ";
         $SQL .= " 	ON layout.LayoutID = lklayoutmedia.LayoutID";
-        $SQL .= sprintf(" WHERE layout.layoutid IN ('%s')  ", $layoutIdList);
+        $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
         $SQL .= " ORDER BY RecordType";
 
         if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", $SQL, "xmds", "RequiredFiles");
