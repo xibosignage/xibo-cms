@@ -95,11 +95,16 @@ class Config
 		
 		$row 		= $db->get_assoc_row($results);
 		
-		$appVer		= Kit::ValidateParam($row['app_ver'], _STRING);
-		$xlfVer		= Kit::ValidateParam($row['XlfVersion'], _INT);
-		$xmdsVer	= Kit::ValidateParam($row['XmdsVersion'], _INT);
+		$appVer     = Kit::ValidateParam($row['app_ver'], _STRING);
+		$xlfVer     = Kit::ValidateParam($row['XlfVersion'], _INT);
+		$xmdsVer    = Kit::ValidateParam($row['XmdsVersion'], _INT);
+		$dbVer      = Kit::ValidateParam($row['DBVersion'], _INT);
 	
-		if (!defined('VERSION')) define('VERSION', $appVer);
+		if (!defined('VERSION')) 
+                    define('VERSION', $appVer);
+
+		if (!defined('DBVERSION')) 
+                    define('DBVERSION', $dbVer);
 		
 		if ($object != '')
 		{
