@@ -4,7 +4,7 @@
  * Storage container for the oauth credentials, both server and consumer side.
  * This file can only be used in conjunction with anyMeta.
  * 
- * @version $Id: OAuthStoreAnyMeta.php 49 2008-10-01 09:43:19Z marcw@pobox.com $
+ * @version $Id: OAuthStoreAnyMeta.php 68 2010-01-12 18:59:23Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Nov 16, 2007 4:03:30 PM
  * 
@@ -32,7 +32,6 @@
  * THE SOFTWARE.
  */
 
-require_once dirname(__FILE__) . '/../../../../core/inc/any_database.inc.php';
 require_once dirname(__FILE__) . '/OAuthStoreMySQL.php';
 
 

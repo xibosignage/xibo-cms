@@ -48,7 +48,9 @@ class database
 	{
     	//select out the correct db name
         if(!mysql_select_db($dbname)) return false;
-        
+
+        $this->query("SET NAMES 'utf8'");
+
         return true;
     }
 

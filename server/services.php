@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2010 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -60,8 +60,9 @@ if (defined('XMDS') || $method != '')
 
             break;
 
-        /* DISABLED IN 1.1
         case 'oauth':
+
+            Debug::LogEntry($db, 'audit', 'OAuth Webservice call');
 
             Kit::ClassLoader('ServiceOAuth');
 
@@ -75,6 +76,8 @@ if (defined('XMDS') || $method != '')
             break;
 
         case 'rest':
+
+            Debug::LogEntry($db, 'audit', 'RESTful Webservice call');
 
             // OAuth authorization.
             if (OAuthRequestVerifier::requestIsSigned())
@@ -148,7 +151,6 @@ if (defined('XMDS') || $method != '')
                 $serviceResponse->ErrorServerError('Unknown Method');
 
             break;
-        */
 
         default:
             $serviceResponse->ErrorServerError('Not implemented.');

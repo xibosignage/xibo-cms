@@ -3,7 +3,7 @@
 /**
  * Perform a signed OAuth request with a GET, POST, PUT or DELETE operation.
  * 
- * @version $Id: OAuthRequester.php 63 2009-02-25 10:24:33Z marcw@pobox.com $
+ * @version $Id: OAuthRequester.php 134 2010-06-22 17:00:32Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Nov 20, 2007 1:41:38 PM
  * 
@@ -58,7 +58,7 @@ class OAuthRequester extends OAuthRequestSigner
 	 * @param string body		optional body to send
 	 * @param array files		optional files to send (max 1 till OAuth support multipart/form-data posts)
 	 */
-	function __construct ( $request, $method = 'GET', $params = null, $body = null, $files = null )
+	function __construct ( $request, $method = null, $params = null, $body = null, $files = null )
 	{
 		parent::__construct($request, $method, $params, $body);
 
@@ -75,7 +75,7 @@ class OAuthRequester extends OAuthRequestSigner
 			{
 				if (!is_null($body))
 				{
-					throw new OAuthException('When sending files, you can\'t send a body as well.');
+					throw new OAuthException2('When sending files, you can\'t send a body as well.');
 				}
 				$this->files = $files;
 			}
@@ -89,8 +89,8 @@ class OAuthRequester extends OAuthRequestSigner
 	 * @param int usr_id			optional user id for which we make the request
 	 * @param array curl_options	optional extra options for curl request
 	 * @param array options			options like name and token_ttl
-	 * @exception OAuthException when authentication not accepted
-	 * @exception OAuthException when signing was not possible
+	 * @exception OAuthException2 when authentication not accepted
+	 * @exception OAuthException2 when signing was not possible
 	 * @return array (code=>int, headers=>array(), body=>string)
 	 */
 	function doRequest ( $usr_id = 0, $curl_options = array(), $options = array() )
@@ -114,7 +114,7 @@ class OAuthRequester extends OAuthRequestSigner
 		$result = $this->curl_parse($text);	
 		if ($result['code'] >= 400)
 		{
-			throw new OAuthException('Request failed with code ' . $result['code'] . ': ' . $result['body']);
+			throw new OAuthException2('Request failed with code ' . $result['code'] . ': ' . $result['body']);
 		}
 
 		// Record the token time to live for this server access token, immediate delete iff ttl <= 0
@@ -137,11 +137,12 @@ class OAuthRequester extends OAuthRequestSigner
 	 * @param array params (optional) extra arguments for when requesting the request token
 	 * @param string method (optional) change the method of the request, defaults to POST (as it should be)
 	 * @param array options (optional) options like name and token_ttl
-	 * @exception OAuthException when no key could be fetched
-	 * @exception OAuthException when no server with consumer_key registered
+	 * @param array curl_options	optional extra options for curl request
+	 * @exception OAuthException2 when no key could be fetched
+	 * @exception OAuthException2 when no server with consumer_key registered
 	 * @return array (authorize_uri, token)
 	 */
-	static function requestRequestToken ( $consumer_key, $usr_id, $params = null, $method = 'POST', $options = array() )
+	static function requestRequestToken ( $consumer_key, $usr_id, $params = null, $method = 'POST', $options = array(), $curl_options = array())
 	{
 		OAuthRequestLogger::start();
 
@@ -156,16 +157,16 @@ class OAuthRequester extends OAuthRequestSigner
 
 		$oauth 	= new OAuthRequester($uri, $method, $params);
 		$oauth->sign($usr_id, $r);
-		$text	= $oauth->curl_raw();
+		$text	= $oauth->curl_raw($curl_options);
 
 		if (empty($text))
 		{
-			throw new OAuthException('No answer from the server "'.$uri.'" while requesting a request token');
+			throw new OAuthException2('No answer from the server "'.$uri.'" while requesting a request token');
 		}
 		$data	= $oauth->curl_parse($text);
 		if ($data['code'] != 200)
 		{
-			throw new OAuthException('Unexpected result from the server "'.$uri.'" ('.$data['code'].') while requesting a request token');
+			throw new OAuthException2('Unexpected result from the server "'.$uri.'" ('.$data['code'].') while requesting a request token');
 		}
 		$token  = array();
 		$params = explode('&', $data['body']);
@@ -190,7 +191,7 @@ class OAuthRequester extends OAuthRequestSigner
 		}
 		else
 		{
-			throw new OAuthException('The server "'.$uri.'" did not return the oauth_token or the oauth_token_secret');
+			throw new OAuthException2('The server "'.$uri.'" did not return the oauth_token or the oauth_token_secret');
 		}
 
 		OAuthRequestLogger::flush();
@@ -213,24 +214,30 @@ class OAuthRequester extends OAuthRequestSigner
 	 * @param int usr_id		user requesting the access token
 	 * @param string method (optional) change the method of the request, defaults to POST (as it should be)
 	 * @param array options (optional) extra options for request, eg token_ttl
-	 * @exception OAuthException when no key could be fetched
-	 * @exception OAuthException when no server with consumer_key registered
+	 * @param array curl_options	optional extra options for curl request
+	 *  
+	 * @exception OAuthException2 when no key could be fetched
+	 * @exception OAuthException2 when no server with consumer_key registered
 	 */
-	static function requestAccessToken ( $consumer_key, $token, $usr_id, $method = 'POST', $options = array() )
+	static function requestAccessToken ( $consumer_key, $token, $usr_id, $method = 'POST', $options = array(), $curl_options = array() )
 	{
 		OAuthRequestLogger::start();
-
+				
 		$store	    = OAuthStore::instance();
 		$r		    = $store->getServerTokenSecrets($consumer_key, $token, 'request', $usr_id);
 		$uri 	    = $r['access_token_uri'];
 		$token_name	= $r['token_name'];
-
+		
 		// Delete the server request token, this one was for one use only
 		$store->deleteServerToken($consumer_key, $r['token'], 0, true);
 
 		// Try to exchange our request token for an access token
 		$oauth 	= new OAuthRequester($uri, $method);
 
+		if (isset($options['oauth_verifier'])) 
+		{
+			$oauth->setParam('oauth_verifier', $options['oauth_verifier']);
+        }
 		if (isset($options['token_ttl']) && is_numeric($options['token_ttl']))
 		{
 			$oauth->setParam('xoauth_token_ttl', intval($options['token_ttl']));
@@ -239,16 +246,16 @@ class OAuthRequester extends OAuthRequestSigner
 		OAuthRequestLogger::setRequestObject($oauth);
 
 		$oauth->sign($usr_id, $r);
-		$text	= $oauth->curl_raw();
+		$text	= $oauth->curl_raw($curl_options);
 		if (empty($text))
 		{
-			throw new OAuthException('No answer from the server "'.$uri.'" while requesting a request token');
+			throw new OAuthException2('No answer from the server "'.$uri.'" while requesting a request token');
 		}
 		$data	= $oauth->curl_parse($text);
 
 		if ($data['code'] != 200)
 		{
-			throw new OAuthException('Unexpected result from the server "'.$uri.'" ('.$data['code'].') while requesting a request token');
+			throw new OAuthException2('Unexpected result from the server "'.$uri.'" ('.$data['code'].') while requesting a request token');
 		}
 
 		$token  = array();
@@ -271,7 +278,7 @@ class OAuthRequester extends OAuthRequestSigner
 		}
 		else
 		{
-			throw new OAuthException('The server "'.$uri.'" did not return the oauth_token or the oauth_token_secret');
+			throw new OAuthException2('The server "'.$uri.'" did not return the oauth_token or the oauth_token_secret');
 		}
 
 		OAuthRequestLogger::flush();
@@ -282,8 +289,8 @@ class OAuthRequester extends OAuthRequestSigner
 	/**
 	 * Open and close a curl session passing all the options to the curl libs
 	 * 
-	 * @param string url the http address to fetch
-	 * @exception OAuthException when temporary file for PUT operation could not be created
+	 * @param array opts the curl options.
+	 * @exception OAuthException2 when temporary file for PUT operation could not be created
 	 * @return string the result of the curl action
 	 */
 	protected function curl_raw ( $opts = array() )
@@ -296,7 +303,7 @@ class OAuthRequester extends OAuthRequestSigner
 		{
 			$header = array();
 		}
-
+		
 		$ch 		= curl_init();
 		$method		= $this->getMethod();
 		$url		= $this->getRequestUrl();
@@ -317,7 +324,7 @@ class OAuthRequester extends OAuthRequestSigner
 		{
 			if ($method == 'TRACE')
 			{
-				throw new OAuthException('A body can not be sent with a TRACE operation');
+				throw new OAuthException2('A body can not be sent with a TRACE operation');
 			}
 
 			// PUT and POST allow a request body
@@ -347,7 +354,7 @@ class OAuthRequester extends OAuthRequestSigner
 				$put_file = @tmpfile();
 				if (!$put_file)
 				{
-					throw new OAuthException('Could not create tmpfile for PUT operation');
+					throw new OAuthException2('Could not create tmpfile for PUT operation');
 				}
 				fwrite($put_file, $body);
 				fseek($put_file, 0);
@@ -390,10 +397,11 @@ class OAuthRequester extends OAuthRequestSigner
 		}
 
 		curl_setopt($ch, CURLOPT_HTTPHEADER,	 $header);
-		curl_setopt($ch, CURLOPT_USERAGENT,		 'anyMeta/OAuth 1.0 - ($LastChangedRevision: 63 $)');
+		curl_setopt($ch, CURLOPT_USERAGENT,		 'anyMeta/OAuth 1.0 - ($LastChangedRevision: 134 $)');
 		curl_setopt($ch, CURLOPT_URL, 			 $url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_HEADER, 		 true);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 		 30);
 	
 		foreach ($opts as $k => $v)
 		{
@@ -404,6 +412,11 @@ class OAuthRequester extends OAuthRequestSigner
 		}
 
 		$txt = curl_exec($ch);
+		if ($txt === false) {
+			$error = curl_error($ch);
+			curl_close($ch);
+			throw new OAuthException2('CURL error: ' . $error);
+		} 
 		curl_close($ch);
 		
 		if (!empty($put_file))

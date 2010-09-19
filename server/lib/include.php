@@ -121,9 +121,11 @@ require_once('modules/' . Config::GetSetting($db, "userModule"));
 $user 		= new User($db);
 $session 	= new Session($db);
 
+// Work out the location of this service
+$serviceLocation = Kit::GetXiboRoot();
+
 // OAuth
-// TODO: Disabled due to headers it sends causing utf8 encoding to go nuts
-//require_once('lib/oauth.inc.php');
+require_once('lib/oauth.inc.php');
 
 // Page variable set? Otherwise default to index
 $page 		= Kit::GetParam('p', _REQUEST, _WORD, 'index');

@@ -24,8 +24,10 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-if(Config::GetSetting($db, 'debug') == 'On') DEFINE('OAUTH_LOG_REQUEST', true);
+if(Config::GetSetting($db, 'debug') == 'On')
+    DEFINE('OAUTH_LOG_REQUEST', true);
 
+// TODO: This breaks Unicode in the text editors, and also unicode served in layoutxml from XMDS
 header('X-XRDS-Location:' . $serviceLocation . '/service.php?xrds');
 
 require_once('3rdparty/oauth-php/library/OAuthServer.php');

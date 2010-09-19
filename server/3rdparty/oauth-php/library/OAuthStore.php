@@ -4,7 +4,7 @@
  * Storage container for the oauth credentials, both server and consumer side.
  * This is the factory to select the store you want to use
  * 
- * @version $Id: OAuthStore.php 49 2008-10-01 09:43:19Z marcw@pobox.com $
+ * @version $Id: OAuthStore.php 67 2010-01-12 18:42:04Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Nov 16, 2007 4:03:30 PM
  * 
@@ -32,7 +32,7 @@
  * THE SOFTWARE.
  */
 
-require_once dirname(__FILE__) . '/OAuthException.php';
+require_once dirname(__FILE__) . '/OAuthException2.php';
 
 class OAuthStore
 {
@@ -68,12 +68,12 @@ class OAuthStore
 				}
 				else
 				{
-					throw new OAuthException('Could not find class '.$class.' in file '.$file);
+					throw new OAuthException2('Could not find class '.$class.' in file '.$file);
 				}
 			}
 			else
 			{
-				throw new OAuthException('No OAuthStore for '.$store.' (file '.$file.')');
+				throw new OAuthException2('No OAuthStore for '.$store.' (file '.$file.')');
 			}
 	    }
 	    return OAuthStore::$instance;	

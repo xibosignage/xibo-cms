@@ -64,7 +64,7 @@ class OAuthBodyContentDisposition
 					$data = @file_get_contents($f['file']);
 					if ($data === false)
 					{
-						throw new OAuthException(sprintf('Could not read the file "%s" for request body', $f['file']));
+						throw new OAuthException2(sprintf('Could not read the file "%s" for request body', $f['file']));
 					}
 					if (empty($filename))
 					{
@@ -81,7 +81,7 @@ class OAuthBodyContentDisposition
 				{
 					if (isset($headers['Content-Disposition']))
 					{
-						throw new OAuthException('Only a single file (or data) allowed in a signed PUT/POST request body.');
+						throw new OAuthException2('Only a single file (or data) allowed in a signed PUT/POST request body.');
 					}
 
 					if (empty($filename))

@@ -818,6 +818,7 @@ END;
         $SQL .= "FROM    media ";
         $SQL .= "WHERE   1 = 1  AND isEdited = 0 ";
 
+        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of media for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {

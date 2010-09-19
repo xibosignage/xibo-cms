@@ -3,7 +3,7 @@
 /**
  * Log OAuth requests
  * 
- * @version $Id: OAuthRequestLogger.php 55 2009-01-14 15:27:36Z scherpenisse $
+ * @version $Id: OAuthRequestLogger.php 98 2010-03-08 12:48:59Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Dec 7, 2007 12:22:43 PM
  * 
@@ -123,7 +123,7 @@ class OAuthRequestLogger
 			if (is_null(OAuthRequestLogger::$received))
 			{
 				// Build the request we received
-				$hs0   = getallheaders();
+				$hs0   = self::getAllHeaders();
 				$hs    = array();
 				foreach ($hs0 as $h => $v)
 				{
@@ -206,7 +206,7 @@ class OAuthRequestLogger
 
 
 	/**
-	 * Add a note, used by the OAuthException to log all exceptions.
+	 * Add a note, used by the OAuthException2 to log all exceptions.
 	 * 
 	 * @param string note
 	 */
@@ -266,6 +266,48 @@ class OAuthRequestLogger
 	static function getLog ()
 	{
 		return OAuthRequestLogger::$log;
+	}
+
+
+	/**
+	 * helper to try to sort out headers for people who aren't running apache,
+	 * or people who are running PHP as FastCGI.
+	 *
+	 * @return array of request headers as associative array.
+	 */
+	public static function getAllHeaders() {
+		$retarr = array();
+		$headers = array();
+		
+		if (function_exists('apache_request_headers')) {
+			$headers = apache_request_headers();
+			ksort($headers);
+			return $headers;
+		} else {
+			$headers = array_merge($_ENV, $_SERVER);
+			
+			foreach ($headers as $key => $val) {
+				//we need this header
+				if (strpos(strtolower($key), 'content-type') !== FALSE)
+					continue;
+				if (strtoupper(substr($key, 0, 5)) != "HTTP_")
+					unset($headers[$key]);
+			}
+		}
+		
+		//Normalize this array to Cased-Like-This structure.
+		foreach ($headers AS $key => $value) {
+			$key = preg_replace('/^HTTP_/i', '', $key);
+			$key = str_replace(
+					" ",
+					"-",
+					ucwords(strtolower(str_replace(array("-", "_"), " ", $key)))
+				);
+			$retarr[$key] = $value;
+		}
+		ksort($retarr);
+		
+		return $retarr;
 	}
 }
 

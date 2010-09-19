@@ -3,7 +3,7 @@
 /**
  * Sign requests before performing the request.
  * 
- * @version $Id: OAuthRequestSigner.php 58 2009-02-23 01:47:23Z marcw@pobox.com $
+ * @version $Id: OAuthRequestSigner.php 138 2010-07-29 15:01:06Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Nov 16, 2007 4:02:49 PM
  * 
@@ -54,7 +54,7 @@ class OAuthRequestSigner extends OAuthRequest
 	 * @param mixed params 		string (for urlencoded data, or array with name/value pairs)
 	 * @param string body		optional body for PUT and/or POST requests
 	 */
-	function __construct ( $request, $method = 'GET', $params = null, $body = null )
+	function __construct ( $request, $method = null, $params = null, $body = null )
 	{
 		$this->store = OAuthStore::instance();
 		
@@ -99,8 +99,8 @@ class OAuthRequestSigner extends OAuthRequest
 	 * @param int usr_id		(optional) user that wants to sign this request
 	 * @param array secrets		secrets used for signing, when empty then secrets will be fetched from the token registry
 	 * @param string name		name of the token to be used for signing
-	 * @exception OAuthException when there is no oauth relation with the server
-	 * @exception OAuthException when we don't support the signing methods of the server
+	 * @exception OAuthException2 when there is no oauth relation with the server
+	 * @exception OAuthException2 when we don't support the signing methods of the server
 	 */	
 	function sign ( $usr_id = 0, $secrets = null, $name = '' )
 	{
@@ -112,13 +112,17 @@ class OAuthRequestSigner extends OAuthRequest
 		}
 		if (empty($secrets))
 		{
-			throw new OAuthException('No OAuth relation with the server for at "'.$url.'"');
+			throw new OAuthException2('No OAuth relation with the server for at "'.$url.'"');
 		}
 
 		$signature_method = $this->selectSignatureMethod($secrets['signature_methods']);
 
 		$token		  = isset($secrets['token'])        ? $secrets['token']        : '';
 		$token_secret = isset($secrets['token_secret']) ? $secrets['token_secret'] : '';
+
+		if (!$token) {
+			$token = $this->getParam('oauth_token');
+		}
 
 		$this->setParam('oauth_signature_method',$signature_method);
 		$this->setParam('oauth_signature',		 '');
