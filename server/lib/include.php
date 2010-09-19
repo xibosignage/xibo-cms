@@ -107,8 +107,8 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 Config::Version($db);
 
 // Does the version in the DB match the version of the code?
-if (Config::Version($db, 'DBVersion') != '25')
-    die('Incompatible database version detected. Please ensure your database and website versions match.');
+if (DBVERSION != '25')
+    die(sprintf('Incompatible database version detected. Please ensure your database and website versions match. You have %d and the website for %d', DBVERSION, 25));
 
 // What is the production mode of the server?
 if(Config::GetSetting($db, "SERVER_MODE")=="Test") ini_set('display_errors', 1);
