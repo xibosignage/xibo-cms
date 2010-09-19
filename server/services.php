@@ -128,15 +128,15 @@ if (defined('XMDS') || $method != '')
             {
                 case 'json':
                     Kit::ClassLoader('RestJson');
-
-                    $rest = new RestJson($db, $user, $_POST);
+                    
+                    $rest = new RestJson($db, $user, $_REQUEST);
 
                     break;
 
                 case 'xml':
                     Kit::ClassLoader('RestXml');
 
-                    $rest = new RestXml($db, $user, $_POST);
+                    $rest = new RestXml($db, $user, $_REQUEST);
 
                     break;
 

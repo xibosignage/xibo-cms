@@ -841,13 +841,64 @@ END;
 
             list($see, $edit) = $this->eval_permission($mediaItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
 
-            $mediaItem['read']      = (int) $see;
-            $mediaItem['write']     = (int) $edit;
-
-            $media[] = $mediaItem;
+            if ($see)
+            {
+                $mediaItem['read']      = (int) $see;
+                $mediaItem['write']     = (int) $edit;
+                $media[] = $mediaItem;
+            }
         }
 
         return $media;
+    }
+
+    /**
+     * Returns an array of layouts that this user has access to
+     */
+    public function LayoutList()
+    {
+        $SQL  = "";
+        $SQL .= "SELECT layoutID, ";
+        $SQL .= "        layout, ";
+        $SQL .= "        description, ";
+        $SQL .= "        tags, ";
+        $SQL .= "        permissionID, ";
+        $SQL .= "        userID ";
+        $SQL .= "   FROM layout ";
+
+         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $layouts = array();
+
+        while ($row = $this->db->get_assoc_row($result))
+        {
+            $layoutItem = array();
+
+            // Validate each param and add it to the array.
+            $layoutItem['layoutid'] = Kit::ValidateParam($row['layoutID'], _INT);
+            $layoutItem['layout']   = Kit::ValidateParam($row['layout'], _STRING);
+            $layoutItem['description'] = Kit::ValidateParam($row['description'], _STRING);
+            $layoutItem['tags']     = Kit::ValidateParam($row['tags'], _STRING);
+            $layoutItem['ownerid']  = Kit::ValidateParam('userid', _INT);
+
+            list($see, $edit) = $this->eval_permission($layoutItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
+
+            if ($see)
+            {
+                $layoutItem['read']      = (int) $see;
+                $layoutItem['write']     = (int) $edit;
+                
+                $layouts[] = $layoutItem;
+            }
+        }
+
+        return $layouts;
     }
 }
 ?>

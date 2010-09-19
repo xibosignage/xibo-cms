@@ -46,16 +46,15 @@ class RestXml extends Rest
         $xmlDoc->documentElement->appendChild($node);
 
         // Log it
-        Debug::LogEntry($this->db, 'audit', $xmlDoc->saveXML());
+        Debug::LogEntry($this->db, 'audit', $xmlDoc->saveXML(), 'RestXml', 'Respond');
 
         // Return it as a string
         return $xmlDoc->saveXML();
     }
 
-    public function Error($errorNo)
+    public function Error($errorNo, $errorMessage = '')
     {
-        // Get the message
-        $errorMessage = '';
+        Debug::LogEntry($this->db, 'audit', $errorMessage, 'RestXml', 'Error');
 
         // Output the error doc
         $xmlDoc = new DOMDocument('1.0');

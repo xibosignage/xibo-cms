@@ -24,36 +24,23 @@ class Rest
     protected $user;
     protected $POST;
 
-    public function __construct(database $db, User $user, $_POST)
+    public function __construct(database $db, User $user, $postData)
     {
         $this->db =& $db;
         $this->user =& $user;
 
         // Hold the POST data
-        $POST = $_POST;
+        $this->POST = $postData;
     }
 
     public function MediaList()
     {
-        if (!$media = $this->user->MediaList())
+        $media = $this->user->MediaList();
+
+        if (!is_array($media))
             return $this->Error(1);
 
-        $xmlDoc = new DOMDocument();
-        $xmlElement = $xmlDoc->createElement('mediaItems');
-        $xmlElement->setAttribute('length', count($media));
-        
-        // Create the XML nodes
-        foreach($media as $mediaItem)
-        {
-            $mediaNode = $xmlDoc->createElement('media');
-            foreach($mediaItem as $key => $value)
-            {
-                $mediaNode->setAttribute($key, $value);
-            }
-            $xmlElement->appendChild($mediaNode);
-        }
-
-        return $this->Respond($xmlElement);
+        return $this->Respond($this->NodeListFromArray($media, 'media'));
     }
 
     /**
@@ -144,6 +131,67 @@ class Rest
 
     }
 
+    public function LayoutList()
+    {
+        $layout = $this->user->LayoutList();
+
+        if (!is_array($layout))
+            return $this->Error(2);
+
+        return $this->Respond($this->NodeListFromArray($layout, 'layout'));
+    }
+
+    public function LayoutAdd()
+    {
+        Kit::ClassLoader('layout');
+        
+        $layout         = $this->GetParam('layout', _STRING);
+        $description    = $this->GetParam('description', _STRING);
+        $permissionid   = $this->GetParam('permissionid', _INT);
+        $tags           = $this->GetParam('tags', _STRING);
+        $templateId     = $this->GetParam('templateid', _INT, 0);
+
+        // Add this layout
+        $layoutObject = new Layout($this->db);
+
+        if(!$id = $layoutObject->Add($layout, $description, $permissionid, $tags, $this->user->userid, $templateId))
+            return $this->Error(3, $layoutObject->GetErrorMessage());
+
+        Debug::LogEntry($this->db, 'audit', 'Added new layout with id' . $id);
+
+        return $this->Respond($this->ReturnId('layout', $id));
+    }
+
+    public function LayoutEdit()
+    {
+
+    }
+
+    public function LayoutUpdateXlf()
+    {
+
+    }
+
+    public function LayoutBackground()
+    {
+
+    }
+
+    public function LayoutDelete()
+    {
+
+    }
+
+    public function LayoutRegionAdd()
+    {
+
+    }
+
+    public function LayoutRegionEdit()
+    {
+
+    }
+
     /**
      * Returns the Xibo Server version information
      * @return <type>
@@ -170,7 +218,7 @@ class Rest
      * @param <type> $default
      * @return <type>
      */
-    protected function GetParam($param, $type, $default = '')
+    protected function GetParam($param, $type, $default = null)
     {
         return Kit::GetParam($param, $this->POST, $type, $default);
     }
@@ -187,6 +235,33 @@ class Rest
         $xmlDoc = new DOMDocument();
         $xmlElement = $xmlDoc->createElement($nodeName);
         $xmlElement->setAttribute($idAttributeName, $id);
+
+        return $xmlElement;
+    }
+
+    /**
+     * Creates a node list from an array
+     * @param <type> $array
+     * @param <type> $node
+     */
+    protected function NodeListFromArray($array, $nodeName)
+    {
+        Debug::LogEntry($this->db, 'audit', sprintf('Building node list containing %d items', count($array)));
+
+        $xmlDoc = new DOMDocument();
+        $xmlElement = $xmlDoc->createElement($nodeName . 'Items');
+        $xmlElement->setAttribute('length', count($array));
+
+        // Create the XML nodes
+        foreach($array as $arrayItem)
+        {
+            $node = $xmlDoc->createElement($nodeName);
+            foreach($arrayItem as $key => $value)
+            {
+                $node->setAttribute($key, $value);
+            }
+            $xmlElement->appendChild($node);
+        }
 
         return $xmlElement;
     }

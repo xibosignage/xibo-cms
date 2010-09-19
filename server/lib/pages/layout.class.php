@@ -215,128 +215,26 @@ HTML;
 	 */
 	function add() 
 	{
-		$db 			=& $this->db;
-		$response		= new ResponseManager();
+            $db             =& $this->db;
+            $response       = new ResponseManager();
 
-		$layout 		= Kit::GetParam('layout', _POST, _STRING);
-		$description 	= Kit::GetParam('description', _POST, _STRING);
-		$permissionid 	= Kit::GetParam('permissionid', _POST, _INT);
-		$tags		 	= Kit::GetParam('tags', _POST, _STRING);
-		$templateid		= Kit::GetParam('templateid', _POST, _STRING, 'none');
-		$userid 		= Kit::GetParam('userid', _SESSION, _INT);
-		$currentdate 	= date("Y-m-d H:i:s");
-		
-		//validation
-		if (strlen($layout) > 50 || strlen($layout) < 1) 
-		{
-			$response->SetError(__("Layout Name must be between 1 and 50 characters"));
-			$response->Respond();
-		}
-		
-		if (strlen($description) > 254) 
-		{
-			$response->SetError(__("Description can not be longer than 254 characters"));
-			$response->Respond();
-		}
-		
-		if (strlen($tags) > 254) 
-		{
-			$response->SetError(__("Tags can not be longer than 254 characters"));
-			$response->Respond();
-		}
-		
-		$check 	= sprintf("SELECT layout FROM layout WHERE layout = '%s' AND userID = %d ", $layout, $userid);
-		$result = $db->query($check) or trigger_error($db->error());
-		
-		//Layouts with the same name?
-		if($db->num_rows($result) != 0) 
-		{
-			$response->SetError(sprintf(__("You already own a layout called '%s'. Please choose another."), $layout));
-			$response->Respond();
-		}
-		//end validation
-		
-		//What do we do with the template...
-		if ($templateid == "none")
-		{
-			//make some default XML
-			$xmlDoc = new DOMDocument("1.0");
-			$layoutNode = $xmlDoc->createElement("layout");
-			
-			$layoutNode->setAttribute("width", 800);
-			$layoutNode->setAttribute("height", 450);
-			$layoutNode->setAttribute("bgcolor", "#000000");
-			$layoutNode->setAttribute("schemaVersion", Config::Version($db, 'XlfVersion'));
-			
-			$xmlDoc->appendChild($layoutNode);
-			
-			$xml = $xmlDoc->saveXML();
-		}
-		else
-		{
-			//get the template XML
-			$SQL = sprintf("SELECT xml FROM template WHERE templateID = %d ", $templateid);
-			if (!$result = $db->query($SQL))
-			{
-				$response->SetError(__("Error getting this template."));
-				$response->Respond();
-			}
-			
-			$row = $db->get_row($result);
-			$xml = $row[0];
-		}
+            $layout         = Kit::GetParam('layout', _POST, _STRING);
+            $description    = Kit::GetParam('description', _POST, _STRING);
+            $permissionid   = Kit::GetParam('permissionid', _POST, _INT);
+            $tags           = Kit::GetParam('tags', _POST, _STRING);
+            $templateId     = Kit::GetParam('templateid', _POST, _INT, 0);
+            $userid         = Kit::GetParam('userid', _SESSION, _INT);
+            
+            // Add this layout
+            $layoutObject = new Layout($db);
 
-		if(!$id = $this->db_add($layout, $description, $permissionid, $tags, $userid, $xml)) 
-		{
-			//otherwise we need to take them back and tell them why the playlist has failed.
-			$response->SetError(__("Unknown error adding layout."));
-			$response->Respond();
-		}
-		
-		// Create an array out of the tags
-		$tagsArray = explode(' ', $tags);
-		
-		// Add the tags XML to the layout
-		$layoutObject = new Layout($db);
-		
-		if (!$layoutObject->EditTags($id, $tagsArray))
-		{
-			//there was an ERROR
-			trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
-		}
+            if(!$id = $layoutObject->Add($layout, $description, $permissionid, $tags, $userid, $templateId))
+                trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
-		$response->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $id));
-		$response->Respond();
+            // Successful layout creation
+            $response->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $id));
+            $response->Respond();
 	}
-
-	function db_add($layout, $description, $permissionid, $tags, $userid, $xml) 
-	{
-		$db =& $this->db;
-
-		$currentdate 	= date("Y-m-d H:i:s");
-
-		$query = <<<END
-		INSERT INTO layout (layout, description, userID, permissionID, createdDT, modifiedDT, tags, xml)
-		 VALUES ('%s', '%s', %d, %d, '%s', '%s', '%s', '%s')
-END;
-
-		$query = sprintf($query, 
-							$db->escape_string($layout), 
-							$db->escape_string($description), $userid, $permissionid, 
-							$db->escape_string($currentdate), 
-							$db->escape_string($currentdate), 
-							$db->escape_string($tags), 
-							$xml);
-
-		if(!$id = $db->insert_query($query)) 
-		{
-			trigger_error($db->error());
-			return false;
-		}
-
-		return $id;
-	}
-
 
 	/**
 	 * Modifies a layout record
@@ -493,37 +391,20 @@ END;
 	 */
 	function delete() 
 	{
-		$db 			=& $this->db;
-		$response		= new ResponseManager();
-		$layoutid 		= Kit::GetParam('layoutid', _POST, _INT, 0);
-		
-		if ($layoutid == 0) 
-		{
-			$response->SetError(__("No Layout selected"));
-			$response->Respond();
-		}
-		
-		// Unassign all the Media
-		$SQL = sprintf("DELETE FROM lklayoutmedia WHERE layoutID = %d", $layoutid);
-		
-		if (!$db->query($SQL)) 
-		{
-			$response->SetError(__("Cannot unassign this layouts media. Please manually unassign."));
-			$response->Respond();
-		}
+            $db 	=& $this->db;
+            $response	= new ResponseManager();
+            $layoutId 	= Kit::GetParam('layoutid', _POST, _INT, 0);
 
-		$SQL = " ";
-		$SQL .= "DELETE FROM layout ";
-		$SQL .= sprintf(" WHERE layoutID = %d", $layoutid);
+            if ($layoutId == 0)
+                trigger_error(__('No Layout selected'), E_USER_ERROR);
 
-		if (!$db->query($SQL)) 
-		{
-			$response->SetError(__("Cannot delete this layout. You may retire it from the Edit form."));
-			$response->Respond();
-		}
+            $layoutObject = new Layout($db);
 
-		$response->SetFormSubmitResponse(__("The Layout has been Deleted"));
-		$response->Respond();
+            if (!$layoutObject->Delete($layoutId))
+                trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+
+            $response->SetFormSubmitResponse(__('The Layout has been Deleted'));
+            $response->Respond();
 	}
 	
 	/**
