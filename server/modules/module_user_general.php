@@ -885,7 +885,7 @@ END;
             $layoutItem['layout']   = Kit::ValidateParam($row['layout'], _STRING);
             $layoutItem['description'] = Kit::ValidateParam($row['description'], _STRING);
             $layoutItem['tags']     = Kit::ValidateParam($row['tags'], _STRING);
-            $layoutItem['ownerid']  = Kit::ValidateParam('userid', _INT);
+            $layoutItem['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
 
             list($see, $edit) = $this->eval_permission($layoutItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
 
