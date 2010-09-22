@@ -21,6 +21,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 $msgAdd	= __('Add Application');
+$msgLog	= __('OAuth Log');
 
 ?>
 <div id="form_container">
@@ -34,6 +35,7 @@ $msgAdd	= __('Add Application');
             <!-- Maybe at a later date we could have these buttons generated from the DB - and therefore passed through the security system ? -->
             <ul>
                     <li><a title="<?php echo $msgAdd; ?>" class="XiboFormButton" href="index.php?p=oauth&q=RegisterForm" ><span><?php echo $msgAdd; ?></span></a></li>
+                    <li><a title="<?php echo $msgLog; ?>" class="XiboFormButton" href="index.php?p=oauth&q=ViewLog" ><span><?php echo $msgLog; ?></span></a></li>
             </ul>
         </div>
         <?php $this->Filter(); ?>
