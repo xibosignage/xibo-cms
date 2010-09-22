@@ -177,7 +177,7 @@ END;
         $output .= '    </table>';
         $output .= '</div>';
 
-        $response->SetFormRequestResponse($output, __('Events for Day'), '650', '450');
+        $response->SetFormRequestResponse($output, __('OAuth Access Log'), '1000', '600');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
