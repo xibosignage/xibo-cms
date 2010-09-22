@@ -21,8 +21,9 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 $msgUser		= __('Add User');
+$msgApps		= __('My Applications');
 $msgFilter		= __('Filter');
-$msgShowFilter	= __('Show Filter');
+$msgShowFilter          = __('Show Filter');
 ?>
 <div id="form_container">
 	<div id="form_header">
@@ -37,10 +38,11 @@ $msgShowFilter	= __('Show Filter');
 			<!-- Maybe at a later date we could have these buttons generated from the DB - and therefore passed through the security system ? -->
 			<ul>
 				<?php
-					if ($_SESSION['usertype']==1)
-					{
-						echo '<li><a title="' . $msgUser . '" class="XiboFormButton" href="index.php?p=user&q=DisplayForm"><span>' . $msgUser . '</span></a></li>';
-					}
+                                    if ($_SESSION['usertype']==1)
+                                    {
+                                        echo '<li><a title="' . $msgUser . '" class="XiboFormButton" href="index.php?p=user&q=DisplayForm"><span>' . $msgUser . '</span></a></li>';
+                                    }
+                                    echo '<li><a title="' . $msgApps . '" class="XiboFormButton" href="index.php?p=user&q=MyApplications"><span>' . $msgApps . '</span></a></li>';
 				?>
 				<li><a title="<?php echo $msgShowFilter; ?>" href="#" onclick="ToggleFilterView('UserFilter')"><span><?php echo $msgFilter; ?></span></a></li>
 			</ul>

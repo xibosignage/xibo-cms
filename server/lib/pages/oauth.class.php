@@ -324,5 +324,58 @@ END;
     {
         return true;
     }
+
+    /**
+     * Shows the Authorised applications this user has
+     */
+    public function UserTokens()
+    {
+        $db         =& $this->db;
+        $user       =& $this->user;
+        $response   = new ResponseManager();
+
+        $store = OAuthStore::instance();
+
+        try
+        {
+            $list = $store->listConsumerTokens(Kit::GetParam('userID', _GET, _INT));
+        }
+        catch (OAuthException $e)
+        {
+            trigger_error($e->getMessage());
+            trigger_error(__('Error listing Log.'), E_USER_ERROR);
+        }
+
+        $output .= '<div class="info_table">';
+        $output .= '    <table style="width:100%">';
+        $output .= '        <thead>';
+        $output .= sprintf('    <th>%s</th>', __('Application'));
+        $output .= sprintf('    <th>%s</th>', __('Enabled'));
+        $output .= sprintf('    <th>%s</th>', __('Status'));
+        $output .= '        </thead>';
+        $output .= '        <tbody>';
+
+        foreach($list as $app)
+        {
+            $title      = Kit::ValidateParam($app['application_title'], _STRING);
+            $enabled    = Kit::ValidateParam($app['enabled'], _STRING);
+            $status     = Kit::ValidateParam($app['status'], _STRING);
+
+            $output .= '<tr>';
+            $output .= '<td>' . $title . '</td>';
+            $output .= '<td>' . $enabled . '</td>';
+            $output .= '<td>' . $status . '</td>';
+            $output .= '</tr>';
+        }
+
+        $output .= '        </tbody>';
+        $output .= '    </table>';
+        $output .= '</div>';
+
+        $response->SetFormRequestResponse($output, __('Authorized applications for user'), '650', '450');
+        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
 }
 ?>
