@@ -39,6 +39,50 @@ class oauthDAO
         return false;
     }
 
+    public function Filter()
+    {
+        $filterForm = <<<END
+            <div class="FilterDiv" id="DisplayGroupFilter">
+                <form onsubmit="return false">
+                    <input type="hidden" name="p" value="oauth">
+                    <input type="hidden" name="q" value="Grid">
+                </form>
+            </div>
+END;
+
+        $id = uniqid();
+
+        $xiboGrid = <<<HTML
+        <div class="XiboGrid" id="$id">
+            <div class="XiboFilter">
+                $filterForm
+            </div>
+            <div class="XiboData">
+
+            </div>
+        </div>
+HTML;
+            echo $xiboGrid;
+    }
+
+    public function Grid()
+    {
+        $db         =& $this->db;
+        $user       =& $this->user;
+        $response   = new ResponseManager();
+
+        $store = OAuthStore::instance();
+
+        $list = $store->listConsumers($this->user->userid);
+
+        $output = var_export($list);
+
+        Debug::LogEntry($db, 'audit', $output);
+
+        $response->SetGridResponse($output);
+        $response->Respond();
+    }
+
     /**
      * Authorize an OAuth request OR display the Authorize form.
      */

@@ -12,7 +12,9 @@ ALTER TABLE  `oauth_server_token` ADD FOREIGN KEY (  `ost_usa_id_ref` ) REFERENC
 `UserID`
 ) ON DELETE CASCADE ON UPDATE CASCADE ;
 
-DROP TABLE `oauth_consumer_registry`, `oauth_consumer_token`;
+
+INSERT INTO `menuitem` (`MenuID`, `PageID`, `Text`, `Sequence`)
+SELECT 4, PageID, 'Applications', 12 FROM `pages` WHERE `name` = 'oauth';
 
 /* VERSION UPDATE */
 /* Set the version table, etc */

@@ -32,82 +32,7 @@ CREATE TABLE IF NOT EXISTS oauth_log (
     key (olg_oct_token, olg_id),
     key (olg_usa_id_ref, olg_id)
 
-#   , foreign key (olg_usa_id_ref) references any_user_auth (usa_id_ref)
-#       on update cascade
-#       on delete cascade
 ) engine=InnoDB default charset=utf8;
-
-#--SPLIT--
-
-#
-# /////////////////// CONSUMER SIDE ///////////////////
-#
-
-# This is a registry of all consumer codes we got from other servers
-# The consumer_key/secret is obtained from the server
-# We also register the server uri, so that we can find the consumer key and secret
-# for a certain server.  From that server we can check if we have a token for a
-# particular user.
-
-CREATE TABLE IF NOT EXISTS oauth_consumer_registry (
-    ocr_id                  int(11) not null auto_increment,
-    ocr_usa_id_ref          int(11),
-    ocr_consumer_key        varchar(64) binary not null,
-    ocr_consumer_secret     varchar(64) binary not null,
-    ocr_signature_methods   varchar(255) not null default 'HMAC-SHA1,PLAINTEXT',
-    ocr_server_uri          varchar(255) not null,
-    ocr_server_uri_host     varchar(128) not null,
-    ocr_server_uri_path     varchar(128) binary not null,
-
-    ocr_request_token_uri   varchar(255) not null,
-    ocr_authorize_uri       varchar(255) not null,
-    ocr_access_token_uri    varchar(255) not null,
-    ocr_timestamp           timestamp not null default current_timestamp,
-
-    primary key (ocr_id),
-    unique key (ocr_consumer_key, ocr_usa_id_ref),
-    key (ocr_server_uri),
-    key (ocr_server_uri_host, ocr_server_uri_path),
-    key (ocr_usa_id_ref)
-
-#   , foreign key (ocr_usa_id_ref) references any_user_auth(usa_id_ref)
-#       on update cascade
-#       on delete set null
-) engine=InnoDB default charset=utf8;
-
-#--SPLIT--
-
-# Table used to sign requests for sending to a server by the consumer
-# The key is defined for a particular user.  Only one single named
-# key is allowed per user/server combination
-
-CREATE TABLE IF NOT EXISTS oauth_consumer_token (
-    oct_id                  int(11) not null auto_increment,
-    oct_ocr_id_ref          int(11) not null,
-    oct_usa_id_ref          int(11) not null,
-    oct_name                varchar(64) binary not null default '',
-    oct_token               varchar(64) binary not null,
-    oct_token_secret        varchar(64) binary not null,
-    oct_token_type          enum('request','authorized','access'),
-    oct_token_ttl           datetime not null default '9999-12-31',
-    oct_timestamp           timestamp not null default current_timestamp,
-
-    primary key (oct_id),
-    unique key (oct_ocr_id_ref, oct_token),
-    unique key (oct_usa_id_ref, oct_ocr_id_ref, oct_token_type, oct_name),
-	key (oct_token_ttl),
-
-    foreign key (oct_ocr_id_ref) references oauth_consumer_registry (ocr_id)
-        on update cascade
-        on delete cascade
-
-#   , foreign key (oct_usa_id_ref) references any_user_auth (usa_id_ref)
-#       on update cascade
-#       on delete cascade
-) engine=InnoDB default charset=utf8;
-
-#--SPLIT--
-
 
 #
 # ////////////////// SERVER SIDE /////////////////
@@ -139,9 +64,6 @@ CREATE TABLE IF NOT EXISTS oauth_server_registry (
     unique key (osr_consumer_key),
     key (osr_usa_id_ref)
 
-#   , foreign key (osr_usa_id_ref) references any_user_auth(usa_id_ref)
-#       on update cascade
-#       on delete set null
 ) engine=InnoDB default charset=utf8;
 
 #--SPLIT--
