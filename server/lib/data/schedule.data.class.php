@@ -41,12 +41,16 @@ class Schedule extends Data
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'Add');
 
+                if (count($displayGroupIDs) == 0)
+                    return $this->SetError(25001, __('No display groups selected'));
+
+
                 // Cant have a 0 increment as it creates a loop
                 if ($recDetail ==0)
                     $recDetail = 1;
 		
 		// make the displayid_list from the selected displays.
-		$displayGroupIDList = implode(",", $displayGroupIDs); 
+		$displayGroupIDList = implode(",", $displayGroupIDs);
 		
 		$SQL  = "";
 		$SQL .= "INSERT ";
