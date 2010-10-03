@@ -60,7 +60,7 @@ class File extends Data
         $db =& $this->db;
 
         // Directory location
-	$libraryFolder 	= Config::GetSetting($db, "LIBRARY_LOCATION");
+	$libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
         $libraryFolder  = $libraryFolder . 'temp';
 
         if (!$this->EnsureLibraryExists($libraryFolder))

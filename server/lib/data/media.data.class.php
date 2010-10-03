@@ -40,7 +40,7 @@ class Media extends Data
         $SQL  = "INSERT INTO media (name, type, duration, originalFilename, permissionID, userID, retired ) ";
         $SQL .= "VALUES ('%s', '%s', '%s', '%s', %d, %d, 0) ";
 
-        $SQL = sprintf($SQL, $db->escape_string($name), $db->
+        $SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($type),
             $db->escape_string($duration), $db->escape_string($fileName), $permissionid, $userid);
 
         if (!$mediaId = $db->insert_query($SQL))
@@ -48,6 +48,18 @@ class Media extends Data
             trigger_error($db->error());
             $this->SetError(25001, __('Could not add a display group for the new display.'));
             return false;
+        }
+
+        // Now move the file
+        $libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
+
+        if (!rename($libraryFolder . 'temp/' . $fileId, $libraryFolder . $mediaId . '.' . strtolower(substr(strrchr($fileName, '.'), 1))))
+        {
+            // If we couldnt move it - we need to delete the media record we just added
+            $SQL = sprintf("DELETE FROM media WHERE mediaID = %d ", $mediaId);
+
+            if (!$db->query($SQL))
+                return $this->SetError(15, 'Error storing file.');
         }
 
         return $mediaId;

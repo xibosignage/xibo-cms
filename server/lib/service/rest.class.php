@@ -112,7 +112,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Add the media.
-        if (!$mediaId = $media->Add($type, $name, $duration, $fileName, $permissionId, $this->user->userid))
+        if (!$mediaId = $media->Add($fileId, $type, $name, $duration, $fileName, $permissionId, $this->user->userid))
             return $this->Error($media->GetErrorNumber());
 
         // Return the mediaId.
