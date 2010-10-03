@@ -18,6 +18,6 @@ SELECT 4, PageID, 'Applications', 12 FROM `pages` WHERE `name` = 'oauth';
 
 /* VERSION UPDATE */
 /* Set the version table, etc */
-UPDATE `version` SET `app_ver` = '1.3.0-rc1', `XmdsVersion` = 2;
+UPDATE `version` SET `app_ver` = '1.3.0', `XmdsVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '40';

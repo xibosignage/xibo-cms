@@ -22,11 +22,19 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Media extends Data
 {
-    public function Add($type, $name, $duration, $fileName, $permissionId, $userId)
+    public function Add($fileId, $type, $name, $duration, $fileName, $permissionId, $userId)
     {
         $db =& $this->db;
 
-        // TODO: Validation
+        // Validation
+        if (strlen($name) > 100)
+            return $this->SetError(10, __('The name cannot be longer than 100 characters'));
+
+        if ($duration == 0)
+            return $this->SetError(11, __('You must enter a duration.'));
+
+        if ($db->GetSingleRow(sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d", $db->escape_string($name), $userId)))
+            return $this->SetError(12, __('Media you own already has this name. Please choose another.'));
 
         // All OK to insert this record
         $SQL  = "INSERT INTO media (name, type, duration, originalFilename, permissionID, userID, retired ) ";

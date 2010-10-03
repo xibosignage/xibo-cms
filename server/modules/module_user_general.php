@@ -795,6 +795,17 @@ END;
 	}
 
     /**
+     * Authenticates a user against a fileId
+     * @param <type> $fileId
+     * @return <bool> true on granted
+     */
+    public function FileAuth($fileId)
+    {
+        // Need to check this user has permission to upload this file (i.e. is it theirs)
+        return ($db->GetSingleValue(sprintf("SELECT UserID FROM file WHERE FileID = %d", $fileId), 'UserID', _INT) != $this->userid);
+    }
+
+    /**
      * Authorizes a user against a media ID
      * @param <int> $mediaID
      */
@@ -850,6 +861,11 @@ END;
         }
 
         return $media;
+    }
+
+    public function LayoutAuth()
+    {
+
     }
 
     /**

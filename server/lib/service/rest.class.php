@@ -48,7 +48,7 @@ class Rest
      * Upload a media file in parts
      * @return <XiboAPIResponse>
      */
-    public function MediaFileUpload()
+    public function LibraryMediaFileUpload()
     {
         // TODO: Does this user have permission to call this webservice method? Do via PageAuth?
 
@@ -68,36 +68,48 @@ class Rest
 
         if ($fileId == 0)
         {
-            // New upload
+            // New upload. All users have permissions to upload files if they have gotten this far
             if (!$fileId = $file->NewFile($payload, $this->user->userid))
                 return $this->Error($file->GetErrorNumber());
         }
         else
         {
+            // Check permissions
+            if (!$this->user->FileAuth($fileId))
+                return $this->Error(1, 'Access Denied');
+
             // Continue upload
-            if (!$file->Append($fileId, $payload, $this->user->userid))
+            if (!$file->Append($fileId, $payload))
                 return $this->Error($file->GetErrorNumber());
         }
 
+        // Current offset
+        $size = $file->Size($fileId);
+
         // Return the fileId
-        return $this->Respond($this->ReturnId('file', $fileId));
+        return $this->Respond($this->ReturnAttributes('file', array('id' => $fileId, 'offset' => $size)));
     }
 
     /**
      * Add a media file to the library
      */
-    public function MediaAdd()
+    public function LibraryMediaAdd()
     {
         // TODO: Does this user have permission to call this webservice method? Do via PageAuth?
         Kit::ClassLoader('Media');
 
         // Create a media object and gather the required parameters.
         $media          = new Media($this->db);
+        $fileId         = $this->GetParam('fileId', _INT);
         $type           = $this->GetParam('type', _WORD);
         $name           = $this->GetParam('name', _STRING);
         $duration       = $this->GetParam('duration', _INT);
         $fileName       = $this->GetParam('fileName', _FILENAME);
         $permissionId   = $this->GetParam('permissionID', _INT);
+
+        // Check permissions
+        if (!$this->user->FileAuth($fileId))
+            return $this->Error(1, 'Access Denied');
 
         // Add the media.
         if (!$mediaId = $media->Add($type, $name, $duration, $fileName, $permissionId, $this->user->userid))
@@ -110,7 +122,7 @@ class Rest
     /**
      * Edit a media file in the library
      */
-    public function MediaEdit()
+    public function LibraryMediaEdit()
     {
 
     }
@@ -118,7 +130,7 @@ class Rest
     /**
      * Retire a media file in the library
      */
-    public function MediaRetire()
+    public function LibraryMediaRetire()
     {
 
     }
@@ -126,7 +138,7 @@ class Rest
     /**
      * Delete a Media file from the library
      */
-    public function MediaDelete()
+    public function LibraryMediaDelete()
     {
 
     }
@@ -235,6 +247,25 @@ class Rest
         $xmlDoc = new DOMDocument();
         $xmlElement = $xmlDoc->createElement($nodeName);
         $xmlElement->setAttribute($idAttributeName, $id);
+
+        return $xmlElement;
+    }
+
+    /**
+     * Returns a single node with the attributes contained in a key/value array
+     * @param <type> $nodeName
+     * @param <type> $attributes
+     * @return <DOMDocument::XmlElement>
+     */
+    protected function ReturnAttributes($nodeName, $attributes)
+    {
+        $xmlDoc = new DOMDocument();
+        $xmlElement = $xmlDoc->createElement($nodeName);
+
+        foreach ($attributes as $key => $value)
+        {
+            $xmlElement->setAttribute($key, $value);
+        }
 
         return $xmlElement;
     }

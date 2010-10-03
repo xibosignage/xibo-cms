@@ -62,21 +62,21 @@ class Data
 		return $this->errorMessage;
 	}
 	
-	/**
-	 * Sets the Error for this Data object
-	 * @return 
-	 * @param $errNo Object
-	 * @param $errMessage Object
-	 */
-	protected function SetError($errNo, $errMessage = '')
-	{
-		$this->error		= true;
-		$this->errorNo 		= $errNo;
-		$this->errorMessage	= $errMessage;
-		
-		Debug::LogEntry($this->db, 'audit', sprintf('Data Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage));
-		
-		return;
-	}
+    /**
+     * Sets the Error for this Data object
+     * @return
+     * @param $errNo Object
+     * @param $errMessage Object
+     */
+    protected function SetError($errNo, $errMessage = '')
+    {
+        $this->error		= true;
+        $this->errorNo 		= $errNo;
+        $this->errorMessage	= $errMessage;
+
+        Debug::LogEntry($this->db, 'audit', sprintf('Data Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage));
+
+        return false;
+    }
 } 
 ?>

@@ -33,7 +33,7 @@ class File extends Data
         $db =& $this->db;
 
         // Create a new file record
-        $SQL = sprintf("INSERT INTO file ('CreatedDT, UserID') VALUES (%d, %d)", time(), $userId);
+        $SQL = sprintf("INSERT INTO file (CreatedDT, UserID) VALUES (%d, %d)", time(), $userId);
 
         if (!$fileId = $db->insert_query($SQL))
         {
@@ -55,31 +55,16 @@ class File extends Data
      * @param <type> $payload
      * @param <type> $userId
      */
-    public function Append($fileId, $payload, $userId)
+    public function Append($fileId, $payload)
     {
         $db =& $this->db;
 
-        // Need to check this user has permission to upload this file (i.e. is it theirs)
-        if ($db->GetSingleValue(sprintf("SELECT UserID FROM file WHERE FileID = %d", $fileId), 'UserID', _INT) != $userId)
-            return $this->SetError(7);
-
         // Directory location
 	$libraryFolder 	= Config::GetSetting($db, "LIBRARY_LOCATION");
-        $libraryFolder = $libraryFolder . 'temp';
+        $libraryFolder  = $libraryFolder . 'temp';
 
-        // Check that this location exists - and if not create it..
-        if (!file_exists($libraryFolder))
-        {
-            // Make the directory with broad permissions recursively (so will add the whole path)
-            mkdir($libraryFolder, 0777, true);
-        }
-
-        // Check that we are now writable - if not then error
-        if (!is_writable($libraryFolder))
-        {
-            $this->SetError(4);
+        if (!$this->EnsureLibraryExists($libraryFolder))
             return false;
-        }
 
         // Open a file pointer
         if (!$fp = fopen($libraryFolder . '/' . $fileId, 'a'))
@@ -97,6 +82,65 @@ class File extends Data
 
         // Close the file pointer
         fclose($fp);
+
+        return true;
+    }
+
+    /**
+     * The current size of a file
+     * @param <type> $fileId
+     * @return <int> filesize
+     */
+    public function Size($fileId)
+    {
+        // Directory location
+	$libraryFolder 	= Config::GetSetting($db, "LIBRARY_LOCATION");
+        $libraryFolder = $libraryFolder . 'temp';
+
+        return filesize($libraryFolder . '/' . $fileId);
+    }
+
+    /**
+     * Generates a fileid
+     * @param <type> $userId
+     */
+    public function GenerateFileId($userId)
+    {
+        $db =& $this->db;
+
+        // Create a new file record
+        $SQL = sprintf("INSERT INTO file (CreatedDT, UserID) VALUES (%d, %d)", time(), $userId);
+
+        if (!$fileId = $db->insert_query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(3);
+
+            return false;
+        }
+
+        return $fileId;
+    }
+
+    public function EnsureLibraryExists()
+    {
+        $db =& $this->db;
+        
+        $libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
+
+        // Check that this location exists - and if not create it..
+        if (!file_exists($libraryFolder))
+            mkdir($libraryFolder, 0777, true);
+
+        if (!file_exists($libraryFolder . '/temp'))
+            mkdir($libraryFolder . '/temp', 0777, true);
+
+        // Check that we are now writable - if not then error
+        if (!is_writable($libraryFolder))
+        {
+            $this->SetError(4);
+            return false;
+        }
 
         return true;
     }
