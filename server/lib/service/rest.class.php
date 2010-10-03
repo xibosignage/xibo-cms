@@ -56,16 +56,16 @@ class Rest
 
         $file           = new File($this->db);
         $fileId         = $this->GetParam('fileId', _INT);
-        $checkSum       = $this->GetParam('checkSum', _STRING);
+        $checkSum       = $this->GetParam('checksum', _STRING);
         $payload        = $this->GetParam('payload', _STRING);
         $payloadMd5     = md5($payload);
 
         // Checksum the payload
         if ($payloadMd5 != $checkSum)
         {
-            Debug::LogEntry($this->db, 'audit', 'Sent Checksum: ' . $checkSum, 'RestXml', 'LibraryMediaFileUpload');
-            Debug::LogEntry($this->db, 'audit', 'Calculated Checksum: ' . $payloadMd5, 'RestXml', 'LibraryMediaFileUpload');
-            Debug::LogEntry($this->db, 'audit', 'Payload: ' . $payload, 'RestXml', 'LibraryMediaFileUpload');
+            // Debug::LogEntry($this->db, 'audit', 'Sent Checksum: ' . $checkSum, 'RestXml', 'LibraryMediaFileUpload');
+            // Debug::LogEntry($this->db, 'audit', 'Calculated Checksum: ' . $payloadMd5, 'RestXml', 'LibraryMediaFileUpload');
+            // Debug::LogEntry($this->db, 'audit', 'Payload: ' . $payload, 'RestXml', 'LibraryMediaFileUpload');
 
             return $this->Error(2);
         }

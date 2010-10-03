@@ -94,7 +94,7 @@ class File extends Data
     public function Size($fileId)
     {
         // Directory location
-	$libraryFolder 	= Config::GetSetting($db, "LIBRARY_LOCATION");
+	$libraryFolder 	= Config::GetSetting($this->db, "LIBRARY_LOCATION");
         $libraryFolder = $libraryFolder . 'temp';
 
         return filesize($libraryFolder . '/' . $fileId);
