@@ -63,9 +63,9 @@ class Rest
         // Checksum the payload
         if ($payloadMd5 != $checkSum)
         {
-            Debug::LogEntry($db, 'audit', 'Sent Checksum: ' . $checkSum, 'RestXml', 'LibraryMediaFileUpload');
-            Debug::LogEntry($db, 'audit', 'Calculated Checksum: ' . $payloadMd5, 'RestXml', 'LibraryMediaFileUpload');
-            Debug::LogEntry($db, 'audit', 'Payload: ' . $payload, 'RestXml', 'LibraryMediaFileUpload');
+            Debug::LogEntry($this->db, 'audit', 'Sent Checksum: ' . $checkSum, 'RestXml', 'LibraryMediaFileUpload');
+            Debug::LogEntry($this->db, 'audit', 'Calculated Checksum: ' . $payloadMd5, 'RestXml', 'LibraryMediaFileUpload');
+            Debug::LogEntry($this->db, 'audit', 'Payload: ' . $payload, 'RestXml', 'LibraryMediaFileUpload');
 
             return $this->Error(2);
         }
