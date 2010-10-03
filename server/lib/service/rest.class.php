@@ -58,10 +58,17 @@ class Rest
         $fileId         = $this->GetParam('fileId', _INT);
         $checkSum       = $this->GetParam('checkSum', _STRING);
         $payload        = $this->GetParam('payload', _STRING);
+        $payloadMd5     = md5($payload);
 
         // Checksum the payload
-        if (md5($payload) != $checkSum)
+        if ($payloadMd5 != $checkSum)
+        {
+            Debug::LogEntry($db, 'audit', 'Sent Checksum: ' . $checkSum, 'RestXml', 'LibraryMediaFileUpload');
+            Debug::LogEntry($db, 'audit', 'Calculated Checksum: ' . $payloadMd5, 'RestXml', 'LibraryMediaFileUpload');
+            Debug::LogEntry($db, 'audit', 'Payload: ' . $payload, 'RestXml', 'LibraryMediaFileUpload');
+
             return $this->Error(2);
+        }
 
         // Payload will be encoded in base64. Need to decode before handing to File class
         $payload = base64_decode($payload);

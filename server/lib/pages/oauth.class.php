@@ -114,7 +114,7 @@ END;
             $appId  = Kit::ValidateParam($app['id'], _INT);
             $title  = Kit::ValidateParam($app['application_title'], _STRING);
             $desc   = Kit::ValidateParam($app['application_descr'], _STRING);
-            $url    = Kit::ValidateParam($app['application_uri'], _URL);
+            $url    = Kit::ValidateParam($app['application_uri'], _URI);
             $conKey = Kit::ValidateParam($app['consumer_key'], _STRING);
             $conSecret = Kit::ValidateParam($app['consumer_secret'], _STRING);
 
