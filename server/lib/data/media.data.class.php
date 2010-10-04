@@ -49,7 +49,7 @@ class Media extends Data
 
         // Check the extension is valid for that media type
         if (!$this->IsValidFile($extension))
-            return false;
+            return $this->SetError(18, __('Invalid file extension'));
 
         // Validation
         if (strlen($name) > 100)
@@ -87,6 +87,20 @@ class Media extends Data
                 return $this->SetError(14, 'Error cleaning up after failure.');
 
             return $this->SetError(15, 'Error storing file.');
+        }
+
+        // Calculate the MD5 and the file size
+        $storedAs   = $libraryFolder . $mediaId . '.' . $extension;
+        $md5        = md5_file($storedAs);
+        $fileSize   = filesize($storedAs);
+
+        // Update the media record to include this information
+        $SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $storedAs, $md5, $fileSize, $mediaId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            return $this->SetError(16, 'Updating stored file location and MD5');
         }
 
         return $mediaId;
@@ -130,6 +144,7 @@ class Media extends Data
                 return false;
         }
 
+        // TODO: Is this search case sensitive?
         return in_array($extension, $this->validExtensions);
     }
 
