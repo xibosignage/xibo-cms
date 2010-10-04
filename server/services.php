@@ -77,8 +77,6 @@ if (defined('XMDS') || $method != '')
 
         case 'rest':
 
-            Debug::LogEntry($db, 'audit', 'RESTful Webservice call');
-
             // OAuth authorization.
             if (OAuthRequestVerifier::requestIsSigned())
             {

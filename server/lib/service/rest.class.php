@@ -35,6 +35,9 @@ class Rest
 
     public function MediaList()
     {
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
+
         $media = $this->user->MediaList();
 
         if (!is_array($media))
@@ -50,7 +53,9 @@ class Rest
      */
     public function LibraryMediaFileUpload()
     {
-        // TODO: Does this user have permission to call this webservice method? Do via PageAuth?
+        // Does this user have permission to call this webservice method?
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('file');
 
@@ -102,7 +107,10 @@ class Rest
      */
     public function LibraryMediaAdd()
     {
-        // TODO: Does this user have permission to call this webservice method? Do via PageAuth?
+        // Does this user have permission to call this webservice method?
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
+
         Kit::ClassLoader('Media');
 
         // Create a media object and gather the required parameters.
@@ -120,7 +128,7 @@ class Rest
 
         // Add the media.
         if (!$mediaId = $media->Add($fileId, $type, $name, $duration, $fileName, $permissionId, $this->user->userid))
-            return $this->Error($media->GetErrorNumber());
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
         // Return the mediaId.
         return $this->Respond($this->ReturnId('media', $mediaId));
@@ -131,7 +139,8 @@ class Rest
      */
     public function LibraryMediaEdit()
     {
-
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
     }
 
     /**
@@ -139,7 +148,8 @@ class Rest
      */
     public function LibraryMediaRetire()
     {
-
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
     }
 
     /**
@@ -147,11 +157,15 @@ class Rest
      */
     public function LibraryMediaDelete()
     {
-
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
     }
 
     public function LayoutList()
     {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
         $layout = $this->user->LayoutList();
 
         if (!is_array($layout))
@@ -162,6 +176,9 @@ class Rest
 
     public function LayoutAdd()
     {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
         Kit::ClassLoader('layout');
         
         $layout         = $this->GetParam('layout', _STRING);
@@ -183,31 +200,43 @@ class Rest
 
     public function LayoutEdit()
     {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
 
     }
 
     public function LayoutUpdateXlf()
     {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
 
     }
 
     public function LayoutBackground()
     {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
 
     }
 
     public function LayoutDelete()
     {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
 
     }
 
     public function LayoutRegionAdd()
     {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
 
     }
 
     public function LayoutRegionEdit()
     {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
 
     }
 

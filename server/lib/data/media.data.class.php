@@ -22,9 +22,34 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Media extends Data
 {
+    private $moduleInfoLoaded;
+    private $regionSpecific;
+    private $validExtensions;
+
+    /**
+     * Adds a new media record
+     * @param <type> $fileId
+     * @param <type> $type
+     * @param <type> $name
+     * @param <type> $duration
+     * @param <type> $fileName
+     * @param <type> $permissionId
+     * @param <type> $userId
+     * @return <type>
+     */
     public function Add($fileId, $type, $name, $duration, $fileName, $permissionId, $userId)
     {
         $db =& $this->db;
+
+        $extension = strtolower(substr(strrchr($fileName, '.'), 1));
+
+        // Check that is a valid media type
+        if (!$this->IsValidType($type))
+            return false;
+
+        // Check the extension is valid for that media type
+        if (!$this->IsValidFile($extension))
+            return false;
 
         // Validation
         if (strlen($name) > 100)
@@ -41,25 +66,27 @@ class Media extends Data
         $SQL .= "VALUES ('%s', '%s', '%s', '%s', %d, %d, 0) ";
 
         $SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($type),
-            $db->escape_string($duration), $db->escape_string($fileName), $permissionid, $userid);
+            $db->escape_string($duration), $db->escape_string($fileName), $permissionId, $userId);
 
         if (!$mediaId = $db->insert_query($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25001, __('Could not add a display group for the new display.'));
+            $this->SetError(13, __('Error inserting media.'));
             return false;
         }
 
         // Now move the file
         $libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
 
-        if (!rename($libraryFolder . 'temp/' . $fileId, $libraryFolder . $mediaId . '.' . strtolower(substr(strrchr($fileName, '.'), 1))))
+        if (!rename($libraryFolder . 'temp/' . $fileId, $libraryFolder . $mediaId . '.' . $extension))
         {
             // If we couldnt move it - we need to delete the media record we just added
             $SQL = sprintf("DELETE FROM media WHERE mediaID = %d ", $mediaId);
 
             if (!$db->query($SQL))
-                return $this->SetError(15, 'Error storing file.');
+                return $this->SetError(14, 'Error cleaning up after failure.');
+
+            return $this->SetError(15, 'Error storing file.');
         }
 
         return $mediaId;
@@ -78,6 +105,60 @@ class Media extends Data
     public function Delete()
     {
         $db =& $this->db;
+    }
+
+    private function IsValidType($type)
+    {
+        $db =& $this->db;
+
+        if (!$this->moduleInfoLoaded)
+        {
+            if (!$this->LoadModuleInfo($type))
+                return false;
+        }
+
+        return true;
+    }
+
+    private function IsValidFile($extension)
+    {
+        $db =& $this->db;
+
+        if (!$this->moduleInfoLoaded)
+        {
+            if (!$this->LoadModuleInfo())
+                return false;
+        }
+
+        return in_array($extension, $this->validExtensions);
+    }
+
+    /**
+     * Loads some information about this type of module
+     * @return <bool>
+     */
+    private function LoadModuleInfo($type)
+    {
+        $db =& $this->db;
+
+        if ($type == '')
+            return $this->SetError(18, __('No module type given'));
+
+        $SQL = sprintf("SELECT * FROM module WHERE Module = '%s'", $db->escape_string($type));
+
+        if (!$result = $db->query($SQL))
+            return $this->SetError(19, __('Database error checking module'));
+
+        if ($db->num_rows($result) != 1)
+            return $this->SetError(20, __('No Module of this type found'));
+
+        $row = $db->get_assoc_row($result);
+
+        $this->moduleInfoLoaded = true;
+        $this->regionSpecific   = Kit::ValidateParam($row['RegionSpecific'], _INT);
+        $this->validExtensions 	= explode(',', Kit::ValidateParam($row['ValidExtensions'], _STRING));
+        
+        return true;
     }
 }
 ?>
