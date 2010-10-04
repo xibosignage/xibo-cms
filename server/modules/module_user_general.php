@@ -802,7 +802,15 @@ END;
     public function FileAuth($fileId)
     {
         // Need to check this user has permission to upload this file (i.e. is it theirs)
-        return ($this->db->GetSingleValue(sprintf("SELECT UserID FROM file WHERE FileID = %d", $fileId), 'UserID', _INT) != $this->userid);
+        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM file WHERE FileID = %d", $fileId), 'UserID', _INT))
+        {
+            trigger_error($this->db->error_text);
+            trigger_error($this->db->error());
+
+            return false;
+        }
+        
+        return ($userId == $this->userid);
     }
 
     /**
