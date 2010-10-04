@@ -430,6 +430,7 @@ class Kit
             {
                 $_SERVER['REQUEST_URI'].='?'.$_SERVER['QUERY_STRING'];
             }
+            $_SERVER['REQUEST_URI'] = '/' . $_SERVER['REQUEST_URI'];
         }
         ## End Code Snippet
 
@@ -461,6 +462,23 @@ class Kit
      */
     public static function GetCurrentPage()
     {
+
+        # Check REQUEST_URI is set. IIS doesn't set it so we need to build it
+        # Attribution:
+        # Code snippet from http://support.ecenica.com/web-hosting/scripting/troubleshooting-scripting-errors/how-to-fix-server-request_uri-php-error-on-windows-iis/
+        # Released under BSD License
+        # Copyright (c) 2009, Ecenica Limited All rights reserved.
+        if (!isset($_SERVER['REQUEST_URI']))
+        {
+            $_SERVER['REQUEST_URI'] = substr($_SERVER['PHP_SELF'],1 );
+            if (isset($_SERVER['QUERY_STRING']))
+            {
+                $_SERVER['REQUEST_URI'].='?'.$_SERVER['QUERY_STRING'];
+            }
+            $_SERVER['REQUEST_URI'] = '/' . $_SERVER['REQUEST_URI'];
+        }
+        ## End Code Snippet
+
         $request = explode('?', $_SERVER['REQUEST_URI']);
 
         if (isset($request[1]))
