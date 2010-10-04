@@ -425,12 +425,11 @@ class Kit
         # Copyright (c) 2009, Ecenica Limited All rights reserved.
         if (!isset($_SERVER['REQUEST_URI']))
         {
-            $_SERVER['REQUEST_URI'] = substr($_SERVER['PHP_SELF'],1 );
+            $_SERVER['REQUEST_URI'] = substr($_SERVER['PHP_SELF'],1 ) . '/';
             if (isset($_SERVER['QUERY_STRING']))
             {
                 $_SERVER['REQUEST_URI'].='?'.$_SERVER['QUERY_STRING'];
             }
-            $_SERVER['REQUEST_URI'] = '/' . $_SERVER['REQUEST_URI'];
         }
         ## End Code Snippet
 
@@ -470,12 +469,11 @@ class Kit
         # Copyright (c) 2009, Ecenica Limited All rights reserved.
         if (!isset($_SERVER['REQUEST_URI']))
         {
-            $_SERVER['REQUEST_URI'] = substr($_SERVER['PHP_SELF'],1 );
+            $_SERVER['REQUEST_URI'] = substr($_SERVER['PHP_SELF'],1 ) . '/';
             if (isset($_SERVER['QUERY_STRING']))
             {
                 $_SERVER['REQUEST_URI'].='?'.$_SERVER['QUERY_STRING'];
             }
-            $_SERVER['REQUEST_URI'] = '/' . $_SERVER['REQUEST_URI'];
         }
         ## End Code Snippet
 
