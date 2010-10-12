@@ -49,7 +49,7 @@ if (defined('XMDS') || $method != '')
 
             try
             {
-                $soap = new SoapServer($serviceLocation . '?wsdl');
+                $soap = new SoapServer(NULL, array('uri' => 'urn:xmds'));
                 $soap->setClass('XMDSSoap');
                 $soap->handle();
             }

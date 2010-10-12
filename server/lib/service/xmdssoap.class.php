@@ -444,7 +444,7 @@ class XMDSSoap
 
         if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "[OUT]", "xmds", "GetFile");
         
-        return $file;
+        return base64_encode($file);
     }
 
     /**
