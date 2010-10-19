@@ -431,7 +431,7 @@ END;
 
         // Remove the Layout
         if (!$db->query(sprintf('DELETE FROM layout WHERE layoutid = %d', $layoutId)))
-            return false;
+            return $this->SetError(20, __('Unable to delete layout'));
 
         return true;
     }

@@ -880,9 +880,23 @@ END;
         return $media;
     }
 
-    public function LayoutAuth()
+    /**
+     * Authorises a user against a layoutid
+     * @param <type> $layoutId
+     * @return <type>
+     */
+    public function LayoutAuth($layoutId)
     {
+        // TODO: Extend to cover group access and all that
+        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM layout WHERE LayoutID = %d", $layoutId), 'UserID', _INT))
+        {
+            trigger_error($this->db->error_text);
+            trigger_error($this->db->error());
 
+            return false;
+        }
+
+        return ($userId == $this->userid);
     }
 
     /**

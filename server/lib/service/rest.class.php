@@ -231,6 +231,13 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
     }
 
     public function LayoutUpdateXlf()
@@ -238,6 +245,13 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
     }
 
     public function LayoutBackground()
@@ -245,6 +259,13 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
     }
 
     public function LayoutDelete()
@@ -252,6 +273,18 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        if (!$layout->Delete($layoutId))
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
+
+        return true;
     }
 
     public function LayoutRegionAdd()
