@@ -817,9 +817,18 @@ END;
      * Authorizes a user against a media ID
      * @param <int> $mediaID
      */
-    public function MediaAuth($mediaID)
+    public function MediaAuth($mediaId)
     {
-        return false;
+        // TODO: Extend to cover group access and all that
+        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM media WHERE MediaID = %d", $mediaId), 'UserID', _INT))
+        {
+            trigger_error($this->db->error_text);
+            trigger_error($this->db->error());
+
+            return false;
+        }
+
+        return ($userId == $this->userid);
     }
 
     /**

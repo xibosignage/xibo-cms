@@ -141,6 +141,8 @@ class Rest
     {
         if (!$this->user->PageAuth('media'))
             return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Media');
     }
 
     /**
@@ -150,6 +152,19 @@ class Rest
     {
         if (!$this->user->PageAuth('media'))
             return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Media');
+
+        $media      = new Media($this->db);
+        $mediaId    = $this->GetParam('mediaId', _INT);
+
+        if (!$this->user->MediaAuth($mediaId))
+            return $this->Error(1, 'Access Denied');
+
+        if (!$media->Retire($mediaId))
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
@@ -159,6 +174,19 @@ class Rest
     {
         if (!$this->user->PageAuth('media'))
             return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Media');
+
+        $media      = new Media($this->db);
+        $mediaId    = $this->GetParam('mediaId', _INT);
+
+        if (!$this->user->MediaAuth($mediaId))
+            return $this->Error(1, 'Access Denied');
+
+        if (!$media->Delete($mediaId))
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     public function LayoutList()
