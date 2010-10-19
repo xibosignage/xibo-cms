@@ -114,11 +114,76 @@ class Media extends Data
     public function Retire()
     {
         $db =& $this->db;
+
+        // Retire the media
+        $SQL = sprintf("UPDATE media SET retired = 1 WHERE MediaID = %d", $mediaId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            return $this->SetError(10, __('Error deleting media.'));
+        }
+
+        return true;
     }
 
-    public function Delete()
+    public function Delete($mediaId)
     {
         $db =& $this->db;
+
+        // Check for links
+        $SQL = sprintf("SELECT * FROM lklayoutmedia WHERE MediaID = %d", $mediaId);
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            return $this->SetError(12, __('Error checking if media can be deleted.'));
+        }
+
+        // If any links are found, then we cannot delete
+        if ($db->num_rows($result) > 0)
+            return $this->SetError(13, __('This media is in use, please retire it instead.'));
+
+        // Get the file name
+        $SQL = sprintf("SELECT StoredAs FROM media WHERE mediaID = %d", $mediaId);
+
+        if (!$fileName = $db->GetSingleValue($SQL, 'StoredAs', _STRING))
+            return $this->SetError(14, __('Cannot locate the files for this media. Unable to delete.'));
+
+        // Delete the media
+        $SQL = sprintf("DELETE FROM media WHERE MediaID = %d", $mediaId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            return $this->SetError(15, __('Error deleting media.'));
+        }
+
+        // Delete the file itself (and any thumbs, etc)
+        $this->DeleteMediaFile($fileName);
+
+        return true;
+    }
+
+    public function DeleteMediaFile($fileName)
+    {
+        $db =& $this->db;
+
+        // Library location
+        $databaseDir = Config::GetSetting($db, "LIBRARY_LOCATION");
+
+        //3 things to check for..
+        //the actual file, the thumbnail, the background
+        if (file_exists($databaseDir . $fileName))
+            unlink($databaseDir . $fileName);
+
+        if (file_exists($databaseDir . 'tn_' . $fileName))
+            unlink($databaseDir . 'tn_' . $fileName);
+
+        if (file_exists($databaseDir . 'bg_' . $fileName))
+            unlink($databaseDir . 'bg_' . $fileName);
+
+        return true;
     }
 
     private function IsValidType($type)
