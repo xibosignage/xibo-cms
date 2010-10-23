@@ -425,6 +425,7 @@ class Kit
         # Copyright (c) 2009, Ecenica Limited All rights reserved.
         if (!isset($_SERVER['REQUEST_URI']))
         {
+            $_SERVER['REQUEST_URI'] = $_SERVER['PHP_SELF'];
             if (isset($_SERVER['QUERY_STRING']))
             {
                 $_SERVER['REQUEST_URI'].='?'.$_SERVER['QUERY_STRING'];
@@ -468,6 +469,7 @@ class Kit
         # Copyright (c) 2009, Ecenica Limited All rights reserved.
         if (!isset($_SERVER['REQUEST_URI']))
         {
+            $_SERVER['REQUEST_URI'] = $_SERVER['PHP_SELF'];
             if (isset($_SERVER['QUERY_STRING']))
             {
                 $_SERVER['REQUEST_URI'].='?'.$_SERVER['QUERY_STRING'];
