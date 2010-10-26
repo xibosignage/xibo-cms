@@ -417,6 +417,22 @@ class Kit
      */
     public static function GetXiboRoot()
     {
+
+        # Check REQUEST_URI is set. IIS doesn't set it so we need to build it
+        # Attribution:
+        # Code snippet from http://support.ecenica.com/web-hosting/scripting/troubleshooting-scripting-errors/how-to-fix-server-request_uri-php-error-on-windows-iis/
+        # Released under BSD License
+        # Copyright (c) 2009, Ecenica Limited All rights reserved.
+        if (!isset($_SERVER['REQUEST_URI']))
+        {
+            $_SERVER['REQUEST_URI'] = $_SERVER['PHP_SELF'];
+            if (isset($_SERVER['QUERY_STRING']))
+            {
+                $_SERVER['REQUEST_URI'].='?'.$_SERVER['QUERY_STRING'];
+            }
+        }
+        ## End Code Snippet
+
         $request = explode('?', $_SERVER['REQUEST_URI']);
 
         $fullUrl = 'http';
@@ -445,6 +461,22 @@ class Kit
      */
     public static function GetCurrentPage()
     {
+
+        # Check REQUEST_URI is set. IIS doesn't set it so we need to build it
+        # Attribution:
+        # Code snippet from http://support.ecenica.com/web-hosting/scripting/troubleshooting-scripting-errors/how-to-fix-server-request_uri-php-error-on-windows-iis/
+        # Released under BSD License
+        # Copyright (c) 2009, Ecenica Limited All rights reserved.
+        if (!isset($_SERVER['REQUEST_URI']))
+        {
+            $_SERVER['REQUEST_URI'] = $_SERVER['PHP_SELF'];
+            if (isset($_SERVER['QUERY_STRING']))
+            {
+                $_SERVER['REQUEST_URI'].='?'.$_SERVER['QUERY_STRING'];
+            }
+        }
+        ## End Code Snippet
+
         $request = explode('?', $_SERVER['REQUEST_URI']);
 
         if (isset($request[1]))
