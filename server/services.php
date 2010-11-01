@@ -49,7 +49,7 @@ if (defined('XMDS') || $method != '')
 
             try
             {
-                $soap = new SoapServer(__DIR__ . '/lib/service/service.wsdl');
+                $soap = new SoapServer('lib/service/service.wsdl');
                 $soap->setClass('XMDSSoap');
                 $soap->handle();
             }
