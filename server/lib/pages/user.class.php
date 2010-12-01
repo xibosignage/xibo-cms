@@ -584,7 +584,7 @@ END;
                                     <td><label for="email">Email Address<span class="required email">*</span></label></td>
                                     <td>$emailHelp <input type="text" id="email" name="email" value="$email" class="required" /></td>
                             </tr>
-                            $homepageOption
+                            <!-- $homepageOption -->
                             $usertypeOption
                     </table>
             </form>
