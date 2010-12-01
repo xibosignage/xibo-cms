@@ -125,6 +125,9 @@ else
     if(($aKey == $key) || ($pKey == $key) || (Config::GetSetting($db, "MAINTENANCE_ENABLED")=="On"))
     {
         // Email Alerts
+        // Note that email alerts for displays coming back online are triggered directly from
+        // the XMDS service.
+
         print "<h1>" . __("Email Alerts") . "</h1>";
         flush();
 
@@ -163,6 +166,7 @@ else
             trigger_error(__('Unable to access displays'), E_USER_ERROR);
         }
 
+        // Loop over the licensed displays
         while($row = $db->get_row($result))
         {
             $displayid     = Kit::ValidateParam($row[0],_INT);
@@ -187,28 +191,31 @@ else
                 //   * Email alerts are enabled for this display and the last time we saw this display it was logged in
                 if ($emailAlerts)
                 {
-                    // print "email_alert: $email_alert, alwaysAlert: $alwaysAlert, loggedin: $loggedin. ";
                     if ((($email_alert == 1) && $alwaysAlert) || (($loggedin == 1) && ($email_alert == 1)))
                     {
                         $subject  = sprintf(__("Xibo Email Alert for Display %s"),$display_name);
                         $body     = sprintf(__("Display %s with ID %d was last seen at %s."),$display_name,$displayid,$last_seen);
-                        $headers  = sprintf("From: %s\r\nX-Mailer: php", $msgFrom);
-                        if (mail($msgTo, $subject, $body, $headers))
+
+                        if (Kit::SendEmail($msgTo, $msgFrom, $subject, $body))
                         {
+                            // Successful Alert
                             print "A";
                         }
                         else
                         {
+                            // Error sending Alert
                             print "E";
                         }
                     }
                     else
                     {
+                        // Alert disabled for this display
                         print "D";
                     }
                 }
                 else
                 {
+                    // Email alerts disabled globally
                     print "X";
                 }
 
@@ -221,45 +228,8 @@ else
                     trigger_error(__('Unable to update loggedin status for display.'), E_USER_ERROR);
                 }
                 
-            }
-            else
-            {
-                // If we've transitioned back from loggedout to logged in, update the database
-                if ($loggedin == 0)
-                {
-                    $SQL = sprintf("UPDATE `display` SET `loggedin` = 1 WHERE `displayid` = %d",$displayid);
+            }            
 
-                    if (!$r =$db->query($SQL))
-                    {
-                        trigger_error($db->error());
-                        trigger_error(__('Unable to update loggedin status for display.'), E_USER_ERROR);
-                    }
-
-                    // Send an email alert if appropriate
-                    if ($emailAlerts && ($email_alert == 1))
-                    {
-                        $subject  = sprintf(__("Xibo Recovery for Display %s"),$display_name);
-                        $body     = sprintf(__("Display %s with ID %d has recovered."),$display_name,$displayid);
-                        $headers  = sprintf("From: %s\r\nX-Mailer: php", $msgFrom);
-                        if (mail($msgTo, $subject, $body, $headers))
-                        {
-                            print "G";
-                        }
-                        else
-                        {
-                            print "E";
-                        }    
-                    }
-                    else
-                    {
-                        print ".";
-                    }
-                }
-                else
-                {
-                    print ".";
-                }
-            }
             flush();
         }
 

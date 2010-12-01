@@ -857,7 +857,7 @@ class XMDSSoap
 	$db =& $this->db;
 
 	// check in the database for this hardwareKey
-	$SQL = "SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid FROM display WHERE license = '$hardwareKey'";
+	$SQL = "SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin, email_alert, display FROM display WHERE license = '$hardwareKey'";
 
         if (!$result = $db->query($SQL))
 	{
@@ -877,6 +877,19 @@ class XMDSSoap
 
         // Pull the client IP address
         $clientAddress = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
+
+        // See if the client was offline and if appropriate send an alert
+        // to say that it has come back online
+        if (($row[5] == 0) and ($row[6] == 1))
+        {
+            $msgTo    = Kit::ValidateParam(Config::GetSetting($db, "mail_to"),_PASSWORD);
+            $msgFrom  = Kit::ValidateParam(Config::GetSetting($db, "mail_from"),_PASSWORD);
+
+            $subject  = sprintf(__("Xibo Recovery for Display %s"),$row[7]);
+            $body     = sprintf(__("Display %s with ID %d is now back online."), $row[7], $row[3]);
+
+            Kit::SendEmail($msgTo, $msgFrom, $subject, $body)
+        }
 
         // Last accessed date on the display
         $displayObject = new Display($db);

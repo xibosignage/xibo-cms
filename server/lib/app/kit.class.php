@@ -484,5 +484,15 @@ class Kit
 
         return '';
     }
+
+    /**
+     * Sends an email alert
+     */
+    public static function SendEmail($to, $from, $subject, $message)
+    {
+        $headers  = sprintf("From: %s\r\nX-Mailer: php", $from);
+        return mail($to, $subject, $message, $headers)
+    }
+
 }
 ?>
