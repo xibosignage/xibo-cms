@@ -888,7 +888,7 @@ class XMDSSoap
             $subject  = sprintf(__("Xibo Recovery for Display %s"),$row[7]);
             $body     = sprintf(__("Display %s with ID %d is now back online."), $row[7], $row[3]);
 
-            Kit::SendEmail($msgTo, $msgFrom, $subject, $body)
+            Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
         }
 
         // Last accessed date on the display
