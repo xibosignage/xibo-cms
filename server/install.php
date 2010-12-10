@@ -182,17 +182,17 @@ elseif ($xibo_step == 5) {
   }
   else {
     $db_host = Kit::GetParam('host',_POST,_STRING,'localhost');
-    $db_user = Kit::GetParam('db_username',_POST,_USERNAME);
+    $db_user = Kit::GetParam('db_username',_POST,_PASSWORD);
     $db_pass = Kit::GetParam('db_password',_POST,_PASSWORD);
-    $db_name = Kit::GetParam('db_name',_POST,_USERNAME);
+    $db_name = Kit::GetParam('db_name',_POST,_PASSWORD);
     ?>
     <div class="info">
     <?php
     if ($db_create == 'On') {  
-      $db_admin_user = Kit::GetParam('admin_username',_POST,_USERNAME);
+      $db_admin_user = Kit::GetParam('admin_username',_POST,_PASSWORD);
       $db_admin_pass = Kit::GetParam('admin_password',_POST,_PASSWORD);
       
-      if (! ($db_host && $db_name && $db_user && $db_pass && $db_admin_user && $db_admin_pass)) {
+      if (! ($db_host && $db_name && $db_user && $db_admin_user)) {
         # Something was blank.
         # Throw an error.
         reportError("3", __("A field was blank. Please fill in all fields."));
