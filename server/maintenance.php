@@ -229,6 +229,10 @@ else
                 }
                 
             }            
+            else
+            {
+                print ".";
+            }
 
             flush();
         }
