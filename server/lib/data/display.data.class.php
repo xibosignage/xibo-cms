@@ -61,10 +61,10 @@ class Display extends Data
             $SQL .= "       ) ";
             $SQL .= "       VALUES ";
             $SQL .= "       ( ";
-            $SQL .= sprintf("      '%s', ", $display);
+            $SQL .= sprintf("      '%s', ", $db->escape_string($display));
             $SQL .= "              0   , ";
             $SQL .= "              1   , ";
-            $SQL .= sprintf("      '%s', ", $license);
+            $SQL .= sprintf("      '%s', ", $db->escape_string($license));
             $SQL .= "              0   , ";
             $SQL .= "              0   , ";
             $SQL .= "              1   , ";
