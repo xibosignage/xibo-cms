@@ -66,6 +66,14 @@ class File extends Data
         if (!$this->EnsureLibraryExists($libraryFolder))
             return false;
 
+        // Append should only be called on existing files, if this file does not exist then we
+        // need to error accordingly.
+        if (!file_exists($libraryFolder . '/' . $fileId))
+        {
+            $this->SetError(7);
+            return false;
+        }
+
         // Open a file pointer
         if (!$fp = fopen($libraryFolder . '/' . $fileId, 'a'))
         {
