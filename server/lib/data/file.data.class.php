@@ -43,7 +43,7 @@ class File extends Data
             return false;
         }
 
-        if (!$this->Append($fileId, $payload, $userId))
+        if (!$this->WriteToDisk($fileId, $payload))
             return false;
 
         return $fileId;
@@ -63,9 +63,6 @@ class File extends Data
 	$libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
         $libraryFolder  = $libraryFolder . 'temp';
 
-        if (!$this->EnsureLibraryExists($libraryFolder))
-            return false;
-
         // Append should only be called on existing files, if this file does not exist then we
         // need to error accordingly.
         if (!file_exists($libraryFolder . '/' . $fileId))
@@ -73,6 +70,25 @@ class File extends Data
             $this->SetError(7);
             return false;
         }
+
+        return $this->WriteToDisk($fileId, $payload);
+    }
+
+    /**
+     * Writes the file to disk
+     * @param <type> $fileId
+     * @param <type> $payload
+     */
+    public function WriteToDisk($fileId, $payload)
+    {
+        $db =& $this->db;
+
+        // Directory location
+	$libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
+        $libraryFolder  = $libraryFolder . 'temp';
+
+        if (!$this->EnsureLibraryExists($libraryFolder))
+            return false;
 
         // Open a file pointer
         if (!$fp = fopen($libraryFolder . '/' . $fileId, 'a'))
@@ -90,8 +106,6 @@ class File extends Data
 
         // Close the file pointer
         fclose($fp);
-
-        return true;
     }
 
     /**
