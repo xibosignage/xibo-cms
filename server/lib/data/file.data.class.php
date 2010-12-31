@@ -106,6 +106,8 @@ class File extends Data
 
         // Close the file pointer
         fclose($fp);
+
+        return true;
     }
 
     /**
