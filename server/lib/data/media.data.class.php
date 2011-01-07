@@ -121,7 +121,7 @@ class Media extends Data
         if (!$db->query($SQL))
         {
             trigger_error($db->error());
-            return $this->SetError(10, __('Error deleting media.'));
+            return $this->SetError(19, __('Error retiring media.'));
         }
 
         return true;
@@ -137,18 +137,18 @@ class Media extends Data
         if (!$results = $db->query($SQL))
         {
             trigger_error($db->error());
-            return $this->SetError(12, __('Error checking if media can be deleted.'));
+            return $this->SetError(20, __('Error checking if media can be deleted.'));
         }
 
         // If any links are found, then we cannot delete
         if ($db->num_rows($result) > 0)
-            return $this->SetError(13, __('This media is in use, please retire it instead.'));
+            return $this->SetError(21, __('This media is in use, please retire it instead.'));
 
         // Get the file name
         $SQL = sprintf("SELECT StoredAs FROM media WHERE mediaID = %d", $mediaId);
 
         if (!$fileName = $db->GetSingleValue($SQL, 'StoredAs', _STRING))
-            return $this->SetError(14, __('Cannot locate the files for this media. Unable to delete.'));
+            return $this->SetError(22, __('Cannot locate the files for this media. Unable to delete.'));
 
         // Delete the media
         $SQL = sprintf("DELETE FROM media WHERE MediaID = %d", $mediaId);
@@ -156,7 +156,7 @@ class Media extends Data
         if (!$db->query($SQL))
         {
             trigger_error($db->error());
-            return $this->SetError(15, __('Error deleting media.'));
+            return $this->SetError(23, __('Error deleting media.'));
         }
 
         // Delete the file itself (and any thumbs, etc)

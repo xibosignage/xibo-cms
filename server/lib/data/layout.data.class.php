@@ -45,19 +45,19 @@ class Layout extends Data
         // Validation
         if (strlen($layout) > 50 || strlen($layout) < 1)
         {
-            $this->SetError(25000, __("Layout Name must be between 1 and 50 characters"));
+            $this->SetError(25001, __("Layout Name must be between 1 and 50 characters"));
             return false;
         }
 
         if (strlen($description) > 254)
         {
-            $this->SetError(25000, __("Description can not be longer than 254 characters"));
+            $this->SetError(25002, __("Description can not be longer than 254 characters"));
             return false;
         }
 
         if (strlen($tags) > 254)
         {
-            $this->SetError(25000, __("Tags can not be longer than 254 characters"));
+            $this->SetError(25003, __("Tags can not be longer than 254 characters"));
             return false;
         }
 
@@ -67,7 +67,7 @@ class Layout extends Data
         if ($db->GetSingleRow($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25000, sprintf(__("You already own a layout called '%s'. Please choose another name."), $layout));
+            $this->SetError(25004, sprintf(__("You already own a layout called '%s'. Please choose another name."), $layout));
             return false;
         }
         // End Validation
@@ -94,7 +94,7 @@ END;
         if(!$id = $db->insert_query($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25000, __('Could not add Layout'));
+            $this->SetError(25005, __('Could not add Layout'));
 
             return false;
         }
@@ -170,7 +170,7 @@ END;
         // Make sure we get an array
         if(!is_array($tags))
         {
-            $this->SetError(25000, 'Must pass EditTags an array');
+            $this->SetError(25006, 'Must pass EditTags an array');
             return false;
         }
 
@@ -325,7 +325,7 @@ END;
         if (!$db->query($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25000, 'Unable to Update Layout.');
+            $this->SetError(25007, 'Unable to Update Layout.');
             return false;
         }
 
@@ -431,7 +431,7 @@ END;
 
         // Remove the Layout
         if (!$db->query(sprintf('DELETE FROM layout WHERE layoutid = %d', $layoutId)))
-            return $this->SetError(20, __('Unable to delete layout'));
+            return $this->SetError(25008, __('Unable to delete layout'));
 
         return true;
     }

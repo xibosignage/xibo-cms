@@ -219,7 +219,7 @@ class Rest
         $layoutObject = new Layout($this->db);
 
         if(!$id = $layoutObject->Add($layout, $description, $permissionid, $tags, $this->user->userid, $templateId))
-            return $this->Error(3, $layoutObject->GetErrorMessage());
+            return $this->Error($layoutObject->GetErrorNumber(), $layoutObject->GetErrorMessage());
 
         Debug::LogEntry($this->db, 'audit', 'Added new layout with id' . $id);
 
@@ -284,7 +284,7 @@ class Rest
         if (!$layout->Delete($layoutId))
             return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
-        return true;
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     public function LayoutRegionAdd()
