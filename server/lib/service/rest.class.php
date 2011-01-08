@@ -33,7 +33,207 @@ class Rest
         $this->POST = $postData;
     }
 
-    public function MediaList()
+    /**
+     * List all Displays for this user
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayList()
+    {
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Display
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayEdit()
+    {
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Retire Display
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayRetire()
+    {
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Delete a Display
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayDelete()
+    {
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Display User Group Security
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayUserGroupSecurity()
+    {
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Display User Group Security
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayUserGroupEdit()
+    {
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Display Groups
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupList()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Add Display Group
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupAdd()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Display Group
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupEdit()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Delete Display Group
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupDelete()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Display Group Members
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupMembersList()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Display Group Members
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupMembersEdit()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Display Group User Groups
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupUserGroupList()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Display Group User Group Edit
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupUserGroupEdit()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Library Media
+     * @return <XiboAPIResponse>
+     */
+    public function LibraryMediaList()
     {
         if (!$this->user->PageAuth('media'))
             return $this->Error(1, 'Access Denied');
@@ -189,6 +389,10 @@ class Rest
         return $this->Respond($this->ReturnId('success', true));
     }
 
+    /**
+     * List Layouts
+     * @return <XiboAPIResponse>
+     */
     public function LayoutList()
     {
         if (!$this->user->PageAuth('layout'))
@@ -202,6 +406,10 @@ class Rest
         return $this->Respond($this->NodeListFromArray($layout, 'layout'));
     }
 
+    /**
+     * Add Layout
+     * @return <XiboAPIResponse>
+     */
     public function LayoutAdd()
     {
         if (!$this->user->PageAuth('layout'))
@@ -226,6 +434,10 @@ class Rest
         return $this->Respond($this->ReturnId('layout', $id));
     }
 
+    /**
+     * Edit Layout
+     * @return <XiboAPIResponse>
+     */
     public function LayoutEdit()
     {
         if (!$this->user->PageAuth('layout'))
@@ -238,9 +450,15 @@ class Rest
 
         if (!$this->user->LayoutAuth($layoutId))
             return $this->Error(1, 'Access Denied');
-    }
 
-    public function LayoutUpdateXlf()
+        return $this->Error(1000, 'Not implemented');
+    }
+    
+    /**
+     * Copy Layout
+     * @return <XiboAPIResponse> 
+     */
+    public function LayoutCopy()
     {
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
@@ -252,22 +470,14 @@ class Rest
 
         if (!$this->user->LayoutAuth($layoutId))
             return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
     }
 
-    public function LayoutBackground()
-    {
-        if (!$this->user->PageAuth('layout'))
-            return $this->Error(1, 'Access Denied');
-
-        Kit::ClassLoader('Layout');
-
-        $layout     = new Layout($this->db);
-        $layoutId   = $this->GetParam('layoutId', _INT);
-
-        if (!$this->user->LayoutAuth($layoutId))
-            return $this->Error(1, 'Access Denied');
-    }
-
+    /**
+     * Delete Layout
+     * @return <XiboAPIResponse>
+     */
     public function LayoutDelete()
     {
         if (!$this->user->PageAuth('layout'))
@@ -281,24 +491,267 @@ class Rest
         if (!$this->user->LayoutAuth($layoutId))
             return $this->Error(1, 'Access Denied');
 
-        if (!$layout->Delete($layoutId))
-            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
-
-        return $this->Respond($this->ReturnId('success', true));
+        return $this->Error(1000, 'Not implemented');
     }
 
+    /**
+     * Retire Layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRetire()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List possible layout backgrounds
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutBackgroundList()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit layout background
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutBackgroundEdit()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Get the Xlf for a Layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutGetXlf()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Regions on a layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionList()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Add Region to a Layout
+     * @return <XiboAPIResponse>
+     */
     public function LayoutRegionAdd()
     {
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
+        return $this->Error(1000, 'Not implemented');
     }
 
+    /**
+     * Edit Region on a layout
+     * @return <XiboAPIResponse>
+     */
     public function LayoutRegionEdit()
     {
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Position Region on a Layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionPosition()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List the items on a region timeline
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionTimelineList()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Add Media to a Region
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionMediaAdd()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Media on a Region
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionMediaEdit()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Details of Media on a Region
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionMediaDetails()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Reorder media on a region
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionMediaReorder()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Delete media from a region
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionMediaDelete()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Add media to a region from the Library
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionLibraryAdd()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Schedule
+     * @return <XiboAPIResponse>
+     */
+    public function ScheduleList()
+    {
+        if (!$this->user->PageAuth('schedule'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Add Schedule
+     * @return <XiboAPIResponse>
+     */
+    public function ScheduleAdd()
+    {
+        if (!$this->user->PageAuth('schedule'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Schedule
+     * @return <XiboAPIResponse>
+     */
+    public function ScheduleEdit()
+    {
+        if (!$this->user->PageAuth('schedule'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Delete Schedule
+     * @return <XiboAPIResponse>
+     */
+    public function ScheduleDelete()
+    {
+        if (!$this->user->PageAuth('schedule'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
     }
 
     /**
