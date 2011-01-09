@@ -320,7 +320,7 @@ class Rest
         $name           = $this->GetParam('name', _STRING);
         $duration       = $this->GetParam('duration', _INT);
         $fileName       = $this->GetParam('fileName', _FILENAME);
-        $permissionId   = $this->GetParam('permissionID', _INT);
+        $permissionId   = $this->GetParam('permissionId', _INT);
 
         // Check permissions
         if (!$this->user->FileAuth($fileId))
@@ -342,7 +342,25 @@ class Rest
         if (!$this->user->PageAuth('media'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Media');
+        // Create a media object and gather the required parameters.
+        $media          = new Media($this->db);
+        $mediaId        = $this->GetParam('mediaId', _INT);
+        $type           = $this->GetParam('type', _WORD);
+        $name           = $this->GetParam('name', _STRING);
+        $duration       = $this->GetParam('duration', _INT);
+        $fileName       = $this->GetParam('fileName', _FILENAME);
+        $permissionId   = $this->GetParam('permissionId', _INT);
+
+        // Check permissions
+        if (!$this->user->MediaAuth($mediaId))
+            return $this->Error(1, 'Access Denied');
+
+        // Add the media.
+        if (!$mediaId = $media->Edit($mediaId, $name, $duration, $permissionId))
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
+
+        // Return the mediaId.
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
@@ -387,6 +405,36 @@ class Rest
             return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
         return $this->Respond($this->ReturnId('success', true));
+    }
+
+    /**
+     * Replace a Media items file with a new revision
+     * @return <XiboAPIResponse>
+     */
+    public function LibraryMediaFileRevise()
+    {
+        // Does this user have permission to call this webservice method?
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Media');
+
+        // Create a media object and gather the required parameters.
+        $media          = new Media($this->db);
+        $mediaId        = $this->GetParam('mediaId', _INT);
+        $fileId         = $this->GetParam('fileId', _INT);
+        $fileName       = $this->GetParam('fileName', _FILENAME);
+        
+        // Check permissions
+        if (!$this->user->FileAuth($fileId))
+            return $this->Error(1, 'Access Denied');
+
+        // Add the media.
+        if (!$mediaId = $media->FileRevise($mediaId, $fileId, $fileName))
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
+
+        // Return the mediaId.
+        return $this->Respond($this->ReturnId('media', $mediaId));
     }
 
     /**

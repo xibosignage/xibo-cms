@@ -106,9 +106,77 @@ class Media extends Data
         return $mediaId;
     }
 
-    public function Edit()
+    /**
+     * Edit Media Record
+     * @param <type> $mediaId
+     * @param <type> $name
+     * @param <type> $duration
+     * @param <type> $permissionId
+     * @return <bool>
+     */
+    public function Edit($mediaId, $name, $duration, $permissionId)
     {
        $db =& $this->db;
+
+       // Validation
+        if (strlen($name) > 100)
+            return $this->SetError(10, __('The name cannot be longer than 100 characters'));
+
+        if ($duration == 0)
+            return $this->SetError(11, __('You must enter a duration.'));
+
+        if ($db->GetSingleRow(sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d", $db->escape_string($name), $userId)))
+            return $this->SetError(12, __('Media you own already has this name. Please choose another.'));
+       
+       $SQL = "UPDATE media SET name = '%s', duration = %d, permissionID = %d WHERE MediaID = %d";
+       $SQL = sprintf($SQL, $db->escape_string($name), $duration, $permissionId);
+       
+       if (!$db->query($SQL))
+       {
+           trigger_error($db->error());
+           return $this->SetError(30, 'Database failure updating media');
+       }
+
+       return true;
+    }
+
+    /**
+     * Revises the file for this media id
+     * @param <type> $mediaId
+     * @param <type> $fileId
+     * @param <type> $fileName
+     */
+    public function FileRevise($mediaId, $fileId, $fileName)
+    {
+        $db =& $this->db;
+
+        // Call add with this file Id and then update the existing mediaId with the returned mediaId
+        // from the add call.
+        // Will need to get some information about the existing media record first.
+        $SQL = "SELECT name, duration, permissionId, UserID FROM media WHERE MediaID = %d";
+        $SQL = sprintf($SQL);
+
+        if (!$row = $db->GetSingleRow($SQL))
+        {
+            trigger_error($db->error());
+            return $this->SetError(31, 'Unable to get information about existing media record.');
+        }
+
+        if (!$newMediaId = $this->Add($fileId, $type, $row['name'], $row['duration'], $fileName, $row['permissionId'], $row['UserID']))
+            return false;
+
+        // Update the existing record with the new record's id
+        $SQL =  "UPDATE media SET isEdited = 1, editedMediaID = %d ";
+        $SQL .= " WHERE IFNULL(editedMediaID,0) <> %d AND mediaID = %d ";
+        $SQL = sprintf($SQL, $newMediaId, $newMediaId, $mediaId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            return $this->SetError(32, 'Unable to update existing media record');
+        }
+
+        return $newMediaId;
     }
 
     public function Retire()
