@@ -308,5 +308,36 @@ class Media extends Data
         
         return true;
     }
+
+    /**
+     * List of available modules
+     * @return <array>
+     */
+    public function ModuleList()
+    {
+        $db =& $this->db;
+
+        if (!$result = $db->query("SELECT * FROM module WHERE Enabled = 1"))
+        {
+            trigger_error($db->error());
+            return $this->SetError(40, 'Unable to query for modules');
+        }
+
+        $modules = array();
+
+        while($row = $db->get_assoc_row($results))
+        {
+            $module = array();
+
+            $module['module'] = $row['Module'];
+            $module['libraryBased'] = $row['RegionSpecific'];
+            $module['description'] = $row['Description'];
+            $module['extensions'] = $row['ValidExtensions'];
+            
+            $modules[] = $module;
+        }
+
+        return $modules;
+    }
 }
 ?>

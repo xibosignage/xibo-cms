@@ -803,6 +803,25 @@ class Rest
     }
 
     /**
+     * Lists enabled modules
+     * @return <XiboAPIResponse>
+     */
+    public function ModuleList()
+    {
+        // Does this user have permission to call this webservice method?
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Media');
+
+        // Create a media object and gather the required parameters.
+        $media = new Media($this->db);
+
+
+        return $this->Respond($this->NodeListFromArray($module, 'module'));
+    }
+
+    /**
      * Returns the Xibo Server version information
      * @return <type>
      */
