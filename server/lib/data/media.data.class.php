@@ -317,7 +317,7 @@ class Media extends Data
     {
         $db =& $this->db;
 
-        if (!$result = $db->query("SELECT * FROM module WHERE Enabled = 1"))
+        if (!$results = $db->query("SELECT * FROM module WHERE Enabled = 1"))
         {
             trigger_error($db->error());
             return $this->SetError(40, 'Unable to query for modules');

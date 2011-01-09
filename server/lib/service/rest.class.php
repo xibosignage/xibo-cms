@@ -817,8 +817,10 @@ class Rest
         // Create a media object and gather the required parameters.
         $media = new Media($this->db);
 
+        if (!$modules = $media->ModuleList())
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
-        return $this->Respond($this->NodeListFromArray($module, 'module'));
+        return $this->Respond($this->NodeListFromArray($modules, 'module'));
     }
 
     /**
