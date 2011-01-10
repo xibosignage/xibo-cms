@@ -114,7 +114,7 @@ class Media extends Data
      * @param <type> $permissionId
      * @return <bool>
      */
-    public function Edit($mediaId, $name, $duration, $permissionId)
+    public function Edit($mediaId, $name, $duration, $permissionId, $userId)
     {
        $db =& $this->db;
 
@@ -209,7 +209,7 @@ class Media extends Data
         }
 
         // If any links are found, then we cannot delete
-        if ($db->num_rows($result) > 0)
+        if ($db->num_rows($results) > 0)
             return $this->SetError(21, __('This media is in use, please retire it instead.'));
 
         // Get the file name
@@ -330,7 +330,7 @@ class Media extends Data
             $module = array();
 
             $module['module'] = $row['Module'];
-            $module['libraryBased'] = $row['RegionSpecific'];
+            $module['layoutOnly'] = $row['RegionSpecific'];
             $module['description'] = $row['Description'];
             $module['extensions'] = $row['ValidExtensions'];
             

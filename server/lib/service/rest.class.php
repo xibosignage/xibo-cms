@@ -356,7 +356,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Add the media.
-        if (!$mediaId = $media->Edit($mediaId, $name, $duration, $permissionId))
+        if (!$mediaId = $media->Edit($mediaId, $name, $duration, $permissionId, $this->user->userid))
             return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
         // Return the mediaId.
@@ -539,7 +539,10 @@ class Rest
         if (!$this->user->LayoutAuth($layoutId))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        if (!$layout->Delete($layoutId))
+            return $this->Error($layout->GetErrorNumber(), $layout->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
