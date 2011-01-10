@@ -129,7 +129,7 @@ class Media extends Data
             return $this->SetError(12, __('Media you own already has this name. Please choose another.'));
        
        $SQL = "UPDATE media SET name = '%s', duration = %d, permissionID = %d WHERE MediaID = %d";
-       $SQL = sprintf($SQL, $db->escape_string($name), $duration, $permissionId);
+       $SQL = sprintf($SQL, $db->escape_string($name), $duration, $permissionId, $mediaId);
        
        if (!$db->query($SQL))
        {
@@ -154,7 +154,7 @@ class Media extends Data
         // from the add call.
         // Will need to get some information about the existing media record first.
         $SQL = "SELECT name, duration, permissionId, UserID FROM media WHERE MediaID = %d";
-        $SQL = sprintf($SQL);
+        $SQL = sprintf($SQL, $mediaId);
 
         if (!$row = $db->GetSingleRow($SQL))
         {
