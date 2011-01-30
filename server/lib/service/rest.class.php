@@ -338,17 +338,17 @@ class Rest
      * Edit a media file in the library
      */
     public function LibraryMediaEdit()
-    {
+    {      
         if (!$this->user->PageAuth('media'))
             return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Media');
 
         // Create a media object and gather the required parameters.
         $media          = new Media($this->db);
         $mediaId        = $this->GetParam('mediaId', _INT);
-        $type           = $this->GetParam('type', _WORD);
         $name           = $this->GetParam('name', _STRING);
         $duration       = $this->GetParam('duration', _INT);
-        $fileName       = $this->GetParam('fileName', _FILENAME);
         $permissionId   = $this->GetParam('permissionId', _INT);
 
         // Check permissions
@@ -356,7 +356,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Add the media.
-        if (!$mediaId = $media->Edit($mediaId, $name, $duration, $permissionId, $this->user->userid))
+        if (!$media->Edit($mediaId, $name, $duration, $permissionId, $this->user->userid))
             return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
         // Return the mediaId.

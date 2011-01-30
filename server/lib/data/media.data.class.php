@@ -116,9 +116,9 @@ class Media extends Data
      */
     public function Edit($mediaId, $name, $duration, $permissionId, $userId)
     {
-       $db =& $this->db;
+        $db =& $this->db;
 
-       // Validation
+        // Validation
         if (strlen($name) > 100)
             return $this->SetError(10, __('The name cannot be longer than 100 characters'));
 
@@ -128,16 +128,16 @@ class Media extends Data
         if ($db->GetSingleRow(sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d", $db->escape_string($name), $userId)))
             return $this->SetError(12, __('Media you own already has this name. Please choose another.'));
        
-       $SQL = "UPDATE media SET name = '%s', duration = %d, permissionID = %d WHERE MediaID = %d";
-       $SQL = sprintf($SQL, $db->escape_string($name), $duration, $permissionId, $mediaId);
-       
-       if (!$db->query($SQL))
-       {
+        $SQL = "UPDATE media SET name = '%s', duration = %d, permissionID = %d WHERE MediaID = %d";
+        $SQL = sprintf($SQL, $db->escape_string($name), $duration, $permissionId, $mediaId);
+
+        if (!$db->query($SQL))
+        {
            trigger_error($db->error());
            return $this->SetError(30, 'Database failure updating media');
-       }
+        }
 
-       return true;
+        return true;
     }
 
     /**
