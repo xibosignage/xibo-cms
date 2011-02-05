@@ -37,6 +37,8 @@ class displayDAO
     private $email_alert;
     private $alert_timeout;
 	private $ajax;
+        private $mediaInventoryStatus;
+        private $mediaInventoryXml;
 
 	function __construct(database $db, user $user)
 	{
@@ -71,7 +73,9 @@ class displayDAO
             display.isAuditing,
             display.email_alert,
             display.alert_timeout,
-            display.ClientAddress
+            display.ClientAddress,
+            display.MediaInventoryStatus,
+            display.MediaInventoryXml
      FROM display
     WHERE display.displayid = %d
 SQL;
@@ -95,8 +99,10 @@ SQL;
 				$this->licensed		 	= Kit::ValidateParam($row[4], _INT);
 				$this->inc_schedule 	= Kit::ValidateParam($row[5], _INT);
 				$this->auditing			= Kit::ValidateParam($row[6], _INT);
-                $this->email_alert      = Kit::ValidateParam($row[7], _INT);
-                $this->alert_timeout    = Kit::ValidateParam($row[8], _INT);
+                            $this->email_alert      = Kit::ValidateParam($row[7], _INT);
+                            $this->alert_timeout    = Kit::ValidateParam($row[8], _INT);
+                            $this->mediaInventoryStatus = Kit::ValidateParam($row[9], _INT);
+                            $this->mediaInventoryXml = Kit::ValidateParam($row[10], _HTMLSTRING);
 			}
 		}
 
@@ -307,7 +313,12 @@ HTML;
                         CASE WHEN display.licensed = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS licensed,
                         CASE WHEN display.email_alert = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS email_alert,
                         displaygroup.DisplayGroupID,
-                        display.ClientAddress
+                        display.ClientAddress,
+                        CASE WHEN display.MediaInventoryStatus = 1 THEN '<img src="img/act.gif">'
+                             WHEN display.MediaInventoryStatus = 2 THEN '<img src="img/warn.gif">'
+                             ELSE '<img src="img/disact.gif">'
+                        END AS MediaInventoryStatus,
+                        display.MediaInventoryXml
 		  FROM display
                     INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID
                     INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
@@ -338,6 +349,7 @@ SQL;
 		$msgDelete	= __('Delete');
 		$msgGroupSecurity = __('Group Security');
                 $msgClientAddress = __('IP Address');
+                $msgStatus = __('Status');
 
 		$output = <<<END
 		<div class="info_table">
@@ -353,6 +365,7 @@ SQL;
                         <th>$msgLogIn</th>
                         <th>$msgLastA</th>
                         <th>$msgClientAddress</th>
+                        <th>$msgStatus</th>
                         <th>$msgAction</th>
                     </tr>
                     </thead>
@@ -376,6 +389,7 @@ END;
                         // Do we want to make a VNC link out of the display name?
                         $vncTemplate = Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK');
                         $linkTarget = Kit::ValidateParam(Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
+                        $mediaInventoryStatusLight = Kit::ValidateParam($aRow[10], _STRING);
 
                         if ($vncTemplate != '' && $clientAddress != '')
                         {
@@ -399,6 +413,7 @@ END;
 			<td>$loggedin</td>
 			<td>$lastaccessed</td>
 			<td>$clientAddress</td>
+                        <td>$mediaInventoryStatusLight</td>
 			<td>
 				<button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>$msgEdit</span></button>
 				<button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>

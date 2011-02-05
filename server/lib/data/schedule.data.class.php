@@ -164,6 +164,11 @@ class Schedule extends Data
 				}
 			}
 		}
+
+                // Notify (dont error)
+                Kit::ClassLoader('Display');
+                $displayObject = new Display($db);
+                $displayObject->NotifyDisplays($layoutID);
 		
 		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'Add');
 		
