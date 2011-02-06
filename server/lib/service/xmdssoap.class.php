@@ -870,7 +870,7 @@ class XMDSSoap
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, 'audit', 'IN', 'xmds', 'MediaInventory', '', $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry ($db, 'audit', $inventory, 'xmds', 'MediaInventory', '', $this->displayId);
 
         // Check that the $inventory contains something
         if ($inventory == '')
