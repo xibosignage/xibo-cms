@@ -200,7 +200,7 @@ class XMDSSoap
         $SQL .= " 	INNER JOIN layout ";
         $SQL .= " 	ON layout.LayoutID = lklayoutmedia.LayoutID";
         $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
-        $SQL .= " ORDER BY RecordType";
+        $SQL .= " ORDER BY RecordType DESC";
 
         if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", $SQL, "xmds", "RequiredFiles");
 
