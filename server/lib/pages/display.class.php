@@ -350,6 +350,7 @@ SQL;
 		$msgGroupSecurity = __('Group Security');
                 $msgClientAddress = __('IP Address');
                 $msgStatus = __('Status');
+                $msgMediaInventory = __('Media Inventory');
 
 		$output = <<<END
 		<div class="info_table">
@@ -418,6 +419,7 @@ END;
 				<button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>$msgEdit</span></button>
 				<button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
 				<button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$displayName"><span>$msgGroupSecurity</span></button>
+				<button class="XiboFormButton" href="index.php?p=display&q=MediaInventory&DisplayId=$displayid"><span>$msgMediaInventory</span></button>
 			</td>
 END;
 		}
@@ -655,5 +657,59 @@ END;
 		$response->SetFormSubmitResponse(__("The Display has been Deleted"));
 		$response->Respond();
 	}
+
+    /**
+     * Shows the inventory XML for the display
+     */
+    public function MediaInventory()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+
+        if ($displayId == 0)
+            trigger_error(__('No DisplayId Given'));
+
+        // Get the media inventory xml for this display
+        $SQL = "SELECT MediaInventoryXml FROM display WHERE DisplayId = %d";
+        $SQL = sprintf($SQL, $displayId);
+
+        if (!$mediaInventoryXml = $db->GetSingleValue($SQL, 'MediaInventoryXml', _HTMLSTRING))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get the Inventory for this Display'), E_USER_ERROR);
+        }
+
+        // Load the XML into a DOMDocument
+        $document = new DOMDocument("1.0");
+
+        if (!$document->loadXML($mediaInventoryXml))
+            trigger_error(__('Invalid Media Inventory'), E_USER_ERROR);
+
+        // Output a table
+        $table = '<table><tr><th>Type</th><th>Id</th><th>Complete</th><th>Last Checked</th><th>MD5</th></tr>';
+
+        foreach ($document->documentElement->childNodes as $node)
+        {
+            $type = $node->getAttribute('type');
+            $id = $node->getAttribute('id');
+            $complete = $node->getAttribute('complete');
+            $lastChecked = $node->getAttribute('lastChecked');
+            $md5 = $node->getAttribute('md5');
+
+            if ($complete == 0)
+                $complete = __('No');
+            else
+                $complete = __('Yes');
+
+            $table .= sprintf('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>', $type, $id, $complete, $lastChecked, $md5);
+        }
+
+        $table .= '</table>';
+
+        $response->SetFormRequestResponse($table, __('Media Inventory'), '550px', '350px');
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
 }
 ?>
