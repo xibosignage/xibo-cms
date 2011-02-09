@@ -241,7 +241,7 @@ else
         print "<h1>" . __("Tidy Logs") . "</h1>";
         if(Config::GetSetting($db, "MAINTENANCE_LOG_MAXAGE")!=0)
         {
-            $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENTANCE_LOG_MAXAGE"),_INT)));
+            $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENANCE_LOG_MAXAGE"),_INT)));
             
             $SQL = sprintf("DELETE from `log` WHERE logdate < '%s'",$maxage);
             if ((!$db->query($SQL)))
@@ -263,7 +263,7 @@ else
         print "<h1>" . __("Tidy Stats") . "</h1>";
         if(Config::GetSetting($db, "MAINTENANCE_STAT_MAXAGE")!=0)
         {
-            $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENTANCE_STAT_MAXAGE"),_INT)));
+            $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENANCE_STAT_MAXAGE"),_INT)));
             
             $SQL = sprintf("DELETE from `stat` WHERE statDate < '%s'",$maxage);
             if ((!$db->query($SQL)))
