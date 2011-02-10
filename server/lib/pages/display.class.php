@@ -296,6 +296,8 @@ HTML;
 		$user		=& $this->user;
 		$response	= new ResponseManager();
 
+                $displayGroupAuth = $user->DisplayGroupAuth();
+
 		//display the display table
 		$SQL = <<<SQL
 		SELECT display.displayid,
@@ -338,6 +340,7 @@ SQL;
 		$msgDelete	= __('Delete');
 		$msgGroupSecurity = __('Group Security');
                 $msgClientAddress = __('IP Address');
+                $msgDefault = __('Default Layout');
 
 		$output = <<<END
 		<div class="info_table">
@@ -361,15 +364,21 @@ END;
 
 		while($aRow = $db->get_row($results))
 		{
-			$displayid 	= $aRow[0];
-			$display 	= $aRow[1];
-			$defaultlayoutid = $aRow[2];
-			$loggedin 	= $aRow[3];
-			$lastaccessed 	= date('Y-m-d H:i:s', $aRow[4]);
-			$inc_schedule 	= $aRow[5];
-			$licensed 	= $aRow[6];
+                    // Check that we have permission to access this display record
+                    $displayGroupID = Kit::ValidateParam($aRow[8], _INT);
+
+                    if (!in_array($displayGroupID, $displayGroupAuth))
+                        continue;
+
+                    $displayid 	= $aRow[0];
+                    $display 	= $aRow[1];
+                    $defaultlayoutid = $aRow[2];
+                    $loggedin 	= $aRow[3];
+                    $lastaccessed 	= date('Y-m-d H:i:s', $aRow[4]);
+                    $inc_schedule 	= $aRow[5];
+                    $licensed 	= $aRow[6];
             $email_alert    = $aRow[7];
-			$displayGroupID = $aRow[8];
+			
 			$clientAddress  = Kit::ValidateParam($aRow[9], _STRING);
                         $displayName    = $display;
 
@@ -387,6 +396,22 @@ END;
                             $display = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $display . '" target="' . $linkTarget . '">' . $display . '</a>', $clientAddress);
                         }
 
+                        $buttons = '';
+
+                        if ($user->usertypeid == 1)
+                        {
+                            $buttons = <<<END
+                        <button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>$msgEdit</span></button>
+                        <button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
+                        <button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$displayName"><span>$msgGroupSecurity</span></button>
+                        <button class="XiboFormButton" href="index.php?p=display&q=DefaultLayoutForm&DisplayId=$displayid"><span>$msgDefault</span></button>
+END;
+                        }
+                        else
+                        {
+                            $buttons = '<button class="XiboFormButton" href="index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $displayid . '"><span>' . $msgDefault . '</span></button>';
+                        }
+
 			$output .= <<<END
 
 			<tr>
@@ -399,11 +424,7 @@ END;
 			<td>$loggedin</td>
 			<td>$lastaccessed</td>
 			<td>$clientAddress</td>
-			<td>
-				<button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>$msgEdit</span></button>
-				<button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
-				<button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$displayName"><span>$msgGroupSecurity</span></button>
-			</td>
+			<td>$buttons</td>
 END;
 		}
 		$output .= "</tbody></table></div>";
@@ -640,5 +661,64 @@ END;
 		$response->SetFormSubmitResponse(__("The Display has been Deleted"));
 		$response->Respond();
 	}
+
+    /**
+     * Form for editing the default layout of a display
+     */
+    public function DefaultLayoutForm()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+
+        if (!$defaultLayoutId = $this->db->GetSingleValue(sprintf("SELECT defaultlayoutid FROM display WHERE displayid = %d", $displayId),
+                'defaultlayoutid', _INT))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get the default layout'), E_USER_ERROR);
+        }
+
+        $msgDefault = __('Default Layout');
+        $layoutList = dropdownlist('SELECT layoutid, layout FROM layout WHERE retired = 0 ORDER by layout', 'defaultlayoutid', $defaultLayoutId);
+
+        $form = <<<END
+            <form id="DefaultLayoutForm" class="XiboForm" method="post" action="index.php?p=display&q=DefaultLayout&DisplayId=$displayId">
+                <input type="hidden" name="DisplayId" value="$displayId">
+                <table>
+                    <tr>
+                        <td>$msgDefault<span class="required">*</span></td>
+                        <td>$layoutList</td>
+                    </tr>
+                </table>
+            </form>
+END;
+
+        $response->SetFormRequestResponse($form, __('Edit Default Layout'), '300px', '150px');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#DefaultLayoutForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Edit the default layout for a display
+     */
+    public function DefaultLayout()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $displayObject 	= new Display($db);
+
+        $displayId = Kit::GetParam('DisplayId', _POST, _INT);
+        $defaultLayoutId = Kit::GetParam('defaultlayoutid', _POST, _INT);
+
+        if (!$displayObject->EditDefaultLayout($displayId, $defaultLayoutId))
+        {
+            trigger_error(__('Cannot Edit this Display'), E_USER_ERROR);
+        }
+
+        $response->SetFormSubmitResponse(__('Display Saved.'));
+        $response->Respond();
+    }
 }
 ?>
