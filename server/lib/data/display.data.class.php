@@ -282,5 +282,33 @@ class Display extends Data
 		
 		return true;
 	}
+
+    /**
+     * Edits the default layout for a display
+     * @param <type> $displayId
+     * @param <type> $defaultLayoutId
+     * @return <type>
+     */
+    public function EditDefaultLayout($displayId, $defaultLayoutId)
+    {
+        $db	=& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'Display', 'EditDefaultLayout');
+
+        $SQL = sprintf('UPDATE display SET defaultLayoutId = %d WHERE displayID = %d ', $defaultLayoutId, $displayId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25012, __('Error updating this displays default layout.'));
+
+            return false;
+        }
+
+
+        Debug::LogEntry($db, 'audit', 'OUT', 'Display', 'EditDefaultLayout');
+
+        return true;
+    }
 }
 ?>
