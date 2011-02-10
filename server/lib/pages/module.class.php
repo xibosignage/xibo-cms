@@ -118,6 +118,7 @@ class moduleDAO
 
             $mediaID 	= Kit::GetParam('id', _GET, _INT, 0);
             $proportional = Kit::GetParam('proportional', _GET, _BOOL, true);
+            $thumb = Kit::GetParam('thumb', _GET, _BOOL, false);
             $dynamic	= isset($_REQUEST['dynamic']);
 
             if ($mediaID == 0)
@@ -133,6 +134,21 @@ class moduleDAO
             $library 	= Config::GetSetting($db, "LIBRARY_LOCATION");
             $fileName 	= $library . $file;
 
+            // If we are a thumb request then output the cached thumbnail
+            if ($thumb)
+                $fileName = $library . 'tn_' . $file;
+
+            // If the thumbnail doesnt exist then create one
+            if (!file_exists($fileName))
+            {
+                Debug::LogEntry($db, 'audit', 'File doesnt exist, creating a thumbnail for ' . $fileName);
+
+                if (!$info = getimagesize($library . $file))
+                    die($library . $file . ' is not an image');
+
+                ResizeImage($library . $file, $fileName, 80, 80, $proportional, 'file');
+            }
+            
             // Get the info for this new temporary file
             if (!$info = getimagesize($fileName))
             {
