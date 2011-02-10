@@ -1148,7 +1148,7 @@ END;
 		$days 		= 60*60*24;
 		$rec_type 	= listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type");
 		$rec_detail	= listcontent("1|1,2|2,3|3,4|4,5|5,6|6,7|7,8|8,9|9,10|10,11|11,12|12,13|13,14|14", "rec_detail");
-		$rec_range 	= '<input class="date-pick" type="text" id="rec_range" name="rec_range" />';
+		$rec_range 	= '<input class="date-pick" type="text" id="rec_range" name="rec_range" size="12" />';
 		
 		$form .= <<<END
 		<tr>
@@ -1166,7 +1166,9 @@ END;
 						</tr>
 						<tr>
 							<td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
-							<td>$rec_range</td>
+							<td>$rec_range
+                                                        <input id="repeatTime" type="text" size="12" name="repeatTime" value="00:00" />
+                                                        </td>
 						</tr>
 					</table>
 				</fieldset>
@@ -1257,10 +1259,12 @@ END;
 		$toDtText	= date("d/m/Y", $toDT);
 		$toTimeText	= date("H:i", $toDT);
 		$recToDtText	= '';
+                $recToTimeText = '';
 		
 		if ($recType != '')
 		{
 			$recToDtText		= date("d/m/Y", $recToDT);
+			$recToTimeText		= date("H:i", $recToDT);
 		}
 		
 		// Check that we have permission to edit this event.
@@ -1317,7 +1321,7 @@ END;
 		// Recurrance part of the form
 		$days 		= 60*60*24;
 		$rec_type 	= listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type", $recType);
-		$rec_range 	= '<input class="date-pick" type="text" id="rec_range" name="rec_range" value="' . $recToDtText . '" />';
+		$rec_range 	= '<input class="date-pick" type="text" id="rec_range" name="rec_range" value="' . $recToDtText . '" size="12" />';
 		
 		$form .= <<<END
 		<tr>
@@ -1335,7 +1339,9 @@ END;
 						</tr>
 						<tr>
 							<td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
-							<td>$rec_range</td>
+							<td>$rec_range
+                                                        <input id="repeatTime" type="text" size="12" name="repeatTime" value="$recToTimeText" />
+                                                        </td>
 						</tr>
 					</table>
 				</fieldset>
@@ -1377,6 +1383,7 @@ END;
 		$rec_type           = Kit::GetParam('rec_type', _POST, _STRING);
 		$rec_detail         = Kit::GetParam('rec_detail', _POST, _INT);
 		$recToDT            = Kit::GetParam('rec_range', _POST, _STRING);
+		$repeatTime            = Kit::GetParam('repeatTime', _POST, _STRING, '00:00');
 		
 		$userid             = Kit::GetParam('userid', _SESSION, _INT);
 		
@@ -1391,7 +1398,7 @@ END;
 		
 		$fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
 		$toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
-		$recToDT    = $datemanager->GetDateFromUS($recToDT, '');
+		$recToDT    = $datemanager->GetDateFromUS($recToDT, $repeatTime);
 		
 		// Validate layout
 		if ($layoutid == 0) 
@@ -1458,6 +1465,7 @@ END;
 		$rec_type			= Kit::GetParam('rec_type', _POST, _STRING);
 		$rec_detail			= Kit::GetParam('rec_detail', _POST, _INT);
 		$recToDT			= Kit::GetParam('rec_range', _POST, _STRING);
+		$repeatTime			= Kit::GetParam('repeatTime', _POST, _STRING, '00:00');
 		
 		$userid 			= Kit::GetParam('userid', _SESSION, _INT);
 		
@@ -1474,7 +1482,7 @@ END;
 		
 		$fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
 		$toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
-		$recToDT    = $datemanager->GetDateFromUS($recToDT, '');
+		$recToDT    = $datemanager->GetDateFromUS($recToDT, $repeatTime);
 		
 		// Validate layout
 		if ($layoutid == 0) 
