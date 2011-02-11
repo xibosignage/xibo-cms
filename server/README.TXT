@@ -1,5 +1,5 @@
 Xibo - Digitial Signage - http://www.xibo.org.uk
-Copyright (C) 2006 - 2010 Daniel Garner, James Packer and Alex Harrington
+Copyright (C) 2006 - 2011 Daniel Garner, James Packer and Alex Harrington
 
 This file is part of Xibo.
 
@@ -21,11 +21,11 @@ This folder contains the Xibo SERVER application.
 
 Requirements:
 
-PHP 5+
+PHP 5.2.9+
 MySQL
 
 Libraries
- - FCKEditor (included)
+ - CKEditor (included)
  - jQuery (included)
  
 Installation:
