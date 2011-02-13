@@ -848,6 +848,66 @@ class XMDSSoap
     }
 
     /**
+     * Store the media inventory for a client
+     * @param <type> $hardwareKey
+     * @param <type> $inventory
+     */
+    public function MediaInventory($version, $serverKey, $hardwareKey, $inventory)
+    {
+        $db =& $this->db;
+
+        // Sanitize
+        $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
+        $version 	= Kit::ValidateParam($version, _STRING);
+        $inventory 	= Kit::ValidateParam($inventory, _HTMLSTRING);
+
+        // Make sure we are talking the same language
+        if (!$this->CheckVersion($version))
+            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
+
+        // Auth this request...
+        if (!$this->AuthDisplay($hardwareKey))
+            throw new SoapFault('Receiver', 'This display client is not licensed');
+
+        if ($this->isAuditing == 1) Debug::LogEntry ($db, 'audit', $inventory, 'xmds', 'MediaInventory', '', $this->displayId);
+
+        // Check that the $inventory contains something
+        if ($inventory == '')
+            throw new SoapFault('Receiver', 'Inventory Cannot be Empty');
+
+        // Load the XML into a DOMDocument
+        $document = new DOMDocument("1.0");
+        $document->loadXML($inventory);
+
+        // Assume we are complete (but we are getting some)
+        $mediaInventoryComplete = 1;
+
+        foreach ($document->documentElement->childNodes as $node)
+        {
+            // Make sure we dont consider any text nodes
+            if ($node->nodeType == XML_TEXT_NODE) continue;
+
+            $mediaId = $node->getAttribute('id');
+            $complete = $node->getAttribute('complete');
+            $md5 = $node->getAttribute('md5');
+            $lastChecked = $node->getAttribute('lastChecked');
+
+            // Check the MD5?
+
+            // If this item is a 0 then set not complete
+            if ($complete == 0)
+                $mediaInventoryComplete = 2;
+        }
+
+        // Touch the display record
+        $displayObject = new Display($db);
+        $displayObject->Touch($hardwareKey, '', $mediaInventoryComplete, $inventory);
+
+        return true;
+    }
+
+    /**
      * Authenticates the display
      * @param <type> $hardwareKey
      * @return <type>

@@ -76,6 +76,11 @@ class region
 			$this->errMsg = __("Unable to Update that layouts XML with a new Media Node");
 			return false;
 		}
+
+                // Notify (dont error)
+                Kit::ClassLoader('display');
+                $displayObject = new Display($db);
+                $displayObject->NotifyDisplays($layoutid);
 		
 		return true;
 	}

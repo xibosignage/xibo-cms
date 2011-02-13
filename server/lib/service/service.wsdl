@@ -80,6 +80,15 @@
     <message name="SubmitStatsResponse">
         <part name="success" type="xsd:boolean" />
     </message>
+    <message name="MediaInventoryRequest">
+        <part name="version" type="xsd:string" />
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="mediaInventory" type="xsd:string" />
+    </message>
+    <message name="MediaInventoryResponse">
+        <part name="success" type="xsd:boolean" />
+    </message>
     <portType name="xmdsPortType">
         <operation name="RegisterDisplay">
             <documentation>Registered the Display on the Xibo Network</documentation>
@@ -120,6 +129,11 @@
             <documentation>Submit Display statistics from the Client</documentation>
             <input message="tns:SubmitStatsRequest"/>
             <output message="tns:SubmitStatsResponse"/>
+        </operation>
+        <operation name="MediaInventory">
+            <documentation>Report back the clients MediaInventory</documentation>
+            <input message="tns:MediaInventoryRequest" />
+            <output message="tns:MediaInventoryResponse" />
         </operation>
     </portType>
     <binding name="xmdsBinding" type="tns:xmdsPortType">
@@ -189,6 +203,15 @@
         </operation>
         <operation name="SubmitStats">
             <soap:operation soapAction="urn:xmds#SubmitLog" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="MediaInventory">
+            <soap:operation soapAction="urn:xmds#MediaInventory" style="rpc"/>
             <input>
                 <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
             </input>
