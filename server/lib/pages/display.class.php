@@ -381,7 +381,7 @@ END;
                     // Check that we have permission to access this display record
                     $displayGroupID = Kit::ValidateParam($aRow[8], _INT);
 
-                    if (!in_array($displayGroupID, $displayGroupAuth))
+                    if (!in_array($displayGroupID, $displayGroupAuth) && $this->user->usertypeid != 1)
                         continue;
 
                     $displayid 	= $aRow[0];
