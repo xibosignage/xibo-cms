@@ -3,7 +3,7 @@
 /**
  * Simple exception wrapper for OAuth
  * 
- * @version $Id: OAuthException.php 49 2008-10-01 09:43:19Z marcw@pobox.com $
+ * @version $Id: OAuthException2.php 67 2010-01-12 18:42:04Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Nov 29, 2007 5:33:54 PM
  * 
@@ -34,12 +34,12 @@
 
 require_once dirname(__FILE__) . '/OAuthRequestLogger.php';
 
-class OAuthException extends Exception
+class OAuthException2 extends Exception
 {
 	function __construct ( $message )
 	{
 		Exception::__construct($message);
-		OAuthRequestLogger::addNote('OAuthException: '.$message);
+		OAuthRequestLogger::addNote('OAuthException2: '.$message);
 	}
 
 }

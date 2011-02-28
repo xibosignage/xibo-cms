@@ -62,6 +62,7 @@ abstract class OAuthStoreAbstract
 	abstract public function setConsumerAccessTokenTtl ( $token, $ttl );
 	
 	abstract public function listConsumers ( $user_id );
+	abstract public function listConsumerApplications( $begin = 0, $total = 25 ); 
 	abstract public function listConsumerTokens ( $user_id );
 
 	abstract public function checkServerNonce ( $consumer_key, $token, $timestamp, $nonce );

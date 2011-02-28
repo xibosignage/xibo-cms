@@ -39,6 +39,150 @@ class oauthDAO
         return false;
     }
 
+    public function Filter()
+    {
+        $filterForm = <<<END
+            <div class="FilterDiv" id="DisplayGroupFilter">
+                <form onsubmit="return false">
+                    <input type="hidden" name="p" value="oauth">
+                    <input type="hidden" name="q" value="Grid">
+                </form>
+            </div>
+END;
+
+        $id = uniqid();
+
+        $xiboGrid = <<<HTML
+        <div class="XiboGrid" id="$id">
+            <div class="XiboFilter">
+                $filterForm
+            </div>
+            <div class="XiboData">
+
+            </div>
+        </div>
+HTML;
+            echo $xiboGrid;
+    }
+
+    public function Grid()
+    {
+        $db         =& $this->db;
+        $user       =& $this->user;
+        $response   = new ResponseManager();
+
+        $store = OAuthStore::instance();
+
+        try
+        {
+            $list = $store->listConsumers($this->user->userid);
+        }
+        catch (OAuthException $e)
+        {
+            trigger_error($e->getMessage());
+            trigger_error(__('Error listing Applications.'), E_USER_ERROR);
+        }
+        
+        $msgTitle   = __('App Title');
+        $msgDesc    = __('App Desc');
+        $msgUri     = __('App Homepage');
+        
+        $msgConKey  = __('App Key');
+        $msgConSecret = __('App Secret');
+        
+        $msgAction  = __('Action');
+        $msgEdit    = __('Edit');
+
+        $output = <<<END
+<div class="info_table">
+    <table style="width:100%">
+        <thead>
+        <tr>
+            <th>$msgTitle</th>
+            <th>$msgDesc</th>
+            <th>$msgUri</th>
+            <th>$msgConKey</th>
+            <th>$msgConSecret</th>
+            <th>$msgAction</th>
+        </tr>
+        </thead>
+        <tbody>
+END;
+
+        foreach($list as $app)
+        {
+            $appId  = Kit::ValidateParam($app['id'], _INT);
+            $title  = Kit::ValidateParam($app['application_title'], _STRING);
+            $desc   = Kit::ValidateParam($app['application_descr'], _STRING);
+            $url    = Kit::ValidateParam($app['application_uri'], _URI);
+            $conKey = Kit::ValidateParam($app['consumer_key'], _STRING);
+            $conSecret = Kit::ValidateParam($app['consumer_secret'], _STRING);
+
+            $output .= '<tr>';
+            $output .= '    <td>' . $title . '</td>';
+            $output .= '    <td>' . $desc . '</td>';
+            $output .= '    <td>' . $url . '</td>';
+            $output .= '    <td>' . $conKey . '</td>';
+            $output .= '    <td>' . $conSecret . '</td>';
+            $output .= '</tr>';
+        }
+
+        $output .= "</tbody></table></div>";
+
+        $response->SetGridResponse($output);
+        $response->Respond();
+    }
+
+    public function ViewLog()
+    {
+        $db         =& $this->db;
+        $user       =& $this->user;
+        $response   = new ResponseManager();
+
+        $store = OAuthStore::instance();
+
+        try
+        {
+            $list = $store->listLog($this->user->userid);
+        }
+        catch (OAuthException $e)
+        {
+            trigger_error($e->getMessage());
+            trigger_error(__('Error listing Log.'), E_USER_ERROR);
+        }
+
+        $output .= '<div class="info_table">';
+        $output .= '    <table style="width:100%">';
+        $output .= '        <thead>';
+        $output .= sprintf('    <th>%s</th>', __('Header'));
+        $output .= sprintf('    <th>%s</th>', __('Notes'));
+        $output .= sprintf('    <th>%s</th>', __('Timestamp'));
+        $output .= '        </thead>';
+        $output .= '        <tbody>';
+
+        foreach($list as $logEntry)
+        {
+            $header     = Kit::ValidateParam($logEntry['received'], _STRING);
+            $notes      = Kit::ValidateParam($logEntry['notes'], _STRING);
+            $timestamp  = Kit::ValidateParam($logEntry['timestamp'], _STRING);
+
+            $output .= '<tr>';
+            $output .= '<td>' . $header . '</td>';
+            $output .= '<td>' . $notes . '</td>';
+            $output .= '<td>' . $timestamp . '</td>';
+            $output .= '</tr>';
+        }
+
+        $output .= '        </tbody>';
+        $output .= '    </table>';
+        $output .= '</div>';
+
+        $response->SetFormRequestResponse($output, __('OAuth Access Log'), '1000', '600');
+        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
+
     /**
      * Authorize an OAuth request OR display the Authorize form.
      */
@@ -179,6 +323,59 @@ END;
     function echo_page_heading()
     {
         return true;
+    }
+
+    /**
+     * Shows the Authorised applications this user has
+     */
+    public function UserTokens()
+    {
+        $db         =& $this->db;
+        $user       =& $this->user;
+        $response   = new ResponseManager();
+
+        $store = OAuthStore::instance();
+
+        try
+        {
+            $list = $store->listConsumerTokens(Kit::GetParam('userID', _GET, _INT));
+        }
+        catch (OAuthException $e)
+        {
+            trigger_error($e->getMessage());
+            trigger_error(__('Error listing Log.'), E_USER_ERROR);
+        }
+
+        $output .= '<div class="info_table">';
+        $output .= '    <table style="width:100%">';
+        $output .= '        <thead>';
+        $output .= sprintf('    <th>%s</th>', __('Application'));
+        $output .= sprintf('    <th>%s</th>', __('Enabled'));
+        $output .= sprintf('    <th>%s</th>', __('Status'));
+        $output .= '        </thead>';
+        $output .= '        <tbody>';
+
+        foreach($list as $app)
+        {
+            $title      = Kit::ValidateParam($app['application_title'], _STRING);
+            $enabled    = Kit::ValidateParam($app['enabled'], _STRING);
+            $status     = Kit::ValidateParam($app['status'], _STRING);
+
+            $output .= '<tr>';
+            $output .= '<td>' . $title . '</td>';
+            $output .= '<td>' . $enabled . '</td>';
+            $output .= '<td>' . $status . '</td>';
+            $output .= '</tr>';
+        }
+
+        $output .= '        </tbody>';
+        $output .= '    </table>';
+        $output .= '</div>';
+
+        $response->SetFormRequestResponse($output, __('Authorized applications for user'), '650', '450');
+        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
     }
 }
 ?>

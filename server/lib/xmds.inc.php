@@ -85,7 +85,7 @@ date_default_timezone_set(Config::GetSetting($db, 'defaultTimezone'));
 $serviceLocation = Kit::GetXiboRoot();
 
 // OAuth
-//require_once('lib/oauth.inc.php');
+require_once('lib/oauth.inc.php');
 
 // Setup the translations for gettext
 TranslationEngine::InitLocale($db);

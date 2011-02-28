@@ -22,181 +22,317 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Layout extends Data
 {
-	private $xml;
-        private $DomXml;
-	
-	public function EditTags($layoutID, $tags)
-	{
-            $db =& $this->db;
+    private $xml;
+    private $DomXml;
 
-            Debug::LogEntry($db, 'audit', 'IN', 'Layout', 'EditTags');
+    /**
+     * Add a layout
+     * @param <type> $layout
+     * @param <type> $description
+     * @param <type> $permissionid
+     * @param <type> $tags
+     * @param <type> $userid
+     * @param <type> $templateId
+     * @return <type>
+     */
+    public function Add($layout, $description, $permissionid, $tags, $userid, $templateId)
+    {
+        $db          =& $this->db;
+        $currentdate = date("Y-m-d H:i:s");
 
-            // Make sure we get an array
-            if(!is_array($tags))
-            {
-                $this->SetError(25000, 'Must pass EditTags an array');
-                return false;
-            }
+        Debug::LogEntry($db, 'audit', 'Adding new Layout', 'Layout', 'Add');
 
-            // Set the XML
-            if (!$this->SetXml($layoutID))
-            {
-                Debug::LogEntry($db, 'audit', 'Failed to Set the layout Xml.', 'Layout', 'EditTags');
-                return false;
-            }
-
-            Debug::LogEntry($db, 'audit', 'Got the XML from the DB. Now creating the tags.', 'Layout', 'EditTags');
-
-            // Create the tags XML
-            $tagsXml = '<tags>';
-
-            foreach($tags as $tag)
-            {
-                $tagsXml .= sprintf('<tag>%s</tag>', $tag);
-            }
-
-            $tagsXml .= '</tags>';
-
-            Debug::LogEntry($db, 'audit', 'Tags XML is:' . $tagsXml, 'Layout', 'EditTags');
-
-            // Load the tags XML into a document
-            $tagsXmlDoc = new DOMDocument('1.0');
-            $tagsXmlDoc->loadXML($tagsXml);
-
-
-            // Load the XML for this layout
-            $xml = new DOMDocument("1.0");
-            $xml->loadXML($this->xml);
-
-            // Import the new node into this document
-            $newTagsNode = $xml->importNode($tagsXmlDoc->documentElement, true);
-
-            // Xpath for an existing tags node
-            $xpath 	= new DOMXPath($xml);
-            $tagsNode 	= $xpath->query("//tags");
-
-            // Does the tags node exist?
-            if ($tagsNode->length < 1)
-            {
-                // We need to append our new node to the layout node
-                $layoutXpath	= new DOMXPath($xml);
-                $layoutNode 	= $xpath->query("//layout");
-                $layoutNode 	= $layoutNode->item(0);
-
-                $layoutNode->appendChild($newTagsNode);
-            }
-            else
-            {
-                // We need to swap our new node with the existing one
-                $tagsNode = $tagsNode->item(0);
-
-                // Replace the node
-                $tagsNode->parentNode->replaceChild($newTagsNode, $tagsNode);
-            }
-
-            // Format the output a bit nicer for Alex
-            $xml->formatOutput = true;
-
-            // Convert back to XML
-            $xml = $xml->saveXML();
-
-            Debug::LogEntry($db, 'audit', $xml, 'layout', 'EditTags');
-
-            // Save it
-            if (!$this->SetLayoutXml($layoutID, $xml)) return false;
-
-            Debug::LogEntry($db, 'audit', 'OUT', 'Layout', 'EditTags');
-
-            return true;
-	}
-	
-	/**
-	 * Sets the Layout XML for this layoutid
-	 * @return 
-	 * @param $layoutID Object
-	 */
-	private function SetXml($layoutID)
-	{
-            if(!$this->xml = $this->GetLayoutXml($layoutID))
-                return false;
-
-            return true;
-        }
-
-        private function SetDomXml($layoutId)
+        // Validation
+        if (strlen($layout) > 50 || strlen($layout) < 1)
         {
-            if (!$this->SetXml($layoutId))
-                return false;
-
-            $this->DomXml = new DOMDocument("1.0");
-
-            Debug::LogEntry($this->db, 'audit', 'Loading LayoutXml into the DOM', 'layout', 'SetDomXML');
-
-            if (!$this->DomXml->loadXML($this->xml))
-                return false;
-
-            Debug::LogEntry($this->db, 'audit', 'Loaded LayoutXml into the DOM', 'layout', 'SetDomXML');
-
-            return true;
+            $this->SetError(25001, __("Layout Name must be between 1 and 50 characters"));
+            return false;
         }
-	
-	/**
-	 * Gets the Xml for the specified layout
-	 * @return 
-	 * @param $layoutid Object
-	 */
-	private function GetLayoutXml($layoutid)
-	{
-            $db =& $this->db;
 
-            Debug::LogEntry($db, 'audit', 'IN', 'Layout', 'GetLayoutXml');
+        if (strlen($description) > 254)
+        {
+            $this->SetError(25002, __("Description can not be longer than 254 characters"));
+            return false;
+        }
 
-            //Get the Xml for this Layout from the DB
-            $SQL = sprintf("SELECT xml FROM layout WHERE layoutID = %d ", $layoutid);
+        if (strlen($tags) > 254)
+        {
+            $this->SetError(25003, __("Tags can not be longer than 254 characters"));
+            return false;
+        }
 
-            if (!$results = $db->query($SQL))
+        // Ensure there are no layouts with the same name
+        $SQL = sprintf("SELECT layout FROM layout WHERE layout = '%s' AND userID = %d ", $layout, $userid);
+
+        if ($db->GetSingleRow($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25004, sprintf(__("You already own a layout called '%s'. Please choose another name."), $layout));
+            return false;
+        }
+        // End Validation
+
+        Debug::LogEntry($db, 'audit', 'Validation Compelte', 'Layout', 'Add');
+
+        // Get the XML for this template.
+        $templateXml = $this->GetTemplateXml($templateId);
+
+        Debug::LogEntry($db, 'audit', 'Retrieved template xml', 'Layout', 'Add');
+
+        $SQL = <<<END
+        INSERT INTO layout (layout, description, userID, permissionID, createdDT, modifiedDT, tags, xml)
+         VALUES ('%s', '%s', %d, %d, '%s', '%s', '%s', '%s')
+END;
+
+        $SQL = sprintf($SQL, $db->escape_string($layout),
+                            $db->escape_string($description), $userid, $permissionid,
+                            $db->escape_string($currentdate),
+                            $db->escape_string($currentdate),
+                            $db->escape_string($tags),
+                            $templateXml);
+
+        if(!$id = $db->insert_query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25005, __('Could not add Layout'));
+
+            return false;
+        }
+
+        Debug::LogEntry($db, 'audit', 'Updating Tags', 'Layout', 'Add');
+
+        // Are there any tags?
+        if ($tags != '')
+        {
+            // Create an array out of the tags
+            $tagsArray = explode(' ', $tags);
+
+            // Add the tags XML to the layout
+            if (!$this->EditTags($id, $tagsArray))
             {
-                trigger_error($db->error());
-                $this->SetError(25000, 'Layout does not exist.');
+                $this->Delete($id);
                 return false;
             }
+        }
 
-            $row = $db->get_row($results) ;
+        Debug::LogEntry($db, 'audit', 'Complete', 'Layout', 'Add');
 
-            Debug::LogEntry($db, 'audit', 'OUT', 'Layout', 'GetLayoutXml');
+        return $id;
+    }
 
-            return $row[0];
-	}
-	
-	/**
-	 * Sets the Layout Xml and writes it back to the database
-	 * @return 
-	 * @param $layoutid Object
-	 * @param $xml Object
-	 */
-	private function SetLayoutXml($layoutid, $xml)
-	{
-            $db =& $this->db;
+    /**
+     * Gets the XML for the specified template id
+     * @param <type> $templateId
+     */
+    private function GetTemplateXml($templateId)
+    {
+        $db =& $this->db;
 
-            Debug::LogEntry($db, 'audit', 'IN', 'Layout', 'SetLayoutXml');
+        if ($templateId == 0)
+        {
+            // make some default XML
+            $xmlDoc = new DOMDocument("1.0");
+            $layoutNode = $xmlDoc->createElement("layout");
 
-            $xml = addslashes($xml);
+            $layoutNode->setAttribute("width", 800);
+            $layoutNode->setAttribute("height", 450);
+            $layoutNode->setAttribute("bgcolor", "#000000");
+            $layoutNode->setAttribute("schemaVersion", Config::Version($db, 'XlfVersion'));
 
-            // Write it back to the database
-            $SQL = sprintf("UPDATE layout SET xml = '%s' WHERE layoutID = %d ", $xml, $layoutid);
+            $xmlDoc->appendChild($layoutNode);
+
+            $xml = $xmlDoc->saveXML();
+        }
+        else
+        {
+            // Get the template XML
+            if (!$row = $db->GetSingleRow(sprintf("SELECT xml FROM template WHERE templateID = %d ", $templateId)))
+                trigger_error(__('Error getting this template.'), E_USER_ERROR);
+
+            $xml = $row['xml'];
+        }
+
+        return $xml;
+    }
+
+    /**
+     * Edit Tags for a layout
+     * @param <type> $layoutID
+     * @param <type> $tags
+     * @return <type>
+     */
+    public function EditTags($layoutID, $tags)
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'Layout', 'EditTags');
+
+        // Make sure we get an array
+        if(!is_array($tags))
+        {
+            $this->SetError(25006, 'Must pass EditTags an array');
+            return false;
+        }
+
+        // Set the XML
+        if (!$this->SetXml($layoutID))
+        {
+            Debug::LogEntry($db, 'audit', 'Failed to Set the layout Xml.', 'Layout', 'EditTags');
+            return false;
+        }
+
+        Debug::LogEntry($db, 'audit', 'Got the XML from the DB. Now creating the tags.', 'Layout', 'EditTags');
+
+        // Create the tags XML
+        $tagsXml = '<tags>';
+
+        foreach($tags as $tag)
+        {
+            $tagsXml .= sprintf('<tag>%s</tag>', $tag);
+        }
+
+        $tagsXml .= '</tags>';
+
+        Debug::LogEntry($db, 'audit', 'Tags XML is:' . $tagsXml, 'Layout', 'EditTags');
+
+        // Load the tags XML into a document
+        $tagsXmlDoc = new DOMDocument('1.0');
+        $tagsXmlDoc->loadXML($tagsXml);
 
 
-            if (!$db->query($SQL))
-            {
-                trigger_error($db->error());
-                $this->SetError(25000, 'Unable to Update Layout.');
-                return false;
-            }
+        // Load the XML for this layout
+        $xml = new DOMDocument("1.0");
+        $xml->loadXML($this->xml);
 
-            Debug::LogEntry($db, 'audit', 'OUT', 'Layout', 'SetLayoutXml');
+        // Import the new node into this document
+        $newTagsNode = $xml->importNode($tagsXmlDoc->documentElement, true);
 
-            return true;
-	}
+        // Xpath for an existing tags node
+        $xpath 	= new DOMXPath($xml);
+        $tagsNode 	= $xpath->query("//tags");
+
+        // Does the tags node exist?
+        if ($tagsNode->length < 1)
+        {
+            // We need to append our new node to the layout node
+            $layoutXpath	= new DOMXPath($xml);
+            $layoutNode 	= $xpath->query("//layout");
+            $layoutNode 	= $layoutNode->item(0);
+
+            $layoutNode->appendChild($newTagsNode);
+        }
+        else
+        {
+            // We need to swap our new node with the existing one
+            $tagsNode = $tagsNode->item(0);
+
+            // Replace the node
+            $tagsNode->parentNode->replaceChild($newTagsNode, $tagsNode);
+        }
+
+        // Format the output a bit nicer for Alex
+        $xml->formatOutput = true;
+
+        // Convert back to XML
+        $xml = $xml->saveXML();
+
+        Debug::LogEntry($db, 'audit', $xml, 'layout', 'EditTags');
+
+        // Save it
+        if (!$this->SetLayoutXml($layoutID, $xml)) return false;
+
+        Debug::LogEntry($db, 'audit', 'OUT', 'Layout', 'EditTags');
+
+        return true;
+    }
+
+    /**
+     * Sets the Layout XML for this layoutid
+     * @return
+     * @param $layoutID Object
+     */
+    private function SetXml($layoutID)
+    {
+        if(!$this->xml = $this->GetLayoutXml($layoutID))
+            return false;
+
+        return true;
+    }
+
+    private function SetDomXml($layoutId)
+    {
+        if (!$this->SetXml($layoutId))
+            return false;
+
+        $this->DomXml = new DOMDocument("1.0");
+
+        Debug::LogEntry($this->db, 'audit', 'Loading LayoutXml into the DOM', 'layout', 'SetDomXML');
+
+        if (!$this->DomXml->loadXML($this->xml))
+            return false;
+
+        Debug::LogEntry($this->db, 'audit', 'Loaded LayoutXml into the DOM', 'layout', 'SetDomXML');
+
+        return true;
+    }
+
+    /**
+     * Gets the Xml for the specified layout
+     * @return
+     * @param $layoutid Object
+     */
+    private function GetLayoutXml($layoutid)
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'Layout', 'GetLayoutXml');
+
+        //Get the Xml for this Layout from the DB
+        $SQL = sprintf("SELECT xml FROM layout WHERE layoutID = %d ", $layoutid);
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25000, 'Layout does not exist.');
+            return false;
+        }
+
+        $row = $db->get_row($results) ;
+
+        Debug::LogEntry($db, 'audit', 'OUT', 'Layout', 'GetLayoutXml');
+
+        return $row[0];
+    }
+
+    /**
+     * Sets the Layout Xml and writes it back to the database
+     * @return
+     * @param $layoutid Object
+     * @param $xml Object
+     */
+    private function SetLayoutXml($layoutid, $xml)
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'Layout', 'SetLayoutXml');
+
+        $xml = addslashes($xml);
+
+        // Write it back to the database
+        $SQL = sprintf("UPDATE layout SET xml = '%s' WHERE layoutID = %d ", $xml, $layoutid);
+
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25007, 'Unable to Update Layout.');
+            return false;
+        }
+
+        Debug::LogEntry($db, 'audit', 'OUT', 'Layout', 'SetLayoutXml');
+
+        return true;
+    }
 
     /**
      * Copys a Layout
@@ -286,7 +422,7 @@ class Layout extends Data
      * @param <type> $layoutId
      * @return <type>
      */
-    private function Delete($layoutId)
+    public function Delete($layoutId)
     {
         $db =& $this->db;
 
@@ -295,7 +431,7 @@ class Layout extends Data
 
         // Remove the Layout
         if (!$db->query(sprintf('DELETE FROM layout WHERE layoutid = %d', $layoutId)))
-            return false;
+            return $this->SetError(25008, __('Unable to delete layout'));
 
         return true;
     }

@@ -24,36 +24,226 @@ class Rest
     protected $user;
     protected $POST;
 
-    public function __construct(database $db, User $user, $_POST)
+    public function __construct(database $db, User $user, $postData)
     {
         $this->db =& $db;
         $this->user =& $user;
 
         // Hold the POST data
-        $POST = $_POST;
+        $this->POST = $postData;
     }
 
-    public function MediaList()
+    /**
+     * List all Displays for this user
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayList()
     {
-        if (!$media = $this->user->MediaList())
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Display
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayEdit()
+    {
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Retire Display
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayRetire()
+    {
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Delete a Display
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayDelete()
+    {
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Display User Group Security
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayUserGroupSecurity()
+    {
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Display User Group Security
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayUserGroupEdit()
+    {
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Display Groups
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupList()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Add Display Group
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupAdd()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Display Group
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupEdit()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Delete Display Group
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupDelete()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Display Group Members
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupMembersList()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Display Group Members
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupMembersEdit()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Display Group User Groups
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupUserGroupList()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Display Group User Group Edit
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayGroupUserGroupEdit()
+    {
+        if (!$this->user->PageAuth('displaygroup'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('DisplayGroup');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Library Media
+     * @return <XiboAPIResponse>
+     */
+    public function LibraryMediaList()
+    {
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
+
+        $media = $this->user->MediaList();
+
+        if (!is_array($media))
             return $this->Error(1);
 
-        $xmlDoc = new DOMDocument();
-        $xmlElement = $xmlDoc->createElement('mediaItems');
-        $xmlElement->setAttribute('length', count($media));
-        
-        // Create the XML nodes
-        foreach($media as $mediaItem)
-        {
-            $mediaNode = $xmlDoc->createElement('media');
-            foreach($mediaItem as $key => $value)
-            {
-                $mediaNode->setAttribute($key, $value);
-            }
-            $xmlElement->appendChild($mediaNode);
-        }
-
-        return $this->Respond($xmlElement);
+        return $this->Respond($this->NodeListFromArray($media, 'media'));
     }
 
     /**
@@ -61,60 +251,84 @@ class Rest
      * Upload a media file in parts
      * @return <XiboAPIResponse>
      */
-    public function MediaFileUpload()
+    public function LibraryMediaFileUpload()
     {
-        // TODO: Does this user have permission to call this webservice method? Do via PageAuth?
+        // Does this user have permission to call this webservice method?
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('file');
 
         $file           = new File($this->db);
         $fileId         = $this->GetParam('fileId', _INT);
-        $checkSum       = $this->GetParam('checkSum', _STRING);
+        $checkSum       = $this->GetParam('checksum', _STRING);
         $payload        = $this->GetParam('payload', _STRING);
+        $payloadMd5     = md5($payload);
 
         // Checksum the payload
-        if (md5($payload) != $checkSum)
+        if ($payloadMd5 != $checkSum)
+        {
+            // Debug::LogEntry($this->db, 'audit', 'Sent Checksum: ' . $checkSum, 'RestXml', 'LibraryMediaFileUpload');
+            // Debug::LogEntry($this->db, 'audit', 'Calculated Checksum: ' . $payloadMd5, 'RestXml', 'LibraryMediaFileUpload');
+            // Debug::LogEntry($this->db, 'audit', 'Payload: ' . $payload, 'RestXml', 'LibraryMediaFileUpload');
+
             return $this->Error(2);
+        }
 
         // Payload will be encoded in base64. Need to decode before handing to File class
         $payload = base64_decode($payload);
 
         if ($fileId == 0)
         {
-            // New upload
+            // New upload. All users have permissions to upload files if they have gotten this far
             if (!$fileId = $file->NewFile($payload, $this->user->userid))
                 return $this->Error($file->GetErrorNumber());
         }
         else
         {
+            // Check permissions
+            if (!$this->user->FileAuth($fileId))
+                return $this->Error(1, 'Access Denied');
+
             // Continue upload
-            if (!$file->Append($fileId, $payload, $this->user->userid))
+            if (!$file->Append($fileId, $payload))
                 return $this->Error($file->GetErrorNumber());
         }
 
+        // Current offset
+        $size = $file->Size($fileId);
+
         // Return the fileId
-        return $this->Respond($this->ReturnId('file', $fileId));
+        return $this->Respond($this->ReturnAttributes('file', array('id' => $fileId, 'offset' => $size)));
     }
 
     /**
      * Add a media file to the library
      */
-    public function MediaAdd()
+    public function LibraryMediaAdd()
     {
-        // TODO: Does this user have permission to call this webservice method? Do via PageAuth?
+        // Does this user have permission to call this webservice method?
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
+
         Kit::ClassLoader('Media');
 
         // Create a media object and gather the required parameters.
         $media          = new Media($this->db);
+        $fileId         = $this->GetParam('fileId', _INT);
         $type           = $this->GetParam('type', _WORD);
         $name           = $this->GetParam('name', _STRING);
         $duration       = $this->GetParam('duration', _INT);
         $fileName       = $this->GetParam('fileName', _FILENAME);
-        $permissionId   = $this->GetParam('permissionID', _INT);
+        $permissionId   = $this->GetParam('permissionId', _INT);
+
+        // Check permissions
+        if (!$this->user->FileAuth($fileId))
+            return $this->Error(1, 'Access Denied');
 
         // Add the media.
-        if (!$mediaId = $media->Add($type, $name, $duration, $fileName, $permissionId, $this->user->userid))
-            return $this->Error($media->GetErrorNumber());
+        if (!$mediaId = $media->Add($fileId, $type, $name, $duration, $fileName, $permissionId, $this->user->userid))
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
         // Return the mediaId.
         return $this->Respond($this->ReturnId('media', $mediaId));
@@ -123,25 +337,493 @@ class Rest
     /**
      * Edit a media file in the library
      */
-    public function MediaEdit()
-    {
+    public function LibraryMediaEdit()
+    {      
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
 
+        Kit::ClassLoader('Media');
+
+        // Create a media object and gather the required parameters.
+        $media          = new Media($this->db);
+        $mediaId        = $this->GetParam('mediaId', _INT);
+        $name           = $this->GetParam('name', _STRING);
+        $duration       = $this->GetParam('duration', _INT);
+        $permissionId   = $this->GetParam('permissionId', _INT);
+
+        // Check permissions
+        if (!$this->user->MediaAuth($mediaId))
+            return $this->Error(1, 'Access Denied');
+
+        // Add the media.
+        if (!$media->Edit($mediaId, $name, $duration, $permissionId, $this->user->userid))
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
+
+        // Return the mediaId.
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
      * Retire a media file in the library
      */
-    public function MediaRetire()
+    public function LibraryMediaRetire()
     {
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
 
+        Kit::ClassLoader('Media');
+
+        $media      = new Media($this->db);
+        $mediaId    = $this->GetParam('mediaId', _INT);
+
+        if (!$this->user->MediaAuth($mediaId))
+            return $this->Error(1, 'Access Denied');
+
+        if (!$media->Retire($mediaId))
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
      * Delete a Media file from the library
      */
-    public function MediaDelete()
+    public function LibraryMediaDelete()
     {
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
 
+        Kit::ClassLoader('Media');
+
+        $media      = new Media($this->db);
+        $mediaId    = $this->GetParam('mediaId', _INT);
+
+        if (!$this->user->MediaAuth($mediaId))
+            return $this->Error(1, 'Access Denied');
+
+        if (!$media->Delete($mediaId))
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
+    }
+
+    /**
+     * Replace a Media items file with a new revision
+     * @return <XiboAPIResponse>
+     */
+    public function LibraryMediaFileRevise()
+    {
+        // Does this user have permission to call this webservice method?
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Media');
+
+        // Create a media object and gather the required parameters.
+        $media          = new Media($this->db);
+        $mediaId        = $this->GetParam('mediaId', _INT);
+        $fileId         = $this->GetParam('fileId', _INT);
+        $fileName       = $this->GetParam('fileName', _FILENAME);
+        
+        // Check permissions
+        if (!$this->user->FileAuth($fileId))
+            return $this->Error(1, 'Access Denied');
+
+        // Add the media.
+        if (!$mediaId = $media->FileRevise($mediaId, $fileId, $fileName))
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
+
+        // Return the mediaId.
+        return $this->Respond($this->ReturnId('media', $mediaId));
+    }
+
+    /**
+     * List Layouts
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutList()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        $layout = $this->user->LayoutList();
+
+        if (!is_array($layout))
+            return $this->Error(2);
+
+        return $this->Respond($this->NodeListFromArray($layout, 'layout'));
+    }
+
+    /**
+     * Add Layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutAdd()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('layout');
+        
+        $layout         = $this->GetParam('layout', _STRING);
+        $description    = $this->GetParam('description', _STRING);
+        $permissionid   = $this->GetParam('permissionid', _INT);
+        $tags           = $this->GetParam('tags', _STRING);
+        $templateId     = $this->GetParam('templateid', _INT, 0);
+
+        // Add this layout
+        $layoutObject = new Layout($this->db);
+
+        if(!$id = $layoutObject->Add($layout, $description, $permissionid, $tags, $this->user->userid, $templateId))
+            return $this->Error($layoutObject->GetErrorNumber(), $layoutObject->GetErrorMessage());
+
+        Debug::LogEntry($this->db, 'audit', 'Added new layout with id' . $id);
+
+        return $this->Respond($this->ReturnId('layout', $id));
+    }
+
+    /**
+     * Edit Layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutEdit()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+    
+    /**
+     * Copy Layout
+     * @return <XiboAPIResponse> 
+     */
+    public function LayoutCopy()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Delete Layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutDelete()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        if (!$layout->Delete($layoutId))
+            return $this->Error($layout->GetErrorNumber(), $layout->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
+    }
+
+    /**
+     * Retire Layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRetire()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List possible layout backgrounds
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutBackgroundList()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit layout background
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutBackgroundEdit()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Get the Xlf for a Layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutGetXlf()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Layout');
+
+        $layout     = new Layout($this->db);
+        $layoutId   = $this->GetParam('layoutId', _INT);
+
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Regions on a layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionList()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Add Region to a Layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionAdd()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Region on a layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionEdit()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Position Region on a Layout
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionPosition()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List the items on a region timeline
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionTimelineList()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Add Media to a Region
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionMediaAdd()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Media on a Region
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionMediaEdit()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Details of Media on a Region
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionMediaDetails()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Reorder media on a region
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionMediaReorder()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Delete media from a region
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionMediaDelete()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Add media to a region from the Library
+     * @return <XiboAPIResponse>
+     */
+    public function LayoutRegionLibraryAdd()
+    {
+        if (!$this->user->PageAuth('layout'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * List Schedule
+     * @return <XiboAPIResponse>
+     */
+    public function ScheduleList()
+    {
+        if (!$this->user->PageAuth('schedule'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Add Schedule
+     * @return <XiboAPIResponse>
+     */
+    public function ScheduleAdd()
+    {
+        if (!$this->user->PageAuth('schedule'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Edit Schedule
+     * @return <XiboAPIResponse>
+     */
+    public function ScheduleEdit()
+    {
+        if (!$this->user->PageAuth('schedule'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Delete Schedule
+     * @return <XiboAPIResponse>
+     */
+    public function ScheduleDelete()
+    {
+        if (!$this->user->PageAuth('schedule'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Lists enabled modules
+     * @return <XiboAPIResponse>
+     */
+    public function ModuleList()
+    {
+        // Does this user have permission to call this webservice method?
+        if (!$this->user->PageAuth('media'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Media');
+
+        // Create a media object and gather the required parameters.
+        $media = new Media($this->db);
+
+        if (!$modules = $media->ModuleList())
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
+
+        return $this->Respond($this->NodeListFromArray($modules, 'module'));
     }
 
     /**
@@ -170,7 +852,7 @@ class Rest
      * @param <type> $default
      * @return <type>
      */
-    protected function GetParam($param, $type, $default = '')
+    protected function GetParam($param, $type, $default = null)
     {
         return Kit::GetParam($param, $this->POST, $type, $default);
     }
@@ -187,6 +869,52 @@ class Rest
         $xmlDoc = new DOMDocument();
         $xmlElement = $xmlDoc->createElement($nodeName);
         $xmlElement->setAttribute($idAttributeName, $id);
+
+        return $xmlElement;
+    }
+
+    /**
+     * Returns a single node with the attributes contained in a key/value array
+     * @param <type> $nodeName
+     * @param <type> $attributes
+     * @return <DOMDocument::XmlElement>
+     */
+    protected function ReturnAttributes($nodeName, $attributes)
+    {
+        $xmlDoc = new DOMDocument();
+        $xmlElement = $xmlDoc->createElement($nodeName);
+
+        foreach ($attributes as $key => $value)
+        {
+            $xmlElement->setAttribute($key, $value);
+        }
+
+        return $xmlElement;
+    }
+
+    /**
+     * Creates a node list from an array
+     * @param <type> $array
+     * @param <type> $node
+     */
+    protected function NodeListFromArray($array, $nodeName)
+    {
+        Debug::LogEntry($this->db, 'audit', sprintf('Building node list containing %d items', count($array)));
+
+        $xmlDoc = new DOMDocument();
+        $xmlElement = $xmlDoc->createElement($nodeName . 'Items');
+        $xmlElement->setAttribute('length', count($array));
+
+        // Create the XML nodes
+        foreach($array as $arrayItem)
+        {
+            $node = $xmlDoc->createElement($nodeName);
+            foreach($arrayItem as $key => $value)
+            {
+                $node->setAttribute($key, $value);
+            }
+            $xmlElement->appendChild($node);
+        }
 
         return $xmlElement;
     }

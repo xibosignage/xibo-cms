@@ -58,7 +58,9 @@ class XiboServiceResponse
     public function XRDS()
     {
         header('Content-Type: application/xrds+xml');
-    
+
+        // TODO: Need to strip out the services.php part of serviceLocation - or work out a better way to do it.
+
         $xrds = file_get_contents('lib/service/services.xrds.xml');
         $xrds = str_replace('{{XRDS_LOCATION}}', $this->serviceLocation, $xrds);
         echo $xrds;

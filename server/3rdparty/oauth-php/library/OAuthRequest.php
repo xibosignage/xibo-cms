@@ -3,7 +3,7 @@
 /**
  * Request wrapper class.  Prepares a request for consumption by the OAuth routines
  * 
- * @version $Id: OAuthRequest.php 50 2008-10-01 15:11:08Z marcw@pobox.com $
+ * @version $Id: OAuthRequest.php 139 2010-07-29 15:14:08Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Nov 16, 2007 12:20:31 PM
  * 
@@ -31,7 +31,7 @@
  */
 
 
-require_once dirname(__FILE__) . '/OAuthException.php';
+require_once dirname(__FILE__) . '/OAuthException2.php';
 
 /**
  * Object to parse an incoming OAuth request or prepare an outgoing OAuth request
@@ -70,53 +70,66 @@ class OAuthRequest
 	 * @param array		headers			headers for request
 	 * @param string	body			optional body of the OAuth request (POST or PUT)
 	 */
-	function __construct ( $uri = null, $method = 'GET', $parameters = '', $headers = array(), $body = null )
+	function __construct ( $uri = null, $method = null, $parameters = '', $headers = array(), $body = null )
 	{
-		if (empty($uri))
+		if (is_object($_SERVER))
 		{
-			if (is_object($_SERVER))
-			{
-				// Tainted arrays - the normal stuff in anyMeta
+			// Tainted arrays - the normal stuff in anyMeta
+			if (!$method) {
 				$method	= $_SERVER->REQUEST_METHOD->getRawUnsafe();
+			}
+			if (empty($uri)) {
 				$uri	= $_SERVER->REQUEST_URI->getRawUnsafe();
+			}
+		}
+		else
+		{
+			// non anyMeta systems
+			if (!$method) {
+				if (isset($_SERVER['SCRIPT_URI'])) {
+					$method	= $_SERVER['SCRIPT_URI'] . $_SERVER['QUERY_STRING'];
+				}
+				else if (isset($_SERVER['REQUEST_METHOD'])) {
+					$method	= $_SERVER['REQUEST_METHOD'];
+				}
+				else {
+					$method = 'GET';
+				}
+			}
+			$proto = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https' : 'http';
+			if (empty($uri)) {
+				$uri = sprintf('%s://%s%s', $proto, $_SERVER['HTTP_HOST'], $_SERVER['REQUEST_URI']);
+			}
+		}
+		$headers      = OAuthRequestLogger::getAllHeaders();
+		$this->method = strtoupper($method);
+		
+		// If this is a post then also check the posted variables
+		if (strcasecmp($method, 'POST') == 0)
+		{
+			/*
+			// TODO: what to do with 'multipart/form-data'?
+			if ($this->getRequestContentType() == 'multipart/form-data')
+			{
+				throw new OAuthException2('Unsupported POST content type, expected "application/x-www-form-urlencoded" got "'.@$_SERVER['CONTENT_TYPE'].'"');
+			}
+			*/
+			if ($this->getRequestContentType() == 'application/x-www-form-urlencoded')
+			{
+				// Get the posted body (when available)
+				if (!isset($headers['X-OAuth-Test']))
+				{
+					$parameters .= $this->getRequestBody();
+				}
 			}
 			else
 			{
-				// non anyMeta systems
-				$method	= $_SERVER['REQUEST_METHOD'];
-				$uri	= $_SERVER['REQUEST_URI'];
-			}
-			$headers      = getallheaders();
-			$parameters   = '';
-			$this->method = strtoupper($method);
-			
-			// If this is a post then also check the posted variables
-			if (strcasecmp($method, 'POST') == 0)
-			{
-				/*
-				// TODO: what to do with 'multipart/form-data'?
-				if ($this->getRequestContentType() == 'multipart/form-data')
-				{
-					throw new OAuthException('Unsupported POST content type, expected "application/x-www-form-urlencoded" got "'.@$_SERVER['CONTENT_TYPE'].'"');
-				}
-				*/
-				if ($this->getRequestContentType() == 'application/x-www-form-urlencoded')
-				{
-					// Get the posted body (when available)
-					if (!isset($headers['X-OAuth-Test']))
-					{
-						$parameters .= $this->getRequestBody();
-					}
-				}
-				else
-				{
-					$body = $this->getRequestBody();
-				}
-			}
-			else if (strcasecmp($method, 'PUT') == 0)
-			{
 				$body = $this->getRequestBody();
 			}
+		}
+		else if (strcasecmp($method, 'PUT') == 0)
+		{
+			$body = $this->getRequestBody();
 		}
 
 		$this->method  = strtoupper($method);
@@ -175,7 +188,7 @@ class OAuthRequest
 		{
 			if (!isset($this->param[$req]))
 			{
-				throw new OAuthException('Can\'t sign request, missing parameter "'.$req.'"');
+				throw new OAuthException2('Can\'t sign request, missing parameter "'.$req.'"');
 			}
 		}
 
@@ -195,7 +208,7 @@ class OAuthRequest
 	 * @param string	consumer_secret
 	 * @param string	token_secret
 	 * @param string 	signature_method
-	 * @exception OAuthException thrown when the signature method is unknown 
+	 * @exception OAuthException2 thrown when the signature method is unknown 
 	 * @return string signature
 	 */
 	function calculateDataSignature ( $data, $consumer_secret, $token_secret, $signature_method )
@@ -216,7 +229,7 @@ class OAuthRequest
 	 * 
 	 * @todo Let the signature method tell us how secure it is
 	 * @param array methods
-	 * @exception OAuthException when we don't support any method in the list
+	 * @exception OAuthException2 when we don't support any method in the list
 	 * @return string
 	 */
 	public function selectSignatureMethod ( $methods )
@@ -235,8 +248,8 @@ class OAuthRequest
 			foreach ($methods as $m)
 			{
 				$m = strtoupper($m);
-				$m = preg_replace('/[^A-Z0-9]/', '_', $m);
-				if (file_exists(dirname(__FILE__).'/signature_method/OAuthSignatureMethod_'.$m.'.php'))
+				$m2 = preg_replace('/[^A-Z0-9]/', '_', $m);
+				if (file_exists(dirname(__FILE__).'/signature_method/OAuthSignatureMethod_'.$m2.'.php'))
 				{
 					$method = $m;
 					break;
@@ -245,7 +258,7 @@ class OAuthRequest
 			
 			if (empty($method))
 			{
-				throw new OAuthException('None of the signing methods is supported.');
+				throw new OAuthException2('None of the signing methods is supported.');
 			}
 		}
 		return $method;
@@ -271,7 +284,7 @@ class OAuthRequest
 		}
 		else
 		{
-			throw new OAuthException('Unsupported signature method "'.$m.'".');
+			throw new OAuthException2('Unsupported signature method "'.$m.'".');
 		}
 		return $sig;
 	}
@@ -280,7 +293,7 @@ class OAuthRequest
 	/**
 	 * Perform some sanity checks.
 	 * 
-	 * @exception OAuthException thrown when sanity checks failed
+	 * @exception OAuthException2 thrown when sanity checks failed
 	 */
 	function checks ()
 	{
@@ -289,7 +302,7 @@ class OAuthRequest
 			$version = $this->urldecode($this->param['oauth_version']);
 			if ($version != '1.0')
 			{
-				throw new OAuthException('Expected OAuth version 1.0, got "'.$this->param['oauth_version'].'"');
+				throw new OAuthException2('Expected OAuth version 1.0, got "'.$this->param['oauth_version'].'"');
 			}
 		}
 	}
@@ -486,40 +499,24 @@ class OAuthRequest
 	/**
 	 * Parse the uri into its parts.  Fill in the missing parts.
 	 * 
-	 * @todo  check for the use of https, right now we default to http
-	 * @todo  support for multiple occurences of parameters
 	 * @param string $parameters  optional extra parameters (from eg the http post)
 	 */
 	protected function parseUri ( $parameters )
 	{
-		$ps = parse_url($this->uri);
+		$ps = @parse_url($this->uri);
 
 		// Get the current/requested method
-		if (empty($ps['scheme']))
-		{
-			$ps['scheme'] = 'http';
-		}
-		else
-		{
-			$ps['scheme'] = strtolower($ps['scheme']);
-		}
+		$ps['scheme'] = strtolower($ps['scheme']);
 
 		// Get the current/requested host
-		if (empty($ps['host']))
-		{
-			if (isset($_SERVER['HTTP_HOST']))
-			{
-				$ps['host'] = $_SERVER['HTTP_HOST'];
-			}
-			else
-			{
-				$ps['host'] = '';
-			}
-		}
-		$ps['host'] = mb_strtolower($ps['host']);
+		if (function_exists('mb_strtolower'))
+			$ps['host'] = mb_strtolower($ps['host']);
+		else
+			$ps['host'] = strtolower($ps['host']);
+			
 		if (!preg_match('/^[a-z0-9\.\-]+$/', $ps['host']))
 		{
-			throw new OAuthException('Unsupported characters in host name');
+			throw new OAuthException2('Unsupported characters in host name');
 		}
 
 		// Get the port we are talking on
@@ -527,7 +524,7 @@ class OAuthRequest
 		{
 			$ps['port'] = $this->defaultPortForScheme($ps['scheme']);
 		}
-
+		
 		if (empty($ps['user']))
 		{
 			$ps['user'] = '';
@@ -558,7 +555,22 @@ class OAuthRequest
 				foreach ($params as $p)
 				{
 					@list($name, $value) = explode('=', $p, 2);
-					$this->param[$name]  = $value;
+					if (!strlen($name)) 
+					{
+						continue;
+					}
+
+					if (array_key_exists($name, $this->param)) 
+					{
+						if (is_array($this->param[$name]))
+							$this->param[$name][] = $value;
+						else
+							$this->param[$name] = array($this->param[$name], $value);
+					}
+					else 
+					{
+						$this->param[$name]  = $value;
+					}
 				}
 			}
 		}
@@ -579,7 +591,7 @@ class OAuthRequest
 		case 'http':	return 80;
 		case 'https':	return 43;
 		default:
-			throw new OAuthException('Unsupported scheme type, expected http or https, got "'.$scheme.'"');
+			throw new OAuthException2('Unsupported scheme type, expected http or https, got "'.$scheme.'"');
 			break;
 		}
 	}
@@ -638,7 +650,8 @@ class OAuthRequest
 		}
 		else
 		{
-			return $this->urlencode(urldecode($s));
+			return $this->urlencode(rawurldecode($s));
+			// return $this->urlencode(urldecode($s));
 		}
 	}
 
@@ -753,7 +766,7 @@ class OAuthRequest
 	 * 
 	 * @param string uri
 	 * @param array params		parameters, urlencoded
-	 * @exception OAuthException when redirect uri is illegal
+	 * @exception OAuthException2 when redirect uri is illegal
 	 */
 	public function redirect ( $uri, $params )
 	{
@@ -782,7 +795,7 @@ class OAuthRequest
 		{
 			if (strpos($uri, '://'))
 			{
-				throw new OAuthException('Illegal protocol in redirect uri '.$uri);
+				throw new OAuthException2('Illegal protocol in redirect uri '.$uri);
 			}
 			$uri = 'http://'.$uri;
 		}
@@ -792,7 +805,6 @@ class OAuthRequest
 		echo '';
 		exit();
 	}
-	
 }
 
 

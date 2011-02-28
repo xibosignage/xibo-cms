@@ -795,12 +795,40 @@ END;
 	}
 
     /**
+     * Authenticates a user against a fileId
+     * @param <type> $fileId
+     * @return <bool> true on granted
+     */
+    public function FileAuth($fileId)
+    {
+        // Need to check this user has permission to upload this file (i.e. is it theirs)
+        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM file WHERE FileID = %d", $fileId), 'UserID', _INT))
+        {
+            trigger_error($this->db->error_text);
+            trigger_error($this->db->error());
+
+            return false;
+        }
+        
+        return ($userId == $this->userid);
+    }
+
+    /**
      * Authorizes a user against a media ID
      * @param <int> $mediaID
      */
-    public function MediaAuth($mediaID)
+    public function MediaAuth($mediaId)
     {
-        return false;
+        // TODO: Extend to cover group access and all that
+        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM media WHERE MediaID = %d", $mediaId), 'UserID', _INT))
+        {
+            trigger_error($this->db->error_text);
+            trigger_error($this->db->error());
+
+            return false;
+        }
+
+        return ($userId == $this->userid);
     }
 
     /**
@@ -818,6 +846,7 @@ END;
         $SQL .= "FROM    media ";
         $SQL .= "WHERE   1 = 1  AND isEdited = 0 ";
 
+        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of media for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -840,13 +869,83 @@ END;
 
             list($see, $edit) = $this->eval_permission($mediaItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
 
-            $mediaItem['read']      = (int) $see;
-            $mediaItem['write']     = (int) $edit;
-
-            $media[] = $mediaItem;
+            if ($see)
+            {
+                $mediaItem['read']      = (int) $see;
+                $mediaItem['write']     = (int) $edit;
+                $media[] = $mediaItem;
+            }
         }
 
         return $media;
+    }
+
+    /**
+     * Authorises a user against a layoutid
+     * @param <type> $layoutId
+     * @return <type>
+     */
+    public function LayoutAuth($layoutId)
+    {
+        // TODO: Extend to cover group access and all that
+        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM layout WHERE LayoutID = %d", $layoutId), 'UserID', _INT))
+        {
+            trigger_error($this->db->error_text);
+            trigger_error($this->db->error());
+
+            return false;
+        }
+
+        return ($userId == $this->userid);
+    }
+
+    /**
+     * Returns an array of layouts that this user has access to
+     */
+    public function LayoutList()
+    {
+        $SQL  = "";
+        $SQL .= "SELECT layoutID, ";
+        $SQL .= "        layout, ";
+        $SQL .= "        description, ";
+        $SQL .= "        tags, ";
+        $SQL .= "        permissionID, ";
+        $SQL .= "        userID ";
+        $SQL .= "   FROM layout ";
+
+         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $layouts = array();
+
+        while ($row = $this->db->get_assoc_row($result))
+        {
+            $layoutItem = array();
+
+            // Validate each param and add it to the array.
+            $layoutItem['layoutid'] = Kit::ValidateParam($row['layoutID'], _INT);
+            $layoutItem['layout']   = Kit::ValidateParam($row['layout'], _STRING);
+            $layoutItem['description'] = Kit::ValidateParam($row['description'], _STRING);
+            $layoutItem['tags']     = Kit::ValidateParam($row['tags'], _STRING);
+            $layoutItem['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
+
+            list($see, $edit) = $this->eval_permission($layoutItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
+
+            if ($see)
+            {
+                $layoutItem['read']      = (int) $see;
+                $layoutItem['write']     = (int) $edit;
+                
+                $layouts[] = $layoutItem;
+            }
+        }
+
+        return $layouts;
     }
 }
 ?>

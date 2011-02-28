@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2010 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -385,11 +385,13 @@ END;
 			{
                             $msgPageSec	= __('Page Security');
                             $msgMenuSec	= __('Menu Security');
+                            $msgApps	= __('Applications');
 
                             $table .= '<button class="XiboFormButton" href="index.php?p=user&q=DisplayForm&userID=' . $userID . '"><span>Edit</span></button>';
                             $table .= '<button class="XiboFormButton" href="index.php?p=user&q=DeleteForm&userID=' . $userID . '" ><span>Delete</span></button>';
                             $table .= '<button class="XiboFormButton" href="index.php?p=group&q=PageSecurityForm&groupid=' . $groupid . '"><span>' . $msgPageSec . '</span></button>';
                             $table .= '<button class="XiboFormButton" href="index.php?p=group&q=MenuItemSecurityForm&groupid=' . $groupid . '"><span>' . $msgMenuSec . '</span></button>';
+                            $table .= '<button class="XiboFormButton" href="index.php?p=oauth&q=UserTokens&userID=' . $userID. '"><span>' . $msgApps . '</span></button>';
 			}
                         $table .= "</td>";
 			$table .= "</tr>";
@@ -709,5 +711,58 @@ END;
 		$response->SetFormSubmitResponse('Homepage has been set.');
 		$response->Respond();
 	}
+
+    /**
+     * Shows the Authorised applications this user has
+     */
+    public function MyApplications()
+    {
+        $db         =& $this->db;
+        $user       =& $this->user;
+        $response   = new ResponseManager();
+
+        $store = OAuthStore::instance();
+
+        try
+        {
+            $list = $store->listConsumerTokens($this->user->userid);
+        }
+        catch (OAuthException $e)
+        {
+            trigger_error($e->getMessage());
+            trigger_error(__('Error listing Log.'), E_USER_ERROR);
+        }
+
+        $output .= '<div class="info_table">';
+        $output .= '    <table style="width:100%">';
+        $output .= '        <thead>';
+        $output .= sprintf('    <th>%s</th>', __('Application'));
+        $output .= sprintf('    <th>%s</th>', __('Enabled'));
+        $output .= sprintf('    <th>%s</th>', __('Status'));
+        $output .= '        </thead>';
+        $output .= '        <tbody>';
+
+        foreach($list as $app)
+        {
+            $title      = Kit::ValidateParam($app['application_title'], _STRING);
+            $enabled    = Kit::ValidateParam($app['enabled'], _STRING);
+            $status     = Kit::ValidateParam($app['status'], _STRING);
+
+            $output .= '<tr>';
+            $output .= '<td>' . $title . '</td>';
+            $output .= '<td>' . $enabled . '</td>';
+            $output .= '<td>' . $status . '</td>';
+            $output .= '</tr>';
+        }
+
+        $output .= '        </tbody>';
+        $output .= '    </table>';
+        $output .= '</div>';
+
+        $response->SetFormRequestResponse($output, __('My Applications'), '650', '450');
+        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
 }
 ?>

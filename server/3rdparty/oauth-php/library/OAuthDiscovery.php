@@ -32,7 +32,7 @@
 
 require_once dirname(__FILE__).'/discovery/xrds_parse.php';
 
-require_once dirname(__FILE__).'/OAuthException.php';
+require_once dirname(__FILE__).'/OAuthException2.php';
 require_once dirname(__FILE__).'/OAuthRequestLogger.php';
 
 
@@ -56,12 +56,12 @@ class OAuthDiscovery
 			$xrds = xrds_parse($xrds_file);
 			if (empty($xrds))
 			{
-				throw new OAuthException('Could not discover OAuth information for '.$uri);
+				throw new OAuthException2('Could not discover OAuth information for '.$uri);
 			}
 		}
 		else
 		{
-			throw new OAuthException('Could not discover XRDS file at '.$uri);
+			throw new OAuthException2('Could not discover XRDS file at '.$uri);
 		}
 
 		// Fill an OAuthServer record for the uri found
@@ -164,8 +164,8 @@ class OAuthDiscovery
 			{
 				$xrds = $body;
 			}
-			else if (	preg_match('/^X-XRDS-Location:\s*(.*)$/im', $head, $m)
-					||	preg_match('/^Location:\s*(.*)$/im', $head, $m))
+			else if (	preg_match('/^X-XRDS-Location:\s*([^\r\n]*)/im', $head, $m)
+					||	preg_match('/^Location:\s*([^\r\n]*)/im', $head, $m))
 			{
 				// Recurse to the given location
 				if ($uri != $m[1])
@@ -207,6 +207,7 @@ class OAuthDiscovery
 		curl_setopt($ch, CURLOPT_URL, 			 $uri);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_HEADER, 		 true);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 		 30);
 
 		$txt = curl_exec($ch);
 		curl_close($ch);

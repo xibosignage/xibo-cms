@@ -376,9 +376,7 @@ class Kit
         static function ClassLoader($class)
 	{
             if (class_exists($class))
-            {
-                return true;
-            }
+                return;
 
             $class = strtolower($class);
 
@@ -387,28 +385,28 @@ class Kit
             {
                 include_once('lib/pages/' . $class . '.class.php');
             }
-            elseif (file_exists('lib/data/' . $class . '.data.class.php'))
+
+            if (file_exists('lib/data/' . $class . '.data.class.php'))
             {
                 include_once('lib/data/' . $class . '.data.class.php');
             }
-            elseif (file_exists('modules/' . $class . '.module.php'))
+
+            if (file_exists('modules/' . $class . '.module.php'))
             {
                 include_once('modules/' . $class . '.module.php');
             }
-            elseif (file_exists('modules/' . $class . '.php'))
+
+            if (file_exists('modules/' . $class . '.php'))
             {
                 include_once('modules/' . $class . '.php');
             }
-            elseif (file_exists('lib/service/' . $class . '.class.php'))
+
+            if (file_exists('lib/service/' . $class . '.class.php'))
             {
                 include_once('lib/service/' . $class . '.class.php');
             }
-            else
-            {
-                return false;
-            }
-
-            return true;
+            
+            return;
 	}
 
     /**

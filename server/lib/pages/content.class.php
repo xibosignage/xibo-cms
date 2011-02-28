@@ -598,93 +598,79 @@ END;
 		$response->Respond();
 	}
 	
-	/**
-	 * Gets called by the SWFUpload Object for uploading files
-	 * @return 
-	 */
-	function FileUpload()
-	{
-		$db =& $this->db;
-		
-		/*
-		 * Normal file post:
-		 * 
-		 * need to get the fileId
-		 * and the file name
-		 * 
-		 * and return them to the javascript (which will do a window.parent.setsomevalues)
-		 * 
-		 */
-		
-		// File upload directory.. get this from the settings object
-		$libraryFolder 	= Config::GetSetting($db, "LIBRARY_LOCATION");
-		
-		// Check that this location exists - and if not create it..
-		if (!file_exists($libraryFolder . 'temp'))
-		{
-			// Make the directory with broad permissions recursively (so will add the whole path)
-			mkdir($libraryFolder . 'temp', 0777, true);
-		}
-		
-		if (!is_writable($libraryFolder . 'temp'))
-		{
-			trigger_error(__('The Library Location you have picked is not writable to the Xibo Server.'), E_USER_ERROR);
-		}
-		
-		// Save this file in a random place
-		$fileId 		= uniqid() . rand(100, 999);
-		
-		Debug::LogEntry($db, "audit", '[IN - FileId ' . $fileId . '] to library location: '. $libraryFolder, 'FileUpload');
-		
-		if (isset($_FILES["media_file"]) && is_uploaded_file($_FILES["media_file"]["tmp_name"]) && $_FILES["media_file"]["error"] == 0) 
-		{
-			$error 		= 0;
-			$fileName 	= Kit::ValidateParam($_FILES["media_file"]["name"], _FILENAME);
-			$fileLocation 	= $libraryFolder."temp/".$fileId;
-			
-			// Save the FILE
-			move_uploaded_file($_FILES["media_file"]["tmp_name"], $fileLocation);
-			
-			Debug::LogEntry($db, "audit", "Upload Success", "FileUpload");
-		} 
-		else 
-		{
-			Debug::LogEntry($db, "audit", "Error uploading the file num [{$_FILES["media_file"]["error"]}]", "FileUpload");
-			
-			$error = $_FILES["media_file"]["error"];
-			$fileName = "Error";
-			$fileId = 0;
-		}
-		
-		$complete_page = <<<HTML
-		<html>
-			<head>
-				<script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
-				<script type="text/javascript">
-					
-					var fileId = '$fileId';
-					var fileName = '$fileName';
-					var errorNo = $error;
-					
-					function report()
-					{
-						var form = window.parent.fileUploadReport(fileName, fileId, errorNo);
-						
-					}
-					
-					window.onload = report;
-					
-				</script>
-			</head>
-			<body></body>
-		</html>
+    /**
+     * Gets called by the SWFUpload Object for uploading files
+     * @return
+     */
+    function FileUpload()
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'Uploading a file', 'Library', 'FileUpload');
+
+        Kit::ClassLoader('file');
+        $fileObject = new File($db);
+
+        
+        // Check we got a valid file
+        if (isset($_FILES['media_file']) && is_uploaded_file($_FILES['media_file']['tmp_name']) && $_FILES['media_file']['error'] == 0)
+        {
+            Debug::LogEntry($db, 'audit', 'Valid Upload', 'Library', 'FileUpload');
+
+            // Directory location
+            $libraryFolder  = Config::GetSetting($db, 'LIBRARY_LOCATION');
+            $error          = 0;
+            $fileName       = Kit::ValidateParam($_FILES['media_file']['name'], _FILENAME);
+            $fileId         = $fileObject->GenerateFileId($this->user->userid);
+            $fileLocation   = $libraryFolder . 'temp/' . $fileId;
+
+            // Make sure the library exists
+            $fileObject->EnsureLibraryExists();
+
+            // Save the FILE
+            Debug::LogEntry($db, 'audit', 'Saving the file to: ' . $fileLocation, 'FileUpload');
+
+            move_uploaded_file($_FILES['media_file']['tmp_name'], $fileLocation);
+
+            Debug::LogEntry($db, 'audit', 'Upload Success', 'FileUpload');
+        }
+        else
+        {
+            Debug::LogEntry($db, 'audit', 'Error uploading the file. Error Number: ' . $_FILES['media_file']['error'] , 'FileUpload');
+
+            $error      = $_FILES['media_file']['error'];
+            $fileName   = 'Error';
+            $fileId     = 0;
+        }
+
+        $complete_page = <<<HTML
+        <html>
+            <head>
+                <script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
+                <script type="text/javascript">
+
+                    var fileId = '$fileId';
+                    var fileName = '$fileName';
+                    var errorNo = $error;
+
+                    function report()
+                    {
+                        var form = window.parent.fileUploadReport(fileName, fileId, errorNo);
+                    }
+
+                    window.onload = report;
+
+                </script>
+            </head>
+            <body></body>
+        </html>
 HTML;
-		
-		echo $complete_page;
-		
-		Debug::LogEntry($db, "audit", $complete_page, "FileUpload");
-		Debug::LogEntry($db, "audit", "[OUT]", "FileUpload");
-		exit;
-	}
+
+        echo $complete_page;
+
+        Debug::LogEntry($db, "audit", $complete_page, "FileUpload");
+        Debug::LogEntry($db, "audit", "[OUT]", "FileUpload");
+        exit;
+    }
 }
 ?>

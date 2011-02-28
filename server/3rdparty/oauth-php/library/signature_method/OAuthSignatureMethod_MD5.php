@@ -86,7 +86,7 @@ class OAuthSignatureMethod_MD5 extends OAuthSignatureMethod
 		$valB  = base64_decode($b);
 
 		// Crude binary comparison
-		return rawurlencode($a) == rawurlencode($b);
+		return rawurlencode($valA) == rawurlencode($valB);
 	}
 }
 

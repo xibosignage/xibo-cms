@@ -3,7 +3,7 @@
 /**
  * Server layer over the OAuthRequest handler
  * 
- * @version $Id: OAuthServer.php 51 2008-10-15 15:15:47Z marcw@pobox.com $
+ * @version $Id: OAuthServer.php 154 2010-08-31 18:04:41Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Nov 27, 2007 12:36:38 PM
  * 
@@ -32,9 +32,68 @@
  */
 
 require_once 'OAuthRequestVerifier.php';
+require_once 'OAuthSession.php';
 
 class OAuthServer extends OAuthRequestVerifier
 {
+	protected $session;
+	
+	protected $allowed_uri_schemes = array(
+		'http',
+		'https'
+	);
+
+	protected $disallowed_uri_schemes = array(
+		'file',
+		'callto',
+		'mailto'
+	);
+
+	/**
+	 * Construct the request to be verified
+	 * 
+	 * @param string request
+	 * @param string method
+	 * @param array params The request parameters
+	 * @param string store The session storage class.
+	 * @param array store_options The session storage class parameters.
+	 * @param array options Extra options:
+	 *   - allowed_uri_schemes: list of allowed uri schemes.
+	 *   - disallowed_uri_schemes: list of unallowed uri schemes.
+	 * 
+	 * e.g. Allow only http and https
+	 * $options = array(
+	 *     'allowed_uri_schemes' => array('http', 'https'),
+	 *     'disallowed_uri_schemes' => array()
+	 * );
+	 * 
+	 * e.g. Disallow callto, mailto and file, allow everything else
+	 * $options = array(
+	 *     'allowed_uri_schemes' => array(),
+	 *     'disallowed_uri_schemes' => array('callto', 'mailto', 'file')
+	 * );
+	 * 
+	 * e.g. Allow everything
+	 * $options = array(
+	 *     'allowed_uri_schemes' => array(),
+	 *     'disallowed_uri_schemes' => array()
+	 * ); 
+	 *  
+	 */
+	function __construct ( $uri = null, $method = null, $params = null, $store = 'SESSION', 
+			$store_options = array(), $options = array() )
+	{
+ 		parent::__construct($uri, $method, $params);
+ 		$this->session = OAuthSession::instance($store, $store_options);
+ 		
+	 	if (array_key_exists('allowed_uri_schemes', $options) && is_array($options['allowed_uri_schemes'])) {
+	 		$this->allowed_uri_schemes = $options['allowed_uri_schemes'];
+	 	}
+	 	if (array_key_exists('disallowed_uri_schemes', $options) && is_array($options['disallowed_uri_schemes'])) {
+	 		$this->disallowed_uri_schemes = $options['disallowed_uri_schemes'];
+	 	}
+	}
+	
 	/**
 	 * Handle the request_token request.
 	 * Returns the new request token and request token secret.
@@ -57,10 +116,16 @@ class OAuthServer extends OAuthRequestVerifier
 				$options['token_ttl'] = $ttl;
 			}
 
+ 			// 1.0a Compatibility : associate callback url to the request token
+ 			$cbUrl   = $this->getParam('oauth_callback', true);
+ 			if ($cbUrl) {
+ 				$options['oauth_callback'] = $cbUrl;
+ 			}
+			
 			// Create a request token
 			$store  = OAuthStore::instance();
 			$token  = $store->addConsumerRequestToken($this->getParam('oauth_consumer_key', true), $options);
-			$result = 'oauth_token='.$this->urlencode($token['token'])
+			$result = 'oauth_callback_confirmed=1&oauth_token='.$this->urlencode($token['token'])
 					.'&oauth_token_secret='.$this->urlencode($token['token_secret']);
 
 			if (!empty($token['token_ttl']))
@@ -69,14 +134,14 @@ class OAuthServer extends OAuthRequestVerifier
 			}
 
 			$request_token = $token['token'];
-					
+			
 			header('HTTP/1.1 200 OK');
 			header('Content-Length: '.strlen($result));
 			header('Content-Type: application/x-www-form-urlencoded');
 
 			echo $result;
 		}
-		catch (OAuthException $e)
+		catch (OAuthException2 $e)
 		{
 			$request_token = false;
 
@@ -97,10 +162,10 @@ class OAuthServer extends OAuthRequestVerifier
 	 * 
 	 * Nota bene: this stores the current token, consumer key and callback in the _SESSION
 	 * 
-	 * @exception OAuthException thrown when not a valid request
+	 * @exception OAuthException2 thrown when not a valid request
 	 * @return array token description
 	 */
-	public function authorizeVerify ( )
+	public function authorizeVerify ()
 	{
 		OAuthRequestLogger::start($this);
 
@@ -109,16 +174,21 @@ class OAuthServer extends OAuthRequestVerifier
 		$rs    = $store->getConsumerRequestToken($token);
 		if (empty($rs))
 		{
-			throw new OAuthException('Unknown request token "'.$token.'"');
+			throw new OAuthException2('Unknown request token "'.$token.'"');
 		}
 
-		// We need to remember the callback		
-		if (	empty($_SESSION['verify_oauth_token'])
-			||	strcmp($_SESSION['verify_oauth_token'], $rs['token']))
+		// We need to remember the callback
+		$verify_oauth_token = $this->session->get('verify_oauth_token');		
+		if (	empty($verify_oauth_token)
+			||	strcmp($verify_oauth_token, $rs['token']))
 		{
-			$_SESSION['verify_oauth_token'] 		= $rs['token'];
-			$_SESSION['verify_oauth_consumer_key']	= $rs['consumer_key'];
-			$_SESSION['verify_oauth_callback']		= $this->getParam('oauth_callback', true);
+			$this->session->set('verify_oauth_token', $rs['token']);
+			$this->session->set('verify_oauth_consumer_key', $rs['consumer_key']);
+			$cb = $this->getParam('oauth_callback', true); 
+			if ($cb)
+				$this->session->set('verify_oauth_callback', $cb);
+			else
+				$this->session->set('verify_oauth_callback', $rs['callback_url']);
 		}
 		OAuthRequestLogger::flush();
 		return $rs;
@@ -132,14 +202,15 @@ class OAuthServer extends OAuthRequestVerifier
 	 * 
 	 * @param boolean authorized	if the current token (oauth_token param) is authorized or not
 	 * @param int user_id			user for which the token was authorized (or denied)
+	 * @return string verifier  For 1.0a Compatibility
 	 */
 	public function authorizeFinish ( $authorized, $user_id )
 	{
 		OAuthRequestLogger::start($this);
 
 		$token = $this->getParam('oauth_token', true);
-		if (	isset($_SESSION['verify_oauth_token']) 
-			&&	$_SESSION['verify_oauth_token'] == $token)
+		$verifier = null;
+		if ($this->session->get('verify_oauth_token') == $token)
 		{
 			// Flag the token as authorized, or remove the token when not authorized
 			$store = OAuthStore::instance();
@@ -147,9 +218,10 @@ class OAuthServer extends OAuthRequestVerifier
 			// Fetch the referrer host from the oauth callback parameter
 			$referrer_host  = '';
 			$oauth_callback = false;
-			if (!empty($_SESSION['verify_oauth_callback']))
+			$verify_oauth_callback = $this->session->get('verify_oauth_callback');
+			if (!empty($verify_oauth_callback) && $verify_oauth_callback != 'oob') // OUT OF BAND
 			{
-				$oauth_callback = $_SESSION['verify_oauth_callback'];
+				$oauth_callback = $this->session->get('verify_oauth_callback');
 				$ps = parse_url($oauth_callback);
 				if (isset($ps['host']))
 				{
@@ -160,7 +232,8 @@ class OAuthServer extends OAuthRequestVerifier
 			if ($authorized)
 			{
 				OAuthRequestLogger::addNote('Authorized token "'.$token.'" for user '.$user_id.' with referrer "'.$referrer_host.'"');
-				$store->authorizeConsumerRequestToken($token, $user_id, $referrer_host);
+ 				// 1.0a Compatibility : create a verifier code
+				$verifier = $store->authorizeConsumerRequestToken($token, $user_id, $referrer_host);
 			}
 			else
 			{
@@ -170,10 +243,33 @@ class OAuthServer extends OAuthRequestVerifier
 			
 			if (!empty($oauth_callback))
 			{
-				$this->redirect($oauth_callback, array('oauth_token'=>rawurlencode($token)));
+ 				$params = array('oauth_token' => rawurlencode($token));
+ 				// 1.0a Compatibility : if verifier code has been generated, add it to the URL
+ 				if ($verifier) {
+ 					$params['oauth_verifier'] = $verifier;
+ 				}
+ 				
+				$uri = preg_replace('/\s/', '%20', $oauth_callback);
+				if (!empty($this->allowed_uri_schemes)) 
+				{
+					if (!in_array(substr($uri, 0, strpos($uri, '://')), $this->allowed_uri_schemes)) 
+					{
+						throw new OAuthException2('Illegal protocol in redirect uri '.$uri);
+					}
+				} 
+				else if (!empty($this->disallowed_uri_schemes)) 
+				{
+					if (in_array(substr($uri, 0, strpos($uri, '://')), $this->disallowed_uri_schemes))
+					{
+						throw new OAuthException2('Illegal protocol in redirect uri '.$uri);
+					}
+				}
+
+ 				$this->redirect($oauth_callback, $params);
 			}
 		}
 		OAuthRequestLogger::flush();
+		return $verifier;
 	}
 	
 	
@@ -197,6 +293,11 @@ class OAuthServer extends OAuthRequestVerifier
 			{
 				$options['token_ttl'] = $ttl;
 			}
+
+			$verifier = $this->getParam('oauth_verifier', false);
+ 			if ($verifier) {
+ 				$options['verifier'] = $verifier;
+ 			}
 			
 			$store  = OAuthStore::instance();
 			$token  = $store->exchangeConsumerRequestForAccessToken($this->getParam('oauth_token', true), $options);
@@ -214,7 +315,7 @@ class OAuthServer extends OAuthRequestVerifier
 
 			echo $result;
 		}
-		catch (OAuthException $e)
+		catch (OAuthException2 $e)
 		{
 			header('HTTP/1.1 401 Access Denied');
 			header('Content-Type: text/plain');

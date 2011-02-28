@@ -22,39 +22,31 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
  
 class database 
 {
-
+    private $connection;
     public $error_text;
-
-    //connects to the database
-    function __construct() 
-	{
-		
-    }
     
     function connect_db($dbhost, $dbuser, $dbpass) 
-	{
-    	//open the db link
-        $dblink = mysql_connect($dbhost, $dbuser, $dbpass);
-        
-        if(!$dblink) 
-		{
-        	return false;
-        }
-		
-        return true;	
+    {
+        //open the db link
+        if (!$this->connection = mysql_connect($dbhost, $dbuser, $dbpass))
+            return false;
+
+        return true;
     }
     
     function select_db($dbname) 
-	{
+    {
     	//select out the correct db name
-        if(!mysql_select_db($dbname)) return false;
-        
-        return true;
+        if (!mysql_select_db($dbname, $this->connection))
+            return false;
+
+        return $this->query("SET NAMES 'utf8'", $this->connection);
     }
 
     /**
      * Runs a query on the database
      * @param <string> $SQL
+     * @param <args> $args (for sprintf)
      * @return <type>
      */
     function query($SQL) 
@@ -65,59 +57,61 @@ class database
             return false;
         }
 
-        
-        if(!$result = mysql_query($SQL)) 
+        // sprintf and escape the string as necessary using the arguments provided
+        $args = func_get_args();
+
+        if (count($args) > 1)
+            $SQL = $this->SqlPrintF($args);
+
+        // Run the query
+        if(!$result = mysql_query($SQL, $this->connection))
 	{
             $this->error_text = 'The query [' . $SQL . '] failed to execute';
             return false;
         }
-        /*else
-	{
-            Debug::LogEntry($this, 'audit', 'Running SQL: [' . $SQL . ']', '', 'query');
-        }*/
+
         return $result;
     }
     
     function insert_query($SQL) 
-	{
+    {
     	//executes a SQL query and returns the ID of the insert
-    	if(!$result = mysql_query($SQL)) 
-		{
+    	if(!$result = mysql_query($SQL, $this->connection))
+	{
             $this->error_text="The query [".$SQL."] failed to execute";
             return false;
         }
         else 
-		{
+	{
             return mysql_insert_id();
         }
     }
 
-    //gets the current row from the result object
+    // gets the current row from the result object
     function get_row($result) 
-	{
+    {
         return mysql_fetch_row($result);
     }
 	
-	function get_assoc_row($result) 
-	{
+    function get_assoc_row($result)
+    {
         return mysql_fetch_assoc($result);
     }
 
-
     //gets the number of rows
     function num_rows($result) 
-	{
+    {
         return mysql_num_rows($result);
     }
 
-    //gets the number of fields
+    // Gets the number of fields
     function num_fields($result) 
-	{
+    {
         return mysql_num_fields($result);
     }
     
     function escape_string($string) 
-	{
+    {
     	return mysql_real_escape_string($string);
     }
 
@@ -169,17 +163,65 @@ class database
         return Kit::ValidateParam($row[$columnName], $dataType);
     }
 
-    //returns the error text to display
+    /**
+     * Returns the Error to display
+     * @return <type>
+     */
     function error() 
-	{
+    {
         try 
-		{
-            $this->error_text .= "<br />MySQL error: ".mysql_error();
+	{
+            $this->error_text .= mysql_error($this->connection);
+            
             return $this->error_text;
         }
         catch (Exception $e) 
-		{
-            echo $e->getMessage();
+	{
+            return $e->getMessage();
+        }
+    }
+    
+    /**
+     * Runs sprintf over a SQL string and a list of args
+     * @param <string> $SQL
+     * @param <type> $args (for sprintf)
+     * @return <type>
+     */
+    public function SqlPrintF($args)
+    {
+        $sql  = array_shift($args);
+        
+        if (count($args) == 1 && is_array($args[0]))
+        {
+            $args = $args[0];
+        }
+        
+        $args = array_map(array($this, 'SqlEscapeString'), $args);
+        
+        return vsprintf($sql, $args);
+    }
+
+    private function SqlEscapeString($s)
+    {
+        if (is_string($s))
+        {
+            return mysql_real_escape_string($s, $this->connection);
+        }
+        else if (is_null($s))
+        {
+            return NULL;
+        }
+        else if (is_bool($s))
+        {
+            return intval($s);
+        }
+        else if (is_int($s) || is_float($s))
+        {
+            return $s;
+        }
+        else
+        {
+            return mysql_real_escape_string(strval($s), $this->connection);
         }
     }
 }

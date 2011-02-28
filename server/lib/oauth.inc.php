@@ -24,8 +24,10 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-if(Config::GetSetting($db, 'debug') == 'On') DEFINE('OAUTH_LOG_REQUEST', true);
+if(Config::GetSetting($db, 'debug') == 'On')
+    DEFINE('OAUTH_LOG_REQUEST', true);
 
+// Output a discovery header
 header('X-XRDS-Location:' . $serviceLocation . '/service.php?xrds');
 
 require_once('3rdparty/oauth-php/library/OAuthServer.php');

@@ -20,6 +20,9 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
+$msgAdd	= __('Add Application');
+$msgLog	= __('OAuth Log');
+
 ?>
 <div id="form_container">
     <div id="form_header">
@@ -28,11 +31,14 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     </div>
 
     <div id="form_body">
-
-        <div >
-        <h1>Authorized Web Services</h1>
-        <p>If you would like to register for a consumer key / secret please click <a class="XiboFormButton" href="index.php?p=oauth&q=RegisterForm" title="Click to register for a key">here.</a></p>
+        <div class="SecondNav">
+            <!-- Maybe at a later date we could have these buttons generated from the DB - and therefore passed through the security system ? -->
+            <ul>
+                    <li><a title="<?php echo $msgAdd; ?>" class="XiboFormButton" href="index.php?p=oauth&q=RegisterForm" ><span><?php echo $msgAdd; ?></span></a></li>
+                    <li><a title="<?php echo $msgLog; ?>" class="XiboFormButton" href="index.php?p=oauth&q=ViewLog" ><span><?php echo $msgLog; ?></span></a></li>
+            </ul>
         </div>
+        <?php $this->Filter(); ?>
     </div>
 
     <div id="form_footer">
