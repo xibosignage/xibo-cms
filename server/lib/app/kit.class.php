@@ -405,8 +405,6 @@ class Kit
             {
                 include_once('lib/service/' . $class . '.class.php');
             }
-            
-            return;
 	}
 
     /**

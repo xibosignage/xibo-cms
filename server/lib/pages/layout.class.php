@@ -325,6 +325,12 @@ END;
 			trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 		}
 
+                // Notify (dont error)
+                Kit::ClassLoader('display');
+                $displayObject = new Display($db);
+                $displayObject->NotifyDisplays($this->layoutid);
+
+
 		$response->SetFormSubmitResponse(__('Layout Details Changed.'));
 		$response->Respond();
 	}

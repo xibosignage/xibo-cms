@@ -37,6 +37,8 @@ class displayDAO
     private $email_alert;
     private $alert_timeout;
 	private $ajax;
+        private $mediaInventoryStatus;
+        private $mediaInventoryXml;
 
 	function __construct(database $db, user $user)
 	{
@@ -71,7 +73,9 @@ class displayDAO
             display.isAuditing,
             display.email_alert,
             display.alert_timeout,
-            display.ClientAddress
+            display.ClientAddress,
+            display.MediaInventoryStatus,
+            display.MediaInventoryXml
      FROM display
     WHERE display.displayid = %d
 SQL;
@@ -95,8 +99,10 @@ SQL;
 				$this->licensed		 	= Kit::ValidateParam($row[4], _INT);
 				$this->inc_schedule 	= Kit::ValidateParam($row[5], _INT);
 				$this->auditing			= Kit::ValidateParam($row[6], _INT);
-                $this->email_alert      = Kit::ValidateParam($row[7], _INT);
-                $this->alert_timeout    = Kit::ValidateParam($row[8], _INT);
+                            $this->email_alert      = Kit::ValidateParam($row[7], _INT);
+                            $this->alert_timeout    = Kit::ValidateParam($row[8], _INT);
+                            $this->mediaInventoryStatus = Kit::ValidateParam($row[9], _INT);
+                            $this->mediaInventoryXml = Kit::ValidateParam($row[10], _HTMLSTRING);
 			}
 		}
 
@@ -309,7 +315,12 @@ HTML;
                         CASE WHEN display.licensed = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS licensed,
                         CASE WHEN display.email_alert = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS email_alert,
                         displaygroup.DisplayGroupID,
-                        display.ClientAddress
+                        display.ClientAddress,
+                        CASE WHEN display.MediaInventoryStatus = 1 THEN '<img src="img/act.gif">'
+                             WHEN display.MediaInventoryStatus = 2 THEN '<img src="img/warn.gif">'
+                             ELSE '<img src="img/disact.gif">'
+                        END AS MediaInventoryStatus,
+                        display.MediaInventoryXml
 		  FROM display
                     INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID
                     INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
@@ -341,6 +352,8 @@ SQL;
 		$msgGroupSecurity = __('Group Security');
                 $msgClientAddress = __('IP Address');
                 $msgDefault = __('Default Layout');
+                $msgStatus = __('Status');
+                $msgMediaInventory = __('Media Inventory');
 
 		$output = <<<END
 		<div class="info_table">
@@ -356,6 +369,7 @@ SQL;
                         <th>$msgLogIn</th>
                         <th>$msgLastA</th>
                         <th>$msgClientAddress</th>
+                        <th>$msgStatus</th>
                         <th>$msgAction</th>
                     </tr>
                     </thead>
@@ -385,6 +399,7 @@ END;
                         // Do we want to make a VNC link out of the display name?
                         $vncTemplate = Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK');
                         $linkTarget = Kit::ValidateParam(Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
+                        $mediaInventoryStatusLight = Kit::ValidateParam($aRow[10], _STRING);
 
                         if ($vncTemplate != '' && $clientAddress != '')
                         {
@@ -424,6 +439,7 @@ END;
 			<td>$loggedin</td>
 			<td>$lastaccessed</td>
 			<td>$clientAddress</td>
+                        <td>$mediaInventoryStatusLight</td>
 			<td>$buttons</td>
 END;
 		}
@@ -718,6 +734,60 @@ END;
         }
 
         $response->SetFormSubmitResponse(__('Display Saved.'));
+        $response->Respond();
+    }
+
+    /**
+     * Shows the inventory XML for the display
+     */
+    public function MediaInventory()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+
+        if ($displayId == 0)
+            trigger_error(__('No DisplayId Given'));
+
+        // Get the media inventory xml for this display
+        $SQL = "SELECT MediaInventoryXml FROM display WHERE DisplayId = %d";
+        $SQL = sprintf($SQL, $displayId);
+
+        if (!$mediaInventoryXml = $db->GetSingleValue($SQL, 'MediaInventoryXml', _HTMLSTRING))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get the Inventory for this Display'), E_USER_ERROR);
+        }
+
+        // Load the XML into a DOMDocument
+        $document = new DOMDocument("1.0");
+
+        if (!$document->loadXML($mediaInventoryXml))
+            trigger_error(__('Invalid Media Inventory'), E_USER_ERROR);
+
+        // Output a table
+        $table = '<table><tr><th>Type</th><th>Id</th><th>Complete</th><th>Last Checked</th><th>MD5</th></tr>';
+
+        foreach ($document->documentElement->childNodes as $node)
+        {
+            $type = $node->getAttribute('type');
+            $id = $node->getAttribute('id');
+            $complete = $node->getAttribute('complete');
+            $lastChecked = $node->getAttribute('lastChecked');
+            $md5 = $node->getAttribute('md5');
+
+            if ($complete == 0)
+                $complete = __('No');
+            else
+                $complete = __('Yes');
+
+            $table .= sprintf('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>', $type, $id, $complete, $lastChecked, $md5);
+        }
+
+        $table .= '</table>';
+
+        $response->SetFormRequestResponse($table, __('Media Inventory'), '550px', '350px');
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }
 }

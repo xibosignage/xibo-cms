@@ -251,7 +251,7 @@ class Display extends Data
 	 * @return 
 	 * @param $license Object
 	 */
-	public function Touch($license, $clientAddress = '')
+	public function Touch($license, $clientAddress = '', $mediaInventoryComplete = 0, $mediaInventoryXml = '')
 	{
 		$db		=& $this->db;
 		$time 	= time();
@@ -265,6 +265,13 @@ class Display extends Data
                 // We will want to update the client Address if it is given
                 if ($clientAddress != '')
                     $SQL .= sprintf(" , ClientAddress = '%s' ", $db->escape_string($clientAddress));
+
+                // Media Inventory Settings (if appropriate)
+                if ($mediaInventoryComplete != 0)
+                    $SQL .= sprintf(" , MediaInventoryStatus = %d ", $mediaInventoryComplete);
+
+                if ($mediaInventoryXml != '')
+                    $SQL .= sprintf(" , MediaInventoryXml = '%s' ", $mediaInventoryXml);
 
                 // Restrict to the display license
                 $SQL .= " WHERE license = '%s'";
@@ -284,31 +291,68 @@ class Display extends Data
 	}
 
     /**
-     * Edits the default layout for a display
+     * Flags a display as being incomplete
      * @param <type> $displayId
-     * @param <type> $defaultLayoutId
-     * @return <type>
      */
-    public function EditDefaultLayout($displayId, $defaultLayoutId)
+    private function FlagIncomplete($displayId)
     {
-        $db	=& $this->db;
+        $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'Display', 'EditDefaultLayout');
+        Debug::LogEntry($db, 'audit', sprintf('Flag DisplayID %d incomplete.', $displayId), 'display', 'NotifyDisplays');
 
-        $SQL = sprintf('UPDATE display SET defaultLayoutId = %d WHERE displayID = %d ', $defaultLayoutId, $displayId);
+        $SQL = sprintf("UPDATE display SET MediaInventoryStatus = 3 WHERE displayID = %d", $displayId);
 
         if (!$db->query($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25012, __('Error updating this displays default layout.'));
-
-            return false;
+            return $this->SetError(25004, 'Unable to Flag Display as incomplete');
         }
 
-
-        Debug::LogEntry($db, 'audit', 'OUT', 'Display', 'EditDefaultLayout');
-
         return true;
+    }
+
+    /**
+     * Notify displays of this layout change
+     * @param <type> $layoutId
+     */
+    public function NotifyDisplays($layoutId)
+    {
+        $db =& $this->db;
+        $currentdate 	= time();
+        $rfLookahead    = Kit::ValidateParam(Config::GetSetting($db,'REQUIRED_FILES_LOOKAHEAD'), _INT);
+
+        $rfLookahead 	= $currentdate + $rfLookahead;
+
+        Debug::LogEntry($db, 'audit', sprintf('Checking for Displays to refresh on Layout %d', $layoutId), 'display', 'NotifyDisplays');
+
+        // Which displays does a change to this layout effect?
+        $SQL  = " SELECT DISTINCT display.DisplayID ";
+        $SQL .= "   FROM schedule_detail ";
+        $SQL .= " 	INNER JOIN lkdisplaydg ";
+        $SQL .= "	ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
+        $SQL .= " 	INNER JOIN display ";
+        $SQL .= "	ON lkdisplaydg.DisplayID = display.displayID ";
+        $SQL .= " WHERE schedule_detail.layoutID = %d ";
+        $SQL .= " AND schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d ";
+        $SQL .= " UNION ";
+        $SQL .= " SELECT DisplayID FROM display WHERE DefaultLayoutID = %d";
+
+        $SQL = sprintf($SQL, $layoutId, $rfLookahead, $currentdate - 3600, $layoutId);
+
+        Debug::LogEntry($db, 'audit', $SQL, 'display', 'NotifyDisplays');
+
+        if (!$result = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            return $this->SetError(25037, __('Unable to get layouts for Notify'));
+        }
+
+        while ($row = $db->get_assoc_row($result))
+        {
+            // Notify each display in turn
+            $displayId = Kit::ValidateParam($row['DisplayID'], _INT);
+            $this->FlagIncomplete($displayId);
+        }
     }
 }
 ?>
