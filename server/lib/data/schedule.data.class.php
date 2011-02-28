@@ -46,7 +46,7 @@ class Schedule extends Data
 
 
                 // Cant have a 0 increment as it creates a loop
-                if ($recDetail ==0)
+                if ($recDetail == 0)
                     $recDetail = 1;
 		
 		// make the displayid_list from the selected displays.
@@ -138,8 +138,8 @@ class Schedule extends Data
 							break;
 							
 						case 'Week':
-							$t_start_temp 	= $t_start_temp + (60 * 60 * 24 * 7);
-							$t_end_temp 	= $t_end_temp + (60 * 60 * 24 * 7);
+							$t_start_temp 	= $t_start_temp + (60 * 60 * 24 * 7 * $recDetail);
+							$t_end_temp 	= $t_end_temp + (60 * 60 * 24 * 7 * $recDetail);
 							break;
 							
 						case 'Month':
@@ -192,8 +192,8 @@ class Schedule extends Data
 		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'Edit');
 
                 // Cant have a 0 increment as it creates a loop
-                if ($recDetail ==0)
-                    $recDetail = 1;
+                if ($rec_detail == 0)
+                    $rec_detail = 1;
 		
 		// What we are really going to do here is delete and re-add... just because it is easier to get the logic right
 		// and it means the same logic will be applied across both functions.

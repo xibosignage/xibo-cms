@@ -1389,10 +1389,10 @@ HTML;
 			Debug::LogEntry($db, 'audit', sprintf('Module name returned for MediaID: %s is %s', $mediaid, $mediaName), 'layout', 'RegionOptions');
 						
 			//Do we have a thumbnail for this media?
-			if ($mediaType == "image" && file_exists($libraryLocation."tn_$mediaFileName"))
+			if ($mediaType == 'image')
 			{
 				//make up a list of the media, with an image showing the media type
-				$mediaList = "<img alt='$mediaFileName' src='index.php?p=module&q=GetImage&file=tn_$mediaFileName'>";
+				$mediaList = "<img alt='$mediaFileName' src='index.php?p=module&q=GetImage&id=$mediaid&thumb=true'>";
 			}
 			else
 			{
