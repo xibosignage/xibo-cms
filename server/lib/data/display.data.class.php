@@ -61,10 +61,10 @@ class Display extends Data
             $SQL .= "       ) ";
             $SQL .= "       VALUES ";
             $SQL .= "       ( ";
-            $SQL .= sprintf("      '%s', ", $display);
+            $SQL .= sprintf("      '%s', ", $db->escape_string($display));
             $SQL .= "              0   , ";
             $SQL .= "              1   , ";
-            $SQL .= sprintf("      '%s', ", $license);
+            $SQL .= sprintf("      '%s', ", $db->escape_string($license));
             $SQL .= "              0   , ";
             $SQL .= "              0   , ";
             $SQL .= "              1   , ";
@@ -166,9 +166,7 @@ class Display extends Data
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Delete');
 
-                //TODO: Need to put some logic in here that tests whether or not we ought to be able to delete this display.
-		
-		// Pass over to the DisplayGroup data class so that it can try and delete the
+                // Pass over to the DisplayGroup data class so that it can try and delete the
 		// display specific group first (it is that group which is linked to schedules)
 		$displayGroupObject = new DisplayGroup($db);
 		
@@ -179,6 +177,14 @@ class Display extends Data
 			
 			return false;
 		}
+
+            // Delete the blacklist
+            $SQL = sprintf("DELETE FROM blacklist WHERE DisplayID = %d", $displayID);
+
+            Debug::LogEntry($db, 'audit', $SQL);
+
+            if (!$db->query($SQL))
+                return $this->SetError(25016,__('Unable to delete blacklist records.'));
 		
 		// Now we know the Display Group is gone - and so are any links
 		// delete the display

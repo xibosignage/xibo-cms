@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2010 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -598,7 +598,7 @@ END;
                 $helpManager    = new HelpManager($db, $user);
 
 		// Output the delete form
-		$msgInfo	= __('You will only be able to delete this display if there is no associated information contained in Xibo.');
+		$msgInfo	= __('Deleting a display cannot be undone.');
 		$msgWarn	= __('Are you sure you want to delete this display?');
 		$msgYes		= __('Yes');
 		$msgNo		= __('No');

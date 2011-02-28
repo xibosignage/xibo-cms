@@ -25,6 +25,7 @@ class DisplayGroup extends Data
 	public function __construct(database $db)
 	{
 		include_once('lib/data/schedule.data.class.php');
+		include_once('lib/data/displaygroupsecurity.data.class.php');
 		
 		parent::__construct($db);
 	}
@@ -189,6 +190,14 @@ class DisplayGroup extends Data
 			
 			return false;
 		}
+
+            // Delete this display groups link to any groups
+            $SQL = sprintf("DELETE FROM lkgroupdg WHERE DisplayGroupId = %d", $displayGroupID);
+		
+            Debug::LogEntry($db, 'audit', $SQL);
+
+            if (!$db->query($SQL))
+                return $this->SetError(25016,__('Unable to delete Display Group Links.'));
 		
 		// Delete the Display Group Itself
 		if (!$this->Delete($displayGroupID))
