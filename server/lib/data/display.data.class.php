@@ -377,6 +377,8 @@ class Display extends Data
             return false;
         }
 
+        // Flag this display as not having all the content
+        $this->FlagIncomplete($displayId);
 
         Debug::LogEntry($db, 'audit', 'OUT', 'Display', 'EditDefaultLayout');
 
