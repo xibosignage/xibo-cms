@@ -883,17 +883,17 @@ class XMDSSoap
         // Assume we are complete (but we are getting some)
         $mediaInventoryComplete = 1;
 
-        foreach ($document->documentElement->childNodes as $node)
-        {
-            // Make sure we dont consider any text nodes
-            if ($node->nodeType == XML_TEXT_NODE) continue;
+        $xpath = new DOMXPath($document);
+	$fileNodes = $xpath->query("//file");
 
+        foreach ($fileNodes as $node)
+        {
             $mediaId = $node->getAttribute('id');
             $complete = $node->getAttribute('complete');
             $md5 = $node->getAttribute('md5');
             $lastChecked = $node->getAttribute('lastChecked');
 
-            // Check the MD5?
+            // TODO: Check the MD5?
 
             // If this item is a 0 then set not complete
             if ($complete == 0)

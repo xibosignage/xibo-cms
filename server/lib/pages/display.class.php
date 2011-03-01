@@ -769,7 +769,10 @@ END;
         // Output a table
         $table = '<table><tr><th>Type</th><th>Id</th><th>Complete</th><th>Last Checked</th><th>MD5</th></tr>';
 
-        foreach ($document->documentElement->childNodes as $node)
+        $xpath = new DOMXPath($document);
+	$fileNodes = $xpath->query("//file");
+
+        foreach ($fileNodes as $node)
         {
             $type = $node->getAttribute('type');
             $id = $node->getAttribute('id');
