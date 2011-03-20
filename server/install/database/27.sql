@@ -1,5 +1,5 @@
 
-ALTER TABLE  `display` ADD  `MediaInventoryStatus` TINYINT NOT NULL ,
+ALTER TABLE  `display` ADD  `MediaInventoryStatus` TINYINT NOT NULL DEFAULT '0' ,
 ADD  `MediaInventoryXml` LONGTEXT NULL;
 
 /* VERSION UPDATE */
