@@ -156,7 +156,7 @@ class database
 
         if (!isset($row[$columnName]))
         {
-            $this->error_text = 'No such column';
+            $this->error_text = 'No such column or column is null';
             return false;
         }
 

@@ -420,6 +420,7 @@ END;
                         <button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
                         <button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$displayName"><span>$msgGroupSecurity</span></button>
                         <button class="XiboFormButton" href="index.php?p=display&q=DefaultLayoutForm&DisplayId=$displayid"><span>$msgDefault</span></button>
+                        <button class="XiboFormButton" href="index.php?p=display&q=MediaInventory&DisplayId=$displayid"><span>$msgMediaInventory</span></button>
 END;
                         }
                         else
@@ -768,7 +769,10 @@ END;
         // Output a table
         $table = '<table><tr><th>Type</th><th>Id</th><th>Complete</th><th>Last Checked</th><th>MD5</th></tr>';
 
-        foreach ($document->documentElement->childNodes as $node)
+        $xpath = new DOMXPath($document);
+	$fileNodes = $xpath->query("//file");
+
+        foreach ($fileNodes as $node)
         {
             $type = $node->getAttribute('type');
             $id = $node->getAttribute('id');
