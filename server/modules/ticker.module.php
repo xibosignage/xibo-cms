@@ -49,7 +49,16 @@ class ticker extends Module
 		$rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down,single|Single", "direction");
-		
+                $takeItemsFromList = listcontent('start|start of the feed,end|end of the feed', 'takeItemsFrom');
+
+                // Translations
+                $numItemsText = __('Number of Items');
+                $numItemsLabel = __('The Number of RSS items you want to display');
+                $takeItemsFromText = __('from the ');
+                $takeItemsFromLabel = __('Take the items from the beginning or the end of the list');
+                $durationIsPerItemText = __('Duration is per item');
+                $durationIsPerItemLabel = __('The duration speficied is per item otherwise it is per feed.');
+                
 		$form = <<<FORM
 		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=AddMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
@@ -73,6 +82,18 @@ class ticker extends Module
 		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval (mins)<span class="required">*</span></label></td>
 		    		<td><input id="updateInterval" name="updateInterval" type="text" value="360"></td>
 				</tr>
+                                <tr>
+                                    <td><label for="numItems" title="$numItemsLabel">$numItemsText</label></td>
+                                    <td><input id="numItems" name="numItems" type="text" /></td>
+                                    <td><label for="takeItemsFrom" title="$takeItemsFromLabel">$takeItemsFromText</label></td>
+                                    <td>$takeItemsFromList</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td><label for="durationIsPerItem" title="$durationIsPerItemLabel">$durationIsPerItemText</label></td>
+                                    <td><input id="durationIsPerItem" name="durationIsPerItem" type="checkbox" /></td>
+                                </tr>
 				<tr>
 					<td colspan="4">
 						<textarea id="ta_text" name="ta_text">
@@ -110,6 +131,12 @@ FORM;
 		$scrollSpeed 	= $this->GetOption('scrollSpeed');
 		$updateInterval = $this->GetOption('updateInterval');
 		$uri			= urldecode($this->GetOption('uri'));
+		$numItems = $this->GetOption('numItems');
+		$takeItemsFrom = $this->GetOption('takeItemsFrom');
+		$durationIsPerItem = $this->GetOption('durationIsPerItem');
+                
+                // Is duration per item checked or not
+                $durationIsPerItemChecked = ($durationIsPerItem == '1') ? 'checked' : '';
 		
 		// Get the text out of RAW
 		$rawXml = new DOMDocument();
@@ -123,7 +150,16 @@ FORM;
 		$text 		= $textNode->nodeValue;
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down,single|Single", "direction", $direction);
-		
+                $takeItemsFromList = listcontent('start|start of the feed,end|end of the feed', 'takeItemsFrom', $takeItemsFrom);
+
+                // Translations
+                $numItemsText = __('Number of Items');
+                $numItemsLabel = __('The Number of RSS items you want to display');
+                $takeItemsFromText = __('from the ');
+                $takeItemsFromLabel = __('Take the items from the beginning or the end of the list');
+                $durationIsPerItemText = __('Duration is per item');
+                $durationIsPerItemLabel = __('The duration speficied is per item otherwise it is per feed.');
+
 		//Output the form
 		$form = <<<FORM
 		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=EditMedia">
@@ -149,6 +185,18 @@ FORM;
 		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval (mins)<span class="required">*</span></label></td>
 		    		<td><input id="updateInterval" name="updateInterval" type="text" value="$updateInterval"></td>
 				</tr>
+                                <tr>
+                                    <td><label for="numItems" title="$numItemsLabel">$numItemsText</td>
+                                    <td><input id="numItems" name="numItems" type="text" value="$numItems" /></td>
+                                    <td><label for="takeItemsFrom" title="$takeItemsFromLabel">$takeItemsFromText</label></td>
+                                    <td>$takeItemsFromList</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td><label for="durationIsPerItem" title="$durationIsPerItemLabel">$durationIsPerItemText</label></td>
+                                    <td><input id="durationIsPerItem" name="durationIsPerItem" type="checkbox" $durationIsPerItemChecked /></td>
+                                </tr>
 				<tr>
 					<td colspan="4">
 						<textarea id="ta_text" name="ta_text">$text</textarea>
@@ -187,6 +235,9 @@ FORM;
 		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 360);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
+		$numItems = Kit::GetParam('numItems', _POST, _STRING);
+		$takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
+		$durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -212,6 +263,17 @@ FORM;
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
+
+                if ($numItems != '')
+                {
+                    // Make sure we have a number in here
+                    if (!is_numeric($numItems))
+                    {
+                        $this->response->SetError(__('The value in Number of Items must be numeric.'));
+			$this->response->keepOpen = true;
+			return $this->response;
+                    }
+                }
 		
 		// Required Attributes
 		$this->mediaid	= md5(uniqid());
@@ -223,6 +285,9 @@ FORM;
 		$this->SetOption('scrollSpeed', $scrollSpeed);
 		$this->SetOption('updateInterval', $updateInterval);
 		$this->SetOption('uri', $uri);
+		$this->SetOption('numItems', $numItems);
+		$this->SetOption('takeItemsFrom', $takeItemsFrom);
+		$this->SetOption('durationIsPerItem', $durationIsPerItem);
 
 		$this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
 		
@@ -260,7 +325,10 @@ FORM;
 		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
 		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 360);
 		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
-		
+		$numItems = Kit::GetParam('numItems', _POST, _STRING);
+                $takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
+		$durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
+                
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 		
 		//validation
@@ -285,6 +353,17 @@ FORM;
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
+
+                if ($numItems != '')
+                {
+                    // Make sure we have a number in here
+                    if (!is_numeric($numItems))
+                    {
+                        $this->response->SetError(__('The value in Number of Items must be numeric.'));
+			$this->response->keepOpen = true;
+			return $this->response;
+                    }
+                }
 		
 		// Required Attributes
 		$this->duration = $duration;
@@ -295,6 +374,9 @@ FORM;
 		$this->SetOption('scrollSpeed', $scrollSpeed);
 		$this->SetOption('updateInterval', $updateInterval);
 		$this->SetOption('uri', $uri);
+                $this->SetOption('numItems', $numItems);
+                $this->SetOption('takeItemsFrom', $takeItemsFrom);
+		$this->SetOption('durationIsPerItem', $durationIsPerItem);
 
 		$this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
 		
