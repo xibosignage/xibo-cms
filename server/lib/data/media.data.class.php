@@ -153,7 +153,7 @@ class Media extends Data
         // Call add with this file Id and then update the existing mediaId with the returned mediaId
         // from the add call.
         // Will need to get some information about the existing media record first.
-        $SQL = "SELECT name, duration, permissionId, UserID FROM media WHERE MediaID = %d";
+        $SQL = "SELECT name, duration, permissionId, UserID, type FROM media WHERE MediaID = %d";
         $SQL = sprintf($SQL, $mediaId);
 
         if (!$row = $db->GetSingleRow($SQL))
@@ -162,7 +162,7 @@ class Media extends Data
             return $this->SetError(31, 'Unable to get information about existing media record.');
         }
 
-        if (!$newMediaId = $this->Add($fileId, $type, $row['name'], $row['duration'], $fileName, $row['permissionId'], $row['UserID']))
+        if (!$newMediaId = $this->Add($fileId, $row['type'], $row['name'], $row['duration'], $fileName, $row['permissionId'], $row['UserID']))
             return false;
 
         // Update the existing record with the new record's id
