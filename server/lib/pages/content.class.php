@@ -205,7 +205,8 @@ HTML;
 		{
 			$SQL .= " AND media.retired = 0 ";			
 		}
-		
+		$SQL .= " ORDER BY media.name ";
+
 		Debug::LogEntry($db, 'audit', $SQL);
 
 		if (!$results = $db->query($SQL)) 
@@ -514,6 +515,7 @@ HTML;
 		{
 			$SQL.= " AND media.name LIKE '%" . sprintf('%s', $name) . "%'";
 		}
+                $SQL .= " ORDER BY media.name ";
 		
 		if(!$results = $db->query($SQL)) 
 		{
