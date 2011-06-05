@@ -102,7 +102,8 @@ class flash extends Module
 		$session->setSecurityToken($securityToken);
 
 		//Get the default value for the shared list
-		$default = Config::GetSetting($db,"defaultMedia");
+		$default = Config::GetSetting($db, 'defaultMedia');
+                $defaultDuration = Config::GetSetting($db, 'jpg_length');
 
 		$permissionid = 0;
 
@@ -165,7 +166,7 @@ END;
 				</tr>
 				<tr>
 		    		<td><label for="duration" title="The duration in seconds this flash should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
-		    		<td><input id="duration" name="duration" type="text" value="$this->duration"></td>
+		    		<td><input id="duration" name="duration" type="text" value="$defaultDuration"></td>
 					<td><label for="permissionid">Sharing<span class="required">*</span></label></td>
 					<td>
 					$shared_list
