@@ -806,6 +806,29 @@ class Rest
     }
 
     /**
+     * Delete Template
+     * @return <XiboAPIResponse>
+     */
+    public function TemplateDelete()
+    {
+        if (!$this->user->PageAuth('template'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Template');
+
+        $template     = new Template($this->db);
+        $templateId   = $this->GetParam('templateId', _INT);
+
+        if (!$this->user->TemplateAuth($templateId))
+            return $this->Error(1, 'Access Denied');
+
+        if (!$template->Delete($templateId))
+            return $this->Error($layout->GetErrorNumber(), $layout->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
+    }
+
+    /**
      * Lists enabled modules
      * @return <XiboAPIResponse>
      */

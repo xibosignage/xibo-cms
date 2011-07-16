@@ -117,6 +117,8 @@ class statsDAO
 		{
 			$SQL .= sprintf("  AND stat.displayID = %d ", $displayID);
 		}
+
+                $SQL .= " ORDER BY stat.start ";
 		
 		Debug::LogEntry($db, 'audit', $SQL, 'Stats', 'OutputCSV');
 		

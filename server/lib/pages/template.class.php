@@ -112,8 +112,9 @@ class templateDAO
 		
 		$tags = "";
 		if (isset($_SESSION['template']['tags'])) $tags = $_SESSION['template']['tags'];
-		
-		$is_system = $_SESSION['template']['is_system'];
+
+                $is_system = 'all';
+		if (isset($_SESSION['template']['is_system'])) $is_system = $_SESSION['template']['is_system'];
 		
 		$system_list = dropdownlist("SELECT 'all','All' UNION SELECT '1','Yes' UNION SELECT '0','No'","is_system",$is_system);
 		
@@ -219,7 +220,7 @@ END;
 		
 		while ($row = $db->get_row($results)) 
 		{
-			$templateid = $row[0];
+			$templateId = Kit::ValidateParam($row[0], _INT);
 			$template 	= $row[1];
 			$issystem 	= $row[2];
 			$tags		= $row[3];
@@ -232,9 +233,14 @@ END;
 			$group			= $user->getGroupFromID($userid);
 			
 			//get the permissions
-			list($see_permissions , $edit_permissions) = $user->eval_permission($userid, $permissionid);
+			list($see_permissions, $edit_permissions) = $user->eval_permission($userid, $permissionid);
 			
 			$buttons = "No available Actions";
+
+                        if ($edit_permissions && $issystem == 'No')
+                        {
+                            $buttons = '<button class="XiboFormButton" href="index.php?p=template&q=DeleteTemplateForm&templateId=' . $templateId . '"><span>' . __('Delete') . '</span></button>';
+                        }
 			
 			if ($see_permissions)
 			{
@@ -442,20 +448,69 @@ END;
 		return false;	
 	}
 	
-	/**
-	 * Deletes a template
-	 * @return 
-	 */
-	function DeleteTemplate() 
-	{
-		$db =& $this->db;
-		
-		$templateid = $_REQUEST['templateid'];
-		
-		//ajax request handler
-		trigger_error('Deleting of templates currently unavailable.', E_USER_ERROR);
-		return false;	
-	}
+    /**
+     * Deletes a template
+     * @return
+     */
+    function DeleteTemplate()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $helpManager = new HelpManager($db, $user);
+
+        $templateId = Kit::GetParam('templateId', _POST, _INT);
+
+        if ($templateId == 0)
+            trigger_error(__('No template found'), E_USER_ERROR);
+
+        // Is this user allowed to delete this template?
+        if (!$this->user->TemplateAuth($templateId))
+            trigger_error(__('Access denied'), E_USER_ERROR);
+
+        // Use the data class
+        Kit::ClassLoader('template');
+        $template = new Template($db);
+
+        // Delete the template
+        if (!$template->Delete($templateId))
+            trigger_error($layout->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('The Template has been Deleted'));
+        $response->Respond();
+    }
+
+    /**
+     * Shows the form to delete a template
+     */
+    public function DeleteTemplateForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $helpManager = new HelpManager($db, $user);
+        
+        $templateId = Kit::GetParam('templateId', _GET, _INT);
+
+        if ($templateId == 0)
+            trigger_error(__('No template found'), E_USER_ERROR);
+        
+        // Construct some messages to display
+        $msgWarn = __('Are you sure you want to delete this template?');
+
+        $form = <<<END
+        <form id="DeleteTemplateForm" class="XiboForm" method="post" action="index.php?p=template&q=DeleteTemplate">
+            <input type="hidden" name="templateId" value="$templateId">
+            <p>$msgWarn</p>
+        </form>
+END;
+
+        $response->SetFormRequestResponse($form, __('Delete a Template'), '350px', '275px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Template', 'Delete') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#DeleteTemplateForm").submit()');
+        $response->Respond();
+    }
 	
 	/**
 	 * Gets the Xml for the specified layout

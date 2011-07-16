@@ -900,6 +900,25 @@ END;
     }
 
     /**
+     *Authorises a user against a template Id
+     * @param <type> $templateId
+     * @return <type>
+     */
+    public function TemplateAuth($templateId)
+    {
+        // TODO: Extend to cover group access and all that
+        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM template WHERE TemplateID = %d", $templateId), 'UserID', _INT))
+        {
+            trigger_error($this->db->error_text);
+            trigger_error($this->db->error());
+
+            return false;
+        }
+
+        return ($userId == $this->userid);
+    }
+
+    /**
      * Returns an array of layouts that this user has access to
      */
     public function LayoutList()
