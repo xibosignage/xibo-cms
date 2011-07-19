@@ -65,8 +65,12 @@ class layoutDAO
 		if ($usertype == 1) $this->isadmin = true;
 		
 		//if we have modify selected then we need to get some info
-		if ($this->layoutid != "") 
+		if ($this->layoutid != '')
 		{
+                    // get the permissions
+                    if (!$user->LayoutAuth($this->layoutid))
+                        trigger_error(__("You do not have permissions to edit this layout"), E_USER_ERROR);
+
 			$this->sub_page = "edit";
 
 			$sql  = " SELECT layout, description, permissionID, userid, retired, tags, xml FROM layout ";
@@ -89,16 +93,6 @@ class layoutDAO
 				$this->retired 		= Kit::ValidateParam($aRow[4], _INT);	
 				$this->tags	 		= Kit::ValidateParam($aRow[5], _STRING);	
 				$this->xml			= $aRow[6];	
-				
-				// get the permissions
-				
-				list($see_permission , $this->has_permissions) = $user->eval_permission($ownerid, $this->permissionid);
-				
-				// check on permissions
-				if ($ajax == "true" && (!$this->has_permissions)) 
-				{
-					trigger_error(__("You do not have permissions to edit this layout"), E_USER_ERROR);
-				}
 			}
 		}
 	}

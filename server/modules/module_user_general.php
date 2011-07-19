@@ -888,7 +888,7 @@ END;
     public function LayoutAuth($layoutId)
     {
         // TODO: Extend to cover group access and all that
-        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM layout WHERE LayoutID = %d", $layoutId), 'UserID', _INT))
+        if (!$row = $this->db->GetSingleRow(sprintf("SELECT UserID, PermissionID FROM layout WHERE LayoutID = %d", $layoutId)))
         {
             trigger_error($this->db->error_text);
             trigger_error($this->db->error());
@@ -896,7 +896,10 @@ END;
             return false;
         }
 
-        return ($userId == $this->userid);
+        $auth = new PermissionManager($this->db, $this);
+        $auth->Evaluate($row['UserID'], $row['PermissionID']);
+
+        return $auth->edit;
     }
 
     /**
@@ -953,7 +956,7 @@ END;
             $layoutItem['tags']     = Kit::ValidateParam($row['tags'], _STRING);
             $layoutItem['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
 
-            $auth = new PermissionManager($db, $user);
+            $auth = new PermissionManager($this->db, $this);
             $auth->Evaluate($layoutItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
 
             if ($auth->view)
