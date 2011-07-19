@@ -489,6 +489,5 @@ class Kit
         $headers  = sprintf("From: %s\r\nX-Mailer: php", $from);
         return mail($to, $subject, $message, $headers);
     }
-
 }
 ?>

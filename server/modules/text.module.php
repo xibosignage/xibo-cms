@@ -49,6 +49,9 @@ class text extends Module
 		$rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
+
+                $default = Config::GetSetting($db, 'defaultPlaylist');
+                $sharedList = dropdownlist('SELECT permissionID, permission FROM permission ORDER BY DisplayOrder ', 'permissionId', $default);
 		
 		$form = <<<FORM
 		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=AddMedia">
@@ -62,8 +65,10 @@ class text extends Module
 		    		<td><input id="duration" name="duration" type="text"></td>		
 				</tr>
 				<tr>
-					<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
-		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="30"></td>
+                                    <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
+                                    <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="30"></td>
+                                    <td><label for="permissionId" title="The Permissions for this Media Assignment.">Permissions<span class="required">*</span></label></td>
+                                    <td>$sharedList</td>
 				</tr>
 				<tr>
 					<td colspan="4">
@@ -110,7 +115,8 @@ FORM;
 		$text 		= $textNode->nodeValue;
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
-		
+		$sharedList = dropdownlist('SELECT permissionID, permission FROM permission ORDER BY DisplayOrder ', 'permissionId', $this->permissionId);
+                
 		//Output the form
 		$form = <<<FORM
 		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=EditMedia">
@@ -125,8 +131,10 @@ FORM;
 		    		<td><input id="duration" name="duration" value="$this->duration" type="text"></td>		
 				</tr>
 				<tr>
-					<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
-		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>
+                                    <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
+                                    <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>
+                                    <td><label for="permissionId" title="The Permissions for this Media Assignment.">Permissions<span class="required">*</span></label></td>
+                                    <td>$sharedList</td>
 				</tr>
 				<tr>
 					<td colspan="4">
@@ -163,6 +171,7 @@ FORM;
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+                $this->permissionId = Kit::GetParam('permissionId', _POST, _INT);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -221,6 +230,7 @@ FORM;
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+                $this->permissionId = Kit::GetParam('permissionId', _POST, _INT);
 		
 		Debug::LogEntry($db, 'audit', 'Text received: ' . $text);
 		

@@ -47,7 +47,7 @@ class layoutDAO
 	 * @return 
 	 * @param $db Object
 	 */
-	function __construct(database $db, user $user) 
+	function __construct(database $db, user $user)
 	{
 		$this->db 	=& $db;
 		$this->user =& $user;
@@ -91,7 +91,7 @@ class layoutDAO
 				$this->xml			= $aRow[6];	
 				
 				// get the permissions
-				global $user;
+				
 				list($see_permission , $this->has_permissions) = $user->eval_permission($ownerid, $this->permissionid);
 				
 				// check on permissions
@@ -546,18 +546,26 @@ END;
 			
 			//get the username from the userID using the user module
 			$username 		= $user->getNameFromID($userid);
-			$group			= $user->getGroupFromID($userid);
+
+        $group = '';
+
+        foreach($this->user->GetUserGroups($userid) as $groupName)
+        {
+            $group = $group . ', ' . $groupName;
+        }
+
+        $group = trim($group, ',');
 			
 			//assess the permissions of each item
 			$permission		= Kit::ValidateParam($aRow[4], _STRING);
 			$permissionid	= Kit::ValidateParam($aRow[5], _INT);
+
+        $auth = new PermissionManager($db, $this->user);
+        $auth->Evaluate($userid, $permissionid);
 			
-			//get the permissions
-			list($see_permissions , $edit_permissions) = $user->eval_permission($userid, $permissionid);
-			
-			if ($see_permissions) 
+			if ($auth->view)
 			{
-				if ($edit_permissions) 
+				if ($auth->edit)
 				{			
 					$title = <<<END
 					<tr ondblclick="return XiboFormRender('index.php?p=layout&q=displayForm&layoutid=$layoutid')">
@@ -581,7 +589,7 @@ END;
 				<td>$group</td>
 END;
 				
-				if ($edit_permissions) 
+				if ($auth->edit)
 				{
 					$output .= '<td class="nobr">';
 					$output .= '<button href="index.php?p=layout&modify=true&layoutid=' . $layoutid . '" onclick="window.location = $(this).attr(\'href\')"><span>Design</span></button>';
@@ -671,7 +679,7 @@ END;
 		
 		if($default=="private") $default = 1;
 		
-		$shared_list = dropdownlist("SELECT permissionID, permission FROM permission", "permissionid", $default);
+		$shared_list = dropdownlist("SELECT permissionID, permission FROM permission ORDER BY DisplayOrder ", "permissionid", $default);
 		
 		$msgName	= __('Name');
 		$msgName2	= __('The Name of the Layout - (1 - 50 characters)');

@@ -28,6 +28,7 @@ require_once('lib/app/translationengine.class.php');
 require_once('lib/app/app_functions.php');
 require_once('lib/app/debug.class.php');
 require_once('lib/app/kit.class.php');
+require_once('lib/app/permissionmanager.class.php');
 require_once('lib/data/data.class.php');
 require_once('config/db_config.php');
 require_once('config/config.class.php');

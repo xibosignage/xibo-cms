@@ -220,6 +220,7 @@ HTML;
 		$msgType	= __('Type');
 		$msgRetired	= __('Retired');
 		$msgOwner	= __('Owner');
+		$msgGroups	= __('Groups');
 		$msgShared	= __('Shared');
 		$msgAction	= __('Action');
 
@@ -233,6 +234,7 @@ HTML;
 			        <th>h:mi:ss</th>            
 			        <th>$msgShared</th>       
 					<th>$msgOwner</th>
+					<th>$msgGroups</th>
 			        <th>$msgAction</th>     
 			    </tr>
 			</thead>
@@ -252,7 +254,16 @@ END;
 			
 			//get the username from the userID using the user module
 			$username 		= $user->getNameFromID($ownerid);
-			$group			= $user->getGroupFromID($ownerid);
+
+        $group = '';
+
+        foreach($this->user->GetUserGroups($ownerid) as $groupName)
+        {
+            $group = $group . ', ' . $groupName;
+        }
+
+        $group = trim($group, ',');
+
 			
 			//get the permissions
 			list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid);
@@ -276,6 +287,7 @@ END;
 		    	$output .= "<td>$length</td>\n";
 		    	$output .= "<td>$permission</td>\n";
 				$output .= "<td>$username</td>";
+				$output .= "<td>$group</td>";
 				
 				// ACTION buttons
 		    	if ($edit_permissions) 

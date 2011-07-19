@@ -45,6 +45,8 @@ class Module implements ModuleInterface
 
 	protected $existingMedia;
 	protected $deleteFromRegion;
+        protected $permissionId;
+        protected $originalUserId;
 
     /**
      * Constructor - sets up this media object with all the available information
@@ -175,6 +177,9 @@ class Module implements ModuleInterface
             if ($lkid == '')
                 $this->lkid     = $mediaNode->getAttribute('lkid');
 
+            $this->permissionId = $mediaNode->getAttribute('permissionId');
+            $this->originalUserId = $mediaNode->getAttribute('userId');
+
             $mediaNode = $xmlDoc->importNode($mediaNode, true);
             $xmlDoc->documentElement->appendChild($mediaNode);
         }
@@ -257,6 +262,8 @@ XML;
 		$mediaNode->setAttribute('id', $this->mediaid);
 		$mediaNode->setAttribute('duration', $this->duration);
 		$mediaNode->setAttribute('type', $this->type);
+                $mediaNode->setAttribute('userId', $this->user->userid);
+                $mediaNode->setAttribute('permissionId', $this->permissionId);
 
 		return $this->xml->saveXML($mediaNode);
 	}

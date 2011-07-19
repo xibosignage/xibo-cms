@@ -258,7 +258,7 @@
          * @param <type> $returnID Whether to return ID's or Names
          * @return <array>
          */
-        function GetUserGroups($id, $returnID = false)
+        public function GetUserGroups($id, $returnID = false)
 	{
             $db =& $this->db;
 
@@ -932,7 +932,7 @@ END;
         $SQL .= "        userID ";
         $SQL .= "   FROM layout ";
 
-         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -953,12 +953,13 @@ END;
             $layoutItem['tags']     = Kit::ValidateParam($row['tags'], _STRING);
             $layoutItem['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
 
-            list($see, $edit) = $this->eval_permission($layoutItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
+            $auth = new PermissionManager($db, $user);
+            $auth->Evaluate($layoutItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
 
-            if ($see)
+            if ($auth->view)
             {
-                $layoutItem['read']      = (int) $see;
-                $layoutItem['write']     = (int) $edit;
+                $layoutItem['read']      = (int) $auth->view;
+                $layoutItem['write']     = (int) $auth->edit;
                 
                 $layouts[] = $layoutItem;
             }

@@ -32,6 +32,7 @@ require_once("lib/app/kit.class.php");
 require_once("lib/app/pagemanager.class.php");
 require_once("lib/app/menumanager.class.php");
 require_once("lib/app/modulemanager.class.php");
+require_once("lib/app/permissionmanager.class.php");
 require_once("lib/app/formmanager.class.php");
 require_once("lib/app/helpmanager.class.php");
 require_once("lib/app/responsemanager.class.php");
