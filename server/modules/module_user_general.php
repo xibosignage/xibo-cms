@@ -817,10 +817,9 @@ END;
      * Authorizes a user against a media ID
      * @param <int> $mediaID
      */
-    public function MediaAuth($mediaId)
+    public function MediaAuth($mediaId, $fullObject = false)
     {
-        // TODO: Extend to cover group access and all that
-        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM media WHERE MediaID = %d", $mediaId), 'UserID', _INT))
+        if (!$userId = $this->db->GetSingleRow(sprintf("SELECT UserID, PermissionID FROM media WHERE MediaID = %d", $mediaId)))
         {
             trigger_error($this->db->error_text);
             trigger_error($this->db->error());
@@ -828,7 +827,13 @@ END;
             return false;
         }
 
-        return ($userId == $this->userid);
+        $auth = new PermissionManager($this->db, $this);
+        $auth->Evaluate($row['UserID'], $row['PermissionID']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
     }
 
     /**
@@ -867,9 +872,10 @@ END;
             $mediaItem['length']    = Kit::ValidateParam($row['duration'], _DOUBLE);
             $mediaItem['ownerid']   = Kit::ValidateParam($row['userID'], _INT);
 
-            list($see, $edit) = $this->eval_permission($mediaItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
+            $auth = new PermissionManager($this->db, $this);
+            $auth->Evaluate($mediaItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
 
-            if ($see)
+            if ($auth->view)
             {
                 $mediaItem['read']      = (int) $see;
                 $mediaItem['write']     = (int) $edit;
@@ -909,10 +915,9 @@ END;
      * @param <type> $templateId
      * @return <type>
      */
-    public function TemplateAuth($templateId)
+    public function TemplateAuth($templateId, $fullObject = false)
     {
-        // TODO: Extend to cover group access and all that
-        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM template WHERE TemplateID = %d", $templateId), 'UserID', _INT))
+        if (!$userId = $this->db->GetSingleRow(sprintf("SELECT UserID, PermissionID FROM template WHERE TemplateID = %d", $templateId)))
         {
             trigger_error($this->db->error_text);
             trigger_error($this->db->error());
@@ -920,7 +925,13 @@ END;
             return false;
         }
 
-        return ($userId == $this->userid);
+        $auth = new PermissionManager($this->db, $this);
+        $auth->Evaluate($row['UserID'], $row['PermissionID']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
     }
 
     /**
