@@ -1396,6 +1396,18 @@ HTML;
 			$mediaFileName 	= $mediaNode->getAttribute('filename');
 			$mediaDuration  = $mediaNode->getAttribute('duration');
 
+                        // Permissions for this assignment?
+                        Debug::LogEntry($db, 'audit', sprintf('Request Permission MediaID: %s', $mediaid), 'layout', 'RegionOptions');
+
+                        $auth = new PermissionManager($db, $user);
+                        $auth->Evaluate($mediaNode->getAttribute('userId'), $mediaNode->getAttribute('permissionId'));
+
+                        // Skip over media assignments that we do not have permission to see
+                        if (!$auth->view)
+                            continue;
+
+                        Debug::LogEntry($db, 'audit', sprintf('Permission Granted to View MediaID: %s', $mediaid), 'layout', 'RegionOptions');
+
                         // Artifically cap a duration so we dont break the timeline
                         if ($mediaDuration > 350)
                             $mediaDuration = 350;
@@ -1404,12 +1416,10 @@ HTML;
 			require_once("modules/$mediaType.module.php");
 			
 			// Create the media object without any region and layout information
-			$tmpModule 		= new $mediaType($db, $user, $mediaid);
-			$mediaName 		= $tmpModule->GetName();
+			$tmpModule = new $mediaType($db, $user, $mediaid, $this->layoutid, $regionid, $lkid);
+			$mediaName = $tmpModule->GetName();
 			
-			Debug::LogEntry($db, 'audit', sprintf('Module name returned for MediaID: %s is %s', $mediaid, $mediaName), 'layout', 'RegionOptions');
-						
-			//Do we have a thumbnail for this media?
+			// Do we have a thumbnail for this media?
 			if ($mediaType == 'image')
 			{
 				//make up a list of the media, with an image showing the media type
@@ -1442,13 +1452,7 @@ HTML;
 			$thumbWidthVal 	= $thumbWidth . "px";
 			$top			= $this->GetTopForMediaType($mediaType, $count);
 			$leftMediaBreakVal = ($left + $thumbWidth)."px";
-			
-			$editLink = <<<LINK
-				<a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to edit this media">
-					Edit
-				</a><br />
-LINK;
-			
+
 			$mediaBreakHtml = <<<END
 			<div class="mediabreak" breakid="$count" style="position:absolute; top:20px; left:$leftMediaBreakVal; width:$mediaBreakWidthVal;"></div>
 END;
@@ -1462,11 +1466,25 @@ END;
 			//
 			// Translate Messages
 			//
-			$msgDelete		= __('Delete');
-			$msgType		= __('Type');
-			$msgName		= __('Name');
-			$msgDuration	= __('Duration');
-			
+			$msgEdit = __('Edit');
+			$msgDelete = __('Delete');
+			$msgType = __('Type');
+			$msgName = __('Name');
+			$msgDuration = __('Duration');
+
+                        $editLink = <<<LINK
+                            <a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to edit this media">
+                                $msgEdit
+                            </a><br />
+                            <a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=DeleteForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to delete this media">
+                                $msgDelete
+                            </a>
+LINK;
+
+                        // If we do not have permission to edit, remove the link
+                        if (!$auth->edit)
+                            $editLink = '';
+
 			$mediaHtml .= <<<BUTTON
 			<div class="timebar_ctl" style="position:absolute; top:$top; left:$leftVal; width:$thumbWidthVal;" mediaid="$mediaid" lkid="$lkid">
 				<div class="timebar">
@@ -1474,9 +1492,6 @@ END;
 					<div class="$leftClass"></div>
 						<br />
 						$editLink
-						<a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=DeleteForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to delete this media">
-							$msgDelete
-						</a>
 					</div>
 				</div>
 				<div class="tooltip_hidden" style="position:absolute; z-index:5;">

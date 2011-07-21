@@ -28,6 +28,7 @@ class text extends Module
 	{
 		// Must set the type of the class
 		$this->type = 'text';
+                $this->name = 'Text';
 	
 		// Must call the parent class	
 		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -94,14 +95,26 @@ FORM;
 	 */
 	public function EditForm()
 	{
-		$db 		=& $this->db;
-		
-		$layoutid		= $this->layoutid;
-		$regionid		= $this->regionid;
-		$mediaid  		= $this->mediaid;
-		
-		$direction		= $this->GetOption('direction');
-		$scrollSpeed 	= $this->GetOption('scrollSpeed');
+		$db =& $this->db;
+		$user =& $this->user;
+		$layoutid = $this->layoutid;
+		$regionid = $this->regionid;
+		$mediaid = $this->mediaid;
+
+                // Permissions
+                $auth = new PermissionManager($db, $user);
+                $auth->Evaluate($this->originalUserId, $this->permissionId);
+
+                if (!$auth->edit)
+                {
+                    $this->response->SetError('You do not have permission to edit this assignment.');
+                    $this->response->keepOpen = true;
+                    return $this->response;
+                }
+
+                // Other properties
+		$direction = $this->GetOption('direction');
+		$scrollSpeed = $this->GetOption('scrollSpeed');
 		
 		// Get the text out of RAW
 		$rawXml = new DOMDocument();
@@ -110,14 +123,23 @@ FORM;
 		Debug::LogEntry($db, 'audit', 'Raw XML returned: ' . $this->GetRaw());
 		
 		// Get the Text Node out of this
-		$textNodes 	= $rawXml->getElementsByTagName('text');
-		$textNode 	= $textNodes->item(0);
-		$text 		= $textNode->nodeValue;
+		$textNodes = $rawXml->getElementsByTagName('text');
+		$textNode = $textNodes->item(0);
+		$text = $textNode->nodeValue;
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
 		$sharedList = dropdownlist('SELECT permissionID, permission FROM permission ORDER BY DisplayOrder ', 'permissionId', $this->permissionId);
-                
-		//Output the form
+
+                $sharingFormField = <<<END
+                    <td><label for="permissionId" title="The Permissions for this Media Assignment.">Permissions<span class="required">*</span></label></td>
+                    <td>$sharedList</td>
+END;
+
+                // Check that this user has permission to change the sharing options
+                if (!$auth->modifyPermissions)
+                    $sharingFormField = '';
+
+		// Output the form
 		$form = <<<FORM
 		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=EditMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
@@ -133,8 +155,7 @@ FORM;
 				<tr>
                                     <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
                                     <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>
-                                    <td><label for="permissionId" title="The Permissions for this Media Assignment.">Permissions<span class="required">*</span></label></td>
-                                    <td>$sharedList</td>
+                                    $sharingFormField
 				</tr>
 				<tr>
 					<td colspan="4">
@@ -173,7 +194,7 @@ FORM;
 		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
                 $this->permissionId = Kit::GetParam('permissionId', _POST, _INT);
 		
-		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+		$url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
 		//validation
 		if ($text == '')
@@ -220,23 +241,38 @@ FORM;
 	public function EditMedia()
 	{
 		$db 		=& $this->db;
+                $user =& $this->user;
 		
 		$layoutid 	= $this->layoutid;
 		$regionid 	= $this->regionid;
 		$mediaid	= $this->mediaid;
-		
+
+                // Permissions
+                $auth = new PermissionManager($db, $user);
+                $auth->Evaluate($this->originalUserId, $this->permissionId);
+
+                if (!$auth->edit)
+                {
+                    $this->response->SetError('You do not have permission to edit this assignment.');
+                    $this->response->keepOpen = false;
+                    return $this->response;
+                }
+
 		//Other properties
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
-                $this->permissionId = Kit::GetParam('permissionId', _POST, _INT);
+
+                // If we have permission to change it, then get the value from the form
+                if ($auth->modifyPermissions)
+                    $this->permissionId = Kit::GetParam('permissionId', _POST, _INT);
 		
 		Debug::LogEntry($db, 'audit', 'Text received: ' . $text);
 		
-		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+		$url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 		
-		//validation
+		// Validation
 		if ($text == '')
 		{
 			$this->response->SetError('Please enter some text');

@@ -193,7 +193,7 @@ class Module implements ModuleInterface
                 $this->existingMedia = true;
 
                 // Load what we know about this media into the object
-                $SQL = "SELECT duration, name FROM media WHERE mediaID = '$mediaid'";
+                $SQL = "SELECT duration, name, UserId, PermissionId FROM media WHERE mediaID = '$mediaid'";
 
                 Debug::LogEntry($db, 'audit', $SQL, 'Module', 'SetMediaInformation');
 
@@ -204,15 +204,19 @@ class Module implements ModuleInterface
 
                 if ($db->num_rows($result) != 0)
                 {
-                    $row 				= $db->get_row($result);
-                    $this->duration		= $row[0];
-                    $this->name			= $row[1];
+                    $row = $db->get_row($result);
+                    $this->duration = $row[0];
+                    $this->name = $row[1];
                 }
             }
 
+            // New assignment, therefore user and permissions are defaulted
+            $this->originalUserId = $this->user->userid;
+            $this->permissionId = 1;
+
             $xml = <<<XML
             <root>
-                    <media id="" type="$this->type" duration="" lkid="" schemaVersion="$this->schemaVersion">
+                    <media id="" type="$this->type" duration="" lkid="" userId="$this->originalUserId" permissionId="$this->permissionId" schemaVersion="$this->schemaVersion">
                             <options />
                             <raw />
                     </media>
@@ -223,7 +227,7 @@ XML;
 
         $this->xml = $xmlDoc;
 
-        Debug::LogEntry($db, 'audit', 'XML is: ' . $this->xml->saveXML());
+        Debug::LogEntry($db, 'audit', 'XML is: ' . $this->xml->saveXML(), 'module', 'SetMediaInformation');
 
         return true;
     }
@@ -262,7 +266,7 @@ XML;
 		$mediaNode->setAttribute('id', $this->mediaid);
 		$mediaNode->setAttribute('duration', $this->duration);
 		$mediaNode->setAttribute('type', $this->type);
-                $mediaNode->setAttribute('userId', $this->user->userid);
+                $mediaNode->setAttribute('userId', $this->originalUserId);
                 $mediaNode->setAttribute('permissionId', $this->permissionId);
 
 		return $this->xml->saveXML($mediaNode);
