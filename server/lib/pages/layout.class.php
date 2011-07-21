@@ -24,9 +24,9 @@ class layoutDAO
 {
 	private $db;
 	private $user;
+    private $auth;
 	private $has_permissions = true;
 	
-	private $isadmin = false;
 	private $sub_page = "";
 	
 	private $layoutid;
@@ -49,52 +49,48 @@ class layoutDAO
 	 */
 	function __construct(database $db, user $user)
 	{
-		$this->db 	=& $db;
-		$this->user =& $user;
+            $this->db 	=& $db;
+            $this->user =& $user;
 		
-		$usertype 		= Kit::GetParam('usertype', _SESSION, _INT);
-		$this->sub_page	= Kit::GetParam('sp', _GET, _WORD, 'view');
-		$ajax			= Kit::GetParam('ajax', _GET, _WORD, 'false');
-		
-		$this->layoutid	= Kit::GetParam('layoutid', _REQUEST, _INT);
+            $this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
+            $this->layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
 
-		// Include the layout data class		
-		include_once("lib/data/layout.data.class.php");
-		
-		//set the information that we know
-		if ($usertype == 1) $this->isadmin = true;
-		
-		//if we have modify selected then we need to get some info
-		if ($this->layoutid != '')
-		{
-                    // get the permissions
-                    if (!$user->LayoutAuth($this->layoutid))
-                        trigger_error(__("You do not have permissions to edit this layout"), E_USER_ERROR);
+            // Include the layout data class
+            include_once("lib/data/layout.data.class.php");
 
-			$this->sub_page = "edit";
+            //if we have modify selected then we need to get some info
+            if ($this->layoutid != '')
+            {
+                // get the permissions
+                $this->auth = $user->LayoutAuth($this->layoutid, true);
 
-			$sql  = " SELECT layout, description, permissionID, userid, retired, tags, xml FROM layout ";
-			$sql .= sprintf(" WHERE layoutID = %d ", $this->layoutid);
+                if (!$this->auth->edit)
+                    trigger_error(__("You do not have permissions to edit this layout"), E_USER_ERROR);
 
-			if(!$results = $db->query($sql)) 
-			{
-				trigger_error($db->error());
-				trigger_error(__("Cannot retrieve the Information relating to this layout. The layout may be corrupt."), E_USER_ERROR);
-			}
+                $this->sub_page = "edit";
 
-			if ($db->num_rows($results) == 0) $this->has_permissions = false;
-			
-			while($aRow = $db->get_row($results)) 
-			{
-				$this->layout 		= Kit::ValidateParam($aRow[0], _STRING);
-				$this->description 	= Kit::ValidateParam($aRow[1], _STRING);
-				$this->permissionid = Kit::ValidateParam($aRow[2], _INT);	
-				$ownerid 			= Kit::ValidateParam($aRow[3], _INT);	
-				$this->retired 		= Kit::ValidateParam($aRow[4], _INT);	
-				$this->tags	 		= Kit::ValidateParam($aRow[5], _STRING);	
-				$this->xml			= $aRow[6];	
-			}
-		}
+                $sql  = " SELECT layout, description, permissionID, userid, retired, tags, xml FROM layout ";
+                $sql .= sprintf(" WHERE layoutID = %d ", $this->layoutid);
+
+                if(!$results = $db->query($sql))
+                {
+                        trigger_error($db->error());
+                        trigger_error(__("Cannot retrieve the Information relating to this layout. The layout may be corrupt."), E_USER_ERROR);
+                }
+
+                if ($db->num_rows($results) == 0)
+                    $this->has_permissions = false;
+
+                while($aRow = $db->get_row($results))
+                {
+                    $this->layout 		= Kit::ValidateParam($aRow[0], _STRING);
+                    $this->description 	= Kit::ValidateParam($aRow[1], _STRING);
+                    $this->permissionid = Kit::ValidateParam($aRow[2], _INT);
+                    $this->retired 		= Kit::ValidateParam($aRow[4], _INT);
+                    $this->tags	 		= Kit::ValidateParam($aRow[5], _STRING);
+                    $this->xml			= $aRow[6];
+                }
+            }
 	}
 
 	function on_page_load() 
@@ -242,12 +238,17 @@ HTML;
 
 		$layout 		= Kit::GetParam('layout', _POST, _STRING);
 		$description 	= Kit::GetParam('description', _POST, _STRING);
-		$permissionid 	= Kit::GetParam('permissionid', _POST, _INT);
 		$tags		 	= Kit::GetParam('tags', _POST, _STRING);
 		$retired 		= Kit::GetParam('retired', _POST, _INT, 0);
 		
 		$userid 		= Kit::GetParam('userid', _SESSION, _INT);
 		$currentdate 	= date("Y-m-d H:i:s");
+
+                // We can only change the permissionId if we have permission to
+                $permissionId = $this->auth->permissionId;
+
+                if ($this->auth->modifyPermissions)
+                    $permissionId = Kit::GetParam('permissionid', _POST, _INT);
 		
 		//validation
 		if (strlen($layout) > 50 || strlen($layout) < 1) 
@@ -293,7 +294,7 @@ HTML;
 END;
 
 		$SQL = sprintf($SQL, 
-						$db->escape_string($layout), $permissionid, 
+						$db->escape_string($layout), $permissionId,
 						$db->escape_string($description), 
 						$db->escape_string($currentdate), $retired, 
 						$db->escape_string($tags), $this->layoutid);
@@ -635,7 +636,7 @@ END;
 		$retired_option 	= '';
 		$template_option 	= '';
 		
-		if ($this->layoutid != "") 
+		if ($this->layoutid != '')
 		{ 
                         // assume an edit
 			$action = "index.php?p=layout&q=modify";
@@ -662,7 +663,7 @@ END;
 END;
 		}
 		
-		if($permissionid == "") 
+		if($permissionid == '')
 		{
 			$default = Config::GetSetting($db, "defaultPlaylist");
 		}
@@ -673,8 +674,6 @@ END;
 		
 		if($default=="private") $default = 1;
 		
-		$shared_list = dropdownlist("SELECT permissionID, permission FROM permission ORDER BY DisplayOrder ", "permissionid", $default);
-		
 		$msgName	= __('Name');
 		$msgName2	= __('The Name of the Layout - (1 - 50 characters)');
 		$msgDesc	= __('Description');
@@ -683,7 +682,24 @@ END;
 		$msgTags2	= __('Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)');
 		$msgShared	= __('Shared');
 		$msgShared2	= __('The permissions to associate with this Layout');
-		
+
+                // Show the Permissions List?
+                $shared_list = dropdownlist("SELECT permissionID, permission FROM permission ORDER BY DisplayOrder ", "permissionid", $default);
+
+                $permission_option = <<<END
+                    	<tr>
+                            <td><label for='permissionid' title="$msgShared2">$msgShared<span class="required">*</span></label></td>
+                            <td>$sharedHelp $shared_list</td>
+			</tr>
+END;
+
+                if ($this->layoutid != 0)
+                {
+                    // Do we have permission to edit the permissions?
+                    if (!$this->auth->modifyPermissions)
+                        $permission_option = '';
+                }
+
 		$form = <<<END
 		<form id="LayoutForm" class="XiboForm" method="post" action="$action">
 			<input type="hidden" name="layoutid" value="$this->layoutid">
@@ -700,10 +716,7 @@ END;
 				<td><label for="tags" accesskey="d" title="$msgTags2">$msgTags</label></td>
 				<td>$tagsHelp <input name="tags" type="text" id="tags" value="$tags" tabindex="3" /></td>
 			</tr>
-			<tr>
-				<td><label for='permissionid' title="$msgShared2">$msgShared<span class="required">*</span></label></td>
-				<td>$sharedHelp $shared_list</td>
-			</tr>
+                        $permission_option
 			$retired_option
 			$template_option
 		</table>

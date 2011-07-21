@@ -885,9 +885,8 @@ END;
      * @param <type> $layoutId
      * @return <type>
      */
-    public function LayoutAuth($layoutId)
+    public function LayoutAuth($layoutId, $fullObject = false)
     {
-        // TODO: Extend to cover group access and all that
         if (!$row = $this->db->GetSingleRow(sprintf("SELECT UserID, PermissionID FROM layout WHERE LayoutID = %d", $layoutId)))
         {
             trigger_error($this->db->error_text);
@@ -898,6 +897,9 @@ END;
 
         $auth = new PermissionManager($this->db, $this);
         $auth->Evaluate($row['UserID'], $row['PermissionID']);
+
+        if ($fullObject)
+            return $auth;
 
         return $auth->edit;
     }

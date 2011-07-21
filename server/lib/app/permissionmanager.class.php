@@ -25,8 +25,8 @@ class PermissionManager
     private $db;
     private $user;
     
-    private $ownerId;
-    private $permissionId;
+    public $ownerId;
+    public $permissionId;
 
     public $view;
     public $edit;
@@ -51,6 +51,9 @@ class PermissionManager
     public function Evaluate($ownerId, $permissionId)
     {
         $user =& $this->user;
+
+        $this->ownerId = $ownerId;
+        $this->permissionId = $permissionId;
 
         // Basic checks first
         if ($this->user->usertypeid == 1 || $ownerId == $user->userid)
