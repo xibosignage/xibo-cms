@@ -30,6 +30,7 @@ class PermissionManager
 
     public $view;
     public $edit;
+    public $del;
     public $modifyPermissions;
 
     /**
@@ -45,6 +46,7 @@ class PermissionManager
 
         $this->view = false;
         $this->edit = false;
+        $this->del = false;
         $this->modifyPermissions = false;
     }
 
@@ -61,6 +63,7 @@ class PermissionManager
             // Super admin or owner, therefore permission granted to everything
             $this->view = true;
             $this->edit = true;
+            $this->del = true;
             $this->modifyPermissions = true;
             return;
         }
@@ -85,12 +88,14 @@ class PermissionManager
                 // User is in the group AND a group admin
                 $this->view = true;
                 $this->edit = true;
+                $this->del = true;
             }
             else
             {
                 // User is in the group AND NOT a group admin
                 $this->view = $permissions['GroupView'];
                 $this->edit = $permissions['GroupEdit'];
+                $this->del = $permissions['GroupEdit'];
             }
         }
         else
@@ -98,6 +103,7 @@ class PermissionManager
             // User is not in the group
             $this->view = $permissions['PublicView'];
             $this->edit = $permissions['PublicEdit'];
+            $this->del = $permissions['PublicEdit'];
         }
     }
 }
