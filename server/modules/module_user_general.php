@@ -893,7 +893,18 @@ END;
      */
     public function LayoutAuth($layoutId, $fullObject = false)
     {
-        if (!$row = $this->db->GetSingleRow(sprintf("SELECT UserID, PermissionID FROM layout WHERE LayoutID = %d", $layoutId)))
+        $SQL  = '';
+        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM layout ';
+        $SQL .= '   LEFT OUTER JOIN lklayoutgroup ';
+        $SQL .= '   ON lklayoutgroup.LayoutID = layout.LayoutID ';
+        $SQL .= ' WHERE layout.LayoutID = %d ';
+        $SQL .= 'GROUP BY layout.UserID ';
+
+        $SQL = sprintf($SQL, $layoutId);
+        Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
         {
             trigger_error($this->db->error_text);
             trigger_error($this->db->error());
@@ -902,7 +913,7 @@ END;
         }
 
         $auth = new PermissionManager($this->db, $this);
-        $auth->Evaluate($row['UserID'], $row['PermissionID']);
+        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
 
         if ($fullObject)
             return $auth;

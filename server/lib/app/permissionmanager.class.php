@@ -26,7 +26,6 @@ class PermissionManager
     private $user;
     
     public $ownerId;
-    public $permissionId;
 
     public $view;
     public $edit;
@@ -50,12 +49,14 @@ class PermissionManager
         $this->modifyPermissions = false;
     }
 
-    public function Evaluate($ownerId, $permissionId)
+    public function Evaluate($ownerId, $view, $edit, $del)
     {
         $user =& $this->user;
 
         $this->ownerId = $ownerId;
-        $this->permissionId = $permissionId;
+        $this->view = $view;
+        $this->edit = $edit;
+        $this->del = $del;
 
         // Basic checks first
         if ($this->user->usertypeid == 1 || $ownerId == $user->userid)
@@ -65,45 +66,13 @@ class PermissionManager
             $this->edit = true;
             $this->del = true;
             $this->modifyPermissions = true;
-            return;
         }
-
-        // Get the permissions for this permissionId
-        if (!$permissions = $this->db->GetSingleRow(sprintf('SELECT PublicView, PublicEdit, GroupView, GroupEdit FROM permission WHERE PermissionID = %d', $permissionId)))
+        else if ($this->user->usertypeid == 2 && $this->view == 1)
         {
-            trigger_error($this->db->error());
-            return;
-        }
-        
-        // Not a super admin, get groups
-        $groupIds = $user->GetUserGroups($user->userid, true);
-        $ownerGroupIds = $user->GetUserGroups($ownerId, true);
-
-        if (count(array_intersect($ownerGroupIds, $groupIds)) > 0)
-        {
-            // User is in the group
-
-            if ($this->user->usertypeid == 2)
-            {
-                // User is in the group AND a group admin
-                $this->view = true;
-                $this->edit = true;
-                $this->del = true;
-            }
-            else
-            {
-                // User is in the group AND NOT a group admin
-                $this->view = $permissions['GroupView'];
-                $this->edit = $permissions['GroupEdit'];
-                $this->del = $permissions['GroupEdit'];
-            }
-        }
-        else
-        {
-            // User is not in the group
-            $this->view = $permissions['PublicView'];
-            $this->edit = $permissions['PublicEdit'];
-            $this->del = $permissions['PublicEdit'];
+            // Group Admin and we have view permissions (i.e. this group is assigned to this item)
+            $this->view = true;
+            $this->edit = true;
+            $this->del = true;
         }
     }
 }

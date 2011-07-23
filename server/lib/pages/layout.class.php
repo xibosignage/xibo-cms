@@ -474,11 +474,8 @@ END;
 		$SQL .= "SELECT  layout.layoutID, ";
 		$SQL .= "        layout.layout, ";
 		$SQL .= "        layout.description, ";
-		$SQL .= "        layout.userID, ";
-		$SQL .= "        permission.permission, ";
-		$SQL .= "        permission.permissionID ";
+		$SQL .= "        layout.userID ";
 		$SQL .= "FROM    layout ";
-		$SQL .= "INNER JOIN permission ON layout.permissionID = permission.permissionID ";
 		$SQL .= "WHERE   1                   = 1";
 		//name filter
 		if ($name != "") 
@@ -522,7 +519,6 @@ END;
 				<tr>
 				<th>Name</th>
 				<th>Description</th>
-				<th>Permissions</th>
 				<th>Owner</th>
 				<th>Group</th>
 				<th>Action</th>	
@@ -555,12 +551,8 @@ END;
 
         $group = trim($group, ',');
 			
-			//assess the permissions of each item
-			$permission		= Kit::ValidateParam($aRow[4], _STRING);
-			$permissionid	= Kit::ValidateParam($aRow[5], _INT);
-
-        $auth = new PermissionManager($db, $this->user);
-        $auth->Evaluate($userid, $permissionid);
+        // Permissions
+        $auth = $this->user->LayoutAuth($layoutid, true);
 			
 			if ($auth->view)
 			{
@@ -583,7 +575,6 @@ END;
 				$title
 				<td>$layout</td>
 				<td>$description</td>
-				<td>$permission</td>
 				<td>$username</td>
 				<td>$group</td>
 END;
