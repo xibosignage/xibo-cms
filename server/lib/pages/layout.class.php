@@ -512,6 +512,10 @@ END;
 			trigger_error(__("An Unknown error occured when listing the layouts."), E_USER_ERROR);			
 		}
 
+                $msgCopy = __('Copy');
+                $msgPermissions = __('Permissions');
+                $msgDelete = __('Delete');
+
 		$output = <<<END
 		<div class="info_table">
 		<table style="width:100%">
@@ -520,16 +524,12 @@ END;
 				<th>Name</th>
 				<th>Description</th>
 				<th>Owner</th>
-				<th>Group</th>
+				<th>$msgPermissions</th>
 				<th>Action</th>	
 				</tr>
 			</thead>
 			<tbody>
 END;
-
-                $msgCopy = __('Copy');
-                $msgPermissions = __('Permissions');
-                $msgDelete = __('Delete');
 
 		while($aRow = $db->get_row($results)) 
 		{
@@ -542,14 +542,7 @@ END;
 			//get the username from the userID using the user module
 			$username 		= $user->getNameFromID($userid);
 
-        $group = '';
-
-        foreach($this->user->GetUserGroups($userid) as $groupName)
-        {
-            $group = $group . ', ' . $groupName;
-        }
-
-        $group = trim($group, ',');
+        $group = $this->GroupsForLayout($layoutid);
 			
         // Permissions
         $auth = $this->user->LayoutAuth($layoutid, true);
@@ -1968,6 +1961,43 @@ END;
 
         $response->SetFormSubmitResponse(__('Permissions Changed'));
         $response->Respond();
+    }
+
+    /**
+     * Get a list of group names for a layout
+     * @param <type> $layoutId
+     * @return <type>
+     */
+    private function GroupsForLayout($layoutId)
+    {
+        $db =& $this->db;
+
+        $SQL = '';
+        $SQL .= 'SELECT `group`.Group ';
+        $SQL .= '  FROM `group` ';
+        $SQL .= '   INNER JOIN lklayoutgroup ';
+        $SQL .= '   ON `group`.GroupID = lklayoutgroup.GroupID ';
+        $SQL .= ' WHERE lklayoutgroup.LayoutID = %d ';
+
+        $SQL = sprintf($SQL, $layoutId);
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get group information for layout'), E_USER_ERROR);
+        }
+
+        $groups = '';
+
+        while ($row = $db->get_assoc_row($results))
+        {
+            $groups .= $row['Group'] . ', ';
+        }
+
+        $groups = trim($groups);
+        $groups = trim($groups, ',');
+
+        return $groups;
     }
 }
 ?>
