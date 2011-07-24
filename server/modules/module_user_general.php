@@ -893,26 +893,42 @@ END;
      */
     public function LayoutAuth($layoutId, $fullObject = false)
     {
+        $auth = new PermissionManager($this->db, $this);
+
+        $SQL  = '';
+        $SQL .= 'SELECT UserID ';
+        $SQL .= '  FROM layout ';
+        $SQL .= ' WHERE layout.LayoutID = %d ';
+
+        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $layoutId), 'UserID', _INT))
+            return $auth;
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
+        }
+
+        // Permissions for groups the user is assigned to, and Everyone
         $SQL  = '';
         $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
         $SQL .= '  FROM layout ';
-        $SQL .= '   LEFT OUTER JOIN lklayoutgroup ';
+        $SQL .= '   INNER JOIN lklayoutgroup ';
         $SQL .= '   ON lklayoutgroup.LayoutID = layout.LayoutID ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lklayoutgroup.GroupID ';
         $SQL .= ' WHERE layout.LayoutID = %d ';
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
         $SQL .= 'GROUP BY layout.UserID ';
 
-        $SQL = sprintf($SQL, $layoutId);
+        $SQL = sprintf($SQL, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
         Debug::LogEntry($this->db, 'audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
-        {
-            trigger_error($this->db->error_text);
-            trigger_error($this->db->error());
+            return $auth;
 
-            return false;
-        }
-
-        $auth = new PermissionManager($this->db, $this);
+        // There are permissions to evaluate
         $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
 
         if ($fullObject)

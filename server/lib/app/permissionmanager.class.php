@@ -62,10 +62,7 @@ class PermissionManager
         if ($this->user->usertypeid == 1 || $ownerId == $user->userid)
         {
             // Super admin or owner, therefore permission granted to everything
-            $this->view = true;
-            $this->edit = true;
-            $this->del = true;
-            $this->modifyPermissions = true;
+            $this->FullAccess();
         }
         else if ($this->user->usertypeid == 2 && $this->view == 1)
         {
@@ -74,5 +71,13 @@ class PermissionManager
             $this->edit = true;
             $this->del = true;
         }
+    }
+
+    public function FullAccess()
+    {
+        $this->view = true;
+        $this->edit = true;
+        $this->del = true;
+        $this->modifyPermissions = true;
     }
 }
