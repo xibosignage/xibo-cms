@@ -1850,7 +1850,7 @@ END;
         $SQL .= '   ON lklayoutgroup.GroupID = group.GroupID ';
         $SQL .= '       AND lklayoutgroup.LayoutID = %d ';
         $SQL .= ' WHERE `group`.GroupID <> %d ';
-        $SQL .= 'ORDER BY `group`.IsUserSpecific, `group`.`Group` ';
+        $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
 
         $SQL = sprintf($SQL, $layoutid, $user->getGroupFromId($user->userid, true));
 

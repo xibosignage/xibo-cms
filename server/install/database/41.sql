@@ -14,7 +14,17 @@ ALTER TABLE `lklayoutgroup`
   ADD CONSTRAINT `lklayoutgroup_ibfk_2` FOREIGN KEY (`GroupID`) REFERENCES `group` (`groupID`),
   ADD CONSTRAINT `lklayoutgroup_ibfk_1` FOREIGN KEY (`LayoutID`) REFERENCES `layout` (`layoutID`);
 
+ALTER TABLE  `group` ADD  `IsEveryone` TINYINT NOT NULL DEFAULT  '0';
 
+INSERT INTO `group` (
+`groupID` ,
+`group` ,
+`IsUserSpecific` ,
+`IsEveryone`
+)
+VALUES (
+NULL ,  'Everyone',  '0',  '1'
+);
 
 UPDATE `version` SET `app_ver` = '1.3.0', `XmdsVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

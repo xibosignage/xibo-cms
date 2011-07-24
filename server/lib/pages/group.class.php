@@ -145,7 +145,7 @@ HTML;
 		SELECT 	group.group,
 				group.groupID
 		FROM `group`
-		WHERE IsUserSpecific = 0
+		WHERE IsUserSpecific = 0 AND IsEveryone = 0
 END;
 		if ($filter_name != '') 
 		{
