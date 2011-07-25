@@ -1386,14 +1386,14 @@ HTML;
 			$mediaid 		= $mediaNode->getAttribute('id');
 			$lkid 			= $mediaNode->getAttribute('lkid');
 			$mediaType 		= $mediaNode->getAttribute('type');
-			$mediaFileName 	= $mediaNode->getAttribute('filename');
-			$mediaDuration  = $mediaNode->getAttribute('duration');
+			$mediaFileName	= $mediaNode->getAttribute('filename');
+			$mediaDuration = $mediaNode->getAttribute('duration');
+			$ownerId = $mediaNode->getAttribute('userId');
 
                         // Permissions for this assignment?
                         Debug::LogEntry($db, 'audit', sprintf('Request Permission MediaID: %s', $mediaid), 'layout', 'RegionOptions');
 
-                        $auth = new PermissionManager($db, $user);
-                        $auth->Evaluate($mediaNode->getAttribute('userId'), $mediaNode->getAttribute('permissionId'));
+                        $auth = $user->MediaAssignmentAuth($ownerId, $this->layoutid, $regionid, $mediaid, true);
 
                         // Skip over media assignments that we do not have permission to see
                         if (!$auth->view)
@@ -1461,15 +1461,23 @@ END;
 			//
 			$msgEdit = __('Edit');
 			$msgDelete = __('Delete');
+                        $msgPermissions = __('Permissions');
 			$msgType = __('Type');
 			$msgName = __('Name');
 			$msgDuration = __('Duration');
 
-                        $editLink = <<<LINK
+                        $editLink = '';
+
+                        if ($auth->edit)
+                            $editLink .= <<<LINK
                             <a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to edit this media">
                                 $msgEdit
-                            </a><br />
-                            <a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=DeleteForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to delete this media">
+                            </a>
+LINK;
+
+                        if ($auth->del)
+                            $editLink .= <<<LINK
+                            | <a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=DeleteForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to delete this media">
                                 $msgDelete
                             </a>
 LINK;
@@ -1477,6 +1485,9 @@ LINK;
                         // If we do not have permission to edit, remove the link
                         if (!$auth->edit)
                             $editLink = '';
+
+                        if ($auth->modifyPermissions)
+                            $editLink .= ' | <a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '&mediaid=' . $mediaid . '&lkid=' . $lkid . '" title="Click to change permissions for this media">' . $msgPermissions . '</a>';
 
 			$mediaHtml .= <<<BUTTON
 			<div class="timebar_ctl" style="position:absolute; top:$top; left:$leftVal; width:$thumbWidthVal;" mediaid="$mediaid" lkid="$lkid">

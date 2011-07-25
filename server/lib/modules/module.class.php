@@ -27,6 +27,7 @@ class Module implements ModuleInterface
 	protected $user;
 	protected $region;
 	protected $response;
+        public $auth;
 
 	protected $layoutid;
 	protected $regionid;
@@ -45,8 +46,8 @@ class Module implements ModuleInterface
 
 	protected $existingMedia;
 	protected $deleteFromRegion;
-        protected $permissionId;
         protected $originalUserId;
+        protected $assignedMedia;
 
     /**
      * Constructor - sets up this media object with all the available information
@@ -75,12 +76,12 @@ class Module implements ModuleInterface
 
         $this->existingMedia 	= false;
         $this->deleteFromRegion = false;
-        $this->duration 		= '';
+        $this->duration = '';
 
         // Determine which type this module is
         $this->SetModuleInformation();
 
-        Debug::LogEntry($db, 'audit', 'New module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
+        Debug::LogEntry($db, 'audit', 'Module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 
         // Either the information from the region - or some blanks
         $this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid);
@@ -137,18 +138,20 @@ class Module implements ModuleInterface
      */
     final private function SetMediaInformation($layoutid, $regionid, $mediaid, $lkid)
     {
-        $db 		=& $this->db;
-        $region 	=& $this->region;
-        $xmlDoc 	= new DOMDocument();
+        $db =& $this->db;
+        $region =& $this->region;
+        $xmlDoc = new DOMDocument();
 
         if ($this->mediaid != '' && $this->regionid != '' && $this->layoutid != '')
         {
+            // Existing media that is assigned to a layout
             $this->existingMedia = true;
+            $this->assignedMedia = true;
 
             // Set the layout Xml
             $layoutXml = $region->GetLayoutXml($layoutid);
 
-            Debug::LogEntry($db, 'audit', 'Layout XML retrieved: ' . $layoutXml);
+            //Debug::LogEntry($db, 'audit', 'Layout XML retrieved: ' . $layoutXml);
 
             $layoutDoc = new DOMDocument();
             $layoutDoc->loadXML($layoutXml);
@@ -175,13 +178,17 @@ class Module implements ModuleInterface
             
             // Get the LK id if we do not have one provided
             if ($lkid == '')
-                $this->lkid     = $mediaNode->getAttribute('lkid');
+                $this->lkid = $mediaNode->getAttribute('lkid');
 
-            $this->permissionId = $mediaNode->getAttribute('permissionId');
             $this->originalUserId = $mediaNode->getAttribute('userId');
+
+            // Make sure we have permissions
+            $this->auth = $this->user->MediaAssignmentAuth($this->originalUserId, $this->layoutid, $this->regionid, $this->mediaid, true);
 
             $mediaNode = $xmlDoc->importNode($mediaNode, true);
             $xmlDoc->documentElement->appendChild($mediaNode);
+
+            Debug::LogEntry($db, 'audit', 'Existing Assigned Media XML is: \n ' . $xmlDoc->saveXML(), 'module', 'SetMediaInformation');
         }
         else
         {
@@ -191,9 +198,10 @@ class Module implements ModuleInterface
                 // But this is some existing media
                 // Therefore make sure we get the bare minimum!
                 $this->existingMedia = true;
+                $this->assignedMedia = false;
 
                 // Load what we know about this media into the object
-                $SQL = "SELECT duration, name, UserId, PermissionId FROM media WHERE mediaID = '$mediaid'";
+                $SQL = "SELECT duration, name, UserId FROM media WHERE mediaID = '$mediaid'";
 
                 Debug::LogEntry($db, 'audit', $SQL, 'Module', 'SetMediaInformation');
 
@@ -207,16 +215,20 @@ class Module implements ModuleInterface
                     $row = $db->get_row($result);
                     $this->duration = $row[0];
                     $this->name = $row[1];
+                    $this->originalUserId = $row[2];
                 }
-            }
 
-            // New assignment, therefore user and permissions are defaulted
-            $this->originalUserId = $this->user->userid;
-            $this->permissionId = 1;
+                $this->auth = $this->user->MediaAuth($this->mediaid, true);
+            }
+            else
+            {
+                // New assignment, therefore user and permissions are defaulted
+                $this->originalUserId = $this->user->userid;
+            }
 
             $xml = <<<XML
             <root>
-                    <media id="" type="$this->type" duration="" lkid="" userId="$this->originalUserId" permissionId="$this->permissionId" schemaVersion="$this->schemaVersion">
+                    <media id="" type="$this->type" duration="" lkid="" userId="$this->originalUserId" schemaVersion="$this->schemaVersion">
                             <options />
                             <raw />
                     </media>
@@ -226,9 +238,6 @@ XML;
         }
 
         $this->xml = $xmlDoc;
-
-        Debug::LogEntry($db, 'audit', 'XML is: ' . $this->xml->saveXML(), 'module', 'SetMediaInformation');
-
         return true;
     }
 
@@ -267,7 +276,6 @@ XML;
 		$mediaNode->setAttribute('duration', $this->duration);
 		$mediaNode->setAttribute('type', $this->type);
                 $mediaNode->setAttribute('userId', $this->originalUserId);
-                $mediaNode->setAttribute('permissionId', $this->permissionId);
 
 		return $this->xml->saveXML($mediaNode);
 	}
@@ -595,6 +603,201 @@ END;
     public function IsRegionSpecific()
     {
         return $this->regionSpecific;
+    }
+
+    /**
+     * Permissions form
+     */
+    public function PermissionsForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = $this->response;
+        $helpManager = new HelpManager($db, $user);
+
+        if (!$this->auth->modifyPermissions)
+            trigger_error(__('You do not have permissions to edit this media'), E_USER_ERROR);
+
+        // Form content
+        $form = '<form id="LayoutPermissionsForm" class="XiboForm" method="post" action="index.php?p=module&mod=' . $this->type . '&q=Exec&method=Permissions">';
+	$form .= '<input type="hidden" name="layoutid" value="' . $this->layoutid . '" />';
+	$form .= '<input type="hidden" name="regionid" value="' . $this->regionid . '" />';
+	$form .= '<input type="hidden" name="mediaid" value="' . $this->mediaid . '" />';
+        $form .= '<div class="dialog_table">';
+	$form .= '  <table style="width:100%">';
+        $form .= '      <tr>';
+        $form .= '          <th>' . __('Group') . '</th>';
+        $form .= '          <th>' . __('View') . '</th>';
+        $form .= '          <th>' . __('Edit') . '</th>';
+        $form .= '          <th>' . __('Delete') . '</th>';
+        $form .= '      </tr>';
+
+        // List of all Groups with a view/edit/delete checkbox
+        $SQL = '';
+        $SQL .= 'SELECT `group`.GroupID, `group`.`Group`, View, Edit, Del, `group`.IsUserSpecific ';
+        $SQL .= '  FROM `group` ';
+
+        if ($this->assignedMedia)
+        {
+            $SQL .= '   LEFT OUTER JOIN lklayoutmediagroup ';
+            $SQL .= '   ON lklayoutmediagroup.GroupID = group.GroupID ';
+            $SQL .= sprintf(" AND lklayoutmediagroup.MediaID = '%s' AND lklayoutmediagroup.RegionID = '%s' AND lklayoutmediagroup.LayoutID = %d ", $this->mediaid, $this->regionid, $this->layoutid);
+        }
+        else
+        {
+            $SQL .= '   LEFT OUTER JOIN lkmediagroup ';
+            $SQL .= '   ON lkmediagroup.GroupID = group.GroupID ';
+            $SQL .= sprintf('       AND lkmediagroup.MediaID = %d ', $this->mediaid);
+        }
+
+        $SQL .= ' WHERE `group`.GroupID <> %d ';
+        $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
+
+        $SQL = sprintf($SQL, $user->getGroupFromId($user->userid, true));
+
+        Debug::LogEntry($db, 'audit', $SQL, 'module', 'PermissionsForm');
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get permissions for this layout'), E_USER_ERROR);
+        }
+
+        while($row = $db->get_assoc_row($results))
+        {
+            $groupId = $row['GroupID'];
+            $group = ($row['IsUserSpecific'] == 0) ? '<strong>' . $row['Group'] . '</strong>' : $row['Group'];
+
+            $form .= '<tr>';
+            $form .= ' <td>' . $group . '</td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_view" ' . (($row['View'] == 1) ? 'checked' : '') . '></td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_edit" ' . (($row['Edit'] == 1) ? 'checked' : '') . '></td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_del" ' . (($row['Del'] == 1) ? 'checked' : '') . '></td>';
+            $form .= '</tr>';
+        }
+
+        $form .= '</table>';
+        $form .= '</div>';
+        $form .= '</form>';
+
+        $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Permissions') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#LayoutPermissionsForm").submit()');
+
+        return $response;
+    }
+
+    /**
+     * Permissions Edit
+     */
+    public function Permissions()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = $this->response;
+
+        Kit::ClassLoader('mediagroupsecurity');
+        Kit::ClassLoader('layoutmediagroupsecurity');
+
+        $layoutId = Kit::GetParam('layoutid', _POST, _INT);
+        $regionId = Kit::GetParam('regionid', _POST, _STRING);
+        $mediaId = Kit::GetParam('mediaid', _POST, _STRING);
+        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
+
+        if (!$this->auth->modifyPermissions)
+            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
+
+        // Unlink all
+        if ($this->assignedMedia)
+        {
+            $layoutMediaSecurity = new LayoutMediaGroupSecurity($db);
+            if (!$layoutMediaSecurity->UnlinkAll($layoutId, $regionId, $mediaId))
+                trigger_error(__('Unable to set permissions'));
+        }
+        else
+        {
+            $mediaSecurity = new MediaGroupSecurity($db);
+            if (!$mediaSecurity->UnlinkAll($mediaId))
+                trigger_error(__('Unable to set permissions'));
+        }
+
+        // Some assignments for the loop
+        $lastGroupId = 0;
+        $first = true;
+        $view = 0;
+        $edit = 0;
+        $del = 0;
+
+        // List of groupIds with view, edit and del assignments
+        foreach($groupIds as $groupPermission)
+        {
+            $groupPermission = explode('_', $groupPermission);
+            $groupId = $groupPermission[0];
+
+            if ($first)
+            {
+                // First time through
+                $first = false;
+                $lastGroupId = $groupId;
+            }
+
+            if ($groupId != $lastGroupId)
+            {
+                // The groupId has changed, so we need to write the current settings to the db.
+                // Link new permissions
+                if ($this->assignedMedia)
+                {
+                    if (!$layoutMediaSecurity->Link($layoutId, $regionId, $mediaId, $lastGroupId, $view, $edit, $del))
+                        trigger_error(__('Unable to set permissions'));
+                }
+                else
+                {
+                    if (!$mediaSecurity->Link($mediaId, $lastGroupId, $view, $edit, $del))
+                        trigger_error(__('Unable to set permissions'));
+                }
+
+                // Reset
+                $lastGroupId = $groupId;
+                $view = 0;
+                $edit = 0;
+                $del = 0;
+            }
+
+            switch ($groupPermission[1])
+            {
+                case 'view':
+                    $view = 1;
+                    break;
+
+                case 'edit':
+                    $edit = 1;
+                    break;
+
+                case 'del':
+                    $del = 1;
+                    break;
+            }
+        }
+
+        // Need to do the last one
+        if (!$first)
+        {
+            if ($this->assignedMedia)
+            {
+                if (!$layoutMediaSecurity->Link($layoutId, $regionId, $mediaId, $lastGroupId, $view, $edit, $del))
+                    trigger_error(__('Unable to set permissions'));
+            }
+            else
+            {
+                if (!$mediaSecurity->Link($mediaId, $lastGroupId, $view, $edit, $del))
+                    trigger_error(__('Unable to set permissions'));
+            }
+        }
+
+        $response->SetFormSubmitResponse(__('Permissions Changed'));
+
+        return $response;
     }
 }
 ?>

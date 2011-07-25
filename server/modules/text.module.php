@@ -51,9 +51,7 @@ class text extends Module
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
 
-                $default = Config::GetSetting($db, 'defaultPlaylist');
-                $sharedList = dropdownlist('SELECT permissionID, permission FROM permission ORDER BY DisplayOrder ', 'permissionId', $default);
-		
+                
 		$form = <<<FORM
 		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=AddMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
@@ -68,8 +66,6 @@ class text extends Module
 				<tr>
                                     <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
                                     <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="30"></td>
-                                    <td><label for="permissionId" title="The Permissions for this Media Assignment.">Permissions<span class="required">*</span></label></td>
-                                    <td>$sharedList</td>
 				</tr>
 				<tr>
 					<td colspan="4">
@@ -102,10 +98,7 @@ FORM;
 		$mediaid = $this->mediaid;
 
                 // Permissions
-                $auth = new PermissionManager($db, $user);
-                $auth->Evaluate($this->originalUserId, $this->permissionId);
-
-                if (!$auth->edit)
+                if (!$this->auth->edit)
                 {
                     $this->response->SetError('You do not have permission to edit this assignment.');
                     $this->response->keepOpen = true;
@@ -128,17 +121,7 @@ FORM;
 		$text = $textNode->nodeValue;
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
-		$sharedList = dropdownlist('SELECT permissionID, permission FROM permission ORDER BY DisplayOrder ', 'permissionId', $this->permissionId);
-
-                $sharingFormField = <<<END
-                    <td><label for="permissionId" title="The Permissions for this Media Assignment.">Permissions<span class="required">*</span></label></td>
-                    <td>$sharedList</td>
-END;
-
-                // Check that this user has permission to change the sharing options
-                if (!$auth->modifyPermissions)
-                    $sharingFormField = '';
-
+		
 		// Output the form
 		$form = <<<FORM
 		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=EditMedia">
@@ -155,7 +138,6 @@ END;
 				<tr>
                                     <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
                                     <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>
-                                    $sharingFormField
 				</tr>
 				<tr>
 					<td colspan="4">

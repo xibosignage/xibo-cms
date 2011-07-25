@@ -819,16 +819,82 @@ END;
      */
     public function MediaAuth($mediaId, $fullObject = false)
     {
-        if (!$userId = $this->db->GetSingleRow(sprintf("SELECT UserID, PermissionID FROM media WHERE MediaID = %d", $mediaId)))
-        {
-            trigger_error($this->db->error_text);
-            trigger_error($this->db->error());
+        $auth = new PermissionManager($this->db, $this);
 
-            return false;
+        $SQL  = '';
+        $SQL .= 'SELECT UserID ';
+        $SQL .= '  FROM media ';
+        $SQL .= ' WHERE media.MediaID = %d ';
+
+        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $mediaId), 'UserID', _INT))
+            return $auth;
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
         }
 
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM media ';
+        $SQL .= '   INNER JOIN lkmediagroup ';
+        $SQL .= '   ON lkmediagroup.MediaID = media.MediaID ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lkmediagroup.GroupID ';
+        $SQL .= ' WHERE media.MediaID = %d ';
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+        $SQL .= 'GROUP BY media.UserID ';
+
+        $SQL = sprintf($SQL, $mediaId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
+    }
+
+    /**
+     * Authorizes a user against a media ID assigned to a layout
+     * @param <int> $mediaID
+     */
+    public function MediaAssignmentAuth($ownerId, $layoutId, $regionId, $mediaId, $fullObject = false)
+    {
         $auth = new PermissionManager($this->db, $this);
-        $auth->Evaluate($row['UserID'], $row['PermissionID']);
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
+        }
+
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM lklayoutmediagroup ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lklayoutmediagroup.GroupID ';
+        $SQL .= " WHERE lklayoutmediagroup.MediaID = '%s' AND lklayoutmediagroup.RegionID = '%s' AND lklayoutmediagroup.LayoutID = '%s' ";
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+
+        $SQL = sprintf($SQL, $mediaId, $regionId, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($ownerId, $row['View'], $row['Edit'], $row['Del']);
 
         if ($fullObject)
             return $auth;
@@ -923,7 +989,7 @@ END;
         $SQL .= 'GROUP BY layout.UserID ';
 
         $SQL = sprintf($SQL, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
-        Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry($this->db, 'audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
