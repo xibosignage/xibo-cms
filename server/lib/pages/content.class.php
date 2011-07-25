@@ -490,11 +490,8 @@ HTML;
 		$SQL .= "        media.name, ";
 		$SQL .= "        media.type, ";
 		$SQL .= "        media.duration, ";
-		$SQL .= "        media.userID, ";
-		$SQL .= "        permission.permission, ";
-		$SQL .= "        media.permissionID ";
+		$SQL .= "        media.userID ";
 		$SQL .= "FROM    media ";
-		$SQL .= "INNER JOIN permission ON permission.permissionID = media.permissionID ";
 		$SQL .= "WHERE   retired = 0 AND isEdited = 0 ";
 		if($mediatype != "all") 
 		{
@@ -517,7 +514,6 @@ HTML;
 		$msgType	= __('Type');
 		$msgLen		= __('Duration');
 		$msgOwner	= __('Owner');
-		$msgShared	= __('Shared');
 		$msgSelect	= __('Select');
 		
 		//some table headings
@@ -532,7 +528,6 @@ HTML;
 			        <th>$msgName</th>
 		            <th>$msgType</th>
 		            <th>$msgLen</th>
-		            <th>$msgShared</th>
 			        <th>$msgSelect</th>
 			    </tr>
 				</thead>
@@ -548,26 +543,21 @@ END;
 			$length 		= sec2hms(Kit::ValidateParam($row[3], _DOUBLE));
 			$ownerid 		= Kit::ValidateParam($row[4], _INT);
 			
-			$permission 	= Kit::ValidateParam($row[5], _STRING);
-			$permissionid 	= Kit::ValidateParam($row[6], _INT);
-			
 			//get the username from the userID using the user module
 			$username 		= $user->getNameFromID($ownerid);
 			$group			= $user->getGroupFromID($ownerid);
 	
-			//get the permissions
-			list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid);
-			
-			if ($see_permissions) 
-			{ //is this user allowed to see this
+			// Permissions
+                        $auth = $this->user->MediaAuth($mediaid, true);
 
-				$form .= "<tr>";
-				$form .= "<td>" . $media . "</td>\n";
-				$form .= "<td>" . $mediatype . "</td>\n";
-				$form .= "<td>" . $length . "</td>\n";
-				$form .= "<td>" . $permission . "</td>\n";
-				$form .= "<td><input type='checkbox' name='mediaids[]' value='$mediaid'></td>";
-				$form .= "</tr>";
+                        if ($auth->view) //is this user allowed to see this
+                        {
+                            $form .= "<tr>";
+                            $form .= "<td>" . $media . "</td>\n";
+                            $form .= "<td>" . $mediatype . "</td>\n";
+                            $form .= "<td>" . $length . "</td>\n";
+                            $form .= "<td><input type='checkbox' name='mediaids[]' value='$mediaid'></td>";
+                            $form .= "</tr>";
 			}
 		}
 

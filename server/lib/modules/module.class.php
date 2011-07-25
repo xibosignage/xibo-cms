@@ -504,6 +504,19 @@ END;
 
 		$url 		= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
+                if (!$this->auth->del)
+                {
+                    $this->response->SetError('You do not have permission to delete this assignment.');
+                    $this->response->keepOpen = false;
+                    return $this->response;
+                }
+
+                Kit::ClassLoader('layoutmediagroupsecurity');
+                $security = new LayoutMediaGroupSecurity($db);
+
+                if (!$security->UnlinkAll($layoutid, $regionid, $this->mediaid))
+                    trigger_error($security->GetErrorMessage(), E_USER_ERROR);
+
 		$this->deleteFromRegion = true;
 		$this->UpdateRegion();
 

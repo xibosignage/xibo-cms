@@ -105,17 +105,7 @@ class image extends Module
 		$default = Config::GetSetting($db, 'defaultMedia');
                 $defaultDuration = Config::GetSetting($db, 'jpg_length');
 
-		$permissionid = 0;
-
-		if($default=="private")
-		{
-			$permissionid = 1;
-		}
-
-		//shared list
-		$shared_list = dropdownlist("SELECT permissionID, permission FROM permission", "permissionid", $permissionid);
-
-		//Save button is different depending on if we are on a region or not
+		// Save button is different depending on if we are on a region or not
 		if ($regionid != "")
 		{
 			setSession('content','mediatype','image');
@@ -176,10 +166,6 @@ END;
 				<tr>
 		    		<td><label for="duration" title="The duration in seconds this image should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
 		    		<td><input id="duration" name="duration" type="text" value="$defaultDuration"></td>
-					<td><label for="permissionid">Sharing<span class="required">*</span></label></td>
-					<td>
-					$shared_list
-					</td>
 				</tr>
 				<tr>
 					<td></td>
@@ -219,6 +205,14 @@ FORM;
             $lkid		= $this->lkid;
             $userid		= Kit::GetParam('userid', _SESSION, _INT);
 
+            // Can this user delete?
+            if (!$this->auth->edit)
+            {
+                $this->response->SetError('You do not have permission to edit this media.');
+                $this->response->keepOpen = false;
+                return $this->response;
+            }
+
             // Set the Session / Security information
             $sessionId 		= session_id();
             $securityToken 	= CreateFormToken();
@@ -226,7 +220,7 @@ FORM;
             $session->setSecurityToken($securityToken);
 
             // Load what we know about this media into the object
-            $SQL = "SELECT name, originalFilename, userID, permissionID, retired, storedAs, isEdited, editedMediaID FROM media WHERE mediaID = $mediaid ";
+            $SQL = "SELECT name, originalFilename, userID, retired, storedAs, isEdited, editedMediaID FROM media WHERE mediaID = $mediaid ";
 
             if (!$result = $db->query($SQL))
             {
@@ -248,21 +242,15 @@ FORM;
             $name 		= $row[0];
             $originalFilename 	= $row[1];
             $userid 		= $row[2];
-            $permissionid 	= $row[3];
-            $retired 		= $row[4];
-            $storedAs		= $row[5];
-            $isEdited		= $row[6];
-            $editedMediaID	= $row[7];
+            $retired 		= $row[3];
+            $storedAs		= $row[4];
+            $isEdited		= $row[5];
+            $editedMediaID	= $row[6];
 
             // derive the ext
             $ext		= strtolower(substr(strrchr($originalFilename, "."), 1));
 
-            //Calc the permissions on it aswell
-            list($see_permissions , $edit_permissions) = $user->eval_permission($userid, $permissionid);
-
-            //shared list
-            $shared_list = dropdownlist("SELECT permissionID, permission FROM permission", "permissionid", $permissionid);
-
+            
             //Save button is different depending on if we are on a region or not
             if ($regionid != "")
             {
@@ -283,6 +271,16 @@ END;
                     $save_button = <<<END
                     <input id="btnSave" type="submit" value="Save" />
                     <input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
+END;
+            }
+
+            $durationField = '';
+
+            if ($this->auth->modifyPermissions)
+            {
+                $durationField = <<<END
+                    <td><label for="duration" title="The duration in seconds this image should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
+                    <td><input id="duration" name="duration" type="text" value="$this->duration"></td>
 END;
             }
 
@@ -319,15 +317,8 @@ END;
                             <tr>
                             <td><label for="name" title="The name of the image. Leave this blank to use the file name">Name</label></td>
                             <td><input id="name" name="name" type="text" value="$name"></td>
-                            </tr>
-                            <tr>
-                            <td><label for="duration" title="The duration in seconds this image should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
-                            <td><input id="duration" name="duration" type="text" value="$this->duration"></td>
-                                    <td><label for="permissionid">Sharing<span class="required">*</span></label></td>
-                                    <td>
-                                    $shared_list
-                                    </td>
-                            </tr>
+                            $durationField
+                            </tr>                                    
                             <tr>
                                     <td></td>
                                     <td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
@@ -368,6 +359,14 @@ FORM;
 		$mediaid		= $this->mediaid;
 		$lkid			= $this->lkid;
 		$userid			= Kit::GetParam('userid', _SESSION, _INT);
+
+                // Can this user delete?
+                if (!$this->auth->del)
+                {
+                    $this->response->SetError('You do not have permission to delete this media.');
+                    $this->response->keepOpen = false;
+                    return $this->response;
+                }
 
 		$options = "";
 		//Always have the abilty to unassign from the region
@@ -523,7 +522,6 @@ END;
 		// Other properties
 		$name	  		= Kit::GetParam('name', _POST, _STRING);
 		$duration	  	= Kit::GetParam('duration', _POST, _INT, 0);
-		$permissionid 	= Kit::GetParam('permissionid', _POST, _INT, 1);
 
 		if ($name == '') $name = Kit::ValidateParam($fileName, _FILENAME);
 
@@ -569,10 +567,10 @@ END;
 		}
 
 		// All OK to insert this record
-		$SQL  = "INSERT INTO media (name, type, duration, originalFilename, permissionID, userID, retired ) ";
-		$SQL .= "VALUES ('%s', 'image', '%s', '%s', %d, %d, 0) ";
+		$SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired ) ";
+		$SQL .= "VALUES ('%s', 'image', '%s', '%s', %d, 0) ";
 
-		$SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($duration), $db->escape_string($fileName), $permissionid, $userid);
+		$SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($duration), $db->escape_string($fileName), $userid);
 
 		if (!$mediaid = $db->insert_query($SQL))
 		{
@@ -653,11 +651,19 @@ END;
 	 */
 	public function EditMedia()
 	{
-		$db 		=& $this->db;
-		$layoutid 	= $this->layoutid;
-		$regionid 	= $this->regionid;
-		$mediaid	= $this->mediaid;
-		$userid		= Kit::GetParam('userid', _SESSION, _INT);
+            $db =& $this->db;
+            $user =& $this->user;
+            $layoutid = $this->layoutid;
+            $regionid = $this->regionid;
+            $mediaid = $this->mediaid;
+            $userid = $this->user->userid;
+
+            if (!$this->auth->edit)
+            {
+                $this->response->SetError('You do not have permission to edit this media.');
+                $this->response->keepOpen = false;
+                return $this->response;
+            }
 
 		// Stored As from the XML
 		$storedAs	= $this->GetOption('uri');
@@ -688,9 +694,8 @@ END;
 
 		// Other properties
 		$name	  		= Kit::GetParam('name', _POST, _STRING);
-		$duration	  	= Kit::GetParam('duration', _POST, _INT, 0);
-		$permissionid 	= Kit::GetParam('permissionid', _POST, _INT, 1);
-
+		$duration	  	= Kit::GetParam('duration', _POST, _INT, $this->duration);
+		
 		if ($name == '')
 		{
 			if ($fileRevision)
@@ -742,10 +747,10 @@ END;
 		if ($fileRevision)
 		{
 			// All OK to insert this record
-			$SQL  = "INSERT INTO media (name, type, duration, originalFilename, permissionID, userID, retired ) ";
-			$SQL .= "VALUES ('%s', 'image', '%s', '%s', %d, %d, 0) ";
+			$SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired ) ";
+			$SQL .= "VALUES ('%s', 'image', '%s', '%s', %d, 0) ";
 
-			$SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($duration), $db->escape_string($fileName), $permissionid, $userid);
+			$SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($duration), $db->escape_string($fileName), $userid);
 
 			if (!$new_mediaid = $db->insert_query($SQL))
 			{
@@ -808,9 +813,9 @@ END;
 			// Editing the existing record
 			$new_mediaid = $mediaid;
 
-			$SQL =  "UPDATE media SET name = '%s', permissionID = %d";
+			$SQL =  "UPDATE media SET name = '%s' ";
 			$SQL .= " WHERE mediaID = %d ";
-			$SQL = sprintf($SQL, $db->escape_string($name), $permissionid, $mediaid);
+			$SQL = sprintf($SQL, $db->escape_string($name), $mediaid);
 
 			Debug::LogEntry($db, 'audit', $SQL);
 
@@ -871,50 +876,66 @@ END;
 		// Stored As from the XML
 		$this->uri	= $this->GetOption('uri');
 
+                // Can this user delete?
+                if (!$this->auth->del)
+                {
+                    $this->response->SetError('You do not have permission to delete this media.');
+                    $this->response->keepOpen = false;
+                    return $this->response;
+                }
+
 		// Do we need to remove this from a layout?
 		if ($layoutid != '')
 		{
-			// Call base method - which will set up the response
-			parent::DeleteMedia();
+                    // Call base method - which will set up the response
+                    parent::DeleteMedia();
 		}
 		else
 		{
-			// Set this message now in preparation
-			$this->response->message = 'Deleted the Media.';
+                    // Set this message now in preparation
+                    $this->response->message = 'Deleted the Media.';
 		}
 
 		// If we are set to retire we retire
 		if ($options == "retire")
 		{
-			//Update the media record to say it is retired
-			$SQL = "UPDATE media SET retired = 1 WHERE mediaid = $mediaid ";
+                    //Update the media record to say it is retired
+                    $SQL = "UPDATE media SET retired = 1 WHERE mediaid = $mediaid ";
 
-			if (!$db->query($SQL))
-			{
-				trigger_error($db->error());
+                    if (!$db->query($SQL))
+                    {
+                        trigger_error($db->error());
 
-				$this->response->SetError('Database error retiring this media record.');
-				$this->response->keepOpen = true;
-				return $this->response;
-			}
+                        $this->response->SetError('Database error retiring this media record.');
+                        $this->response->keepOpen = true;
+                        return $this->response;
+                    }
 		}
 
-		//If we are set to delete, we delete
+		// If we are set to delete, we delete
 		if ($options == "delete")
 		{
-			//Update the media record to say it is retired
-			$SQL = "DELETE FROM media WHERE mediaid = $mediaid ";
+                    // Remove permission assignments
+                    Kit::ClassLoader('mediagroupsecurity');
 
-			if (!$db->query($SQL))
-			{
-				trigger_error($db->error());
+                    $security = new MediaGroupSecurity($db);
 
-				$this->response->SetError('Database error deleting this media record.');
-				$this->response->keepOpen = true;
-				return $this->response;
-			}
+                    if (!$security->UnlinkAll($mediaid))
+                        trigger_error($security->GetErrorMessage(), E_USER_ERROR);
 
-			$this->DeleteMediaFiles();
+                    //Update the media record to say it is retired
+                    $SQL = "DELETE FROM media WHERE mediaid = $mediaid ";
+
+                    if (!$db->query($SQL))
+                    {
+                        trigger_error($db->error());
+
+                        $this->response->SetError('Database error deleting this media record.');
+                        $this->response->keepOpen = true;
+                        return $this->response;
+                    }
+
+                    $this->DeleteMediaFiles();
 		}
 
 		return $this->response;

@@ -174,7 +174,6 @@ FORM;
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
-                $this->permissionId = Kit::GetParam('permissionId', _POST, _INT);
 		
 		$url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
