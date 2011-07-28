@@ -29,7 +29,6 @@ class Layout extends Data
      * Add a layout
      * @param <type> $layout
      * @param <type> $description
-     * @param <type> $permissionid
      * @param <type> $tags
      * @param <type> $userid
      * @param <type> $templateId

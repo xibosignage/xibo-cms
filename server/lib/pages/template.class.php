@@ -31,7 +31,6 @@ class templateDAO
 	//template table fields
 	private $templateid;
 	private $template;
-	private $permissionid;
 	private $retired;
 	private $description;
 	private $tags;

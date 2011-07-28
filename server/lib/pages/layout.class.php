@@ -436,10 +436,6 @@ END;
 		$name = Kit::GetParam('filter_layout', _POST, _STRING, '');
 		setSession('layout', 'filter_layout', $name);
 		
-		// Sharing
-		$permissionid = Kit::GetParam('permissionid', _POST, _STRING, 'all');
-		setSession('layout', 'permissionid', $permissionid);
-		
 		// User ID
 		$filter_userid = Kit::GetParam('filter_userid', _POST, _STRING, 'all');
 		setSession('layout', 'filter_userid', $filter_userid);
@@ -463,11 +459,6 @@ END;
 		if ($name != "") 
 		{
 			$SQL.= " AND  (layout.layout LIKE '%" . sprintf('%s', $name) . "%') ";
-		}
-		//sharing filter
-		if ($permissionid != "all") 
-		{
-			$SQL .= sprintf(" AND (layout.permissionID = %d) ", $permissionid);
 		}
 		//owner filter
 		if ($filter_userid != "all") 
@@ -713,8 +704,10 @@ END;
                     $thumbBgImage = "img/forms/filenotfound.png";
 		}
 
-		//A list of available backgrounds
-		$backgroundList = dropdownlist("SELECT '0', 'None', 3, 1 AS name, 0 As sort_order UNION SELECT mediaID, name, permissionID, userID, 1 AS sort_order FROM media WHERE type = 'image' AND IsEdited = 0 AND retired = 0 AND storedAs IS NOT NULL ORDER BY sort_order, 1","bg_image", $bgImageId, "onchange=\"background_button_callback()\"", false, true);
+		// A list of available backgrounds
+                $backgrounds = $user->MediaList('image');
+                array_unshift($backgrounds, array('mediaid' => '0', 'media' => 'None'));
+                $backgroundList = Kit::SelectList('bg_image', $backgrounds, 'mediaid', 'media', $bgImageId, "onchange=\"background_button_callback()\"");
 		
 		//A list of web safe colors
 		//Strip the # from the currently set color

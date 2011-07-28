@@ -33,11 +33,10 @@ class Media extends Data
      * @param <type> $name
      * @param <type> $duration
      * @param <type> $fileName
-     * @param <type> $permissionId
      * @param <type> $userId
      * @return <type>
      */
-    public function Add($fileId, $type, $name, $duration, $fileName, $permissionId, $userId)
+    public function Add($fileId, $type, $name, $duration, $fileName, $userId)
     {
         $db =& $this->db;
 
@@ -62,8 +61,8 @@ class Media extends Data
             return $this->SetError(12, __('Media you own already has this name. Please choose another.'));
 
         // All OK to insert this record
-        $SQL  = "INSERT INTO media (name, type, duration, originalFilename, permissionID, userID, retired ) ";
-        $SQL .= "VALUES ('%s', '%s', '%s', '%s', %d, %d, 0) ";
+        $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired ) ";
+        $SQL .= "VALUES ('%s', '%s', '%s', '%s', %d, 0) ";
 
         $SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($type),
             $db->escape_string($duration), $db->escape_string($fileName), $permissionId, $userId);
@@ -111,10 +110,9 @@ class Media extends Data
      * @param <type> $mediaId
      * @param <type> $name
      * @param <type> $duration
-     * @param <type> $permissionId
      * @return <bool>
      */
-    public function Edit($mediaId, $name, $duration, $permissionId, $userId)
+    public function Edit($mediaId, $name, $duration, $userId)
     {
         $db =& $this->db;
 
@@ -128,8 +126,8 @@ class Media extends Data
         if ($db->GetSingleRow(sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d", $db->escape_string($name), $userId)))
             return $this->SetError(12, __('Media you own already has this name. Please choose another.'));
        
-        $SQL = "UPDATE media SET name = '%s', duration = %d, permissionID = %d WHERE MediaID = %d";
-        $SQL = sprintf($SQL, $db->escape_string($name), $duration, $permissionId, $mediaId);
+        $SQL = "UPDATE media SET name = '%s', duration = %d WHERE MediaID = %d";
+        $SQL = sprintf($SQL, $db->escape_string($name), $duration, $mediaId);
 
         if (!$db->query($SQL))
         {

@@ -905,17 +905,19 @@ END;
     /**
      * Returns an array of Media the current user has access to
      */
-    public function MediaList()
+    public function MediaList($type = '')
     {
         $SQL  = "";
         $SQL .= "SELECT  media.mediaID, ";
         $SQL .= "        media.name, ";
         $SQL .= "        media.type, ";
         $SQL .= "        media.duration, ";
-        $SQL .= "        media.userID, ";
-        $SQL .= "        media.permissionID ";
+        $SQL .= "        media.userID ";
         $SQL .= "FROM    media ";
         $SQL .= "WHERE   1 = 1  AND isEdited = 0 ";
+
+        if ($type != '')
+            $SQL .= sprintf(" AND type = '%s'", $this->db->escape_string($type));
 
         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of media for %s with SQL: %s', $this->userName, $SQL));
 
@@ -938,13 +940,12 @@ END;
             $mediaItem['length']    = Kit::ValidateParam($row['duration'], _DOUBLE);
             $mediaItem['ownerid']   = Kit::ValidateParam($row['userID'], _INT);
 
-            $auth = new PermissionManager($this->db, $this);
-            $auth->Evaluate($mediaItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
+            $auth = $this->MediaAuth($mediaItem['mediaid'], true);
 
             if ($auth->view)
             {
-                $mediaItem['read']      = (int) $see;
-                $mediaItem['write']     = (int) $edit;
+                $mediaItem['view'] = $auth->view;
+                $mediaItem['edit'] = $auth->edit;
                 $media[] = $mediaItem;
             }
         }
