@@ -86,6 +86,12 @@ ALTER TABLE  `template` DROP  `permissionID`;
 
 DROP TABLE  `permission`;
 
+INSERT INTO lktemplategroup (TemplateID, GroupID, View)
+SELECT TemplateID, GroupId, 1
+  FROM template
+    CROSS JOIN (SELECT GroupID, `Group` FROM `group` WHERE IsEveryone = 1) `group`
+ WHERE IsSystem = 1;
+
 UPDATE `version` SET `app_ver` = '1.3.0', `XmdsVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '41';

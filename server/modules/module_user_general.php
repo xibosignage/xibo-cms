@@ -1101,5 +1101,50 @@ END;
 
         return $layouts;
     }
+
+    public function TemplateList()
+    {
+        $SQL  = "";
+        $SQL .= "SELECT  template.templateID, ";
+        $SQL .= "        template.template, ";
+        $SQL .= "        CASE WHEN template.issystem = 1 THEN 'Yes' ELSE 'No' END AS issystem, ";
+        $SQL .= "        template.tags, ";
+        $SQL .= "        template.userID ";
+        $SQL .= "FROM    template ";
+
+        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of templates for %s with SQL: %s', $this->userName, $SQL));
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $templates = array();
+
+        while ($row = $this->db->get_assoc_row($result))
+        {
+            $layoutItem = array();
+
+            // Validate each param and add it to the array.
+            $item['templateid'] = Kit::ValidateParam($row['templateID'], _INT);
+            $item['template']   = Kit::ValidateParam($row['template'], _STRING);
+            $item['issystem'] = Kit::ValidateParam($row['issystem'], _STRING);
+            $item['tags'] = Kit::ValidateParam($row['tags'], _STRING);
+            $item['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
+
+            $auth = $this->TemplateAuth($item['templateid'], true);
+
+            if ($auth->view)
+            {
+                $item['view'] = (int) $auth->view;
+                $item['edit'] = (int) $auth->edit;
+
+                $templates[] = $item;
+            }
+        }
+
+        return $templates;
+    }
 }
 ?>

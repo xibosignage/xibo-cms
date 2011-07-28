@@ -595,7 +595,6 @@ END;
 		$layoutid 		= $this->layoutid; 
 		$layout 		= $this->layout;
 		$description            = $this->description;
-		$permissionid           = $this->permissionid;
 		$retired		= $this->retired;
 		$tags			= $this->tags;
 		
@@ -603,7 +602,6 @@ END;
 		$nameHelp	= $helpManager->HelpIcon(__("The Name of the Layout - (1 - 50 characters)"), true);
 		$descHelp	= $helpManager->HelpIcon(__("An optional description of the Layout. (1 - 250 characters)"), true);
 		$tagsHelp	= $helpManager->HelpIcon(__("Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)"), true);
-		$sharedHelp	= $helpManager->HelpIcon(__("The permissions to associate with this Layout"), true);
 		$retireHelp	= $helpManager->HelpIcon(__("Retire this layout or not? It will no longer be visible in lists"), true);
 		$templateHelp	= $helpManager->HelpIcon(__("Template to create this layout with."), true);
 		
@@ -627,27 +625,15 @@ END;
 		}
 		else
 		{
-			//build the template list
-			$template_list = dropdownlist("SELECT 'none','None',3,1 UNION SELECT templateID, template, permissionID, userID FROM template ORDER BY 2","templateid", "none", "", false, true, $_SESSION['userid']);
+			$templateList = Kit::SelectList('templateid', $user->TemplateList(), 'templateid', 'template');
 			
 			$template_option = <<<END
 			<tr>
 				<td><label for='templateid'>Template<span class="required">*</span></label></td>
-				<td>$templateHelp $template_list</td>
+				<td>$templateHelp $templateList</td>
 			</tr>
 END;
 		}
-		
-		if($permissionid == '')
-		{
-			$default = Config::GetSetting($db, "defaultPlaylist");
-		}
-		else 
-		{
-			$default = $permissionid;
-		}
-		
-		if($default=="private") $default = 1;
 		
 		$msgName	= __('Name');
 		$msgName2	= __('The Name of the Layout - (1 - 50 characters)');
@@ -655,27 +641,8 @@ END;
 		$msgDesc2	= __('An optional description of the Layout. (1 - 250 characters)');
 		$msgTags	= __('Tags');
 		$msgTags2	= __('Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)');
-		$msgShared	= __('Shared');
-		$msgShared2	= __('The permissions to associate with this Layout');
-
-                // Show the Permissions List?
-                $shared_list = dropdownlist("SELECT permissionID, permission FROM permission ORDER BY DisplayOrder ", "permissionid", $default);
-
-                $permission_option = <<<END
-                    	<tr>
-                            <td><label for='permissionid' title="$msgShared2">$msgShared<span class="required">*</span></label></td>
-                            <td>$sharedHelp $shared_list</td>
-			</tr>
-END;
-
-                if ($this->layoutid != 0)
-                {
-                    // Do we have permission to edit the permissions?
-                    if (!$this->auth->modifyPermissions)
-                        $permission_option = '';
-                }
-
-		$form = <<<END
+		
+                $form = <<<END
 		<form id="LayoutForm" class="XiboForm" method="post" action="$action">
 			<input type="hidden" name="layoutid" value="$this->layoutid">
 		<table>
@@ -691,7 +658,6 @@ END;
 				<td><label for="tags" accesskey="d" title="$msgTags2">$msgTags</label></td>
 				<td>$tagsHelp <input name="tags" type="text" id="tags" value="$tags" tabindex="3" /></td>
 			</tr>
-                        $permission_option
 			$retired_option
 			$template_option
 		</table>
