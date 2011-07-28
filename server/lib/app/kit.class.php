@@ -489,5 +489,19 @@ class Kit
         $headers  = sprintf("From: %s\r\nX-Mailer: php", $from);
         return mail($to, $subject, $message, $headers);
     }
+
+    public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = '')
+    {
+        $list = '<select name="' . $listName . '" id="' . $listName . '">';
+
+        foreach ($listValues as $listItem)
+        {
+            $list .= '<option value="' . $listItem[$idColumn] . '" ' . (($listItem[$idColumn] == $selectedId) ? 'selected' : '') . '>' . $listItem[$nameColumn] . '</option>';
+        }
+
+        $list .= '</select>';
+
+        return $list;
+    }
 }
 ?>

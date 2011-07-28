@@ -35,7 +35,7 @@ class Layout extends Data
      * @param <type> $templateId
      * @return <type>
      */
-    public function Add($layout, $description, $permissionid, $tags, $userid, $templateId)
+    public function Add($layout, $description, $tags, $userid, $templateId)
     {
         $db          =& $this->db;
         $currentdate = date("Y-m-d H:i:s");
@@ -80,12 +80,12 @@ class Layout extends Data
         Debug::LogEntry($db, 'audit', 'Retrieved template xml', 'Layout', 'Add');
 
         $SQL = <<<END
-        INSERT INTO layout (layout, description, userID, permissionID, createdDT, modifiedDT, tags, xml)
-         VALUES ('%s', '%s', %d, %d, '%s', '%s', '%s', '%s')
+        INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, tags, xml)
+         VALUES ('%s', '%s', %d, %d, '%s', '%s', '%s')
 END;
 
         $SQL = sprintf($SQL, $db->escape_string($layout),
-                            $db->escape_string($description), $userid, $permissionid,
+                            $db->escape_string($description), $userid,
                             $db->escape_string($currentdate),
                             $db->escape_string($currentdate),
                             $db->escape_string($tags),
@@ -348,8 +348,8 @@ END;
 
         // The Layout ID is the old layout
         $SQL  = "";
-        $SQL .= " INSERT INTO layout (layout, permissionID, xml, userID, description, tags, templateID, retired, duration, background, createdDT, modifiedDT) ";
-        $SQL .= " SELECT '%s', permissionID, xml, %d, description, tags, templateID, retired, duration, background, '%s', '%s' ";
+        $SQL .= " INSERT INTO layout (layout, xml, userID, description, tags, templateID, retired, duration, background, createdDT, modifiedDT) ";
+        $SQL .= " SELECT '%s', xml, %d, description, tags, templateID, retired, duration, background, '%s', '%s' ";
         $SQL .= "  FROM layout ";
         $SQL .= " WHERE layoutid = %d";
         $SQL = sprintf($SQL, $db->escape_string($newLayoutName), $userId, $db->escape_string($currentdate), $db->escape_string($currentdate), $oldLayoutId);

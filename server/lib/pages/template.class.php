@@ -24,6 +24,7 @@ class templateDAO
 	private $user;
 	private $isadmin = false;
 	private $has_permissions = true;
+        private $auth;
 	
 	private $sub_page = "";
 
@@ -57,7 +58,7 @@ class templateDAO
 		//If we have the template ID get the templates information
 		if ($this->templateid != "")
 		{	
-			$SQL = "SELECT template, description, permissionID, xml, tags, retired, isSystem, thumbnail FROM template WHERE templateID = $this->templateid ";
+			$SQL = "SELECT template, description, xml, tags, retired, isSystem, thumbnail FROM template WHERE templateID = $this->templateid ";
 			
 			if (!$results = $db->query($SQL)) 
 			{
@@ -69,21 +70,16 @@ class templateDAO
 			
 			$this->template		= $row[0];
 			$this->description	= $row[1];
-			$this->permissionid = $row[2];
-			$this->xml			= $row[3];
-			$this->tags 		= $row[4];
-			$this->retired 		= $row[5];
-			$this->isSystem		= $row[6];
-			$this->thumbnail	= $row[7];
+			$this->xml		= $row[2];
+			$this->tags 		= $row[3];
+			$this->retired 		= $row[4];
+			$this->isSystem		= $row[5];
+			$this->thumbnail	= $row[6];
 			
-			// get the permissions
-			list($see_permission , $this->has_permissions) = $user->eval_permission($ownerid, $this->permissionid);
-			
-			//check on permissions
-			if (isset($_REQUEST['ajax']) && (!$this->has_permissions || !$see_permission)) {
-				//ajax request handler
-				trigger_error("You do not have permissions to edit this layout", E_USER_ERROR);
-			}
+			$this->auth = $user->TemplateAuth($this->templateid, true);
+
+                        if (!$this->auth->edit)
+                            trigger_error(__('You do not have permissions to edit this template'), E_USER_ERROR);
 		}
 	}
 	
@@ -177,11 +173,8 @@ HTML;
 		$SQL .= "        template.template, ";
 		$SQL .= "        CASE WHEN template.issystem = 1 THEN 'Yes' ELSE 'No' END AS issystem, ";
 		$SQL .= "        template.tags, ";
-		$SQL .= "        permission.permission, ";
-		$SQL .= "        permission.permissionID, ";
 		$SQL .= "        template.userID ";
 		$SQL .= "FROM    template ";
-		$SQL .= "INNER JOIN permission ON template.permissionID = permission.permissionID ";
 		$SQL .= "WHERE 1=1 ";
 		if ($filter_name != "") 
 		{
@@ -201,7 +194,9 @@ HTML;
 			trigger_error($db->error());
 			trigger_error("Can not get the templates - 1st query", E_USER_ERROR);
 		}
-		
+
+                $msgPermissions = __('Permissions');
+
 		$table = <<<END
 		<div class="info_table">
 		<table style="width:100%;">
@@ -210,7 +205,7 @@ HTML;
 					<th>Name</th>
 					<th>Is System</th>
 					<th>Tags</th>
-					<th>Permissions</th>
+					<th>$msgPermissions</th>
 					<th>Owner</th>
 					<th>Action</th>
 				</tr>
@@ -224,32 +219,31 @@ END;
 			$template 	= $row[1];
 			$issystem 	= $row[2];
 			$tags		= $row[3];
-			$permission	= $row[4];
-			$permissionid = $row[5];
-			$userid		 = $row[6];
+			$userid		 = $row[4];
 			
 			//get the username from the userID using the user module
 			$username 		= $user->getNameFromID($userid);
-			$group			= $user->getGroupFromID($userid);
-			
-			//get the permissions
-			list($see_permissions, $edit_permissions) = $user->eval_permission($userid, $permissionid);
-			
-			$buttons = "No available Actions";
+        $group = $this->GroupsForTemplate($templateId);
 
-                        if ($edit_permissions && $issystem == 'No')
-                        {
-                            $buttons = '<button class="XiboFormButton" href="index.php?p=template&q=DeleteTemplateForm&templateId=' . $templateId . '"><span>' . __('Delete') . '</span></button>';
-                        }
+        // Permissions
+        $auth = $this->user->TemplateAuth($templateId, true);
 			
-			if ($see_permissions)
-			{
+        $buttons = "No available Actions";
+
+        if ($auth->del && $issystem == 'No')
+            $buttons = '<button class="XiboFormButton" href="index.php?p=template&q=DeleteTemplateForm&templateid=' . $templateId . '"><span>' . __('Delete') . '</span></button>';
+
+        if ($auth->modifyPermissions && $issystem == 'No')
+            $buttons .= '<button class="XiboFormButton" href="index.php?p=template&q=PermissionsForm&templateid=' . $templateId . '"><span>' . __('Permissions') . '</span></button>';
+
+        if ($auth->view)
+        {
 				$table .= <<<END
 				<tr>
 					<td>$template</td>
 					<td>$issystem</td>
 					<td>$tags</td>
-					<td>$permission</td>
+					<td>$group</td>
 					<td>$username</td>
 					<td>$buttons</td>
 				</tr>
@@ -303,7 +297,6 @@ END;
 		$template 			= $this->template;
 		$description		= $this->description;
 		$tags		 		= $this->tags;
-		$permissionid		= $this->permissionid;
 		$retired			= $this->retired;
 		
 		//init the retired option
@@ -326,8 +319,6 @@ END;
 END;
 		}
 		
-		$shared_list = dropdownlist("SELECT permissionID, permission FROM permission", "permissionid", $permissionid);
-	
 		$form = <<<END
 		
 			<form class="XiboForm" action="$action" method="post">
@@ -345,8 +336,6 @@ END;
 					<tr>
 						<td><label for="description"  title="An optional description of this template.">Description</label></td>
 						<td><input type="text" id="description" name="description" value="$description"></td>
-						<td><label for="permissionid" title="What permissions to give this template.">Sharing <span class="required">*</span></label></td>
-						<td>$shared_list</td>
 					</tr>
 					<tr>
 						<td></td>
@@ -373,7 +362,6 @@ END;
 
 		$template 		= $_POST['template'];
 		$tags		 	= $_POST['tags'];
-		$permissionid 	= Kit::GetParam('permissionid', _POST, _INT);
 		$description	= $_POST['description'];
 		
 		$layoutid		= $_POST['layoutid'];
@@ -421,8 +409,8 @@ END;
 		}
 		
 		//Insert the template
-		$SQL = "INSERT INTO template (template, tags, issystem, retired, description, createdDT, modifiedDT, userID, xml, permissionID) ";
-		$SQL.= "	   VALUES ('$template', '$tags', 0, 0, '$description', '$currentdate', '$currentdate', $userid, '$xml', $permissionid) ";
+		$SQL = "INSERT INTO template (template, tags, issystem, retired, description, createdDT, modifiedDT, userID, xml) ";
+		$SQL.= "	   VALUES ('$template', '$tags', 0, 0, '$description', '$currentdate', '$currentdate', $userid, '$xml') ";
 		
 		if (!$db->query($SQL)) 
 		{
@@ -459,7 +447,10 @@ END;
         $response = new ResponseManager();
         $helpManager = new HelpManager($db, $user);
 
-        $templateId = Kit::GetParam('templateId', _POST, _INT);
+        if (!$this->auth->del)
+            trigger_error(__('You do not have permissions to delete this template'), E_USER_ERROR);
+
+        $templateId = Kit::GetParam('templateid', _POST, _INT);
 
         if ($templateId == 0)
             trigger_error(__('No template found'), E_USER_ERROR);
@@ -489,8 +480,11 @@ END;
         $user =& $this->user;
         $response = new ResponseManager();
         $helpManager = new HelpManager($db, $user);
+
+        if (!$this->auth->del)
+            trigger_error(__('You do not have permissions to delete this template'), E_USER_ERROR);
         
-        $templateId = Kit::GetParam('templateId', _GET, _INT);
+        $templateId = Kit::GetParam('templateid', _GET, _INT);
 
         if ($templateId == 0)
             trigger_error(__('No template found'), E_USER_ERROR);
@@ -546,5 +540,187 @@ END;
 		
 		return $xml->saveXML();
 	}
+     
+     /**
+     * Get a list of group names for a layout
+     * @param <type> $layoutId
+     * @return <type>
+     */
+    private function GroupsForTemplate($templateId)
+    {
+        $db =& $this->db;
+
+        $SQL = '';
+        $SQL .= 'SELECT `group`.Group ';
+        $SQL .= '  FROM `group` ';
+        $SQL .= '   INNER JOIN lktemplategroup ';
+        $SQL .= '   ON `group`.GroupID = lktemplategroup.GroupID ';
+        $SQL .= ' WHERE lktemplategroup.TemplateID = %d ';
+
+        $SQL = sprintf($SQL, $templateId);
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get group information for template'), E_USER_ERROR);
+        }
+
+        $groups = '';
+
+        while ($row = $db->get_assoc_row($results))
+        {
+            $groups .= $row['Group'] . ', ';
+        }
+
+        $groups = trim($groups);
+        $groups = trim($groups, ',');
+
+        return $groups;
+    }
+
+    public function PermissionsForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $helpManager = new HelpManager($db, $user);
+
+        $templateId = Kit::GetParam('templateid', _GET, _INT);
+
+        if (!$this->auth->modifyPermissions)
+            trigger_error(__('You do not have permissions to edit this template'), E_USER_ERROR);
+
+        // Form content
+        $form = '<form id="TemplatePermissionsForm" class="XiboForm" method="post" action="index.php?p=template&q=Permissions">';
+	$form .= '<input type="hidden" name="templateid" value="' . $templateId . '" />';
+        $form .= '<div class="dialog_table">';
+	$form .= '  <table style="width:100%">';
+        $form .= '      <tr>';
+        $form .= '          <th>' . __('Group') . '</th>';
+        $form .= '          <th>' . __('View') . '</th>';
+        $form .= '          <th>' . __('Edit') . '</th>';
+        $form .= '          <th>' . __('Delete') . '</th>';
+        $form .= '      </tr>';
+
+        // List of all Groups with a view/edit/delete checkbox
+        $SQL = '';
+        $SQL .= 'SELECT `group`.GroupID, `group`.`Group`, View, Edit, Del, `group`.IsUserSpecific ';
+        $SQL .= '  FROM `group` ';
+        $SQL .= '   LEFT OUTER JOIN lktemplategroup ';
+        $SQL .= '   ON lktemplategroup.GroupID = group.GroupID ';
+        $SQL .= '       AND lktemplategroup.TemplateID = %d ';
+        $SQL .= ' WHERE `group`.GroupID <> %d ';
+        $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
+
+        $SQL = sprintf($SQL, $templateId, $user->getGroupFromId($user->userid, true));
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get permissions for this template'), E_USER_ERROR);
+        }
+
+        while($row = $db->get_assoc_row($results))
+        {
+            $groupId = $row['GroupID'];
+            $group = ($row['IsUserSpecific'] == 0) ? '<strong>' . $row['Group'] . '</strong>' : $row['Group'];
+
+            $form .= '<tr>';
+            $form .= ' <td>' . $group . '</td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_view" ' . (($row['View'] == 1) ? 'checked' : '') . '></td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_edit" ' . (($row['Edit'] == 1) ? 'checked' : '') . '></td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_del" ' . (($row['Del'] == 1) ? 'checked' : '') . '></td>';
+            $form .= '</tr>';
+        }
+
+        $form .= '</table>';
+        $form .= '</div>';
+        $form .= '</form>';
+
+        $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Template', 'Permissions') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#TemplatePermissionsForm").submit()');
+        $response->Respond();
+    }
+
+    public function Permissions()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        Kit::ClassLoader('templategroupsecurity');
+
+        $templateId = Kit::GetParam('templateid', _POST, _INT);
+        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
+
+        if (!$this->auth->modifyPermissions)
+            trigger_error(__('You do not have permissions to edit this template'), E_USER_ERROR);
+
+        // Unlink all
+        $security = new TemplateGroupSecurity($db);
+        if (!$security->UnlinkAll($templateId))
+            trigger_error(__('Unable to set permissions'), E_USER_ERROR);
+
+        // Some assignments for the loop
+        $lastGroupId = 0;
+        $first = true;
+        $view = 0;
+        $edit = 0;
+        $del = 0;
+
+        // List of groupIds with view, edit and del assignments
+        foreach($groupIds as $groupPermission)
+        {
+            $groupPermission = explode('_', $groupPermission);
+            $groupId = $groupPermission[0];
+
+            if ($first)
+            {
+                // First time through
+                $first = false;
+                $lastGroupId = $groupId;
+            }
+
+            if ($groupId != $lastGroupId)
+            {
+                // The groupId has changed, so we need to write the current settings to the db.
+                // Link new permissions
+                if (!$security->Link($templateId, $lastGroupId, $view, $edit, $del))
+                    trigger_error(__('Unable to set permissions'), E_USER_ERROR);
+
+                // Reset
+                $lastGroupId = $groupId;
+                $view = 0;
+                $edit = 0;
+                $del = 0;
+            }
+
+            switch ($groupPermission[1])
+            {
+                case 'view':
+                    $view = 1;
+                    break;
+
+                case 'edit':
+                    $edit = 1;
+                    break;
+
+                case 'del':
+                    $del = 1;
+                    break;
+            }
+        }
+
+        // Need to do the last one
+        if (!$first)
+        {
+            if (!$security->Link($templateId, $lastGroupId, $view, $edit, $del))
+                    trigger_error(__('Unable to set permissions'), E_USER_ERROR);
+        }
+
+        $response->SetFormSubmitResponse(__('Permissions Changed'));
+        $response->Respond();
+    }
 }
 ?>

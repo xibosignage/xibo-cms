@@ -196,8 +196,10 @@ SQL;
         $emailHelp      = $helpManager->HelpIcon(__("Do you want to be notified by email if there is a problem with this display?"), true);
         $alertHelp      = $helpManager->HelpIcon(__("How long in minutes after the display last connected to the webservice should we send an alert. Set this value higher than the collection interval on the client. Set to 0 to use global default."), true);
 
-		$layout_list = dropdownlist("SELECT layoutid, layout FROM layout WHERE retired = 0 ORDER by layout", "defaultlayoutid", $layoutid);
-		$inc_schedule_list = listcontent("1|Yes,0|No","inc_schedule",$inc_schedule);
+
+                $layoutList = Kit::SelectList('defaultlayoutid', $this->user->LayoutList(), 'layoutid', 'layout', $layoutid);
+
+                $inc_schedule_list = listcontent("1|Yes,0|No","inc_schedule",$inc_schedule);
 		$auditing_list = listcontent("1|Yes,0|No","auditing",$auditing);
         $email_alert_list = listcontent("1|Yes,0|No","email_alert",$email_alert);
 
@@ -234,7 +236,7 @@ SQL;
 					<td>$msgDisplay<span class="required">*</span></td>
 					<td>$nameHelp <input name="display" type="text" value="$display"></td>
 					<td>$msgDefault<span class="required">*</span></td>
-					<td>$defaultHelp $layout_list</td>
+					<td>$defaultHelp $layoutList</td>
 				</tr>
 				<tr>
 					<td>$msgInterL<span class="required">*</span></td>
@@ -697,7 +699,7 @@ END;
         }
 
         $msgDefault = __('Default Layout');
-        $layoutList = dropdownlist('SELECT layoutid, layout FROM layout WHERE retired = 0 ORDER by layout', 'defaultlayoutid', $defaultLayoutId);
+	$layoutList = Kit::SelectList('defaultlayoutid', $this->user->LayoutList(), 'layoutid', 'layout', $defaultLayoutId);
 
         $form = <<<END
             <form id="DefaultLayoutForm" class="XiboForm" method="post" action="index.php?p=display&q=DefaultLayout&DisplayId=$displayId">

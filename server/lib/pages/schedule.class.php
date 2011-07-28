@@ -1102,12 +1102,9 @@ HTML;
 		$dateText		= date("d/m/Y", $date);
 		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
 		
-		// need to do some user checking here
-		$sql  = "SELECT layoutID, layout, permissionID, userID ";
-		$sql .= "  FROM layout WHERE retired = 0";
-		$sql .= " ORDER BY layout ";
-		
-		$layout_list 	= dropdownlist($sql, "layoutid", 0, "", false, true);
+		// Layout list
+                $layouts = $user->LayoutList();
+		$layout_list 	= Kit::SelectList('layoutid', $layouts, 'layoutid', 'layout');
 		
 		$outputForm		= false;
 		$displayList	= $this->UnorderedListofDisplays($outputForm, $displayGroupIDs);
@@ -1275,11 +1272,9 @@ END;
 		}
 		
 		// need to do some user checking here
-		$sql  = "SELECT layoutID, layout, permissionID, userID ";
-		$sql .= "  FROM layout WHERE retired = 0";
-		$sql .= " ORDER BY layout ";
-		
-		$layout_list 	= dropdownlist($sql, "layoutid", $layoutID, "", false, true);
+		// Layout list
+                $layouts = $user->LayoutList();
+		$layout_list 	= Kit::SelectList('layoutid', $layouts, 'layoutid', 'layout', $layoutID);
 		
 		$outputForm		= false;
 		$displayList	= $this->UnorderedListofDisplays($outputForm, $displayGroupIDs);
@@ -1398,7 +1393,9 @@ END;
 		
 		$fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
 		$toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
-		$recToDT    = $datemanager->GetDateFromUS($recToDT, $repeatTime);
+
+                if ($recToDT != '')
+                    $recToDT = $datemanager->GetDateFromUS($recToDT, $repeatTime);
 		
 		// Validate layout
 		if ($layoutid == 0) 
@@ -1482,8 +1479,9 @@ END;
 		
 		$fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
 		$toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
-		$recToDT    = $datemanager->GetDateFromUS($recToDT, $repeatTime);
-		
+		if ($recToDT != '')
+                    $recToDT = $datemanager->GetDateFromUS($recToDT, $repeatTime);
+
 		// Validate layout
 		if ($layoutid == 0) 
 		{

@@ -31,7 +31,6 @@ class layoutDAO
 	
 	private $layoutid;
 	private $layout;
-	private $permissionid;
 	private $retired;
 	private $description;
 	private $tags;
@@ -71,7 +70,7 @@ class layoutDAO
 
                 $this->sub_page = "edit";
 
-                $sql  = " SELECT layout, description, permissionID, userid, retired, tags, xml FROM layout ";
+                $sql  = " SELECT layout, description, userid, retired, tags, xml FROM layout ";
                 $sql .= sprintf(" WHERE layoutID = %d ", $this->layoutid);
 
                 if(!$results = $db->query($sql))
@@ -85,12 +84,11 @@ class layoutDAO
 
                 while($aRow = $db->get_row($results))
                 {
-                    $this->layout 		= Kit::ValidateParam($aRow[0], _STRING);
+                    $this->layout = Kit::ValidateParam($aRow[0], _STRING);
                     $this->description 	= Kit::ValidateParam($aRow[1], _STRING);
-                    $this->permissionid = Kit::ValidateParam($aRow[2], _INT);
-                    $this->retired 		= Kit::ValidateParam($aRow[4], _INT);
-                    $this->tags	 		= Kit::ValidateParam($aRow[5], _STRING);
-                    $this->xml			= $aRow[6];
+                    $this->retired = Kit::ValidateParam($aRow[3], _INT);
+                    $this->tags = Kit::ValidateParam($aRow[4], _STRING);
+                    $this->xml = $aRow[5];
                 }
             }
 	}
@@ -134,11 +132,6 @@ class layoutDAO
 		$layout = ""; //3
 		if (isset($_SESSION['layout']['filter_layout'])) $layout = $_SESSION['layout']['filter_layout'];
 		
-		//sharing list
-		$shared = "All";
-		if (isset($_SESSION['layout']['permissionid'])) $shared = $_SESSION['layout']['permissionid'];
-		$shared_list = dropdownlist("SELECT 'all','All' UNION SELECT permissionID, permission FROM permission", "permissionid", $shared);
-		
 		//retired list
 		$retired = "0";
 		if(isset($_SESSION['layout']['filter_retired'])) $retired = $_SESSION['layout']['retired'];
@@ -155,7 +148,6 @@ class layoutDAO
 
 		$msgName	= __('Name');
 		$msgOwner	= __('Owner');
-		$msgShared	= __('Shared');
 		$msgTags	= __('Tags');
 		$msgRetired	= __('Retired');
 
@@ -171,8 +163,6 @@ class layoutDAO
 					<td><input type="text" name="filter_layout"></td>
 					<td>$msgOwner</td>
 					<td>$user_list</td>
-					<td>$msgShared</td>
-					<td>$shared_list</td>
 				</tr>
 				<tr>
 					<td>$msgTags</td>
@@ -212,7 +202,6 @@ HTML;
 
             $layout         = Kit::GetParam('layout', _POST, _STRING);
             $description    = Kit::GetParam('description', _POST, _STRING);
-            $permissionid   = Kit::GetParam('permissionid', _POST, _INT);
             $tags           = Kit::GetParam('tags', _POST, _STRING);
             $templateId     = Kit::GetParam('templateid', _POST, _INT, 0);
             $userid         = Kit::GetParam('userid', _SESSION, _INT);
@@ -220,7 +209,7 @@ HTML;
             // Add this layout
             $layoutObject = new Layout($db);
 
-            if(!$id = $layoutObject->Add($layout, $description, $permissionid, $tags, $userid, $templateId))
+            if(!$id = $layoutObject->Add($layout, $description, $tags, $userid, $templateId))
                 trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
             // Successful layout creation
@@ -246,12 +235,6 @@ HTML;
 		$userid 		= Kit::GetParam('userid', _SESSION, _INT);
 		$currentdate 	= date("Y-m-d H:i:s");
 
-                // We can only change the permissionId if we have permission to
-                $permissionId = $this->auth->permissionId;
-
-                if ($this->auth->modifyPermissions)
-                    $permissionId = Kit::GetParam('permissionid', _POST, _INT);
-		
 		//validation
 		if (strlen($layout) > 50 || strlen($layout) < 1) 
 		{
@@ -286,7 +269,6 @@ HTML;
 
 		UPDATE layout SET
 			layout = '%s',
-			permissionID = %d,
 			description = '%s',
 			modifiedDT = '%s',
 			retired = %d,
@@ -296,7 +278,7 @@ HTML;
 END;
 
 		$SQL = sprintf($SQL, 
-						$db->escape_string($layout), $permissionId,
+						$db->escape_string($layout),
 						$db->escape_string($description), 
 						$db->escape_string($currentdate), $retired, 
 						$db->escape_string($tags), $this->layoutid);

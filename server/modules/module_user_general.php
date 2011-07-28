@@ -1010,16 +1010,43 @@ END;
      */
     public function TemplateAuth($templateId, $fullObject = false)
     {
-        if (!$userId = $this->db->GetSingleRow(sprintf("SELECT UserID, PermissionID FROM template WHERE TemplateID = %d", $templateId)))
-        {
-            trigger_error($this->db->error_text);
-            trigger_error($this->db->error());
+        $auth = new PermissionManager($this->db, $this);
 
-            return false;
+        $SQL  = '';
+        $SQL .= 'SELECT UserID ';
+        $SQL .= '  FROM template ';
+        $SQL .= ' WHERE TemplateId = %d ';
+
+        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $templateId), 'UserID', _INT))
+            return $auth;
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
         }
 
-        $auth = new PermissionManager($this->db, $this);
-        $auth->Evaluate($row['UserID'], $row['PermissionID']);
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM template ';
+        $SQL .= '   INNER JOIN lktemplategroup ';
+        $SQL .= '   ON lktemplategroup.TemplateID = template.TemplateID ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lktemplategroup.GroupID ';
+        $SQL .= ' WHERE template.TemplateID = %d ';
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+        $SQL .= 'GROUP BY template.UserID ';
+
+        $SQL = sprintf($SQL, $templateId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
 
         if ($fullObject)
             return $auth;
@@ -1037,7 +1064,6 @@ END;
         $SQL .= "        layout, ";
         $SQL .= "        description, ";
         $SQL .= "        tags, ";
-        $SQL .= "        permissionID, ";
         $SQL .= "        userID ";
         $SQL .= "   FROM layout ";
 
@@ -1062,8 +1088,7 @@ END;
             $layoutItem['tags']     = Kit::ValidateParam($row['tags'], _STRING);
             $layoutItem['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
 
-            $auth = new PermissionManager($this->db, $this);
-            $auth->Evaluate($layoutItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
+            $auth = $this->LayoutAuth($layoutItem['layoutid'], true);
 
             if ($auth->view)
             {
