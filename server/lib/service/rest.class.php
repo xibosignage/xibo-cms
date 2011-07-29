@@ -320,14 +320,13 @@ class Rest
         $name           = $this->GetParam('name', _STRING);
         $duration       = $this->GetParam('duration', _INT);
         $fileName       = $this->GetParam('fileName', _FILENAME);
-        $permissionId   = $this->GetParam('permissionId', _INT);
 
         // Check permissions
         if (!$this->user->FileAuth($fileId))
             return $this->Error(1, 'Access Denied');
 
         // Add the media.
-        if (!$mediaId = $media->Add($fileId, $type, $name, $duration, $fileName, $permissionId, $this->user->userid))
+        if (!$mediaId = $media->Add($fileId, $type, $name, $duration, $fileName, $this->user->userid))
             return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
         // Return the mediaId.
@@ -349,14 +348,13 @@ class Rest
         $mediaId        = $this->GetParam('mediaId', _INT);
         $name           = $this->GetParam('name', _STRING);
         $duration       = $this->GetParam('duration', _INT);
-        $permissionId   = $this->GetParam('permissionId', _INT);
 
         // Check permissions
         if (!$this->user->MediaAuth($mediaId))
             return $this->Error(1, 'Access Denied');
 
         // Add the media.
-        if (!$media->Edit($mediaId, $name, $duration, $permissionId, $this->user->userid))
+        if (!$media->Edit($mediaId, $name, $duration, $this->user->userid))
             return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
         // Return the mediaId.
@@ -467,14 +465,13 @@ class Rest
         
         $layout         = $this->GetParam('layout', _STRING);
         $description    = $this->GetParam('description', _STRING);
-        $permissionid   = $this->GetParam('permissionid', _INT);
         $tags           = $this->GetParam('tags', _STRING);
         $templateId     = $this->GetParam('templateid', _INT, 0);
 
         // Add this layout
         $layoutObject = new Layout($this->db);
 
-        if(!$id = $layoutObject->Add($layout, $description, $permissionid, $tags, $this->user->userid, $templateId))
+        if(!$id = $layoutObject->Add($layout, $description, $tags, $this->user->userid, $templateId))
             return $this->Error($layoutObject->GetErrorNumber(), $layoutObject->GetErrorMessage());
 
         Debug::LogEntry($this->db, 'audit', 'Added new layout with id' . $id);

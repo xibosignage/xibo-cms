@@ -28,13 +28,14 @@ class Module implements ModuleInterface
 	protected $region;
 	protected $response;
         public $auth;
+	protected $type;
+      	protected $displayType;
 
 	protected $layoutid;
 	protected $regionid;
 
 	protected $mediaid;
 	protected $name;
-	protected $type;
 	private   $schemaVersion;
 	protected $regionSpecific;
 	protected $duration;
@@ -458,37 +459,150 @@ XML;
 	 */
 	public function DeleteForm()
 	{
-		$db =& $this->db;
+            $db =& $this->db;
+            $helpManager = new HelpManager($db, $this->user);
+            $this->response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link($this->type, 'Delete') . '")');
 
-		//Parameters
-		$layoutid 	= $this->layoutid;
-		$regionid 	= $this->regionid;
-		$mediaid	= $this->mediaid;
-		
-		// Messages
-		$msgTitle 		= __('Return to the Region Options');
-		$msgWarn		= __('Are you sure you want to remove this item from Xibo?');
-		$msgWarnLost 	= __('It will be lost');
+            //Parameters
+            $layoutid = $this->layoutid;
+            $regionid = $this->regionid;
+            $mediaid = $this->mediaid;
+            $lkid = $this->lkid;
+            $userid = $this->user->userid;
 
-		//we can delete
-		$form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=DeleteMedia">
-			<input type="hidden" name="mediaid" value="$mediaid">
-			<input type="hidden" name="layoutid" value="$layoutid">
-			<input type="hidden" name="regionid" value="$regionid">
-			<p>$msgWarn <span class="required">$msgWarnLost</span>.</p>
-			<input id="btnSave" type="submit" value="Yes"  />
-			<input class="XiboFormButton" id="btnCancel" type="button" title="$msgTitle" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="No" />
-		</form>
+            // Can this user delete?
+            if (!$this->auth->del)
+            {
+                $this->response->SetError('You do not have permission to delete this media.');
+                $this->response->keepOpen = false;
+                return $this->response;
+            }
+
+            // Messages
+            $msgTitle = __('Return to the Region Options');
+            $msgWarn = __('Are you sure you want to remove this item from Xibo?');
+            $msgWarnLost = __('It will be lost');
+            $msgYes = __('Yes');
+            $msgNo = __('No');
+
+            if ($this->regionSpecific)
+            {
+                $form = <<<END
+                <form id="MediaDeleteForm" class="XiboForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=DeleteMedia">
+                        <input type="hidden" name="mediaid" value="$mediaid">
+                        <input type="hidden" name="layoutid" value="$layoutid">
+                        <input type="hidden" name="regionid" value="$regionid">
+                        <p>$msgWarn <span class="required">$msgWarnLost</span>.</p>
+                </form>
 END;
+                $this->response->AddButton(__('No'), 'XiboFormRender("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+                $this->response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
+            }
+            else
+            {
+                // This is for library based media
+                $options = '';
 
-		$this->response->html 		 	= $form;
-		$this->response->dialogTitle 	= __('Delete Item');
-		$this->response->dialogSize 	= true;
-		$this->response->dialogWidth 	= '450px';
-		$this->response->dialogHeight 	= '150px';
+                // Always have the abilty to unassign from the region
+                $options .= 'unassign|' . __('Unassign from this region only');
 
-		return $this->response;
+                // Is this user allowed to edit this media?
+                if ($this->auth->edit)
+                {
+                    // Load what we know about this media into the object
+                    $SQL = "SELECT IFNULL(editedMediaID, 0) AS editedMediaID FROM media WHERE mediaID = $mediaid ";
+                    $editedMediaID = $db->GetSingleValue($SQL, 'editedMediaID', _INT);
+                    
+                    if ($editedMediaID === false)
+                    {
+                        trigger_error($editedMediaID . $db->error());
+                        $this->response->SetError(__('Error querying for the Media information'));
+                        $this->response->keepOpen = true;
+                        return $this->response;
+                    }
+
+                    $options .= ',retire|' . __('Unassign from this region and retire');
+
+                    // Is this media retired?
+                    $revised = false;
+                    if ($editedMediaID != 0)
+                            $revised = true;
+
+                    // Is this media being used anywhere else?
+                    if ($layoutid == '')
+                    {
+                        $SQL = sprintf('SELECT layoutID FROM lklayoutmedia WHERE mediaID = %d ', $mediaid);
+                        $options = '';
+                    }
+                    else
+                    {
+                        $SQL = sprintf("SELECT layoutID FROM lklayoutmedia WHERE mediaID = %d AND layoutid <> %d AND regionID <> '%s' ", $mediaid, $layoutid, $regionid);
+                    }
+
+                    if (!$results = $db->query($SQL))
+                    {
+                        trigger_error($db->error());
+
+                        $this->response->SetError(__('Cannot determine if this media has been used.'));
+                        $this->response->keepOpen = true;
+                        return $this->response;
+                    }
+
+                    if ($db->num_rows($results) == 0 && !$revised)
+                    {
+                        $options .= ',delete|' . __('Delete this media');
+                    }
+                    else
+                    {
+                        $options .= ',retire|' . __('Retire this media');
+                    }
+                }
+                else
+                {
+                    // If this is the normal content page then say they cant edit, otherwise display the form with only the unassign option
+                    if ($layoutid == '')
+                    {
+                        $this->response->SetError(__('You do not have permission to alter/delete this media.'));
+                        $this->response->keepOpen = true;
+                        return $this->response;
+                    }
+                }
+
+                $options = ltrim($options, ',');
+
+                $deleteOptions = listcontent($options, 'options');
+
+                $msgWarn = __('Are you sure you want to delete this media?');
+                $msgSelect = __('Please select from the following options');
+                $msgCaution = __('Warning! You cannot undo this operation');
+
+                //we can delete
+                $form = <<<END
+                <form id="MediaDeleteForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=DeleteMedia">
+                    <input type="hidden" name="mediaid" value="$mediaid">
+                    <input type="hidden" name="lkid" value="$lkid">
+                    <input type="hidden" name="layoutid" value="$layoutid">
+                    <input type="hidden" name="regionid" value="$regionid">
+                    <p>$msgWarn</p>
+                    <p>$msgSelect: $deleteOptions </p>
+                    <p>$msgCaution</p>
+                </form>
+END;
+                if ($layoutid == '')
+                    $this->response->AddButton(__('No'), 'XiboDialogClose()');
+                else
+                   $this->response->AddButton(__('No'), 'XiboFormRender("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+
+                $this->response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
+            }
+
+            $this->response->html = $form;
+            $this->response->dialogTitle = __('Delete Media');
+            $this->response->dialogSize = true;
+            $this->response->dialogWidth = '450px';
+            $this->response->dialogHeight = '280px';
+
+            return $this->response;
 	}
 
 	/**
@@ -497,34 +611,93 @@ END;
 	 */
 	public function DeleteMedia()
 	{
-		$db 		=& $this->db;
+            $db =& $this->db;
 
-		$layoutid 	= $this->layoutid;
-		$regionid 	= $this->regionid;
+            $layoutid = $this->layoutid;
+            $regionid = $this->regionid;
+            $mediaid = $this->mediaid;
 
-		$url 		= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+            $url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
-                if (!$this->auth->del)
-                {
-                    $this->response->SetError('You do not have permission to delete this assignment.');
-                    $this->response->keepOpen = false;
-                    return $this->response;
-                }
+            if (!$this->auth->del)
+            {
+                $this->response->SetError('You do not have permission to delete this assignment.');
+                $this->response->keepOpen = false;
+                return $this->response;
+            }
 
+            if ($layoutid != '')
+            {
                 Kit::ClassLoader('layoutmediagroupsecurity');
                 $security = new LayoutMediaGroupSecurity($db);
 
                 if (!$security->UnlinkAll($layoutid, $regionid, $this->mediaid))
                     trigger_error($security->GetErrorMessage(), E_USER_ERROR);
 
-		$this->deleteFromRegion = true;
-		$this->UpdateRegion();
+                $this->deleteFromRegion = true;
+                $this->UpdateRegion();
+            }
 
-		// We want to load a new form
-		$this->response->loadForm	= true;
-		$this->response->loadFormUri= $url;
+            // Are we region specific media?
+            if (!$this->regionSpecific)
+            {
+                $options = Kit::GetParam('options', _POST, _WORD);
 
-		return $this->response;
+                // If we are set to retire we retire
+		if ($options == 'retire')
+		{
+                    //Update the media record to say it is retired
+                    $SQL = sprintf("UPDATE media SET retired = 1 WHERE mediaid = %d ", $mediaid);
+
+                    if (!$db->query($SQL))
+                    {
+                        trigger_error($db->error());
+
+                        $this->response->SetError(__('Database error retiring this media record.'));
+                        $this->response->keepOpen = true;
+                        return $this->response;
+                    }
+		}
+
+		// If we are set to delete, we delete
+		if ($options == 'delete')
+		{
+                    // Get the file location from the database
+                    $storedAs = $db->GetSingleValue(sprintf("SELECT storedAs FROM media WHERE mediaid = %d", $mediaid), 'storedAs', _FILENAME);
+
+                    // Remove permission assignments
+                    Kit::ClassLoader('mediagroupsecurity');
+
+                    $security = new MediaGroupSecurity($db);
+
+                    if (!$security->UnlinkAll($mediaid))
+                        trigger_error($security->GetErrorMessage(), E_USER_ERROR);
+
+                    //Update the media record to say it is retired
+                    $SQL = sprintf("DELETE FROM media WHERE mediaid = %d ", $mediaid);
+
+                    if (!$db->query($SQL))
+                    {
+                        trigger_error($db->error());
+
+                        $this->response->SetError(__('Database error deleting this media record.'));
+                        $this->response->keepOpen = true;
+                        return $this->response;
+                    }
+
+                    $this->DeleteMediaFiles($storedAs);
+		}
+
+                $this->response->message = __('Media Deleted');
+            }
+            else
+            {
+                // We want to load a new form
+                $this->response->loadForm = true;
+                $this->response->loadFormUri= $url;
+            }
+
+            return $this->response;
 	}
 
 	/**
@@ -545,6 +718,110 @@ END;
 		return $this->response;
 	}
 
+    protected function AddFormForLibraryMedia()
+    {
+        global $session;
+        $db =& $this->db;
+        $user =& $this->user;
+
+        // Would like to get the regions width / height
+        $layoutid = $this->layoutid;
+        $regionid = $this->regionid;
+
+        // Set the Session / Security information
+        $sessionId = session_id();
+        $securityToken = CreateFormToken();
+        $backgroundImage = Kit::GetParam('backgroundImage', _GET, _BOOL, false);
+
+        $session->setSecurityToken($securityToken);
+
+        //Get the default value for the shared list
+        $default = Config::GetSetting($db, 'defaultMedia');
+        $defaultDuration = Config::GetSetting($db, 'jpg_length');
+
+        // Save button is different depending on if we are on a region or not
+        if ($regionid != '')
+        {
+            setSession('content','mediatype', $this->type);
+
+            $save_button = <<<END
+            <input id="btnSave" type="submit" value="Save" disabled />
+            <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
+            <input class="XiboFormButton" type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" title="Library" value="Library" />
+END;
+        }
+        elseif ($backgroundImage)
+        {
+            // Show the save button, and make cancel go back to the background form
+            $save_button = <<<END
+            <input id="btnSave" type="submit" value="Save" disabled />
+            <input class="XiboFormButton" id="btnCancel" type="button" title="Close" href="index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid" value="Cancel" />
+END;
+        }
+        else
+        {
+            $save_button = <<<END
+            <input id="btnSave" type="submit" value="Save" disabled />
+            <input class="XiboFormButton" id="btnCancel" type="button" title="Close" href="index.php?p=content&q=displayForms&sp=add" value="Cancel" />
+END;
+        }
+
+        $form = <<<FORM
+        <div style="display:none"><iframe name="fileupload" width="1px" height="1px"></iframe></div>
+        <div>
+                <form id="file_upload" method="post" action="index.php?p=content&q=FileUpload" enctype="multipart/form-data" target="fileupload">
+                        <input type="hidden" id="PHPSESSID" value="$sessionId" />
+                        <input type="hidden" id="SecurityToken" value="$securityToken" />
+                        <input type="hidden" name="MAX_FILE_SIZE" value="$this->maxFileSizeBytes" />
+                        <table>
+                                <tr>
+                                        <td><label for="file">$this->displayType File<span class="required">*</span></label></td>
+                                        <td colspan="3">
+                                                <input type="file" name="media_file" onchange="fileFormSubmit();this.form.submit();" />
+                                        </td>
+                                </tr>
+                        </table>
+                </form>
+        </div>
+        <div id="uploadProgress" style="display:none">
+                <img src="img/loading.gif"><span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
+        </div>
+        <form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
+                <input type="hidden" name="layoutid" value="$layoutid">
+                <input type="hidden" name="regionid" value="$regionid">
+                <input type="hidden" name="backgroundImage" value="$backgroundImage" />
+                <input type="hidden" id="txtFileName" name="txtFileName" readonly="true" />
+                <input type="hidden" name="hidFileID" id="hidFileID" value="" />
+                <table width="100%">
+                        <tr>
+                        <td><label for="name" title="The name of the $this->type. Leave this blank to use the file name">Name</label></td>
+                        <td><input id="name" name="name" type="text"></td>
+                        </tr>
+                        <tr>
+                        <td><label for="duration" title="The duration in seconds this image should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
+                        <td><input id="duration" name="duration" type="text" value="$defaultDuration"></td>
+                        </tr>
+                        <tr>
+                                <td></td>
+                                <td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+                        </tr>
+                        <tr>
+                                <td></td>
+                                <td colspan="3">$save_button</td>
+                        </tr>
+                </table>
+        </form>
+FORM;
+
+        $this->response->html = $form;
+        $this->response->dialogTitle = 'Add New ' . $this->displayType;
+        $this->response->dialogSize = true;
+        $this->response->dialogWidth = '450px';
+        $this->response->dialogHeight = '280px';
+
+        return $this->response;
+    }
+
 	/**
 	 * Default Edit Form
 	 * @return
@@ -562,6 +839,139 @@ END;
 		return $this->response;
 	}
 
+    protected function EditFormForLibraryMedia()
+    {
+        global $session;
+        $db =& $this->db;
+        $user =& $this->user;
+
+        // Would like to get the regions width / height
+        $layoutid = $this->layoutid;
+        $regionid = $this->regionid;
+        $mediaid = $this->mediaid;
+        $lkid = $this->lkid;
+        $userid	= $this->user->userid;
+
+        // Can this user delete?
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this media.');
+            $this->response->keepOpen = false;
+            return $this->response;
+        }
+
+        // Set the Session / Security information
+        $sessionId = session_id();
+        $securityToken = CreateFormToken();
+
+        $session->setSecurityToken($securityToken);
+
+        // Load what we know about this media into the object
+        $SQL = "SELECT name, originalFilename, userID, retired, storedAs, isEdited, editedMediaID FROM media WHERE mediaID = $mediaid ";
+
+        if (!$row = $db->GetSingleRow($SQL))
+        {
+            trigger_error($db->error()); //log the error
+
+            $this->message = __('Error querying for the Media information');
+            return false;
+        }
+
+        $name = $row['name'];
+        $originalFilename = $row['originalFilename'];
+        $userid = $row['userID'];
+        $retired = $row['retired'];
+        $storedAs = $row['storedAs'];
+        $isEdited = $row['isEdited'];
+        $editedMediaID = $row['editedMediaID'];
+        $ext = strtolower(substr(strrchr($originalFilename, '.'), 1));
+
+        //Save button is different depending on if we are on a region or not
+        if ($regionid != '')
+        {
+            setSession('content', 'mediatype', $this->type);
+
+            $extraNotes = '<em>Note: Uploading a new ' . $this->displayType . ' here will replace it on this layout only.</em>';
+
+            $save_button = <<<END
+            <input id="btnSave" type="submit" value="Save" />
+            <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
+            <input class="XiboFormButton" type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" title="Library" value="Library" />
+END;
+        }
+        else
+        {
+            $extraNotes = '<em>Note: As you are editing from the library uploading a new media item will not replace the old one from any layouts. To do this navigate to the layout and edit the media from there.</em>';
+
+            $save_button = <<<END
+            <input id="btnSave" type="submit" value="Save" />
+            <input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
+END;
+        }
+
+        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
+
+        $form = <<<FORM
+        <div style="display:none"><iframe name="fileupload" width="1px" height="1px"></iframe></div>
+        <div>
+                <form id="file_upload" method="post" action="index.php?p=content&q=FileUpload" enctype="multipart/form-data" target="fileupload">
+                        <input type="hidden" id="PHPSESSID" value="$sessionId" />
+                        <input type="hidden" id="SecurityToken" value="$securityToken" />
+                        <input type="hidden" name="MAX_FILE_SIZE" value="$this->maxFileSizeBytes" />
+                        <table>
+                                <tr>
+                                        <td><label for="file">New $this->displayType File<span class="required">*</span></label></td>
+                                        <td colspan="3">
+                                                <input type="file" name="media_file" onchange="fileFormSubmit();this.form.submit();" />
+                                        </td>
+                                </tr>
+                        </table>
+                </form>
+        </div>
+        <div id="uploadProgress" style="display:none">
+                <img src="img/loading.gif"><span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
+        </div>
+        <form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
+                <input type="hidden" name="hidFileID" id="hidFileID" value="" />
+                <input type="hidden" id="txtFileName" name="txtFileName" readonly="true" />
+                <input type="hidden" name="layoutid" value="$layoutid">
+                <input type="hidden" name="regionid" value="$regionid">
+                <input type="hidden" name="mediaid" value="$mediaid">
+                <input type="hidden" name="lkid" value="$lkid">
+                <input type="hidden" id="PHPSESSID" value="$sessionId" />
+                <input type="hidden" id="SecurityToken" value="$securityToken" />
+                <table>
+                        <tr>
+                        <td><label for="name" title="The name of the $this->displayType. Leave this blank to use the file name">Name</label></td>
+                        <td><input id="name" name="name" type="text" value="$name"></td>
+                        <td><label for="duration" title="The duration in seconds this media should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
+                        <td><input id="duration" name="duration" type="text" value="$this->duration" $durationFieldEnabled></td>
+                        </tr>
+                        <tr>
+                                <td></td>
+                                <td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
+                        </tr>
+                        <tr>
+                                <td></td>
+                                <td colspan="2">$extraNotes</td>
+                        </tr>
+                        <tr>
+                                <td></td>
+                                <td colspan="3">$save_button</td>
+                        </tr>
+                </table>
+        </form>
+FORM;
+
+        $this->response->html 		= $form;
+        $this->response->dialogTitle 	= 'Edit ' . $this->displayType;
+        $this->response->dialogSize 	= true;
+        $this->response->dialogWidth 	= '450px';
+        $this->response->dialogHeight 	= '280px';
+
+        return $this->response;
+    }
+
 	/**
 	 * Default Add Media
 	 * @return
@@ -574,6 +984,157 @@ END;
 		return $this->response;	
 	}
 
+    protected function AddLibraryMedia()
+    {
+        $db =& $this->db;
+        $layoutid = $this->layoutid;
+        $regionid = $this->regionid;
+        $mediaid = $this->mediaid;
+        $userid	= $this->user->userid;
+        $backgroundImage = Kit::GetParam('backgroundImage', _POST, _BOOL, false);
+
+        // File data
+        $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
+
+        if ($tmpName == '')
+        {
+            $this->response->SetError('Cannot save Image details. <br/> You must have picked a file.');
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        // File name and extension (orignial name)
+        $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
+        $fileName = basename($fileName);
+        $ext = strtolower(substr(strrchr($fileName, "."), 1));
+
+        // Other properties
+        $name = Kit::GetParam('name', _POST, _STRING);
+        $duration = Kit::GetParam('duration', _POST, _INT, -1);
+
+        if ($name == '')
+            $name = Kit::ValidateParam($fileName, _FILENAME);
+
+        // Validation
+        if (!$this->IsValidExtension($ext))
+        {
+            $this->response->SetError(sprintf(__('Your file has an extension not supported by Media Type %s'), $this->displayType));
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        // Make sure the name isnt too long
+        if (strlen($name) > 100)
+        {
+            $this->response->SetError(__('The name cannot be longer than 100 characters'));
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        if ($duration < 0)
+        {
+            $this->response->SetError(__('You must enter a duration.'));
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        // Ensure the name is not already in the database
+        $SQL = sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d", $db->escape_string($name), $userid);
+
+        if(!$result = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->response->SetError('Error checking whether the media name is ok. Try choosing a different name.');
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        if ($db->num_rows($result) != 0)
+        {
+            $this->response->SetError('Some media you own already has this name. Please choose another.');
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        // All OK to insert this record
+        $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired ) ";
+        $SQL .= "VALUES ('%s', '$this->type', '%s', '%s', %d, 0) ";
+
+        $SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($duration), $db->escape_string($fileName), $userid);
+
+        if (!$mediaid = $db->insert_query($SQL))
+        {
+            trigger_error($db->error());
+            $this->response->SetError(__('Database error adding this media record.'));
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        // File upload directory.. get this from the settings object
+        $databaseDir = Config::GetSetting($db, 'LIBRARY_LOCATION');
+
+        // What are we going to store this media as...
+        $storedAs = $mediaid . '.' . $ext;
+
+        // Now we need to move the file
+        if (!$result = rename($databaseDir . 'temp/' . $tmpName, $databaseDir . $storedAs))
+        {
+            // If we couldnt move it - we need to delete the media record we just added
+            $SQL = sprintf("DELETE FROM media WHERE mediaID = %d ", $mediaid);
+
+            if (!$db->query($SQL))
+            {
+                trigger_error($db->error());
+                $this->response->SetError(__('Error storing file'));
+                $this->response->keepOpen = true;
+                return $this->response;
+            }
+        }
+
+        // Calculate the MD5 and the file size
+        $md5 = md5_file($databaseDir.$storedAs);
+        $fileSize = filesize($databaseDir.$storedAs);
+
+        // Update the media record to include this information
+        $SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $storedAs, $md5, $fileSize, $mediaid);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            return true;
+        }
+
+        // Required Attributes
+        $this->mediaid	= $mediaid;
+        $this->duration = $duration;
+
+        // Any Options
+        $this->SetOption('uri', $storedAs);
+
+        // Should have built the media object entirely by this time
+        if ($regionid != '')
+        {
+            // This saves the Media Object to the Region
+            $this->UpdateRegion();
+            $this->response->loadFormUri = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
+        }
+        else
+        {
+            $this->response->loadFormUri = "index.php?p=content&q=displayForms&sp=add";
+        }
+
+        // We want to load a new form
+        $this->response->loadForm = true;
+
+        // If we just added a background we should load the background form
+        if ($backgroundImage)
+        {
+            $this->response->loadFormUri = "index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid&backgroundOveride=$storedAs";
+        }
+
+        return $this->response;
+    }
+
 	/**
 	 * Default EditMedia
 	 * @return
@@ -585,6 +1146,218 @@ END;
 		
 		return $this->response;	
 	}
+
+    protected function EditLibraryMedia()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $layoutid = $this->layoutid;
+        $regionid = $this->regionid;
+        $mediaid = $this->mediaid;
+        $userid = $this->user->userid;
+
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this media.');
+            $this->response->keepOpen = false;
+            return $this->response;
+        }
+
+        // Stored As from the XML
+        $storedAs = $this->GetOption('uri');
+
+        // File data
+        $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
+
+        if ($tmpName == '')
+        {
+            $fileRevision = false;
+        }
+        else
+        {
+            $fileRevision = true;
+
+            // File name and extension (orignial name)
+            $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
+            $fileName = basename($fileName);
+            $ext = strtolower(substr(strrchr($fileName, "."), 1));
+
+            if (!$this->IsValidExtension($ext))
+            {
+                $this->response->SetError('Your file has an extension not supported by this Media Type.');
+                $this->response->keepOpen = true;
+                return $this->response;
+            }
+        }
+
+        // Other properties
+        $name = Kit::GetParam('name', _POST, _STRING);
+        
+        if ($this->auth->modifyPermissions)
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+
+        if ($name == '')
+        {
+            if ($fileRevision)
+            {
+                $name = Kit::ValidateParam($fileName, _FILENAME);
+            }
+            else
+            {
+                $this->response->SetError(__('The Name cannot be blank.'));
+                $this->response->keepOpen = true;
+                return $this->response;
+            }
+        }
+
+        // Make sure the name isnt too long
+        if (strlen($name) > 100)
+        {
+            $this->response->SetError(__('The name cannot be longer than 100 characters'));
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        if ($this->duration < 0)
+        {
+            $this->response->SetError(__('You must enter a duration.'));
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        // Ensure the name is not already in the database
+        $SQL = sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d AND mediaid <> %d  AND IsEdited = 0", $db->escape_string($name), $userid, $mediaid);
+
+        if(!$result = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->response->SetError(__('Error checking whether the media name is ok. Try choosing a different name.'));
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        if ($db->num_rows($result) != 0)
+        {
+            $this->response->SetError(__('Some media you own already has this name. Please choose another.'));
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        //Are we revising this media - or just plain editing
+        if ($fileRevision)
+        {
+            // All OK to insert this record
+            $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired ) ";
+            $SQL .= "VALUES ('%s', '$this->type', '%s', '%s', %d, 0) ";
+
+            $SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($duration), $db->escape_string($fileName), $userid);
+
+            if (!$new_mediaid = $db->insert_query($SQL))
+            {
+                trigger_error($db->error());
+                trigger_error('Error inserting replacement media record.', E_USER_ERROR);
+            }
+
+            //What are we going to store this media as...
+            $storedAs = $new_mediaid . '.' . $ext;
+
+            // File upload directory.. get this from the settings object
+            $databaseDir = Config::GetSetting($db, 'LIBRARY_LOCATION');
+
+            //Now we need to move the file
+            if (!$result = rename($databaseDir . '/temp/' . $tmpName, $databaseDir . $storedAs))
+            {
+                //If we couldnt move it - we need to delete the media record we just added
+                $SQL = "DELETE FROM media WHERE mediaID = $new_mediaid ";
+
+                if (!$db->insert_query($SQL))
+                {
+                    $this->response->SetError('Error rolling back transcation.');
+                    $this->response->keepOpen = true;
+                    return $this->response;
+                }
+            }
+
+            // Calculate the MD5 and the file size
+            $md5 = md5_file($databaseDir.$storedAs);
+            $fileSize = filesize($databaseDir.$storedAs);
+
+            // Update the media record to include this information
+            $SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $storedAs, $md5, $fileSize, $new_mediaid);
+
+            if (!$db->query($SQL))
+            {
+                trigger_error($db->error());
+                $this->response->SetError('Error updating media with Library location.');
+                $this->response->keepOpen = true;
+                return $this->response;
+            }
+
+            // Update the existing record with the new record's id
+            $SQL =  "UPDATE media SET isEdited = 1, editedMediaID = $new_mediaid ";
+            $SQL .= " WHERE IFNULL(editedMediaID,0) <> $new_mediaid AND mediaID = $mediaid ";
+
+            Debug::LogEntry($db, 'audit', $SQL);
+
+            if (!$db->query($SQL))
+            {
+                trigger_error($db->error());
+
+                $this->response->SetError('Database error editing this media record.');
+                $this->response->keepOpen = true;
+                return $this->response;
+            }
+        }
+        else
+        {
+            // Editing the existing record
+            $new_mediaid = $mediaid;
+
+            $SQL =  "UPDATE media SET name = '%s' ";
+            $SQL .= " WHERE mediaID = %d ";
+            $SQL = sprintf($SQL, $db->escape_string($name), $mediaid);
+
+            Debug::LogEntry($db, 'audit', $SQL);
+
+            if (!$db->query($SQL))
+            {
+                trigger_error($db->error());
+
+                $this->response->SetError('Database error editing this media record.');
+                $this->response->keepOpen = true;
+                return $this->response;
+            }
+        }
+
+        // Required Attributes
+        $this->mediaid	= $new_mediaid;
+        $this->duration = $duration;
+
+        // Any Options
+        $this->SetOption('uri', $storedAs);
+
+        // Should have built the media object entirely by this time
+        if ($regionid != '')
+        {
+            // This saves the Media Object to the Region
+            $this->UpdateRegion();
+
+            $this->response->loadForm	 = true;
+            $this->response->loadFormUri = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
+        }
+        else
+        {
+            // We are in the library so we therefore have to update the duration with the new value.
+            // We could do this in the above code, but it is much simpler here until we rewrite
+            // these classes to use a data base class.
+            $db->query(sprintf("UPDATE media SET duration = %d WHERE mediaID = %d", $duration, $this->mediaid));
+
+            $this->response->loadFormUri = "index.php?p=content&q=displayForms&sp=add";
+            $this->response->message = 'Edited the ' . $this->displayType;
+        }
+
+        return $this->response;
+    }
 
 	/**
 	 * Default GetName
@@ -811,6 +1584,37 @@ END;
         $response->SetFormSubmitResponse(__('Permissions Changed'));
 
         return $response;
+    }
+
+    /**
+     * Deletes the media files associated with this record
+     * @return
+     */
+    private function DeleteMediaFiles($fileName)
+    {
+        $db =& $this->db;
+
+        //Library location
+        $databaseDir = Config::GetSetting($db, 'LIBRARY_LOCATION');
+
+        //3 things to check for..
+        //the actual file, the thumbnail, the background
+        if (file_exists($databaseDir . $fileName))
+        {
+            unlink($databaseDir . $fileName);
+        }
+
+        if (file_exists($databaseDir . 'tn_' . $fileName))
+        {
+            unlink($databaseDir . 'tn_' . $fileName);
+        }
+
+        if (file_exists($databaseDir . 'bg_' . $fileName))
+        {
+            unlink($databaseDir . 'bg_' . $fileName);
+        }
+
+        return true;
     }
 }
 ?>

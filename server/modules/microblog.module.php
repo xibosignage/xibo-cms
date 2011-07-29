@@ -111,6 +111,14 @@ FORM;
         $regionid	= $this->regionid;
         $mediaid  	= $this->mediaid;
 
+        // Permissions
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this assignment.');
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
         // Get some options
         $searchTerm     = $this->GetOption('searchTerm');
         $fadeInterval   = $this->GetOption('fadeInterval');
@@ -143,6 +151,8 @@ FORM;
         $nocontentNode 	= $nocontentNodes->item(0);
         $nocontent	= $nocontentNode->nodeValue;
 
+        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
+
         //Output the form
         $form = <<<FORM
         <form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
@@ -158,7 +168,7 @@ FORM;
                     <td><label for="searchTerm" title="">Search Term<span class="required">*</span></label></td>
                     <td><input id="searchTerm" name="searchTerm" type="text" value="$searchTerm"></td>
                     <td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration (s)<span class="required">*</span></label></td>
-                    <td><input id="duration" name="duration" type="text" value="$this->duration"></td>
+                    <td><input id="duration" name="duration" type="text" value="$this->duration" $durationFieldEnabled></td>
                 </tr>
                 <tr>
                     <td><label for="fadeInterval" title="">Fade Interval</label></td>
@@ -271,9 +281,15 @@ FORM;
         $mediaid	= $this->mediaid;
         $url 		= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this assignment.');
+            $this->response->keepOpen = false;
+            return $this->response;
+        }
+
         //Other properties
         $searchTerm	= Kit::GetParam('searchTerm', _POST, _STRING);
-        $duration	= Kit::GetParam('duration', _POST, _INT, 0);
         $fadeInterval   = Kit::GetParam('fadeInterval', _POST, _INT);
         $speedInterval  = Kit::GetParam('speedInterval', _POST, _INT);
         $updateInterval = Kit::GetParam('updateInterval', _POST, _INT);
@@ -284,14 +300,15 @@ FORM;
         $nocontent      = Kit::GetParam('nocontent', _POST, _HTMLSTRING);
 
         // Validation
-        if ($duration == 0)
+        // If we have permission to change it, then get the value from the form
+        if ($this->auth->modifyPermissions)
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            
+        if ($this->duration == 0)
             $this->response->Error('You must enter a duration.', true);
 
         if ($template == '')
             $this->response->Error('You must enter a Message Template.', true);
-
-        // Required Attributes
-        $this->duration = $duration;
 
         // Any Options
         $this->SetOption('searchTerm', $searchTerm);

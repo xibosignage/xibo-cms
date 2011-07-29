@@ -20,10 +20,6 @@
  */ 
 class ticker extends Module
 {
-	// Custom Media information
-	private $text;
-	private $direction;
-	
 	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
 	{
 		// Must set the type of the class
@@ -125,6 +121,14 @@ FORM;
 		$layoutid	= $this->layoutid;
 		$regionid	= $this->regionid;
 		$mediaid  	= $this->mediaid;
+
+        // Permissions
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this assignment.');
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
 		
 		$direction		= $this->GetOption('direction');
 		$copyright		= $this->GetOption('copyright');
@@ -160,6 +164,8 @@ FORM;
                 $durationIsPerItemText = __('Duration is per item');
                 $durationIsPerItemLabel = __('The duration speficied is per item otherwise it is per feed.');
 
+                $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
+
 		//Output the form
 		$form = <<<FORM
 		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=EditMedia">
@@ -177,7 +183,7 @@ FORM;
 		    		<td><label for="direction" title="The Direction this text should move, if any">Direction<span class="required">*</span></label></td>
 		    		<td>$direction_list</td>
 		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
-		    		<td><input id="duration" name="duration" value="$this->duration" type="text"></td>		
+		    		<td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
 				</tr>
 				<tr>
 		    		<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
@@ -316,11 +322,17 @@ FORM;
 		$layoutid 	= $this->layoutid;
 		$regionid 	= $this->regionid;
 		$mediaid	= $this->mediaid;
+
+        if (!$this->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this assignment.');
+            $this->response->keepOpen = false;
+            return $this->response;
+        }
 		
 		//Other properties
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
-		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
 		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 360);
@@ -328,6 +340,10 @@ FORM;
 		$numItems = Kit::GetParam('numItems', _POST, _STRING);
                 $takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
 		$durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
+
+        // If we have permission to change it, then get the value from the form
+        if ($auth->modifyPermissions)
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
                 
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 		
@@ -347,7 +363,7 @@ FORM;
 			return $this->response;
 		}
 		
-		if ($duration == 0)
+		if ($this->duration == 0)
 		{
 			$this->response->SetError('You must enter a duration.');
 			$this->response->keepOpen = true;
@@ -364,9 +380,6 @@ FORM;
 			return $this->response;
                     }
                 }
-		
-		// Required Attributes
-		$this->duration = $duration;
 		
 		// Any Options
 		$this->SetOption('direction', $direction);
