@@ -895,20 +895,24 @@ FORM;
 			$response->SetError(__("No layout/region information available, please refresh the page and try again."));
 			$response->Respond();
 		}
-		
-		include_once("lib/pages/region.class.php");
-		
-		$region = new region($db, $user);
-		
-		if (!$region->DeleteRegion($this->layoutid, $regionid))
-		{
-			//there was an ERROR
-			$response->SetError($region->errorMsg);
-			$response->Respond();
-		}
-		
-		$response->SetFormSubmitResponse(__('Region Deleted.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
-		$response->Respond();
+
+        Kit::ClassLoader('region');
+        $region = new region($db, $user);
+        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->del)
+            trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
+
+            if (!$region->DeleteRegion($this->layoutid, $regionid))
+            {
+                    //there was an ERROR
+                    $response->SetError($region->errorMsg);
+                    $response->Respond();
+            }
+
+            $response->SetFormSubmitResponse(__('Region Deleted.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
+            $response->Respond();
 	}
 
         /*
@@ -928,6 +932,14 @@ FORM;
             $height 	= Kit::GetParam('height', _GET, _INT);
             $layoutWidth = Kit::GetParam('layoutWidth', _GET, _INT);
             $layoutHeight = Kit::GetParam('layoutHeight', _GET, _INT);
+
+        Kit::ClassLoader('region');
+        $region = new region($db, $this->user);
+        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->edit)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
             $form = <<<END
 		<form class="XiboForm" method="post" action="index.php?p=layout&q=ManualRegionPosition">
@@ -981,6 +993,14 @@ END;
             $width      = Kit::GetParam('width', _POST, _INT);
             $height 	= Kit::GetParam('height', _POST, _INT);
 
+        Kit::ClassLoader('region');
+        $region = new region($db, $this->user);
+        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->edit)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+
             Debug::LogEntry($db, 'audit', sprintf('Layoutid [%d] Regionid [%s]', $layoutid, $regionid), 'layout', 'ManualRegionPosition');
 
             // Remove the "px" from them
@@ -1025,9 +1045,13 @@ END;
 		$top 	= str_replace("px", '', $top);
 		$left 	= str_replace("px", '', $left);
 		
-		include_once("lib/pages/region.class.php");
-		
-		$region = new region($db, $user);
+        Kit::ClassLoader('region');
+        $region = new region($db, $this->user);
+        $ownerId = $region->GetOwnerId($this->layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->del)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 		
 		if (!$region->EditRegion($this->layoutid, $regionid, $width, $height, $top, $left))
 		{
@@ -1085,37 +1109,47 @@ END;
 		$response->Respond();
 	}
 	
-	/**
-	 * Return the Delete Form as HTML
-	 * @return 
-	 */
-	public function DeleteRegionForm()
-	{
-		$db 		=& $this->db;
-		$response	= new ResponseManager();
-		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
+    /**
+     * Return the Delete Form as HTML
+     * @return
+     */
+    public function DeleteRegionForm()
+    {
+        $db 		=& $this->db;
+        $response	= new ResponseManager();
+        $helpManager = new HelpManager($db, $this->user);
+        $layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
+        $regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
+
+        Kit::ClassLoader('region');
+        $region = new region($db, $this->user);
+        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->del)
+            trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
 		
-		// Translate messages
-		$msgDelete		= __('Are you sure you want to remove this region?');
-		$msgDelete2		= __('All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.');
-		$msgYes			= __('Yes');
-		$msgNo			= __('No');
-		
-		//we can delete
-		$form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=layout&q=DeleteRegion">
-			<input type="hidden" name="layoutid" value="$layoutid">
-			<input type="hidden" name="regionid" value="$regionid">
-			<p>$msgDelete $msgDelete2</p>
-			<input type="submit" value="$msgYes">
-			<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
-		</form>
+        // Translate messages
+        $msgDelete		= __('Are you sure you want to remove this region?');
+        $msgDelete2		= __('All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.');
+        $msgYes			= __('Yes');
+        $msgNo			= __('No');
+
+        //we can delete
+        $form = <<<END
+        <form id="RegionDeleteForm" class="XiboForm" method="post" action="index.php?p=layout&q=DeleteRegion">
+                <input type="hidden" name="layoutid" value="$layoutid">
+                <input type="hidden" name="regionid" value="$regionid">
+                <p>$msgDelete $msgDelete2</p>
+        </form>
 END;
 		
-		$response->SetFormRequestResponse($form, __('Delete this region?'), '260px', '180px');
-		$response->Respond();
-	}
+        $response->SetFormRequestResponse($form, __('Delete this region?'), '350px', '200px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Region', 'Delete') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Delete'), '$("#RegionDeleteForm").submit()');
+        $response->Respond();
+    }
 	
 	function RenderDesigner() 
 	{
@@ -1138,10 +1172,11 @@ END;
 		$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 		
 		//Fix up the background css
-		if ($bgImage == "")
+		if ($bgImage == '')
 		{
-                    $background_css = "$bgColor";
+                    $background_css = $bgColor;
 		}
+                else
 		{
                     // Get the ID for the background image
                     $bgImageInfo = explode('.', $bgImage);
@@ -1171,31 +1206,42 @@ END;
 			$regionLeft	= $region->getAttribute('left') . "px";
 			$regionTop	= $region->getAttribute('top') . "px";
 			$regionid	= $region->getAttribute('id');
+                        $ownerId = $region->getAttribute('userId');
+
+                        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
 
 			$paddingTop	= $regionHeight / 2 - 16;
 			$paddingTop	= $paddingTop . "px";
 
-			$regionTransparency  = '<div class="regionTransparency" style="width:100%; height:100%;">';
-			$regionTransparency .= '</div>';
+                        $regionAuthTransparency = ($regionAuth->edit) ? '' : ' regionDisabled';
+                        $regionDisabledClass = ($regionAuth->edit) ? 'region' : 'regionDis';
+                        $regionPreviewClass = ($regionAuth->view) ? 'regionPreview' : '';
 
-			$doubleClickLink = "XiboFormRender($(this).attr('href'))";
-			$regionHtml .= "<div id='region_$regionid' regionid='$regionid' layoutid='$this->layoutid' href='index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions' ondblclick=\"$doubleClickLink\"' class='region' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
-					  $regionTransparency
-                                           <div class='regionInfo'>
+			$regionTransparency  = '<div class="regionTransparency ' . $regionAuthTransparency . '" style="width:100%; height:100%;"></div>';
+			$doubleClickLink = ($regionAuth->edit) ? "XiboFormRender($(this).attr('href'))" : '';
+
+			$regionHtml .= "<div id='region_$regionid' regionEnabled='$regionAuth->edit' regionid='$regionid' layoutid='$this->layoutid' href='index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions' ondblclick=\"$doubleClickLink\"' class='$regionDisabledClass $regionPreviewClass' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
+					  $regionTransparency";
+                                          
+                      if ($regionAuth->view)
+                      {
+                        $regionHtml .= "<div class='regionInfo'>
                                                 $tipWidth x $tipHeight ($tipLeft,$tipTop)
                                            </div>
 								<div class='preview'>
 									<div class='previewContent'></div>
 									<div class='previewNav'></div>
-								</div>
-							</div>";
+								</div>";
+                      }
+
+                      $regionHtml .= '</div>';
 		}
 		
 		// Translate messages
 		$msgTimeLine			= __('Timeline');
 		$msgOptions			= __('Options');
 		$msgDelete			= __('Delete');
-		$msgSetAsHome		= __('Set as Home');
+		$msgSetAsHome		= __('Permissions');
 		
 		$msgAddRegion		= __('Add Region');
 		$msgEditBg			= __('Edit Background');
@@ -1244,6 +1290,14 @@ HTML;
                 $helpManager    = new HelpManager($db, $user);
 		
 		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
+
+        Kit::ClassLoader('region');
+        $region = new region($db, $user);
+        $ownerId = $region->GetOwnerId($this->layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->edit)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 		
 		//ajax request handler
 		$arh = new ResponseManager();
@@ -1382,7 +1436,7 @@ HTML;
 			if ($thumbWidth < 100) $thumbWidth = 100;
 			
 			$thumbWidthVal 	= $thumbWidth . "px";
-			$top			= $this->GetTopForMediaType($mediaType, $count);
+			$top = $this->GetTopForMediaType($mediaType, $count);
 			$leftMediaBreakVal = ($left + $thumbWidth)."px";
 
 			$mediaBreakHtml = <<<END
@@ -1391,10 +1445,17 @@ END;
 			//If the count is == to the number of nodes then dont put this bar (its the last)
 			if ($count == $countNodes) $mediaBreakHtml = "";
 			
-			
-			$leftClass = "timebar_".$mediaType."_left";
-			$rightClass = "timebar_".$mediaType."_right";
-			
+			if (Config::GetSetting($db, 'REGION_OPTIONS_COLOURING') == 'Media Colouring')
+                        {
+                            $leftClass = 'timebar_' . $mediaType . '_left';
+                            $rightClass = 'timebar_' . $mediaType . '_right';
+                        }
+                        else
+                        {
+                            $leftClass = 'timebar_' . (($auth->edit) ? 'enabled' : 'disabled') . '_left';
+                            $rightClass = 'timebar_' . (($auth->edit) ? 'enabled' : 'disabled') . '_right';
+                        }
+
 			//
 			// Translate Messages
 			//
@@ -1911,6 +1972,165 @@ END;
         if (!$first)
         {
             if (!$layoutSecurity->Link($layoutId, $lastGroupId, $view, $edit, $del))
+                    trigger_error(__('Unable to set permissions'));
+        }
+
+        $response->SetFormSubmitResponse(__('Permissions Changed'));
+        $response->Respond();
+    }
+
+    public function RegionPermissionsForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $helpManager = new HelpManager($db, $user);
+
+        $layoutid = Kit::GetParam('layoutid', _GET, _INT);
+        $regionid = Kit::GetParam('regionid', _GET, _STRING);
+
+        Kit::ClassLoader('region');
+        $region = new region($db, $user);
+        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->modifyPermissions)
+            trigger_error(__("You do not have permissions to edit this regions permissions"), E_USER_ERROR);
+
+        // Form content
+        $form = '<form id="RegionPermissionsForm" class="XiboForm" method="post" action="index.php?p=layout&q=RegionPermissions">';
+	$form .= '<input type="hidden" name="layoutid" value="' . $layoutid . '" />';
+	$form .= '<input type="hidden" name="regionid" value="' . $regionid . '" />';
+        $form .= '<div class="dialog_table">';
+	$form .= '  <table style="width:100%">';
+        $form .= '      <tr>';
+        $form .= '          <th>' . __('Group') . '</th>';
+        $form .= '          <th>' . __('View') . '</th>';
+        $form .= '          <th>' . __('Edit') . '</th>';
+        $form .= '          <th>' . __('Delete') . '</th>';
+        $form .= '      </tr>';
+
+        // List of all Groups with a view/edit/delete checkbox
+        $SQL = '';
+        $SQL .= 'SELECT `group`.GroupID, `group`.`Group`, View, Edit, Del, `group`.IsUserSpecific ';
+        $SQL .= '  FROM `group` ';
+        $SQL .= '   LEFT OUTER JOIN lklayoutregiongroup ';
+        $SQL .= '   ON lklayoutregiongroup.GroupID = group.GroupID ';
+        $SQL .= '       AND lklayoutregiongroup.LayoutID = %d ';
+        $SQL .= "       AND lklayoutregiongroup.RegionID = '%s' ";
+        $SQL .= ' WHERE `group`.GroupID <> %d ';
+        $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
+
+        $SQL = sprintf($SQL, $layoutid, $regionid, $user->getGroupFromId($user->userid, true));
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get permissions for this layout region'), E_USER_ERROR);
+        }
+
+        while($row = $db->get_assoc_row($results))
+        {
+            $groupId = $row['GroupID'];
+            $group = ($row['IsUserSpecific'] == 0) ? '<strong>' . $row['Group'] . '</strong>' : $row['Group'];
+
+            $form .= '<tr>';
+            $form .= ' <td>' . $group . '</td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_view" ' . (($row['View'] == 1) ? 'checked' : '') . '></td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_edit" ' . (($row['Edit'] == 1) ? 'checked' : '') . '></td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_del" ' . (($row['Del'] == 1) ? 'checked' : '') . '></td>';
+            $form .= '</tr>';
+        }
+
+        $form .= '</table>';
+        $form .= '</div>';
+        $form .= '</form>';
+
+        $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Region', 'Permissions') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#RegionPermissionsForm").submit()');
+        $response->Respond();
+    }
+
+    public function RegionPermissions()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        Kit::ClassLoader('layoutregiongroupsecurity');
+
+        $layoutId = Kit::GetParam('layoutid', _POST, _INT);
+        $regionId = Kit::GetParam('regionid', _POST, _STRING);
+        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
+
+        Kit::ClassLoader('region');
+        $region = new region($db, $user);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionId, true);
+        if (!$regionAuth->modifyPermissions)
+            trigger_error(__('You do not have permissions to edit this regions permissions'), E_USER_ERROR);
+
+        // Unlink all
+        $layoutSecurity = new LayoutRegionGroupSecurity($db);
+        if (!$layoutSecurity->UnlinkAll($layoutId, $regionId))
+            trigger_error(__('Unable to set permissions'));
+
+        // Some assignments for the loop
+        $lastGroupId = 0;
+        $first = true;
+        $view = 0;
+        $edit = 0;
+        $del = 0;
+
+        // List of groupIds with view, edit and del assignments
+        foreach($groupIds as $groupPermission)
+        {
+            $groupPermission = explode('_', $groupPermission);
+            $groupId = $groupPermission[0];
+
+            if ($first)
+            {
+                // First time through
+                $first = false;
+                $lastGroupId = $groupId;
+            }
+
+            if ($groupId != $lastGroupId)
+            {
+                // The groupId has changed, so we need to write the current settings to the db.
+                // Link new permissions
+                if (!$layoutSecurity->Link($layoutId, $regionId, $lastGroupId, $view, $edit, $del))
+                    trigger_error(__('Unable to set permissions'));
+
+                // Reset
+                $lastGroupId = $groupId;
+                $view = 0;
+                $edit = 0;
+                $del = 0;
+            }
+
+            switch ($groupPermission[1])
+            {
+                case 'view':
+                    $view = 1;
+                    break;
+
+                case 'edit':
+                    $edit = 1;
+                    break;
+
+                case 'del':
+                    $del = 1;
+                    break;
+            }
+        }
+
+        // Need to do the last one
+        if (!$first)
+        {
+            if (!$layoutSecurity->Link($layoutId, $regionId, $lastGroupId, $view, $edit, $del))
                     trigger_error(__('Unable to set permissions'));
         }
 

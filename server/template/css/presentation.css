@@ -1040,6 +1040,36 @@ td.error {
 	margin-left:9px;
 }
 
+.timebar_enabled_left{
+	background:url(../../img/forms/green_bar.gif) no-repeat;
+	background-position:top left;
+	height:59px;
+	width:9px;
+	float:left;
+}
+
+.timebar_enabled_right{
+	background:url(../../img/forms/green_bar.gif) no-repeat;
+	background-position:top right;
+	height:59px;
+	margin-left:9px;
+}
+
+.timebar_disabled_left{
+	background:url(../../img/forms/grey_bar.gif) no-repeat;
+	background-position:top left;
+	height:59px;
+	width:9px;
+	float:left;
+}
+
+.timebar_disabled_right{
+	background:url(../../img/forms/grey_bar.gif) no-repeat;
+	background-position:top right;
+	height:59px;
+	margin-left:9px;
+}
+
 #timeline table
 {
 	width:100%;

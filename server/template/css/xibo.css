@@ -73,8 +73,13 @@
 .regionTransparency {
 	position: absolute;
 	background-color: #FFF; 
-	opacity: .75; 
-	filter: alpha(opacity=75);
+	opacity: .80;
+	filter: alpha(opacity=80);
+}
+
+.regionDisabled {
+    opacity: .65;
+    filter: alpha(opacity=65);
 }
 
 .footer {

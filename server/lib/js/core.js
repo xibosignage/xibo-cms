@@ -24,7 +24,7 @@ $(document).ready(function(){
     $('#system_message').dialog({
         title: "Application Message",
         width: "320",
-        height: "120",
+        height: "220",
         draggable: false,
         resizable: false,
         bgiframe: true,

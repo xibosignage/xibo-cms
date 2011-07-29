@@ -819,6 +819,41 @@ END;
         return $auth->edit;
     }
 
+    public function RegionAssignmentAuth($ownerId, $layoutId, $regionId, $fullObject = false)
+    {
+        $auth = new PermissionManager($this->db, $this);
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
+        }
+
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM lklayoutregiongroup ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lklayoutregiongroup.GroupID ';
+        $SQL .= " WHERE lklayoutregiongroup.RegionID = '%s' AND lklayoutregiongroup.LayoutID = '%s' ";
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+
+        $SQL = sprintf($SQL, $regionId, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($ownerId, $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
+    }
+
     /**
      * Returns an array of Media the current user has access to
      */
