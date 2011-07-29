@@ -421,14 +421,12 @@ END;
                         <button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>$msgEdit</span></button>
                         <button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
                         <button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$displayName"><span>$msgGroupSecurity</span></button>
-                        <button class="XiboFormButton" href="index.php?p=display&q=DefaultLayoutForm&DisplayId=$displayid"><span>$msgDefault</span></button>
                         <button class="XiboFormButton" href="index.php?p=display&q=MediaInventory&DisplayId=$displayid"><span>$msgMediaInventory</span></button>
 END;
                         }
-                        else
-                        {
-                            $buttons = '<button class="XiboFormButton" href="index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $displayid . '"><span>' . $msgDefault . '</span></button>';
-                        }
+
+                        $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $displayid . '"><span>' . $msgDefault . '</span></button>';
+                        $buttons .= '<button class="XiboFormButton" href="index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $displayGroupID . '"><span>' . __('Schedule Now') . '</span></button>';
 
 			$output .= <<<END
 

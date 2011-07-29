@@ -544,10 +544,12 @@ END;
 				<td>$username</td>
 				<td>$group</td>
 END;
-				
+
+                                $output .= '<td class="nobr">';
+                                $output .= '<button class="XiboFormButton" href="index.php?p=schedule&q=ScheduleNowForm&layoutid=' . $layoutid . '"><span>' . __('Schedule Now') . '</span></button>';
+
 				if ($auth->edit)
 				{
-                                    $output .= '<td class="nobr">';
                                     $output .= '<button href="index.php?p=layout&modify=true&layoutid=' . $layoutid . '" onclick="window.location = $(this).attr(\'href\')"><span>Design</span></button>';
                                     $output .= '<button class="XiboFormButton" href="index.php?p=layout&q=displayForm&modify=true&layoutid=' . $layoutid . '"><span>Edit</span></button>';
                                     $output .= '<button class="XiboFormButton" href="index.php?p=layout&q=CopyForm&layoutid=' . $layoutid . '&oldlayout=' . $layout . '"><span>' . $msgCopy . '</span></button>';
@@ -557,13 +559,9 @@ END;
                                     if ($auth->modifyPermissions)
                                         $output .= '<button class="XiboFormButton" href="index.php?p=layout&q=PermissionsForm&layoutid=' . $layoutid . '"><span>' . $msgPermissions . '</span></button>';
 
-                                    $output .= '</td>';
-				}
-				else 
-				{
-					$output .= '<td class="centered">' . __('None') . '</td>';
 				}
 				
+                                $output .= '</td>';
 				$output .= '</tr>';
 			}
 		}
@@ -1625,6 +1623,11 @@ END;
 		//output the button
 		echo "index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$this->layoutid";
 	}
+
+    function ScheduleNowHref()
+    {
+        echo 'index.php?p=schedule&q=ScheduleNowForm&layoutid=' . $this->layoutid;
+    }
 	
 	/**
 	 * Called by AJAX

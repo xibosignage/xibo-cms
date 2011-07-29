@@ -290,6 +290,20 @@
 	width: 90px;
 }
 
+#schedulenow_button {
+	background:url(../../img/forms/broadcastup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width: 90px;
+}
+
+#schedulenow_button:hover {
+	background:url(../../img/forms/broadcastdown.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width: 90px;
+}
+
 #help_button{
 	background:url(../../img/forms/helpup.png);
 	background-repeat: no-repeat;

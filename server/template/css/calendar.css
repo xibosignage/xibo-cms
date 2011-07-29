@@ -164,6 +164,7 @@
 .LongEvent, .Event {
 	padding: 2px;
 	margin-bottom: 1px;
+        overflow-x: hidden;
 }
 
 #Displays {
