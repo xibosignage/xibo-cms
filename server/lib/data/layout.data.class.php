@@ -74,7 +74,7 @@ class Layout extends Data
         Debug::LogEntry($db, 'audit', 'Validation Compelte', 'Layout', 'Add');
 
         // Get the XML for this template.
-        $templateXml = $this->GetTemplateXml($templateId);
+        $templateXml = $this->GetTemplateXml($templateId, $userid);
 
         Debug::LogEntry($db, 'audit', 'Retrieved template xml', 'Layout', 'Add');
 
@@ -123,7 +123,7 @@ END;
      * Gets the XML for the specified template id
      * @param <type> $templateId
      */
-    private function GetTemplateXml($templateId)
+    private function GetTemplateXml($templateId, $userId)
     {
         $db =& $this->db;
 
@@ -148,7 +148,16 @@ END;
             if (!$row = $db->GetSingleRow(sprintf("SELECT xml FROM template WHERE templateID = %d ", $templateId)))
                 trigger_error(__('Error getting this template.'), E_USER_ERROR);
 
-            $xml = $row['xml'];
+            $xmlDoc = new DOMDocument("1.0");
+            $xmlDoc->loadXML($row['xml']);
+
+            $regionNodeList = $xmlDoc->getElementsByTagName('region');
+
+            //get the regions
+            foreach ($regionNodeList as $region)
+                $region->setAttribute('userId', $userId);
+
+            $xml = $xmlDoc->saveXML();
         }
 
         return $xml;
@@ -426,6 +435,9 @@ END;
         $db =& $this->db;
 
         // Remove all LK records for this layout
+        $db->query(sprintf('DELETE FROM lklayoutgroup WHERE layoutid = %d', $layoutId));
+        $db->query(sprintf('DELETE FROM lklayoutmediagroup WHERE layoutid = %d', $layoutId));
+        $db->query(sprintf('DELETE FROM lklayoutregiongroup WHERE layoutid = %d', $layoutId));
         $db->query(sprintf('DELETE FROM lklayoutmedia WHERE layoutid = %d', $layoutId));
 
         // Remove the Layout

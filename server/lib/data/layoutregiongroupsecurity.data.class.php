@@ -69,6 +69,25 @@ class LayoutRegionGroupSecurity extends Data
     }
 
     /**
+     * Links everyone to the layout specified
+     * @param <type> $layoutId
+     * @param <type> $view
+     * @param <type> $edit
+     * @param <type> $del
+     * @return <type>
+     */
+    public function LinkEveryone($layoutId, $regionId, $view, $edit, $del)
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'LayoutGroupSecurity', 'LinkEveryone');
+
+        $groupId = $db->GetSingleValue("SELECT GroupID FROM `group` WHERE IsEveryone = 1", 'GroupID', _INT);
+
+        return $this->Link($layoutId, $regionId, $groupId, $view, $edit, $del);
+    }
+
+    /**
      * Unlinks a display group from a group
      * @return
      * @param $displayGroupID Object

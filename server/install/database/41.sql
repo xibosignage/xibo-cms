@@ -123,6 +123,12 @@ VALUES (
 NULL ,  'REGION_OPTIONS_COLOURING',  'media',  'dropdown', NULL ,  'Media Colouring|Permissions Colouring',  'permissions',  '1'
 );
 
+UPDATE  `setting` SET  `setting` =  'LAYOUT_DEFAULT',
+`helptext` =  'New layouts will be created with these settings. If public everyone will be able to view and use this layout.' WHERE  `setting`.`settingid` =2 LIMIT 1 ;
+
+UPDATE  `setting` SET  `setting` =  'MEDIA_DEFAULT',
+`helptext` =  'Media will be created with these settings. If public everyone will be able to view and use this media.' WHERE  `setting`.`settingid` =1 LIMIT 1 ;
+
 UPDATE `version` SET `app_ver` = '1.3.0', `XmdsVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '41';

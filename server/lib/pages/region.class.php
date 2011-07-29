@@ -116,7 +116,13 @@ class region
 
             if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;
 
-            // TODO: Apply some default permissions
+            // What permissions should we create this with?
+            if (Config::GetSetting($db, 'LAYOUT_DEFAULT') == 'public')
+            {
+                Kit::ClassLoader('layoutregiongroupsecurity');
+                $security = new LayoutRegionGroupSecurity($db);
+                $security->LinkEveryone($layoutid, $regionid, 1, 0, 0);
+            }
 
             return true;
 	}
@@ -519,7 +525,7 @@ class region
                 if (!$ownerId = $regionNode->getAttribute('userId'))
                 {
                     $ownerId = $db->GetSingleValue(sprintf("SELECT userid FROM layout WHERE layoutid = %d", $layoutid), 'userid', _INT);
-                    $regionNode->setAttribute('userid', $ownerId);
+                    $regionNode->setAttribute('userId', $ownerId);
                 }
 		
 		//Convert back to XML		

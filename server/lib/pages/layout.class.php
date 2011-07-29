@@ -205,12 +205,20 @@ HTML;
             $tags           = Kit::GetParam('tags', _POST, _STRING);
             $templateId     = Kit::GetParam('templateid', _POST, _INT, 0);
             $userid         = Kit::GetParam('userid', _SESSION, _INT);
-            
+
             // Add this layout
             $layoutObject = new Layout($db);
 
             if(!$id = $layoutObject->Add($layout, $description, $tags, $userid, $templateId))
                 trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+
+            // What permissions should we create this with?
+            if (Config::GetSetting($db, 'LAYOUT_DEFAULT') == 'public')
+            {
+                Kit::ClassLoader('layoutgroupsecurity');
+                $security = new LayoutGroupSecurity($db);
+                $security->LinkEveryone($id, 1, 0, 0);
+            }
 
             // Successful layout creation
             $response->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $id));
@@ -316,12 +324,15 @@ END;
 	
 	function delete_form() 
 	{
-		$db 		=& $this->db;
-		$response 	= new ResponseManager();
-		
-		
-		//expect the $layoutid to be set
-		$layoutid = $this->layoutid;
+            $db 		=& $this->db;
+            $response 	= new ResponseManager();
+            $helpManager = new HelpManager($db, $this->user);
+
+            //expect the $layoutid to be set
+            $layoutid = $this->layoutid;
+
+        if (!$this->auth->del)
+            trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
 		
 		//Are we going to be able to delete this?
 		// - Has it been scheduled
@@ -332,9 +343,6 @@ END;
 			trigger_error($db->error());
 			trigger_error(__("Can not get layout information"), E_USER_ERROR);
 		}
-
-		$msgYes		= __('Yes');
-		$msgNo		= __('No');
 		
 		if ($db->num_rows($results) == 0) 
 		{
@@ -342,11 +350,9 @@ END;
 			$msgWarn	= __('Are you sure you want to delete this layout? All media will be unassigned. Any layout specific media such as text/rss will be lost.');
 			
 			$form = <<<END
-			<form class="XiboForm" method="post" action="index.php?p=layout&q=delete">
+			<form id="LayoutDeleteForm" class="XiboForm" method="post" action="index.php?p=layout&q=delete">
 				<input type="hidden" name="layoutid" value="$layoutid">
 				<p>$msgWarn</p>
-				<input type="submit" value="$msgYes">
-				<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
 			</form>
 END;
 		}
@@ -357,19 +363,20 @@ END;
 			$msgWarn2	= __('Retire this layout instead?');
 			
 			$form = <<<END
-			<form class="XiboForm" method="post" action="index.php?p=layout&q=retire">
+			<form id="LayoutDeleteForm" class="XiboForm" method="post" action="index.php?p=layout&q=retire">
 				<input type="hidden" name="layoutid" value="$layoutid">
 				<p>$msgWarn</p>
 				<p>$msgWarn2</p>
-				<input type="submit" value="$msgYes">
-				<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
 			</form>
 END;
 		}
 		
-		$response->SetFormRequestResponse($form, __('Delete this layout?'), '260px', '180px');
-		$response->Respond();
-	}
+        $response->SetFormRequestResponse($form, __('Delete this layout?'), '300px', '200px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Delete') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#LayoutDeleteForm").submit()');
+        $response->Respond();
+    }
 
 	/**
 	 * Deletes a layout record from the DB
@@ -614,13 +621,16 @@ END;
 		}
 		else
 		{
-			$templateList = Kit::SelectList('templateid', $user->TemplateList(), 'templateid', 'template');
-			
-			$template_option = <<<END
-			<tr>
-				<td><label for='templateid'>Template<span class="required">*</span></label></td>
-				<td>$templateHelp $templateList</td>
-			</tr>
+                    $templates = $user->TemplateList();
+                    array_unshift($templates, array('templateid' => '0', 'template' => 'None'));
+                    
+                    $templateList = Kit::SelectList('templateid', $templates, 'templateid', 'template');
+                        
+                    $template_option = <<<END
+                    <tr>
+                            <td><label for='templateid'>Template<span class="required">*</span></label></td>
+                            <td>$templateHelp $templateList</td>
+                    </tr>
 END;
 		}
 		
@@ -903,6 +913,13 @@ FORM;
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
         if (!$regionAuth->del)
             trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
+
+        // Remove the permissions
+        Kit::ClassLoader('layoutregiongroupsecurity');
+        $security = new LayoutRegionGroupSecurity($db);
+        $security->UnlinkAll($layoutid, $regionid);
+
+        $db->query(sprintf("DELETE FROM lklayoutmediagroup WHERE layoutid = %d AND RegionID = '%s'", $this->layoutid, $regionid));
 
             if (!$region->DeleteRegion($this->layoutid, $regionid))
             {
