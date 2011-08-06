@@ -955,6 +955,48 @@ END;
         return $auth->edit;
     }
 
+    public function MediaAssignmentList()
+    {
+        $SQL  = 'SELECT layout.LayoutID, layout.Layout, layout.xml, RegionID, MediaID, View, Edit, Del ';
+        $SQL .= '  FROM lklayoutmediagroup ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lklayoutmediagroup.GroupID ';
+        $SQL .= '   INNER JOIN layout ';
+        $SQL .= '   ON layout.layoutid = lklayoutmediagroup.LayoutID ';
+        $SQL .= ' WHERE (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+
+        $SQL = sprintf($SQL, implode(',', $this->GetUserGroups($this->userid, true)));
+
+        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of media for %s with SQL: %s', $this->userName, $SQL));
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $media = array();
+
+        while($row = $this->db->get_assoc_row($result))
+        {
+            $mediaItem = array();
+
+            // Validate each param and add it to the array.
+            $mediaItem['layoutid'] = Kit::ValidateParam($row['LayoutID'], _INT);
+            $mediaItem['regionid'] = Kit::ValidateParam($row['RegionID'], _STRING);
+            $mediaItem['mediaid'] = Kit::ValidateParam($row['MediaID'], _STRING);
+            $mediaItem['view'] = Kit::ValidateParam($row['View'], _INT);
+            $mediaItem['edit'] = Kit::ValidateParam($row['Edit'], _INT);
+            $mediaItem['del'] = Kit::ValidateParam($row['Del'], _INT);
+            $mediaItem['layout'] = Kit::ValidateParam($row['Layout'], _STRING);
+            $mediaItem['xml'] = Kit::ValidateParam($row['xml'], _HTMLSTRING);
+
+            $media[] = $mediaItem;
+        }
+
+        return $media;
+    }
+
     /**
      *Authorises a user against a template Id
      * @param <type> $templateId

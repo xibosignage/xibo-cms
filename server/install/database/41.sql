@@ -129,6 +129,10 @@ UPDATE  `setting` SET  `setting` =  'LAYOUT_DEFAULT',
 UPDATE  `setting` SET  `setting` =  'MEDIA_DEFAULT',
 `helptext` =  'Media will be created with these settings. If public everyone will be able to view and use this media.' WHERE  `setting`.`settingid` =1 LIMIT 1 ;
 
+INSERT INTO `pages` (`name`, `pagegroupID`) VALUES
+('help', 2),
+('clock', 2);
+
 UPDATE `version` SET `app_ver` = '1.3.0', `XmdsVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '41';

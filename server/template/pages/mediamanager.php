@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2011 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -29,42 +29,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	</div>
 
 	<div id="form_body">
-			<div id="dashbuttons">
-
-				<?php
-					// Put a menu here
-					if (!$menu = new MenuManager($db, $user, 'Region Manager')) trigger_error($menu->message, E_USER_ERROR);
-					
-					while ($menuItem = $menu->GetNextMenuItem())
-					{
-						$uri 	= Kit::ValidateParam($menuItem['name'], _WORD);
-						$args 	= Kit::ValidateParam($menuItem['Args'], _STRING);
-						$class 	= Kit::ValidateParam($menuItem['Class'], _WORD);
-						$title 	= Kit::ValidateParam($menuItem['Text'], _STRING);
-						$img 	= Kit::ValidateParam($menuItem['Img'], _STRING);
-						
-						// Extra style for the current one
-						if ($p == $uri) $class = 'current ' . $class;
-						
-						$href = 'index.php?p=' . $uri . '&' . $args;
-						
-						$out = <<<END
-							<div class="dashicons">
-								<a id="$class" alt="$title" href="$href">
-								<img class="dash_button" src="$img"/>
-								<span class="dash_text">$title</span></a>
-							</div>
-END;
-						echo $out;
-					}
-				?>
-				
-				<div class="dashicons">
-					<a id="help_button" target="_blank" alt="The Manual" href="http://www.xibo.org.uk/manual/index.html">
-					<img class="dash_button" src="img/dashboard/help.png"/>
-					<span class="dash_text">Manual</span></a>
-				</div>
-			</div>	
+            <div class="SecondNav">
+            
+            </div>
+            <?php $this->MediaManagerFilter(); ?>
 	</div>
 	
 	<div id="form_footer">
