@@ -1132,6 +1132,15 @@ FORM;
             $this->response->loadFormUri = "index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid&backgroundOveride=$storedAs";
         }
 
+        // What permissions should we assign this with?
+        if (Config::GetSetting($db, 'MEDIA_DEFAULT') == 'public')
+        {
+            Kit::ClassLoader('mediagroupsecurity');
+
+            $security = new MediaGroupSecurity($db);
+            $security->LinkEveryone($mediaid, 1, 0, 0);
+        }
+
         return $this->response;
     }
 
@@ -1468,7 +1477,7 @@ FORM;
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Permissions') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
         $response->AddButton(__('Save'), '$("#LayoutPermissionsForm").submit()');
 
         return $response;

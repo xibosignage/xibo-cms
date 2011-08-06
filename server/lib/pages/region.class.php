@@ -192,13 +192,13 @@ class region
 		
 		//Load the Media's XML into a SimpleXML object
 		$mediaXml->loadXML($mediaXmlString);
+
+                // Get the Media ID from the mediaXml node
+                $mediaid = $mediaXml->documentElement->getAttribute('id');
 		
 		// Do we need to add a Link here?
 		if ($regionSpecific == 0)
 		{
-			// Get the Media ID from the mediaXml node
-			$mediaid = $mediaXml->documentElement->getAttribute('id');
-			
 			// Add the DB link
 			$lkid = $this->AddDbLink($layoutid, $regionid, $mediaid);
 			
@@ -221,6 +221,15 @@ class region
 		
 		//Convert back to XML
 		$xml = $xml->saveXML();
+
+        // What permissions should we assign this with?
+        if (Config::GetSetting($db, 'MEDIA_DEFAULT') == 'public')
+        {
+            Kit::ClassLoader('layoutmediagroupsecurity');
+
+            $security = new LayoutMediaGroupSecurity($db);
+            $security->LinkEveryone($layoutid, $regionid, $mediaid, 1, 0, 0);
+        }
 		
 		if (!$this->SetLayoutXml($layoutid, $xml)) return false;
 		

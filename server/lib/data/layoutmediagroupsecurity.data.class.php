@@ -70,6 +70,25 @@ class LayoutMediaGroupSecurity extends Data
     }
 
     /**
+     * Links everyone to the layout specified
+     * @param <type> $layoutId
+     * @param <type> $view
+     * @param <type> $edit
+     * @param <type> $del
+     * @return <type>
+     */
+    public function LinkEveryone($layoutId, $regionId, $mediaId, $view, $edit, $del)
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'LayoutMediaGroupSecurity', 'LinkEveryone');
+
+        $groupId = $db->GetSingleValue("SELECT GroupID FROM `group` WHERE IsEveryone = 1", 'GroupID', _INT);
+
+        return $this->Link($layoutId, $regionId, $mediaId, $groupId, $view, $edit, $del);
+    }
+
+    /**
      * Unlinks a display group from a group
      * @return
      * @param $displayGroupID Object
