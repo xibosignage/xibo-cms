@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2011 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -26,16 +26,7 @@ $q 			= Kit::GetParam('q', _REQUEST, _WORD);
 
 $thisPage 	= Kit::GetParam('session', _SESSION, _WORD);
 $userid		= Kit::GetParam('userid', _SESSION, _INT, 0);
-$homepage 	= $user->homepage($userid);
-
-if (strpos($homepage, '&') === false) 
-{
-	$homepageName = $homepage;
-}
-else 
-{
-	$homepageName = substr($homepage, 0, strpos($homepage, '&'));	
-}
+$homepage 	= $user->homePage;
 
 $help 		= new HelpManager($db, $user);
 $helpLink 	= $help->Link();

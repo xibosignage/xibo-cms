@@ -316,7 +316,6 @@ class userDAO
 					<tr>
 						<th>Name</th>
 						<th>Homepage</th>
-						<th>Layout</th>
 						<th>Email</th>
 						<th>Action</th>
 					</tr>
@@ -344,30 +343,8 @@ END;
 				$loggedin="<img src=\"img/disact.gif\">";
 			}
 			
-			//parse the homepage name, split into & seperated bits.
-			$homepageArray = explode('&', $homepage);
-			
-			if (count($homepageArray) > 1)
-			{
-				list($temp, $layoutid) = explode('=', $homepageArray[1]);
-			
-				//Look up the layout name
-				$SQL = "SELECT layout FROM layout WHERE layoutID = $layoutid ";
-				if (!$result = $db->query($SQL))
-				{
-					trigger_error("Incorrect home page setting, please contact your system admin.", E_USER_ERROR);
-				}
-				
-				$row = $db->get_row($result);
-				
-				$layout = $row[0];
-			}
-			else
-			{
-				$layout = "";
-			}
 
-			if($_SESSION['usertype'] == 1 ||($userID == $_SESSION['userid'])) 
+			if($this->user->usertypeid == 1)
 			{
 				$table .= '<tr ondblclick="XiboFormRender(\'index.php?p=user&q=DisplayForm&userID=' . $userID . '\')">';
 			}
@@ -376,22 +353,23 @@ END;
 				$table .= "<tr>";
 			}
 			$table .= "<td>" . $userName . "</td>";
-			$table .= "<td>" . $homepageArray[0] . "</td>";
-			$table .= "<td>" . $layout . "</td>";
+			$table .= "<td>" . $homepage . "</td>";
 			$table .= "<td>" . $email . "</td>";
 			$table .= "<td>";
 			
-			if($_SESSION['usertype'] == 1 ||($userID == $_SESSION['userid'])) 
+			if($this->user->usertypeid == 1)
 			{
                             $msgPageSec	= __('Page Security');
                             $msgMenuSec	= __('Menu Security');
                             $msgApps	= __('Applications');
+                            $msgHomepage	= __('Set Homepage');
 
                             $table .= '<button class="XiboFormButton" href="index.php?p=user&q=DisplayForm&userID=' . $userID . '"><span>Edit</span></button>';
                             $table .= '<button class="XiboFormButton" href="index.php?p=user&q=DeleteForm&userID=' . $userID . '" ><span>Delete</span></button>';
                             $table .= '<button class="XiboFormButton" href="index.php?p=group&q=PageSecurityForm&groupid=' . $groupid . '"><span>' . $msgPageSec . '</span></button>';
                             $table .= '<button class="XiboFormButton" href="index.php?p=group&q=MenuItemSecurityForm&groupid=' . $groupid . '"><span>' . $msgMenuSec . '</span></button>';
                             $table .= '<button class="XiboFormButton" href="index.php?p=oauth&q=UserTokens&userID=' . $userID. '"><span>' . $msgApps . '</span></button>';
+                            $table .= '<button class="XiboFormButton" href="index.php?p=user&q=SetUserHomePageForm&userid=' . $userID. '"><span>' . $msgHomepage . '</span></button>';
 			}
                         $table .= "</td>";
 			$table .= "</tr>";
@@ -586,7 +564,7 @@ END;
                                     <td><label for="email">Email Address<span class="required email">*</span></label></td>
                                     <td>$emailHelp <input type="text" id="email" name="email" value="$email" class="required" /></td>
                             </tr>
-                            <!-- $homepageOption -->
+                            $homepageOption
                             $usertypeOption
                     </table>
             </form>
@@ -628,89 +606,66 @@ END;
 		$response->Respond();
 	}
 	
-	/**
-	 * Sets the users home page
-	 * @return 
-	 */
-	function SetUserHomepageForm()
-	{
-		$db 		=& $this->db;
-		$response	= new ResponseManager();
-		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
-		
-		//Homepages are for layouts / region combinations
-		//The user doesnt have to have access to the layout.
-		
-		//There should be a list of users on this form - that list should change according to permissions
-		//Permissions being related to the logged in user (can they change the users records)
-		//								the layout they are on (does the user have permission for it)
-		
-		//Get the layout owner and permissions
-		$SQL = "SELECT userID, permissionID FROM layout WHERE layoutID = $layoutid ";
-		if (!$result = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error("Cant get this regions permissions details.", E_USER_ERROR);			
-		}
-		
-		$row = $db->get_row($result);
-		
-		$layoutOwnerID 		= $row[0];
-		$layoutPermissionID = $row[1];
-		
-		//Query for the user list
-		$SQL = " SELECT userID, username, $layoutPermissionID, $layoutOwnerID ";
-		$SQL .= " FROM  user  ";		
-		if ($_SESSION['usertype'] != "1") //if we arnt an admin then only show us.
-		{
-			$SQL .= " WHERE userID = " . $_SESSION['userid'];
-		}
-		$SQL .= " ORDER BY username  ";
-		
-		$user_list = dropdownlist($SQL, "userid", '', '', false, true, "", "edit", true);
-		
-		$form = <<<END
-		<form class="XiboForm" action="index.php?p=user&q=SetUserHomepage" method="post">
-			<input type="hidden" name="layoutid" value="$layoutid" />
-			<input type="hidden" name="regionid" value="$regionid" />
-			Set this region to be the homepage for: <br /><br /> $user_list 
-			<input type="submit" value="Yes" />
-			<input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
-		</form>
-END;
-		
-		$response->SetFormRequestResponse($form, 'Set as the home page for a User?', '350px', '150px');
-		$response->Respond();
-	}
-	
-	/**
-	 * Sets the users homepage
-	 * @return 
-	 */
-	function SetUserHomepage()
-	{
-		$db 		=& $this->db;
-		$response 	= new ResponseManager();
+    /**
+     * Sets the users home page
+     * @return
+     */
+    function SetUserHomepageForm()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $userid = Kit::GetParam('userid', _GET, _INT);
 
-		$userid 	= Kit::GetParam('userid', _POST, _INT, 0);
-		$layoutid 	= Kit::GetParam('layoutid', _POST, _INT, 0);
-		$regionid 	= Kit::GetParam('regionid', _POST, _STRING);
-		
-		$homepage 	= "mediamanager&layoutid=$layoutid&regionid=$regionid";
-		
-		$SQL = sprintf("UPDATE user SET homepage = '%s' WHERE userID = $userid ", $homepage);
-		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$response->SetError('Unknown error setting this users homepage.');
-			$response->Respond();
-		}
-		
-		$response->SetFormSubmitResponse('Homepage has been set.');
-		$response->Respond();
-	}
+        $listValues = array(array('homepage' => 'dashboard'), array('homepage' => 'mediamanager'));
+
+        $msgHomePage = __('Homepage');
+        $homePageList = Kit::SelectList('homepage', $listValues, 'homepage', 'homepage', $this->user->GetHomePage($userid));
+
+        $form = <<<END
+        <form id="SetUserHomePageForm" class="XiboForm" action="index.php?p=user&q=SetUserHomepage" method="post">
+        <input type="hidden" name="userid" value="$userid" />
+        <table>
+            <tr>
+                <td><label for="homepage">$msgHomePage</label></td>
+                <td>$homePageList</td>
+            </tr>
+        </table>
+        </form>
+END;
+
+        $response->SetFormRequestResponse($form, __('Set the homepage for this user'), '350px', '150px');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#SetUserHomePageForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Sets the users homepage
+     * @return
+     */
+    function SetUserHomepage()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        if (!$this->user->usertypeid == 1)
+            trigger_error(__('You do not have permission to change this users homepage'));
+
+        $userid	= Kit::GetParam('userid', _POST, _INT, 0);
+        $homepage = Kit::GetParam('homepage', _POST, _WORD);
+
+        $SQL = sprintf("UPDATE user SET homepage = '%s' WHERE userID = %d", $homepage, $userid);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            $response->SetError(__('Unknown error setting this users homepage'));
+            $response->Respond();
+        }
+
+        $response->SetFormSubmitResponse(__('Homepage has been set'));
+        $response->Respond();
+    }
 
     /**
      * Shows the Authorised applications this user has

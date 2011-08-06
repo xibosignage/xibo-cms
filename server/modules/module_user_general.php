@@ -30,6 +30,8 @@
 	
 	private $displayGroupIDs;
 	private $authedDisplayGroupIDs;
+
+        public $homePage;
 	
  	public function __construct(database $db)
 	{
@@ -79,9 +81,9 @@
 			$SQL = sprintf("UPDATE user SET lastaccessed = '" . date("Y-m-d H:i:s") . "', loggedin = 1 WHERE userid = %d ", $userid);
 			
 			$results = $db->query($SQL) or trigger_error("Can not write last accessed info.", E_USER_ERROR);
-			
-			$this->usertypeid		= $_SESSION['usertype'];
-			$this->userid			= $_SESSION['userid'];
+
+                        // Load the information about this user
+			$this->LoginServices($userid);
 			
 			return true;
 		}
@@ -143,7 +145,7 @@
         {
             $db =& $this->db;
 
-            $SQL = sprintf("SELECT UserName, usertypeid FROM user WHERE userID = '%d'", $userID);
+            $SQL = sprintf("SELECT UserName, usertypeid, homepage FROM user WHERE userID = '%d'", $userID);
 
             if (!$results = $this->db->GetSingleRow($SQL))
                 return false;
@@ -151,6 +153,7 @@
             $this->userName     = Kit::ValidateParam($results['UserName'], _USERNAME);
             $this->usertypeid	= Kit::ValidateParam($results['usertypeid'], _INT);
             $this->userid	= $userID;
+            $this->homePage = Kit::ValidateParam($results['homepage'], _WORD);
 
             return true;
         }
@@ -422,24 +425,20 @@
 	}
 	
 	/**
-	 * Gets the users homepage
-	 * @return 
-	 */
-	function homepage($id) 
+         * Gets the homepage for the given userid
+         * @param <type> $userId
+         * @return <type>
+         */
+	function GetHomePage($userId)
 	{
-		$db 		=& $this->db;
-		
-		$SQL = sprintf("SELECT homepage FROM user WHERE userid = %d", $id);
-		
-		if(!$results = $db->query($SQL)) trigger_error("Unknown user id in the system", E_USER_NOTICE);
-		
-		if ($db->num_rows($results) ==0 ) 
-		{
-			return "dashboard";
-		}
-		
-		$row = $db->get_row($results);
-		return $row[0];
+            $db	=& $this->db;
+
+            $SQL = sprintf("SELECT homepage FROM `user` WHERE userid = %d", $userId);
+
+            if (!$homepage = $db->GetSingleValue($SQL, 'homepage', _WORD))
+                trigger_error(__('Unknown User'));
+
+            return $homepage;
 	}
 	
 	/**
