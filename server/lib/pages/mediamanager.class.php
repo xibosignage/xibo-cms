@@ -83,11 +83,13 @@ HTML;
         
         // We would like a list of all layouts, media and media assignments that this user
         // has access to.
-        $mediaItems = $user->MediaAssignmentList();
+        $layouts = $user->LayoutList();
 
         $msgLayout = __('Layout');
         $msgRegion = __('Region');
         $msgMedia = __('Media');
+        $msgMediaType = __('Type');
+        $msgSeq = __('Sequence');
 
         $msgAction = __('Action');
         $msgEdit = __('Edit');
@@ -101,21 +103,83 @@ HTML;
                     <th>$msgLayout</th>
                     <th>$msgRegion</th>
                     <th>$msgMedia</th>
+                    <th>$msgMediaType</th>
+                    <th>$msgSeq</th>
                     <th>$msgAction</th>
                 </tr>
             </thead>
             <tbody>
 END;
 
-        foreach ($mediaItems as $media)
+        foreach ($layouts as $layout)
         {
-            // Every layout this user has access to.. get the region and media link
-            $output .= '<tr>';
-            $output .= '    <td>' . $media['layout'] . '</td>';
-            $output .= '    <td></td>';
-            $output .= '    <td></td>';
-            $output .= '    <td></td>';
-            $output .= '</tr>';
+            // We have edit permissions?
+            if (!$layout['edit'])
+                continue;
+
+            Debug::LogEntry($db, 'audit', 'Permission to edit layout ' . $layout['layout'], 'mediamanager', 'MediaManagerGrid');
+
+            // Every layout this user has access to.. get the regions
+            $layoutXml = new DOMDocument();
+            $layoutXml->loadXML($layout['xml']);
+
+            // Get ever region
+            $regionNodeList = $layoutXml->getElementsByTagName('region');
+            $regionNodeSequence = 0;
+
+            //get the regions
+            foreach ($regionNodeList as $region)
+            {
+                $regionId = $region->getAttribute('id');
+                $ownerId = ($region->getAttribute('userId') == '') ? $layout['ownerid'] : $region->getAttribute('userId');
+
+                $regionAuth = $user->RegionAssignmentAuth($ownerId, $layout['layoutid'], $regionId, true);
+
+                // Do we have permission to edit?
+                if (!$regionAuth->edit)
+                    continue;
+
+                $regionNodeSequence++;
+                $regionName = ($region->getAttribute('name') == '') ? 'Region ' . $regionNodeSequence : $region->getAttribute('name');
+
+                Debug::LogEntry($db, 'audit', 'Permissions granted for ' . $regionId . ' owned by ' . $ownerId, 'mediamanager', 'MediaManagerGrid');
+
+                // Media
+                $xpath = new DOMXPath($layoutXml);
+		$mediaNodes = $xpath->query("//region[@id='$regionId']/media");
+                $mediaNodeSequence = 0;
+
+		foreach ($mediaNodes as $mediaNode)
+		{
+                    $mediaId = $mediaNode->getAttribute('id');
+                    $lkId = $mediaNode->getAttribute('lkid');
+                    $mediaOwnerId = ($mediaNode->getAttribute('userId') == '') ? $layout['ownerid'] : $mediaNode->getAttribute('userId');
+                    $mediaType = $mediaNode->getAttribute('type');
+
+                    // Permissions
+                    $auth = $user->MediaAssignmentAuth($mediaOwnerId, $layout['layoutid'], $regionId, $mediaId, true);
+
+                    if (!$auth->edit)
+                        continue;
+
+                    // Create the media object without any region and layout information
+                    require_once('modules/' . $mediaType . '.module.php');
+                    $tmpModule = new $mediaType($db, $user, $mediaId, $layout['layoutid'], $regionId, $lkId);
+                    $mediaName = $tmpModule->GetName();
+
+                    $editLink = '<button class="XiboFormButton" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&layoutid=' . $layout['layoutid'] . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '">' . $msgEdit . '</button>';
+                    $mediaNodeSequence++;
+
+                    $output .= '<tr>';
+                    $output .= '    <td>' . $layout['layout'] . '</td>';
+                    $output .= '    <td>' . $regionName . '</td>';
+                    $output .= '    <td>' . $mediaName . '</td>';
+                    $output .= '    <td>' . $mediaType . '</td>';
+                    $output .= '    <td>' . $mediaNodeSequence . '</td>';
+                    $output .= '    <td>' . $editLink . '</td>';
+                    $output .= '</tr>';
+                }
+            }
         }
 
         $output .= '</tbody></table></div>';

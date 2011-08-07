@@ -1340,7 +1340,6 @@ FORM;
 
         // Required Attributes
         $this->mediaid	= $new_mediaid;
-        $this->duration = $duration;
 
         // Any Options
         $this->SetOption('uri', $storedAs);
@@ -1359,27 +1358,34 @@ FORM;
             // We are in the library so we therefore have to update the duration with the new value.
             // We could do this in the above code, but it is much simpler here until we rewrite
             // these classes to use a data base class.
-            $db->query(sprintf("UPDATE media SET duration = %d WHERE mediaID = %d", $duration, $this->mediaid));
+            $db->query(sprintf("UPDATE media SET duration = %d WHERE mediaID = %d", $this->duration, $this->mediaid));
 
-            $this->response->loadFormUri = "index.php?p=content&q=displayForms&sp=add";
             $this->response->message = 'Edited the ' . $this->displayType;
         }
 
         return $this->response;
     }
 
-	/**
-	 * Default GetName
-	 * @return
-	 */
-	public function GetName()
-	{
-		$db =& $this->db;
+    /**
+     * Default GetName
+     * @return
+     */
+    public function GetName()
+    {
+        $db =& $this->db;
 
-		Debug::LogEntry($db, 'audit', sprintf('Module name returned for MediaID: %s is %s', $this->mediaid, $this->name), 'Module', 'GetName');
+        if ($this->name == '')
+        {
+            // Load what we know about this media into the object
+            $SQL = "SELECT name FROM media WHERE mediaID = %d ";
 
-		return $this->name;
-	}
+            $this->name = $db->GetSingleValue(sprintf($SQL, $this->mediaid), 'name', _STRING);
+        }
+
+        Debug::LogEntry($db, 'audit', sprintf('Module name returned for MediaID: %s is %s', $this->mediaid, $this->name), 'Module', 'GetName');
+
+        return $this->name;
+    }
 
         /**
          * Preview code for a module
