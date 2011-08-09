@@ -504,7 +504,7 @@ class region
 	 * @param $top Object
 	 * @param $left Object
 	 */
-	public function EditRegion($layoutid, $regionid, $width, $height, $top, $left)
+	public function EditRegion($layoutid, $regionid, $width, $height, $top, $left, $name = '')
 	{
 		$db =& $this->db;
 		
@@ -525,6 +525,7 @@ class region
 		$regionNodeList = $xpath->query("//region[@id='$regionid']");
 		$regionNode = $regionNodeList->item(0);
 		
+		if ($name != '') $regionNode->setAttribute('name', $name);
 		$regionNode->setAttribute('width',$width);
 		$regionNode->setAttribute('height', $height);
 		$regionNode->setAttribute('top', $top);
@@ -566,6 +567,23 @@ class region
         }
 
         return $ownerId;
+    }
+
+    public function GetRegionName($layoutId, $regionId)
+    {
+        $db =& $this->db;
+
+        //Load the XML for this layout
+        $xml = new DOMDocument("1.0");
+        $xml->loadXML($this->GetLayoutXml($layoutId));
+
+        //Find the region
+        $xpath = new DOMXPath($xml);
+
+        $regionNodeList = $xpath->query("//region[@id='$regionId']");
+        $regionNode = $regionNodeList->item(0);
+
+        return $regionNode->getAttribute('name');
     }
 }
 ?>

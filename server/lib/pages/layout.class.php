@@ -953,39 +953,42 @@ FORM;
         Kit::ClassLoader('region');
         $region = new region($db, $this->user);
         $ownerId = $region->GetOwnerId($layoutid, $regionid);
+        $regionName = $region->GetRegionName($layoutid, $regionid);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
             $form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=layout&q=ManualRegionPosition">
+		<form id="RegionProperties" class="XiboForm" method="post" action="index.php?p=layout&q=ManualRegionPosition">
                     <input type="hidden" name="layoutid" value="$layoutid">
                     <input type="hidden" name="regionid" value="$regionid">
                     <input id="layoutWidth" type="hidden" name="layoutWidth" value="$layoutWidth">
                     <input id="layoutHeight" type="hidden" name="layoutHeight" value="$layoutHeight">
                     <table>
 			<tr>
+                            <td><label for="name" title="Name of the Region">Name</label></td>
+                            <td><input name="name" type="text" id="name" value="$regionName" tabindex="1" /></td>
+			</tr>
+			<tr>
                             <td><label for="top" title="Offset from the Top Corner">Top Offset</label></td>
-                            <td><input name="top" type="text" id="top" value="$top" tabindex="1" /></td>
+                            <td><input name="top" type="text" id="top" value="$top" tabindex="2" /></td>
 			</tr>
 			<tr>
                             <td><label for="left" title="Offset from the Left Corner">Left Offset</label></td>
-                            <td><input name="left" type="text" id="left" value="$left" tabindex="2" /></td>
+                            <td><input name="left" type="text" id="left" value="$left" tabindex="3" /></td>
 			</tr>
 			<tr>
                             <td><label for="width" title="Width of the Region">Width</label></td>
-                            <td><input name="width" type="text" id="width" value="$width" tabindex="3" /></td>
+                            <td><input name="width" type="text" id="width" value="$width" tabindex="4" /></td>
 			</tr>
 			<tr>
                             <td><label for="height" title="Height of the Region">Height</label></td>
-                            <td><input name="height" type="text" id="height" value="$height" tabindex="4" /></td>
+                            <td><input name="height" type="text" id="height" value="$height" tabindex="5" /></td>
 			</tr>
                         <tr>
                             <td></td>
                             <td>
-                                <input type='submit' value="Save" / >
-                                <input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />
                                 <input id="btnFullScreen" type='button' value="Full Screen" / >
                             </td>
                         </tr>
@@ -994,6 +997,8 @@ FORM;
 END;
 
             $response->SetFormRequestResponse($form, 'Manual Region Positioning', '350px', '275px', 'manualPositionCallback');
+            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+            $response->AddButton(__('Save'), '$("#RegionProperties").submit()');
             $response->Respond();
         }
 
@@ -1005,6 +1010,7 @@ END;
 
             $layoutid   = Kit::GetParam('layoutid', _POST, _INT);
             $regionid   = Kit::GetParam('regionid', _POST, _STRING);
+            $regionName = Kit::GetParam('name', _POST, _STRING);
             $top        = Kit::GetParam('top', _POST, _INT);
             $left       = Kit::GetParam('left', _POST, _INT);
             $width      = Kit::GetParam('width', _POST, _INT);
@@ -1030,7 +1036,7 @@ END;
 
             $region = new region($db, $user);
 
-            if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
+            if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName))
                 trigger_error($region->errorMsg, E_USER_ERROR);
 
             $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid");
