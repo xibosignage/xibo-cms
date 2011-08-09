@@ -53,6 +53,7 @@ class text extends Module
             <form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=AddMedia">
                     <input type="hidden" name="layoutid" value="$layoutid">
                     <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                    <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
                     <table>
                             <tr>
                             <td><label for="direction" title="The Direction this text should move, if any">Direction<span class="required">*</span></label></td>
@@ -76,7 +77,14 @@ FORM;
         $this->response->html 		= $form;
         $this->response->callBack 	= 'text_callback';
         $this->response->dialogTitle    = __('Add Text');
-        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -127,6 +135,7 @@ FORM;
                 <input type="hidden" name="layoutid" value="$layoutid">
                 <input type="hidden" name="mediaid" value="$mediaid">
                 <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
                 <table>
                         <tr>
                         <td><label for="direction" title="The Direction this text should move, if any">Direction<span class="required">*</span></label></td>
@@ -150,7 +159,14 @@ FORM;
         $this->response->html = $form;
         $this->response->callBack = 'text_callback';
         $this->response->dialogTitle = __('Edit Text');
-        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -207,9 +223,12 @@ FORM;
         //Set this as the session information
         setSession('content', 'type', 'text');
 
-        // We want to load a new form
-        $this->response->loadForm	= true;
-        $this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 
         return $this->response;
     }
@@ -274,9 +293,12 @@ FORM;
             //Set this as the session information
             setSession('content', 'type', 'text');
 
+	if ($this->showRegionOptions)
+        {
             // We want to load a new form
-            $this->response->loadForm	= true;
-            $this->response->loadFormUri= $url;
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 
             return $this->response;
     }

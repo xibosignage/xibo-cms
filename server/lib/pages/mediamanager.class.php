@@ -167,7 +167,7 @@ END;
                     $tmpModule = new $mediaType($db, $user, $mediaId, $layout['layoutid'], $regionId, $lkId);
                     $mediaName = $tmpModule->GetName();
 
-                    $editLink = '<button class="XiboFormButton" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&layoutid=' . $layout['layoutid'] . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '">' . $msgEdit . '</button>';
+                    $editLink = '<button class="XiboFormButton" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&showRegionOptions=0&layoutid=' . $layout['layoutid'] . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '">' . $msgEdit . '</button>';
                     $mediaNodeSequence++;
 
                     $output .= '<tr>';

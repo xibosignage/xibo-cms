@@ -50,6 +50,7 @@ class microblog extends Module
         <form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
             <input type="hidden" name="layoutid" value="$layoutid">
             <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
             <table>
                 <tr>
                     <td colspan="2"><input type="checkbox" name="twitter" /><label for="twitter" title="">Twitter</label></td>
@@ -93,7 +94,16 @@ FORM;
         $this->response->dialogTitle    = 'Add Microblog';
         $this->response->callBack 	= 'microblog_callback';
         $this->response->AddButton(__('Help'), 'XiboHelpRender("index.php?p=help&q=Display&Topic=Microblog&Category=Media")');
-        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
+
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -159,6 +169,7 @@ FORM;
             <input type="hidden" name="layoutid" value="$layoutid">
             <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
             <input type="hidden" name="mediaid" value="$mediaid">
+            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
             <table>
                 <tr>
                     <td colspan="2"><input type="checkbox" name="twitter" $twitterChecked /><label for="twitter" title="">Twitter</label></td>
@@ -202,7 +213,14 @@ FORM;
         $this->response->dialogTitle    = 'Edit MicroBlog';
         $this->response->callBack 	= 'microblog_callback';
         $this->response->AddButton(__('Help'), 'XiboHelpRender("index.php?p=help&q=Display&Topic=Microblog&Category=Media")');
-        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
         
         return $this->response;
@@ -261,9 +279,12 @@ FORM;
         //Set this as the session information
         setSession('content', 'type', 'microblog');
 
-        // We want to load a new form
-        $this->response->loadForm   = true;
-        $this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 
         return $this->response;
     }
@@ -329,9 +350,12 @@ FORM;
         //Set this as the session information
         setSession('content', 'type', 'microblog');
 
-        // We want to load a new form
-        $this->response->loadForm   = true;
-        $this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 
         return $this->response;
     }

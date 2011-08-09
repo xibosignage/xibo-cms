@@ -47,6 +47,7 @@ class Module implements ModuleInterface
 
 	protected $existingMedia;
 	protected $deleteFromRegion;
+        protected $showRegionOptions;
         protected $originalUserId;
         protected $assignedMedia;
 
@@ -77,6 +78,7 @@ class Module implements ModuleInterface
 
         $this->existingMedia 	= false;
         $this->deleteFromRegion = false;
+        $this->showRegionOptions = Kit::GetParam('showRegionOptions', _REQUEST, _INT, 1);
         $this->duration = '';
 
         // Determine which type this module is
@@ -740,7 +742,7 @@ END;
         $defaultDuration = Config::GetSetting($db, 'jpg_length');
 
         // Save button is different depending on if we are on a region or not
-        if ($regionid != '')
+        if ($regionid != '' && $this->showRegionOptions)
         {
             setSession('content','mediatype', $this->type);
 
@@ -748,6 +750,13 @@ END;
             <input id="btnSave" type="submit" value="Save" disabled />
             <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
             <input class="XiboFormButton" type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" title="Library" value="Library" />
+END;
+        }
+        elseif ($regionid != '' && !$this->showRegionOptions)
+        {
+            $save_button = <<<END
+            <input id="btnSave" type="submit" value="Save" disabled />
+            <input class="XiboFormButton" id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
 END;
         }
         elseif ($backgroundImage)
@@ -786,10 +795,11 @@ END;
         <div id="uploadProgress" style="display:none">
                 <img src="img/loading.gif"><span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
         </div>
-        <form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
+        <form class="XiboForm" id="AddLibraryBasedMedia" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
                 <input type="hidden" name="layoutid" value="$layoutid">
                 <input type="hidden" name="regionid" value="$regionid">
                 <input type="hidden" name="backgroundImage" value="$backgroundImage" />
+                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
                 <input type="hidden" id="txtFileName" name="txtFileName" readonly="true" />
                 <input type="hidden" name="hidFileID" id="hidFileID" value="" />
                 <table width="100%">
@@ -886,8 +896,8 @@ FORM;
         $editedMediaID = $row['editedMediaID'];
         $ext = strtolower(substr(strrchr($originalFilename, '.'), 1));
 
-        //Save button is different depending on if we are on a region or not
-        if ($regionid != '')
+        // Save button is different depending on if we are on a region or not
+        if ($regionid != '' && $this->showRegionOptions)
         {
             setSession('content', 'mediatype', $this->type);
 
@@ -897,6 +907,15 @@ FORM;
             <input id="btnSave" type="submit" value="Save" />
             <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
             <input class="XiboFormButton" type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" title="Library" value="Library" />
+END;
+        }
+        elseif ($regionid != '' && !$this->showRegionOptions)
+        {
+            $extraNotes = '<em>Note: Uploading a new ' . $this->displayType . ' here will replace it on this layout only.</em>';
+            
+            $save_button = <<<END
+            <input id="btnSave" type="submit" value="Save" />
+            <input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
 END;
         }
         else
@@ -940,6 +959,7 @@ END;
                 <input type="hidden" name="lkid" value="$lkid">
                 <input type="hidden" id="PHPSESSID" value="$sessionId" />
                 <input type="hidden" id="SecurityToken" value="$securityToken" />
+                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
                 <table>
                         <tr>
                         <td><label for="name" title="The name of the $this->displayType. Leave this blank to use the file name">Name</label></td>
@@ -1112,11 +1132,16 @@ FORM;
         $this->SetOption('uri', $storedAs);
 
         // Should have built the media object entirely by this time
-        if ($regionid != '')
+        if ($regionid != '' && $this->showRegionOptions)
         {
             // This saves the Media Object to the Region
             $this->UpdateRegion();
             $this->response->loadFormUri = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
+        }
+        elseif ($regionid != '' && !$this->showRegionOptions)
+        {
+            $this->UpdateRegion();
+            $this->response->loadForm = false;
         }
         else
         {
@@ -1345,13 +1370,18 @@ FORM;
         $this->SetOption('uri', $storedAs);
 
         // Should have built the media object entirely by this time
-        if ($regionid != '')
+        if ($regionid != '' && $this->showRegionOptions)
         {
             // This saves the Media Object to the Region
             $this->UpdateRegion();
 
             $this->response->loadForm	 = true;
             $this->response->loadFormUri = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
+        }
+        elseif ($regionid != '' && !$this->showRegionOptions)
+        {
+            $this->UpdateRegion();
+            $this->response->loadForm = false;
         }
         else
         {
@@ -1374,7 +1404,7 @@ FORM;
     {
         $db =& $this->db;
 
-        if ($this->name == '')
+        if ($this->name == '' && !$this->regionSpecific)
         {
             // Load what we know about this media into the object
             $SQL = "SELECT name FROM media WHERE mediaID = %d ";

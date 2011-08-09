@@ -51,6 +51,7 @@ class counter extends Module
             <form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
                 <input type="hidden" name="layoutid" value="$layoutid">
                 <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
                 <table>
                     <tr>
                         <td colspan="2"><center>Python Client Only</center></td>
@@ -74,10 +75,18 @@ class counter extends Module
             </form>
 FORM;
 
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
+
         $this->response->html = $form;
         $this->response->callBack = 'text_callback';
         $this->response->dialogTitle = __('Add Counter');
-        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -126,6 +135,7 @@ FORM;
                 <input type="hidden" name="layoutid" value="$layoutid">
                 <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
                 <input type="hidden" name="mediaid" value="$mediaid">
+                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
                 <table>
                     <tr>
                         <td colspan="2"><center>Python Client Only</center></td>
@@ -149,10 +159,18 @@ FORM;
             </form>
 FORM;
 
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
+
         $this->response->html = $form;
         $this->response->callBack = 'text_callback';
         $this->response->dialogTitle = __('Edit Counter');
-        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -207,10 +225,13 @@ FORM;
         //Set this as the session information
         setSession('content', 'type', 'counter');
 
-        // We want to load a new form
-        $this->response->loadForm	= true;
-        $this->response->loadFormUri= $url;
-
+        if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
+        
         return $this->response;
     }
 
@@ -274,9 +295,12 @@ FORM;
         //Set this as the session information
         setSession('content', 'type', 'counter');
 
-        // We want to load a new form
-        $this->response->loadForm = true;
-        $this->response->loadFormUri= $url;
+        if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 
         return $this->response;
     }

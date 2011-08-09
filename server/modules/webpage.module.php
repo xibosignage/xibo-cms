@@ -52,6 +52,7 @@ class webpage extends Module
 		<form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
                     <input type="hidden" name="layoutid" value="$layoutid">
                     <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                    <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
                     <table>
                         <tr>
                             <td><label for="uri" title="The Location (URL) of the webpage. E.g. http://www.xibo.org.uk">Link<span class="required">*</span></label></td>
@@ -76,7 +77,14 @@ class webpage extends Module
 FORM;
 
             $this->response->html 		= $form;
+        if ($this->showRegionOptions)
+        {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
             $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
             $this->response->dialogTitle = __('Add Webpage');
             $this->response->dialogSize 	= true;
@@ -127,6 +135,7 @@ FORM;
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="mediaid" value="$mediaid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                        <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
 			<table>
 				<tr>
 		    		<td><label for="uri" title="The Location (URL) of the webpage. E.g. http://www.xibo.org.uk">Link<span class="required">*</span></label></td>
@@ -151,7 +160,14 @@ FORM;
 FORM;
 		
             $this->response->html 		= $form;
+        if ($this->showRegionOptions)
+        {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
             $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
             $this->response->dialogTitle = __('Edit Webpage');
             $this->response->dialogSize 	= true;
@@ -213,9 +229,12 @@ FORM;
 		//Set this as the session information
 		setSession('content', 'type', 'webpage');
 		
-		// We want to load a new form
-		$this->response->loadForm	= true;
-		$this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 		
 		return $this->response;
 	}
@@ -277,9 +296,12 @@ FORM;
 		//Set this as the session information
 		setSession('content', 'type', 'text');
 		
-		// We want to load a new form
-		$this->response->loadForm	= true;
-		$this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 		
 		return $this->response;	
 	}

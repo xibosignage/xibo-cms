@@ -49,6 +49,7 @@ class embedded extends Module
 		<form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                        <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
 			<table>
 				<tr>
 		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
@@ -88,16 +89,24 @@ function EmbedInit()
 		</form>
 FORM;
 
-		$this->response->html 			= $form;
-		$this->response->dialogTitle 	= 'Add Embedded HTML';
-		$this->response->dialogSize 	= true;
-		$this->response->dialogWidth 	= '650px';
-		$this->response->dialogHeight 	= '450px';
+        if ($this->showRegionOptions)
+        {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-            $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
 
-            return $this->response;
-	}
+        $this->response->html 			= $form;
+        $this->response->dialogTitle 	= 'Add Embedded HTML';
+        $this->response->dialogSize 	= true;
+        $this->response->dialogWidth 	= '650px';
+        $this->response->dialogHeight 	= '450px';
+        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+
+        return $this->response;
+    }
 	
 	/**
 	 * Return the Edit Form as HTML
@@ -142,6 +151,7 @@ FORM;
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="mediaid" value="$mediaid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                        <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
 			<table>
 				<tr>
 		    		<td><label for="duration" title="The duration in seconds this $this->type should be displayed">Duration<span class="required">*</span></label></td>
@@ -162,13 +172,21 @@ FORM;
 			</table>
 		</form>
 FORM;
-		
+
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
+
 		$this->response->html 			= $form;
 		$this->response->dialogTitle 	= 'Edit Embedded HTML';
 		$this->response->dialogSize 	= true;
 		$this->response->dialogWidth 	= '650px';
 		$this->response->dialogHeight 	= '450px';
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
             $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
             return $this->response;
@@ -222,9 +240,12 @@ FORM;
 		//Set this as the session information
 		setSession('content', 'type', $this->type);
 		
-		// We want to load a new form
-		$this->response->loadForm	= true;
-		$this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 		
 		return $this->response;
 	}
@@ -283,9 +304,12 @@ FORM;
 		//Set this as the session information
 		setSession('content', 'type', $this->type);
 		
-		// We want to load a new form
-		$this->response->loadForm	= true;
-		$this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 		
 		return $this->response;	
 	}

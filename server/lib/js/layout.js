@@ -89,7 +89,7 @@ var text_callback = function()
     return false; //prevent submit
 }
 
-function microblog_callback()
+var microblog_callback = function()
 {
     // Conjure up a text editor
     $("#ta_template").ckeditor();
