@@ -147,6 +147,77 @@ VALUES (
 NULL ,  'Counter',  '1',  '1',  'Customer Counter connected to a Remote Control',  'img/forms/webpage.gif',  '1', NULL
 );
 
+INSERT INTO  `pagegroup` (
+`pagegroupID` ,
+`pagegroup`
+)
+VALUES (
+NULL ,  'DataSets'
+);
+
+INSERT INTO `pages` (`name`, `pagegroupID`)
+SELECT 'dataset', pagegroupID
+  FROM pagegroup
+ WHERE pagegroup = 'DataSets';
+
+INSERT INTO `menuitem` (`menuID`, `pageID`, `Text`, `sequence`)
+SELECT '4', pageID, 'DataSets', '6'
+  FROM pages
+ WHERE `name` = 'dataset';
+
+CREATE TABLE IF NOT EXISTS `dataset` (
+  `DataSetID` int(11) NOT NULL AUTO_INCREMENT,
+  `DataSet` varchar(50) NOT NULL,
+  `Description` varchar(254) DEFAULT NULL,
+  `UserID` int(11) NOT NULL,
+  PRIMARY KEY (`DataSetID`),
+  KEY `UserID` (`UserID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `datasetcolumn` (
+  `DataSetColumnID` int(11) NOT NULL AUTO_INCREMENT,
+  `DataSetID` int(11) NOT NULL,
+  `Heading` varchar(50) NOT NULL,
+  `DataTypeID` smallint(6) NOT NULL,
+  `ListContent` varchar(255) DEFAULT NULL,
+  `ColumnOrder` smallint(6) NOT NULL,
+  PRIMARY KEY (`DataSetColumnID`),
+  KEY `DataSetID` (`DataSetID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `datasetdata` (
+  `DataSetDataID` int(11) NOT NULL AUTO_INCREMENT,
+  `DataColumnID` int(11) NOT NULL,
+  `RowNumber` int(11) NOT NULL,
+  `Value` int(11) NOT NULL,
+  PRIMARY KEY (`DataSetDataID`),
+  KEY `DataColumnID` (`DataColumnID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+ALTER TABLE `datasetcolumn`
+  ADD CONSTRAINT `datasetcolumn_ibfk_1` FOREIGN KEY (`DataSetID`) REFERENCES `dataset` (`DataSetID`);
+
+ALTER TABLE `datasetdata`
+  ADD CONSTRAINT `datasetdata_ibfk_1` FOREIGN KEY (`DataColumnID`) REFERENCES `datasetcolumn` (`DataSetColumnID`);
+
+CREATE TABLE IF NOT EXISTS `lkdatasetgroup` (
+  `LkDataSetGroupID` int(11) NOT NULL AUTO_INCREMENT,
+  `DataSetID` int(11) NOT NULL,
+  `GroupID` int(11) NOT NULL,
+  `View` tinyint(4) NOT NULL DEFAULT '0',
+  `Edit` tinyint(4) NOT NULL DEFAULT '0',
+  `Del` tinyint(4) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`LkDataSetGroupID`),
+  KEY `DataSetID` (`DataSetID`),
+  KEY `GroupID` (`GroupID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+ALTER TABLE `lkdatasetgroup`
+  ADD CONSTRAINT `lkdatasetgroup_ibfk_2` FOREIGN KEY (`GroupID`) REFERENCES `group` (`groupID`),
+  ADD CONSTRAINT `lkdatasetgroup_ibfk_1` FOREIGN KEY (`DataSetID`) REFERENCES `dataset` (`DataSetID`);
+
+
+
 UPDATE `version` SET `app_ver` = '1.3.0', `XmdsVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '41';

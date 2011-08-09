@@ -1100,5 +1100,103 @@ END;
 
         return $templates;
     }
+
+    /**
+     * Authorises a user against a dataSetId
+     * @param <type> $dataSetId
+     * @return <type>
+     */
+    public function DataSetAuth($dataSetId, $fullObject = false)
+    {
+        $auth = new PermissionManager($this->db, $this);
+
+        $SQL  = '';
+        $SQL .= 'SELECT UserID ';
+        $SQL .= '  FROM dataset ';
+        $SQL .= ' WHERE dataset.DataSetID = %d ';
+
+        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $dataSetId), 'UserID', _INT))
+            return $auth;
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
+        }
+
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM dataset ';
+        $SQL .= '   INNER JOIN lkdatasetgroup ';
+        $SQL .= '   ON lkdatasetgroup.DataSetID = dataset.DataSetID ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lkdatasetgroup.GroupID ';
+        $SQL .= ' WHERE dataset.DataSetID = %d ';
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+        $SQL .= 'GROUP BY dataset.UserID ';
+
+        $SQL = sprintf($SQL, $dataSetId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
+    }
+
+    /**
+     * Returns an array of layouts that this user has access to
+     */
+    public function DataSetList()
+    {
+        $SQL  = "";
+        $SQL .= "SELECT DataSetID, ";
+        $SQL .= "       DataSet, ";
+        $SQL .= "       Description, ";
+        $SQL .= "       UserID ";
+        $SQL .= "  FROM dataset ";
+
+        //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $dataSets = array();
+
+        while ($row = $this->db->get_assoc_row($result))
+        {
+            $dataSetItem = array();
+
+            // Validate each param and add it to the array.
+            $dataSetItem['datasetid'] = Kit::ValidateParam($row['DataSetID'], _INT);
+            $dataSetItem['dataset']   = Kit::ValidateParam($row['DataSet'], _STRING);
+            $dataSetItem['description'] = Kit::ValidateParam($row['Description'], _STRING);
+            $dataSetItem['ownerid']  = Kit::ValidateParam($row['UserID'], _INT);
+            
+            $auth = $this->DataSetAuth($dataSetItem['datasetid'], true);
+
+            if ($auth->view)
+            {
+                $dataSetItem['view'] = (int) $auth->view;
+                $dataSetItem['edit'] = (int) $auth->edit;
+                $dataSetItem['del'] = (int) $auth->del;
+
+                $dataSets[] = $dataSetItem;
+            }
+        }
+
+        return $dataSets;
+    }
 }
 ?>
