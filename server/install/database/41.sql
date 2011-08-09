@@ -133,6 +133,20 @@ INSERT INTO `pages` (`name`, `pagegroupID`) VALUES
 ('help', 2),
 ('clock', 2);
 
+INSERT INTO `module` (
+`ModuleID` ,
+`Module` ,
+`Enabled` ,
+`RegionSpecific` ,
+`Description` ,
+`ImageUri` ,
+`SchemaVersion` ,
+`ValidExtensions`
+)
+VALUES (
+NULL ,  'Counter',  '1',  '1',  'Customer Counter connected to a Remote Control',  'img/forms/webpage.gif',  '1', NULL
+);
+
 UPDATE `version` SET `app_ver` = '1.3.0', `XmdsVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '41';
