@@ -75,6 +75,7 @@ HTML;
         $user =& $this->user;
         $response = new ResponseManager();
 
+        $msgEdit = __('Edit');
         $msgPermissions = __('Permissions');
 
         $output = <<<END
@@ -104,6 +105,9 @@ END;
             $output .= '    <td>' . $owner . '</td>';
             $output .= '    <td>' . $groups . '</td>';
             $output .= '    <td>';
+
+            if ($auth->edit)
+                $output .= '<button class="XiboFormButton" href="index.php?p=dataset&q=EditDataSetForm&datasetid=' . $dataSet['datasetid'] . '"><span>' . $msgEdit . '</span></button>';
 
             if ($auth->modifyPermissions)
                 $output .= '<button class="XiboFormButton" href="index.php?p=dataset&q=PermissionsForm&datasetid=' . $dataSet['datasetid'] . '"><span>' . $msgPermissions . '</span></button>';
@@ -151,6 +155,9 @@ END;
         $response->Respond();
     }
 
+    /**
+     * Add a dataset
+     */
     public function Add()
     {
         $db =& $this->db;
@@ -165,6 +172,70 @@ END;
             trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
             
         $response->SetFormSubmitResponse(__('DataSet Added'));
+        $response->Respond();
+    }
+
+    public function EditDataSetForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        $helpManager = new HelpManager($db, $user);
+
+        $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
+
+        // Get the information we already know
+        $SQL = sprintf("SELECT DataSet, Description FROM dataset WHERE DataSetID = %d", $dataSetId);
+
+        if (!$row = $db->GetSingleRow($SQL))
+            trigger_error(__('Unable to get DataSet information'));
+
+        $dataSet = $row['DataSet'];
+        $description = $row['Description'];
+
+        $msgName = __('Name');
+        $msgDesc = __('Description');
+
+        $form = <<<END
+        <form id="EditDataSetForm" class="XiboForm" method="post" action="index.php?p=dataset&q=Edit">
+            <input type="hidden" name="datasetid" value="$dataSetId" />
+            <table>
+                <tr>
+                    <td><label for="dataset" accesskey="n">$msgName<span class="required">*</span></label></td>
+                    <td><input name="dataset" class="required" type="text" id="dataset" tabindex="1" value="$dataSet" /></td>
+                </tr>
+                <tr>
+                    <td><label for="description" accesskey="d">$msgDesc</label></td>
+                    <td><input name="description" type="text" id="description" tabindex="2" value="$description" /></td>
+                </tr>
+            </table>
+        </form>
+END;
+
+
+        $response->SetFormRequestResponse($form, __('Edit DataSet'), '350px', '275px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Add') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Edit'), '$("#EditDataSetForm").submit()');
+        $response->Respond();
+    }
+
+    public function Edit()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
+        $dataSet = Kit::GetParam('dataset', _POST, _STRING);
+        $description = Kit::GetParam('description', _POST, _STRING);
+
+        $dataSetObject = new DataSet($db);
+        if (!$dataSetObject->Edit($dataSetId, $dataSet, $description))
+            trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('DataSet Edited'));
         $response->Respond();
     }
 

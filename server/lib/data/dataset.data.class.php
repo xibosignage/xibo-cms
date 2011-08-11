@@ -47,12 +47,12 @@ class DataSet extends Data
         }
 
         // Ensure there are no layouts with the same name
-        $SQL = sprintf("SELECT DataSet FROM dataset WHERE DataSet = '%s' AND UserID = %d ", $dataSet, $userId);
+        $SQL = sprintf("SELECT DataSet FROM dataset WHERE DataSet = '%s' ", $dataSet);
 
         if ($db->GetSingleRow($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25004, sprintf(__("You already own a dataset called '%s'. Please choose another name."), $dataSet));
+            $this->SetError(25004, sprintf(__("There is already dataset called '%s'. Please choose another name."), $dataSet));
             return false;
         }
         // End Validation
@@ -97,12 +97,12 @@ class DataSet extends Data
         }
 
         // Ensure there are no layouts with the same name
-        $SQL = sprintf("SELECT DataSet FROM dataset WHERE DataSet = '%s' AND UserID = %d ", $dataSet, $userId);
+        $SQL = sprintf("SELECT DataSet FROM dataset WHERE DataSet = '%s' AND DataSetID <> %d ", $dataSet, $dataSetId);
 
         if ($db->GetSingleRow($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25004, sprintf(__("You already own a dataset called '%s'. Please choose another name."), $dataSet));
+            $this->SetError(25004, sprintf(__("There is already a dataset called '%s'. Please choose another name."), $dataSet));
             return false;
         }
         // End Validation
