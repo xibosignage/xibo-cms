@@ -906,7 +906,6 @@ FORM;
             $save_button = <<<END
             <input id="btnSave" type="submit" value="Save" />
             <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-            <input class="XiboFormButton" type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" title="Library" value="Library" />
 END;
         }
         elseif ($regionid != '' && !$this->showRegionOptions)
@@ -1284,7 +1283,7 @@ FORM;
             $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired ) ";
             $SQL .= "VALUES ('%s', '$this->type', '%s', '%s', %d, 0) ";
 
-            $SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($duration), $db->escape_string($fileName), $userid);
+            $SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($this->duration), $db->escape_string($fileName), $userid);
 
             if (!$new_mediaid = $db->insert_query($SQL))
             {
@@ -1340,6 +1339,21 @@ FORM;
                 $this->response->SetError('Database error editing this media record.');
                 $this->response->keepOpen = true;
                 return $this->response;
+            }
+
+            // We need to assign all permissions for the old media id to the new media id
+            Kit::ClassLoader('mediagroupsecurity');
+
+            $security = new MediaGroupSecurity($db);
+            $security->Copy($mediaid, $new_mediaid);
+
+            // Are we on a region
+            if ($regionid != '')
+            {
+                Kit::ClassLoader('layoutmediagroupsecurity');
+
+                $security = new LayoutMediaGroupSecurity($db);
+                $security->Copy($layoutid, $regionid, $mediaid, $new_mediaid);
             }
         }
         else

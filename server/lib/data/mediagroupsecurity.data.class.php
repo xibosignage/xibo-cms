@@ -145,5 +145,44 @@ class MediaGroupSecurity extends Data
 
         return true;
     }
+
+    /**
+     * Copies a media items permissions
+     * @param <type> $mediaId
+     * @param <type> $newMediaId
+     * @return <type>
+     */
+    public function Copy($mediaId, $newMediaId)
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'MediaGroupSecurity', 'Copy');
+
+        $SQL  = "";
+        $SQL .= "INSERT ";
+        $SQL .= "INTO   lkmediagroup ";
+        $SQL .= "       ( ";
+        $SQL .= "              MediaID, ";
+        $SQL .= "              GroupID, ";
+        $SQL .= "              View, ";
+        $SQL .= "              Edit, ";
+        $SQL .= "              Del ";
+        $SQL .= "       ) ";
+        $SQL .= " SELECT '%s', GroupID, View, Edit, Del ";
+        $SQL .= "   FROM lkmediagroup ";
+        $SQL .= "  WHERE MediaID = '%s' ";
+
+        $SQL = sprintf($SQL, $newMediaId, $mediaId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25028, __('Could not Copy Layout Media Security'));
+
+            return false;
+        }
+
+        return true;
+    }
 }
 ?>
