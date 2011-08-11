@@ -76,6 +76,12 @@ $datemanager	= new DateManager($db);
 				<?php
 			}
 		}
+
+            if (file_exists('stylesheet.css'))
+            {
+                // Include the custom style sheet
+                echo '<link rel="stylesheet" type="text/css" href="stylesheet.css" />';
+            }
         ?>
 	</head>
 <?php
