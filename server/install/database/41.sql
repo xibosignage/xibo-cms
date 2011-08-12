@@ -187,7 +187,7 @@ CREATE TABLE IF NOT EXISTS `datasetcolumn` (
 
 CREATE TABLE IF NOT EXISTS `datasetdata` (
   `DataSetDataID` int(11) NOT NULL AUTO_INCREMENT,
-  `DataColumnID` int(11) NOT NULL,
+  `DataSetColumnID` int(11) NOT NULL,
   `RowNumber` int(11) NOT NULL,
   `Value` int(11) NOT NULL,
   PRIMARY KEY (`DataSetDataID`),

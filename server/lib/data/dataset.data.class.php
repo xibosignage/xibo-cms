@@ -128,11 +128,16 @@ class DataSet extends Data
     {
         $db =& $this->db;
 
+        Kit::ClassLoader('datasetgroupsecurity');
+        $security = new DataSetGroupSecurity($db);
+        $security->UnlinkAll($dataSetId);
+
         $SQL = "DELETE FROM dataset WHERE DataSetID = %d";
         $SQL = sprintf($SQL, $dataSetId);
 
         if (!$db->query($SQL))
         {
+            trigger_error($db->error());
             $this->SetError(25005, __('Cannot delete dataset'));
             return false;
         }

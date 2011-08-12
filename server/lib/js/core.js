@@ -410,8 +410,9 @@ function XiboSubmitResponse(response) {
         }
 
         // Should we display the message?
-        if (!response.hideMessage || response.message != '') {
-            SystemMessage(response.message);
+        if (!response.hideMessage) {
+            if (response.message != '')
+                SystemMessage(response.message);
         }
 
         // Do we need to fire a callback function?
