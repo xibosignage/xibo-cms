@@ -48,6 +48,8 @@ class ResponseManager
 	
 	public $login;
 	public $clockUpdate;
+
+        public $uniqueReference;
 	
 	public function __construct()
 	{		
@@ -212,6 +214,7 @@ class ResponseManager
 			// General
 			$response['html'] 			= $this->html;
 			$response['buttons']		= $this->buttons;
+                        $response['uniqueReference'] = $this->uniqueReference;
 			
 			$response['success']		= $this->success;
 			$response['callBack']		= $this->callBack;

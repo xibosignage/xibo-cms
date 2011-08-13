@@ -32,6 +32,7 @@ class datasetDAO
 
         Kit::ClassLoader('dataset');
         Kit::ClassLoader('datasetcolumn');
+        Kit::ClassLoader('datasetdata');
     }
 
     function on_page_load()
@@ -376,7 +377,7 @@ END;
 
         $form .= '</tbody></table></div>';
         
-        $response->SetFormRequestResponse($form, sprintf(__('Columns for %s'), $dataSet), '450px', '400px');
+        $response->SetFormRequestResponse($form, sprintf(__('Columns for %s'), $dataSet), '550px', '400px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'ViewColumns') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->AddButton(__('Add Column'), 'XiboFormRender("index.php?p=dataset&q=AddDataSetColumnForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
@@ -656,7 +657,7 @@ END;
         $form  = '<div class="info_table">';
         $form .= '<table style="width:100%">';
         $form .= '   <tr>';
-        $form .= '      <th>Row</th>';
+        $form .= '      <th>' . __('Row Number') . '</th>';
 
 	while ($row = $db->get_assoc_row($results))
         {
@@ -669,33 +670,34 @@ END;
         $form .= '</tr>';
 
         // Loop through the max rows
-        for ($row=1; $row <= $maxRows + 4; $row++)
+        for ($row = 1; $row <= $maxRows + 2; $row++)
         {
             $form .= '<tr>';
             $form .= '  <td>' . $row . '</td>';
 
             // $row is the current row
-            for ($col=1; $col <= $maxCols; $col++)
+            for ($col = 0; $col < $maxCols; $col++)
             {
-                $dataSetColumnId = $columnDefinition[$col-1]['DataSetColumnID'];
-                $listContent = $columnDefinition[$col-1]['ListContent'];
+                $dataSetColumnId = $columnDefinition[$col]['DataSetColumnID'];
+                $listContent = $columnDefinition[$col]['ListContent'];
+                $columnOrder = $columnDefinition[$col]['ColumnOrder'];
 
                 // Value for this Col/Row
                 $value = '';
 
-                if ($row > $maxRows)
+                if ($row <= $maxRows)
                 {
                     // This is intended to be a blank row
                     $SQL  = "";
                     $SQL .= "SELECT Value ";
                     $SQL .= "  FROM datasetdata ";
-                    $SQL .= "   INNER JOIN datasetcolumn ";
-                    $SQL .= "   ON datasetdata.DataSetColumnID = datasetcolumn.DataSetColumnID ";
-                    $SQL .= "WHERE datasetcolumn.DataSetID = %d ";
-                    $SQL .= "   AND datasetdata.RowNumber = %d ";
-                    $SQL .= "   AND datasetcolumn.ColumnOrder = %d ";
+                    $SQL .= "WHERE datasetdata.RowNumber = %d ";
+                    $SQL .= "   AND datasetdata.DataSetColumnID = %d ";
+                    $SQL = sprintf($SQL, $row, $dataSetColumnId);
 
-                    if (!$results = $db->query(sprintf($SQL, $dataSetId, $row, $columnDefinition[$col-1]['ColumnOrder'])))
+                    Debug::LogEntry($db, 'audit', $SQL, 'dataset');
+
+                    if (!$results = $db->query($SQL))
                     {
                         trigger_error($db->error());
                         trigger_error(__('Can not get the data row/column'), E_USER_ERROR);
@@ -708,7 +710,7 @@ END;
                     else
                     {
                         $valueRow = $db->get_assoc_row($results);
-                        $value = $valueRow[0];
+                        $value = $valueRow['Value'];
                     }
                 }
                 
@@ -716,14 +718,15 @@ END;
                 if ($listContent != '')
                 {
                     $listItems = explode(',', $listContent);
+                    $selected = ($value == '') ? ' selected' : '';
                     $select = '<select name="value">';
-                    $select.= '     <option value="" selected></option>';
+                    $select.= '     <option value="" ' . $selected . '></option>';
 
                     for ($i=0; $i < count($listItems); $i++)
                     {
-                        $selected = ($listItems[0] == $value) ? ' selected' : '';
+                        $selected = ($listItems[$i] == $value) ? ' selected' : '';
 
-                        $select .= '<option value=' . $listItems[$i] . ' ' . $selected . '>' . $listItems[$i] . '</option>';
+                        $select .= '<option value="' . $listItems[$i] . '" ' . $selected . '>' . $listItems[$i] . '</option>';
                     }
 
                     $select .= '</select>';
@@ -733,12 +736,13 @@ END;
                     $select = '<input type="text" name="value" value="' . $value . '">';
                 }
 
-                $action = ($value == '') ? 'DataSetDataAdd' : 'DataSetDataEdit';
-
+                $action = ($value == '') ? 'AddDataSetData' : 'EditDataSetData';
+                $fieldId = uniqid();
+                
                 $form .= <<<END
                 <td>
-                    <form class="dataset_data">
-                        <input type="hidden" name="location" value="index.php?p=dataset&q=$action">
+                    <form id="$fieldId" class="XiboDataSetDataForm" action="index.php?p=dataset&q=$action">
+                        <input type="hidden" name="fieldid" value="$fieldId">
                         <input type="hidden" name="datasetid" value="$dataSetId">
                         <input type="hidden" name="datasetcolumnid" value="$dataSetColumnId">
                         <input type="hidden" name="rownumber" value="$row">
@@ -755,10 +759,77 @@ END;
 
         $form .= '</table></div>';
         
-        $response->callBack = 'dataSetData';
-        $response->SetFormRequestResponse($form, $dataSet, '750px', '600px');
+        $response->SetFormRequestResponse($form, $dataSet, '750px', '600px', 'dataSetData');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Data') . '")');
+        $response->AddButton(__('Add Rows'), 'XiboFormRender("index.php?p=dataset&q=DataSetDataForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
         $response->AddButton(__('Done'), 'XiboDialogClose()');
+        $response->Respond();
+    }
+
+    public function AddDataSetData()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        $response->uniqueReference = Kit::GetParam('fieldid', _POST, _WORD);
+        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
+        $dataSetColumnId = Kit::GetParam('datasetcolumnid', _POST, _INT);
+        $rowNumber = Kit::GetParam('rownumber', _POST, _INT);
+        $value = Kit::GetParam('value', _POST, _STRING);
+
+        $auth = $user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            trigger_error(__('Access Denied'));
+
+        $dataSetObject = new DataSetData($db);
+        if (!$dataSetObject->Add($dataSetColumnId, $rowNumber, $value))
+            trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Data Added'));
+        $response->loadFormUri = 'index.php?p=dataset&q=EditDataSetData';
+        $response->hideMessage = true;
+        $response->keepOpen = true;
+        $response->Respond();
+    }
+
+    public function EditDataSetData()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        $response->uniqueReference = Kit::GetParam('fieldid', _POST, _WORD);
+        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
+        $dataSetColumnId = Kit::GetParam('datasetcolumnid', _POST, _INT);
+        $rowNumber = Kit::GetParam('rownumber', _POST, _INT);
+        $value = Kit::GetParam('value', _POST, _STRING);
+
+        $auth = $user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            trigger_error(__('Access Denied'));
+
+        if ($value == '')
+        {
+            $dataSetObject = new DataSetData($db);
+            if (!$dataSetObject->Delete($dataSetColumnId, $rowNumber))
+                trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
+
+            $response->SetFormSubmitResponse(__('Data Deleted'));
+            $response->loadFormUri = 'index.php?p=dataset&q=AddDataSetData';
+        }
+        else
+        {
+            $dataSetObject = new DataSetData($db);
+            if (!$dataSetObject->Edit($dataSetColumnId, $rowNumber, $value))
+                trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
+
+            $response->SetFormSubmitResponse(__('Data Edited'));
+            $response->loadFormUri = 'index.php?p=dataset&q=EditDataSetData';
+        }
+
+        $response->hideMessage = true;
+        $response->keepOpen = true;
         $response->Respond();
     }
 
