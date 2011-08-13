@@ -299,6 +299,14 @@ function XiboFormRender(formUrl) {
                     $('input[type=text]', '#div_dialog').eq(0).focus();
                 }
 
+                if (response.appendHiddenSubmit) {
+                    var hiddenField = '<input type="submit" style="display:none" />';
+
+                    if ($("input[type=submit]", "#div_dialog").length == 0) {
+                        $("form", "#div_dialog").append('<input type="submit" style="display:none" />');
+                    }
+                }
+
                 // Call Xibo Init for this form
                 XiboInitialise("#div_dialog");
             }
