@@ -185,20 +185,20 @@ CREATE TABLE IF NOT EXISTS `datasetcolumn` (
   KEY `DataSetID` (`DataSetID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+ALTER TABLE `datasetcolumn`
+  ADD CONSTRAINT `datasetcolumn_ibfk_1` FOREIGN KEY (`DataSetID`) REFERENCES `dataset` (`DataSetID`);
+
 CREATE TABLE IF NOT EXISTS `datasetdata` (
   `DataSetDataID` int(11) NOT NULL AUTO_INCREMENT,
   `DataSetColumnID` int(11) NOT NULL,
   `RowNumber` int(11) NOT NULL,
   `Value` varchar(255) NOT NULL,
   PRIMARY KEY (`DataSetDataID`),
-  KEY `DataColumnID` (`DataColumnID`)
+  KEY `DataColumnID` (`DataSetColumnID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
-ALTER TABLE `datasetcolumn`
-  ADD CONSTRAINT `datasetcolumn_ibfk_1` FOREIGN KEY (`DataSetID`) REFERENCES `dataset` (`DataSetID`);
-
 ALTER TABLE `datasetdata`
-  ADD CONSTRAINT `datasetdata_ibfk_1` FOREIGN KEY (`DataColumnID`) REFERENCES `datasetcolumn` (`DataSetColumnID`);
+  ADD CONSTRAINT `datasetdata_ibfk_1` FOREIGN KEY (`DataSetColumnID`) REFERENCES `datasetcolumn` (`DataSetColumnID`);
 
 CREATE TABLE IF NOT EXISTS `lkdatasetgroup` (
   `LkDataSetGroupID` int(11) NOT NULL AUTO_INCREMENT,
