@@ -24,7 +24,7 @@ $(document).ready(function(){
     $('#system_message').dialog({
         title: "Application Message",
         width: "320",
-        height: "120",
+        height: "220",
         draggable: false,
         resizable: false,
         bgiframe: true,
@@ -299,6 +299,14 @@ function XiboFormRender(formUrl) {
                     $('input[type=text]', '#div_dialog').eq(0).focus();
                 }
 
+                if (response.appendHiddenSubmit) {
+                    var hiddenField = '<input type="submit" style="display:none" />';
+
+                    if ($("input[type=submit]", "#div_dialog").length == 0) {
+                        $("form", "#div_dialog").append('<input type="submit" style="display:none" />');
+                    }
+                }
+
                 // Call Xibo Init for this form
                 XiboInitialise("#div_dialog");
             }
@@ -410,8 +418,9 @@ function XiboSubmitResponse(response) {
         }
 
         // Should we display the message?
-        if (!response.hideMessage || response.message != '') {
-            SystemMessage(response.message);
+        if (!response.hideMessage) {
+            if (response.message != '')
+                SystemMessage(response.message);
         }
 
         // Do we need to fire a callback function?

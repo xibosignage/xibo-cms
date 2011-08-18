@@ -75,7 +75,7 @@ class TranslationEngine
                     {
                         // Remove any quality rating (as we aren't interested)
                         $rawLang = explode(';', $lang);
-                        $lang = $rawLang[0];
+                        $lang = str_replace("-", "_", $rawLang[0]);
 
                         if (in_array($lang . '.mo', $supportedLangs))
                         {

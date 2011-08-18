@@ -46,9 +46,10 @@ class embedded extends Module
 		$rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 		
 		$form = <<<FORM
-		<form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
+		<form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                        <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
 			<table>
 				<tr>
 		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
@@ -88,14 +89,24 @@ function EmbedInit()
 		</form>
 FORM;
 
-		$this->response->html 			= $form;
-		$this->response->dialogTitle 	= 'Add Embedded HTML';
-		$this->response->dialogSize 	= true;
-		$this->response->dialogWidth 	= '650px';
-		$this->response->dialogHeight 	= '450px';
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
 
-		return $this->response;
-	}
+        $this->response->html 			= $form;
+        $this->response->dialogTitle 	= 'Add Embedded HTML';
+        $this->response->dialogSize 	= true;
+        $this->response->dialogWidth 	= '650px';
+        $this->response->dialogHeight 	= '450px';
+        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+
+        return $this->response;
+    }
 	
 	/**
 	 * Return the Edit Form as HTML
@@ -108,6 +119,14 @@ FORM;
 		$layoutid	= $this->layoutid;
 		$regionid	= $this->regionid;
 		$mediaid  	= $this->mediaid;
+
+            // Can this user edit?
+            if (!$this->auth->edit)
+            {
+                $this->response->SetError('You do not have permission to edit this media.');
+                $this->response->keepOpen = false;
+                return $this->response;
+            }
 		
 		// Get the embedded HTML out of RAW
 		$rawXml = new DOMDocument();
@@ -123,17 +142,20 @@ FORM;
 		$textNodes 	= $rawXml->getElementsByTagName('embedScript');
 		$textNode 	= $textNodes->item(0);
 		$embedScript= $textNode->nodeValue;
+
+        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
 		
 		//Output the form
 		$form = <<<FORM
-		<form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
+		<form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="mediaid" value="$mediaid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                        <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
 			<table>
 				<tr>
-		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
-		    		<td><input id="duration" name="duration" value="$this->duration" type="text"></td>		
+		    		<td><label for="duration" title="The duration in seconds this $this->type should be displayed">Duration<span class="required">*</span></label></td>
+                                <td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
 				</tr>
 				<tr>
 		    		<td colspan="2">
@@ -147,24 +169,27 @@ FORM;
 						<textarea id="embedScript" name="embedScript">$embedScript</textarea>
 					</td>
 				</tr>				
-				<tr>
-					<td></td>
-					<td>
-						<input id="btnSave" type="submit" value="Save"  />
-						<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-					</td>
-				</tr>
 			</table>
 		</form>
 FORM;
-		
+
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
+
 		$this->response->html 			= $form;
 		$this->response->dialogTitle 	= 'Edit Embedded HTML';
 		$this->response->dialogSize 	= true;
 		$this->response->dialogWidth 	= '650px';
 		$this->response->dialogHeight 	= '450px';
+            $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
-		return $this->response;		
+            return $this->response;
 	}
 	
 	/**
@@ -215,9 +240,12 @@ FORM;
 		//Set this as the session information
 		setSession('content', 'type', $this->type);
 		
-		// We want to load a new form
-		$this->response->loadForm	= true;
-		$this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 		
 		return $this->response;
 	}
@@ -233,11 +261,21 @@ FORM;
 		$layoutid 	= $this->layoutid;
 		$regionid 	= $this->regionid;
 		$mediaid	= $this->mediaid;
+
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this assignment.');
+            $this->response->keepOpen = false;
+            return $this->response;
+        }
 		
 		//Other properties
 		$embedHtml	  = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
 		$embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
-		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
+
+        // If we have permission to change it, then get the value from the form
+        if ($this->auth->modifyPermissions)
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -249,15 +287,12 @@ FORM;
 			return $this->response;
 		}
 		
-		if ($duration == 0)
+		if ($this->duration == 0)
 		{
 			$this->response->SetError('You must enter a duration.');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
-		
-		// Required Attributes
-		$this->duration = $duration;
 		
 		// Any Options
 		$this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml><embedScript><![CDATA[' . $embedScript . ']]></embedScript>');
@@ -269,9 +304,12 @@ FORM;
 		//Set this as the session information
 		setSession('content', 'type', $this->type);
 		
-		// We want to load a new form
-		$this->response->loadForm	= true;
-		$this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 		
 		return $this->response;	
 	}

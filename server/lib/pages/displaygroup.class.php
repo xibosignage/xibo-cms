@@ -420,7 +420,7 @@ END;
 		$SQL .= "		       INNER JOIN lkgroupdg ";
 		$SQL .= "		       ON     lkgroupdg.GroupID = group.GroupID ";
 		$SQL .= sprintf("	WHERE  lkgroupdg.DisplayGroupID   = %d", $displayGroupID);
-		$SQL .= "       )";
+		$SQL .= " ) AND `group`.IsEveryone = 0      ";
 		
 		if(!$resultOut = $db->query($SQL))
 		{

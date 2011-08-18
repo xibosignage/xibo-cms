@@ -44,6 +44,8 @@ class Schedule extends Data
                 if (count($displayGroupIDs) == 0)
                     return $this->SetError(25001, __('No display groups selected'));
 
+                if ($userID == 0)
+                    return $this->SetError(25001, __('No User Id Present'));
 
                 // Cant have a 0 increment as it creates a loop
                 if ($recDetail == 0)

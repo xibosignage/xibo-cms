@@ -93,31 +93,38 @@ class region
 	 */
 	public function AddRegion($layoutid, $regionid = "")
 	{
-		$db =& $this->db;
-			
-		//Load the XML for this layout
-		$xml = new DOMDocument("1.0");
-		$xml->loadXML($this->GetLayoutXml($layoutid));
-		
-		//Do we have a region ID provided?
-		if ($regionid == "")
-		{
-			$regionid = uniqid();
-		}
-		
-		//make a new region node
-		$newRegion = $xml->createElement("region");
-		$newRegion->setAttribute('id', $regionid);
-		$newRegion->setAttribute('width', 50);
-		$newRegion->setAttribute('height', 50);
-		$newRegion->setAttribute('top', 50);
-		$newRegion->setAttribute('left', 50);
-		
-		$xml->firstChild->appendChild($newRegion);
-		
-		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;
-		
-		return true;
+            $db =& $this->db;
+
+            //Load the XML for this layout
+            $xml = new DOMDocument("1.0");
+            $xml->loadXML($this->GetLayoutXml($layoutid));
+
+            //Do we have a region ID provided?
+            if ($regionid == '')
+                $regionid = uniqid();
+
+            // make a new region node
+            $newRegion = $xml->createElement("region");
+            $newRegion->setAttribute('id', $regionid);
+            $newRegion->setAttribute('userId', $this->user->userid);
+            $newRegion->setAttribute('width', 50);
+            $newRegion->setAttribute('height', 50);
+            $newRegion->setAttribute('top', 50);
+            $newRegion->setAttribute('left', 50);
+
+            $xml->firstChild->appendChild($newRegion);
+
+            if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;
+
+            // What permissions should we create this with?
+            if (Config::GetSetting($db, 'LAYOUT_DEFAULT') == 'public')
+            {
+                Kit::ClassLoader('layoutregiongroupsecurity');
+                $security = new LayoutRegionGroupSecurity($db);
+                $security->LinkEveryone($layoutid, $regionid, 1, 0, 0);
+            }
+
+            return true;
 	}
 	
 	public function DeleteRegion($layoutid, $regionid)
@@ -185,13 +192,13 @@ class region
 		
 		//Load the Media's XML into a SimpleXML object
 		$mediaXml->loadXML($mediaXmlString);
+
+                // Get the Media ID from the mediaXml node
+                $mediaid = $mediaXml->documentElement->getAttribute('id');
 		
 		// Do we need to add a Link here?
 		if ($regionSpecific == 0)
 		{
-			// Get the Media ID from the mediaXml node
-			$mediaid = $mediaXml->documentElement->getAttribute('id');
-			
 			// Add the DB link
 			$lkid = $this->AddDbLink($layoutid, $regionid, $mediaid);
 			
@@ -214,6 +221,15 @@ class region
 		
 		//Convert back to XML
 		$xml = $xml->saveXML();
+
+        // What permissions should we assign this with?
+        if (Config::GetSetting($db, 'MEDIA_DEFAULT') == 'public')
+        {
+            Kit::ClassLoader('layoutmediagroupsecurity');
+
+            $security = new LayoutMediaGroupSecurity($db);
+            $security->LinkEveryone($layoutid, $regionid, $mediaid, 1, 0, 0);
+        }
 		
 		if (!$this->SetLayoutXml($layoutid, $xml)) return false;
 		
@@ -488,7 +504,7 @@ class region
 	 * @param $top Object
 	 * @param $left Object
 	 */
-	public function EditRegion($layoutid, $regionid, $width, $height, $top, $left)
+	public function EditRegion($layoutid, $regionid, $width, $height, $top, $left, $name = '')
 	{
 		$db =& $this->db;
 		
@@ -503,17 +519,24 @@ class region
 		$xml = new DOMDocument("1.0");
 		$xml->loadXML($this->GetLayoutXml($layoutid));
 		
-		
 		//Find the region
 		$xpath = new DOMXPath($xml);
 		
 		$regionNodeList = $xpath->query("//region[@id='$regionid']");
 		$regionNode = $regionNodeList->item(0);
 		
+		if ($name != '') $regionNode->setAttribute('name', $name);
 		$regionNode->setAttribute('width',$width);
 		$regionNode->setAttribute('height', $height);
 		$regionNode->setAttribute('top', $top);
 		$regionNode->setAttribute('left', $left);
+
+                // If the userId is blank, then set it to be the layout user id?
+                if (!$ownerId = $regionNode->getAttribute('userId'))
+                {
+                    $ownerId = $db->GetSingleValue(sprintf("SELECT userid FROM layout WHERE layoutid = %d", $layoutid), 'userid', _INT);
+                    $regionNode->setAttribute('userId', $ownerId);
+                }
 		
 		//Convert back to XML		
 		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;
@@ -521,5 +544,46 @@ class region
 		//Its swapped
 		return true;
 	}
+
+    public function GetOwnerId($layoutId, $regionId)
+    {
+        $db =& $this->db;
+
+        //Load the XML for this layout
+        $xml = new DOMDocument("1.0");
+        $xml->loadXML($this->GetLayoutXml($layoutId));
+
+        //Find the region
+        $xpath = new DOMXPath($xml);
+
+        $regionNodeList = $xpath->query("//region[@id='$regionId']");
+        $regionNode = $regionNodeList->item(0);
+
+        // If the userId is blank, then set it to be the layout user id?
+        if (!$ownerId = $regionNode->getAttribute('userId'))
+        {
+            $ownerId = $db->GetSingleValue(sprintf("SELECT userid FROM layout WHERE layoutid = %d", $layoutId), 'userid', _INT);
+            $regionNode->setAttribute('userid', $ownerId);
+        }
+
+        return $ownerId;
+    }
+
+    public function GetRegionName($layoutId, $regionId)
+    {
+        $db =& $this->db;
+
+        //Load the XML for this layout
+        $xml = new DOMDocument("1.0");
+        $xml->loadXML($this->GetLayoutXml($layoutId));
+
+        //Find the region
+        $xpath = new DOMXPath($xml);
+
+        $regionNodeList = $xpath->query("//region[@id='$regionId']");
+        $regionNode = $regionNodeList->item(0);
+
+        return $regionNode->getAttribute('name');
+    }
 }
 ?>

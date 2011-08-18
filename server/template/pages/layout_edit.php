@@ -32,6 +32,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<div class='buttons'>
 			<a id="background_button" class="XiboFormButton" href="<?php echo $this->EditBackgroundHref(); ?>" title="Background"><div class="button_text">Background</div></a> 
 			<a id="edit_button" class="XiboFormButton" href="<?php echo $this->EditPropertiesHref(); ?>" title="Layout Properties"><div class="button_text">Properties</div></a> 		
+			<a id="schedulenow_button" class="XiboFormButton" href="<?php echo $this->ScheduleNowHref(); ?>" title="Schedule Now"><div class="button_text">Schedule Now</div></a>
 		</div>
 		<div class="leftbuttons">
 			<div class="buttons">

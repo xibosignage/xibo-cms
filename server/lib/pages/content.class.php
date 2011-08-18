@@ -70,11 +70,6 @@ class contentDAO
 		if (isset($_SESSION['content']['usertype'])) $usertype = $_SESSION['content']['usertype'];
 		if (isset($_SESSION['content']['playlistid'])) $playlistid = $_SESSION['content']['playlistid'];
 		
-		//shared list
-		$shared = "All";
-		if (isset($_SESSION['content']['shared'])) $shared = $_SESSION['content']['shared'];
-		$shared_list = dropdownlist("SELECT 'all','All' UNION SELECT permissionID, permission FROM permission", "shared", $shared);
-		
 		$filter_userid = "";
 		if (isset($_SESSION['content']['filter_userid'])) $filter_userid = $_SESSION['content']['filter_userid'];
 		
@@ -122,8 +117,6 @@ class contentDAO
 							<td>$user_list</td>
 							<td></td>
 							<td></td>
-							<td>$msgShared</td>
-							<td>$shared_list</td>
 						</tr>
 					</table>
 			</form>
@@ -174,12 +167,9 @@ HTML;
 		$SQL .= "        media.name, ";
 		$SQL .= "        media.type, ";
 		$SQL .= "        media.duration, ";
-		$SQL .= "        media.userID, ";
-		$SQL .= "        permission.permission, ";
-		$SQL .= "        media.permissionID ";
+		$SQL .= "        media.userID ";
 		$SQL .= "FROM    media ";
-		$SQL .= "INNER JOIN permission ON permission.permissionID = media.permissionID ";
-		$SQL .= "WHERE   1            = 1  AND isEdited = 0 ";
+		$SQL .= "WHERE   isEdited = 0 ";
 		if ($mediatype != "all") 
 		{
 			$SQL .= sprintf(" AND media.type = '%s'", $db->escape_string($mediatype));
@@ -191,10 +181,6 @@ HTML;
 		if ($filter_userid != 'all') 
 		{
 			$SQL .= sprintf(" AND media.userid = %d ", $filter_userid);
-		}
-		if ($shared != "all") 
-		{
-			$SQL .= sprintf(" AND media.permissionID = %d ", $shared);			
 		}
 		//retired options
 		if ($filter_retired == '1') 
@@ -220,7 +206,7 @@ HTML;
 		$msgType	= __('Type');
 		$msgRetired	= __('Retired');
 		$msgOwner	= __('Owner');
-		$msgShared	= __('Shared');
+		$msgShared	= __('Permissions');
 		$msgAction	= __('Action');
 
     	$output = <<<END
@@ -231,83 +217,86 @@ HTML;
 			        <th>$msgName</th>
 			        <th>$msgType</th>
 			        <th>h:mi:ss</th>            
+                                <th>$msgOwner</th>
 			        <th>$msgShared</th>       
-					<th>$msgOwner</th>
 			        <th>$msgAction</th>     
 			    </tr>
 			</thead>
 			<tbody>
 END;
 		
-	    while ($aRow = $db->get_row($results)) 
-		{
-	    	$mediaid 		= Kit::ValidateParam($aRow[0], _INT);
-			$media 			= Kit::ValidateParam($aRow[1], _STRING);
-			$mediatype 		= Kit::ValidateParam($aRow[2], _WORD);
-			$length 		= sec2hms(Kit::ValidateParam($aRow[3], _DOUBLE));
-			$ownerid 		= Kit::ValidateParam($aRow[4], _INT);
-			
-			$permission 	= Kit::ValidateParam($aRow[5], _STRING);
-			$permissionid 	= Kit::ValidateParam($aRow[6], _INT);
-			
-			//get the username from the userID using the user module
-			$username 		= $user->getNameFromID($ownerid);
-			$group			= $user->getGroupFromID($ownerid);
-			
-			//get the permissions
-			list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid);
-			
-			if ($see_permissions) //is this user allowed to see this
-			{ 
-				if ($edit_permissions) 
-				{
-					//double click action - depends on what type of media we are
-					$output .= <<<END
-					<tr href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid' ondblclick="XiboFormRender($(this).attr('href'))">
+        while ($aRow = $db->get_row($results))
+        {
+            $mediaid 		= Kit::ValidateParam($aRow[0], _INT);
+            $media 			= Kit::ValidateParam($aRow[1], _STRING);
+            $mediatype 		= Kit::ValidateParam($aRow[2], _WORD);
+            $length 		= sec2hms(Kit::ValidateParam($aRow[3], _DOUBLE));
+            $ownerid 		= Kit::ValidateParam($aRow[4], _INT);
+
+            //get the username from the userID using the user module
+            $username 		= $user->getNameFromID($ownerid);
+
+            $group = $this->GroupsForMedia($mediaid);
+
+            // Permissions
+            $auth = $this->user->MediaAuth($mediaid, true);
+
+            if ($auth->view) //is this user allowed to see this
+            {
+                if ($auth->edit)
+                {
+                    //double click action - depends on what type of media we are
+                    $output .= <<<END
+                    <tr href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid' ondblclick="XiboFormRender($(this).attr('href'))">
 END;
-				}
-				else 
-				{
-					$output .= '<tr ondblclick="alert(' . __('You do not have permission to edit this media') . ')">';
-				}
-				
-				$output .= "<td>$media</td>\n";
-		    	$output .= "<td>$mediatype</td>\n";
-		    	$output .= "<td>$length</td>\n";
-		    	$output .= "<td>$permission</td>\n";
-				$output .= "<td>$username</td>";
-				
-				// ACTION buttons
-		    	if ($edit_permissions) 
-				{
-					$msgEdit	= __('Edit');
-					$msgDelete	= __('Delete');
-					
-			   		$buttons 	= "<button class='XiboFormButton' title='$msgEdit' href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid'><span>$msgEdit</span></button>";					
-	    			$buttons 	.= "<button class='XiboFormButton' title='$msgDelete' href='index.php?p=module&mod=$mediatype&q=Exec&method=DeleteForm&mediaid=$mediaid'><span>$msgDelete</span></button>";
-		    	}
-		    	else 
-				{
-		    		$buttons = __("No available actions.");
-		    	}
-				
-				$output .= <<<END
-				<td>
-					<div class='buttons'>
-						$buttons
-					</div>
-				</td>
+                }
+                else
+                {
+                    $output .= '<tr ondblclick="alert(' . __('You do not have permission to edit this media') . ')">';
+                }
+
+                $output .= "<td>$media</td>\n";
+                $output .= "<td>$mediatype</td>\n";
+                $output .= "<td>$length</td>\n";
+                $output .= "<td>$username</td>";
+                $output .= "<td>$group</td>";
+
+                // ACTION buttons
+                if ($auth->edit)
+                {
+                    $msgEdit	= __('Edit');
+                    $msgDelete	= __('Delete');
+
+                    $buttons 	= "<button class='XiboFormButton' title='$msgEdit' href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid'><span>$msgEdit</span></button>";
+                    
+                    if ($auth->del)
+                        $buttons .= "<button class='XiboFormButton' title='$msgDelete' href='index.php?p=module&mod=$mediatype&q=Exec&method=DeleteForm&mediaid=$mediaid'><span>$msgDelete</span></button>";
+
+                    if ($auth->modifyPermissions)
+                        $buttons .= "<button class='XiboFormButton' title='$msgShared' href='index.php?p=module&mod=$mediatype&q=Exec&method=PermissionsForm&mediaid=$mediaid'><span>$msgShared</span></button>";
+                }
+                else
+                {
+                    $buttons = __("No available actions.");
+                }
+
+                $output .= <<<END
+                <td>
+                        <div class='buttons'>
+                                $buttons
+                        </div>
+                </td>
 END;
-				
-		    	$output .= "</tr>\n";
-			}
-	    }
+
+                $output .= "</tr>\n";
+            }
+        }
 		
     	$output .= "</tbody></table>\n</div>\n";
 
     	$response->SetGridResponse($output);
-		$response->Respond();
-	}
+        $response->Respond();
+    }
 	
 	/**
 	 * Display the forms
@@ -501,11 +490,8 @@ HTML;
 		$SQL .= "        media.name, ";
 		$SQL .= "        media.type, ";
 		$SQL .= "        media.duration, ";
-		$SQL .= "        media.userID, ";
-		$SQL .= "        permission.permission, ";
-		$SQL .= "        media.permissionID ";
+		$SQL .= "        media.userID ";
 		$SQL .= "FROM    media ";
-		$SQL .= "INNER JOIN permission ON permission.permissionID = media.permissionID ";
 		$SQL .= "WHERE   retired = 0 AND isEdited = 0 ";
 		if($mediatype != "all") 
 		{
@@ -528,7 +514,6 @@ HTML;
 		$msgType	= __('Type');
 		$msgLen		= __('Duration');
 		$msgOwner	= __('Owner');
-		$msgShared	= __('Shared');
 		$msgSelect	= __('Select');
 		
 		//some table headings
@@ -543,7 +528,6 @@ HTML;
 			        <th>$msgName</th>
 		            <th>$msgType</th>
 		            <th>$msgLen</th>
-		            <th>$msgShared</th>
 			        <th>$msgSelect</th>
 			    </tr>
 				</thead>
@@ -559,26 +543,21 @@ END;
 			$length 		= sec2hms(Kit::ValidateParam($row[3], _DOUBLE));
 			$ownerid 		= Kit::ValidateParam($row[4], _INT);
 			
-			$permission 	= Kit::ValidateParam($row[5], _STRING);
-			$permissionid 	= Kit::ValidateParam($row[6], _INT);
-			
 			//get the username from the userID using the user module
 			$username 		= $user->getNameFromID($ownerid);
 			$group			= $user->getGroupFromID($ownerid);
 	
-			//get the permissions
-			list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid);
-			
-			if ($see_permissions) 
-			{ //is this user allowed to see this
+			// Permissions
+                        $auth = $this->user->MediaAuth($mediaid, true);
 
-				$form .= "<tr>";
-				$form .= "<td>" . $media . "</td>\n";
-				$form .= "<td>" . $mediatype . "</td>\n";
-				$form .= "<td>" . $length . "</td>\n";
-				$form .= "<td>" . $permission . "</td>\n";
-				$form .= "<td><input type='checkbox' name='mediaids[]' value='$mediaid'></td>";
-				$form .= "</tr>";
+                        if ($auth->view) //is this user allowed to see this
+                        {
+                            $form .= "<tr>";
+                            $form .= "<td>" . $media . "</td>\n";
+                            $form .= "<td>" . $mediatype . "</td>\n";
+                            $form .= "<td>" . $length . "</td>\n";
+                            $form .= "<td><input type='checkbox' name='mediaids[]' value='$mediaid'></td>";
+                            $form .= "</tr>";
 			}
 		}
 
@@ -673,6 +652,43 @@ HTML;
         Debug::LogEntry($db, "audit", $complete_page, "FileUpload");
         Debug::LogEntry($db, "audit", "[OUT]", "FileUpload");
         exit;
+    }
+
+    /**
+     * Get a list of group names for a layout
+     * @param <type> $layoutId
+     * @return <type>
+     */
+    private function GroupsForMedia($mediaId)
+    {
+        $db =& $this->db;
+
+        $SQL = '';
+        $SQL .= 'SELECT `group`.Group ';
+        $SQL .= '  FROM `group` ';
+        $SQL .= '   INNER JOIN lkmediagroup ';
+        $SQL .= '   ON `group`.GroupID = lkmediagroup.GroupID ';
+        $SQL .= ' WHERE lkmediagroup.MediaID = %d ';
+
+        $SQL = sprintf($SQL, $mediaId);
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get group information for media'), E_USER_ERROR);
+        }
+
+        $groups = '';
+
+        while ($row = $db->get_assoc_row($results))
+        {
+            $groups .= $row['Group'] . ', ';
+        }
+
+        $groups = trim($groups);
+        $groups = trim($groups, ',');
+
+        return $groups;
     }
 }
 ?>

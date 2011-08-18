@@ -20,13 +20,12 @@
  */ 
 class webpage extends Module
 {
-	// Custom Media information
-	private $uri;
 	
 	public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
 	{
 		// Must set the type of the class
 		$this->type = 'webpage';
+                $this->displayType = 'Webpage';
 	
 		// Must call the parent class	
 		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -50,9 +49,10 @@ class webpage extends Module
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
 		
 		$form = <<<FORM
-		<form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
+		<form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
                     <input type="hidden" name="layoutid" value="$layoutid">
                     <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                    <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
                     <table>
                         <tr>
                             <td><label for="uri" title="The Location (URL) of the webpage. E.g. http://www.xibo.org.uk">Link<span class="required">*</span></label></td>
@@ -69,27 +69,29 @@ class webpage extends Module
                         <tr>
                             <td colspan="2">
                                 <input id="transparency" name="transparency" type="checkbox">
-                                <label for="transparency" title="Make webpage background transparent?">Background transparency (python only)</label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                                <input id="btnSave" type="submit" value="Save"  />
-                                <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
+                                <label for="transparency" title="Make webpage background transparent?">Background transparent? (python only)</label>
                             </td>
                         </tr>
                     </table>
 		</form>
 FORM;
 
-		$this->response->html 		= $form;
-		$this->response->dialogTitle = 'Add New Webpage';
-		$this->response->dialogSize 	= true;
-		$this->response->dialogWidth 	= '450px';
-		$this->response->dialogHeight 	= '250px';
+            $this->response->html 		= $form;
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
+            $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+            $this->response->dialogTitle = __('Add Webpage');
+            $this->response->dialogSize 	= true;
+            $this->response->dialogWidth 	= '450px';
+            $this->response->dialogHeight 	= '250px';
 
-		return $this->response;
+            return $this->response;
 	}
 	
 	/**
@@ -103,6 +105,14 @@ FORM;
 		$layoutid	= $this->layoutid;
 		$regionid	= $this->regionid;
 		$mediaid  	= $this->mediaid;
+
+        // Permissions
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this assignment.');
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
 		
 		$direction	= $this->GetOption('direction');
 		$copyright	= $this->GetOption('copyright');
@@ -116,13 +126,16 @@ FORM;
                     $transparencyChecked = 'checked';
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
+
+        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
 		
 		//Output the form
 		$form = <<<FORM
-		<form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
+		<form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" name="mediaid" value="$mediaid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                        <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
 			<table>
 				<tr>
 		    		<td><label for="uri" title="The Location (URL) of the webpage. E.g. http://www.xibo.org.uk">Link<span class="required">*</span></label></td>
@@ -130,7 +143,7 @@ FORM;
 				</tr>
 				<tr>
 		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
-		    		<td><input id="duration" name="duration" value="$this->duration" type="text"></td>		
+		    		<td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
 				</tr>
                         <tr>
                             <td><label for="scaling" title="">Scale Percentage</label></td>
@@ -142,24 +155,26 @@ FORM;
                                 <label for="transparency" title="Make webpage background transparent?">Background transparency (python only)</label>
                             </td>
                         </tr>
-				<tr>
-					<td></td>
-					<td>
-						<input id="btnSave" type="submit" value="Save"  />
-						<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-					</td>
-				</tr>
 			</table>
 		</form>
 FORM;
 		
-		$this->response->html 		= $form;
-		$this->response->dialogTitle = 'Edit Webpage';
-		$this->response->dialogSize 	= true;
-		$this->response->dialogWidth 	= '450px';
-		$this->response->dialogHeight 	= '250px';
+            $this->response->html 		= $form;
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
+            $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+            $this->response->dialogTitle = __('Edit Webpage');
+            $this->response->dialogSize 	= true;
+            $this->response->dialogWidth 	= '450px';
+            $this->response->dialogHeight 	= '250px';
 
-		return $this->response;		
+            return $this->response;
 	}
 	
 	/**
@@ -212,11 +227,14 @@ FORM;
 		$this->UpdateRegion();
 		
 		//Set this as the session information
-		setSession('content', 'type', 'text');
+		setSession('content', 'type', 'webpage');
 		
-		// We want to load a new form
-		$this->response->loadForm	= true;
-		$this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 		
 		return $this->response;
 	}
@@ -232,14 +250,24 @@ FORM;
 		$layoutid 	= $this->layoutid;
 		$regionid 	= $this->regionid;
 		$mediaid	= $this->mediaid;
+
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this assignment.');
+            $this->response->keepOpen = false;
+            return $this->response;
+        }
 		
 		//Other properties
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
-		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
                 $scaling	  = Kit::GetParam('scaling', _POST, _INT, 100);
 		$transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
-		
-		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+        
+        // If we have permission to change it, then get the value from the form
+        if ($this->auth->modifyPermissions)
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+
+	$url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
 		//Validate the URL?
 		if ($uri == "" || $uri == "http://")
@@ -249,15 +277,12 @@ FORM;
 			return $this->response;
 		}
 		
-		if ($duration == 0)
+		if ($this->duration == 0)
 		{
 			$this->response->SetError('You must enter a duration.');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
-		
-		// Required Attributes
-		$this->duration = $duration;
 		
 		// Any Options
 		$this->SetOption('uri', $uri);
@@ -271,9 +296,12 @@ FORM;
 		//Set this as the session information
 		setSession('content', 'type', 'text');
 		
-		// We want to load a new form
-		$this->response->loadForm	= true;
-		$this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 		
 		return $this->response;	
 	}

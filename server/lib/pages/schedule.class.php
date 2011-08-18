@@ -442,7 +442,7 @@ class scheduleDAO
                     $timePrefix	= $spanningDays == 1 ? date("H:i", $event->fromDT) : '';
                     $editLink	= $event->editPermission == true ? sprintf('class="XiboFormButton" href="%s"',$event->layoutUri) : 'class="UnEditableEvent"';
 
-                    $layoutUri	= sprintf('<div class="%s %s" title="Display Group: %s"><a %s title="%s">%s %s</a></div>', $tdClass, $calEvent[$index], $event->displayGroup, $editLink, $event->layout, $timePrefix, substr($event->layout, 0, 14));
+                    $layoutUri	= sprintf('<div class="%s %s" title="Display Group: %s"><a %s title="%s">%s %s</a></div>', $tdClass, $calEvent[$index], $event->displayGroup, $editLink, $event->layout, $timePrefix, $event->layout);
 
                     // We should subtract any days ahead of the start date from the spanning days
                     $spanningDays 	= $d - $event->startDayNo > 0 ? $spanningDays - ($d - $event->startDayNo) : $spanningDays;
@@ -1102,12 +1102,9 @@ HTML;
 		$dateText		= date("d/m/Y", $date);
 		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
 		
-		// need to do some user checking here
-		$sql  = "SELECT layoutID, layout, permissionID, userID ";
-		$sql .= "  FROM layout WHERE retired = 0";
-		$sql .= " ORDER BY layout ";
-		
-		$layout_list 	= dropdownlist($sql, "layoutid", 0, "", false, true);
+		// Layout list
+                $layouts = $user->LayoutList();
+		$layout_list 	= Kit::SelectList('layoutid', $layouts, 'layoutid', 'layout');
 		
 		$outputForm		= false;
 		$displayList	= $this->UnorderedListofDisplays($outputForm, $displayGroupIDs);
@@ -1275,11 +1272,9 @@ END;
 		}
 		
 		// need to do some user checking here
-		$sql  = "SELECT layoutID, layout, permissionID, userID ";
-		$sql .= "  FROM layout WHERE retired = 0";
-		$sql .= " ORDER BY layout ";
-		
-		$layout_list 	= dropdownlist($sql, "layoutid", $layoutID, "", false, true);
+		// Layout list
+                $layouts = $user->LayoutList();
+		$layout_list 	= Kit::SelectList('layoutid', $layouts, 'layoutid', 'layout', $layoutID);
 		
 		$outputForm		= false;
 		$displayList	= $this->UnorderedListofDisplays($outputForm, $displayGroupIDs);
@@ -1398,7 +1393,9 @@ END;
 		
 		$fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
 		$toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
-		$recToDT    = $datemanager->GetDateFromUS($recToDT, $repeatTime);
+
+                if ($recToDT != '')
+                    $recToDT = $datemanager->GetDateFromUS($recToDT, $repeatTime);
 		
 		// Validate layout
 		if ($layoutid == 0) 
@@ -1482,8 +1479,9 @@ END;
 		
 		$fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
 		$toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
-		$recToDT    = $datemanager->GetDateFromUS($recToDT, $repeatTime);
-		
+		if ($recToDT != '')
+                    $recToDT = $datemanager->GetDateFromUS($recToDT, $repeatTime);
+
 		// Validate layout
 		if ($layoutid == 0) 
 		{
@@ -1787,5 +1785,101 @@ END;
 		
 		return true;
 	}
+
+    public function ScheduleNowForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        $date = time();
+        $dateText = date("d/m/Y", $date);
+
+        // We might have a layout id, or a display id
+        $layoutId = Kit::GetParam('layoutid', _GET, _INT, 0);
+        $displayGroupIds = Kit::GetParam('displayGroupId', _GET, _ARRAY);
+
+        // Layout list
+        $layouts = $user->LayoutList();
+        $layoutList = Kit::SelectList('layoutid', $layouts, 'layoutid', 'layout', $layoutId);
+
+        $outputForm = false;
+        $displayList = $this->UnorderedListofDisplays($outputForm, $displayGroupIds);
+
+        $form = <<<END
+            <form id="ScheduleNowForm" class="XiboForm" action="index.php?p=schedule&q=ScheduleNow" method="post">
+                <table style="width:100%;">
+                    <tr>
+                        <td><label for="duration" title="How long should this event be scheduled for">Duration<span class="required">*</span></label></td>
+                        <td>H: <input type="text" name="hours" id="hours" size="2" class="number">
+                        M: <input type="text" name="minutes" id="minutes" size="2" class="number">
+                        S: <input type="text" name="seconds" id="seconds" size="2" class="number"></td>
+                        <td rowspan="4">
+                            <div class="FormDisplayList">
+                            $displayList
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="layoutid" title="Select which layout this event will show.">Layout<span class="required">*</span></label></td>
+                        <td>$layoutList</td>
+                    </tr>
+                    <tr>
+                        <td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
+                        <td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preferance to other events."></td>
+                    </tr>
+                </table>
+            </form>
+END;
+
+        $response->SetFormRequestResponse($form, __('Schedule Now'), '700px', '400px');
+        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#ScheduleNowForm").submit()');
+        $response->Respond();
+    }
+
+    public function ScheduleNow()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $datemanager = new DateManager($db);
+
+        $layoutId = Kit::GetParam('layoutid', _POST, _INT, 0);
+        $displayGroupIds = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
+        $isPriority = Kit::GetParam('is_priority', _POST, _CHECKBOX);
+        $fromDt = time();
+
+        $hours = Kit::GetParam('hours', _POST, _INT, 0);
+        $minutes = Kit::GetParam('minutes', _POST, _INT, 0);
+        $seconds = Kit::GetParam('seconds', _POST, _INT, 0);
+        $duration = ($hours * 3600) + ($minutes * 60) + $seconds;
+
+        // Validate
+        if ($layoutId == 0)
+            trigger_error(__('No layout selected'), E_USER_ERROR);
+
+        if ($duration == 0)
+            trigger_error(__('You must enter a duration'), E_USER_ERROR);
+
+        // check that at least one display has been selected
+        if ($displayGroupIds == '')
+            trigger_error(__('No displays selected'), E_USER_ERROR);
+
+        if ($fromDt < (time()- 86400))
+            trigger_error(__('Your start time is in the past. Cannot schedule events in the past'), E_USER_ERROR);
+
+        $toDt = $fromDt + $duration;
+
+        // Ready to do the add
+        $scheduleObject = new Schedule($db);
+
+        if (!$scheduleObject->Add($displayGroupIds, $fromDt, $toDt, $layoutId, '', '', '', $isPriority, $this->user->userid))
+            trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('The Event has been Scheduled'));
+        $response->Respond();
+    }
 }
 ?>

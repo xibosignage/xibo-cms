@@ -346,7 +346,7 @@ END;
             trigger_error(__('Error listing Log.'), E_USER_ERROR);
         }
 
-        $output .= '<div class="info_table">';
+        $output  = '<div class="info_table">';
         $output .= '    <table style="width:100%">';
         $output .= '        <thead>';
         $output .= sprintf('    <th>%s</th>', __('Application'));

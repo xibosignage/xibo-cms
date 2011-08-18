@@ -29,13 +29,12 @@ class Layout extends Data
      * Add a layout
      * @param <type> $layout
      * @param <type> $description
-     * @param <type> $permissionid
      * @param <type> $tags
      * @param <type> $userid
      * @param <type> $templateId
      * @return <type>
      */
-    public function Add($layout, $description, $permissionid, $tags, $userid, $templateId)
+    public function Add($layout, $description, $tags, $userid, $templateId)
     {
         $db          =& $this->db;
         $currentdate = date("Y-m-d H:i:s");
@@ -75,17 +74,17 @@ class Layout extends Data
         Debug::LogEntry($db, 'audit', 'Validation Compelte', 'Layout', 'Add');
 
         // Get the XML for this template.
-        $templateXml = $this->GetTemplateXml($templateId);
+        $templateXml = $this->GetTemplateXml($templateId, $userid);
 
         Debug::LogEntry($db, 'audit', 'Retrieved template xml', 'Layout', 'Add');
 
         $SQL = <<<END
-        INSERT INTO layout (layout, description, userID, permissionID, createdDT, modifiedDT, tags, xml)
-         VALUES ('%s', '%s', %d, %d, '%s', '%s', '%s', '%s')
+        INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, tags, xml)
+         VALUES ('%s', '%s', %d, %d, '%s', '%s', '%s')
 END;
 
         $SQL = sprintf($SQL, $db->escape_string($layout),
-                            $db->escape_string($description), $userid, $permissionid,
+                            $db->escape_string($description), $userid,
                             $db->escape_string($currentdate),
                             $db->escape_string($currentdate),
                             $db->escape_string($tags),
@@ -124,7 +123,7 @@ END;
      * Gets the XML for the specified template id
      * @param <type> $templateId
      */
-    private function GetTemplateXml($templateId)
+    private function GetTemplateXml($templateId, $userId)
     {
         $db =& $this->db;
 
@@ -149,7 +148,16 @@ END;
             if (!$row = $db->GetSingleRow(sprintf("SELECT xml FROM template WHERE templateID = %d ", $templateId)))
                 trigger_error(__('Error getting this template.'), E_USER_ERROR);
 
-            $xml = $row['xml'];
+            $xmlDoc = new DOMDocument("1.0");
+            $xmlDoc->loadXML($row['xml']);
+
+            $regionNodeList = $xmlDoc->getElementsByTagName('region');
+
+            //get the regions
+            foreach ($regionNodeList as $region)
+                $region->setAttribute('userId', $userId);
+
+            $xml = $xmlDoc->saveXML();
         }
 
         return $xml;
@@ -348,8 +356,8 @@ END;
 
         // The Layout ID is the old layout
         $SQL  = "";
-        $SQL .= " INSERT INTO layout (layout, permissionID, xml, userID, description, tags, templateID, retired, duration, background, createdDT, modifiedDT) ";
-        $SQL .= " SELECT '%s', permissionID, xml, %d, description, tags, templateID, retired, duration, background, '%s', '%s' ";
+        $SQL .= " INSERT INTO layout (layout, xml, userID, description, tags, templateID, retired, duration, background, createdDT, modifiedDT) ";
+        $SQL .= " SELECT '%s', xml, %d, description, tags, templateID, retired, duration, background, '%s', '%s' ";
         $SQL .= "  FROM layout ";
         $SQL .= " WHERE layoutid = %d";
         $SQL = sprintf($SQL, $db->escape_string($newLayoutName), $userId, $db->escape_string($currentdate), $db->escape_string($currentdate), $oldLayoutId);
@@ -427,6 +435,9 @@ END;
         $db =& $this->db;
 
         // Remove all LK records for this layout
+        $db->query(sprintf('DELETE FROM lklayoutgroup WHERE layoutid = %d', $layoutId));
+        $db->query(sprintf('DELETE FROM lklayoutmediagroup WHERE layoutid = %d', $layoutId));
+        $db->query(sprintf('DELETE FROM lklayoutregiongroup WHERE layoutid = %d', $layoutId));
         $db->query(sprintf('DELETE FROM lklayoutmedia WHERE layoutid = %d', $layoutId));
 
         // Remove the Layout

@@ -45,20 +45,25 @@ class ResponseManager
 	public $refresh;
 	public $refreshLocation;
 	public $focusInFirstInput;
+        public $appendHiddenSubmit;
 	
 	public $login;
 	public $clockUpdate;
+
+        public $uniqueReference;
 	
 	public function __construct()
 	{		
 		// Determine if this is an AJAX call or not
-		$this->ajax	= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
+		$this->ajax = Kit::GetParam('ajax', _REQUEST, _BOOL, false);
 		
 		// Assume success
-		$this->success 				= true;
-		$this->clockUpdate 			= false;
-		$this->focusInFirstInput	= true;
-		$this->buttons				= '';
+		$this->success = true;
+		$this->clockUpdate = false;
+		$this->focusInFirstInput = true;
+                $this->appendHiddenSubmit = true;
+                $this->uniqueReference = '';
+		$this->buttons = '';
 		
 		return true;
 	}
@@ -212,6 +217,7 @@ class ResponseManager
 			// General
 			$response['html'] 			= $this->html;
 			$response['buttons']		= $this->buttons;
+                        $response['uniqueReference'] = $this->uniqueReference;
 			
 			$response['success']		= $this->success;
 			$response['callBack']		= $this->callBack;

@@ -30,6 +30,8 @@
 	
 	private $displayGroupIDs;
 	private $authedDisplayGroupIDs;
+
+        public $homePage;
 	
  	public function __construct(database $db)
 	{
@@ -79,9 +81,9 @@
 			$SQL = sprintf("UPDATE user SET lastaccessed = '" . date("Y-m-d H:i:s") . "', loggedin = 1 WHERE userid = %d ", $userid);
 			
 			$results = $db->query($SQL) or trigger_error("Can not write last accessed info.", E_USER_ERROR);
-			
-			$this->usertypeid		= $_SESSION['usertype'];
-			$this->userid			= $_SESSION['userid'];
+
+                        // Load the information about this user
+			$this->LoginServices($userid);
 			
 			return true;
 		}
@@ -143,7 +145,7 @@
         {
             $db =& $this->db;
 
-            $SQL = sprintf("SELECT UserName, usertypeid FROM user WHERE userID = '%d'", $userID);
+            $SQL = sprintf("SELECT UserName, usertypeid, homepage FROM user WHERE userID = '%d'", $userID);
 
             if (!$results = $this->db->GetSingleRow($SQL))
                 return false;
@@ -151,6 +153,7 @@
             $this->userName     = Kit::ValidateParam($results['UserName'], _USERNAME);
             $this->usertypeid	= Kit::ValidateParam($results['usertypeid'], _INT);
             $this->userid	= $userID;
+            $this->homePage = Kit::ValidateParam($results['homepage'], _WORD);
 
             return true;
         }
@@ -258,7 +261,7 @@
          * @param <type> $returnID Whether to return ID's or Names
          * @return <array>
          */
-        function GetUserGroups($id, $returnID = false)
+        public function GetUserGroups($id, $returnID = false)
 	{
             $db =& $this->db;
 
@@ -422,107 +425,20 @@
 	}
 	
 	/**
-	 * Gets the users homepage
-	 * @return 
-	 */
-	function homepage($id) 
+         * Gets the homepage for the given userid
+         * @param <type> $userId
+         * @return <type>
+         */
+	function GetHomePage($userId)
 	{
-		$db 		=& $this->db;
-		
-		$SQL = sprintf("SELECT homepage FROM user WHERE userid = %d", $id);
-		
-		if(!$results = $db->query($SQL)) trigger_error("Unknown user id in the system", E_USER_NOTICE);
-		
-		if ($db->num_rows($results) ==0 ) 
-		{
-			return "dashboard";
-		}
-		
-		$row = $db->get_row($results);
-		return $row[0];
-	}
-	
-	/**
-	 * Evaulates the permissons and returns an array [canSee,canEdit]
-	 * @return 
-	 * @param $ownerid Object
-	 * @param $permissionid Object
-	 * @param $userid Object[optional]
-	 */
-	function eval_permission($ownerid, $permissionid, $userid = '')
-	{
-            $db =& $this->db;
+            $db	=& $this->db;
 
-            // If a user ID is provided with the call then evaluate against that, otherwise use the logged in user
-            if ($userid != '')
-            {
-                // Use the userid provided
-                $groupids    = $this->GetUserGroups($userid, true);
-                $usertypeid  = $this->getUserTypeFromID($userid, true);
-            }
-            else
-            {
-                // Use the logged in user
-                $userid     =& $this->userid;	// the logged in user
-                $usertypeid =& $this->usertypeid; // the logged in users group (admin, group admin, user)
-                $groupids   = $this->GetUserGroups($userid, true);	// the logged in users groups
-            }
+            $SQL = sprintf("SELECT homepage FROM `user` WHERE userid = %d", $userId);
 
-            // If we are a super admin we can view/edit anything we like regardless of settings
-            if ($usertypeid == 1)
-                return array(true,true);
+            if (!$homepage = $db->GetSingleValue($SQL, 'homepage', _WORD))
+                trigger_error(__('Unknown User'));
 
-            // Get the groups that the owner belongs to
-            $ownerGroupIDs  = $this->GetUserGroups($ownerid, true); 	// the owners groupid
-
-            // set both the flags to false
-            $see = false;
-            $edit = false;
-
-            switch ($permissionid)
-            {
-                case '1': // Private
-                    // to see we need to be a group admin in this group OR the owner
-                    // to edit we need to be: a group admin in this group - or the owner
-                    if ((count(array_intersect($ownerGroupIDs, $groupids)) > 0 && $usertypeid == 2) || $ownerid == $userid)
-                    {
-                        $see = true;
-                        $edit = true;
-                    }
-                    break;
-
-                case '2': // Group
-                    // to see we need to be in this group
-                    if (count(array_intersect($ownerGroupIDs, $groupids)) > 0)
-                    {
-                        $see = true;
-
-                        //to edit we need to be a group admin in this group (or the owner)
-                        if ($usertypeid == 2 || ($ownerid == $userid))
-                        {
-                            $edit = true;
-                        }
-                    }
-
-                    break;
-
-                case '3': //Public
-                    $see = true; //everyone can see it
-
-                    // group admins (and owners) can edit
-                    if (count(array_intersect($ownerGroupIDs, $groupids)) > 0)
-                    {
-                        // to edit we need to be a group admin in this group (or the owner)
-                        if ($usertypeid == 2 || ($ownerid == $userid))
-                        {
-                            $edit = true;
-                        }
-                    }
-
-                    break;
-            }
-
-            return array($see,$edit);
+            return $homepage;
 	}
 	
 	/**
@@ -817,34 +733,142 @@ END;
      * Authorizes a user against a media ID
      * @param <int> $mediaID
      */
-    public function MediaAuth($mediaId)
+    public function MediaAuth($mediaId, $fullObject = false)
     {
-        // TODO: Extend to cover group access and all that
-        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM media WHERE MediaID = %d", $mediaId), 'UserID', _INT))
-        {
-            trigger_error($this->db->error_text);
-            trigger_error($this->db->error());
+        $auth = new PermissionManager($this->db, $this);
 
-            return false;
+        $SQL  = '';
+        $SQL .= 'SELECT UserID ';
+        $SQL .= '  FROM media ';
+        $SQL .= ' WHERE media.MediaID = %d ';
+
+        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $mediaId), 'UserID', _INT))
+            return $auth;
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
         }
 
-        return ($userId == $this->userid);
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM media ';
+        $SQL .= '   INNER JOIN lkmediagroup ';
+        $SQL .= '   ON lkmediagroup.MediaID = media.MediaID ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lkmediagroup.GroupID ';
+        $SQL .= ' WHERE media.MediaID = %d ';
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+        $SQL .= 'GROUP BY media.UserID ';
+
+        $SQL = sprintf($SQL, $mediaId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
+    }
+
+    /**
+     * Authorizes a user against a media ID assigned to a layout
+     * @param <int> $mediaID
+     */
+    public function MediaAssignmentAuth($ownerId, $layoutId, $regionId, $mediaId, $fullObject = false)
+    {
+        $auth = new PermissionManager($this->db, $this);
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
+        }
+
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM lklayoutmediagroup ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lklayoutmediagroup.GroupID ';
+        $SQL .= " WHERE lklayoutmediagroup.MediaID = '%s' AND lklayoutmediagroup.RegionID = '%s' AND lklayoutmediagroup.LayoutID = '%s' ";
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+
+        $SQL = sprintf($SQL, $mediaId, $regionId, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($ownerId, $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
+    }
+
+    public function RegionAssignmentAuth($ownerId, $layoutId, $regionId, $fullObject = false)
+    {
+        $auth = new PermissionManager($this->db, $this);
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
+        }
+
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM lklayoutregiongroup ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lklayoutregiongroup.GroupID ';
+        $SQL .= " WHERE lklayoutregiongroup.RegionID = '%s' AND lklayoutregiongroup.LayoutID = '%s' ";
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+
+        $SQL = sprintf($SQL, $regionId, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($ownerId, $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
     }
 
     /**
      * Returns an array of Media the current user has access to
      */
-    public function MediaList()
+    public function MediaList($type = '')
     {
         $SQL  = "";
         $SQL .= "SELECT  media.mediaID, ";
         $SQL .= "        media.name, ";
         $SQL .= "        media.type, ";
         $SQL .= "        media.duration, ";
-        $SQL .= "        media.userID, ";
-        $SQL .= "        media.permissionID ";
+        $SQL .= "        media.userID ";
         $SQL .= "FROM    media ";
         $SQL .= "WHERE   1 = 1  AND isEdited = 0 ";
+
+        if ($type != '')
+            $SQL .= sprintf(" AND type = '%s'", $this->db->escape_string($type));
 
         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of media for %s with SQL: %s', $this->userName, $SQL));
 
@@ -867,12 +891,12 @@ END;
             $mediaItem['length']    = Kit::ValidateParam($row['duration'], _DOUBLE);
             $mediaItem['ownerid']   = Kit::ValidateParam($row['userID'], _INT);
 
-            list($see, $edit) = $this->eval_permission($mediaItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
+            $auth = $this->MediaAuth($mediaItem['mediaid'], true);
 
-            if ($see)
+            if ($auth->view)
             {
-                $mediaItem['read']      = (int) $see;
-                $mediaItem['write']     = (int) $edit;
+                $mediaItem['view'] = $auth->view;
+                $mediaItem['edit'] = $auth->edit;
                 $media[] = $mediaItem;
             }
         }
@@ -885,18 +909,50 @@ END;
      * @param <type> $layoutId
      * @return <type>
      */
-    public function LayoutAuth($layoutId)
+    public function LayoutAuth($layoutId, $fullObject = false)
     {
-        // TODO: Extend to cover group access and all that
-        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM layout WHERE LayoutID = %d", $layoutId), 'UserID', _INT))
-        {
-            trigger_error($this->db->error_text);
-            trigger_error($this->db->error());
+        $auth = new PermissionManager($this->db, $this);
 
-            return false;
+        $SQL  = '';
+        $SQL .= 'SELECT UserID ';
+        $SQL .= '  FROM layout ';
+        $SQL .= ' WHERE layout.LayoutID = %d ';
+
+        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $layoutId), 'UserID', _INT))
+            return $auth;
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
         }
 
-        return ($userId == $this->userid);
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM layout ';
+        $SQL .= '   INNER JOIN lklayoutgroup ';
+        $SQL .= '   ON lklayoutgroup.LayoutID = layout.LayoutID ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lklayoutgroup.GroupID ';
+        $SQL .= ' WHERE layout.LayoutID = %d ';
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+        $SQL .= 'GROUP BY layout.UserID ';
+
+        $SQL = sprintf($SQL, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
     }
 
     /**
@@ -904,18 +960,50 @@ END;
      * @param <type> $templateId
      * @return <type>
      */
-    public function TemplateAuth($templateId)
+    public function TemplateAuth($templateId, $fullObject = false)
     {
-        // TODO: Extend to cover group access and all that
-        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM template WHERE TemplateID = %d", $templateId), 'UserID', _INT))
-        {
-            trigger_error($this->db->error_text);
-            trigger_error($this->db->error());
+        $auth = new PermissionManager($this->db, $this);
 
-            return false;
+        $SQL  = '';
+        $SQL .= 'SELECT UserID ';
+        $SQL .= '  FROM template ';
+        $SQL .= ' WHERE TemplateId = %d ';
+
+        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $templateId), 'UserID', _INT))
+            return $auth;
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
         }
 
-        return ($userId == $this->userid);
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM template ';
+        $SQL .= '   INNER JOIN lktemplategroup ';
+        $SQL .= '   ON lktemplategroup.TemplateID = template.TemplateID ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lktemplategroup.GroupID ';
+        $SQL .= ' WHERE template.TemplateID = %d ';
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+        $SQL .= 'GROUP BY template.UserID ';
+
+        $SQL = sprintf($SQL, $templateId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
     }
 
     /**
@@ -928,11 +1016,10 @@ END;
         $SQL .= "        layout, ";
         $SQL .= "        description, ";
         $SQL .= "        tags, ";
-        $SQL .= "        permissionID, ";
-        $SQL .= "        userID ";
+        $SQL .= "        userID, xml ";
         $SQL .= "   FROM layout ";
 
-         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -952,19 +1039,164 @@ END;
             $layoutItem['description'] = Kit::ValidateParam($row['description'], _STRING);
             $layoutItem['tags']     = Kit::ValidateParam($row['tags'], _STRING);
             $layoutItem['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
+            $layoutItem['xml']  = Kit::ValidateParam($row['xml'], _HTMLSTRING);
 
-            list($see, $edit) = $this->eval_permission($layoutItem['ownerid'], Kit::ValidateParam($row['permissionID'], _INT));
+            $auth = $this->LayoutAuth($layoutItem['layoutid'], true);
 
-            if ($see)
+            if ($auth->view)
             {
-                $layoutItem['read']      = (int) $see;
-                $layoutItem['write']     = (int) $edit;
+                $layoutItem['view'] = (int) $auth->view;
+                $layoutItem['edit'] = (int) $auth->edit;
+                $layoutItem['del'] = (int) $auth->del;
                 
                 $layouts[] = $layoutItem;
             }
         }
 
         return $layouts;
+    }
+
+    public function TemplateList()
+    {
+        $SQL  = "";
+        $SQL .= "SELECT  template.templateID, ";
+        $SQL .= "        template.template, ";
+        $SQL .= "        CASE WHEN template.issystem = 1 THEN 'Yes' ELSE 'No' END AS issystem, ";
+        $SQL .= "        template.tags, ";
+        $SQL .= "        template.userID ";
+        $SQL .= "FROM    template ";
+
+        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of templates for %s with SQL: %s', $this->userName, $SQL));
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $templates = array();
+
+        while ($row = $this->db->get_assoc_row($result))
+        {
+            $layoutItem = array();
+
+            // Validate each param and add it to the array.
+            $item['templateid'] = Kit::ValidateParam($row['templateID'], _INT);
+            $item['template']   = Kit::ValidateParam($row['template'], _STRING);
+            $item['issystem'] = Kit::ValidateParam($row['issystem'], _STRING);
+            $item['tags'] = Kit::ValidateParam($row['tags'], _STRING);
+            $item['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
+
+            $auth = $this->TemplateAuth($item['templateid'], true);
+
+            if ($auth->view)
+            {
+                $item['view'] = (int) $auth->view;
+                $item['edit'] = (int) $auth->edit;
+
+                $templates[] = $item;
+            }
+        }
+
+        return $templates;
+    }
+
+    /**
+     * Authorises a user against a dataSetId
+     * @param <type> $dataSetId
+     * @return <type>
+     */
+    public function DataSetAuth($dataSetId, $fullObject = false)
+    {
+        $auth = new PermissionManager($this->db, $this);
+
+        $SQL  = '';
+        $SQL .= 'SELECT UserID ';
+        $SQL .= '  FROM dataset ';
+        $SQL .= ' WHERE dataset.DataSetID = %d ';
+
+        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $dataSetId), 'UserID', _INT))
+            return $auth;
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
+        }
+
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM dataset ';
+        $SQL .= '   INNER JOIN lkdatasetgroup ';
+        $SQL .= '   ON lkdatasetgroup.DataSetID = dataset.DataSetID ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lkdatasetgroup.GroupID ';
+        $SQL .= ' WHERE dataset.DataSetID = %d ';
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+        $SQL .= 'GROUP BY dataset.UserID ';
+
+        $SQL = sprintf($SQL, $dataSetId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
+    }
+
+    /**
+     * Returns an array of layouts that this user has access to
+     */
+    public function DataSetList()
+    {
+        $SQL  = "";
+        $SQL .= "SELECT DataSetID, ";
+        $SQL .= "       DataSet, ";
+        $SQL .= "       Description, ";
+        $SQL .= "       UserID ";
+        $SQL .= "  FROM dataset ";
+
+        //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $dataSets = array();
+
+        while ($row = $this->db->get_assoc_row($result))
+        {
+            $dataSetItem = array();
+
+            // Validate each param and add it to the array.
+            $dataSetItem['datasetid'] = Kit::ValidateParam($row['DataSetID'], _INT);
+            $dataSetItem['dataset']   = Kit::ValidateParam($row['DataSet'], _STRING);
+            $dataSetItem['description'] = Kit::ValidateParam($row['Description'], _STRING);
+            $dataSetItem['ownerid']  = Kit::ValidateParam($row['UserID'], _INT);
+            
+            $auth = $this->DataSetAuth($dataSetItem['datasetid'], true);
+
+            if ($auth->view)
+            {
+                $dataSetItem['view'] = (int) $auth->view;
+                $dataSetItem['edit'] = (int) $auth->edit;
+                $dataSetItem['del'] = (int) $auth->del;
+
+                $dataSets[] = $dataSetItem;
+            }
+        }
+
+        return $dataSets;
     }
 }
 ?>

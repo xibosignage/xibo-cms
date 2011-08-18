@@ -89,7 +89,7 @@ var text_callback = function()
     return false; //prevent submit
 }
 
-function microblog_callback()
+var microblog_callback = function()
 {
     // Conjure up a text editor
     $("#ta_template").ckeditor();
@@ -169,7 +169,7 @@ $(document).ready(function() {
                     var layoutid = $(t).attr("layoutid");
                     var regionid = $(t).attr("regionid");
 
-	            XiboFormRender("index.php?p=user&q=SetUserHomepageForm&layoutid="+layoutid+"&regionid="+regionid);
+	            XiboFormRender("index.php?p=layout&q=RegionPermissionsForm&layoutid="+layoutid+"&regionid="+regionid);
 	        }
             }
 	});
@@ -195,7 +195,7 @@ $(document).ready(function() {
 	
 	
 	// Preview
-	$('.region').each(function(){
+	$('.regionPreview').each(function(){
             new Preview(this);
 	});
 

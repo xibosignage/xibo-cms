@@ -50,6 +50,7 @@ class microblog extends Module
         <form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
             <input type="hidden" name="layoutid" value="$layoutid">
             <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
             <table>
                 <tr>
                     <td colspan="2"><input type="checkbox" name="twitter" /><label for="twitter" title="">Twitter</label></td>
@@ -93,7 +94,16 @@ FORM;
         $this->response->dialogTitle    = 'Add Microblog';
         $this->response->callBack 	= 'microblog_callback';
         $this->response->AddButton(__('Help'), 'XiboHelpRender("index.php?p=help&q=Display&Topic=Microblog&Category=Media")');
-        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
+
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -110,6 +120,14 @@ FORM;
         $layoutid	= $this->layoutid;
         $regionid	= $this->regionid;
         $mediaid  	= $this->mediaid;
+
+        // Permissions
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this assignment.');
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
 
         // Get some options
         $searchTerm     = $this->GetOption('searchTerm');
@@ -143,12 +161,15 @@ FORM;
         $nocontentNode 	= $nocontentNodes->item(0);
         $nocontent	= $nocontentNode->nodeValue;
 
+        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
+
         //Output the form
         $form = <<<FORM
         <form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
             <input type="hidden" name="layoutid" value="$layoutid">
             <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
             <input type="hidden" name="mediaid" value="$mediaid">
+            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
             <table>
                 <tr>
                     <td colspan="2"><input type="checkbox" name="twitter" $twitterChecked /><label for="twitter" title="">Twitter</label></td>
@@ -158,7 +179,7 @@ FORM;
                     <td><label for="searchTerm" title="">Search Term<span class="required">*</span></label></td>
                     <td><input id="searchTerm" name="searchTerm" type="text" value="$searchTerm"></td>
                     <td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration (s)<span class="required">*</span></label></td>
-                    <td><input id="duration" name="duration" type="text" value="$this->duration"></td>
+                    <td><input id="duration" name="duration" type="text" value="$this->duration" $durationFieldEnabled></td>
                 </tr>
                 <tr>
                     <td><label for="fadeInterval" title="">Fade Interval</label></td>
@@ -192,7 +213,14 @@ FORM;
         $this->response->dialogTitle    = 'Edit MicroBlog';
         $this->response->callBack 	= 'microblog_callback';
         $this->response->AddButton(__('Help'), 'XiboHelpRender("index.php?p=help&q=Display&Topic=Microblog&Category=Media")');
-        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        if ($this->showRegionOptions)
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+        }
+        else
+        {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
         
         return $this->response;
@@ -251,9 +279,12 @@ FORM;
         //Set this as the session information
         setSession('content', 'type', 'microblog');
 
-        // We want to load a new form
-        $this->response->loadForm   = true;
-        $this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 
         return $this->response;
     }
@@ -271,9 +302,15 @@ FORM;
         $mediaid	= $this->mediaid;
         $url 		= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this assignment.');
+            $this->response->keepOpen = false;
+            return $this->response;
+        }
+
         //Other properties
         $searchTerm	= Kit::GetParam('searchTerm', _POST, _STRING);
-        $duration	= Kit::GetParam('duration', _POST, _INT, 0);
         $fadeInterval   = Kit::GetParam('fadeInterval', _POST, _INT);
         $speedInterval  = Kit::GetParam('speedInterval', _POST, _INT);
         $updateInterval = Kit::GetParam('updateInterval', _POST, _INT);
@@ -284,14 +321,15 @@ FORM;
         $nocontent      = Kit::GetParam('nocontent', _POST, _HTMLSTRING);
 
         // Validation
-        if ($duration == 0)
+        // If we have permission to change it, then get the value from the form
+        if ($this->auth->modifyPermissions)
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            
+        if ($this->duration == 0)
             $this->response->Error('You must enter a duration.', true);
 
         if ($template == '')
             $this->response->Error('You must enter a Message Template.', true);
-
-        // Required Attributes
-        $this->duration = $duration;
 
         // Any Options
         $this->SetOption('searchTerm', $searchTerm);
@@ -312,9 +350,12 @@ FORM;
         //Set this as the session information
         setSession('content', 'type', 'microblog');
 
-        // We want to load a new form
-        $this->response->loadForm   = true;
-        $this->response->loadFormUri= $url;
+	if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = $url;
+        }
 
         return $this->response;
     }

@@ -18,15 +18,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-class text extends Module
+class counter extends Module
 {
 
     public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
     {
         // Must set the type of the class
-        $this->type = 'text';
-        $this->displayType = 'Text';
-        $this->name = 'Text';
+        $this->type = 'counter';
+        $this->displayType = 'Counter';
+        $this->name = 'Counter';
 
         // Must call the parent class
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -47,36 +47,34 @@ class text extends Module
         $rWidth		= Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 
-        $direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
-
-            $form = <<<FORM
-            <form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=AddMedia">
-                    <input type="hidden" name="layoutid" value="$layoutid">
-                    <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                    <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-                    <table>
-                            <tr>
-                            <td><label for="direction" title="The Direction this text should move, if any">Direction<span class="required">*</span></label></td>
-                            <td>$direction_list</td>
-                            <td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
-                            <td><input id="duration" name="duration" type="text"></td>
-                            </tr>
-                            <tr>
-                                <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
-                                <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="30"></td>
-                            </tr>
-                            <tr>
-                                    <td colspan="4">
-                                            <textarea id="ta_text" name="ta_text"></textarea>
-                                    </td>
-                            </tr>
-                    </table>
+        $form = <<<FORM
+            <form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
+                <input type="hidden" name="layoutid" value="$layoutid">
+                <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
+                <table>
+                    <tr>
+                        <td colspan="2"><center>Python Client Only</center></td>
+                    </tr>
+                    <tr>
+                        <td><label for="duration" title="The duration in seconds this counter should be displayed">Duration<span class="required">*</span></label></td>
+                        <td><input id="duration" name="duration" type="text"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <input id="popupNotification" name="popupNotification" type="checkbox">
+                            <label for="popupNotification" title="Popup a notification when the counter changes">Popup Notification?</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <textarea id="ta_text" name="ta_text">[Counter]</textarea>
+                        </td>
+                    </tr>
+                </table>
             </form>
 FORM;
 
-        $this->response->html 		= $form;
-        $this->response->callBack 	= 'text_callback';
-        $this->response->dialogTitle    = __('Add Text');
         if ($this->showRegionOptions)
         {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
@@ -85,6 +83,10 @@ FORM;
         {
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
+
+        $this->response->html = $form;
+        $this->response->callBack = 'text_callback';
+        $this->response->dialogTitle = __('Add Counter');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -111,8 +113,7 @@ FORM;
         }
 
         // Other properties
-        $direction = $this->GetOption('direction');
-        $scrollSpeed = $this->GetOption('scrollSpeed');
+        $popupNotification = $this->GetOption('popupNotification');
 
         // Get the text out of RAW
         $rawXml = new DOMDocument();
@@ -121,44 +122,43 @@ FORM;
         Debug::LogEntry($db, 'audit', 'Raw XML returned: ' . $this->GetRaw());
 
         // Get the Text Node out of this
-        $textNodes = $rawXml->getElementsByTagName('text');
+        $textNodes = $rawXml->getElementsByTagName('template');
         $textNode = $textNodes->item(0);
         $text = $textNode->nodeValue;
 
-        $direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
-
         $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
+        $popupNotificationChecked = ($popupNotification) ? 'checked' : '';
 
         // Output the form
         $form = <<<FORM
-        <form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=EditMedia">
+            <form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
                 <input type="hidden" name="layoutid" value="$layoutid">
-                <input type="hidden" name="mediaid" value="$mediaid">
                 <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
+                <input type="hidden" name="mediaid" value="$mediaid">
                 <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
                 <table>
-                        <tr>
-                        <td><label for="direction" title="The Direction this text should move, if any">Direction<span class="required">*</span></label></td>
-                        <td>$direction_list</td>
-                        <td><label for="duration" title="The duration in seconds this text should be displayed">Duration<span class="required">*</span></label></td>
+                    <tr>
+                        <td colspan="2"><center>Python Client Only</center></td>
+                    </tr>
+                    <tr>
+                        <td><label for="duration" title="The duration in seconds this counter should be displayed">Duration<span class="required">*</span></label></td>
                         <td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
-                        </tr>
-                        <tr>
-                            <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
-                            <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>
-                        </tr>
-                        <tr>
-                                <td colspan="4">
-                                        <textarea id="ta_text" name="ta_text">$text</textarea>
-                                </td>
-                        </tr>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <input id="popupNotification" name="popupNotification" type="checkbox" $popupNotificationChecked>
+                            <label for="popupNotification" title="Popup a notification when the counter changes">Popup Notification?</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <textarea id="ta_text" name="ta_text">$text</textarea>
+                        </td>
+                    </tr>
                 </table>
-        </form>
+            </form>
 FORM;
 
-        $this->response->html = $form;
-        $this->response->callBack = 'text_callback';
-        $this->response->dialogTitle = __('Edit Text');
         if ($this->showRegionOptions)
         {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
@@ -167,6 +167,10 @@ FORM;
         {
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
+
+        $this->response->html = $form;
+        $this->response->callBack = 'text_callback';
+        $this->response->dialogTitle = __('Edit Counter');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -185,17 +189,16 @@ FORM;
         $mediaid	= $this->mediaid;
 
         //Other properties
-        $direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
-        $duration	  = Kit::GetParam('duration', _POST, _INT, 0);
-        $text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-        $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+        $duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+        $popupNotification = Kit::GetParam('popupNotification', _POST, _CHECKBOX);
 
         $url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
         //validation
         if ($text == '')
         {
-            $this->response->SetError('Please enter some text');
+            $this->response->SetError('Please enter a template');
             $this->response->keepOpen = true;
             return $this->response;
         }
@@ -212,24 +215,23 @@ FORM;
         $this->duration = $duration;
 
         // Any Options
-        $this->SetOption('direction', $direction);
-        $this->SetOption('scrollSpeed', $scrollSpeed);
-        $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
+        $this->SetOption('popupNotification', $popupNotification);
+        $this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
         $this->UpdateRegion();
 
         //Set this as the session information
-        setSession('content', 'type', 'text');
+        setSession('content', 'type', 'counter');
 
-	if ($this->showRegionOptions)
+        if ($this->showRegionOptions)
         {
             // We want to load a new form
             $this->response->loadForm = true;
             $this->response->loadFormUri = $url;
         }
-
+        
         return $this->response;
     }
 
@@ -239,12 +241,12 @@ FORM;
      */
     public function EditMedia()
     {
-            $db 		=& $this->db;
-            $user =& $this->user;
+        $db =& $this->db;
+        $user =& $this->user;
 
-            $layoutid 	= $this->layoutid;
-            $regionid 	= $this->regionid;
-            $mediaid	= $this->mediaid;
+        $layoutid = $this->layoutid;
+        $regionid = $this->regionid;
+        $mediaid = $this->mediaid;
 
         if (!$this->auth->edit)
         {
@@ -253,67 +255,66 @@ FORM;
             return $this->response;
         }
 
-            //Other properties
-            $direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
-            $text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-            $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+        //Other properties
+        $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+        $popupNotification = Kit::GetParam('popupNotification', _POST, _CHECKBOX);
+
+        Debug::LogEntry($db, 'audit', 'Popup notification:' . $popupNotification);
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
 
-            Debug::LogEntry($db, 'audit', 'Text received: ' . $text);
+        Debug::LogEntry($db, 'audit', 'Text received: ' . $text);
 
-            $url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+        $url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
-            // Validation
-            if ($text == '')
-            {
-                    $this->response->SetError('Please enter some text');
-                    $this->response->keepOpen = true;
-                    return $this->response;
-            }
+        // Validation
+        if ($text == '')
+        {
+            $this->response->SetError('Please enter a template');
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
 
-            if ($this->duration == 0)
-            {
-                $this->response->SetError('You must enter a duration.');
-                $this->response->keepOpen = true;
-                return $this->response;
-            }
+        if ($this->duration == 0)
+        {
+            $this->response->SetError('You must enter a duration.');
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
 
-            // Any Options
-            $this->SetOption('direction', $direction);
-            $this->SetOption('scrollSpeed', $scrollSpeed);
-            $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
+        // Any Options
+        $this->SetOption('popupNotification', $popupNotification);
+        $this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
 
-            // Should have built the media object entirely by this time
-            // This saves the Media Object to the Region
-            $this->UpdateRegion();
+        // Should have built the media object entirely by this time
+        // This saves the Media Object to the Region
+        $this->UpdateRegion();
 
-            //Set this as the session information
-            setSession('content', 'type', 'text');
+        //Set this as the session information
+        setSession('content', 'type', 'counter');
 
-	if ($this->showRegionOptions)
+        if ($this->showRegionOptions)
         {
             // We want to load a new form
             $this->response->loadForm = true;
             $this->response->loadFormUri = $url;
         }
 
-            return $this->response;
+        return $this->response;
     }
 
     public function Preview($width, $height)
     {
         $regionid   = $this->regionid;
-        $direction  = $this->GetOption('direction');
 
         // Get the text out of RAW
         $rawXml = new DOMDocument();
         $rawXml->loadXML($this->GetRaw());
 
         // Get the Text Node out of this
-        $textNodes 	= $rawXml->getElementsByTagName('text');
+        $textNodes 	= $rawXml->getElementsByTagName('template');
         $textNode 	= $textNodes->item(0);
         $text 	= $textNode->nodeValue;
 
@@ -323,13 +324,10 @@ FORM;
         $widthPx	= $width.'px';
         $heightPx	= $height.'px';
 
-        $textWrap = '';
-        if ($direction == "left" || $direction == "right") $textWrap = "white-space:nowrap;";
-
         //Show the contents of text accordingly
         $return = <<<END
         <div id="$textId" style="position:relative; overflow:hidden ;width:$widthPx; height:$heightPx; font-size: 1em;">
-            <div id="$innerId" style="position:absolute; left: 0px; top: 0px; $textWrap">
+            <div id="$innerId" style="position:absolute; left: 0px; top: 0px;">
                 <div class="article">
                         $text
                 </div>

@@ -24,14 +24,13 @@ class layoutDAO
 {
 	private $db;
 	private $user;
+    private $auth;
 	private $has_permissions = true;
 	
-	private $isadmin = false;
 	private $sub_page = "";
 	
 	private $layoutid;
 	private $layout;
-	private $permissionid;
 	private $retired;
 	private $description;
 	private $tags;
@@ -47,60 +46,51 @@ class layoutDAO
 	 * @return 
 	 * @param $db Object
 	 */
-	function __construct(database $db, user $user) 
+	function __construct(database $db, user $user)
 	{
-		$this->db 	=& $db;
-		$this->user =& $user;
+            $this->db 	=& $db;
+            $this->user =& $user;
 		
-		$usertype 		= Kit::GetParam('usertype', _SESSION, _INT);
-		$this->sub_page	= Kit::GetParam('sp', _GET, _WORD, 'view');
-		$ajax			= Kit::GetParam('ajax', _GET, _WORD, 'false');
-		
-		$this->layoutid	= Kit::GetParam('layoutid', _REQUEST, _INT);
+            $this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
+            $this->layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
 
-		// Include the layout data class		
-		include_once("lib/data/layout.data.class.php");
-		
-		//set the information that we know
-		if ($usertype == 1) $this->isadmin = true;
-		
-		//if we have modify selected then we need to get some info
-		if ($this->layoutid != "") 
-		{
-			$this->sub_page = "edit";
+            // Include the layout data class
+            include_once("lib/data/layout.data.class.php");
 
-			$sql  = " SELECT layout, description, permissionID, userid, retired, tags, xml FROM layout ";
-			$sql .= sprintf(" WHERE layoutID = %d ", $this->layoutid);
+            //if we have modify selected then we need to get some info
+            if ($this->layoutid != '')
+            {
+                // get the permissions
+                Debug::LogEntry($db, 'audit', 'Loading permissions for layoutid ' . $this->layoutid);
 
-			if(!$results = $db->query($sql)) 
-			{
-				trigger_error($db->error());
-				trigger_error(__("Cannot retrieve the Information relating to this layout. The layout may be corrupt."), E_USER_ERROR);
-			}
+                $this->auth = $user->LayoutAuth($this->layoutid, true);
 
-			if ($db->num_rows($results) == 0) $this->has_permissions = false;
-			
-			while($aRow = $db->get_row($results)) 
-			{
-				$this->layout 		= Kit::ValidateParam($aRow[0], _STRING);
-				$this->description 	= Kit::ValidateParam($aRow[1], _STRING);
-				$this->permissionid = Kit::ValidateParam($aRow[2], _INT);	
-				$ownerid 			= Kit::ValidateParam($aRow[3], _INT);	
-				$this->retired 		= Kit::ValidateParam($aRow[4], _INT);	
-				$this->tags	 		= Kit::ValidateParam($aRow[5], _STRING);	
-				$this->xml			= $aRow[6];	
-				
-				// get the permissions
-				global $user;
-				list($see_permission , $this->has_permissions) = $user->eval_permission($ownerid, $this->permissionid);
-				
-				// check on permissions
-				if ($ajax == "true" && (!$this->has_permissions)) 
-				{
-					trigger_error(__("You do not have permissions to edit this layout"), E_USER_ERROR);
-				}
-			}
-		}
+                if (!$this->auth->edit)
+                    trigger_error(__("You do not have permissions to edit this layout"), E_USER_ERROR);
+
+                $this->sub_page = "edit";
+
+                $sql  = " SELECT layout, description, userid, retired, tags, xml FROM layout ";
+                $sql .= sprintf(" WHERE layoutID = %d ", $this->layoutid);
+
+                if(!$results = $db->query($sql))
+                {
+                        trigger_error($db->error());
+                        trigger_error(__("Cannot retrieve the Information relating to this layout. The layout may be corrupt."), E_USER_ERROR);
+                }
+
+                if ($db->num_rows($results) == 0)
+                    $this->has_permissions = false;
+
+                while($aRow = $db->get_row($results))
+                {
+                    $this->layout = Kit::ValidateParam($aRow[0], _STRING);
+                    $this->description 	= Kit::ValidateParam($aRow[1], _STRING);
+                    $this->retired = Kit::ValidateParam($aRow[3], _INT);
+                    $this->tags = Kit::ValidateParam($aRow[4], _STRING);
+                    $this->xml = $aRow[5];
+                }
+            }
 	}
 
 	function on_page_load() 
@@ -142,11 +132,6 @@ class layoutDAO
 		$layout = ""; //3
 		if (isset($_SESSION['layout']['filter_layout'])) $layout = $_SESSION['layout']['filter_layout'];
 		
-		//sharing list
-		$shared = "All";
-		if (isset($_SESSION['layout']['permissionid'])) $shared = $_SESSION['layout']['permissionid'];
-		$shared_list = dropdownlist("SELECT 'all','All' UNION SELECT permissionID, permission FROM permission", "permissionid", $shared);
-		
 		//retired list
 		$retired = "0";
 		if(isset($_SESSION['layout']['filter_retired'])) $retired = $_SESSION['layout']['retired'];
@@ -163,7 +148,6 @@ class layoutDAO
 
 		$msgName	= __('Name');
 		$msgOwner	= __('Owner');
-		$msgShared	= __('Shared');
 		$msgTags	= __('Tags');
 		$msgRetired	= __('Retired');
 
@@ -179,8 +163,6 @@ class layoutDAO
 					<td><input type="text" name="filter_layout"></td>
 					<td>$msgOwner</td>
 					<td>$user_list</td>
-					<td>$msgShared</td>
-					<td>$shared_list</td>
 				</tr>
 				<tr>
 					<td>$msgTags</td>
@@ -220,16 +202,23 @@ HTML;
 
             $layout         = Kit::GetParam('layout', _POST, _STRING);
             $description    = Kit::GetParam('description', _POST, _STRING);
-            $permissionid   = Kit::GetParam('permissionid', _POST, _INT);
             $tags           = Kit::GetParam('tags', _POST, _STRING);
             $templateId     = Kit::GetParam('templateid', _POST, _INT, 0);
             $userid         = Kit::GetParam('userid', _SESSION, _INT);
-            
+
             // Add this layout
             $layoutObject = new Layout($db);
 
-            if(!$id = $layoutObject->Add($layout, $description, $permissionid, $tags, $userid, $templateId))
+            if(!$id = $layoutObject->Add($layout, $description, $tags, $userid, $templateId))
                 trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+
+            // What permissions should we create this with?
+            if (Config::GetSetting($db, 'LAYOUT_DEFAULT') == 'public')
+            {
+                Kit::ClassLoader('layoutgroupsecurity');
+                $security = new LayoutGroupSecurity($db);
+                $security->LinkEveryone($id, 1, 0, 0);
+            }
 
             // Successful layout creation
             $response->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $id));
@@ -248,13 +237,12 @@ HTML;
 
 		$layout 		= Kit::GetParam('layout', _POST, _STRING);
 		$description 	= Kit::GetParam('description', _POST, _STRING);
-		$permissionid 	= Kit::GetParam('permissionid', _POST, _INT);
 		$tags		 	= Kit::GetParam('tags', _POST, _STRING);
 		$retired 		= Kit::GetParam('retired', _POST, _INT, 0);
 		
 		$userid 		= Kit::GetParam('userid', _SESSION, _INT);
 		$currentdate 	= date("Y-m-d H:i:s");
-		
+
 		//validation
 		if (strlen($layout) > 50 || strlen($layout) < 1) 
 		{
@@ -289,7 +277,6 @@ HTML;
 
 		UPDATE layout SET
 			layout = '%s',
-			permissionID = %d,
 			description = '%s',
 			modifiedDT = '%s',
 			retired = %d,
@@ -299,7 +286,7 @@ HTML;
 END;
 
 		$SQL = sprintf($SQL, 
-						$db->escape_string($layout), $permissionid, 
+						$db->escape_string($layout),
 						$db->escape_string($description), 
 						$db->escape_string($currentdate), $retired, 
 						$db->escape_string($tags), $this->layoutid);
@@ -337,12 +324,15 @@ END;
 	
 	function delete_form() 
 	{
-		$db 		=& $this->db;
-		$response 	= new ResponseManager();
-		
-		
-		//expect the $layoutid to be set
-		$layoutid = $this->layoutid;
+            $db 		=& $this->db;
+            $response 	= new ResponseManager();
+            $helpManager = new HelpManager($db, $this->user);
+
+            //expect the $layoutid to be set
+            $layoutid = $this->layoutid;
+
+        if (!$this->auth->del)
+            trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
 		
 		//Are we going to be able to delete this?
 		// - Has it been scheduled
@@ -353,9 +343,6 @@ END;
 			trigger_error($db->error());
 			trigger_error(__("Can not get layout information"), E_USER_ERROR);
 		}
-
-		$msgYes		= __('Yes');
-		$msgNo		= __('No');
 		
 		if ($db->num_rows($results) == 0) 
 		{
@@ -363,11 +350,9 @@ END;
 			$msgWarn	= __('Are you sure you want to delete this layout? All media will be unassigned. Any layout specific media such as text/rss will be lost.');
 			
 			$form = <<<END
-			<form class="XiboForm" method="post" action="index.php?p=layout&q=delete">
+			<form id="LayoutDeleteForm" class="XiboForm" method="post" action="index.php?p=layout&q=delete">
 				<input type="hidden" name="layoutid" value="$layoutid">
 				<p>$msgWarn</p>
-				<input type="submit" value="$msgYes">
-				<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
 			</form>
 END;
 		}
@@ -378,19 +363,20 @@ END;
 			$msgWarn2	= __('Retire this layout instead?');
 			
 			$form = <<<END
-			<form class="XiboForm" method="post" action="index.php?p=layout&q=retire">
+			<form id="LayoutDeleteForm" class="XiboForm" method="post" action="index.php?p=layout&q=retire">
 				<input type="hidden" name="layoutid" value="$layoutid">
 				<p>$msgWarn</p>
 				<p>$msgWarn2</p>
-				<input type="submit" value="$msgYes">
-				<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
 			</form>
 END;
 		}
 		
-		$response->SetFormRequestResponse($form, __('Delete this layout?'), '260px', '180px');
-		$response->Respond();
-	}
+        $response->SetFormRequestResponse($form, __('Delete this layout?'), '300px', '200px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Delete') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#LayoutDeleteForm").submit()');
+        $response->Respond();
+    }
 
 	/**
 	 * Deletes a layout record from the DB
@@ -457,10 +443,6 @@ END;
 		$name = Kit::GetParam('filter_layout', _POST, _STRING, '');
 		setSession('layout', 'filter_layout', $name);
 		
-		// Sharing
-		$permissionid = Kit::GetParam('permissionid', _POST, _STRING, 'all');
-		setSession('layout', 'permissionid', $permissionid);
-		
 		// User ID
 		$filter_userid = Kit::GetParam('filter_userid', _POST, _STRING, 'all');
 		setSession('layout', 'filter_userid', $filter_userid);
@@ -477,21 +459,13 @@ END;
 		$SQL .= "SELECT  layout.layoutID, ";
 		$SQL .= "        layout.layout, ";
 		$SQL .= "        layout.description, ";
-		$SQL .= "        layout.userID, ";
-		$SQL .= "        permission.permission, ";
-		$SQL .= "        permission.permissionID ";
+		$SQL .= "        layout.userID ";
 		$SQL .= "FROM    layout ";
-		$SQL .= "INNER JOIN permission ON layout.permissionID = permission.permissionID ";
 		$SQL .= "WHERE   1                   = 1";
 		//name filter
 		if ($name != "") 
 		{
 			$SQL.= " AND  (layout.layout LIKE '%" . sprintf('%s', $name) . "%') ";
-		}
-		//sharing filter
-		if ($permissionid != "all") 
-		{
-			$SQL .= sprintf(" AND (layout.permissionID = %d) ", $permissionid);
 		}
 		//owner filter
 		if ($filter_userid != "all") 
@@ -518,6 +492,10 @@ END;
 			trigger_error(__("An Unknown error occured when listing the layouts."), E_USER_ERROR);			
 		}
 
+                $msgCopy = __('Copy');
+                $msgPermissions = __('Permissions');
+                $msgDelete = __('Delete');
+
 		$output = <<<END
 		<div class="info_table">
 		<table style="width:100%">
@@ -525,16 +503,13 @@ END;
 				<tr>
 				<th>Name</th>
 				<th>Description</th>
-				<th>Permissions</th>
 				<th>Owner</th>
-				<th>Group</th>
+				<th>$msgPermissions</th>
 				<th>Action</th>	
 				</tr>
 			</thead>
 			<tbody>
 END;
-
-                $msgCopy = __('Copy');
 
 		while($aRow = $db->get_row($results)) 
 		{
@@ -546,18 +521,15 @@ END;
 			
 			//get the username from the userID using the user module
 			$username 		= $user->getNameFromID($userid);
-			$group			= $user->getGroupFromID($userid);
+
+        $group = $this->GroupsForLayout($layoutid);
 			
-			//assess the permissions of each item
-			$permission		= Kit::ValidateParam($aRow[4], _STRING);
-			$permissionid	= Kit::ValidateParam($aRow[5], _INT);
+        // Permissions
+        $auth = $this->user->LayoutAuth($layoutid, true);
 			
-			//get the permissions
-			list($see_permissions , $edit_permissions) = $user->eval_permission($userid, $permissionid);
-			
-			if ($see_permissions) 
+			if ($auth->view)
 			{
-				if ($edit_permissions) 
+				if ($auth->edit)
 				{			
 					$title = <<<END
 					<tr ondblclick="return XiboFormRender('index.php?p=layout&q=displayForm&layoutid=$layoutid')">
@@ -576,25 +548,27 @@ END;
 				$title
 				<td>$layout</td>
 				<td>$description</td>
-				<td>$permission</td>
 				<td>$username</td>
 				<td>$group</td>
 END;
-				
-				if ($edit_permissions) 
+
+                                $output .= '<td class="nobr">';
+                                $output .= '<button class="XiboFormButton" href="index.php?p=schedule&q=ScheduleNowForm&layoutid=' . $layoutid . '"><span>' . __('Schedule Now') . '</span></button>';
+
+				if ($auth->edit)
 				{
-					$output .= '<td class="nobr">';
-					$output .= '<button href="index.php?p=layout&modify=true&layoutid=' . $layoutid . '" onclick="window.location = $(this).attr(\'href\')"><span>Design</span></button>';
-					$output .= '<button class="XiboFormButton" href="index.php?p=layout&q=displayForm&modify=true&layoutid=' . $layoutid . '"><span>Edit</span></button>';
-					$output .= '<button class="XiboFormButton" href="index.php?p=layout&q=CopyForm&layoutid=' . $layoutid . '&oldlayout=' . $layout . '"><span>' . $msgCopy . '</span></button>';
-					$output .= '<button class="XiboFormButton" href="index.php?p=layout&q=delete_form&layoutid=' . $layoutid . '"><span>Delete</span></button>';
-					$output .= '</td>';
-				}
-				else 
-				{
-					$output .= '<td class="centered">' . __('None') . '</td>';
+                                    $output .= '<button href="index.php?p=layout&modify=true&layoutid=' . $layoutid . '" onclick="window.location = $(this).attr(\'href\')"><span>Design</span></button>';
+                                    $output .= '<button class="XiboFormButton" href="index.php?p=layout&q=displayForm&modify=true&layoutid=' . $layoutid . '"><span>Edit</span></button>';
+                                    $output .= '<button class="XiboFormButton" href="index.php?p=layout&q=CopyForm&layoutid=' . $layoutid . '&oldlayout=' . $layout . '"><span>' . $msgCopy . '</span></button>';
+                                    if ($auth->del)
+                                        $output .= '<button class="XiboFormButton" href="index.php?p=layout&q=delete_form&layoutid=' . $layoutid . '"><span>' . $msgDelete . '</span></button>';
+                                        
+                                    if ($auth->modifyPermissions)
+                                        $output .= '<button class="XiboFormButton" href="index.php?p=layout&q=PermissionsForm&layoutid=' . $layoutid . '"><span>' . $msgPermissions . '</span></button>';
+
 				}
 				
+                                $output .= '</td>';
 				$output .= '</tr>';
 			}
 		}
@@ -617,7 +591,6 @@ END;
 		$layoutid 		= $this->layoutid; 
 		$layout 		= $this->layout;
 		$description            = $this->description;
-		$permissionid           = $this->permissionid;
 		$retired		= $this->retired;
 		$tags			= $this->tags;
 		
@@ -625,7 +598,6 @@ END;
 		$nameHelp	= $helpManager->HelpIcon(__("The Name of the Layout - (1 - 50 characters)"), true);
 		$descHelp	= $helpManager->HelpIcon(__("An optional description of the Layout. (1 - 250 characters)"), true);
 		$tagsHelp	= $helpManager->HelpIcon(__("Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)"), true);
-		$sharedHelp	= $helpManager->HelpIcon(__("The permissions to associate with this Layout"), true);
 		$retireHelp	= $helpManager->HelpIcon(__("Retire this layout or not? It will no longer be visible in lists"), true);
 		$templateHelp	= $helpManager->HelpIcon(__("Template to create this layout with."), true);
 		
@@ -633,7 +605,7 @@ END;
 		$retired_option 	= '';
 		$template_option 	= '';
 		
-		if ($this->layoutid != "") 
+		if ($this->layoutid != '')
 		{ 
                         // assume an edit
 			$action = "index.php?p=layout&q=modify";
@@ -649,29 +621,18 @@ END;
 		}
 		else
 		{
-			//build the template list
-			$template_list = dropdownlist("SELECT 'none','None',3,1 UNION SELECT templateID, template, permissionID, userID FROM template ORDER BY 2","templateid", "none", "", false, true, $_SESSION['userid']);
-			
-			$template_option = <<<END
-			<tr>
-				<td><label for='templateid'>Template<span class="required">*</span></label></td>
-				<td>$templateHelp $template_list</td>
-			</tr>
+                    $templates = $user->TemplateList();
+                    array_unshift($templates, array('templateid' => '0', 'template' => 'None'));
+                    
+                    $templateList = Kit::SelectList('templateid', $templates, 'templateid', 'template');
+                        
+                    $template_option = <<<END
+                    <tr>
+                            <td><label for='templateid'>Template<span class="required">*</span></label></td>
+                            <td>$templateHelp $templateList</td>
+                    </tr>
 END;
 		}
-		
-		if($permissionid == "") 
-		{
-			$default = Config::GetSetting($db, "defaultPlaylist");
-		}
-		else 
-		{
-			$default = $permissionid;
-		}
-		
-		if($default=="private") $default = 1;
-		
-		$shared_list = dropdownlist("SELECT permissionID, permission FROM permission", "permissionid", $default);
 		
 		$msgName	= __('Name');
 		$msgName2	= __('The Name of the Layout - (1 - 50 characters)');
@@ -679,10 +640,8 @@ END;
 		$msgDesc2	= __('An optional description of the Layout. (1 - 250 characters)');
 		$msgTags	= __('Tags');
 		$msgTags2	= __('Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)');
-		$msgShared	= __('Shared');
-		$msgShared2	= __('The permissions to associate with this Layout');
 		
-		$form = <<<END
+                $form = <<<END
 		<form id="LayoutForm" class="XiboForm" method="post" action="$action">
 			<input type="hidden" name="layoutid" value="$this->layoutid">
 		<table>
@@ -697,10 +656,6 @@ END;
 			<tr>
 				<td><label for="tags" accesskey="d" title="$msgTags2">$msgTags</label></td>
 				<td>$tagsHelp <input name="tags" type="text" id="tags" value="$tags" tabindex="3" /></td>
-			</tr>
-			<tr>
-				<td><label for='permissionid' title="$msgShared2">$msgShared<span class="required">*</span></label></td>
-				<td>$sharedHelp $shared_list</td>
 			</tr>
 			$retired_option
 			$template_option
@@ -757,8 +712,10 @@ END;
                     $thumbBgImage = "img/forms/filenotfound.png";
 		}
 
-		//A list of available backgrounds
-		$backgroundList = dropdownlist("SELECT '0', 'None', 3, 1 AS name, 0 As sort_order UNION SELECT mediaID, name, permissionID, userID, 1 AS sort_order FROM media WHERE type = 'image' AND IsEdited = 0 AND retired = 0 AND storedAs IS NOT NULL ORDER BY sort_order, 1","bg_image", $bgImageId, "onchange=\"background_button_callback()\"", false, true);
+		// A list of available backgrounds
+                $backgrounds = $user->MediaList('image');
+                array_unshift($backgrounds, array('mediaid' => '0', 'media' => 'None'));
+                $backgroundList = Kit::SelectList('bg_image', $backgrounds, 'mediaid', 'media', $bgImageId, "onchange=\"background_button_callback()\"");
 		
 		//A list of web safe colors
 		//Strip the # from the currently set color
@@ -948,20 +905,31 @@ FORM;
 			$response->SetError(__("No layout/region information available, please refresh the page and try again."));
 			$response->Respond();
 		}
-		
-		include_once("lib/pages/region.class.php");
-		
-		$region = new region($db, $user);
-		
-		if (!$region->DeleteRegion($this->layoutid, $regionid))
-		{
-			//there was an ERROR
-			$response->SetError($region->errorMsg);
-			$response->Respond();
-		}
-		
-		$response->SetFormSubmitResponse(__('Region Deleted.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
-		$response->Respond();
+
+        Kit::ClassLoader('region');
+        $region = new region($db, $user);
+        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->del)
+            trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
+
+        // Remove the permissions
+        Kit::ClassLoader('layoutregiongroupsecurity');
+        $security = new LayoutRegionGroupSecurity($db);
+        $security->UnlinkAll($layoutid, $regionid);
+
+        $db->query(sprintf("DELETE FROM lklayoutmediagroup WHERE layoutid = %d AND RegionID = '%s'", $this->layoutid, $regionid));
+
+            if (!$region->DeleteRegion($this->layoutid, $regionid))
+            {
+                    //there was an ERROR
+                    $response->SetError($region->errorMsg);
+                    $response->Respond();
+            }
+
+            $response->SetFormSubmitResponse(__('Region Deleted.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
+            $response->Respond();
 	}
 
         /*
@@ -982,34 +950,45 @@ FORM;
             $layoutWidth = Kit::GetParam('layoutWidth', _GET, _INT);
             $layoutHeight = Kit::GetParam('layoutHeight', _GET, _INT);
 
+        Kit::ClassLoader('region');
+        $region = new region($db, $this->user);
+        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+        $regionName = $region->GetRegionName($layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->edit)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+
             $form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=layout&q=ManualRegionPosition">
+		<form id="RegionProperties" class="XiboForm" method="post" action="index.php?p=layout&q=ManualRegionPosition">
                     <input type="hidden" name="layoutid" value="$layoutid">
                     <input type="hidden" name="regionid" value="$regionid">
                     <input id="layoutWidth" type="hidden" name="layoutWidth" value="$layoutWidth">
                     <input id="layoutHeight" type="hidden" name="layoutHeight" value="$layoutHeight">
                     <table>
 			<tr>
+                            <td><label for="name" title="Name of the Region">Name</label></td>
+                            <td><input name="name" type="text" id="name" value="$regionName" tabindex="1" /></td>
+			</tr>
+			<tr>
                             <td><label for="top" title="Offset from the Top Corner">Top Offset</label></td>
-                            <td><input name="top" type="text" id="top" value="$top" tabindex="1" /></td>
+                            <td><input name="top" type="text" id="top" value="$top" tabindex="2" /></td>
 			</tr>
 			<tr>
                             <td><label for="left" title="Offset from the Left Corner">Left Offset</label></td>
-                            <td><input name="left" type="text" id="left" value="$left" tabindex="2" /></td>
+                            <td><input name="left" type="text" id="left" value="$left" tabindex="3" /></td>
 			</tr>
 			<tr>
                             <td><label for="width" title="Width of the Region">Width</label></td>
-                            <td><input name="width" type="text" id="width" value="$width" tabindex="3" /></td>
+                            <td><input name="width" type="text" id="width" value="$width" tabindex="4" /></td>
 			</tr>
 			<tr>
                             <td><label for="height" title="Height of the Region">Height</label></td>
-                            <td><input name="height" type="text" id="height" value="$height" tabindex="4" /></td>
+                            <td><input name="height" type="text" id="height" value="$height" tabindex="5" /></td>
 			</tr>
                         <tr>
                             <td></td>
                             <td>
-                                <input type='submit' value="Save" / >
-                                <input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />
                                 <input id="btnFullScreen" type='button' value="Full Screen" / >
                             </td>
                         </tr>
@@ -1018,6 +997,8 @@ FORM;
 END;
 
             $response->SetFormRequestResponse($form, 'Manual Region Positioning', '350px', '275px', 'manualPositionCallback');
+            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+            $response->AddButton(__('Save'), '$("#RegionProperties").submit()');
             $response->Respond();
         }
 
@@ -1029,10 +1010,19 @@ END;
 
             $layoutid   = Kit::GetParam('layoutid', _POST, _INT);
             $regionid   = Kit::GetParam('regionid', _POST, _STRING);
+            $regionName = Kit::GetParam('name', _POST, _STRING);
             $top        = Kit::GetParam('top', _POST, _INT);
             $left       = Kit::GetParam('left', _POST, _INT);
             $width      = Kit::GetParam('width', _POST, _INT);
             $height 	= Kit::GetParam('height', _POST, _INT);
+
+        Kit::ClassLoader('region');
+        $region = new region($db, $this->user);
+        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->edit)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
             Debug::LogEntry($db, 'audit', sprintf('Layoutid [%d] Regionid [%s]', $layoutid, $regionid), 'layout', 'ManualRegionPosition');
 
@@ -1046,7 +1036,7 @@ END;
 
             $region = new region($db, $user);
 
-            if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
+            if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName))
                 trigger_error($region->errorMsg, E_USER_ERROR);
 
             $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid");
@@ -1078,9 +1068,13 @@ END;
 		$top 	= str_replace("px", '', $top);
 		$left 	= str_replace("px", '', $left);
 		
-		include_once("lib/pages/region.class.php");
-		
-		$region = new region($db, $user);
+        Kit::ClassLoader('region');
+        $region = new region($db, $this->user);
+        $ownerId = $region->GetOwnerId($this->layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->del)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 		
 		if (!$region->EditRegion($this->layoutid, $regionid, $width, $height, $top, $left))
 		{
@@ -1138,37 +1132,47 @@ END;
 		$response->Respond();
 	}
 	
-	/**
-	 * Return the Delete Form as HTML
-	 * @return 
-	 */
-	public function DeleteRegionForm()
-	{
-		$db 		=& $this->db;
-		$response	= new ResponseManager();
-		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
+    /**
+     * Return the Delete Form as HTML
+     * @return
+     */
+    public function DeleteRegionForm()
+    {
+        $db 		=& $this->db;
+        $response	= new ResponseManager();
+        $helpManager = new HelpManager($db, $this->user);
+        $layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
+        $regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
+
+        Kit::ClassLoader('region');
+        $region = new region($db, $this->user);
+        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->del)
+            trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
 		
-		// Translate messages
-		$msgDelete		= __('Are you sure you want to remove this region?');
-		$msgDelete2		= __('All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.');
-		$msgYes			= __('Yes');
-		$msgNo			= __('No');
-		
-		//we can delete
-		$form = <<<END
-		<form class="XiboForm" method="post" action="index.php?p=layout&q=DeleteRegion">
-			<input type="hidden" name="layoutid" value="$layoutid">
-			<input type="hidden" name="regionid" value="$regionid">
-			<p>$msgDelete $msgDelete2</p>
-			<input type="submit" value="$msgYes">
-			<input type="submit" value="$msgNo" onclick="$('#div_dialog').dialog('close');return false; ">
-		</form>
+        // Translate messages
+        $msgDelete		= __('Are you sure you want to remove this region?');
+        $msgDelete2		= __('All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.');
+        $msgYes			= __('Yes');
+        $msgNo			= __('No');
+
+        //we can delete
+        $form = <<<END
+        <form id="RegionDeleteForm" class="XiboForm" method="post" action="index.php?p=layout&q=DeleteRegion">
+                <input type="hidden" name="layoutid" value="$layoutid">
+                <input type="hidden" name="regionid" value="$regionid">
+                <p>$msgDelete $msgDelete2</p>
+        </form>
 END;
 		
-		$response->SetFormRequestResponse($form, __('Delete this region?'), '260px', '180px');
-		$response->Respond();
-	}
+        $response->SetFormRequestResponse($form, __('Delete this region?'), '350px', '200px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Region', 'Delete') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Delete'), '$("#RegionDeleteForm").submit()');
+        $response->Respond();
+    }
 	
 	function RenderDesigner() 
 	{
@@ -1191,10 +1195,11 @@ END;
 		$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 		
 		//Fix up the background css
-		if ($bgImage == "")
+		if ($bgImage == '')
 		{
-                    $background_css = "$bgColor";
+                    $background_css = $bgColor;
 		}
+                else
 		{
                     // Get the ID for the background image
                     $bgImageInfo = explode('.', $bgImage);
@@ -1224,31 +1229,42 @@ END;
 			$regionLeft	= $region->getAttribute('left') . "px";
 			$regionTop	= $region->getAttribute('top') . "px";
 			$regionid	= $region->getAttribute('id');
+                        $ownerId = $region->getAttribute('userId');
+
+                        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
 
 			$paddingTop	= $regionHeight / 2 - 16;
 			$paddingTop	= $paddingTop . "px";
 
-			$regionTransparency  = '<div class="regionTransparency" style="width:100%; height:100%;">';
-			$regionTransparency .= '</div>';
+                        $regionAuthTransparency = ($regionAuth->edit) ? '' : ' regionDisabled';
+                        $regionDisabledClass = ($regionAuth->edit) ? 'region' : 'regionDis';
+                        $regionPreviewClass = ($regionAuth->view) ? 'regionPreview' : '';
 
-			$doubleClickLink = "XiboFormRender($(this).attr('href'))";
-			$regionHtml .= "<div id='region_$regionid' regionid='$regionid' layoutid='$this->layoutid' href='index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions' ondblclick=\"$doubleClickLink\"' class='region' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
-					  $regionTransparency
-                                           <div class='regionInfo'>
+			$regionTransparency  = '<div class="regionTransparency ' . $regionAuthTransparency . '" style="width:100%; height:100%;"></div>';
+			$doubleClickLink = ($regionAuth->edit) ? "XiboFormRender($(this).attr('href'))" : '';
+
+			$regionHtml .= "<div id='region_$regionid' regionEnabled='$regionAuth->edit' regionid='$regionid' layoutid='$this->layoutid' href='index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions' ondblclick=\"$doubleClickLink\"' class='$regionDisabledClass $regionPreviewClass' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
+					  $regionTransparency";
+                                          
+                      if ($regionAuth->view)
+                      {
+                        $regionHtml .= "<div class='regionInfo'>
                                                 $tipWidth x $tipHeight ($tipLeft,$tipTop)
                                            </div>
 								<div class='preview'>
 									<div class='previewContent'></div>
 									<div class='previewNav'></div>
-								</div>
-							</div>";
+								</div>";
+                      }
+
+                      $regionHtml .= '</div>';
 		}
 		
 		// Translate messages
 		$msgTimeLine			= __('Timeline');
 		$msgOptions			= __('Options');
 		$msgDelete			= __('Delete');
-		$msgSetAsHome		= __('Set as Home');
+		$msgSetAsHome		= __('Permissions');
 		
 		$msgAddRegion		= __('Add Region');
 		$msgEditBg			= __('Edit Background');
@@ -1297,6 +1313,14 @@ HTML;
                 $helpManager    = new HelpManager($db, $user);
 		
 		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
+
+        Kit::ClassLoader('region');
+        $region = new region($db, $user);
+        $ownerId = $region->GetOwnerId($this->layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->edit)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 		
 		//ajax request handler
 		$arh = new ResponseManager();
@@ -1336,7 +1360,7 @@ HTML;
 		}
 		
 		//Work out how much room the grid can take up
-		$availableWidth = 780;
+		$availableWidth = 860;
 		$left 			= 10;
 		
 		$availableWidth = $availableWidth - $left;
@@ -1378,8 +1402,20 @@ HTML;
 			$mediaid 		= $mediaNode->getAttribute('id');
 			$lkid 			= $mediaNode->getAttribute('lkid');
 			$mediaType 		= $mediaNode->getAttribute('type');
-			$mediaFileName 	= $mediaNode->getAttribute('filename');
-			$mediaDuration  = $mediaNode->getAttribute('duration');
+			$mediaFileName	= $mediaNode->getAttribute('filename');
+			$mediaDuration = $mediaNode->getAttribute('duration');
+			$ownerId = $mediaNode->getAttribute('userId');
+
+                        // Permissions for this assignment?
+                        Debug::LogEntry($db, 'audit', sprintf('Request Permission MediaID: %s', $mediaid), 'layout', 'RegionOptions');
+
+                        $auth = $user->MediaAssignmentAuth($ownerId, $this->layoutid, $regionid, $mediaid, true);
+
+                        // Skip over media assignments that we do not have permission to see
+                        if (!$auth->view)
+                            continue;
+
+                        Debug::LogEntry($db, 'audit', sprintf('Permission Granted to View MediaID: %s', $mediaid), 'layout', 'RegionOptions');
 
                         // Artifically cap a duration so we dont break the timeline
                         if ($mediaDuration > 350)
@@ -1389,12 +1425,10 @@ HTML;
 			require_once("modules/$mediaType.module.php");
 			
 			// Create the media object without any region and layout information
-			$tmpModule 		= new $mediaType($db, $user, $mediaid);
-			$mediaName 		= $tmpModule->GetName();
+			$tmpModule = new $mediaType($db, $user, $mediaid, $this->layoutid, $regionid, $lkid);
+			$mediaName = $tmpModule->GetName();
 			
-			Debug::LogEntry($db, 'audit', sprintf('Module name returned for MediaID: %s is %s', $mediaid, $mediaName), 'layout', 'RegionOptions');
-						
-			//Do we have a thumbnail for this media?
+			// Do we have a thumbnail for this media?
 			if ($mediaType == 'image')
 			{
 				//make up a list of the media, with an image showing the media type
@@ -1425,33 +1459,59 @@ HTML;
 			if ($thumbWidth < 100) $thumbWidth = 100;
 			
 			$thumbWidthVal 	= $thumbWidth . "px";
-			$top			= $this->GetTopForMediaType($mediaType, $count);
+			$top = $this->GetTopForMediaType($mediaType, $count);
 			$leftMediaBreakVal = ($left + $thumbWidth)."px";
-			
-			$editLink = <<<LINK
-				<a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to edit this media">
-					Edit
-				</a><br />
-LINK;
-			
+
 			$mediaBreakHtml = <<<END
 			<div class="mediabreak" breakid="$count" style="position:absolute; top:20px; left:$leftMediaBreakVal; width:$mediaBreakWidthVal;"></div>
 END;
 			//If the count is == to the number of nodes then dont put this bar (its the last)
 			if ($count == $countNodes) $mediaBreakHtml = "";
 			
-			
-			$leftClass = "timebar_".$mediaType."_left";
-			$rightClass = "timebar_".$mediaType."_right";
-			
+			if (Config::GetSetting($db, 'REGION_OPTIONS_COLOURING') == 'Media Colouring')
+                        {
+                            $leftClass = 'timebar_' . $mediaType . '_left';
+                            $rightClass = 'timebar_' . $mediaType . '_right';
+                        }
+                        else
+                        {
+                            $leftClass = 'timebar_' . (($auth->edit) ? 'enabled' : 'disabled') . '_left';
+                            $rightClass = 'timebar_' . (($auth->edit) ? 'enabled' : 'disabled') . '_right';
+                        }
+
 			//
 			// Translate Messages
 			//
-			$msgDelete		= __('Delete');
-			$msgType		= __('Type');
-			$msgName		= __('Name');
-			$msgDuration	= __('Duration');
-			
+			$msgEdit = __('Edit');
+			$msgDelete = __('Delete');
+                        $msgPermissions = __('Permissions');
+			$msgType = __('Type');
+			$msgName = __('Name');
+			$msgDuration = __('Duration');
+
+                        $editLink = '';
+
+                        if ($auth->edit)
+                            $editLink .= <<<LINK
+                            <a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to edit this media">
+                                $msgEdit
+                            </a>
+LINK;
+
+                        if ($auth->del)
+                            $editLink .= <<<LINK
+                            | <a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=DeleteForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to delete this media">
+                                $msgDelete
+                            </a>
+LINK;
+
+                        // If we do not have permission to edit, remove the link
+                        if (!$auth->edit)
+                            $editLink = '';
+
+                        if ($auth->modifyPermissions)
+                            $editLink .= ' | <a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '&mediaid=' . $mediaid . '&lkid=' . $lkid . '" title="Click to change permissions for this media">' . $msgPermissions . '</a>';
+
 			$mediaHtml .= <<<BUTTON
 			<div class="timebar_ctl" style="position:absolute; top:$top; left:$leftVal; width:$thumbWidthVal;" mediaid="$mediaid" lkid="$lkid">
 				<div class="timebar">
@@ -1459,9 +1519,6 @@ END;
 					<div class="$leftClass"></div>
 						<br />
 						$editLink
-						<a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=$mediaType&q=Exec&method=DeleteForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid&lkid=$lkid" title="Click to delete this media">
-							$msgDelete
-						</a>
 					</div>
 				</div>
 				<div class="tooltip_hidden" style="position:absolute; z-index:5;">
@@ -1538,7 +1595,7 @@ HTML;
 				$buttons
 			</div>
 			<div id="timeline" style="clear:left; float:none;">
-				<div id="timeline_ctl" style="$timelineCtlMargin width:790px; position:relative; overflow-y:hidden; overflow-x:scroll;" layoutid="$this->layoutid" regionid="$regionid">
+				<div id="timeline_ctl" style="$timelineCtlMargin width:860px; position:relative; overflow-y:hidden; overflow-x:scroll;" layoutid="$this->layoutid" regionid="$regionid">
 					<div style="width:$tableWidthPx; height:200px;">
 						$mediaHtml
 					</div>
@@ -1552,7 +1609,7 @@ END;
 		$arh->callBack 		= 'region_options_callback';
 		$arh->dialogTitle 	= __('Region Options');
 		$arh->dialogSize 	= true;
-		$arh->dialogWidth 	= '830px';
+		$arh->dialogWidth 	= '900px';
 		$arh->dialogHeight 	= '450px';
                 $arh->AddButton(__('Close'), 'XiboDialogClose()');
                 $arh->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'RegionOptions') . '")');
@@ -1650,6 +1707,11 @@ END;
 		//output the button
 		echo "index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$this->layoutid";
 	}
+
+    function ScheduleNowHref()
+    {
+        echo 'index.php?p=schedule&q=ScheduleNowForm&layoutid=' . $this->layoutid;
+    }
 	
 	/**
 	 * Called by AJAX
@@ -1793,6 +1855,347 @@ END;
 
         $response->SetFormSubmitResponse(__('Layout Copied'));
         $response->Respond();
+    }
+
+    public function PermissionsForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $helpManager = new HelpManager($db, $user);
+
+        $layoutid = Kit::GetParam('layoutid', _GET, _INT);
+
+        if (!$this->auth->modifyPermissions)
+            trigger_error(__("You do not have permissions to edit this layout"), E_USER_ERROR);
+
+        // Form content
+        $form = '<form id="LayoutPermissionsForm" class="XiboForm" method="post" action="index.php?p=layout&q=Permissions">';
+	$form .= '<input type="hidden" name="layoutid" value="' . $layoutid . '" />';
+        $form .= '<div class="dialog_table">';
+	$form .= '  <table style="width:100%">';
+        $form .= '      <tr>';
+        $form .= '          <th>' . __('Group') . '</th>';
+        $form .= '          <th>' . __('View') . '</th>';
+        $form .= '          <th>' . __('Edit') . '</th>';
+        $form .= '          <th>' . __('Delete') . '</th>';
+        $form .= '      </tr>';
+
+        // List of all Groups with a view/edit/delete checkbox
+        $SQL = '';
+        $SQL .= 'SELECT `group`.GroupID, `group`.`Group`, View, Edit, Del, `group`.IsUserSpecific ';
+        $SQL .= '  FROM `group` ';
+        $SQL .= '   LEFT OUTER JOIN lklayoutgroup ';
+        $SQL .= '   ON lklayoutgroup.GroupID = group.GroupID ';
+        $SQL .= '       AND lklayoutgroup.LayoutID = %d ';
+        $SQL .= ' WHERE `group`.GroupID <> %d ';
+        $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
+
+        $SQL = sprintf($SQL, $layoutid, $user->getGroupFromId($user->userid, true));
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get permissions for this layout'), E_USER_ERROR);
+        }
+
+        while($row = $db->get_assoc_row($results))
+        {
+            $groupId = $row['GroupID'];
+            $group = ($row['IsUserSpecific'] == 0) ? '<strong>' . $row['Group'] . '</strong>' : $row['Group'];
+
+            $form .= '<tr>';
+            $form .= ' <td>' . $group . '</td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_view" ' . (($row['View'] == 1) ? 'checked' : '') . '></td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_edit" ' . (($row['Edit'] == 1) ? 'checked' : '') . '></td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_del" ' . (($row['Del'] == 1) ? 'checked' : '') . '></td>';
+            $form .= '</tr>';
+        }
+
+        $form .= '</table>';
+        $form .= '</div>';
+        $form .= '</form>';
+        
+        $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Permissions') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#LayoutPermissionsForm").submit()');
+        $response->Respond();
+    }
+
+    public function Permissions()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        Kit::ClassLoader('layoutgroupsecurity');
+
+        $layoutId = Kit::GetParam('layoutid', _POST, _INT);
+        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
+
+        if (!$this->auth->modifyPermissions)
+            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
+
+        // Unlink all
+        $layoutSecurity = new LayoutGroupSecurity($db);
+        if (!$layoutSecurity->UnlinkAll($layoutId))
+            trigger_error(__('Unable to set permissions'));
+
+        // Some assignments for the loop
+        $lastGroupId = 0;
+        $first = true;
+        $view = 0;
+        $edit = 0;
+        $del = 0;
+
+        // List of groupIds with view, edit and del assignments
+        foreach($groupIds as $groupPermission)
+        {
+            $groupPermission = explode('_', $groupPermission);
+            $groupId = $groupPermission[0];
+
+            if ($first)
+            {
+                // First time through
+                $first = false;
+                $lastGroupId = $groupId;
+            }
+
+            if ($groupId != $lastGroupId)
+            {
+                // The groupId has changed, so we need to write the current settings to the db.
+                // Link new permissions
+                if (!$layoutSecurity->Link($layoutId, $lastGroupId, $view, $edit, $del))
+                    trigger_error(__('Unable to set permissions'));
+
+                // Reset
+                $lastGroupId = $groupId;
+                $view = 0;
+                $edit = 0;
+                $del = 0;
+            }
+
+            switch ($groupPermission[1])
+            {
+                case 'view':
+                    $view = 1;
+                    break;
+
+                case 'edit':
+                    $edit = 1;
+                    break;
+
+                case 'del':
+                    $del = 1;
+                    break;
+            }
+        }
+
+        // Need to do the last one
+        if (!$first)
+        {
+            if (!$layoutSecurity->Link($layoutId, $lastGroupId, $view, $edit, $del))
+                    trigger_error(__('Unable to set permissions'));
+        }
+
+        $response->SetFormSubmitResponse(__('Permissions Changed'));
+        $response->Respond();
+    }
+
+    public function RegionPermissionsForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $helpManager = new HelpManager($db, $user);
+
+        $layoutid = Kit::GetParam('layoutid', _GET, _INT);
+        $regionid = Kit::GetParam('regionid', _GET, _STRING);
+
+        Kit::ClassLoader('region');
+        $region = new region($db, $user);
+        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
+        if (!$regionAuth->modifyPermissions)
+            trigger_error(__("You do not have permissions to edit this regions permissions"), E_USER_ERROR);
+
+        // Form content
+        $form = '<form id="RegionPermissionsForm" class="XiboForm" method="post" action="index.php?p=layout&q=RegionPermissions">';
+	$form .= '<input type="hidden" name="layoutid" value="' . $layoutid . '" />';
+	$form .= '<input type="hidden" name="regionid" value="' . $regionid . '" />';
+        $form .= '<div class="dialog_table">';
+	$form .= '  <table style="width:100%">';
+        $form .= '      <tr>';
+        $form .= '          <th>' . __('Group') . '</th>';
+        $form .= '          <th>' . __('View') . '</th>';
+        $form .= '          <th>' . __('Edit') . '</th>';
+        $form .= '          <th>' . __('Delete') . '</th>';
+        $form .= '      </tr>';
+
+        // List of all Groups with a view/edit/delete checkbox
+        $SQL = '';
+        $SQL .= 'SELECT `group`.GroupID, `group`.`Group`, View, Edit, Del, `group`.IsUserSpecific ';
+        $SQL .= '  FROM `group` ';
+        $SQL .= '   LEFT OUTER JOIN lklayoutregiongroup ';
+        $SQL .= '   ON lklayoutregiongroup.GroupID = group.GroupID ';
+        $SQL .= '       AND lklayoutregiongroup.LayoutID = %d ';
+        $SQL .= "       AND lklayoutregiongroup.RegionID = '%s' ";
+        $SQL .= ' WHERE `group`.GroupID <> %d ';
+        $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
+
+        $SQL = sprintf($SQL, $layoutid, $regionid, $user->getGroupFromId($user->userid, true));
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get permissions for this layout region'), E_USER_ERROR);
+        }
+
+        while($row = $db->get_assoc_row($results))
+        {
+            $groupId = $row['GroupID'];
+            $group = ($row['IsUserSpecific'] == 0) ? '<strong>' . $row['Group'] . '</strong>' : $row['Group'];
+
+            $form .= '<tr>';
+            $form .= ' <td>' . $group . '</td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_view" ' . (($row['View'] == 1) ? 'checked' : '') . '></td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_edit" ' . (($row['Edit'] == 1) ? 'checked' : '') . '></td>';
+            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_del" ' . (($row['Del'] == 1) ? 'checked' : '') . '></td>';
+            $form .= '</tr>';
+        }
+
+        $form .= '</table>';
+        $form .= '</div>';
+        $form .= '</form>';
+
+        $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Region', 'Permissions') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#RegionPermissionsForm").submit()');
+        $response->Respond();
+    }
+
+    public function RegionPermissions()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        Kit::ClassLoader('layoutregiongroupsecurity');
+
+        $layoutId = Kit::GetParam('layoutid', _POST, _INT);
+        $regionId = Kit::GetParam('regionid', _POST, _STRING);
+        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
+
+        Kit::ClassLoader('region');
+        $region = new region($db, $user);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionId, true);
+        if (!$regionAuth->modifyPermissions)
+            trigger_error(__('You do not have permissions to edit this regions permissions'), E_USER_ERROR);
+
+        // Unlink all
+        $layoutSecurity = new LayoutRegionGroupSecurity($db);
+        if (!$layoutSecurity->UnlinkAll($layoutId, $regionId))
+            trigger_error(__('Unable to set permissions'));
+
+        // Some assignments for the loop
+        $lastGroupId = 0;
+        $first = true;
+        $view = 0;
+        $edit = 0;
+        $del = 0;
+
+        // List of groupIds with view, edit and del assignments
+        foreach($groupIds as $groupPermission)
+        {
+            $groupPermission = explode('_', $groupPermission);
+            $groupId = $groupPermission[0];
+
+            if ($first)
+            {
+                // First time through
+                $first = false;
+                $lastGroupId = $groupId;
+            }
+
+            if ($groupId != $lastGroupId)
+            {
+                // The groupId has changed, so we need to write the current settings to the db.
+                // Link new permissions
+                if (!$layoutSecurity->Link($layoutId, $regionId, $lastGroupId, $view, $edit, $del))
+                    trigger_error(__('Unable to set permissions'));
+
+                // Reset
+                $lastGroupId = $groupId;
+                $view = 0;
+                $edit = 0;
+                $del = 0;
+            }
+
+            switch ($groupPermission[1])
+            {
+                case 'view':
+                    $view = 1;
+                    break;
+
+                case 'edit':
+                    $edit = 1;
+                    break;
+
+                case 'del':
+                    $del = 1;
+                    break;
+            }
+        }
+
+        // Need to do the last one
+        if (!$first)
+        {
+            if (!$layoutSecurity->Link($layoutId, $regionId, $lastGroupId, $view, $edit, $del))
+                    trigger_error(__('Unable to set permissions'));
+        }
+
+        $response->SetFormSubmitResponse(__('Permissions Changed'));
+        $response->Respond();
+    }
+
+    /**
+     * Get a list of group names for a layout
+     * @param <type> $layoutId
+     * @return <type>
+     */
+    private function GroupsForLayout($layoutId)
+    {
+        $db =& $this->db;
+
+        $SQL = '';
+        $SQL .= 'SELECT `group`.Group ';
+        $SQL .= '  FROM `group` ';
+        $SQL .= '   INNER JOIN lklayoutgroup ';
+        $SQL .= '   ON `group`.GroupID = lklayoutgroup.GroupID ';
+        $SQL .= ' WHERE lklayoutgroup.LayoutID = %d ';
+
+        $SQL = sprintf($SQL, $layoutId);
+
+        if (!$results = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get group information for layout'), E_USER_ERROR);
+        }
+
+        $groups = '';
+
+        while ($row = $db->get_assoc_row($results))
+        {
+            $groups .= $row['Group'] . ', ';
+        }
+
+        $groups = trim($groups);
+        $groups = trim($groups, ',');
+
+        return $groups;
     }
 }
 ?>

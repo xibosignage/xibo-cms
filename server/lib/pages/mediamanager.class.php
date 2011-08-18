@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2011 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,54 +22,170 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class mediamanagerDAO 
 {
-	private $db;
-	private $user;
+    private $db;
+    private $user;
 
-	function __construct(database $db, user $user) 
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-	}
-	
-	function on_page_load() 
-	{
-		return "";
-	}
-	
-	function echo_page_heading() 
-	{
-		global $user;
-		
-		$userid = Kit::GetParam('userid', _SESSION, _INT);
-		$uid 	= $user->getNameFromID($userid);
-		
-		echo "$uid's " . __('Dashboard');
-		return true;
-	}
+    function __construct(database $db, user $user)
+    {
+        $this->db =& $db;
+        $this->user =& $user;
+    }
 
-	function displayPage() 
-	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-		
-		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
-		$regionid = Kit::GetParam('regionid', _REQUEST, _INT);
-		
-		$SQL = sprintf("SELECT layout FROM layout WHERE layoutID = %d ", $layoutid);
-		
-		if (!$result = $db->query($SQL))
+    function on_page_load()
+    {
+        return "";
+    }
+
+    function echo_page_heading()
+    {
+        global $user;
+
+        $userid = Kit::GetParam('userid', _SESSION, _INT);
+        $uid 	= $user->getNameFromID($userid);
+
+        echo "$uid's " . __('Dashboard');
+        return true;
+    }
+
+    function displayPage()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+
+        include_once("template/pages/mediamanager.php");
+    }
+
+    public function MediaManagerFilter()
+    {
+        $id = uniqid();
+
+        $xiboGrid = <<<HTML
+        <div class="XiboGrid" id="$id">
+                <div class="XiboFilter">
+                        <form onsubmit="return false">
+				<input type="hidden" name="p" value="mediamanager">
+				<input type="hidden" name="q" value="MediaManagerGrid">
+                        </form>
+                </div>
+                <div class="XiboData">
+
+                </div>
+        </div>
+HTML;
+        echo $xiboGrid;
+    }
+
+    public function MediaManagerGrid()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        
+        // We would like a list of all layouts, media and media assignments that this user
+        // has access to.
+        $layouts = $user->LayoutList();
+
+        $msgLayout = __('Layout');
+        $msgRegion = __('Region');
+        $msgMedia = __('Media');
+        $msgMediaType = __('Type');
+        $msgSeq = __('Sequence');
+
+        $msgAction = __('Action');
+        $msgEdit = __('Edit');
+        $msgDelete = __('Delete');
+
+        $output = <<<END
+        <div class="info_table">
+        <table style="width:100%">
+            <thead>
+                <tr>
+                    <th>$msgLayout</th>
+                    <th>$msgRegion</th>
+                    <th>$msgMedia</th>
+                    <th>$msgMediaType</th>
+                    <th>$msgSeq</th>
+                    <th>$msgAction</th>
+                </tr>
+            </thead>
+            <tbody>
+END;
+
+        foreach ($layouts as $layout)
+        {
+            // We have edit permissions?
+            if (!$layout['edit'])
+                continue;
+
+            Debug::LogEntry($db, 'audit', 'Permission to edit layout ' . $layout['layout'], 'mediamanager', 'MediaManagerGrid');
+
+            // Every layout this user has access to.. get the regions
+            $layoutXml = new DOMDocument();
+            $layoutXml->loadXML($layout['xml']);
+
+            // Get ever region
+            $regionNodeList = $layoutXml->getElementsByTagName('region');
+            $regionNodeSequence = 0;
+
+            //get the regions
+            foreach ($regionNodeList as $region)
+            {
+                $regionId = $region->getAttribute('id');
+                $ownerId = ($region->getAttribute('userId') == '') ? $layout['ownerid'] : $region->getAttribute('userId');
+
+                $regionAuth = $user->RegionAssignmentAuth($ownerId, $layout['layoutid'], $regionId, true);
+
+                // Do we have permission to edit?
+                if (!$regionAuth->edit)
+                    continue;
+
+                $regionNodeSequence++;
+                $regionName = ($region->getAttribute('name') == '') ? 'Region ' . $regionNodeSequence : $region->getAttribute('name');
+
+                Debug::LogEntry($db, 'audit', 'Permissions granted for ' . $regionId . ' owned by ' . $ownerId, 'mediamanager', 'MediaManagerGrid');
+
+                // Media
+                $xpath = new DOMXPath($layoutXml);
+		$mediaNodes = $xpath->query("//region[@id='$regionId']/media");
+                $mediaNodeSequence = 0;
+
+		foreach ($mediaNodes as $mediaNode)
 		{
-			trigger_error(__("Incorrect home page setting, please contact your system admin."), E_USER_ERROR);
-		}
-		
-		$row = $db->get_row($result);
-		
-		$layout = Kit::ValidateParam($row[0], _STRING);
-		
-		/**
-		 * Include the design layer for this page
-		 */
-		include_once("template/pages/mediamanager.php");
-	}
+                    $mediaId = $mediaNode->getAttribute('id');
+                    $lkId = $mediaNode->getAttribute('lkid');
+                    $mediaOwnerId = ($mediaNode->getAttribute('userId') == '') ? $layout['ownerid'] : $mediaNode->getAttribute('userId');
+                    $mediaType = $mediaNode->getAttribute('type');
+
+                    // Permissions
+                    $auth = $user->MediaAssignmentAuth($mediaOwnerId, $layout['layoutid'], $regionId, $mediaId, true);
+
+                    if (!$auth->edit)
+                        continue;
+
+                    // Create the media object without any region and layout information
+                    require_once('modules/' . $mediaType . '.module.php');
+                    $tmpModule = new $mediaType($db, $user, $mediaId, $layout['layoutid'], $regionId, $lkId);
+                    $mediaName = $tmpModule->GetName();
+
+                    $editLink = '<button class="XiboFormButton" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&showRegionOptions=0&layoutid=' . $layout['layoutid'] . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '">' . $msgEdit . '</button>';
+                    $mediaNodeSequence++;
+
+                    $output .= '<tr>';
+                    $output .= '    <td>' . $layout['layout'] . '</td>';
+                    $output .= '    <td>' . $regionName . '</td>';
+                    $output .= '    <td>' . $mediaName . '</td>';
+                    $output .= '    <td>' . $mediaType . '</td>';
+                    $output .= '    <td>' . $mediaNodeSequence . '</td>';
+                    $output .= '    <td>' . $editLink . '</td>';
+                    $output .= '</tr>';
+                }
+            }
+        }
+
+        $output .= '</tbody></table></div>';
+
+        $response->SetGridResponse($output);
+        $response->Respond();
+    }
 }
 ?>
