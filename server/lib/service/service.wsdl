@@ -89,6 +89,14 @@
     <message name="MediaInventoryResponse">
         <part name="success" type="xsd:boolean" />
     </message>
+    <message name="GetResourceRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="layoutId" type="xsd:int" />
+        <part name="regionId" type="xsd:string" />
+        <part name="mediaId" type="xsd:string" />
+        <part name="version" type="xsd:string" />
+    </message>
     <portType name="xmdsPortType">
         <operation name="RegisterDisplay">
             <documentation>Registered the Display on the Xibo Network</documentation>
@@ -134,6 +142,11 @@
             <documentation>Report back the clients MediaInventory</documentation>
             <input message="tns:MediaInventoryRequest" />
             <output message="tns:MediaInventoryResponse" />
+        </operation>
+        <operation name="GetResource">
+            <documentation>Gets the file requested</documentation>
+            <input message="tns:GetResourceRequest"/>
+            <output message="tns:GetResourceResponse"/>
         </operation>
     </portType>
     <binding name="xmdsBinding" type="tns:xmdsPortType">
@@ -212,6 +225,15 @@
         </operation>
         <operation name="MediaInventory">
             <soap:operation soapAction="urn:xmds#MediaInventory" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="GetResource">
+            <soap:operation soapAction="urn:xmds#GetResource" style="rpc"/>
             <input>
                 <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
             </input>
