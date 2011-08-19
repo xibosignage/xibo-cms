@@ -160,11 +160,6 @@ SELECT 'dataset', pagegroupID
   FROM pagegroup
  WHERE pagegroup = 'DataSets';
 
-INSERT INTO `menuitem` (`menuID`, `pageID`, `Text`, `sequence`)
-SELECT '4', pageID, 'DataSets', '6'
-  FROM pages
- WHERE `name` = 'dataset';
-
 CREATE TABLE IF NOT EXISTS `dataset` (
   `DataSetID` int(11) NOT NULL AUTO_INCREMENT,
   `DataSet` varchar(50) NOT NULL,

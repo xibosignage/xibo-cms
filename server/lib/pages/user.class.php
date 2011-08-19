@@ -68,6 +68,7 @@ class userDAO
             $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT, 0);
             $homepage   = Kit::GetParam('homepage', _POST, _STRING);
             $pass_change = isset($_POST['pass_change']);
+            $initialGroupId = Kit::GetParam('groupid', _POST, _INT);
 
             // Construct the Homepage
             $homepage	= "dashboard";
@@ -126,6 +127,9 @@ class userDAO
             }
 
             $userGroupObject->Link($groupID, $id);
+
+            // Link the initial group
+            $userGroupObject->Link($initialGroupId, $id);
 
             $response->SetFormSubmitResponse('User Saved.');
             $response->Respond();
@@ -492,15 +496,27 @@ HTML;
             $homepageHelp   = $helpManager->HelpIcon("The users Homepage. This should not be changed until you want to reset their homepage.", true);
             $overpassHelp   = $helpManager->HelpIcon("Do you want to override this users password with the one entered here.", true);
             $usertypeHelp   = $helpManager->HelpIcon("What is this users type? This would usually be set to 'User'", true);
+            $userGroupHelp = $helpManager->HelpIcon(__('What is the initial user group for this user?'), true);
 
             $homepageOption = '';
             $override_option = '';
+            $userGroupOption = '';
 
             //What form are we displaying
             if ($userid == "")
             {
                     //add form
                     $action = "index.php?p=user&q=AddUser";
+
+                // Build a list of groups to choose from
+                $msgGroupSelect = __('Initial User Group');
+                $userGroupList = dropdownlist('SELECT GroupID, `Group` FROM `group` WHERE IsUserSpecific = 0 AND IsEveryone = 0 ORDER BY 2', 'groupid');
+                $userGroupOption = <<<END
+                    <tr>
+                        <td><label for="groupid">$msgGroupSelect<span class="required">*</span></label></td>
+                        <td>$userGroupHelp $userGroupList</td>
+                    </tr>
+END;
             }
             else
             {
@@ -566,6 +582,7 @@ END;
                             </tr>
                             $homepageOption
                             $usertypeOption
+                            $userGroupOption
                     </table>
             </form>
 END;
