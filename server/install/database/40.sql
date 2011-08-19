@@ -13,9 +13,6 @@ ALTER TABLE  `oauth_server_token` ADD FOREIGN KEY (  `ost_usa_id_ref` ) REFERENC
 ) ON DELETE CASCADE ON UPDATE CASCADE ;
 
 
-INSERT INTO `menuitem` (`MenuID`, `PageID`, `Text`, `Sequence`)
-SELECT 4, PageID, 'Applications', 12 FROM `pages` WHERE `name` = 'oauth';
-
 /* VERSION UPDATE */
 /* Set the version table, etc */
 UPDATE `version` SET `app_ver` = '1.3.0', `XmdsVersion` = 2;
