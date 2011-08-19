@@ -288,10 +288,10 @@
             {
                 // Every user should have a group?
                 // Add one in!
-                include_once('lib/data/usergroup.data.class.php');
+                Kit::ClassLoader('usergroup');
 
                 $userGroupObject = new UserGroup($db);
-                if (!$groupID = $userGroupObject->Add('Unknown user id: ' . $id, 1))
+                if (!$groupID = $userGroupObject->Add($this->getNameFromID($id), 1))
                 {
                     // Error
                     trigger_error(__('User does not have a group and Xibo is unable to add one.'), E_USER_ERROR);
@@ -345,10 +345,10 @@
             {
                 // Every user should have a group?
                 // Add one in!
-                include_once('lib/data/usergroup.data.class.php');
+                Kit::ClassLoader('usergroup');
 
                 $userGroupObject = new UserGroup($db);
-                if (!$groupID = $userGroupObject->Add('Unknown user id: ' . $id, 1))
+                if (!$groupID = $userGroupObject->Add($this->getNameFromID($id), 1))
                 {
                     // Error
                     trigger_error(__('User does not have a group and Xibo is unable to add one.'), E_USER_ERROR);
