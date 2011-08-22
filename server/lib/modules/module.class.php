@@ -51,6 +51,8 @@ class Module implements ModuleInterface
         protected $originalUserId;
         protected $assignedMedia;
 
+        public $xmdsRequest;
+
     /**
      * Constructor - sets up this media object with all the available information
      * @return
@@ -80,6 +82,10 @@ class Module implements ModuleInterface
         $this->deleteFromRegion = false;
         $this->showRegionOptions = Kit::GetParam('showRegionOptions', _REQUEST, _INT, 1);
         $this->duration = '';
+        $this->xmdsRequest = false;
+
+        if ($user == null)
+            $this->xmdsRequest = true;
 
         // Determine which type this module is
         $this->SetModuleInformation();
@@ -186,7 +192,8 @@ class Module implements ModuleInterface
             $this->originalUserId = $mediaNode->getAttribute('userId');
 
             // Make sure we have permissions
-            $this->auth = $this->user->MediaAssignmentAuth($this->originalUserId, $this->layoutid, $this->regionid, $this->mediaid, true);
+            if (!$this->xmdsRequest)
+                $this->auth = $this->user->MediaAssignmentAuth($this->originalUserId, $this->layoutid, $this->regionid, $this->mediaid, true);
 
             $mediaNode = $xmlDoc->importNode($mediaNode, true);
             $xmlDoc->documentElement->appendChild($mediaNode);
@@ -508,8 +515,11 @@ END;
                 // Always have the abilty to unassign from the region
                 $options .= 'unassign|' . __('Unassign from this region only');
 
-                // Is this user allowed to edit this media?
-                if ($this->auth->edit)
+                // Get the permissions for the media item
+                $mediaAuth = $this->user->MediaAuth($mediaid, true);
+
+                // Is this user allowed to delete this media?
+                if ($mediaAuth->del)
                 {
                     // Load what we know about this media into the object
                     $SQL = "SELECT IFNULL(editedMediaID, 0) AS editedMediaID FROM media WHERE mediaID = $mediaid ";
@@ -1674,6 +1684,11 @@ FORM;
         }
 
         return true;
+    }
+
+    public function GetResource()
+    {
+        return false;
     }
 }
 ?>

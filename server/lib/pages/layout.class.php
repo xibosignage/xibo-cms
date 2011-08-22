@@ -1505,10 +1505,6 @@ LINK;
                             </a>
 LINK;
 
-                        // If we do not have permission to edit, remove the link
-                        if (!$auth->edit)
-                            $editLink = '';
-
                         if ($auth->modifyPermissions)
                             $editLink .= ' | <a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '&mediaid=' . $mediaid . '&lkid=' . $lkid . '" title="Click to change permissions for this media">' . $msgPermissions . '</a>';
 
@@ -1683,6 +1679,13 @@ END;
 				$response->keepOpen = true;
 				return $response;
 			}
+
+                    // Need to copy over the permissions from this media item & also the delete permission
+                    $mediaAuth = $this->user->MediaAuth($mediaid, true);
+
+                    Kit::ClassLoader('layoutmediagroupsecurity');
+                    $security = new LayoutMediaGroupSecurity($db);
+                    $security->Link($this->layoutid, $regionid, $mediaid, $this->user->getGroupFromID($this->user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
 		}
 		
 		// We want to load a new form

@@ -56,6 +56,8 @@ interface ModuleInterface
 
 	// Return the name of the media as input by the user
 	public function GetName();
+
+        public function GetResource();
 }
 
 ?>

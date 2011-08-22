@@ -908,6 +908,58 @@ class XMDSSoap
     }
 
     /**
+     * Gets additional resources for assigned media
+     * @param <type> $serverKey
+     * @param <type> $hardwareKey
+     * @param <type> $layoutId
+     * @param <type> $regionId
+     * @param <type> $mediaId
+     * @param <type> $version
+     */
+    function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId, $version)
+    {
+        $db =& $this->db;
+
+        // Sanitize
+        $serverKey = Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
+        $layoutId = Kit::ValidateParam($layoutId, _INT);
+        $regionId = Kit::ValidateParam($regionId, _STRING);
+        $mediaId = Kit::ValidateParam($mediaId, _STRING);
+        $version = Kit::ValidateParam($version, _STRING);
+
+        // Make sure we are talking the same language
+        if (!$this->CheckVersion($version))
+        {
+            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
+        }
+
+        // Auth this request...
+        if (!$this->AuthDisplay($hardwareKey))
+        {
+            throw new SoapFault('Receiver', "This display client is not licensed");
+        }
+
+        // What type of module is this?
+        Kit::ClassLoader('region');
+        $region = new region($db, null);
+        $type = $region->GetMediaNodeType($layoutId, $regionId, $mediaId);
+
+        if ($type == '')
+            throw new SoapFault('Receiver', 'Unable to get the media node type');
+
+        // Get the resource from the module
+        require_once('modules/' . $type . '.module.php');
+        $module = new $type($db, null, $mediaid, $layoutid, $regionid, $lkid);
+        $resource = $module->GetResource();
+
+        if (!$resource || $resource == '')
+            throw new SoapFault('Receiver', 'Unable to get the media resource');
+
+        return $resource;
+    }
+
+    /**
      * Authenticates the display
      * @param <type> $hardwareKey
      * @return <type>
