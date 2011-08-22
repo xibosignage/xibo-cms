@@ -1561,7 +1561,7 @@ BUTTON;
 		while ($modulesItem = $enabledModules->GetNextModule())
 		{
 			$mod 		= Kit::ValidateParam($modulesItem['Module'], _STRING);
-			$caption 	= '+ ' . $mod;
+			$caption 	= '+ ' . Kit::ValidateParam($modulesItem['Name'], _STRING);
 			$mod		= strtolower($mod);
 			$title 		= Kit::ValidateParam($modulesItem['Description'], _STRING);
 			$img 		= Kit::ValidateParam($modulesItem['ImageUri'], _STRING);

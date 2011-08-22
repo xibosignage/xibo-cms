@@ -82,3 +82,9 @@ var microblog_callback = function()
 
     return false; //prevent submit
 }
+
+var datasetview_callback = function()
+{
+
+    return false; //prevent submit
+}

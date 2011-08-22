@@ -361,6 +361,13 @@ function XiboPing(url) {
                     $('#div_dialog').dialog('destroy');
 
                     LoginBox(response.message);
+
+                    if (response.appendHiddenSubmit) {
+                        if ($("input[type=submit]", "#div_dialog").length == 0) {
+                            $("form", "#div_dialog").append('<input type="submit" style="display:none" />');
+                        }
+                    }
+                    
                     return false;
                 }
 

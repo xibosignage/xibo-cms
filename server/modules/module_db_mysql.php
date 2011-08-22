@@ -164,6 +164,26 @@ class database
     }
 
     /**
+     * Get an Array of Results
+     * @param <type> $SQL
+     * @return <type>
+     */
+    public function GetArray($SQL)
+    {
+        if (!$result = $this->query($SQL))
+            return false;
+
+        $array = array();
+
+        while ($row = $this->get_assoc_row($result))
+        {
+            $array[] = $row;
+        }
+
+        return $array;
+    }
+
+    /**
      * Returns the Error to display
      * @return <type>
      */

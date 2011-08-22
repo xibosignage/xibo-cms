@@ -125,6 +125,18 @@ var microblog_callback = function()
     return false; //prevent submit
 }
 
+var datasetview_callback = function()
+{
+    $("#columnsIn, #columnsOut").sortable({
+		connectWith: '.connectedSortable',
+		dropOnEmpty: true
+	}).disableSelection();
+
+    $(".li-sortable", "#div_dialog");
+
+    return false; //prevent submit
+}
+
 $(document).ready(function() {
 	
 	var container = document.getElementById('layout');
