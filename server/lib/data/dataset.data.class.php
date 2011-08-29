@@ -144,5 +144,35 @@ class DataSet extends Data
         
         return true;
     }
+
+    public function DataSetResults($dataSetId)
+    {
+        $db =& $this->db;
+
+        $selectSQL = "";
+
+        $columns = $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId));
+
+        foreach($columns as $col)
+        {
+            $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $col['DataSetColumnID'], $col['Heading']);
+        }
+
+        $SQL  = "SELECT $selectSQL ";
+        $SQL .= "  RowNumber ";
+        $SQL .= "  FROM (";
+        $SQL .= "   SELECT datasetcolumn.DataSetColumnID, datasetdata.RowNumber, datasetdata.`Value` ";
+        $SQL .= "     FROM datasetdata ";
+        $SQL .= "       INNER JOIN datasetcolumn ";
+        $SQL .= "       ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID ";
+        $SQL .= sprintf("   WHERE datasetcolumn.DataSetID = %d ", $dataSetId);
+        $SQL .= ") datasetdata ";
+        $SQL .= "GROUP BY RowNumber ";
+        $SQL .= "ORDER BY RowNumber ";
+
+        Debug::LogEntry($db, 'audit', $SQL);
+
+        return $db->GetArray($SQL);
+    }
 }
 ?>

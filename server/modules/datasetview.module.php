@@ -129,13 +129,15 @@ FORM;
             return $this->response;
         }
 
-        $msgUpperLimit = __('Upper Limit');
-        $msgLowerLimit = __('Lower Limit');
+        $msgUpperLimit = __('Upper Row Limit');
+        $msgLowerLimit = __('Lower Row Limit');
         $msgDuration = __('Duration');
+        $msgFilter = __('Filter');
         
         $dataSetId = $this->GetOption('datasetid');
         $upperLimit = $this->GetOption('upperLimit');
         $lowerLimit = $this->GetOption('lowerLimit');
+        $filter = $this->GetOption('filter');
         $columns = $this->GetOption('columns');
 
         if ($columns != '')
@@ -180,12 +182,14 @@ FORM;
                 <tr>
                     <td><label for="duration">$msgDuration<span class="required">*</span></label></td>
                     <td><input id="duration" name="duration" type="text" value="$this->duration" $durationFieldEnabled></td>
+                    <td><label for="filter">$msgFilter</label></td>
+                    <td><input id="filter" name="filter" type="text" value="$filter"></td>
                 </tr>
                 <tr>
-                    <td><label for="upperLimit">$msgUpperLimit<span class="required">*</span></label></td>
-                    <td><input class="numeric" id="upperLimit" name="upperLimit" type="text"></td>
-                    <td><label for="lowerLimit">$msgLowerLimit<span class="required">*</span></label></td>
-                    <td><input class="numeric" id="lowerLimit" name="lowerLimit" type="text"></td>
+                    <td><label for="lowerLimit">$msgLowerLimit</label></td>
+                    <td><input class="numeric required" id="lowerLimit" name="lowerLimit" type="text" value="$lowerLimit"></td>
+                    <td><label for="upperLimit">$msgUpperLimit</label></td>
+                    <td><input class="numeric required" id="upperLimit" name="upperLimit" type="text" value="$upperLimit"></td>
                 </tr>
                 <tr>
                     <td colspan="4">$columnsList<td>
@@ -195,6 +199,8 @@ FORM;
 FORM;
 
         $this->response->SetFormRequestResponse($form, __('Edit DataSet View'), '650px', '575px');
+
+        $this->response->AddButton(__('Preview'), 'XiboPreviewDataSetView()');
 
         // Cancel button
         if ($this->showRegionOptions)
@@ -286,7 +292,7 @@ FORM;
         $regionid = $this->regionid;
         $mediaid = $this->mediaid;
 
-        //Other properties
+        // Other properties
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT, 0);
 
         if (!$this->auth->edit)
@@ -308,11 +314,18 @@ FORM;
         }
 
         $columns = Kit::GetParam('DataSetColumnId', _POST, _ARRAY, array());
+        $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
+        $lowerLimit = Kit::GetParam('lowerLimit', _POST, _INT);
+        $filter = Kit::GetParam('filter', _POST, _STRING);
 
         if (count($columns) == 0)
             $this->SetOption('columns', '');
         else
             $this->SetOption('columns', implode(',', $columns));
+
+        $this->SetOption('upperLimit', $upperLimit);
+        $this->SetOption('lowerLimit', $lowerLimit);
+        $this->SetOption('filter', $filter);
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -329,6 +342,51 @@ FORM;
         }
 
         return $this->response;
+    }
+
+    public function Preview($width, $height)
+    {
+        $db =& $this->db;
+
+        // Show a preview of the data set table output.
+        $dataSetId = $this->GetOption('datasetid');
+        $upperLimit = $this->GetOption('upperLimit');
+        $lowerLimit = $this->GetOption('lowerLimit');
+        $filter = $this->GetOption('filter');
+        $columnIds = $this->GetOption('columns');
+
+        if ($columnIds == '')
+            return 'No columns';
+
+        if (!$columns = $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d AND DataSetColumnID IN (%s)", $dataSetId, $columnIds)))
+            trigger_error($db->error());
+
+        // Create a data set view object, to get the results.
+        Kit::ClassLoader('dataset');
+        $dataSet = new DataSet($db);
+        $dataSetResults = $dataSet->DataSetResults($dataSetId);
+
+        $table  = '<table>';
+        $table .= ' <tr>';
+
+        foreach($columns as $col)
+            $table .= '<th>' . $col['Heading'] . '</th>';
+
+        $table .= ' </tr>';
+
+        foreach($dataSetResults as $row)
+        {
+            $table .= '<tr>';
+
+            foreach($columns as $col)
+                $table .= '<td>' . $row[$col['Heading']] . '</td>';
+
+            $table .= '</tr>';
+        }
+
+        $table .= '</table>';
+
+        return $table;
     }
 }
 ?>
