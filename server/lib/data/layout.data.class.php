@@ -80,7 +80,7 @@ class Layout extends Data
 
         $SQL = <<<END
         INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, tags, xml)
-         VALUES ('%s', '%s', %d, %d, '%s', '%s', '%s')
+         VALUES ('%s', '%s', %d, '%s', '%s', '%s', '%s')
 END;
 
         $SQL = sprintf($SQL, $db->escape_string($layout),
