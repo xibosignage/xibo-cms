@@ -342,7 +342,7 @@ FORM;
 		$regionid 	= $this->regionid;
 		$mediaid	= $this->mediaid;
 
-        if (!$this->edit)
+        if (!$this->auth->edit)
         {
             $this->response->SetError('You do not have permission to edit this assignment.');
             $this->response->keepOpen = false;
