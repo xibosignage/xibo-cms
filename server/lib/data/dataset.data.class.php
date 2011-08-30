@@ -145,34 +145,65 @@ class DataSet extends Data
         return true;
     }
 
-    public function DataSetResults($dataSetId)
+    public function DataSetResults($dataSetId, $columnIds, $filter = "", $lowerLimit = 0, $upperLimit = 0)
     {
         $db =& $this->db;
 
-        $selectSQL = "";
-
-        $columns = $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId));
+        $selectSQL = '';
+        $results = array();
+        $headings = array();
+        
+        $columns = explode(',', $columnIds);
 
         foreach($columns as $col)
         {
-            $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $col['DataSetColumnID'], $col['Heading']);
+            $heading = $db->GetSingleValue(sprintf('SELECT Heading FROM datasetcolumn WHERE DataSetColumnID = %d', $col), 'Heading', _STRING);
+            $headings[] = $heading;
+            $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $col, $heading);
         }
 
-        $SQL  = "SELECT $selectSQL ";
-        $SQL .= "  RowNumber ";
-        $SQL .= "  FROM (";
-        $SQL .= "   SELECT datasetcolumn.DataSetColumnID, datasetdata.RowNumber, datasetdata.`Value` ";
-        $SQL .= "     FROM datasetdata ";
-        $SQL .= "       INNER JOIN datasetcolumn ";
-        $SQL .= "       ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID ";
-        $SQL .= sprintf("   WHERE datasetcolumn.DataSetID = %d ", $dataSetId);
-        $SQL .= ") datasetdata ";
-        $SQL .= "GROUP BY RowNumber ";
+        $results['Columns'] = $headings;
+
+        $SQL  = "SELECT * ";
+        $SQL .= "  FROM ( ";
+        $SQL .= "   SELECT $selectSQL ";
+        $SQL .= "       RowNumber ";
+        $SQL .= "     FROM (";
+        $SQL .= "       SELECT datasetcolumn.DataSetColumnID, datasetdata.RowNumber, datasetdata.`Value` ";
+        $SQL .= "         FROM datasetdata ";
+        $SQL .= "           INNER JOIN datasetcolumn ";
+        $SQL .= "           ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID ";
+        $SQL .= sprintf("       WHERE datasetcolumn.DataSetID = %d ", $dataSetId);
+        $SQL .= "       ) datasetdatainner ";
+        $SQL .= "   GROUP BY RowNumber ";
+        $SQL .= " ) datasetdata ";
+        if ($filter != '')
+        {
+            $where = ' WHERE 1=1 ';
+
+            $filter = explode(',', $filter);
+
+            foreach ($filter as $filterPair)
+            {
+                $filterPair = explode('=', $filterPair);
+                $where .= sprintf(" AND %s = '%s' ", $filterPair[0], $db->escape_string($filterPair[1]));
+            }
+
+            $SQL .= $where . ' ';
+        }
         $SQL .= "ORDER BY RowNumber ";
 
-        Debug::LogEntry($db, 'audit', $SQL);
+        if ($lowerLimit != 0)
+        {
+            $upperLimit = $upperLimit - $lowerLimit + 1;
+            $SQL .= sprintf('LIMIT %d, %d ', $lowerLimit, $upperLimit);
+        }
 
-        return $db->GetArray($SQL);
+        Debug::LogEntry($db, 'audit', $SQL);
+        
+        $results['Rows'] = $db->GetArray($SQL, false);
+
+        return $results;
     }
 }
 ?>

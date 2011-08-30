@@ -133,18 +133,34 @@ FORM;
         $msgLowerLimit = __('Lower Row Limit');
         $msgDuration = __('Duration');
         $msgFilter = __('Filter');
+        $msgShowHeadings = __('Show the table headings?');
+        $msgStyleSheet = __('Stylesheet for the Table');
         
         $dataSetId = $this->GetOption('datasetid');
         $upperLimit = $this->GetOption('upperLimit');
         $lowerLimit = $this->GetOption('lowerLimit');
         $filter = $this->GetOption('filter');
+        $showHeadings = $this->GetOption('showHeadings');
+        $showHeadingsChecked = ($showHeadings == 1) ? ' checked' : '';
         $columns = $this->GetOption('columns');
+        $styleSheet = $this->GetOption('styleSheet', $this->DefaultStyleSheet());
 
         if ($columns != '')
         {
             // Query for more info about the selected and available columns
             $notColumns = $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d AND DataSetColumnID NOT IN (%s)", $dataSetId, $columns));
-            $columns = $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d AND DataSetColumnID IN (%s)", $dataSetId, $columns));
+
+            // These columns need to be in order
+            $columnIds = explode(',', $columns);
+            $headings = array();
+
+            foreach($columnIds as $col)
+            {
+                $heading = $db->GetSingleRow(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetColumnID = %d', $col), 'Heading', _STRING);
+                $headings[] = $heading;
+            }
+
+            $columns = $headings;
         }
         else
         {
@@ -192,15 +208,19 @@ FORM;
                     <td><input class="numeric required" id="upperLimit" name="upperLimit" type="text" value="$upperLimit"></td>
                 </tr>
                 <tr>
+                    <td colspan="2"><input id="showHeadings" name="showHeadings" type="checkbox" $showHeadingsChecked><label for="showHeadings">$msgShowHeadings</label></td>
+                </tr>
+                <tr>
                     <td colspan="4">$columnsList<td>
+                </tr>
+                <tr>
+                    <td colspan="4">$msgStyleSheet<br /><textarea cols="80" rows="10" id="styleSheet" name="styleSheet">$styleSheet</textarea></td>
                 </tr>
             </table>
         </form>
 FORM;
 
         $this->response->SetFormRequestResponse($form, __('Edit DataSet View'), '650px', '575px');
-
-        $this->response->AddButton(__('Preview'), 'XiboPreviewDataSetView()');
 
         // Cancel button
         if ($this->showRegionOptions)
@@ -317,6 +337,8 @@ FORM;
         $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
         $lowerLimit = Kit::GetParam('lowerLimit', _POST, _INT);
         $filter = Kit::GetParam('filter', _POST, _STRING);
+        $showHeadings = Kit::GetParam('showHeadings', _POST, _CHECKBOX);
+        $styleSheet = Kit::GetParam('styleSheet', _POST, _STRING);
 
         if (count($columns) == 0)
             $this->SetOption('columns', '');
@@ -326,6 +348,8 @@ FORM;
         $this->SetOption('upperLimit', $upperLimit);
         $this->SetOption('lowerLimit', $lowerLimit);
         $this->SetOption('filter', $filter);
+        $this->SetOption('showHeadings', $showHeadings);
+        $this->SetOption('styleSheet', $styleSheet);
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -349,41 +373,118 @@ FORM;
         $db =& $this->db;
 
         // Show a preview of the data set table output.
+        return $this->DataSetTableHtml();
+    }
+
+    public function GetResource()
+    {
+        $db =& $this->db;
+
+        $styleSheet = $this->GetOption('styleSheet');
+        $styleSheet = '<style type="text/css">' . $styleSheet . '</style>';
+
+        // Load the HtmlTemplate
+        $template = file_get_contents('modules/HtmlTemplate.htm');
+
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $styleSheet, $template);
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml(), $template);
+
+        return $template;
+    }
+
+    public function DefaultStyleSheet()
+    {
+        $styleSheet = <<<END
+table.DataSetTable {
+
+}
+
+tr.HeaderRow {
+
+}
+
+tr#row_1 {
+
+}
+
+td#col_1 {
+
+}
+
+td.DataSetColumn {
+
+}
+
+tr.DataSetRow {
+
+}
+
+th.DataSetColumnHeaderCell {
+
+}
+
+span#1_1 {
+
+}
+
+span.DataSetColumnSpan {
+
+}
+END;
+        return $styleSheet;
+    }
+
+    public function DataSetTableHtml()
+    {
+        $db =& $this->db;
+
+        // Show a preview of the data set table output.
         $dataSetId = $this->GetOption('datasetid');
         $upperLimit = $this->GetOption('upperLimit');
         $lowerLimit = $this->GetOption('lowerLimit');
         $filter = $this->GetOption('filter');
         $columnIds = $this->GetOption('columns');
+        $showHeadings = $this->GetOption('showHeadings');
 
         if ($columnIds == '')
             return 'No columns';
-
-        if (!$columns = $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d AND DataSetColumnID IN (%s)", $dataSetId, $columnIds)))
-            trigger_error($db->error());
-
+            
         // Create a data set view object, to get the results.
         Kit::ClassLoader('dataset');
         $dataSet = new DataSet($db);
-        $dataSetResults = $dataSet->DataSetResults($dataSetId);
+        $dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $lowerLimit, $upperLimit);
 
-        $table  = '<table>';
-        $table .= ' <tr>';
+        $table  = '<table class="DataSetTable">';
 
-        foreach($columns as $col)
-            $table .= '<th>' . $col['Heading'] . '</th>';
-
-        $table .= ' </tr>';
-
-        foreach($dataSetResults as $row)
+        if ($showHeadings == 1)
         {
-            $table .= '<tr>';
+            $table .= '<thead>';
+            $table .= ' <tr class="HeaderRow">';
 
-            foreach($columns as $col)
-                $table .= '<td>' . $row[$col['Heading']] . '</td>';
+            foreach($dataSetResults['Columns'] as $col)
+                $table .= '<th class="DataSetColumnHeaderCell">' . $col . '</th>';
 
-            $table .= '</tr>';
+            $table .= ' </tr>';
+            $table .= '</thead>';
         }
 
+        $table .= '<tbody>';
+
+        $rowCount = 1;
+
+        foreach($dataSetResults['Rows'] as $row)
+        {
+            $table .= '<tr class="DataSetRow" id="row_' . $rowCount . '">';
+
+            for($i = 0; $i < count($dataSetResults['Columns']); $i++)
+                $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $row[$i] . '</span></td>';
+
+            $table .= '</tr>';
+
+            $rowCount++;
+        }
+
+        $table .= '</tbody>';
         $table .= '</table>';
 
         return $table;

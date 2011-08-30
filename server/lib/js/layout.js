@@ -427,8 +427,3 @@ Preview.prototype.SetSequence = function(seq)
 		}
 	});
 }
-
-var XiboPreviewDataSetView = function()
-{
-    
-}

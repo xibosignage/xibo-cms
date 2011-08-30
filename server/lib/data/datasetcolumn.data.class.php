@@ -76,7 +76,7 @@ class DataSetColumn extends Data
 
             $select = rtrim($select, ',');
 
-            $SQL = sprintf("SELECT DataSetDataID FROM datasetdata WHERE DataColumnID = %d AND Value NOT IN (%s)", $dataSetColumnId, $select);
+            $SQL = sprintf("SELECT DataSetDataID FROM datasetdata WHERE DataSetColumnID = %d AND Value NOT IN (%s)", $dataSetColumnId, $select);
 
             if (!$results = $db->query($SQL))
             {

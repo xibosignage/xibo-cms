@@ -359,7 +359,7 @@ XML;
 		{
 			// Replace the old node we found with XPath with the new node we just created
 			Debug::LogEntry($db, 'audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue);
-			return $userOptions->item(0)->nodeValue;
+			return ($userOptions->item(0)->nodeValue != '') ? $userOptions->item(0)->nodeValue : $default;
 		}
 	}
 

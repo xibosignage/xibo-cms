@@ -85,28 +85,35 @@ class moduleDAO
 		return true;
 	}
 	
-	/**
-	 * What action to perform?
-	 * @return 
-	 */
-	public function Exec()
-	{
-		// What module has been requested?
-		$method	= Kit::GetParam('method', _REQUEST, _WORD);
-		
-		if (method_exists($this->module,$method)) 
-		{
-			$response = $this->module->$method();
-		}
-		else
-		{
-			// Set the error to display
-			$response = new ResponseManager();
-			$response->SetError(__('This Module does not exist'));
-		}
-		
-		$response->Respond();
-	}
+    /**
+     * What action to perform?
+     * @return
+     */
+    public function Exec()
+    {
+        // What module has been requested?
+        $method	= Kit::GetParam('method', _REQUEST, _WORD);
+        $raw = Kit::GetParam('raw', _REQUEST, _WORD);
+
+        if (method_exists($this->module,$method))
+        {
+            $response = $this->module->$method();
+        }
+        else
+        {
+            // Set the error to display
+            trigger_error(__('This Module does not exist'), E_USER_ERROR);
+        }
+
+        if ($raw == 'true')
+        {
+            echo $response;
+        }
+        else
+        {
+            $response->Respond();
+        }
+    }
 
 	/**
 	 * Returns an image stream to the browser - for the mediafile specified.
