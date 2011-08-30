@@ -10,7 +10,9 @@ ALTER TABLE  `module` ADD  `Name` VARCHAR( 50 ) NOT NULL AFTER  `Module`;
 
 UPDATE `module` SET `Name` = `Module`;
 
-INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`) VALUES (NULL, 'datasetview', 'DataSet View', '1', '1', 'A view on a DataSet', 'img/forms/ticker.gif', '1', NULL);
+INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`) VALUES (NULL, 'datasetview', 'Data Set', '1', '1', 'A view on a DataSet', 'img/forms/datasetview.gif', '1', NULL);
+
+UPDATE  `module` SET  `ImageUri` =  'img/forms/microblog.gif' WHERE  `module`.`ModuleID` =9 LIMIT 1 ;
 
 UPDATE `version` SET `app_ver` = '1.3.1', `XmdsVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
