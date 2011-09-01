@@ -954,7 +954,7 @@ class XMDSSoap
 
         // Get the resource from the module
         require_once('modules/' . $type . '.module.php');
-        $module = new $type($db, $user, $mediaid, $layoutid, $regionid, $lkid);
+        $module = new $type($db, $user, $mediaId, $layoutId, $regionId);
         $resource = $module->GetResource();
 
         if (!$resource || $resource == '')
