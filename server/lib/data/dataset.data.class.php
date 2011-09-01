@@ -155,11 +155,16 @@ class DataSet extends Data
         
         $columns = explode(',', $columnIds);
 
-        foreach($columns as $col)
+        $allColumns = $db->GetArray(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d' , $dataSetId));
+
+        foreach($allColumns as $col)
         {
-            $heading = $db->GetSingleValue(sprintf('SELECT Heading FROM datasetcolumn WHERE DataSetColumnID = %d', $col), 'Heading', _STRING);
-            $headings[] = $heading;
-            $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $col, $heading);
+            $heading = $col['Heading'];
+            
+            if (in_array($col['DataSetColumnID'], $columns))
+                $headings[] = $heading;
+
+            $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $col['DataSetColumnID'], $heading);
         }
 
         $results['Columns'] = $headings;
@@ -200,8 +205,11 @@ class DataSet extends Data
         }
 
         Debug::LogEntry($db, 'audit', $SQL);
-        
-        $results['Rows'] = $db->GetArray($SQL, false);
+
+        if (!$rows = $db->GetArray($SQL, false))
+            trigger_error($db->error());
+            
+        $results['Rows'] = $rows;
 
         return $results;
     }

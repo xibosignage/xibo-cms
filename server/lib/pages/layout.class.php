@@ -1360,7 +1360,7 @@ HTML;
 		}
 		
 		//Work out how much room the grid can take up
-		$availableWidth = 860;
+		$availableWidth = 960;
 		$left 			= 10;
 		
 		$availableWidth = $availableWidth - $left;
@@ -1591,7 +1591,7 @@ HTML;
 				$buttons
 			</div>
 			<div id="timeline" style="clear:left; float:none;">
-				<div id="timeline_ctl" style="$timelineCtlMargin width:860px; position:relative; overflow-y:hidden; overflow-x:scroll;" layoutid="$this->layoutid" regionid="$regionid">
+				<div id="timeline_ctl" style="$timelineCtlMargin width:960px; position:relative; overflow-y:hidden; overflow-x:scroll;" layoutid="$this->layoutid" regionid="$regionid">
 					<div style="width:$tableWidthPx; height:200px;">
 						$mediaHtml
 					</div>
@@ -1603,9 +1603,9 @@ END;
 		
 		$arh->html 		= $options;
 		$arh->callBack 		= 'region_options_callback';
-		$arh->dialogTitle 	= __('Region Options');
+		$arh->dialogTitle 	= __('Region Timeline');
 		$arh->dialogSize 	= true;
-		$arh->dialogWidth 	= '900px';
+		$arh->dialogWidth 	= '1000px';
 		$arh->dialogHeight 	= '450px';
                 $arh->AddButton(__('Close'), 'XiboDialogClose()');
                 $arh->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'RegionOptions') . '")');
