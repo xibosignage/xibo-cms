@@ -135,7 +135,9 @@ FORM;
         $msgFilter = __('Filter');
         $msgShowHeadings = __('Show the table headings?');
         $msgStyleSheet = __('Stylesheet for the Table');
+        $msgUpdateInterval = __('Update Interval (mins)');
         
+        $updateInterval = $this->GetOption('updateInterval', 0);
         $dataSetId = $this->GetOption('datasetid');
         $upperLimit = $this->GetOption('upperLimit');
         $lowerLimit = $this->GetOption('lowerLimit');
@@ -209,6 +211,8 @@ FORM;
                 </tr>
                 <tr>
                     <td colspan="2"><input id="showHeadings" name="showHeadings" type="checkbox" $showHeadingsChecked><label for="showHeadings">$msgShowHeadings</label></td>
+                    <td><label for="updateInterval">$msgUpdateInterval<span class="required">*</span></label></td>
+                    <td><input id="updateInterval" name="updateInterval" type="text" value="$updateInterval"></td>
                 </tr>
                 <tr>
                     <td colspan="4">$columnsList<td>
@@ -248,7 +252,6 @@ FORM;
 
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
 
         //Other properties
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT, 0);
@@ -294,7 +297,7 @@ FORM;
         {
             // We want to load a new form
             $this->response->loadForm = true;
-            $this->response->loadFormUri = "index.php?p=module&mod=datasetview&q=Exec&method=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$mediaid";
+            $this->response->loadFormUri = "index.php?p=module&mod=datasetview&q=Exec&method=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$this->mediaid";
         }
 
         return $this->response;
@@ -339,6 +342,7 @@ FORM;
         $filter = Kit::GetParam('filter', _POST, _STRING);
         $showHeadings = Kit::GetParam('showHeadings', _POST, _CHECKBOX);
         $styleSheet = Kit::GetParam('styleSheet', _POST, _STRING);
+        $updateInterval = Kit::GetParam('updateInterval', _POST, _STRING);
 
         if (count($columns) == 0)
             $this->SetOption('columns', '');
@@ -350,6 +354,8 @@ FORM;
         $this->SetOption('filter', $filter);
         $this->SetOption('showHeadings', $showHeadings);
         $this->SetOption('styleSheet', $styleSheet);
+        $this->SetOption('duration', $this->duration);
+        $this->SetOption('updateInterval', $updateInterval);
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
