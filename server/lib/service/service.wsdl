@@ -97,6 +97,9 @@
         <part name="mediaId" type="xsd:string" />
         <part name="version" type="xsd:string" />
     </message>
+    <message name="GetResourceResponse">
+        <part name="resource" type="xsd:string" />
+    </message>
     <portType name="xmdsPortType">
         <operation name="RegisterDisplay">
             <documentation>Registered the Display on the Xibo Network</documentation>

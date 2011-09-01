@@ -51,8 +51,6 @@ class Module implements ModuleInterface
         protected $originalUserId;
         protected $assignedMedia;
 
-        public $xmdsRequest;
-
     /**
      * Constructor - sets up this media object with all the available information
      * @return
@@ -82,10 +80,6 @@ class Module implements ModuleInterface
         $this->deleteFromRegion = false;
         $this->showRegionOptions = Kit::GetParam('showRegionOptions', _REQUEST, _INT, 1);
         $this->duration = '';
-        $this->xmdsRequest = false;
-
-        if ($user == null)
-            $this->xmdsRequest = true;
 
         // Determine which type this module is
         $this->SetModuleInformation();
@@ -192,8 +186,7 @@ class Module implements ModuleInterface
             $this->originalUserId = $mediaNode->getAttribute('userId');
 
             // Make sure we have permissions
-            if (!$this->xmdsRequest)
-                $this->auth = $this->user->MediaAssignmentAuth($this->originalUserId, $this->layoutid, $this->regionid, $this->mediaid, true);
+            $this->auth = $this->user->MediaAssignmentAuth($this->originalUserId, $this->layoutid, $this->regionid, $this->mediaid, true);
 
             $mediaNode = $xmlDoc->importNode($mediaNode, true);
             $xmlDoc->documentElement->appendChild($mediaNode);
