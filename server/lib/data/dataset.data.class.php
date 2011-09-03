@@ -145,7 +145,17 @@ class DataSet extends Data
         return true;
     }
 
-    public function DataSetResults($dataSetId, $columnIds, $filter = "", $lowerLimit = 0, $upperLimit = 0)
+    /**
+     * Data Set Results
+     * @param <type> $dataSetId
+     * @param <type> $columnIds
+     * @param <type> $filter
+     * @param <type> $ordering
+     * @param <type> $lowerLimit
+     * @param <type> $upperLimit
+     * @return <type>
+     */
+    public function DataSetResults($dataSetId, $columnIds, $filter = '', $ordering = '', $lowerLimit = 0, $upperLimit = 0)
     {
         $db =& $this->db;
 
@@ -184,7 +194,7 @@ class DataSet extends Data
         $SQL .= " ) datasetdata ";
         if ($filter != '')
         {
-            $where = ' WHERE 1=1 ';
+            $where = ' WHERE 1 = 1 ';
 
             $filter = explode(',', $filter);
 
@@ -196,7 +206,32 @@ class DataSet extends Data
 
             $SQL .= $where . ' ';
         }
-        $SQL .= "ORDER BY RowNumber ";
+
+        if ($ordering != '')
+        {
+            $order = ' ORDER BY ';
+
+            $ordering = explode(',', $ordering);
+
+            foreach ($ordering as $orderPair)
+            {
+                if (strripos($orderPair, ' DESC'))
+                {
+                    $orderPair = str_replace(' DESC', '', $orderPair);
+                    $order .= sprintf(" `%s` DESC,", $db->escape_string($orderPair));
+                }
+                else
+                {
+                    $order .= sprintf(" `%s`,", $db->escape_string($orderPair));
+                }
+            }
+
+            $SQL .= trim($order, ',');
+        }
+        else
+        {
+            $SQL .= "ORDER BY RowNumber ";
+        }
 
         if ($lowerLimit != 0)
         {

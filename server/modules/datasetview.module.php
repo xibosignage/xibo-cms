@@ -133,6 +133,7 @@ FORM;
         $msgLowerLimit = __('Lower Row Limit');
         $msgDuration = __('Duration');
         $msgFilter = __('Filter');
+        $msgOrdering = __('Order');
         $msgShowHeadings = __('Show the table headings?');
         $msgStyleSheet = __('Stylesheet for the Table');
         $msgUpdateInterval = __('Update Interval (mins)');
@@ -142,6 +143,7 @@ FORM;
         $upperLimit = $this->GetOption('upperLimit');
         $lowerLimit = $this->GetOption('lowerLimit');
         $filter = $this->GetOption('filter');
+        $ordering = $this->GetOption('ordering');
         $showHeadings = $this->GetOption('showHeadings');
         $showHeadingsChecked = ($showHeadings == 1) ? ' checked' : '';
         $columns = $this->GetOption('columns');
@@ -200,8 +202,8 @@ FORM;
                 <tr>
                     <td><label for="duration">$msgDuration<span class="required">*</span></label></td>
                     <td><input id="duration" name="duration" type="text" value="$this->duration" $durationFieldEnabled></td>
-                    <td><label for="filter">$msgFilter</label></td>
-                    <td><input id="filter" name="filter" type="text" value="$filter"></td>
+                    <td><label for="updateInterval">$msgUpdateInterval<span class="required">*</span></label></td>
+                    <td><input id="updateInterval" name="updateInterval" type="text" value="$updateInterval"></td>
                 </tr>
                 <tr>
                     <td><label for="lowerLimit">$msgLowerLimit</label></td>
@@ -210,9 +212,13 @@ FORM;
                     <td><input class="numeric required" id="upperLimit" name="upperLimit" type="text" value="$upperLimit"></td>
                 </tr>
                 <tr>
+                    <td><label for="ordering">$msgOrdering</label></td>
+                    <td><input id="ordering" name="ordering" type="text" value="$ordering"></td>
+                    <td><label for="filter">$msgFilter</label></td>
+                    <td><input id="filter" name="filter" type="text" value="$filter"></td>
+                </tr>
+                <tr>
                     <td colspan="2"><input id="showHeadings" name="showHeadings" type="checkbox" $showHeadingsChecked><label for="showHeadings">$msgShowHeadings</label></td>
-                    <td><label for="updateInterval">$msgUpdateInterval<span class="required">*</span></label></td>
-                    <td><input id="updateInterval" name="updateInterval" type="text" value="$updateInterval"></td>
                 </tr>
                 <tr>
                     <td colspan="4">$columnsList<td>
@@ -340,6 +346,7 @@ FORM;
         $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
         $lowerLimit = Kit::GetParam('lowerLimit', _POST, _INT);
         $filter = Kit::GetParam('filter', _POST, _STRING);
+        $ordering = Kit::GetParam('ordering', _POST, _STRING);
         $showHeadings = Kit::GetParam('showHeadings', _POST, _CHECKBOX);
         $styleSheet = Kit::GetParam('styleSheet', _POST, _STRING);
         $updateInterval = Kit::GetParam('updateInterval', _POST, _STRING);
@@ -352,6 +359,7 @@ FORM;
         $this->SetOption('upperLimit', $upperLimit);
         $this->SetOption('lowerLimit', $lowerLimit);
         $this->SetOption('filter', $filter);
+        $this->SetOption('ordering', $ordering);
         $this->SetOption('showHeadings', $showHeadings);
         $this->SetOption('styleSheet', $styleSheet);
         $this->SetOption('duration', $this->duration);
@@ -449,6 +457,7 @@ END;
         $upperLimit = $this->GetOption('upperLimit');
         $lowerLimit = $this->GetOption('lowerLimit');
         $filter = $this->GetOption('filter');
+        $ordering = $this->GetOption('ordering');
         $columnIds = $this->GetOption('columns');
         $showHeadings = $this->GetOption('showHeadings');
 
@@ -458,7 +467,7 @@ END;
         // Create a data set view object, to get the results.
         Kit::ClassLoader('dataset');
         $dataSet = new DataSet($db);
-        $dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $lowerLimit, $upperLimit);
+        $dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $ordering, $lowerLimit, $upperLimit);
 
         $table  = '<table class="DataSetTable">';
 
