@@ -1380,6 +1380,12 @@ HTML;
 			$durationPerPixel = 2;
 			$availableWidth = $durationPerPixel * $maxMediaDuration;
 		}
+
+                if ($durationPerPixel > 70)
+                {
+                    $durationPerPixel = 70;
+                    $availableWidth = $durationPerPixel * $maxMediaDuration;
+                }
 		
 		$availableWidthPx = $availableWidth . "px";
 		
