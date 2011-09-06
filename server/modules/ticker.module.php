@@ -361,7 +361,7 @@ FORM;
 		$durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
 
         // If we have permission to change it, then get the value from the form
-        if ($auth->modifyPermissions)
+        if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
                 
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
