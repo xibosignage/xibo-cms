@@ -625,23 +625,19 @@
 		// Populate the array of display group ids we are authed against
 		$usertype 	= $this->usertypeid;
 		
-		$SQL  = "SELECT DISTINCT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
+		$SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific ";
 		$SQL .= "  FROM displaygroup ";
-                $SQL .= "  INNER JOIN lkdisplaydg ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID ";
-                $SQL .= " INNER JOIN display ON display.DisplayID = lkdisplaydg.DisplayID ";
-		
+                
 		// If the usertype is not 1 (admin) then we need to include the link table for display groups.
 		if ($usertype != 1)
 		{
 			$SQL .= " INNER JOIN lkgroupdg ON lkgroupdg.DisplayGroupID = displaygroup.DisplayGroupID ";
 			$SQL .= " INNER JOIN lkusergroup ON lkgroupdg.GroupID = lkusergroup.GroupID ";
                 }
-                
-                $SQL .= " WHERE display.licensed = 1 ";
 
                 if ($usertype != 1)
                 {
-                    $SQL .= sprintf(" AND lkusergroup.UserID = %d ", $userid);
+                    $SQL .= sprintf(" WHERE lkusergroup.UserID = %d ", $userid);
                 }
 		
 		Debug::LogEntry($db, 'audit', $SQL, 'User', 'DisplayGroupAuth');
