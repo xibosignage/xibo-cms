@@ -144,5 +144,126 @@ class DataSet extends Data
         
         return true;
     }
+
+    /**
+     * Data Set Results
+     * @param <type> $dataSetId
+     * @param <type> $columnIds
+     * @param <type> $filter
+     * @param <type> $ordering
+     * @param <type> $lowerLimit
+     * @param <type> $upperLimit
+     * @return <type>
+     */
+    public function DataSetResults($dataSetId, $columnIds, $filter = '', $ordering = '', $lowerLimit = 0, $upperLimit = 0)
+    {
+        $db =& $this->db;
+
+        $selectSQL = '';
+        $outserSelect = '';
+        $results = array();
+        $headings = array();
+        
+        $columns = explode(',', $columnIds);
+
+        // Get all columns for the cross tab
+        $allColumns = $db->GetArray(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d' , $dataSetId));
+
+        foreach($allColumns as $col)
+        {
+            $heading = $col;
+            
+            if (in_array($col['DataSetColumnID'], $columns))
+                $headings[] = $heading;
+
+            $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $col['DataSetColumnID'], $heading['Heading']);
+        }
+
+        // For each heading, put it in the correct order (according to $columns)
+        foreach($columns as $visibleColumn)
+        {
+            // Check to see if this column is in the headings
+            foreach($headings as $heading)
+            {
+                if ($heading['DataSetColumnID'] == $visibleColumn)
+                {
+                    $outserSelect .= sprintf(' `%s`,', $heading['Heading']);
+                    $results['Columns'][] = $heading['Heading'];
+                }
+            }
+        }
+
+        $outserSelect = rtrim($outserSelect, ',');
+
+        // We are ready to build the select and from part of the SQL
+        $SQL  = "SELECT $outserSelect ";
+        $SQL .= "  FROM ( ";
+        $SQL .= "   SELECT $selectSQL ";
+        $SQL .= "       RowNumber ";
+        $SQL .= "     FROM (";
+        $SQL .= "       SELECT datasetcolumn.DataSetColumnID, datasetdata.RowNumber, datasetdata.`Value` ";
+        $SQL .= "         FROM datasetdata ";
+        $SQL .= "           INNER JOIN datasetcolumn ";
+        $SQL .= "           ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID ";
+        $SQL .= sprintf("       WHERE datasetcolumn.DataSetID = %d ", $dataSetId);
+        $SQL .= "       ) datasetdatainner ";
+        $SQL .= "   GROUP BY RowNumber ";
+        $SQL .= " ) datasetdata ";
+        if ($filter != '')
+        {
+            $where = ' WHERE 1 = 1 ';
+
+            $filter = explode(',', $filter);
+
+            foreach ($filter as $filterPair)
+            {
+                $filterPair = explode('=', $filterPair);
+                $where .= sprintf(" AND %s = '%s' ", $filterPair[0], $db->escape_string($filterPair[1]));
+            }
+
+            $SQL .= $where . ' ';
+        }
+
+        if ($ordering != '')
+        {
+            $order = ' ORDER BY ';
+
+            $ordering = explode(',', $ordering);
+
+            foreach ($ordering as $orderPair)
+            {
+                if (strripos($orderPair, ' DESC'))
+                {
+                    $orderPair = str_replace(' DESC', '', $orderPair);
+                    $order .= sprintf(" `%s` DESC,", $db->escape_string($orderPair));
+                }
+                else
+                {
+                    $order .= sprintf(" `%s`,", $db->escape_string($orderPair));
+                }
+            }
+
+            $SQL .= trim($order, ',');
+        }
+        else
+        {
+            $SQL .= "ORDER BY RowNumber ";
+        }
+
+        if ($lowerLimit != 0)
+        {
+            $upperLimit = $upperLimit - $lowerLimit + 1;
+            $SQL .= sprintf('LIMIT %d, %d ', $lowerLimit, $upperLimit);
+        }
+
+        Debug::LogEntry($db, 'audit', $SQL);
+
+        if (!$rows = $db->GetArray($SQL, false))
+            trigger_error($db->error());
+            
+        $results['Rows'] = $rows;
+
+        return $results;
+    }
 }
 ?>

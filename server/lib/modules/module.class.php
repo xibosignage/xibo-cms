@@ -352,7 +352,7 @@ XML;
 		{
 			// Replace the old node we found with XPath with the new node we just created
 			Debug::LogEntry($db, 'audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue);
-			return $userOptions->item(0)->nodeValue;
+			return ($userOptions->item(0)->nodeValue != '') ? $userOptions->item(0)->nodeValue : $default;
 		}
 	}
 
@@ -508,8 +508,11 @@ END;
                 // Always have the abilty to unassign from the region
                 $options .= 'unassign|' . __('Unassign from this region only');
 
-                // Is this user allowed to edit this media?
-                if ($this->auth->edit)
+                // Get the permissions for the media item
+                $mediaAuth = $this->user->MediaAuth($mediaid, true);
+
+                // Is this user allowed to delete this media?
+                if ($mediaAuth->del)
                 {
                     // Load what we know about this media into the object
                     $SQL = "SELECT IFNULL(editedMediaID, 0) AS editedMediaID FROM media WHERE mediaID = $mediaid ";
@@ -1674,6 +1677,11 @@ FORM;
         }
 
         return true;
+    }
+
+    public function GetResource()
+    {
+        return false;
     }
 }
 ?>

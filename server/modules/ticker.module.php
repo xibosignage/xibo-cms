@@ -342,7 +342,7 @@ FORM;
 		$regionid 	= $this->regionid;
 		$mediaid	= $this->mediaid;
 
-        if (!$this->edit)
+        if (!$this->auth->edit)
         {
             $this->response->SetError('You do not have permission to edit this assignment.');
             $this->response->keepOpen = false;
@@ -361,7 +361,7 @@ FORM;
 		$durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
 
         // If we have permission to change it, then get the value from the form
-        if ($auth->modifyPermissions)
+        if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
                 
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";

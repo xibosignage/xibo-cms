@@ -585,5 +585,28 @@ class region
 
         return $regionNode->getAttribute('name');
     }
+
+    /**
+     * Get media node type
+     * @param <int> $layoutId
+     * @param <string> $regionId
+     * @param <string> $mediaId
+     * @return <string>
+     */
+    public function GetMediaNodeType($layoutId, $regionId, $mediaId)
+    {
+        $db =& $this->db;
+
+        //Load the XML for this layout
+        $xml = new DOMDocument("1.0");
+        $xml->loadXML($this->GetLayoutXml($layoutId));
+
+        //Find the region
+        $xpath = new DOMXPath($xml);
+        $mediaNodeList = $xpath->query('//region[@id="' . $regionId . '"]/media[@id="' . $mediaId . '"]');
+        $mediaNode = $mediaNodeList->item(0);
+
+        return $mediaNode->getAttribute('type');
+    }
 }
 ?>

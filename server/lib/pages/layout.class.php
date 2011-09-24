@@ -1360,7 +1360,7 @@ HTML;
 		}
 		
 		//Work out how much room the grid can take up
-		$availableWidth = 860;
+		$availableWidth = 960;
 		$left 			= 10;
 		
 		$availableWidth = $availableWidth - $left;
@@ -1380,6 +1380,12 @@ HTML;
 			$durationPerPixel = 2;
 			$availableWidth = $durationPerPixel * $maxMediaDuration;
 		}
+
+                if ($durationPerPixel > 70)
+                {
+                    $durationPerPixel = 70;
+                    $availableWidth = $durationPerPixel * $maxMediaDuration;
+                }
 		
 		$availableWidthPx = $availableWidth . "px";
 		
@@ -1505,10 +1511,6 @@ LINK;
                             </a>
 LINK;
 
-                        // If we do not have permission to edit, remove the link
-                        if (!$auth->edit)
-                            $editLink = '';
-
                         if ($auth->modifyPermissions)
                             $editLink .= ' | <a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '&mediaid=' . $mediaid . '&lkid=' . $lkid . '" title="Click to change permissions for this media">' . $msgPermissions . '</a>';
 
@@ -1565,7 +1567,7 @@ BUTTON;
 		while ($modulesItem = $enabledModules->GetNextModule())
 		{
 			$mod 		= Kit::ValidateParam($modulesItem['Module'], _STRING);
-			$caption 	= '+ ' . $mod;
+			$caption 	= '+ ' . Kit::ValidateParam($modulesItem['Name'], _STRING);
 			$mod		= strtolower($mod);
 			$title 		= Kit::ValidateParam($modulesItem['Description'], _STRING);
 			$img 		= Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
@@ -1595,7 +1597,7 @@ HTML;
 				$buttons
 			</div>
 			<div id="timeline" style="clear:left; float:none;">
-				<div id="timeline_ctl" style="$timelineCtlMargin width:860px; position:relative; overflow-y:hidden; overflow-x:scroll;" layoutid="$this->layoutid" regionid="$regionid">
+				<div id="timeline_ctl" style="$timelineCtlMargin width:960px; position:relative; overflow-y:hidden; overflow-x:scroll;" layoutid="$this->layoutid" regionid="$regionid">
 					<div style="width:$tableWidthPx; height:200px;">
 						$mediaHtml
 					</div>
@@ -1607,9 +1609,9 @@ END;
 		
 		$arh->html 		= $options;
 		$arh->callBack 		= 'region_options_callback';
-		$arh->dialogTitle 	= __('Region Options');
+		$arh->dialogTitle 	= __('Region Timeline');
 		$arh->dialogSize 	= true;
-		$arh->dialogWidth 	= '900px';
+		$arh->dialogWidth 	= '1000px';
 		$arh->dialogHeight 	= '450px';
                 $arh->AddButton(__('Close'), 'XiboDialogClose()');
                 $arh->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'RegionOptions') . '")');
@@ -1683,6 +1685,13 @@ END;
 				$response->keepOpen = true;
 				return $response;
 			}
+
+                    // Need to copy over the permissions from this media item & also the delete permission
+                    $mediaAuth = $this->user->MediaAuth($mediaid, true);
+
+                    Kit::ClassLoader('layoutmediagroupsecurity');
+                    $security = new LayoutMediaGroupSecurity($db);
+                    $security->Link($this->layoutid, $regionid, $mediaid, $this->user->getGroupFromID($this->user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
 		}
 		
 		// We want to load a new form

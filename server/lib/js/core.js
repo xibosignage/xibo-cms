@@ -300,8 +300,6 @@ function XiboFormRender(formUrl) {
                 }
 
                 if (response.appendHiddenSubmit) {
-                    var hiddenField = '<input type="submit" style="display:none" />';
-
                     if ($("input[type=submit]", "#div_dialog").length == 0) {
                         $("form", "#div_dialog").append('<input type="submit" style="display:none" />');
                     }
@@ -314,6 +312,7 @@ function XiboFormRender(formUrl) {
                 // Login Form needed?
                 if (response.login) {
                     LoginBox(response.message);
+
                     return false;
                 }
                 else {
@@ -356,6 +355,7 @@ function XiboPing(url) {
                     $('#div_dialog').dialog('destroy');
 
                     LoginBox(response.message);
+                    
                     return false;
                 }
 
@@ -711,6 +711,10 @@ function LoginBox(message) {
 
     // Focus in the first form element
     $('input[type=text]', '#div_dialog').eq(0).focus();
+
+    if ($("input[type=submit]", "#div_dialog").length == 0) {
+        $("form", "#div_dialog").append('<input type="submit" style="display:none" />');
+    }
 
     return;
 }
