@@ -15,6 +15,6 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
 UPDATE  `module` SET  `ImageUri` =  'img/forms/microblog.gif' WHERE  `module`.`ModuleID` =9 LIMIT 1 ;
 UPDATE  `module` SET  `ImageUri` =  'img/forms/counter.gif' WHERE  `module`.`ModuleID` =10 LIMIT 1 ;
 
-UPDATE `version` SET `app_ver` = '1.3.1', `XmdsVersion` = 2;
+UPDATE `version` SET `app_ver` = '1.3.1', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '42';

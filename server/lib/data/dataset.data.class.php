@@ -160,26 +160,43 @@ class DataSet extends Data
         $db =& $this->db;
 
         $selectSQL = '';
+        $outserSelect = '';
         $results = array();
         $headings = array();
         
         $columns = explode(',', $columnIds);
 
+        // Get all columns for the cross tab
         $allColumns = $db->GetArray(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d' , $dataSetId));
 
         foreach($allColumns as $col)
         {
-            $heading = $col['Heading'];
+            $heading = $col;
             
             if (in_array($col['DataSetColumnID'], $columns))
                 $headings[] = $heading;
 
-            $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $col['DataSetColumnID'], $heading);
+            $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $col['DataSetColumnID'], $heading['Heading']);
         }
 
-        $results['Columns'] = $headings;
+        // For each heading, put it in the correct order (according to $columns)
+        foreach($columns as $visibleColumn)
+        {
+            // Check to see if this column is in the headings
+            foreach($headings as $heading)
+            {
+                if ($heading['DataSetColumnID'] == $visibleColumn)
+                {
+                    $outserSelect .= sprintf(' `%s`,', $heading['Heading']);
+                    $results['Columns'][] = $heading['Heading'];
+                }
+            }
+        }
 
-        $SQL  = "SELECT * ";
+        $outserSelect = rtrim($outserSelect, ',');
+
+        // We are ready to build the select and from part of the SQL
+        $SQL  = "SELECT $outserSelect ";
         $SQL .= "  FROM ( ";
         $SQL .= "   SELECT $selectSQL ";
         $SQL .= "       RowNumber ";
