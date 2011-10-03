@@ -146,5 +146,45 @@ class LayoutRegionGroupSecurity extends Data
 
         return true;
     }
+
+    /**
+     * Copys all region security for a layout
+     * @param <type> $layoutId
+     * @param <type> $newLayoutId
+     * @return <type>
+     */
+    public function CopyAll($layoutId, $newLayoutId)
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'LayoutRegionGroupSecurity', 'Copy');
+
+        $SQL  = "";
+        $SQL .= "INSERT ";
+        $SQL .= "INTO   lklayoutregiongroup ";
+        $SQL .= "       ( ";
+        $SQL .= "              LayoutID, ";
+        $SQL .= "              RegionID, ";
+        $SQL .= "              GroupID, ";
+        $SQL .= "              View, ";
+        $SQL .= "              Edit, ";
+        $SQL .= "              Del ";
+        $SQL .= "       ) ";
+        $SQL .= " SELECT '%s', RegionID, GroupID, View, Edit, Del ";
+        $SQL .= "   FROM lklayoutregiongroup ";
+        $SQL .= "  WHERE LayoutID = %d ";
+
+        $SQL = sprintf($SQL, $newLayoutId, $layoutId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25028, __('Could not Copy All Layout Region Security'));
+
+            return false;
+        }
+
+        return true;
+    }
 }
 ?>

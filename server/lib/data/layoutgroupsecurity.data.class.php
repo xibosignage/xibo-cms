@@ -145,5 +145,44 @@ class LayoutGroupSecurity extends Data
 
         return true;
     }
+
+    /**
+     * Copys all security for a layout
+     * @param <type> $layoutId
+     * @param <type> $newLayoutId
+     * @return <type>
+     */
+    public function CopyAll($layoutId, $newLayoutId)
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'LayoutGroupSecurity', 'Copy');
+
+        $SQL  = "";
+        $SQL .= "INSERT ";
+        $SQL .= "INTO   lklayoutgroup ";
+        $SQL .= "       ( ";
+        $SQL .= "              LayoutID, ";
+        $SQL .= "              GroupID, ";
+        $SQL .= "              View, ";
+        $SQL .= "              Edit, ";
+        $SQL .= "              Del ";
+        $SQL .= "       ) ";
+        $SQL .= " SELECT '%s', GroupID, View, Edit, Del ";
+        $SQL .= "   FROM lklayoutgroup ";
+        $SQL .= "  WHERE LayoutID = %d ";
+
+        $SQL = sprintf($SQL, $newLayoutId, $layoutId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25028, __('Could not Copy All Layout Security'));
+
+            return false;
+        }
+
+        return true;
+    }
 }
 ?>

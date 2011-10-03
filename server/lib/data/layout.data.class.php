@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2011 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -420,6 +420,20 @@ END;
 
         // Set the XML
         $this->SetLayoutXml($newLayoutId, $this->DomXml->saveXML());
+
+        // Copy links
+        Kit::ClassLoader('layoutgroupsecurity');
+        Kit::ClassLoader('layoutregiongroupsecurity');
+        Kit::ClassLoader('layoutmediagroupsecurity');
+
+        $security = new LayoutGroupSecurity($db);
+        $security->CopyAll($oldLayoutId, $newLayoutId);
+
+        $security = new LayoutRegionGroupSecurity($db);
+        $security->CopyAll($oldLayoutId, $newLayoutId);
+
+        $security = new LayoutMediaGroupSecurity($db);
+        $security->CopyAll($oldLayoutId, $newLayoutId);
         
         // Return the new layout id
         return $newLayoutId;
