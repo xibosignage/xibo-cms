@@ -151,7 +151,7 @@ class userDAO
             $password   = md5($password);
             $email      = Kit::GetParam('email', _POST, _STRING);
             $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT, 0);
-            $homepage   = Kit::GetParam('homepage', _POST, _STRING);
+            $homepage   = Kit::GetParam('homepage', _POST, _STRING, 'dashboard');
             $pass_change = isset($_POST['pass_change']);
 
             // Validation
@@ -163,14 +163,8 @@ class userDAO
             {
                 trigger_error("Please enter a Password.", E_USER_ERROR);
             }
-            if ($email == "")
-            {
-                trigger_error("Please enter an Email Address.", E_USER_ERROR);
-            }
-
-            if ($homepage == "") $homepage = "dashboard";
-
-            //Check for duplicate user name
+            
+            // Check for duplicate user name
             $sqlcheck = " ";
             $sqlcheck .= "SELECT UserName FROM user WHERE UserName = '" . $username . "' AND userID <> $userID ";
 
@@ -185,31 +179,21 @@ class userDAO
                 trigger_error(__("Could Not Complete, Duplicate User Name Exists"), E_USER_ERROR);
             }
 
-            //Everything is ok - run the update
-            $sql = "UPDATE user SET UserName = '$username'";
+            // Everything is ok - run the update
+            $sql = sprintf("UPDATE user SET UserName = '%s', HomePage = '%s', Email = '%s' ", $username, $homepage, $email);
+
             if ($pass_change)
-            {
-                $sql .= ", UserPassword = '$password'";
-            }
+                $sql .= sprintf(", UserPassword = '%s'", $password);
 
-            $sql .= ", email = '$email' ";
-            if ($homepage == 'dashboard')
-            {
-                //acts as a reset
-                $sql .= ", homepage='$homepage' ";
-            }
+            if ($usertypeid != 0)
+                $sql .= sprintf(", usertypeid = %d ", $usertypeid);
 
-            if ($usertypeid != "")
-            {
-                $sql .= ", usertypeid =  " . $usertypeid;
-            }
-
-            $sql .= " WHERE UserID = ". $userID . "";
+            $sql .= sprintf(" WHERE UserID = %d ", $userID);
 
             if (!$db->query($sql))
             {
                 trigger_error($db->error());
-                trigger_error("Error updating that user", E_USER_ERROR);
+                trigger_error(__('Error updating user'), E_USER_ERROR);
             }
 
             // Update the group to follow suit
