@@ -1005,7 +1005,7 @@ END;
     /**
      * Returns an array of layouts that this user has access to
      */
-    public function LayoutList()
+    public function LayoutList($filterLayout = '')
     {
         $SQL  = "";
         $SQL .= "SELECT layoutID, ";
@@ -1014,6 +1014,10 @@ END;
         $SQL .= "        tags, ";
         $SQL .= "        userID, xml ";
         $SQL .= "   FROM layout ";
+        $SQL .= " WHERE 1 = 1 ";
+
+        if ($filterLayout != '')
+            $SQL .= "   AND layout LIKE '%" . $filterLayout . "%'";
 
         //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
