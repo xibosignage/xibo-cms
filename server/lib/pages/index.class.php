@@ -226,19 +226,28 @@ class indexDAO
 	    return substr($password, 0, $length);
 	}  
 	
-	function displayPage() 
-	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-		
-		include("lib/pages/dashboard.class.php");
-		
-		$schedule = new dashboardDAO($db, $user);
-		
-		$schedule->displayPage();
-		
-		exit;
-	}
+    function displayPage()
+    {
+        $db 	=& $this->db;
+        $user 	=& $this->user;
+
+        $homepage = $this->user->homePage;
+
+        if ($homepage == 'mediamanager')
+        {
+            include('lib/pages/mediamanager.class.php');
+            $userHomepage = new mediamanagerDAO($db, $user);
+        }
+        else
+        {
+            include("lib/pages/dashboard.class.php");
+            $userHomepage = new dashboardDAO($db, $user);
+        }
+
+        $userHomepage->displayPage();
+
+        exit;
+    }
 	
 	/**
 	 * Ping Pong
