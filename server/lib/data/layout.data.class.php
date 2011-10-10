@@ -347,12 +347,27 @@ END;
      * @param <int> $oldLayoutId
      * @param <string> $newLayoutName
      * @param <int> $userId
+     * @param <bool> $copyMedia Make copies of this layouts media
      * @return <int> 
      */
-    public function Copy($oldLayoutId, $newLayoutName, $userId)
+    public function Copy($oldLayoutId, $newLayoutName, $userId, $copyMedia = false)
     {
         $db =& $this->db;
         $currentdate = date("Y-m-d H:i:s");
+
+        // Include to media data class?
+        if ($copyMedia)
+        {
+            Kit::ClassLoader('media');
+            Kit::ClassLoader('mediagroupsecurity');
+            $mediaObject = new Media($db);
+            $mediaSecurity = new MediaGroupSecurity($db);
+        }
+
+        // Permissions model
+        Kit::ClassLoader('layoutgroupsecurity');
+        Kit::ClassLoader('layoutregiongroupsecurity');
+        Kit::ClassLoader('layoutmediagroupsecurity');
 
         // The Layout ID is the old layout
         $SQL  = "";
@@ -405,6 +420,23 @@ END;
             $regionNode = $mediaNode->parentNode;
             $regionId = $regionNode->getAttribute('id');
 
+            // Do we need to copy this media record?
+            if ($copyMedia)
+            {
+                // Store the old media id
+                $oldMediaId = $mediaId;
+
+                // Take this media item and make a hard copy of it.
+                if (!$mediaId = $mediaObject->Copy($mediaId))
+                {
+                    $this->Delete($newLayoutId);
+                    return false;
+                }
+
+                // Update the permissions for the new media record
+                $mediaSecurity->Copy($oldMediaId, $mediaId);
+            }
+
             // Add the database link for this media record
             if (!$lkId = $this->AddLk($newLayoutId, $regionId, $mediaId))
             {
@@ -412,8 +444,13 @@ END;
                 return false;
             }
 
+            // Update the permissions for this media on this layout
+            $security = new LayoutMediaGroupSecurity($db);
+            $security->CopyAll($oldLayoutId, $newLayoutId, $mediaId);
+
             // Set this LKID on the media node
             $mediaNode->setAttribute('lkid', $lkId);
+            $mediaNode->setAttribute('id', $mediaId);
         }
 
         Debug::LogEntry($this->db, 'audit', 'Finished looping through media nodes', 'layout', 'Copy');
@@ -421,18 +458,11 @@ END;
         // Set the XML
         $this->SetLayoutXml($newLayoutId, $this->DomXml->saveXML());
 
-        // Copy links
-        Kit::ClassLoader('layoutgroupsecurity');
-        Kit::ClassLoader('layoutregiongroupsecurity');
-        Kit::ClassLoader('layoutmediagroupsecurity');
-
+        // Layout permissions
         $security = new LayoutGroupSecurity($db);
         $security->CopyAll($oldLayoutId, $newLayoutId);
 
         $security = new LayoutRegionGroupSecurity($db);
-        $security->CopyAll($oldLayoutId, $newLayoutId);
-
-        $security = new LayoutMediaGroupSecurity($db);
         $security->CopyAll($oldLayoutId, $newLayoutId);
         
         // Return the new layout id

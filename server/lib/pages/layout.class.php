@@ -1823,6 +1823,7 @@ END;
 
         $msgName        = __('New Name');
         $msgName2       = __('The name for the new layout');
+        $msgCopyMedia = __('Make new copies of all media on this layout?');
 
         $form = <<<END
         <form id="LayoutCopyForm" class="XiboForm" method="post" action="index.php?p=layout&q=Copy">
@@ -1831,6 +1832,12 @@ END;
                 <tr>
                     <td><label for="layout" accesskey="n" title="$msgName2">$msgName<span class="required">*</span></label></td>
                     <td><input name="layout" class="required" type="text" id="layout" value="$oldLayout 2" tabindex="1" /></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input type="checkbox" id="copyMediaFiles" name="copyMediaFiles" />
+                        <label for="copyMediaFiles" accesskey="c" title="$msgCopyMedia">$msgCopyMedia</label>
+                    </td>
                 </tr>
             </table>
         </form>
@@ -1854,12 +1861,13 @@ END;
 
         $layoutid       = Kit::GetParam('layoutid', _POST, _INT);
         $layout         = Kit::GetParam('layout', _POST, _STRING);
+        $copyMedia = Kit::GetParam('copyMediaFiles', _POST, _CHECKBOX);
 
         Kit::ClassLoader('Layout');
 
         $layoutObject = new Layout($db);
 
-        if (!$layoutObject->Copy($layoutid, $layout, $user->userid))
+        if (!$layoutObject->Copy($layoutid, $layout, $user->userid, (bool)$copyMedia))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Layout Copied'));

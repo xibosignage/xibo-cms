@@ -197,7 +197,7 @@ class LayoutMediaGroupSecurity extends Data
      * @param <type> $newLayoutId
      * @return <type>
      */
-    public function CopyAll($layoutId, $newLayoutId)
+    public function CopyAll($layoutId, $newLayoutId, $mediaId = 0)
     {
         $db =& $this->db;
 
@@ -215,11 +215,11 @@ class LayoutMediaGroupSecurity extends Data
         $SQL .= "              Edit, ";
         $SQL .= "              Del ";
         $SQL .= "       ) ";
-        $SQL .= " SELECT '%s', RegionID, MediaID, GroupID, View, Edit, Del ";
+        $SQL .= " SELECT '%s', RegionID, %s, GroupID, View, Edit, Del ";
         $SQL .= "   FROM lklayoutmediagroup ";
         $SQL .= "  WHERE LayoutID = %d ";
 
-        $SQL = sprintf($SQL, $newLayoutId, $layoutId);
+        $SQL = sprintf($SQL, $newLayoutId, $layoutId, ($mediaId == '' ? 'MediaID' : $mediaId));
 
         if (!$db->query($SQL))
         {
