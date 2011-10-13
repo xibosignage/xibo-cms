@@ -219,7 +219,9 @@ class LayoutMediaGroupSecurity extends Data
         $SQL .= "   FROM lklayoutmediagroup ";
         $SQL .= "  WHERE LayoutID = %d ";
 
-        $SQL = sprintf($SQL, $newLayoutId, $layoutId, ($mediaId == '' ? 'MediaID' : $mediaId));
+        $SQL = sprintf($SQL, $newLayoutId, ($mediaId == 0 ? 'MediaID' : $mediaId), $layoutId);
+
+        Debug::LogEntry($db, 'audit', $SQL);
 
         if (!$db->query($SQL))
         {

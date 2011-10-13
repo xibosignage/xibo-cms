@@ -427,7 +427,7 @@ END;
                 $oldMediaId = $mediaId;
 
                 // Take this media item and make a hard copy of it.
-                if (!$mediaId = $mediaObject->Copy($mediaId))
+                if (!$mediaId = $mediaObject->Copy($mediaId, $newLayoutName))
                 {
                     $this->Delete($newLayoutId);
                     return false;

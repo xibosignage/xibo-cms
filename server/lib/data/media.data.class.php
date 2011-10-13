@@ -342,7 +342,7 @@ class Media extends Data
      * Make a copy of this media record
      * @param <type> $oldMediaId
      */
-    public function Copy($oldMediaId)
+    public function Copy($oldMediaId, $prefix = '')
     {
         $db =& $this->db;
 
@@ -355,13 +355,18 @@ class Media extends Data
 
         $extension = strtolower(substr(strrchr($fileName, '.'), 1));
 
+        $newMediaName = "CONCAT(name, ' ', 2)";
+
+        if ($prefix != '')
+            $newMediaName = "CONCAT('$prefix', ' ', name)";
+
         // All OK to insert this record
         $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired ) ";
-        $SQL .= " SELECT CONCAT(name, ' ', 2), type, duration, originalFilename, userID, retired ";
+        $SQL .= " SELECT %s, type, duration, originalFilename, userID, retired ";
         $SQL .= "  FROM media ";
         $SQL .= " WHERE MediaID = %d ";
 
-        $SQL = sprintf($SQL, $oldMediaId);
+        $SQL = sprintf($SQL, $newMediaName, $oldMediaId);
 
         if (!$newMediaId = $db->insert_query($SQL))
         {
