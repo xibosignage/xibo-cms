@@ -74,4 +74,5 @@ echo __('mail_to');
 echo __('SHOW_DISPLAY_AS_VNCLINK');
 echo __('SHOW_DISPLAY_AS_VNC_TGT');
 echo __('REGION_OPTIONS_COLOURING');
+echo __('LAYOUT_COPY_MEDIA_CHECKB');
 ?>

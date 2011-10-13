@@ -1825,6 +1825,8 @@ END;
         $msgName2       = __('The name for the new layout');
         $msgCopyMedia = __('Make new copies of all media on this layout?');
 
+        $copyMediaChecked = (Config::GetSetting($db, 'LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 'checked' : '';
+
         $form = <<<END
         <form id="LayoutCopyForm" class="XiboForm" method="post" action="index.php?p=layout&q=Copy">
             <input type="hidden" name="layoutid" value="$layoutid">
@@ -1835,7 +1837,7 @@ END;
                 </tr>
                 <tr>
                     <td colspan="2">
-                        <input type="checkbox" id="copyMediaFiles" name="copyMediaFiles" />
+                        <input type="checkbox" id="copyMediaFiles" name="copyMediaFiles" $copyMediaChecked />
                         <label for="copyMediaFiles" accesskey="c" title="$msgCopyMedia">$msgCopyMedia</label>
                     </td>
                 </tr>
