@@ -197,7 +197,7 @@ class LayoutMediaGroupSecurity extends Data
      * @param <type> $newLayoutId
      * @return <type>
      */
-    public function CopyAll($layoutId, $newLayoutId, $mediaId = 0)
+    public function CopyAll($layoutId, $newLayoutId)
     {
         $db =& $this->db;
 
@@ -215,11 +215,56 @@ class LayoutMediaGroupSecurity extends Data
         $SQL .= "              Edit, ";
         $SQL .= "              Del ";
         $SQL .= "       ) ";
-        $SQL .= " SELECT '%s', RegionID, %s, GroupID, View, Edit, Del ";
+        $SQL .= " SELECT '%s', RegionID, MediaID, GroupID, View, Edit, Del ";
         $SQL .= "   FROM lklayoutmediagroup ";
         $SQL .= "  WHERE LayoutID = %d ";
 
-        $SQL = sprintf($SQL, $newLayoutId, ($mediaId == 0 ? 'MediaID' : $mediaId), $layoutId);
+        $SQL = sprintf($SQL, $newLayoutId, $layoutId);
+
+        Debug::LogEntry($db, 'audit', $SQL);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25028, __('Could not Copy All Layout Media Security'));
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Copys all security for specific media on a layout
+     * @param <type> $layoutId
+     * @param <type> $newLayoutId
+     * @param <type> $oldMediaId
+     * @param <type> $newMediaId
+     * @return <type>
+     */
+    public function CopyAllForMedia($layoutId, $newLayoutId, $oldMediaId, $newMediaId)
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'LayoutMediaGroupSecurity', 'Copy');
+
+        $SQL  = "";
+        $SQL .= "INSERT ";
+        $SQL .= "INTO   lklayoutmediagroup ";
+        $SQL .= "       ( ";
+        $SQL .= "              LayoutID, ";
+        $SQL .= "              RegionID, ";
+        $SQL .= "              MediaID, ";
+        $SQL .= "              GroupID, ";
+        $SQL .= "              View, ";
+        $SQL .= "              Edit, ";
+        $SQL .= "              Del ";
+        $SQL .= "       ) ";
+        $SQL .= " SELECT '%s', RegionID, '%s', GroupID, View, Edit, Del ";
+        $SQL .= "   FROM lklayoutmediagroup ";
+        $SQL .= "  WHERE LayoutID = %d AND MediaID = '%s' ";
+
+        $SQL = sprintf($SQL, $newLayoutId, $newMediaId, $layoutId, $oldMediaId);
 
         Debug::LogEntry($db, 'audit', $SQL);
 

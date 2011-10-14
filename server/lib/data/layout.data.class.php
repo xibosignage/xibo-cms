@@ -414,7 +414,12 @@ END;
 
             // If this is a non region specific type, then move on
             if ($this->IsRegionSpecific($type))
+            {
+                // Copy media security
+                $security = new LayoutMediaGroupSecurity($db);
+                $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $mediaId, $mediaId);
                 continue;
+            }
 
             // Get the regionId
             $regionNode = $mediaNode->parentNode;
@@ -446,7 +451,7 @@ END;
 
             // Update the permissions for this media on this layout
             $security = new LayoutMediaGroupSecurity($db);
-            $security->CopyAll($oldLayoutId, $newLayoutId, $mediaId);
+            $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $oldMediaId, $mediaId);
 
             // Set this LKID on the media node
             $mediaNode->setAttribute('lkid', $lkId);
