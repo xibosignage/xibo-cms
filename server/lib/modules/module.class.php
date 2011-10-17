@@ -463,7 +463,7 @@ XML;
 	{
             $db =& $this->db;
             $helpManager = new HelpManager($db, $this->user);
-            $this->response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link($this->type, 'Delete') . '")');
+            $this->response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Media', 'Delete') . '")');
 
             //Parameters
             $layoutid = $this->layoutid;
