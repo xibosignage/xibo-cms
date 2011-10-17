@@ -579,7 +579,7 @@ END;
 
                 $msgWarn = __('Are you sure you want to delete this media?');
                 $msgSelect = __('Please select from the following options');
-                $msgCaution = __('Warning! You cannot undo this operation');
+                $msgCaution = __('Deleting media cannot be undone');
 
                 //we can delete
                 $form = <<<END
@@ -1529,7 +1529,7 @@ FORM;
         $form .= '</form>';
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Permissions') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('LayoutMedia', 'Permissions') . '")');
         $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
         $response->AddButton(__('Save'), '$("#LayoutPermissionsForm").submit()');
 

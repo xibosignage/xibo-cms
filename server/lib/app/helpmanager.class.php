@@ -103,7 +103,7 @@ END;
 		$user 		=& $this->user;		
 		
 		// if topic is empty use the page name
-		$topic	= Kit::GetParam('p', _REQUEST, _WORD, $topic);
+		$topic	= ($topic == '') ? Kit::GetParam('p', _REQUEST, _WORD) : $topic;
 		$topic	= ucfirst($topic);
 		
 		$link	= 'index.php?p=help&q=Display&Topic=' . $topic . '&Category=' . $category . '';
