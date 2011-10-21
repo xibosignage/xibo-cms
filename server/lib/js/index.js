@@ -1,6 +1,6 @@
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2011 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -36,4 +36,100 @@ function month_change(value) {
 function reset_time() {
 	document.getElementById("3").value = 0;
 	document.getElementById("4").value = 0;
+}
+
+var text_callback = function()
+{
+    // Conjure up a text editor
+    $("#ta_text").ckeditor();
+
+    // Make sure when we close the dialog we also destroy the editor
+    $("#div_dialog").bind("dialogclose.xibo", function(event, ui){
+        $("#ta_text").ckeditorGet().destroy();
+        $("#div_dialog").unbind("dialogclose.xibo");
+    })
+
+    var regionid = $("#iRegionId").val();
+    var width = $("#region_"+regionid).width();
+    var height = $("#region_"+regionid).height();
+
+    // Min width
+    if (width < 800) width = 800;
+
+    // Adjust the width and height
+    width = width + 80;
+    height = height + 295;
+
+    $('#div_dialog').height(height+"px");
+    $('#div_dialog').dialog('option', 'width', width);
+    $('#div_dialog').dialog('option', 'height', height);
+    $('#div_dialog').dialog('option', 'position', 'center');
+
+    return false; //prevent submit
+}
+
+var microblog_callback = function()
+{
+    // Conjure up a text editor
+    $("#ta_template").ckeditor();
+    $("#ta_nocontent").ckeditor();
+
+    // Make sure when we close the dialog we also destroy the editor
+    $("#div_dialog").bind("dialogclose.xibo", function(event, ui){
+        $("#ta_template").ckeditorGet().destroy();
+        $("#ta_nocontent").ckeditorGet().destroy();
+
+        $("#div_dialog").unbind("dialogclose.xibo");
+    })
+
+    var regionid = $("#iRegionId").val();
+    var width = $("#region_"+regionid).width();
+    var height = $("#region_"+regionid).height();
+
+    //Min width
+    if (width < 800) width = 800;
+    height = height - 170;
+
+    // Min height
+    if (height < 300) height = 300;
+
+    width = width + 80;
+    height = height + 480;
+
+    $('#div_dialog').height(height+"px");
+    $('#div_dialog').dialog('option', 'width', width);
+    $('#div_dialog').dialog('option', 'height', height);
+    $('#div_dialog').dialog('option', 'position', 'center');
+
+    return false; //prevent submit
+}
+
+
+var datasetview_callback = function()
+{
+    $("#columnsIn, #columnsOut").sortable({
+		connectWith: '.connectedSortable',
+		dropOnEmpty: true
+	}).disableSelection();
+
+    return false; //prevent submit
+}
+
+var DataSetViewSubmit = function() {
+    // Serialise the form and then submit it via Ajax.
+    var href = $("#ModuleForm").attr('action') + "&ajax=true";
+
+    // Get the two lists
+    serializedData = $("#columnsIn").sortable('serialize') + "&" + $("#ModuleForm").serialize();
+
+    $.ajax({
+        type: "post",
+        url: href,
+        cache: false,
+        dataType: "json",
+        data: serializedData,
+        success: XiboSubmitResponse
+    });
+
+    return;
 }
