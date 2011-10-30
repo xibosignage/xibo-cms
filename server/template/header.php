@@ -67,7 +67,7 @@ $datemanager	= new DateManager($db);
 		{
                     echo '<script type="text/javascript" src="lib/js/' . $p . '.js"></script>';
 			
-			if ($p == 'layout' || $p == 'mediamanager')
+			if ($p == 'layout' || $p == 'mediamanager' || $p == 'index')
 			{
 				?>
 					<script type="text/javascript" src="lib/js/text-render.js"></script>
