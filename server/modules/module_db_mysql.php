@@ -164,6 +164,18 @@ class database
     }
 
     /**
+     * Gets a count of rows returned by the specified SQL
+     * @param <type> $SQL
+     */
+    public function GetCountOfRows($SQL)
+    {
+        if (!$result = $this->query($SQL))
+            return 0;
+            
+        return $this->num_rows($result);
+    }
+
+    /**
      * Get an Array of Results
      * @param <type> $SQL
      * @return <type>
