@@ -285,7 +285,7 @@ class userDAO
 
             // Delete the user
             $sqldel = "DELETE FROM user";
-            $sqldel .= " WHERE UserID = %d";
+            $sqldel .= " WHERE UserID = %d"; 
 
             if (!$db->query(sprintf($sqldel, $userid)))
             {
