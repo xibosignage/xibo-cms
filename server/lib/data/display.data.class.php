@@ -269,7 +269,7 @@ class Display extends Data
 	 * @return 
 	 * @param $license Object
 	 */
-	public function Touch($license, $clientAddress = '', $mediaInventoryComplete = 0, $mediaInventoryXml = '')
+	public function Touch($license, $clientAddress = '', $mediaInventoryComplete = 0, $mediaInventoryXml = '', $macAddress = '')
 	{
 		$db		=& $this->db;
 		$time 	= time();
@@ -290,6 +290,18 @@ class Display extends Data
 
                 if ($mediaInventoryXml != '')
                     $SQL .= sprintf(" , MediaInventoryXml = '%s' ", $mediaInventoryXml);
+
+                // Mac address storage
+                if ($macAddress != '')
+                {
+                    // Address changed.
+                    $currentAddress = $db->GetSingleValue(sprintf("SELECT MacAddress FROM display WHERE license = '%s'", $license), 'MacAddress', _STRING);
+
+                    if ($macAddress != $currentAddress)
+                    {
+                        $SQL .= sprintf(" , MacAddress = '%s', LastChanged = %d, NumberOfMacAddressChanges = NumberOfMacAddressChanges + 1 ", $macAddress, time());
+                    }
+                }
 
                 // Restrict to the display license
                 $SQL .= " WHERE license = '%s'";
