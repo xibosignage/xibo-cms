@@ -157,7 +157,7 @@ SQL;
 
 		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert, $alert_timeout))
 		{
-			trigger_error(__('Cannot Edit this Display'), E_USER_ERROR);
+			trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 		}
 
 		$response->SetFormSubmitResponse(__('Display Saved.'));

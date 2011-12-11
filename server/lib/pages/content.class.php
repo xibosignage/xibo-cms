@@ -243,7 +243,7 @@ END;
             $fileSize = sprintf('%.2f', $fileSize / pow(1024, $factor)) . @$sz[$factor];
 
             //get the username from the userID using the user module
-            $username 		= $user->getNameFromID($ownerid);
+            $username = $user->getNameFromID($ownerid);
 
             $group = $this->GroupsForMedia($mediaid);
 

@@ -115,8 +115,26 @@ class Display extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Edit');
-		
+		Debug::LogEntry($db, 'audit', 'IN', 'Display', 'Edit');
+
+                // Check the number of licensed displays
+                $maxDisplays = Config::GetSetting($db, 'MAX_LICENSED_DISPLAYS');
+
+                if ($maxDisplays > 0)
+                {
+                    // See if this is a license switch
+                    $currentLicense = $db->GetSingleValue(sprintf('SELECT licensed FROM display WHERE DisplayID = %d', $displayID), 'licensed', _INT);
+
+                    if ($currentLicense != $licensed && $licensed == 1)
+                    {
+                        // License change - test number of licensed displays.
+                        $licensedDisplays = $db->GetSingleValue('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed =1 ', 'CountLicensed', _INT);
+
+                        if ($licensedDisplays + 1 > $maxDisplays)
+                            return $this->SetError(25000, sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays));
+                    }
+                }
+
 		// Update the display record
 		$SQL  = "UPDATE display SET display = '%s', ";
 		$SQL .= "		defaultlayoutid = %d, ";
