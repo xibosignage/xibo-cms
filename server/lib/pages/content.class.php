@@ -167,7 +167,8 @@ HTML;
 		$SQL .= "        media.name, ";
 		$SQL .= "        media.type, ";
 		$SQL .= "        media.duration, ";
-		$SQL .= "        media.userID ";
+		$SQL .= "        media.userID, ";
+		$SQL .= "        media.FileSize ";
 		$SQL .= "FROM    media ";
 		$SQL .= "WHERE   isEdited = 0 ";
 		if ($mediatype != "all") 
@@ -206,6 +207,7 @@ HTML;
 		$msgType	= __('Type');
 		$msgRetired	= __('Retired');
 		$msgOwner	= __('Owner');
+		$msgFileSize	= __('Size');
 		$msgShared	= __('Permissions');
 		$msgAction	= __('Action');
 
@@ -217,6 +219,7 @@ HTML;
 			        <th>$msgName</th>
 			        <th>$msgType</th>
 			        <th>h:mi:ss</th>            
+			        <th>$msgFileSize</th>
                                 <th>$msgOwner</th>
 			        <th>$msgShared</th>       
 			        <th>$msgAction</th>     
@@ -232,6 +235,12 @@ END;
             $mediatype 		= Kit::ValidateParam($aRow[2], _WORD);
             $length 		= sec2hms(Kit::ValidateParam($aRow[3], _DOUBLE));
             $ownerid 		= Kit::ValidateParam($aRow[4], _INT);
+            $fileSize = Kit::ValidateParam($aRow[5], _INT);
+
+            // Size in MB
+            $sz = 'BKMGTP';
+            $factor = floor((strlen($fileSize) - 1) / 3);
+            $fileSize = sprintf('%.2f', $fileSize / pow(1024, $factor)) . @$sz[$factor];
 
             //get the username from the userID using the user module
             $username 		= $user->getNameFromID($ownerid);
@@ -258,6 +267,7 @@ END;
                 $output .= "<td>$media</td>\n";
                 $output .= "<td>$mediatype</td>\n";
                 $output .= "<td>$length</td>\n";
+                $output .= "<td>$fileSize</td>\n";
                 $output .= "<td>$username</td>";
                 $output .= "<td>$group</td>";
 
