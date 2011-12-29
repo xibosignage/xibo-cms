@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -49,40 +49,209 @@ class statsDAO
 		echo 'Display Statistics';
 		return true;
 	}
-	
-	public function StatsForm()
-	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-		$output = '';
-		
-		$fromdt			= date("Y-m-d H:i:s", time() - 86400);
-		$todt			= date("Y-m-d H:i:s");
-		$display_list 	= dropdownlist("SELECT 'All', 'All' UNION SELECT displayID, display FROM display WHERE licensed = 1 ORDER BY 2", "displayid");
-		
-		// We want to build a form which will sit on the page and allow a button press to generate a CSV file.
-		$output	.= '<script type="text/javascript">$(document).onload(function(){$(".date-pick").datepicker({dateFormat: "dd/mm/yy"})});</script>';
-		$output	.= '<form action="index.php?p=stats&q=OutputCSV" method="post">';
-		$output	.= ' <table>';
-		$output	.= '  <tr>';
-		$output	.= '   <td>From Date</td>';
-		$output	.= '   <td><input type="text" class="date-pick" name="fromdt" value="' . $fromdt . '"/></td>';
-		$output	.= '   <td>To Date</td>';
-		$output	.= '   <td><input type="text" class="date-pick" name="todt" value="' . $todt . '" /></td>';
-		$output	.= '  </tr>';
-		$output	.= '  <tr>';
-		$output	.= '   <td>Display</td>';
-		$output	.= '   <td>' . $display_list . '</td>';
-		$output	.= '  </tr>';
-		
-		$output	.= '  <tr>';
-		$output	.= '   <td><input type="submit" value="Export" /></td>';
-		$output	.= '  </tr>';
-		$output	.= ' </table>';
-		$output	.= '</form>';
-		
-		echo $output;
-	}
+
+    /**
+     * Shows the stats form
+     */
+    public function StatsForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+
+        $fromdt = date("Y-m-d", time() - 86400);
+        $todt = date("Y-m-d");
+        $display_list = dropdownlist("SELECT 'All', 'All' UNION SELECT displayID, display FROM display WHERE licensed = 1 ORDER BY 2", "displayid");
+
+        // We want to build a form which will sit on the page and allow a button press to generate a CSV file.
+        $output = '';
+        $output .= '<div id="StatsFilter">';
+        $output .= ' <form onsubmit="return false">';
+        $output .= ' <input type="hidden" name="p" value="stats">';
+        $output .= ' <input type="hidden" name="q" value="StatsGrid">';
+        $output .= ' <table>';
+        $output .= '  <tr>';
+        $output .= '   <td>From Date</td>';
+        $output .= '   <td><input type="text" class="date-pick" name="fromdt" value="' . $fromdt . '"/></td>';
+        $output .= '   <td>To Date</td>';
+        $output .= '   <td><input type="text" class="date-pick" name="todt" value="' . $todt . '" /></td>';
+        $output .= '  </tr>';
+        $output .= '  <tr>';
+        $output .= '   <td>Display</td>';
+        $output .= '   <td>' . $display_list . '</td>';
+        $output .= '  </tr>';
+        $output .= ' </table>';
+        $output .= '</form>';
+        $output .= '</div>';
+
+        $id = uniqid();
+
+        $xiboGrid = <<<HTML
+        <div class="XiboGrid" id="$id">
+            <div class="XiboFilter">
+                $output
+            </div>
+            <div class="XiboData"></div>
+        </div>
+HTML;
+        echo $xiboGrid;
+    }
+
+    /**
+     * Shows the stats grid
+     */
+    public function StatsGrid()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        $fromDt = Kit::GetParam('fromdt', _POST, _STRING);
+        $toDt = Kit::GetParam('todt', _POST, _STRING);
+        $displayId = Kit::GetParam('displayid', _POST, _INT);
+        $output = '';
+
+        // Output CSV button
+        $output .= '<p>' . __('Export raw data to CSV') . '</p>';
+        $output .= '<form action="index.php" method="post">';
+        $output .= ' <input type="hidden" name="p" value="stats" />';
+        $output .= ' <input type="hidden" name="q" value="OutputCSV" />';
+        $output .= ' <input type="hidden" name="displayid" value="' . $displayId . '" />';
+        $output .= ' <input type="hidden" name="fromdt" value="' . $fromDt . '" />';
+        $output .= ' <input type="hidden" name="todt" value="' . $toDt . '" />';
+        $output .= ' <input type="submit" value="Export" />';
+        $output .= '</form>';
+
+        // 3 grids showing different stats.
+
+        // Layouts Ran
+        $SQL =  'SELECT layout.Layout, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration ';
+        $SQL .= '  FROM stat ';
+        $SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
+        $SQL .= ' WHERE 1 = 1 ';
+        $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
+        $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
+
+        if ($displayId != 0)
+            $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
+
+        $SQL .= 'GROUP BY layout.Layout ';
+        $SQL .= 'ORDER BY layout.Layout';
+
+        $output .= '<p>' . __('Layouts ran') . '</p>';
+        $output .= '<table>';
+        $output .= '<thead>';
+        $output .= '<th>' . __('Layout') . '</th>';
+        $output .= '<th>' . __('Number of Plays') . '</th>';
+        $output .= '<th>' . __('Total Duration') . '</th>';
+        $output .= '</thead>';
+        $output .= '<tbody>';
+
+        if (!$results = $this->db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get Layouts Ran'), E_USER_ERROR);
+        }
+
+        while ($row = $db->get_assoc_row($results))
+        {
+            $output .= '<tr>';
+            $output .= '<td>' . Kit::ValidateParam($row['Layout'], _STRING) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['NumberPlays'], _INT) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['Duration'], _INT) . '</td>';
+            $output .= '</tr>';
+        }
+
+        $output .= '</tbody>';
+        $output .= '</table>';
+
+        // Media Ran
+        $SQL =  'SELECT media.Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration ';
+        $SQL .= '  FROM stat ';
+        $SQL .= '  INNER JOIN  media ON media.MediaID = stat.MediaID ';
+        $SQL .= ' WHERE 1 = 1 ';
+        $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
+        $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
+
+        if ($displayId != 0)
+            $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
+
+        $SQL .= 'GROUP BY media.Name ';
+        $SQL .= 'ORDER BY media.Name';
+
+        $output .= '<p>' . __('Library Media ran') . '</p>';
+        $output .= '<table>';
+        $output .= '<thead>';
+        $output .= '<th>' . __('Media') . '</th>';
+        $output .= '<th>' . __('Number of Plays') . '</th>';
+        $output .= '<th>' . __('Total Duration') . '</th>';
+        $output .= '</thead>';
+        $output .= '<tbody>';
+
+        if (!$results = $this->db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get Library Media Ran'), E_USER_ERROR);
+        }
+
+        while ($row = $db->get_assoc_row($results))
+        {
+            $output .= '<tr>';
+            $output .= '<td>' . Kit::ValidateParam($row['Name'], _STRING) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['NumberPlays'], _INT) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['Duration'], _INT) . '</td>';
+            $output .= '</tr>';
+        }
+
+        $output .= '</tbody>';
+        $output .= '</table>';
+
+        // Media on Layouts Ran
+        $SQL =  "SELECT layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') AS Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration ";
+        $SQL .= '  FROM stat ';
+        $SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
+        $SQL .= '  LEFT OUTER JOIN media ON media.MediaID = stat.MediaID ';
+        $SQL .= ' WHERE 1 = 1 ';
+        $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
+        $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
+
+        if ($displayId != 0)
+            $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
+
+        $SQL .= "GROUP BY layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') ";
+        $SQL .= "ORDER BY layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage')";
+
+        $output .= '<p>' . __('Media on Layouts ran') . '</p>';
+        $output .= '<table>';
+        $output .= '<thead>';
+        $output .= '<th>' . __('Layout') . '</th>';
+        $output .= '<th>' . __('Media') . '</th>';
+        $output .= '<th>' . __('Number of Plays') . '</th>';
+        $output .= '<th>' . __('Total Duration') . '</th>';
+        $output .= '</thead>';
+        $output .= '<tbody>';
+
+        if (!$results = $this->db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to get Library Media Ran'), E_USER_ERROR);
+        }
+
+        while ($row = $db->get_assoc_row($results))
+        {
+            $output .= '<tr>';
+            $output .= '<td>' . Kit::ValidateParam($row['Layout'], _STRING) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['Name'], _STRING) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['NumberPlays'], _INT) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['Duration'], _INT) . '</td>';
+            $output .= '</tr>';
+        }
+
+        $output .= '</tbody>';
+        $output .= '</table>';
+
+        $response->SetGridResponse($output);
+        $response->Respond();
+    }
 	
 	/**
 	 * Outputs a CSV of stats
