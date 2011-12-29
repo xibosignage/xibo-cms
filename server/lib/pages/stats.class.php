@@ -124,9 +124,10 @@ HTML;
         // 3 grids showing different stats.
 
         // Layouts Ran
-        $SQL =  'SELECT layout.Layout, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration ';
+        $SQL =  'SELECT display.Display, layout.Layout, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ';
         $SQL .= '  FROM stat ';
         $SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
+        $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
         $SQL .= ' WHERE 1 = 1 ';
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
         $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
@@ -134,15 +135,19 @@ HTML;
         if ($displayId != 0)
             $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
 
-        $SQL .= 'GROUP BY layout.Layout ';
-        $SQL .= 'ORDER BY layout.Layout';
+        $SQL .= 'GROUP BY display.Display, layout.Layout ';
+        $SQL .= 'ORDER BY display.Display, layout.Layout';
 
         $output .= '<p>' . __('Layouts ran') . '</p>';
         $output .= '<table>';
         $output .= '<thead>';
+        $output .= '<th>' . __('Display') . '</th>';
         $output .= '<th>' . __('Layout') . '</th>';
         $output .= '<th>' . __('Number of Plays') . '</th>';
+        $output .= '<th>' . __('Total Duration (s)') . '</th>';
         $output .= '<th>' . __('Total Duration') . '</th>';
+        $output .= '<th>' . __('First Shown') . '</th>';
+        $output .= '<th>' . __('Last Shown') . '</th>';
         $output .= '</thead>';
         $output .= '<tbody>';
 
@@ -155,9 +160,13 @@ HTML;
         while ($row = $db->get_assoc_row($results))
         {
             $output .= '<tr>';
+            $output .= '<td>' . Kit::ValidateParam($row['Display'], _STRING) . '</td>';
             $output .= '<td>' . Kit::ValidateParam($row['Layout'], _STRING) . '</td>';
             $output .= '<td>' . Kit::ValidateParam($row['NumberPlays'], _INT) . '</td>';
             $output .= '<td>' . Kit::ValidateParam($row['Duration'], _INT) . '</td>';
+            $output .= '<td>' . sec2hms(Kit::ValidateParam($row['Duration'], _INT)) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['MinStart'], _STRING) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['MaxEnd'], _STRING) . '</td>';
             $output .= '</tr>';
         }
 
@@ -165,8 +174,9 @@ HTML;
         $output .= '</table>';
 
         // Media Ran
-        $SQL =  'SELECT media.Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration ';
+        $SQL =  'SELECT display.Display, media.Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ';
         $SQL .= '  FROM stat ';
+        $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
         $SQL .= '  INNER JOIN  media ON media.MediaID = stat.MediaID ';
         $SQL .= ' WHERE 1 = 1 ';
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
@@ -175,15 +185,19 @@ HTML;
         if ($displayId != 0)
             $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
 
-        $SQL .= 'GROUP BY media.Name ';
-        $SQL .= 'ORDER BY media.Name';
+        $SQL .= 'GROUP BY display.Display, media.Name ';
+        $SQL .= 'ORDER BY display.Display, media.Name';
 
         $output .= '<p>' . __('Library Media ran') . '</p>';
         $output .= '<table>';
         $output .= '<thead>';
+        $output .= '<th>' . __('Display') . '</th>';
         $output .= '<th>' . __('Media') . '</th>';
         $output .= '<th>' . __('Number of Plays') . '</th>';
+        $output .= '<th>' . __('Total Duration (s)') . '</th>';
         $output .= '<th>' . __('Total Duration') . '</th>';
+        $output .= '<th>' . __('First Shown') . '</th>';
+        $output .= '<th>' . __('Last Shown') . '</th>';
         $output .= '</thead>';
         $output .= '<tbody>';
 
@@ -196,9 +210,13 @@ HTML;
         while ($row = $db->get_assoc_row($results))
         {
             $output .= '<tr>';
+            $output .= '<td>' . Kit::ValidateParam($row['Display'], _STRING) . '</td>';
             $output .= '<td>' . Kit::ValidateParam($row['Name'], _STRING) . '</td>';
             $output .= '<td>' . Kit::ValidateParam($row['NumberPlays'], _INT) . '</td>';
             $output .= '<td>' . Kit::ValidateParam($row['Duration'], _INT) . '</td>';
+            $output .= '<td>' . sec2hms(Kit::ValidateParam($row['Duration'], _INT)) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['MinStart'], _STRING) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['MaxEnd'], _STRING) . '</td>';
             $output .= '</tr>';
         }
 
@@ -206,8 +224,9 @@ HTML;
         $output .= '</table>';
 
         // Media on Layouts Ran
-        $SQL =  "SELECT layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') AS Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration ";
+        $SQL =  "SELECT display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') AS Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ";
         $SQL .= '  FROM stat ';
+        $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
         $SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
         $SQL .= '  LEFT OUTER JOIN media ON media.MediaID = stat.MediaID ';
         $SQL .= ' WHERE 1 = 1 ';
@@ -217,16 +236,20 @@ HTML;
         if ($displayId != 0)
             $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
 
-        $SQL .= "GROUP BY layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') ";
-        $SQL .= "ORDER BY layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage')";
+        $SQL .= "GROUP BY display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') ";
+        $SQL .= "ORDER BY display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage')";
 
         $output .= '<p>' . __('Media on Layouts ran') . '</p>';
         $output .= '<table>';
         $output .= '<thead>';
+        $output .= '<th>' . __('Display') . '</th>';
         $output .= '<th>' . __('Layout') . '</th>';
         $output .= '<th>' . __('Media') . '</th>';
         $output .= '<th>' . __('Number of Plays') . '</th>';
+        $output .= '<th>' . __('Total Duration (s)') . '</th>';
         $output .= '<th>' . __('Total Duration') . '</th>';
+        $output .= '<th>' . __('First Shown') . '</th>';
+        $output .= '<th>' . __('Last Shown') . '</th>';
         $output .= '</thead>';
         $output .= '<tbody>';
 
@@ -239,10 +262,14 @@ HTML;
         while ($row = $db->get_assoc_row($results))
         {
             $output .= '<tr>';
+            $output .= '<td>' . Kit::ValidateParam($row['Display'], _STRING) . '</td>';
             $output .= '<td>' . Kit::ValidateParam($row['Layout'], _STRING) . '</td>';
             $output .= '<td>' . Kit::ValidateParam($row['Name'], _STRING) . '</td>';
             $output .= '<td>' . Kit::ValidateParam($row['NumberPlays'], _INT) . '</td>';
             $output .= '<td>' . Kit::ValidateParam($row['Duration'], _INT) . '</td>';
+            $output .= '<td>' . sec2hms(Kit::ValidateParam($row['Duration'], _INT)) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['MinStart'], _STRING) . '</td>';
+            $output .= '<td>' . Kit::ValidateParam($row['MaxEnd'], _STRING) . '</td>';
             $output .= '</tr>';
         }
 
