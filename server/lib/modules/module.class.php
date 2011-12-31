@@ -1462,6 +1462,9 @@ FORM;
                 // Create a new module as if we were assigning it for the first time
                 $module = new $type($db, $this->user, $newMediaId);
 
+                // Sets the URI field
+                $module->SetRegionInformation($layoutId, $regionId);
+
                 // Get the media xml string to use in the swap.
                 $mediaXmlString = $module->AsXml();
 
