@@ -62,6 +62,11 @@ class statsDAO
         $todt = date("Y-m-d");
         $display_list = dropdownlist("SELECT 'All', 'All' UNION SELECT displayID, display FROM display WHERE licensed = 1 ORDER BY 2", "displayid");
 
+        // List of Media this user has permission for
+        $media = $this->user->MediaList();
+        $media[] = array('mediaid' => 0, 'media' => 'All');
+        $mediaList = Kit::SelectList('mediaid', $media, 'mediaid', 'media', 0);
+
         // We want to build a form which will sit on the page and allow a button press to generate a CSV file.
         $output = '';
         $output .= '<div id="StatsFilter">';
@@ -76,8 +81,10 @@ class statsDAO
         $output .= '   <td><input type="text" class="date-pick" name="todt" value="' . $todt . '" /></td>';
         $output .= '  </tr>';
         $output .= '  <tr>';
-        $output .= '   <td>Display</td>';
+        $output .= '   <td>' . __('Display') . '</td>';
         $output .= '   <td>' . $display_list . '</td>';
+        $output .= '   <td>' . __('Media') . '</td>';
+        $output .= '   <td>' . $mediaList . '</td>';
         $output .= '  </tr>';
         $output .= ' </table>';
         $output .= '</form>';
@@ -108,6 +115,8 @@ HTML;
         $fromDt = Kit::GetParam('fromdt', _POST, _STRING);
         $toDt = Kit::GetParam('todt', _POST, _STRING);
         $displayId = Kit::GetParam('displayid', _POST, _INT);
+        $mediaId = Kit::GetParam('mediaid', _POST, _INT);
+
         $output = '';
 
         // Output CSV button
@@ -182,6 +191,9 @@ HTML;
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
         $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
 
+        if ($mediaId != 0)
+            $SQL .= sprintf("  AND media.MediaID = %d ", $mediaId);
+
         if ($displayId != 0)
             $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
 
@@ -232,6 +244,9 @@ HTML;
         $SQL .= ' WHERE 1 = 1 ';
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
         $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
+
+        if ($mediaId != 0)
+            $SQL .= sprintf("  AND media.MediaID = %d ", $mediaId);
 
         if ($displayId != 0)
             $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
