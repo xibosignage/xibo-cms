@@ -922,7 +922,8 @@ END;
         }
         else
         {
-            $extraNotes = '<input type="checkbox" id="replaceInLayouts" name="replaceInLayouts"><label for="replaceInLayouts">' . __('Update this media in all layouts it is assigned to. Note: It will only be replaced in layouts you have permission to edit.') . '</label>';
+            $updateMediaChecked = (Config::GetSetting($db, 'LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 'checked' : '';
+            $extraNotes = '<input type="checkbox" id="replaceInLayouts" name="replaceInLayouts" ' . $updateMediaChecked . '><label for="replaceInLayouts">' . __('Update this media in all layouts it is assigned to. Note: It will only be replaced in layouts you have permission to edit.') . '</label>';
 
             $save_button = <<<END
             <input id="btnSave" type="submit" value="Save" />
