@@ -593,9 +593,13 @@ class region
      * @param <string> $mediaId
      * @return <string>
      */
-    public function GetMediaNodeType($layoutId, $regionId, $mediaId)
+    public function GetMediaNodeType($layoutId, $regionId = '', $mediaId = '', $lkId = '')
     {
         $db =& $this->db;
+
+        // Validate
+        if ($regionId == '' && $mediaId == '' && $lkId == '')
+            return false;
 
         //Load the XML for this layout
         $xml = new DOMDocument("1.0");
@@ -603,8 +607,20 @@ class region
 
         //Find the region
         $xpath = new DOMXPath($xml);
-        $mediaNodeList = $xpath->query('//region[@id="' . $regionId . '"]/media[@id="' . $mediaId . '"]');
-        $mediaNode = $mediaNodeList->item(0);
+
+        if ($lkId == '')
+        {
+            Debug::LogEntry($db, 'audit', 'No link ID. Using mediaid and regionid', 'region', 'GetMediaNodeType');
+            $mediaNodeList = $xpath->query('//region[@id="' . $regionId . '"]/media[@id="' . $mediaId . '"]');
+        }
+        else
+        {
+            $mediaNodeList = $xpath->query('//media[@lkid=' . $lkId . ']');
+        }
+
+        // Only 1 node
+        if (!$mediaNode = $mediaNodeList->item(0))
+            return false;
 
         return $mediaNode->getAttribute('type');
     }

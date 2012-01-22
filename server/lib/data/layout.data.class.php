@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2011 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -347,12 +347,27 @@ END;
      * @param <int> $oldLayoutId
      * @param <string> $newLayoutName
      * @param <int> $userId
+     * @param <bool> $copyMedia Make copies of this layouts media
      * @return <int> 
      */
-    public function Copy($oldLayoutId, $newLayoutName, $userId)
+    public function Copy($oldLayoutId, $newLayoutName, $userId, $copyMedia = false)
     {
         $db =& $this->db;
         $currentdate = date("Y-m-d H:i:s");
+
+        // Include to media data class?
+        if ($copyMedia)
+        {
+            Kit::ClassLoader('media');
+            Kit::ClassLoader('mediagroupsecurity');
+            $mediaObject = new Media($db);
+            $mediaSecurity = new MediaGroupSecurity($db);
+        }
+
+        // Permissions model
+        Kit::ClassLoader('layoutgroupsecurity');
+        Kit::ClassLoader('layoutregiongroupsecurity');
+        Kit::ClassLoader('layoutmediagroupsecurity');
 
         // The Layout ID is the old layout
         $SQL  = "";
@@ -399,11 +414,33 @@ END;
 
             // If this is a non region specific type, then move on
             if ($this->IsRegionSpecific($type))
+            {
+                // Copy media security
+                $security = new LayoutMediaGroupSecurity($db);
+                $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $mediaId, $mediaId);
                 continue;
+            }
 
             // Get the regionId
             $regionNode = $mediaNode->parentNode;
             $regionId = $regionNode->getAttribute('id');
+
+            // Do we need to copy this media record?
+            if ($copyMedia)
+            {
+                // Store the old media id
+                $oldMediaId = $mediaId;
+
+                // Take this media item and make a hard copy of it.
+                if (!$mediaId = $mediaObject->Copy($mediaId, $newLayoutName))
+                {
+                    $this->Delete($newLayoutId);
+                    return false;
+                }
+
+                // Update the permissions for the new media record
+                $mediaSecurity->Copy($oldMediaId, $mediaId);
+            }
 
             // Add the database link for this media record
             if (!$lkId = $this->AddLk($newLayoutId, $regionId, $mediaId))
@@ -412,14 +449,26 @@ END;
                 return false;
             }
 
+            // Update the permissions for this media on this layout
+            $security = new LayoutMediaGroupSecurity($db);
+            $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $oldMediaId, $mediaId);
+
             // Set this LKID on the media node
             $mediaNode->setAttribute('lkid', $lkId);
+            $mediaNode->setAttribute('id', $mediaId);
         }
 
         Debug::LogEntry($this->db, 'audit', 'Finished looping through media nodes', 'layout', 'Copy');
 
         // Set the XML
         $this->SetLayoutXml($newLayoutId, $this->DomXml->saveXML());
+
+        // Layout permissions
+        $security = new LayoutGroupSecurity($db);
+        $security->CopyAll($oldLayoutId, $newLayoutId);
+
+        $security = new LayoutRegionGroupSecurity($db);
+        $security->CopyAll($oldLayoutId, $newLayoutId);
         
         // Return the new layout id
         return $newLayoutId;

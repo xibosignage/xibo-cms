@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-11 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -188,6 +188,62 @@ class UserGroup extends Data
         }
 
         Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'Unlink');
+
+        return true;
+    }
+
+    /**
+     * Unlinks all users from the speficied group
+     * @param <type> $userGroupId
+     */
+    public function UnlinkAllUsers($userGroupId)
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'UnlinkAllUsers');
+
+        $SQL  = "";
+        $SQL .= "DELETE FROM ";
+        $SQL .= "   lkusergroup ";
+        $SQL .= sprintf("  WHERE GroupID = %d ", $userGroupId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25007, __('Could not Unlink all Users from User Group'));
+
+            return false;
+        }
+
+        Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'UnlinkAllUsers');
+
+        return true;
+    }
+
+    /**
+     * Unliks all groups from the specified user
+     * @param <type> $userId
+     */
+    public function UnlinkAllGroups($userId)
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'UnlinkAllGroups');
+
+        $SQL  = "";
+        $SQL .= "DELETE FROM ";
+        $SQL .= "   lkusergroup ";
+        $SQL .= sprintf("  WHERE UserID = %d ", $userId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25007, __('Could not Unlink Groups from User'));
+
+            return false;
+        }
+
+        Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'UnlinkAllGroups');
 
         return true;
     }

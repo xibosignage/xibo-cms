@@ -26,23 +26,12 @@ var text_callback = function()
     $("#div_dialog").bind("dialogclose.xibo", function(event, ui){
         $("#ta_text").ckeditorGet().destroy();
         $("#div_dialog").unbind("dialogclose.xibo");
-    })
+    });
 
-    var regionid = $("#iRegionId").val();
-    var width = $("#region_"+regionid).width();
-    var height = $("#region_"+regionid).height();
-
-    // Min width
-    if (width < 800) width = 800;
-
-    // Adjust the width and height
-    width = width + 80;
-    height = height + 295;
-
-    $('#div_dialog').height(height+"px");
-    $('#div_dialog').dialog('option', 'width', width);
-    $('#div_dialog').dialog('option', 'height', height);
+    $('#div_dialog').dialog('option', 'width', 800);
+    $('#div_dialog').dialog('option', 'height', 500);
     $('#div_dialog').dialog('option', 'position', 'center');
+
 
     return false; //prevent submit
 }
@@ -61,24 +50,10 @@ var microblog_callback = function()
         $("#div_dialog").unbind("dialogclose.xibo");
     })
 
-    var regionid = $("#iRegionId").val();
-    var width = $("#region_"+regionid).width();
-    var height = $("#region_"+regionid).height();
-
-    //Min width
-    if (width < 800) width = 800;
-    height = height - 170;
-
-    // Min height
-    if (height < 300) height = 300;
-
-    width = width + 80;
-    height = height + 480;
-
-    $('#div_dialog').height(height+"px");
-    $('#div_dialog').dialog('option', 'width', width);
-    $('#div_dialog').dialog('option', 'height', height);
+    $('#div_dialog').dialog('option', 'width', 800);
+    $('#div_dialog').dialog('option', 'height', 500);
     $('#div_dialog').dialog('option', 'position', 'center');
+
 
     return false; //prevent submit
 }

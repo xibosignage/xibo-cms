@@ -151,7 +151,7 @@ class userDAO
             $password   = md5($password);
             $email      = Kit::GetParam('email', _POST, _STRING);
             $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT, 0);
-            $homepage   = Kit::GetParam('homepage', _POST, _STRING);
+            $homepage   = Kit::GetParam('homepage', _POST, _STRING, 'dashboard');
             $pass_change = isset($_POST['pass_change']);
 
             // Validation
@@ -163,14 +163,8 @@ class userDAO
             {
                 trigger_error("Please enter a Password.", E_USER_ERROR);
             }
-            if ($email == "")
-            {
-                trigger_error("Please enter an Email Address.", E_USER_ERROR);
-            }
-
-            if ($homepage == "") $homepage = "dashboard";
-
-            //Check for duplicate user name
+            
+            // Check for duplicate user name
             $sqlcheck = " ";
             $sqlcheck .= "SELECT UserName FROM user WHERE UserName = '" . $username . "' AND userID <> $userID ";
 
@@ -185,31 +179,21 @@ class userDAO
                 trigger_error(__("Could Not Complete, Duplicate User Name Exists"), E_USER_ERROR);
             }
 
-            //Everything is ok - run the update
-            $sql = "UPDATE user SET UserName = '$username'";
+            // Everything is ok - run the update
+            $sql = sprintf("UPDATE user SET UserName = '%s', HomePage = '%s', Email = '%s' ", $username, $homepage, $email);
+
             if ($pass_change)
-            {
-                $sql .= ", UserPassword = '$password'";
-            }
+                $sql .= sprintf(", UserPassword = '%s'", $password);
 
-            $sql .= ", email = '$email' ";
-            if ($homepage == 'dashboard')
-            {
-                //acts as a reset
-                $sql .= ", homepage='$homepage' ";
-            }
+            if ($usertypeid != 0)
+                $sql .= sprintf(", usertypeid = %d ", $usertypeid);
 
-            if ($usertypeid != "")
-            {
-                $sql .= ", usertypeid =  " . $usertypeid;
-            }
-
-            $sql .= " WHERE UserID = ". $userID . "";
+            $sql .= sprintf(" WHERE UserID = %d ", $userID);
 
             if (!$db->query($sql))
             {
                 trigger_error($db->error());
-                trigger_error("Error updating that user", E_USER_ERROR);
+                trigger_error(__('Error updating user'), E_USER_ERROR);
             }
 
             // Update the group to follow suit
@@ -243,30 +227,76 @@ class userDAO
             $userid 	= Kit::GetParam('userid', _POST, _INT, 0);
             $groupID    = $user->getGroupFromID($userid, true);
 
+            // Can we delete this user? Dont even try if we cant. Check tables that have this userid or this groupid
+            if ($this->db->GetCountOfRows(sprintf('SELECT LayoutID FROM layout WHERE UserID = %d', $userid)) > 0)
+                trigger_error(__('Cannot delete this user, they have layouts'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT MediaID FROM media WHERE UserID = %d', $userid)) > 0)
+                trigger_error(__('Cannot delete this user, they have media'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT EventID FROM schedule WHERE UserID = %d', $userid)) > 0)
+                trigger_error(__('Cannot delete this user, they have scheduled layouts'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT Schedule_DetailID FROM schedule_detail WHERE UserID = %d', $userid)) > 0)
+                trigger_error(__('Cannot delete this user, they have schedule detail records'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT TemplateID FROM template WHERE UserID = %d', $userid)) > 0)
+                trigger_error(__('Cannot delete this user, they have templates'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT osr_id FROM oauth_server_registry WHERE osr_usa_id_ref = %d', $userid)) > 0)
+                trigger_error(__('Cannot delete this user, they have applications'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkdatasetgroup WHERE GroupID = %d', $groupID)) > 0)
+                trigger_error(__('Cannot delete this user, they have permissions to data sets'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkgroupdg WHERE GroupID = %d', $groupID)) > 0)
+                trigger_error(__('Cannot delete this user, they have permissions to display groups'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lklayoutgroup WHERE GroupID = %d', $groupID)) > 0)
+                trigger_error(__('Cannot delete this user, they have permissions to layouts'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lklayoutmediagroup WHERE GroupID = %d', $groupID)) > 0)
+                trigger_error(__('Cannot delete this user, they have permissions to media on layouts'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lklayoutregiongroup WHERE GroupID = %d', $groupID)) > 0)
+                trigger_error(__('Cannot delete this user, they have permissions to regions on layouts'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkmediagroup WHERE GroupID = %d', $groupID)) > 0)
+                trigger_error(__('Cannot delete this user, they have permissions to media'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkmenuitemgroup WHERE GroupID = %d', $groupID)) > 0)
+                trigger_error(__('Cannot delete this user, they have permissions to menu items'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkpagegroup WHERE GroupID = %d', $groupID)) > 0)
+                trigger_error(__('Cannot delete this user, they have permissions to pages'), E_USER_ERROR);
+
+            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lktemplategroup WHERE GroupID = %d', $groupID)) > 0)
+                trigger_error(__('Cannot delete this user, they have permissions to templates'), E_USER_ERROR);
+
             // Firstly delete the group for this user
             $userGroupObject = new UserGroup($db);
+            
+            // Remove this user from all user groups (including their own)
+            $userGroupObject->UnlinkAllGroups($userid);
 
-            $userGroupObject->Unlink($groupID, $userid);
-
+            // Delete the user specific group
             if (!$userGroupObject->Delete($groupID))
-            {
                 trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
-            }
 
             // Delete the user
             $sqldel = "DELETE FROM user";
-            $sqldel .= " WHERE UserID = ". $userid . "";
+            $sqldel .= " WHERE UserID = %d"; 
 
-            if (!$db->query($sqldel))
+            if (!$db->query(sprintf($sqldel, $userid)))
             {
                 trigger_error($db->error());
                 trigger_error(__("This user has been active, you may only retire them."), E_USER_ERROR);
             }
 
             // We should delete this users sessions record.
-            $SQL = "DELETE FROM session WHERE userID = $userid ";
+            $SQL = "DELETE FROM session WHERE userID = %d ";
 
-            if (!$db->query($sqldel))
+            if (!$db->query(sprintf($SQL, $userid)))
             {
                 trigger_error($db->error());
                 trigger_error(__("If logged in, this user will be deleted once they log out."), E_USER_ERROR);

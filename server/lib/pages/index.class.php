@@ -106,7 +106,7 @@ class indexDAO
 		
 		if ($referingpage == '') 
 		{
-                    header('Location:index.php?p=dashboard');
+                    header('Location:index.php?p=index');
 		}
 		else 
 		{
@@ -116,27 +116,27 @@ class indexDAO
 		exit;
 	}
 
-	function logout($referingpage = "") 
-	{
-		global $user;
-		$db =& $this->db;
-		
-		$username 	= Kit::GetParam('username', _SESSION, _USERNAME);
+    function logout($referingpage = '')
+    {
+        global $user;
+        $db =& $this->db;
 
-		setMessage($username . __("Please Login to access this page."));
+        $username = Kit::GetParam('username', _SESSION, _USERNAME);
 
-		//logs the user out -- true if ok
-		$user->logout();
+        setMessage(__('Please Login to access this page.'));
 
-		if($referingpage=="") 
-		{
-			$referingpage="index";
-		}
+        //logs the user out -- true if ok
+        $user->logout();
 
-		//then go back to the index page
-		header("Location:index.php?p=".$referingpage);
-		exit;
-	}
+        if($referingpage == '')
+        {
+            $referingpage = 'index';
+        }
+
+        //then go back to the index page
+        header('Location:index.php?p=' . $referingpage);
+        exit;
+    }
 	
 	function forgotten() 
 	{
@@ -226,19 +226,26 @@ class indexDAO
 	    return substr($password, 0, $length);
 	}  
 	
-	function displayPage() 
-	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-		
-		include("lib/pages/dashboard.class.php");
-		
-		$schedule = new dashboardDAO($db, $user);
-		
-		$schedule->displayPage();
-		
-		exit;
-	}
+    function displayPage()
+    {
+        $db 	=& $this->db;
+        $user 	=& $this->user;
+
+        $homepage = $this->user->homePage;
+
+        if ($homepage == 'mediamanager')
+        {
+            include('lib/pages/mediamanager.class.php');
+            $userHomepage = new mediamanagerDAO($db, $user);
+        }
+        else
+        {
+            include("lib/pages/dashboard.class.php");
+            $userHomepage = new dashboardDAO($db, $user);
+        }
+
+        $userHomepage->displayPage();
+    }
 	
 	/**
 	 * Ping Pong

@@ -337,5 +337,72 @@ class Media extends Data
 
         return $modules;
     }
+
+    /**
+     * Make a copy of this media record
+     * @param <type> $oldMediaId
+     */
+    public function Copy($oldMediaId, $prefix = '')
+    {
+        $db =& $this->db;
+
+        // Get the extension from the old media record
+        if (!$fileName = $this->db->GetSingleValue(sprintf("SELECT StoredAs FROM media WHERE MediaID = %d", $oldMediaId), 'StoredAs', _STRING))
+        {
+            trigger_error($db->error());
+            return $this->SetError(26, __('Error getting media extension before copy.'));
+        }
+
+        $extension = strtolower(substr(strrchr($fileName, '.'), 1));
+
+        $newMediaName = "CONCAT(name, ' ', 2)";
+
+        if ($prefix != '')
+            $newMediaName = "CONCAT('$prefix', ' ', name)";
+
+        // All OK to insert this record
+        $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired ) ";
+        $SQL .= " SELECT %s, type, duration, originalFilename, userID, retired ";
+        $SQL .= "  FROM media ";
+        $SQL .= " WHERE MediaID = %d ";
+
+        $SQL = sprintf($SQL, $newMediaName, $oldMediaId);
+
+        if (!$newMediaId = $db->insert_query($SQL))
+        {
+            trigger_error($db->error());
+            return $this->SetError(26, __('Error copying media.'));
+        }
+
+        // Make a copy of the file
+        $libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
+
+        if (!copy($libraryFolder . $oldMediaId . '.' . $extension, $libraryFolder . $newMediaId . '.' . $extension))
+        {
+            // If we couldnt move it - we need to delete the media record we just added
+            $SQL = sprintf("DELETE FROM media WHERE mediaID = %d ", $newMediaId);
+
+            if (!$db->query($SQL))
+                return $this->SetError(14, 'Error cleaning up after failure.');
+
+            return $this->SetError(15, 'Error storing file.');
+        }
+
+        // Calculate the MD5 and the file size
+        $storedAs   = $libraryFolder . $newMediaId . '.' . $extension;
+        $md5        = md5_file($storedAs);
+        $fileSize   = filesize($storedAs);
+
+        // Update the media record to include this information
+        $SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $newMediaId . '.' . $extension, $md5, $fileSize, $newMediaId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            return $this->SetError(16, 'Updating stored file location and MD5');
+        }
+
+        return $newMediaId;
+    }
 }
 ?>

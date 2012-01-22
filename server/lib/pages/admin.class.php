@@ -251,6 +251,18 @@ END;
 			</select>
 END;
 		}
+
+                if ($cat == 'content')
+                {
+                    // Display the file size
+                    $fileSize = $this->db->GetSingleValue('SELECT SUM(FileSize) AS SumSize FROM media', 'SumSize', _INT);
+
+                    $sz = 'BKMGTP';
+                    $factor = floor((strlen($fileSize) - 1) / 3);
+                    $fileSize = sprintf('%.2f', $fileSize / pow(1024, $factor)) . @$sz[$factor];
+
+                    $output .= sprintf('<p>You have %s of media in the library.</p>', $fileSize);
+                }
 		
 		// Need to now get all the Misc settings 
 		$SQL = "";

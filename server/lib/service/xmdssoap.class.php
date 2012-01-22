@@ -880,6 +880,8 @@ class XMDSSoap
         $document = new DOMDocument("1.0");
         $document->loadXML($inventory);
 
+        $macAddress = $document->documentElement->getAttribute('macAddress');
+
         // Assume we are complete (but we are getting some)
         $mediaInventoryComplete = 1;
 
@@ -902,7 +904,7 @@ class XMDSSoap
 
         // Touch the display record
         $displayObject = new Display($db);
-        $displayObject->Touch($hardwareKey, '', $mediaInventoryComplete, $inventory);
+        $displayObject->Touch($hardwareKey, '', $mediaInventoryComplete, $inventory, $macAddress);
 
         return true;
     }

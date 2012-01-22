@@ -57,6 +57,16 @@ class mediamanagerDAO
 
     public function MediaManagerFilter()
     {
+        $msgLayout = __('Layout');
+        $msgRegion = __('Region');
+        $msgMedia = __('Media');
+        $msgMediaType = __('Type');
+
+        $modules = $this->db->GetArray("SELECT Module, Name FROM module WHERE Enabled = 1 ORDER BY 2", true);
+        $modules[] = array('Module' => 'all', 'Name' => 'All');
+
+        $mediaTypeList = Kit::SelectList('filterMediaType', $modules, 'Module', 'Name', 'all');
+
         $id = uniqid();
 
         $xiboGrid = <<<HTML
@@ -65,6 +75,20 @@ class mediamanagerDAO
                         <form onsubmit="return false">
 				<input type="hidden" name="p" value="mediamanager">
 				<input type="hidden" name="q" value="MediaManagerGrid">
+                            <table class="mediamanager_filterform">
+                                <tr>
+                                    <td>$msgLayout</td>
+                                    <td><input type="text" name="filterLayout"></td>
+                                    <td>$msgMedia</td>
+                                    <td><input type="text" name="filterMediaName"></td>
+				</tr>
+                                <tr>
+                                    <td>$msgRegion</td>
+                                    <td><input type="text" name="filterRegion"></td>
+                                    <td>$msgMediaType</td>
+                                    <td>$mediaTypeList</td>
+				</tr>
+                            </table>
                         </form>
                 </div>
                 <div class="XiboData">
@@ -80,10 +104,15 @@ HTML;
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
+
+        $filterLayout = Kit::GetParam('filterLayout', _POST, _STRING);
+        $filterRegion = Kit::GetParam('filterRegion', _POST, _STRING);
+        $filterMediaName = Kit::GetParam('filterMediaName', _POST, _STRING);
+        $filterMediaType = Kit::GetParam('filterMediaType', _POST, _STRING);
         
         // We would like a list of all layouts, media and media assignments that this user
         // has access to.
-        $layouts = $user->LayoutList();
+        $layouts = $user->LayoutList($filterLayout);
 
         $msgLayout = __('Layout');
         $msgRegion = __('Region');
@@ -142,6 +171,9 @@ END;
                 $regionNodeSequence++;
                 $regionName = ($region->getAttribute('name') == '') ? 'Region ' . $regionNodeSequence : $region->getAttribute('name');
 
+                if ($filterRegion != '' && !stristr($regionName, $filterRegion))
+                    continue;
+
                 Debug::LogEntry($db, 'audit', 'Permissions granted for ' . $regionId . ' owned by ' . $ownerId, 'mediamanager', 'MediaManagerGrid');
 
                 // Media
@@ -167,6 +199,14 @@ END;
                     $tmpModule = new $mediaType($db, $user, $mediaId, $layout['layoutid'], $regionId, $lkId);
                     $mediaName = $tmpModule->GetName();
 
+                    if ($filterMediaName != '' && !stristr($mediaName, $filterMediaName))
+                        continue;
+
+                            Debug::LogEntry($db, 'audit', $filterMediaType . ' ' . $mediaType);
+
+                    if ($filterMediaType != 'all' && $mediaType != strtolower($filterMediaType))
+                        continue;
+                    
                     $editLink = '<button class="XiboFormButton" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&showRegionOptions=0&layoutid=' . $layout['layoutid'] . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '">' . $msgEdit . '</button>';
                     $mediaNodeSequence++;
 

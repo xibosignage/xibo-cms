@@ -463,7 +463,7 @@ XML;
 	{
             $db =& $this->db;
             $helpManager = new HelpManager($db, $this->user);
-            $this->response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link($this->type, 'Delete') . '")');
+            $this->response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Media', 'Delete') . '")');
 
             //Parameters
             $layoutid = $this->layoutid;
@@ -579,7 +579,7 @@ END;
 
                 $msgWarn = __('Are you sure you want to delete this media?');
                 $msgSelect = __('Please select from the following options');
-                $msgCaution = __('Warning! You cannot undo this operation');
+                $msgCaution = __('Deleting media cannot be undone');
 
                 //we can delete
                 $form = <<<END
@@ -922,7 +922,8 @@ END;
         }
         else
         {
-            $extraNotes = '<em>Note: As you are editing from the library uploading a new media item will not replace the old one from any layouts. To do this navigate to the layout and edit the media from there.</em>';
+            $updateMediaChecked = (Config::GetSetting($db, 'LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 'checked' : '';
+            $extraNotes = '<input type="checkbox" id="replaceInLayouts" name="replaceInLayouts" ' . $updateMediaChecked . '><label for="replaceInLayouts">' . __('Update this media in all layouts it is assigned to. Note: It will only be replaced in layouts you have permission to edit.') . '</label>';
 
             $save_button = <<<END
             <input id="btnSave" type="submit" value="Save" />
@@ -1408,9 +1409,78 @@ FORM;
             $db->query(sprintf("UPDATE media SET duration = %d WHERE mediaID = %d", $this->duration, $this->mediaid));
 
             $this->response->message = 'Edited the ' . $this->displayType;
+
+            // Edit from the library - check to see if we are replacing this media in *all* layouts.
+            if (Kit::GetParam('replaceInLayouts', _POST, _CHECKBOX) == 1)
+                $this->ReplaceMediaInAllLayouts($mediaid, $this->mediaid, $this->duration);
         }
 
         return $this->response;
+    }
+
+    /**
+     * Replace media in all layouts.
+     * @param <type> $oldMediaId
+     * @param <type> $newMediaId
+     */
+    private function ReplaceMediaInAllLayouts($oldMediaId, $newMediaId)
+    {
+        Kit::ClassLoader('region');
+        $db =& $this->db;
+        $count = 0;
+        
+        Debug::LogEntry($db, 'audit', sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
+
+        // Create a region object for later use
+        $region = new region($db, $this->user);
+
+        // Loop through a list of layouts this user has access to
+        foreach($this->user->LayoutList() as $layout)
+        {
+            $layoutId = $layout['layoutid'];
+
+            // Does this layout use the old media id?
+            $SQL = sprintf("SELECT lklayoutmediaid, regionid FROM lklayoutmedia WHERE mediaid = %d and layoutid = %d", $oldMediaId, $layoutId);
+            
+            if (!$results = $db->query($SQL))
+                return false;
+            
+            // Loop through each media link for this layout
+            while ($row = $db->get_assoc_row($results))
+            {
+                // Get the LKID of the link between this layout and this media.. could be more than one?
+                $lkId = $row['lklayoutmediaid'];
+                $regionId = $row['regionid'];
+
+                // Get the Type of this media
+                if (!$type = $region->GetMediaNodeType($layoutId, '', '', $lkId))
+                    continue;
+
+                // Create a new media node use it to swap the nodes over
+                Debug::LogEntry($db, 'audit', 'Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
+                require_once('modules/' . $type . '.module.php');
+
+                // Create a new module as if we were assigning it for the first time
+                $module = new $type($db, $this->user, $newMediaId);
+
+                // Sets the URI field
+                $module->SetRegionInformation($layoutId, $regionId);
+
+                // Get the media xml string to use in the swap.
+                $mediaXmlString = $module->AsXml();
+
+                // Swap the nodes
+                if (!$region->SwapMedia($layoutId, $regionId, $lkId, $oldMediaId, $newMediaId, $mediaXmlString))
+                    return false;
+
+                // Update the LKID with the new media id
+                $db->query("UPDATE lklayoutmedia SET mediaid = %d WHERE lklayoutmediaid = %d", $newMediaId, $row['lklayoutmediaid']);
+
+                $count++;
+            }
+        }
+
+        Debug::LogEntry($db, 'audit', sprintf('Replaced media in %d layouts', $count), 'module', 'ReplaceMediaInAllLayouts');
     }
 
     /**
@@ -1529,7 +1599,7 @@ FORM;
         $form .= '</form>';
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Permissions') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('LayoutMedia', 'Permissions') . '")');
         $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
         $response->AddButton(__('Save'), '$("#LayoutPermissionsForm").submit()');
 
