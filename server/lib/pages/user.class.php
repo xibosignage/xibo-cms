@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2010 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -764,6 +764,67 @@ END;
         $response->SetFormRequestResponse($output, __('My Applications'), '650', '450');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
         $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
+
+    /**
+     * Change my password form
+     */
+    public function ChangePasswordForm()
+    {
+        $db         =& $this->db;
+        $user       =& $this->user;
+        $response   = new ResponseManager();
+
+        $msgOldPassword = __('Old Password');
+        $msgNewPassword = __('New Password');
+        $msgRetype = __('Retype New Password');
+
+        $form = <<<END
+        <form id="ChangePasswordForm" class="XiboForm" action="index.php?p=user&q=ChangePassword" method="post">
+        <table>
+            <tr>
+                <td><label for="oldPassword">$msgOldPassword</label></td>
+                <td><input type="text" name="oldPassword" class="required" /></td>
+            </tr>
+            <tr>
+                <td><label for="newPassword">$msgNewPassword</label></td>
+                <td><input type="text" name="newPassword" class="required" /></td>
+            </tr>
+            <tr>
+                <td><label for="retypeNewPassword">$msgRetype</label></td>
+                <td><input type="text" name="retypeNewPassword" class="required" /></td>
+            </tr>
+        </table>
+        </form>
+END;
+
+        $response->SetFormRequestResponse($form, __('Change Password'), '450', '300');
+        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=User&Category=ChangePassword')");
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#ChangePasswordForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Change my Password
+     */
+    public function ChangePassword()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        $oldPassword = Kit::GetParam('oldPassword', _POST, _STRING);
+        $newPassword = Kit::GetParam('newPassword', _POST, _STRING);
+        $retypeNewPassword = Kit::GetParam('retypeNewPassword', _POST, _STRING);
+
+        Kit::ClassLoader('userdata');
+        $userData = new Userdata($db);
+
+        if (!$userData->ChangePassword($this->user->userid, $oldPassword, $newPassword, $retypeNewPassword))
+            trigger_error($userData->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Password Changed'));
         $response->Respond();
     }
 }
