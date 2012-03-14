@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2010 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -39,6 +39,7 @@ class displayDAO
 	private $ajax;
         private $mediaInventoryStatus;
         private $mediaInventoryXml;
+        private $macAddress;
 
 	function __construct(database $db, user $user)
 	{
@@ -75,7 +76,8 @@ class displayDAO
             display.alert_timeout,
             display.ClientAddress,
             display.MediaInventoryStatus,
-            display.MediaInventoryXml
+            display.MediaInventoryXml,
+            display.MacAddress
      FROM display
     WHERE display.displayid = %d
 SQL;
@@ -103,6 +105,7 @@ SQL;
                             $this->alert_timeout    = Kit::ValidateParam($row[8], _INT);
                             $this->mediaInventoryStatus = Kit::ValidateParam($row[9], _INT);
                             $this->mediaInventoryXml = Kit::ValidateParam($row[10], _HTMLSTRING);
+                            $this->macAddress = Kit::ValidateParam($row[11], _STRING);
 			}
 		}
 
@@ -322,7 +325,8 @@ HTML;
                              WHEN display.MediaInventoryStatus = 2 THEN '<img src="img/warn.gif">'
                              ELSE '<img src="img/disact.gif">'
                         END AS MediaInventoryStatus,
-                        display.MediaInventoryXml
+                        display.MediaInventoryXml,
+                        display.MacAddress
 		  FROM display
                     INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID
                     INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
@@ -356,6 +360,8 @@ SQL;
                 $msgDefault = __('Default Layout');
                 $msgStatus = __('Status');
                 $msgMediaInventory = __('Media Inventory');
+                $msgMacAddress = __('Mac Address');
+                $msgWakeOnLan = __('Wake on LAN');
 
 		$output = <<<END
 		<div class="info_table">
@@ -371,6 +377,7 @@ SQL;
                         <th>$msgLogIn</th>
                         <th>$msgLastA</th>
                         <th>$msgClientAddress</th>
+                        <th>$msgMacAddress</th>
                         <th>$msgStatus</th>
                         <th>$msgAction</th>
                     </tr>
@@ -402,6 +409,7 @@ END;
                         $vncTemplate = Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK');
                         $linkTarget = Kit::ValidateParam(Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
                         $mediaInventoryStatusLight = Kit::ValidateParam($aRow[10], _STRING);
+                        $macAddress = Kit::ValidateParam($aRow[11], _STRING);
 
                         if ($vncTemplate != '' && $clientAddress != '')
                         {
@@ -422,6 +430,7 @@ END;
                         <button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
                         <button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$displayName"><span>$msgGroupSecurity</span></button>
                         <button class="XiboFormButton" href="index.php?p=display&q=MediaInventory&DisplayId=$displayid"><span>$msgMediaInventory</span></button>
+                        <button class="XiboFormButton" href="index.php?p=display&q=WakeOnLanForm&DisplayId=$displayid"><span>$msgWakeOnLan</span></button>
 END;
                         }
 
@@ -440,6 +449,7 @@ END;
 			<td>$loggedin</td>
 			<td>$lastaccessed</td>
 			<td>$clientAddress</td>
+                        <td>$macAddress</td>
                         <td>$mediaInventoryStatusLight</td>
 			<td>$buttons</td>
 END;
@@ -792,6 +802,62 @@ END;
 
         $response->SetFormRequestResponse($table, __('Media Inventory'), '550px', '350px');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
+
+    /**
+     * Form for wake on Lan
+     */
+    public function WakeOnLanForm()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+
+        $msg = __('Are you sure you want to send a Wake On Lan message to this display?');
+
+        // Get the MAC Address
+        $macAddress = $db->GetSingleValue(sprintf("SELECT MacAddress FROM `display` WHERE DisplayID = %d", $displayId), 'MacAddress', _STRING);
+
+        if (!$macAddress || $macAddress == '')
+                trigger_error(__('This display has no mac address recorded against it yet. Make sure the display is running.'), E_USER_ERROR);
+
+        $form = <<<END
+            <form id="WakeOnLanForm" class="XiboForm" method="post" action="index.php?p=display&q=WakeOnLan">
+                <input type="hidden" name="DisplayId" value="$displayId">
+                <inpput type="hidden" name="MacAddress" value="$macAddress">
+                <table>
+                    <tr>
+                        <td>$msg</td>
+                    </tr>
+                </table>
+            </form>
+END;
+
+        $response->SetFormRequestResponse($form, __('Wake On Lan'), '300px', '150px');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Send'), '$("#WakeOnLanForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Wake on LAN
+     */
+    public function WakeOnLan()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $displayObject 	= new Display($db);
+
+        $displayId = Kit::GetParam('DisplayId', _POST, _INT);
+
+        if (!$displayObject->WakeOnLan($displayId))
+        {
+            trigger_error(__('Cannot Wake this Display'), E_USER_ERROR);
+        }
+
+        $response->SetFormSubmitResponse(__('Wake on Lan command sent.'));
         $response->Respond();
     }
 }

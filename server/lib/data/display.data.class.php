@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -413,6 +413,79 @@ class Display extends Data
         Debug::LogEntry($db, 'audit', 'OUT', 'Display', 'EditDefaultLayout');
 
         return true;
+    }
+
+    /**
+     * Wake this display using a WOL command
+     * @param <type> $displayId
+     * @return <type>
+     */
+    public function WakeOnLan($displayId)
+    {
+        $db =& $this->db;
+
+        // Get the Client Address and the Mac Address
+        if (!$row = $db->GetSingleRow(sprintf("SELECT MacAddress, ClientAddress FROM `display` WHERE DisplayID = %d", $displayId)))
+            $this->SetError(25013, __('Unable to get the Mac or Client Address'));
+
+        // Check they are populated
+        if ($row['MacAddress'] == '' || $row['ClientAddress'] == '')
+            $this->SetError(25014, __('This display has no mac address recorded against it yet. Make sure the display is running.'));
+
+        // Wake on Lan command via a socket
+        $socketNumber = "7";
+
+        if (!$this->AllanBarizoWol($row['ClientAddress'], $row['MacAddress'], $socketNumber))
+            $this->SetError(25015, __('Unable to generate the WOL Command'));
+
+        return true;
+    }
+
+    # Wake on LAN - (c) HotKey@spr.at, upgraded by Murzik
+    # Modified by Allan Barizo http://www.hackernotcracker.com
+    private function AllanBarizoWol($addr, $mac, $socket_number)
+    {
+        $addr_byte = explode(':', $mac);
+        $hw_addr = '';
+
+        for ($a=0; $a <6; $a++) $hw_addr .= chr(hexdec($addr_byte[$a]));
+        $msg = chr(255).chr(255).chr(255).chr(255).chr(255).chr(255);
+
+        for ($a = 1; $a <= 16; $a++) $msg .= $hw_addr;
+
+        // send it to the broadcast address using UDP
+        // SQL_BROADCAST option isn't help!!
+        $s = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+
+        if ($s == false)
+        {
+            echo "Error creating socket!\n";
+            echo "Error code is '".socket_last_error($s)."' - " . socket_strerror(socket_last_error($s));
+            return FALSE;
+        }
+        else
+        {
+            // setting a broadcast option to socket:
+            $opt_ret = socket_set_option($s, 1, 6, TRUE);
+
+            if($opt_ret <0)
+            {
+                echo "setsockopt() failed, error: " . strerror($opt_ret) . "\n";
+                return FALSE;
+            }
+
+            if(socket_sendto($s, $msg, strlen($msg), 0, $addr, $socket_number))
+            {
+                echo "Magic Packet sent successfully!";
+                socket_close($s);
+                return TRUE;
+            }
+            else
+            {
+                echo "Magic packet failed!";
+                return FALSE;
+            }
+        }
     }
 }
 ?>
