@@ -92,7 +92,7 @@ $datemanager	= new DateManager($db);
 
 	echo $body;
 ?>
-
+    <!-- Copyright 2006-2012 Daniel Garner and the Xibo Developers. Part of the Xibo Open Source Digital Signage Solution. AGPLv3 or later License Applies. -->
 	<div id="container">
 		<div id="headercontainer">
 	  		<div id="header"></div>

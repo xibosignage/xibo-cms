@@ -599,40 +599,48 @@ END;
 		return $return;
 	}
 
-	/**
-	 * Assess each Display to correctly set the logged in flag based on last accessed time
-	 * @return
-	 */
+    /**
+     * Assess each Display to correctly set the logged in flag based on last accessed time
+     * @return
+     */
     function validateDisplays()
-	{
-    	$db =& $this->db;
+    {
+        $db =& $this->db;
 
-		// timeout after 10 minutes
-		$timeout = time() - (60*10);
+        // Get the global timeout (overrides the alert timeout on the display if 0
+        $globalTimeout = Config::GetSetting($db, 'MAINTENANCE_ALERT_TOUT');
 
+        // Get a list of all displays and there last accessed / alert timeout value
         $SQL  = "";
-        $SQL .= "SELECT displayid, lastaccessed FROM display ";
-        $SQL .= sprintf("WHERE lastaccessed < %d ", $timeout);
+        $SQL .= "SELECT displayid, lastaccessed, alert_timeout FROM display ";
 
         if (!$result =$db->query($SQL))
         {
-        	trigger_error($db->error());
-        	trigger_error(__('Unable to access displays'), E_USER_ERROR);
+            trigger_error($db->error());
+            trigger_error(__('Unable to access displays'), E_USER_ERROR);
         }
 
-        while($row = $db->get_row($result))
+        // Look through each display
+        while($row = $db->get_assoc_row($result))
         {
-            $displayid    = $row[0];
-            $lastAccessed = $row[1];
-			
-			Debug::LogEntry($db, 'audit', sprintf('LastAccessed = %d, Timeout = %d for displayId %d', $lastAccessed, $timeout, $displayid));
+            $displayid    = Kit::ValidateParam($row['displayid'], _INT);
+            $lastAccessed = Kit::ValidateParam($row['lastaccessed'], _INT);
+            $alertTimeout = Kit::ValidateParam($row['alert_timeout'], _INT);
 
-            $SQL = "UPDATE display SET loggedin = 0 WHERE displayid = " . $displayid;
+            // Do we need to update the logged in light?
+            $timeoutToTestAgainst = ($alertTimeout == 0) ? $globalTimeout : $alertTimeout;
 
-        	if ((!$db->query($SQL)))
-        	{
-        		trigger_error($db->error());
-        	}
+            // If the last time we accessed is less than now minus the timeout
+            if ($lastAccessed < time() - ($timeoutToTestAgainst * 60))
+            {
+                // Update the display and set it as logged out
+                $SQL = "UPDATE display SET loggedin = 0 WHERE displayid = " . $displayid;
+
+                if ((!$db->query($SQL)))
+                    trigger_error($db->error());
+
+                Debug::LogEntry($db, 'audit', sprintf('LastAccessed = %d, Timeout = %d for displayId %d', $lastAccessed, $timeout, $displayid));
+            }
         }
     }
 
