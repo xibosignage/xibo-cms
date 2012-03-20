@@ -417,8 +417,8 @@ class Display extends Data
 
     /**
      * Wake this display using a WOL command
-     * @param <type> $displayId
-     * @return <type>
+     * @param <int> $displayId
+     * @return <bool>
      */
     public function WakeOnLan($displayId)
     {
@@ -434,6 +434,8 @@ class Display extends Data
 
         // Wake on Lan command via a socket
         $socketNumber = "7";
+
+        Debug::LogEntry($db, 'audit', 'About to send WOL packet to ' . $row['ClientAddress'] . ' with Mac Address ' . $row['MacAddress'], 'display', 'WakeOnLan');
 
         if (!$this->AllanBarizoWol($row['ClientAddress'], $row['MacAddress'], $socketNumber))
             $this->SetError(25015, __('Unable to generate the WOL Command'));
@@ -459,9 +461,7 @@ class Display extends Data
 
         if ($s == false)
         {
-            echo "Error creating socket!\n";
-            echo "Error code is '".socket_last_error($s)."' - " . socket_strerror(socket_last_error($s));
-            return FALSE;
+            return $this->SetError(25000, 'Error Creating the Socket. Error code is: ' . socket_last_error($s) . ' - ' . socket_strerror(socket_last_error($s)));
         }
         else
         {
@@ -471,19 +471,17 @@ class Display extends Data
             if($opt_ret <0)
             {
                 echo "setsockopt() failed, error: " . strerror($opt_ret) . "\n";
-                return FALSE;
+                return $this->SetError(25000, 'setsockopt() failed, error: ' . strerror($opt_ret));
             }
 
             if(socket_sendto($s, $msg, strlen($msg), 0, $addr, $socket_number))
             {
-                echo "Magic Packet sent successfully!";
                 socket_close($s);
                 return TRUE;
             }
             else
             {
-                echo "Magic packet failed!";
-                return FALSE;
+                return $this->SetError(25000, 'Send Failed');
             }
         }
     }

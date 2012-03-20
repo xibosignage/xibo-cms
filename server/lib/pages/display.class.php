@@ -639,7 +639,7 @@ END;
                 if ((!$db->query($SQL)))
                     trigger_error($db->error());
 
-                Debug::LogEntry($db, 'audit', sprintf('LastAccessed = %d, Timeout = %d for displayId %d', $lastAccessed, $timeout, $displayid));
+                Debug::LogEntry($db, 'audit', sprintf('LastAccessed = %d, Timeout = %d for displayId %d', $lastAccessed, $timeoutToTestAgainst, $displayid));
             }
         }
     }

@@ -280,6 +280,9 @@ else
             print "-&gt;" . __("Disabled") . "<br/>\n";
         }
         flush();
+
+        // TODO: Wake On LAN
+        
     }
     else
     {
