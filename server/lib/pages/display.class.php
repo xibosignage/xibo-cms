@@ -40,6 +40,8 @@ class displayDAO
         private $mediaInventoryStatus;
         private $mediaInventoryXml;
         private $macAddress;
+        private $wakeOnLan;
+        private $wakeOnLanTime;
 
 	function __construct(database $db, user $user)
 	{
@@ -74,10 +76,11 @@ class displayDAO
             display.isAuditing,
             display.email_alert,
             display.alert_timeout,
-            display.ClientAddress,
             display.MediaInventoryStatus,
             display.MediaInventoryXml,
-            display.MacAddress
+            display.MacAddress,
+            display.WakeOnLan,
+            display.WakeOnLanTime
      FROM display
     WHERE display.displayid = %d
 SQL;
@@ -106,6 +109,8 @@ SQL;
                             $this->mediaInventoryStatus = Kit::ValidateParam($row[9], _INT);
                             $this->mediaInventoryXml = Kit::ValidateParam($row[10], _HTMLSTRING);
                             $this->macAddress = Kit::ValidateParam($row[11], _STRING);
+                            $this->wakeOnLan = Kit::ValidateParam($row[12], _INT);
+                            $this->wakeOnLanTime = Kit::ValidateParam($row[13], _STRING);
 			}
 		}
 
@@ -139,6 +144,8 @@ SQL;
 		$auditing 		= Kit::GetParam('auditing', _POST, _INT);
         $email_alert    = Kit::GetParam('email_alert', _POST, _INT);
         $alert_timeout  = Kit::GetParam('alert_timeout', _POST, _INT);
+        $wakeOnLanEnabled = Kit::GetParam('wakeOnLanEnabled', _POST, _CHECKBOX);
+        $wakeOnLanTime = Kit::GetParam('wakeOnLanTime', _POST, _STRING);
 
 		// Do we take, or revoke a license
 		if (isset($_POST['takeLicense']))
@@ -156,9 +163,12 @@ SQL;
 			trigger_error(__("Can not have a display without a name"), E_USER_ERROR);
 		}
 
+                if ($wakeOnLanEnabled == 1 && $wakeOnLanTime == '')
+                    trigger_error(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), E_USER_ERROR);
+
 		$displayObject 	= new Display($db);
 
-		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert, $alert_timeout))
+		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime))
 		{
 			trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 		}
@@ -198,13 +208,17 @@ SQL;
 		$auditHelp		= $helpManager->HelpIcon(__("Collect auditing from this client. Should only be used if there is a problem with the display."), true);
         $emailHelp      = $helpManager->HelpIcon(__("Do you want to be notified by email if there is a problem with this display?"), true);
         $alertHelp      = $helpManager->HelpIcon(__("How long in minutes after the display last connected to the webservice should we send an alert. Set this value higher than the collection interval on the client. Set to 0 to use global default."), true);
-
-
+        $wolHelp = $helpManager->HelpIcon(__('Wake on Lan requires the correct network configuration to route the magic packet to the display PC'), true);
+        $wolTimeHelp = $helpManager->HelpIcon(_('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), true);
+        
                 $layoutList = Kit::SelectList('defaultlayoutid', $this->user->LayoutList(), 'layoutid', 'layout', $layoutid);
 
                 $inc_schedule_list = listcontent("1|Yes,0|No","inc_schedule",$inc_schedule);
 		$auditing_list = listcontent("1|Yes,0|No","auditing",$auditing);
         $email_alert_list = listcontent("1|Yes,0|No","email_alert",$email_alert);
+
+        // Is the wake on lan field checked?
+        $wakeOnLanChecked = ($this->wakeOnLan == 1) ? ' checked' : '';
 
 		$license_list = "";
 
@@ -230,6 +244,8 @@ SQL;
 		$msgLicense	= __('License');
         $msgAlert   = __('Email Alerts');
         $msgTimeout = __('Alert Timeout');
+        $msgWakeOnLan = __('Enable Wake On LAN');
+        $msgWakeOnLanTime = __('Wake On LAN Time');
 
 		$form = <<<END
 		<form id="DisplayEditForm" class="XiboForm" method="post" action="index.php?p=display&q=modify&id=$displayid">
@@ -254,6 +270,11 @@ SQL;
                     <td>$emailHelp $email_alert_list</td>
                     <td>$msgTimeout<span class="required">*</span></td>
                     <td>$alertHelp <input name="alert_timeout" type="text" value="$alert_timeout"></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><label for="wakeOnLanEnabled">$msgWakeOnLan</label>$wolHelp<input type="checkbox" id="wakeOnLanEnabled" name="wakeOnLanEnabled" $wakeOnLanChecked></td>
+                    <td>$msgWakeOnLanTime</td>
+                    <td>$wolTimeHelp<input name="wakeOnLanTime" type="text" value="$this->wakeOnLanTime"></td>
                 </tr>
 				<tr>
 					<td>$msgLicense</td>
@@ -409,7 +430,7 @@ END;
                         $vncTemplate = Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK');
                         $linkTarget = Kit::ValidateParam(Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
                         $mediaInventoryStatusLight = Kit::ValidateParam($aRow[10], _STRING);
-                        $macAddress = Kit::ValidateParam($aRow[11], _STRING);
+                        $macAddress = Kit::ValidateParam($aRow[12], _STRING);
 
                         if ($vncTemplate != '' && $clientAddress != '')
                         {

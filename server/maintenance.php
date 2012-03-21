@@ -31,6 +31,8 @@ ini_set('gd.jpeg_ignore_warning', 1);
 require_once("lib/app/translationengine.class.php");
 require_once("lib/app/debug.class.php");
 require_once("lib/app/kit.class.php");
+require_once("lib/data/data.class.php");
+require_once("lib/data/display.data.class.php");
 
 // Required Config Files
 require_once("config/config.class.php");
@@ -281,8 +283,40 @@ else
         }
         flush();
 
-        // TODO: Wake On LAN
-        
+
+        // Wake On LAN
+        print '<h1>' . __('Wake On LAN') . '</h1>';
+
+        // Create a display object to use later
+        $displayObject = new Display($db);
+
+        // Get a list of all displays which have WOL enabled
+        $SQL = "SELECT DisplayID, Display, WakeOnLanTime, LastWakeOnLanCommandSent FROM `display` WHERE WakeOnLan = 1";
+
+        foreach($db->GetArray($SQL) as $row)
+        {
+            $displayId = Kit::ValidateParam($row['DisplayID'], _INT);
+            $display = Kit::ValidateParam($row['Display'], _STRING);
+            $wakeOnLanTime = Kit::ValidateParam($row['WakeOnLanTime'], _STRING);
+            $lastWakeOnLan = Kit::ValidateParam($row['LastWakeOnLanCommandSent'], _INT);
+
+            // Time to WOL (with respect to today)
+            $timeToWake = strtotime(date('d-m-Y') . ' ' . $wakeOnLanTime);
+
+            // Has this displays WOL time been passed
+            if ($lastWakeOnLan < $timeToWake)
+            {
+                // Call the Wake On Lan method of the display object
+                if (!$displayObject->WakeOnLan($displayId))
+                    print $display . ':Error=' . $displayObject->GetErrorMessage() . '<br/>\n';
+                else
+                    print $display . ':Sent<br/>\n';
+            }
+            else
+                print $display . ':N/A<br/>\n';
+        }
+
+        flush();
     }
     else
     {

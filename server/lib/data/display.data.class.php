@@ -111,7 +111,7 @@ class Display extends Data
 	 * @param $licensed Object
 	 * @param $incSchedule Object
 	 */
-	public function Edit($displayID, $display, $isAuditing, $defaultLayoutID, $licensed, $incSchedule, $email_alert, $alert_timeout)
+	public function Edit($displayID, $display, $isAuditing, $defaultLayoutID, $licensed, $incSchedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime)
 	{
 		$db	=& $this->db;
 		
@@ -142,10 +142,12 @@ class Display extends Data
 		$SQL .= " 		licensed = %d, ";
 		$SQL .= "		isAuditing = %d, ";
                 $SQL .= "       email_alert = %d, ";
-                $SQL .= "       alert_timeout = %d ";
+                $SQL .= "       alert_timeout = %d, ";
+                $SQL .= "       WakeOnLan = %d, ";
+                $SQL .= "       WakeOnLanTime = '%s' ";
 		$SQL .= "WHERE displayid = %d ";
 		
-		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $email_alert, $alert_timeout, $displayID);
+		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $displayID);
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 		
@@ -440,6 +442,9 @@ class Display extends Data
         if (!$this->AllanBarizoWol($row['ClientAddress'], $row['MacAddress'], $socketNumber))
             $this->SetError(25015, __('Unable to generate the WOL Command'));
 
+        // If we succeeded then update this display with the last WOL time
+        $db->query(sprintf("UPDATE `display` SET LastWakeOnLanCommandSent = %d", time()));
+
         return true;
     }
 
@@ -470,7 +475,6 @@ class Display extends Data
 
             if($opt_ret <0)
             {
-                echo "setsockopt() failed, error: " . strerror($opt_ret) . "\n";
                 return $this->SetError(25000, 'setsockopt() failed, error: ' . strerror($opt_ret));
             }
 
