@@ -42,6 +42,10 @@ class displayDAO
         private $macAddress;
         private $wakeOnLan;
         private $wakeOnLanTime;
+        private $broadCastAddress;
+        private $secureOn;
+        private $cidr;
+        private $clientIpAddress;
 
 	function __construct(database $db, user $user)
 	{
@@ -80,7 +84,11 @@ class displayDAO
             display.MediaInventoryXml,
             display.MacAddress,
             display.WakeOnLan,
-            display.WakeOnLanTime
+            display.WakeOnLanTime,
+            display.BroadCastAddress,
+            display.SecureOn,
+            display.Cidr,
+            display.ClientAddress
      FROM display
     WHERE display.displayid = %d
 SQL;
@@ -111,6 +119,13 @@ SQL;
                             $this->macAddress = Kit::ValidateParam($row[11], _STRING);
                             $this->wakeOnLan = Kit::ValidateParam($row[12], _INT);
                             $this->wakeOnLanTime = Kit::ValidateParam($row[13], _STRING);
+                            $this->broadCastAddress = Kit::ValidateParam($row[14], _STRING);
+                            $this->secureOn = Kit::ValidateParam($row[15], _STRING);
+                            $this->cidr = Kit::ValidateParam($row[16], _INT);
+                            $this->clientIpAddress = Kit::ValidateParam($row[17], _STRING);
+
+                            // Make cidr null if its a 0
+                            $this->cidr = ($this->cidr == 0) ? '' : $this->cidr;
 			}
 		}
 
@@ -146,6 +161,9 @@ SQL;
         $alert_timeout  = Kit::GetParam('alert_timeout', _POST, _INT);
         $wakeOnLanEnabled = Kit::GetParam('wakeOnLanEnabled', _POST, _CHECKBOX);
         $wakeOnLanTime = Kit::GetParam('wakeOnLanTime', _POST, _STRING);
+        $broadCastAddress = Kit::GetParam('broadCastAddress', _POST, _STRING);
+        $secureOn = Kit::GetParam('secureOn', _POST, _STRING);
+        $cidr = Kit::GetParam('cidr', _POST, _INT);
 
 		// Do we take, or revoke a license
 		if (isset($_POST['takeLicense']))
@@ -168,7 +186,7 @@ SQL;
 
 		$displayObject 	= new Display($db);
 
-		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime))
+		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr))
 		{
 			trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 		}
@@ -246,6 +264,16 @@ SQL;
         $msgTimeout = __('Alert Timeout');
         $msgWakeOnLan = __('Enable Wake On LAN');
         $msgWakeOnLanTime = __('Wake On LAN Time');
+        $msgBroadCastAddress = __('BroadCast Address');
+        $msgSecureOn = __('Wake On LAN Secure On');
+        $msgCidr = __('Wake On LAN CIDR');
+
+        $helpBroadCastAddress = $helpManager->HelpIcon(__('The IP address of the remote host\'s broadcast address (or gateway)'), true);
+        $helpSecureOn = $helpManager->HelpIcon(__('Enter a hexidecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn).'), true);
+        $helpCidr = $helpManager->HelpIcon(__('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unkown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), true);
+
+        // If the broadcast address has not been set, then default to the client ip address
+        $broadCastAddress = ($this->broadCastAddress == '') ? $this->clientIpAddress : $this->broadCastAddress;
 
 		$form = <<<END
 		<form id="DisplayEditForm" class="XiboForm" method="post" action="index.php?p=display&q=modify&id=$displayid">
@@ -275,6 +303,16 @@ SQL;
                     <td colspan="2"><label for="wakeOnLanEnabled">$msgWakeOnLan</label>$wolHelp<input type="checkbox" id="wakeOnLanEnabled" name="wakeOnLanEnabled" $wakeOnLanChecked></td>
                     <td>$msgWakeOnLanTime</td>
                     <td>$wolTimeHelp<input name="wakeOnLanTime" type="text" value="$this->wakeOnLanTime"></td>
+                </tr>
+                <tr>
+                    <td><label for="broadCastAddress">$msgBroadCastAddress</label></td>
+                    <td>$helpBroadCastAddress<input type="text" id="broadCastAddress" name="broadCastAddress" value="$broadCastAddress"></td>
+                </tr>
+                <tr>
+                    <td><label for="secureOn">$msgSecureOn</label></td>
+                    <td>$helpSecureOn<input id="secureOn" name="secureOn" type="text" value="$this->secureOn"></td>
+                    <td><label for="cidr">$msgCidr</label></td>
+                    <td>$helpCidr<input id="cidr" name="cidr" type="text" value="$this->cidr" class="number"></td>
                 </tr>
 				<tr>
 					<td>$msgLicense</td>
@@ -883,7 +921,7 @@ END;
 
         if (!$displayObject->WakeOnLan($displayId))
         {
-            trigger_error(__('Cannot Wake this Display'), E_USER_ERROR);
+            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
         }
 
         $response->SetFormSubmitResponse(__('Wake on Lan command sent.'));
