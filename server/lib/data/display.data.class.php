@@ -661,7 +661,7 @@ class Display extends Data
             {
                 unset($socket);
                 
-                return $this->SetError(25015, __('Using fsockopen() failed, due to denied permission'));
+                Debug::LogEntry($this->db, 'audit', __('Using fsockopen() failed, due to denied permission'));
             }
         }
 
