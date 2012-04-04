@@ -471,7 +471,7 @@ class Display extends Data
             return false;
 
         // If we succeeded then update this display with the last WOL time
-        $db->query(sprintf("UPDATE `display` SET LastWakeOnLanCommandSent = %d", time()));
+        $db->query(sprintf("UPDATE `display` SET LastWakeOnLanCommandSent = %d WHERE DisplayID = %d", time(), $displayId));
 
         return true;
     }

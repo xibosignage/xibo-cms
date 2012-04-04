@@ -301,7 +301,7 @@ else
             $lastWakeOnLan = Kit::ValidateParam($row['LastWakeOnLanCommandSent'], _INT);
 
             // Time to WOL (with respect to today)
-            $timeToWake = strtotime(date('d-m-Y') . ' ' . $wakeOnLanTime);
+            $timeToWake = strtotime(date('Y-m-d') . ' ' . $wakeOnLanTime);
 
             // Has this displays WOL time been passed
             if ($lastWakeOnLan < $timeToWake)
@@ -310,7 +310,7 @@ else
                 if (!$displayObject->WakeOnLan($displayId))
                     print $display . ':Error=' . $displayObject->GetErrorMessage() . '<br/>\n';
                 else
-                    print $display . ':Sent<br/>\n';
+                    print $display . ':Sent. Previous send time: ' . date('Y-m-d H:i:s', $lastWakeOnLan) . '<br/>\n';
             }
             else
                 print $display . ':N/A<br/>\n';
