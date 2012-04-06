@@ -301,19 +301,26 @@ else
             $lastWakeOnLan = Kit::ValidateParam($row['LastWakeOnLanCommandSent'], _INT);
 
             // Time to WOL (with respect to today)
-            $timeToWake = strtotime(date('d-m-Y') . ' ' . $wakeOnLanTime);
+            $timeToWake = strtotime(date('Y-m-d') . ' ' . $wakeOnLanTime);
+            $timeNow = time();
 
-            // Has this displays WOL time been passed
-            if ($lastWakeOnLan < $timeToWake)
+            // Should the display be awake?
+            if ($timeNow >= $wakeOnLanTime)
             {
-                // Call the Wake On Lan method of the display object
-                if (!$displayObject->WakeOnLan($displayId))
-                    print $display . ':Error=' . $displayObject->GetErrorMessage() . '<br/>\n';
+                // Client should be awake, so has this displays WOL time been passed
+                if ($lastWakeOnLan < $timeToWake)
+                {
+                    // Call the Wake On Lan method of the display object
+                    if (!$displayObject->WakeOnLan($displayId))
+                        print $display . ':Error=' . $displayObject->GetErrorMessage() . '<br/>\n';
+                    else
+                        print $display . ':Sent. Previous send time: ' . date('Y-m-d H:i:s', $lastWakeOnLan) . '<br/>\n';
+                }
                 else
-                    print $display . ':Sent<br/>\n';
+                    print $display . ':Already Sent<br/>\n';
             }
             else
-                print $display . ':N/A<br/>\n';
+                print $display . ':Sleeping<br/>\n';
         }
 
         flush();
