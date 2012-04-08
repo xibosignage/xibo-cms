@@ -1438,7 +1438,8 @@ END;
 		
 		$response->SetFormSubmitResponse(__("The Event has been Added."));
 		$response->callBack = 'CallGenerateCalendar';
-                $response->keepOpen = true;
+                if ($isNextButton)
+                    $response->keepOpen = true;
 		$response->Respond();
 	}
 	

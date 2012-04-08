@@ -30,10 +30,10 @@ $(document).ready(function(){
         bgiframe: true,
         autoOpen: false,
         modal: false,
-        open: function() {
-            setTimeout(function() {
-                    $('#system_message').dialog('close');
-            }, 1000 );
+        buttons: {
+            Ok: function() {
+                $(this).dialog('close');
+            }
         }
     });
 
@@ -426,7 +426,7 @@ function XiboSubmitResponse(response) {
         // Should we display the message?
         if (!response.hideMessage) {
             if (response.message != '')
-                SystemMessage(response.message);
+                SystemMessage(response.message, true);
         }
 
         // Do we need to fire a callback function?
@@ -477,7 +477,7 @@ function XiboSubmitResponse(response) {
         }
         else {
             // Likely just an error that we want to report on
-            SystemMessage(response.message);
+            SystemMessage(response.message, false);
         }
     }
 
@@ -728,8 +728,9 @@ function LoginBox(message) {
 /**
  * Displays the system message
  * @param {String} messageText
+ * @param {Bool} success
  */
-function SystemMessage(messageText) {
+function SystemMessage(messageText, success) {
 
     if (messageText == '' || messageText == null) return;
 
@@ -737,9 +738,11 @@ function SystemMessage(messageText) {
 
     $('span', message).html(messageText);
     message.dialog('open');
-}
 
-function SystemMessageShown() {
+    if (!success)
+        return;
+
+    // Close after 1 second
     setTimeout(function() {
             $('#system_message').dialog('close');
     }, 1000 );
