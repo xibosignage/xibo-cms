@@ -30,11 +30,6 @@ $(document).ready(function(){
         bgiframe: true,
         autoOpen: false,
         modal: false,
-        buttons: {
-            Ok: function() {
-                $(this).dialog('close');
-            }
-        },
         open: function() {
             setTimeout(function() {
                     $('#system_message').dialog('close');

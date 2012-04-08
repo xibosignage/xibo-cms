@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -56,7 +56,7 @@ class licenseDAO
 		$output = <<<END
 		<h1>License Information</h1>
 		Xibo - Digitial Signage - http://www.xibo.org.uk
-		Copyright (C) 2006,2007,2008,2009 Daniel Garner, James Packer and Alex Harrington
+		Copyright (C) 2006-2012 Daniel Garner, James Packer and Alex Harrington
 		 
 		Xibo is free software: you can redistribute it and/or modify
 		it under the terms of the GNU Affero General Public License as published by

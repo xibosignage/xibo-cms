@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -1181,6 +1181,7 @@ END;
 		$response->SetFormRequestResponse($form, __('Schedule an Event'), '700px', '400px');
 		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Next'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=true").submit()');
 		$response->AddButton(__('Save'), '$("#AddEventForm").submit()');
 		$response->callBack = 'setupScheduleForm';
 		$response->Respond();
@@ -1381,6 +1382,8 @@ END;
 		$repeatTime            = Kit::GetParam('repeatTime', _POST, _STRING, '00:00');
 		
 		$userid             = Kit::GetParam('userid', _SESSION, _INT);
+
+                $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
 		
 		Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
 		Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
@@ -1435,6 +1438,7 @@ END;
 		
 		$response->SetFormSubmitResponse(__("The Event has been Added."));
 		$response->callBack = 'CallGenerateCalendar';
+                $response->keepOpen = true;
 		$response->Respond();
 	}
 	
