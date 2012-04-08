@@ -42,7 +42,9 @@ $datemanager	= new DateManager($db);
 		<link rel="shortcut icon" href="img/favicon.ico" />
 		<!-- Javascript Libraries -->
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
-		<script type="text/javascript" src="3rdparty/jQuery/jquery-ui.packed.js"></script>
+		<script type="text/javascript" src="3rdparty/jQuery/jquery-ui.min.js"></script>
+                <link rel="stylesheet" type="text/css" href="3rdparty/jQuery/css/jquery-ui.css" />
+
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.form.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.validate.min.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.bgiframe.min.js"></script>
@@ -51,8 +53,6 @@ $datemanager	= new DateManager($db);
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.ifixpng.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.contextmenu.r2.packed.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.corner.js"></script>
-		<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/datePicker.css" />
-		<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/ui-elements.css" />
 		
 		<!-- Our own -->
 		<link rel="stylesheet" type="text/css" href="template/css/presentation.css" />

@@ -1,6 +1,6 @@
 /**
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008,2009 Daniel Garner
+ * Copyright (C) 2006-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -29,11 +29,16 @@ $(document).ready(function(){
         resizable: false,
         bgiframe: true,
         autoOpen: false,
-        modal: true,
+        modal: false,
         buttons: {
             Ok: function() {
                 $(this).dialog('close');
             }
+        },
+        open: function() {
+            setTimeout(function() {
+                    $('#system_message').dialog('close');
+            }, 1000 );
         }
     });
 
@@ -44,6 +49,9 @@ $(document).ready(function(){
     });
 
     XiboInitialise();
+
+    // Make some buttons
+    $('.SecondNav a').button();
 });
 
 /**
@@ -211,6 +219,9 @@ function XiboGridRender(gridId){
 
             // Call XiboInitialise for this form
             XiboInitialise(gridDiv);
+
+            // Make some buttons
+            $('button', outputDiv).button();
 
             return false;
         }
@@ -731,6 +742,12 @@ function SystemMessage(messageText) {
 
     $('span', message).html(messageText);
     message.dialog('open');
+}
+
+function SystemMessageShown() {
+    setTimeout(function() {
+            $('#system_message').dialog('close');
+    }, 1000 );
 }
 
 /**
