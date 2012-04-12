@@ -302,17 +302,25 @@ else
 
             // Time to WOL (with respect to today)
             $timeToWake = strtotime(date('Y-m-d') . ' ' . $wakeOnLanTime);
+            $timeNow = time();
 
-            // Has this displays WOL time been passed
-            if ($lastWakeOnLan < $timeToWake)
+            // Should the display be awake?
+            if ($timeNow >= $timeToWake)
             {
-                // Call the Wake On Lan method of the display object
-                if (!$displayObject->WakeOnLan($displayId))
-                    print $display . ':Error=' . $displayObject->GetErrorMessage() . '<br/>\n';
+                // Client should be awake, so has this displays WOL time been passed
+                if ($lastWakeOnLan < $timeToWake)
+                {
+                    // Call the Wake On Lan method of the display object
+                    if (!$displayObject->WakeOnLan($displayId))
+                        print $display . ':Error=' . $displayObject->GetErrorMessage() . '<br/>\n';
+                    else
+                        print $display . ':Sent WOL Message. Previous WOL send time: ' . date('Y-m-d H:i:s', $lastWakeOnLan) . '<br/>\n';
+                }
                 else
-                    print $display . ':Sent. Previous send time: ' . date('Y-m-d H:i:s', $lastWakeOnLan) . '<br/>\n';
-            }
-            else
+                    print $display . ':Display already awake. Previous WOL send time: ' . date('Y-m-d H:i:s', $lastWakeOnLan) . '<br/>\n';
+             }
+             else
+                print $display . ':Sleeping<br/>\n';
                 print $display . ':N/A<br/>\n';
         }
 
