@@ -50,7 +50,14 @@ class Userdata extends Data
         if ($newPassword != $retypedNewPassword)
             return $this->SetError(26001, __('New Passwords do not match'));
 
-        // TODO: Check password complexity
+        // Check password complexity
+        $policy = Config::GetSetting($this->db, 'USER_PASSWORD_POLICY');
+
+        if ($policy != '')
+        {
+            if(!preg_match($policy, $newPassword, $matches))
+                return $this->SetError(26001, __('Your password does not meet the required complexity'));
+        }
 
         // Run the update
         if (!$this->db->query(sprintf("UPDATE `user` SET UserPassword = '%s' WHERE UserID = %d", md5($newPassword), $userId)))
