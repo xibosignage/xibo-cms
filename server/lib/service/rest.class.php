@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2010 Daniel Garner
+ * Copyright (C) 2010-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -87,6 +87,28 @@ class Rest
         Kit::ClassLoader('Display');
 
         return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * Display Wake On LAN
+     * @return <XiboAPIResponse>
+     */
+    public function DisplayWakeOnLan()
+    {
+        if (!$this->user->PageAuth('display'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('Display');
+
+        $displayObject = new Display($this->db);
+        $displaId = $this->GetParam('displayId', _INT);
+
+        // Try to issue the WOL command
+        if (!$displayObject->WakeOnLan($displayId))
+            return $this->Error($displayObject->GetErrorNumber(), $displayObject->GetErrorMessage());
+
+        // Return True
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**

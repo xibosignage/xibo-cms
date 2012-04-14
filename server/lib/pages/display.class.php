@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2010 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -39,6 +39,13 @@ class displayDAO
 	private $ajax;
         private $mediaInventoryStatus;
         private $mediaInventoryXml;
+        private $macAddress;
+        private $wakeOnLan;
+        private $wakeOnLanTime;
+        private $broadCastAddress;
+        private $secureOn;
+        private $cidr;
+        private $clientIpAddress;
 
 	function __construct(database $db, user $user)
 	{
@@ -73,9 +80,15 @@ class displayDAO
             display.isAuditing,
             display.email_alert,
             display.alert_timeout,
-            display.ClientAddress,
             display.MediaInventoryStatus,
-            display.MediaInventoryXml
+            display.MediaInventoryXml,
+            display.MacAddress,
+            display.WakeOnLan,
+            display.WakeOnLanTime,
+            display.BroadCastAddress,
+            display.SecureOn,
+            display.Cidr,
+            display.ClientAddress
      FROM display
     WHERE display.displayid = %d
 SQL;
@@ -103,6 +116,16 @@ SQL;
                             $this->alert_timeout    = Kit::ValidateParam($row[8], _INT);
                             $this->mediaInventoryStatus = Kit::ValidateParam($row[9], _INT);
                             $this->mediaInventoryXml = Kit::ValidateParam($row[10], _HTMLSTRING);
+                            $this->macAddress = Kit::ValidateParam($row[11], _STRING);
+                            $this->wakeOnLan = Kit::ValidateParam($row[12], _INT);
+                            $this->wakeOnLanTime = Kit::ValidateParam($row[13], _STRING);
+                            $this->broadCastAddress = Kit::ValidateParam($row[14], _STRING);
+                            $this->secureOn = Kit::ValidateParam($row[15], _STRING);
+                            $this->cidr = Kit::ValidateParam($row[16], _INT);
+                            $this->clientIpAddress = Kit::ValidateParam($row[17], _STRING);
+
+                            // Make cidr null if its a 0
+                            $this->cidr = ($this->cidr == 0) ? '' : $this->cidr;
 			}
 		}
 
@@ -136,6 +159,11 @@ SQL;
 		$auditing 		= Kit::GetParam('auditing', _POST, _INT);
         $email_alert    = Kit::GetParam('email_alert', _POST, _INT);
         $alert_timeout  = Kit::GetParam('alert_timeout', _POST, _INT);
+        $wakeOnLanEnabled = Kit::GetParam('wakeOnLanEnabled', _POST, _CHECKBOX);
+        $wakeOnLanTime = Kit::GetParam('wakeOnLanTime', _POST, _STRING);
+        $broadCastAddress = Kit::GetParam('broadCastAddress', _POST, _STRING);
+        $secureOn = Kit::GetParam('secureOn', _POST, _STRING);
+        $cidr = Kit::GetParam('cidr', _POST, _INT);
 
 		// Do we take, or revoke a license
 		if (isset($_POST['takeLicense']))
@@ -153,9 +181,12 @@ SQL;
 			trigger_error(__("Can not have a display without a name"), E_USER_ERROR);
 		}
 
+                if ($wakeOnLanEnabled == 1 && $wakeOnLanTime == '')
+                    trigger_error(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), E_USER_ERROR);
+
 		$displayObject 	= new Display($db);
 
-		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert, $alert_timeout))
+		if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr))
 		{
 			trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 		}
@@ -195,13 +226,17 @@ SQL;
 		$auditHelp		= $helpManager->HelpIcon(__("Collect auditing from this client. Should only be used if there is a problem with the display."), true);
         $emailHelp      = $helpManager->HelpIcon(__("Do you want to be notified by email if there is a problem with this display?"), true);
         $alertHelp      = $helpManager->HelpIcon(__("How long in minutes after the display last connected to the webservice should we send an alert. Set this value higher than the collection interval on the client. Set to 0 to use global default."), true);
-
-
+        $wolHelp = $helpManager->HelpIcon(__('Wake on Lan requires the correct network configuration to route the magic packet to the display PC'), true);
+        $wolTimeHelp = $helpManager->HelpIcon(_('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), true);
+        
                 $layoutList = Kit::SelectList('defaultlayoutid', $this->user->LayoutList(), 'layoutid', 'layout', $layoutid);
 
                 $inc_schedule_list = listcontent("1|Yes,0|No","inc_schedule",$inc_schedule);
 		$auditing_list = listcontent("1|Yes,0|No","auditing",$auditing);
         $email_alert_list = listcontent("1|Yes,0|No","email_alert",$email_alert);
+
+        // Is the wake on lan field checked?
+        $wakeOnLanChecked = ($this->wakeOnLan == 1) ? ' checked' : '';
 
 		$license_list = "";
 
@@ -227,6 +262,18 @@ SQL;
 		$msgLicense	= __('License');
         $msgAlert   = __('Email Alerts');
         $msgTimeout = __('Alert Timeout');
+        $msgWakeOnLan = __('Enable Wake On LAN');
+        $msgWakeOnLanTime = __('Wake On LAN Time');
+        $msgBroadCastAddress = __('BroadCast Address');
+        $msgSecureOn = __('Wake On LAN Secure On');
+        $msgCidr = __('Wake On LAN CIDR');
+
+        $helpBroadCastAddress = $helpManager->HelpIcon(__('The IP address of the remote host\'s broadcast address (or gateway)'), true);
+        $helpSecureOn = $helpManager->HelpIcon(__('Enter a hexidecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn).'), true);
+        $helpCidr = $helpManager->HelpIcon(__('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unkown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), true);
+
+        // If the broadcast address has not been set, then default to the client ip address
+        $broadCastAddress = ($this->broadCastAddress == '') ? $this->clientIpAddress : $this->broadCastAddress;
 
 		$form = <<<END
 		<form id="DisplayEditForm" class="XiboForm" method="post" action="index.php?p=display&q=modify&id=$displayid">
@@ -251,6 +298,21 @@ SQL;
                     <td>$emailHelp $email_alert_list</td>
                     <td>$msgTimeout<span class="required">*</span></td>
                     <td>$alertHelp <input name="alert_timeout" type="text" value="$alert_timeout"></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><label for="wakeOnLanEnabled">$msgWakeOnLan</label>$wolHelp<input type="checkbox" id="wakeOnLanEnabled" name="wakeOnLanEnabled" $wakeOnLanChecked></td>
+                    <td>$msgWakeOnLanTime</td>
+                    <td>$wolTimeHelp<input name="wakeOnLanTime" type="text" value="$this->wakeOnLanTime"></td>
+                </tr>
+                <tr>
+                    <td><label for="broadCastAddress">$msgBroadCastAddress</label></td>
+                    <td>$helpBroadCastAddress<input type="text" id="broadCastAddress" name="broadCastAddress" value="$broadCastAddress"></td>
+                </tr>
+                <tr>
+                    <td><label for="secureOn">$msgSecureOn</label></td>
+                    <td>$helpSecureOn<input id="secureOn" name="secureOn" type="text" value="$this->secureOn"></td>
+                    <td><label for="cidr">$msgCidr</label></td>
+                    <td>$helpCidr<input id="cidr" name="cidr" type="text" value="$this->cidr" class="number"></td>
                 </tr>
 				<tr>
 					<td>$msgLicense</td>
@@ -322,7 +384,8 @@ HTML;
                              WHEN display.MediaInventoryStatus = 2 THEN '<img src="img/warn.gif">'
                              ELSE '<img src="img/disact.gif">'
                         END AS MediaInventoryStatus,
-                        display.MediaInventoryXml
+                        display.MediaInventoryXml,
+                        display.MacAddress
 		  FROM display
                     INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID
                     INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
@@ -356,6 +419,8 @@ SQL;
                 $msgDefault = __('Default Layout');
                 $msgStatus = __('Status');
                 $msgMediaInventory = __('Media Inventory');
+                $msgMacAddress = __('Mac Address');
+                $msgWakeOnLan = __('Wake on LAN');
 
 		$output = <<<END
 		<div class="info_table">
@@ -371,6 +436,7 @@ SQL;
                         <th>$msgLogIn</th>
                         <th>$msgLastA</th>
                         <th>$msgClientAddress</th>
+                        <th>$msgMacAddress</th>
                         <th>$msgStatus</th>
                         <th>$msgAction</th>
                     </tr>
@@ -402,6 +468,7 @@ END;
                         $vncTemplate = Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK');
                         $linkTarget = Kit::ValidateParam(Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
                         $mediaInventoryStatusLight = Kit::ValidateParam($aRow[10], _STRING);
+                        $macAddress = Kit::ValidateParam($aRow[12], _STRING);
 
                         if ($vncTemplate != '' && $clientAddress != '')
                         {
@@ -422,6 +489,7 @@ END;
                         <button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
                         <button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$displayName"><span>$msgGroupSecurity</span></button>
                         <button class="XiboFormButton" href="index.php?p=display&q=MediaInventory&DisplayId=$displayid"><span>$msgMediaInventory</span></button>
+                        <button class="XiboFormButton" href="index.php?p=display&q=WakeOnLanForm&DisplayId=$displayid"><span>$msgWakeOnLan</span></button>
 END;
                         }
 
@@ -440,6 +508,7 @@ END;
 			<td>$loggedin</td>
 			<td>$lastaccessed</td>
 			<td>$clientAddress</td>
+                        <td>$macAddress</td>
                         <td>$mediaInventoryStatusLight</td>
 			<td>$buttons</td>
 END;
@@ -589,40 +658,48 @@ END;
 		return $return;
 	}
 
-	/**
-	 * Assess each Display to correctly set the logged in flag based on last accessed time
-	 * @return
-	 */
+    /**
+     * Assess each Display to correctly set the logged in flag based on last accessed time
+     * @return
+     */
     function validateDisplays()
-	{
-    	$db =& $this->db;
+    {
+        $db =& $this->db;
 
-		// timeout after 10 minutes
-		$timeout = time() - (60*10);
+        // Get the global timeout (overrides the alert timeout on the display if 0
+        $globalTimeout = Config::GetSetting($db, 'MAINTENANCE_ALERT_TOUT');
 
+        // Get a list of all displays and there last accessed / alert timeout value
         $SQL  = "";
-        $SQL .= "SELECT displayid, lastaccessed FROM display ";
-        $SQL .= sprintf("WHERE lastaccessed < %d ", $timeout);
+        $SQL .= "SELECT displayid, lastaccessed, alert_timeout FROM display ";
 
         if (!$result =$db->query($SQL))
         {
-        	trigger_error($db->error());
-        	trigger_error(__('Unable to access displays'), E_USER_ERROR);
+            trigger_error($db->error());
+            trigger_error(__('Unable to access displays'), E_USER_ERROR);
         }
 
-        while($row = $db->get_row($result))
+        // Look through each display
+        while($row = $db->get_assoc_row($result))
         {
-            $displayid    = $row[0];
-            $lastAccessed = $row[1];
-			
-			Debug::LogEntry($db, 'audit', sprintf('LastAccessed = %d, Timeout = %d for displayId %d', $lastAccessed, $timeout, $displayid));
+            $displayid    = Kit::ValidateParam($row['displayid'], _INT);
+            $lastAccessed = Kit::ValidateParam($row['lastaccessed'], _INT);
+            $alertTimeout = Kit::ValidateParam($row['alert_timeout'], _INT);
 
-            $SQL = "UPDATE display SET loggedin = 0 WHERE displayid = " . $displayid;
+            // Do we need to update the logged in light?
+            $timeoutToTestAgainst = ($alertTimeout == 0) ? $globalTimeout : $alertTimeout;
 
-        	if ((!$db->query($SQL)))
-        	{
-        		trigger_error($db->error());
-        	}
+            // If the last time we accessed is less than now minus the timeout
+            if ($lastAccessed < time() - ($timeoutToTestAgainst * 60))
+            {
+                // Update the display and set it as logged out
+                $SQL = "UPDATE display SET loggedin = 0 WHERE displayid = " . $displayid;
+
+                if ((!$db->query($SQL)))
+                    trigger_error($db->error());
+
+                Debug::LogEntry($db, 'audit', sprintf('LastAccessed = %d, Timeout = %d for displayId %d', $lastAccessed, $timeoutToTestAgainst, $displayid));
+            }
         }
     }
 
@@ -792,6 +869,62 @@ END;
 
         $response->SetFormRequestResponse($table, __('Media Inventory'), '550px', '350px');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
+
+    /**
+     * Form for wake on Lan
+     */
+    public function WakeOnLanForm()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+
+        $msg = __('Are you sure you want to send a Wake On Lan message to this display?');
+
+        // Get the MAC Address
+        $macAddress = $db->GetSingleValue(sprintf("SELECT MacAddress FROM `display` WHERE DisplayID = %d", $displayId), 'MacAddress', _STRING);
+
+        if (!$macAddress || $macAddress == '')
+                trigger_error(__('This display has no mac address recorded against it yet. Make sure the display is running.'), E_USER_ERROR);
+
+        $form = <<<END
+            <form id="WakeOnLanForm" class="XiboForm" method="post" action="index.php?p=display&q=WakeOnLan">
+                <input type="hidden" name="DisplayId" value="$displayId">
+                <inpput type="hidden" name="MacAddress" value="$macAddress">
+                <table>
+                    <tr>
+                        <td>$msg</td>
+                    </tr>
+                </table>
+            </form>
+END;
+
+        $response->SetFormRequestResponse($form, __('Wake On Lan'), '300px', '150px');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Send'), '$("#WakeOnLanForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Wake on LAN
+     */
+    public function WakeOnLan()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $displayObject 	= new Display($db);
+
+        $displayId = Kit::GetParam('DisplayId', _POST, _INT);
+
+        if (!$displayObject->WakeOnLan($displayId))
+        {
+            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
+        }
+
+        $response->SetFormSubmitResponse(__('Wake on Lan command sent.'));
         $response->Respond();
     }
 }
