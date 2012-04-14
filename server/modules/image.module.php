@@ -114,5 +114,16 @@ class image extends Module
         // Show the image - scaled to the aspect ratio of this region (get from GET)
         return sprintf('<div style="text-align:center;"><img src="index.php?p=module&q=GetImage&id=%d&width=%d&height=%d&dynamic" /></div>', $this->mediaid, $width, $height);
     }
+
+    public function HoverPreview()
+    {
+        // Default Hover window contains a thumbnail, media type and duration
+        $output = parent::HoverPreview();
+        $output .= '<div class="hoverPreview">';
+        $output .= '    <img src="index.php?p=module&q=GetImage&id=' . $this->mediaid . '&width=200&height=200&dynamic=true" alt="Hover Preview">';
+        $output .= '</div>';
+
+        return $output;
+    }
 }
 ?>

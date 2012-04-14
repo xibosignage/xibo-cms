@@ -338,5 +338,27 @@ FORM;
 END;
         return $return;
     }
+
+    public function HoverPreview()
+    {
+        // Default Hover window contains a thumbnail, media type and duration
+        $output = parent::HoverPreview();
+
+        // Provide a sample of the text content
+        $rawXml = new DOMDocument();
+        $rawXml->loadXML($this->GetRaw());
+
+        // Get the Text Node out of this
+        $textNodes = $rawXml->getElementsByTagName('text');
+        $textNode = $textNodes->item(0);
+        $text = $textNode->nodeValue;
+
+
+        $output .= '<div class="hoverPreview">';
+        $output .= '    ' . $text;
+        $output .= '</div>';
+
+        return $output;
+    }
 }
 ?>

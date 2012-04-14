@@ -1434,18 +1434,6 @@ HTML;
 			$tmpModule = new $mediaType($db, $user, $mediaid, $this->layoutid, $regionid, $lkid);
 			$mediaName = $tmpModule->GetName();
 			
-			// Do we have a thumbnail for this media?
-			if ($mediaType == 'image')
-			{
-				//make up a list of the media, with an image showing the media type
-				$mediaList = "<img alt='$mediaFileName' src='index.php?p=module&q=GetImage&id=$mediaid&thumb=true'>";
-			}
-			else
-			{
-				//make up a list of the media, with an image showing the media type
-				$mediaList = "<img alt='$mediaType thumbnail' src='img/forms/$mediaType.png'>";
-			}
-			
 			// Media duration check
 			if ($mediaDuration == 0)
 			{
@@ -1514,29 +1502,22 @@ LINK;
                         if ($auth->modifyPermissions)
                             $editLink .= ' | <a class="XiboFormButton" style="color:#FFF" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '&mediaid=' . $mediaid . '&lkid=' . $lkid . '" title="Click to change permissions for this media">' . $msgPermissions . '</a>';
 
+                        // Pad the media name
+                        $mediaNameCr = ($mediaName != '') ? $mediaName . '<br/>' : $mediaName;
+                        $mediaHoverPreview = $tmpModule->HoverPreview();
+
 			$mediaHtml .= <<<BUTTON
 			<div class="timebar_ctl" style="position:absolute; top:$top; left:$leftVal; width:$thumbWidthVal;" mediaid="$mediaid" lkid="$lkid">
 				<div class="timebar">
 					<div class="$rightClass">
 					<div class="$leftClass"></div>
 						<br />
+                                                $mediaNameCr
 						$editLink
 					</div>
 				</div>
 				<div class="tooltip_hidden" style="position:absolute; z-index:5;">
-					<div class="thumbnail">$mediaList</div>
-					<div class="info">
-						<ul>
-							<li>$msgType: $mediaType</li>
-BUTTON;
-			if ($mediaName != "")
-			{
-				$mediaHtml .= "<li>$msgName: $mediaName</li>";
-			}
-			$mediaHtml .= <<<BUTTON
-							<li>$msgDuration: $mediaDurationText</li>
-						</ul>
-					</div>
+				$mediaHoverPreview
 				</div>
 			</div>
 			$mediaBreakHtml			
@@ -1602,7 +1583,6 @@ HTML;
 						$mediaHtml
 					</div>
 				</div>
-				<div id="tooltip_hover" style="position:absolute; top: 275px; left:0px; display:none"></div>
 			</div>
 		</div>
 END;

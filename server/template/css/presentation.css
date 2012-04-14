@@ -1109,12 +1109,16 @@ td.error {
 #tooltip_hover
 {
 	display:block;
-	width: 200px;
-	height: 200px;
 	background: url(../../img/forms/previewback.png) repeat-x #fff;
 	border: 2px solid #DCE4F5;
 	padding: 10px;
 	z-index:15;
+        overflow-x: hidden;
+        overflow-y: scroll;
+}
+
+#tooltip_hover li {
+    list-style-type: disc;
 }
 
 .scrollingWindow 

@@ -20,18 +20,23 @@
 
 var region_options_callback = function(outputDiv)
 {	
-	//Get all the tooltip_hidden
-	$(".tooltip_hidden").parent().hover(function() {
-		var html = $(".tooltip_hidden",this).html();
-		var left = this.offsetLeft - this.offsetParent.scrollLeft;;
-		
-		//Change the hidden div's content
-		$('#tooltip_hover')	.html(html)
-							.css("left",left)
-							.show();
-	}, function() {
-		$('#tooltip_hover').hide();
-	});
+    //Get all the tooltip_hidden
+    $(".tooltip_hidden").parent().hover(function() {
+
+        // Get the position of the dialog
+        var position =  $('#div_dialog').dialog().parent().position();
+
+        //Change the hidden div's content
+        $('#tooltip_hover')
+            .html($(".tooltip_hidden", this).html())
+            .css("top", position.top + "px")
+            .css("width", (position.left - 25) + "px")
+            .css("height", $('#div_dialog').dialog().parent().height() + "px")
+            .show();
+
+    }, function() {
+        return false;
+    });
 	
 	// Make the elements draggable
 	$(".timebar_ctl").draggable({
@@ -240,6 +245,11 @@ $(document).ready(function() {
                 $('.region').resizable('option', 'aspectRatio', false);
             }
        });
+
+        // Bind to the close event for the dialog
+        $('#div_dialog').bind('dialogclose', function(event) {
+            $('#tooltip_hover').hide();
+        });
 });
 
 /*

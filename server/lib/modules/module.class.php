@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner
+ * Copyright (C) 2006-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -1521,6 +1521,31 @@ FORM;
     public function IsRegionSpecific()
     {
         return $this->regionSpecific;
+    }
+
+    /**
+     * Default code for the hover preview
+     */
+    public function HoverPreview()
+    {
+        $msgType = __('Type');
+        $msgName = __('Name');
+        $msgDuration = __('Duration');
+
+        // Default Hover window contains a thumbnail, media type and duration
+        $output = '<div class="thumbnail"><img alt="' . $this->displayType . ' thumbnail" src="img/forms/' . $this->type . '.png"></div>';
+        $output .= '<div class="info">';
+        $output .= '    <ul>';
+        $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';
+
+        if (!$this->regionSpecific)
+            $output .= '    <li>' . $msgName . ': ' . $this->name . '</li>';
+
+        $output .= '    <li>' . $msgDuration . ': ' . $this->duration . ' ' . __('seconds') . '</li>';
+        $output .= '    </ul>';
+        $output .= '</div>';
+
+        return $output;
     }
 
     /**

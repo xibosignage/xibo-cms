@@ -59,4 +59,4 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		</div>
 	</div>
 </div>	
-
+<div id="tooltip_hover" style="position:absolute; top: 0px; left:0px; display:none"></div>
