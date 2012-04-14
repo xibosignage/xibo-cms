@@ -147,21 +147,18 @@ class userDAO
 
             $userID	= Kit::GetParam('userid', _POST, _INT, 0);
             $username   = Kit::GetParam('username', _POST, _STRING);
-            $password   = Kit::GetParam('password', _POST, _STRING);
-            $password   = md5($password);
             $email      = Kit::GetParam('email', _POST, _STRING);
             $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT, 0);
             $homepage   = Kit::GetParam('homepage', _POST, _STRING, 'dashboard');
             $pass_change = isset($_POST['pass_change']);
+            $oldPassword = Kit::GetParam('oldPassword', _POST, _STRING);
+            $newPassword = Kit::GetParam('newPassword', _POST, _STRING);
+            $retypeNewPassword = Kit::GetParam('retypeNewPassword', _POST, _STRING);
 
             // Validation
             if ($username == "")
             {
-                trigger_error("Please enter a User Name.", E_USER_ERROR);
-            }
-            if ($password == "")
-            {
-                trigger_error("Please enter a Password.", E_USER_ERROR);
+                trigger_error(__("Please enter a User Name."), E_USER_ERROR);
             }
             
             // Check for duplicate user name
@@ -182,9 +179,6 @@ class userDAO
             // Everything is ok - run the update
             $sql = sprintf("UPDATE user SET UserName = '%s', HomePage = '%s', Email = '%s' ", $username, $homepage, $email);
 
-            if ($pass_change)
-                $sql .= sprintf(", UserPassword = '%s'", $password);
-
             if ($usertypeid != 0)
                 $sql .= sprintf(", usertypeid = %d ", $usertypeid);
 
@@ -194,6 +188,20 @@ class userDAO
             {
                 trigger_error($db->error());
                 trigger_error(__('Error updating user'), E_USER_ERROR);
+            }
+
+            // Check that we have permission to get to this point
+            if ($user->usertypeid != 1 && $pass_change)
+                trigger_error(__('You do not have permissions to change this users password'));
+
+            // Handle the Password Change
+            if ($newPassword != '' || $pass_change)
+            {
+                Kit::ClassLoader('userdata');
+                $userData = new Userdata($db);
+
+                if (!$userData->ChangePassword($this->user->userid, $oldPassword, $newPassword, $retypeNewPassword, $pass_change))
+                    trigger_error($userData->GetErrorMessage(), E_USER_ERROR);
             }
 
             // Update the group to follow suit
@@ -524,7 +532,7 @@ HTML;
             $passHelp       = $helpManager->HelpIcon("The Password for this user.", true);
             $emailHelp      = $helpManager->HelpIcon("Users email address. E.g. user@example.com", true);
             $homepageHelp   = $helpManager->HelpIcon("The users Homepage. This should not be changed until you want to reset their homepage.", true);
-            $overpassHelp   = $helpManager->HelpIcon("Do you want to override this users password with the one entered here.", true);
+            $overpassHelp   = $helpManager->HelpIcon(__("As an admin, do you want to force this users password to change?."), true);
             $usertypeHelp   = $helpManager->HelpIcon("What is this users type? This would usually be set to 'User'", true);
             $userGroupHelp = $helpManager->HelpIcon(__('What is the initial user group for this user?'), true);
 
@@ -571,14 +579,17 @@ END;
 
                     $override_option = <<<FORM
                     <td>Override Password?</td>
-                    <td>$overpassHelp <input type="checkbox" name="pass_change" value="0"></td>
+                    <td>$overpassHelp <input type="checkbox" name="pass_change"></td>
 FORM;
+
+                    // Only show the override option if we are a super admin
+                    $override_option = ($user->usertypeid == 1) ? $override_option : '';
             }
 
-            if ($_SESSION['usertype']==1)
+            if ($user->usertypeid == 1)
             {
                     //usertype list
-                    $usertype_list = dropdownlist("SELECT usertypeid, usertype FROM usertype", "usertypeid", $usertypeid);
+                    $usertype_list = dropdownlist('SELECT usertypeid, usertype FROM usertype', "usertypeid", $usertypeid);
 
                     $usertypeOption = <<<END
                     <tr>
@@ -592,6 +603,9 @@ END;
                     $usertypeOption = "";
             }
 
+            $msgOldPassword = __('Old Password');
+            $msgNewPassword = __('New Password');
+            $msgRetype = __('Retype New Password');
 
             $form = <<<END
             <form id="UserForm" class="XiboForm" method='post' action='$action'>
@@ -602,9 +616,17 @@ END;
                                     <td>$nameHelp <input type="text" id="" name="username" value="$username" class="required" /></td>
                             </tr>
                             <tr>
-                                    <td><label for="password">Password<span class="required">*</span></label></td>
-                                    <td>$passHelp <input type="password" id="password" name="password" value="$password" /></td>
-                                    $override_option
+                                <td><label for="oldPassword">$msgOldPassword</label></td>
+                                <td><input type="password" name="oldPassword" /></td>
+                                $override_option
+                            </tr>
+                            <tr>
+                                <td><label for="newPassword">$msgNewPassword</label></td>
+                                <td>$passHelp<input type="password" name="newPassword" /></td>
+                            </tr>
+                            <tr>
+                                <td><label for="retypeNewPassword">$msgRetype</label></td>
+                                <td><input type="password" name="retypeNewPassword" /></td>
                             </tr>
                             <tr>
                                     <td><label for="email">Email Address<span class="required email">*</span></label></td>
@@ -785,15 +807,15 @@ END;
         <table>
             <tr>
                 <td><label for="oldPassword">$msgOldPassword</label></td>
-                <td><input type="text" name="oldPassword" class="required" /></td>
+                <td><input type="password" name="oldPassword" class="required" /></td>
             </tr>
             <tr>
                 <td><label for="newPassword">$msgNewPassword</label></td>
-                <td><input type="text" name="newPassword" class="required" /></td>
+                <td><input type="password" name="newPassword" class="required" /></td>
             </tr>
             <tr>
                 <td><label for="retypeNewPassword">$msgRetype</label></td>
-                <td><input type="text" name="retypeNewPassword" class="required" /></td>
+                <td><input type="password" name="retypeNewPassword" class="required" /></td>
             </tr>
         </table>
         </form>

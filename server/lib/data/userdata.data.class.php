@@ -35,12 +35,17 @@ class Userdata extends Data
      * @param <type> $retypedNewPassword
      * @return <type> 
      */
-    public function ChangePassword($userId, $oldPassword, $newPassword, $retypedNewPassword)
+    public function ChangePassword($userId, $oldPassword, $newPassword, $retypedNewPassword, $forceChange = false)
     {
-        // Check the Old Password is correct
-        if ($this->db->GetCountOfRows(sprintf("SELECT UserId FROM `user` WHERE UserID = %d AND UserPassword = '%s'", $userId, md5($oldPassword))) == 0)
-            return $this->SetError(26000, __('Incorrect Password Provided'));
-
+        // We can force the users password to change without having to provide the old one.
+        // Is this a potential security hole - we must have validated that we are an admin to get to this point
+        if (!$forceChange)
+        {
+            // Check the Old Password is correct
+            if ($this->db->GetCountOfRows(sprintf("SELECT UserId FROM `user` WHERE UserID = %d AND UserPassword = '%s'", $userId, md5($oldPassword))) == 0)
+                return $this->SetError(26000, __('Incorrect Password Provided'));
+        }
+        
         // Check the New Password and Retyped Password match
         if ($newPassword != $retypedNewPassword)
             return $this->SetError(26001, __('New Passwords do not match'));
