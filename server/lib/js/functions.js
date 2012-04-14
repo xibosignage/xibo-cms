@@ -24,19 +24,6 @@ if (window.attachEvent) window.attachEvent("onload", sfHover); //if IE6 imitate 
 
 $(document).ready(function() {
 
-	//help tabs - where they are found
-	$('#helptabs').tabs({ fxSlide: true, fxFade: true, fxSpeed: 'fast' });
-	
-	$(' :input').css("z-index","1");
-	$(' :input').css("position","relative");
-	$('#notes').css("z-index","2");
-	
-	//fixes the IE hover and select list problem
-	$('#nav li').css("z-index","2");
-	$("li ul","#nav").css("z-index","2").bgiframe();
-	
-	$('#notes').bgiframe();
-
 	//handle the trigger function (we might want to trigger some javascript on the page load)
 	var trigger = gup('trigger')
 	if (trigger != "")

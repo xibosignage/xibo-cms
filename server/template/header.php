@@ -47,7 +47,6 @@ $datemanager	= new DateManager($db);
 
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.form.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.validate.min.js"></script>
-		<script type="text/javascript" src="3rdparty/jQuery/jquery.bgiframe.min.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.tablesorter.pack.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.tablesorter.pager.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.ifixpng.js"></script>
