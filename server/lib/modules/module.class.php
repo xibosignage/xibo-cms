@@ -622,8 +622,7 @@ END;
             $regionid = $this->regionid;
             $mediaid = $this->mediaid;
 
-            $url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-
+            // Check permissions
             if (!$this->auth->del)
             {
                 $this->response->SetError('You do not have permission to delete this assignment.');
@@ -631,6 +630,7 @@ END;
                 return $this->response;
             }
 
+            // Extra work if we are on a layout
             if ($layoutid != '')
             {
                 Kit::ClassLoader('layoutmediagroupsecurity');
@@ -695,13 +695,14 @@ END;
 
                 $this->response->message = __('Media Deleted');
             }
-            else
-            {
-                // We want to load a new form
-                $this->response->loadForm = true;
-                $this->response->loadFormUri= $url;
-            }
 
+            // We want to load the region timeline form back again
+            if ($layoutid != '')
+            {
+                $this->response->loadForm = true;
+                $this->response->loadFormUri= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+            }
+                
             return $this->response;
 	}
 
