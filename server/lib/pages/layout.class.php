@@ -2216,5 +2216,49 @@ END;
 
         return $groups;
     }
+
+    /**
+     * A List of Layouts we have permission to design
+     */
+    public function LayoutJumpList()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        // Show a list of layouts we have permission to jump to
+        $output = '<div class="info_table">';
+        $output .= '<table style="width:100%">';
+        $output .= '    <thead>';
+        $output .= '    <tr>';
+        $output .= '    <th>' . __('Layout') . '</th>';
+        $output .= '    <th>' . __('Action') . '</th>';
+        $output .= '    </tr>';
+        $output .= '    </thead>';
+        $output .= '    <tbody>';
+
+        // Get a layout list
+        $layoutList = $user->LayoutList();
+
+        foreach($layoutList as $layout)
+        {
+            if (!$layout['edit'] == 1)
+                continue;
+
+            // We have permission to edit this layout
+            $output .= '<tr>';
+            $output .= '    <td>' . $layout['layout'] . '</td>';
+            $output .= '    <td><button href="index.php?p=layout&modify=true&layoutid=' . $layout['layoutid'] . '" onclick="window.location = $(this).attr(\'href\')"><span>' . __('Design') . '</span></button></td>';
+            $output .= '</tr>';
+        }
+
+        $output .= '    </tbody>';
+        $output .= '</table>';
+        $output .= '</div>';
+
+        $response->SetFormRequestResponse($output, __('Jump to...'), '350px', '500px');
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
 }
 ?>
