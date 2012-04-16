@@ -63,7 +63,6 @@ class userDAO
 
             $username   = Kit::GetParam('username', _POST, _STRING);
             $password   = Kit::GetParam('password', _POST, _STRING);
-            $password   = md5($password);
             $email      = Kit::GetParam('email', _POST, _STRING);
             $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT, 0);
             $homepage   = Kit::GetParam('homepage', _POST, _STRING);
@@ -89,7 +88,14 @@ class userDAO
 
             if ($homepage == "") $homepage = "dashboard";
 
-            //Check for duplicate user name
+            // Test the password
+            Kit::ClassLoader('userdata');
+            $userData = new Userdata($db);
+
+            if (!$userData->TestPasswordAgainstPolicy($password))
+                trigger_error($userData->GetErrorMessage(), E_USER_ERROR);
+
+            // Check for duplicate user name
             $sqlcheck = " ";
             $sqlcheck .= sprintf("SELECT UserName FROM user WHERE UserName = '%s'", $db->escape_string($username));
 
@@ -104,7 +110,10 @@ class userDAO
                 trigger_error("Could Not Complete, Duplicate User Name Exists", E_USER_ERROR);
             }
 
-            //Ready to enter the user into the database
+            // Ready to enter the user into the database
+            $password = md5($password);
+
+            // Run the INSERT statement
             $query = "INSERT INTO user (UserName, UserPassword, usertypeid, email, homepage)";
             $query .= " VALUES ('$username', '$password', $usertypeid, '$email', '$homepage')";
 
@@ -540,6 +549,11 @@ HTML;
             $override_option = '';
             $userGroupOption = '';
 
+            $msgOldPassword = __('Old Password');
+            $msgNewPassword = __('New Password');
+            $msgRetype = __('Retype New Password');
+            $msgPassword = __('Password');
+
             //What form are we displaying
             if ($userid == "")
             {
@@ -553,6 +567,13 @@ HTML;
                     <tr>
                         <td><label for="groupid">$msgGroupSelect<span class="required">*</span></label></td>
                         <td>$userGroupHelp $userGroupList</td>
+                    </tr>
+END;
+
+                $passwordOptions = <<<END
+                    <tr>
+                        <td><label for="password">$msgPassword</label></td>
+                        <td>$passHelp<input type="password" name="password" /></td>
                     </tr>
 END;
             }
@@ -584,6 +605,22 @@ FORM;
 
                     // Only show the override option if we are a super admin
                     $override_option = ($user->usertypeid == 1) ? $override_option : '';
+
+                    $passwordOptions = <<<END
+                    <tr>
+                        <td><label for="oldPassword">$msgOldPassword</label></td>
+                        <td><input type="password" name="oldPassword" /></td>
+                        $override_option
+                    </tr>
+                    <tr>
+                        <td><label for="newPassword">$msgNewPassword</label></td>
+                        <td>$passHelp<input type="password" name="newPassword" /></td>
+                    </tr>
+                    <tr>
+                        <td><label for="retypeNewPassword">$msgRetype</label></td>
+                        <td><input type="password" name="retypeNewPassword" /></td>
+                    </tr>
+END;
             }
 
             if ($user->usertypeid == 1)
@@ -603,10 +640,6 @@ END;
                     $usertypeOption = "";
             }
 
-            $msgOldPassword = __('Old Password');
-            $msgNewPassword = __('New Password');
-            $msgRetype = __('Retype New Password');
-
             $form = <<<END
             <form id="UserForm" class="XiboForm" method='post' action='$action'>
                     <input type='hidden' name='userid' value='$userid'>
@@ -615,19 +648,7 @@ END;
                                     <td><label for="username">User Name<span class="required">*</span></label></td>
                                     <td>$nameHelp <input type="text" id="" name="username" value="$username" class="required" /></td>
                             </tr>
-                            <tr>
-                                <td><label for="oldPassword">$msgOldPassword</label></td>
-                                <td><input type="password" name="oldPassword" /></td>
-                                $override_option
-                            </tr>
-                            <tr>
-                                <td><label for="newPassword">$msgNewPassword</label></td>
-                                <td>$passHelp<input type="password" name="newPassword" /></td>
-                            </tr>
-                            <tr>
-                                <td><label for="retypeNewPassword">$msgRetype</label></td>
-                                <td><input type="password" name="retypeNewPassword" /></td>
-                            </tr>
+                            $passwordOptions
                             <tr>
                                     <td><label for="email">Email Address<span class="required email">*</span></label></td>
                                     <td>$emailHelp <input type="text" id="email" name="email" value="$email" class="required" /></td>
