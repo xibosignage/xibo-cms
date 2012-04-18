@@ -539,6 +539,8 @@ HTML;
             // Help UI
             $nameHelp       = $helpManager->HelpIcon("The Login Name of the user.", true);
             $passHelp       = $helpManager->HelpIcon("The Password for this user.", true);
+            $retypePassHelp = $helpManager->HelpIcon(__('Retype the users new password'), true);
+            $oldPassHelp    = $helpManager->HelpIcon(__('To change the password you must enter the old password, if password is to remain the same, leave blank.'), true);
             $emailHelp      = $helpManager->HelpIcon("Users email address. E.g. user@example.com", true);
             $homepageHelp   = $helpManager->HelpIcon("The users Homepage. This should not be changed until you want to reset their homepage.", true);
             $overpassHelp   = $helpManager->HelpIcon(__("As an admin, do you want to force this users password to change?."), true);
@@ -549,10 +551,15 @@ HTML;
             $override_option = '';
             $userGroupOption = '';
 
+            $msgUserName = __('User Name');
+            $msgEmailAddress = __('Email Address');
             $msgOldPassword = __('Old Password');
             $msgNewPassword = __('New Password');
             $msgRetype = __('Retype New Password');
             $msgPassword = __('Password');
+            $msgHomePage = __('Homepage');
+            $msgOverrideOption = __('Override Password?');
+            $msgUserType = __('User Type');
 
             //What form are we displaying
             if ($userid == "")
@@ -593,13 +600,13 @@ END;
 
                     $homepageOption = <<<END
                     <tr>
-                            <td><label for="homepage">Homepage<span class="required">*</span></label></td>
+                            <td><label for="homepage">$msgHomePage<span class="required">*</span></label></td>
                             <td>$homepageHelp $homepage_list</td>
                     </tr>
 END;
 
                     $override_option = <<<FORM
-                    <td>Override Password?</td>
+                    <td>$msgOverrideOption</td>
                     <td>$overpassHelp <input type="checkbox" name="pass_change"></td>
 FORM;
 
@@ -609,7 +616,7 @@ FORM;
                     $passwordOptions = <<<END
                     <tr>
                         <td><label for="oldPassword">$msgOldPassword</label></td>
-                        <td><input type="password" name="oldPassword" /></td>
+                        <td>$oldPassHelp<input type="password" name="oldPassword" /></td>
                         $override_option
                     </tr>
                     <tr>
@@ -618,7 +625,7 @@ FORM;
                     </tr>
                     <tr>
                         <td><label for="retypeNewPassword">$msgRetype</label></td>
-                        <td><input type="password" name="retypeNewPassword" /></td>
+                        <td>$retypePassHelp<input type="password" name="retypeNewPassword" /></td>
                     </tr>
 END;
             }
@@ -630,7 +637,7 @@ END;
 
                     $usertypeOption = <<<END
                     <tr>
-                            <td><label for="usertypeid">User Type <span class="required">*</span></label></td>
+                            <td><label for="usertypeid">$msgUserType<span class="required">*</span></label></td>
                             <td>$usertypeHelp $usertype_list</td>
                     </tr>
 END;
@@ -645,13 +652,13 @@ END;
                     <input type='hidden' name='userid' value='$userid'>
                     <table>
                             <tr>
-                                    <td><label for="username">User Name<span class="required">*</span></label></td>
+                                    <td><label for="username">$msgUserName<span class="required">*</span></label></td>
                                     <td>$nameHelp <input type="text" id="" name="username" value="$username" class="required" /></td>
                             </tr>
                             $passwordOptions
                             <tr>
-                                    <td><label for="email">Email Address<span class="required email">*</span></label></td>
-                                    <td>$emailHelp <input type="text" id="email" name="email" value="$email" class="required" /></td>
+                                    <td><label for="email">$msgEmailAddress<span class="required email">*</span></label></td>
+                                    <td>$emailHelp <input type="text" id="email" name="email" value="$email" class="required email" /></td>
                             </tr>
                             $homepageOption
                             $usertypeOption
@@ -660,7 +667,7 @@ END;
             </form>
 END;
 
-            $response->SetFormRequestResponse($form, 'Add/Edit a User.', '550px', '320px');
+            $response->SetFormRequestResponse($form, ($userid == "") ? __('Add User') : __('Edit User'), '550px', '320px');
             $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('User', 'Add') . '")');
             $response->AddButton(__('Cancel'), 'XiboDialogClose()');
             $response->AddButton(__('Save'), '$("#UserForm").submit()');
