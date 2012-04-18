@@ -209,7 +209,7 @@ class userDAO
                 Kit::ClassLoader('userdata');
                 $userData = new Userdata($db);
 
-                if (!$userData->ChangePassword($this->user->userid, $oldPassword, $newPassword, $retypeNewPassword, $pass_change))
+                if (!$userData->ChangePassword($userID, $oldPassword, $newPassword, $retypeNewPassword, $pass_change))
                     trigger_error($userData->GetErrorMessage(), E_USER_ERROR);
             }
 
