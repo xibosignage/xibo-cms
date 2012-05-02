@@ -1179,7 +1179,7 @@ END;
 END;
 		
 		$response->SetFormRequestResponse($form, __('Schedule an Event'), '700px', '400px');
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Add')");
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Next'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=true").submit()');
 		$response->AddButton(__('Save'), '$("#AddEventForm").submit()');
@@ -1349,7 +1349,7 @@ END;
 		
 		$response->SetFormRequestResponse($form, __('Edit Scheduled Event'), '700px', '400px');
 		$response->focusInFirstInput = false;
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Edit')");
 		$response->AddButton(__('Delete'), sprintf('XiboFormRender("index.php?p=schedule&q=DeleteForm&EventID=%d&EventDetailID=%d")', $eventID, $eventDetailID));
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#EditEventForm").submit()');
@@ -1838,7 +1838,7 @@ END;
 END;
 
         $response->SetFormRequestResponse($form, __('Schedule Now'), '700px', '400px');
-        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=ScheduleNow')");
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ScheduleNowForm").submit()');
         $response->Respond();

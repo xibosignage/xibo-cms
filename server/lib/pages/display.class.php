@@ -791,6 +791,7 @@ END;
         $table .= '</table>';
 
         $response->SetFormRequestResponse($table, __('Media Inventory'), '550px', '350px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'MediaInventory') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }
