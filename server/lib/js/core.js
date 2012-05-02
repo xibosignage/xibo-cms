@@ -201,7 +201,7 @@ function XiboGridRender(gridId){
 
                 if ($('tbody', sortingDiv).html() != "") {
                     $(sortingDiv).tablesorter({
-                        sortList: [[1, 0]],
+                        sortList: [[0, 0]],
                         widthFixed: true
                     })
                 }

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,99 +22,210 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class helpDAO
 {
-	private $db;
-	private $user;
-	private $helpLink;
+    private $db;
+    private $user;
+    private $helpLink;
 
-	function __construct(database $db, user $user)
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
+    function __construct(database $db, user $user)
+    {
+        $this->db =& $db;
+        $this->user =& $user;
 
-		$topic	 	= Kit::GetParam('Topic', _REQUEST, _WORD);
-		$category 	= Kit::GetParam('Category', _REQUEST, _WORD, 'General');
+        return true;
+    }
 
-		if ($topic != '')
-		{
-			Debug::LogEntry($db, 'audit', 'Help requested for Topic = ' . $topic);
+    /**
+     * Displays the particular help subject / page
+     * @return
+     */
+    function Display()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
 
-			// Look up this help topic / category in the db
-			$SQL = "SELECT Link FROM help WHERE Topic = '%s' and Category = '%s'";
-			$SQL = sprintf($SQL, $db->escape_string($topic), $db->escape_string($category));
+        $response	= new ResponseManager();
+        $width          = 1000;
+        $height         = 650;
 
-			Debug::LogEntry($db, 'audit', $SQL);
+        $topic	 	= Kit::GetParam('Topic', _REQUEST, _WORD);
+        $category 	= Kit::GetParam('Category', _REQUEST, _WORD, 'General');
 
-			if(!$results = $db->query($SQL))
-			{
-				trigger_error($db->error());
-				trigger_error(__('Error getting Help Link'), E_USER_ERROR);
-			}
+        if ($topic != '')
+        {
+            Debug::LogEntry($db, 'audit', 'Help requested for Topic = ' . $topic);
 
-			if ($db->num_rows($results) != 0)
-			{
-				$row 	= $db->get_row($results);
-				$link 	= $row[0];
+            // Look up this help topic / category in the db
+            $SQL = "SELECT Link FROM help WHERE Topic = '%s' and Category = '%s'";
+            $SQL = sprintf($SQL, $db->escape_string($topic), $db->escape_string($category));
 
-				// Store the link for the requested help page
-				$this->helpLink = $link;
-			}
-			else
-			{
-				trigger_error(sprintf(__('No help file found for Topic %s and Category %s.'), $topic, $category), E_USER_ERROR);
-			}
-		}
-		else
-		{
-			trigger_error(__('You must specify a help page.'), E_USER_ERROR);
-		}
+            Debug::LogEntry($db, 'audit', $SQL);
 
-		return true;
-	}
+            if(!$results = $db->query($SQL))
+            {
+                trigger_error($db->error());
+                trigger_error(__('Error getting Help Link'), E_USER_ERROR);
+            }
 
-	/**
-	 * Displays the particular help subject / page
-	 * @return
-	 */
-	function Display()
-	{
-		$response	= new ResponseManager();
-		$helpLink 	= $this->helpLink;
-                $width          = 1000;
-                $height         = 650;
+            if ($db->num_rows($results) != 0)
+            {
+                $row 	= $db->get_row($results);
+                $link 	= $row[0];
 
-		$out 		= '<iframe src="' . $helpLink . '" width="' . ($width - 35) . '" height="' . ($height - 60) . '"></iframe>';
+                // Store the link for the requested help page
+                $this->helpLink = $link;
+            }
+            else
+            {
+                trigger_error(sprintf(__('No help file found for Topic %s and Category %s.'), $topic, $category), E_USER_ERROR);
+            }
+        }
+        else
+        {
+            trigger_error(__('You must specify a help page.'), E_USER_ERROR);
+        }
 
-		$response->SetFormRequestResponse($out, __('Help'), $width, $height);
-		$response->Respond();
+        $helpLink 	= $this->helpLink;
+        $out 		= '<iframe src="' . $helpLink . '" width="' . ($width - 35) . '" height="' . ($height - 60) . '"></iframe>';
 
-		return true;
-	}
+        $response->SetFormRequestResponse($out, __('Help'), $width, $height);
+        $response->Respond();
 
-	/**
-	 * No display page functionaility
-	 * @return
-	 */
-	function displayPage()
-	{
-		return false;
-	}
+        return true;
+    }
 
-	/**
-	 * No onload
-	 * @return
-	 */
-	function on_page_load()
-	{
-		return '';
-	}
+    public function Filter()
+    {
+        $filterForm = <<<END
+        <div class="FilterDiv" id="HelpFilter">
+                <form onsubmit="return false">
+                        <input type="hidden" name="p" value="help">
+                        <input type="hidden" name="q" value="Grid">
+                </form>
+        </div>
+END;
 
-	/**
-	 * No page heading
-	 * @return
-	 */
-	function echo_page_heading()
-	{
-		return true;
-	}
+        $id = uniqid();
+
+        $xiboGrid = <<<HTML
+        <div class="XiboGrid" id="$id">
+                <div class="XiboFilter">
+                        $filterForm
+                </div>
+                <div class="XiboData">
+
+                </div>
+        </div>
+HTML;
+        echo $xiboGrid;
+    }
+
+    public function Grid()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        //display the display table
+        $SQL = <<<SQL
+        SELECT HelpID, Topic, Category, Link
+          FROM `help`
+        ORDER BY Topic, Category
+SQL;
+
+        if(!($results = $db->query($SQL)))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Unable to list Help topics'), E_USER_ERROR);
+        }
+
+        $msgSave = __('Save');
+        $msgCancel = __('Cancel');
+        $msgAction = __('Action');
+        $msgEdit = __('Edit');
+        $msgDelete = __('Delete');
+
+        $msgHelpTopic = __('Topic');
+        $msgHelpCategory = __('Category');
+        $msgHelpLink = __('Link');
+
+        $output = <<<END
+        <div class="info_table">
+            <table style="width:100%">
+            <thead>
+                <tr>
+                    <th>$msgHelpTopic</th>
+                    <th>$msgHelpCategory</th>
+                    <th>$msgHelpLink</th>
+                    <th>$msgAction</th>
+                </tr>
+            </thead>
+            <tbody>
+END;
+
+        while($row = $db->get_assoc_row($results))
+        {
+            $helpId = Kit::ValidateParam($row['HelpID'], _INT);
+            $topic = Kit::ValidateParam($row['Topic'], _STRING);
+            $category = Kit::ValidateParam($row['Category'], _STRING);
+            $link = Kit::ValidateParam($row['Link'], _STRING);
+
+            // we only want to show certain buttons, depending on the user logged in
+            if ($user->GetUserTypeID() != 1)
+            {
+                //dont any actions
+                $buttons = __("No available Actions");
+            }
+            else
+            {
+                $buttons = <<<END
+                <button class="XiboFormButton" href="index.php?p=displaygroup&q=EditForm&HelpID=$helpId"><span>$msgEdit</span></button>
+                <button class="XiboFormButton" href="index.php?p=displaygroup&q=DeleteForm&HelpID=$helpId"><span>$msgDelete</span></button>
+END;
+            }
+
+            $output .= <<<END
+            <tr>
+                <td>$topic</td>
+                <td>$category</td>
+                <td>$link</td>
+                <td>$buttons</td>
+            </tr>
+END;
+        }
+
+        $output .= "</tbody></table></div>";
+
+        $response->SetGridResponse($output);
+        $response->Respond();
+    }
+
+    /**
+     * No display page functionaility
+     * @return
+     */
+    function displayPage()
+    {
+        require("template/pages/help_view.php");
+
+            return false;
+    }
+
+    /**
+     * No onload
+     * @return
+     */
+    function on_page_load()
+    {
+            return '';
+    }
+
+    /**
+     * No page heading
+     * @return
+     */
+    function echo_page_heading()
+    {
+            return true;
+    }
 }
 ?>
