@@ -178,8 +178,8 @@ END;
             else
             {
                 $buttons = <<<END
-                <button class="XiboFormButton" href="index.php?p=displaygroup&q=EditForm&HelpID=$helpId"><span>$msgEdit</span></button>
-                <button class="XiboFormButton" href="index.php?p=displaygroup&q=DeleteForm&HelpID=$helpId"><span>$msgDelete</span></button>
+                <button class="XiboFormButton" href="index.php?p=help&q=EditForm&HelpID=$helpId"><span>$msgEdit</span></button>
+                <button class="XiboFormButton" href="index.php?p=help&q=DeleteForm&HelpID=$helpId"><span>$msgDelete</span></button>
 END;
             }
 
@@ -226,6 +226,230 @@ END;
     function echo_page_heading()
     {
             return true;
+    }
+
+    public function AddForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $helpManager = new HelpManager($db, $user);
+
+        // Help UI
+        $iconHelpTopic = $helpManager->HelpIcon(__('The Topic for this Help Link'), true);
+        $iconHelpCategory = $helpManager->HelpIcon(__('The Category for this Help Link'), true);
+        $iconHelpLink = $helpManager->HelpIcon(__('The Link to open for this help topic and category'), true);
+
+        $msgSave = __('Save');
+        $msgCancel = __('Cancel');
+        $msgAction = __('Action');
+        $msgEdit = __('Edit');
+        $msgDelete = __('Delete');
+
+        $msgHelpTopic = __('Topic');
+        $msgHelpCategory = __('Category');
+        $msgHelpLink = __('Link');
+
+        $form = <<<END
+        <form id="HelpAddForm" class="XiboForm" action="index.php?p=help&q=Add" method="post">
+            <table>
+                <tr>
+                    <td>$msgHelpTopic</td>
+                    <td>$iconHelpTopic <input class="required" type="text" name="Topic" maxlength="254"></td>
+                </tr>
+                <tr>
+                    <td>$msgHelpCategory</span></td>
+                    <td>$iconHelpCategory <input class="required" type="text" name="Category" maxlength="254"></td>
+                </tr>
+                <tr>
+                    <td>$msgHelpLink</span></td>
+                    <td>$iconHelpLink <input class="required" type="text" name="Link" maxlength="254"></td>
+                </tr>
+            </table>
+        </form>
+END;
+
+        $response->SetFormRequestResponse($form, __('Add Help Link'), '350px', '325px');
+        $response->AddButton($msgCancel, 'XiboDialogClose()');
+        $response->AddButton($msgSave, '$("#HelpAddForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Help Edit form
+     */
+    public function EditForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $helpManager = new HelpManager($db, $user);
+
+        $helpId	= Kit::GetParam('HelpID', _REQUEST, _INT);
+
+        // Pull the currently known info from the DB
+        $SQL = "SELECT HelpID, Topic, Category, Link FROM `help` WHERE HelpID = %d ";
+        $SQL = sprintf($SQL, $helpId);
+
+        if (!$row = $db->GetSingleRow($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Error getting Help Link'));
+        }
+
+        $topic = Kit::ValidateParam($row['Topic'], _STRING);
+        $category = Kit::ValidateParam($row['Category'], _STRING);
+        $link = Kit::ValidateParam($row['Link'], _STRING);
+
+        // Help UI
+        $iconHelpTopic = $helpManager->HelpIcon(__('The Topic for this Help Link'), true);
+        $iconHelpCategory = $helpManager->HelpIcon(__('The Category for this Help Link'), true);
+        $iconHelpLink = $helpManager->HelpIcon(__('The Link to open for this help topic and category'), true);
+
+        $msgSave = __('Save');
+        $msgCancel = __('Cancel');
+        $msgAction = __('Action');
+        $msgEdit = __('Edit');
+        $msgDelete = __('Delete');
+
+        $msgHelpTopic = __('Topic');
+        $msgHelpCategory = __('Category');
+        $msgHelpLink = __('Link');
+
+        $form = <<<END
+        <form id="HelpEditForm" class="XiboForm" action="index.php?p=help&q=Edit" method="post">
+            <input type="hidden" name="HelpID" value="$helpId" />
+            <table>
+                <tr>
+                    <td>$msgHelpTopic</td>
+                    <td>$iconHelpTopic <input class="required" type="text" name="Topic" value="$topic" maxlength="254"></td>
+                </tr>
+                <tr>
+                    <td>$msgHelpCategory</span></td>
+                    <td>$iconHelpCategory <input class="required" type="text" name="Category" value="$category" maxlength="254"></td>
+                </tr>
+                <tr>
+                    <td>$msgHelpLink</span></td>
+                    <td>$iconHelpLink <input class="required" type="text" name="Link" value="$link" maxlength="254"></td>
+                </tr>
+            </table>
+        </form>
+END;
+
+        $response->SetFormRequestResponse($form, __('Edit Help Link'), '350px', '325px');
+        $response->AddButton($msgCancel, 'XiboDialogClose()');
+        $response->AddButton($msgSave, '$("#HelpEditForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Delete Help Link Form
+     */
+    public function DeleteForm()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $helpId	= Kit::GetParam('HelpID', _REQUEST, _INT);
+
+        $msgWarn = __('Are you sure you want to delete?');
+
+        //we can delete
+        $form = <<<END
+        <form id="HelpDeleteForm" class="XiboForm" method="post" action="index.php?p=help&q=Delete">
+            <input type="hidden" name="HelpID" value="$helpId" />
+            <p>$msgWarn</p>
+        </form>
+END;
+
+        $response->SetFormRequestResponse($form, __('Delete Help Link'), '350px', '175px');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#HelpDeleteForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Adds a help link
+     */
+    public function Add()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        $topic = Kit::GetParam('Topic', _POST, _STRING);
+        $category = Kit::GetParam('Category', _POST, _STRING);
+        $link = Kit::GetParam('Link', _POST, _STRING);
+
+        // Validation
+        if ($topic == '')
+            trigger_error(__('Topic is a required field. It must be between 1 and 254 characters.'), E_USER_ERROR);
+
+        if ($category == '')
+            trigger_error(__('Category is a required field. It must be between 1 and 254 characters.'), E_USER_ERROR);
+
+        if ($link == '')
+            trigger_error(__('Link is a required field. It must be between 1 and 254 characters.'), E_USER_ERROR);
+
+        // Deal with the Edit
+        Kit::ClassLoader('help');
+        $helpObject = new Help($db);
+
+        if (!$helpObject->Add($topic, $category, $link))
+            trigger_error($helpObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Help Link Added'), false);
+        $response->Respond();
+    }
+
+    /**
+     * Edits a help link
+     */
+    public function Edit()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        $helpId	= Kit::GetParam('HelpID', _POST, _INT);
+        $topic = Kit::GetParam('Topic', _POST, _STRING);
+        $category = Kit::GetParam('Category', _POST, _STRING);
+        $link = Kit::GetParam('Link', _POST, _STRING);
+
+        // Validation
+        if ($topic == '')
+            trigger_error(__('Topic is a required field. It must be between 1 and 254 characters.'), E_USER_ERROR);
+
+        if ($category == '')
+            trigger_error(__('Category is a required field. It must be between 1 and 254 characters.'), E_USER_ERROR);
+
+        if ($link == '')
+            trigger_error(__('Link is a required field. It must be between 1 and 254 characters.'), E_USER_ERROR);
+
+        // Deal with the Edit
+        Kit::ClassLoader('help');
+        $helpObject = new Help($db);
+
+        if (!$helpObject->Edit($helpId, $topic, $category, $link))
+            trigger_error($helpObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Help Link Edited'), false);
+        $response->Respond();
+    }
+
+    public function Delete()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        $helpId	= Kit::GetParam('HelpID', _POST, _INT);
+
+        // Deal with the Edit
+        Kit::ClassLoader('help');
+        $helpObject = new Help($db);
+
+        if (!$helpObject->Delete($helpId))
+            trigger_error($helpObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Help Link Deleted'), false);
+        $response->Respond();
     }
 }
 ?>
