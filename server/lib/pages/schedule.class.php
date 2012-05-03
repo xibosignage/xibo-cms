@@ -1558,7 +1558,7 @@ END;
 END;
 
 		$response->SetFormRequestResponse($form, __('Delete Event.'), '480px', '240px');
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Delete')");
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#DeleteEventForm").submit()');
 		$response->callBack = 'setupScheduleForm';

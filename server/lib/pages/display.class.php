@@ -712,6 +712,7 @@ END;
 END;
 
         $response->SetFormRequestResponse($form, __('Edit Default Layout'), '300px', '150px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'DefaultLayout') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DefaultLayoutForm").submit()');
         $response->Respond();

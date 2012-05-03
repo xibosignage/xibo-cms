@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -664,7 +664,7 @@ END;
 END;
 
 		$response->SetFormRequestResponse($form, __('Add/Edit a Layout.'), '350px', '275px');
-                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Add') . '")');
+                $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != '') ? $helpManager->Link('Layout', 'Edit') : $helpManager->Link('Layout', 'Add')) . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#LayoutForm").submit()');
 		$response->Respond();
