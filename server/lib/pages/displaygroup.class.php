@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-12 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -198,7 +198,7 @@ END;
 END;
 
 		$response->SetFormRequestResponse($form, __('Add Display Group'), '350px', '275px');
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=DisplayGroup&Category=Add')");
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Add') . '")');
 		$response->AddButton($msgCancel, 'XiboDialogClose()');
 		$response->AddButton($msgSave, '$("#DisplayGroupAddForm").submit()');
 		$response->Respond();
@@ -264,7 +264,7 @@ END;
 END;
 
 		$response->SetFormRequestResponse($form, __('Edit Display Group'), '350px', '275px');
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=DisplayGroup&Category=Edit')");
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Edit') . '")');
 		$response->AddButton($msgCancel, 'XiboDialogClose()');
 		$response->AddButton($msgSave, '$("#DisplayGroupEditForm").submit()');
 		$response->Respond();
@@ -291,7 +291,7 @@ END;
 END;
 		
 		$response->SetFormRequestResponse($form, __('Delete Display Group'), '350px', '175px');
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=DisplayGroup&Category=Delete')");
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Delete') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#DisplayGroupDeleteForm").submit()');
 		$response->Respond();
@@ -373,7 +373,7 @@ END;
 		$form       = $helpText . '<div class="connectedlist"><h3>Members</h3>' . $listIn . '</div><div class="connectedlist"><h3>Non-members</h3>' . $listOut . '</div>';
 		
 		$response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=DisplayGroup&Category=Members')");
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Members') . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), 'MembersSubmit()');
 		$response->Respond();
@@ -456,7 +456,7 @@ END;
 		$form		= $helpText . '<div class="connectedlist firstList"><h3>Members</h3>' . $listIn . '</div><div class="connectedlist"><h3>Non-members</h3>' . $listOut . '</div>';
 		
 		$response->SetFormRequestResponse($form, __('Manage Group Security for' . ' ' . $displayGroup), '400', '375', 'GroupSecurityCallBack');
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=DisplayGroup&Category=GroupSecurity')");
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DisplayGroup', 'Permissions') . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), 'GroupSecuritySubmit()');
 		$response->Respond();

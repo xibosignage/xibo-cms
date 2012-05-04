@@ -286,8 +286,8 @@ END;
 END;
 
 		// Construct the Response		
-		$response->SetFormRequestResponse($form, __('Add/Edit Group'), '400', '180');
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Groups&Category=General')");
+		$response->SetFormRequestResponse($form, (($this->groupid == '') ? __('Add User Group') : __('Edit User Group')), '400', '180');
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->groupid == '') ? HelpManager::Link('UserGroup', 'Add') : HelpManager::Link('UserGroup', 'Edit')) . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#GroupForm").submit()');
 		$response->Respond();
@@ -334,7 +334,7 @@ HTML;
 			
 		// Construct the Response		
 		$response->SetFormRequestResponse($xiboGrid, __('Page Security'), '500', '380');
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Groups&Category=General')");
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'PageSecurity') . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Assign / Unassign'), '$("#GroupForm").submit()');
 		$response->Respond();
@@ -457,7 +457,7 @@ END;
 				
 		// Construct the Response		
 		$response->SetFormRequestResponse($form, __('Delete Group'), '400', '180');
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Groups&Category=General')");
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('UserGroup', 'Delete') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#GroupForm").submit()');
 		$response->Respond();
@@ -661,7 +661,7 @@ HTML;
 		
 		// Construct the Response		
 		$response->SetFormRequestResponse($xiboGrid, __('Menu Item Security'), '500', '380');
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Groups&Category=General')");
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'MenuSecurity') . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Assign / Unassign'), '$("#GroupForm").submit()');
 		$response->Respond();
@@ -899,7 +899,7 @@ END;
             $form       = $helpText . '<div class="connectedlist"><h3>Members</h3>' . $listIn . '</div><div class="connectedlist"><h3>Non-members</h3>' . $listOut . '</div>';
 
             $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
-            $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Users&Category=Groups')");
+            $response->AddButton(__('Help'), "XiboHelpRender(". HelpManager::Link('UserGroup', 'Members') .")");
             $response->AddButton(__('Cancel'), 'XiboDialogClose()');
             $response->AddButton(__('Save'), 'MembersSubmit()');
             $response->Respond();

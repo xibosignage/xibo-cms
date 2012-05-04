@@ -650,7 +650,7 @@ END;
 END;
 
 		$response->SetFormRequestResponse($form, __('Delete this Display?'), '350px', '210');
-                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Display', 'Delete') . '")');
+                $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Delete') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#DisplayDeleteForm").submit()');
 		$response->Respond();

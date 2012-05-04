@@ -667,8 +667,8 @@ END;
             </form>
 END;
 
-            $response->SetFormRequestResponse($form, ($userid == "") ? __('Add User') : __('Edit User'), '550px', '320px');
-            $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('User', 'Add') . '")');
+            $response->SetFormRequestResponse($form, (($userid == "") ? __('Add User') : __('Edit User')), '550px', '320px');
+            $response->AddButton(__('Help'), 'XiboHelpRender("' . (($userid == "") ? HelpManager::Link('User', 'Add') : HelpManager::Link('User', 'Edit')) . '")');
             $response->AddButton(__('Cancel'), 'XiboDialogClose()');
             $response->AddButton(__('Save'), '$("#UserForm").submit()');
             $response->Respond();
@@ -731,6 +731,7 @@ END;
 END;
 
         $response->SetFormRequestResponse($form, __('Set the homepage for this user'), '350px', '150px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'SetHomepage') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#SetUserHomePageForm").submit()');
         $response->Respond();
@@ -812,7 +813,7 @@ END;
         $output .= '</div>';
 
         $response->SetFormRequestResponse($output, __('My Applications'), '650', '450');
-        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'Applications') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }
@@ -850,7 +851,7 @@ END;
 END;
 
         $response->SetFormRequestResponse($form, __('Change Password'), '450', '300');
-        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=User&Category=ChangePassword')");
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'ChangePassword') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ChangePasswordForm").submit()');
         $response->Respond();
