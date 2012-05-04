@@ -1,12 +1,4 @@
-INSERT INTO `help` (
-`HelpID` ,
-`Topic` ,
-`Category` ,
-`Link`
-)
-VALUES (
-NULL , 'User', 'ChangePassword', 'http://wiki.xibo.org.uk/wiki/Manual:Administration:Users#Change_Password'
-);
+ALTER TABLE  `session` CHANGE  `session_id`  `session_id` VARCHAR( 160 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 
 ALTER TABLE `display` CHANGE `NumberOfMacAddressChanges` `NumberOfMacAddressChanges` INT( 11 ) NOT NULL DEFAULT '0';
 
