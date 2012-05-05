@@ -982,7 +982,7 @@ END;
             {
                 // The groupId has changed, so we need to write the current settings to the db.
                 // Link new permissions
-                if (!$security->Link($dataSetId, $groupId, $view, $edit, $del))
+                if (!$security->Link($dataSetId, $lastGroupId, $view, $edit, $del))
                     trigger_error(__('Unable to set permissions'));
 
                 // Reset

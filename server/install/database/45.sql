@@ -77,6 +77,14 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (69, 'OAuth', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Applications'),
 (70, 'Services', 'Log', 'http://wiki.xibo.org.uk/wiki/Manual:Applications#View_Log');
 
+RENAME TABLE `lkgroupdg` TO  `xibo_133`.`lkdisplaygroupgroup`;
+
+ALTER TABLE  `lkdisplaygroupgroup` CHANGE  `LkGroupDGID`  `LkDisplayGroupGroupID` INT( 11 ) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE  `lkdisplaygroupgroup` ADD  `View` TINYINT NOT NULL DEFAULT  '0',
+ADD  `Edit` TINYINT NOT NULL DEFAULT  '0',
+ADD  `Del` TINYINT NOT NULL DEFAULT  '0';
+
 UPDATE `version` SET `app_ver` = '1.3.3', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '45';

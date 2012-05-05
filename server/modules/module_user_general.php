@@ -611,64 +611,6 @@
 	}
 	
 	/**
-	 * Authenticates the current user and returns an array of display group ID's this user is authenticated on
-	 * @return 
-	 */
-	public function DisplayGroupAuth()
-	{
-		$db 		=& $this->db;
-		$userid		=& $this->userid;
-		
-		// If it is already set then just return it
-		if ($this->authedDisplayGroupIDs) return $this->displayGroupIDs;
-		
-		// Populate the array of display group ids we are authed against
-		$usertype 	= $this->usertypeid;
-		
-		$SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific ";
-		$SQL .= "  FROM displaygroup ";
-                
-		// If the usertype is not 1 (admin) then we need to include the link table for display groups.
-		if ($usertype != 1)
-		{
-			$SQL .= " INNER JOIN lkgroupdg ON lkgroupdg.DisplayGroupID = displaygroup.DisplayGroupID ";
-			$SQL .= " INNER JOIN lkusergroup ON lkgroupdg.GroupID = lkusergroup.GroupID ";
-                }
-
-                if ($usertype != 1)
-                {
-                    $SQL .= sprintf(" WHERE lkusergroup.UserID = %d ", $userid);
-                }
-		
-		Debug::LogEntry($db, 'audit', $SQL, 'User', 'DisplayGroupAuth');
-
-		if(!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			return false;
-		}
-		
-		$ids = array();
-		
-		
-		// For each display that is returned - add it to the array
-		while ($row = $db->get_assoc_row($results))
-		{
-			$displayGroupID = Kit::ValidateParam($row['DisplayGroupID'], _INT);
-			
-			$ids[] 			= $displayGroupID;
-		}
-		
-		Debug::LogEntry($db, 'audit', count($ids) . ' authenticated displays.', 'User', 'DisplayGroupAuth');
-		
-		// Set this for later (incase we call this again from the same session)
-		$this->displayGroupIDs 			= $ids;
-		$this->authedDisplayGroupIDs 	= true;
-		
-		return $ids;
-	}
-	
-	/**
 	 * Returns the usertypeid for this user object.
 	 * @return 
 	 */
@@ -1197,6 +1139,98 @@ END;
         }
 
         return $dataSets;
+    }
+
+
+
+    /**
+     * Authorises a user against a DisplayGroupId
+     * @param <int> $displayGroupId
+     * @return <type>
+     */
+    public function DisplayGroupAuth($displayGroupId, $fullObject = false)
+    {
+        $auth = new PermissionManager($this->db, $this);
+        $noOwnerId = 0;
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1)
+        {
+            $auth->FullAccess();
+            return $auth;
+        }
+
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM displaygroup ';
+        $SQL .= '   INNER JOIN lkdisplaygroupgroup ';
+        $SQL .= '   ON lkdisplaygroupgroup.DisplayGroupID = displaygroup.DisplayGroupID ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lkdisplaygroupgroup.GroupID ';
+        $SQL .= ' WHERE displaygroup.DisplayGroupID = %d ';
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+
+        $SQL = sprintf($SQL, $displayGroupId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($noOwnerId, $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
+    }
+
+    /**
+     * Authenticates the current user and returns an array of display groups this user is authenticated on
+     * @return 
+     */
+    public function DisplayGroupList()
+    {
+        $db 		=& $this->db;
+        $userid		=& $this->userid;
+
+        $SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific ";
+        $SQL .= "  FROM displaygroup ";
+
+        //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $displayGroups = array();
+
+        while ($row = $this->db->get_assoc_row($result))
+        {
+            $displayGroupItem = array();
+
+            // Validate each param and add it to the array.
+            $displayGroupItem['displaygroupid'] = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $displayGroupItem['displaygroup']   = Kit::ValidateParam($row['DisplayGroup'], _STRING);
+            $displayGroupItem['isdisplayspecific'] = Kit::ValidateParam($row['IsDisplaySpecific'], _STRING);
+
+            $auth = $this->DisplayGroupAuth($displayGroupItem['displaygroupid'], true);
+
+            if ($auth->view)
+            {
+                $displayGroupItem['view'] = (int) $auth->view;
+                $displayGroupItem['edit'] = (int) $auth->edit;
+                $displayGroupItem['del'] = (int) $auth->del;
+                $displayGroupItem['modifypermissions'] = (int) $auth->modifyPermissions;
+
+                $displayGroups[] = $displayGroupItem;
+            }
+        }
+
+        return $displayGroups;
     }
 }
 ?>

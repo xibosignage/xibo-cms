@@ -1064,7 +1064,10 @@ HTML;
 			$checked 			= (in_array($displayGroupID, $displayGroupIDs)) ? 'checked' : '';
 			
 			// Determine if we are authed against this group.
-			if (!in_array($displayGroupID, $user->DisplayGroupAuth())) continue;
+			$auth = $this->user->DisplayGroupAuth($displayGroupID, true);
+
+                        if (!$auth->view)
+                            continue;
 			
 			// Do we need to nest yet? We only nest display specific groups
 			if ($isDisplaySpecific == 1 && !$nested)
