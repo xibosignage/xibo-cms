@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-12 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -17,11 +17,43 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+
+// We can do this because this is included from the page class in "displayPage"
+$user =& $this->user;
+
+$p = Kit::GetParam('p', _REQUEST, _WORD);
+$q = Kit::GetParam('q', _REQUEST, _WORD);
+
 ?>
 <div id="form_container">
 	<div id="form_header">
 		<div id="form_header_left"></div>
+                <div id="secondaryMenu">
+                    <ul id="menu" style="padding-left: 26.5em;">
+<?php
+// Put a menu here
+if (!$menu = new MenuManager($db, $user, 'Layout Menu')) trigger_error($menu->message, E_USER_ERROR);
+
+while ($menuItem = $menu->GetNextMenuItem())
+{
+    $uri 	= Kit::ValidateParam($menuItem['name'], _WORD);
+    $args 	= Kit::ValidateParam($menuItem['Args'], _STRING);
+    $class 	= Kit::ValidateParam($menuItem['Class'], _WORD);
+    $title 	= Kit::ValidateParam($menuItem['Text'], _STRING);
+    $title 	= __($title);
+
+    // Extra style for the current one
+    if ($p == $uri)
+        $class = 'current ' . $class;
+
+    $href = 'index.php?p=' . $uri . '&' . $args;
+
+    echo '<li class="' . $class . '"><a href="' . $href . '" class="' . $class . '">' . $title . '</a></li>';
+}
+?>
+                    </ul>
+                </div>
 		<div id="form_header_right"></div>
 	</div>
 	

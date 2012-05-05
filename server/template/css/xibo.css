@@ -144,3 +144,20 @@
 .ui-dialog-buttonset .ui-button {
     float: right;
 }
+
+#secondaryMenu ul {
+    padding: 0;
+}
+
+#secondaryMenu {
+    float: left;
+}
+
+#secondaryMenu li {
+    display: inline;
+    padding-right: 55px;
+}
+
+#secondaryMenu .current {
+    color: red;
+}

@@ -110,7 +110,7 @@ $datemanager	= new DateManager($db);
 			<ul id="nav">
 				<?php
 					// Always have access to your own homepage
-					echo '<li><a href="index.php?p=' . $homepage . '">Dashboard</a></li>';
+					echo '<li><a href="index.php?p=' . $homepage . '">' . __('Dashboard') . '</a></li>';
 				
 					// Put a menu here
 					if (!$menu = new MenuManager($db, $user, 'Top Nav')) trigger_error($menu->message, E_USER_ERROR);
@@ -123,43 +123,9 @@ $datemanager	= new DateManager($db);
 						$title 	= Kit::ValidateParam($menuItem['Text'], _STRING);
 						$title 	= __($title);
 						
-						// Extra style for the current one
-						if ($p == $uri) $class = 'current ' . $class;
-						
-						if ($uri == 'user')
-						{
-							// This is the management menu, so behave differently
-							// Code duplication here - i wonder if we could be more effective?
-							if (!$mgmMenu = new MenuManager($db, $user, 'Management')) trigger_error($mgmMenu->message, E_USER_ERROR);
-							
-							$menuTitle = $title;
-							
-							echo '<li><ul>';
-							
-							while ($menuItem = $mgmMenu->GetNextMenuItem())
-							{
-								$uri 	= Kit::ValidateParam($menuItem['name'], _WORD);
-								$args 	= Kit::ValidateParam($menuItem['Args'], _STRING);
-								$class 	= Kit::ValidateParam($menuItem['Class'], _WORD);
-								$title 	= Kit::ValidateParam($menuItem['Text'], _STRING);
-								$title 	= __($title);
-								
-								// Extra style for the current one
-								if ($p == $uri) $class = 'current ' . $class;
-								
-								$href = 'index.php?p=' . $uri . '&' . $args;
-									
-								echo '<li><a href="' . $href . '" class="' . $class . '">' . $title . '</a></li>';
-							}
-							
-							echo '</ul><a href="#" class="' . $class . '">' . $menuTitle . '</a></li>';
-						}
-						else
-						{
-							$href = 'index.php?p=' . $uri . '&' . $args;
-							
-							echo '<li class="' . $class . '"><a href="' . $href . '" class="' . $class . '">' . $title . '</a></li>';
-						}
+                                                $href = 'index.php?p=' . $uri . '&' . $args;
+
+                                                echo '<li class="' . $class . '"><a href="' . $href . '" class="' . $class . '">' . $title . '</a></li>';
 					}
 				?>
 			</ul>
