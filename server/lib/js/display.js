@@ -1,6 +1,6 @@
 /**
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner
+ * Copyright (C) 2006-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -43,5 +43,34 @@ function GroupSecuritySubmit() {
 		success: XiboSubmitResponse
 	});
 	
+	return;
+}
+
+function ManageMembersCallBack()
+{
+	$("#displaygroupsIn, #displaygroupsOut").sortable({
+		connectWith: '.connectedSortable',
+		dropOnEmpty: true
+	}).disableSelection();
+
+        $(".li-sortable", "#div_dialog").dblclick(switchLists);
+}
+
+function MembersSubmit() {
+	// Serialise the form and then submit it via Ajax.
+	var href = $("#displaygroupsIn").attr('href') + "&ajax=true";
+
+	// Get the two lists
+	serializedData = $("#displaygroupsIn").sortable('serialize');
+
+	$.ajax({
+		type: "post",
+		url: href,
+		cache: false,
+		dataType: "json",
+		data: serializedData,
+		success: XiboSubmitResponse
+	});
+
 	return;
 }

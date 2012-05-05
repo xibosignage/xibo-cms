@@ -106,7 +106,6 @@ HTML;
             $msgMembers = __('Group Members');
             $msgPermissions = __('Permissions');
 
-            $buttons = '';
             $output = <<<END
             <div class="info_table">
             <table style="width:100%">
@@ -121,6 +120,8 @@ END;
 
             foreach ($displayGroups as $row)
             {
+                $buttons = '';
+
                 $displayGroupID	= $row['displaygroupid'];
                 $displayGroup = $row['displaygroup'];
 

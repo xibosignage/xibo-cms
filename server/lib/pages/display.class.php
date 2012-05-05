@@ -446,6 +446,7 @@ END;
 
                         if ($auth->modifyPermissions)
                         {
+                            $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=MemberOfForm&DisplayID=' . $displayid . '"><span>' . __('Display Groups') . '</span></button>';
                             $buttons .= '<button class="XiboFormButton" href="index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $displayGroupID . '"><span>' . $msgPermissions . '</span></button>';
 
                         }
@@ -858,6 +859,158 @@ END;
         }
 
         return $id;
+    }
+
+    public function MemberOfForm()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $displayID	= Kit::GetParam('DisplayID', _REQUEST, _INT);
+
+        // Auth
+        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayID), true);
+        if (!$auth->modifyPermissions)
+            trigger_error(__('You do not have permission to change Display Groups on this display'), E_USER_ERROR);
+
+        // There needs to be two lists here.
+        //  - DisplayGroups this Display is already assigned to
+        //  - DisplayGroups this Display could be assigned to
+
+        // Display Groups Assigned
+        $SQL  = "";
+        $SQL .= "SELECT displaygroup.DisplayGroupID, ";
+        $SQL .= "       displaygroup.DisplayGroup ";
+        $SQL .= "FROM   displaygroup ";
+        $SQL .= "   INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+        $SQL .= sprintf("WHERE  lkdisplaydg.DisplayID   = %d ", $displayID);
+        $SQL .= " AND displaygroup.IsDisplaySpecific = 0 ";
+        $SQL .= " ORDER BY displaygroup.DisplayGroup ";
+
+        if(!$resultIn = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Error getting Display Groups'), E_USER_ERROR);
+        }
+
+        // Display Groups not assigned
+        $SQL  = "";
+        $SQL .= "SELECT displaygroup.DisplayGroupID, ";
+        $SQL .= "       displaygroup.DisplayGroup ";
+        $SQL .= "  FROM displaygroup ";
+        $SQL .= " WHERE displaygroup.IsDisplaySpecific = 0 ";
+        $SQL .= " AND displaygroup.DisplayGroupID NOT IN ";
+        $SQL .= "       (SELECT lkdisplaydg.DisplayGroupID ";
+        $SQL .= "          FROM lkdisplaydg ";
+        $SQL .= sprintf(" WHERE  lkdisplaydg.DisplayID   = %d ", $displayID);
+        $SQL .= "       )";
+        $SQL .= " ORDER BY displaygroup.DisplayGroup ";
+
+        if(!$resultOut = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Error getting Displays'), E_USER_ERROR);
+        }
+
+        // Now we have an IN and an OUT results object which we can use to build our lists
+        $listIn = '<ul id="displaygroupsIn" href="index.php?p=display&q=SetMemberOf&DisplayID=' . $displayID . '" class="connectedSortable">';
+
+        while($row = $db->get_assoc_row($resultIn))
+        {
+            // For each item output a LI
+            $displayID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $display	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
+
+            $listIn .= '<li id="DisplayGroupID_' . $displayID . '"class="li-sortable">' . $display . '</li>';
+        }
+        $listIn	.= '</ul>';
+
+        $listOut = '<ul id="displaygroupsOut" class="connectedSortable">';
+
+        while($row = $db->get_assoc_row($resultOut))
+        {
+            // For each item output a LI
+            $displayID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $display	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
+
+            $listOut .= '<li id="DisplayGroupID_' . $displayID . '" class="li-sortable">' . $display . '</li>';
+        }
+        $listOut .= '</ul>';
+
+        // Build the final form.
+        $helpText   = '<center>' . __('Drag or double click to move items between lists') . '</center>';
+        $form       = $helpText . '<div class="connectedlist"><h3>' . __('Member Of') . '</h3>' . $listIn . '</div><div class="connectedlist"><h3>' . __('Available') . '</h3>' . $listOut . '</div>';
+
+        $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Members') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), 'MembersSubmit()');
+        $response->Respond();
+    }
+
+    /**
+     * Sets the Members of a group
+     * @return
+     */
+    public function SetMemberOf()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        Kit::ClassLoader('displaygroup');
+        $displayGroupObject = new DisplayGroup($db);
+
+        $displayID = Kit::GetParam('DisplayID', _REQUEST, _INT);
+        $displayGroups = Kit::GetParam('DisplayGroupID', _POST, _ARRAY, array());
+        $members = array();
+
+        // Get a list of current members
+        $SQL  = "";
+        $SQL .= "SELECT displaygroup.DisplayGroupID ";
+        $SQL .= "FROM   displaygroup ";
+        $SQL .= "   INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+        $SQL .= sprintf("WHERE  lkdisplaydg.DisplayID   = %d ", $displayID);
+        $SQL .= " AND displaygroup.IsDisplaySpecific = 0 ";
+
+        if(!$resultIn = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Error getting Display Groups'), E_USER_ERROR);
+        }
+
+        while($row = $db->get_assoc_row($resultIn))
+        {
+            // Test whether this ID is in the array or not
+            $displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
+
+            if(!in_array($displayGroupID, $displayGroups))
+            {
+                // Its currently assigned but not in the $displays array
+                //  so we unassign
+                if (!$displayGroupObject->Unlink($displayGroupID, $displayID))
+                {
+                    trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
+                }
+            }
+            else
+            {
+                $members[] = $displayGroupID;
+            }
+        }
+
+        foreach($displayGroups as $displayGroupID)
+        {
+            // Add any that are missing
+            if(!in_array($displayGroupID, $members))
+            {
+                if (!$displayGroupObject->Link($displayGroupID, $displayID))
+                {
+                    trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
+                }
+            }
+        }
+
+        $response->SetFormSubmitResponse(__('Group membership set'), false);
+        $response->Respond();
     }
 }
 ?>
