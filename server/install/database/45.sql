@@ -1,4 +1,4 @@
-ALTER TABLE  `session` CHANGE  `session_id`  `session_id` VARCHAR( 160 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+ALTER TABLE `session` CHANGE  `session_id`  `session_id` VARCHAR( 160 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 
 ALTER TABLE `display` CHANGE `NumberOfMacAddressChanges` `NumberOfMacAddressChanges` INT( 11 ) NOT NULL DEFAULT '0';
 
@@ -77,7 +77,7 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (69, 'OAuth', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Applications'),
 (70, 'Services', 'Log', 'http://wiki.xibo.org.uk/wiki/Manual:Applications#View_Log');
 
-RENAME TABLE `lkgroupdg` TO  `xibo_133`.`lkdisplaygroupgroup`;
+RENAME TABLE `lkgroupdg` TO  `lkdisplaygroupgroup`;
 
 ALTER TABLE  `lkdisplaygroupgroup` CHANGE  `LkGroupDGID`  `LkDisplayGroupGroupID` INT( 11 ) NOT NULL AUTO_INCREMENT;
 
@@ -85,6 +85,64 @@ ALTER TABLE  `lkdisplaygroupgroup` ADD  `View` TINYINT NOT NULL DEFAULT  '0',
 ADD  `Edit` TINYINT NOT NULL DEFAULT  '0',
 ADD  `Del` TINYINT NOT NULL DEFAULT  '0';
 
+DELETE FROM `lkmenuitemgroup`;
+DELETE FROM `menuitem`;
+DELETE FROM `menu`;
+
+INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
+(8, 'Administration Menu'),
+(9, 'Advanced Menu'),
+(2, 'Dashboard'),
+(7, 'Display Menu'),
+(6, 'Design Menu'),
+(5, 'Library Menu'),
+(1, 'Top Nav');
+
+INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`) VALUES
+(1, 1, 2, NULL, 'Schedule', NULL, NULL, 1),
+(2, 1, 5, NULL, 'Design', NULL, NULL, 2),
+(3, 1, 7, NULL, 'Library', NULL, NULL, 3),
+(4, 1, 17, NULL, 'Administration', NULL, NULL, 5),
+(7, 7, 11, NULL, 'Displays', NULL, NULL, 1),
+(8, 8, 15, NULL, 'User Groups', NULL, NULL, 2),
+(9, 8, 17, NULL, 'Users', NULL, NULL, 1),
+(10, 9, 16, 'sp=log', 'Log', NULL, NULL, 1),
+(11, 9, 18, NULL, 'License', NULL, NULL, 4),
+(12, 9, 16, 'sp=sessions', 'Sessions', NULL, NULL, 2),
+(13, 8, 14, NULL, 'Settings', NULL, NULL, 3),
+(14, 2, 2, 'sp=month', 'Schedule', 'schedule_button', 'img/dashboard/scheduleview.png', 1),
+(15, 2, 5, NULL, 'Layouts', 'playlist_button', 'img/dashboard/presentations.png', 2),
+(16, 2, 7, NULL, 'Library', 'content_button', 'img/dashboard/content.png', 3),
+(17, 2, 25, NULL, 'Templates', 'layout_button', 'img/dashboard/layouts.png', 4),
+(18, 2, 17, NULL, 'Users', 'user_button', 'img/dashboard/users.png', 5),
+(19, 2, 14, NULL, 'Settings', 'settings_button', 'img/dashboard/settings.png', 6),
+(20, 2, 18, NULL, 'License', 'license_button', 'img/dashboard/license.png', 7),
+(22, 9, 26, NULL, 'Report Fault', NULL, NULL, 3),
+(23, 7, 27, NULL, 'Statistics', NULL, NULL, 3),
+(24, 2, 28, 'http://wiki.xibo.org.uk/wiki/Manual:TOC', 'Manual', 'help_button', 'img/dashboard/help.png', 10),
+(25, 6, 29, NULL, 'Resolutions', NULL, NULL, 3),
+(26, 6, 25, NULL, 'Templates', NULL, NULL, 2),
+(27, 7, 32, NULL, 'Display Groups', NULL, NULL, 2),
+(28, 8, 33, NULL, 'Applications', NULL, NULL, 4),
+(29, 5, 36, NULL, 'DataSets', NULL, NULL, 2),
+(30, 5, 7, NULL, 'Media', NULL, NULL, 1),
+(33, 6, 5, NULL, 'Layouts', NULL, NULL, 1),
+(34, 1, 11, NULL, 'Displays', NULL, NULL, 4),
+(35, 1, 16, 'sp=log', 'Advanced', NULL, NULL, 6);
+
+INSERT INTO `lkmenuitemgroup` (`LkMenuItemGroupID`, `GroupID`, `MenuItemID`) VALUES
+(1, 1, 33),
+(2, 1, 14),
+(3, 1, 15),
+(4, 1, 16),
+(5, 1, 20),
+(6, 1, 24),
+(7, 1, 1),
+(8, 1, 2),
+(9, 1, 3),
+(10, 1, 29),
+(11, 1, 30),
+(12, 1, 26);
 
 
 UPDATE `version` SET `app_ver` = '1.3.3', `XmdsVersion` = 3;

@@ -37,7 +37,7 @@ $q = Kit::GetParam('q', _REQUEST, _WORD);
                     <ul id="menu" style="padding-left: 26.5em;">
 <?php
 // Put a menu here
-if (!$menu = new MenuManager($db, $user, 'Layout Menu')) trigger_error($menu->message, E_USER_ERROR);
+if (!$menu = new MenuManager($db, $user, 'Design Menu')) trigger_error($menu->message, E_USER_ERROR);
 
 while ($menuItem = $menu->GetNextMenuItem())
 {
