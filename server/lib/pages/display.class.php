@@ -130,6 +130,11 @@ SQL;
 		$response		= new ResponseManager();
 
 		$displayid 		= Kit::GetParam('displayid', _POST, _INT);
+
+                $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
+                if (!$auth->edit)
+                    trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
+
 		$display 		= Kit::GetParam('display', _POST, _STRING);
 		$layoutid 		= Kit::GetParam('defaultlayoutid', _POST, _INT);
 		$inc_schedule 	= Kit::GetParam('inc_schedule', _POST, _INT);
@@ -178,6 +183,11 @@ SQL;
 
 		//get some vars
 		$displayid 			= $this->displayid;
+
+                $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
+                if (!$auth->edit)
+                    trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
+
 		$display 			= $this->display;
 		$layoutid 			= $this->layoutid;
 		$license 			= $this->license;
@@ -304,8 +314,6 @@ HTML;
 		$user		=& $this->user;
 		$response	= new ResponseManager();
 
-                $displayGroupAuth = $user->DisplayGroupAuth();
-
 		//display the display table
 		$SQL = <<<SQL
 		SELECT display.displayid,
@@ -351,7 +359,7 @@ SQL;
 		$msgLogIn	= __('Logged In');
 		$msgEdit	= __('Edit');
 		$msgDelete	= __('Delete');
-		$msgGroupSecurity = __('Group Security');
+		$msgPermissions = __('Permissions');
                 $msgClientAddress = __('IP Address');
                 $msgDefault = __('Default Layout');
                 $msgStatus = __('Status');
@@ -383,8 +391,12 @@ END;
                     // Check that we have permission to access this display record
                     $displayGroupID = Kit::ValidateParam($aRow[8], _INT);
 
-                    if (!in_array($displayGroupID, $displayGroupAuth) && $this->user->usertypeid != 1)
+                    // Auth
+                    $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
+
+                    if (!$auth->view)
                         continue;
+
 
                     $displayid 	= $aRow[0];
                     $display 	= $aRow[1];
@@ -415,18 +427,28 @@ END;
 
                         $buttons = '';
 
-                        if ($user->usertypeid == 1)
+                        // We always get some buttons
+                        $buttons .= '<button class="XiboFormButton" href="index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $displayGroupID . '"><span>' . __('Schedule Now') . '</span></button>';
+                        $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=MediaInventory&DisplayId=' . $displayid . '"><span>' . $msgMediaInventory . '</span></button>';
+
+                        // Decide what buttons we get based on permissions
+                        if ($auth->edit)
                         {
-                            $buttons = <<<END
-                        <button class='XiboFormButton' href='index.php?p=display&q=displayForm&displayid=$displayid'><span>$msgEdit</span></button>
-                        <button class='XiboFormButton' href='index.php?p=display&q=DeleteForm&displayid=$displayid'><span>$msgDelete</span></button>
-                        <button class="XiboFormButton" href="index.php?p=displaygroup&q=GroupSecurityForm&DisplayGroupID=$displayGroupID&DisplayGroup=$displayName"><span>$msgGroupSecurity</span></button>
-                        <button class="XiboFormButton" href="index.php?p=display&q=MediaInventory&DisplayId=$displayid"><span>$msgMediaInventory</span></button>
-END;
+                            $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $displayid . '"><span>' . $msgDefault . '</span></button>';
+                            $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=displayForm&displayid=' . $displayid . '"><span>' . $msgEdit . '</span></button>';
                         }
 
-                        $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $displayid . '"><span>' . $msgDefault . '</span></button>';
-                        $buttons .= '<button class="XiboFormButton" href="index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $displayGroupID . '"><span>' . __('Schedule Now') . '</span></button>';
+                        if ($auth->del)
+                        {
+                            $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=DeleteForm&displayid=' . $displayid . '"><span>' . $msgDelete . '</span></button>';
+
+                        }
+
+                        if ($auth->modifyPermissions)
+                        {
+                            $buttons .= '<button class="XiboFormButton" href="index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $displayGroupID . '"><span>' . $msgPermissions . '</span></button>';
+
+                        }
 
 			$output .= <<<END
 
@@ -635,6 +657,11 @@ END;
 		$displayid 	= Kit::GetParam('displayid', _REQUEST, _INT);
                 $helpManager    = new HelpManager($db, $user);
 
+                // Auth
+                $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
+                if (!$auth->del)
+                    trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
+
 		// Output the delete form
 		$msgInfo	= __('Deleting a display cannot be undone.');
 		$msgWarn	= __('Are you sure you want to delete this display?');
@@ -662,6 +689,10 @@ END;
 		$response	= new ResponseManager();
 		$displayid 	= Kit::GetParam('displayid', _POST, _INT, 0);
 
+                $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
+                if (!$auth->del)
+                    trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
+
 		if ($displayid == 0)
 		{
 			$response->SetError(__("No Display selected for Deletion."));
@@ -688,6 +719,10 @@ END;
         $response = new ResponseManager();
 
         $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+
+        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
+        if (!$auth->edit)
+            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
         if (!$defaultLayoutId = $this->db->GetSingleValue(sprintf("SELECT defaultlayoutid FROM display WHERE displayid = %d", $displayId),
                 'defaultlayoutid', _INT))
@@ -730,6 +765,10 @@ END;
         $displayId = Kit::GetParam('DisplayId', _POST, _INT);
         $defaultLayoutId = Kit::GetParam('defaultlayoutid', _POST, _INT);
 
+        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
+        if (!$auth->edit)
+            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
+
         if (!$displayObject->EditDefaultLayout($displayId, $defaultLayoutId))
         {
             trigger_error(__('Cannot Edit this Display'), E_USER_ERROR);
@@ -747,6 +786,10 @@ END;
         $db =& $this->db;
         $response = new ResponseManager();
         $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+
+        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
+        if (!$auth->view)
+            trigger_error(__('You do not have permission to view this display'), E_USER_ERROR);
 
         if ($displayId == 0)
             trigger_error(__('No DisplayId Given'));
@@ -795,6 +838,26 @@ END;
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'MediaInventory') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
+    }
+
+    /**
+     * Get DisplayGroupID
+     * @param <type> $displayId
+     */
+    private function GetDisplayGroupId($displayId)
+    {
+        $sql = "SELECT displaygroup.DisplayGroupID ";
+        $sql .= "  FROM `displaygroup` ";
+        $sql .= "   INNER JOIN `lkdisplaydg` ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+        $sql .= " WHERE displaygroup.IsDisplaySpecific = 1 AND lkdisplaydg.DisplayID = %d";
+
+        if (!$id = $this->db->GetSingleValue(sprintf($sql, $displayId), 'DisplayGroupID', _INT))
+        {
+            trigger_error($this->db->error());
+            trigger_error(__('Unable to determine permissions'), E_USER_ERROR);
+        }
+
+        return $id;
     }
 }
 ?>
