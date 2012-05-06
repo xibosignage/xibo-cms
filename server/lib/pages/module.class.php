@@ -257,6 +257,7 @@ END;
 END;
 
         $response->SetFormRequestResponse($form, __('Edit Module'), '350px', '325px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Module', 'Edit') . '")');
         $response->AddButton($msgCancel, 'XiboDialogClose()');
         $response->AddButton($msgSave, '$("#ModuleEditForm").submit()');
         $response->Respond();

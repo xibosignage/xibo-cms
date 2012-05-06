@@ -75,7 +75,9 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (67, 'Template', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Layouts:Templates'),
 (68, 'Services', 'Register', 'http://wiki.xibo.org.uk/wiki/Manual:Applications#Adding_Applications'),
 (69, 'OAuth', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Applications'),
-(70, 'Services', 'Log', 'http://wiki.xibo.org.uk/wiki/Manual:Applications#View_Log');
+(70, 'Services', 'Log', 'http://wiki.xibo.org.uk/wiki/Manual:Applications#View_Log'),
+(71, 'Module', 'Edit', 'http://wiki.xibo.org.uk/wiki/Manual:Media#Module_Config'),
+(72, 'Module', 'General', 'http://wiki.xibo.org.uk/wiki/Manual:Media#Editing_Module_Config');
 
 RENAME TABLE `lkgroupdg` TO  `lkdisplaygroupgroup`;
 
