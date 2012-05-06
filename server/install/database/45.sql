@@ -149,6 +149,12 @@ INSERT INTO `lkmenuitemgroup` (`LkMenuItemGroupID`, `GroupID`, `MenuItemID`) VAL
 
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES (NULL, 'MODULE_CONFIG_LOCKED_CHECKB', 'Unchecked', 'dropdown', 'Is the module config locked? Useful for Service providers.', 'Checked|Unchecked', 'general', '0');
 
+DELETE FROM `schedule_detail` WHERE DisplayGroupID NOT IN (SELECT DisplayGroupID FROM `displaygroup`);
+
+ALTER TABLE `schedule_detail` ADD FOREIGN KEY (  `DisplayGroupID` ) REFERENCES `displaygroup` (
+`DisplayGroupID`
+) ON DELETE RESTRICT ON UPDATE RESTRICT ;
+
 UPDATE `version` SET `app_ver` = '1.3.3', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '45';

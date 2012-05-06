@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -25,7 +25,11 @@ class Data
 	protected $db;
 	private $errorNo;
 	private $errorMessage;
-	
+
+        /**
+         * Data Class
+         * @param database $db
+         */
 	public function __construct(database $db)
 	{
 		$this->db =& $db;
