@@ -50,6 +50,7 @@ echo __('Error');
 echo __('General');
 echo __('Path');
 echo __('DataSets');
+echo __('Modules');
 
 // Settings translations
 echo __('jpg_length');
@@ -81,4 +82,5 @@ echo __('LAYOUT_COPY_MEDIA_CHECKB');
 echo __('LIBRARY_MEDIA_UPDATEINALL_CHECKB');
 echo __('USER_PASSWORD_POLICY');
 echo __('USER_PASSWORD_ERROR');
+echo __('MODULE_CONFIG_LOCKED_CHECKB');
 ?>
