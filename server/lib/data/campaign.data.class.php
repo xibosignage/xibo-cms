@@ -27,19 +27,140 @@ class Campaign extends Data
         parent::__construct($db);
     }
 
+    /**
+     * Add Campaign
+     * @param <type> $campaign
+     * @param <type> $isLayoutSpecific
+     * @return <type>
+     */
     public function Add($campaign, $isLayoutSpecific)
     {
+        Debug::LogEntry($db, 'audit', 'IN', 'Campaign', 'Add');
+        
+        if ($campaign == '')
+            return $this->SetError(25000, __('Campaign name cannot be empty'));
 
+        $SQL = "INSERT INTO `campaign` (Campaign, IsLayoutSpecific) VALUES ('%s', %d) ";
+        $SQL = sprintf($SQL, $this->db->escape_string($campaign), $isLayoutSpecific);
+
+        if (!$id = $this->db->insert_query($SQL))
+        {
+            trigger_error($this->db->error());
+            return $this->SetError(25500, __('Unable to add Campaign, Step 1'));
+        }
+
+        return true;
     }
 
-    public function Edit($campaignId, $campaign, $isLayoutSpecific)
+    /**
+     * Edit Campaign
+     * @param <type> $campaignId
+     * @param <type> $campaign
+     * @return <type>
+     */
+    public function Edit($campaignId, $campaign)
     {
+        Debug::LogEntry($db, 'audit', 'IN', 'Campaign', 'Edit');
 
+        if ($campaign == '')
+            return $this->SetError(25000, __('Campaign name cannot be empty'));
+
+        $SQL = "UPDATE `campaign` SET Campaign = '%s' WHERE CampaignID = %d ";
+        $SQL = sprintf($SQL, $this->db->escape_string($campaign), $isLayoutSpecific, $campaignId);
+
+        if (!$this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return $this->SetError(25500, __('Unable to edit Campaign, Step 1'));
+        }
+
+        return true;
     }
 
+    /**
+     * Delete Campaign
+     * @param <type> $campaignId
+     */
     public function Delete($campaignId)
     {
+        Debug::LogEntry($db, 'audit', 'IN', 'Campaign', 'Delete');
 
+        // Unlink all Layouts
+        if (!$this->UnlinkAll($campaignId))
+            return false;
+
+        // Delete the Campaign record
+        $SQL = "DELETE FROM `campaign` WHERE CampaignID = %d ";
+        $SQL = sprintf($SQL, $campaignId);
+
+        if (!$this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return $this->SetError(25500, __('Unable to delete Campaign'));
+        }
+
+        return true;
+    }
+
+    /**
+     * Link a Campaign to a Layout
+     * @param <type> $campaignId
+     * @param <type> $layoutId
+     * @param <type> $displayOrder
+     * @return <type>
+     */
+    public function Link($campaignId, $layoutId, $displayOrder)
+    {
+        $SQL = "INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES (%d, %d, %d)";
+        $SQL = sprintf($SQL, $campaignId, $layoutId, $displayOrder);
+
+        if (!$this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return $this->SetError(25500, __('Unable to link Campaign to Layout'));
+        }
+
+        return true;
+    }
+
+    /**
+     * Unlink a Layout from a Campaign
+     * @param <type> $campaignId
+     * @param <type> $layoutId
+     * @param <type> $displayOrder
+     * @return <type>
+     */
+    public function Unlink($campaignId, $layoutId, $displayOrder)
+    {
+        $SQL = "DELETE FROM `lkcampaignlayout` WHERE CampaignID = %d AND LayoutID = %d AND DisplayOrder = %d";
+        $SQL = sprintf($SQL, $campaignId, $layoutId, $displayOrder);
+
+        if (!$this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return $this->SetError(25500, __('Unable to unlink Campaign from Layout'));
+        }
+
+        return true;
+    }
+
+    /**
+     * Unlink all
+     * @param <type> $campaignId
+     * @return <type>
+     */
+    public function UnlinkAll($campaignId)
+    {
+        $SQL = "DELETE FROM `lkcampaignlayout` WHERE CampaignID = %d";
+        $SQL = sprintf($SQL, $campaignId);
+
+        if (!$this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return $this->SetError(25500, __('Unable to unlink all Layouts'));
+        }
+
+        return true;
     }
 }
 ?>

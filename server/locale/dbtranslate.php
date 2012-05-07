@@ -51,6 +51,7 @@ echo __('General');
 echo __('Path');
 echo __('DataSets');
 echo __('Modules');
+echo __('Campaigns');
 
 // Settings translations
 echo __('jpg_length');

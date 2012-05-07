@@ -122,13 +122,13 @@ INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class
 (22, 9, 26, NULL, 'Report Fault', NULL, NULL, 3),
 (23, 7, 27, NULL, 'Statistics', NULL, NULL, 3),
 (24, 2, 28, 'http://wiki.xibo.org.uk/wiki/Manual:TOC', 'Manual', 'help_button', 'img/dashboard/help.png', 10),
-(25, 6, 29, NULL, 'Resolutions', NULL, NULL, 3),
-(26, 6, 25, NULL, 'Templates', NULL, NULL, 2),
+(25, 6, 29, NULL, 'Resolutions', NULL, NULL, 4),
+(26, 6, 25, NULL, 'Templates', NULL, NULL, 3),
 (27, 7, 32, NULL, 'Display Groups', NULL, NULL, 2),
 (28, 8, 33, NULL, 'Applications', NULL, NULL, 4),
 (29, 5, 36, NULL, 'DataSets', NULL, NULL, 2),
 (30, 5, 7, NULL, 'Media', NULL, NULL, 1),
-(33, 6, 5, NULL, 'Layouts', NULL, NULL, 1),
+(33, 6, 5, NULL, 'Layouts', NULL, NULL, 2),
 (34, 1, 11, NULL, 'Displays', NULL, NULL, 4),
 (35, 1, 16, 'sp=log', 'Advanced', NULL, NULL, 6),
 (36, 8, 24, NULL, 'Modules', NULL, NULL, 5);
@@ -177,6 +177,27 @@ CREATE TABLE IF NOT EXISTS `lkcampaigngroup` (
 ALTER TABLE `lkcampaigngroup`
   ADD CONSTRAINT `lkcampaigngroup_ibfk_2` FOREIGN KEY (`GroupID`) REFERENCES `group` (`groupID`),
   ADD CONSTRAINT `lkcampaigngroup_ibfk_1` FOREIGN KEY (`CampaignID`) REFERENCES `campaign` (`CampaignID`);
+
+CREATE TABLE IF NOT EXISTS `lkcampaignlayout` (
+  `LkCampaignLayoutID` int(11) NOT NULL AUTO_INCREMENT,
+  `CampaignID` int(11) NOT NULL,
+  `LayoutID` int(11) NOT NULL,
+  `DisplayOrder` int(11) NOT NULL,
+  PRIMARY KEY (`LkCampaignLayoutID`),
+  KEY `CampaignID` (`CampaignID`),
+  KEY `LayoutID` (`LayoutID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+ALTER TABLE `lkcampaignlayout`
+  ADD CONSTRAINT `lkcampaignlayout_ibfk_2` FOREIGN KEY (`LayoutID`) REFERENCES `layout` (`layoutID`),
+  ADD CONSTRAINT `lkcampaignlayout_ibfk_1` FOREIGN KEY (`CampaignID`) REFERENCES `campaign` (`CampaignID`);
+
+INSERT INTO `pages` (`name`, `pagegroupID`) VALUES ('campaign', '3');
+
+INSERT INTO `menuitem` (`MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`)
+    SELECT 6, PageId, NULL, 'Campaigns', NULL, NULL, 1
+      FROM `pages`
+     WHERE name = 'campaign';
 
 UPDATE `version` SET `app_ver` = '1.3.3', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
