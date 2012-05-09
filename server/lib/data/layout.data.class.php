@@ -125,6 +125,7 @@ END;
         $campaign = new Campaign($db);
 
         $campaignId = $campaign->Add($layout, 1, $userid);
+        $campaign->Link($campaignId, $id, 0);
 
         // What permissions should we create this with?
         if (Config::GetSetting($db, 'LAYOUT_DEFAULT') == 'public')
