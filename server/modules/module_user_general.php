@@ -924,11 +924,11 @@ END;
     {
         $SQL  = "";
         $SQL .= "SELECT layout.layoutID, ";
-        $SQL .= "        layout, ";
-        $SQL .= "        description, ";
-        $SQL .= "        tags, ";
-        $SQL .= "        userID, ";
-        $SQL .= "        xml, ";
+        $SQL .= "        layout.layout, ";
+        $SQL .= "        layout.description, ";
+        $SQL .= "        layout.tags, ";
+        $SQL .= "        layout.userID, ";
+        $SQL .= "        layout.xml, ";
         $SQL .= "        campaign.CampaignID ";
         $SQL .= "   FROM layout ";
         $SQL .= "  INNER JOIN `lkcampaignlayout` ";
@@ -964,7 +964,7 @@ END;
             $layoutItem['xml']  = Kit::ValidateParam($row['xml'], _HTMLSTRING);
             $layoutItem['campaignid'] = Kit::ValidateParam($row['CampaignID'], _INT);
 
-            $auth = $this->CampaignAuth($layoutItem['campaignid'], $fullObject);
+            $auth = $this->CampaignAuth($layoutItem['campaignid'], true);
 
             if ($auth->view)
             {

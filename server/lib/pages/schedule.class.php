@@ -1393,6 +1393,7 @@ END;
 		$repeatTime            = Kit::GetParam('repeatTime', _POST, _STRING, '00:00');
 		
 		$userid             = Kit::GetParam('userid', _SESSION, _INT);
+		$displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
 
                 $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
 		
@@ -1442,7 +1443,7 @@ END;
 		// Ready to do the add 
 		$scheduleObject = new Schedule($db);
 		
-		if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid))
+		if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid, $displayOrder))
 		{
 			trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
 		}
@@ -1481,6 +1482,7 @@ END;
 		$repeatTime			= Kit::GetParam('repeatTime', _POST, _STRING, '00:00');
 		
 		$userid 			= Kit::GetParam('userid', _SESSION, _INT);
+                $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
 		
 		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
 		
@@ -1525,7 +1527,7 @@ END;
 		// Ready to do the edit 
 		$scheduleObject = new Schedule($db);
 		
-		if (!$scheduleObject->Edit($eventID, $eventDetailID, $displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid))
+		if (!$scheduleObject->Edit($eventID, $eventDetailID, $displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid, $displayOrder))
 		{
 			trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
 		}
@@ -1841,6 +1843,10 @@ END;
                         <td>$layoutList</td>
                     </tr>
                     <tr>
+                        <td><label for="DisplayOrder" title="Select the Order for this Event">Display Order</label></td>
+                        <td><input type=text" name="DisplayOrder" value="0" />
+                    </tr>
+                    <tr>
                         <td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
                         <td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
                     </tr>
@@ -1871,6 +1877,7 @@ END;
         $minutes = Kit::GetParam('minutes', _POST, _INT, 0);
         $seconds = Kit::GetParam('seconds', _POST, _INT, 0);
         $duration = ($hours * 3600) + ($minutes * 60) + $seconds;
+        $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
 
         // Validate
         if ($campaignId == 0)
@@ -1891,7 +1898,7 @@ END;
         // Ready to do the add
         $scheduleObject = new Schedule($db);
 
-        if (!$scheduleObject->Add($displayGroupIds, $fromDt, $toDt, $campaignId, '', '', '', $isPriority, $this->user->userid))
+        if (!$scheduleObject->Add($displayGroupIds, $fromDt, $toDt, $campaignId, '', '', '', $isPriority, $this->user->userid, $displayOrder))
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('The Event has been Scheduled'));

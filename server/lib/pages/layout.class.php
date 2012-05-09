@@ -558,7 +558,7 @@ END;
 END;
 
                                 $output .= '<td class="nobr">';
-                                $output .= '<button class="XiboFormButton" href="index.php?p=schedule&q=ScheduleNowForm&layoutid=' . $layoutid . '"><span>' . __('Schedule Now') . '</span></button>';
+                                $output .= '<button class="XiboFormButton" href="index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $campaignId . '"><span>' . __('Schedule Now') . '</span></button>';
 
 				if ($auth->edit)
 				{

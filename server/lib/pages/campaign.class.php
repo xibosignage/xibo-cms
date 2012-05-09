@@ -113,6 +113,7 @@ HTML;
             $numLayouts = Kit::ValidateParam($row['numlayouts'], _INT);
 
             $buttons = '';
+            $buttons .= '<button class="XiboFormButton" href="index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $campaignId . '"><span>' . __('Schedule Now') . '</span></button>';
             
             // Buttons based on permissions
             if ($row['edit'] == 1)
