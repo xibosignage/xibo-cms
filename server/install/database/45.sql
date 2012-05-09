@@ -159,8 +159,14 @@ CREATE TABLE IF NOT EXISTS `campaign` (
   `CampaignID` int(11) NOT NULL AUTO_INCREMENT,
   `Campaign` varchar(254) NOT NULL,
   `IsLayoutSpecific` tinyint(4) NOT NULL,
-  PRIMARY KEY (`CampaignID`)
+  `UserID` int(11) NOT NULL,
+  PRIMARY KEY (`CampaignID`),
+  KEY `UserID` (`UserID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+ALTER TABLE `campaign`
+  ADD CONSTRAINT `campaign_ibfk_1` FOREIGN KEY (`UserID`) REFERENCES `user` (`UserID`);
+
 
 CREATE TABLE IF NOT EXISTS `lkcampaigngroup` (
   `LkCampaignGroupID` int(11) NOT NULL AUTO_INCREMENT,

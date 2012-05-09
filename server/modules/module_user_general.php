@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -27,10 +27,6 @@
 	public $userid;
 	public $usertypeid;
         public $userName;
-	
-	private $displayGroupIDs;
-	private $authedDisplayGroupIDs;
-
         public $homePage;
 	
  	public function __construct(database $db)
@@ -1141,8 +1137,6 @@ END;
         return $dataSets;
     }
 
-
-
     /**
      * Authorises a user against a DisplayGroupId
      * @param <int> $displayGroupId
@@ -1231,6 +1225,107 @@ END;
         }
 
         return $displayGroups;
+    }
+    
+    /**
+     * Authorises a user against a campaign
+     * @param <type> $layoutId
+     * @return <type>
+     */
+    public function CampaignAuth($campaignId, $fullObject = false)
+    {
+        $auth = new PermissionManager($this->db, $this);
+
+        $SQL  = '';
+        $SQL .= 'SELECT UserID ';
+        $SQL .= '  FROM `campaign` ';
+        $SQL .= ' WHERE campaign.CampaignID = %d ';
+
+        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $campaignId), 'UserID', _INT))
+            return $auth;
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
+        }
+
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM `campaign` ';
+        $SQL .= '   INNER JOIN lkcampaigngroup ';
+        $SQL .= '   ON lkcampaigngroup.CampaignID = campaign.CampaignID ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lkcampaigngroup.GroupID ';
+        $SQL .= ' WHERE campaign.CampaignID = %d ';
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+        $SQL .= 'GROUP BY campaign.UserID ';
+
+        $SQL = sprintf($SQL, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
+    }
+
+    /**
+     * Authenticates the current user and returns an array ofcampaigns this user is authenticated on
+     * @return
+     */
+    public function CampaignList()
+    {
+        $db 		=& $this->db;
+        $userid		=& $this->userid;
+
+        $SQL  = "SELECT campaign.CampaignID, Campaign, IsLayoutSpecific, COUNT(lkcampaignlayout.LayoutID) AS NumLayouts ";
+        $SQL .= "  FROM `campaign` ";
+        $SQL .= "   LEFT OUTER JOIN `lkcampaignlayout` ";
+        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= "GROUP BY campaign.CampaignID, Campaign, IsLayoutSpecific ";
+        $SQL .= "ORDER BY Campaign";
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $campaigns = array();
+
+        while ($row = $this->db->get_assoc_row($result))
+        {
+            $campaignItem = array();
+
+            // Validate each param and add it to the array.
+            $campaignItem['campaignid'] = Kit::ValidateParam($row['CampaignID'], _INT);
+            $campaignItem['campaign'] = Kit::ValidateParam($row['Campaign'], _STRING);
+            $campaignItem['numlayouts'] = Kit::ValidateParam($row['NumLayouts'], _INT);
+            $campaignItem['islayoutspecific'] = Kit::ValidateParam($row['IsLayoutSpecific'], _INT);
+
+            $auth = $this->CampaignAuth($campaignItem['campaignid'], true);
+
+            if ($auth->view)
+            {
+                $campaignItem['view'] = (int) $auth->view;
+                $campaignItem['edit'] = (int) $auth->edit;
+                $campaignItem['del'] = (int) $auth->del;
+                $campaignItem['modifypermissions'] = (int) $auth->modifyPermissions;
+
+                $campaigns[] = $campaignItem;
+            }
+        }
+
+        return $campaigns;
     }
 }
 ?>

@@ -29,19 +29,20 @@ class Campaign extends Data
 
     /**
      * Add Campaign
-     * @param <type> $campaign
-     * @param <type> $isLayoutSpecific
+     * @param <string> $campaign
+     * @param <int> $isLayoutSpecific
+     * @param <int> $userId
      * @return <type>
      */
-    public function Add($campaign, $isLayoutSpecific)
+    public function Add($campaign, $isLayoutSpecific, $userId)
     {
-        Debug::LogEntry($db, 'audit', 'IN', 'Campaign', 'Add');
+        Debug::LogEntry($this->db, 'audit', 'IN', 'Campaign', 'Add');
         
         if ($campaign == '')
             return $this->SetError(25000, __('Campaign name cannot be empty'));
 
-        $SQL = "INSERT INTO `campaign` (Campaign, IsLayoutSpecific) VALUES ('%s', %d) ";
-        $SQL = sprintf($SQL, $this->db->escape_string($campaign), $isLayoutSpecific);
+        $SQL = "INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId) VALUES ('%s', %d, %d) ";
+        $SQL = sprintf($SQL, $this->db->escape_string($campaign), $isLayoutSpecific, $userId);
 
         if (!$id = $this->db->insert_query($SQL))
         {
@@ -60,13 +61,13 @@ class Campaign extends Data
      */
     public function Edit($campaignId, $campaign)
     {
-        Debug::LogEntry($db, 'audit', 'IN', 'Campaign', 'Edit');
+        Debug::LogEntry($this->db, 'audit', 'IN', 'Campaign', 'Edit');
 
         if ($campaign == '')
             return $this->SetError(25000, __('Campaign name cannot be empty'));
 
         $SQL = "UPDATE `campaign` SET Campaign = '%s' WHERE CampaignID = %d ";
-        $SQL = sprintf($SQL, $this->db->escape_string($campaign), $isLayoutSpecific, $campaignId);
+        $SQL = sprintf($SQL, $this->db->escape_string($campaign), $campaignId);
 
         if (!$this->db->query($SQL))
         {
@@ -83,7 +84,7 @@ class Campaign extends Data
      */
     public function Delete($campaignId)
     {
-        Debug::LogEntry($db, 'audit', 'IN', 'Campaign', 'Delete');
+        Debug::LogEntry($this->db, 'audit', 'IN', 'Campaign', 'Delete');
 
         // Unlink all Layouts
         if (!$this->UnlinkAll($campaignId))
