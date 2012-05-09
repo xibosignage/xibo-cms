@@ -500,7 +500,7 @@ class scheduleDAO
             $SQL.= "       schedule_detail.ToDT,";
             $SQL.= "       GREATEST(schedule_detail.FromDT, $thisMonth) AS AdjustedFromDT,";
             $SQL.= "       LEAST(schedule_detail.ToDT, $nextMonth) AS AdjustedToDT,";
-            $SQL.= "       layout.layout, ";
+            $SQL.= "       campaign.Campaign, ";
             $SQL.= "       schedule_detail.userid, ";
             $SQL.= "       schedule_detail.is_priority, ";
             $SQL.= "       schedule_detail.EventID, ";
@@ -510,7 +510,7 @@ class scheduleDAO
             $SQL.= "       displaygroup.DisplayGroupID, ";
 	    $SQL.= "       schedule.DisplayGroupIDs ";
             $SQL.= "  FROM schedule_detail ";
-            $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
+            $SQL.= "  INNER JOIN campaign ON campaign.CampaignID = schedule_detail.CampaignID ";
             $SQL.= "  INNER JOIN displaygroup ON displaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
             $SQL.= "  INNER JOIN schedule ON schedule_detail.EventID = schedule.EventID ";
             $SQL.= " WHERE 1=1 ";
@@ -540,13 +540,13 @@ class scheduleDAO
                 $eventID	= Kit::ValidateParam($row['EventID'], _INT);
                 $fromDT		= Kit::ValidateParam($row['AdjustedFromDT'], _INT);
                 $toDT		= Kit::ValidateParam($row['AdjustedToDT'], _INT);
-                $layout		= Kit::ValidateParam($row['layout'], _STRING);
+                $layout		= Kit::ValidateParam($row['Campaign'], _STRING);
                 $displayGroup	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
                 $displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
                 $eventDGIDs	= Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
                 $eventDGIDs 	= explode(',', $eventDGIDs);
 
-                if (!in_array($displayGroupID, $user->DisplayGroupAuth())) continue;
+                if (!$user->DisplayGroupAuth($displayGroupID)) continue;
 
                 // How many days does this event span?
                 $spanningDays	= ($toDT - $fromDT) / (60 * 60 * 24);
@@ -702,12 +702,12 @@ class scheduleDAO
         $SQL.= "SELECT schedule_detail.schedule_detailID, ";
         $SQL.= "       schedule_detail.FromDT, ";
         $SQL.= "       schedule_detail.ToDT,";
-        $SQL.= "       layout.layout, ";
+        $SQL.= "       campaign.Campaign, ";
         $SQL.= "       schedule_detail.userid, ";
         $SQL.= "       schedule_detail.is_priority, ";
         $SQL.= "       schedule_detail.EventID ";
         $SQL.= "  FROM schedule_detail ";
-        $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
+        $SQL.= "  INNER JOIN campaign ON campaign.CampaignID = schedule_detail.CampaignID ";
         $SQL.= " WHERE 1=1 ";
         $SQL.= sprintf("   AND schedule_detail.DisplayGroupID IN (%s) ", $db->escape_string($displayGroups));
         
@@ -746,7 +746,7 @@ class scheduleDAO
 			$eventID		= Kit::ValidateParam($row['EventID'], _INT);
 			$fromDT			= Kit::ValidateParam($row['FromDT'], _INT);
 			$toDT			= Kit::ValidateParam($row['ToDT'], _INT);
-			$layout			= Kit::ValidateParam($row['layout'], _STRING);
+			$layout			= Kit::ValidateParam($row['Campaign'], _STRING);
 			$layout			= sprintf('<a class="XiboFormButton" href="index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d" title="%s">%s</a>', $eventID, $eventDetailID, __('Edit Event'), $layout);
 			
 			// How many days does this event span?
@@ -795,7 +795,7 @@ class scheduleDAO
             $SQL.= "       schedule_detail.ToDT,";
             $SQL.= "       GREATEST(schedule_detail.FromDT, $fromDt) AS AdjustedFromDT,";
             $SQL.= "       LEAST(schedule_detail.ToDT, $toDt) AS AdjustedToDT,";
-            $SQL.= "       layout.layout, ";
+            $SQL.= "       campaign.Campaign, ";
             $SQL.= "       schedule_detail.userid, ";
             $SQL.= "       schedule_detail.is_priority, ";
             $SQL.= "       schedule_detail.EventID, ";
@@ -805,7 +805,7 @@ class scheduleDAO
             $SQL.= "       displaygroup.DisplayGroupID, ";
 	    $SQL.= "       schedule.DisplayGroupIDs ";
             $SQL.= "  FROM schedule_detail ";
-            $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
+            $SQL.= "  INNER JOIN campaign ON campaign.CampaignID = schedule_detail.CampaignID ";
 
 
             $SQL.= "  INNER JOIN displaygroup ON displaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
@@ -837,7 +837,7 @@ class scheduleDAO
                 $eventID	= Kit::ValidateParam($row['EventID'], _INT);
                 $fromDT		= Kit::ValidateParam($row['AdjustedFromDT'], _INT);
                 $toDT		= Kit::ValidateParam($row['AdjustedToDT'], _INT);
-                $layout		= Kit::ValidateParam($row['layout'], _STRING);
+                $layout		= Kit::ValidateParam($row['Campaign'], _STRING);
                 $displayGroup	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
                 $displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
                 $eventDGIDs	= Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
@@ -897,12 +897,12 @@ class scheduleDAO
         $SQL.= "SELECT schedule_detail.schedule_detailID, ";
         $SQL.= "       schedule_detail.FromDT, ";
         $SQL.= "       schedule_detail.ToDT,";
-        $SQL.= "       layout.layout, ";
+        $SQL.= "       campaign.Campaign, ";
         $SQL.= "       schedule_detail.userid, ";
         $SQL.= "       schedule_detail.is_priority, ";
         $SQL.= "       schedule_detail.EventID ";
         $SQL.= "  FROM schedule_detail ";
-        $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
+        $SQL.= "  INNER JOIN campaign ON campaign.CampaignID = schedule_detail.CampaignID ";
         $SQL.= " WHERE 1=1 ";
         $SQL.= sprintf("   AND schedule_detail.DisplayGroupID IN (%s) ", $db->escape_string($displayGroups));
         
@@ -941,7 +941,7 @@ class scheduleDAO
 			$eventID		= Kit::ValidateParam($row['EventID'], _INT);
 			$fromDT			= Kit::ValidateParam($row['FromDT'], _INT);
 			$toDT			= Kit::ValidateParam($row['ToDT'], _INT);
-			$layout			= Kit::ValidateParam($row['layout'], _STRING);
+			$layout			= Kit::ValidateParam($row['campaign'], _STRING);
 			$layout			= sprintf('<a class="XiboFormButton" href="index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d" title="%s">%s</a>', $eventID, $eventDetailID, __('Edit Event'), $layout);
 			
 			if($currentWeekDayNo == 1) $events .= '<tr>';
@@ -1106,8 +1106,8 @@ HTML;
 		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
 		
 		// Layout list
-                $layouts = $user->LayoutList();
-		$layout_list 	= Kit::SelectList('layoutid', $layouts, 'layoutid', 'layout');
+                $layouts = $user->CampaignList();
+		$layout_list 	= Kit::SelectList('CampaignID', $layouts, 'campaignid', 'campaign');
 		
 		$outputForm		= false;
 		$displayList	= $this->UnorderedListofDisplays($outputForm, $displayGroupIDs);
@@ -1135,9 +1135,13 @@ HTML;
 						</td>
 					</tr>
 					<tr>
-						<td><label for="layoutid" title="Select which layout this event will show.">Layout<span class="required">*</span></label></td>
+						<td><label for="CampaignID" title="Select which layout this event will show.">Campaign/Layout<span class="required">*</span></label></td>
 						<td>$layout_list</td>
 					</tr>
+                                        <tr>
+                                                <td><label for="DisplayOrder" title="Select the Order for this Event">Display Order</label></td>
+                                                <td><input type=text" name="DisplayOrder" value="0" />
+                                        </tr>
 					<tr>
 						<td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
 						<td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
@@ -1210,17 +1214,17 @@ END;
 		$SQL = "";
         $SQL.= "SELECT schedule.FromDT, ";
         $SQL.= "       schedule.ToDT,";
-        $SQL.= "       schedule.LayoutID, ";
+        $SQL.= "       schedule.CampaignID, ";
         $SQL.= "       schedule.userid, ";
         $SQL.= "       schedule.is_priority, ";
         $SQL.= "       schedule.DisplayGroupIDs, ";
         $SQL.= "       schedule.recurrence_type, ";
         $SQL.= "       schedule.recurrence_detail, ";
         $SQL.= "       schedule.recurrence_range, ";
-        $SQL.= "       schedule.EventID ";
+        $SQL.= "       schedule.EventID, ";
+        $SQL.= "       schedule_detail.DisplayOrder ";
         $SQL.= "  FROM schedule ";
         $SQL.= "  INNER JOIN schedule_detail ON schedule.EventID = schedule_detail.EventID ";
-        $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule.layoutID ";
         $SQL.= " WHERE 1=1 ";
         $SQL.= sprintf("   AND schedule.EventID = %d", $eventID);
         $SQL.= sprintf("   AND schedule_detail.schedule_detailID = %d", $eventDetailID);
@@ -1243,8 +1247,9 @@ END;
 		$recDetail	= Kit::ValidateParam($row['recurrence_detail'], _STRING);
 		$recToDT	= Kit::ValidateParam($row['recurrence_range'], _STRING);
 		$displayGroupIDs 	= explode(',', $displayGroupIDs);
-		$layoutID	= Kit::ValidateParam($row['LayoutID'], _STRING);
+		$campaignId	= Kit::ValidateParam($row['CampaignID'], _STRING);
         $isPriority = Kit::ValidateParam($row['is_priority'], _CHECKBOX);
+        $displayOrder = Kit::ValidateParam($row['DisplayOrder'], _INT);
 
         if ($isPriority == 1)
         {
@@ -1275,10 +1280,9 @@ END;
 			return;
 		}
 		
-		// need to do some user checking here
 		// Layout list
-                $layouts = $user->LayoutList();
-		$layout_list 	= Kit::SelectList('layoutid', $layouts, 'layoutid', 'layout', $layoutID);
+                $layouts = $user->CampaignList();
+		$layout_list 	= Kit::SelectList('CampaignID', $layouts, 'campaignid', 'campaign', $campaignId);
 		
 		$outputForm		= false;
 		$displayList	= $this->UnorderedListofDisplays($outputForm, $displayGroupIDs);
@@ -1308,9 +1312,13 @@ END;
 						</td>
 					</tr>
 					<tr>
-						<td><label for="layoutid" title="Select which layout this event will show.">Layout<span class="required">*</span></label></td>
+						<td><label for="CampaignID" title="Select which layout this event will show.">Campaign/Layout<span class="required">*</span></label></td>
 						<td>$layout_list</td>
 					</tr>
+                                        <tr>
+                                                <td><label for="DisplayOrder" title="Select the Order for this Event">Display Order</label></td>
+                                                <td><input type=text" name="DisplayOrder" value="$displayOrder" />
+                                        </tr>
 					<tr>
 						<td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
 						<td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" $isPriority title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
@@ -1371,7 +1379,7 @@ END;
 		$response           = new ResponseManager();
 		$datemanager        = new DateManager($db);
 
-		$layoutid           = Kit::GetParam('layoutid', _POST, _INT, 0);
+		$campaignId           = Kit::GetParam('CampaignID', _POST, _INT, 0);
 		$fromDT             = Kit::GetParam('starttime', _POST, _STRING);
 		$toDT               = Kit::GetParam('endtime', _POST, _STRING);
 		$fromTime           = Kit::GetParam('sTime', _POST, _STRING, '00:00');
@@ -1404,7 +1412,7 @@ END;
                     $recToDT = $datemanager->GetDateFromUS($recToDT, $repeatTime);
 		
 		// Validate layout
-		if ($layoutid == 0) 
+		if ($campaignId == 0)
 		{
 			trigger_error(__("No layout selected"), E_USER_ERROR);
 		}
@@ -1434,7 +1442,7 @@ END;
 		// Ready to do the add 
 		$scheduleObject = new Schedule($db);
 		
-		if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $layoutid, $rec_type, $rec_detail, $recToDT, $isPriority, $userid)) 
+		if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid))
 		{
 			trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
 		}
@@ -1459,7 +1467,7 @@ END;
 
 		$eventID			= Kit::GetParam('EventID', _POST, _INT, 0);
 		$eventDetailID		= Kit::GetParam('EventDetailID', _POST, _INT, 0);
-		$layoutid			= Kit::GetParam('layoutid', _POST, _INT, 0);
+		$campaignId			= Kit::GetParam('CampaignID', _POST, _INT, 0);
 		$fromDT				= Kit::GetParam('starttime', _POST, _STRING);
 		$toDT				= Kit::GetParam('endtime', _POST, _STRING);
 		$fromTime			= Kit::GetParam('sTime', _POST, _STRING, '00:00');
@@ -1491,7 +1499,7 @@ END;
                     $recToDT = $datemanager->GetDateFromUS($recToDT, $repeatTime);
 
 		// Validate layout
-		if ($layoutid == 0) 
+		if ($campaignId == 0)
 		{
 			trigger_error(__("No layout selected"), E_USER_ERROR);
 		}
@@ -1517,7 +1525,7 @@ END;
 		// Ready to do the edit 
 		$scheduleObject = new Schedule($db);
 		
-		if (!$scheduleObject->Edit($eventID, $eventDetailID, $displayGroupIDs, $fromDT, $toDT, $layoutid, $rec_type, $rec_detail, $recToDT, $isPriority, $userid)) 
+		if (!$scheduleObject->Edit($eventID, $eventDetailID, $displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid))
 		{
 			trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
 		}
@@ -1618,11 +1626,11 @@ END;
         $SQL.= "SELECT schedule_detail.schedule_detailID, ";
         $SQL.= "       schedule_detail.FromDT, ";
         $SQL.= "       schedule_detail.ToDT,";
-        $SQL.= "       layout.layout, ";
+        $SQL.= "       campaign.Campaign, ";
         $SQL.= "       schedule_detail.userid, ";
         $SQL.= "       schedule_detail.is_priority ";
         $SQL.= "  FROM schedule_detail ";
-        $SQL.= "  INNER JOIN layout ON layout.layoutID = schedule_detail.layoutID ";
+        $SQL.= "  INNER JOIN campaign ON campaign.CampaignID = schedule_detail.CampaignID ";
         $SQL.= " WHERE 1=1 ";
         $SQL.= "   AND schedule_detail.DisplayGroupID = $this->displayid ";
         
@@ -1785,7 +1793,7 @@ END;
 		// of each display group this event is associated with
 		foreach ($eventDGIDs as $dgID)
 		{
-			if (!in_array($dgID, $user->DisplayGroupAuth()))
+			if (!$user->DisplayGroupAuth($dgID))
 			{
 				return false;
 			}
@@ -1804,13 +1812,13 @@ END;
         $dateText = date("d/m/Y", $date);
 
         // We might have a layout id, or a display id
-        $layoutId = Kit::GetParam('layoutid', _GET, _INT, 0);
+        $campaignId = Kit::GetParam('CampaignID', _GET, _INT, 0);
         $displayGroupIds = Kit::GetParam('displayGroupId', _GET, _ARRAY);
 
         // Layout list
-        $layouts = $user->LayoutList();
-        $layoutList = Kit::SelectList('layoutid', $layouts, 'layoutid', 'layout', $layoutId);
-
+        $layouts = $user->CampaignList();
+        $layoutList = Kit::SelectList('CampaignID', $layouts, 'campaignid', 'campaign', $campaignId);
+        
         $outputForm = false;
         $displayList = $this->UnorderedListofDisplays($outputForm, $displayGroupIds);
 
@@ -1829,7 +1837,7 @@ END;
                         </td>
                     </tr>
                     <tr>
-                        <td><label for="layoutid" title="Select which layout this event will show.">Layout<span class="required">*</span></label></td>
+                        <td><label for="CampaignID" title="Select which layout this event will show.">Campaign/Layout<span class="required">*</span></label></td>
                         <td>$layoutList</td>
                     </tr>
                     <tr>
@@ -1854,7 +1862,7 @@ END;
         $response = new ResponseManager();
         $datemanager = new DateManager($db);
 
-        $layoutId = Kit::GetParam('layoutid', _POST, _INT, 0);
+        $campaignId = Kit::GetParam('CampaignID', _POST, _INT, 0);
         $displayGroupIds = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
         $isPriority = Kit::GetParam('is_priority', _POST, _CHECKBOX);
         $fromDt = time();
@@ -1865,7 +1873,7 @@ END;
         $duration = ($hours * 3600) + ($minutes * 60) + $seconds;
 
         // Validate
-        if ($layoutId == 0)
+        if ($campaignId == 0)
             trigger_error(__('No layout selected'), E_USER_ERROR);
 
         if ($duration == 0)
@@ -1883,7 +1891,7 @@ END;
         // Ready to do the add
         $scheduleObject = new Schedule($db);
 
-        if (!$scheduleObject->Add($displayGroupIds, $fromDt, $toDt, $layoutId, '', '', '', $isPriority, $this->user->userid))
+        if (!$scheduleObject->Add($displayGroupIds, $fromDt, $toDt, $campaignId, '', '', '', $isPriority, $this->user->userid))
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('The Event has been Scheduled'));

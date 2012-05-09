@@ -212,14 +212,6 @@ HTML;
             if(!$id = $layoutObject->Add($layout, $description, $tags, $userid, $templateId))
                 trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
-            // What permissions should we create this with?
-            if (Config::GetSetting($db, 'LAYOUT_DEFAULT') == 'public')
-            {
-                Kit::ClassLoader('layoutgroupsecurity');
-                $security = new LayoutGroupSecurity($db);
-                $security->LinkEveryone($id, 1, 0, 0);
-            }
-
             // Successful layout creation
             $response->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $id));
             $response->Respond();
@@ -311,6 +303,12 @@ END;
 			//there was an ERROR
 			trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 		}
+
+                // Maintain the name on the campaign
+                Kit::ClassLoader('campaign');
+                $campaign = new Campaign($db);
+                $campaignId = $campaign->GetCampaignId($this->layoutid);
+                $campaign->Edit($campaignId, $layout);
 
                 // Notify (dont error)
                 Kit::ClassLoader('display');
@@ -459,9 +457,15 @@ END;
 		$SQL .= "SELECT  layout.layoutID, ";
 		$SQL .= "        layout.layout, ";
 		$SQL .= "        layout.description, ";
-		$SQL .= "        layout.userID ";
-		$SQL .= "FROM    layout ";
-		$SQL .= "WHERE   1                   = 1";
+		$SQL .= "        layout.userID, ";
+		$SQL .= "        campaign.CampaignID ";
+		$SQL .= "  FROM layout ";
+                $SQL .= "  INNER JOIN `lkcampaignlayout` ";
+                $SQL .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
+                $SQL .= "   INNER JOIN `campaign` ";
+                $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+                $SQL .= "       AND campaign.IsLayoutSpecific = 1";
+		$SQL .= " WHERE 1= 1";
 		//name filter
 		if ($name != "") 
 		{
@@ -518,6 +522,7 @@ END;
 			$description 	= Kit::ValidateParam($aRow[2], _STRING);
 			$layoutid 		= Kit::ValidateParam($aRow[0], _INT);
 			$userid 		= Kit::ValidateParam($aRow[3], _INT);
+                        $campaignId = Kit::ValidateParam($aRow[4], _INT);
 			
 			//get the username from the userID using the user module
 			$username 		= $user->getNameFromID($userid);
@@ -564,7 +569,7 @@ END;
                                         $output .= '<button class="XiboFormButton" href="index.php?p=layout&q=delete_form&layoutid=' . $layoutid . '"><span>' . $msgDelete . '</span></button>';
                                         
                                     if ($auth->modifyPermissions)
-                                        $output .= '<button class="XiboFormButton" href="index.php?p=layout&q=PermissionsForm&layoutid=' . $layoutid . '"><span>' . $msgPermissions . '</span></button>';
+                                        $output .= '<button class="XiboFormButton" href="index.php?p=campaign&q=PermissionsForm&CampaignID=' . $campaignId . '"><span>' . $msgPermissions . '</span></button>';
 
 				}
 				
@@ -1856,151 +1861,6 @@ END;
         $response->Respond();
     }
 
-    public function PermissionsForm()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
-
-        $layoutid = Kit::GetParam('layoutid', _GET, _INT);
-
-        if (!$this->auth->modifyPermissions)
-            trigger_error(__("You do not have permissions to edit this layout"), E_USER_ERROR);
-
-        // Form content
-        $form = '<form id="LayoutPermissionsForm" class="XiboForm" method="post" action="index.php?p=layout&q=Permissions">';
-	$form .= '<input type="hidden" name="layoutid" value="' . $layoutid . '" />';
-        $form .= '<div class="dialog_table">';
-	$form .= '  <table style="width:100%">';
-        $form .= '      <tr>';
-        $form .= '          <th>' . __('Group') . '</th>';
-        $form .= '          <th>' . __('View') . '</th>';
-        $form .= '          <th>' . __('Edit') . '</th>';
-        $form .= '          <th>' . __('Delete') . '</th>';
-        $form .= '      </tr>';
-
-        // List of all Groups with a view/edit/delete checkbox
-        $SQL = '';
-        $SQL .= 'SELECT `group`.GroupID, `group`.`Group`, View, Edit, Del, `group`.IsUserSpecific ';
-        $SQL .= '  FROM `group` ';
-        $SQL .= '   LEFT OUTER JOIN lklayoutgroup ';
-        $SQL .= '   ON lklayoutgroup.GroupID = group.GroupID ';
-        $SQL .= '       AND lklayoutgroup.LayoutID = %d ';
-        $SQL .= ' WHERE `group`.GroupID <> %d ';
-        $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
-
-        $SQL = sprintf($SQL, $layoutid, $user->getGroupFromId($user->userid, true));
-
-        if (!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get permissions for this layout'), E_USER_ERROR);
-        }
-
-        while($row = $db->get_assoc_row($results))
-        {
-            $groupId = $row['GroupID'];
-            $group = ($row['IsUserSpecific'] == 0) ? '<strong>' . $row['Group'] . '</strong>' : $row['Group'];
-
-            $form .= '<tr>';
-            $form .= ' <td>' . $group . '</td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_view" ' . (($row['View'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_edit" ' . (($row['Edit'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_del" ' . (($row['Del'] == 1) ? 'checked' : '') . '></td>';
-            $form .= '</tr>';
-        }
-
-        $form .= '</table>';
-        $form .= '</div>';
-        $form .= '</form>';
-        
-        $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Permissions') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#LayoutPermissionsForm").submit()');
-        $response->Respond();
-    }
-
-    public function Permissions()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ResponseManager();
-        Kit::ClassLoader('layoutgroupsecurity');
-
-        $layoutId = Kit::GetParam('layoutid', _POST, _INT);
-        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
-
-        if (!$this->auth->modifyPermissions)
-            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
-
-        // Unlink all
-        $layoutSecurity = new LayoutGroupSecurity($db);
-        if (!$layoutSecurity->UnlinkAll($layoutId))
-            trigger_error(__('Unable to set permissions'));
-
-        // Some assignments for the loop
-        $lastGroupId = 0;
-        $first = true;
-        $view = 0;
-        $edit = 0;
-        $del = 0;
-
-        // List of groupIds with view, edit and del assignments
-        foreach($groupIds as $groupPermission)
-        {
-            $groupPermission = explode('_', $groupPermission);
-            $groupId = $groupPermission[0];
-
-            if ($first)
-            {
-                // First time through
-                $first = false;
-                $lastGroupId = $groupId;
-            }
-
-            if ($groupId != $lastGroupId)
-            {
-                // The groupId has changed, so we need to write the current settings to the db.
-                // Link new permissions
-                if (!$layoutSecurity->Link($layoutId, $lastGroupId, $view, $edit, $del))
-                    trigger_error(__('Unable to set permissions'));
-
-                // Reset
-                $lastGroupId = $groupId;
-                $view = 0;
-                $edit = 0;
-                $del = 0;
-            }
-
-            switch ($groupPermission[1])
-            {
-                case 'view':
-                    $view = 1;
-                    break;
-
-                case 'edit':
-                    $edit = 1;
-                    break;
-
-                case 'del':
-                    $del = 1;
-                    break;
-            }
-        }
-
-        // Need to do the last one
-        if (!$first)
-        {
-            if (!$layoutSecurity->Link($layoutId, $lastGroupId, $view, $edit, $del))
-                    trigger_error(__('Unable to set permissions'));
-        }
-
-        $response->SetFormSubmitResponse(__('Permissions Changed'));
-        $response->Respond();
-    }
-
     public function RegionPermissionsForm()
     {
         $db =& $this->db;
@@ -2169,14 +2029,18 @@ END;
     {
         $db =& $this->db;
 
+        Kit::ClassLoader('campaign');
+        $campaign = new Campaign($db);
+        $campaignId = $campaign->GetCampaignId($layoutId);
+
         $SQL = '';
         $SQL .= 'SELECT `group`.Group ';
         $SQL .= '  FROM `group` ';
-        $SQL .= '   INNER JOIN lklayoutgroup ';
-        $SQL .= '   ON `group`.GroupID = lklayoutgroup.GroupID ';
-        $SQL .= ' WHERE lklayoutgroup.LayoutID = %d ';
+        $SQL .= '   INNER JOIN lkcampaigngroup ';
+        $SQL .= '   ON `group`.GroupID = lkcampaigngroup.GroupID ';
+        $SQL .= ' WHERE lkcampaigngroup.CampaignID = %d ';
 
-        $SQL = sprintf($SQL, $layoutId);
+        $SQL = sprintf($SQL, $campaignId);
 
         if (!$results = $db->query($SQL))
         {

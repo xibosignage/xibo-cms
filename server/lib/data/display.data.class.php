@@ -342,10 +342,10 @@ class Display extends Data
     }
 
     /**
-     * Notify displays of this layout change
+     * Notify displays of this campaign change
      * @param <type> $layoutId
      */
-    public function NotifyDisplays($layoutId)
+    public function NotifyDisplays($campaignId)
     {
         $db =& $this->db;
         $currentdate 	= time();
@@ -353,7 +353,7 @@ class Display extends Data
 
         $rfLookahead 	= $currentdate + $rfLookahead;
 
-        Debug::LogEntry($db, 'audit', sprintf('Checking for Displays to refresh on Layout %d', $layoutId), 'display', 'NotifyDisplays');
+        Debug::LogEntry($db, 'audit', sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
 
         // Which displays does a change to this layout effect?
         $SQL  = " SELECT DISTINCT display.DisplayID ";
@@ -362,12 +362,16 @@ class Display extends Data
         $SQL .= "	ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
         $SQL .= " 	INNER JOIN display ";
         $SQL .= "	ON lkdisplaydg.DisplayID = display.displayID ";
-        $SQL .= " WHERE schedule_detail.layoutID = %d ";
+        $SQL .= " WHERE schedule_detail.CampaignID = %d ";
         $SQL .= " AND schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d ";
         $SQL .= " UNION ";
-        $SQL .= " SELECT DisplayID FROM display WHERE DefaultLayoutID = %d";
+        $SQL .= " SELECT DISTINCT display.DisplayID ";
+        $SQL .= "   FROM display ";
+        $SQL .= "       INNER JOIN lkcampaignlayout ";
+        $SQL .= "       ON lkcampaignlayout.LayoutID = display.DefaultLayoutID ";
+        $SQL .= " WHERE lkcampaignlayout.CampaignID = %d";
 
-        $SQL = sprintf($SQL, $layoutId, $rfLookahead, $currentdate - 3600, $layoutId);
+        $SQL = sprintf($SQL, $campaignId, $rfLookahead, $currentdate - 3600, $campaignId);
 
         Debug::LogEntry($db, 'audit', $SQL, 'display', 'NotifyDisplays');
 
@@ -385,7 +389,7 @@ class Display extends Data
         }
     }
 
-        /**
+    /**
      * Edits the default layout for a display
      * @param <type> $displayId
      * @param <type> $defaultLayoutId

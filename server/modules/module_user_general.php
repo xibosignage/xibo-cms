@@ -847,41 +847,18 @@ END;
     {
         $auth = new PermissionManager($this->db, $this);
 
-        $SQL  = '';
-        $SQL .= 'SELECT UserID ';
-        $SQL .= '  FROM layout ';
-        $SQL .= ' WHERE layout.LayoutID = %d ';
+        // Get the Campaign ID
+        $SQL  = "SELECT campaign.CampaignID ";
+        $SQL .= "  FROM `lkcampaignlayout` ";
+        $SQL .= "   INNER JOIN `campaign` ";
+        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= " WHERE lkcampaignlayout.LayoutID = %d ";
+        $SQL .= "   AND campaign.IsLayoutSpecific = 1";
 
-        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $layoutId), 'UserID', _INT))
-            return $auth;
+        if (!$campaignId = $this->db->GetSingleValue(sprintf($SQL, $layoutId), 'CampaignID', _INT))
+            trigger_error(__('Layout has no associated Campaign, corrupted Layout'), E_USER_ERROR);
 
-        // If we are the owner, or a super admin then give full permissions
-        if ($this->usertypeid == 1 || $ownerId == $this->userid)
-        {
-            $auth->FullAccess();
-            return $auth;
-        }
-
-        // Permissions for groups the user is assigned to, and Everyone
-        $SQL  = '';
-        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
-        $SQL .= '  FROM layout ';
-        $SQL .= '   INNER JOIN lklayoutgroup ';
-        $SQL .= '   ON lklayoutgroup.LayoutID = layout.LayoutID ';
-        $SQL .= '   INNER JOIN `group` ';
-        $SQL .= '   ON `group`.GroupID = lklayoutgroup.GroupID ';
-        $SQL .= ' WHERE layout.LayoutID = %d ';
-        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
-        $SQL .= 'GROUP BY layout.UserID ';
-
-        $SQL = sprintf($SQL, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
-
-        if (!$row = $this->db->GetSingleRow($SQL))
-            return $auth;
-
-        // There are permissions to evaluate
-        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
+        $auth = $this->CampaignAuth($campaignId, true);
 
         if ($fullObject)
             return $auth;
@@ -946,12 +923,19 @@ END;
     public function LayoutList($filterLayout = '')
     {
         $SQL  = "";
-        $SQL .= "SELECT layoutID, ";
+        $SQL .= "SELECT layout.layoutID, ";
         $SQL .= "        layout, ";
         $SQL .= "        description, ";
         $SQL .= "        tags, ";
-        $SQL .= "        userID, xml ";
+        $SQL .= "        userID, ";
+        $SQL .= "        xml, ";
+        $SQL .= "        campaign.CampaignID ";
         $SQL .= "   FROM layout ";
+        $SQL .= "  INNER JOIN `lkcampaignlayout` ";
+        $SQL .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
+        $SQL .= "   INNER JOIN `campaign` ";
+        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= "       AND campaign.IsLayoutSpecific = 1";
         $SQL .= " WHERE 1 = 1 ";
 
         if ($filterLayout != '')
@@ -978,8 +962,9 @@ END;
             $layoutItem['tags']     = Kit::ValidateParam($row['tags'], _STRING);
             $layoutItem['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
             $layoutItem['xml']  = Kit::ValidateParam($row['xml'], _HTMLSTRING);
+            $layoutItem['campaignid'] = Kit::ValidateParam($row['CampaignID'], _INT);
 
-            $auth = $this->LayoutAuth($layoutItem['layoutid'], true);
+            $auth = $this->CampaignAuth($layoutItem['campaignid'], $fullObject);
 
             if ($auth->view)
             {

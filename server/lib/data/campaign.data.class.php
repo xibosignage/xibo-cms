@@ -50,7 +50,7 @@ class Campaign extends Data
             return $this->SetError(25500, __('Unable to add Campaign, Step 1'));
         }
 
-        return true;
+        return $id;
     }
 
     /**
@@ -162,6 +162,29 @@ class Campaign extends Data
         }
 
         return true;
+    }
+
+    /**
+     * Gets the CampaignId for a layoutspecfic campaign
+     * @param <type> $layoutId
+     */
+    public function GetCampaignId($layoutId)
+    {
+        // Get the Campaign ID
+        $SQL  = "SELECT campaign.CampaignID ";
+        $SQL .= "  FROM `lkcampaignlayout` ";
+        $SQL .= "   INNER JOIN `campaign` ";
+        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= " WHERE lkcampaignlayout.LayoutID = %d ";
+        $SQL .= "   AND campaign.IsLayoutSpecific = 1";
+
+        if (!$campaignId = $this->db->GetSingleValue(sprintf($SQL, $layoutId), 'CampaignID', _INT))
+        {
+            trigger_error(sprintf('LayoutId %d has no associated campaign', $layoutId));
+            return $this->SetError(25000, __('Layout has no associated Campaign, corrupted Layout'));
+        }
+
+        return $campaignId;
     }
 }
 ?>

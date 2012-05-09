@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2011 Daniel Garner
+ * Copyright (C) 2011-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -24,6 +24,13 @@ class Layout extends Data
 {
     private $xml;
     private $DomXml;
+
+    public function  __construct($db)
+    {
+        Kit::ClassLoader('campaign');
+
+        parent::__construct($db);
+    }
 
     /**
      * Add a layout
@@ -112,6 +119,19 @@ END;
                 $this->Delete($id);
                 return false;
             }
+        }
+
+        // Create a campaign
+        $campaign = new Campaign($db);
+
+        $campaignId = $campaign->Add($layout, 1, $userid);
+
+        // What permissions should we create this with?
+        if (Config::GetSetting($db, 'LAYOUT_DEFAULT') == 'public')
+        {
+            Kit::ClassLoader('campaignsecurity');
+            $security = new CampaignSecurity($db);
+            $security->LinkEveryone($campaignId, 1, 0, 0);
         }
 
         Debug::LogEntry($db, 'audit', 'Complete', 'Layout', 'Add');
@@ -354,6 +374,7 @@ END;
     {
         $db =& $this->db;
         $currentdate = date("Y-m-d H:i:s");
+        $campaign = new Campaign($db);
 
         // Include to media data class?
         if ($copyMedia)
@@ -364,8 +385,11 @@ END;
             $mediaSecurity = new MediaGroupSecurity($db);
         }
 
+        // We need the old campaignid
+        $oldCampaignId = $campaign->GetCampaignId($oldLayoutId);
+
         // Permissions model
-        Kit::ClassLoader('layoutgroupsecurity');
+        Kit::ClassLoader('campaignsecurity');
         Kit::ClassLoader('layoutregiongroupsecurity');
         Kit::ClassLoader('layoutmediagroupsecurity');
 
@@ -385,6 +409,9 @@ END;
             $this->SetError(25000, __('Unable to Copy this Layout'));
             return false;
         }
+
+        // Create a campaign
+        $newCampaignId = $campaign->Add($newLayoutName, 1, $userId);
 
         // Open the layout XML and parse for media nodes
         if (!$this->SetDomXml($newLayoutId))
@@ -464,8 +491,8 @@ END;
         $this->SetLayoutXml($newLayoutId, $this->DomXml->saveXML());
 
         // Layout permissions
-        $security = new LayoutGroupSecurity($db);
-        $security->CopyAll($oldLayoutId, $newLayoutId);
+        $security = new CampaignSecurity($db);
+        $security->CopyAll($oldCampaignId, $newCampaignId);
 
         $security = new LayoutRegionGroupSecurity($db);
         $security->CopyAll($oldLayoutId, $newLayoutId);
@@ -483,8 +510,14 @@ END;
     {
         $db =& $this->db;
 
+        $campaign = new Campaign($db);
+        $campaignId = $campaign->GetCampaignId($layoutId);
+
+        // Remove all campaign links
+        if (!$campaign->UnlinkAll($campaignId))
+            return $this->SetError(25008, __('Unable to delete campaign links'));
+
         // Remove all LK records for this layout
-        $db->query(sprintf('DELETE FROM lklayoutgroup WHERE layoutid = %d', $layoutId));
         $db->query(sprintf('DELETE FROM lklayoutmediagroup WHERE layoutid = %d', $layoutId));
         $db->query(sprintf('DELETE FROM lklayoutregiongroup WHERE layoutid = %d', $layoutId));
         $db->query(sprintf('DELETE FROM lklayoutmedia WHERE layoutid = %d', $layoutId));
@@ -492,6 +525,10 @@ END;
         // Remove the Layout
         if (!$db->query(sprintf('DELETE FROM layout WHERE layoutid = %d', $layoutId)))
             return $this->SetError(25008, __('Unable to delete layout'));
+
+        // Remove the Campaign
+        if (!$campaign->Delete($campaignId))
+            return $this->SetError(25008, __('Unable to delete campaign'));
 
         return true;
     }

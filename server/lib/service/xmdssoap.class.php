@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -161,13 +161,12 @@ class XMDSSoap
 
         // Get a list of all layout ids in the schedule right now.
         $SQL  = " SELECT DISTINCT layout.layoutID ";
-        $SQL .= "   FROM layout ";
-        $SQL .= " 	INNER JOIN schedule_detail ";
-        $SQL .= " 	ON schedule_detail.layoutID = layout.layoutID ";
-        $SQL .= " 	INNER JOIN lkdisplaydg ";
-        $SQL .= "	ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
-        $SQL .= " 	INNER JOIN display ";
-        $SQL .= "	ON lkdisplaydg.DisplayID = display.displayID ";
+        $SQL .= " FROM `campaign` ";
+        $SQL .= "   INNER JOIN schedule_detail ON schedule_detail.CampaignID = campaign.CampaignID ";
+        $SQL .= "   INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= "   INNER JOIN `layout` ON lkcampaignlayout.LayoutID = layout.LayoutID ";
+        $SQL .= "   INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
+        $SQL .= "   INNER JOIN display ON lkdisplaydg.DisplayID = display.displayID ";
         $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
         $SQL .= sprintf(" AND schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d ", $rfLookahead, $currentdate - 3600);
         $SQL .= "   AND layout.retired = 0  ";
@@ -492,13 +491,16 @@ class XMDSSoap
         // Add file nodes to the $fileElements
         // Firstly get all the scheduled layouts
         $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID, schedule_detail.is_priority ";
-        $SQL .= " FROM layout ";
-        $SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
+        $SQL .= " FROM `campaign` ";
+        $SQL .= " INNER JOIN schedule_detail ON schedule_detail.CampaignID = campaign.CampaignID ";
+        $SQL .= " INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= " INNER JOIN `layout` ON lkcampaignlayout.LayoutID = layout.LayoutID ";
         $SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
         $SQL .= " INNER JOIN display ON lkdisplaydg.DisplayID = display.displayID ";
         $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
         $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate - 3600);
         $SQL .= "   AND layout.retired = 0  ";
+        $SQL .= " ORDER BY schedule_detail.DisplayOrder, lkcampaignlayout.DisplayOrder ";
 
         if ($this->isAuditing == 1)
             Debug::LogEntry($db, "audit", $SQL, "xmds", "Schedule");
