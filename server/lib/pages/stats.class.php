@@ -60,7 +60,11 @@ class statsDAO
 
         $fromdt = date("Y-m-d", time() - 86400);
         $todt = date("Y-m-d");
-        $display_list = dropdownlist("SELECT 'All', 'All' UNION SELECT displayID, display FROM display WHERE licensed = 1 ORDER BY 2", "displayid");
+
+        // List of Displays this user has permission for
+        $displays = $this->user->DisplayGroupList(1);
+        $displays[] = array('displayid' => 0, 'displaygroup' => 'All');
+        $displayList = Kit::SelectList('displayid', $displays, 'displayid', 'displaygroup', 0);
 
         // List of Media this user has permission for
         $media = $this->user->MediaList();
@@ -82,7 +86,7 @@ class statsDAO
         $output .= '  </tr>';
         $output .= '  <tr>';
         $output .= '   <td>' . __('Display') . '</td>';
-        $output .= '   <td>' . $display_list . '</td>';
+        $output .= '   <td>' . $displayList . '</td>';
         $output .= '   <td>' . __('Media') . '</td>';
         $output .= '   <td>' . $mediaList . '</td>';
         $output .= '  </tr>';

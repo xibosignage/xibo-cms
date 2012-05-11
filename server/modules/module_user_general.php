@@ -1169,15 +1169,26 @@ END;
      * Authenticates the current user and returns an array of display groups this user is authenticated on
      * @return 
      */
-    public function DisplayGroupList()
+    public function DisplayGroupList($isDisplaySpecific = 0)
     {
         $db 		=& $this->db;
         $userid		=& $this->userid;
 
         $SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific ";
+        if ($isDisplaySpecific == 1)
+            $SQL .= " , lkdisplaydg.DisplayID ";
+
         $SQL .= "  FROM displaygroup ";
 
-        //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        // If we are only interested in displays, then return the display
+        if ($isDisplaySpecific == 1)
+        {
+            $SQL .= "   INNER JOIN lkdisplaydg ";
+            $SQL .= "   ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+            $SQL .= " WHERE displaygroup.IsDisplaySpecific = 1 ";
+        }
+
+        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1195,6 +1206,7 @@ END;
             $displayGroupItem['displaygroupid'] = Kit::ValidateParam($row['DisplayGroupID'], _INT);
             $displayGroupItem['displaygroup']   = Kit::ValidateParam($row['DisplayGroup'], _STRING);
             $displayGroupItem['isdisplayspecific'] = Kit::ValidateParam($row['IsDisplaySpecific'], _STRING);
+            $displayGroupItem['displayid'] = (($isDisplaySpecific == 1) ? Kit::ValidateParam($row['DisplayID'], _INT) : 0);
 
             $auth = $this->DisplayGroupAuth($displayGroupItem['displaygroupid'], true);
 
