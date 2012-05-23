@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -262,6 +262,16 @@ END;
                     $fileSize = sprintf('%.2f', $fileSize / pow(1024, $factor)) . @$sz[$factor];
 
                     $output .= sprintf('<p>You have %s of media in the library.</p>', $fileSize);
+                }
+
+                if ($cat == 'general')
+                {
+                    $output .= '<p>' . __('Export Database') . '</p>';
+                    $output .= '<form action="index.php" method="post">';
+                    $output .= ' <input type="hidden" name="p" value="admin" />';
+                    $output .= ' <input type="hidden" name="q" value="BackupDatabase" />';
+                    $output .= ' <input type="submit" value="' . __('Export') . '" />';
+                    $output .= '</form>';
                 }
 		
 		// Need to now get all the Misc settings 
@@ -572,5 +582,22 @@ END;
         $response->Respond();
     }
 
+    /**
+     * Backup Data and Return a file
+     */
+    public function BackupDatabase()
+    {
+        // We want to output a load of stuff to the browser as a text file.
+        header('Content-Type: text/plaintext');
+        header('Content-Disposition: attachment; filename="' . date('Y-m-d H:i:s') . '.bak"');
+        header("Content-Transfer-Encoding: binary");
+        header('Accept-Ranges: bytes');
+
+        Kit::ClassLoader('maintenance');
+        $maintenance = new Maintenance($this->db);
+
+        echo $maintenance->BackupDatabase();
+        exit;
+    }
 }
 ?>
