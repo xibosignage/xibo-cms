@@ -47,5 +47,25 @@ class Maintenance extends Data
 
         return $sqlDump;
     }
+
+    /**
+     * Restore Database
+     * @param <string> $fileName
+     */
+    public function RestoreDatabase($fileName)
+    {
+        global $dbhost;
+        global $dbuser;
+        global $dbpass;
+        global $dbname;
+
+        if (file_exists($fileName))
+            return $this->SetError(25000, __('File does not exist'));
+
+        // Run mysqldump
+        passthru('mysql -u=' . $dbuser . ' -p=' . $dbpass . ' ' . $dbname . ' < ' . $fileName);
+
+        return true;
+    }
 }
 ?>

@@ -266,12 +266,13 @@ END;
 
                 if ($cat == 'general')
                 {
-                    $output .= '<p>' . __('Export Database') . '</p>';
+                    $output .= '<p>' . __('Import / Export Database') . '</p>';
                     $output .= '<form action="index.php" method="post">';
                     $output .= ' <input type="hidden" name="p" value="admin" />';
                     $output .= ' <input type="hidden" name="q" value="BackupDatabase" />';
                     $output .= ' <input type="submit" value="' . __('Export') . '" />';
                     $output .= '</form>';
+                    $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=RestoreForm">' . __('Restore') . '</button>';
                 }
 		
 		// Need to now get all the Misc settings 
@@ -598,6 +599,63 @@ END;
 
         echo $maintenance->BackupDatabase();
         exit;
+    }
+
+    /**
+     * Show an upload form to restore a database dump file
+     */
+    public function RestoreForm()
+    {
+        $response = new ResponseManager();
+
+        $msgDumpFile = __('Backup File');
+
+        $form = <<<FORM
+        <form id="file_upload" method="post" action="index.php?p=admin&q=RestoreDatabase" enctype="multipart/form-data">
+            <table>
+                <tr>
+                    <td><label for="file">$msgDumpFile<span class="required">*</span></label></td>
+                    <td>
+                        <input type="file" name="dumpFile" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+FORM;
+        $response->SetFormRequestResponse($form, __('Restore Database Backup'), '550px', '275px');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#file_upload").submit()');
+        $response->Respond();
+    }
+
+    public function RestoreDatabase()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        // Expect a file upload
+        // Check we got a valid file
+        if (isset($_FILES['dumpFile']) && is_uploaded_file($_FILES['dumpFile']['tmp_name']) && $_FILES['dumpFile']['error'] == 0)
+        {
+            Debug::LogEntry($db, 'audit', 'Valid Upload', 'Backup', 'RestoreDatabase');
+
+            // Directory location
+            $fileName = Kit::ValidateParam($_FILES['dumpFile']['tmp_name'], _FILENAME);
+
+            Kit::ClassLoader('maintenance');
+            $maintenance = new Maintenance($this->db);
+
+            // Use the maintenance class to restore the database
+            if (!$maintenance->RestoreDatabase($fileName))
+                trigger_error($maintenance->GetErrorMessage(), E_USER_ERROR);
+        }
+        else
+        {
+            trigger_error(__('Unable to upload file'), E_USER_ERROR);
+        }
+
+        $response->SetFormSubmitResponse(__('Database Restored.'));
+        $response->Respond();
     }
 }
 ?>
