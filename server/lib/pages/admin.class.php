@@ -257,7 +257,7 @@ END;
                     $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
 
                     // Display the file size
-                    $fileSize = $this->db->GetSingleValue('SELECT SUM(FileSize) AS SumSize FROM media', 'SumSize', _INT);
+                    $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
 
                     $limitPcnt = ($libraryLimit > 0) ? (($fileSize / ($libraryLimit * 1024)) * 100) : '';
 

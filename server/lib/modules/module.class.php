@@ -730,6 +730,17 @@ END;
         $db =& $this->db;
         $user =& $this->user;
 
+        // Check we have room in the library
+        $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+
+        if ($libraryLimit > 0)
+        {
+            $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
+
+            if (($fileSize / 1024) > $libraryLimit)
+                trigger_error(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit), E_USER_ERROR);
+        }
+
         // Would like to get the regions width / height
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
@@ -1022,7 +1033,7 @@ FORM;
 
         if ($libraryLimit > 0)
         {
-            $fileSize = $this->db->GetSingleValue('SELECT SUM(FileSize) AS SumSize FROM media', 'SumSize', _INT);
+            $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
 
             if (($fileSize / 1024) > $libraryLimit)
             {
@@ -1233,7 +1244,7 @@ FORM;
 
             if ($libraryLimit > 0)
             {
-                $fileSize = $this->db->GetSingleValue('SELECT SUM(FileSize) AS SumSize FROM media', 'SumSize', _INT);
+                $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
 
                 if (($fileSize / 1024) > $libraryLimit)
                 {
