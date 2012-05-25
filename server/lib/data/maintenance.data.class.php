@@ -54,17 +54,40 @@ class Maintenance extends Data
      */
     public function RestoreDatabase($fileName)
     {
-        global $dbhost;
-        global $dbuser;
-        global $dbpass;
-        global $dbname;
+        // Get the contents of the file and run it as a SQL statement
+        $fileContents = file($fileName);
 
-        if (file_exists($fileName))
-            return $this->SetError(25000, __('File does not exist'));
+        $errors = 0;
+        $statement = '';
 
-        // Run mysqldump
-        passthru('mysql -u=' . $dbuser . ' -p=' . $dbpass . ' ' . $dbname . ' < ' . $fileName);
+        foreach($fileContents as $line)
+        {
+            // Store this in the statement
+            $statement = $statement . $line;
 
+            // end of a statement??
+            if (substr(trim($line), -1, 1) == ';')
+            {
+                // End of statement, so run it
+                echo '. ';
+                flush();
+
+                if (!$this->db->query($statement))
+                {
+                    $errors++;
+                    echo $this->db->error() . '<br/>';
+                }
+
+                // Clear this statement
+                $statement = '';
+            }
+        }
+
+        if ($errors > 0)
+            echo __('There were errors with this import. Please restore manually.');
+
+        echo '<br/>';
+        
         return true;
     }
 }

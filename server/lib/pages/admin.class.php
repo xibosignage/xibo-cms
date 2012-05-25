@@ -267,12 +267,12 @@ END;
                 if ($cat == 'general')
                 {
                     $output .= '<p>' . __('Import / Export Database') . '</p>';
+                    $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=RestoreForm">' . __('Import') . '</button>';
                     $output .= '<form action="index.php" method="post">';
                     $output .= ' <input type="hidden" name="p" value="admin" />';
                     $output .= ' <input type="hidden" name="q" value="BackupDatabase" />';
                     $output .= ' <input type="submit" value="' . __('Export') . '" />';
                     $output .= '</form>';
-                    $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=RestoreForm">' . __('Restore') . '</button>';
                 }
 		
 		// Need to now get all the Misc settings 
@@ -608,9 +608,16 @@ END;
     {
         $response = new ResponseManager();
 
+        // Check we have permission to do this
+        if ($this->user->usertypeid != 1)
+            trigger_error(__('Only an adminitrator can import a database'));
+
         $msgDumpFile = __('Backup File');
+        $msgWarn = __('Warning: Importing a file here will overwrite your existing database. This action cannot be reversed.');
+        $msgMore = __('Select a file to import and then click the import button below. You will be taken to another page where the file will be imported.');
 
         $form = <<<FORM
+        <p>$msgWarn</p>
         <form id="file_upload" method="post" action="index.php?p=admin&q=RestoreDatabase" enctype="multipart/form-data">
             <table>
                 <tr>
@@ -621,41 +628,57 @@ END;
                 </tr>
             </table>
         </form>
+        <p>$msgMore</p>
 FORM;
-        $response->SetFormRequestResponse($form, __('Restore Database Backup'), '550px', '275px');
+        $response->SetFormRequestResponse($form, __('Import Database Backup'), '550px', '275px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#file_upload").submit()');
+        $response->AddButton(__('Import'), '$("#file_upload").submit()');
         $response->Respond();
     }
 
+    /**
+     * Restore the Database
+     */
     public function RestoreDatabase()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
 
+        include('install/header.inc');
+        echo '<div class="info">';
+        
         // Expect a file upload
         // Check we got a valid file
         if (isset($_FILES['dumpFile']) && is_uploaded_file($_FILES['dumpFile']['tmp_name']) && $_FILES['dumpFile']['error'] == 0)
         {
+            echo 'Restoring Database</br>';
             Debug::LogEntry($db, 'audit', 'Valid Upload', 'Backup', 'RestoreDatabase');
 
             // Directory location
-            $fileName = Kit::ValidateParam($_FILES['dumpFile']['tmp_name'], _FILENAME);
+            $fileName = Kit::ValidateParam($_FILES['dumpFile']['tmp_name'], _STRING);
 
-            Kit::ClassLoader('maintenance');
-            $maintenance = new Maintenance($this->db);
+            if (is_uploaded_file($fileName))
+            {
+                Kit::ClassLoader('maintenance');
+                $maintenance = new Maintenance($this->db);
 
-            // Use the maintenance class to restore the database
-            if (!$maintenance->RestoreDatabase($fileName))
-                trigger_error($maintenance->GetErrorMessage(), E_USER_ERROR);
+                // Use the maintenance class to restore the database
+                if (!$maintenance->RestoreDatabase($fileName))
+                    trigger_error($maintenance->GetErrorMessage(), E_USER_ERROR);
+            }
+            else
+                trigger_error(__('Not a valid uploaded file'), E_USER_ERROR);
         }
         else
         {
             trigger_error(__('Unable to upload file'), E_USER_ERROR);
         }
 
-        $response->SetFormSubmitResponse(__('Database Restored.'));
-        $response->Respond();
+        echo '</div>';
+        echo '<a href="index.php?p=admin">Database Restored. Click here to continue.</a>';
+
+        include('install/footer.inc');
+
+        die();
     }
 }
 ?>
