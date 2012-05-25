@@ -254,14 +254,18 @@ END;
 
                 if ($cat == 'content')
                 {
+                    $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+
                     // Display the file size
                     $fileSize = $this->db->GetSingleValue('SELECT SUM(FileSize) AS SumSize FROM media', 'SumSize', _INT);
+
+                    $limitPcnt = ($libraryLimit > 0) ? (($fileSize / ($libraryLimit * 1024)) * 100) : '';
 
                     $sz = 'BKMGTP';
                     $factor = floor((strlen($fileSize) - 1) / 3);
                     $fileSize = sprintf('%.2f', $fileSize / pow(1024, $factor)) . @$sz[$factor];
 
-                    $output .= sprintf('<p>You have %s of media in the library.</p>', $fileSize);
+                    $output .= '<p>' . sprintf(__('You have %s of media in the library.'), $fileSize) . (($libraryLimit > 0) ? sprintf(__(' This is %d %% of your %s K limit.'), $limitPcnt, $libraryLimit) : '') . '</p>';
                 }
 
                 if ($cat == 'general')

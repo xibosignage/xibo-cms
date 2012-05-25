@@ -1017,6 +1017,21 @@ FORM;
         $userid	= $this->user->userid;
         $backgroundImage = Kit::GetParam('backgroundImage', _POST, _BOOL, false);
 
+        // Check we have room in the library
+        $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+
+        if ($libraryLimit > 0)
+        {
+            $fileSize = $this->db->GetSingleValue('SELECT SUM(FileSize) AS SumSize FROM media', 'SumSize', _INT);
+
+            if (($fileSize / 1024) > $libraryLimit)
+            {
+                $this->response->SetError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
+                $this->response->keepOpen = true;
+                return $this->response;
+            }
+        }
+
         // File data
         $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
 
@@ -1213,6 +1228,21 @@ FORM;
         }
         else
         {
+            // Check we have room in the library
+            $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+
+            if ($libraryLimit > 0)
+            {
+                $fileSize = $this->db->GetSingleValue('SELECT SUM(FileSize) AS SumSize FROM media', 'SumSize', _INT);
+
+                if (($fileSize / 1024) > $libraryLimit)
+                {
+                    $this->response->SetError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
+                    $this->response->keepOpen = true;
+                    return $this->response;
+                }
+            }
+
             $fileRevision = true;
 
             // File name and extension (orignial name)

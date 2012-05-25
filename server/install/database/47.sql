@@ -14,6 +14,8 @@ DROP TABLE lklayoutgroup;
 
 INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`) VALUES (NULL, 'shellcommand', 'Shell Command', '1', '1', 'Execute a shell command on the client', 'img/forms/shellcommand.gif', '1', NULL);
 
+INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES (NULL, 'LIBRARY_SIZE_LIMIT_KB', '0', 'text', 'The Limit for the Library Size in KB', NULL, 'content', '0'), (NULL, 'MONTHLY_XMDS_TRANSFER_LIMIT_KB', '0', 'text', 'XMDS Transfer Limit in KB/month', NULL, 'general', '0');
+
 UPDATE `version` SET `app_ver` = '1.3.3', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '47';
