@@ -30,20 +30,23 @@ class Maintenance extends Data
     {
         // Always truncate the log first
         $this->db->query("TRUNCATE TABLE `log` ");
+        $this->db->query("TRUNCATE TABLE `oauth_log` ");
 
         global $dbhost;
         global $dbuser;
         global $dbpass;
         global $dbname;
 
-        // Run mysqldump with output buffering on
-        ob_start();
-        
-        passthru('mysqldump --opt --host=' . $dbhost . ' --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname);
+        // Run mysqldump to a temporary file
 
-        $sqlDump = ob_get_contents();
+        // get temporary file
+        $tempFile = tempnam(Config::GetSetting($this->db, 'LIBRARY_LOCATION'), 'dmp');
 
-        ob_end_clean();
+        exec('mysqldump --opt --host=' . $dbhost . ' --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' > ' . escapeshellarg($tempFile) . ' ');
+
+        $sqlDump = file_get_contents($tempFile);
+
+        unlink($tempFile);
 
         return $sqlDump;
     }

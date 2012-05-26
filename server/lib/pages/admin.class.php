@@ -272,11 +272,7 @@ END;
                 {
                     $output .= '<p>' . __('Import / Export Database') . '</p>';
                     $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=RestoreForm">' . __('Import') . '</button>';
-                    $output .= '<form action="index.php" method="post">';
-                    $output .= ' <input type="hidden" name="p" value="admin" />';
-                    $output .= ' <input type="hidden" name="q" value="BackupDatabase" />';
-                    $output .= ' <input type="submit" value="' . __('Export') . '" />';
-                    $output .= '</form>';
+                    $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=BackupForm">' . __('Export') . '</button>';
                 }
 		
 		// Need to now get all the Misc settings 
@@ -588,20 +584,45 @@ END;
     }
 
     /**
+     * Backup Form
+     */
+    public function BackupForm()
+    {
+        $response = new ResponseManager();
+
+        // Check we have permission to do this
+        if ($this->user->usertypeid != 1)
+            trigger_error(__('Only an adminitrator can export a database'));
+
+        $form = '';
+        $form .= '<p>' . __('This will create a dump file of your database that you can restore later using the import functionality.') . '</p>';
+        $form .= '<p>' . __('Please note: The folder location for mysqldump must be available in your path environment variable for this to work and the php "exec" command must be enabled.') . '</p>';
+        $form .= '<a href="index.php?p=admin&q=BackupDatabase" title="' . __('Export Database. Right click to save as.') . '">' . __('Click here to Export') . '</a>';
+        
+        $response->SetFormRequestResponse($form, __('Export Database Backup'), '550px', '275px');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->Respond();
+    }
+
+    /**
      * Backup Data and Return a file
      */
     public function BackupDatabase()
     {
         // We want to output a load of stuff to the browser as a text file.
+        Kit::ClassLoader('maintenance');
+        $maintenance = new Maintenance($this->db);
+
+        $dump = $maintenance->BackupDatabase();
+
+        if ($dump == '')
+            trigger_error(__('Unable to export database'), E_USER_ERROR);
+
         header('Content-Type: text/plaintext');
         header('Content-Disposition: attachment; filename="' . date('Y-m-d H:i:s') . '.bak"');
         header("Content-Transfer-Encoding: binary");
         header('Accept-Ranges: bytes');
-
-        Kit::ClassLoader('maintenance');
-        $maintenance = new Maintenance($this->db);
-
-        echo $maintenance->BackupDatabase();
+        echo $dump;
         exit;
     }
 
