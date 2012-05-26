@@ -596,11 +596,12 @@ END;
 
         $form = '';
         $form .= '<p>' . __('This will create a dump file of your database that you can restore later using the import functionality.') . '</p>';
+        $form .= '<p>' . __('You should also manually take a backup of your Xibo library.') . '</p>';
         $form .= '<p>' . __('Please note: The folder location for mysqldump must be available in your path environment variable for this to work and the php "exec" command must be enabled.') . '</p>';
         $form .= '<a href="index.php?p=admin&q=BackupDatabase" title="' . __('Export Database. Right click to save as.') . '">' . __('Click here to Export') . '</a>';
         
         $response->SetFormRequestResponse($form, __('Export Database Backup'), '550px', '275px');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }
 
@@ -640,9 +641,11 @@ END;
         $msgDumpFile = __('Backup File');
         $msgWarn = __('Warning: Importing a file here will overwrite your existing database. This action cannot be reversed.');
         $msgMore = __('Select a file to import and then click the import button below. You will be taken to another page where the file will be imported.');
+        $msgInfo = __('Please note: The folder location for mysqldump must be available in your path environment variable for this to work and the php "exec" command must be enabled.');
 
         $form = <<<FORM
         <p>$msgWarn</p>
+        <p>$msgInfo</p>
         <form id="file_upload" method="post" action="index.php?p=admin&q=RestoreDatabase" enctype="multipart/form-data">
             <table>
                 <tr>
@@ -655,7 +658,7 @@ END;
         </form>
         <p>$msgMore</p>
 FORM;
-        $response->SetFormRequestResponse($form, __('Import Database Backup'), '550px', '275px');
+        $response->SetFormRequestResponse($form, __('Import Database Backup'), '550px', '375px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Import'), '$("#file_upload").submit()');
         $response->Respond();
@@ -683,12 +686,18 @@ FORM;
 
             if (is_uploaded_file($fileName))
             {
+                // Move the uploaded file to a temporary location in the library
+                $destination = tempnam(Config::GetSetting($this->db, 'LIBRARY_LOCATION'), 'dmp');
+                move_uploaded_file($fileName, $destination);
+                
                 Kit::ClassLoader('maintenance');
                 $maintenance = new Maintenance($this->db);
 
                 // Use the maintenance class to restore the database
-                if (!$maintenance->RestoreDatabase($fileName))
+                if (!$maintenance->RestoreDatabase($destination))
                     trigger_error($maintenance->GetErrorMessage(), E_USER_ERROR);
+
+                unlink($destination);
             }
             else
                 trigger_error(__('Not a valid uploaded file'), E_USER_ERROR);

@@ -57,40 +57,16 @@ class Maintenance extends Data
      */
     public function RestoreDatabase($fileName)
     {
-        // Get the contents of the file and run it as a SQL statement
-        $fileContents = file($fileName);
-
-        $errors = 0;
-        $statement = '';
-
-        foreach($fileContents as $line)
-        {
-            // Store this in the statement
-            $statement = $statement . $line;
-
-            // end of a statement??
-            if (substr(trim($line), -1, 1) == ';')
-            {
-                // End of statement, so run it
-                echo '. ';
-                flush();
-
-                if (!$this->db->query($statement))
-                {
-                    $errors++;
-                    echo $this->db->error() . '<br/>';
-                }
-
-                // Clear this statement
-                $statement = '';
-            }
-        }
-
-        if ($errors > 0)
-            echo __('There were errors with this import. Please restore manually.');
-
-        echo '<br/>';
+        global $dbhost;
+        global $dbuser;
+        global $dbpass;
+        global $dbname;
         
+        // Push the file into msqldump
+        exec('mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ');
+
+        Debug::LogEntry($this->db, 'audit', 'mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ' );
+
         return true;
     }
 }
