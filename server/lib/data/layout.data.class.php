@@ -310,7 +310,7 @@ END;
      * @return
      * @param $layoutid Object
      */
-    private function GetLayoutXml($layoutid)
+    public function GetLayoutXml($layoutid)
     {
         $db =& $this->db;
 
@@ -331,6 +331,24 @@ END;
         Debug::LogEntry($db, 'audit', 'OUT', 'Layout', 'GetLayoutXml');
 
         return $row[0];
+    }
+
+    /**
+     * Get media node list
+     * @param <type> $layoutId
+     * @param <type> $regionId
+     */
+    public function GetMediaNodeList($layoutId, $regionId)
+    {
+        if (!$xml = $this->GetLayoutXml($layoutId))
+            return false;
+
+        // Load the XML into a new DOMDocument
+        $document = new DOMDocument();
+        $document->loadXML($xml);
+
+        $xpath = new DOMXPath($document);
+        return $xpath->query("//region[@id='$regionId']/media");
     }
 
     /**

@@ -37,10 +37,6 @@ class layoutDAO
 	
 	private $xml;
 	
-	//background properties
-	private $backgroundImage;
-	private $backgroundColor;
-	
 	/**
 	 * Layout Page Logic
 	 * @return 
@@ -1317,6 +1313,9 @@ HTML;
 	 */
 	function RegionOptions()
 	{
+            $this->TimeLine();
+            exit();
+            
 		$db 	=& $this->db;
 		$user 	=& $this->user;
                 $helpManager    = new HelpManager($db, $user);
@@ -1334,7 +1333,7 @@ HTML;
 		//ajax request handler
 		$arh = new ResponseManager();
 		
-		//Library location
+		// Library location
 		$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 		
 		//Buttons down the side - media across the top, absolutly positioned in the canvas div
@@ -2106,6 +2105,116 @@ END;
 
         $response->SetFormRequestResponse($output, __('Jump to...'), '350px', '500px');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
+
+    /**
+     * Shows the TimeLine
+     */
+    public function TimeLine()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $response->html = '';
+
+        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
+        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
+
+        // Make sure we have permission to edit this region
+        Kit::ClassLoader('region');
+        $region = new region($db, $user);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+
+        // Library location
+        $libraryLocation = Config::GetSetting($db, 'LIBRARY_LOCATION');
+
+        // Present a canvas with 2 columns, left column for the media icons
+        $response->html .= '<div class="timelineLeftColumn">';
+        $response->html .= '    <ul class="timelineModuleButtons">';
+        
+        // Get a list of the enabled modules and then create buttons for them
+        if (!$enabledModules = new ModuleManager($db, $user))
+            trigger_error($enabledModules->message, E_USER_ERROR);
+
+        // Loop through the buttons we have and output each one
+        while ($modulesItem = $enabledModules->GetNextModule())
+        {
+            $mod = Kit::ValidateParam($modulesItem['Module'], _STRING);
+            $caption = Kit::ValidateParam($modulesItem['Name'], _STRING);
+            $mod = strtolower($mod);
+            $title = Kit::ValidateParam($modulesItem['Description'], _STRING);
+            $img = Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
+
+            $uri = 'index.php?p=module&q=Exec&mod=' . $mod . '&method=AddForm&layoutid=' . $layoutId . '&regionid=' . $regionId;
+
+            $response->html .= '<li class="timelineModuleListItem">';
+            $response->html .= '    <a class="XiboFormButton timelineModuleButtonAnchor" title="$title" href="' . $uri . '">';
+            $response->html .= '        <img class="timelineModuleButtonImage" src="' . $img . '" alt="' . __('Module Image') . '" />';
+            $response->html .= '        <span class="timelineModuleButtonText">' . $caption . '</span>';
+            $response->html .= '    </a>';
+            $response->html .= '</li>';
+        }
+        
+        $response->html .= '</ul>';
+        $response->html .= '</div>';
+
+        // Load the XML for this layout and region, we need to get the media nodes.
+        // These form the timeline and go in the right column
+        $response->html .= '<div class="timelineRightColumn">';
+        $response->html .= '    <ul>';
+
+        // Create a layout object
+        $layout = new Layout($db);
+
+        foreach($layout->GetMediaNodeList($layoutId, $regionId) as $mediaNode)
+        {
+            // Put this node vertically in the region timeline
+            $mediaId = $mediaNode->getAttribute('id');
+            $lkId = $mediaNode->getAttribute('lkid');
+            $mediaType = $mediaNode->getAttribute('type');
+$mediaFileName = $mediaNode->getAttribute('filename');
+$mediaDuration = $mediaNode->getAttribute('duration');
+            $ownerId = $mediaNode->getAttribute('userId');
+
+            // Permissions for this assignment
+            $auth = $user->MediaAssignmentAuth($ownerId, $layoutId, $regionId, $mediaId, true);
+
+            // Skip over media assignments that we do not have permission to see
+            if (!$auth->view)
+                continue;
+
+            Debug::LogEntry($db, 'audit', sprintf('Permission Granted to View MediaID: %s', $mediaId), 'layout', 'TimeLine');
+
+            // Create a media module to handle all the complex stuff
+            require_once("modules/$mediaType.module.php");
+            $tmpModule = new $mediaType($db, $user, $mediaId, $layoutId, $regionId, $lkId);
+            $mediaName = $tmpModule->GetName();
+
+            // Create the list item
+            $response->html .= '<li class="timelineMediaItem">';
+            $response->html .= '    <div class="' . $mediaType . '_MediaItem">';
+            $response->html .= '    </div>';
+            $response->html .= '</li>';
+        }
+
+        $response->html .= '    </ul>';
+        $response->html .= '</div>';
+
+        // Finish constructing the response
+        $response->callBack = 'LoadTimeLineCallback';
+        $response->dialogTitle 	= __('Region Timeline');
+        $response->dialogSize 	= true;
+        $response->dialogWidth 	= '1000px';
+        $response->dialogHeight = '550px';
+        $response->focusInFirstInput = false;
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'RegionOptions') . '")');
+
         $response->Respond();
     }
 }
