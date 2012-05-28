@@ -333,8 +333,12 @@ END;
             trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
 		
 		//Are we going to be able to delete this?
+                Kit::ClassLoader('campaign');
+                $campaign = new Campaign($db);
+                $campaignId = $campaign->GetCampaignId($layoutid);
+
 		// - Has it been scheduled
-		$SQL = sprintf("SELECT layoutid FROM schedule WHERE layoutid = %d", $layoutid);
+		$SQL = sprintf("SELECT CampaignID FROM schedule WHERE CampaignID = %d", $campaignId);
 		
 		if (!$results = $db->query($SQL)) 
 		{

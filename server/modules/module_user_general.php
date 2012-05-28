@@ -856,7 +856,15 @@ END;
         $SQL .= "   AND campaign.IsLayoutSpecific = 1";
 
         if (!$campaignId = $this->db->GetSingleValue(sprintf($SQL, $layoutId), 'CampaignID', _INT))
-            trigger_error(__('Layout has no associated Campaign, corrupted Layout'), E_USER_ERROR);
+        {
+            trigger_error(__('Layout has no associated Campaign, corrupted Layout'));
+
+            // New auth object is no permissions
+            if ($fullObject)
+                return $auth;
+
+            return false;
+        }
 
         $auth = $this->CampaignAuth($campaignId, true);
 

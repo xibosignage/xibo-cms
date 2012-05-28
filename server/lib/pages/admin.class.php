@@ -256,16 +256,25 @@ END;
                 {
                     $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
 
-                    // Display the file size
+                    // Library Size in Bytes
                     $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
-
                     $limitPcnt = ($libraryLimit > 0) ? (($fileSize / ($libraryLimit * 1024)) * 100) : '';
 
-                    $sz = 'BKMGTP';
-                    $factor = floor((strlen($fileSize) - 1) / 3);
-                    $fileSize = sprintf('%.2f', $fileSize / pow(1024, $factor)) . @$sz[$factor];
+                    $output .= '<p>' . sprintf(__('You have %s of media in the library.'), $this->FormatByteSize($fileSize)) . (($libraryLimit > 0) ? sprintf(__(' This is %d %% of your %s limit.'), $limitPcnt, $this->FormatByteSize($libraryLimit * 1024)) : '') . '</p>';
+                
+                    // Monthly bandwitdh - optionally tested against limits
+                    $xmdsLimit = Config::GetSetting($db, 'MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+                    $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
+                    $endOfMonth = strtotime('-1 second',strtotime('+1 month',strtotime(date('m').'/01/'.date('Y').' 00:00:00')));
 
-                    $output .= '<p>' . sprintf(__('You have %s of media in the library.'), $fileSize) . (($libraryLimit > 0) ? sprintf(__(' This is %d %% of your %s K limit.'), $limitPcnt, $libraryLimit) : '') . '</p>';
+                    $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE DateTime > %d AND DateTime <= %d', $startOfMonth, $endOfMonth);
+                    $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
+
+                    Debug::LogEntry($db, 'audit', $sql);
+                    
+                    $usagePcnt = ($xmdsLimit > 0) ? (($bandwidthUsage / ($xmdsLimit * 1024)) * 100) : '';
+                    
+                    $output .= '<p>' . sprintf(__('You have used %s of bandwidth this month.'), $this->FormatByteSize($bandwidthUsage)) . (($xmdsLimit > 0) ? sprintf(__(' This is %d %% of your %s limit.'), $usagePcnt, $this->FormatByteSize($xmdsLimit * 1024)) : '') . '</p>';
                 }
 
                 if ($cat == 'general')
@@ -713,6 +722,18 @@ FORM;
         include('install/footer.inc');
 
         die();
+    }
+
+    /**
+     * Friendly format for file size
+     * @param <type> $fileSize
+     * @return <type>
+     */
+    private function FormatByteSize($fileSize)
+    {
+        $sz = 'BKMGTP';
+        $factor = floor((strlen($fileSize) - 1) / 3);
+        return sprintf('%.2f', $fileSize / pow(1024, $factor)) . @$sz[$factor];
     }
 }
 ?>

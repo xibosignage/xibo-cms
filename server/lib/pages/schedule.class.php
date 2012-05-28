@@ -818,7 +818,7 @@ class scheduleDAO
             $SQL.= "   AND schedule_detail.FromDT <= $toDt ";
 
             //Ordering
-            $SQL .= " ORDER BY schedule_detail.FromDT ASC, layout.layout ASC";
+            $SQL .= " ORDER BY schedule_detail.FromDT ASC, campaign.Campaign ASC";
 
             Debug::LogEntry($db, 'audit', $SQL);
 
@@ -843,7 +843,7 @@ class scheduleDAO
                 $eventDGIDs	= Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
                 $eventDGIDs 	= explode(',', $eventDGIDs);
 
-                if (!in_array($displayGroupID, $user->DisplayGroupAuth())) continue;
+                if (!$user->DisplayGroupAuth($displayGroupID)) continue;
 
                 // How many days does this event span?
                 $spanningDays	= ($toDT - $fromDT) / (60 * 60 * 24);
@@ -1188,8 +1188,8 @@ END;
 		$response->SetFormRequestResponse($form, __('Schedule an Event'), '700px', '400px');
 		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Add')");
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
-		$response->AddButton(__('Next'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=true").submit()');
-		$response->AddButton(__('Save'), '$("#AddEventForm").submit()');
+		$response->AddButton(__('Next'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=1").submit()');
+		$response->AddButton(__('Save'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=0").submit()');
 		$response->callBack = 'setupScheduleForm';
 		$response->Respond();
 	}

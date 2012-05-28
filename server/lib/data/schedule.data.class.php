@@ -159,7 +159,7 @@ class Schedule extends Data
 					// after we have added the appropriate amount, are we still valid
 					if ($t_start_temp > $recToDT) break;
 					
-					if (!$this->AddDetail($displayGroupID, $layoutID, $t_start_temp, $t_end_temp, $userID, $isPriority, $eventID, $displayOrder))
+					if (!$this->AddDetail($displayGroupID, $campaignId, $t_start_temp, $t_end_temp, $userID, $isPriority, $eventID, $displayOrder))
 					{
 						Debug::LogEntry($db, 'audit', 'Failure in AddDetail - aborting partially done', 'Schedule', 'Add');
 						return false;
