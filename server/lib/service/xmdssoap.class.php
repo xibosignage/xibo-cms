@@ -146,6 +146,10 @@ class XMDSSoap
         if (!$this->CheckVersion($version))
             throw new SoapFault('Sender', 'Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk');
 
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
+
         $libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 
         // auth this request...
@@ -402,6 +406,10 @@ class XMDSSoap
             throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
         }
 
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
+
         //auth this request...
         if (!$this->AuthDisplay($hardwareKey))
         {
@@ -478,6 +486,10 @@ class XMDSSoap
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
             throw new SoapFault('Sender', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
+
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         //auth this request...
         if (!$this->AuthDisplay($hardwareKey))
@@ -606,6 +618,10 @@ class XMDSSoap
                 throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
         }
 
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
+
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
         {
@@ -685,6 +701,10 @@ class XMDSSoap
         {
             throw new SoapFault('Sender', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
         }
+
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
@@ -798,6 +818,10 @@ class XMDSSoap
             throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
         }
 
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
+
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
         {
@@ -887,6 +911,10 @@ class XMDSSoap
         if (!$this->CheckVersion($version))
             throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
 
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
+
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', 'This display client is not licensed');
@@ -953,9 +981,11 @@ class XMDSSoap
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
-        {
             throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
-        }
+
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
@@ -1068,7 +1098,25 @@ class XMDSSoap
         return true;
     }
 
+    /**
+     * Check we havent exceeded the bandwidth limits
+     */
+    private function CheckBandwidth()
+    {
+        $xmdsLimit = Config::GetSetting($db, 'MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
+        if ($xmdsLimit <= 0)
+            return true;
+
+        // Test bandwidth for the current month
+        $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
+        $endOfMonth = strtotime('-1 second',strtotime('+1 month',strtotime(date('m').'/01/'.date('Y').' 00:00:00')));
+
+        $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE DateTime > %d AND DateTime <= %d', $startOfMonth, $endOfMonth);
+        $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
+
+        return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? true : false;
+    }
 
     /**
      * Log Bandwidth Usage
