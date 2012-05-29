@@ -29,7 +29,7 @@ class Module implements ModuleInterface
 	protected $response;
         public $auth;
 	protected $type;
-      	protected $displayType;
+      	public $displayType;
 
 	protected $layoutid;
 	protected $regionid;
@@ -1588,6 +1588,11 @@ FORM;
         $output .= '</div>';
 
         return $output;
+    }
+
+    public function ImageThumbnail()
+    {
+        return '<img alt="' . $this->displayType . ' thumbnail" src="img/forms/' . $this->type . '.gif">';
     }
 
     /**

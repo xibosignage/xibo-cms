@@ -779,4 +779,18 @@ function switchLists(e) {
  */
 var LoadTimeLineCallback = function() {
 
+    // Refresh the preview
+    var preview = Preview.instances[$('#timelineControl').attr('regionid')];
+    preview.SetSequence(preview.seq);
+
+    $("li.timelineMediaListItem").hover(function() {
+
+        var position = $(this).position();
+
+        //Change the hidden div's content
+        $("div#timelinePreview").html($("div.timelineMediaPreview", this).html()).css("margin-top", position.top).show();
+
+    }, function() {
+        return false;
+    });
 }

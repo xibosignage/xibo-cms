@@ -2160,13 +2160,17 @@ END;
             $response->html .= '</li>';
         }
         
-        $response->html .= '</ul>';
+        $response->html .= '    </ul>';
         $response->html .= '</div>';
 
         // Load the XML for this layout and region, we need to get the media nodes.
         // These form the timeline and go in the right column
-        $response->html .= '<div class="timelineRightColumn">';
-        $response->html .= '    <ul>';
+        $response->html .= '<div id="timelineControl" class="timelineRightColumn" layoutid="' . $layoutId . '" regionid="' . $regionId . '">';
+        $response->html .= '    <div class="timelineMediaVerticalList">';
+        $response->html .= '        <ul>';
+
+        // How are we going to colour the bars, my media type or my permissions
+        $timeBarColouring = Config::GetSetting($db, 'REGION_OPTIONS_COLOURING');
 
         // Create a layout object
         $layout = new Layout($db);
@@ -2177,8 +2181,7 @@ END;
             $mediaId = $mediaNode->getAttribute('id');
             $lkId = $mediaNode->getAttribute('lkid');
             $mediaType = $mediaNode->getAttribute('type');
-$mediaFileName = $mediaNode->getAttribute('filename');
-$mediaDuration = $mediaNode->getAttribute('duration');
+            $mediaDuration = $mediaNode->getAttribute('duration');
             $ownerId = $mediaNode->getAttribute('userId');
 
             // Permissions for this assignment
@@ -2194,15 +2197,53 @@ $mediaDuration = $mediaNode->getAttribute('duration');
             require_once("modules/$mediaType.module.php");
             $tmpModule = new $mediaType($db, $user, $mediaId, $layoutId, $regionId, $lkId);
             $mediaName = $tmpModule->GetName();
+            
+            // Colouring for the media block
+            if ($timeBarColouring == 'Media Colouring')
+                $mediaBlockColouringClass = 'timelineMediaItemColouring_' . $mediaType;
+            else
+                $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($auth->edit) ? 'enabled' : 'disabled');
 
+            // Work out the height for each bar?
+            
             // Create the list item
-            $response->html .= '<li class="timelineMediaItem">';
-            $response->html .= '    <div class="' . $mediaType . '_MediaItem">';
+            $response->html .= '<li class="timelineMediaListItem">';
+            $response->html .= '    <div class="timelineMediaItem">';
+            $response->html .= '        <ul class="timelineMediaItemLinks">';
+
+            // Create some links
+            if ($auth->edit)
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this media') . '">' . __('Edit') . '</a></li>';
+
+            if ($auth->del)
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=DeleteForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to delete this media') . '">' . __('Delete') . '</a></li>';
+
+            if ($auth->modifyPermissions)
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="Click to change permissions for this media">' . __('Permissions') . '</a></li>';
+
+            $response->html .= '        </ul>';
+
+            // Put the media name in
+            $response->html .= '        <div class="timelineMediaDetails ' . $mediaBlockColouringClass . '">';
+            $response->html .= '            <h3>' . (($mediaName == '') ? $tmpModule->displayType : $mediaName) . '</h3>';
+            $response->html .= '            <div class="timelineMediaImageThumbnail">' . $tmpModule->ImageThumbnail() . '</div>';
+            $response->html .= '        </div>';
+
+            // Put the media hover preview in
+            $mediaHoverPreview = $tmpModule->HoverPreview();
+            $response->html .= '        <div class="timelineMediaPreview">' . $mediaHoverPreview . '</div>';
+
+            // End the time line media item and list
             $response->html .= '    </div>';
             $response->html .= '</li>';
         }
 
-        $response->html .= '    </ul>';
+        $response->html .= '        </ul>';
+        $response->html .= '    </div>';
+
+        // Output a div to contain the preview for this media item
+        $response->html .= '    <div id="timelinePreview"></div>';
+
         $response->html .= '</div>';
 
         // Finish constructing the response
@@ -2212,6 +2253,8 @@ $mediaDuration = $mediaNode->getAttribute('duration');
         $response->dialogWidth 	= '1000px';
         $response->dialogHeight = '550px';
         $response->focusInFirstInput = false;
+
+        // Add some buttons
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'RegionOptions') . '")');
 

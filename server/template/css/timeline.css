@@ -1,0 +1,161 @@
+/*
+ * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Copyright (C) 2012 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+div.timelineLeftColumn, div.timelineRightColumn {
+     float: left;
+}
+
+div.timelineLeftColumn {
+    width: 200px;
+}
+
+div.timelineRightColumn {
+    width: 780px;
+    height: 450px;
+    overflow-y: scroll;
+}
+
+div.timelineMediaVerticalList {
+    float: left;
+    width: 480px;
+}
+
+div#timelinePreview {
+    float: left;
+    width: 284px;
+    height: 445px;
+}
+
+li.timelineModuleListItem {
+     list-style: none;
+}
+
+img.timelineModuleButtonImage {
+    width: 35px;
+    height: 35px;
+    float: left;
+}
+
+span.timelineModuleButtonText {
+    float:left;
+    padding-top: 12px;
+}
+
+a.timelineModuleButtonAnchor {
+    display: block;
+    clear: left;
+}
+
+div.timelineMediaItem {
+    width: 400px;
+}
+
+li.timelineMediaListItem {
+    padding: 5px;
+    padding-bottom: 60px;
+}
+
+ul.timelineMediaItemLinks li {
+    display: inline;
+    padding-left: 15px;
+}
+
+ul.timelineMediaItemLinks li a {
+    color: white;
+}
+
+ul.timelineMediaItemLinks {
+    background-color: black;
+    margin: 0;
+    padding: 10px;
+}
+
+div.timelineMediaPreview {
+    display: none;
+}
+
+div.timelineMediaDetails {
+    height: 60px;
+}
+
+div.timelineMediaDetails h3 {
+    float: left;
+    padding-left: 20px;
+    color: whiteSmoke;
+}
+
+div.timelineMediaImageThumbnail {
+    float:right;
+    width: 35px;
+    height: 35px;
+}
+
+div.timelineMediaImageThumbnail img {
+    width: 70px;
+    height: 70px;
+}
+
+div.timelineMediaItemColouring_powerpoint {
+    background:url(../../img/forms/blue_bar.gif) no-repeat;
+}
+
+div.timelineMediaItemColouring_image {
+    background:url(../../img/forms/red_bar.gif) no-repeat;
+}
+
+div.timelineMediaItemColouring_webpage {
+    background:url(../../img/forms/green_bar.gif) no-repeat;
+}
+
+div.timelineMediaItemColouring_shellcommand {
+    background:url(../../img/forms/green_bar.gif) no-repeat;
+}
+
+div.timelineMediaItemColouring_microblog {
+    background:url(../../img/forms/orange_bar.gif) no-repeat;
+}
+
+div.timelineMediaItemColouring_embedded {
+    background:url(../../img/forms/green_bar.gif) no-repeat;
+}
+
+div.timelineMediaItemColouring_text {
+    background:url(../../img/forms/yellow_bar.gif) no-repeat;
+}
+
+div.timelineMediaItemColouring_ticker {
+    background:url(../../img/forms/orange_bar.gif) no-repeat;
+}
+
+div.timelineMediaItemColouring_video {
+    background:url(../../img/forms/purple_bar.gif) no-repeat;
+}
+
+div.timelineMediaItemColouring_flash {
+    background:url(../../img/forms/grey_bar.gif) no-repeat;
+}
+
+div.timelineMediaItemColouring_enabled {
+    background:url(../../img/forms/green_bar.gif) no-repeat;
+}
+
+div.timelineMediaItemColouring_disabled{
+    background:url(../../img/forms/grey_bar.gif) no-repeat;
+}
