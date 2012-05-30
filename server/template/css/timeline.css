@@ -27,7 +27,7 @@ div.timelineLeftColumn {
 }
 
 div.timelineRightColumn {
-    width: 780px;
+    width: 779px;
     height: 450px;
     overflow-y: scroll;
 }
@@ -39,7 +39,7 @@ div.timelineMediaVerticalList {
 
 div#timelinePreview {
     float: left;
-    width: 284px;
+    width: 283px;
     height: 445px;
 }
 
