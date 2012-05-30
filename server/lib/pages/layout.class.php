@@ -1313,7 +1313,7 @@ HTML;
 	 */
 	function RegionOptions()
 	{
-            $this->TimeLine();
+            $this->Timeline();
             exit();
             
 		$db 	=& $this->db;
@@ -2111,7 +2111,7 @@ END;
     /**
      * Shows the TimeLine
      */
-    public function TimeLine()
+    public function Timeline()
     {
         $db =& $this->db;
         $user =& $this->user;
@@ -2165,9 +2165,13 @@ END;
 
         // Load the XML for this layout and region, we need to get the media nodes.
         // These form the timeline and go in the right column
+
+        // Generate an ID for the list (this is passed into the reorder function)
+        $timeListMediaListId = uniqid('timelineMediaList_');
+
         $response->html .= '<div id="timelineControl" class="timelineRightColumn" layoutid="' . $layoutId . '" regionid="' . $regionId . '">';
         $response->html .= '    <div class="timelineMediaVerticalList">';
-        $response->html .= '        <ul>';
+        $response->html .= '        <ul id="' . $timeListMediaListId . '" class="timelineSortableListOfMedia">';
 
         // How are we going to colour the bars, my media type or my permissions
         $timeBarColouring = Config::GetSetting($db, 'REGION_OPTIONS_COLOURING');
@@ -2203,11 +2207,9 @@ END;
                 $mediaBlockColouringClass = 'timelineMediaItemColouring_' . $mediaType;
             else
                 $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($auth->edit) ? 'enabled' : 'disabled');
-
-            // Work out the height for each bar?
             
             // Create the list item
-            $response->html .= '<li class="timelineMediaListItem">';
+            $response->html .= '<li class="timelineMediaListItem" mediaid="' . $mediaId . '" lkid="' . $lkId . '">';
             $response->html .= '    <div class="timelineMediaItem">';
             $response->html .= '        <ul class="timelineMediaItemLinks">';
 
@@ -2225,7 +2227,7 @@ END;
 
             // Put the media name in
             $response->html .= '        <div class="timelineMediaDetails ' . $mediaBlockColouringClass . '">';
-            $response->html .= '            <h3>' . (($mediaName == '') ? $tmpModule->displayType : $mediaName) . '</h3>';
+            $response->html .= '            <h3>' . (($mediaName == '') ? $tmpModule->displayType : $mediaName) . ' (' . $mediaDuration . ' seconds)</h3>';
             $response->html .= '            <div class="timelineMediaImageThumbnail">' . $tmpModule->ImageThumbnail() . '</div>';
             $response->html .= '        </div>';
 
@@ -2255,9 +2257,64 @@ END;
         $response->focusInFirstInput = false;
 
         // Add some buttons
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'RegionOptions') . '")');
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->AddButton(__('Save Order'), 'XiboTimelineSaveOrder("' . $timeListMediaListId . '","' . $layoutId . '","' . $regionId . '")');
 
+        $response->Respond();
+    }
+
+    /**
+     * Re-orders a medias regions
+     * @return
+     */
+    function TimelineReorder()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        // Vars
+        $layoutId = Kit::GetParam('layoutid', _REQUEST, _INT);
+        $regionId = Kit::GetParam('regionid', _POST, _STRING);
+        $mediaList = Kit::GetParam('medialist', _POST, _STRING);
+
+        // Check the user has permission
+        Kit::ClassLoader('region');
+        $region = new region($db, $user);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+
+        // Create a list of media
+        if ($mediaList == '')
+            trigger_error(__('No media to reorder'));
+
+        // Trim the last | if there is one
+        $mediaList = rtrim($mediaList, '|');
+
+        // Explode into an array
+        $mediaList = explode('|', $mediaList);
+
+        // Store in an array
+        $resolvedMedia = array();
+
+        foreach($mediaList as $mediaNode)
+        {
+            // Explode the second part of the array
+            $mediaNode = explode('&', $mediaNode);
+
+            $resolvedMedia[] = array('mediaid' => $mediaNode[0], 'lkid' => $mediaNode[1]);
+        }
+
+        // Hand off to the region object to do the actual reorder
+        if (!$region->ReorderTimeline($layoutId, $regionId, $resolvedMedia))
+            trigger_error($region->errorMsg, E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Order Changed'));
+        $response->keepOpen = true;
         $response->Respond();
     }
 }

@@ -312,13 +312,13 @@ input.required {
 	padding: 5px;
 }
 
-.ui-sortable {
+.connectedlist .ui-sortable {
 	width: 150px;
 	background-color: #EEEEEE;
 	padding: 5px;
 }
 
-.li-sortable {
+.connectedlist .li-sortable {
 	padding: 5px;
 	margin: 5px;
 	border: 1px solid #8080ff;

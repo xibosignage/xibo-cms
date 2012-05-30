@@ -624,5 +624,71 @@ class region
 
         return $mediaNode->getAttribute('type');
     }
+
+    /**
+     * Reorder the timeline according to the media list provided
+     * @param <type> $layoutId
+     * @param <type> $regionId
+     * @param <type> $mediaList
+     */
+    public function ReorderTimeline($layoutId, $regionId, $mediaList)
+    {
+        // Load the XML for this layout
+        $xml = new DOMDocument("1.0");
+        $xml->loadXML($this->GetLayoutXml($layoutId));
+
+        //Get the Media Node in question in a DOMNode using Xpath
+        $xpath = new DOMXPath($xml);
+
+        $sequence = 0;
+        $numberofMediaItems = count($mediaList);
+
+        Debug::LogEntry($this->db, 'audit', 'There are ' . $numberofMediaItems . ' media items to reorder', 'region', 'ReorderTimeline');
+
+        foreach($mediaList as $mediaItem)
+        {
+            // Look for mediaid and lkid
+            $mediaId = $mediaItem['mediaid'];
+            $lkId = $mediaItem['lkid'];
+
+            Debug::LogEntry($this->db, 'audit', 'RegionId: ' . $regionId . '. MediaId: ' . $mediaId . '. LkId: ' . $lkId, 'region', 'ReorderTimeline');
+
+            if ($lkId == '')
+                $mediaNodeList = $xpath->query("//region[@id='$regionId']/media[@id='$mediaId']");
+            else
+                $mediaNodeList = $xpath->query("//region[@id='$regionId']/media[@lkid='$lkId']");
+
+            $mediaNode = $mediaNodeList->item(0);
+
+            // Remove this node from its parent
+            $mediaNode->parentNode->removeChild($mediaNode);
+
+            // Get a NodeList of the Region specified (using XPath again)
+            $regionNodeList = $xpath->query("//region[@id='$regionId']/media");
+
+            // Insert the Media Node in question before this $sequence node
+            if ($sequence == $numberofMediaItems - 1)
+            {
+                // Get the region node, and append the child node to the end
+                $regionNode = $regionNodeList = $xpath->query("//region[@id='$regionId']")->item(0);
+                $regionNode->appendChild($mediaNode);
+            }
+            else
+            {
+                // Get the $sequence node from the list
+                $mediaSeq = $regionNodeList->item($sequence);
+                $mediaSeq->parentNode->insertBefore($mediaNode, $mediaSeq);
+            }
+
+            // Increment the sequence
+            $sequence++;
+        }
+
+        // Save it
+        if (!$this->SetLayoutXml($layoutId, $xml->saveXML()))
+            return false;
+
+        return true;
+    }
 }
 ?>

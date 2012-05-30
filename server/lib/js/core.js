@@ -788,9 +788,39 @@ var LoadTimeLineCallback = function() {
         var position = $(this).position();
 
         //Change the hidden div's content
-        $("div#timelinePreview").html($("div.timelineMediaPreview", this).html()).css("margin-top", position.top).show();
+        $("div#timelinePreview").html($("div.timelineMediaPreview", this).html()).css("margin-top", position.top + $('#timelineControl').scrollTop()).show();
 
     }, function() {
         return false;
+    });
+
+    $(".timelineSortableListOfMedia").sortable();
+}
+
+
+var XiboTimelineSaveOrder = function(mediaListId, layoutId, regionId) {
+
+    //console.log(mediaListId);
+
+    // Load the media id's into an array
+    var mediaList = "";
+
+    $('#' + mediaListId + ' li.timelineMediaListItem').each(function(){
+        mediaList = mediaList + $(this).attr("mediaid") + "&" + $(this).attr("lkid") + "|";
+    });
+
+    //console.log("Media List: " + mediaList);
+
+    // Call the server to do the reorder
+    $.ajax({
+        type:"post",
+        url:"index.php?p=layout&q=TimelineReorder&layoutid="+layoutId+"&ajax=true",
+        cache:false,
+        dataType:"json",
+        data:{
+            "regionid": regionId,
+            "medialist": mediaList
+        },
+        success: XiboSubmitResponse
     });
 }
