@@ -17,45 +17,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-var region_options_callback = function(outputDiv)
-{	
-    //Get all the tooltip_hidden
-    $(".tooltip_hidden").parent().hover(function() {
-
-        // Get the position of the dialog
-        var position =  $('#div_dialog').dialog().parent().position();
-
-        //Change the hidden div's content
-        $('#tooltip_hover')
-            .html($(".tooltip_hidden", this).html())
-            .css("top", position.top + "px")
-            .css("width", (position.left - 25) + "px")
-            .css("height", $('#div_dialog').dialog().parent().height() + "px")
-            .show();
-
-    }, function() {
-        return false;
-    });
-	
-	// Make the elements draggable
-	$(".timebar_ctl").draggable({
-		containment: document.getElementById("timeline_ctl")
-	});
-	
-	$(".mediabreak").droppable({
-		accept: ".timebar_ctl",
-		tolerance: "pointer",
-		drop: function(ev, ui) {
-			orderRegion(ui.draggable, this);
-		}
-	});
-
-        // Refresh the preview
-        var preview = Preview.instances[$('#timeline_ctl').attr('regionid')];
-        preview.SetSequence(preview.seq);
-}
-
 var background_button_callback = function()
 {
 	//Want to attach an onchange event to the drop down for the bg-image
@@ -245,11 +206,6 @@ $(document).ready(function() {
                 $('.region').resizable('option', 'aspectRatio', false);
             }
        });
-
-        // Bind to the close event for the dialog
-        $('#div_dialog').bind('dialogclose', function(event) {
-            $('#tooltip_hover').hide();
-        });
 });
 
 /*
@@ -299,24 +255,6 @@ function deleteRegion(region) {
 	var layoutid = $(region).attr("layoutid");
 
 	XiboFormRender("index.php?p=layout&q=DeleteRegionForm&layoutid="+layoutid+"&regionid="+regionid);
-}
-
-/**
- * Reorders the Region specified by the timebar and its position
- * @param {Object} timeBar
- * @param {Object} mediaBreak
- */
-function orderRegion(timeBar, mediaBreak) {
-	var timeLine = $(timeBar).parent().parent();
-	
-	var layoutid = timeLine.attr("layoutid");
-	var regionid = timeLine.attr("regionid");
-	var mediaid = $(timeBar).attr("mediaid");
-        var lkid     = $(timeBar).attr("lkid");
-	var sequence = $(mediaBreak).attr("breakid");
-	
-	$.ajax({type:"post", url:"index.php?p=layout&q=RegionOrder&layoutid="+layoutid+"&callingpage=layout&ajax=true", cache:false, dataType:"json", 
-		data:{"mediaid":mediaid,"lkid":lkid,"sequence":sequence,"regionid":regionid},success: XiboSubmitResponse});
 }
 
 /**
