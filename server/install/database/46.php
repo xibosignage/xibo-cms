@@ -11,7 +11,7 @@ class Step46 extends UpgradeStep
         
         $campaign = new Campaign($db);
 
-        $SQL = "SELECT LayoutID, Layout, UserID FROM layout";
+        $SQL = "SELECT LayoutID, Layout, UserID FROM layout WHERE LayoutID NOT IN (SELECT DISTINCT LayoutID FROM lkcampaigngroup WHERE IsLayoutSpecific = 1)";
 
         $layouts = $db->GetArray($SQL);
 
