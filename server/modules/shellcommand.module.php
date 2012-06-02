@@ -243,7 +243,7 @@ FORM;
         return $this->response;
     }
 
-    public function Preview()
+    public function Preview($width, $height)
     {
         $msgWindows = __('Windows Command');
         $msgLinux = __('Linux Command');
@@ -257,7 +257,7 @@ FORM;
 
     public function HoverPreview()
     {
-        return $this->Preview();
+        return $this->Preview(0,0);
     }
 }
 ?>

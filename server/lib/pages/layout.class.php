@@ -1272,67 +1272,85 @@ HTML;
         exit();
     }
 	
-	/**
-	 * Adds the media into the region provided
-	 * @return 
-	 */
-	function AddFromLibrary()
-	{
-		$db 		=& $this->db;
-		$user 		=& $this->user;
-		$response 	= new ResponseManager();
-		
-		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
-		$mediaids 	= $_POST['mediaids'];
-		
-		foreach ($mediaids as $mediaid)
-		{
-			$mediaid = Kit::ValidateParam($mediaid, _INT);
-			
-			// Get the type from this media
-			$SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaid);
-			
-			if (!$result = $db->query($SQL))
-			{
-				trigger_error($db->error());
-				$response->SetError(__('Error getting type from a media item.'));
-				$response->keepOpen = false;
-				return $response;
-			}
-			
-			$row = $db->get_row($result);
-			$mod = $row[0];
-			
-			require_once("modules/$mod.module.php");
-			
-			// Create the media object without any region and layout information
-			$this->module = new $mod($db, $user, $mediaid);
-			
-			if ($this->module->SetRegionInformation($this->layoutid, $regionid))
-			{
-				$this->module->UpdateRegion();
-			}
-			else
-			{
-				$response->SetError(__('Cannot set region information.'));
-				$response->keepOpen = true;
-				return $response;
-			}
+    /**
+     * Adds the media into the region provided
+     * @return
+     */
+    function AddFromLibrary()
+    {
+        $db 		=& $this->db;
+        $user 		=& $this->user;
+        $response 	= new ResponseManager();
 
-                    // Need to copy over the permissions from this media item & also the delete permission
-                    $mediaAuth = $this->user->MediaAuth($mediaid, true);
+        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
+        $regionId = Kit::GetParam('regionid', _POST, _STRING);
+        $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY, array());
 
-                    Kit::ClassLoader('layoutmediagroupsecurity');
-                    $security = new LayoutMediaGroupSecurity($db);
-                    $security->Link($this->layoutid, $regionid, $mediaid, $this->user->getGroupFromID($this->user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
-		}
-		
-		// We want to load a new form
-		$response->loadForm	= true;
-		$response->loadFormUri= "index.php?p=layout&layoutid=$this->layoutid&regionid=$regionid&q=RegionOptions";;
-		
-		$response->Respond();
-	}
+        // Make sure we have permission to edit this region
+        Kit::ClassLoader('region');
+        $region = new region($db, $user);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+
+        // Check that some media assignments have been made
+        if (count($mediaList) == 0)
+            trigger_error(__('No media to assign'), E_USER_ERROR);
+
+        // Loop through all the media
+        foreach ($mediaList as $mediaId)
+        {
+            $mediaId = Kit::ValidateParam($mediaId, _INT);
+
+            // Check we have permissions to use this media (we will use this to copy the media later)
+            $mediaAuth = $this->user->MediaAuth($mediaId, true);
+
+            if (!$mediaAuth->view)
+            {
+                $response->SetError(__('You have selected media that you no longer have permission to use. Please reload Library form.'));
+                $response->keepOpen = true;
+                return $response;
+            }
+
+            // Get the type from this media
+            $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
+
+            if (!$mod = $db->GetSingleValue($SQL, 'type', _STRING))
+            {
+                trigger_error($db->error());
+                $response->SetError(__('Error getting type from a media item.'));
+                $response->keepOpen = false;
+                return $response;
+            }
+
+            require_once("modules/$mod.module.php");
+
+            // Create the media object without any region and layout information
+            $this->module = new $mod($db, $user, $mediaId);
+
+            if ($this->module->SetRegionInformation($layoutId, $regionId))
+                $this->module->UpdateRegion();
+            else
+            {
+                $response->SetError(__('Cannot set region information.'));
+                $response->keepOpen = true;
+                return $response;
+            }
+
+            // Need to copy over the permissions from this media item & also the delete permission
+            Kit::ClassLoader('layoutmediagroupsecurity');
+            $security = new LayoutMediaGroupSecurity($db);
+            $security->Link($layoutId, $regionId, $mediaId, $this->user->getGroupFromID($this->user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
+        }
+
+        // We want to load a new form
+        $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));
+        $response->loadForm = true;
+        $response->loadFormUri = "index.php?p=layout&layoutid=$layoutId&regionid=$regionId&q=RegionOptions";
+        $response->Respond();
+    }
 
 	/**
 	 * Properties Edit
@@ -1781,6 +1799,14 @@ END;
         // Present a canvas with 2 columns, left column for the media icons
         $response->html .= '<div class="timelineLeftColumn">';
         $response->html .= '    <ul class="timelineModuleButtons">';
+
+        // Always output a Library assignment button
+        $response->html .= '<li class="timelineModuleListItem">';
+        $response->html .= '    <a class="XiboFormButton timelineModuleButtonAnchor" title="' . __('Assign from Library') . '" href="index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '">';
+        $response->html .= '        <img class="timelineModuleButtonImage" src="img/forms/library.gif" alt="' . __('Library Image') . '" />';
+        $response->html .= '        <span class="timelineModuleButtonText">' . __('Library') . '</span>';
+        $response->html .= '    </a>';
+        $response->html .= '</li>';
         
         // Get a list of the enabled modules and then create buttons for them
         if (!$enabledModules = new ModuleManager($db, $user))
@@ -1798,7 +1824,7 @@ END;
             $uri = 'index.php?p=module&q=Exec&mod=' . $mod . '&method=AddForm&layoutid=' . $layoutId . '&regionid=' . $regionId;
 
             $response->html .= '<li class="timelineModuleListItem">';
-            $response->html .= '    <a class="XiboFormButton timelineModuleButtonAnchor" title="$title" href="' . $uri . '">';
+            $response->html .= '    <a class="XiboFormButton timelineModuleButtonAnchor" title="' . $title . '" href="' . $uri . '">';
             $response->html .= '        <img class="timelineModuleButtonImage" src="' . $img . '" alt="' . __('Module Image') . '" />';
             $response->html .= '        <span class="timelineModuleButtonText">' . $caption . '</span>';
             $response->html .= '    </a>';

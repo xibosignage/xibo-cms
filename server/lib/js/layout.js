@@ -1,6 +1,6 @@
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -17,6 +17,114 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+
+/**
+ * Load timeline callback
+ */
+var LoadTimeLineCallback = function() {
+
+    // Refresh the preview
+    var preview = Preview.instances[$('#timelineControl').attr('regionid')];
+    preview.SetSequence(preview.seq);
+
+    $("li.timelineMediaListItem").hover(function() {
+
+        var position = $(this).position();
+
+        //Change the hidden div's content
+        $("div#timelinePreview").html($("div.timelineMediaPreview", this).html()).css("margin-top", position.top + $('#timelineControl').scrollTop()).show();
+
+    }, function() {
+        return false;
+    });
+
+    $(".timelineSortableListOfMedia").sortable();
+}
+
+
+var XiboTimelineSaveOrder = function(mediaListId, layoutId, regionId) {
+
+    //console.log(mediaListId);
+
+    // Load the media id's into an array
+    var mediaList = "";
+
+    $('#' + mediaListId + ' li.timelineMediaListItem').each(function(){
+        mediaList = mediaList + $(this).attr("mediaid") + "&" + $(this).attr("lkid") + "|";
+    });
+
+    //console.log("Media List: " + mediaList);
+
+    // Call the server to do the reorder
+    $.ajax({
+        type:"post",
+        url:"index.php?p=layout&q=TimelineReorder&layoutid="+layoutId+"&ajax=true",
+        cache:false,
+        dataType:"json",
+        data:{
+            "regionid": regionId,
+            "medialist": mediaList
+        },
+        success: XiboSubmitResponse
+    });
+}
+
+/**
+ * Library Assignment Form Callback
+ */
+var LibraryAssignCallback = function()
+{
+    // Connect the two lists.
+    $("#LibraryAvailableSortable").sortable({
+        connectWith: '.connectedSortable',
+        dropOnEmpty: true,
+        remove: function(event, ui) {
+            ui.item.clone().appendTo('#LibraryAssignSortable');
+
+            $(".li-sortable", "#LibraryAssignSortable").dblclick(function(e){
+                $(this).remove();
+            });
+            
+            $(this).sortable('cancel');
+        },
+        revert: true
+    }).disableSelection();
+
+    $("#LibraryAssignSortable").sortable({
+        dropOnEmpty: true
+    }).disableSelection();
+
+    $(".li-sortable", "#LibraryAvailableSortable").dblclick(function(e){
+        var otherList = $($(e.currentTarget).parent().sortable("option","connectWith")).not($(e.currentTarget).parent());
+
+        otherList.append($(e.currentTarget).clone());
+    });
+
+    $(".li-sortable", "#LibraryAssignSortable").dblclick(function(e){
+        $(this).remove();
+    });
+}
+
+var LibraryAssignSubmit = function(layoutId, regionId)
+{
+    // Serialize the data from the form and call submit
+    var mediaList = $("#LibraryAssignSortable").sortable('serialize');
+
+    mediaList = mediaList + "&regionid=" + regionId;
+
+    console.log(mediaList);
+
+    $.ajax({
+        type: "post",
+        url: "index.php?p=layout&q=AddFromLibrary&layoutid="+layoutId+"&ajax=true",
+        cache: false,
+        dataType: "json",
+        data: mediaList,
+        success: XiboSubmitResponse
+    });
+}
+
 var background_button_callback = function()
 {
 	//Want to attach an onchange event to the drop down for the bg-image
