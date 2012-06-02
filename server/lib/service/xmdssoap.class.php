@@ -1103,7 +1103,7 @@ class XMDSSoap
      */
     private function CheckBandwidth()
     {
-        $xmdsLimit = Config::GetSetting($db, 'MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+        $xmdsLimit = Config::GetSetting($this->db, 'MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
         if ($xmdsLimit <= 0)
             return true;
