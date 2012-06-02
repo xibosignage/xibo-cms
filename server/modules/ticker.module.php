@@ -24,6 +24,7 @@ class ticker extends Module
 	{
 		// Must set the type of the class
 		$this->type = 'ticker';
+                $this->displayType = 'Ticker';
 	
 		// Must call the parent class	
 		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -428,6 +429,28 @@ FORM;
 		
 		return $this->response;	
 	}
+
+    public function HoverPreview()
+    {
+        $msgType = __('Type');
+        $msgUrl = __('Feed');
+        $msgDuration = __('Duration');
+
+        $url = urldecode($this->GetOption('uri'));
+
+        // Default Hover window contains a thumbnail, media type and duration
+        $output = '<div class="thumbnail"><img alt="' . $this->displayType . ' thumbnail" src="img/forms/' . $this->type . '.gif"></div>';
+        $output .= '<div class="info">';
+        $output .= '    <ul>';
+        $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';
+        $output .= '    <li>' . $msgUrl . ': <a href="' . $url . '" target="_blank" title="' . $msgUrl . '">' . $url . '</a></li>';
+
+        $output .= '    <li>' . $msgDuration . ': ' . $this->duration . ' ' . __('seconds') . '</li>';
+        $output .= '    </ul>';
+        $output .= '</div>';
+
+        return $output;
+    }
         
         public function Preview($width, $height)
         {
