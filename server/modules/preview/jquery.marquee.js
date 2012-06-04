@@ -97,6 +97,7 @@
             var $marquee = $(this),
                 width = $marquee.attr('width') || $marquee.width(),
                 height = $marquee.attr('height') || $marquee.height(),
+                // Dan Garner: Modified to keep the original ID
                 $marqueeRedux = $marquee.after('<div id="' + $marquee.attr("id") + '" ' + (klass ? 'class="' + klass + '" ' : '') + 'style="display: block-inline; width: ' + width + 'px; height: ' + height + 'px; overflow: hidden;"><div style="float: left; white-space: nowrap;">' + $marquee.html() + '</div></div>').next(),
                 marqueeRedux = $marqueeRedux.get(0),
                 hitedge = 0,

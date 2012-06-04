@@ -27,6 +27,7 @@
             }
 
             // Resizer() resizes items based on the object width divided by the compressor * 10
+            // Dan Garner: Modified to resize the children
             var resizer = function () {
                 $this.children().css('font-size', Math.max(Math.min($this.width() / (compressor*10), parseFloat(settings.maxFontSize)), parseFloat(settings.minFontSize)));
             };

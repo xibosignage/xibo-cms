@@ -354,6 +354,7 @@ FORM;
         $direction = $this->GetOption('direction');
         $scrollSpeed = $this->GetOption('scrollSpeed');
         $fitText = $this->GetOption('fitText', 0);
+        $duration = $this->duration;
 
         // Get the text out of RAW
         $rawXml = new DOMDocument();
@@ -368,7 +369,11 @@ FORM;
         $headContent  = '<script type="text/javascript">';
         $headContent .= '   function init() { ';
         $headContent .= '       $("#text").xiboRender({ ';
+        $headContent .= '           type: "text",';
         $headContent .= '           direction: "' . $direction . '",';
+        $headContent .= '           duration: ' . $duration . ',';
+        $headContent .= '           durationIsPerItem: false,';
+        $headContent .= '           numItems: 0,';
         $headContent .= '           width: ' . $width . ',';
         $headContent .= '           height: ' . $height . ',';
         $headContent .= '           scrollSpeed: ' . $scrollSpeed . ',';

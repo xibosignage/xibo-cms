@@ -58,11 +58,47 @@ jQuery.fn.extend({
                 // Remove the font-size property of all children
                 $("*", this).css("font-size", "");
 
-                $(this).fitText(1.2);
+                // Run the Fit Text plugin
+                $(this).fitText(1.75);
+            }
+
+            // Ticker?
+            if (options.type == "ticker") {
+                $(".article", this).css({
+                    "padding-left": "4px",
+                    display: "inline"
+                });
+
+                $(".XiboRssItem", this).css({
+                    display: "block",
+                    width: options.width,
+                    height: options.height
+                });
+
+                if (options.direction == "single") {
+                    // Use the cycle plugin to switch between the items
+                    var totalDuration = options.duration * 1000;
+                    var itemCount = $('.XiboRssItem').size();
+                    var itemTime;
+
+                    if (options.durationIsPerItem)
+                        itemTime = totalDuration / itemCount;
+                    else
+                        itemTime = totalDuration;
+
+                    if (itemTime < 2000) itemTime = 2000;
+
+                   // Try to get the itemTime from an element we expect to be in the HTML
+                   $('#text').cycle({fx: 'fade', timeout:itemTime});
+                }
+                else if (options.direction == "left" || options.direction == "right") {
+                    $("p", this).css("display", "inline");
+                }
             }
 
             // Marquee?
-            if (options.direction != "none") {
+            if (options.direction != "none" && options.direction != "single") {
+
                 // Scroll speed is going to be wrong (30 was the default before)
                 var scrollSpeed = (options.scrollSpeed > 15) ? 3 : options.scrollSpeed;
 
