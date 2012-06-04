@@ -47,6 +47,9 @@ class webpage extends Module
 		$rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 		
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
+
+                $msgOffsetLeft = __('Offset Left');
+                $msgOffsetTop = __('Offset Top');
 		
 		$form = <<<FORM
 		<form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
@@ -57,10 +60,14 @@ class webpage extends Module
                         <tr>
                             <td><label for="uri" title="The Location (URL) of the webpage. E.g. http://www.xibo.org.uk">Link<span class="required">*</span></label></td>
                             <td><input id="uri" name="uri" type="text"></td>
-                        </tr>
-                        <tr>
                             <td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration (s)<span class="required">*</span></label></td>
                             <td><input id="duration" name="duration" type="text"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="offsetTop" title="$msgOffsetTop">$msgOffsetTop</label></td>
+                            <td><input id="offsetTop" name="offsetTop" type="text"></td>
+                            <td><label for="offsetLeft" title="$msgOffsetLeft">$msgOffsetLeft</label></td>
+                            <td><input id="offsetLeft" name="offsetLeft" type="text"></td>
                         </tr>
                         <tr>
                             <td><label for="scaling" title="">Scale Percentage</label></td>
@@ -120,6 +127,8 @@ FORM;
 		$transparency	= $this->GetOption('transparency');
                 $transparencyChecked = '';
 		$uri		= urldecode($this->GetOption('uri'));
+                $offsetLeft = $this->GetOption('offsetLeft');
+                $offsetTop = $this->GetOption('offsetTop');
 
                 // Is the transparency option set?
                 if ($transparency)
@@ -128,6 +137,9 @@ FORM;
 		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
 
         $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
+
+                $msgOffsetLeft = __('Offset Left');
+                $msgOffsetTop = __('Offset Top');
 		
 		//Output the form
 		$form = <<<FORM
@@ -137,14 +149,18 @@ FORM;
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
                         <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
 			<table>
-				<tr>
-		    		<td><label for="uri" title="The Location (URL) of the webpage. E.g. http://www.xibo.org.uk">Link<span class="required">*</span></label></td>
-		    		<td><input id="uri" name="uri" value="$uri" type="text"></td>
-				</tr>
-				<tr>
-		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
-		    		<td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
-				</tr>
+                        <tr>
+                            <td><label for="uri" title="The Location (URL) of the webpage. E.g. http://www.xibo.org.uk">Link<span class="required">*</span></label></td>
+                            <td><input id="uri" name="uri" value="$uri" type="text"></td>
+                            <td><label for="duration" title="The duration in seconds this webpage should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
+                            <td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
+                        </tr>
+                        <tr>
+                            <td><label for="offsetTop" title="$msgOffsetTop">$msgOffsetTop</label></td>
+                            <td><input id="offsetTop" name="offsetTop" type="text" value="$offsetTop"></td>
+                            <td><label for="offsetLeft" title="$msgOffsetLeft">$msgOffsetLeft</label></td>
+                            <td><input id="offsetLeft" name="offsetLeft" type="text" value="$offsetLeft"></td>
+                        </tr>
                         <tr>
                             <td><label for="scaling" title="">Scale Percentage</label></td>
                             <td><input id="scaling" name="scaling" type="text" value="$scaling"/></td>
@@ -194,6 +210,8 @@ FORM;
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
                 $scaling	  = Kit::GetParam('scaling', _POST, _INT, 100);
 		$transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
+                $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
+                $offsetTop = Kit::GetParam('offsetTop', _POST, _INT);
 		
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -220,7 +238,8 @@ FORM;
 		$this->SetOption('uri', $uri);
                 $this->SetOption('scaling', $scaling);
                 $this->SetOption('transparency', $transparency);
-
+                $this->SetOption('offsetLeft', $offsetLeft);
+                $this->SetOption('offsetTop', $offsetTop);
 
 		// Should have built the media object entirely by this time
 		// This saves the Media Object to the Region
@@ -262,6 +281,8 @@ FORM;
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
                 $scaling	  = Kit::GetParam('scaling', _POST, _INT, 100);
 		$transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
+                $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
+                $offsetTop = Kit::GetParam('offsetTop', _POST, _INT);
         
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
@@ -288,6 +309,8 @@ FORM;
 		$this->SetOption('uri', $uri);
                 $this->SetOption('scaling', $scaling);
                 $this->SetOption('transparency', $transparency);
+                $this->SetOption('offsetLeft', $offsetLeft);
+                $this->SetOption('offsetTop', $offsetTop);
 
 		// Should have built the media object entirely by this time
 		// This saves the Media Object to the Region
@@ -322,13 +345,13 @@ FORM;
         $mediaType = $this->type;
         $mediaDuration = $this->duration;
 
-        $offsetTop = 0;
-        $offsetLeft = 0;
+        $offsetTop = $this->GetOption('offsetTop', 0);
+        $offsetLeft = $this->GetOption('offsetLeft', 0);
 
         $widthPx = ($width + $offsetLeft) . 'px';
         $heightPx = ($height + $offsetTop) . 'px';
 
-        $iframeStyle = 'top:-' . $offsetTop . 'px; left: -' . $offsetLeft . 'px; border:0;';
+        $iframeStyle = 'margin-top:-' . $offsetTop . 'px; margin-left: -' . $offsetLeft . 'px; border:0;';
 
         return '<iframe scrolling="no" src="' . urldecode($this->GetOption('uri')) . '" width="' . $widthPx . '" height="' . $heightPx . '" style="' . $iframeStyle . '"></iframe>';
     }
