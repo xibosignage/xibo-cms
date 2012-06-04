@@ -321,6 +321,7 @@ END;
         if ($raw == 'true')
         {
             echo $response;
+            exit();
         }
         else
         {

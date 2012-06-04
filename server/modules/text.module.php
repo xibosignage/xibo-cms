@@ -303,40 +303,74 @@ FORM;
             return $this->response;
     }
 
+    /**
+     * Preview
+     * @param <type> $width
+     * @param <type> $height
+     * @return <type>
+     */
     public function Preview($width, $height)
     {
-        $regionid   = $this->regionid;
-        $direction  = $this->GetOption('direction');
+        $layoutId = $this->layoutid;
+        $regionId = $this->regionid;
+
+        $mediaId = $this->mediaid;
+        $lkId = $this->lkid;
+        $mediaType = $this->type;
+        $mediaDuration = $this->duration;
+        
+        $widthPx	= $width.'px';
+        $heightPx	= $height.'px';
+
+        return '<iframe src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=RawPreview&raw=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+    }
+
+    /**
+     * Raw Preview
+     */
+    public function RawPreview()
+    {
+        // Behave exactly like the client.
+
+        // Load in the template
+        $template = file_get_contents('modules/preview/HtmlTemplate.htm');
+
+        $width = Kit::GetParam('width', _REQUEST, _INT);
+        $height = Kit::GetParam('height', _REQUEST, _INT);
+        $direction = $this->GetOption('direction');
+        $scrollSpeed = $this->GetOption('scrollSpeed');
 
         // Get the text out of RAW
         $rawXml = new DOMDocument();
         $rawXml->loadXML($this->GetRaw());
 
-        // Get the Text Node out of this
-        $textNodes 	= $rawXml->getElementsByTagName('text');
-        $textNode 	= $textNodes->item(0);
-        $text 	= $textNode->nodeValue;
+        // Get the Text Node
+        $textNodes = $rawXml->getElementsByTagName('text');
+        $textNode = $textNodes->item(0);
+        $text = $textNode->nodeValue;
 
-        $textId 	= $regionid.'_text';
-        $innerId 	= $regionid.'_innerText';
-        $timerId	= $regionid.'_timer';
-        $widthPx	= $width.'px';
-        $heightPx	= $height.'px';
+        // Replace the head content
+        $headContent  = '<script type="text/javascript">';
+        $headContent .= '   function init() { ';
+        $headContent .= '       $("#text").xiboRender({ direction: "' . $direction . '", width: ' . $width . ', height: ' . $height . ', scrollSpeed: ' . $scrollSpeed . ' });';
+        $headContent .= '   } ';
+        $headContent .= '</script>';
 
-        $textWrap = '';
-        if ($direction == "left" || $direction == "right") $textWrap = "white-space:nowrap;";
+        // Replace the Head Content with our generated javascript
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
-        //Show the contents of text accordingly
-        $return = <<<END
-        <div id="$textId" style="position:relative; overflow:hidden ;width:$widthPx; height:$heightPx; font-size: 1em;">
-            <div id="$innerId" style="position:absolute; left: 0px; top: 0px; $textWrap">
-                <div class="article">
-                        $text
-                </div>
-            </div>
-        </div>
-END;
-        return $return;
+        // Generate the body content
+        $bodyContent  = '';
+        $bodyContent .= '<div id="contentPane" style="width:' . $width . 'px; height:' . $height . 'px;">';
+        $bodyContent .= '   <div id="text">';
+        $bodyContent .= '       ' . $text;
+        $bodyContent .= '   </div>';
+        $bodyContent .= '</div>';
+
+        // Replace the Body Content with our generated text
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $bodyContent, $template);
+
+        return $template;
     }
 
     public function HoverPreview()

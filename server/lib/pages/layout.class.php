@@ -1217,6 +1217,13 @@ END;
 								</div>";
                       }
 
+                 if ($regionAuth->edit)
+                 {
+                    $regionHtml .= '<div class="timelineLink">';
+                    $regionHtml .= '    <a class="XiboFormButton" href="index.php?p=layout&q=Timeline&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '" title="' . __('Timeline') . '">' . __('Edit Timeline') . '</a>';
+                    $regionHtml .= '</div>';
+                 }
+
                       $regionHtml .= '</div>';
 		}
 		
@@ -1419,6 +1426,7 @@ HTML;
 		$return .= "<div class='seqInfo' style='position:absolute; right:15px; top:31px; color:#FFF; background-color:#000; z-index:50; padding: 5px;'>
                                 <span style='font-family: Verdana;'>$seqGiven / {$nodeList->length}</span>
                             </div>";
+                $return .= '<div class="regionPreviewOverlay"></div>';
 		
 		if ($nodeList->length == 0)
 		{

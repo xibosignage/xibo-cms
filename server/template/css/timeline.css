@@ -175,3 +175,24 @@ div.LibraryAssign .connectedlist ul {
 div.LibraryAssign .connectedlist .li-sortable {
     width: 315px;
 }
+
+div.timelineLink {
+    color: white;
+    background-color: black;
+    z-index: 50;
+    padding: 5px;
+    position: absolute;
+    right: 15px;
+    font-family: Verdana;
+    top: 109px;
+}
+
+div.timelineLink a {
+    color: white;
+}
+
+div.regionPreviewOverlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
