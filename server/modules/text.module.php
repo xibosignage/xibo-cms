@@ -336,7 +336,7 @@ FORM;
         $widthPx	= $width.'px';
         $heightPx	= $height.'px';
 
-        return '<iframe src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=RawPreview&raw=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return '<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=RawPreview&raw=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
 
     /**
@@ -389,7 +389,7 @@ FORM;
 
         // Generate the body content
         $bodyContent  = '';
-        $bodyContent .= '<div id="contentPane" style="width:' . $width . 'px; height:' . $height . 'px;">';
+        $bodyContent .= '<div id="contentPane" style="overflow: none; width:' . $width . 'px; height:' . $height . 'px;">';
         $bodyContent .= '   <div id="text">';
         $bodyContent .= '       ' . $text;
         $bodyContent .= '   </div>';

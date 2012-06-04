@@ -196,3 +196,7 @@ div.regionPreviewOverlay {
     height: 100%;
     position: absolute;
 }
+
+div.previewContent {
+    overflow: hidden;
+}

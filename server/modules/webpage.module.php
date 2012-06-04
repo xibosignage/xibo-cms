@@ -305,6 +305,32 @@ FORM;
 		
 		return $this->response;	
 	}
-}
 
+    /**
+     * Preview
+     * @param <type> $width
+     * @param <type> $height
+     * @return <type>
+     */
+    public function Preview($width, $height)
+    {
+        $layoutId = $this->layoutid;
+        $regionId = $this->regionid;
+
+        $mediaId = $this->mediaid;
+        $lkId = $this->lkid;
+        $mediaType = $this->type;
+        $mediaDuration = $this->duration;
+
+        $offsetTop = 0;
+        $offsetLeft = 0;
+
+        $widthPx = ($width + $offsetLeft) . 'px';
+        $heightPx = ($height + $offsetTop) . 'px';
+
+        $iframeStyle = 'top:-' . $offsetTop . 'px; left: -' . $offsetLeft . 'px; border:0;';
+
+        return '<iframe scrolling="no" src="' . urldecode($this->GetOption('uri')) . '" width="' . $widthPx . '" height="' . $heightPx . '" style="' . $iframeStyle . '"></iframe>';
+    }
+}
 ?>
