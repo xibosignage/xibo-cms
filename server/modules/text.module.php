@@ -49,6 +49,8 @@ class text extends Module
 
         $direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
 
+        $msgFitText = __('Fit text to region');
+
             $form = <<<FORM
             <form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=AddMedia">
                     <input type="hidden" name="layoutid" value="$layoutid">
@@ -62,8 +64,10 @@ class text extends Module
                             <td><input id="duration" name="duration" type="text"></td>
                             </tr>
                             <tr>
-                                <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
-                                <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="30"></td>
+                                <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (higher is faster)</label></td>
+                                <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="2"></td>
+                                <td><label for="fitText" title="$msgFitText">$msgFitText</label></td>
+                                <td><input id="fitText" name="fitText" type="checkbox"></td>
                             </tr>
                             <tr>
                                     <td colspan="4">
@@ -113,6 +117,8 @@ FORM;
         // Other properties
         $direction = $this->GetOption('direction');
         $scrollSpeed = $this->GetOption('scrollSpeed');
+        $fitText = $this->GetOption('fitText', 0);
+        $fitTextChecked = ($fitText == 0) ? '' : ' checked';
 
         // Get the text out of RAW
         $rawXml = new DOMDocument();
@@ -128,6 +134,8 @@ FORM;
         $direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
 
         $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
+
+        $msgFitText = __('Fit text to region');
 
         // Output the form
         $form = <<<FORM
@@ -146,6 +154,8 @@ FORM;
                         <tr>
                             <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
                             <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>
+                                <td><label for="fitText" title="$msgFitText">$msgFitText</label></td>
+                                <td><input id="fitText" name="fitText" type="checkbox" $fitTextChecked></td>
                         </tr>
                         <tr>
                                 <td colspan="4">
@@ -188,7 +198,8 @@ FORM;
         $direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
         $duration	  = Kit::GetParam('duration', _POST, _INT, 0);
         $text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-        $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+        $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 2);
+        $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
 
         $url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
@@ -214,6 +225,7 @@ FORM;
         // Any Options
         $this->SetOption('direction', $direction);
         $this->SetOption('scrollSpeed', $scrollSpeed);
+        $this->SetOption('fitText', $fitText);
         $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 
         // Should have built the media object entirely by this time
@@ -257,6 +269,7 @@ FORM;
             $direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
             $text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
             $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+        $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
@@ -284,6 +297,7 @@ FORM;
             // Any Options
             $this->SetOption('direction', $direction);
             $this->SetOption('scrollSpeed', $scrollSpeed);
+            $this->SetOption('fitText', $fitText);
             $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 
             // Should have built the media object entirely by this time
@@ -339,6 +353,7 @@ FORM;
         $height = Kit::GetParam('height', _REQUEST, _INT);
         $direction = $this->GetOption('direction');
         $scrollSpeed = $this->GetOption('scrollSpeed');
+        $fitText = $this->GetOption('fitText', 0);
 
         // Get the text out of RAW
         $rawXml = new DOMDocument();
@@ -352,7 +367,15 @@ FORM;
         // Replace the head content
         $headContent  = '<script type="text/javascript">';
         $headContent .= '   function init() { ';
-        $headContent .= '       $("#text").xiboRender({ direction: "' . $direction . '", width: ' . $width . ', height: ' . $height . ', scrollSpeed: ' . $scrollSpeed . ' });';
+        $headContent .= '       $("#text").xiboRender({ ';
+        $headContent .= '           direction: "' . $direction . '",';
+        $headContent .= '           width: ' . $width . ',';
+        $headContent .= '           height: ' . $height . ',';
+        $headContent .= '           scrollSpeed: ' . $scrollSpeed . ',';
+        $headContent .= '           fitText: ' . (($fitText == 0) ? 'false' : 'true') . ',';
+        $headContent .= '           scaleText: ' . (($fitText == 1) ? 'false' : 'true') . ',';
+        $headContent .= '           scaleFactor: 1';
+        $headContent .= '       });';
         $headContent .= '   } ';
         $headContent .= '</script>';
 

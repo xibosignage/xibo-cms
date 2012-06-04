@@ -26,15 +26,42 @@ jQuery.fn.extend({
                 direction: "none",
                 width: 100,
                 height: 100,
-                scrollSpeed: 2
+                scrollSpeed: 2,
+                scaleText: false,
+                fitText: false,
+                scaleFactor: 1
             };
         }
 
         this.each(function() {
             // Scale text to fit the box
-            //$(this).fit2Box();
+            if (options.scaleText) {
+                // Go through every <span> element, and scale it accordingly.
+                $("span, p", this).each(function(){
+                    // Already has a font?
+                    var fontSize = $(this).css("font-size");
 
-            // Set an interval
+                    $(this).css("font-size", Math.round(fontSize.replace("px", "") * options.scaleFactor));
+                });
+            }
+
+            // Fit text?
+            else if (options.fitText) {
+
+                // Make sure our element has a width and height - and is display:block
+                $(this).css({
+                    width: options.width,
+                    height: options.height,
+                    display: "block"
+                });
+
+                // Remove the font-size property of all children
+                $("*", this).css("font-size", "");
+
+                $(this).fitText(1.2);
+            }
+
+            // Marquee?
             if (options.direction != "none") {
                 // Scroll speed is going to be wrong (30 was the default before)
                 var scrollSpeed = (options.scrollSpeed > 15) ? 3 : options.scrollSpeed;
