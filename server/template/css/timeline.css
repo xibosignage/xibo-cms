@@ -156,6 +156,10 @@ div.timelineMediaItemColouring_counter {
     background:url(../../img/forms/grey_bar.gif) no-repeat;
 }
 
+div.timelineMediaItemColouring_datasetview {
+    background:url(../../img/forms/grey_bar.gif) no-repeat;
+}
+
 div.timelineMediaItemColouring_enabled {
     background:url(../../img/forms/green_bar.gif) no-repeat;
 }

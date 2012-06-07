@@ -345,6 +345,10 @@ FORM;
         $mediaType = $this->type;
         $mediaDuration = $this->duration;
 
+        // Work out the url
+        $url = urldecode($this->GetOption('uri'));
+        $url = (preg_match('/^' . preg_quote('http') . "/", $url)) ? $url : 'http://' . $url;
+
         $offsetTop = $this->GetOption('offsetTop', 0);
         $offsetLeft = $this->GetOption('offsetLeft', 0);
 
@@ -353,7 +357,7 @@ FORM;
 
         $iframeStyle = 'margin-top:-' . $offsetTop . 'px; margin-left: -' . $offsetLeft . 'px; border:0;';
 
-        return '<iframe scrolling="no" src="' . urldecode($this->GetOption('uri')) . '" width="' . $widthPx . '" height="' . $heightPx . '" style="' . $iframeStyle . '"></iframe>';
+        return '<iframe scrolling="no" src="' . $url . '" width="' . $widthPx . '" height="' . $heightPx . '" style="' . $iframeStyle . '"></iframe>';
     }
 }
 ?>
