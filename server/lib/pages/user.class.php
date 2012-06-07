@@ -163,6 +163,7 @@ class userDAO
             $oldPassword = Kit::GetParam('oldPassword', _POST, _STRING);
             $newPassword = Kit::GetParam('newPassword', _POST, _STRING);
             $retypeNewPassword = Kit::GetParam('retypeNewPassword', _POST, _STRING);
+            $retired = Kit::GetParam('retired', _POST, _CHECKBOX);
 
             // Validation
             if ($username == "")
@@ -186,7 +187,7 @@ class userDAO
             }
 
             // Everything is ok - run the update
-            $sql = sprintf("UPDATE user SET UserName = '%s', HomePage = '%s', Email = '%s' ", $username, $homepage, $email);
+            $sql = sprintf("UPDATE user SET UserName = '%s', HomePage = '%s', Email = '%s', Retired = %d ", $username, $homepage, $email, $retired);
 
             if ($usertypeid != 0)
                 $sql .= sprintf(", usertypeid = %d ", $usertypeid);
@@ -200,7 +201,7 @@ class userDAO
             }
 
             // Check that we have permission to get to this point
-            if ($user->usertypeid != 1 && $pass_change)
+            if ($this->user->usertypeid != 1 && $pass_change)
                 trigger_error(__('You do not have permissions to change this users password'));
 
             // Handle the Password Change
@@ -280,12 +281,6 @@ class userDAO
 
             if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkmediagroup WHERE GroupID = %d', $groupID)) > 0)
                 trigger_error(__('Cannot delete this user, they have permissions to media'), E_USER_ERROR);
-
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkmenuitemgroup WHERE GroupID = %d', $groupID)) > 0)
-                trigger_error(__('Cannot delete this user, they have permissions to menu items'), E_USER_ERROR);
-
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkpagegroup WHERE GroupID = %d', $groupID)) > 0)
-                trigger_error(__('Cannot delete this user, they have permissions to pages'), E_USER_ERROR);
 
             if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lktemplategroup WHERE GroupID = %d', $groupID)) > 0)
                 trigger_error(__('Cannot delete this user, they have permissions to templates'), E_USER_ERROR);
@@ -503,7 +498,8 @@ HTML;
                 $SQL .= "       UserPassword, ";
                 $SQL .= "       usertypeid  , ";
                 $SQL .= "       email       , ";
-                $SQL .= "       homepage ";
+                $SQL .= "       homepage, ";
+                $SQL .= "       Retired ";
                 $SQL .= "FROM   `user`";
                 $SQL .= sprintf(" WHERE userID = %d", $userid);
 
@@ -518,6 +514,7 @@ HTML;
                 $usertypeid	= Kit::ValidateParam($aRow['usertypeid'], _INT);
                 $email          = Kit::ValidateParam($aRow['email'], _STRING);
                 $homepage 	= Kit::ValidateParam($aRow['homepage'], _STRING);
+                $retired = Kit::ValidateParam($aRow['Retired'], _INT);
             }
             else
             {
@@ -526,6 +523,7 @@ HTML;
                 $username = '';
                 $password = '';
                 $email    = '';
+                $retired = 0;
 
                 $SQL = sprintf("SELECT usertypeid FROM usertype WHERE usertype = '%s'", $db->escape_string($usertype));
 
@@ -560,6 +558,7 @@ HTML;
             $msgHomePage = __('Homepage');
             $msgOverrideOption = __('Override Password?');
             $msgUserType = __('User Type');
+            $msgRetired = __('Retired');
 
             //What form are we displaying
             if ($userid == "")
@@ -641,10 +640,19 @@ END;
                             <td>$usertypeHelp $usertype_list</td>
                     </tr>
 END;
+
+                    $retiredOptionChecked = ($retired == 0) ? '' : ' checked';
+                    $retiredOption = <<<END
+                        <tr>
+                            <td><label for="retired">$msgRetired</label></td>
+                            <td><input type="checkbox" name="retired" $retiredOptionChecked /></td>
+                        </tr>
+END;
             }
             else
             {
                     $usertypeOption = "";
+                    $retiredOption = '';
             }
 
             $form = <<<END
@@ -663,6 +671,7 @@ END;
                             $homepageOption
                             $usertypeOption
                             $userGroupOption
+                            $retiredOption
                     </table>
             </form>
 END;
@@ -687,16 +696,20 @@ END;
 		
 		//expect the $userid to be set
 		$userid 	= Kit::GetParam('userID', _REQUEST, _INT);
+
+                $msgWarn = __('Are you sure you want to delete this user?');
+                $msgExplain = __('You may not be able to delete this user if they have associated content. You can retire users by using the Edit Button.');
 		
 		//we can delete
 		$form = <<<END
 		<form id="UserDeleteForm" class="XiboForm" method="post" action="index.php?p=user&q=DeleteUser">
 			<input type="hidden" name="userid" value="$userid">
-			<p>Are you sure you want to delete this user?</p>
+			<p>$msgWarn</p>
+                        <p>$msgExplain</p>
 		</form>
 END;
 
-		$response->SetFormRequestResponse($form, __('Delete this User?'), '260px', '180px');
+		$response->SetFormRequestResponse($form, __('Delete this User?'), '430px', '200px');
                 $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('User', 'Delete') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#UserDeleteForm").submit()');

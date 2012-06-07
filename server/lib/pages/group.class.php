@@ -335,7 +335,7 @@ HTML;
 		// Construct the Response		
 		$response->SetFormRequestResponse($xiboGrid, __('Page Security'), '500', '380');
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'PageSecurity') . '")');
-		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Close'), 'XiboDialogClose()');
 		$response->AddButton(__('Assign / Unassign'), '$("#GroupForm").submit()');
 		$response->Respond();
 
@@ -662,7 +662,7 @@ HTML;
 		// Construct the Response		
 		$response->SetFormRequestResponse($xiboGrid, __('Menu Item Security'), '500', '380');
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'MenuSecurity') . '")');
-		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		$response->AddButton(__('Close'), 'XiboDialogClose()');
 		$response->AddButton(__('Assign / Unassign'), '$("#GroupForm").submit()');
 		$response->Respond();
 

@@ -96,7 +96,7 @@
 		$db 		=& $this->db;
 		global $session;
 		
-		$sql = sprintf("SELECT UserID, UserName, UserPassword, usertypeid FROM user WHERE UserName = '%s' AND UserPassword = '%s'", $db->escape_string($username), $db->escape_string($password));
+		$sql = sprintf("SELECT UserID, UserName, UserPassword, usertypeid FROM user WHERE UserName = '%s' AND UserPassword = '%s' AND Retired = 0", $db->escape_string($username), $db->escape_string($password));
 		
 		if(!$result = $db->query($sql)) trigger_error('A database error occurred while checking your login details.', E_USER_ERROR);
 
@@ -141,7 +141,7 @@
         {
             $db =& $this->db;
 
-            $SQL = sprintf("SELECT UserName, usertypeid, homepage FROM user WHERE userID = '%d'", $userID);
+            $SQL = sprintf("SELECT UserName, usertypeid, homepage FROM user WHERE userID = '%d' AND Retired = 0", $userID);
 
             if (!$results = $this->db->GetSingleRow($SQL))
                 return false;
