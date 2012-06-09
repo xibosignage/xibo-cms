@@ -147,7 +147,21 @@ FORM;
         $showHeadings = $this->GetOption('showHeadings');
         $showHeadingsChecked = ($showHeadings == 1) ? ' checked' : '';
         $columns = $this->GetOption('columns');
-        $styleSheet = $this->GetOption('styleSheet', $this->DefaultStyleSheet());
+
+        // Get the embedded HTML out of RAW
+        $rawXml = new DOMDocument();
+        $rawXml->loadXML($this->GetRaw());
+        $rawNodes = $rawXml->getElementsByTagName('styleSheet');
+
+        if ($rawNodes->length == 0)
+        {
+            $styleSheet = $this->DefaultStyleSheet();
+        }
+        else
+        {
+            $rawNode = $rawNodes->item(0);
+            $styleSheet = $rawNode->nodeValue;
+        }
 
         if ($columns != '')
         {
@@ -361,9 +375,9 @@ FORM;
         $this->SetOption('filter', $filter);
         $this->SetOption('ordering', $ordering);
         $this->SetOption('showHeadings', $showHeadings);
-        $this->SetOption('styleSheet', $styleSheet);
         $this->SetOption('duration', $this->duration);
         $this->SetOption('updateInterval', $updateInterval);
+        $this->SetRaw('<styleSheet><![CDATA[' . $styleSheet . ']]></styleSheet>');
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
