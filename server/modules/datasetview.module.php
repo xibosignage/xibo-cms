@@ -408,7 +408,21 @@ FORM;
     {
         $db =& $this->db;
 
-        $styleSheet = $this->GetOption('styleSheet');
+        // Get the embedded HTML out of RAW
+        $rawXml = new DOMDocument();
+        $rawXml->loadXML($this->GetRaw());
+        $rawNodes = $rawXml->getElementsByTagName('styleSheet');
+
+        if ($rawNodes->length == 0)
+        {
+            $styleSheet = $this->DefaultStyleSheet();
+        }
+        else
+        {
+            $rawNode = $rawNodes->item(0);
+            $styleSheet = $rawNode->nodeValue;
+        }
+
         $styleSheet = '<style type="text/css">' . $styleSheet . '</style>';
 
         // Load the HtmlTemplate
