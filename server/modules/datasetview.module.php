@@ -398,7 +398,7 @@ FORM;
         $styleSheet = '<style type="text/css">' . $styleSheet . '</style>';
 
         // Load the HtmlTemplate
-        $template = file_get_contents('modules/HtmlTemplate.htm');
+        $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
 
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $styleSheet, $template);
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml(), $template);
