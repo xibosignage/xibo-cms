@@ -407,6 +407,8 @@ class scheduleDAO
             $output .= '</div>';
 
             $response->SetFormRequestResponse($output, __('Events for Day'), '650', '450');
+            $response->sortable = true;
+            $response->sortingDiv = '.info_table table';
             $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
             $response->AddButton(__('Close'), 'XiboDialogClose()');
             $response->Respond();

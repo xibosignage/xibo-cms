@@ -368,7 +368,8 @@ XML;
 
 		// Load the XML we are given into its own document
 		$rawNode = new DOMDocument();
-		$rawNode->loadXML('<raw>' . $xml . '</raw>');
+		if (!$rawNode->loadXML('<raw>' . $xml . '</raw>'))
+                    trigger_error(__('There is an error in the HTML/XML'), E_USER_ERROR);
 
 		// Import the Raw node into this document (with all sub nodes)
 		$importedNode = $this->xml->importNode($rawNode->documentElement, true);

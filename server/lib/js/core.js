@@ -311,6 +311,17 @@ function XiboFormRender(formUrl) {
                     }
                 }
 
+                // Do we need to do anything else now?
+                if (response.sortable) {
+                    // Call paging
+                    if ($(response.sortingDiv + ' tbody', '#div_dialog').html() != "") {
+                        $(response.sortingDiv, '#div_dialog').tablesorter({
+                            sortList: [[0, 0]],
+                            widthFixed: true
+                        })
+                    }
+                }
+
                 // Call Xibo Init for this form
                 XiboInitialise("#div_dialog");
             }
