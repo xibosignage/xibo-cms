@@ -63,7 +63,7 @@ class Schedule extends Data
 		$SQL .= "              DisplayGroupIDs  , ";
 		$SQL .= "              userID           , ";
 		$SQL .= "              is_priority      , ";
-		if ($recType != 'null')
+		if ($recType != '' && $recType != 'null')
 		{
 			$SQL .= "              recurrence_type  , ";
 			$SQL .= "              recurrence_detail, ";
@@ -78,7 +78,7 @@ class Schedule extends Data
 		$SQL .= sprintf("              '%s'            , ", $db->escape_string($displayGroupIDList));
 		$SQL .= sprintf("              %d              , ", $userID);
 		$SQL .= sprintf("              %d              , ", $isPriority);
-		if ($recType != 'null')
+		if ($recType != '' && $recType != 'null')
 		{
 			$SQL .= sprintf("              '%s'            , ", $db->escape_string($recType));
 			$SQL .= sprintf("              '%s'            , ", $db->escape_string($recDetail));
