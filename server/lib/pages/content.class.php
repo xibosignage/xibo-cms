@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -168,9 +168,12 @@ HTML;
 		$SQL .= "        media.type, ";
 		$SQL .= "        media.duration, ";
 		$SQL .= "        media.userID, ";
-		$SQL .= "        media.FileSize ";
+		$SQL .= "        media.FileSize, ";
+		$SQL .= "        IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID ";
 		$SQL .= "FROM    media ";
-		$SQL .= "WHERE   isEdited = 0 ";
+		$SQL .= " LEFT OUTER JOIN media parentmedia ";
+		$SQL .= " ON parentmedia.MediaID = media.MediaID ";
+		$SQL .= "WHERE   media.isEdited = 0 ";
 		if ($mediatype != "all") 
 		{
 			$SQL .= sprintf(" AND media.type = '%s'", $db->escape_string($mediatype));
@@ -208,6 +211,7 @@ HTML;
 		$msgRetired	= __('Retired');
 		$msgOwner	= __('Owner');
 		$msgFileSize	= __('Size');
+                $msgRevisions = __('Revised');
 		$msgShared	= __('Permissions');
 		$msgAction	= __('Action');
 
@@ -222,6 +226,7 @@ HTML;
 			        <th>$msgFileSize</th>
                                 <th>$msgOwner</th>
 			        <th>$msgShared</th>       
+			        <th>$msgRevisions</th>
 			        <th>$msgAction</th>     
 			    </tr>
 			</thead>
@@ -236,6 +241,7 @@ END;
             $length 		= sec2hms(Kit::ValidateParam($aRow[3], _DOUBLE));
             $ownerid 		= Kit::ValidateParam($aRow[4], _INT);
             $fileSize = Kit::ValidateParam($aRow[5], _INT);
+            $revisions = (Kit::ValidateParam($aRow[6], _INT) != 0) ? '<img src="img/act.gif" />' : '';
 
             // Size in MB
             $sz = 'BKMGTP';
@@ -270,6 +276,7 @@ END;
                 $output .= "<td>$fileSize</td>\n";
                 $output .= "<td>$username</td>";
                 $output .= "<td>$group</td>";
+                $output .= '<td>' . $revisions . '</td>';
 
                 // ACTION buttons
                 if ($auth->edit)
@@ -393,201 +400,162 @@ END;
 		return false;
 	}
 	
-	/**
-	 * Displays the Library Assign form
-	 * @return 
-	 */
-	function LibraryAssignForm() 
-	{
-		$db 			=& $this->db;
-		$user			=& $this->user;
-		$response		= new ResponseManager();
-		$formMgr 		= new FormManager($db, $user);
-                $helpManager            = new HelpManager($db, $user);
+    /**
+     * Displays the Library Assign form
+     * @return
+     */
+    function LibraryAssignForm()
+    {
+        $db 			=& $this->db;
+        $user			=& $this->user;
+        $response		= new ResponseManager();
+        $formMgr 		= new FormManager($db, $user);
+        $helpManager            = new HelpManager($db, $user);
 
-                $mediatype              = '';
-                $name                   = '';
-		
-		if (isset($_SESSION['content']['mediatype'])) $mediatype = $_SESSION['content']['mediatype'];
-		if (isset($_SESSION['content']['name'])) $name = $_SESSION['content']['name'];
-		
-		//Media Type drop down list
-		$sql = "SELECT 'all', 'all' ";
-		$sql .= "UNION ";
-		$sql .= "SELECT type, type ";
-		$sql .= "FROM media WHERE 1=1 ";
-		$sql .= "  GROUP BY type ";
-		
-		$type_list 	= $formMgr->DropDown($sql, 'type', $mediatype);
-		
-		//Input vars
-		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
-		$regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
-		
-		// Messages
-		$msgName	= __('Name');
-		$msgType	= __('Type');
-		
-		$form = <<<HTML
-		<form>
-			<input type="hidden" name="p" value="content">
-			<input type="hidden" name="q" value="LibraryAssignView">
-			<input type="hidden" name="layoutid" value="$layoutid" />
-			<input type="hidden" name="regionid" value="$regionid" />
-			<table>
-				<tr>
-					<td>$msgName</td>
-					<td><input type="text" name="name" id="name" value="$name"></td>
-					<td>$msgType</td>
-					<td>$type_list</td>
-				</tr>
-			</table>
-		</form>
+        $mediatype              = '';
+        $name                   = '';
+
+        if (isset($_SESSION['content']['mediatype'])) $mediatype = $_SESSION['content']['mediatype'];
+
+        //Media Type drop down list
+        $sql = "SELECT 'all', 'all' ";
+        $sql .= "UNION ";
+        $sql .= "SELECT type, type ";
+        $sql .= "FROM media WHERE 1=1 ";
+        $sql .= "  GROUP BY type ";
+
+        $type_list 	= $formMgr->DropDown($sql, 'type', $mediatype);
+
+        //Input vars
+        $layoutId = Kit::GetParam('layoutid', _REQUEST, _INT);
+        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
+
+        // Messages
+        $msgName	= __('Name');
+        $msgType	= __('Type');
+
+        $form = <<<HTML
+        <form>
+            <input type="hidden" name="p" value="content">
+            <input type="hidden" name="q" value="LibraryAssignView">
+            <table>
+                <tr>
+                    <td>$msgName</td>
+                    <td><input type="text" name="name" id="name" value="$name"></td>
+                    <td>$msgType</td>
+                    <td>$type_list</td>
+                </tr>
+            </table>
+        </form>
 HTML;
 		
-		$id = uniqid();
-		
-		$xiboGrid = <<<HTML
-		<div class="XiboGrid" id="$id">
-			<div class="XiboFilter">
-				$form
-			</div>
-			<div class="XiboData">
-			
-			</div>
-		</div>
+        $id = uniqid();
+
+        $msgAssignBox = __('Media to Assign');
+        $msgInfoMessage = __('Drag or double click to move items between lists');
+
+        $xiboGrid = <<<HTML
+        <div class="XiboGrid LibraryAssign" id="$id">
+            <div class="XiboFilter">
+                $form
+            </div>
+            <center>$msgInfoMessage</center>
+            <div class="XiboData LibraryAssignLeftSortableList connectedlist">
+
+            </div>
+            <div class="LibraryAssignRightSortableList connectedlist">
+                <h3>$msgAssignBox</h3>
+                <ul id="LibraryAssignSortable" class="connectedSortable">
+
+                </ul>
+            </div>
+        </div>
 HTML;
 		
-		// Construct the Response
-		$response->html         = $xiboGrid;
-		$response->success	= true;
-		$response->dialogSize	= true;
-		$response->dialogWidth	= '500px';
-		$response->dialogHeight = '380px';
-		$response->dialogTitle	= __('Assign an item from the Library');
+        // Construct the Response
+        $response->html         = $xiboGrid;
+        $response->success	= true;
+        $response->dialogSize	= true;
+        $response->dialogWidth	= '780px';
+        $response->dialogHeight = '580px';
+        $response->dialogTitle	= __('Assign an item from the Library');
 
-                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Library', 'Assign') . '")');
-		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
-		$response->AddButton(__('Assign'), '$("#LibraryAssignForm").submit()');
-		
-		$response->Respond();	
-	}
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Library', 'Assign') . '")');
+        $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutId . '&regionid=' . $regionId . '&q=RegionOptions")');
+        $response->AddButton(__('Assign'), 'LibraryAssignSubmit("' . $layoutId . '","' . $regionId . '")');
+
+        $response->Respond();
+    }
 	
-	/**
-	 * Show the library
-	 * @return 
-	 */
-	function LibraryAssignView() 
-	{
-		$db 		=& $this->db;
-		$user		=& $this->user;
-		$userid 	= Kit::GetParam('userid', _SESSION, _INT);
-		$response	= new ResponseManager();
-                $helpManager    = new HelpManager($db, $user);
-		
-		//Input vars
-		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT);
-		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
-		$mediatype 	= Kit::GetParam('type', _POST, _STRING, 'all');
-		$name 		= Kit::GetParam('name', _POST, _STRING, 'all');
-		
-		setSession('content', 'mediatype', $mediatype);
-		setSession('content', 'name', $name);
-		
-		// query to get all media that is in the database ready to display
-		$SQL  = "";
-		$SQL .= "SELECT  media.mediaID, ";
-		$SQL .= "        media.name, ";
-		$SQL .= "        media.type, ";
-		$SQL .= "        media.duration, ";
-		$SQL .= "        media.userID ";
-		$SQL .= "FROM    media ";
-		$SQL .= "WHERE   retired = 0 AND isEdited = 0 ";
-		if($mediatype != "all") 
-		{
-			$SQL.= sprintf(" AND media.type = '%s'", $mediatype); //id of the remaining items
-		}
-		if ($name != "all") 
-		{
-			$SQL.= " AND media.name LIKE '%" . sprintf('%s', $name) . "%'";
-		}
-                $SQL .= " ORDER BY media.name ";
-		
-		if(!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error(__("Cant get content list"), E_USER_ERROR);			
-		}
-		
-		// Messages
-		$msgName	= __('Name');
-		$msgType	= __('Type');
-		$msgLen		= __('Duration');
-		$msgOwner	= __('Owner');
-		$msgSelect	= __('Select');
-		
-		//some table headings
-		$form = <<<END
-		<form id="LibraryAssignForm" class="XiboForm" method="post" action="index.php?p=layout&q=AddFromLibrary">
-			<input type="hidden" name="layoutid" value="$layoutid" />
-			<input type="hidden" name="regionid" value="$regionid" />
-			<div class="dialog_table">
-			<table style="width:100%">
-				<thead>
-			    <tr>
-			        <th>$msgName</th>
-		            <th>$msgType</th>
-		            <th>$msgLen</th>
-			        <th>$msgSelect</th>
-			    </tr>
-				</thead>
-				<tbody>
-END;
+    /**
+     * Show the library
+     * @return 
+     */
+    function LibraryAssignView() 
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
 
-		// while loop
-		while ($row = $db->get_row($results)) 
-		{			
-			$mediaid 		= Kit::ValidateParam($row[0], _INT);
-			$media 			= Kit::ValidateParam($row[1], _STRING);
-			$mediatype 		= Kit::ValidateParam($row[2], _WORD);
-			$length 		= sec2hms(Kit::ValidateParam($row[3], _DOUBLE));
-			$ownerid 		= Kit::ValidateParam($row[4], _INT);
-			
-			//get the username from the userID using the user module
-			$username 		= $user->getNameFromID($ownerid);
-			$group			= $user->getGroupFromID($ownerid);
-	
-			// Permissions
-                        $auth = $this->user->MediaAuth($mediaid, true);
+        //Input vars
+        $mediatype = Kit::GetParam('type', _POST, _STRING, 'all');
+        $name = Kit::GetParam('name', _POST, _STRING, 'all');
 
-                        if ($auth->view) //is this user allowed to see this
-                        {
-                            $form .= "<tr>";
-                            $form .= "<td>" . $media . "</td>\n";
-                            $form .= "<td>" . $mediatype . "</td>\n";
-                            $form .= "<td>" . $length . "</td>\n";
-                            $form .= "<td><input type='checkbox' name='mediaids[]' value='$mediaid'></td>";
-                            $form .= "</tr>";
-			}
-		}
+        setSession('content', 'mediatype', $mediatype);
+        setSession('content', 'name', $name);
 
-		//table ending
-		$form .= <<<END
-				</tbody>
-			</table>
-                       <div style="display:none"><input type="submit" /></div>
-		</div>
-	</form>
-END;
-		
-		// Construct the Response
-		$response->html 		= $form;
-		$response->success		= true;
-		$response->sortable		= false;
-		$response->sortingDiv	= '.info_table table';
-		
-		$response->Respond();
-	}
+        // query to get all media that is in the database ready to display
+        $SQL  = "";
+        $SQL .= "SELECT media.mediaID, ";
+        $SQL .= "       media.name, ";
+        $SQL .= "       media.type, ";
+        $SQL .= "       media.duration ";
+        $SQL .= "  FROM media ";
+        $SQL .= " WHERE retired = 0 AND isEdited = 0 ";
+
+        // Filter on media type
+        if($mediatype != "all") 
+            $SQL.= sprintf(" AND media.type = '%s'", $mediatype);
+            
+        // Filter on name
+        if ($name != "all") 
+            $SQL.= " AND media.name LIKE '%" . sprintf('%s', $name) . "%'";
+
+        $SQL .= " ORDER BY media.name ";
+
+        if(!$results = $db->query($SQL)) 
+        {
+            trigger_error($db->error());
+            trigger_error(__('Cannot get list of media in the library'), E_USER_ERROR);			
+        }
+
+        $response->html  = '<h3>' . __('Library') . '</h3>';
+        $response->html .= '<ul id="LibraryAvailableSortable" class="connectedSortable">';
+
+        // while loop
+        while ($row = $db->get_row($results)) 
+        {			
+            $mediaId = Kit::ValidateParam($row[0], _INT);
+            $media = Kit::ValidateParam($row[1], _STRING);
+            $mediatype = Kit::ValidateParam($row[2], _WORD);
+            $length = sec2hms(Kit::ValidateParam($row[3], _DOUBLE));
+            
+            // Permissions
+            $auth = $this->user->MediaAuth($mediaId, true);
+            
+            // Is this user allowed to see this
+            if ($auth->view) 
+                $response->html .= '<li class="li-sortable" id="MediaID_' . $mediaId . '">' . $media . ' (' . $mediatype . ') - Duration (sec): ' . $length . '</li>';
+        }
+
+        //table ending
+        $response->html .= '</ul>';
+
+        // Construct the Response
+        $response->success = true;
+        $response->callBack = 'LibraryAssignCallback';
+        $response->Respond();
+    }
 	
     /**
      * Gets called by the SWFUpload Object for uploading files

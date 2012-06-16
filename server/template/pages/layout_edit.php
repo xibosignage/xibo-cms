@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -36,6 +36,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		</div>
 		<div class="leftbuttons">
 			<div class="buttons">
+                            <a id="jumpListButton" class="XiboFormButton" href="index.php?p=layout&q=LayoutJumpList" title="Jump to another Layout"><div class="button_text">Jump to...</div></a>
 				<a id='pres_button' href='index.php?p=layout' alt='Cancel Edit'><div class="button_text">Layout List</div></a>
 			</div>	
 			
@@ -58,4 +59,4 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		</div>
 	</div>
 </div>	
-
+<div id="tooltip_hover" style="position:absolute; top: 0px; left:0px; display:none"></div>

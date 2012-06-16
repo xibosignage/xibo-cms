@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -29,13 +29,20 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/ui-elements.css" />
 	
 	<link rel="shortcut icon" href="img/favicon.ico" />
-	<script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
-	<script type="text/javascript" src="3rdparty/jQuery/jquery-ui.packed.js"></script>
-	<script type="text/javascript" src="3rdparty/jQuery/jquery.form.js"></script>
-	<script type="text/javascript" src="3rdparty/jQuery/jquery.validate.min.js"></script>
-	<script type="text/javascript" src="3rdparty/jQuery/jquery.bgiframe.min.js"></script>
 	
-	<script type="text/javascript" src="lib/js/functions.js"></script>
+        <!-- Javascript Libraries -->
+        <script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
+        <script type="text/javascript" src="3rdparty/jQuery/jquery-ui.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="3rdparty/jQuery/css/jquery-ui.css" />
+
+        <script type="text/javascript" src="3rdparty/jQuery/jquery.form.js"></script>
+        <script type="text/javascript" src="3rdparty/jQuery/jquery.validate.min.js"></script>
+        <script type="text/javascript" src="3rdparty/jQuery/jquery.tablesorter.pack.js"></script>
+        <script type="text/javascript" src="3rdparty/jQuery/jquery.tablesorter.pager.js"></script>
+        <script type="text/javascript" src="3rdparty/jQuery/jquery.ifixpng.js"></script>
+        <script type="text/javascript" src="3rdparty/jQuery/jquery.contextmenu.r2.packed.js"></script>
+        <script type="text/javascript" src="3rdparty/jQuery/jquery.corner.js"></script>
+        <script type="text/javascript" src="lib/js/functions.js"></script>
 	<script type="text/javascript" src="lib/js/core.js"></script>
 	
 	<script type="text/javascript">

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -271,7 +271,7 @@ class indexDAO
 		$output = <<<END
 		<h1>License Information</h1>
 		<p>Xibo - Digitial Signage - <a href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>. Version $version<br />
-		Copyright &copy 2011 Daniel Garner and the <a href="https://launchpad.net/~xibo-developers/+members" title="Xibo Developers">Xibo Developers</a>.</p>
+		Copyright &copy 2006-2012 Daniel Garner and the <a href="https://launchpad.net/~xibo-developers/+members" title="Xibo Developers">Xibo Developers</a>.</p>
 		 
 		<p>Xibo is free software: you can redistribute it and/or modify
 		it under the terms of the GNU Affero General Public License as published by

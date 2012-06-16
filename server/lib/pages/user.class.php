@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2010 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -63,7 +63,6 @@ class userDAO
 
             $username   = Kit::GetParam('username', _POST, _STRING);
             $password   = Kit::GetParam('password', _POST, _STRING);
-            $password   = md5($password);
             $email      = Kit::GetParam('email', _POST, _STRING);
             $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT, 0);
             $homepage   = Kit::GetParam('homepage', _POST, _STRING);
@@ -89,7 +88,14 @@ class userDAO
 
             if ($homepage == "") $homepage = "dashboard";
 
-            //Check for duplicate user name
+            // Test the password
+            Kit::ClassLoader('userdata');
+            $userData = new Userdata($db);
+
+            if (!$userData->TestPasswordAgainstPolicy($password))
+                trigger_error($userData->GetErrorMessage(), E_USER_ERROR);
+
+            // Check for duplicate user name
             $sqlcheck = " ";
             $sqlcheck .= sprintf("SELECT UserName FROM user WHERE UserName = '%s'", $db->escape_string($username));
 
@@ -104,7 +110,10 @@ class userDAO
                 trigger_error("Could Not Complete, Duplicate User Name Exists", E_USER_ERROR);
             }
 
-            //Ready to enter the user into the database
+            // Ready to enter the user into the database
+            $password = md5($password);
+
+            // Run the INSERT statement
             $query = "INSERT INTO user (UserName, UserPassword, usertypeid, email, homepage)";
             $query .= " VALUES ('$username', '$password', $usertypeid, '$email', '$homepage')";
 
@@ -147,21 +156,19 @@ class userDAO
 
             $userID	= Kit::GetParam('userid', _POST, _INT, 0);
             $username   = Kit::GetParam('username', _POST, _STRING);
-            $password   = Kit::GetParam('password', _POST, _STRING);
-            $password   = md5($password);
             $email      = Kit::GetParam('email', _POST, _STRING);
             $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT, 0);
             $homepage   = Kit::GetParam('homepage', _POST, _STRING, 'dashboard');
             $pass_change = isset($_POST['pass_change']);
+            $oldPassword = Kit::GetParam('oldPassword', _POST, _STRING);
+            $newPassword = Kit::GetParam('newPassword', _POST, _STRING);
+            $retypeNewPassword = Kit::GetParam('retypeNewPassword', _POST, _STRING);
+            $retired = Kit::GetParam('retired', _POST, _CHECKBOX);
 
             // Validation
             if ($username == "")
             {
-                trigger_error("Please enter a User Name.", E_USER_ERROR);
-            }
-            if ($password == "")
-            {
-                trigger_error("Please enter a Password.", E_USER_ERROR);
+                trigger_error(__("Please enter a User Name."), E_USER_ERROR);
             }
             
             // Check for duplicate user name
@@ -180,10 +187,7 @@ class userDAO
             }
 
             // Everything is ok - run the update
-            $sql = sprintf("UPDATE user SET UserName = '%s', HomePage = '%s', Email = '%s' ", $username, $homepage, $email);
-
-            if ($pass_change)
-                $sql .= sprintf(", UserPassword = '%s'", $password);
+            $sql = sprintf("UPDATE user SET UserName = '%s', HomePage = '%s', Email = '%s', Retired = %d ", $username, $homepage, $email, $retired);
 
             if ($usertypeid != 0)
                 $sql .= sprintf(", usertypeid = %d ", $usertypeid);
@@ -194,6 +198,20 @@ class userDAO
             {
                 trigger_error($db->error());
                 trigger_error(__('Error updating user'), E_USER_ERROR);
+            }
+
+            // Check that we have permission to get to this point
+            if ($this->user->usertypeid != 1 && $pass_change)
+                trigger_error(__('You do not have permissions to change this users password'));
+
+            // Handle the Password Change
+            if ($newPassword != '' || $pass_change)
+            {
+                Kit::ClassLoader('userdata');
+                $userData = new Userdata($db);
+
+                if (!$userData->ChangePassword($userID, $oldPassword, $newPassword, $retypeNewPassword, $pass_change))
+                    trigger_error($userData->GetErrorMessage(), E_USER_ERROR);
             }
 
             // Update the group to follow suit
@@ -263,12 +281,6 @@ class userDAO
 
             if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkmediagroup WHERE GroupID = %d', $groupID)) > 0)
                 trigger_error(__('Cannot delete this user, they have permissions to media'), E_USER_ERROR);
-
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkmenuitemgroup WHERE GroupID = %d', $groupID)) > 0)
-                trigger_error(__('Cannot delete this user, they have permissions to menu items'), E_USER_ERROR);
-
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkpagegroup WHERE GroupID = %d', $groupID)) > 0)
-                trigger_error(__('Cannot delete this user, they have permissions to pages'), E_USER_ERROR);
 
             if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lktemplategroup WHERE GroupID = %d', $groupID)) > 0)
                 trigger_error(__('Cannot delete this user, they have permissions to templates'), E_USER_ERROR);
@@ -486,7 +498,8 @@ HTML;
                 $SQL .= "       UserPassword, ";
                 $SQL .= "       usertypeid  , ";
                 $SQL .= "       email       , ";
-                $SQL .= "       homepage ";
+                $SQL .= "       homepage, ";
+                $SQL .= "       Retired ";
                 $SQL .= "FROM   `user`";
                 $SQL .= sprintf(" WHERE userID = %d", $userid);
 
@@ -501,6 +514,7 @@ HTML;
                 $usertypeid	= Kit::ValidateParam($aRow['usertypeid'], _INT);
                 $email          = Kit::ValidateParam($aRow['email'], _STRING);
                 $homepage 	= Kit::ValidateParam($aRow['homepage'], _STRING);
+                $retired = Kit::ValidateParam($aRow['Retired'], _INT);
             }
             else
             {
@@ -509,6 +523,7 @@ HTML;
                 $username = '';
                 $password = '';
                 $email    = '';
+                $retired = 0;
 
                 $SQL = sprintf("SELECT usertypeid FROM usertype WHERE usertype = '%s'", $db->escape_string($usertype));
 
@@ -522,15 +537,28 @@ HTML;
             // Help UI
             $nameHelp       = $helpManager->HelpIcon("The Login Name of the user.", true);
             $passHelp       = $helpManager->HelpIcon("The Password for this user.", true);
+            $retypePassHelp = $helpManager->HelpIcon(__('Retype the users new password'), true);
+            $oldPassHelp    = $helpManager->HelpIcon(__('To change the password you must enter the old password, if password is to remain the same, leave blank.'), true);
             $emailHelp      = $helpManager->HelpIcon("Users email address. E.g. user@example.com", true);
             $homepageHelp   = $helpManager->HelpIcon("The users Homepage. This should not be changed until you want to reset their homepage.", true);
-            $overpassHelp   = $helpManager->HelpIcon("Do you want to override this users password with the one entered here.", true);
+            $overpassHelp   = $helpManager->HelpIcon(__("As an admin, do you want to force this users password to change?."), true);
             $usertypeHelp   = $helpManager->HelpIcon("What is this users type? This would usually be set to 'User'", true);
             $userGroupHelp = $helpManager->HelpIcon(__('What is the initial user group for this user?'), true);
 
             $homepageOption = '';
             $override_option = '';
             $userGroupOption = '';
+
+            $msgUserName = __('User Name');
+            $msgEmailAddress = __('Email Address');
+            $msgOldPassword = __('Old Password');
+            $msgNewPassword = __('New Password');
+            $msgRetype = __('Retype New Password');
+            $msgPassword = __('Password');
+            $msgHomePage = __('Homepage');
+            $msgOverrideOption = __('Override Password?');
+            $msgUserType = __('User Type');
+            $msgRetired = __('Retired');
 
             //What form are we displaying
             if ($userid == "")
@@ -545,6 +573,13 @@ HTML;
                     <tr>
                         <td><label for="groupid">$msgGroupSelect<span class="required">*</span></label></td>
                         <td>$userGroupHelp $userGroupList</td>
+                    </tr>
+END;
+
+                $passwordOptions = <<<END
+                    <tr>
+                        <td><label for="password">$msgPassword</label></td>
+                        <td>$passHelp<input type="password" name="password" /></td>
                     </tr>
 END;
             }
@@ -564,61 +599,85 @@ END;
 
                     $homepageOption = <<<END
                     <tr>
-                            <td><label for="homepage">Homepage<span class="required">*</span></label></td>
+                            <td><label for="homepage">$msgHomePage<span class="required">*</span></label></td>
                             <td>$homepageHelp $homepage_list</td>
                     </tr>
 END;
 
                     $override_option = <<<FORM
-                    <td>Override Password?</td>
-                    <td>$overpassHelp <input type="checkbox" name="pass_change" value="0"></td>
+                    <td>$msgOverrideOption</td>
+                    <td>$overpassHelp <input type="checkbox" name="pass_change"></td>
 FORM;
+
+                    // Only show the override option if we are a super admin
+                    $override_option = ($user->usertypeid == 1) ? $override_option : '';
+
+                    $passwordOptions = <<<END
+                    <tr>
+                        <td><label for="oldPassword">$msgOldPassword</label></td>
+                        <td>$oldPassHelp<input type="password" name="oldPassword" /></td>
+                        $override_option
+                    </tr>
+                    <tr>
+                        <td><label for="newPassword">$msgNewPassword</label></td>
+                        <td>$passHelp<input type="password" name="newPassword" /></td>
+                    </tr>
+                    <tr>
+                        <td><label for="retypeNewPassword">$msgRetype</label></td>
+                        <td>$retypePassHelp<input type="password" name="retypeNewPassword" /></td>
+                    </tr>
+END;
             }
 
-            if ($_SESSION['usertype']==1)
+            if ($user->usertypeid == 1)
             {
                     //usertype list
-                    $usertype_list = dropdownlist("SELECT usertypeid, usertype FROM usertype", "usertypeid", $usertypeid);
+                    $usertype_list = dropdownlist('SELECT usertypeid, usertype FROM usertype', "usertypeid", $usertypeid);
 
                     $usertypeOption = <<<END
                     <tr>
-                            <td><label for="usertypeid">User Type <span class="required">*</span></label></td>
+                            <td><label for="usertypeid">$msgUserType<span class="required">*</span></label></td>
                             <td>$usertypeHelp $usertype_list</td>
                     </tr>
+END;
+
+                    $retiredOptionChecked = ($retired == 0) ? '' : ' checked';
+                    $retiredOption = <<<END
+                        <tr>
+                            <td><label for="retired">$msgRetired</label></td>
+                            <td><input type="checkbox" name="retired" $retiredOptionChecked /></td>
+                        </tr>
 END;
             }
             else
             {
                     $usertypeOption = "";
+                    $retiredOption = '';
             }
-
 
             $form = <<<END
             <form id="UserForm" class="XiboForm" method='post' action='$action'>
                     <input type='hidden' name='userid' value='$userid'>
                     <table>
                             <tr>
-                                    <td><label for="username">User Name<span class="required">*</span></label></td>
+                                    <td><label for="username">$msgUserName<span class="required">*</span></label></td>
                                     <td>$nameHelp <input type="text" id="" name="username" value="$username" class="required" /></td>
                             </tr>
+                            $passwordOptions
                             <tr>
-                                    <td><label for="password">Password<span class="required">*</span></label></td>
-                                    <td>$passHelp <input type="password" id="password" name="password" value="$password" /></td>
-                                    $override_option
-                            </tr>
-                            <tr>
-                                    <td><label for="email">Email Address<span class="required email">*</span></label></td>
-                                    <td>$emailHelp <input type="text" id="email" name="email" value="$email" class="required" /></td>
+                                    <td><label for="email">$msgEmailAddress<span class="required email">*</span></label></td>
+                                    <td>$emailHelp <input type="text" id="email" name="email" value="$email" class="required email" /></td>
                             </tr>
                             $homepageOption
                             $usertypeOption
                             $userGroupOption
+                            $retiredOption
                     </table>
             </form>
 END;
 
-            $response->SetFormRequestResponse($form, 'Add/Edit a User.', '550px', '320px');
-            $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('User', 'Add') . '")');
+            $response->SetFormRequestResponse($form, (($userid == "") ? __('Add User') : __('Edit User')), '550px', '320px');
+            $response->AddButton(__('Help'), 'XiboHelpRender("' . (($userid == "") ? HelpManager::Link('User', 'Add') : HelpManager::Link('User', 'Edit')) . '")');
             $response->AddButton(__('Cancel'), 'XiboDialogClose()');
             $response->AddButton(__('Save'), '$("#UserForm").submit()');
             $response->Respond();
@@ -637,16 +696,20 @@ END;
 		
 		//expect the $userid to be set
 		$userid 	= Kit::GetParam('userID', _REQUEST, _INT);
+
+                $msgWarn = __('Are you sure you want to delete this user?');
+                $msgExplain = __('You may not be able to delete this user if they have associated content. You can retire users by using the Edit Button.');
 		
 		//we can delete
 		$form = <<<END
 		<form id="UserDeleteForm" class="XiboForm" method="post" action="index.php?p=user&q=DeleteUser">
 			<input type="hidden" name="userid" value="$userid">
-			<p>Are you sure you want to delete this user?</p>
+			<p>$msgWarn</p>
+                        <p>$msgExplain</p>
 		</form>
 END;
 
-		$response->SetFormRequestResponse($form, __('Delete this User?'), '260px', '180px');
+		$response->SetFormRequestResponse($form, __('Delete this User?'), '430px', '200px');
                 $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('User', 'Delete') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#UserDeleteForm").submit()');
@@ -681,6 +744,7 @@ END;
 END;
 
         $response->SetFormRequestResponse($form, __('Set the homepage for this user'), '350px', '150px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'SetHomepage') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#SetUserHomePageForm").submit()');
         $response->Respond();
@@ -762,8 +826,69 @@ END;
         $output .= '</div>';
 
         $response->SetFormRequestResponse($output, __('My Applications'), '650', '450');
-        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'Applications') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
+
+    /**
+     * Change my password form
+     */
+    public function ChangePasswordForm()
+    {
+        $db         =& $this->db;
+        $user       =& $this->user;
+        $response   = new ResponseManager();
+
+        $msgOldPassword = __('Old Password');
+        $msgNewPassword = __('New Password');
+        $msgRetype = __('Retype New Password');
+
+        $form = <<<END
+        <form id="ChangePasswordForm" class="XiboForm" action="index.php?p=user&q=ChangePassword" method="post">
+        <table>
+            <tr>
+                <td><label for="oldPassword">$msgOldPassword</label></td>
+                <td><input type="password" name="oldPassword" class="required" /></td>
+            </tr>
+            <tr>
+                <td><label for="newPassword">$msgNewPassword</label></td>
+                <td><input type="password" name="newPassword" class="required" /></td>
+            </tr>
+            <tr>
+                <td><label for="retypeNewPassword">$msgRetype</label></td>
+                <td><input type="password" name="retypeNewPassword" class="required" /></td>
+            </tr>
+        </table>
+        </form>
+END;
+
+        $response->SetFormRequestResponse($form, __('Change Password'), '450', '300');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'ChangePassword') . '")');
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#ChangePasswordForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Change my Password
+     */
+    public function ChangePassword()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        $oldPassword = Kit::GetParam('oldPassword', _POST, _STRING);
+        $newPassword = Kit::GetParam('newPassword', _POST, _STRING);
+        $retypeNewPassword = Kit::GetParam('retypeNewPassword', _POST, _STRING);
+
+        Kit::ClassLoader('userdata');
+        $userData = new Userdata($db);
+
+        if (!$userData->ChangePassword($this->user->userid, $oldPassword, $newPassword, $retypeNewPassword))
+            trigger_error($userData->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Password Changed'));
         $response->Respond();
     }
 }

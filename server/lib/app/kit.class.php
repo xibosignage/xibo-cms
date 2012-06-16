@@ -212,12 +212,11 @@ class Kit
 			case _INT :
 				// Only use the first integer value
 				if ($return == '')
-				{
-					$return = 0;
-					break;	
-				}
+                                    return 0;
 				
-				@ preg_match('/-?[0-9]+/', $return, $matches);
+				if (preg_match('/-?[0-9]+/', $return, $matches) == 0)
+                                    trigger_error(sprintf(__('No integer match found for %s, and return value is not an int'), $param), E_USER_ERROR);
+
 				$return = @ (int) $matches[0];
 				break;
 

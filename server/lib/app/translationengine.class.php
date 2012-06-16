@@ -34,7 +34,7 @@ class TranslationEngine
 	public static function InitLocale(database $db)
 	{
             $localeDir	= 'locale';
-            $default    = 'en_GB';
+            $default    = Config::GetSetting($db, 'DEFAULT_LANGUAGE');
             
             global $transEngine;
             global $stream;

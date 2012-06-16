@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -27,10 +27,6 @@
 	public $userid;
 	public $usertypeid;
         public $userName;
-	
-	private $displayGroupIDs;
-	private $authedDisplayGroupIDs;
-
         public $homePage;
 	
  	public function __construct(database $db)
@@ -100,7 +96,7 @@
 		$db 		=& $this->db;
 		global $session;
 		
-		$sql = sprintf("SELECT UserID, UserName, UserPassword, usertypeid FROM user WHERE UserName = '%s' AND UserPassword = '%s'", $db->escape_string($username), $db->escape_string($password));
+		$sql = sprintf("SELECT UserID, UserName, UserPassword, usertypeid FROM user WHERE UserName = '%s' AND UserPassword = '%s' AND Retired = 0", $db->escape_string($username), $db->escape_string($password));
 		
 		if(!$result = $db->query($sql)) trigger_error('A database error occurred while checking your login details.', E_USER_ERROR);
 
@@ -145,7 +141,7 @@
         {
             $db =& $this->db;
 
-            $SQL = sprintf("SELECT UserName, usertypeid, homepage FROM user WHERE userID = '%d'", $userID);
+            $SQL = sprintf("SELECT UserName, usertypeid, homepage FROM user WHERE userID = '%d' AND Retired = 0", $userID);
 
             if (!$results = $this->db->GetSingleRow($SQL))
                 return false;
@@ -611,64 +607,6 @@
 	}
 	
 	/**
-	 * Authenticates the current user and returns an array of display group ID's this user is authenticated on
-	 * @return 
-	 */
-	public function DisplayGroupAuth()
-	{
-		$db 		=& $this->db;
-		$userid		=& $this->userid;
-		
-		// If it is already set then just return it
-		if ($this->authedDisplayGroupIDs) return $this->displayGroupIDs;
-		
-		// Populate the array of display group ids we are authed against
-		$usertype 	= $this->usertypeid;
-		
-		$SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific ";
-		$SQL .= "  FROM displaygroup ";
-                
-		// If the usertype is not 1 (admin) then we need to include the link table for display groups.
-		if ($usertype != 1)
-		{
-			$SQL .= " INNER JOIN lkgroupdg ON lkgroupdg.DisplayGroupID = displaygroup.DisplayGroupID ";
-			$SQL .= " INNER JOIN lkusergroup ON lkgroupdg.GroupID = lkusergroup.GroupID ";
-                }
-
-                if ($usertype != 1)
-                {
-                    $SQL .= sprintf(" WHERE lkusergroup.UserID = %d ", $userid);
-                }
-		
-		Debug::LogEntry($db, 'audit', $SQL, 'User', 'DisplayGroupAuth');
-
-		if(!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			return false;
-		}
-		
-		$ids = array();
-		
-		
-		// For each display that is returned - add it to the array
-		while ($row = $db->get_assoc_row($results))
-		{
-			$displayGroupID = Kit::ValidateParam($row['DisplayGroupID'], _INT);
-			
-			$ids[] 			= $displayGroupID;
-		}
-		
-		Debug::LogEntry($db, 'audit', count($ids) . ' authenticated displays.', 'User', 'DisplayGroupAuth');
-		
-		// Set this for later (incase we call this again from the same session)
-		$this->displayGroupIDs 			= $ids;
-		$this->authedDisplayGroupIDs 	= true;
-		
-		return $ids;
-	}
-	
-	/**
 	 * Returns the usertypeid for this user object.
 	 * @return 
 	 */
@@ -909,41 +847,26 @@ END;
     {
         $auth = new PermissionManager($this->db, $this);
 
-        $SQL  = '';
-        $SQL .= 'SELECT UserID ';
-        $SQL .= '  FROM layout ';
-        $SQL .= ' WHERE layout.LayoutID = %d ';
+        // Get the Campaign ID
+        $SQL  = "SELECT campaign.CampaignID ";
+        $SQL .= "  FROM `lkcampaignlayout` ";
+        $SQL .= "   INNER JOIN `campaign` ";
+        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= " WHERE lkcampaignlayout.LayoutID = %d ";
+        $SQL .= "   AND campaign.IsLayoutSpecific = 1";
 
-        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $layoutId), 'UserID', _INT))
-            return $auth;
-
-        // If we are the owner, or a super admin then give full permissions
-        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        if (!$campaignId = $this->db->GetSingleValue(sprintf($SQL, $layoutId), 'CampaignID', _INT))
         {
-            $auth->FullAccess();
-            return $auth;
+            trigger_error(__('Layout has no associated Campaign, corrupted Layout'));
+
+            // New auth object is no permissions
+            if ($fullObject)
+                return $auth;
+
+            return false;
         }
 
-        // Permissions for groups the user is assigned to, and Everyone
-        $SQL  = '';
-        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
-        $SQL .= '  FROM layout ';
-        $SQL .= '   INNER JOIN lklayoutgroup ';
-        $SQL .= '   ON lklayoutgroup.LayoutID = layout.LayoutID ';
-        $SQL .= '   INNER JOIN `group` ';
-        $SQL .= '   ON `group`.GroupID = lklayoutgroup.GroupID ';
-        $SQL .= ' WHERE layout.LayoutID = %d ';
-        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
-        $SQL .= 'GROUP BY layout.UserID ';
-
-        $SQL = sprintf($SQL, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
-
-        if (!$row = $this->db->GetSingleRow($SQL))
-            return $auth;
-
-        // There are permissions to evaluate
-        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
+        $auth = $this->CampaignAuth($campaignId, true);
 
         if ($fullObject)
             return $auth;
@@ -1008,12 +931,19 @@ END;
     public function LayoutList($filterLayout = '')
     {
         $SQL  = "";
-        $SQL .= "SELECT layoutID, ";
-        $SQL .= "        layout, ";
-        $SQL .= "        description, ";
-        $SQL .= "        tags, ";
-        $SQL .= "        userID, xml ";
+        $SQL .= "SELECT layout.layoutID, ";
+        $SQL .= "        layout.layout, ";
+        $SQL .= "        layout.description, ";
+        $SQL .= "        layout.tags, ";
+        $SQL .= "        layout.userID, ";
+        $SQL .= "        layout.xml, ";
+        $SQL .= "        campaign.CampaignID ";
         $SQL .= "   FROM layout ";
+        $SQL .= "  INNER JOIN `lkcampaignlayout` ";
+        $SQL .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
+        $SQL .= "   INNER JOIN `campaign` ";
+        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= "       AND campaign.IsLayoutSpecific = 1";
         $SQL .= " WHERE 1 = 1 ";
 
         if ($filterLayout != '')
@@ -1040,8 +970,9 @@ END;
             $layoutItem['tags']     = Kit::ValidateParam($row['tags'], _STRING);
             $layoutItem['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
             $layoutItem['xml']  = Kit::ValidateParam($row['xml'], _HTMLSTRING);
+            $layoutItem['campaignid'] = Kit::ValidateParam($row['CampaignID'], _INT);
 
-            $auth = $this->LayoutAuth($layoutItem['layoutid'], true);
+            $auth = $this->CampaignAuth($layoutItem['campaignid'], true);
 
             if ($auth->view)
             {
@@ -1197,6 +1128,209 @@ END;
         }
 
         return $dataSets;
+    }
+
+    /**
+     * Authorises a user against a DisplayGroupId
+     * @param <int> $displayGroupId
+     * @return <type>
+     */
+    public function DisplayGroupAuth($displayGroupId, $fullObject = false)
+    {
+        $auth = new PermissionManager($this->db, $this);
+        $noOwnerId = 0;
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1)
+        {
+            $auth->FullAccess();
+            return $auth;
+        }
+
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM displaygroup ';
+        $SQL .= '   INNER JOIN lkdisplaygroupgroup ';
+        $SQL .= '   ON lkdisplaygroupgroup.DisplayGroupID = displaygroup.DisplayGroupID ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lkdisplaygroupgroup.GroupID ';
+        $SQL .= ' WHERE displaygroup.DisplayGroupID = %d ';
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+
+        $SQL = sprintf($SQL, $displayGroupId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($noOwnerId, $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
+    }
+
+    /**
+     * Authenticates the current user and returns an array of display groups this user is authenticated on
+     * @return 
+     */
+    public function DisplayGroupList($isDisplaySpecific = 0)
+    {
+        $db 		=& $this->db;
+        $userid		=& $this->userid;
+
+        $SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific ";
+        if ($isDisplaySpecific == 1)
+            $SQL .= " , lkdisplaydg.DisplayID ";
+
+        $SQL .= "  FROM displaygroup ";
+
+        // If we are only interested in displays, then return the display
+        if ($isDisplaySpecific == 1)
+        {
+            $SQL .= "   INNER JOIN lkdisplaydg ";
+            $SQL .= "   ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+            $SQL .= " WHERE displaygroup.IsDisplaySpecific = 1 ";
+        }
+
+        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $displayGroups = array();
+
+        while ($row = $this->db->get_assoc_row($result))
+        {
+            $displayGroupItem = array();
+
+            // Validate each param and add it to the array.
+            $displayGroupItem['displaygroupid'] = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $displayGroupItem['displaygroup']   = Kit::ValidateParam($row['DisplayGroup'], _STRING);
+            $displayGroupItem['isdisplayspecific'] = Kit::ValidateParam($row['IsDisplaySpecific'], _STRING);
+            $displayGroupItem['displayid'] = (($isDisplaySpecific == 1) ? Kit::ValidateParam($row['DisplayID'], _INT) : 0);
+
+            $auth = $this->DisplayGroupAuth($displayGroupItem['displaygroupid'], true);
+
+            if ($auth->view)
+            {
+                $displayGroupItem['view'] = (int) $auth->view;
+                $displayGroupItem['edit'] = (int) $auth->edit;
+                $displayGroupItem['del'] = (int) $auth->del;
+                $displayGroupItem['modifypermissions'] = (int) $auth->modifyPermissions;
+
+                $displayGroups[] = $displayGroupItem;
+            }
+        }
+
+        return $displayGroups;
+    }
+    
+    /**
+     * Authorises a user against a campaign
+     * @param <type> $layoutId
+     * @return <type>
+     */
+    public function CampaignAuth($campaignId, $fullObject = false)
+    {
+        $auth = new PermissionManager($this->db, $this);
+
+        $SQL  = '';
+        $SQL .= 'SELECT UserID ';
+        $SQL .= '  FROM `campaign` ';
+        $SQL .= ' WHERE campaign.CampaignID = %d ';
+
+        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $campaignId), 'UserID', _INT))
+            return $auth;
+
+        // If we are the owner, or a super admin then give full permissions
+        if ($this->usertypeid == 1 || $ownerId == $this->userid)
+        {
+            $auth->FullAccess();
+            return $auth;
+        }
+
+        // Permissions for groups the user is assigned to, and Everyone
+        $SQL  = '';
+        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
+        $SQL .= '  FROM `campaign` ';
+        $SQL .= '   INNER JOIN lkcampaigngroup ';
+        $SQL .= '   ON lkcampaigngroup.CampaignID = campaign.CampaignID ';
+        $SQL .= '   INNER JOIN `group` ';
+        $SQL .= '   ON `group`.GroupID = lkcampaigngroup.GroupID ';
+        $SQL .= ' WHERE campaign.CampaignID = %d ';
+        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
+        $SQL .= 'GROUP BY campaign.UserID ';
+
+        $SQL = sprintf($SQL, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry($this->db, 'audit', $SQL);
+
+        if (!$row = $this->db->GetSingleRow($SQL))
+            return $auth;
+
+        // There are permissions to evaluate
+        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
+
+        if ($fullObject)
+            return $auth;
+
+        return $auth->edit;
+    }
+
+    /**
+     * Authenticates the current user and returns an array ofcampaigns this user is authenticated on
+     * @return
+     */
+    public function CampaignList()
+    {
+        $db 		=& $this->db;
+        $userid		=& $this->userid;
+
+        $SQL  = "SELECT campaign.CampaignID, Campaign, IsLayoutSpecific, COUNT(lkcampaignlayout.LayoutID) AS NumLayouts ";
+        $SQL .= "  FROM `campaign` ";
+        $SQL .= "   LEFT OUTER JOIN `lkcampaignlayout` ";
+        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= "GROUP BY campaign.CampaignID, Campaign, IsLayoutSpecific ";
+        $SQL .= "ORDER BY Campaign";
+
+        if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $campaigns = array();
+
+        while ($row = $this->db->get_assoc_row($result))
+        {
+            $campaignItem = array();
+
+            // Validate each param and add it to the array.
+            $campaignItem['campaignid'] = Kit::ValidateParam($row['CampaignID'], _INT);
+            $campaignItem['campaign'] = Kit::ValidateParam($row['Campaign'], _STRING);
+            $campaignItem['numlayouts'] = Kit::ValidateParam($row['NumLayouts'], _INT);
+            $campaignItem['islayoutspecific'] = Kit::ValidateParam($row['IsLayoutSpecific'], _INT);
+
+            $auth = $this->CampaignAuth($campaignItem['campaignid'], true);
+
+            if ($auth->view)
+            {
+                $campaignItem['view'] = (int) $auth->view;
+                $campaignItem['edit'] = (int) $auth->edit;
+                $campaignItem['del'] = (int) $auth->del;
+                $campaignItem['modifypermissions'] = (int) $auth->modifyPermissions;
+
+                $campaigns[] = $campaignItem;
+            }
+        }
+
+        return $campaigns;
     }
 }
 ?>

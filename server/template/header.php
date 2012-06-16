@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2011 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -42,17 +42,16 @@ $datemanager	= new DateManager($db);
 		<link rel="shortcut icon" href="img/favicon.ico" />
 		<!-- Javascript Libraries -->
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
-		<script type="text/javascript" src="3rdparty/jQuery/jquery-ui.packed.js"></script>
+		<script type="text/javascript" src="3rdparty/jQuery/jquery-ui.min.js"></script>
+                <link rel="stylesheet" type="text/css" href="3rdparty/jQuery/css/jquery-ui.css" />
+
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.form.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.validate.min.js"></script>
-		<script type="text/javascript" src="3rdparty/jQuery/jquery.bgiframe.min.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.tablesorter.pack.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.tablesorter.pager.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.ifixpng.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.contextmenu.r2.packed.js"></script>
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.corner.js"></script>
-		<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/datePicker.css" />
-		<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/ui-elements.css" />
 		
 		<!-- Our own -->
 		<link rel="stylesheet" type="text/css" href="template/css/presentation.css" />
@@ -73,6 +72,7 @@ $datemanager	= new DateManager($db);
 					<script type="text/javascript" src="lib/js/text-render.js"></script>
                                         <script type="text/javascript" src="3rdparty/ckeditor/ckeditor.js"></script>
                                         <script type="text/javascript" src="3rdparty/ckeditor/adapters/jquery.js"></script>
+                                        <link rel="stylesheet" type="text/css" href="template/css/timeline.css" />
 				<?php
 			}
 		}
@@ -99,7 +99,7 @@ $datemanager	= new DateManager($db);
 			<div id="headerback">
 				<ul>
 					<?php displayMessage(); ?>
-					<li><?php echo $username; ?></li>
+					<li><a class="XiboFormButton" href="index.php?p=user&q=ChangePasswordForm" title="<?php echo __('Change Password') ?>"><?php echo $username; ?></a></li>
 					<li><a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo __('Click to show more time information'); ?>"><?php echo $datemanager->GetClock(); ?></a></li>
 					<li><a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo __('About Xibo'); ?>"><?php echo __('About'); ?></a></li>
 					<li><a title="Show <?php echo ucfirst($p); ?> Help" class="XiboHelpButton" href="<?php echo $helpLink; ?>"><?php echo __('Help'); ?></a></li>
@@ -111,7 +111,7 @@ $datemanager	= new DateManager($db);
 			<ul id="nav">
 				<?php
 					// Always have access to your own homepage
-					echo '<li><a href="index.php?p=' . $homepage . '">Dashboard</a></li>';
+					echo '<li><a href="index.php?p=' . $homepage . '">' . __('Dashboard') . '</a></li>';
 				
 					// Put a menu here
 					if (!$menu = new MenuManager($db, $user, 'Top Nav')) trigger_error($menu->message, E_USER_ERROR);
@@ -124,43 +124,9 @@ $datemanager	= new DateManager($db);
 						$title 	= Kit::ValidateParam($menuItem['Text'], _STRING);
 						$title 	= __($title);
 						
-						// Extra style for the current one
-						if ($p == $uri) $class = 'current ' . $class;
-						
-						if ($uri == 'user')
-						{
-							// This is the management menu, so behave differently
-							// Code duplication here - i wonder if we could be more effective?
-							if (!$mgmMenu = new MenuManager($db, $user, 'Management')) trigger_error($mgmMenu->message, E_USER_ERROR);
-							
-							$menuTitle = $title;
-							
-							echo '<li><ul>';
-							
-							while ($menuItem = $mgmMenu->GetNextMenuItem())
-							{
-								$uri 	= Kit::ValidateParam($menuItem['name'], _WORD);
-								$args 	= Kit::ValidateParam($menuItem['Args'], _STRING);
-								$class 	= Kit::ValidateParam($menuItem['Class'], _WORD);
-								$title 	= Kit::ValidateParam($menuItem['Text'], _STRING);
-								$title 	= __($title);
-								
-								// Extra style for the current one
-								if ($p == $uri) $class = 'current ' . $class;
-								
-								$href = 'index.php?p=' . $uri . '&' . $args;
-									
-								echo '<li><a href="' . $href . '" class="' . $class . '">' . $title . '</a></li>';
-							}
-							
-							echo '</ul><a href="#" class="' . $class . '">' . $menuTitle . '</a></li>';
-						}
-						else
-						{
-							$href = 'index.php?p=' . $uri . '&' . $args;
-							
-							echo '<li class="' . $class . '"><a href="' . $href . '" class="' . $class . '">' . $title . '</a></li>';
-						}
+                                                $href = 'index.php?p=' . $uri . '&' . $args;
+
+                                                echo '<li class="' . $class . '"><a href="' . $href . '" class="' . $class . '">' . $title . '</a></li>';
 					}
 				?>
 			</ul>

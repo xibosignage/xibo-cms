@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2011 Daniel Garner
+ * Copyright (C) 2011-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -24,6 +24,13 @@ class Layout extends Data
 {
     private $xml;
     private $DomXml;
+
+    public function  __construct($db)
+    {
+        Kit::ClassLoader('campaign');
+
+        parent::__construct($db);
+    }
 
     /**
      * Add a layout
@@ -112,6 +119,20 @@ END;
                 $this->Delete($id);
                 return false;
             }
+        }
+
+        // Create a campaign
+        $campaign = new Campaign($db);
+
+        $campaignId = $campaign->Add($layout, 1, $userid);
+        $campaign->Link($campaignId, $id, 0);
+
+        // What permissions should we create this with?
+        if (Config::GetSetting($db, 'LAYOUT_DEFAULT') == 'public')
+        {
+            Kit::ClassLoader('campaignsecurity');
+            $security = new CampaignSecurity($db);
+            $security->LinkEveryone($campaignId, 1, 0, 0);
         }
 
         Debug::LogEntry($db, 'audit', 'Complete', 'Layout', 'Add');
@@ -289,7 +310,7 @@ END;
      * @return
      * @param $layoutid Object
      */
-    private function GetLayoutXml($layoutid)
+    public function GetLayoutXml($layoutid)
     {
         $db =& $this->db;
 
@@ -310,6 +331,24 @@ END;
         Debug::LogEntry($db, 'audit', 'OUT', 'Layout', 'GetLayoutXml');
 
         return $row[0];
+    }
+
+    /**
+     * Get media node list
+     * @param <type> $layoutId
+     * @param <type> $regionId
+     */
+    public function GetMediaNodeList($layoutId, $regionId)
+    {
+        if (!$xml = $this->GetLayoutXml($layoutId))
+            return false;
+
+        // Load the XML into a new DOMDocument
+        $document = new DOMDocument();
+        $document->loadXML($xml);
+
+        $xpath = new DOMXPath($document);
+        return $xpath->query("//region[@id='$regionId']/media");
     }
 
     /**
@@ -354,6 +393,7 @@ END;
     {
         $db =& $this->db;
         $currentdate = date("Y-m-d H:i:s");
+        $campaign = new Campaign($db);
 
         // Include to media data class?
         if ($copyMedia)
@@ -364,8 +404,11 @@ END;
             $mediaSecurity = new MediaGroupSecurity($db);
         }
 
+        // We need the old campaignid
+        $oldCampaignId = $campaign->GetCampaignId($oldLayoutId);
+
         // Permissions model
-        Kit::ClassLoader('layoutgroupsecurity');
+        Kit::ClassLoader('campaignsecurity');
         Kit::ClassLoader('layoutregiongroupsecurity');
         Kit::ClassLoader('layoutmediagroupsecurity');
 
@@ -385,6 +428,12 @@ END;
             $this->SetError(25000, __('Unable to Copy this Layout'));
             return false;
         }
+
+        // Create a campaign
+        $newCampaignId = $campaign->Add($newLayoutName, 1, $userId);
+
+        // Link them
+        $campaign->Link($newCampaignId, $newLayoutId, 0);
 
         // Open the layout XML and parse for media nodes
         if (!$this->SetDomXml($newLayoutId))
@@ -410,14 +459,22 @@ END;
             $mediaId = $mediaNode->getAttribute('id');
             $type = $mediaNode->getAttribute('type');
 
+            // Store the old media id
+            $oldMediaId = $mediaId;
+
             Debug::LogEntry($this->db, 'audit', sprintf('Media %s node found with id %d', $type, $mediaId), 'layout', 'Copy');
 
             // If this is a non region specific type, then move on
             if ($this->IsRegionSpecific($type))
             {
+                // Generate a new media id
+                $newMediaId = md5(uniqid());
+                
+                $mediaNode->setAttribute('id', $newMediaId);
+
                 // Copy media security
                 $security = new LayoutMediaGroupSecurity($db);
-                $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $mediaId, $mediaId);
+                $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $mediaId, $newMediaId);
                 continue;
             }
 
@@ -428,9 +485,6 @@ END;
             // Do we need to copy this media record?
             if ($copyMedia)
             {
-                // Store the old media id
-                $oldMediaId = $mediaId;
-
                 // Take this media item and make a hard copy of it.
                 if (!$mediaId = $mediaObject->Copy($mediaId, $newLayoutName))
                 {
@@ -464,8 +518,8 @@ END;
         $this->SetLayoutXml($newLayoutId, $this->DomXml->saveXML());
 
         // Layout permissions
-        $security = new LayoutGroupSecurity($db);
-        $security->CopyAll($oldLayoutId, $newLayoutId);
+        $security = new CampaignSecurity($db);
+        $security->CopyAll($oldCampaignId, $newCampaignId);
 
         $security = new LayoutRegionGroupSecurity($db);
         $security->CopyAll($oldLayoutId, $newLayoutId);
@@ -483,8 +537,14 @@ END;
     {
         $db =& $this->db;
 
+        $campaign = new Campaign($db);
+        $campaignId = $campaign->GetCampaignId($layoutId);
+
+        // Remove all campaign links
+        if (!$campaign->UnlinkAll($campaignId))
+            return $this->SetError(25008, __('Unable to delete campaign links'));
+
         // Remove all LK records for this layout
-        $db->query(sprintf('DELETE FROM lklayoutgroup WHERE layoutid = %d', $layoutId));
         $db->query(sprintf('DELETE FROM lklayoutmediagroup WHERE layoutid = %d', $layoutId));
         $db->query(sprintf('DELETE FROM lklayoutregiongroup WHERE layoutid = %d', $layoutId));
         $db->query(sprintf('DELETE FROM lklayoutmedia WHERE layoutid = %d', $layoutId));
@@ -492,6 +552,10 @@ END;
         // Remove the Layout
         if (!$db->query(sprintf('DELETE FROM layout WHERE layoutid = %d', $layoutId)))
             return $this->SetError(25008, __('Unable to delete layout'));
+
+        // Remove the Campaign
+        if (!$campaign->Delete($campaignId))
+            return $this->SetError(25008, __('Unable to delete campaign'));
 
         return true;
     }

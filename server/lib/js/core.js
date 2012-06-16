@@ -1,6 +1,6 @@
 /**
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008,2009 Daniel Garner
+ * Copyright (C) 2006-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -29,7 +29,7 @@ $(document).ready(function(){
         resizable: false,
         bgiframe: true,
         autoOpen: false,
-        modal: true,
+        modal: false,
         buttons: {
             Ok: function() {
                 $(this).dialog('close');
@@ -44,6 +44,9 @@ $(document).ready(function(){
     });
 
     XiboInitialise();
+
+    // Make some buttons
+    $('.SecondNav a').button();
 });
 
 /**
@@ -198,7 +201,7 @@ function XiboGridRender(gridId){
 
                 if ($('tbody', sortingDiv).html() != "") {
                     $(sortingDiv).tablesorter({
-                        sortList: [[1, 0]],
+                        sortList: [[0, 0]],
                         widthFixed: true
                     })
                 }
@@ -211,6 +214,9 @@ function XiboGridRender(gridId){
 
             // Call XiboInitialise for this form
             XiboInitialise(gridDiv);
+
+            // Make some buttons
+            $('button', outputDiv).button();
 
             return false;
         }
@@ -302,6 +308,17 @@ function XiboFormRender(formUrl) {
                 if (response.appendHiddenSubmit) {
                     if ($("input[type=submit]", "#div_dialog").length == 0) {
                         $("form", "#div_dialog").append('<input type="submit" style="display:none" />');
+                    }
+                }
+
+                // Do we need to do anything else now?
+                if (response.sortable) {
+                    // Call paging
+                    if ($(response.sortingDiv + ' tbody', '#div_dialog').html() != "") {
+                        $(response.sortingDiv, '#div_dialog').tablesorter({
+                            sortList: [[0, 0]],
+                            widthFixed: true
+                        })
                     }
                 }
 
@@ -420,7 +437,7 @@ function XiboSubmitResponse(response) {
         // Should we display the message?
         if (!response.hideMessage) {
             if (response.message != '')
-                SystemMessage(response.message);
+                SystemMessage(response.message, true);
         }
 
         // Do we need to fire a callback function?
@@ -471,7 +488,7 @@ function XiboSubmitResponse(response) {
         }
         else {
             // Likely just an error that we want to report on
-            SystemMessage(response.message);
+            SystemMessage(response.message, false);
         }
     }
 
@@ -722,8 +739,9 @@ function LoginBox(message) {
 /**
  * Displays the system message
  * @param {String} messageText
+ * @param {Bool} success
  */
-function SystemMessage(messageText) {
+function SystemMessage(messageText, success) {
 
     if (messageText == '' || messageText == null) return;
 
@@ -731,6 +749,14 @@ function SystemMessage(messageText) {
 
     $('span', message).html(messageText);
     message.dialog('open');
+
+    if (!success)
+        return;
+
+    // Close after 1 second
+    setTimeout(function() {
+            $('#system_message').dialog('close');
+    }, 1000 );
 }
 
 /**

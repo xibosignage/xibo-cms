@@ -20,22 +20,7 @@
 // regular expression to match alphanumeric characters and spaces
 var re = /^[\w ]+$/;
 
-if (window.attachEvent) window.attachEvent("onload", sfHover); //if IE6 imitate hover
-
 $(document).ready(function() {
-
-	//help tabs - where they are found
-	$('#helptabs').tabs({ fxSlide: true, fxFade: true, fxSpeed: 'fast' });
-	
-	$(' :input').css("z-index","1");
-	$(' :input').css("position","relative");
-	$('#notes').css("z-index","2");
-	
-	//fixes the IE hover and select list problem
-	$('#nav li').css("z-index","2");
-	$("li ul","#nav").css("z-index","2").bgiframe();
-	
-	$('#notes').bgiframe();
 
 	//handle the trigger function (we might want to trigger some javascript on the page load)
 	var trigger = gup('trigger')
@@ -45,19 +30,6 @@ $(document).ready(function() {
 	}
 
 });
-
-function sfHover () {
-	// IF IE6 replace hover
-	var sfEls = document.getElementById("nav").getElementsByTagName("LI");
-	for (var i=0; i<sfEls.length; i++) {
-		sfEls[i].onmouseover=function() {
-			this.className+=" sfhover";
-		}
-		sfEls[i].onmouseout=function() {
-			this.className=this.className.replace(new RegExp(" sfhover\\b"), "");
-		}
-	}
-}
 
 /**
  * Checks all the checkboxes for a particular form

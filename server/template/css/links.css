@@ -335,6 +335,19 @@
 	width:90px;
 }
 
+#jumpListButton {
+	background:url(../../img/forms/toggleup.png);
+	background-repeat: no-repeat;
+	border: 0px;
+	width:90px;
+}
+
+#jumpListButton:hover {
+	background:url(../../img/forms/toggledown.png);
+	background-repeat: no-repeat;
+	width:90px;
+}
+
 #log_button{
 	background:url(../../img/forms/truncate_log.png);
 	background-repeat: no-repeat;

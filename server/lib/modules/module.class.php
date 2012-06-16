@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner
+ * Copyright (C) 2006-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -29,7 +29,7 @@ class Module implements ModuleInterface
 	protected $response;
         public $auth;
 	protected $type;
-      	protected $displayType;
+      	public $displayType;
 
 	protected $layoutid;
 	protected $regionid;
@@ -368,7 +368,8 @@ XML;
 
 		// Load the XML we are given into its own document
 		$rawNode = new DOMDocument();
-		$rawNode->loadXML('<raw>' . $xml . '</raw>');
+		if (!$rawNode->loadXML('<raw>' . $xml . '</raw>'))
+                    trigger_error(__('There is an error in the HTML/XML'), E_USER_ERROR);
 
 		// Import the Raw node into this document (with all sub nodes)
 		$importedNode = $this->xml->importNode($rawNode->documentElement, true);
@@ -622,8 +623,7 @@ END;
             $regionid = $this->regionid;
             $mediaid = $this->mediaid;
 
-            $url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-
+            // Check permissions
             if (!$this->auth->del)
             {
                 $this->response->SetError('You do not have permission to delete this assignment.');
@@ -631,6 +631,7 @@ END;
                 return $this->response;
             }
 
+            // Extra work if we are on a layout
             if ($layoutid != '')
             {
                 Kit::ClassLoader('layoutmediagroupsecurity');
@@ -691,17 +692,28 @@ END;
                     }
 
                     $this->DeleteMediaFiles($storedAs);
+
+                    // Bring back the previous revision of this media (if there is one)
+                    $editedMediaRow = $db->GetSingleRow(sprintf('SELECT IFNULL(MediaID, 0) AS MediaID FROM media WHERE EditedMediaID = %d', $mediaid));
+
+                    if (count($editedMediaRow) > 0)
+                    {
+                        // Unretire this edited record
+                        $editedMediaId = Kit::ValidateParam($editedMediaRow['MediaID'], _INT);
+                        $db->query(sprintf('UPDATE media SET IsEdited = 0, EditedMediaID = NULL WHERE mediaid = %d', $editedMediaId));
+                    }
 		}
 
                 $this->response->message = __('Media Deleted');
             }
-            else
-            {
-                // We want to load a new form
-                $this->response->loadForm = true;
-                $this->response->loadFormUri= $url;
-            }
 
+            // We want to load the region timeline form back again
+            if ($layoutid != '')
+            {
+                $this->response->loadForm = true;
+                $this->response->loadFormUri= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+            }
+                
             return $this->response;
 	}
 
@@ -728,6 +740,17 @@ END;
         global $session;
         $db =& $this->db;
         $user =& $this->user;
+
+        // Check we have room in the library
+        $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+
+        if ($libraryLimit > 0)
+        {
+            $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
+
+            if (($fileSize / 1024) > $libraryLimit)
+                trigger_error(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit), E_USER_ERROR);
+        }
 
         // Would like to get the regions width / height
         $layoutid = $this->layoutid;
@@ -1016,6 +1039,21 @@ FORM;
         $userid	= $this->user->userid;
         $backgroundImage = Kit::GetParam('backgroundImage', _POST, _BOOL, false);
 
+        // Check we have room in the library
+        $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+
+        if ($libraryLimit > 0)
+        {
+            $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
+
+            if (($fileSize / 1024) > $libraryLimit)
+            {
+                $this->response->SetError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
+                $this->response->keepOpen = true;
+                return $this->response;
+            }
+        }
+
         // File data
         $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
 
@@ -1212,6 +1250,21 @@ FORM;
         }
         else
         {
+            // Check we have room in the library
+            $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+
+            if ($libraryLimit > 0)
+            {
+                $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
+
+                if (($fileSize / 1024) > $libraryLimit)
+                {
+                    $this->response->SetError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
+                    $this->response->keepOpen = true;
+                    return $this->response;
+                }
+            }
+
             $fileRevision = true;
 
             // File name and extension (orignial name)
@@ -1524,6 +1577,36 @@ FORM;
     }
 
     /**
+     * Default code for the hover preview
+     */
+    public function HoverPreview()
+    {
+        $msgType = __('Type');
+        $msgName = __('Name');
+        $msgDuration = __('Duration');
+
+        // Default Hover window contains a thumbnail, media type and duration
+        $output = '<div class="thumbnail"><img alt="' . $this->displayType . ' thumbnail" src="img/forms/' . $this->type . '.gif"></div>';
+        $output .= '<div class="info">';
+        $output .= '    <ul>';
+        $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';
+
+        if (!$this->regionSpecific)
+            $output .= '    <li>' . $msgName . ': ' . $this->name . '</li>';
+
+        $output .= '    <li>' . $msgDuration . ': ' . $this->duration . ' ' . __('seconds') . '</li>';
+        $output .= '    </ul>';
+        $output .= '</div>';
+
+        return $output;
+    }
+
+    public function ImageThumbnail()
+    {
+        return '<img alt="' . $this->displayType . ' thumbnail" src="img/forms/' . $this->type . '.gif">';
+    }
+
+    /**
      * Permissions form
      */
     public function PermissionsForm()
@@ -1599,7 +1682,7 @@ FORM;
         $form .= '</form>';
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('LayoutMedia', 'Permissions') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != 0) ? $helpManager->Link('LayoutMedia', 'Permissions') : $helpManager->Link('Media', 'Permissions')) . '")');
         $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
         $response->AddButton(__('Save'), '$("#LayoutPermissionsForm").submit()');
 

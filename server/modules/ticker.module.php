@@ -24,6 +24,7 @@ class ticker extends Module
 	{
 		// Must set the type of the class
 		$this->type = 'ticker';
+                $this->displayType = 'Ticker';
 	
 		// Must call the parent class	
 		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -54,6 +55,7 @@ class ticker extends Module
                 $takeItemsFromLabel = __('Take the items from the beginning or the end of the list');
                 $durationIsPerItemText = __('Duration is per item');
                 $durationIsPerItemLabel = __('The duration speficied is per item otherwise it is per feed.');
+                $msgFitText = __('Fit text to region');
                 
 		$form = <<<FORM
 		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=AddMedia">
@@ -74,8 +76,8 @@ class ticker extends Module
 		    		<td><input id="duration" name="duration" type="text"></td>		
 				</tr>
 				<tr>
-		    		<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
-		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="30"></td>		
+		    		<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (higher is faster)</label></td>
+		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="2"></td>
 		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval (mins)<span class="required">*</span></label></td>
 		    		<td><input id="updateInterval" name="updateInterval" type="text" value="360"></td>
 				</tr>
@@ -86,8 +88,8 @@ class ticker extends Module
                                     <td>$takeItemsFromList</td>
                                 </tr>
                                 <tr>
-                                    <td></td>
-                                    <td></td>
+                                    <td><label for="fitText" title="$msgFitText">$msgFitText</label></td>
+                                    <td><input id="fitText" name="fitText" type="checkbox"></td>
                                     <td><label for="durationIsPerItem" title="$durationIsPerItemLabel">$durationIsPerItemText</label></td>
                                     <td><input id="durationIsPerItem" name="durationIsPerItem" type="checkbox" /></td>
                                 </tr>
@@ -146,6 +148,8 @@ FORM;
 		$numItems = $this->GetOption('numItems');
 		$takeItemsFrom = $this->GetOption('takeItemsFrom');
 		$durationIsPerItem = $this->GetOption('durationIsPerItem');
+                $fitText = $this->GetOption('fitText', 0);
+                $fitTextChecked = ($fitText == 0) ? '' : ' checked';
                 
                 // Is duration per item checked or not
                 $durationIsPerItemChecked = ($durationIsPerItem == '1') ? 'checked' : '';
@@ -171,7 +175,8 @@ FORM;
                 $takeItemsFromLabel = __('Take the items from the beginning or the end of the list');
                 $durationIsPerItemText = __('Duration is per item');
                 $durationIsPerItemLabel = __('The duration speficied is per item otherwise it is per feed.');
-
+                $msgFitText = __('Fit text to region');
+                
                 $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
 
 		//Output the form
@@ -195,7 +200,7 @@ FORM;
 		    		<td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
 				</tr>
 				<tr>
-		    		<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
+		    		<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (higher is faster)</label></td>
 		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>		
 		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval (mins)<span class="required">*</span></label></td>
 		    		<td><input id="updateInterval" name="updateInterval" type="text" value="$updateInterval"></td>
@@ -207,8 +212,8 @@ FORM;
                                     <td>$takeItemsFromList</td>
                                 </tr>
                                 <tr>
-                                    <td></td>
-                                    <td></td>
+                                    <td><label for="fitText" title="$msgFitText">$msgFitText</label></td>
+                                    <td><input id="fitText" name="fitText" type="checkbox" $fitTextChecked></td>
                                     <td><label for="durationIsPerItem" title="$durationIsPerItemLabel">$durationIsPerItemText</label></td>
                                     <td><input id="durationIsPerItem" name="durationIsPerItem" type="checkbox" $durationIsPerItemChecked /></td>
                                 </tr>
@@ -253,14 +258,15 @@ FORM;
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
-		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 2);
 		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 360);
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
 		$numItems = Kit::GetParam('numItems', _POST, _STRING);
 		$takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
 		$durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
-		
+                $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
+
 		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
 		//validation
@@ -310,6 +316,7 @@ FORM;
 		$this->SetOption('numItems', $numItems);
 		$this->SetOption('takeItemsFrom', $takeItemsFrom);
 		$this->SetOption('durationIsPerItem', $durationIsPerItem);
+                $this->SetOption('fitText', $fitText);
 
 		$this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
 		
@@ -353,12 +360,13 @@ FORM;
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 2);
 		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 360);
 		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
 		$numItems = Kit::GetParam('numItems', _POST, _STRING);
                 $takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
 		$durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
+        $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
@@ -409,6 +417,7 @@ FORM;
                 $this->SetOption('numItems', $numItems);
                 $this->SetOption('takeItemsFrom', $takeItemsFrom);
 		$this->SetOption('durationIsPerItem', $durationIsPerItem);
+                $this->SetOption('fitText', $fitText);
 
 		$this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
 		
@@ -428,41 +437,133 @@ FORM;
 		
 		return $this->response;	
 	}
-        
-        public function Preview($width, $height)
+
+    public function HoverPreview()
+    {
+        $msgType = __('Type');
+        $msgUrl = __('Feed');
+        $msgDuration = __('Duration');
+
+        $url = urldecode($this->GetOption('uri'));
+
+        // Default Hover window contains a thumbnail, media type and duration
+        $output = '<div class="thumbnail"><img alt="' . $this->displayType . ' thumbnail" src="img/forms/' . $this->type . '.gif"></div>';
+        $output .= '<div class="info">';
+        $output .= '    <ul>';
+        $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';
+        $output .= '    <li>' . $msgUrl . ': <a href="' . $url . '" target="_blank" title="' . $msgUrl . '">' . $url . '</a></li>';
+
+        $output .= '    <li>' . $msgDuration . ': ' . $this->duration . ' ' . __('seconds') . '</li>';
+        $output .= '    </ul>';
+        $output .= '</div>';
+
+        return $output;
+    }
+
+    /**
+     * Preview
+     * @param <type> $width
+     * @param <type> $height
+     * @return <type>
+     */
+    public function Preview($width, $height)
+    {
+        $layoutId = $this->layoutid;
+        $regionId = $this->regionid;
+
+        $mediaId = $this->mediaid;
+        $lkId = $this->lkid;
+        $mediaType = $this->type;
+        $mediaDuration = $this->duration;
+
+        $widthPx	= $width.'px';
+        $heightPx	= $height.'px';
+
+        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=RawPreview&raw=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+    }
+
+    /**
+     * Raw Preview
+     */
+    public function RawPreview()
+    {
+        // Behave exactly like the client.
+
+        // Load in the template
+        $template = file_get_contents('modules/preview/HtmlTemplate.htm');
+
+        $width = Kit::GetParam('width', _REQUEST, _INT);
+        $height = Kit::GetParam('height', _REQUEST, _INT);
+        $direction = $this->GetOption('direction');
+        $scrollSpeed = $this->GetOption('scrollSpeed');
+        $fitText = $this->GetOption('fitText', 0);
+        $duration = $this->duration;
+        $durationIsPerItem = $this->GetOption('durationIsPerItem', 0);
+        $numItems = $this->GetOption('numItems', 0);
+
+        // Get the text out of RAW
+        $rawXml = new DOMDocument();
+        $rawXml->loadXML($this->GetRaw());
+
+        // Get the Text Node
+        $textNodes = $rawXml->getElementsByTagName('template');
+        $textNode = $textNodes->item(0);
+        $text = $textNode->nodeValue;
+
+        // Replace the head content
+        $headContent  = '<script type="text/javascript">';
+        $headContent .= '   function init() { ';
+        $headContent .= '       $("#text").xiboRender({ ';
+        $headContent .= '           type: "ticker",';
+        $headContent .= '           direction: "' . $direction . '",';
+        $headContent .= '           duration: ' . $duration . ',';
+        $headContent .= '           durationIsPerItem: ' . (($durationIsPerItem == 0) ? 'false' : 'true') . ',';
+        $headContent .= '           numItems: ' . $numItems . ',';
+        $headContent .= '           width: ' . $width . ',';
+        $headContent .= '           height: ' . $height . ',';
+        $headContent .= '           scrollSpeed: ' . $scrollSpeed . ',';
+        $headContent .= '           fitText: ' . (($fitText == 0) ? 'false' : 'true') . ',';
+        $headContent .= '           scaleText: ' . (($fitText == 1) ? 'false' : 'true') . ',';
+        $headContent .= '           scaleFactor: 1';
+        $headContent .= '       });';
+        $headContent .= '   } ';
+        $headContent .= '</script>';
+
+        // Replace the Head Content with our generated javascript
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+
+        // Generate the body content
+        $bodyContent  = '';
+        $bodyContent .= '<div id="contentPane" style="overflow: none; width:' . $width . 'px; height:' . $height . 'px;">';
+        $bodyContent .= '   <div id="text">';
+
+        // As we are pretending to be the client, we will duplicate the text template (as if we had 2 RSS items)
+        if ($direction == 'left' || $direction == 'right')
         {
-            $regionid   = $this->regionid;
-            $direction  = $this->GetOption('direction');
-
-            // Get the text out of RAW
-            $rawXml = new DOMDocument();
-            $rawXml->loadXML($this->GetRaw());
-
-            // Get the Text Node out of this
-            $textNodes 	= $rawXml->getElementsByTagName('template');
-            $textNode 	= $textNodes->item(0);
-            $text 	= $textNode->nodeValue;
-
-            $textId 	= $regionid.'_text';
-            $innerId 	= $regionid.'_innerText';
-            $timerId	= $regionid.'_timer';
-            $widthPx	= $width.'px';
-            $heightPx	= $height.'px';
-
-            $textWrap = '';
-            if ($direction == "left" || $direction == "right") $textWrap = "white-space:nowrap;";
-
-            //Show the contents of text accordingly
-            $return = <<<END
-            <div id="$textId" style="position:relative; overflow:hidden ;width:$widthPx; height:$heightPx; font-size: 1em;">
-                <div id="$innerId" style="position:absolute; left: 0px; top: 0px; $textWrap">
-                    <div class="article">
-                            $text
-                    </div>
-                </div>
-            </div>
-END;
-            return $return;
+            // Wrap each item in a span
+            $bodyContent .= '<nobr>';
+            $bodyContent .= '<span class="article">Item 1: ' . $text . '</span>';
+            $bodyContent .= '<span class="article">Item 2: ' . $text . '</span>';
+            $bodyContent .= '</nobr>';
         }
+        else if ($direction == 'single')
+        {
+            // Wrap each item in a div
+            $bodyContent .= '<div class="XiboRssItem">Item 1: ' . $text . '</div>';
+            $bodyContent .= '<div class="XiboRssItem">Item 2: ' . $text . '</div>';
+        }
+        else
+        {
+            $bodyContent .= '       ' . $text;
+        }
+
+        $bodyContent .= '   </div>';
+        $bodyContent .= '</div>';
+
+        // Replace the Body Content with our generated text
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $bodyContent, $template);
+
+        return $template;
+    }
 }
 ?>

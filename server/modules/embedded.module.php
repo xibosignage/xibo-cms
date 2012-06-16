@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -25,6 +25,7 @@ class embedded extends Module
 	{
 		// Must set the type of the class
 		$this->type = 'embedded';
+                $this->displayType = 'Embedded HTML';
 	
 		// Must call the parent class	
 		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -76,13 +77,6 @@ function EmbedInit()
 }
 </script>
 </textarea>
-					</td>
-				</tr>
-				<tr>
-					<td></td>
-					<td>
-						<input id="btnSave" type="submit" value="Save"  />
-						<input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
 					</td>
 				</tr>
 			</table>

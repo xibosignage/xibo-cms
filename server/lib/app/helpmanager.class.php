@@ -97,11 +97,8 @@ END;
 	 * @param $topic Object[optional]
 	 * @param $category Object[optional]
 	 */
-	public function Link($topic = "", $category = "General")
+	public static function Link($topic = "", $category = "General")
 	{
-		$db 		=& $this->db;		
-		$user 		=& $this->user;		
-		
 		// if topic is empty use the page name
 		$topic	= ($topic == '') ? Kit::GetParam('p', _REQUEST, _WORD) : $topic;
 		$topic	= ucfirst($topic);

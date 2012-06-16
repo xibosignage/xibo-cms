@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-12 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -35,7 +35,7 @@ class DisplayGroupSecurity extends Data
 	 * @param $displayGroupID Object
 	 * @param $groupID Object
 	 */
-	public function Link($displayGroupID, $groupID)
+	public function Link($displayGroupId, $groupId, $view, $edit, $del)
 	{
 		$db	=& $this->db;
 		
@@ -43,20 +43,23 @@ class DisplayGroupSecurity extends Data
 		
 		$SQL  = "";
 		$SQL .= "INSERT ";
-		$SQL .= "INTO   lkgroupdg ";
+		$SQL .= "INTO   lkdisplaygroupgroup ";
 		$SQL .= "       ( ";
 		$SQL .= "              DisplayGroupID, ";
-		$SQL .= "              GroupID ";
+		$SQL .= "              GroupID, ";
+		$SQL .= "              View, ";
+		$SQL .= "              Edit, ";
+		$SQL .= "              Del ";
 		$SQL .= "       ) ";
 		$SQL .= "       VALUES ";
 		$SQL .= "       ( ";
-		$SQL .= sprintf("              %d, %d ", $displayGroupID, $groupID);
+		$SQL .= sprintf(" %d, %d, %d, %d, %d ", $displayGroupId, $groupId, $view, $edit, $del);
 		$SQL .= "       )";
 		
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$this->SetError(25005, __('Could not Link Display Group to Group'));
+			$this->SetError(25005, __('Could not Link Display Group to User Group'));
 			
 			return false;
 		}
@@ -72,7 +75,7 @@ class DisplayGroupSecurity extends Data
 	 * @param $displayGroupID Object
 	 * @param $groupID Object
 	 */
-	public function Unlink($displayGroupID, $groupID) 
+	public function Unlink($displayGroupId, $groupId)
 	{
 		$db	=& $this->db;
 		
@@ -81,12 +84,12 @@ class DisplayGroupSecurity extends Data
 		$SQL  = "";
 		$SQL .= "DELETE FROM ";
 		$SQL .= "   lkgroupdg ";
-		$SQL .= sprintf("  WHERE DisplayGroupID = %d AND GroupID = %d ", $displayGroupID, $groupID);
+		$SQL .= sprintf("  WHERE DisplayGroupID = %d AND GroupID = %d ", $displayGroupId, $groupId);
 		
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$this->SetError(25007, __('Could not Unlink Display Group from Group'));
+			$this->SetError(25007, __('Could not Unlink Display Group from User Group'));
 			
 			return false;
 		}
@@ -95,5 +98,35 @@ class DisplayGroupSecurity extends Data
 		
 		return true;
 	}
+
+   /**
+     * Unlinks a display group from a group
+     * @return
+     * @param $displayGroupID Object
+     * @param $groupID Object
+     */
+    public function UnlinkAll($displayGroupId)
+    {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
+
+        $SQL  = "";
+        $SQL .= "DELETE FROM ";
+        $SQL .= "   lkdisplaygroupgroup ";
+        $SQL .= sprintf("  WHERE DisplayGroupID = %d ", $displayGroupId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25025, __('Could not Unlink DisplayGroup from User Group'));
+
+            return false;
+        }
+
+        Debug::LogEntry($db, 'audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
+
+        return true;
+    }
 } 
 ?>

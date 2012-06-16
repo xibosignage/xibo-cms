@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2011 Daniel Garner
+ * Copyright (C) 2011-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -233,7 +233,7 @@ END;
 
 
         $response->SetFormRequestResponse($form, __('Edit DataSet'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Add') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Edit'), '$("#EditDataSetForm").submit()');
         $response->Respond();
@@ -423,7 +423,7 @@ END;
 END;
 
         $response->SetFormRequestResponse($form, __('Add Column'), '450px', '400px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'EditColumn') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'AddColumn') . '")');
         $response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
         $response->AddButton(__('Save'), '$("#DataSetColumnEditForm").submit()');
         $response->Respond();
@@ -932,7 +932,7 @@ END;
         $form .= '</form>';
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Permissions') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Permissions') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DataSetPermissionsForm").submit()');
         $response->Respond();
@@ -982,7 +982,7 @@ END;
             {
                 // The groupId has changed, so we need to write the current settings to the db.
                 // Link new permissions
-                if (!$security->Link($dataSetId, $groupId, $view, $edit, $del))
+                if (!$security->Link($dataSetId, $lastGroupId, $view, $edit, $del))
                     trigger_error(__('Unable to set permissions'));
 
                 // Reset

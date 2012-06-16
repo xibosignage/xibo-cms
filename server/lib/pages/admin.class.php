@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -254,14 +254,34 @@ END;
 
                 if ($cat == 'content')
                 {
-                    // Display the file size
-                    $fileSize = $this->db->GetSingleValue('SELECT SUM(FileSize) AS SumSize FROM media', 'SumSize', _INT);
+                    $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
 
-                    $sz = 'BKMGTP';
-                    $factor = floor((strlen($fileSize) - 1) / 3);
-                    $fileSize = sprintf('%.2f', $fileSize / pow(1024, $factor)) . @$sz[$factor];
+                    // Library Size in Bytes
+                    $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
+                    $limitPcnt = ($libraryLimit > 0) ? (($fileSize / ($libraryLimit * 1024)) * 100) : '';
 
-                    $output .= sprintf('<p>You have %s of media in the library.</p>', $fileSize);
+                    $output .= '<p>' . sprintf(__('You have %s of media in the library.'), $this->FormatByteSize($fileSize)) . (($libraryLimit > 0) ? sprintf(__(' This is %d %% of your %s limit.'), $limitPcnt, $this->FormatByteSize($libraryLimit * 1024)) : '') . '</p>';
+                
+                    // Monthly bandwitdh - optionally tested against limits
+                    $xmdsLimit = Config::GetSetting($db, 'MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+                    $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
+                    $endOfMonth = strtotime('-1 second',strtotime('+1 month',strtotime(date('m').'/01/'.date('Y').' 00:00:00')));
+
+                    $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE DateTime > %d AND DateTime <= %d', $startOfMonth, $endOfMonth);
+                    $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
+
+                    Debug::LogEntry($db, 'audit', $sql);
+                    
+                    $usagePcnt = ($xmdsLimit > 0) ? (($bandwidthUsage / ($xmdsLimit * 1024)) * 100) : '';
+                    
+                    $output .= '<p>' . sprintf(__('You have used %s of bandwidth this month.'), $this->FormatByteSize($bandwidthUsage)) . (($xmdsLimit > 0) ? sprintf(__(' This is %d %% of your %s limit.'), $usagePcnt, $this->FormatByteSize($xmdsLimit * 1024)) : '') . '</p>';
+                }
+
+                if ($cat == 'general')
+                {
+                    $output .= '<p>' . __('Import / Export Database') . '</p>';
+                    $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=RestoreForm">' . __('Import') . '</button>';
+                    $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=BackupForm">' . __('Export') . '</button>';
                 }
 		
 		// Need to now get all the Misc settings 
@@ -572,5 +592,148 @@ END;
         $response->Respond();
     }
 
+    /**
+     * Backup Form
+     */
+    public function BackupForm()
+    {
+        $response = new ResponseManager();
+
+        // Check we have permission to do this
+        if ($this->user->usertypeid != 1)
+            trigger_error(__('Only an adminitrator can export a database'));
+
+        $form = '';
+        $form .= '<p>' . __('This will create a dump file of your database that you can restore later using the import functionality.') . '</p>';
+        $form .= '<p>' . __('You should also manually take a backup of your Xibo library.') . '</p>';
+        $form .= '<p>' . __('Please note: The folder location for mysqldump must be available in your path environment variable for this to work and the php "exec" command must be enabled.') . '</p>';
+        $form .= '<a href="index.php?p=admin&q=BackupDatabase" title="' . __('Export Database. Right click to save as.') . '">' . __('Click here to Export') . '</a>';
+        
+        $response->SetFormRequestResponse($form, __('Export Database Backup'), '550px', '275px');
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
+
+    /**
+     * Backup Data and Return a file
+     */
+    public function BackupDatabase()
+    {
+        // We want to output a load of stuff to the browser as a text file.
+        Kit::ClassLoader('maintenance');
+        $maintenance = new Maintenance($this->db);
+
+        $dump = $maintenance->BackupDatabase();
+
+        if ($dump == '')
+            trigger_error(__('Unable to export database'), E_USER_ERROR);
+
+        header('Content-Type: text/plaintext');
+        header('Content-Disposition: attachment; filename="' . date('Y-m-d H:i:s') . '.bak"');
+        header("Content-Transfer-Encoding: binary");
+        header('Accept-Ranges: bytes');
+        echo $dump;
+        exit;
+    }
+
+    /**
+     * Show an upload form to restore a database dump file
+     */
+    public function RestoreForm()
+    {
+        $response = new ResponseManager();
+
+        // Check we have permission to do this
+        if ($this->user->usertypeid != 1)
+            trigger_error(__('Only an adminitrator can import a database'));
+
+        $msgDumpFile = __('Backup File');
+        $msgWarn = __('Warning: Importing a file here will overwrite your existing database. This action cannot be reversed.');
+        $msgMore = __('Select a file to import and then click the import button below. You will be taken to another page where the file will be imported.');
+        $msgInfo = __('Please note: The folder location for mysqldump must be available in your path environment variable for this to work and the php "exec" command must be enabled.');
+
+        $form = <<<FORM
+        <p>$msgWarn</p>
+        <p>$msgInfo</p>
+        <form id="file_upload" method="post" action="index.php?p=admin&q=RestoreDatabase" enctype="multipart/form-data">
+            <table>
+                <tr>
+                    <td><label for="file">$msgDumpFile<span class="required">*</span></label></td>
+                    <td>
+                        <input type="file" name="dumpFile" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <p>$msgMore</p>
+FORM;
+        $response->SetFormRequestResponse($form, __('Import Database Backup'), '550px', '375px');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Import'), '$("#file_upload").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Restore the Database
+     */
+    public function RestoreDatabase()
+    {
+        $db =& $this->db;
+
+        include('install/header.inc');
+        echo '<div class="info">';
+        
+        // Expect a file upload
+        // Check we got a valid file
+        if (isset($_FILES['dumpFile']) && is_uploaded_file($_FILES['dumpFile']['tmp_name']) && $_FILES['dumpFile']['error'] == 0)
+        {
+            echo 'Restoring Database</br>';
+            Debug::LogEntry($db, 'audit', 'Valid Upload', 'Backup', 'RestoreDatabase');
+
+            // Directory location
+            $fileName = Kit::ValidateParam($_FILES['dumpFile']['tmp_name'], _STRING);
+
+            if (is_uploaded_file($fileName))
+            {
+                // Move the uploaded file to a temporary location in the library
+                $destination = tempnam(Config::GetSetting($this->db, 'LIBRARY_LOCATION'), 'dmp');
+                move_uploaded_file($fileName, $destination);
+                
+                Kit::ClassLoader('maintenance');
+                $maintenance = new Maintenance($this->db);
+
+                // Use the maintenance class to restore the database
+                if (!$maintenance->RestoreDatabase($destination))
+                    trigger_error($maintenance->GetErrorMessage(), E_USER_ERROR);
+
+                unlink($destination);
+            }
+            else
+                trigger_error(__('Not a valid uploaded file'), E_USER_ERROR);
+        }
+        else
+        {
+            trigger_error(__('Unable to upload file'), E_USER_ERROR);
+        }
+
+        echo '</div>';
+        echo '<a href="index.php?p=admin">Database Restored. Click here to continue.</a>';
+
+        include('install/footer.inc');
+
+        die();
+    }
+
+    /**
+     * Friendly format for file size
+     * @param <type> $fileSize
+     * @return <type>
+     */
+    private function FormatByteSize($fileSize)
+    {
+        $sz = 'BKMGTP';
+        $factor = floor((strlen($fileSize) - 1) / 3);
+        return sprintf('%.2f', $fileSize / pow(1024, $factor)) . @$sz[$factor];
+    }
 }
 ?>

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2010 Daniel Garner
+ * Copyright (C) 2010-12 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -151,7 +151,7 @@ END;
             trigger_error(__('Error listing Log.'), E_USER_ERROR);
         }
 
-        $output .= '<div class="info_table">';
+        $output  = '<div class="info_table">';
         $output .= '    <table style="width:100%">';
         $output .= '        <thead>';
         $output .= sprintf('    <th>%s</th>', __('Header'));
@@ -178,7 +178,7 @@ END;
         $output .= '</div>';
 
         $response->SetFormRequestResponse($output, __('OAuth Access Log'), '1000', '600');
-        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Services&Category=Log')");
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }

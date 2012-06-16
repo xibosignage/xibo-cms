@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-12 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -25,7 +25,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 echo __('Schedule');
 echo __('Layout');
 echo __('Library');
-echo __('Management');
+echo __('Administration');
+echo __('Advanced');
+echo __('Media');
 echo __('Displays');
 echo __('Groups');
 echo __('Users');
@@ -47,6 +49,9 @@ echo __('Default');
 echo __('Error');
 echo __('General');
 echo __('Path');
+echo __('DataSets');
+echo __('Modules');
+echo __('Campaigns');
 
 // Settings translations
 echo __('jpg_length');
@@ -76,4 +81,10 @@ echo __('SHOW_DISPLAY_AS_VNC_TGT');
 echo __('REGION_OPTIONS_COLOURING');
 echo __('LAYOUT_COPY_MEDIA_CHECKB');
 echo __('LIBRARY_MEDIA_UPDATEINALL_CHECKB');
+echo __('USER_PASSWORD_POLICY');
+echo __('USER_PASSWORD_ERROR');
+echo __('MODULE_CONFIG_LOCKED_CHECKB');
+echo __('LIBRARY_SIZE_LIMIT_KB');
+echo __('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+echo __('DEFAULT_LANGUAGE');
 ?>

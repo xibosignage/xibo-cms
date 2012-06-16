@@ -1,6 +1,6 @@
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -18,37 +18,111 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var region_options_callback = function(outputDiv)
-{	
-	//Get all the tooltip_hidden
-	$(".tooltip_hidden").parent().hover(function() {
-		var html = $(".tooltip_hidden",this).html();
-		var left = this.offsetLeft - this.offsetParent.scrollLeft;;
-		
-		//Change the hidden div's content
-		$('#tooltip_hover')	.html(html)
-							.css("left",left)
-							.show();
-	}, function() {
-		$('#tooltip_hover').hide();
-	});
-	
-	// Make the elements draggable
-	$(".timebar_ctl").draggable({
-		containment: document.getElementById("timeline_ctl")
-	});
-	
-	$(".mediabreak").droppable({
-		accept: ".timebar_ctl",
-		tolerance: "pointer",
-		drop: function(ev, ui) {
-			orderRegion(ui.draggable, this);
-		}
-	});
 
-        // Refresh the preview
-        var preview = Preview.instances[$('#timeline_ctl').attr('regionid')];
-        preview.SetSequence(preview.seq);
+/**
+ * Load timeline callback
+ */
+var LoadTimeLineCallback = function() {
+
+    // Refresh the preview
+    var preview = Preview.instances[$('#timelineControl').attr('regionid')];
+    preview.SetSequence(preview.seq);
+
+    $("li.timelineMediaListItem").hover(function() {
+
+        var position = $(this).position();
+
+        //Change the hidden div's content
+        $("div#timelinePreview").html($("div.timelineMediaPreview", this).html()).css("margin-top", position.top + $('#timelineControl').scrollTop()).show();
+
+    }, function() {
+        return false;
+    });
+
+    $(".timelineSortableListOfMedia").sortable();
+}
+
+
+var XiboTimelineSaveOrder = function(mediaListId, layoutId, regionId) {
+
+    //console.log(mediaListId);
+
+    // Load the media id's into an array
+    var mediaList = "";
+
+    $('#' + mediaListId + ' li.timelineMediaListItem').each(function(){
+        mediaList = mediaList + $(this).attr("mediaid") + "&" + $(this).attr("lkid") + "|";
+    });
+
+    //console.log("Media List: " + mediaList);
+
+    // Call the server to do the reorder
+    $.ajax({
+        type:"post",
+        url:"index.php?p=layout&q=TimelineReorder&layoutid="+layoutId+"&ajax=true",
+        cache:false,
+        dataType:"json",
+        data:{
+            "regionid": regionId,
+            "medialist": mediaList
+        },
+        success: XiboSubmitResponse
+    });
+}
+
+/**
+ * Library Assignment Form Callback
+ */
+var LibraryAssignCallback = function()
+{
+    // Connect the two lists.
+    $("#LibraryAvailableSortable").sortable({
+        connectWith: '.connectedSortable',
+        dropOnEmpty: true,
+        remove: function(event, ui) {
+            ui.item.clone().appendTo('#LibraryAssignSortable');
+
+            $(".li-sortable", "#LibraryAssignSortable").dblclick(function(e){
+                $(this).remove();
+            });
+            
+            $(this).sortable('cancel');
+        },
+        revert: true
+    }).disableSelection();
+
+    $("#LibraryAssignSortable").sortable({
+        dropOnEmpty: true
+    }).disableSelection();
+
+    $(".li-sortable", "#LibraryAvailableSortable").dblclick(function(e){
+        var otherList = $($(e.currentTarget).parent().sortable("option","connectWith")).not($(e.currentTarget).parent());
+
+        otherList.append($(e.currentTarget).clone());
+    });
+
+    $(".li-sortable", "#LibraryAssignSortable").dblclick(function(e){
+        $(this).remove();
+    });
+}
+
+var LibraryAssignSubmit = function(layoutId, regionId)
+{
+    // Serialize the data from the form and call submit
+    var mediaList = $("#LibraryAssignSortable").sortable('serialize');
+
+    mediaList = mediaList + "&regionid=" + regionId;
+
+    console.log(mediaList);
+
+    $.ajax({
+        type: "post",
+        url: "index.php?p=layout&q=AddFromLibrary&layoutid="+layoutId+"&ajax=true",
+        cache: false,
+        dataType: "json",
+        data: mediaList,
+        success: XiboSubmitResponse
+    });
 }
 
 var background_button_callback = function()
@@ -289,24 +363,6 @@ function deleteRegion(region) {
 	var layoutid = $(region).attr("layoutid");
 
 	XiboFormRender("index.php?p=layout&q=DeleteRegionForm&layoutid="+layoutid+"&regionid="+regionid);
-}
-
-/**
- * Reorders the Region specified by the timebar and its position
- * @param {Object} timeBar
- * @param {Object} mediaBreak
- */
-function orderRegion(timeBar, mediaBreak) {
-	var timeLine = $(timeBar).parent().parent();
-	
-	var layoutid = timeLine.attr("layoutid");
-	var regionid = timeLine.attr("regionid");
-	var mediaid = $(timeBar).attr("mediaid");
-        var lkid     = $(timeBar).attr("lkid");
-	var sequence = $(mediaBreak).attr("breakid");
-	
-	$.ajax({type:"post", url:"index.php?p=layout&q=RegionOrder&layoutid="+layoutid+"&callingpage=layout&ajax=true", cache:false, dataType:"json", 
-		data:{"mediaid":mediaid,"lkid":lkid,"sequence":sequence,"regionid":regionid},success: XiboSubmitResponse});
 }
 
 /**

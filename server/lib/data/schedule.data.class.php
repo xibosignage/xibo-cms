@@ -34,8 +34,9 @@ class Schedule extends Data
 	 * @param $recToDT Object
 	 * @param $isPriority Object
 	 * @param $userID Object
+	 * @param $displayOrder Object
 	 */
-	public function Add($displayGroupIDs, $fromDT, $toDT, $layoutID, $recType, $recDetail, $recToDT, $isPriority, $userID)
+	public function Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $recType, $recDetail, $recToDT, $isPriority, $userID, $displayOrder = 0)
 	{
 		$db	=& $this->db;
 		
@@ -58,11 +59,11 @@ class Schedule extends Data
 		$SQL .= "INSERT ";
 		$SQL .= "INTO   `schedule` ";
 		$SQL .= "       ( ";
-		$SQL .= "              layoutid         , ";
+		$SQL .= "              CampaignId         , ";
 		$SQL .= "              DisplayGroupIDs  , ";
 		$SQL .= "              userID           , ";
 		$SQL .= "              is_priority      , ";
-		if ($recType != 'null')
+		if ($recType != '' && $recType != 'null')
 		{
 			$SQL .= "              recurrence_type  , ";
 			$SQL .= "              recurrence_detail, ";
@@ -73,11 +74,11 @@ class Schedule extends Data
 		$SQL .= "       ) ";
 		$SQL .= "       VALUES ";
 		$SQL .= "       ( ";
-		$SQL .= sprintf("              %d              , ", $layoutID);
+		$SQL .= sprintf("              %d              , ", $campaignId);
 		$SQL .= sprintf("              '%s'            , ", $db->escape_string($displayGroupIDList));
 		$SQL .= sprintf("              %d              , ", $userID);
 		$SQL .= sprintf("              %d              , ", $isPriority);
-		if ($recType != 'null')
+		if ($recType != '' && $recType != 'null')
 		{
 			$SQL .= sprintf("              '%s'            , ", $db->escape_string($recType));
 			$SQL .= sprintf("              '%s'            , ", $db->escape_string($recDetail));
@@ -106,7 +107,7 @@ class Schedule extends Data
 			// Add the parent detail record for this event
 			Debug::LogEntry($db, 'audit', 'Calling AddDetail for new Schedule record', 'Schedule', 'Add');
 			
-			if (!$this->AddDetail($displayGroupID, $layoutID, $fromDT, $toDT, $userID, $isPriority, $eventID))
+			if (!$this->AddDetail($displayGroupID, $campaignId, $fromDT, $toDT, $userID, $isPriority, $eventID, $displayOrder))
 			{
 				Debug::LogEntry($db, 'audit', 'Failure in AddDetail - aborting partially done', 'Schedule', 'Add');
 				return false;
@@ -158,7 +159,7 @@ class Schedule extends Data
 					// after we have added the appropriate amount, are we still valid
 					if ($t_start_temp > $recToDT) break;
 					
-					if (!$this->AddDetail($displayGroupID, $layoutID, $t_start_temp, $t_end_temp, $userID, $isPriority, $eventID))
+					if (!$this->AddDetail($displayGroupID, $campaignId, $t_start_temp, $t_end_temp, $userID, $isPriority, $eventID, $displayOrder))
 					{
 						Debug::LogEntry($db, 'audit', 'Failure in AddDetail - aborting partially done', 'Schedule', 'Add');
 						return false;
@@ -170,29 +171,30 @@ class Schedule extends Data
                 // Notify (dont error)
                 Kit::ClassLoader('Display');
                 $displayObject = new Display($db);
-                $displayObject->NotifyDisplays($layoutID);
+                $displayObject->NotifyDisplays($campaignId);
 		
 		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'Add');
 		
 		return true;
 	}
 	
-	/**
-	 * Edits a Schedule
-	 * @return 
-	 * @param $eventID Object
-	 * @param $eventDetailID Object
-	 * @param $displayGroupIDs Object
-	 * @param $fromDT Object
-	 * @param $toDT Object
-	 * @param $layoutid Object
-	 * @param $rec_type Object
-	 * @param $rec_detail Object
-	 * @param $recToDT Object
-	 * @param $isPriority Object
-	 * @param $userid Object
-	 */
-	public function Edit($eventID, $eventDetailID, $displayGroupIDs, $fromDT, $toDT, $layoutid, $rec_type, $rec_detail, $recToDT, $isPriority, $userid)
+        /**
+         * Edits a Schedule
+         * @param <type> $eventID
+         * @param <type> $eventDetailID
+         * @param <type> $displayGroupIDs
+         * @param <type> $fromDT
+         * @param <type> $toDT
+         * @param <type> $campaignId
+         * @param <type> $rec_type
+         * @param <type> $rec_detail
+         * @param <type> $recToDT
+         * @param <type> $isPriority
+         * @param <type> $userid
+         * @param <int> $displayOrder
+         * @return <type>
+         */
+	public function Edit($eventID, $eventDetailID, $displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid, $displayOrder)
 	{
 		$db	=& $this->db;
 		
@@ -212,7 +214,7 @@ class Schedule extends Data
 		}
 		
 		// Add the new one
-		if (!$this->Add($displayGroupIDs, $fromDT, $toDT, $layoutid, $rec_type, $rec_detail, $recToDT, $isPriority, $userid)) 
+		if (!$this->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid, $displayOrder))
 		{
 			return false;
 		}
@@ -267,7 +269,7 @@ class Schedule extends Data
 	 * @param $isPriority Object
 	 * @param $eventID Object[optional]
 	 */
-	public function AddDetail($displayGroupID, $layoutID, $fromDT, $toDT, $userID = 1, $isPriority = 0, $eventID = '')
+	public function AddDetail($displayGroupID, $campaignId, $fromDT, $toDT, $userID = 1, $isPriority = 0, $eventID = '', $displayOrder = 0)
 	{
 		$db	=& $this->db;
 		
@@ -278,7 +280,7 @@ class Schedule extends Data
 		$SQL .= "INTO   schedule_detail ";
 		$SQL .= "       ( ";
 		$SQL .= "              DisplayGroupID, ";
-		$SQL .= "              layoutID      , ";
+		$SQL .= "              CampaignId      , ";
 		$SQL .= "              FromDT        , ";
 		$SQL .= "              ToDT          , ";
 		$SQL .= "              userID        , ";
@@ -286,12 +288,13 @@ class Schedule extends Data
 		{
 			$SQL .= "              eventID       , ";
 		}
-		$SQL .= "              is_priority ";
+		$SQL .= "              is_priority, ";
+		$SQL .= "              DisplayOrder ";
 		$SQL .= "       ) ";
 		$SQL .= "       VALUES ";
 		$SQL .= "       ( ";
 		$SQL .= sprintf("      %d, ", $displayGroupID);
-		$SQL .= sprintf("      %d, ", $layoutID);
+		$SQL .= sprintf("      %d, ", $campaignId);
 		$SQL .= sprintf("      %d, ", $fromDT);
 		$SQL .= sprintf("      %d, ", $toDT);
 		$SQL .= sprintf("      %d, ", $userID);
@@ -299,7 +302,8 @@ class Schedule extends Data
 		{
 			$SQL .= sprintf("      %d, ", $eventID);
 		}
-		$SQL .= sprintf("      %d  ", $isPriority);
+		$SQL .= sprintf("      %d,  ", $isPriority);
+		$SQL .= sprintf("      %d  ", $displayOrder);
 		$SQL .= "       )";
 		
 		Debug::LogEntry($db, 'audit', $SQL);
@@ -323,17 +327,17 @@ class Schedule extends Data
 	 * @param $scheduleDetailID Object
 	 * @param $layoutID Object
 	 */
-	public function EditDetailLayoutID($scheduleDetailID, $layoutID)
+	public function EditDetailLayoutID($scheduleDetailID, $campaignId)
 	{
 		$db	=& $this->db;
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'EditDetailLayoutID');
 		
 		// Update the default layoutdisplay record
-		$SQL = " UPDATE schedule_detail SET layoutid = %d ";
+		$SQL = " UPDATE schedule_detail SET CampaignId = %d ";
 		$SQL .= " WHERE schedule_detailID = %d ";
 		
-		$SQL = sprintf($SQL, $layoutID, $scheduleDetailID);
+		$SQL = sprintf($SQL, $campaignId, $scheduleDetailID);
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 			

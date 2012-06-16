@@ -109,6 +109,13 @@ class UserGroup extends Data
 
         Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'Delete');
 
+        // Delete all menu links
+        $this->db->query(sprintf('DELETE FROM lkmenuitemgroup WHERE GroupID = %d', $userGroupID));
+
+        // Delete all page links
+        $this->db->query(sprintf('DELETE FROM lkpagegroup WHERE GroupID = %d', $userGroupID));
+
+        // Delete the user group
         $SQL = sprintf("DELETE FROM `group` WHERE GroupID = %d", $userGroupID);
 
         Debug::LogEntry($db, 'audit', $SQL);

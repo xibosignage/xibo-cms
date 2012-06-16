@@ -115,7 +115,13 @@ class DisplayGroup extends Data
 		$db	=& $this->db;
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Delete');
+
+                // Tidy up the schedule detail records.
+                $schedule = new Schedule($db);
 		
+                if (!$schedule->DeleteScheduleForDisplayGroup($displayGroupID))
+                    return false;
+
 		$SQL = sprintf("DELETE FROM displaygroup WHERE DisplayGroupID = %d", $displayGroupID);
 		
 		Debug::LogEntry($db, 'audit', $SQL);

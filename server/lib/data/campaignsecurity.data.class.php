@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2011 Daniel Garner
+ * Copyright (C) 2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.');
 
-class LayoutGroupSecurity extends Data
+class CampaignSecurity extends Data
 {
     public function __construct(database $db)
     {
@@ -28,22 +28,22 @@ class LayoutGroupSecurity extends Data
     }
 
     /**
-     * Links a Display Group to a Group
+     * Links a Campaign to a Group
      * @return
-     * @param $displayGroupID Object
+     * @param $campaignId Object
      * @param $groupID Object
      */
-    public function Link($layoutId, $groupId, $view, $edit, $del)
+    public function Link($campaignId, $groupId, $view, $edit, $del)
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutGroupSecurity', 'Link');
+        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'Link');
 
         $SQL  = "";
         $SQL .= "INSERT ";
-        $SQL .= "INTO   lklayoutgroup ";
+        $SQL .= "INTO   lkcampaigngroup ";
         $SQL .= "       ( ";
-        $SQL .= "              LayoutID, ";
+        $SQL .= "              CampaignID, ";
         $SQL .= "              GroupID, ";
         $SQL .= "              View, ";
         $SQL .= "              Edit, ";
@@ -51,133 +51,133 @@ class LayoutGroupSecurity extends Data
         $SQL .= "       ) ";
         $SQL .= "       VALUES ";
         $SQL .= "       ( ";
-        $SQL .= sprintf("  %d, %d, %d, %d, %d ", $layoutId, $groupId, $view, $edit, $del);
+        $SQL .= sprintf("  %d, %d, %d, %d, %d ", $campaignId, $groupId, $view, $edit, $del);
         $SQL .= "       )";
 
         if (!$db->query($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25024, __('Could not Link Layout to Group'));
+            $this->SetError(25024, __('Could not Link Campaign to Group'));
 
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'LayoutGroupSecurity', 'Link');
+        Debug::LogEntry($db, 'audit', 'OUT', 'CampaignGroupSecurity', 'Link');
 
         return true;
     }
 
     /**
-     * Links everyone to the layout specified
-     * @param <type> $layoutId
+     * Links everyone to the Campaign specified
+     * @param <type> $campaignId
      * @param <type> $view
      * @param <type> $edit
      * @param <type> $del
      * @return <type>
      */
-    public function LinkEveryone($layoutId, $view, $edit, $del)
+    public function LinkEveryone($campaignId, $view, $edit, $del)
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutGroupSecurity', 'LinkEveryone');
+        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'LinkEveryone');
 
         $groupId = $db->GetSingleValue("SELECT GroupID FROM `group` WHERE IsEveryone = 1", 'GroupID', _INT);
 
-        return $this->Link($layoutId, $groupId, $view, $edit, $del);
+        return $this->Link($campaignId, $groupId, $view, $edit, $del);
     }
 
     /**
-     * Unlinks a display group from a group
+     * Unlinks a campaign from a group
      * @return
-     * @param $displayGroupID Object
+     * @param $campaignId Object
      * @param $groupID Object
      */
-    public function Unlink($layoutId, $groupId)
+    public function Unlink($campaignId, $groupId)
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutGroupSecurity', 'Unlink');
+        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
-        $SQL .= "   lklayoutgroup ";
-        $SQL .= sprintf("  WHERE LayoutID = %d AND GroupID = %d ", $layoutId, $groupId);
+        $SQL .= "   lkcampaigngroup ";
+        $SQL .= sprintf("  WHERE CampaignID = %d AND GroupID = %d ", $campaignId, $groupId);
 
         if (!$db->query($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25025, __('Could not Unlink Layout from Group'));
+            $this->SetError(25025, __('Could not Unlink Campaign from Group'));
 
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'LayoutGroupSecurity', 'Unlink');
+        Debug::LogEntry($db, 'audit', 'OUT', 'CampaignGroupSecurity', 'Unlink');
 
         return true;
     }
 
         /**
-     * Unlinks a display group from a group
+     * Unlinks a campaign from a group
      * @return
-     * @param $displayGroupID Object
+     * @param $campaignId Object
      * @param $groupID Object
      */
-    public function UnlinkAll($layoutId)
+    public function UnlinkAll($campaignId)
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutGroupSecurity', 'Unlink');
+        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
-        $SQL .= "   lklayoutgroup ";
-        $SQL .= sprintf("  WHERE LayoutID = %d ", $layoutId);
+        $SQL .= "   lkcampaigngroup ";
+        $SQL .= sprintf("  WHERE CampaignID = %d ", $campaignId);
 
         if (!$db->query($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25025, __('Could not Unlink Layout from Group'));
+            $this->SetError(25025, __('Could not Unlink Campaign from Group'));
 
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'LayoutGroupSecurity', 'Unlink');
+        Debug::LogEntry($db, 'audit', 'OUT', 'CampaignGroupSecurity', 'Unlink');
 
         return true;
     }
 
     /**
-     * Copys all security for a layout
-     * @param <type> $layoutId
-     * @param <type> $newLayoutId
+     * Copys all security for a Campaign
+     * @param <type> $campaignId
+     * @param <type> $newCampaignId
      * @return <type>
      */
-    public function CopyAll($layoutId, $newLayoutId)
+    public function CopyAll($campaignId, $newCampaignId)
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutGroupSecurity', 'Copy');
+        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'Copy');
 
         $SQL  = "";
         $SQL .= "INSERT ";
-        $SQL .= "INTO   lklayoutgroup ";
+        $SQL .= "INTO   lkcampaigngroup ";
         $SQL .= "       ( ";
-        $SQL .= "              LayoutID, ";
+        $SQL .= "              CampaignID, ";
         $SQL .= "              GroupID, ";
         $SQL .= "              View, ";
         $SQL .= "              Edit, ";
         $SQL .= "              Del ";
         $SQL .= "       ) ";
         $SQL .= " SELECT '%s', GroupID, View, Edit, Del ";
-        $SQL .= "   FROM lklayoutgroup ";
-        $SQL .= "  WHERE LayoutID = %d ";
+        $SQL .= "   FROM lkcampaigngroup ";
+        $SQL .= "  WHERE CampaignID = %d ";
 
-        $SQL = sprintf($SQL, $newLayoutId, $layoutId);
+        $SQL = sprintf($SQL, $newCampaignId, $campaignId);
 
         if (!$db->query($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25028, __('Could not Copy All Layout Security'));
+            $this->SetError(25028, __('Could not Copy All Campaign Security'));
 
             return false;
         }

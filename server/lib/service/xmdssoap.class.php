@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -73,7 +73,7 @@ class XMDSSoap
             throw new SoapFault('Sender', 'The Hardware Key you sent was too long. Only 40 characters are allowed (SHA1).');
 
 	// Check in the database for this hardwareKey
-	$SQL = "SELECT licensed, display FROM display WHERE license = '$hardwareKey'";
+	$SQL = "SELECT licensed, display, DisplayID FROM display WHERE license = '$hardwareKey'";
 
 	if (!$result = $db->query($SQL))
 	{
@@ -101,6 +101,8 @@ class XMDSSoap
             // We have seen this display before, so check the licensed value
             $row = $db->get_row($result);
 
+            $displayid = Kit::ValidateParam($row[2], _INT);
+
             // Touch the display to update its last accessed and client address.
             $displayObject->Touch($hardwareKey, $clientAddress);
 
@@ -117,8 +119,10 @@ class XMDSSoap
             }
 	}
 
+        // Log Bandwidth
+        $this->LogBandwidth($displayid, 1, strlen($active));
+
 	Debug::LogEntry($db, "audit", "$active", "xmds", "RegisterDisplay");
-	Debug::LogEntry($db, "audit", "[OUT]", "xmds", "RegisterDisplay");
 
 	return $active;
     }
@@ -142,6 +146,10 @@ class XMDSSoap
         if (!$this->CheckVersion($version))
             throw new SoapFault('Sender', 'Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk');
 
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
+
         $libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
 
         // auth this request...
@@ -161,13 +169,12 @@ class XMDSSoap
 
         // Get a list of all layout ids in the schedule right now.
         $SQL  = " SELECT DISTINCT layout.layoutID ";
-        $SQL .= "   FROM layout ";
-        $SQL .= " 	INNER JOIN schedule_detail ";
-        $SQL .= " 	ON schedule_detail.layoutID = layout.layoutID ";
-        $SQL .= " 	INNER JOIN lkdisplaydg ";
-        $SQL .= "	ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
-        $SQL .= " 	INNER JOIN display ";
-        $SQL .= "	ON lkdisplaydg.DisplayID = display.displayID ";
+        $SQL .= " FROM `campaign` ";
+        $SQL .= "   INNER JOIN schedule_detail ON schedule_detail.CampaignID = campaign.CampaignID ";
+        $SQL .= "   INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= "   INNER JOIN `layout` ON lkcampaignlayout.LayoutID = layout.LayoutID ";
+        $SQL .= "   INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
+        $SQL .= "   INNER JOIN display ON lkdisplaydg.DisplayID = display.displayID ";
         $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
         $SQL .= sprintf(" AND schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d ", $rfLookahead, $currentdate - 3600);
         $SQL .= "   AND layout.retired = 0  ";
@@ -364,8 +371,12 @@ class XMDSSoap
 
         // Return the results of requiredFiles()
         $requiredFilesXml->formatOutput = true;
+        $output = $requiredFilesXml->saveXML();
 
-        return $requiredFilesXml->saveXML();
+        // Log Bandwidth
+        $this->LogBandwidth($this->displayId, 2, strlen($output));
+
+        return $output;
     }
 
     /**
@@ -395,6 +406,10 @@ class XMDSSoap
             throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
         }
 
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
+
         //auth this request...
         if (!$this->AuthDisplay($hardwareKey))
         {
@@ -420,6 +435,9 @@ class XMDSSoap
 
             $row = $db->get_row($results);
             $file = $row[0];
+            
+            // Store file size for bandwidth log
+            $chunkSize = strlen($file);
         }
         elseif ($fileType == "media")
         {
@@ -443,6 +461,9 @@ class XMDSSoap
         }
 
         if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "[OUT]", "xmds", "GetFile");
+
+        // Log Bandwidth
+        $this->LogBandwidth($this->displayId, 4, $chunkSize);
         
         return $file;
     }
@@ -465,6 +486,10 @@ class XMDSSoap
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
             throw new SoapFault('Sender', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
+
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         //auth this request...
         if (!$this->AuthDisplay($hardwareKey))
@@ -492,13 +517,16 @@ class XMDSSoap
         // Add file nodes to the $fileElements
         // Firstly get all the scheduled layouts
         $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID, schedule_detail.is_priority ";
-        $SQL .= " FROM layout ";
-        $SQL .= " INNER JOIN schedule_detail ON schedule_detail.layoutID = layout.layoutID ";
+        $SQL .= " FROM `campaign` ";
+        $SQL .= " INNER JOIN schedule_detail ON schedule_detail.CampaignID = campaign.CampaignID ";
+        $SQL .= " INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= " INNER JOIN `layout` ON lkcampaignlayout.LayoutID = layout.LayoutID ";
         $SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
         $SQL .= " INNER JOIN display ON lkdisplaydg.DisplayID = display.displayID ";
         $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
         $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate - 3600);
         $SQL .= "   AND layout.retired = 0  ";
+        $SQL .= " ORDER BY schedule_detail.DisplayOrder, lkcampaignlayout.DisplayOrder ";
 
         if ($this->isAuditing == 1)
             Debug::LogEntry($db, "audit", $SQL, "xmds", "Schedule");
@@ -557,7 +585,12 @@ class XMDSSoap
         if ($this->isAuditing == 1)
             Debug::LogEntry($db, "audit", $scheduleXml->saveXML(), "xmds", "Schedule");
 
-        return $scheduleXml->saveXML();
+        $output = $scheduleXml->saveXML();
+
+        // Log Bandwidth
+        $this->LogBandwidth($this->displayId, 3, strlen($output));
+
+        return $output;
     }
 
     /**
@@ -584,6 +617,10 @@ class XMDSSoap
         {
                 throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
         }
+
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
@@ -664,6 +701,10 @@ class XMDSSoap
         {
             throw new SoapFault('Sender', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
         }
+
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
@@ -777,6 +818,10 @@ class XMDSSoap
             throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
         }
 
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
+
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
         {
@@ -866,6 +911,10 @@ class XMDSSoap
         if (!$this->CheckVersion($version))
             throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
 
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
+
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', 'This display client is not licensed');
@@ -932,9 +981,11 @@ class XMDSSoap
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
-        {
             throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
-        }
+
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
@@ -961,6 +1012,9 @@ class XMDSSoap
 
         if (!$resource || $resource == '')
             throw new SoapFault('Receiver', 'Unable to get the media resource');
+
+        // Log Bandwidth
+        $this->LogBandwidth($this->displayId, 5, strlen($resource));
 
         return $resource;
     }
@@ -1040,6 +1094,42 @@ class XMDSSoap
             Debug::LogEntry($db, 'audit', sprintf('A Client with an incorrect version connected. Client Version: [%s] Server Version [%s]', $version, $serverVersion));
             return false;
         }
+
+        return true;
+    }
+
+    /**
+     * Check we havent exceeded the bandwidth limits
+     */
+    private function CheckBandwidth()
+    {
+        $xmdsLimit = Config::GetSetting($this->db, 'MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+
+        if ($xmdsLimit <= 0)
+            return true;
+
+        // Test bandwidth for the current month
+        $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
+        $endOfMonth = strtotime('-1 second',strtotime('+1 month',strtotime(date('m').'/01/'.date('Y').' 00:00:00')));
+
+        $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE DateTime > %d AND DateTime <= %d', $startOfMonth, $endOfMonth);
+        $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
+
+        return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? true : false;
+    }
+
+    /**
+     * Log Bandwidth Usage
+     * @param <type> $displayId
+     * @param <type> $type
+     * @param <type> $sizeInBytes
+     */
+    private function LogBandwidth($displayId, $type, $sizeInBytes)
+    {
+        $sql = "INSERT INTO `bandwidth` (DateTime, Type, DisplayID, Size) VALUES (%d, %d, %d, %d) ";
+        $sql = sprintf($sql, time(), $type, $displayId, $sizeInBytes);
+
+        $this->db->query($sql);
 
         return true;
     }
