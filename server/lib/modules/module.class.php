@@ -692,6 +692,16 @@ END;
                     }
 
                     $this->DeleteMediaFiles($storedAs);
+
+                    // Bring back the previous revision of this media (if there is one)
+                    $editedMediaRow = $db->GetSingleRow(sprintf('SELECT IFNULL(MediaID, 0) AS MediaID FROM media WHERE EditedMediaID = %d', $mediaid));
+
+                    if (count($editedMediaRow) > 0)
+                    {
+                        // Unretire this edited record
+                        $editedMediaId = Kit::ValidateParam($editedMediaRow['MediaID'], _INT);
+                        $db->query(sprintf('UPDATE media SET IsEdited = 0, EditedMediaID = NULL WHERE mediaid = %d', $editedMediaId));
+                    }
 		}
 
                 $this->response->message = __('Media Deleted');

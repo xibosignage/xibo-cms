@@ -168,9 +168,12 @@ HTML;
 		$SQL .= "        media.type, ";
 		$SQL .= "        media.duration, ";
 		$SQL .= "        media.userID, ";
-		$SQL .= "        media.FileSize ";
+		$SQL .= "        media.FileSize, ";
+		$SQL .= "        IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID ";
 		$SQL .= "FROM    media ";
-		$SQL .= "WHERE   isEdited = 0 ";
+		$SQL .= " LEFT OUTER JOIN media parentmedia ";
+		$SQL .= " ON parentmedia.MediaID = media.MediaID ";
+		$SQL .= "WHERE   media.isEdited = 0 ";
 		if ($mediatype != "all") 
 		{
 			$SQL .= sprintf(" AND media.type = '%s'", $db->escape_string($mediatype));
@@ -208,6 +211,7 @@ HTML;
 		$msgRetired	= __('Retired');
 		$msgOwner	= __('Owner');
 		$msgFileSize	= __('Size');
+                $msgRevisions = __('Revised');
 		$msgShared	= __('Permissions');
 		$msgAction	= __('Action');
 
@@ -222,6 +226,7 @@ HTML;
 			        <th>$msgFileSize</th>
                                 <th>$msgOwner</th>
 			        <th>$msgShared</th>       
+			        <th>$msgRevisions</th>
 			        <th>$msgAction</th>     
 			    </tr>
 			</thead>
@@ -236,6 +241,7 @@ END;
             $length 		= sec2hms(Kit::ValidateParam($aRow[3], _DOUBLE));
             $ownerid 		= Kit::ValidateParam($aRow[4], _INT);
             $fileSize = Kit::ValidateParam($aRow[5], _INT);
+            $revisions = (Kit::ValidateParam($aRow[6], _INT) != 0) ? '<img src="img/act.gif" />' : '';
 
             // Size in MB
             $sz = 'BKMGTP';
@@ -270,6 +276,7 @@ END;
                 $output .= "<td>$fileSize</td>\n";
                 $output .= "<td>$username</td>";
                 $output .= "<td>$group</td>";
+                $output .= '<td>' . $revisions . '</td>';
 
                 // ACTION buttons
                 if ($auth->edit)
