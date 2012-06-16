@@ -432,6 +432,9 @@ END;
         // Create a campaign
         $newCampaignId = $campaign->Add($newLayoutName, 1, $userId);
 
+        // Link them
+        $campaign->Link($newCampaignId, $newLayoutId, 0);
+
         // Open the layout XML and parse for media nodes
         if (!$this->SetDomXml($newLayoutId))
         {
@@ -456,14 +459,22 @@ END;
             $mediaId = $mediaNode->getAttribute('id');
             $type = $mediaNode->getAttribute('type');
 
+            // Store the old media id
+            $oldMediaId = $mediaId;
+
             Debug::LogEntry($this->db, 'audit', sprintf('Media %s node found with id %d', $type, $mediaId), 'layout', 'Copy');
 
             // If this is a non region specific type, then move on
             if ($this->IsRegionSpecific($type))
             {
+                // Generate a new media id
+                $newMediaId = md5(uniqid());
+                
+                $mediaNode->setAttribute('id', $newMediaId);
+
                 // Copy media security
                 $security = new LayoutMediaGroupSecurity($db);
-                $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $mediaId, $mediaId);
+                $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $mediaId, $newMediaId);
                 continue;
             }
 
@@ -474,9 +485,6 @@ END;
             // Do we need to copy this media record?
             if ($copyMedia)
             {
-                // Store the old media id
-                $oldMediaId = $mediaId;
-
                 // Take this media item and make a hard copy of it.
                 if (!$mediaId = $mediaObject->Copy($mediaId, $newLayoutName))
                 {
