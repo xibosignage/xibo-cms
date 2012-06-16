@@ -37,6 +37,42 @@ class Step46 extends UpgradeStep
             $db->query("UPDATE schedule_detail SET layoutid = '$campaignId' WHERE layoutid = '$layoutId'");
         }
 
+        // Also run a script to tidy up orphaned media in the library
+        $library = Config::GetSetting($db, 'LIBRARY_LOCATION');
+
+        // Dump the files in the temp folder
+        foreach (scandir($library . 'temp') as $item)
+        {
+            if ($item == '.' || $item == '..')
+                continue;
+
+            unlink($library . 'temp' . DIRECTORY_SEPARATOR . $item);
+        }
+
+        // Get a list of all media files
+        foreach(scandir($library) as $file)
+        {
+            if ($file == '.' || $file == '..')
+                continue;
+            
+            // For each media file, check to see if the file still exists in the library
+            if ($db->GetCountOfRows("SELECT * FROM media WHERE storedAs = '" . $file . '"') == 0)
+            {
+                // If not, delete it
+                unlink($library . $file);
+
+                if (file_exists($library . 'tn_' . $file))
+                {
+                    unlink($library . 'tn_' . $file);
+                }
+
+                if (file_exists($library . 'bg_' . $file))
+                {
+                    unlink($library . 'bg_' . $file);
+                }
+            }
+        }
+
         return true;
     }
 }
