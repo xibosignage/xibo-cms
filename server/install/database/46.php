@@ -9,11 +9,11 @@ class Step46 extends UpgradeStep
     {
         global $db;
 
-        // On upgrade, fix all of the layouts, including the default
+        // On upgrade, fix all of the layouts, excluding the default
         
         $campaign = new Campaign($db);
 
-        $SQL = "SELECT LayoutID, Layout, UserID FROM layout ";
+        $SQL = "SELECT LayoutID, Layout, UserID FROM layout WHERE layout <> 'Default Layout'";
 
         $layouts = $db->GetArray($SQL);
 
