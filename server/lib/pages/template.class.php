@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -111,7 +111,7 @@ class templateDAO
                 $is_system = 'all';
 		if (isset($_SESSION['template']['is_system'])) $is_system = $_SESSION['template']['is_system'];
 		
-		$system_list = dropdownlist("SELECT 'all','All' UNION SELECT '1','Yes' UNION SELECT '0','No'","is_system",$is_system);
+		$system_list = dropdownlist("SELECT '-1','All' UNION SELECT '1','Yes' UNION SELECT '0','No'","is_system",$is_system);
 		
 		//Output the filter form
 		$output = <<<END
@@ -183,7 +183,7 @@ HTML;
 		{
 			$SQL .= " AND template.tags LIKE '%" . $db->escape_string($tags) . "%' ";
 		}
-		if ($is_system != "all") 
+		if ($is_system != "-1") 
 		{
 			$SQL .= sprintf(" AND template.issystem = %d ", $is_system);
 		}
