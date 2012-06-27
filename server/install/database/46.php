@@ -39,6 +39,7 @@ class Step46 extends UpgradeStep
 
         // Also run a script to tidy up orphaned media in the library
         $library = Config::GetSetting($db, 'LIBRARY_LOCATION');
+	    $library = rtrim($library, '/') . '/';
 
         // Dump the files in the temp folder
         foreach (scandir($library . 'temp') as $item)
@@ -54,9 +55,14 @@ class Step46 extends UpgradeStep
         {
             if ($file == '.' || $file == '..')
                 continue;
+
+	        if (is_dir($library . $file))
+		        continue;
+
+            $rowCount = $db->GetCountOfRows("SELECT * FROM media WHERE storedAs = '" . $file . "'");
             
             // For each media file, check to see if the file still exists in the library
-            if ($db->GetCountOfRows("SELECT * FROM media WHERE storedAs = '" . $file . '"') == 0)
+            if ($rowCount == 0)
             {
                 // If not, delete it
                 unlink($library . $file);

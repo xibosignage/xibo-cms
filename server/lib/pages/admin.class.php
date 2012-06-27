@@ -282,6 +282,7 @@ END;
                     $output .= '<p>' . __('Import / Export Database') . '</p>';
                     $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=RestoreForm">' . __('Import') . '</button>';
                     $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=BackupForm">' . __('Export') . '</button>';
+                    $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=TidyLibrary">' . __('Tidy Library') . '</button>';
                 }
 		
 		// Need to now get all the Misc settings 
@@ -734,6 +735,69 @@ FORM;
         $sz = 'BKMGTP';
         $factor = floor((strlen($fileSize) - 1) / 3);
         return sprintf('%.2f', $fileSize / pow(1024, $factor)) . @$sz[$factor];
+    }
+
+    /**
+     * Tidies up the library
+     */
+    public function TidyLibrary()
+    {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        // Also run a script to tidy up orphaned media in the library
+        $library = Config::GetSetting($db, 'LIBRARY_LOCATION');
+	    $library = rtrim($library, '/') . '/';
+
+        Debug::LogEntry($db, 'audit', 'Library Location: ' . $library);
+
+        // Dump the files in the temp folder
+        foreach (scandir($library . 'temp') as $item)
+        {
+            if ($item == '.' || $item == '..')
+                continue;
+
+            Debug::LogEntry($db, 'audit', 'Deleting temp file: ' . $item);
+
+            unlink($library . 'temp' . DIRECTORY_SEPARATOR . $item);
+        }
+
+        // Get a list of all media files
+        foreach(scandir($library) as $file)
+        {
+            Debug::LogEntry($db, 'audit', 'Checking file: ' . $file);
+
+            if ($file == '.' || $file == '..')
+                continue;
+
+	        if (is_dir($library . $file))
+		        continue;
+
+            $rowCount = $db->GetCountOfRows("SELECT * FROM media WHERE storedAs = '" . $file . "'");
+
+            Debug::LogEntry($db, 'audit', 'Media count for file: ' . $file . ' is ' . $rowCount);
+            
+            // For each media file, check to see if the file still exists in the library
+            if ($rowCount == 0)
+            {
+                Debug::LogEntry($db, 'audit', 'Deleting file: ' . $file);
+
+                // If not, delete it
+                unlink($library . $file);
+
+                if (file_exists($library . 'tn_' . $file))
+                {
+                    unlink($library . 'tn_' . $file);
+                }
+
+                if (file_exists($library . 'bg_' . $file))
+                {
+                    unlink($library . 'bg_' . $file);
+                }
+            }
+        }
+
+        trigger_error(__('Library Tidy Complete'));
     }
 }
 ?>
