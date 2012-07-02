@@ -99,7 +99,7 @@ abstract class OAuthStoreSQL extends OAuthStoreAbstract
 					$this->sql_errcheck();
 				}
 			}
-			$this->query('set character set utf8');
+			//$this->query('set character set utf8');
 		}
 	}
 
