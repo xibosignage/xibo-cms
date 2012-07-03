@@ -73,7 +73,6 @@ class displayDAO
             display.isAuditing,
             display.email_alert,
             display.alert_timeout,
-            display.ClientAddress,
             display.MediaInventoryStatus,
             display.MediaInventoryXml
      FROM display
