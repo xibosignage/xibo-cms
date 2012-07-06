@@ -1,6 +1,6 @@
 <?php
 
-class Step2 extends UpgradeStep
+class Step48 extends UpgradeStep
 {
 
     public function Boot()
@@ -11,21 +11,46 @@ class Step2 extends UpgradeStep
         if ($this->a[0])
         {
             // Load all layouts
-            $layouts = $db->GetArray("SELECT LayoutId, LayoutXml FROM `layout`");
+            $layouts = $db->GetArray("SELECT LayoutID, Xml FROM `layout`");
+
+            echo ':';
 
             foreach($layouts as $layout)
             {
                 $layoutId = Kit::ValidateParam($layout['LayoutID'], _INT);
-                $layoutXml = Kit::ValidateParam($layout['LayoutXml'], _HTMLSTRING);
+                $layoutXml = Kit::ValidateParam($layout['Xml'], _HTMLSTRING);
+
+                echo '.';
 
                 // Do a regex match for the font sizing...
-                preg_replace_callback('(@(.*?).)', create_function('$matches', ''), $layoutXml);
+                $layoutXml = preg_replace_callback('/font-size:(.*?)em;/', create_function('$matches', 'return "font-size:" . $matches[1] * 16 . "px;";'), $layoutXml);
 
-                // Also do a regex match for the scrollSpeed?
-                
+                // Also do a regex match for the scrollSpeed
+                $scrollSpeedLookup = '
+                    $return = 2;
+
+                    if($matches[1] <= 5)
+                        $return = 15;
+                    else if ($matches[1] <= 10)
+                        $return = 10;
+                    else if ($matches[1] <= 15)
+                        $return = 5;
+                    else if ($matches[1] <= 20)
+                        $return = 4;
+                    else if ($matches[1] <= 25)
+                        $return = 3;
+                    else if ($matches[1] <= 30)
+                        $return = 2;
+                    else if ($matches[1] > 30)
+                        $return = 1;
+
+                    return "<scrollSpeed>" . $return . "</scrollSpeed>";
+                ';
+
+                $layoutXml = preg_replace_callback('/<scrollSpeed>(.*?)<\/scrollSpeed>/', create_function('$matches', $scrollSpeedLookup), $layoutXml);
                 
                 // Update the XML
-                $db->query("UPDATE `layout` SET LayoutXml = '" . $layoutXml . "' WHERE LayoutId = " . $layoutId);
+                $db->query("UPDATE `layout` SET Xml = '" . $layoutXml . "' WHERE LayoutId = " . $layoutId);
             }
         }
 
@@ -50,18 +75,6 @@ class Step2 extends UpgradeStep
         }
 
         return false;
-    }
-
-    /**
-     * Take an EM value and return a PX one (I know this is not always true, nested EM's wont work, but its the best we can do
-     * and all EM's must be removed.
-     * @param <type> $emValue
-     */
-    public function AdjustFontSize($emValue)
-    {
-        // Take the EM value and * 16
-        // most browsers have 1em = 16px
-        return $emValue * 16;
     }
 }
 ?>
