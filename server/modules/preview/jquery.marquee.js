@@ -94,14 +94,14 @@
 
         // TODO consider whether using .html() in the wrapping process could lead to loosing predefined events...
         this.each(function (i) {
+            // Dan Garner: Modified to keep the original div id
             var $marquee = $(this),
                 width = $marquee.attr('width') || $marquee.width(),
                 height = $marquee.attr('height') || $marquee.height(),
-                // Dan Garner: Modified to keep the original ID
-                $marqueeRedux = $marquee.after('<div id="' + $marquee.attr("id") + '" ' + (klass ? 'class="' + klass + '" ' : '') + 'style="display: block-inline; width: ' + width + 'px; height: ' + height + 'px; overflow: hidden;"><div style="float: left; white-space: nowrap;">' + $marquee.html() + '</div></div>').next(),
+                direction = ($marquee.attr('direction') || 'left').toLowerCase(),
+                $marqueeRedux = $marquee.after('<div id="' + $marquee.attr("id") + '" ' + (klass ? 'class="' + klass + '" ' : '') + 'style="display: block-inline; width: ' + width + 'px; height: ' + height + 'px; overflow: hidden;"><div style="float: left; ' + ((/left|right/.test(direction)) ? "white-space: nowrap;" : "") + '">' + $marquee.html() + '</div></div>').next(),
                 marqueeRedux = $marqueeRedux.get(0),
                 hitedge = 0,
-                direction = ($marquee.attr('direction') || 'left').toLowerCase(),
                 marqueeState = {
                     dir : /down|right/.test(direction) ? -1 : 1,
                     axis : /left|right/.test(direction) ? 'scrollLeft' : 'scrollTop',

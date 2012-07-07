@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -152,7 +152,7 @@ FORM;
                         <td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
                         </tr>
                         <tr>
-                            <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (lower is faster)</label></td>
+                            <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (higher is faster)</label></td>
                             <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>
                                 <td><label for="fitText" title="$msgFitText">$msgFitText</label></td>
                                 <td><input id="fitText" name="fitText" type="checkbox" $fitTextChecked></td>

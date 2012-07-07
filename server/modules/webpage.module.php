@@ -218,7 +218,7 @@ FORM;
 		//Validate the URL?
 		if ($uri == "" || $uri == "http://")
 		{
-			$this->response->SetError('Please enter a Link for this Ticker');
+			$this->response->SetError('Please enter a Link');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
@@ -293,7 +293,7 @@ FORM;
 		//Validate the URL?
 		if ($uri == "" || $uri == "http://")
 		{
-			$this->response->SetError('Please enter a Link for this Ticker');
+			$this->response->SetError('Please enter a Link');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
@@ -317,7 +317,7 @@ FORM;
 		$this->UpdateRegion();
 		
 		//Set this as the session information
-		setSession('content', 'type', 'text');
+		setSession('content', 'type', 'webpage');
 		
 	if ($this->showRegionOptions)
         {

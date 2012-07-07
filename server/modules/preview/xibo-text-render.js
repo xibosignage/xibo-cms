@@ -71,43 +71,44 @@ jQuery.fn.extend({
 
                 $(".XiboRssItem", this).css({
                     display: "block",
-                    width: options.width,
-                    height: options.height
+                    width: options.width
                 });
+            }
 
-                if (options.direction == "single") {
-                    // Use the cycle plugin to switch between the items
-                    var totalDuration = options.duration * 1000;
-                    var itemCount = $('.XiboRssItem').size();
-                    var itemTime;
+            // Animated somehow?
+            if (options.direction == "single") {
+                // Use the cycle plugin to switch between the items
+                var totalDuration = options.duration * 1000;
+                var itemCount = $('.XiboRssItem').size();
+                var itemTime;
 
-                    if (options.durationIsPerItem)
-                        itemTime = totalDuration / itemCount;
-                    else
-                        itemTime = totalDuration;
+                if (options.durationIsPerItem)
+                    itemTime = totalDuration / itemCount;
+                else
+                    itemTime = totalDuration;
 
-                    if (itemTime < 2000) itemTime = 2000;
+                if (itemTime < 2000)
+                    itemTime = 2000;
 
-                   // Try to get the itemTime from an element we expect to be in the HTML
-                   $('#text').cycle({fx: 'fade', timeout:itemTime});
-                }
-                else if (options.direction == "left" || options.direction == "right") {
-                    $("p", this).css("display", "inline");
-                }
+               // Cycle handles this for us
+               $('#text').cycle({
+                   fx: 'fade',
+                   timeout:itemTime
+               });
+            }
+            else if (options.direction == "left" || options.direction == "right") {
+                $("p", this).css("display", "inline");
             }
 
             // Marquee?
             if (options.direction != "none" && options.direction != "single") {
-
-                // Scroll speed is going to be wrong (30 was the default before)
-                var scrollSpeed = (options.scrollSpeed > 15) ? 3 : options.scrollSpeed;
 
                 // Set some options on the node, before calling marquee (behaviour, direction, scrollAmount, width, height)
                 $(this).attr({
                     direction: options.direction,
                     width: options.width,
                     height: options.height,
-                    scrollamount: scrollSpeed,
+                    scrollamount: options.scrollSpeed,
                     behaviour: "scroll"
                 });
 
