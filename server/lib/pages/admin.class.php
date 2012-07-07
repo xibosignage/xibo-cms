@@ -730,11 +730,17 @@ FORM;
      * @param <type> $fileSize
      * @return <type>
      */
-    private function FormatByteSize($fileSize)
+    private function FormatByteSize($bytes, $precision = 2)
     {
-        $sz = 'BKMGTP';
-        $factor = floor((strlen($fileSize) - 1) / 3);
-        return sprintf('%.2f', $fileSize / pow(1024, $factor)) . @$sz[$factor];
+        $units = array('B', 'KB', 'MB', 'GB', 'TB');
+
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+
+        $bytes /= pow(1024, $pow);
+
+        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 
     /**

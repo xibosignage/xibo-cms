@@ -1377,7 +1377,18 @@ HTML;
 
     function ScheduleNowHref()
     {
-        echo 'index.php?p=schedule&q=ScheduleNowForm&layoutid=' . $this->layoutid;
+        // Get the Campaign ID
+        $SQL  = "SELECT campaign.CampaignID ";
+        $SQL .= "  FROM `lkcampaignlayout` ";
+        $SQL .= "   INNER JOIN `campaign` ";
+        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= " WHERE lkcampaignlayout.LayoutID = %d ";
+        $SQL .= "   AND campaign.IsLayoutSpecific = 1";
+
+        if (!$campaignId = $this->db->GetSingleValue(sprintf($SQL, $this->layoutid), 'CampaignID', _INT))
+            trigger_error(__('Layout has no associated Campaign, corrupted Layout'), E_USER_ERROR);
+
+        echo 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $campaignId;
     }
 	
 	/**

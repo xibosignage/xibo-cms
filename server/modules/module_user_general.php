@@ -571,7 +571,7 @@
 		$userid		=& $this->userid;
 		
 		// Check that the module is enabled
-		$SQL  = "SELECT * FROM module WHERE Enabled = 1 ";
+		$SQL  = "SELECT * FROM module WHERE Enabled = 1 ORDER BY Name ";
 		if ($regionSpecific != -1)
 		{
 			$SQL .= sprintf(" AND RegionSpecific = %d ", $regionSpecific);
@@ -948,6 +948,8 @@ END;
 
         if ($filterLayout != '')
             $SQL .= "   AND layout LIKE '%" . $filterLayout . "%'";
+
+        $SQL .= " ORDER BY Layout ";
 
         //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
