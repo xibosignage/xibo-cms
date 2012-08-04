@@ -27,7 +27,7 @@ $response   = Kit::GetParam('response', _REQUEST, _WORD, 'xml');
 $serviceResponse = new XiboServiceResponse();
 
 // Is the WSDL being requested.
-if (isset($_GET['wsdl']))
+if (isset($_GET['wsdl']) || isset($_GET['WSDL']))
     $serviceResponse->WSDL();
 
 // Is the XRDS being requested
