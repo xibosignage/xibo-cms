@@ -1236,7 +1236,7 @@ END;
     
     /**
      * Authorises a user against a campaign
-     * @param <type> $layoutId
+     * @param <type> $campaignId
      * @return <type>
      */
     public function CampaignAuth($campaignId, $fullObject = false)
@@ -1270,7 +1270,7 @@ END;
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
         $SQL .= 'GROUP BY campaign.UserID ';
 
-        $SQL = sprintf($SQL, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $campaignId, implode(',', $this->GetUserGroups($this->userid, true)));
         //Debug::LogEntry($this->db, 'audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
