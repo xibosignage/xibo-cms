@@ -571,15 +571,15 @@
 		$userid		=& $this->userid;
 		
 		// Check that the module is enabled
-		$SQL  = "SELECT * FROM module WHERE Enabled = 1 ORDER BY Name ";
+		$SQL  = "SELECT * FROM module WHERE Enabled = 1 ";
+                
 		if ($regionSpecific != -1)
-		{
-			$SQL .= sprintf(" AND RegionSpecific = %d ", $regionSpecific);
-		}
+                    $SQL .= sprintf(" AND RegionSpecific = %d ", $regionSpecific);
+		
 		if ($module != '')
-		{
-			$SQL .= sprintf(" AND Module = '%s' ", $db->escape_string($module));
-		}
+                    $SQL .= sprintf(" AND Module = '%s' ", $db->escape_string($module));
+		
+                $SQL .= "  ORDER BY Name ";
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 		

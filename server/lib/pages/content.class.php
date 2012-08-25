@@ -329,7 +329,8 @@ END;
 		$response = new ResponseManager();
 		
 		// Get a list of the enabled modules and then create buttons for them
-		if (!$enabledModules = new ModuleManager($db, $user, 0)) trigger_error($enabledModules->message, E_USER_ERROR);
+		if (!$enabledModules = new ModuleManager($db, $user, 0)) 
+                    trigger_error($enabledModules->message, E_USER_ERROR);
 		
 		$buttons = '';
 		
