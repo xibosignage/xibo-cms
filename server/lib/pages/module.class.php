@@ -221,10 +221,7 @@ HTML;
 
         $msgSave = __('Save');
         $msgCancel = __('Cancel');
-        $msgAction = __('Action');
-        $msgEdit = __('Edit');
-        $msgDelete = __('Delete');
-
+        
         $msgModuleExtensions = __('Valid Extensions');
         $msgModuleImage = __('Image');
         $msgModuleEnabled = __('Enabled');
