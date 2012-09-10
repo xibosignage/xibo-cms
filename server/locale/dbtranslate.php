@@ -89,4 +89,10 @@ echo __('LIBRARY_SIZE_LIMIT_KB');
 echo __('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 echo __('DEFAULT_LANGUAGE');
 echo __('TRANSITION_CONFIG_LOCKED_CHECKB');
+
+// Transitions
+echo __('Fade In');
+echo __('Fade Out');
+echo __('Fly');
+
 ?>

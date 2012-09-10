@@ -1891,6 +1891,8 @@ END;
             require_once("modules/$mediaType.module.php");
             $tmpModule = new $mediaType($db, $user, $mediaId, $layoutId, $regionId, $lkId);
             $mediaName = $tmpModule->GetName();
+            $transitionIn = $tmpModule->GetTransition('in');
+            $transitionOut = $tmpModule->GetTransition('out');
             
             // Colouring for the media block
             if ($timeBarColouring == 'Media Colouring')
@@ -1903,7 +1905,7 @@ END;
             
             // In transition
             $response->html .= '    <div class="timelineMediaInTransition">';
-            $response->html .= '        <a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a>';
+            $response->html .= '        <a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . $transitionIn . '</a>';
             $response->html .= '    </div>';
             
             // Media Bar
@@ -1937,7 +1939,7 @@ END;
             
             // Out transition
             $response->html .= '    <div class="timelineMediaOutTransition">';
-            $response->html .= '        <a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=out&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . '</a>';
+            $response->html .= '        <a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=out&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . $transitionOut . '</a>';
             $response->html .= '    </div>';
             
             // End of this media item

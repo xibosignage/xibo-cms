@@ -1930,21 +1930,23 @@ END;
         
         // Get the transition type
         $transitionType = Kit::GetParam('transitionType', _POST, _WORD);
+        $duration = Kit::GetParam('transitionDuration', _POST, _INT, 0);
+        $direction = Kit::GetParam('transitionDirection', _POST, _WORD, '');
         $type = Kit::GetParam('type', _REQUEST, _WORD);
         
         switch ($type)
         {
             case 'in':
                 $this->SetOption('transIn', $transitionType);
-                $this->SetOption('transInDuration', 0);
-                $this->SetOption('transInDirection', 0);
+                $this->SetOption('transInDuration', $duration * 1000);
+                $this->SetOption('transInDirection', $direction);
                 
                 break;
             
             case 'out':
                 $this->SetOption('transOut', $transitionType);
-                $this->SetOption('transOutDuration', 0);
-                $this->SetOption('transOutDirection', 0);
+                $this->SetOption('transOutDuration', $duration * 1000);
+                $this->SetOption('transOutDirection', $direction);
                 
                 break;
             
@@ -1963,6 +1965,27 @@ END;
         }
 
         return $this->response;
+    }
+    
+    /**
+     * Get the the Transition for this media
+     * @param string Either "in" or "out"
+     */
+    public function GetTransition($type)
+    {
+        switch ($type)
+        {
+            case 'in':
+                return $this->GetOption('transIn');
+                break;
+            
+            case 'out':
+                return $this->GetOption('transOut');
+                break;
+            
+            default:
+                trigger_error(_('Unknown transition type'), E_USER_ERROR);
+        }
     }
 }
 ?>
