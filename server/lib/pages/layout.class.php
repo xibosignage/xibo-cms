@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -1900,6 +1900,13 @@ END;
             
             // Create the list item
             $response->html .= '<li class="timelineMediaListItem" mediaid="' . $mediaId . '" lkid="' . $lkId . '">';
+            
+            // In transition
+            $response->html .= '    <div class="timelineMediaInTransition">';
+            $response->html .= '        <a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a>';
+            $response->html .= '    </div>';
+            
+            // Media Bar
             $response->html .= '    <div class="timelineMediaItem">';
             $response->html .= '        <ul class="timelineMediaItemLinks">';
 
@@ -1925,8 +1932,15 @@ END;
             $mediaHoverPreview = $tmpModule->HoverPreview();
             $response->html .= '        <div class="timelineMediaPreview">' . $mediaHoverPreview . '</div>';
 
-            // End the time line media item and list
+            // End the time line media item
             $response->html .= '    </div>';
+            
+            // Out transition
+            $response->html .= '    <div class="timelineMediaOutTransition">';
+            $response->html .= '        <a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=out&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . '</a>';
+            $response->html .= '    </div>';
+            
+            // End of this media item
             $response->html .= '</li>';
         }
 
