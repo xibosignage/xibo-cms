@@ -1336,9 +1336,12 @@ END;
     }
     
     /**
-     * Enabled Transitions
-     */    
-    public function TransitionAuth($type = '')
+     * Get a list of transitions
+     * @param string in/out
+     * @param string transition code
+     * @return boolean
+     */
+    public function TransitionAuth($type = '', $code = '')
     {
         // Return a list of in/out transitions (or both)
         $SQL = 'SELECT TransitionID, ';
@@ -1359,6 +1362,12 @@ END;
             
             if ($type == 'out')
                 $SQL .= '  AND AvailableAsOut = 1 ';
+        }
+        
+        if ($code != '')
+        {
+            // Filter on code
+            $SQL .= sprintf("AND Code = '%s' ", $this->db->escape_string($code));
         }
         
         $SQL .= ' ORDER BY Transition ';
@@ -1382,6 +1391,7 @@ END;
             $transitionItem['hasdirection'] = Kit::ValidateParam($transition['HasDirection'], _INT);
             $transitionItem['enabledforin'] = Kit::ValidateParam($transition['AvailableAsIn'], _INT);
             $transitionItem['enabledforout'] = Kit::ValidateParam($transition['AvailableAsOut'], _INT);
+            $transitionItem['class'] = (($transitionItem['hasduration'] == 1) ? 'hasDuration' : '') . ' ' . (($transitionItem['hasdirection'] == 1) ? 'hasDirection' : '');
 
             $transitions[] = $transitionItem;
         }

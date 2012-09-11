@@ -1856,14 +1856,14 @@ FORM;
         {
             case 'in':
                 $transition = $this->GetOption('transIn');
-                $duration = $this->GetOption('transInDuration');
+                $duration = $this->GetOption('transInDuration', 0);
                 $direction = $this->GetOption('transInDirection');
                 
                 break;
             
             case 'out':
                 $transition = $this->GetOption('transOut');
-                $duration = $this->GetOption('transOutDuration');
+                $duration = $this->GetOption('transOutDuration', 0);
                 $direction = $this->GetOption('transOutDirection');
                 
                 break;
@@ -1872,13 +1872,31 @@ FORM;
                 trigger_error(_('Unknown transition type'), E_USER_ERROR);
         }
         
-        // Do we have a transition already?
+        // Adjust the duration for seconds
+        $duration = $duration / 1000;
+        
+        // Add none to the list
+        $transitions = $this->user->TransitionAuth($type);
+        $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
         
         // Prepare a list of options
-        $transitionDropdown = Kit::SelectList('transitionType', $this->user->TransitionAuth($type), 'code', 'transition', $transition);
+        $transitionDropdown = Kit::SelectList('transitionType', $transitions, 'code', 'transition', $transition, '', 'class');
+        
+        // Compass points for direction
+        $compassPoints = array(
+            array('id' => 'N', 'name' => 'North'), 
+            array('id' => 'E', 'name' => 'East'), 
+            array('id' => 'S', 'name' => 'South'), 
+            array('id' => 'W', 'name' => 'West')
+        );
+        
+        // Prepare a list of compass points
+        $directionDropdown = Kit::SelectList('transitionDirection', $compassPoints, 'id', 'name', $direction);
         
         // Some messages for the form
         $msgTransition = __('What transition should be applied to this media item?');
+        $msgDuration = __('The duration for this transition, in seconds.');
+        $msgDirection = __('The direction for this transtion.');
         
         // Construct the form
         $form = <<<END
@@ -1893,22 +1911,32 @@ FORM;
                 <tr>
                     <td><label for="tranisitionType" title="$msgTransition">$msgTransition</label></td>
                     <td>$transitionDropdown</td>
-                    <td></td>
-                    <td></td>
+                </tr>
+                <tr class="transitionDuration">
+                    <td><label for="transitionDuration">$msgDuration</label></td>
+                    <td><input type="text" class="numeric" name="transitionDuration" id="transitionDuration" value="$duration" /></td>
+                </tr>
+                <tr class="transitionDirection">
+                    <td><label for="transitionDirection">$msgDirection</label></td>
+                    <td>$directionDropdown</td>
                 </tr>
             </table>
         </form>
 END;
         
+        // Decide where the cancel button will take us
         if ($this->showRegionOptions)
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
         else
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
 
+        // Always include the save button
         $this->response->AddButton(__('Save'), '$("#TransitionForm").submit()');
         
+        // Output the form and dialog
         $this->response->html = $form;
-        $this->response->dialogTitle = 'Edit Transition for ' . $this->displayType;
+        $this->response->callBack = 'transitionFormLoad';
+        $this->response->dialogTitle = 'Edit ' . $type . ' Transition for ' . $this->displayType;
         $this->response->dialogSize = true;
         $this->response->dialogWidth = '450px';
         $this->response->dialogHeight = '280px';
@@ -1976,16 +2004,24 @@ END;
         switch ($type)
         {
             case 'in':
-                return $this->GetOption('transIn');
+                $code = $this->GetOption('transIn');
                 break;
             
             case 'out':
-                return $this->GetOption('transOut');
+                $code = $this->GetOption('transOut');
                 break;
             
             default:
                 trigger_error(_('Unknown transition type'), E_USER_ERROR);
         }
+        
+        if ($code == '')
+            return __('None');
+        
+        // Look up the real transition name
+        $transition = $this->user->TransitionAuth('', $code);
+        
+        return __($transition[0]['transition']);
     }
 }
 ?>

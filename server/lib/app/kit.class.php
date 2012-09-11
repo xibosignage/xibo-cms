@@ -489,13 +489,25 @@ class Kit
         return mail($to, $subject, $message, $headers);
     }
 
-    public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = '', $callBack = '')
+    /**
+     * Generate a select list
+     * @param string Select list name
+     * @param array Array of Values
+     * @param string Key for item id
+     * @param string Key for item name
+     * @param string ID value for selected item
+     * @param string Extra attributes to put on the list
+     * @param string Key for item class
+     * @return string
+     */
+    public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = '', $callBack = '', $classColumn = '')
     {
         $list = '<select name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
 
         foreach ($listValues as $listItem)
         {
-            $list .= '<option value="' . $listItem[$idColumn] . '" ' . (($listItem[$idColumn] == $selectedId) ? 'selected' : '') . '>' . $listItem[$nameColumn] . '</option>';
+            $class = ($classColumn == '') ? '' : 'class="' . $listItem[$classColumn] . '"';
+            $list .= '<option ' . $class . ' value="' . $listItem[$idColumn] . '" ' . (($listItem[$idColumn] == $selectedId) ? 'selected' : '') . '>' . $listItem[$nameColumn] . '</option>';
         }
 
         $list .= '</select>';
