@@ -1905,7 +1905,10 @@ END;
             
             // In transition
             $response->html .= '    <div class="timelineMediaInTransition">';
-            $response->html .= '        <a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . $transitionIn . '</a>';
+            
+            if ($transitionIn != 'None')
+                $response->html .= '<span>' . $transitionIn . '</span>';
+            
             $response->html .= '    </div>';
             
             // Media Bar
@@ -1922,6 +1925,10 @@ END;
             if ($auth->modifyPermissions)
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="Click to change permissions for this media">' . __('Permissions') . '</a></li>';
 
+            $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a></li>';
+            $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=out&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . '</a></li>';
+
+            
             $response->html .= '        </ul>';
 
             // Put the media name in
@@ -1939,7 +1946,10 @@ END;
             
             // Out transition
             $response->html .= '    <div class="timelineMediaOutTransition">';
-            $response->html .= '        <a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=out&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . $transitionOut . '</a>';
+            
+            if ($transitionOut != 'None')
+                $response->html .= '<span>' . $transitionOut . '</span>';
+            
             $response->html .= '    </div>';
             
             // End of this media item
