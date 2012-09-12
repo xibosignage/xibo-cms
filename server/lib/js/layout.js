@@ -375,13 +375,11 @@ function tRegionOptions() {
     XiboFormRender('index.php?p=layout&layoutid='+layoutid+'&regionid='+regionid+'&q=RegionOptions');
 }
 
-function manualPositionCallback() {
-    $('#btnFullScreen').click(function(){
-        $('#width', '.XiboForm').val($('#layoutWidth').val());
-        $('#height', '.XiboForm').val($('#layoutHeight').val());
-        $('#top', '.XiboForm').val('0');
-        $('#left', '.XiboForm').val('0');
-    })
+function setFullScreenLayout() {
+    $('#width', '.XiboForm').val($('#layoutWidth').val());
+    $('#height', '.XiboForm').val($('#layoutHeight').val());
+    $('#top', '.XiboForm').val('0');
+    $('#left', '.XiboForm').val('0');
 }
 
 function transitionFormLoad() {

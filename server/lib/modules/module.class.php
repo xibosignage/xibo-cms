@@ -1872,9 +1872,6 @@ FORM;
                 trigger_error(_('Unknown transition type'), E_USER_ERROR);
         }
         
-        // Adjust the duration for seconds
-        $duration = $duration / 1000;
-        
         // Add none to the list
         $transitions = $this->user->TransitionAuth($type);
         $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
@@ -1884,10 +1881,14 @@ FORM;
         
         // Compass points for direction
         $compassPoints = array(
-            array('id' => 'N', 'name' => 'North'), 
-            array('id' => 'E', 'name' => 'East'), 
-            array('id' => 'S', 'name' => 'South'), 
-            array('id' => 'W', 'name' => 'West')
+            array('id' => 'N', 'name' => __('North')), 
+            array('id' => 'NE', 'name' => __('North East')), 
+            array('id' => 'E', 'name' => __('East')), 
+            array('id' => 'SE', 'name' => __('South East')), 
+            array('id' => 'S', 'name' => __('South')), 
+            array('id' => 'SW', 'name' => __('South West')), 
+            array('id' => 'W', 'name' => __('West')),
+            array('id' => 'NW', 'name' => __('North West'))
         );
         
         // Prepare a list of compass points
@@ -1895,7 +1896,7 @@ FORM;
         
         // Some messages for the form
         $msgTransition = __('What transition should be applied to this media item?');
-        $msgDuration = __('The duration for this transition, in seconds.');
+        $msgDuration = __('The duration for this transition, in milliseconds.');
         $msgDirection = __('The direction for this transtion.');
         
         // Construct the form
@@ -1966,14 +1967,14 @@ END;
         {
             case 'in':
                 $this->SetOption('transIn', $transitionType);
-                $this->SetOption('transInDuration', $duration * 1000);
+                $this->SetOption('transInDuration', $duration);
                 $this->SetOption('transInDirection', $direction);
                 
                 break;
             
             case 'out':
                 $this->SetOption('transOut', $transitionType);
-                $this->SetOption('transOutDuration', $duration * 1000);
+                $this->SetOption('transOutDuration', $duration);
                 $this->SetOption('transOutDirection', $direction);
                 
                 break;

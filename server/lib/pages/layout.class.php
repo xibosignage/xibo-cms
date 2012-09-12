@@ -937,23 +937,23 @@ FORM;
             $response->Respond();
 	}
 
-        /*
-         * Form called by the layout which shows a manual positioning/sizing form.
-         */
-        function ManualRegionPositionForm()
-        {
-            $db 	=& $this->db;
-            $user 	=& $this->user;
-            $response = new ResponseManager();
+    /*
+     * Form called by the layout which shows a manual positioning/sizing form.
+     */
+    function ManualRegionPositionForm()
+    {
+        $db 	=& $this->db;
+        $user 	=& $this->user;
+        $response = new ResponseManager();
 
-            $regionid 	= Kit::GetParam('regionid', _GET, _STRING);
-            $layoutid 	= Kit::GetParam('layoutid', _GET, _INT);
-            $top 	= Kit::GetParam('top', _GET, _INT);
-            $left 	= Kit::GetParam('left', _GET, _INT);
-            $width 	= Kit::GetParam('width', _GET, _INT);
-            $height 	= Kit::GetParam('height', _GET, _INT);
-            $layoutWidth = Kit::GetParam('layoutWidth', _GET, _INT);
-            $layoutHeight = Kit::GetParam('layoutHeight', _GET, _INT);
+        $regionid 	= Kit::GetParam('regionid', _GET, _STRING);
+        $layoutid 	= Kit::GetParam('layoutid', _GET, _INT);
+        $top 	= Kit::GetParam('top', _GET, _INT);
+        $left 	= Kit::GetParam('left', _GET, _INT);
+        $width 	= Kit::GetParam('width', _GET, _INT);
+        $height 	= Kit::GetParam('height', _GET, _INT);
+        $layoutWidth = Kit::GetParam('layoutWidth', _GET, _INT);
+        $layoutHeight = Kit::GetParam('layoutHeight', _GET, _INT);
 
         Kit::ClassLoader('region');
         $region = new region($db, $this->user);
@@ -963,63 +963,103 @@ FORM;
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
-
-            $form = <<<END
-		<form id="RegionProperties" class="XiboForm" method="post" action="index.php?p=layout&q=ManualRegionPosition">
-                    <input type="hidden" name="layoutid" value="$layoutid">
-                    <input type="hidden" name="regionid" value="$regionid">
-                    <input id="layoutWidth" type="hidden" name="layoutWidth" value="$layoutWidth">
-                    <input id="layoutHeight" type="hidden" name="layoutHeight" value="$layoutHeight">
-                    <table>
-			<tr>
-                            <td><label for="name" title="Name of the Region">Name</label></td>
-                            <td><input name="name" type="text" id="name" value="$regionName" tabindex="1" /></td>
-			</tr>
-			<tr>
-                            <td><label for="top" title="Offset from the Top Corner">Top Offset</label></td>
-                            <td><input name="top" type="text" id="top" value="$top" tabindex="2" /></td>
-			</tr>
-			<tr>
-                            <td><label for="left" title="Offset from the Left Corner">Left Offset</label></td>
-                            <td><input name="left" type="text" id="left" value="$left" tabindex="3" /></td>
-			</tr>
-			<tr>
-                            <td><label for="width" title="Width of the Region">Width</label></td>
-                            <td><input name="width" type="text" id="width" value="$width" tabindex="4" /></td>
-			</tr>
-			<tr>
-                            <td><label for="height" title="Height of the Region">Height</label></td>
-                            <td><input name="height" type="text" id="height" value="$height" tabindex="5" /></td>
-			</tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                                <input id="btnFullScreen" type='button' value="Full Screen" / >
-                            </td>
-                        </tr>
-                    </table>
-		</form>
+        
+        // TODO: Include some logic for the region exit transition?
+        $transition = '';
+        $duration = 0;
+        $direction = 0;
+        
+        // Add none to the list
+        $transitions = $this->user->TransitionAuth('out');
+        $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
+        
+        // Prepare a list of options
+        $transitionDropdown = Kit::SelectList('transitionType', $transitions, 'code', 'transition', $transition, '', 'class');
+        
+        // Compass points for direction
+        $compassPoints = array(
+            array('id' => 'N', 'name' => __('North')), 
+            array('id' => 'NE', 'name' => __('North East')), 
+            array('id' => 'E', 'name' => __('East')), 
+            array('id' => 'SE', 'name' => __('South East')), 
+            array('id' => 'S', 'name' => __('South')), 
+            array('id' => 'SW', 'name' => __('South West')), 
+            array('id' => 'W', 'name' => __('West')),
+            array('id' => 'NW', 'name' => __('North West'))
+        );
+        
+        // Prepare a list of compass points
+        $directionDropdown = Kit::SelectList('transitionDirection', $compassPoints, 'id', 'name', $direction);
+        
+        // Some messages for the form
+        $msgTransition = __('What transition should be applied when this region is finished?');
+        $msgDuration = __('The duration for this transition, in milliseconds.');
+        $msgDirection = __('The direction for this transtion.');
+        
+        // Construct the form
+        $form = <<<END
+            <form id="RegionProperties" class="XiboForm" method="post" action="index.php?p=layout&q=ManualRegionPosition">
+                <input type="hidden" name="layoutid" value="$layoutid">
+                <input type="hidden" name="regionid" value="$regionid">
+                <input id="layoutWidth" type="hidden" name="layoutWidth" value="$layoutWidth">
+                <input id="layoutHeight" type="hidden" name="layoutHeight" value="$layoutHeight">
+                <table>
+                    <tr>
+                        <td><label for="name" title="Name of the Region">Name</label></td>
+                        <td><input name="name" type="text" id="name" value="$regionName" tabindex="1" /></td>
+                    </tr>
+                    <tr>
+                        <td><label for="top" title="Offset from the Top Corner">Top Offset</label></td>
+                        <td><input name="top" type="text" id="top" value="$top" tabindex="2" /></td>
+                    </tr>
+                    <tr>
+                        <td><label for="left" title="Offset from the Left Corner">Left Offset</label></td>
+                        <td><input name="left" type="text" id="left" value="$left" tabindex="3" /></td>
+                    </tr>
+                    <tr>
+                        <td><label for="width" title="Width of the Region">Width</label></td>
+                        <td><input name="width" type="text" id="width" value="$width" tabindex="4" /></td>
+                    </tr>
+                    <tr>
+                        <td><label for="height" title="Height of the Region">Height</label></td>
+                        <td><input name="height" type="text" id="height" value="$height" tabindex="5" /></td>
+                    </tr>
+                    <tr>
+                        <td><label for="tranisitionType" title="$msgTransition">$msgTransition</label></td>
+                        <td>$transitionDropdown</td>
+                    </tr>
+                    <tr class="transitionDuration">
+                        <td><label for="transitionDuration">$msgDuration</label></td>
+                        <td><input type="text" class="numeric" name="transitionDuration" id="transitionDuration" value="$duration" /></td>
+                    </tr>
+                    <tr class="transitionDirection">
+                        <td><label for="transitionDirection">$msgDirection</label></td>
+                        <td>$directionDropdown</td>
+                    </tr>
+                </table>
+            </form>
 END;
 
-            $response->SetFormRequestResponse($form, 'Manual Region Positioning', '350px', '275px', 'manualPositionCallback');
-            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-            $response->AddButton(__('Save'), '$("#RegionProperties").submit()');
-            $response->Respond();
-        }
+        $response->SetFormRequestResponse($form, __('Manual Region Positioning'), '350px', '275px', 'transitionFormLoad');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#RegionProperties").submit()');
+        $response->AddButton(__('Set Full Screen'), 'setFullScreenLayout()');
+        $response->Respond();
+    }
 
-        function ManualRegionPosition()
-        {
-            $db 	=& $this->db;
-            $user 	=& $this->user;
-            $response   = new ResponseManager();
+    function ManualRegionPosition()
+    {
+        $db 	=& $this->db;
+        $user 	=& $this->user;
+        $response   = new ResponseManager();
 
-            $layoutid   = Kit::GetParam('layoutid', _POST, _INT);
-            $regionid   = Kit::GetParam('regionid', _POST, _STRING);
-            $regionName = Kit::GetParam('name', _POST, _STRING);
-            $top        = Kit::GetParam('top', _POST, _INT);
-            $left       = Kit::GetParam('left', _POST, _INT);
-            $width      = Kit::GetParam('width', _POST, _INT);
-            $height 	= Kit::GetParam('height', _POST, _INT);
+        $layoutid   = Kit::GetParam('layoutid', _POST, _INT);
+        $regionid   = Kit::GetParam('regionid', _POST, _STRING);
+        $regionName = Kit::GetParam('name', _POST, _STRING);
+        $top        = Kit::GetParam('top', _POST, _INT);
+        $left       = Kit::GetParam('left', _POST, _INT);
+        $width      = Kit::GetParam('width', _POST, _INT);
+        $height 	= Kit::GetParam('height', _POST, _INT);
 
         Kit::ClassLoader('region');
         $region = new region($db, $this->user);
@@ -1029,24 +1069,24 @@ END;
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-            Debug::LogEntry($db, 'audit', sprintf('Layoutid [%d] Regionid [%s]', $layoutid, $regionid), 'layout', 'ManualRegionPosition');
+        Debug::LogEntry($db, 'audit', sprintf('Layoutid [%d] Regionid [%s]', $layoutid, $regionid), 'layout', 'ManualRegionPosition');
 
-            // Remove the "px" from them
-            $width  = str_replace('px', '', $width);
-            $height = str_replace('px', '', $height);
-            $top    = str_replace('px', '', $top);
-            $left   = str_replace('px', '', $left);
+        // Remove the "px" from them
+        $width  = str_replace('px', '', $width);
+        $height = str_replace('px', '', $height);
+        $top    = str_replace('px', '', $top);
+        $left   = str_replace('px', '', $left);
 
-            include_once("lib/pages/region.class.php");
+        include_once("lib/pages/region.class.php");
 
-            $region = new region($db, $user);
+        $region = new region($db, $user);
 
-            if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName))
-                trigger_error($region->errorMsg, E_USER_ERROR);
+        if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName))
+            trigger_error($region->errorMsg, E_USER_ERROR);
 
-            $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid");
-            $response->Respond();
-        }
+        $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid");
+        $response->Respond();
+    }
 	
 	/**
 	 * Edits the region information
