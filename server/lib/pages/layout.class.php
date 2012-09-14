@@ -964,10 +964,10 @@ FORM;
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
         
-        // TODO: Include some logic for the region exit transition?
-        $transition = '';
-        $duration = 0;
-        $direction = 0;
+        // Include some logic for the region exit transition?
+        $transition = $region->GetOption($layoutid, $regionid, 'transOut', '');
+        $duration = $region->GetOption($layoutid, $regionid, 'transOutDuration', 0);
+        $direction = $region->GetOption($layoutid, $regionid, 'transOutDirection', '');
         
         // Add none to the list
         $transitions = $this->user->TransitionAuth('out');
@@ -1060,6 +1060,11 @@ END;
         $left       = Kit::GetParam('left', _POST, _INT);
         $width      = Kit::GetParam('width', _POST, _INT);
         $height 	= Kit::GetParam('height', _POST, _INT);
+        
+        // Transitions?
+        $transitionType = Kit::GetParam('transitionType', _POST, _WORD);
+        $duration = Kit::GetParam('transitionDuration', _POST, _INT, 0);
+        $direction = Kit::GetParam('transitionDirection', _POST, _WORD, '');
 
         Kit::ClassLoader('region');
         $region = new region($db, $this->user);
@@ -1076,12 +1081,16 @@ END;
         $height = str_replace('px', '', $height);
         $top    = str_replace('px', '', $top);
         $left   = str_replace('px', '', $left);
+        
+        // Create some options
+        $options = array(
+            array('name' => 'transOut', 'value' => $transitionType), 
+            array('name' => 'transOutDuration', 'value' => $duration),
+            array('name' => 'transOutDirection', 'value' => $direction)
+        );
 
-        include_once("lib/pages/region.class.php");
-
-        $region = new region($db, $user);
-
-        if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName))
+        // Edit the region 
+        if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName, $options))
             trigger_error($region->errorMsg, E_USER_ERROR);
 
         $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid");
