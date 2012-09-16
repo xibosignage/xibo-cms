@@ -571,15 +571,15 @@
 		$userid		=& $this->userid;
 		
 		// Check that the module is enabled
-		$SQL  = "SELECT * FROM module WHERE Enabled = 1 ORDER BY Name ";
+		$SQL  = "SELECT * FROM module WHERE Enabled = 1 ";
+                
 		if ($regionSpecific != -1)
-		{
-			$SQL .= sprintf(" AND RegionSpecific = %d ", $regionSpecific);
-		}
+                    $SQL .= sprintf(" AND RegionSpecific = %d ", $regionSpecific);
+		
 		if ($module != '')
-		{
-			$SQL .= sprintf(" AND Module = '%s' ", $db->escape_string($module));
-		}
+                    $SQL .= sprintf(" AND Module = '%s' ", $db->escape_string($module));
+		
+                $SQL .= "  ORDER BY Name ";
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 		
@@ -1236,7 +1236,7 @@ END;
     
     /**
      * Authorises a user against a campaign
-     * @param <type> $layoutId
+     * @param <type> $campaignId
      * @return <type>
      */
     public function CampaignAuth($campaignId, $fullObject = false)
@@ -1270,7 +1270,7 @@ END;
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
         $SQL .= 'GROUP BY campaign.UserID ';
 
-        $SQL = sprintf($SQL, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $campaignId, implode(',', $this->GetUserGroups($this->userid, true)));
         //Debug::LogEntry($this->db, 'audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))

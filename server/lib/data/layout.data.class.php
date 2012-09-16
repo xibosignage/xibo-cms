@@ -494,6 +494,23 @@ END;
 
                 // Update the permissions for the new media record
                 $mediaSecurity->Copy($oldMediaId, $mediaId);
+
+                // Copied the media node, so set the ID
+                $mediaNode->setAttribute('id', $mediaId);
+
+                // Also need to set the options node
+                // Get the stored as value of the new node
+                if (!$fileName = $this->db->GetSingleValue(sprintf("SELECT StoredAs FROM media WHERE MediaID = %d", $mediaId), 'StoredAs', _STRING))
+                    return $this->SetError(25000, __('Unable to stored value of newly copied media'));
+
+                $newNode = $this->DomXml->createElement('uri', $fileName);
+
+                // Find the old node
+                $uriNodes = $mediaNode->getElementsByTagName('uri');
+                $uriNode = $uriNodes->item(0);
+
+                // Replace it
+                $uriNode->parentNode->replaceChild($newNode, $uriNode);
             }
 
             // Add the database link for this media record
@@ -509,7 +526,6 @@ END;
 
             // Set this LKID on the media node
             $mediaNode->setAttribute('lkid', $lkId);
-            $mediaNode->setAttribute('id', $mediaId);
         }
 
         Debug::LogEntry($this->db, 'audit', 'Finished looping through media nodes', 'layout', 'Copy');
