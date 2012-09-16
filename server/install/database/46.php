@@ -39,7 +39,7 @@ class Step46 extends UpgradeStep
 
         // Also run a script to tidy up orphaned media in the library
         $library = Config::GetSetting($db, 'LIBRARY_LOCATION');
-	    $library = rtrim($library, '/') . '/';
+        $library = rtrim($library, '/') . '/';
 
         // Dump the files in the temp folder
         foreach (scandir($library . 'temp') as $item)
@@ -50,34 +50,37 @@ class Step46 extends UpgradeStep
             unlink($library . 'temp' . DIRECTORY_SEPARATOR . $item);
         }
 
+        // Have commented this block out, as am not 100% convinced that it doesn't
+        // delete things it shouldn't
+        // 
         // Get a list of all media files
-        foreach(scandir($library) as $file)
-        {
-            if ($file == '.' || $file == '..')
-                continue;
-
-	        if (is_dir($library . $file))
-		        continue;
-
-            $rowCount = $db->GetCountOfRows("SELECT * FROM media WHERE storedAs = '" . $file . "'");
-            
-            // For each media file, check to see if the file still exists in the library
-            if ($rowCount == 0)
-            {
-                // If not, delete it
-                unlink($library . $file);
-
-                if (file_exists($library . 'tn_' . $file))
-                {
-                    unlink($library . 'tn_' . $file);
-                }
-
-                if (file_exists($library . 'bg_' . $file))
-                {
-                    unlink($library . 'bg_' . $file);
-                }
-            }
-        }
+//        foreach(scandir($library) as $file)
+//        {
+//            if ($file == '.' || $file == '..')
+//                continue;
+//
+//            if (is_dir($library . $file))
+//                continue;
+//
+//            $rowCount = $db->GetCountOfRows("SELECT * FROM media WHERE storedAs = '" . $file . "'");
+//            
+//            // For each media file, check to see if the file still exists in the library
+//            if ($rowCount == 0)
+//            {
+//                // If not, delete it
+//                unlink($library . $file);
+//
+//                if (file_exists($library . 'tn_' . $file))
+//                {
+//                    unlink($library . 'tn_' . $file);
+//                }
+//
+//                if (file_exists($library . 'bg_' . $file))
+//                {
+//                    unlink($library . 'bg_' . $file);
+//                }
+//            }
+//        }
 
         return true;
     }

@@ -94,7 +94,7 @@ class contentDAO
 		$msgType	= __('Type');
 		$msgRetired	= __('Retired');
 		$msgOwner	= __('Owner');
-		$msgShared	= __('Shared');
+                $msgShowOriginal = __('Show the original file name for each media item?');
 
 		$filterForm = <<<END
 			<div class="FilterDiv" id="LibraryFilter">
@@ -115,8 +115,7 @@ class contentDAO
 						<tr>
 							<td>$msgOwner</td>
 							<td>$user_list</td>
-							<td></td>
-							<td></td>
+							<td colspan="4"><input type="checkbox" name="filter_showOriginal" id="filter_showOriginal" /><label for="filter_showOriginal">$msgShowOriginal</label></td>
 						</tr>
 					</table>
 			</form>
@@ -154,6 +153,7 @@ HTML;
 		$shared 		= Kit::GetParam('shared', _REQUEST, _STRING);
 		$filter_userid 	= Kit::GetParam('filter_userid', _REQUEST, _STRING, 'all');
 		$filter_retired = Kit::GetParam('filter_retired', _REQUEST, _STRING, 'all');
+                $filterShowOriginal = Kit::GetParam('filter_showOriginal', _REQUEST, _CHECKBOX, 'off');
 		
 		setSession('content', 'mediatype', $mediatype);
 		setSession('content', 'name', $name);
@@ -169,7 +169,8 @@ HTML;
 		$SQL .= "        media.duration, ";
 		$SQL .= "        media.userID, ";
 		$SQL .= "        media.FileSize, ";
-		$SQL .= "        IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID ";
+		$SQL .= "        IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
+		$SQL .= "        media.originalFileName ";
 		$SQL .= "FROM    media ";
 		$SQL .= " LEFT OUTER JOIN media parentmedia ";
 		$SQL .= " ON parentmedia.MediaID = media.MediaID ";
@@ -208,30 +209,33 @@ HTML;
 		// Messages
 		$msgName	= __('Name');
 		$msgType	= __('Type');
-		$msgRetired	= __('Retired');
 		$msgOwner	= __('Owner');
 		$msgFileSize	= __('Size');
                 $msgRevisions = __('Revised');
+                $msgOriginal = __('Original Filename');
 		$msgShared	= __('Permissions');
 		$msgAction	= __('Action');
 
-    	$output = <<<END
-			<div class="info_table">
-		    <table style="width:100%">
-			<thead>
-			    <tr>
-			        <th>$msgName</th>
-			        <th>$msgType</th>
-			        <th>h:mi:ss</th>            
-			        <th>$msgFileSize</th>
-                                <th>$msgOwner</th>
-			        <th>$msgShared</th>       
-			        <th>$msgRevisions</th>
-			        <th>$msgAction</th>     
-			    </tr>
-			</thead>
-			<tbody>
-END;
+    	$output = '';
+	$output.= '<div class="info_table">';
+	$output.= ' <table style="width:100%">';
+	$output.= '     <thead>';
+	$output.= '         <tr>';
+	$output.= '             <th>' . $msgName . '</th>';
+	$output.= '             <th>' . $msgType . '</th>';
+	$output.= '             <th>h:mi:ss</th>';         
+	$output.= '             <th>' . $msgFileSize . '</th>';
+        $output.= '             <th>' . $msgOwner . '</th>';
+	$output.= '             <th>' . $msgShared . '</th>';      
+	$output.= '             <th>' . $msgRevisions . '</th>';
+        
+        if ($filterShowOriginal == 1)
+            $output.= '             <th>' . $msgOriginal . '</th>';
+        
+	$output.= '             <th>' . $msgAction . '</th>'; 
+	$output.= '         </tr>';
+	$output.= '     </thead>';
+	$output.= '     <tbody>';
 		
         while ($aRow = $db->get_row($results))
         {
@@ -242,7 +246,8 @@ END;
             $ownerid 		= Kit::ValidateParam($aRow[4], _INT);
             $fileSize = Kit::ValidateParam($aRow[5], _INT);
             $revisions = (Kit::ValidateParam($aRow[6], _INT) != 0) ? '<img src="img/act.gif" />' : '';
-
+            $originalFileName = Kit::ValidateParam($aRow[7], _STRING);
+            
             // Size in MB
             $sz = 'BKMGTP';
             $factor = floor((strlen($fileSize) - 1) / 3);
@@ -277,6 +282,9 @@ END;
                 $output .= "<td>$username</td>";
                 $output .= "<td>$group</td>";
                 $output .= '<td>' . $revisions . '</td>';
+                
+                if ($filterShowOriginal == 1)
+                    $output .= '<td>' . $originalFileName . '</td>';
 
                 // ACTION buttons
                 if ($auth->edit)
@@ -329,7 +337,8 @@ END;
 		$response = new ResponseManager();
 		
 		// Get a list of the enabled modules and then create buttons for them
-		if (!$enabledModules = new ModuleManager($db, $user, 0)) trigger_error($enabledModules->message, E_USER_ERROR);
+		if (!$enabledModules = new ModuleManager($db, $user, 0)) 
+                    trigger_error($enabledModules->message, E_USER_ERROR);
 		
 		$buttons = '';
 		
