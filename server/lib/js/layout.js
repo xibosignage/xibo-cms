@@ -314,6 +314,10 @@ $(document).ready(function() {
                 $('.region').resizable('option', 'aspectRatio', false);
             }
        });
+       
+       $('#LayoutJumpListOpenClose').click(function(){
+           $('#' + $(this).attr('JumpListGridID')).toggle();
+       });
 });
 
 /*

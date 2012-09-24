@@ -1253,6 +1253,15 @@ END;
 		<div id="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; border: 1px solid #000; background:$background_css;">
 		$regionHtml
 		</div>
+                <div id="LayoutJumpList">
+HTML;
+                echo $surface;
+
+                // Output the layout jump list filter form 
+                $this->LayoutJumpListFilter();
+                
+                $surface = <<<HTML
+                </div>
 		<div class="contextMenu" id="regionMenu">
 			<ul>
                                 <li id="btnTimeline">$msgTimeLine</li>
@@ -1752,15 +1761,55 @@ END;
 
         return $groups;
     }
+    
+    /**
+     * Filter form for the layout jump list
+     */
+    public function LayoutJumpListFilter()
+    {
+        $msgName = __('Layout');
+        
+        $form = <<<HTML
+        <div class="XiboFilterInner">     
+        <form>
+            <input type="hidden" name="p" value="layout">
+            <input type="hidden" name="q" value="LayoutJumpList">
+            <table>
+                <tr>
+                    <td>$msgName</td>
+                    <td><input type="text" name="name"></td>
+                    <td><input type="checkbox" class="XiboFilterPinned" style="display:none;" checked /></td>
+                </tr>
+            </table>
+        </form>
+        </div>
+HTML;
+		
+        $id = uniqid();
+
+        $xiboGrid = <<<HTML
+        <a id="LayoutJumpListOpenClose" JumpListGridId="$id">X</a>
+        <div class="XiboGrid" id="$id">
+            <div class="XiboFilter">
+                $form
+            </div>
+            <div class="XiboData"></div>
+        </div>
+HTML;
+		
+        echo $xiboGrid;
+    }
 
     /**
      * A List of Layouts we have permission to design
      */
     public function LayoutJumpList()
     {
-        $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
+        
+        // Layout filter?
+        $layoutName = Kit::GetParam('name', _POST, _STRING, '');
 
         // Show a list of layouts we have permission to jump to
         $output = '<div class="info_table">';
@@ -1774,7 +1823,7 @@ END;
         $output .= '    <tbody>';
 
         // Get a layout list
-        $layoutList = $user->LayoutList();
+        $layoutList = $user->LayoutList($layoutName);
 
         foreach($layoutList as $layout)
         {
@@ -1792,8 +1841,7 @@ END;
         $output .= '</table>';
         $output .= '</div>';
 
-        $response->SetFormRequestResponse($output, __('Jump to...'), '350px', '500px');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->SetGridResponse($output);
         $response->Respond();
     }
 
