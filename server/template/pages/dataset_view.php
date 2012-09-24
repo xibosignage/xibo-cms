@@ -68,7 +68,6 @@ while ($menuItem = $menu->GetNextMenuItem())
 			<!-- Maybe at a later date we could have these buttons generated from the DB - and therefore passed through the security system ? -->
 			<ul>
 				<li><a title="<?php echo $msgDataSet; ?>" class="XiboFormButton" href="index.php?p=dataset&q=AddDataSetForm" ><span><?php echo $msgDataSet; ?></span></a></li>
-				<li><a title="<?php echo $msgShowFilter; ?>" href="#" onclick="ToggleFilterView('LayoutFilter')"><span><?php echo $msgFilter; ?></span></a></li>
 			</ul>
 		</div>
 		<?php $this->DataSetFilter(); ?>

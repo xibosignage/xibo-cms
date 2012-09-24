@@ -82,7 +82,20 @@ function XiboInitialise(scope){
     $(scope + " .XiboGrid").each(function(){
 
         var gridId = $(this).attr("id");
-
+        
+        console.log("Running Init");
+        
+        // Keep this filter form open?
+        
+            if ($('.XiboFilter form :input.XiboFilterPinned', this).is(':checked')) {
+                console.log("Show");
+                $('.XiboFilter', this).children(':first').show();
+            }
+            else {
+                console.log("Hide");
+                $('.XiboFilter', this).children(':first').hide();
+            }
+        
         // For each one setup the filter form bindings
         $('.XiboFilter form :input', this).change(function(){
             XiboGridRender(gridId);

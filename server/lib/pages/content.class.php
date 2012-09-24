@@ -95,6 +95,9 @@ class contentDAO
 		$msgRetired	= __('Retired');
 		$msgOwner	= __('Owner');
                 $msgShowOriginal = __('Show the original file name for each media item?');
+                $msgKeepFilterOpen = __('Keep filter open');
+                $filterPinned = (Kit::IsFilterPinned('content', 'LibraryFilter')) ? 'checked' : '';
+                $filterId = uniqid('filter');
 
 		$filterForm = <<<END
 			<div class="FilterDiv" id="LibraryFilter">
@@ -111,6 +114,8 @@ class contentDAO
 							<td>$type_list</td>
 							<td>$msgRetired</td>
 							<td>$retired_list</td>
+                                                        <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
+                                                        <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
 						</tr>
 						<tr>
 							<td>$msgOwner</td>
@@ -154,12 +159,13 @@ HTML;
 		$filter_userid 	= Kit::GetParam('filter_userid', _REQUEST, _STRING, 'all');
 		$filter_retired = Kit::GetParam('filter_retired', _REQUEST, _STRING, 'all');
                 $filterShowOriginal = Kit::GetParam('filter_showOriginal', _REQUEST, _CHECKBOX, 'off');
-		
+                
 		setSession('content', 'mediatype', $mediatype);
 		setSession('content', 'name', $name);
 		setSession('content', 'shared', $shared);
 		setSession('content', 'filter_userid', $filter_userid);
 		setSession('content', 'filter_retired', $filter_userid);
+                setSession('content', 'LibraryFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		// Construct the SQL
 		$SQL  = "";

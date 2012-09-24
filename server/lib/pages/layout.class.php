@@ -146,6 +146,9 @@ class layoutDAO
 		$msgOwner	= __('Owner');
 		$msgTags	= __('Tags');
 		$msgRetired	= __('Retired');
+                $msgKeepFilterOpen = __('Keep filter open');
+                $filterPinned = (Kit::IsFilterPinned('layout', 'LayoutFilter')) ? 'checked' : '';
+                $filterId = uniqid('filter');
 
 		$filterForm = <<<END
 		<div class="FilterDiv" id="LayoutFilter">
@@ -159,6 +162,8 @@ class layoutDAO
 					<td><input type="text" name="filter_layout"></td>
 					<td>$msgOwner</td>
 					<td>$user_list</td>
+                                        <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
+                                        <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
 				</tr>
 				<tr>
 					<td>$msgTags</td>
@@ -452,6 +457,8 @@ END;
 		// Tags list
 		$filter_tags = Kit::GetParam("filter_tags", _POST, _STRING);
 		setSession('layout', 'filter_tags', $filter_tags);
+                
+                setSession('layout', 'LayoutFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		$SQL = "";
 		$SQL .= "SELECT  layout.layoutID, ";

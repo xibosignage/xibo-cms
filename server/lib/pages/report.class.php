@@ -87,6 +87,10 @@ class reportDAO
 		
 		$msgType		= __('Type');
 		$msgFromDT		= __('From Date');
+                
+                $msgKeepFilterOpen = __('Keep filter open');
+                $filterPinned = (Kit::IsFilterPinned('session', 'Filter')) ? 'checked' : '';
+                $filterId = uniqid('filter');
 		
 		$output = <<<END
 		<div class="FilterDiv" id="SessionFilter">
@@ -106,6 +110,8 @@ class reportDAO
 					</td>
 					<td>$msgFromDT</td>
 					<td><input id="fromdt" class="date-pick" name="fromdt" value="$fdate" /></td>
+                                        <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
+                                        <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
 				</tr>
 			</table>
 			</form>
@@ -140,7 +146,7 @@ HTML;
 		$start_date = explode('/', $fromdt); //	dd/mm/yyyy
 		$starttime_timestamp = strtotime($start_date[1] . "/" . $start_date[0] . "/" . $start_date[2] . " 00:00:00");
 
-		
+		setSession('session', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		$_SESSION['type'] = $type;
 		
 		$SQL  = "SELECT session.userID, 
@@ -297,7 +303,11 @@ END;
 		$page_list 		= dropdownlist("SELECT 'All', 'All' UNION SELECT DISTINCT page, page FROM log ORDER BY 2","page",'All');
 		$function_list 	= dropdownlist("SELECT 'All', 'All' UNION SELECT DISTINCT function, function FROM log ORDER BY 2","function",'All');
 		$display_list 	= dropdownlist("SELECT 'All', 'All' UNION SELECT displayID, display FROM display WHERE licensed = 1 ORDER BY 2", "displayid");
-				
+			
+                $msgKeepFilterOpen = __('Keep filter open');
+                $filterPinned = (Kit::IsFilterPinned('log', 'Filter')) ? 'checked' : '';
+                $filterId = uniqid('filter');
+                
 		$xiboGrid = <<<END
 		<div class="XiboGrid" id="LogGridId">
 			<div class="XiboFilter">
@@ -317,7 +327,8 @@ END;
 								</td>
 								<td>From DT</td>
 								<td><input id="fromdt" class="date-pick" name="fromdt" value="$fdate" /></td>
-								
+								<td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
+                                                                <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
 							</tr>
 							<tr>
 								<td>Page</td>
@@ -360,6 +371,8 @@ END;
 		
 		// The number of seconds to go back
 		$seconds 	= Kit::GetParam('seconds', _POST, _INT);
+                
+                setSession('log', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		//get the dates and times
 		$start_date = explode("/",$fromdt); //		dd/mm/yyyy
