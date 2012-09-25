@@ -315,8 +315,8 @@ $(document).ready(function() {
             }
        });
        
-       $('#LayoutJumpListOpenClose').click(function(){
-           $('#' + $(this).attr('JumpListGridID')).toggle();
+       $('#JumpListHeader').click(function(){
+           $('#' + $(this).attr('JumpListGridID')).slideToggle("slow", "swing");
        });
 });
 

@@ -84,10 +84,10 @@
 }
 
 .footer {
-	font-size:0.8em;
-	text-align:right;
-	padding-top: 15px;
-	padding-right: 5px;
+    position:absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size:0.8em;
 }
 
 #system_working {
@@ -160,10 +160,14 @@
 }
 
 #LayoutJumpList .XiboGrid {   
-    
-    height: 550px;
+    height: 530px;
     overflow-y: scroll;
     overflow-x: hidden;
     margin: 0;
     padding: 0;
+}
+
+#JumpListOpenClose {
+    margin-left: 50px;
+    font-weight: bold;
 }

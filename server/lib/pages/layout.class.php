@@ -1768,17 +1768,21 @@ END;
     public function LayoutJumpListFilter()
     {
         $msgName = __('Layout');
+        $msgJumpList = __('Layout Jump List');
+        $filterPinned = (Kit::IsFilterPinned('layout', 'JumpList')) ? 'checked' : '';
+        $listPinned = (Kit::IsFilterPinned('layout', 'JumpList')) ? 'block' : 'none';
         
         $form = <<<HTML
         <div class="XiboFilterInner">     
         <form>
             <input type="hidden" name="p" value="layout">
             <input type="hidden" name="q" value="LayoutJumpList">
+            <input type="checkbox" class="XiboFilterPinned" style="display:none" checked />
             <table>
                 <tr>
                     <td>$msgName</td>
                     <td><input type="text" name="name"></td>
-                    <td><input type="checkbox" class="XiboFilterPinned" style="display:none;" checked /></td>
+                    <td><label for="XiboJumpListPinned">Pin?</label><input id="XiboJumpListPinned" name="XiboJumpListPinned" type="checkbox" class="XiboJumpListPinned" $filterPinned /></td>
                 </tr>
             </table>
         </form>
@@ -1788,8 +1792,10 @@ HTML;
         $id = uniqid();
 
         $xiboGrid = <<<HTML
-        <a id="LayoutJumpListOpenClose" JumpListGridId="$id">X</a>
-        <div class="XiboGrid" id="$id">
+        <div id="JumpListHeader" JumpListGridId="$id">
+            <center>$msgJumpList<span id="JumpListOpenClose">_</span></center>
+        </div>
+        <div class="XiboGrid" id="$id" style="display:$listPinned;">
             <div class="XiboFilter">
                 $form
             </div>
@@ -1810,6 +1816,7 @@ HTML;
         
         // Layout filter?
         $layoutName = Kit::GetParam('name', _POST, _STRING, '');
+        setSession('layout', 'JumpList', Kit::GetParam('XiboJumpListPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Show a list of layouts we have permission to jump to
         $output = '<div class="info_table">';
@@ -1817,7 +1824,6 @@ HTML;
         $output .= '    <thead>';
         $output .= '    <tr>';
         $output .= '    <th>' . __('Layout') . '</th>';
-        $output .= '    <th>' . __('Action') . '</th>';
         $output .= '    </tr>';
         $output .= '    </thead>';
         $output .= '    <tbody>';
@@ -1832,8 +1838,7 @@ HTML;
 
             // We have permission to edit this layout
             $output .= '<tr>';
-            $output .= '    <td>' . $layout['layout'] . '</td>';
-            $output .= '    <td><button href="index.php?p=layout&modify=true&layoutid=' . $layout['layoutid'] . '" onclick="window.location = $(this).attr(\'href\')"><span>' . __('Design') . '</span></button></td>';
+            $output .= '    <td><a href="index.php?p=layout&modify=true&layoutid=' . $layout['layoutid'] . '">' . $layout['layout'] . '</a></td>';
             $output .= '</tr>';
         }
 
