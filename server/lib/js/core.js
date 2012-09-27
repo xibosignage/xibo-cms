@@ -84,11 +84,13 @@ function XiboInitialise(scope){
         var gridId = $(this).attr("id");
         
         // Keep this filter form open?
-        if ($('.XiboFilter form :input.XiboFilterPinned', this).is(':checked')) {
-            $('.XiboFilter', this).children(':first').show();
-        }
-        else {
-            $('.XiboFilter', this).children(':first').hide();
+        if ($('.XiboFilter form :input.XiboFilterPinned', this).length > 0) {
+            if ($('.XiboFilter form :input.XiboFilterPinned', this).is(':checked')) {
+                $('.XiboFilter', this).children(':first').show();
+            }
+            else {
+                $('.XiboFilter', this).children(':first').hide();
+            }
         }
         
         // For each one setup the filter form bindings
