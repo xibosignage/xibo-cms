@@ -315,7 +315,15 @@ $(document).ready(function() {
             }
        });
        
+       // Set the height of the grid to be something sensible for the current screen resolution
+       $('#LayoutJumpList .XiboGrid').css("height", $(window).height() - 200);
+        
        $('#JumpListHeader').click(function(){
+           if ($('#JumpListOpenClose').html() == "^")
+               $('#JumpListOpenClose').html("v");
+           else
+               $('#JumpListOpenClose').html("^");
+           
            $('#' + $(this).attr('JumpListGridID')).slideToggle("slow", "swing");
        });
 });

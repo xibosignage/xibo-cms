@@ -84,9 +84,7 @@
 }
 
 .footer {
-    position:absolute;
-    bottom: 5px;
-    right: 5px;
+    position:relative;
     font-size:0.8em;
 }
 
@@ -156,15 +154,19 @@
     position: absolute;
     width: 350px;
     right: 25px;
-    bottom: 76px;
+    bottom: 55px;
 }
 
 #LayoutJumpList .XiboGrid {   
     height: 530px;
-    overflow-y: scroll;
+    overflow-y: auto;
     overflow-x: hidden;
     margin: 0;
     padding: 0;
+}
+
+#JumpListHeader {
+    text-align: right;
 }
 
 #JumpListOpenClose {
