@@ -213,21 +213,17 @@ class Display extends Data
 	 */
 	public function Delete($displayID)
 	{
-		$db	=& $this->db;
-		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Delete');
+            $db	=& $this->db;
 
-                // Pass over to the DisplayGroup data class so that it can try and delete the
-		// display specific group first (it is that group which is linked to schedules)
-		$displayGroupObject = new DisplayGroup($db);
-		
-		// Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
-		if (!$displayGroupObject->DeleteDisplay($displayID))
-		{
-			$this->SetError(25002, __('Could not delete this display.'));
-			
-			return false;
-		}
+            Debug::LogEntry($db, 'audit', 'IN', 'Display', 'Delete');
+
+            // Pass over to the DisplayGroup data class so that it can try and delete the
+            // display specific group first (it is that group which is linked to schedules)
+            $displayGroupObject = new DisplayGroup($db);
+
+            // Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
+            if (!$displayGroupObject->DeleteDisplay($displayID))
+                return $this->SetError($displayGroupObject->GetErrorMessage(), $displayGroupObject->GetErrorMessage());
 
             // Delete the blacklist
             $SQL = sprintf("DELETE FROM blacklist WHERE DisplayID = %d", $displayID);
@@ -237,25 +233,23 @@ class Display extends Data
             if (!$db->query($SQL))
                 return $this->SetError(25016,__('Unable to delete blacklist records.'));
 		
-		// Now we know the Display Group is gone - and so are any links
-		// delete the display
-		$SQL = " ";
-		$SQL .= "DELETE FROM display ";
-		$SQL .= sprintf(" WHERE displayid = %d", $displayID);
-		
-		Debug::LogEntry($db, 'audit', $SQL);
+            // Now we know the Display Group is gone - and so are any links
+            // delete the display
+            $SQL = " ";
+            $SQL .= "DELETE FROM display ";
+            $SQL .= sprintf(" WHERE displayid = %d", $displayID);
 
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25015,__('Unable to delete display record. However it is no longer usable.'));
-			
-			return false;
-		}
+            Debug::LogEntry($db, 'audit', $SQL);
 
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Delete');
-		
-		return true;
+            if (!$db->query($SQL)) 
+            {
+                trigger_error($db->error());
+                return $this->SetError(25015,__('Unable to delete display record. However it is no longer usable.'));
+            }
+
+            Debug::LogEntry($db, 'audit', 'OUT', 'Display', 'Delete');
+
+            return true;
 	}
 	
 	/**
