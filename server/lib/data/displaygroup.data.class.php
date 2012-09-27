@@ -167,52 +167,49 @@ class DisplayGroup extends Data
 		$row 			= $db->get_assoc_row($result);
 		$displayGroupID	= $row['DisplayGroupID'];
 		
-		if ($displayGroupID == '')
-		{
-			// If there is no region specific display record... what do we do?
-			$this->SetError(25006, __('Unable to get the DisplayGroup for this Display'));
-			
-			return false;
-		}
+            if ($displayGroupID == '')
+            {
+                // If there is no region specific display record... what do we do?
+                return $this->SetError(25006, __('Unable to get the DisplayGroup for this Display'));
+            }
 		
-		// Delete the Schedule for this Display Group
-		$scheduleObject = new Schedule($db);
-		
-		if (!$scheduleObject->DeleteScheduleForDisplayGroup($displayGroupID))
-		{
-			$this->SetError(25006, __('Unable to delete Schedule records for this DisplayGroup.'));
-			
-			return false;
-		}
-		
-		// Unlink all Display Groups from this Display
-		$SQL = sprintf("DELETE FROM lkdisplaydg WHERE DisplayID = %d", $displayID);
-		
-		Debug::LogEntry($db, 'audit', $SQL);
+            // Delete the Schedule for this Display Group
+            $scheduleObject = new Schedule($db);
 
-		if (!$db->query($SQL)) 
-		{
-			$this->SetError(25015,__('Unable to delete Display Group Links.'));
-			
-			return false;
-		}
+            if (!$scheduleObject->DeleteScheduleForDisplayGroup($displayGroupID))
+            {
+                trigger_error($db->error());
+                return $this->SetError(25006, __('Unable to delete Schedule records for this DisplayGroup.'));
+            }
+
+            // Unlink all Display Groups from this Display
+            $SQL = sprintf("DELETE FROM lkdisplaydg WHERE DisplayID = %d", $displayID);
+
+            Debug::LogEntry($db, 'audit', $SQL);
+
+            if (!$db->query($SQL)) 
+            {
+                trigger_error($db->error());
+                return $this->SetError(25015,__('Unable to delete Display Group Links.'));
+            }
 
             // Delete this display groups link to any groups
-            $SQL = sprintf("DELETE FROM lkgroupdg WHERE DisplayGroupId = %d", $displayGroupID);
+            $SQL = sprintf("DELETE FROM lkdisplaygroupgroup WHERE DisplayGroupId = %d", $displayGroupID);
 		
             Debug::LogEntry($db, 'audit', $SQL);
 
             if (!$db->query($SQL))
+            {
+                trigger_error($db->error());
                 return $this->SetError(25016,__('Unable to delete Display Group Links.'));
-		
-		// Delete the Display Group Itself
-		if (!$this->Delete($displayGroupID))
-		{
-			// An error will already be set - so just drop out
-			return false;
-		}
-		
-		return true;
+            }
+            
+            // Delete the Display Group Itself
+            if (!$this->Delete($displayGroupID))
+                // An error will already be set - so just drop out
+                return false;
+
+            return true;
 	}
 	
 	/**

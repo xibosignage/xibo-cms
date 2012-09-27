@@ -267,7 +267,7 @@ class userDAO
             if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkdatasetgroup WHERE GroupID = %d', $groupID)) > 0)
                 trigger_error(__('Cannot delete this user, they have permissions to data sets'), E_USER_ERROR);
 
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkgroupdg WHERE GroupID = %d', $groupID)) > 0)
+            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkdisplaygroupgroup WHERE GroupID = %d', $groupID)) > 0)
                 trigger_error(__('Cannot delete this user, they have permissions to display groups'), E_USER_ERROR);
 
             if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lklayoutgroup WHERE GroupID = %d', $groupID)) > 0)

@@ -772,9 +772,7 @@ END;
             $displayObject = new Display($db);
 
             if (!$displayObject->Delete($displayid))
-            {
-                    trigger_error(__("Cannot delete this display. You may unlicense it to hide it from view."), E_USER_ERROR);
-            }
+                trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 
             $response->SetFormSubmitResponse(__("The Display has been Deleted"));
             $response->Respond();
