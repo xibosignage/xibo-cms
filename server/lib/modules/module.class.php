@@ -1836,5 +1836,193 @@ FORM;
     {
         return false;
     }
+    
+    /**
+     * Form to Edit a transition
+     */
+    public function TransitionEditForm()
+    {
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this media.');
+            $this->response->keepOpen = false;
+            return $this->response;
+        }
+        
+        // Are we dealing with an IN or an OUT
+        $type = Kit::GetParam('type', _REQUEST, _WORD);
+        
+        switch ($type)
+        {
+            case 'in':
+                $transition = $this->GetOption('transIn');
+                $duration = $this->GetOption('transInDuration', 0);
+                $direction = $this->GetOption('transInDirection');
+                
+                break;
+            
+            case 'out':
+                $transition = $this->GetOption('transOut');
+                $duration = $this->GetOption('transOutDuration', 0);
+                $direction = $this->GetOption('transOutDirection');
+                
+                break;
+            
+            default:
+                trigger_error(_('Unknown transition type'), E_USER_ERROR);
+        }
+        
+        // Add none to the list
+        $transitions = $this->user->TransitionAuth($type);
+        $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
+        
+        // Prepare a list of options
+        $transitionDropdown = Kit::SelectList('transitionType', $transitions, 'code', 'transition', $transition, '', 'class');
+        
+        // Compass points for direction
+        $compassPoints = array(
+            array('id' => 'N', 'name' => __('North')), 
+            array('id' => 'NE', 'name' => __('North East')), 
+            array('id' => 'E', 'name' => __('East')), 
+            array('id' => 'SE', 'name' => __('South East')), 
+            array('id' => 'S', 'name' => __('South')), 
+            array('id' => 'SW', 'name' => __('South West')), 
+            array('id' => 'W', 'name' => __('West')),
+            array('id' => 'NW', 'name' => __('North West'))
+        );
+        
+        // Prepare a list of compass points
+        $directionDropdown = Kit::SelectList('transitionDirection', $compassPoints, 'id', 'name', $direction);
+        
+        // Some messages for the form
+        $msgTransition = __('What transition should be applied to this media item?');
+        $msgDuration = __('The duration for this transition, in milliseconds.');
+        $msgDirection = __('The direction for this transtion.');
+        
+        // Construct the form
+        $form = <<<END
+        <form id="TransitionForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=TransitionEdit">
+            <input type="hidden" name="type" value="$type">
+            <input type="hidden" name="layoutid" value="$this->layoutid">
+            <input type="hidden" name="mediaid" value="$this->mediaid">
+            <input type="hidden" id="iRegionId" name="regionid" value="$this->regionid">
+            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" /> 
+            
+            <table>
+                <tr>
+                    <td><label for="tranisitionType" title="$msgTransition">$msgTransition</label></td>
+                    <td>$transitionDropdown</td>
+                </tr>
+                <tr class="transitionDuration">
+                    <td><label for="transitionDuration">$msgDuration</label></td>
+                    <td><input type="text" class="numeric" name="transitionDuration" id="transitionDuration" value="$duration" /></td>
+                </tr>
+                <tr class="transitionDirection">
+                    <td><label for="transitionDirection">$msgDirection</label></td>
+                    <td>$directionDropdown</td>
+                </tr>
+            </table>
+        </form>
+END;
+        
+        // Decide where the cancel button will take us
+        if ($this->showRegionOptions)
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+        else
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+
+        // Always include the save button
+        $this->response->AddButton(__('Save'), '$("#TransitionForm").submit()');
+        
+        // Output the form and dialog
+        $this->response->html = $form;
+        $this->response->callBack = 'transitionFormLoad';
+        $this->response->dialogTitle = 'Edit ' . $type . ' Transition for ' . $this->displayType;
+        $this->response->dialogSize = true;
+        $this->response->dialogWidth = '450px';
+        $this->response->dialogHeight = '280px';
+        
+        return $this->response;
+    }
+    
+    /**
+     * Edit a transition
+     */
+    public function TransitionEdit()
+    {
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this media.');
+            $this->response->keepOpen = false;
+            return $this->response;
+        }
+        
+        // Get the transition type
+        $transitionType = Kit::GetParam('transitionType', _POST, _WORD);
+        $duration = Kit::GetParam('transitionDuration', _POST, _INT, 0);
+        $direction = Kit::GetParam('transitionDirection', _POST, _WORD, '');
+        $type = Kit::GetParam('type', _REQUEST, _WORD);
+        
+        switch ($type)
+        {
+            case 'in':
+                $this->SetOption('transIn', $transitionType);
+                $this->SetOption('transInDuration', $duration);
+                $this->SetOption('transInDirection', $direction);
+                
+                break;
+            
+            case 'out':
+                $this->SetOption('transOut', $transitionType);
+                $this->SetOption('transOutDuration', $duration);
+                $this->SetOption('transOutDirection', $direction);
+                
+                break;
+            
+            default:
+                trigger_error(_('Unknown transition type'), E_USER_ERROR);
+        }
+        
+        // This saves the Media Object to the Region
+        $this->UpdateRegion();
+        
+        if ($this->showRegionOptions)
+        {
+            // We want to load a new form
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = 'index.php?p=layout&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions';
+        }
+
+        return $this->response;
+    }
+    
+    /**
+     * Get the the Transition for this media
+     * @param string Either "in" or "out"
+     */
+    public function GetTransition($type)
+    {
+        switch ($type)
+        {
+            case 'in':
+                $code = $this->GetOption('transIn');
+                break;
+            
+            case 'out':
+                $code = $this->GetOption('transOut');
+                break;
+            
+            default:
+                trigger_error(_('Unknown transition type'), E_USER_ERROR);
+        }
+        
+        if ($code == '')
+            return __('None');
+        
+        // Look up the real transition name
+        $transition = $this->user->TransitionAuth('', $code);
+        
+        return __($transition[0]['transition']);
+    }
 }
 ?>

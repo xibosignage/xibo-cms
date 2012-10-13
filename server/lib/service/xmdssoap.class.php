@@ -1115,7 +1115,7 @@ class XMDSSoap
         $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE DateTime > %d AND DateTime <= %d', $startOfMonth, $endOfMonth);
         $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
 
-        return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? true : false;
+        return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? false : true;
     }
 
     /**

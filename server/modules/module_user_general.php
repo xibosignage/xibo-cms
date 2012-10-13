@@ -1334,5 +1334,69 @@ END;
 
         return $campaigns;
     }
+    
+    /**
+     * Get a list of transitions
+     * @param string in/out
+     * @param string transition code
+     * @return boolean
+     */
+    public function TransitionAuth($type = '', $code = '')
+    {
+        // Return a list of in/out transitions (or both)
+        $SQL = 'SELECT TransitionID, ';
+        $SQL .= '   Transition, ';
+        $SQL .= '   Code, ';
+        $SQL .= '   HasDuration, ';
+        $SQL .= '   HasDirection, ';
+        $SQL .= '   AvailableAsIn, ';
+        $SQL .= '   AvailableAsOut ';
+        $SQL .= '  FROM `transition` ';
+        $SQL .= ' WHERE 1 = 1 ';
+        
+        if ($type != '')
+        {
+            // Filter on type
+            if ($type == 'in')
+                $SQL .= '  AND AvailableAsIn = 1 ';
+            
+            if ($type == 'out')
+                $SQL .= '  AND AvailableAsOut = 1 ';
+        }
+        
+        if ($code != '')
+        {
+            // Filter on code
+            $SQL .= sprintf("AND Code = '%s' ", $this->db->escape_string($code));
+        }
+        
+        $SQL .= ' ORDER BY Transition ';
+
+        if (!$rows = $this->db->GetArray($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+        
+        $transitions = array();
+
+        foreach($rows as $transition)
+        {
+            $transitionItem = array();
+            
+            $transitionItem['transitionid'] = Kit::ValidateParam($transition['TransitionID'], _INT);
+            $transitionItem['transition'] = Kit::ValidateParam($transition['Transition'], _STRING);
+            $transitionItem['code'] = Kit::ValidateParam($transition['Code'], _WORD);
+            $transitionItem['hasduration'] = Kit::ValidateParam($transition['HasDuration'], _INT);
+            $transitionItem['hasdirection'] = Kit::ValidateParam($transition['HasDirection'], _INT);
+            $transitionItem['enabledforin'] = Kit::ValidateParam($transition['AvailableAsIn'], _INT);
+            $transitionItem['enabledforout'] = Kit::ValidateParam($transition['AvailableAsOut'], _INT);
+            $transitionItem['class'] = (($transitionItem['hasduration'] == 1) ? 'hasDuration' : '') . ' ' . (($transitionItem['hasdirection'] == 1) ? 'hasDirection' : '');
+
+            $transitions[] = $transitionItem;
+        }
+
+        return $transitions;
+    }
 }
 ?>

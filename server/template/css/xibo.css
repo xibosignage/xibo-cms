@@ -155,3 +155,12 @@
 #secondaryMenu .current {
     color: red;
 }
+
+.timelineMediaOutTransition, .timelineMediaInTransition {
+    width: 400px;
+    text-align: center;
+}
+
+.timelineMediaInTransition {
+    margin-bottom: 8px;
+}

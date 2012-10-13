@@ -504,7 +504,7 @@ class region
 	 * @param $top Object
 	 * @param $left Object
 	 */
-	public function EditRegion($layoutid, $regionid, $width, $height, $top, $left, $name = '')
+	public function EditRegion($layoutid, $regionid, $width, $height, $top, $left, $name = '', $options = '')
 	{
 		$db =& $this->db;
 		
@@ -536,6 +536,14 @@ class region
                 {
                     $ownerId = $db->GetSingleValue(sprintf("SELECT userid FROM layout WHERE layoutid = %d", $layoutid), 'userid', _INT);
                     $regionNode->setAttribute('userId', $ownerId);
+                }
+                
+                // Do we need to set any options?
+                if ($options != '')
+                {
+                    // There will be an array of options
+                    foreach($options as $option)
+                        $this->SetOption($xml, $regionid, $option['name'], $option['value']);
                 }
 		
 		//Convert back to XML		
@@ -689,6 +697,99 @@ class region
             return false;
 
         return true;
+    }
+    
+    /**
+     * Get region option
+     * @param type $layoutId
+     * @param type $regionId
+     * @param type $name
+     * @param type $default
+     * @return boolean
+     */
+    final public function GetOption($layoutId, $regionId, $name, $default = false)
+    {
+        $db =& $this->db;
+        
+        // Load the XML for this layout
+        $xml = new DOMDocument("1.0");
+        $xml->loadXML($this->GetLayoutXml($layoutId));
+
+        if ($name == '') 
+            return false;
+
+        // Check to see if we already have this option or not
+        $xpath = new DOMXPath($xml);
+
+        // Xpath for it
+        $userOptions = $xpath->query('//region[@id="' . $regionId . '"]/options/' . $name);
+
+        if ($userOptions->length == 0)
+        {
+            // We do not have an option - return the default
+            Debug::LogEntry($db, 'audit', 'GetOption ' . $name . ': Not Set - returning default ' . $default);
+            return $default;
+        }
+        else
+        {
+            // Replace the old node we found with XPath with the new node we just created
+            Debug::LogEntry($db, 'audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue);
+            return ($userOptions->item(0)->nodeValue != '') ? $userOptions->item(0)->nodeValue : $default;
+        }
+    }
+    
+    /**
+     * Adds the name/value element to the XML Options sequence
+     * @return
+     * @param $name String
+     * @param $value String
+     */
+    final protected function SetOption($xml, $regionId, $name, $value)
+    {
+        $db =& $this->db;
+        
+        if ($name == '') 
+            return;
+
+        Debug::LogEntry($db, 'audit', sprintf('IN with Name=%s and value=%s', $name, $value), 'region', 'Set Option');
+
+        // Get the options node from this document
+        $xpath = new DOMXPath($xml);
+
+        // Xpath for it
+        $optionNodes = $xpath->query('//region[@id="' . $regionId . '"]/options');
+        
+        // What if it isnt there (older layout?)
+        if ($optionNodes->length == 0)
+        {
+            // Append one.
+            $regionNodes = $xpath->query('//region[@id="' . $regionId . '"]');
+            $regionNode = $regionNodes->item(0);
+            
+            $optionNode = $xml->createElement('options');
+            $regionNode->appendChild($optionNode);
+        }
+        else
+            $optionNode = $optionNodes->item(0);
+
+        // Create a new option node
+        $newNode = $xml->createElement($name, $value);
+
+        Debug::LogEntry($db, 'audit', sprintf('Created a new Option Node with Name=%s and value=%s', $name, $value), 'region', 'Set Option');
+
+        // Xpath for it
+        $userOptions = $xpath->query('//region[@id="' . $regionId . '"]/options/' . $name);
+
+        if ($userOptions->length == 0)
+        {
+            // Append the new node to the list
+            $optionNode->appendChild($newNode);
+        }
+        else
+        {
+            // Replace the old node we found with XPath with the new node we just created
+            $optionNode->replaceChild($newNode, $userOptions->item(0));
+        }
     }
 }
 ?>
