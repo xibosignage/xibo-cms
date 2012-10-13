@@ -267,7 +267,7 @@ class userDAO
             if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkdatasetgroup WHERE GroupID = %d', $groupID)) > 0)
                 trigger_error(__('Cannot delete this user, they have permissions to data sets'), E_USER_ERROR);
 
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkgroupdg WHERE GroupID = %d', $groupID)) > 0)
+            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkdisplaygroupgroup WHERE GroupID = %d', $groupID)) > 0)
                 trigger_error(__('Cannot delete this user, they have permissions to display groups'), E_USER_ERROR);
 
             if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lklayoutgroup WHERE GroupID = %d', $groupID)) > 0)
@@ -328,8 +328,9 @@ class userDAO
 		$user		=& $this->user;
 		$response	= new ResponseManager();
 
-		$itemName = $_REQUEST['usertypeid'];
-		$username = $_REQUEST['username'];
+		$itemName = Kit::GetParam('usertypeid', _POST, _STRING);
+		$username = Kit::GetParam('username', _POST, _USERNAME);
+                setSession('user', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
 		$sql = "SELECT user.UserID, user.UserName, user.usertypeid, user.loggedin, user.lastaccessed, user.email, user.homepage ";
 		$sql .= " FROM user ";
@@ -446,6 +447,10 @@ END;
 		
 		$usertype_list = dropdownlist("SELECT 'all', 'All' as usertype UNION SELECT usertypeID, usertype FROM usertype ORDER BY usertype", "usertypeid", 'all');
 		
+                $msgKeepFilterOpen = __('Keep filter open');
+                $filterPinned = (Kit::IsFilterPinned('user', 'Filter')) ? 'checked' : '';
+                $filterId = uniqid('filter');
+                
 		$filterForm = <<<END
 		<div class="FilterDiv" id="UserFilter">
 			<form onsubmit="return false">
@@ -457,6 +462,8 @@ END;
 						<td><input type="text" name="username"></td>
 						<td>User Type</td>
 				   		<td>$usertype_list</td>
+                                                <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
+                                                <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
 					</tr>
 				</table>
 			</form>

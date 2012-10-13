@@ -97,6 +97,9 @@ END;
 		if (isset($_SESSION['group']['name'])) $filter_name = $_SESSION['group']['name'];
 		
 		$msgName	= __('Name');
+                $msgKeepFilterOpen = __('Keep filter open');
+                $filterPinned = (Kit::IsFilterPinned('usergroup', 'Filter')) ? 'checked' : '';
+                $filterId = uniqid('filter');
 		
 		$filterForm = <<<END
 		<div id="GroupFilter" class="FilterDiv">
@@ -107,6 +110,8 @@ END;
 					<tr>
 						<td>$msgName</td>
 						<td><input type="text" name="name" value="$filter_name"></td>
+                                                <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
+                                                <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
 					</tr>
 				</table>
 			</form>
@@ -138,7 +143,8 @@ HTML;
 		$user		=& $this->user;
 		
 		$filter_name = Kit::GetParam('name', _POST, _STRING);
-		
+                
+		setSession('usergroup', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		setSession('group', 'name', $filter_name);
 	
 		$SQL = <<<END

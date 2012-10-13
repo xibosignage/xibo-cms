@@ -514,5 +514,19 @@ class Kit
 
         return $list;
     }
+    
+    /**
+     * Is a filter form pinned
+     * @param type The Page we are on
+     * @param type The Filter we are on
+     * @return boolean
+     */
+    public static function IsFilterPinned($page, $filter)
+    {
+        if (isset($_SESSION[$page][$filter]))
+            return ($_SESSION[$page][$filter] == 1);
+        
+        return false;
+    }
 }
 ?>

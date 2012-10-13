@@ -124,29 +124,40 @@ class layoutDAO
 	function LayoutFilter() 
 	{
 		$db 	=& $this->db;
-		
-		$layout = ""; //3
-		if (isset($_SESSION['layout']['filter_layout'])) $layout = $_SESSION['layout']['filter_layout'];
-		
-		//retired list
-		$retired = "0";
-		if(isset($_SESSION['layout']['filter_retired'])) $retired = $_SESSION['layout']['retired'];
-		$retired_list = listcontent("all|All,1|Yes,0|No","filter_retired",$retired);
-		
-		//owner list
-		$filter_userid = "";
-		if(isset($_SESSION['layout']['filter_userid'])) $filter_userid = $_SESSION['layout']['filter_userid'];
-		$user_list = listcontent("all|All,".userlist("SELECT DISTINCT userid FROM layout"),"filter_userid", $filter_userid);
-		
-		//tags list
-		$filter_tags = "";
-		if(isset($_SESSION['layout']['filter_tags'])) $filter_tags = $_SESSION['layout']['filter_tags'];
-
+                
+                // Translations
 		$msgName	= __('Name');
 		$msgOwner	= __('Owner');
 		$msgTags	= __('Tags');
 		$msgRetired	= __('Retired');
-
+                $msgKeepFilterOpen = __('Keep filter open');
+                $filterId = uniqid('filter');
+                
+                // Default options
+                if (Kit::IsFilterPinned('layout', 'LayoutFilter'))
+                {
+                    $filterPinned = 'checked';
+                    $layout = Session::Get('layout', 'filter_layout');
+                    $retired = Session::Get('layout', 'retired');
+                    $filterUserId = Session::Get('layout', 'filter_userid');
+                    $filterTags = Session::Get('layout', 'filter_tags');
+                }
+                else
+                {
+                    $filterPinned = '';
+                    $layout = '';
+                    $retired = '0';
+                    $filterUserId = '';
+                    $filterTags = '';
+                }
+		
+		// Retired list
+		$retired_list = listcontent("all|All,1|Yes,0|No", "filter_retired", $retired);
+		
+		// owner list
+		$user_list = listcontent("all|All,".userlist("SELECT DISTINCT userid FROM layout"),"filter_userid", $filterUserId);
+		
+                // Output the form
 		$filterForm = <<<END
 		<div class="FilterDiv" id="LayoutFilter">
 			<form onsubmit="return false">
@@ -156,13 +167,15 @@ class layoutDAO
 			<table class="layout_filterform">
 				<tr>
 					<td>$msgName</td>
-					<td><input type="text" name="filter_layout"></td>
+					<td><input type="text" name="filter_layout" value="$layout"></td>
 					<td>$msgOwner</td>
 					<td>$user_list</td>
+                                        <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
+                                        <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
 				</tr>
 				<tr>
 					<td>$msgTags</td>
-					<td><input type="text" name="filter_tags" value="$filter_tags" /></td>
+					<td><input type="text" name="filter_tags" value="$filterTags" /></td>
 					<td>$msgRetired</td>
 					<td>$retired_list</td>
 				</tr>
@@ -452,6 +465,8 @@ END;
 		// Tags list
 		$filter_tags = Kit::GetParam("filter_tags", _POST, _STRING);
 		setSession('layout', 'filter_tags', $filter_tags);
+                
+                setSession('layout', 'LayoutFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		$SQL = "";
 		$SQL .= "SELECT  layout.layoutID, ";
@@ -1295,6 +1310,15 @@ END;
 		<div id="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; border: 1px solid #000; background:$background_css;">
 		$regionHtml
 		</div>
+                <div id="LayoutJumpList">
+HTML;
+                echo $surface;
+
+                // Output the layout jump list filter form 
+                $this->LayoutJumpListFilter();
+                
+                $surface = <<<HTML
+                </div>
 		<div class="contextMenu" id="regionMenu">
 			<ul>
                                 <li id="btnTimeline">$msgTimeLine</li>
@@ -1794,15 +1818,77 @@ END;
 
         return $groups;
     }
+    
+    /**
+     * Filter form for the layout jump list
+     */
+    public function LayoutJumpListFilter()
+    {
+        $msgName = __('Layout');
+        $msgJumpList = __('Layout Jump List');
+        
+        // Default values?
+        if (Kit::IsFilterPinned('layoutDesigner', 'JumpList'))
+        {
+            $filterPinned = 'checked';
+            $listPinned = 'block';
+            $arrowDirection = 'v';
+            $filterName = Session::Get('layoutDesigner', 'Name');
+        }
+        else 
+        {
+            $filterPinned = '';
+            $listPinned = 'none';
+            $arrowDirection = '^';
+            $filterName = '';
+        }
+
+        $form = <<<HTML
+        <div class="XiboFilterInner">     
+        <form>
+            <input type="hidden" name="p" value="layout">
+            <input type="hidden" name="q" value="LayoutJumpList">
+            <input type="checkbox" class="XiboFilterPinned" style="display:none" checked />
+            <table>
+                <tr>
+                    <td>$msgName</td>
+                    <td><input type="text" name="name" value="$filterName"></td>
+                    <td><label for="XiboJumpListPinned">Pin?</label><input id="XiboJumpListPinned" name="XiboJumpListPinned" type="checkbox" class="XiboJumpListPinned" $filterPinned /></td>
+                </tr>
+            </table>
+        </form>
+        </div>
+HTML;
+		
+        $id = uniqid();
+
+        $xiboGrid = <<<HTML
+        <div id="JumpListHeader" JumpListGridId="$id">
+            $msgJumpList<span id="JumpListOpenClose">$arrowDirection</span>
+        </div>
+        <div class="XiboGrid" id="$id" style="display:$listPinned;">
+            <div class="XiboFilter">
+                $form
+            </div>
+            <div class="XiboData"></div>
+        </div>
+HTML;
+		
+        echo $xiboGrid;
+    }
 
     /**
      * A List of Layouts we have permission to design
      */
     public function LayoutJumpList()
     {
-        $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
+        
+        // Layout filter?
+        $layoutName = Kit::GetParam('name', _POST, _STRING, '');
+        setSession('layoutDesigner', 'JumpList', Kit::GetParam('XiboJumpListPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('layoutDesigner', 'Name', $layoutName);
 
         // Show a list of layouts we have permission to jump to
         $output = '<div class="info_table">';
@@ -1810,13 +1896,12 @@ END;
         $output .= '    <thead>';
         $output .= '    <tr>';
         $output .= '    <th>' . __('Layout') . '</th>';
-        $output .= '    <th>' . __('Action') . '</th>';
         $output .= '    </tr>';
         $output .= '    </thead>';
         $output .= '    <tbody>';
 
         // Get a layout list
-        $layoutList = $user->LayoutList();
+        $layoutList = $user->LayoutList($layoutName);
 
         foreach($layoutList as $layout)
         {
@@ -1825,8 +1910,7 @@ END;
 
             // We have permission to edit this layout
             $output .= '<tr>';
-            $output .= '    <td>' . $layout['layout'] . '</td>';
-            $output .= '    <td><button href="index.php?p=layout&modify=true&layoutid=' . $layout['layoutid'] . '" onclick="window.location = $(this).attr(\'href\')"><span>' . __('Design') . '</span></button></td>';
+            $output .= '    <td><a href="index.php?p=layout&modify=true&layoutid=' . $layout['layoutid'] . '">' . $layout['layout'] . '</a></td>';
             $output .= '</tr>';
         }
 
@@ -1834,8 +1918,7 @@ END;
         $output .= '</table>';
         $output .= '</div>';
 
-        $response->SetFormRequestResponse($output, __('Jump to...'), '350px', '500px');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->SetGridResponse($output);
         $response->Respond();
     }
 

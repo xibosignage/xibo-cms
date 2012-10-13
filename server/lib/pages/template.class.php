@@ -112,7 +112,11 @@ class templateDAO
 		if (isset($_SESSION['template']['is_system'])) $is_system = $_SESSION['template']['is_system'];
 		
 		$system_list = dropdownlist("SELECT '-1','All' UNION SELECT '1','Yes' UNION SELECT '0','No'","is_system",$is_system);
-		
+                
+                $msgKeepFilterOpen = __('Keep filter open');
+                $filterPinned = (Kit::IsFilterPinned('template', 'Filter')) ? 'checked' : '';
+                $filterId = uniqid('filter');
+                
 		//Output the filter form
 		$output = <<<END
 		<div class="FilterDiv" id="TemplateFilter">
@@ -125,6 +129,8 @@ class templateDAO
 						<td><input type="text" name="name" value="$filter_name"></td>
 						<td>System</td>
 						<td>$system_list</td>
+                                                <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
+                                                <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
 					</tr>
 					<tr>
 						<td>Tags</td>
@@ -166,6 +172,7 @@ HTML;
 		setSession('template', 'name', $filter_name);
 		setSession('template', 'tags', $tags);
 		setSession('template', 'is_system', $is_system);
+                setSession('template', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 	
 		$SQL  = "";
 		$SQL .= "SELECT  template.templateID, ";

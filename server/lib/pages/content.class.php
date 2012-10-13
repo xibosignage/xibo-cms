@@ -60,42 +60,51 @@ class contentDAO
 	 */	
 	function LibraryFilter() 
 	{
-		$db =& $this->db;
-		
-		$mediatype = ""; //1
-		$usertype = 0; //3
-		$playlistid = ""; //4
-		
-		if (isset($_SESSION['content']['mediatype'])) $mediatype = $_SESSION['content']['mediatype'];
-		if (isset($_SESSION['content']['usertype'])) $usertype = $_SESSION['content']['usertype'];
-		if (isset($_SESSION['content']['playlistid'])) $playlistid = $_SESSION['content']['playlistid'];
-		
-		$filter_userid = "";
-		if (isset($_SESSION['content']['filter_userid'])) $filter_userid = $_SESSION['content']['filter_userid'];
-		
-		$user_list = listcontent("all|All,".userlist("SELECT DISTINCT userid FROM layout"),"filter_userid", $filter_userid);
-		
-		//retired list
-		$retired = "0";
-		if(isset($_SESSION['playlist']['filter_retired'])) $retired = $_SESSION['playlist']['retired'];
-		$retired_list = listcontent("all|All,1|Yes,0|No","filter_retired",$retired);
-
-		//type list query to get all playlists that are in the database which have NOT been assigned to the display
-		$sql = "SELECT 'all', 'all' ";
-		$sql .= "UNION ";
-		$sql .= "SELECT type, type ";
-		$sql .= "FROM media ";
-		$sql .= "GROUP BY type ";
-		
-		$type_list =  dropdownlist($sql,"mediatype",$mediatype);
-		
 		// Messages
 		$msgName	= __('Name');
 		$msgType	= __('Type');
 		$msgRetired	= __('Retired');
 		$msgOwner	= __('Owner');
                 $msgShowOriginal = __('Show the original file name for each media item?');
+                $msgKeepFilterOpen = __('Keep filter open');
+                $filterId = uniqid('filter');
 
+		// Defaults
+                if (Kit::IsFilterPinned('content', 'ContentFilter'))
+                {
+                    $filterPinned = 'checked';
+                    $filterName = Session::Get('content', 'name');
+                    $mediatype = Session::Get('content', 'mediatype');
+                    $usertype = Session::Get('content', 'usertype');
+                    $filter_userid = Session::Get('content', 'filter_userid');
+                    $retired = Session::Get('content', 'filter_retired');
+                }
+                else
+                {
+                    $filterPinned = '';
+                    $filterName = '';
+                    $mediatype = ''; //1
+                    $usertype = 0; //3
+                    $filter_userid = '';
+                    $retired = '0';
+                }
+                
+		// User List
+		$user_list = listcontent("all|All,".userlist("SELECT DISTINCT userid FROM layout"),"filter_userid", $filter_userid);
+		
+		// Retired list
+		$retired_list = listcontent("all|All,1|Yes,0|No","filter_retired",$retired);
+
+		// Type list query to get all playlists that are in the database which have NOT been assigned to the display
+		$sql = "SELECT 'all', 'all' ";
+		$sql .= "UNION ";
+		$sql .= "SELECT type, type ";
+		$sql .= "FROM media ";
+		$sql .= "GROUP BY type ";
+		
+		$type_list =  dropdownlist($sql, 'mediatype', $mediatype);
+		
+                // Filter
 		$filterForm = <<<END
 			<div class="FilterDiv" id="LibraryFilter">
 				<form>
@@ -106,11 +115,13 @@ class contentDAO
 					<table id="content_filterform" class="filterform">
 						<tr>
 							<td>$msgName</td>
-							<td><input type='text' name='2' id='2' /></td>
+							<td><input type='text' name='2' id='2' value="$filterName" /></td>
 							<td>$msgType</td>
 							<td>$type_list</td>
 							<td>$msgRetired</td>
 							<td>$retired_list</td>
+                                                        <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
+                                                        <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
 						</tr>
 						<tr>
 							<td>$msgOwner</td>
@@ -154,12 +165,14 @@ HTML;
 		$filter_userid 	= Kit::GetParam('filter_userid', _REQUEST, _STRING, 'all');
 		$filter_retired = Kit::GetParam('filter_retired', _REQUEST, _STRING, 'all');
                 $filterShowOriginal = Kit::GetParam('filter_showOriginal', _REQUEST, _CHECKBOX, 'off');
-		
+                
 		setSession('content', 'mediatype', $mediatype);
 		setSession('content', 'name', $name);
 		setSession('content', 'shared', $shared);
 		setSession('content', 'filter_userid', $filter_userid);
-		setSession('content', 'filter_retired', $filter_userid);
+		setSession('content', 'filter_retired', $filter_retired);
+		setSession('content', 'filter_showOriginal', $filterShowOriginal);
+                setSession('content', 'LibraryFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		// Construct the SQL
 		$SQL  = "";

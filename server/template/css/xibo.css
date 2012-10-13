@@ -38,10 +38,6 @@
 	color: #003399;
 }
 
-.FilterDiv {
-	display: none;
-}
-
 .ReportFault ol li {
 	display: list-item;
 }
@@ -88,10 +84,8 @@
 }
 
 .footer {
-	font-size:0.8em;
-	text-align:right;
-	padding-top: 15px;
-	padding-right: 5px;
+    position:relative;
+    font-size:0.8em;
 }
 
 #system_working {
@@ -163,4 +157,28 @@
 
 .timelineMediaInTransition {
     margin-bottom: 8px;
+}
+
+#LayoutJumpList {
+    position: absolute;
+    width: 350px;
+    right: 25px;
+    bottom: 55px;
+}
+
+#LayoutJumpList .XiboGrid {   
+    height: 530px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+#JumpListHeader {
+    text-align: right;
+}
+
+#JumpListOpenClose {
+    margin-left: 50px;
+    font-weight: bold;
 }

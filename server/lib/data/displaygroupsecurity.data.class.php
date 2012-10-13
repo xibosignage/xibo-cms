@@ -83,7 +83,7 @@ class DisplayGroupSecurity extends Data
 		
 		$SQL  = "";
 		$SQL .= "DELETE FROM ";
-		$SQL .= "   lkgroupdg ";
+		$SQL .= "   lkdisplaygroupgroup ";
 		$SQL .= sprintf("  WHERE DisplayGroupID = %d AND GroupID = %d ", $displayGroupId, $groupId);
 		
 		if (!$db->query($SQL)) 

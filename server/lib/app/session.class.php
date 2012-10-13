@@ -278,5 +278,19 @@ class Session
 	{
 		$_SESSION[$key] = $value;
 	}
+        
+    /**
+     * Get the Value from the position denoted by the 2 keys provided
+     * @param type $key
+     * @param type $secondKey
+     * @return boolean
+     */
+    public static function Get($key, $secondKey)
+    {
+        if (isset($_SESSION[$key][$secondKey]))
+            return $_SESSION[$key][$secondKey];
+        
+        return false;
+    }        
 }
 ?>
