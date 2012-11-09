@@ -142,7 +142,7 @@ var text_callback = function()
     $("#div_dialog").bind("dialogclose.xibo", function(event, ui){
         $("#ta_text").ckeditorGet().destroy();
         $("#div_dialog").unbind("dialogclose.xibo");
-    })
+    });
 
     var regionid = $("#iRegionId").val();
     var width = $("#region_"+regionid).width();
@@ -159,6 +159,8 @@ var text_callback = function()
     $('#div_dialog').dialog('option', 'width', width);
     $('#div_dialog').dialog('option', 'height', height);
     $('#div_dialog').dialog('option', 'position', 'center');
+    
+    $("#cke_contents_ta_text iframe").contents().find("body").css("background-color", $("#layout").css("background-color"));
 
     return false; //prevent submit
 }
