@@ -32,6 +32,7 @@ class ResponseManager
 	
 	public $sortable;
 	public $sortingDiv;
+        public $paging;
 	
 	public $dialogSize;
 	public $dialogWidth;
@@ -154,6 +155,7 @@ class ResponseManager
 		$this->success		= true;
 		$this->sortable		= true;
 		$this->sortingDiv	= $sortingDiv;
+                $this->paging = true;
 		
 		return;
 	}
@@ -227,6 +229,7 @@ class ResponseManager
 			// Grids
 			$response['sortable']		= $this->sortable;
 			$response['sortingDiv']		= $this->sortingDiv;
+                        $response['paging'] = $this->paging;
 			
 			// Dialogs
 			$response['dialogSize']		= $this->dialogSize;
@@ -288,6 +291,28 @@ class ResponseManager
 		
 		return;
 	}
+        
+    public static function Pager($id)
+    {
+        // Output a pager
+        $output  = '<div class="pager" id="XiboPager_' . $id . '">';
+        $output .= '    <form>';
+        $output .= '        <img src="3rdparty/jQuery/css/images/first.png" class="first"/>';
+        $output .= '        <img src="3rdparty/jQuery/css/images/prev.png" class="prev"/>';
+        $output .= '        <input type="text" class="pagedisplay"/>';
+        $output .= '        <img src="3rdparty/jQuery/css/images/next.png" class="next"/>';
+        $output .= '        <img src="3rdparty/jQuery/css/images/last.png" class="last"/>';
+        $output .= '        <select class="pagesize">';
+        $output .= '            <option selected="selected"  value="10">10</option>';
+        $output .= '            <option value="20">20</option>';
+        $output .= '            <option value="30">30</option>';
+        $output .= '            <option  value="40">40</option>';
+        $output .= '        </select>';
+        $output .= '    </form>';                
+        $output .= '</div>';
+        
+        return $output;
+    }
 }
 
 ?>

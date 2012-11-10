@@ -119,12 +119,14 @@ class reportDAO
 
 END;
 		$id = uniqid();
+                $pager = ResponseManager::Pager($id);
 		
 		$xiboGrid = <<<HTML
 		<div class="XiboGrid" id="$id">
 			<div class="XiboFilter">
 				$output
 			</div>
+                        $pager
 			<div class="XiboData">
 			
 			</div>
@@ -308,6 +310,8 @@ END;
                 $filterPinned = (Kit::IsFilterPinned('log', 'Filter')) ? 'checked' : '';
                 $filterId = uniqid('filter');
                 
+                $pager = ResponseManager::Pager("LogGridId");
+                
 		$xiboGrid = <<<END
 		<div class="XiboGrid" id="LogGridId">
 			<div class="XiboFilter">
@@ -348,6 +352,7 @@ END;
 					</form>
 				</div>
 			</div>
+                        $pager
 			<div class="XiboData">
 			
 			</div>
@@ -383,7 +388,7 @@ END;
 		$fromdt = date("Y-m-d H:i:s", $starttime_timestamp - $seconds);
 		
 		$SQL  = "";
-		$SQL .= "SELECT logdate, page, function, message FROM log ";
+		$SQL .= "SELECT logid, logdate, page, function, message FROM log ";
 		$SQL .= " WHERE 1=1 ";
 		if ($type != "all") 
 		{
@@ -417,12 +422,14 @@ END;
 		$msgPage		= __('Page');
 		$msgFunction	= __('Function');
 		$msgMessage		= __('Message');
+                $msgLogId = __('LogId');
 		
 		$output = <<<END
 		<div class="info_table">
 			<table style="width:100%">
 				<thead>
 					<tr>
+                                                <th>$msgLogId</th>
 						<th>$logDate_t</th>
 						<th>$msgPage</th>
 						<th>$msgFunction</th>
@@ -434,13 +441,15 @@ END;
 		
 		while ($row = $db->get_row($results)) 
 		{
-			$logdate 	= Kit::ValidateParam($row[0], _STRING);
-			$page 		= Kit::ValidateParam($row[1], _STRING);
-			$function 	= Kit::ValidateParam($row[2], _STRING);
-			$message 	= nl2br(htmlspecialchars($row[3]));
+                    $logId = Kit::ValidateParam($row[0], _INT);
+			$logdate 	= Kit::ValidateParam($row[2], _STRING);
+			$page 		= Kit::ValidateParam($row[3], _STRING);
+			$function 	= Kit::ValidateParam($row[3], _STRING);
+			$message 	= nl2br(htmlspecialchars($row[4]));
 			
 			$output .= <<<END
 			<tr>
+                            <td>$logId</td>
 				<td>$logdate</td>
 				<td>$page</td>
 				<td>$function</td>
@@ -457,7 +466,6 @@ END;
 		$output .=  '</tbody></table></div>';
 		
 		$response->SetGridResponse($output);
-		$response->sortable = false;
 		$response->Respond();
 	}
 	

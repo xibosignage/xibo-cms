@@ -204,19 +204,6 @@ function XiboGridRender(gridId){
 
             $(outputDiv).html(respHtml);
 
-            // Do we need to do anything else now?
-            if (response.sortable) {
-                // Call paging
-                var sortingDiv = response.sortingDiv;
-
-                if ($('tbody', sortingDiv).html() != "") {
-                    $(sortingDiv).tablesorter({
-                        sortList: [[0, 0]],
-                        widthFixed: true
-                    })
-                }
-            }
-
             // Do we have to call any functions due to this success?
             if (response.callBack != "" && response.callBack != undefined) {
                 eval(response.callBack)(name);
@@ -227,6 +214,57 @@ function XiboGridRender(gridId){
 
             // Make some buttons
             $('button', outputDiv).button();
+            
+            // Do we have rows in the table?
+            var sortingDiv = '#'+ gridId + ' ' + response.sortingDiv;
+            var hasRows = ($('tbody', sortingDiv).html() != "");
+
+            // Do we need to do anything else now?
+            if (response.sortable) {
+                // See if we have the order stored
+                var sortOrder = $('#' + gridId).data("sorting");
+                if (sortOrder == undefined)
+                    sortOrder = [[0,0]];
+                
+                if (hasRows) {
+                    $(sortingDiv).tablesorter({
+                        sortList: sortOrder,
+                        widthFixed: true,
+                        theme: 'blue'
+                    });
+                    
+                    $(sortingDiv).on('sortEnd', function(e) { 
+                        // Store on the XiboGrid
+                        $('#' + gridId).data("sorting", e.target.config.sortList);
+                    });
+                }
+            }
+            
+            // Do we need to add a pager?
+            if (response.paging && response.sortable) {
+                
+                // See if we have a page number
+                var pageNumber = $('#' + gridId).data("paging"); 
+                if (pageNumber == undefined)
+                    pageNumber = 0;
+                
+                if ($("#XiboPager_" + gridId).length > 0 && hasRows) {
+                    $("#XiboPager_" + gridId).show();
+                    
+                    $(sortingDiv).tablesorterPager({
+                       container: $("#XiboPager_" + gridId),
+                       positionFixed: false,
+                       page: pageNumber
+                    });
+                       
+                    $(sortingDiv).on('pagerComplete', function(e,c) {
+                        $('#' + gridId).data("paging", c.page);
+                    });
+                }
+                else {
+                    $("#XiboPager_" + gridId).hide();
+                }
+            }
 
             return false;
         }

@@ -106,40 +106,42 @@ class contentDAO
 		
                 // Filter
 		$filterForm = <<<END
-			<div class="FilterDiv" id="LibraryFilter">
-				<form>
-					<input type="hidden" name="p" value="content">
-					<input type="hidden" name="q" value="LibraryGrid">
-					<input type="hidden" name="pages" id="pages">
+                    <div class="FilterDiv" id="LibraryFilter">
+                        <form>
+                            <input type="hidden" name="p" value="content">
+                            <input type="hidden" name="q" value="LibraryGrid">
+                            <input type="hidden" name="pages" id="pages">
 					
-					<table id="content_filterform" class="filterform">
-						<tr>
-							<td>$msgName</td>
-							<td><input type='text' name='2' id='2' value="$filterName" /></td>
-							<td>$msgType</td>
-							<td>$type_list</td>
-							<td>$msgRetired</td>
-							<td>$retired_list</td>
-                                                        <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
-                                                        <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
-						</tr>
-						<tr>
-							<td>$msgOwner</td>
-							<td>$user_list</td>
-							<td colspan="4"><input type="checkbox" name="filter_showOriginal" id="filter_showOriginal" /><label for="filter_showOriginal">$msgShowOriginal</label></td>
-						</tr>
-					</table>
+                            <table id="content_filterform" class="filterform">
+                                <tr>
+                                    <td>$msgName</td>
+                                    <td><input type='text' name='2' id='2' value="$filterName" /></td>
+                                    <td>$msgType</td>
+                                    <td>$type_list</td>
+                                    <td>$msgRetired</td>
+                                    <td>$retired_list</td>
+                                    <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
+                                    <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
+                                </tr>
+                                <tr>
+                                    <td>$msgOwner</td>
+                                    <td>$user_list</td>
+                                    <td colspan="4"><input type="checkbox" name="filter_showOriginal" id="filter_showOriginal" /><label for="filter_showOriginal">$msgShowOriginal</label></td>
+                                </tr>
+                            </table>
 			</form>
-		</div>
+                    </div>
 END;
 
             $id = uniqid();
+            $pager = ResponseManager::Pager($id);
 
             $xiboGrid = <<<HTML
             <div class="XiboGrid" id="$id">
                 <div class="XiboFilter">
                         $filterForm
                 </div>
+                $pager
                 <div class="XiboData">
 
                 </div>
@@ -172,7 +174,7 @@ HTML;
 		setSession('content', 'filter_userid', $filter_userid);
 		setSession('content', 'filter_retired', $filter_retired);
 		setSession('content', 'filter_showOriginal', $filterShowOriginal);
-                setSession('content', 'LibraryFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+                setSession('content', 'ContentFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		// Construct the SQL
 		$SQL  = "";

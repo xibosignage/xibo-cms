@@ -141,12 +141,14 @@ class templateDAO
 		</div>
 END;
 		$id = uniqid();
+                $pager = ResponseManager::Pager($id);
 		
 		$xiboGrid = <<<HTML
 		<div class="XiboGrid" id="$id">
 			<div class="XiboFilter">
 				$output
 			</div>
+                        $pager
 			<div class="XiboData">
 			
 			</div>

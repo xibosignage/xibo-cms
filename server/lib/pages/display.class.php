@@ -349,12 +349,14 @@ END;
 END;
 
         $id = uniqid();
+        $pager = ResponseManager::Pager($id);
 
         $xiboGrid = <<<HTML
         <div class="XiboGrid" id="$id">
                 <div class="XiboFilter">
                         $filterForm
                 </div>
+                $pager
                 <div class="XiboData">
 
                 </div>

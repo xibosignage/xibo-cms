@@ -54,6 +54,7 @@ class datasetDAO
     public function DataSetFilter()
     {
         $id = uniqid();
+        $pager = ResponseManager::Pager($id);
 
         $xiboGrid = <<<HTML
         <div class="XiboGrid" id="$id">
@@ -63,6 +64,7 @@ class datasetDAO
 				<input type="hidden" name="q" value="DataSetGrid">
                         </form>
                 </div>
+                $pager
                 <div class="XiboData">
 
                 </div>

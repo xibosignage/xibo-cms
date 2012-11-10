@@ -185,12 +185,14 @@ class layoutDAO
 END;
 		
 		$id = uniqid();
+                $pager = ResponseManager::Pager($id);
 		
 		$xiboGrid = <<<HTML
 		<div class="XiboGrid" id="$id">
 			<div class="XiboFilter">
 				$filterForm
 			</div>
+                        $pager
 			<div class="XiboData">
 			
 			</div>
@@ -1861,6 +1863,7 @@ END;
 HTML;
 		
         $id = uniqid();
+        $pager = ResponseManager::Pager($id);
 
         $xiboGrid = <<<HTML
         <div id="JumpListHeader" JumpListGridId="$id">
@@ -1870,6 +1873,7 @@ HTML;
             <div class="XiboFilter">
                 $form
             </div>
+            $pager
             <div class="XiboData"></div>
         </div>
 HTML;
