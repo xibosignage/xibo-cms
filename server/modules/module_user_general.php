@@ -1289,7 +1289,7 @@ END;
      * Authenticates the current user and returns an array ofcampaigns this user is authenticated on
      * @return
      */
-    public function CampaignList()
+    public function CampaignList($name = '')
     {
         $db 		=& $this->db;
         $userid		=& $this->userid;
@@ -1298,6 +1298,11 @@ END;
         $SQL .= "  FROM `campaign` ";
         $SQL .= "   LEFT OUTER JOIN `lkcampaignlayout` ";
         $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= " WHERE 1 = 1 ";
+        
+        if ($name != '')
+            $SQL .= "   AND campaign.Campaign LIKE '%" . sprintf('%s', $db->escape_string($name)) . "%'";
+        
         $SQL .= "GROUP BY campaign.CampaignID, Campaign, IsLayoutSpecific ";
         $SQL .= "ORDER BY Campaign";
 

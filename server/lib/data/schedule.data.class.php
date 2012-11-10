@@ -547,10 +547,12 @@ class Event
 	public $toDT;
 	public $layout;
 	public $layoutUri;
+        public $deleteUri;
 	public $spanningDays;
 	public $startDayNo;
 	public $displayGroup;
 	public $editPermission;
+        public $isdisplayspecific;
 	
 	public function __construct()
 	{

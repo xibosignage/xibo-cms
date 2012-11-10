@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner and James Packer
+ * Copyright (C) 2006-2012 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -292,7 +292,7 @@ class scheduleDAO
                         // Are there any extra events to fit into this day that didnt have a space
                         if (isset($monthEvents[3][$d]))
                         {
-                            $events4	.= '<td colspan="1"><a href="index.php?p=schedule&q=DayHover&date=' . $currentDay . '" class="XiboFormButton">' . sprintf(__('+ %d more'), $monthEvents[3][$d]) . '</a></td>';
+                            $events4	.= '<td colspan="1"><a href="index.php?p=schedule&q=DayViewFilter&date=' . $currentDay . '" class="XiboFormButton">' . sprintf(__('+ %d more'), $monthEvents[3][$d]) . '</a></td>';
                         }
                         else
                         {
@@ -360,59 +360,103 @@ class scheduleDAO
             $response->Respond();
 	}
 
-        /**
-         * Day Hover
-         * @return
-         */
-        public function DayHover()
+        
+
+    public function DayViewFilter()
+    {
+        $db                 =& $this->db;
+        $response           = new ResponseManager();
+        $date = Kit::GetParam('date', _GET, _INT, 0);
+        $dateString = date('Y-m-d', $date);
+        
+        if ($date == 0)
+            trigger_error(__('You must supply a day'), E_USER_ERROR);
+
+        $filterForm = <<<END
+            <div class="FilterDiv" id="DayViewFilter">
+                <form onsubmit="return false">
+                    <input type="hidden" name="p" value="schedule">
+                    <input type="hidden" name="q" value="DayView">
+                    <input type="hidden" name="date" value="$date">
+                </form>
+            </div>
+END;
+
+        $id = uniqid();
+        $pager = ResponseManager::Pager($id);
+
+        $xiboGrid = <<<HTML
+        <div class="XiboGrid" id="$id">
+            <div class="XiboFilter">
+                $filterForm
+            </div>
+            $pager
+            <div class="XiboData">
+
+            </div>
+        </div>
+HTML;
+        
+        $response->SetFormRequestResponse($xiboGrid, sprintf(__('Events for %s'), $dateString), '850', '450');
+        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
+        
+    /**
+     * Day Hover
+     * @return
+     */
+    public function DayView()
+    {
+        $response = new ResponseManager();
+
+        $displayGroupIDs = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY, Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY));
+        $date = Kit::GetParam('date', _POST, _INT, 0);
+        $output = '';
+
+        if ($date == 0)
+            trigger_error(__('You must supply a day'));
+
+        // Query for all events that sit in this day
+        $events = $this->GetEventsForDay($date, $displayGroupIDs);
+
+        $output .= '<div class="info_table">';
+        $output .= '    <table style="width:100%">';
+        $output .= '        <thead>';
+        $output .= '            <th>' . __('Display / Group') . '</th>';
+        $output .= '            <th>' . __('Name') . '</th>';
+        $output .= '            <th>' . __('Layout') . '</th>';
+        $output .= '            <th>' . __('Start') . '</th>';
+        $output .= '            <th>' . __('Finish') . '</th>';
+        $output .= '            <th>' . __('Action') . '</th>';
+        $output .= '        </thead>';
+        $output .= '        <tbody>';
+
+        foreach($events as $event)
         {
-            $db                 =& $this->db;
-            $response           = new ResponseManager();
+            // We just want a list.
+            $editLink = $event->editPermission == true ? sprintf('class="XiboFormButton" href="%s"', $event->layoutUri) : 'class="UnEditableEvent"';
+            $delLink = $event->editPermission == true ? sprintf('class="XiboFormButton" href="%s"', $event->deleteUri) : 'class="UnEditableEvent"';
 
-            $displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY, Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY));
-            $date		= Kit::GetParam('date', _GET, _INT, 0);
-            $output             = '';
-
-            if ($date == 0)
-                trigger_error(__('You must supply a day'));
-
-            // Query for all events that sit in this day
-            $events = $this->GetEventsForDay($date, $displayGroupIDs);
-
-            $output .= '<div class="info_table">';
-            $output .= '    <table style="width:100%">';
-            $output .= '        <thead>';
-            $output .= sprintf('            <th>%s</th>', __('Start'));
-            $output .= sprintf('            <th>%s</th>', __('Finish'));
-            $output .= sprintf('            <th>%s</th>', __('Layout'));
-            $output .= '            <th></th>';
-            $output .= '        </thead>';
-            $output .= '        <tbody>';
-
-            foreach($events as $event)
-            {
-                // We just want a list.
-                $editLink = $event->editPermission == true ? sprintf('class="XiboFormButton" href="%s"', $event->layoutUri) : 'class="UnEditableEvent"';
-
-                $output .= '<tr>';
-                $output .= '<td>' . date('Y-m-d H:i:s', $event->fromDT) . '</td>';
-                $output .= '<td>' . date('Y-m-d H:i:s', $event->toDT) . '</td>';
-                $output .= '<td>' . $event->layout . '</td>';
-                $output .= sprintf('<td><button %s>%s</button></td>', $editLink, __('Edit'));
-                $output .= '</tr>';
-            }
-
-            $output .= '        </tbody>';
-            $output .= '    </table>';
-            $output .= '</div>';
-
-            $response->SetFormRequestResponse($output, __('Events for Day'), '650', '450');
-            $response->sortable = true;
-            $response->sortingDiv = '.info_table table';
-            $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
-            $response->AddButton(__('Close'), 'XiboDialogClose()');
-            $response->Respond();
+            $output .= '<tr>';
+            $output .= '<td>' . (($event->isdisplayspecific == 1) ? __('Display') : __('Group')) . '</td>';
+            $output .= '<td>' . $event->displayGroup . '</td>';
+            $output .= '<td>' . $event->layout . '</td>';
+            $output .= '<td>' . date('Y-m-d H:i:s', $event->fromDT) . '</td>';
+            $output .= '<td>' . date('Y-m-d H:i:s', $event->toDT) . '</td>';
+            $output .= sprintf('<td><button %s>%s</button><button %s>%s</button></td>', $editLink, __('Edit'), $delLink, __('Delete'));
+            $output .= '</tr>';
         }
+
+        $output .= '        </tbody>';
+        $output .= '    </table>';
+        $output .= '</div>';
+        
+        $response->SetGridResponse($output);
+        $response->focusInFirstInput = false;
+        $response->Respond();
+    }
 	
 	/**
 	 * BuildEventTdForDay
@@ -805,7 +849,8 @@ class scheduleDAO
             $SQL.= "       (GREATEST(schedule_detail.ToDT, $toDt)) - (LEAST(schedule_detail.FromDT, $fromDt)) AS AdjustedDuration, ";
             $SQL.= "       displaygroup.DisplayGroup, ";
             $SQL.= "       displaygroup.DisplayGroupID, ";
-	    $SQL.= "       schedule.DisplayGroupIDs ";
+	    $SQL.= "       schedule.DisplayGroupIDs, ";
+	    $SQL.= "       displaygroup.IsDisplaySpecific ";
             $SQL.= "  FROM schedule_detail ";
             $SQL.= "  INNER JOIN campaign ON campaign.CampaignID = schedule_detail.CampaignID ";
 
@@ -853,6 +898,7 @@ class scheduleDAO
 
                 $dayNo		= (int) date('d', $fromDT);
                 $layoutUri	= sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
+                $deleteUri	= sprintf('index.php?p=schedule&q=DeleteForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
 
                 Debug::LogEntry($db, 'audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
 
@@ -865,9 +911,11 @@ class scheduleDAO
                 $event->layout		= $layout;
                 $event->displayGroup	= $displayGroup;
                 $event->layoutUri	= $layoutUri;
+                $event->deleteUri       = $deleteUri;
                 $event->spanningDays	= ceil($spanningDays);
                 $event->startDayNo	= $dayNo;
                 $event->editPermission	= $this->IsEventEditable($eventDGIDs);
+                $event->isdisplayspecific = Kit::ValidateParam($row['IsDisplaySpecific'], _INT);
                 $events[]               = $event;
             }
 
@@ -1092,109 +1140,191 @@ HTML;
 		return $output;
 	}
 	
-	/**
-	 * Shows a form to add an event
-	 *  will default to the current date if non is provided
-	 * @return 
-	 */
-	function AddEventForm()
-	{
-		$db 			=& $this->db;
-		$user			=& $this->user;
-		$response		= new ResponseManager();
+    private function EventFormLayoutFilter()
+    {
+        $msgName = __('Layout');
+        
+        // Default values?
+        if (Kit::IsFilterPinned('layout', 'LayoutFilter'))
+        {
+            $filterPinned = 'checked';
+            $filterName = Session::Get('scheduleEvent', 'Name');
+        }
+        else 
+        {
+            $filterPinned = '';
+            $filterName = '';
+        }
+
+        $form = <<<HTML
+        <div class="XiboFilterInner">     
+            <form onsubmit="return false">
+                <input type="hidden" name="p" value="schedule">
+                <input type="hidden" name="q" value="EventFormLayout">
+                <table>
+                    <tr>
+                        <td>$msgName</td>
+                        <td><input type="text" name="name" value="$filterName"></td>
+                        <td>
+                            <label for="XiboFilterPinned">Pin?</label>
+                            <input id="XiboFilterPinned" name="XiboFilterPinned" type="checkbox" class="XiboFilter" $filterPinned />
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+HTML;
 		
-		$date			= Kit::GetParam('date', _GET, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
-		$dateText		= date("d/m/Y", $date);
-		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
+        $id = uniqid();
+        $pager = ResponseManager::Pager($id);
+
+        $xiboGrid = <<<HTML
+        <div class="XiboGrid" id="$id">
+            <div class="XiboFilter">
+                $form
+            </div>
+            $pager
+            <div class="XiboData"></div>
+        </div>
+HTML;
 		
-		// Layout list
-                $layouts = $user->CampaignList();
-		$layout_list 	= Kit::SelectList('CampaignID', $layouts, 'campaignid', 'campaign');
+        return $xiboGrid;
+    }
+    
+    public function EventFormLayout()
+    {
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        // Layout filter?
+        $layoutName = Kit::GetParam('name', _POST, _STRING, '');
+        setSession('scheduleEvent', 'JumpList', Kit::GetParam('XiboJumpListPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('scheduleEvent', 'Name', $layoutName);
+        
+        // Layout list
+        $layouts = $user->CampaignList($layoutName);
+        
+        // Show a list of layouts we have permission to jump to
+        $output = '<div class="info_table">';
+        $output .= '<table style="width:100%">';
+        $output .= '    <thead>';
+        $output .= '    <tr>';
+        $output .= '    <th>' . __('Name') . '</th>';
+        $output .= '    <th>' . __('Type') . '</th>';
+        $output .= '    <th></th>';
+        $output .= '    </tr>';
+        $output .= '    </thead>';
+        $output .= '    <tbody>';
+
+        foreach($layouts as $layout)
+        {
+            if (!$layout['edit'] == 1)
+                continue;
+
+            // We have permission to edit this layout
+            $output .= '<tr>';
+            $output .= '    <td>' . $layout['campaign'] . '</td>';
+            $output .= '    <td>' . (($layout['islayoutspecific'] == 1) ? __('Layout') : __('Campaign')) . '</td>';
+            $output .= '    <td><input type="radio" name="CampaignID" value="' . $layout['campaignid'] . '" /></td>';
+            $output .= '</tr>';
+        }
+
+        $output .= '    </tbody>';
+        $output .= '</table>';
+        $output .= '</div>';
+
+        $response->SetGridResponse($output);
+        $response->Respond();
+    }
+        
+    /**
+     * Shows a form to add an event
+     *  will default to the current date if non is provided
+     * @return 
+     */
+    function AddEventForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        $date = Kit::GetParam('date', _GET, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
+        $dateText = date("d/m/Y", $date);
+        $displayGroupIDs = Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
+
+        $outputForm = false;
+        $layoutFilter = $this->EventFormLayoutFilter();
+        $displayList = $this->UnorderedListofDisplays($outputForm, $displayGroupIDs);
 		
-		$outputForm		= false;
-		$displayList	= $this->UnorderedListofDisplays($outputForm, $displayGroupIDs);
-		
-		$form 		= <<<END
-			<form id="AddEventForm" class="XiboForm" action="index.php?p=schedule&q=AddEvent" method="post">
-				<table style="width:100%;">
-					<tr>
-						<td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
-						<td>
-							<input id="starttime" class="date-pick required" type="text" size="12" name="starttime" value="$dateText" />
-							<input id="sTime" class="required" type="text" size="12" name="sTime" value="00:00" />
-						</td>
-						<td rowspan="4">
-                                                        <div class="FormDisplayList">
-							$displayList
-                                                        </div>
-						</td>
-					</tr>
-					<tr>
-						<td><label for="endtime" title="Select the end time for this event">End Time<span class="required">*</span></label></td>
-						<td>
-							<input id="endtime" class="date-pick required" type="text" size="12" name="endtime" value="" />
-							<input id="eTime" class="required" type="text" size="12" name="eTime" value="00:00" />
-						</td>
-					</tr>
-					<tr>
-						<td><label for="CampaignID" title="Select which layout this event will show.">Campaign/Layout<span class="required">*</span></label></td>
-						<td>$layout_list</td>
-					</tr>
-                                        <tr>
-                                                <td><label for="DisplayOrder" title="Select the Order for this Event">Display Order</label></td>
-                                                <td><input type=text" name="DisplayOrder" value="0" />
-                                        </tr>
-					<tr>
-						<td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
-						<td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
-					</tr>
+        $form = <<<END
+<table style="width:100%;">
+    <tr>
+        <td>$layoutFilter</td>
+        <td>$displayList</td>
+    </tr>
+</table>
+<form id="AddEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=AddEvent" method="post">
+    <table style="width:100%;">
+        <tr>
+            <td colspan="4"><center><h3>Event Schedule</h3></center></td>
+        </tr>
+        <tr>
+            <td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
+            <td>
+                <input id="starttime" class="date-pick required" type="text" size="12" name="starttime" value="$dateText" />
+                <input id="sTime" class="required" type="text" size="12" name="sTime" value="00:00" />
+            </td>
+            <td><label for="endtime" title="Select the end time for this event">End Time<span class="required">*</span></label></td>
+            <td>
+                <input id="endtime" class="date-pick required" type="text" size="12" name="endtime" value="" />
+                <input id="eTime" class="required" type="text" size="12" name="eTime" value="00:00" />
+            </td>
+        </tr>
+        <tr>
+            <td><label for="DisplayOrder" title="Select the Order for this Event">Display Order</label></td>
+            <td><input type=text" name="DisplayOrder" value="0" />
+            <td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
+            <td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
+        </tr>
 END;
 
-		//recurrance part of the form
-		$days 		= 60*60*24;
-		$rec_type 	= listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type");
-		$rec_detail	= listcontent("1|1,2|2,3|3,4|4,5|5,6|6,7|7,8|8,9|9,10|10,11|11,12|12,13|13,14|14", "rec_detail");
-		$rec_range 	= '<input class="date-pick" type="text" id="rec_range" name="rec_range" size="12" />';
-		
-		$form .= <<<END
-		<tr>
-			<td colspan="3">
-				<fieldset title="If this event occurs again (e.g. repeats) on a schedule">
-					<legend>Recurrence Information</label>
-					<table>
-						<tr>
-							<td><label for="rec_type" title="What type of repeating is required">Repeats</label></td>
-							<td>$rec_type</td>
-						</tr>
-						<tr>
-							<td><label for="rec_detail" title="How often does this event repeat">Repeat every</label></td>
-							<td><input class="number" type="text" name="rec_detail" value="1" /></td>
-						</tr>
-						<tr>
-							<td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
-							<td>$rec_range
-                                                        <input id="repeatTime" type="text" size="12" name="repeatTime" value="00:00" />
-                                                        </td>
-						</tr>
-					</table>
-				</fieldset>
-			</td>
-		</tr>
+        //recurrance part of the form
+        $rec_type = listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type");
+        $rec_range = '<input class="date-pick" type="text" id="rec_range" name="rec_range" size="12" />';
+
+        $form .= <<<END
+        <tr>
+            <td colspan="4"><center><h3>Recurring Event</h3></center></td>
+        </tr>
+        <tr>
+            <td><label for="rec_type" title="What type of repeating is required">Repeats</label></td>
+            <td>$rec_type</td>
+            <td><label for="rec_detail" title="How often does this event repeat">Repeat every</label></td>
+            <td><input class="number" type="text" name="rec_detail" value="1" /></td>
+        </tr>
+        <tr>
+            <td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
+            <td>$rec_range
+                <input id="repeatTime" type="text" size="12" name="repeatTime" value="00:00" />
+            </td>
+        </tr>
 END;
 
-		$form .= <<<END
-				</table>
-			</form>
+        $form .= <<<END
+        </table>
+    </form>
 END;
 		
-		$response->SetFormRequestResponse($form, __('Schedule an Event'), '700px', '400px');
-		$response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Add')");
-		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
-		$response->AddButton(__('Next'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=1").submit()');
-		$response->AddButton(__('Save'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=0").submit()');
-		$response->callBack = 'setupScheduleForm';
-		$response->Respond();
-	}
+        $response->SetFormRequestResponse($form, __('Schedule Event'), '800px', '600px');
+        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Add')");
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Next'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=1").submit()');
+        $response->AddButton(__('Save'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=0").submit()');
+        $response->callBack = 'setupScheduleForm';
+        $response->sortable = true;
+        $response->paging = true;
+        $response->Respond();
+    }
 	
 	/**
 	 * Shows a form to add an event
@@ -1555,7 +1685,7 @@ END;
 		if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
 		
         $strQuestion = __('Are you sure you want to delete this event from <b>all</b> displays?');
-        $strAdvice = __('If you only want to delete this item from certain displays, please deselect the displays in the previous dialogue and click Save.');
+        $strAdvice = __('If you only want to delete this item from certain displays, please deselect the displays in the edit dialogue and click Save.');
 
 		$form = <<<END
 		<form id="DeleteEventForm" class="XiboForm" action="index.php?p=schedule&q=DeleteEvent">
@@ -1609,179 +1739,7 @@ END;
 		$response->Respond();
 	}
 	
-	function generate_day_view() 
-	{
-		$db =& $this->db;
-		
-		$date		= $this->start_date;
-		
-		//For the day view the date actually wants to be the beginning of the day month year given
-		$date		= mktime(0,0,0,date("m",$date),date("d", $date),date("Y",$date));
-		
-		$next_day	= mktime(0,0,0,date("m",$date),date("d", $date)+1,date("Y",$date));
-		
-		$query_date = date("Y-m-d H:i:s", $date);
-		$query_next_day = date("Y-m-d H:i:s", $next_day);
-		
-		$day_text = date("d-m-Y", $date);
-		
-		// This is a view of a single day (with all events listed in a table)
-		$SQL = "";
-        $SQL.= "SELECT schedule_detail.schedule_detailID, ";
-        $SQL.= "       schedule_detail.FromDT, ";
-        $SQL.= "       schedule_detail.ToDT,";
-        $SQL.= "       campaign.Campaign, ";
-        $SQL.= "       schedule_detail.userid, ";
-        $SQL.= "       schedule_detail.is_priority ";
-        $SQL.= "  FROM schedule_detail ";
-        $SQL.= "  INNER JOIN campaign ON campaign.CampaignID = schedule_detail.CampaignID ";
-        $SQL.= " WHERE 1=1 ";
-        $SQL.= "   AND schedule_detail.DisplayGroupID = $this->displayid ";
-        
-        //Events that fall inside the two dates
-        $SQL.= "   AND schedule_detail.FromDT < $date ";
-        $SQL.= "   AND schedule_detail.ToDT   >  $next_day";
-        
-        //Ordering
-        $SQL.= " ORDER BY 2,3";
-
-        $result = $db->query($SQL) or trigger_error($db->error(), E_USER_ERROR);
-		
-		$table_html = <<<END
-	<h3>Schedule for $day_text</h3>
-    <div class="scrollingWindow" style="height:255px">
-    <table class="day_view" style="width: 98%">
-    	<tr>
-    		<th>Event</th>
-    		<th>Start</th>
-    		<th>End</th>
-END;
-		
-		for ($i=0; $i<24; $i++) 
-		{
-			
-			$h = $i;
-			if ($i<10) $h = "0$i";
-			
-			$full_time = mktime(0+$i,0,0,date("m",$date),date("d", $date),date("Y",$date));	
-			
-    		$table_html .= "<th>$h</th>";
-		}
-		
-    	$table_html .= "</tr>";    
-      	
-      	  
-        while($row = $db->get_row($result))
-		{
-            $schedule_detailid 	= $row[0];
-            $starttime 			= date("H:i",$row[2]);
-            $endtime 			= date("H:i",$row[3]);
-            $name 				= $row[3];
-            $times 				= date("H:i",$row[2])."-".date("H:i",$row[3]);
-            $userid 			= $row[4];
-            $is_priority 		= $row[5];
-            
-			$start_row = $starttime;
-			if($row[2]<$date) 
-			{
-				$start_row = "Earlier Day";
-			}
-			
-			$end_row = $endtime;
-			if ($row[3]>$next_day) 
-			{
-				$end_row = "Later Day";
-			}
-			
-            $table_html .= <<<END
-        <tr>
-        	<td>$name</td>
-        	<td>$start_row</td>
-        	<td>$end_row</td>
-END;
-			
-			/*
-			 * For each event we want to work out:
-			 * 1. when it will start (and therefore the colspan on the first td)
-			 * 2. how many hour periods it coverd (and therefore the colspan on the colored td)
-			 * 3. how many cols are left
-			 */
-			$total_cols = 24;
-			$start_hour = date("H",$row[2]);
-			$end_hour   = date("H",$row[3]);
-			
-			/*
-	         * We need to work out:
-	         * 1. whether the record we've got is within the dates supplied (OR)
-	         * 2. whether the record is outside of these dates
-	         */
-            if ($row[2] < $date) 
-			{ //if 'the event start date' < 'the we are on'
-            	$start_hour = 0;
-            }
-            
-			//if the event goes over this day, then the end hour will be the total_cols shown
-            if ($row[3] >= $next_day) 
-			{
-            	$end_hour = $total_cols;
-            }
-			
-			/*
-			 * We are ready to work it out
-			 */
-			if ($start_hour != 0) 
-			{ //if the start_hour is 0 we dont bother with the beginning
-				for($i=0;$i<$start_hour;$i++) 
-				{ //go from the first column, until the start hour
-					$table_html .= "<td></td>";
-					$total_cols--;
-				}
-			}
-			
-			$colspan = 0;
-			for ($i = $start_hour; $i < $end_hour; $i++) 
-			{
-				$colspan++;
-				$total_cols--;
-			}
-			
-			if ($colspan == 0) $colspan = "";
-			
-			$link = "<a class='XiboFormButton event' title='Load this event into the form for editing' href='index.php?p=schedule&sp=edit&q=display_form&id=$schedule_detailid&date=$this->start_date&displayid=$this->displayid'>Edit</a>";
-			$class = "busy";
-			
-			if ($userid != $_SESSION['userid']) 
-			{
-				$class = "busy_no_edit";
-			}
-			if ($userid != $_SESSION['userid']&& $_SESSION['usertype']!=1) 
-			{
-				$link = "";
-			}
-			if ($is_priority == 1) 
-			{
-				$class = "busy_has_priority";
-			}
-			
-			$table_html .= "<td class='$class' colspan='$colspan'>" .
-					"$link</td>";
-			
-			if ($total_cols != 1) 
-			{
-				while ($total_cols > 0) 
-				{
-					$total_cols--;
-					$table_html .= "<td></td>";
-				}
-			}
-			
-			$table_html .= "</tr>";
-        }
-		
-		$table_html .= "</table></div>";
-        
-        return $table_html;
-	}
+	
 	
 	/**
 	 * Is this event editable?

@@ -108,12 +108,32 @@ function setupScheduleForm() {
         dateFormat: "dd/mm/yy",
         beforeShow: customRange
     });
+    
+    // We submit this form ourselves (outside framework)
+    $('.XiboScheduleForm').validate({
+        submitHandler: ScheduleFormSubmit
+    });
+}
 
-	bindRecurrenceCtl();
-	
-	$('#rec_type').change(function() {
-		bindRecurrenceCtl();
-	});
+function ScheduleFormSubmit(form) {
+    // Get the URL from the action part of the form)
+    var url = $(form).attr("action") + "&ajax=true";
+
+    // Get additional fields from the form
+    var layoutId = $('input:radio[name=CampaignID]:checked', '#div_dialog').val();
+    if (layoutId == undefined)
+        layoutId = 0;
+
+    $.ajax({
+        type:"post",
+        url:url,
+        cache:false,
+        dataType:"json",
+        data:$(form).serialize() + "&CampaignID=" + layoutId,
+        success: XiboSubmitResponse
+    });
+
+    return;
 }
 
 /**
@@ -123,27 +143,4 @@ function setupScheduleForm() {
 function customRange(input) { 
     return {minDate: (input.id == "endtime" ? $("#starttime").datepicker("getDate") : null), 
         maxDate: (input.id == "starttime" ? $("#endtime").datepicker("getDate") : null)}; 
-}
-
-/**
- * Recurrance controls show / hide
- */
-function bindRecurrenceCtl() 
-{
-	/*
-	 * Recurrence
-	 * 	If the recurrence type value is NULL then hide the rec_detail and rec_range fields
-	 */
-	var rec_type 	= $('#rec_type');
-	var rec_detail 	= $('#rec_detail');
-	var rec_range 	= $('#rec_range');
-	
-	if (rec_type.val()=="null") {
-		rec_detail.parent().parent().hide();
-		rec_range.parent().parent().hide();
-	}
-	else {
-		rec_detail.parent().parent().show();
-		rec_range.parent().parent().show();
-	}
 }
