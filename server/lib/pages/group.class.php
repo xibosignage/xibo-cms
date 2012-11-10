@@ -229,6 +229,7 @@ END;
 		$response['html'] 		= $table;
 		$response['success']	= true;
 		$response['sortable']	= true;
+                $response['paging'] = true;
 		$response['sortingDiv']	= '.info_table table';
 		
 		Kit::Redirect($response);

@@ -265,6 +265,9 @@ function XiboGridRender(gridId){
                     $("#XiboPager_" + gridId).hide();
                 }
             }
+            else {
+                $("#XiboPager_" + gridId).hide();
+            }
 
             return false;
         }
