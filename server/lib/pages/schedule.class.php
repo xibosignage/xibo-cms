@@ -399,6 +399,7 @@ HTML;
         
         $response->SetFormRequestResponse($xiboGrid, sprintf(__('Events for %s'), $dateString), '850', '450');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+        $response->AddButton(__('Delete All'), 'XiboFormRender("index.php?p=schedule&q=DeleteDayForm&date=' . $date . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }
@@ -1048,25 +1049,22 @@ HTML;
 		echo $xiboGrid;
 	}
 	
-	/**
-	 * Shows a list of displays
-	 * @return 
-	 */
-	public function DisplayList()
-	{
-		$db 				=& $this->db;
-		$user				=& $this->user;
-		
-		$response			= new ResponseManager();
-		$displayGroupIDs	= Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
-		$output				= '';
-					
-		$output				= $this->UnorderedListofDisplays(true, $displayGroupIDs);
-		
-		$response->SetGridResponse($output);
-		$response->callBack = 'DisplayListRender';
-		$response->Respond();
-	}
+    /**
+     * Shows a list of displays
+     * @return 
+     */
+    public function DisplayList()
+    {
+        $response = new ResponseManager();
+        $displayGroupIDs = Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
+        $output = '';
+        $output .= '<div id="checkAllForDisplayList" class="scheduleFormCheckAll"><label for="checkAll">' . __('Check All') . '</label><input type="checkbox" name="checkAll"></div>';
+        $output .= $this->UnorderedListofDisplays(true, $displayGroupIDs);
+
+        $response->SetGridResponse($output);
+        $response->callBack = 'DisplayListRender';
+        $response->Respond();
+    }
 	
 	/**
 	 * Outputs an unordered list of displays optionally with a form
@@ -1962,5 +1960,79 @@ END;
         $response->SetFormSubmitResponse(__('The Event has been Scheduled'));
         $response->Respond();
     }
+    
+    /**
+    * Shows the DeleteEvent form
+    * @return 
+    */
+   function DeleteDayForm() 
+   {
+        $response = new ResponseManager();
+        $date = Kit::GetParam('date', _GET, _INT, 0);
+        $dateString = date('Y-m-d', $date);
+        
+        if ($date == 0)
+            trigger_error (__('Day not selected'), E_USER_ERROR);
+
+        $strQuestion = __('Are you sure you want to delete all events that intersect this day from <b>all</b> displays?');
+        $strAdvice = __('This action cannot be undone.');
+
+        $form = <<<END
+<form id="DeleteDayForm" class="XiboForm" action="index.php?p=schedule&q=DeleteDay">
+    <input type="hidden" name="date" value="$date">
+    <table>
+        <tr>
+            <td>$strQuestion</td>
+        </tr>
+        <tr>
+            <td>$strAdvice</td>
+        </tr>
+    </table>	
+</form>
+END;
+
+        $response->SetFormRequestResponse($form, sprintf(__('Delete %s'), $dateString), '480px', '240px');
+        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Delete')");
+        $response->AddButton(__('No'), 'XiboFormRender("index.php?p=schedule&q=DayViewFilter&date=' . $date . '")');
+        $response->AddButton(__('Yes'), '$("#DeleteDayForm").submit()');
+        $response->Respond();
+    }
+    
+    /**
+    * Deletes an Event from all displays
+    * @return 
+    */
+    public function DeleteDay()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        $displayGroupIds = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY, Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY));
+        $date = Kit::GetParam('date', _POST, _INT, 0);
+        $dateString = date('Y-m-d', $date);
+        
+        if ($date == 0)
+            trigger_error (__('Day not selected'), E_USER_ERROR);
+        
+        $events = $this->GetEventsForDay($date, $displayGroupIds);
+        
+        // Create an object to use for the delete
+        $scheduleObject = new Schedule($db);
+        
+        foreach($events as $event)
+        {
+            if ($event->editPermission)
+            {
+                // Delete the entire schedule.
+                if (!$scheduleObject->Delete($event->eventID)) 
+                    trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
+            }
+        }
+        
+        $response->SetFormSubmitResponse(sprintf(__('All events for %s have been deleted'), $dateString));
+        $response->callBack = 'CallGenerateCalendar';
+        $response->Respond();
+    }    
 }
 ?>

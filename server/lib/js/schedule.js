@@ -91,12 +91,18 @@ function CallGenerateCalendar() {
  * Callback for the display list renderer
  */
 function DisplayListRender() {
-	// Bind a click event to all the display list checkboxes
-	$('#DisplayList input[type=checkbox]').click(function(){
-		CallGenerateCalendar();
-	});
+    // Bind a click event to all the display list checkboxes
+    $('#DisplayList input[type=checkbox]').click(function(){
+            CallGenerateCalendar();
+    });
 
+    CallGenerateCalendar();
+        
+    $('input:checkbox[name=checkAll]', '#checkAllForDisplayList').click(function(){
+        $("input:checkbox[name='DisplayGroupIDs[]']", "#DisplayList").attr("checked", this.checked);
+        
         CallGenerateCalendar();
+    });
 }
 
 /**
