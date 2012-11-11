@@ -248,13 +248,17 @@ function XiboGridRender(gridId){
                 if (pageNumber == undefined)
                     pageNumber = 0;
                 
+                if (response.pageNumber != 0)
+                    pageNumber = response.pageNumber;
+                
                 if ($("#XiboPager_" + gridId).length > 0 && hasRows) {
                     $("#XiboPager_" + gridId).show();
                     
                     $(sortingDiv).tablesorterPager({
                        container: $("#XiboPager_" + gridId),
                        positionFixed: false,
-                       page: pageNumber
+                       page: pageNumber,
+                       size: response.pageSize
                     });
                        
                     $(sortingDiv).on('pagerComplete', function(e,c) {

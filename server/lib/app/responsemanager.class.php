@@ -33,6 +33,8 @@ class ResponseManager
 	public $sortable;
 	public $sortingDiv;
         public $paging;
+        public $pageSize;
+        public $pageNumber;
 	
 	public $dialogSize;
 	public $dialogWidth;
@@ -65,6 +67,8 @@ class ResponseManager
                 $this->appendHiddenSubmit = true;
                 $this->uniqueReference = '';
 		$this->buttons = '';
+                $this->pageSize = 10;
+                $this->pageNumber = 0;
 		
 		return true;
 	}
@@ -230,6 +234,8 @@ class ResponseManager
 			$response['sortable']		= $this->sortable;
 			$response['sortingDiv']		= $this->sortingDiv;
                         $response['paging'] = $this->paging;
+                        $response['pageSize'] = $this->pageSize;
+                        $response['pageNumber'] = $this->pageNumber;
 			
 			// Dialogs
 			$response['dialogSize']		= $this->dialogSize;
@@ -303,10 +309,11 @@ class ResponseManager
         $output .= '        <img src="3rdparty/jQuery/css/images/next.png" class="next"/>';
         $output .= '        <img src="3rdparty/jQuery/css/images/last.png" class="last"/>';
         $output .= '        <select class="pagesize">';
-        $output .= '            <option selected="selected"  value="10">10</option>';
+        $output .= '            <option value="5">5</option>';
+        $output .= '            <option value="10">10</option>';
         $output .= '            <option value="20">20</option>';
         $output .= '            <option value="30">30</option>';
-        $output .= '            <option  value="40">40</option>';
+        $output .= '            <option value="40">40</option>';
         $output .= '        </select>';
         $output .= '    </form>';                
         $output .= '</div>';

@@ -113,6 +113,21 @@ function setupScheduleForm() {
     $('.XiboScheduleForm').validate({
         submitHandler: ScheduleFormSubmit
     });
+    
+    $(".time-pick", "#div_dialog").setMask("29:59").keypress(function() {
+        var currentMask = $(this).data('mask').mask;
+        var newMask = $(this).val().match(/^2.*/) ? "23:59" : "29:59";
+        if (newMask != currentMask) {
+            $(this).setMask(newMask);
+        }
+    });
+}
+
+function displayGridCallback() {
+
+    $('input:checkbox[name=checkAll]', '#div_dialog').click(function(){
+        $("input:checkbox[name='DisplayGroupIDs[]']", "#div_dialog").attr("checked", this.checked);
+    });
 }
 
 function ScheduleFormSubmit(form) {
@@ -123,13 +138,17 @@ function ScheduleFormSubmit(form) {
     var layoutId = $('input:radio[name=CampaignID]:checked', '#div_dialog').val();
     if (layoutId == undefined)
         layoutId = 0;
+    
+    var displayGroupIds = $("input:checkbox[name='DisplayGroupIDs[]']:checked", "#div_dialog").serialize();
+    if (displayGroupIds == undefined)
+        displayGroupIds = 0;
 
     $.ajax({
         type:"post",
         url:url,
         cache:false,
         dataType:"json",
-        data:$(form).serialize() + "&CampaignID=" + layoutId,
+        data:$(form).serialize() + "&CampaignID=" + layoutId + "&" + displayGroupIds,
         success: XiboSubmitResponse
     });
 

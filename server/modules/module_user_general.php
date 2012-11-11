@@ -1179,7 +1179,7 @@ END;
      * Authenticates the current user and returns an array of display groups this user is authenticated on
      * @return 
      */
-    public function DisplayGroupList($isDisplaySpecific = 0)
+    public function DisplayGroupList($isDisplaySpecific = 0, $name = '')
     {
         $db 		=& $this->db;
         $userid		=& $this->userid;
@@ -1195,8 +1195,15 @@ END;
         {
             $SQL .= "   INNER JOIN lkdisplaydg ";
             $SQL .= "   ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
-            $SQL .= " WHERE displaygroup.IsDisplaySpecific = 1 ";
         }
+        
+        $SQL .= " WHERE 1 = 1 ";
+        
+        if ($name != '')
+            $SQL .= " AND displaygroup.DisplayGroup LIKE '%" . sprintf('%s', $db->escape_string($name)) . "%'";
+        
+        if ($isDisplaySpecific == 1)
+            $SQL .= " AND displaygroup.IsDisplaySpecific = 1 ";
 
         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
 

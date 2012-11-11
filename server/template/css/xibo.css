@@ -182,3 +182,18 @@
     margin-left: 50px;
     font-weight: bold;
 }
+
+table.ScheduleFormSelectDetails {
+    border: 0;
+    background: none;
+}
+
+table.ScheduleFormSelectDetails td {
+    border: 0;
+    background: none;
+    vertical-align: top;
+}
+
+.scheduleFormCheckAll {
+    float: right;
+}
