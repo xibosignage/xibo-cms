@@ -484,9 +484,19 @@ END;
                 $SQL .= "       AND campaign.IsLayoutSpecific = 1";
 		$SQL .= " WHERE 1= 1";
 		//name filter
-		if ($name != "") 
+		if ($name != '') 
 		{
-			$SQL.= " AND  (layout.layout LIKE '%" . sprintf('%s', $name) . "%') ";
+                    // convert into a space delimited array
+                    $names = explode(' ', $name);
+                    
+                    foreach($names as $searchName)
+                    {
+                        // Not like, or like?
+                        if (substr($searchName, 0, 1) == '-')
+                            $SQL.= " AND  (layout.layout NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                        else
+                            $SQL.= " AND  (layout.layout LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+                    }
 		}
 		//owner filter
 		if ($filter_userid != "all") 
@@ -506,6 +516,8 @@ END;
 		{
 			$SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $filter_tags) . "%' ";
 		}
+                
+                Debug::LogEntry($db, 'audit', $SQL);
 
 		if(!$results = $db->query($SQL))
 		{

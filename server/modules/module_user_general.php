@@ -947,8 +947,20 @@ END;
         $SQL .= " WHERE 1 = 1 ";
 
         if ($filterLayout != '')
-            $SQL .= "   AND layout LIKE '%" . $filterLayout . "%'";
+        {
+            // convert into a space delimited array
+            $names = explode(' ', $filterLayout);
 
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (layout.layout NOT LIKE '%" . sprintf('%s', ltrim($this->db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (layout.layout LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
+            }
+        }
+        
         $SQL .= " ORDER BY Layout ";
 
         //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
@@ -1200,7 +1212,19 @@ END;
         $SQL .= " WHERE 1 = 1 ";
         
         if ($name != '')
-            $SQL .= " AND displaygroup.DisplayGroup LIKE '%" . sprintf('%s', $db->escape_string($name)) . "%'";
+        {
+            // convert into a space delimited array
+            $names = explode(' ', $name);
+
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (displaygroup.DisplayGroup NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (displaygroup.DisplayGroup LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+            }
+        }
         
         if ($isDisplaySpecific == 1)
             $SQL .= " AND displaygroup.IsDisplaySpecific = 1 ";
@@ -1308,7 +1332,19 @@ END;
         $SQL .= " WHERE 1 = 1 ";
         
         if ($name != '')
-            $SQL .= "   AND campaign.Campaign LIKE '%" . sprintf('%s', $db->escape_string($name)) . "%'";
+        {
+            // convert into a space delimited array
+            $names = explode(' ', $name);
+
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (campaign.Campaign NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (campaign.Campaign LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+            }
+        }
         
         $SQL .= "GROUP BY campaign.CampaignID, Campaign, IsLayoutSpecific ";
         $SQL .= "ORDER BY Campaign";

@@ -194,9 +194,19 @@ HTML;
 		{
 			$SQL .= sprintf(" AND media.type = '%s'", $db->escape_string($mediatype));
 		}
-		if ($name != "") 
+		if ($name != '') 
 		{
-			$SQL .= " AND media.name LIKE '%$name%' ";
+                    // convert into a space delimited array
+                    $names = explode(' ', $name);
+                    
+                    foreach($names as $searchName)
+                    {
+                        // Not like, or like?
+                        if (substr($searchName, 0, 1) == '-')
+                            $SQL.= " AND  (media.name NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                        else
+                            $SQL.= " AND  (media.name LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+                    }
 		}
 		if ($filter_userid != 'all') 
 		{
@@ -538,12 +548,24 @@ HTML;
         $SQL .= " WHERE retired = 0 AND isEdited = 0 ";
 
         // Filter on media type
-        if($mediatype != "all") 
+        if($mediatype != 'all') 
             $SQL.= sprintf(" AND media.type = '%s'", $mediatype);
             
         // Filter on name
-        if ($name != "all") 
-            $SQL.= " AND media.name LIKE '%" . sprintf('%s', $name) . "%'";
+        if ($name != 'all') 
+        {
+            // convert into a space delimited array
+            $names = explode(' ', $name);
+
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (media.name NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (media.name LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+            }
+        }
 
         $SQL .= " ORDER BY media.name ";
 

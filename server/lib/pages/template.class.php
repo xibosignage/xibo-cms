@@ -184,15 +184,25 @@ HTML;
 		$SQL .= "        template.userID ";
 		$SQL .= "FROM    template ";
 		$SQL .= "WHERE 1=1 ";
-		if ($filter_name != "") 
+		if ($filter_name != '') 
 		{
-			$SQL .= " AND template.template LIKE '%" . $db->escape_string($filter_name) . "%' ";
+                    // convert into a space delimited array
+                    $names = explode(' ', $filter_name);
+                    
+                    foreach($names as $searchName)
+                    {
+                        // Not like, or like?
+                        if (substr($searchName, 0, 1) == '-')
+                            $SQL.= " AND  (template.template NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                        else
+                            $SQL.= " AND  (template.template LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+                    }
 		}
-		if ($tags != "") 
+		if ($tags != '') 
 		{
 			$SQL .= " AND template.tags LIKE '%" . $db->escape_string($tags) . "%' ";
 		}
-		if ($is_system != "-1") 
+		if ($is_system != '-1') 
 		{
 			$SQL .= sprintf(" AND template.issystem = %d ", $is_system);
 		}
