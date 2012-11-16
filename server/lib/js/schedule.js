@@ -126,6 +126,8 @@ function setupScheduleForm() {
         if (newMask != currentMask) {
             $(this).setMask(newMask);
         }
+    }).click(function(){
+        $(this)[0].select();
     });
 }
 
