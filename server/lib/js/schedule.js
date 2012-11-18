@@ -120,11 +120,17 @@ function setupScheduleForm() {
         submitHandler: ScheduleFormSubmit
     });
     
-    $(".time-pick", "#div_dialog").setMask("29:59").keypress(function() {
+    $(".time-pick", "#div_dialog").setMask({
+        mask: "29:59",
+        autoTab: false
+    }).keypress(function() {
         var currentMask = $(this).data('mask').mask;
         var newMask = $(this).val().match(/^2.*/) ? "23:59" : "29:59";
         if (newMask != currentMask) {
-            $(this).setMask(newMask);
+            $(this).setMask({
+                mask: newMask,
+                autoTab: false
+            });
         }
     }).click(function(){
         $(this)[0].select();
