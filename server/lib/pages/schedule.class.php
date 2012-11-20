@@ -1590,6 +1590,7 @@ END;
 		
         $response->SetFormRequestResponse($form, __('Edit Event'), '800px', '600px');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Edit')");
+        $response->AddButton(__('Delete'), 'XiboFormRender("index.php?p=schedule&q=DeleteForm&EventID=' . $eventID . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#EditEventForm").attr("action", $("#EditEventForm").attr("action") + "&next=0").submit()');
         $response->callBack = 'setupScheduleForm';
