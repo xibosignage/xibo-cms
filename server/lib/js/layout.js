@@ -45,16 +45,12 @@ var LoadTimeLineCallback = function() {
 
 var XiboTimelineSaveOrder = function(mediaListId, layoutId, regionId) {
 
-    //console.log(mediaListId);
-
     // Load the media id's into an array
     var mediaList = "";
 
     $('#' + mediaListId + ' li.timelineMediaListItem').each(function(){
         mediaList = mediaList + $(this).attr("mediaid") + "&" + $(this).attr("lkid") + "|";
     });
-
-    //console.log("Media List: " + mediaList);
 
     // Call the server to do the reorder
     $.ajax({
@@ -112,8 +108,6 @@ var LibraryAssignSubmit = function(layoutId, regionId)
     var mediaList = $("#LibraryAssignSortable").sortable('serialize');
 
     mediaList = mediaList + "&regionid=" + regionId;
-
-    console.log(mediaList);
 
     $.ajax({
         type: "post",
