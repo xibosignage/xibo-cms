@@ -111,6 +111,9 @@ class image extends Module
 
     public function Preview($width, $height)
     {
+        if ($this->previewEnabled == 0)
+            return parent::Preview ($width, $height);
+        
         // Show the image - scaled to the aspect ratio of this region (get from GET)
         return sprintf('<div style="text-align:center;"><img src="index.php?p=module&q=GetImage&id=%d&width=%d&height=%d&dynamic" /></div>', $this->mediaid, $width, $height);
     }

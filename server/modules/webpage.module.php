@@ -337,6 +337,9 @@ FORM;
      */
     public function Preview($width, $height)
     {
+        if ($this->previewEnabled == 0)
+            return parent::Preview ($width, $height);
+        
         $layoutId = $this->layoutid;
         $regionId = $this->regionid;
 
