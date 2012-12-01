@@ -83,22 +83,28 @@ var LibraryAssignCallback = function()
             });
             
             $(this).sortable('cancel');
-        },
-        revert: true
+        }
     }).disableSelection();
 
     $("#LibraryAssignSortable").sortable({
-        dropOnEmpty: true
+        connectWith: '.connectedSortable',
+        dropOnEmpty: true,
+        remove: function(event, ui) {
+            ui.item.remove();
+        }
     }).disableSelection();
-
-    $(".li-sortable", "#LibraryAvailableSortable").dblclick(function(e){
-        var otherList = $($(e.currentTarget).parent().sortable("option","connectWith")).not($(e.currentTarget).parent());
-
-        otherList.append($(e.currentTarget).clone());
-    });
 
     $(".li-sortable", "#LibraryAssignSortable").dblclick(function(e){
         $(this).remove();
+    });
+    
+    $(".li-sortable", "#LibraryAvailableSortable").dblclick(function(e){
+        var otherList = $($(e.currentTarget).parent().sortable("option","connectWith")).not($(e.currentTarget).parent());
+        var clone = $(e.currentTarget).clone().dblclick(function(e){
+            $(this).remove();
+        });
+        
+        otherList.append(clone);
     });
 }
 
