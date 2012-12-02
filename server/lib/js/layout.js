@@ -45,16 +45,12 @@ var LoadTimeLineCallback = function() {
 
 var XiboTimelineSaveOrder = function(mediaListId, layoutId, regionId) {
 
-    //console.log(mediaListId);
-
     // Load the media id's into an array
     var mediaList = "";
 
     $('#' + mediaListId + ' li.timelineMediaListItem').each(function(){
         mediaList = mediaList + $(this).attr("mediaid") + "&" + $(this).attr("lkid") + "|";
     });
-
-    //console.log("Media List: " + mediaList);
 
     // Call the server to do the reorder
     $.ajax({
@@ -87,22 +83,28 @@ var LibraryAssignCallback = function()
             });
             
             $(this).sortable('cancel');
-        },
-        revert: true
+        }
     }).disableSelection();
 
     $("#LibraryAssignSortable").sortable({
-        dropOnEmpty: true
+        connectWith: '.connectedSortable',
+        dropOnEmpty: true,
+        remove: function(event, ui) {
+            ui.item.remove();
+        }
     }).disableSelection();
-
-    $(".li-sortable", "#LibraryAvailableSortable").dblclick(function(e){
-        var otherList = $($(e.currentTarget).parent().sortable("option","connectWith")).not($(e.currentTarget).parent());
-
-        otherList.append($(e.currentTarget).clone());
-    });
 
     $(".li-sortable", "#LibraryAssignSortable").dblclick(function(e){
         $(this).remove();
+    });
+    
+    $(".li-sortable", "#LibraryAvailableSortable").dblclick(function(e){
+        var otherList = $($(e.currentTarget).parent().sortable("option","connectWith")).not($(e.currentTarget).parent());
+        var clone = $(e.currentTarget).clone().dblclick(function(e){
+            $(this).remove();
+        });
+        
+        otherList.append(clone);
     });
 }
 
@@ -112,8 +114,6 @@ var LibraryAssignSubmit = function(layoutId, regionId)
     var mediaList = $("#LibraryAssignSortable").sortable('serialize');
 
     mediaList = mediaList + "&regionid=" + regionId;
-
-    console.log(mediaList);
 
     $.ajax({
         type: "post",

@@ -245,6 +245,9 @@ FORM;
 
     public function Preview($width, $height)
     {
+        if ($this->previewEnabled == 0)
+            return parent::Preview ($width, $height);
+        
         $msgWindows = __('Windows Command');
         $msgLinux = __('Linux Command');
 
