@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Alex Harrington
+ * Copyright (C) 2009-2012 Alex Harrington
  *
  * This file is part of Xibo.
  *
@@ -212,9 +212,9 @@ elseif ($_SESSION['step'] == 2) {
 	}
 
     echo '<div class="info"><p>';
-	echo __("Perform automatic database backup?");
+	echo __("I agree I have a valid database backup and can restore it should the upgrade process fail:");
 	echo '</p></div><div class="install-table">';
-    echo '<input type="checkbox" name="doBackup" checked />';
+    echo '<input type="checkbox" name="doBackup" />';
 	echo '</div><hr width="25%" />';
 
 	$_SESSION['step'] = 3;
@@ -262,12 +262,13 @@ elseif ($_SESSION['step'] == 3) {
 		set_time_limit(0);
 		// Backup the database
 		echo '<div class="info"><p>';
-        if ($doBackup) {
-		    echo __('Backing up your database');
-		    backup_tables($db, '*');
-        }
-        else {
-            echo __('Skipping database backup');
+        if (! $doBackup) {
+            echo __('You MUST have a valid database backup to continue. Please take and verify a backup and upgrade again.');
+            echo '</p>';
+            echo '</div>';
+            include('install/footer.inc');
+            session_destroy();
+            exit();
         }
 		echo '</p>';
 
