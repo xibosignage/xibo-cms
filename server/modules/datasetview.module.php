@@ -398,8 +398,9 @@ FORM;
 
     public function Preview($width, $height)
     {
-        $db =& $this->db;
-
+        if ($this->previewEnabled == 0)
+            return parent::Preview ($width, $height);
+        
         // Show a preview of the data set table output.
         return $this->DataSetTableHtml();
     }

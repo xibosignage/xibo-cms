@@ -233,7 +233,7 @@ SQL;
         $emailHelp      = $helpManager->HelpIcon(__("Do you want to be notified by email if there is a problem with this display?"), true);
         $alertHelp      = $helpManager->HelpIcon(__("How long in minutes after the display last connected to the webservice should we send an alert. Set this value higher than the collection interval on the client. Set to 0 to use global default."), true);
         $wolHelp = $helpManager->HelpIcon(__('Wake on Lan requires the correct network configuration to route the magic packet to the display PC'), true);
-        $wolTimeHelp = $helpManager->HelpIcon(_('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), true);
+        $wolTimeHelp = $helpManager->HelpIcon(__('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), true);
 
         // List of layouts
         $layoutList = Kit::SelectList('defaultlayoutid', $this->user->LayoutList(), 'layoutid', 'layout', $layoutid);

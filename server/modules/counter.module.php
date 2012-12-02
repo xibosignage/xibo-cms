@@ -307,6 +307,9 @@ FORM;
 
     public function Preview($width, $height)
     {
+        if ($this->previewEnabled == 0)
+            return parent::Preview ($width, $height);
+        
         $regionid   = $this->regionid;
 
         // Get the text out of RAW

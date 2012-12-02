@@ -124,7 +124,8 @@ HTML;
         $SQL .= '   Description, ';
         $SQL .= '   RegionSpecific, ';
         $SQL .= '   ValidExtensions, ';
-        $SQL .= '   ImageUri ';
+        $SQL .= '   ImageUri, ';
+        $SQL .= '   PreviewEnabled ';
         $SQL .= '  FROM `module` ';
         $SQL .= ' ORDER BY Name ';
 
@@ -142,6 +143,7 @@ HTML;
         $output .= '    <th>' . __('Library Media') .'</th>';
         $output .= '    <th>' . __('Valid Extensions') .'</th>';
         $output .= '    <th>' . __('Image Uri') .'</th>';
+        $output .= '    <th>' . __('Preview Enabled') .'</th>';
         $output .= '    <th>' . __('Enabled') .'</th>';
         $output .= '    <th>' . __('Actions') .'</th>';
         $output .= '    </tr>';
@@ -156,6 +158,7 @@ HTML;
             $isRegionSpecific = Kit::ValidateParam($module['RegionSpecific'], _INT);
             $validExtensions = Kit::ValidateParam($module['ValidExtensions'], _STRING);
             $imageUri = Kit::ValidateParam($module['ImageUri'], _STRING);
+            $previewEnabled = Kit::ValidateParam($module['PreviewEnabled'], _INT);
             $enabled = Kit::ValidateParam($module['Enabled'], _INT);
 
             $output .= '<tr>';
@@ -164,6 +167,7 @@ HTML;
             $output .= '<td>' . (($isRegionSpecific == 0) ? '<img src="img/act.gif" />' : '') . '</td>';
             $output .= '<td>' . $validExtensions . '</td>';
             $output .= '<td>' . $imageUri . '</td>';
+            $output .= '<td>' . (($previewEnabled == 1) ? '<img src="img/act.gif" />' : '<img src="img/disact.gif" />') . '</td>';
             $output .= '<td>' . (($enabled == 1) ? '<img src="img/act.gif" />' : '<img src="img/disact.gif" />') . '</td>';
             $output .= '<td>' . ((Config::GetSetting($db, 'MODULE_CONFIG_LOCKED_CHECKB') == 'Checked') ? __('Modufle Config Locked') : '<button class="XiboFormButton" href="index.php?p=module&q=EditForm&ModuleID=' . $moduleId . '"><span>' . __('Edit') . '</span></button>') . '</td>';
             $output .= '</tr>';
@@ -196,7 +200,8 @@ HTML;
         $SQL .= '   Description, ';
         $SQL .= '   RegionSpecific, ';
         $SQL .= '   ValidExtensions, ';
-        $SQL .= '   ImageUri ';
+        $SQL .= '   ImageUri, ';
+        $SQL .= '   PreviewEnabled ';
         $SQL .= '  FROM `module` ';
         $SQL .= ' WHERE ModuleID = %d ';
 
@@ -213,24 +218,28 @@ HTML;
         $isRegionSpecific = Kit::ValidateParam($row['RegionSpecific'], _INT);
         $enabled = Kit::ValidateParam($row['Enabled'], _INT);
         $enabledChecked = ($enabled) ? 'checked' : '';
+        $previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
+        $previewEnabledChecked = ($previewEnabled) ? 'checked' : '';
 
         // Help UI
         $iconModuleExtensions = $helpManager->HelpIcon(__('The Extensions allowed on files uploaded using this module. Comma Seperated.'), true);
         $iconModuleImage = $helpManager->HelpIcon(__('The Image to display for this module'), true);
         $iconModuleEnabled = $helpManager->HelpIcon(__('When Enabled users will be able to add media using this module'), true);
+        $iconModulePreviewEnabled = $helpManager->HelpIcon(__('When Enabled users will be able to see a preview in the layout designer'), true);
 
         $msgSave = __('Save');
         $msgCancel = __('Cancel');
         
         $msgModuleExtensions = __('Valid Extensions');
         $msgModuleImage = __('Image');
+        $msgModulePreviewEnabled = __('Preview Enabled');
         $msgModuleEnabled = __('Enabled');
 
         // The valid extensions field is only for library media
         $validExtensionsField = <<<END
                 <tr>
                     <td>$msgModuleExtensions</td>
-                    <td>$iconModuleExtensions <input class="required" type="text" name="ValidExtensions" value="$validExtensions" maxlength="254"></td>
+                    <td>$iconModuleExtensions <input type="text" name="ValidExtensions" value="$validExtensions" maxlength="254"></td>
                 </tr>
 END;
 
@@ -244,6 +253,10 @@ END;
                 <tr>
                     <td>$msgModuleImage</span></td>
                     <td>$iconModuleImage <input class="required" type="text" name="ImageUri" value="$imageUri" maxlength="254"></td>
+                </tr>
+                <tr>
+                    <td>$msgModulePreviewEnabled</span></td>
+                    <td>$iconModulePreviewEnabled <input type="checkbox" name="PreviewEnabled" $previewEnabledChecked></td>
                 </tr>
                 <tr>
                     <td>$msgModuleEnabled</span></td>
@@ -272,6 +285,7 @@ END;
         $moduleId = Kit::GetParam('ModuleID', _POST, _INT);
         $validExtensions = Kit::GetParam('ValidExtensions', _POST, _STRING, '');
         $imageUri = Kit::GetParam('ImageUri', _POST, _STRING);
+        $previewEnabled = Kit::GetParam('PreviewEnabled', _POST, _CHECKBOX);
         $enabled = Kit::GetParam('Enabled', _POST, _CHECKBOX);
 
         // Validation
@@ -282,8 +296,8 @@ END;
             trigger_error(__('Image Uri is a required field.'), E_USER_ERROR);
 
         // Deal with the Edit
-        $SQL = "UPDATE `module` SET ImageUri = '%s', ValidExtensions = '%s', Enabled = %d WHERE ModuleID = %d";
-        $SQL = sprintf($SQL, $db->escape_string($imageUri), $db->escape_string($validExtensions), $enabled, $moduleId);
+        $SQL = "UPDATE `module` SET ImageUri = '%s', ValidExtensions = '%s', PreviewEnabled = %d, Enabled = %d WHERE ModuleID = %d";
+        $SQL = sprintf($SQL, $db->escape_string($imageUri), $db->escape_string($validExtensions), $previewEnabled, $enabled, $moduleId);
 
         if (!$db->query($SQL))
         {

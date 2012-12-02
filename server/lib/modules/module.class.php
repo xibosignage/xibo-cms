@@ -42,7 +42,8 @@ class Module implements ModuleInterface
 	protected $lkid;
 	protected $validExtensions;
 	protected $validExtensionsText;
-
+        protected $previewEnabled;
+        
 	protected $xml;
 
 	protected $existingMedia;
@@ -128,6 +129,7 @@ class Module implements ModuleInterface
 		$this->validExtensionsText 	= Kit::ValidateParam($row['ValidExtensions'], _STRING);
 		$this->validExtensions 		= explode(',', $this->validExtensionsText);
 		$this->validExtensionsText	= str_replace(',', ', ', $this->validExtensionsText);
+                $this->previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
 
 		return true;
 	}
