@@ -128,10 +128,23 @@ class DataSet extends Data
     {
         $db =& $this->db;
 
+        $SQL = "SELECT * FROM `datasetdata` INNER JOIN `datasetcolumn` ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID WHERE datasetcolumn.DataSetID = %d";
+
+        // First check to see if we have any data
+        if ($db->GetCountOfRows(sprintf($SQL, $dataSetId)) > 0)
+            return $this->SetError(25005, __('There is data assigned to this data set, cannot delete.'));
+
+        // Delete security
         Kit::ClassLoader('datasetgroupsecurity');
         $security = new DataSetGroupSecurity($db);
         $security->UnlinkAll($dataSetId);
 
+        // Delete columns
+        $dataSetObject = new DataSetColumn($db);
+        if (!$dataSetObject->DeleteAll($dataSetId))
+            return $this->SetError(25005, __('Cannot delete dataset, columns could not be deleted.'));
+
+        // Delete data set
         $SQL = "DELETE FROM dataset WHERE DataSetID = %d";
         $SQL = sprintf($SQL, $dataSetId);
 
