@@ -1282,8 +1282,8 @@ END;
 			return;
 		}
 		
-		// Layout list
-                $layouts = $user->CampaignList();
+		// Layout list (with retired)
+                $layouts = $user->CampaignList(true);
 		$layout_list 	= Kit::SelectList('CampaignID', $layouts, 'campaignid', 'campaign', $campaignId);
 		
 		$outputForm		= false;
