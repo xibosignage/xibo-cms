@@ -28,6 +28,8 @@ INSERT INTO `transition` (`TransitionID`, `Transition`, `Code`, `HasDuration`, `
 (2, 'Fade Out', 'fadeOut', 1, 0, 0, 1),
 (3, 'Fly', 'fly', 1, 1, 1, 1);
 
+INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES (NULL, 'GLOBAL_THEME_NAME', 'default', 'text', 'The Theme to apply to all pages by default', NULL, 'general', '1');
+
 UPDATE `version` SET `app_ver` = '1.5.0', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '60';

@@ -89,17 +89,6 @@ class layoutDAO
             }
 	}
 
-	function on_page_load() 
-	{
-		return "";
-	}
-
-	function echo_page_heading() 
-	{
-		echo __("Layouts");
-		return true;
-	}
-	
 	function displayPage() 
 	{
 		$db =& $this->db;
@@ -107,7 +96,34 @@ class layoutDAO
 		switch ($this->sub_page) 
 		{	
 			case 'view':
-				require("template/pages/layout_view.php");
+				// Default options
+		        if (Kit::IsFilterPinned('layout', 'LayoutFilter')) {
+		            Theme::Set('filter_pinned', 'checked');
+		            Theme::Set('layout', Session::Get('layout', 'filter_layout'));
+		            Theme::Set('retired', Session::Get('layout', 'retired'));
+		            Theme::Set('filter_userid', Session::Get('layout', 'filter_userid'));
+		            Theme::Set('filter_tags', Session::Get('layout', 'filter_tags'));
+		        }
+		        else {
+					Theme::Set('retired', 0);
+		        }
+				
+	        	Theme::Set('layout_form_add_url', 'index.php?p=layout&q=displayForm');
+
+				$id = uniqid();
+				Theme::Set('id', $id);
+				Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
+				Theme::Set('pager', ResponseManager::Pager($id));
+				Theme::Set('form_meta', '<input type="hidden" name="p" value="layout"><input type="hidden" name="q" value="LayoutGrid">');
+				
+				// Field list for a "retired" dropdown list
+		        Theme::Set('retired_field_list', array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')));
+				
+				// Field list for a "owner" dropdown list
+				Theme::Set('owner_field_list', $db->GetArray("SELECT 0 AS UserID, 'All' AS UserName UNION SELECT DISTINCT user.UserID, user.UserName FROM `layout` INNER JOIN `user` ON layout.UserID = user.UserID "));
+
+				// Call to render the template
+				Theme::Render('layout_page');
 				break;
 				
 			case 'edit':
@@ -119,88 +135,7 @@ class layoutDAO
 		}
 		
 		return false;
-	}
-	
-	function LayoutFilter() 
-	{
-		$db 	=& $this->db;
-                
-                // Translations
-		$msgName	= __('Name');
-		$msgOwner	= __('Owner');
-		$msgTags	= __('Tags');
-		$msgRetired	= __('Retired');
-                $msgKeepFilterOpen = __('Keep filter open');
-                $filterId = uniqid('filter');
-                
-                // Default options
-                if (Kit::IsFilterPinned('layout', 'LayoutFilter'))
-                {
-                    $filterPinned = 'checked';
-                    $layout = Session::Get('layout', 'filter_layout');
-                    $retired = Session::Get('layout', 'retired');
-                    $filterUserId = Session::Get('layout', 'filter_userid');
-                    $filterTags = Session::Get('layout', 'filter_tags');
-                }
-                else
-                {
-                    $filterPinned = '';
-                    $layout = '';
-                    $retired = '0';
-                    $filterUserId = '';
-                    $filterTags = '';
-                }
-		
-		// Retired list
-		$retired_list = listcontent("all|All,1|Yes,0|No", "filter_retired", $retired);
-		
-		// owner list
-		$user_list = listcontent("all|All,".userlist("SELECT DISTINCT userid FROM layout"),"filter_userid", $filterUserId);
-		
-                // Output the form
-		$filterForm = <<<END
-		<div class="FilterDiv" id="LayoutFilter">
-			<form onsubmit="return false">
-				<input type="hidden" name="p" value="layout">
-				<input type="hidden" name="q" value="LayoutGrid">
-		
-			<table class="layout_filterform">
-				<tr>
-					<td>$msgName</td>
-					<td><input type="text" name="filter_layout" value="$layout"></td>
-					<td>$msgOwner</td>
-					<td>$user_list</td>
-                                        <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
-                                        <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
-				</tr>
-				<tr>
-					<td>$msgTags</td>
-					<td><input type="text" name="filter_tags" value="$filterTags" /></td>
-					<td>$msgRetired</td>
-					<td>$retired_list</td>
-				</tr>
-			</table>
-			</form>
-		</div>
-END;
-		
-		$id = uniqid();
-                $pager = ResponseManager::Pager($id);
-		
-		$xiboGrid = <<<HTML
-		<div class="XiboGrid" id="$id">
-			<div class="XiboFilter">
-				$filterForm
-			</div>
-                        $pager
-			<div class="XiboData">
-			
-			</div>
-		</div>
-HTML;
-		echo $xiboGrid;
-	}
-	
+	}	
 
 	/**
 	 * Adds a layout record to the db
@@ -457,7 +392,7 @@ END;
 		setSession('layout', 'filter_layout', $name);
 		
 		// User ID
-		$filter_userid = Kit::GetParam('filter_userid', _POST, _STRING, 'all');
+		$filter_userid = Kit::GetParam('filter_userid', _POST, _STRING, '0');
 		setSession('layout', 'filter_userid', $filter_userid);
 		
 		// Show retired
@@ -499,7 +434,7 @@ END;
                     }
 		}
 		//owner filter
-		if ($filter_userid != "all") 
+		if ($filter_userid != "0") 
 		{
 			$SQL .= sprintf(" AND layout.userid = %d ", $filter_userid);
 		}
@@ -612,93 +547,48 @@ END;
 		$response->Respond();
 	}
 
+	/**
+	 * Displays an Add/Edit form
+	 */
 	function displayForm () 
 	{
-		$db 			=& $this->db;
-		$user			=& $this->user;
-		$response		= new ResponseManager();
+		$db =& $this->db;
+		$user =& $this->user;
+		$response = new ResponseManager();
 		
-		$helpManager            = new HelpManager($db, $user);
+		Theme::Set('layoutid', $this->layoutid); 
+		Theme::Set('layout', $this->layout);
+		Theme::Set('description', $this->description);
+		Theme::Set('retired', $this->retired);
+		Theme::Set('tags', $this->tags);
 
-		$action 		= "index.php?p=layout&q=add";
-		
-		$layoutid 		= $this->layoutid; 
-		$layout 		= $this->layout;
-		$description            = $this->description;
-		$retired		= $this->retired;
-		$tags			= $this->tags;
-		
-		// Help icons for the form
-		$nameHelp	= $helpManager->HelpIcon(__("The Name of the Layout - (1 - 50 characters)"), true);
-		$descHelp	= $helpManager->HelpIcon(__("An optional description of the Layout. (1 - 250 characters)"), true);
-		$tagsHelp	= $helpManager->HelpIcon(__("Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)"), true);
-		$retireHelp	= $helpManager->HelpIcon(__("Retire this layout or not? It will no longer be visible in lists"), true);
-		$templateHelp	= $helpManager->HelpIcon(__("Template to create this layout with."), true);
-		
-		//init the retired option
-		$retired_option 	= '';
-		$template_option 	= '';
-		
 		if ($this->layoutid != '')
-		{ 
-                        // assume an edit
-			$action = "index.php?p=layout&q=modify";
+		{
+			// We are editing
+			$theme = 'layout_form_edit';
+			Theme::Set('form_action', 'index.php?p=layout&q=modify');
+			Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '">');
 			
 			// build the retired option
-			$retired_list = listcontent("1|Yes,0|No","retired",$retired);
-			$retired_option = <<<END
-			<tr>
-				<td><label for='retired'>Retired<span class="required">*</span></label></td>
-				<td>$retireHelp $retired_list</td>
-			</tr>
-END;
+			Theme::Set('retired_field_list', array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')));
 		}
 		else
 		{
-                    $templates = $user->TemplateList();
-                    array_unshift($templates, array('templateid' => '0', 'template' => 'None'));
+			// We are adding
+			$theme = 'layout_form_add';
+			Theme::Set('form_action', 'index.php?p=layout&q=add');
+
+            $templates = $user->TemplateList();
+            array_unshift($templates, array('templateid' => '0', 'template' => 'None'));
                     
-                    $templateList = Kit::SelectList('templateid', $templates, 'templateid', 'template');
-                        
-                    $template_option = <<<END
-                    <tr>
-                            <td><label for='templateid'>Template<span class="required">*</span></label></td>
-                            <td>$templateHelp $templateList</td>
-                    </tr>
-END;
+            Theme::Set('template_field_list', $templates);
 		}
-		
-		$msgName	= __('Name');
-		$msgName2	= __('The Name of the Layout - (1 - 50 characters)');
-		$msgDesc	= __('Description');
-		$msgDesc2	= __('An optional description of the Layout. (1 - 250 characters)');
-		$msgTags	= __('Tags');
-		$msgTags2	= __('Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)');
-		
-                $form = <<<END
-		<form id="LayoutForm" class="XiboForm" method="post" action="$action">
-			<input type="hidden" name="layoutid" value="$this->layoutid">
-		<table>
-			<tr>
-				<td><label for="layout" accesskey="n" title="$msgName2">$msgName<span class="required">*</span></label></td>
-				<td>$nameHelp <input name="layout" type="text" id="layout" value="$layout" tabindex="1" /></td>
-			</tr>
-			<tr>
-				<td><label for="description" accesskey="d" title="$msgDesc2">$msgDesc</label></td>
-				<td>$descHelp <input name="description" type="text" id="description" value="$description" tabindex="2" /></td>
-			</tr>
-			<tr>
-				<td><label for="tags" accesskey="d" title="$msgTags2">$msgTags</label></td>
-				<td>$tagsHelp <input name="tags" type="text" id="tags" value="$tags" tabindex="3" /></td>
-			</tr>
-			$retired_option
-			$template_option
-		</table>
-		</form>
-END;
+
+		// Initialise the template and capture the output
+		$form = Theme::RenderReturn($theme);
 
 		$response->SetFormRequestResponse($form, __('Add/Edit a Layout.'), '350px', '275px');
-                $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != '') ? $helpManager->Link('Layout', 'Edit') : $helpManager->Link('Layout', 'Add')) . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != '') ? HelpManager::Link('Layout', 'Edit') : HelpManager::Link('Layout', 'Add')) . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#LayoutForm").submit()');
 		$response->Respond();

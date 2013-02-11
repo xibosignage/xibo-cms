@@ -105,6 +105,10 @@ class PageManager
 			trigger_error(__("You do not have permission to access this page."), E_USER_ERROR);
 			exit;
 		}
+
+		// Create a theme
+		new Theme($db, $user);
+		Theme::SetPagename($this->p);
 		
 		// Create the requested page
 		$this->thePage = new $this->page($db, $user);
@@ -129,11 +133,11 @@ class PageManager
 		else 
 		{
 			// Display a page instead
-			include("template/header.php");
+			Theme::Render('header');
 			
 			$this->thePage->displayPage();
 			
-			include("template/footer.php");
+			Theme::Render('footer');
 		}
 		
 		return;
