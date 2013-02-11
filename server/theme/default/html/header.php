@@ -45,15 +45,15 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.corner.js"></script>
 		
 		<!-- Our own -->
-		<link rel="stylesheet" type="text/css" href="template/css/presentation.css" />
+		<link rel="stylesheet" type="text/css" href="theme/default/css/presentation.css" />
         <!--[if gte IE 8]>
-        <link rel="stylesheet" type="text/css" href="template/css/ie8.css" />
+        <link rel="stylesheet" type="text/css" href="theme/default/css/ie8.css" />
         <![endif]-->
 
-		<script type="text/javascript" src="lib/js/functions.js"></script>
-		<script type="text/javascript" src="lib/js/ping.js"></script>
-		<script type="text/javascript" src="lib/js/core.js"></script>
-        <script type="text/javascript" src="lib/js/<?php echo Theme::GetPageName(); ?>.js"></script>
+		<script type="text/javascript" src="theme/default/js/functions.js"></script>
+		<script type="text/javascript" src="theme/default/js/ping.js"></script>
+		<script type="text/javascript" src="theme/default/js/core.js"></script>
+        <script type="text/javascript" src="theme/default/js/<?php echo Theme::GetPageName(); ?>.js"></script>
 	</head>
 	<body>
     

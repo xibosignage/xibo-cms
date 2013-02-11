@@ -384,10 +384,11 @@ END;
 	 */
 	function LayoutGrid() 
 	{
-		$db 		=& $this->db;
-		$user		=& $this->user;
-		$response	= new ResponseManager();
+		$db =& $this->db;
+		$user =& $this->user;
+		$response = new ResponseManager();
 		
+		// Filter by Name
 		$name = Kit::GetParam('filter_layout', _POST, _STRING, '');
 		setSession('layout', 'filter_layout', $name);
 		
@@ -402,8 +403,9 @@ END;
 		// Tags list
 		$filter_tags = Kit::GetParam("filter_tags", _POST, _STRING);
 		setSession('layout', 'filter_tags', $filter_tags);
-                
-                setSession('layout', 'LayoutFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        
+        // Pinned option?        
+        setSession('layout', 'LayoutFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		$SQL = "";
 		$SQL .= "SELECT  layout.layoutID, ";
@@ -412,27 +414,29 @@ END;
 		$SQL .= "        layout.userID, ";
 		$SQL .= "        campaign.CampaignID ";
 		$SQL .= "  FROM layout ";
-                $SQL .= "  INNER JOIN `lkcampaignlayout` ";
-                $SQL .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
-                $SQL .= "   INNER JOIN `campaign` ";
-                $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-                $SQL .= "       AND campaign.IsLayoutSpecific = 1";
+        $SQL .= "  INNER JOIN `lkcampaignlayout` ";
+        $SQL .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
+        $SQL .= "   INNER JOIN `campaign` ";
+        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= "       AND campaign.IsLayoutSpecific = 1";
 		$SQL .= " WHERE 1= 1";
-		//name filter
+
+		// Name filter
 		if ($name != '') 
 		{
-                    // convert into a space delimited array
-                    $names = explode(' ', $name);
-                    
-                    foreach($names as $searchName)
-                    {
-                        // Not like, or like?
-                        if (substr($searchName, 0, 1) == '-')
-                            $SQL.= " AND  (layout.layout NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
-                        else
-                            $SQL.= " AND  (layout.layout LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
-                    }
+            // convert into a space delimited array
+            $names = explode(' ', $name);
+            
+            foreach($names as $searchName)
+            {
+	            // Not like, or like?
+	            if (substr($searchName, 0, 1) == '-')
+	                $SQL.= " AND  (layout.layout NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+	            else
+	                $SQL.= " AND  (layout.layout LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+            }
 		}
+
 		//owner filter
 		if ($filter_userid != "0") 
 		{
