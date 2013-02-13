@@ -64,53 +64,53 @@
 }
 
 #forward_button {
-	background: url(../../img/forms/pageforward.png);
+	background: url(../img/forms/pageforward.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	float: right;
 }
 
 #forward_button:hover {
-	background: url(../../img/forms/pageforwardup.png);
+	background: url(../img/forms/pageforwardup.png);
 	background-repeat: no-repeat;
 	float: right;
 }
 
 #back_button {
-	background: url(../../img/forms/pagebackward.png);
+	background: url(../img/forms/pagebackward.png);
 	background-repeat: no-repeat;
 	border: 0px;
 }
 
 #back_button:hover {
-	background: url(../../img/forms/pagebackwardup.png);
+	background: url(../img/forms/pagebackwardup.png);
 	background-repeat: no-repeat;
 }
 
 /*add button*/
 
 #add_button, #add_slide_button {
-	background:url(../../img/forms/addup.png);
+	background:url(../img/forms/addup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width:90px;
 }
 
 #add_button:hover, #add_slide_button:hover {
-	background:url(../../img/forms/adddown.png);
+	background:url(../img/forms/adddown.png);
 	background-repeat: no-repeat;
 	width:90px;
 }
 
 .add_button {
-	background:url(../../img/forms/addup.png);
+	background:url(../img/forms/addup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width:90px;
 }
 
 .add_button:hover {
-	background:url(../../img/forms/adddown.png);
+	background:url(../img/forms/adddown.png);
 	background-repeat: no-repeat;
 	width:90px;
 }
@@ -118,14 +118,14 @@
 /*back button*/
 
 #pageback_button {
-	background:url(../../img/forms/backup.png);
+	background:url(../img/forms/backup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width:90px;
 }
 
 #pageback_button:hover {
-	background:url(../../img/forms/backdown.png);
+	background:url(../img/forms/backdown.png);
 	background-repeat: no-repeat;
 	width:90px;
 }
@@ -133,36 +133,36 @@
 
 /*Whats on broadcasting button*/
 #whatson_button {
-	background:url(../../img/forms/broadcastup.png);
+	background:url(../img/forms/broadcastup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width:90px;
 }
 
 #whatson_button:hover {
-	background:url(../../img/forms/broadcastdown.png);
+	background:url(../img/forms/broadcastdown.png);
 	background-repeat: no-repeat;
 	width:90px;
 }
 
 .defaulted_tab{
-	background:url(../../img/forms/display_up.png) no-repeat;
+	background:url(../img/forms/display_up.png) no-repeat;
 	width:90px;
 	height: 80px;
 	margin-bottom: 5px;
 }
 
 .defaulted_tab:hover{
-	background:url(../../img/forms/display_up.png) no-repeat;
+	background:url(../img/forms/display_up.png) no-repeat;
 	width:90px;
 }
 
 .normal_tab{
-	background:url(../../img/forms/display.png) no-repeat;
+	background:url(../img/forms/display.png) no-repeat;
 	width:90px;
 }
 .normal_tab:hover{
-	background:url(../../img/forms/display.png) no-repeat;
+	background:url(../img/forms/display.png) no-repeat;
 	background-position: 0px -71px;
 	width:90px;
 }
@@ -170,28 +170,28 @@
 /*Presnetation button*/
 
 #pres_button {
-	background:url(../../img/forms/presentationup.png);
+	background:url(../img/forms/presentationup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width:90px;
 }
 
 #pres_button:hover {
-	background:url(../../img/forms/presentationdown.png);
+	background:url(../img/forms/presentationdown.png);
 	background-repeat: no-repeat;
 	width:90px;
 }
 /*Preview button*/
 
 #preview_button {
-	background:url(../../img/forms/previewup.png);
+	background:url(../img/forms/previewup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width: 90px;
 }
 
 #preview_button:hover {
-	background:url(../../img/forms/previewdown.png);
+	background:url(../img/forms/previewdown.png);
 	background-repeat: no-repeat;
 	width: 90px;
 }
@@ -199,14 +199,14 @@
 /*layout admin button*/
 
 #layout_admin {
-	background:url(../../img/forms/layoutup.png);
+	background:url(../img/forms/layoutup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width: 90px;
 }
 
 #layout_admin:hover {
-	background:url(../../img/forms/layoutdown.png);
+	background:url(../img/forms/layoutdown.png);
 	background-repeat: no-repeat;
 	width: 90px;
 }
@@ -214,14 +214,14 @@
 /*rows button*/
 
 #rows_button{
-	background:url(../../img/forms/rowsup.png);
+	background:url(../img/forms/rowsup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width: 90px;
 }
 
 #rows_button:hover {
-	background:url(../../img/forms/rowsdown.png);
+	background:url(../img/forms/rowsdown.png);
 	background-repeat: no-repeat;
 	width: 90px;
 }
@@ -229,14 +229,14 @@
 /*CSV button*/
 
 #csv_button{
-	background:url(../../img/forms/csvup.png);
+	background:url(../img/forms/csvup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width: 90px;
 }
 
 #csv_button:hover {
-	background:url(../../img/forms/csvdown.png);
+	background:url(../img/forms/csvdown.png);
 	background-repeat: no-repeat;
 	width: 90px;
 }
@@ -244,14 +244,14 @@
 /*refresh button*/
 
 #refresh_button{
-	background:url(../../img/forms/refreshup.png);
+	background:url(../img/forms/refreshup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width: 90px;
 }
 
 #refresh_button:hover {
-	background:url(../../img/forms/refreshdown.png);
+	background:url(../img/forms/refreshdown.png);
 	background-repeat: no-repeat;
 	width: 90px;
 }
@@ -259,7 +259,7 @@
 /*toggle button*/
 
 #toggle_button {
-	background:url(../../img/forms/toggleup.png);
+	background:url(../img/forms/toggleup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width: 90px;
@@ -267,7 +267,7 @@
 }
 
 #toggle_button:hover {
-	background:url(../../img/forms/toggledown.png);
+	background:url(../img/forms/toggledown.png);
 	background-repeat: no-repeat;
 	border:0px;
 	width: 90px;
@@ -276,7 +276,7 @@
 /*edit_button*/
 
 #edit_button {
-	background:url(../../img/forms/editup.png);
+	background:url(../img/forms/editup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width: 90px;
@@ -284,35 +284,35 @@
 }
 
 #edit_button:hover {
-	background:url(../../img/forms/editdown.png);
+	background:url(../img/forms/editdown.png);
 	background-repeat: no-repeat;
 	border:0px;
 	width: 90px;
 }
 
 #schedulenow_button {
-	background:url(../../img/forms/broadcastup.png);
+	background:url(../img/forms/broadcastup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width: 90px;
 }
 
 #schedulenow_button:hover {
-	background:url(../../img/forms/broadcastdown.png);
+	background:url(../img/forms/broadcastdown.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width: 90px;
 }
 
 #help_button{
-	background:url(../../img/forms/helpup.png);
+	background:url(../img/forms/helpup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width:90px;
 }
 
 #help_button:hover {
-	background:url(../../img/forms/helpdown.png);
+	background:url(../img/forms/helpdown.png);
 	background-repeat: no-repeat;
 	width:90px;
 }
@@ -323,40 +323,40 @@
 }
 
 #background_button{
-	background:url(../../img/forms/background_button.png);
+	background:url(../img/forms/background_button.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width:90px;
 }
 
 #background_button:hover {
-	background:url(../../img/forms/background_button_down.png);
+	background:url(../img/forms/background_button_down.png);
 	background-repeat: no-repeat;
 	width:90px;
 }
 
 #jumpListButton {
-	background:url(../../img/forms/toggleup.png);
+	background:url(../img/forms/toggleup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width:90px;
 }
 
 #jumpListButton:hover {
-	background:url(../../img/forms/toggledown.png);
+	background:url(../img/forms/toggledown.png);
 	background-repeat: no-repeat;
 	width:90px;
 }
 
 #log_button{
-	background:url(../../img/forms/truncate_log.png);
+	background:url(../img/forms/truncate_log.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width:90px;
 }
 
 #log_button:hover {
-	background:url(../../img/forms/truncate_log_down.png);
+	background:url(../img/forms/truncate_log_down.png);
 	background-repeat: no-repeat;
 	width:90px;
 }
@@ -364,7 +364,7 @@
 /* POSITIVE */
 
 button.positive{
-	background:url(../../img/forms/green_button.gif) no-repeat;
+	background:url(../img/forms/green_button.gif) no-repeat;
 	font: normal 15px Tahoma;
 	height:32px;
 	width:70px;
@@ -383,7 +383,7 @@ button.positive:hover span{
 	}		
 
 .buttons a.positive{
-    background:url(../../img/forms/left_positive_button.gif) no-repeat top left;
+    background:url(../img/forms/left_positive_button.gif) no-repeat top left;
 	display: block;
 	float: left;
 	font: normal 15px Tahoma; /* Change 13px as desired */
@@ -394,7 +394,7 @@ button.positive:hover span{
 	color:#fff;
 }
 .buttons a.positive:hover{
-     background:url(../../img/forms/button_positive_active_left.gif) no-repeat top left;
+     background:url(../img/forms/button_positive_active_left.gif) no-repeat top left;
 	display: block;
 	float: left;
 	font: normal 15px Tahoma; /* Change 13px as desired */
@@ -406,12 +406,12 @@ button.positive:hover span{
 }
 
 .buttons a.positive:hover span{
-	background:url(../../img/forms/button_positive_right_active.gif) no-repeat top right;
+	background:url(../img/forms/button_positive_right_active.gif) no-repeat top right;
 	color:green;
 }
 
 .buttons a.positive span{
-	background:url(../../img/forms/right_positive_button.gif) no-repeat top right;
+	background:url(../img/forms/right_positive_button.gif) no-repeat top right;
 	display: block;
 	padding: 4px 11px 4px 0; /*Set 11px below to match value of 'padding-left' value above*/
 	height:32px;
@@ -431,7 +431,7 @@ button.positive:hover span{
 /* NEGATIVE */
 
 button.negative{
-	background:url(../../img/forms/red_button.gif) no-repeat;
+	background:url(../img/forms/red_button.gif) no-repeat;
 	font: normal 15px Tahoma;
 	height:32px;
 	width:70px;
@@ -452,7 +452,7 @@ button.negative:hover span{
 
 .buttons a.negative{
     color:#fff;
-	background:url(../../img/forms/neg_button_left.gif) no-repeat top left;
+	background:url(../img/forms/neg_button_left.gif) no-repeat top left;
 	display: block;
 	float: left;
 	font: normal 15px Tahoma; /* Change 13px as desired */
@@ -462,7 +462,7 @@ button.negative:hover span{
 	text-decoration: none;
 }
 .buttons a.negative:hover{
-      background:url(../../img/forms/neg_button_left_active.gif) no-repeat top left;
+      background:url(../img/forms/neg_button_left_active.gif) no-repeat top left;
 	display: block;
 	float: left;
 	font: normal 15px Tahoma; /* Change 13px as desired */
@@ -474,11 +474,11 @@ button.negative:hover span{
 }
 
 .buttons a.negative:hover span{
-	background:url(../../img/forms/neg_button_right_active.gif) no-repeat top right;
+	background:url(../img/forms/neg_button_right_active.gif) no-repeat top right;
 }
 
 .buttons a.negative span{
-	background:url(../../img/forms/neg_button_right.gif) no-repeat top right;
+	background:url(../img/forms/neg_button_right.gif) no-repeat top right;
 	display: block;
 	padding: 4px 11px 4px 0; /*Set 11px below to match value of 'padding-left' value above*/
 	height:32px;
@@ -499,7 +499,7 @@ button.negative:hover span{
 
 .buttons a.neutral, button.neutral{
     color:#fff;
-	background:url(../../img/forms/button_edit_left.gif) no-repeat top left;
+	background:url(../img/forms/button_edit_left.gif) no-repeat top left;
 	display: block;
 	float: left;
 	font: normal 15px Tahoma; /* Change 13px as desired */
@@ -510,7 +510,7 @@ button.negative:hover span{
 	text-align: center;
 }
 .buttons a.neutral:hover, button.neutral:hover{
-      background:url(../../img/forms/button_edit_left_active.gif) no-repeat top left;
+      background:url(../img/forms/button_edit_left_active.gif) no-repeat top left;
 	display: block;
 	float: left;
 	font: normal 15px Tahoma; /* Change 13px as desired */
@@ -523,11 +523,11 @@ button.negative:hover span{
 }
 
 .buttons a.neutral:hover span, button.neutral:hover span{
-	background:url(../../img/forms/button_edit_right_active.gif) no-repeat top right;
+	background:url(../img/forms/button_edit_right_active.gif) no-repeat top right;
 }
 
 .buttons a.neutral span{
-	background:url(../../img/forms/button_edit_right.gif) no-repeat top right;
+	background:url(../img/forms/button_edit_right.gif) no-repeat top right;
 	display: block;
 	padding: 4px 11px 4px 0; /*Set 11px below to match value of 'padding-left' value above*/
 	height:32px;

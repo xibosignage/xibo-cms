@@ -19,14 +19,14 @@
  */ 
 /* Tables and Forms */
 th.header {
-	background:#E0E9F6 url(../../img/tables/bg.gif) no-repeat scroll 0% 50%;
+	background:#E0E9F6 url(../img/tables/bg.gif) no-repeat scroll 0% 50%;
 	cursor:pointer;
 }
 th.headerSortDown {
-	background:#E0E9F6 url(../../img/tables/desc.gif) no-repeat scroll 0% 50%;
+	background:#E0E9F6 url(../img/tables/desc.gif) no-repeat scroll 0% 50%;
 }
 th.headerSortUp {
-	background:#E0E9F6 url(../../img/tables/asc.gif) no-repeat scroll 0% 50%;
+	background:#E0E9F6 url(../img/tables/asc.gif) no-repeat scroll 0% 50%;
 }
 
 #paging {
@@ -227,7 +227,7 @@ form#selectors{
 #whatson_pane{
 	top: 10px;
 	left:10px;
-	background: url(../../img/filterform/filterbackground.png) #E5F0FF;
+	background: url(../img/filterform/filterbackground.png) #E5F0FF;
 	background-repeat: repeat-x;
 	border: 2px solid #32659E;
 	
@@ -246,7 +246,7 @@ form#selectors{
 
 .license {
 	border: 1px solid #DCE4F5;
-	background: url(../../img/filterform/filterbackground.png) #E5F0FF;
+	background: url(../img/filterform/filterbackground.png) #E5F0FF;
 	background-repeat: repeat-x;
 	padding: 10px;
 	float:right;
@@ -256,7 +256,7 @@ form#selectors{
 
 .license_info {
 	border: 1px solid #DCE4F5;
-	background: url(../../img/filterform/filterbackground.png) #E5F0FF;
+	background: url(../img/filterform/filterbackground.png) #E5F0FF;
 	background-repeat: repeat-x;
 	padding: 10px;
 	float:left;
@@ -266,7 +266,7 @@ form#selectors{
 
 .extralicenses{
 	border: 1px solid #DCE4F5;
-	background: url(../../img/filterform/filterbackground.png) #E5F0FF;
+	background: url(../img/filterform/filterbackground.png) #E5F0FF;
 	background-repeat: repeat-x;
 	padding: 10px;
 	float:right;

@@ -17,20 +17,26 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Theme variables:
+
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 
-					<!-- These DIV's are used by Xibo to display dialog forms and other AJAX components -->
-					<div id="system_working" style="display:none;"><img src="theme/default/img/loading.gif"></div>
-					<div id="system_message" style="text-align: center;">
-						<span>Message</span>
-					</div>
-					<div id="div_dialog"></div>
-					<div id="help_dialog"></div>
+<div class="info_table">
+	<table style="width:100%">
+		<thead>
+			<tr>
+				<th><?php echo Theme::Translate('Name'); ?></th>
+				<th><?php echo Theme::Translate('Description'); ?></th>
+				<th><?php echo Theme::Translate('Owner'); ?></th>
+				<th><?php echo Theme::Translate('Permissions'); ?></th>
+				<th><?php echo Theme::Translate('Action'); ?></th>	
+			</tr>
+		</thead>
+		<tbody>
 
-				</div> <!-- Ends the content div -->
-			</div> <!-- Ends contentwrap div -->
-		</div> <!-- Ends the container div -->
-	</body>
-</html>
+		</tbody>
+	</table>
+</div>

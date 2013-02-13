@@ -69,7 +69,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 								<td><?php echo Theme::Translate('Owner') ?></td>
 								<td><?php echo Theme::SelectList('filter_userid', Theme::Get('owner_field_list'), 'UserID', 'UserName', Theme::Get('filter_userid')); ?></td>
 			                    <td><label for="<?php echo Theme::Get('filter_id'); ?>"><?php echo Theme::Translate('Keep filter open') ?></label></td>
-			                    <td><input type="checkbox" id="<?php echo Theme::Get('filter_id'); ?>" name="<?php echo Theme::Get('filter_id'); ?>" class="XiboFilterPinned" <?php echo Theme::Get('filter_pinned'); ?> /></td>
+			                    <td><input type="checkbox" id="<?php echo Theme::Get('filter_id'); ?>" name="XiboFilterPinned" class="XiboFilterPinned" <?php echo Theme::Get('filter_pinned'); ?> /></td>
 							</tr>
 							<tr>
 								<td><?php echo Theme::Translate('Tags') ?></td>

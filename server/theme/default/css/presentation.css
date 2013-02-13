@@ -23,28 +23,12 @@
 @import url(calendar.css);
 
 body {
-	background: url(../../img/headerback.png) repeat-x;
+	background: url(../img/headerback.png) repeat-x;
 	font-size:76.1%;
 	font-family:Verdana, Arial, Helvetica, sans-serif;
 	margin:0;
 	min-width:950px;
 	width:expression(document.body.clientwidth <950? "950px": "auto");
-}
-
-div.dimmer 
-{
-    visibility: hidden;
-    position:absolute;
-    left:0px;
-    top:0px;
-    padding:40px;
-
-    background-image:url(honey.png);
-    /* ieWin only stuff */
-        /* with this trick only IE 
-           manage the following 2 attributes */   
-    _background-image:none;
-    _filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(enabled=true, sizingMethod=scale src='honey.png');
 }
 
 /* Begin Customisation */
@@ -118,7 +102,7 @@ h5 {
 
 .red {
 	border: 1px solid #003399;
-	background: url(../../img/filterform/filterbackground.png) #E5F0FF repeat-x;
+	background: url(../img/filterform/filterbackground.png) #E5F0FF repeat-x;
 	padding: 10px;
 	text-align: center;
 	color:red;
@@ -199,7 +183,7 @@ th {
 	height: 400px;
 	border: 1px solid #DCE4F5;
 	margin-right: 20px;
-	background: url(../../img/filterform/filterbackground.png) #E5F0FF;
+	background: url(../img/filterform/filterbackground.png) #E5F0FF;
 	background-repeat: repeat-x;
 	overflow-x: hidden; 
 	overflow-y: scroll;
@@ -207,7 +191,7 @@ th {
 }
 
 #notes h4 {
-	background: url(../../img/forms/help.png);
+	background: url(../img/forms/help.png);
 	background-repeat: no-repeat;
 	font-size: 1em;
 	color: #1F6CC2;
@@ -259,7 +243,7 @@ th {
 }
 
 #tips_div{
-	background: url(../../img/tabs/tabbackground.png) repeat-x #e5f0ff; 
+	background: url(../img/tabs/tabbackground.png) repeat-x #e5f0ff; 
 	margin-top: 0px;
 }
 
@@ -275,7 +259,7 @@ th {
 
 #header {
 	text-align:center;
-    background: url(../../img/header.png) no-repeat;
+    background: url(../img/header.png) no-repeat;
     color:#FFF;
     height: 55px;
     width: 500px;
@@ -413,7 +397,7 @@ th {
 
 /* - DASHBOARD DIV's - */
 #dashcontainer{
-	background: url(../../img/fades/E5F0FFback.png);
+	background: url(../img/fades/E5F0FFback.png);
 }
 
 dashschedule.strong{
@@ -467,7 +451,7 @@ dashschedule.strong{
 
 .dashboard_notes h4 {
 	margin: 0;
-	background-image: url(../../img/info_icon.gif);
+	background-image: url(../img/info_icon.gif);
 	background-repeat: no-repeat;
 	background-position: top left;
 	padding: 3px 0 3px 27px;
@@ -479,12 +463,12 @@ dashschedule.strong{
 
 /*form div's*/
 #form_container{
-	background: url(../../img/fades/E5F0FFback.png);
-	background: url(../../img/fades/formbodymiddle.png) #E2F0FF repeat-x;
+	background: url(../img/fades/E5F0FFback.png);
+	background: url(../img/fades/formbodymiddle.png) #E2F0FF repeat-x;
 }
 
 #form_header {
-	background: url(../../img/fades/formheadmiddle.png);
+	background: url(../img/fades/formheadmiddle.png);
 	background-repeat: repeat-x;
 	height: 35px;
 	margin-top: 0px;
@@ -494,7 +478,7 @@ dashschedule.strong{
 
 }
 #form_header_left{
-	background: url(../../img/fades/formheadleft.png);
+	background: url(../img/fades/formheadleft.png);
 	background-repeat: no-repeat;
 	float:left;
 	width:40px;
@@ -506,7 +490,7 @@ dashschedule.strong{
 }
 
 #form_header_right{
-	background: url(../../img/fades/formheadright.png);
+	background: url(../img/fades/formheadright.png);
 	background-repeat: no-repeat;
 	float: right;
 	width:20px;
@@ -517,7 +501,7 @@ dashschedule.strong{
 }
 
 #form_body_left{
-	background: url(../../img/fades/formbodyleft.png);
+	background: url(../img/fades/formbodyleft.png);
 	background-repeat: repeat-y;
 	width: 50px;
 	right: 50px;
@@ -534,7 +518,7 @@ dashschedule.strong{
 }
 
 #form_body_right{
-	background: url(../../img/fades/formbodyright.png);
+	background: url(../img/fades/formbodyright.png);
 	background-repeat: repeat-y;
 	width: 43px;
 	float:right;
@@ -543,7 +527,7 @@ dashschedule.strong{
 }
 
 #form_footer {
-	background: url(../../img/fades/formfootmiddle.png);
+	background: url(../img/fades/formfootmiddle.png);
 	height: 75px;
 	margin-top: 0px;
 	margin-left: 0px;
@@ -553,7 +537,7 @@ dashschedule.strong{
 
 }
 #form_footer_left{
-	background: url(../../img/fades/formfootleft.png);
+	background: url(../img/fades/formfootleft.png);
 	background-repeat: no-repeat;
 	float:left;
 	width:40px;
@@ -564,7 +548,7 @@ dashschedule.strong{
 }
 
 #form_footer_right{
-	background: url(../../img/fades/formfootright.png);
+	background: url(../img/fades/formfootright.png);
 	background-repeat: no-repeat;
 	float: right;
 	width:40px;
@@ -617,7 +601,7 @@ dashschedule.strong{
 	width:500px;
 	height:300px;
 	border: 1px solid #DCE4F5;
-	background: url(../../img/filterform/filterbackground) #E5F0FF;
+	background: url(../img/filterform/filterbackground) #E5F0FF;
 	background-repeat: repeat-x;
 
 }
@@ -664,7 +648,7 @@ dashschedule.strong{
 	width:500px;
 	height:300px;
 	border: 1px solid #DCE4F5;
-	background: url(../../img/filterform/filterbackground) #E5F0FF;
+	background: url(../img/filterform/filterbackground) #E5F0FF;
 	background-repeat: repeat-x;
 
 }
@@ -672,7 +656,7 @@ dashschedule.strong{
 #playlist_filterform_div {
 	
 	margin-left:25%;
-	background: url(../../img/filterform/filterbackground.png) #E5F0FF;
+	background: url(../img/filterform/filterbackground.png) #E5F0FF;
 	background-repeat: repeat-x;
 	width: 45%;
 	padding-bottom: 20px;
@@ -690,7 +674,7 @@ dashschedule.strong{
 
 #content_filterform_div {
 	margin-left:25%;
-	background: url(../../img/filterform/filterbackground.png) #E5F0FF;
+	background: url(../img/filterform/filterbackground.png) #E5F0FF;
 	background-repeat: repeat-x;
 	width: 45%;
 	padding-left: 10px;
@@ -714,7 +698,7 @@ dashschedule.strong{
 
 .pres_edit {
 	border: 1px solid #DCE4F5;
-	background: url(../../img/filterform/filterbackground.png) #E5F0FF;
+	background: url(../img/filterform/filterbackground.png) #E5F0FF;
 	background-repeat: repeat-x;
 	margin-left: 25%;
 	display:block;
@@ -804,7 +788,7 @@ dashschedule.strong{
 }
 /*
 .title {
-	background: url(../../img/titles/header.png) no-repeat;
+	background: url(../img/titles/header.png) no-repeat;
 	padding-left: 5px;
 	margin-bottom: 0px;
 }
@@ -818,7 +802,7 @@ dashschedule.strong{
 }	
 
 .formbody{
-	background: url(../../img/bodys/bodyback.png) repeat-x;
+	background: url(../img/bodys/bodyback.png) repeat-x;
 	padding: 5px;
 }
 
@@ -909,7 +893,7 @@ td.error {
 }
 
 .timebar_powerpoint_left{
-	background:url(../../img/forms/blue_bar.gif) no-repeat;
+	background:url(../img/forms/blue_bar.gif) no-repeat;
 	background-position:top left;
 	height:59px;
 	width:9px;
@@ -917,14 +901,14 @@ td.error {
 }
 
 .timebar_powerpoint_right{
-	background:url(../../img/forms/blue_bar.gif) no-repeat;
+	background:url(../img/forms/blue_bar.gif) no-repeat;
 	background-position:top right;
 	height:59px;
 	margin-left:9px;
 }
 
 .timebar_image_left{
-	background:url(../../img/forms/red_bar.gif) no-repeat;
+	background:url(../img/forms/red_bar.gif) no-repeat;
 	background-position:top left;
 	height:59px;
 	width:9px;
@@ -932,14 +916,14 @@ td.error {
 }
 
 .timebar_image_right{
-	background:url(../../img/forms/red_bar.gif) no-repeat;
+	background:url(../img/forms/red_bar.gif) no-repeat;
 	background-position:top right;
 	height:59px;
 	margin-left:9px;
 }
 
 .timebar_webpage_left{
-	background:url(../../img/forms/green_bar.gif) no-repeat;
+	background:url(../img/forms/green_bar.gif) no-repeat;
 	background-position:top left;
 	height:59px;
 	width:9px;
@@ -947,14 +931,14 @@ td.error {
 }
 
 .timebar_webpage_right{
-	background:url(../../img/forms/green_bar.gif) no-repeat;
+	background:url(../img/forms/green_bar.gif) no-repeat;
 	background-position:top right;
 	height:59px;
 	margin-left:9px;
 }
 
 .timebar_shellcommand_left{
-	background:url(../../img/forms/green_bar.gif) no-repeat;
+	background:url(../img/forms/green_bar.gif) no-repeat;
 	background-position:top left;
 	height:59px;
 	width:9px;
@@ -962,14 +946,14 @@ td.error {
 }
 
 .timebar_shellcommand_right{
-	background:url(../../img/forms/green_bar.gif) no-repeat;
+	background:url(../img/forms/green_bar.gif) no-repeat;
 	background-position:top right;
 	height:59px;
 	margin-left:9px;
 }
 
 .timebar_microblog_left{
-    background:url(../../img/forms/orange_bar.gif) no-repeat;
+    background:url(../img/forms/orange_bar.gif) no-repeat;
     background-position:top left;
     height:59px;
     width:9px;
@@ -977,14 +961,14 @@ td.error {
 }
 
 .timebar_microblog_right{
-    background:url(../../img/forms/orange_bar.gif) no-repeat;
+    background:url(../img/forms/orange_bar.gif) no-repeat;
     background-position:top right;
     height:59px;
     margin-left:9px;
 }
 
 .timebar_embedded_left{
-	background:url(../../img/forms/green_bar.gif) no-repeat;
+	background:url(../img/forms/green_bar.gif) no-repeat;
 	background-position:top left;
 	height:59px;
 	width:9px;
@@ -992,14 +976,14 @@ td.error {
 }
 
 .timebar_embedded_right{
-	background:url(../../img/forms/green_bar.gif) no-repeat;
+	background:url(../img/forms/green_bar.gif) no-repeat;
 	background-position:top right;
 	height:59px;
 	margin-left:9px;
 }
 
 .timebar_text_left{
-	background:url(../../img/forms/yellow_bar.gif) no-repeat;
+	background:url(../img/forms/yellow_bar.gif) no-repeat;
 	background-position:top left;
 	height:59px;
 	width:9px;
@@ -1007,13 +991,13 @@ td.error {
 }
 
 .timebar_text_right{
-	background:url(../../img/forms/yellow_bar.gif) no-repeat;
+	background:url(../img/forms/yellow_bar.gif) no-repeat;
 	background-position:top right;
 	height:59px;
 	margin-left:9px;
 }
 .timebar_ticker_left{
-	background:url(../../img/forms/orange_bar.gif) no-repeat;
+	background:url(../img/forms/orange_bar.gif) no-repeat;
 	background-position:top left;
 	height:59px;
 	width:9px;
@@ -1021,13 +1005,13 @@ td.error {
 }
 
 .timebar_ticker_right{
-	background:url(../../img/forms/orange_bar.gif) no-repeat;
+	background:url(../img/forms/orange_bar.gif) no-repeat;
 	background-position:top right;
 	height:59px;
 	margin-left:9px;
 }
 .timebar_video_left{
-	background:url(../../img/forms/purple_bar.gif) no-repeat;
+	background:url(../img/forms/purple_bar.gif) no-repeat;
 	background-position:top left;
 	height:59px;
 	width:9px;
@@ -1035,13 +1019,13 @@ td.error {
 }
 
 .timebar_video_right{
-	background:url(../../img/forms/purple_bar.gif) no-repeat;
+	background:url(../img/forms/purple_bar.gif) no-repeat;
 	background-position:top right;
 	height:59px;
 	margin-left:9px;
 }
 .timebar_flash_left{
-	background:url(../../img/forms/grey_bar.gif) no-repeat;
+	background:url(../img/forms/grey_bar.gif) no-repeat;
 	background-position:top left;
 	height:59px;
 	width:9px;
@@ -1049,14 +1033,14 @@ td.error {
 }
 
 .timebar_flash_right{
-	background:url(../../img/forms/grey_bar.gif) no-repeat;
+	background:url(../img/forms/grey_bar.gif) no-repeat;
 	background-position:top right;
 	height:59px;
 	margin-left:9px;
 }
 
 .timebar_enabled_left{
-	background:url(../../img/forms/green_bar.gif) no-repeat;
+	background:url(../img/forms/green_bar.gif) no-repeat;
 	background-position:top left;
 	height:59px;
 	width:9px;
@@ -1064,14 +1048,14 @@ td.error {
 }
 
 .timebar_enabled_right{
-	background:url(../../img/forms/green_bar.gif) no-repeat;
+	background:url(../img/forms/green_bar.gif) no-repeat;
 	background-position:top right;
 	height:59px;
 	margin-left:9px;
 }
 
 .timebar_disabled_left{
-	background:url(../../img/forms/grey_bar.gif) no-repeat;
+	background:url(../img/forms/grey_bar.gif) no-repeat;
 	background-position:top left;
 	height:59px;
 	width:9px;
@@ -1079,7 +1063,7 @@ td.error {
 }
 
 .timebar_disabled_right{
-	background:url(../../img/forms/grey_bar.gif) no-repeat;
+	background:url(../img/forms/grey_bar.gif) no-repeat;
 	background-position:top right;
 	height:59px;
 	margin-left:9px;
@@ -1093,13 +1077,13 @@ td.error {
 #timeline{
 	height:164px;
 	width: 980px;
-	background:url(../../img/forms/background_timeline.png) no-repeat;
+	background:url(../img/forms/background_timeline.png) no-repeat;
 	float:left;
 }
 
 #timeline_body{
 	height:164px;
-	background: url(../../img/forms/main_right_timeline.png);
+	background: url(../img/forms/main_right_timeline.png);
 	position: top right;
 	margin-left:20px;
 }
@@ -1109,7 +1093,7 @@ td.error {
 }
 
 .mediabreak{
-	background:url(../../img/forms/line_break.png) no-repeat;
+	background:url(../img/forms/line_break.png) no-repeat;
 	width:9px;
 	height:164px;
 	z-index:2;
@@ -1124,7 +1108,7 @@ td.error {
 #tooltip_hover
 {
 	display:block;
-	background: url(../../img/forms/previewback.png) repeat-x #fff;
+	background: url(../img/forms/previewback.png) repeat-x #fff;
 	border: 2px solid #DCE4F5;
 	padding: 10px;
 	z-index:15;

@@ -113,59 +113,59 @@ div.timelineMediaImageThumbnail img {
 }
 
 div.timelineMediaItemColouring_powerpoint {
-    background:url(../../img/forms/blue_bar.gif) no-repeat;
+    background:url(../img/forms/blue_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_image {
-    background:url(../../img/forms/red_bar.gif) no-repeat;
+    background:url(../img/forms/red_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_webpage {
-    background:url(../../img/forms/green_bar.gif) no-repeat;
+    background:url(../img/forms/green_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_shellcommand {
-    background:url(../../img/forms/green_bar.gif) no-repeat;
+    background:url(../img/forms/green_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_microblog {
-    background:url(../../img/forms/orange_bar.gif) no-repeat;
+    background:url(../img/forms/orange_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_embedded {
-    background:url(../../img/forms/green_bar.gif) no-repeat;
+    background:url(../img/forms/green_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_text {
-    background:url(../../img/forms/yellow_bar.gif) no-repeat;
+    background:url(../img/forms/yellow_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_ticker {
-    background:url(../../img/forms/orange_bar.gif) no-repeat;
+    background:url(../img/forms/orange_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_video {
-    background:url(../../img/forms/purple_bar.gif) no-repeat;
+    background:url(../img/forms/purple_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_flash {
-    background:url(../../img/forms/grey_bar.gif) no-repeat;
+    background:url(../img/forms/grey_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_counter {
-    background:url(../../img/forms/grey_bar.gif) no-repeat;
+    background:url(../img/forms/grey_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_datasetview {
-    background:url(../../img/forms/grey_bar.gif) no-repeat;
+    background:url(../img/forms/grey_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_enabled {
-    background:url(../../img/forms/green_bar.gif) no-repeat;
+    background:url(../img/forms/green_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_disabled{
-    background:url(../../img/forms/grey_bar.gif) no-repeat;
+    background:url(../img/forms/grey_bar.gif) no-repeat;
 }
 
 div.LibraryAssign .connectedlist {

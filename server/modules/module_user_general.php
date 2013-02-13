@@ -928,7 +928,7 @@ END;
     /**
      * Returns an array of layouts that this user has access to
      */
-    public function LayoutList($filterLayout = '')
+    public function LayoutList($filterLayout = '', $filterUserId = '', $filterRetired = '', $filterTags = '')
     {
         $SQL  = "";
         $SQL .= "SELECT layout.layoutID, ";
@@ -960,6 +960,19 @@ END;
                     $SQL.= " AND  (layout.layout LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
             }
         }
+
+        // Owner filter
+		if ($filterUserId != '') 
+			$SQL .= sprintf(" AND layout.userid = %d ", $filterUserId);
+		
+		// Retired options
+		if ($filterRetired != '') 
+			$SQL .= sprintf(" AND layout.retired = %d ", $filterRetired);
+		
+		// Tags
+		if ($filterTags != '')
+			$SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $filterTags) . "%' ";
+		
         
         $SQL .= " ORDER BY Layout ";
 

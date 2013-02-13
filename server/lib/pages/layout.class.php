@@ -389,16 +389,16 @@ END;
 		$response = new ResponseManager();
 		
 		// Filter by Name
-		$name = Kit::GetParam('filter_layout', _POST, _STRING, '');
+		$name = Kit::GetParam('filter_layout', _POST, _STRING);
 		setSession('layout', 'filter_layout', $name);
 		
 		// User ID
-		$filter_userid = Kit::GetParam('filter_userid', _POST, _STRING, '0');
+		$filter_userid = Kit::GetParam('filter_userid', _POST, _STRING);
 		setSession('layout', 'filter_userid', $filter_userid);
 		
 		// Show retired
-		$filter_retired = $_REQUEST['filter_retired'];
-		setSession('layout', 'filter_userid', $filter_userid);
+		$filter_retired = Kit::GetParam('filter_retired', _POST, _STRING);
+		setSession('layout', 'filter_retired', $filter_retired);
 		
 		// Tags list
 		$filter_tags = Kit::GetParam("filter_tags", _POST, _STRING);
@@ -407,81 +407,28 @@ END;
         // Pinned option?        
         setSession('layout', 'LayoutFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
-		$SQL = "";
-		$SQL .= "SELECT  layout.layoutID, ";
-		$SQL .= "        layout.layout, ";
-		$SQL .= "        layout.description, ";
-		$SQL .= "        layout.userID, ";
-		$SQL .= "        campaign.CampaignID ";
-		$SQL .= "  FROM layout ";
-        $SQL .= "  INNER JOIN `lkcampaignlayout` ";
-        $SQL .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
-        $SQL .= "   INNER JOIN `campaign` ";
-        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-        $SQL .= "       AND campaign.IsLayoutSpecific = 1";
-		$SQL .= " WHERE 1= 1";
-
-		// Name filter
-		if ($name != '') 
-		{
-            // convert into a space delimited array
-            $names = explode(' ', $name);
-            
-            foreach($names as $searchName)
-            {
-	            // Not like, or like?
-	            if (substr($searchName, 0, 1) == '-')
-	                $SQL.= " AND  (layout.layout NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
-	            else
-	                $SQL.= " AND  (layout.layout LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
-            }
-		}
-
-		//owner filter
-		if ($filter_userid != "0") 
-		{
-			$SQL .= sprintf(" AND layout.userid = %d ", $filter_userid);
-		}
-		//retired options
-		if ($filter_retired == "1") 
-		{
-			$SQL .= " AND layout.retired = 1 ";
-		}
-		elseif ($filter_retired == "0") 
-		{
-			$SQL .= " AND layout.retired = 0 ";			
-		}
-		if ($filter_tags != "")
-		{
-			$SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $filter_tags) . "%' ";
-		}
-                
-                Debug::LogEntry($db, 'audit', $SQL);
-
-		if(!$results = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			trigger_error(__("An Unknown error occured when listing the layouts."), E_USER_ERROR);			
-		}
+		if (!$layouts = $user->LayoutList($name, $filter_userid, $filter_retired, $filter_tags))
+			trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
 
                 $msgCopy = __('Copy');
                 $msgPermissions = __('Permissions');
                 $msgDelete = __('Delete');
 
-		$output = <<<END
-		<div class="info_table">
-		<table style="width:100%">
-			<thead>
-				<tr>
-				<th>Name</th>
-				<th>Description</th>
-				<th>Owner</th>
-				<th>$msgPermissions</th>
-				<th>Action</th>	
-				</tr>
-			</thead>
-			<tbody>
-END;
+        $rows = array();
+
+    	foreach ($layout in $layouts) {
+    		// Construct an object containing all the layouts, and pass to the theme
+    		$row['layout'] = $layout['layout'];
+    		$row['description'] = $layout['description'];
+    		$row['owner'] = $user->getNameFromID($layout['ownerid']);
+    		$row['permissions'] = $this->GroupsForLayout($layout['layoutid']);
+    		$row['layout_form_edit_url'] = 'index.php?p=layout&q=displayForm&layoutid=' + $layout['layoutid'];
+
+    		// Add some buttons for this row
+    		
+    	}
+
+    	Theme::Set('table_rows', $rows);
 
 		while($aRow = $db->get_row($results)) 
 		{
@@ -492,10 +439,6 @@ END;
 			$userid 		= Kit::ValidateParam($aRow[3], _INT);
                         $campaignId = Kit::ValidateParam($aRow[4], _INT);
 			
-			//get the username from the userID using the user module
-			$username 		= $user->getNameFromID($userid);
-
-        $group = $this->GroupsForLayout($layoutid);
 			
         // Permissions
         $auth = $this->user->LayoutAuth($layoutid, true);

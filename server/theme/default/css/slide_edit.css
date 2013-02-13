@@ -74,14 +74,14 @@
 }
 
 #pageback_button {
-	background:url(../../img/forms/backup.png);
+	background:url(../img/forms/backup.png);
 	background-repeat: no-repeat;
 	border: 0px;
 	width:90px;
 }
 
 #pageback_button:hover {
-	background:url(../../img/forms/backdown.png);
+	background:url(../img/forms/backdown.png);
 	background-repeat: no-repeat;
 	width:90px;
 }
@@ -141,7 +141,7 @@ form table, form td, form th {
 .tabs-nav a, .tabs-nav a span {
     display: block;
     padding: 0 10px;
-    background: url(../../img/tabs/tab.png) no-repeat;
+    background: url(../img/tabs/tab.png) no-repeat;
 }
 .tabs-nav a {
     position: relative;
@@ -199,7 +199,7 @@ form table, form td, form th {
 .tabs-container {
 	border-top:  1px solid #DCE4F5;
     padding: 1em 8px;
-    background: url(../../img/tabs/tabbackground.png) repeat-x #e5f0ff; /* declare background color for container to avoid distorted fonts in IE while fading */
+    background: url(../img/tabs/tabbackground.png) repeat-x #e5f0ff; /* declare background color for container to avoid distorted fonts in IE while fading */
 	clear:both;
 	margin-left: 1px;
 }
