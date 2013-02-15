@@ -19,12 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Theme variables:
+ *  form_id = The ID of the Form
  * 	form_action = The URL for calling the Layout Add Transaction
  * 	template_field_list	= An array of fields for the template selector (templateid => template)
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<form id="LayoutForm" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
 	<table>
 		<tr>
 			<td><label for="layout" accesskey="n" title="<?php echo Theme::Translate('The Name of the Layout - (1 - 50 characters)'); ?>"><?php echo Theme::Translate('Name'); ?></label></td>

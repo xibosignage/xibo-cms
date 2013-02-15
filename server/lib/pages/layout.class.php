@@ -393,11 +393,11 @@ END;
 		setSession('layout', 'filter_layout', $name);
 		
 		// User ID
-		$filter_userid = Kit::GetParam('filter_userid', _POST, _STRING);
+		$filter_userid = Kit::GetParam('filter_userid', _POST, _INT);
 		setSession('layout', 'filter_userid', $filter_userid);
 		
 		// Show retired
-		$filter_retired = Kit::GetParam('filter_retired', _POST, _STRING);
+		$filter_retired = Kit::GetParam('filter_retired', _POST, _INT);
 		setSession('layout', 'filter_retired', $filter_retired);
 		
 		// Tags list
@@ -407,88 +407,86 @@ END;
         // Pinned option?        
         setSession('layout', 'LayoutFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
-		if (!$layouts = $user->LayoutList($name, $filter_userid, $filter_retired, $filter_tags))
-			trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
+		// Get all layouts
+		$layouts = $user->LayoutList($name, $filter_userid, $filter_retired, $filter_tags);
 
-                $msgCopy = __('Copy');
-                $msgPermissions = __('Permissions');
-                $msgDelete = __('Delete');
+		if ($layouts === FALSE)
+			trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
 
         $rows = array();
 
-    	foreach ($layout in $layouts) {
+    	foreach ($layouts as $layout) {
     		// Construct an object containing all the layouts, and pass to the theme
+    		$row = array();
+
     		$row['layout'] = $layout['layout'];
     		$row['description'] = $layout['description'];
     		$row['owner'] = $user->getNameFromID($layout['ownerid']);
     		$row['permissions'] = $this->GroupsForLayout($layout['layoutid']);
-    		$row['layout_form_edit_url'] = 'index.php?p=layout&q=displayForm&layoutid=' + $layout['layoutid'];
+    		$row['layout_form_edit_url'] = 'index.php?p=layout&q=displayForm&layoutid=' . $layout['layoutid'];
 
     		// Add some buttons for this row
-    		
+    		// Schedule Now
+    		$row['buttons'][] = array(
+    				'id' => 'layout_button_schedulenow',
+    				'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $layout['campaignid'],
+    				'text' => __('Schedule Now')
+    			);
+
+    		// Only proceed if we have edit permissions
+    		if ($layout['edit']) {
+
+				// Design Button
+	    		$row['buttons'][] = array(
+	    				'id' => 'layout_button_design',
+						'url' => 'index.php?p=layout&modify=true&layoutid=' . $layout['layoutid'],
+						'text' => __('Design')
+	    			);
+
+	    		// Edit Button
+				$row['buttons'][] = array(
+						'id' => 'layout_button_edit',
+						'url' => 'index.php?p=layout&q=displayForm&modify=true&layoutid=' . $layout['layoutid'],
+						'text' => __('Edit')
+	    			);
+
+				// Copy Button
+				$row['buttons'][] = array(
+						'id' => 'layout_button_copy',
+						'url' => 'index.php?p=layout&q=CopyForm&layoutid=' . $layout['layoutid'] . '&oldlayout=' . $layout['layout'],
+						'text' => __('Copy')
+	    			);
+
+				// Extra buttons if have delete permissions
+				if ($layout['del']) {
+					// Copy Button
+					$row['buttons'][] = array(
+							'id' => 'layout_button_delete',
+							'url' => 'index.php?p=layout&q=delete_form&layoutid=' . $layout['layoutid'],
+							'text' => __('Delete')
+		    			);				
+				}
+
+				// Extra buttons if we have modify permissions
+				if ($layout['modifyPermissions']) {
+					// Permissions button
+					$row['buttons'][] = array(
+							'id' => 'layout_button_permissions',
+							'url' => 'index.php?p=campaign&q=PermissionsForm&CampaignID=' . $layout['campaignid'],
+							'text' => __('Permissions')
+		    			);	
+				}
+    		}
+
+			// Add the row
+			$rows[] = $row;
     	}
 
+    	// Store the table rows
     	Theme::Set('table_rows', $rows);
 
-		while($aRow = $db->get_row($results)) 
-		{
-			//get the query results
-			$layout 		= Kit::ValidateParam($aRow[1], _STRING);
-			$description 	= Kit::ValidateParam($aRow[2], _STRING);
-			$layoutid 		= Kit::ValidateParam($aRow[0], _INT);
-			$userid 		= Kit::ValidateParam($aRow[3], _INT);
-                        $campaignId = Kit::ValidateParam($aRow[4], _INT);
-			
-			
-        // Permissions
-        $auth = $this->user->LayoutAuth($layoutid, true);
-			
-			if ($auth->view)
-			{
-				if ($auth->edit)
-				{			
-					$title = <<<END
-					<tr ondblclick="return XiboFormRender('index.php?p=layout&q=displayForm&layoutid=$layoutid')">
-END;
-				}
-				else 
-				{
-					$msgNoPermission = __('You do not have permission to design this layout');
-					
-					$title = <<<END
-					<tr ondblclick="alert('$msgNoPermission')">
-END;
-				}
-				
-				$output .= <<<END
-				$title
-				<td>$layout</td>
-				<td>$description</td>
-				<td>$username</td>
-				<td>$group</td>
-END;
-
-                                $output .= '<td class="nobr">';
-                                $output .= '<button class="XiboFormButton" href="index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $campaignId . '"><span>' . __('Schedule Now') . '</span></button>';
-
-				if ($auth->edit)
-				{
-                                    $output .= '<button href="index.php?p=layout&modify=true&layoutid=' . $layoutid . '" onclick="window.location = $(this).attr(\'href\')"><span>Design</span></button>';
-                                    $output .= '<button class="XiboFormButton" href="index.php?p=layout&q=displayForm&modify=true&layoutid=' . $layoutid . '"><span>Edit</span></button>';
-                                    $output .= '<button class="XiboFormButton" href="index.php?p=layout&q=CopyForm&layoutid=' . $layoutid . '&oldlayout=' . $layout . '"><span>' . $msgCopy . '</span></button>';
-                                    if ($auth->del)
-                                        $output .= '<button class="XiboFormButton" href="index.php?p=layout&q=delete_form&layoutid=' . $layoutid . '"><span>' . $msgDelete . '</span></button>';
-                                        
-                                    if ($auth->modifyPermissions)
-                                        $output .= '<button class="XiboFormButton" href="index.php?p=campaign&q=PermissionsForm&CampaignID=' . $campaignId . '"><span>' . $msgPermissions . '</span></button>';
-
-				}
-				
-                                $output .= '</td>';
-				$output .= '</tr>';
-			}
-		}
-		$output .= '</tbody></table></div>';
+    	// Initialise the theme and capture the output
+    	$output = Theme::RenderReturn('layout_page_grid');
 		
 		$response->SetGridResponse($output);
 		$response->Respond();
@@ -508,6 +506,7 @@ END;
 		Theme::Set('description', $this->description);
 		Theme::Set('retired', $this->retired);
 		Theme::Set('tags', $this->tags);
+		Theme::Set('form_id', 'LayoutForm');
 
 		if ($this->layoutid != '')
 		{

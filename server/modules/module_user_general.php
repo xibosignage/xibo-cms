@@ -928,7 +928,7 @@ END;
     /**
      * Returns an array of layouts that this user has access to
      */
-    public function LayoutList($filterLayout = '', $filterUserId = '', $filterRetired = '', $filterTags = '')
+    public function LayoutList($filterLayout = '', $filterUserId = 0, $filterRetired = 0, $filterTags = '')
     {
         $SQL  = "";
         $SQL .= "SELECT layout.layoutID, ";
@@ -962,11 +962,11 @@ END;
         }
 
         // Owner filter
-		if ($filterUserId != '') 
+		if ($filterUserId != 0) 
 			$SQL .= sprintf(" AND layout.userid = %d ", $filterUserId);
 		
 		// Retired options
-		if ($filterRetired != '') 
+		if ($filterRetired != 0) 
 			$SQL .= sprintf(" AND layout.retired = %d ", $filterRetired);
 		
 		// Tags
@@ -976,7 +976,7 @@ END;
         
         $SQL .= " ORDER BY Layout ";
 
-        //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1006,6 +1006,7 @@ END;
                 $layoutItem['view'] = (int) $auth->view;
                 $layoutItem['edit'] = (int) $auth->edit;
                 $layoutItem['del'] = (int) $auth->del;
+                $layoutItem['modifyPermissions'] = (int) $auth->modifyPermissions;
                 
                 $layouts[] = $layoutItem;
             }

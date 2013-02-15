@@ -19,7 +19,15 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Theme variables:
-
+ * 	table_rows = Array containing the table rows
+ * 	  layout = The layout name
+ * 	  description = The layout description
+ * 	  owner = The Layout Owner
+ * 	  permissions = The Permissions for the layout
+ * 	  buttons = The buttons enabled for the layout
+ * 	    id = The ID of the button
+ * 	    text = The Text for the button
+ * 	    url = The URL of the button
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
@@ -36,7 +44,19 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			</tr>
 		</thead>
 		<tbody>
-
+			<?php foreach(Theme::Get('table_rows') as $row) { ?>
+			<tr ondblclick="return XiboFormRender('<?php echo $row['layout_form_edit_url']; ?>')">
+				<td><?php echo $row['layout']; ?></td>
+				<td><?php echo $row['description']; ?></td>
+				<td><?php echo $row['owner']; ?></td>
+				<td><?php echo $row['permissions']; ?></td>
+				<td class="nobr">
+					<?php foreach($row['buttons'] as $button) { ?>
+					<button class="<?php echo (($button['id'] == 'layout_button_design') ? 'XiboRedirectButton' : 'XiboFormButton'); ?>" href="<?php echo $button['url']; ?>"><span><?php echo $button['text']; ?></span></button>
+					<?php } ?>
+				</td>
+			</tr>
+			<?php } ?>
 		</tbody>
 	</table>
 </div>

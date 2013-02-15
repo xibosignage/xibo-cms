@@ -139,7 +139,7 @@ class Theme {
 	}
 
 	public static function GetUserHomeLink() {
-		return 'index.php?p=' . Theme::GetInstance()->user->homepage;
+		return 'index.php?p=' . Theme::GetInstance()->user->homePage;
 	}
 
 	public static function GetPageHelpLink() {

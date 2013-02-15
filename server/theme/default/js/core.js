@@ -117,6 +117,13 @@ function XiboInitialise(scope){
         return false;
     });
 
+    // Search for any Buttons that redirect to another page
+    $(scope + " .XiboRedirectButton").click(function(){
+
+        window.location = $(this).attr("href");
+
+    });
+
     // Search for any Buttons / Linkson the page that are used to load hover tooltips
     $(scope + " .XiboHoverButton").hover(
         function(e){
@@ -133,7 +140,7 @@ function XiboInitialise(scope){
             // destroying itself.
             return false;
         }
-        );
+    );
 
     // Search for any forms that will need submitting
     // NOTE: The validation plugin does not like binding to multiple forms at once.

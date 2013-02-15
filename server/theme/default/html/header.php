@@ -72,7 +72,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		</div>
 		<div id="navigation">
 			<ul id="nav">
-				<li><a href="<?php Theme::GetUserHomeLink(); ?>"><?php Theme::Translate('Dashboard'); ?></a></li>
+				<li><a href="<?php echo Theme::GetUserHomeLink(); ?>"><?php echo Theme::Translate('Dashboard'); ?></a></li>
 				<?php
 					foreach (Theme::GetMenu('Top Nav') as $item) {
 						echo $item['li'];
