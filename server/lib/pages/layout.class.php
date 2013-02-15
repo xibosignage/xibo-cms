@@ -266,24 +266,22 @@ END;
 		$response->Respond();
 	}
 	
-	function delete_form() 
+	function DeleteLayoutForm() 
 	{
-            $db 		=& $this->db;
-            $response 	= new ResponseManager();
-            $helpManager = new HelpManager($db, $this->user);
-
-            //expect the $layoutid to be set
-            $layoutid = $this->layoutid;
+        $db =& $this->db;
+        $response = new ResponseManager();
+        
+        $layoutid = $this->layoutid;
 
         if (!$this->auth->del)
             trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
 		
-		//Are we going to be able to delete this?
-                Kit::ClassLoader('campaign');
-                $campaign = new Campaign($db);
-                $campaignId = $campaign->GetCampaignId($layoutid);
+		// Are we going to be able to delete this?
+        Kit::ClassLoader('campaign');
+        $campaign = new Campaign($db);
+        $campaignId = $campaign->GetCampaignId($layoutid);
 
-		// - Has it been scheduled
+		// Has it been scheduled?
 		$SQL = sprintf("SELECT CampaignID FROM schedule WHERE CampaignID = %d", $campaignId);
 		
 		if (!$results = $db->query($SQL)) 
@@ -291,36 +289,27 @@ END;
 			trigger_error($db->error());
 			trigger_error(__("Can not get layout information"), E_USER_ERROR);
 		}
+
+		Theme::Set('form_id', 'LayoutDeleteForm');
+		Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
 		
 		if ($db->num_rows($results) == 0) 
 		{
-			//we can delete
-			$msgWarn	= __('Are you sure you want to delete this layout? All media will be unassigned. Any layout specific media such as text/rss will be lost.');
-			
-			$form = <<<END
-			<form id="LayoutDeleteForm" class="XiboForm" method="post" action="index.php?p=layout&q=delete">
-				<input type="hidden" name="layoutid" value="$layoutid">
-				<p>$msgWarn</p>
-			</form>
-END;
+			// Delete the layout
+			$themeFile = 'layout_form_delete';
+			Theme::Set('form_action', 'index.php?p=layout&q=delete');
 		}
 		else 
 		{
-			//we can only retire
-			$msgWarn	= __('Sorry, unable to delete this layout.');
-			$msgWarn2	= __('Retire this layout instead?');
-			
-			$form = <<<END
-			<form id="LayoutDeleteForm" class="XiboForm" method="post" action="index.php?p=layout&q=retire">
-				<input type="hidden" name="layoutid" value="$layoutid">
-				<p>$msgWarn</p>
-				<p>$msgWarn2</p>
-			</form>
-END;
+			// Retire the layout
+			$themeFile = 'layout_form_retire';
+			Theme::Set('form_action', 'index.php?p=layout&q=retire');
 		}
+
+		$form = Theme::RenderReturn($themeFile);
 		
-        $response->SetFormRequestResponse($form, __('Delete this layout?'), '300px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Delete') . '")');
+        $response->SetFormRequestResponse($form, __('Delete Layout'), '300px', '200px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#LayoutDeleteForm").submit()');
         $response->Respond();
@@ -462,7 +451,7 @@ END;
 					// Copy Button
 					$row['buttons'][] = array(
 							'id' => 'layout_button_delete',
-							'url' => 'index.php?p=layout&q=delete_form&layoutid=' . $layout['layoutid'],
+							'url' => 'index.php?p=layout&q=DeleteLayoutForm&layoutid=' . $layout['layoutid'],
 							'text' => __('Delete')
 		    			);				
 				}
@@ -1405,41 +1394,25 @@ HTML;
      */
     public function CopyForm()
     {
-        $db             =& $this->db;
-        $user		=& $this->user;
-        $response	= new ResponseManager();
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
 
-        $helpManager    = new HelpManager($db, $user);
-
-        $layoutid       = Kit::GetParam('layoutid', _REQUEST, _INT);
-        $oldLayout      = Kit::GetParam('oldlayout', _REQUEST, _STRING);
-
-        $msgName        = __('New Name');
-        $msgName2       = __('The name for the new layout');
-        $msgCopyMedia = __('Make new copies of all media on this layout?');
+        $layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
+        $oldLayout = Kit::GetParam('oldlayout', _REQUEST, _STRING);
 
         $copyMediaChecked = (Config::GetSetting($db, 'LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 'checked' : '';
 
-        $form = <<<END
-        <form id="LayoutCopyForm" class="XiboForm" method="post" action="index.php?p=layout&q=Copy">
-            <input type="hidden" name="layoutid" value="$layoutid">
-            <table>
-                <tr>
-                    <td><label for="layout" accesskey="n" title="$msgName2">$msgName<span class="required">*</span></label></td>
-                    <td><input name="layout" class="required" type="text" id="layout" value="$oldLayout 2" tabindex="1" /></td>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                        <input type="checkbox" id="copyMediaFiles" name="copyMediaFiles" $copyMediaChecked />
-                        <label for="copyMediaFiles" accesskey="c" title="$msgCopyMedia">$msgCopyMedia</label>
-                    </td>
-                </tr>
-            </table>
-        </form>
-END;
+        Theme::Set('form_id', 'LayoutCopyForm');
+        Theme::Set('form_url', 'index.php?p=layout&q=Copy');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
+        Theme::Set('copy_media_checked', $copyMediaChecked);
+        Theme::Set('new_layout_default', $oldLayout . ' 2');
+
+        $form = Theme::RenderReturn('layout_form_copy');
 
         $response->SetFormRequestResponse($form, __('Copy a Layout.'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Copy') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Copy') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Copy'), '$("#LayoutCopyForm").submit()');
         $response->Respond();
