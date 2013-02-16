@@ -68,6 +68,7 @@
 				Theme::Set('about_url', 'index.php?p=index&q=About');
 				Theme::Set('source_url', 'https://launchpad.net/xibo/1.5');
                 Theme::Render('login_page');
+                exit;
 			}
 			
 			return false;

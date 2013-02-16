@@ -54,8 +54,10 @@ class PageManager
 		{
 			require_once($this->path);
 		}
-		
-		return;
+
+		// Create a theme
+		new Theme($db, $user);
+		Theme::SetPagename($this->p);
 	}
 	
 	/**
@@ -105,10 +107,6 @@ class PageManager
 			trigger_error(__("You do not have permission to access this page."), E_USER_ERROR);
 			exit;
 		}
-
-		// Create a theme
-		new Theme($db, $user);
-		Theme::SetPagename($this->p);
 		
 		// Create the requested page
 		$this->thePage = new $this->page($db, $user);

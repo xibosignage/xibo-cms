@@ -24,10 +24,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <head>
 	<title>Xibo Admin - Please Login</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link rel="stylesheet" type="text/css" href="template/css/login_box.css" />
+	<link rel="stylesheet" type="text/css" href="theme/default/css/login_box.css" />
 	<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/ui-elements.css" />
 	
-	<link rel="shortcut icon" href="img/favicon.ico" />
+	<link rel="shortcut icon" href="theme/default/img/favicon.ico" />
 	
     <!-- Javascript Libraries -->
     <script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
@@ -67,22 +67,22 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				</div>
 				
 				<div class="login_body">
-					<h1><?php Theme::Translate('Login'); ?></h1>
-					<p><?php Theme::Translate('Please enter a username and password to access the CMS'); ?></p>
+					<h1><?php echo Theme::Translate('Login'); ?></h1>
+					<p><?php echo Theme::Translate('Please enter a username and password to access the CMS'); ?></p>
 					<form method="post" action="<?php echo Theme::Get('form_action'); ?>">
 						<?php echo Theme::Get('form_meta'); ?>
 						<div class="login_table">
-							<p><label for="username"><?php Theme::Translate('User'); ?></label><input class="username" type="text" id="username" name="username" tabindex="1" size="12" /></p>
+							<p><label for="username"><?php echo Theme::Translate('User'); ?></label><input class="username" type="text" id="username" name="username" tabindex="1" size="12" /></p>
 							
-							<p><label for="password"><?php Theme::Translate('Password'); ?></label><input class="password" id="password" type="password" name="password" tabindex="2" size="12" /></p>
+							<p><label for="password"><?php echo Theme::Translate('Password'); ?></label><input class="password" id="password" type="password" name="password" tabindex="2" size="12" /></p>
 							
-							<div class="loginbuton"><button type="submit" tabindex="3"><?php Theme::Translate('Login'); ?></button></div>
+							<div class="loginbuton"><button type="submit" tabindex="3"><?php echo Theme::Translate('Login'); ?></button></div>
 						</div>
 					</form>
 
-					<p><a href="http://www.xibo.org.uk"><img src='img/login/complogo.png'></a></p>
+					<p><a href="http://www.xibo.org.uk"><img src='theme/default/img/login/complogo.png'></a></p>
 
-					<p><?php Theme::Translate('Version %s', VERSION); ?> | <a href="<?php echo Translate('source_url'); ?>"><?php Theme::Translate('Source'); ?></a> | <a class="XiboFormButton" href="<?php echo Theme::Get('about_url'); ?>" title="<?php Theme::Translate('About'); ?>"><?php Theme::Translate('About'); ?>></a></p>
+					<p><?php echo Theme::Translate('Version %s', VERSION); ?> | <a href="<?php echo Theme::Get('source_url'); ?>"><?php echo Theme::Translate('Source'); ?></a> | <a class="XiboFormButton" href="<?php echo Theme::Get('about_url'); ?>" title="<?php echo Theme::Translate('About'); ?>"><?php echo Theme::Translate('About'); ?></a></p>
 				</div>
 				
 				<div class="login_foot">

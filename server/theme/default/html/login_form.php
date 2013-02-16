@@ -25,7 +25,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div>
-	<p style="text-align:center"><?php echo Theme::Translate('Xibo requires a valid user login to proceed.'); ?></p>
+	<p style="text-align:center"><?php echo Theme::Translate('Please provide your credentials to continue using the CMS'); ?></p>
 	<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
 		<div class="login_table">
 			<table>

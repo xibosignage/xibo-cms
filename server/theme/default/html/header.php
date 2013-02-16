@@ -26,7 +26,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<head>
 		<title>Xibo: Digital Signage</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-		<link rel="shortcut icon" href="img/favicon.ico" />
+		<link rel="shortcut icon" href="theme/default/img/favicon.ico" />
 
 		<!-- Javascript Libraries -->
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>

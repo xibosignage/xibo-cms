@@ -103,6 +103,7 @@ input.username{
 	clear:both;
 	height:25px;
 	width:100px;
+	margin-left: 40px;
 }
 
 input.password{
