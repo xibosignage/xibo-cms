@@ -41,30 +41,33 @@
 	
 	/**
 	 * Validate the User is Logged In
-	 * @return 
 	 * @param $ajax Object[optional] Indicates if this request came from an AJAX call or otherwise
 	 */
 	function attempt_login($ajax = false) 
 	{
-		$db 		=& $this->db;
+		$db =& $this->db;
 
-                // Referring Page is anything after the ?
+        // Referring Page is anything after the ?
 		$requestUri = rawurlencode(Kit::GetCurrentPage());
 		
 		if(!$this->checkforUserid()) 
 		{
-			//print out the login form
+			// Print out the login form
 			if ($ajax) 
 			{
-                            //create the AJAX request object
-                            $response = new ResponseManager();
+                //create the AJAX request object
+                $response = new ResponseManager();
 
-                            $response->Login();
-                            $response->Respond();
+                $response->Login();
+                $response->Respond();
 			}
 			else 
 			{
-                            $this->printLoginBox($requestUri);
+				Theme::Set('form_meta', '<input type="hidden" name="token" value="' . CreateFormToken() . '" />');
+				Theme::Set('form_action', 'index.php?q=login&referingPage=' . $requestUri);
+				Theme::Set('about_url', 'index.php?p=index&q=About');
+				Theme::Set('source_url', 'https://launchpad.net/xibo/1.5');
+                Theme::Render('login_page');
 			}
 			
 			return false;
@@ -78,7 +81,7 @@
 			
 			$results = $db->query($SQL) or trigger_error("Can not write last accessed info.", E_USER_ERROR);
 
-                        // Load the information about this user
+            // Load the information about this user
 			$this->LoginServices($userid);
 			
 			return true;
@@ -219,16 +222,6 @@
 				return true;
 			}
 		}
-	}
-
-	//prints the login box
-	function printLoginBox($referingPage) 
-	{
-		global $pageObject;
-		
-		include("template/pages/login_box.php");
-
-        exit;
 	}
 	
 	function getNameFromID($id) 

@@ -75,17 +75,15 @@ class ResponseManager
 	
 	/**
 	 * Sets the Default response if for a login box
-	 * @return 
 	 */	
 	function Login() 
 	{
-		//prints out the login box
-		$login_form 	= file_get_contents("template/pages/login_box_ajax.php");
-		$this->message	= $login_form;
+		Theme::Set('form_id', 'XiboLoginForm');
+		Theme::Set('form_action', 'index.php?q=login');
+
+		$this->message	= Theme::RenderReturn('login_form');
 		$this->login	= true;
 		$this->success	= false;
-		
-		return;
 	}
 	
 	function decode_response($success, $message) 

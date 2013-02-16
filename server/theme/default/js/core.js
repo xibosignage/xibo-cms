@@ -785,10 +785,10 @@ function LoginBox(message) {
         position: 'center',
         modal: true,
         buttons: {
-            "Login": function(){
+            "Login": function() {
                 XiboFormSubmit($('#XiboLoginForm').submit())
             }
-            }
+        }
     });
 
     // Focus in the first form element
