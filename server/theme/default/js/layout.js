@@ -59,7 +59,7 @@ var XiboTimelineSaveOrder = function(mediaListId, layoutId, regionId) {
     // Call the server to do the reorder
     $.ajax({
         type:"post",
-        url:"index.php?p=layout&q=TimelineReorder&layoutid="+layoutId+"&ajax=true",
+        url:"index.php?p=timeline&q=TimelineReorder&layoutid="+layoutId+"&ajax=true",
         cache:false,
         dataType:"json",
         data:{
@@ -265,7 +265,7 @@ $(document).ready(function() {
 
                     var layout = $('#layout');
 
-                    XiboFormRender("index.php?p=layout&q=ManualRegionPositionForm&layoutid="+layoutid+"&regionid="+regionid+"&top="+top+"&left="+left+"&width="+width+"&height="+height+"&layoutWidth="+layout.width()+"&layoutHeight="+layout.height());
+                    XiboFormRender("index.php?p=timeline&q=ManualRegionPositionForm&layoutid="+layoutid+"&regionid="+regionid+"&top="+top+"&left="+left+"&width="+width+"&height="+height+"&layoutWidth="+layout.width()+"&layoutHeight="+layout.height());
                 },
 		'deleteRegion': function(t) {
 	            deleteRegion(t);
@@ -274,7 +274,7 @@ $(document).ready(function() {
                     var layoutid = $(t).attr("layoutid");
                     var regionid = $(t).attr("regionid");
 
-	            XiboFormRender("index.php?p=layout&q=RegionPermissionsForm&layoutid="+layoutid+"&regionid="+regionid);
+	            XiboFormRender("index.php?p=timeline&q=RegionPermissionsForm&layoutid="+layoutid+"&regionid="+regionid);
 	        }
             }
 	});
@@ -346,7 +346,7 @@ function addRegion(layout)
 {
 	var layoutid = $(layout).attr("layoutid");
 	
-	$.ajax({type:"post", url:"index.php?p=layout&q=AddRegion&layoutid="+layoutid+"&ajax=true", cache:false, dataType:"json",success: XiboSubmitResponse});
+	$.ajax({type:"post", url:"index.php?p=timeline&q=AddRegion&layoutid="+layoutid+"&ajax=true", cache:false, dataType:"json",success: XiboSubmitResponse});
 }
 
 /**
@@ -365,7 +365,7 @@ function submitBackground(region)
         var preview = Preview.instances[regionid];
         preview.SetSequence(preview.seq);
 	
-	$.ajax({type:"post", url:"index.php?p=layout&q=RegionChange&layoutid="+layoutid+"&ajax=true", cache:false, dataType:"json", 
+	$.ajax({type:"post", url:"index.php?p=timeline&q=RegionChange&layoutid="+layoutid+"&ajax=true", cache:false, dataType:"json", 
 		data:{"width":width,"height":height,"top":top,"left":left,"regionid":regionid},success: XiboSubmitResponse});
 }
 
@@ -376,7 +376,7 @@ function deleteRegion(region) {
 	var regionid = $(region).attr("regionid");
 	var layoutid = $(region).attr("layoutid");
 
-	XiboFormRender("index.php?p=layout&q=DeleteRegionForm&layoutid="+layoutid+"&regionid="+regionid);
+	XiboFormRender("index.php?p=timeline&q=DeleteRegionForm&layoutid="+layoutid+"&regionid="+regionid);
 }
 
 /**
@@ -386,7 +386,7 @@ function tRegionOptions() {
     var regionid = gup("regionid");
     var layoutid = gup("layoutid");
 	
-    XiboFormRender('index.php?p=layout&layoutid='+layoutid+'&regionid='+regionid+'&q=RegionOptions');
+    XiboFormRender('index.php?p=timeline&layoutid='+layoutid+'&regionid='+regionid+'&q=RegionOptions');
 }
 
 function setFullScreenLayout() {
@@ -440,8 +440,8 @@ function Preview(regionElement)
 	
 	// Create the Nav Buttons
 	$('.previewNav',this.previewElement)	
-		.append("<div class='prevSeq' style='position:absolute; left:1px; top:"+ arrowsTop +"px'><img src='img/arrow_left.gif' /></div>")
-		.append("<div class='nextSeq' style='position:absolute; right:1px; top:"+ arrowsTop +"px'><img src='img/arrow_right.gif' /></div>");
+		.append("<div class='prevSeq' style='position:absolute; left:1px; top:"+ arrowsTop +"px'><img src='theme/default/img/arrow_left.gif' /></div>")
+		.append("<div class='nextSeq' style='position:absolute; right:1px; top:"+ arrowsTop +"px'><img src='theme/default/img/arrow_right.gif' /></div>");
 
 	$('.prevSeq', $(this.previewElement)).click(function() {
 		var preview = Preview.instances[regionid];
@@ -489,9 +489,9 @@ Preview.prototype.SetSequence = function(seq)
 	this.width	= $(this.regionElement).width();
 	this.height = $(this.regionElement).height();
 	
-	//Get the sequence via AJAX
+	// Get the sequence via AJAX
 	$.ajax({type:"post", 
-		url:"index.php?p=layout&q=RegionPreview&ajax=true", 
+		url:"index.php?p=timeline&q=RegionPreview&ajax=true", 
 		cache:false, 
 		dataType:"json", 
 		data:{"layoutid":layoutid,"seq":seq,"regionid":regionid,"width":this.width, "height":this.height},

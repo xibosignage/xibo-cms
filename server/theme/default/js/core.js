@@ -408,7 +408,7 @@ function XiboFormRender(formUrl) {
             return false;
         },
         error: function(response) {
-            SystemMessage(response);
+            SystemMessage(response.responseText);
         }
     });
 

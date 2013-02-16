@@ -62,7 +62,7 @@ class Module implements ModuleInterface
      */
     public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
     {
-        include_once("lib/pages/region.class.php");
+        include_once("lib/data/region.data.class.php");
 
         $this->db 	=& $db;
         $this->user 	=& $user;
@@ -597,7 +597,7 @@ END;
                 if ($layoutid == '')
                     $this->response->AddButton(__('No'), 'XiboDialogClose()');
                 else
-                   $this->response->AddButton(__('No'), 'XiboFormRender("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+                   $this->response->AddButton(__('No'), 'XiboFormRender("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
 
                 $this->response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
             }
@@ -711,7 +711,7 @@ END;
             if ($layoutid != '')
             {
                 $this->response->loadForm = true;
-                $this->response->loadFormUri= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+                $this->response->loadFormUri= "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
             }
                 
             return $this->response;
@@ -774,7 +774,7 @@ END;
 
             $save_button = <<<END
             <input id="btnSave" type="submit" value="Save" disabled />
-            <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
+            <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
             <input class="XiboFormButton" type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" title="Library" value="Library" />
 END;
         }
@@ -931,7 +931,7 @@ FORM;
 
             $save_button = <<<END
             <input id="btnSave" type="submit" value="Save" />
-            <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
+            <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
 END;
         }
         elseif ($regionid != '' && !$this->showRegionOptions)
@@ -1177,7 +1177,7 @@ FORM;
         {
             // This saves the Media Object to the Region
             $this->UpdateRegion();
-            $this->response->loadFormUri = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
+            $this->response->loadFormUri = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
         }
         elseif ($regionid != '' && !$this->showRegionOptions)
         {
@@ -1447,7 +1447,7 @@ FORM;
             $this->UpdateRegion();
 
             $this->response->loadForm	 = true;
-            $this->response->loadFormUri = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
+            $this->response->loadFormUri = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
         }
         elseif ($regionid != '' && !$this->showRegionOptions)
         {
@@ -1564,7 +1564,7 @@ FORM;
          */
         public function Preview($width, $height)
         {
-            return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="img/forms/' . $this->type . '.png" /></div>';
+            return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.png" /></div>';
         }
 
     /**
@@ -1586,7 +1586,7 @@ FORM;
         $msgDuration = __('Duration');
 
         // Default Hover window contains a thumbnail, media type and duration
-        $output = '<div class="thumbnail"><img alt="' . $this->displayType . ' thumbnail" src="img/forms/' . $this->type . '.gif"></div>';
+        $output = '<div class="thumbnail"><img alt="' . $this->displayType . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif"></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';
@@ -1603,7 +1603,7 @@ FORM;
 
     public function ImageThumbnail()
     {
-        return '<img alt="' . $this->displayType . ' thumbnail" src="img/forms/' . $this->type . '.gif">';
+        return '<img alt="' . $this->displayType . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif">';
     }
 
     /**

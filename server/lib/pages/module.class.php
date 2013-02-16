@@ -392,7 +392,7 @@ END;
                 //not sure
                 Debug::LogEntry($db, 'audit', "Cant find: $uid", 'module', 'GetImage');
 
-                $fileName = 'img/forms/filenotfound.png';
+                $fileName = 'theme/default/img/forms/filenotfound.png';
                 $image 	= file_get_contents($fileName);
             }
 

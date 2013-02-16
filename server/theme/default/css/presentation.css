@@ -21,6 +21,7 @@
 @import url(links.css);
 @import url(xibo.css);
 @import url(calendar.css);
+@import url(timeline.css);
 
 body {
 	background: url(../img/headerback.png) repeat-x;

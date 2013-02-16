@@ -447,7 +447,7 @@ FORM;
         $url = urldecode($this->GetOption('uri'));
 
         // Default Hover window contains a thumbnail, media type and duration
-        $output = '<div class="thumbnail"><img alt="' . $this->displayType . ' thumbnail" src="img/forms/' . $this->type . '.gif"></div>';
+        $output = '<div class="thumbnail"><img alt="' . $this->displayType . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif"></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';
