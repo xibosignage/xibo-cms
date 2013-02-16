@@ -73,7 +73,7 @@ class Module implements ModuleInterface
         $this->regionid = $regionid;
         $this->lkid     = $lkid;
 
-        $this->region 	= new region($db, $user);
+        $this->region 	= new region($db);
         $this->response = new ResponseManager();
 
         $this->existingMedia 	= false;
@@ -1485,7 +1485,7 @@ FORM;
         Debug::LogEntry($db, 'audit', sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
 
         // Create a region object for later use
-        $region = new region($db, $this->user);
+        $region = new region($db);
 
         // Loop through a list of layouts this user has access to
         foreach($this->user->LayoutList() as $layout)

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,14 +22,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class region 
 {
-	private $user;
 	private $db;
 	public $errorMsg;
 	
-	function __construct(database $db, user $user) 
+	function __construct(database $db) 
 	{
 		$this->db 	=& $db;
-		$this->user =& $user;
 		
 		require_once("lib/pages/module.class.php");
 	}
@@ -91,7 +89,7 @@ class region
 	 * @param $layoutid Object
 	 * @param $regionid Object[optional]
 	 */
-	public function AddRegion($layoutid, $regionid = "")
+	public function AddRegion($layoutid, $userid, $regionid = "")
 	{
             $db =& $this->db;
 
@@ -106,7 +104,7 @@ class region
             // make a new region node
             $newRegion = $xml->createElement("region");
             $newRegion->setAttribute('id', $regionid);
-            $newRegion->setAttribute('userId', $this->user->userid);
+            $newRegion->setAttribute('userId', $userid);
             $newRegion->setAttribute('width', 50);
             $newRegion->setAttribute('height', 50);
             $newRegion->setAttribute('top', 50);

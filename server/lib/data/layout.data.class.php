@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2011-2012 Daniel Garner
+ * Copyright (C) 2011-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -138,6 +138,101 @@ END;
         Debug::LogEntry($db, 'audit', 'Complete', 'Layout', 'Add');
 
         return $id;
+    }
+
+    /**
+     * Edit a Layout
+     * @param int $layoutId    [description]
+     * @param string $layout      [description]
+     * @param string $description [description]
+     * @param string $tags        [description]
+     * @param int $userid      [description]
+     * @param int $retired      [description]
+     */
+    public function Edit($layoutId, $layout, $description, $tags, $userid, $retired) {
+        
+        $db          =& $this->db;
+        $currentdate = date("Y-m-d H:i:s");
+
+        // Validation
+        if ($layoutId == 0)
+            return $response->SetError(__('Layout not selected'));
+        
+        if (strlen($layout) > 50 || strlen($layout) < 1) 
+        {
+            $response->SetError(__("Layout Name must be between 1 and 50 characters"));
+            $response->Respond();
+        }
+        
+        if (strlen($description) > 254) 
+        {
+            $response->SetError(__("Description can not be longer than 254 characters"));
+            $response->Respond();
+        }
+        
+        if (strlen($tags) > 254) 
+        {
+            $response->SetError(__("Tags can not be longer than 254 characters"));
+            $response->Respond();
+        }
+        
+        // Name check
+        if ($db->GetSingleRow(sprintf("SELECT layout FROM layout WHERE layout = '%s' AND userID = %d AND layoutid <> %d ", $db->escape_string($layout), $userid, $layoutId)))
+        {
+            trigger_error($db->error());
+            $this->SetError(25004, sprintf(__("You already own a layout called '%s'. Please choose another name."), $layout));
+            return false;
+        }
+        // End Validation
+
+        $SQL = <<<END
+
+        UPDATE layout SET
+            layout = '%s',
+            description = '%s',
+            modifiedDT = '%s',
+            retired = %d,
+            tags = '%s'
+        
+        WHERE layoutID = %s;        
+END;
+
+        $SQL = sprintf($SQL, 
+                        $db->escape_string($layout),
+                        $db->escape_string($description), 
+                        $db->escape_string($currentdate), $retired, 
+                        $db->escape_string($tags), $layoutId);
+        
+        Debug::LogEntry($db, 'audit', $SQL);
+
+        if(!$db->query($SQL)) 
+        {
+            trigger_error($db->error());
+            $response->SetError(sprintf(__('Unknown error editing %s'), $layout));
+            $response->Respond();
+        }
+        
+        // Create an array out of the tags
+        $tagsArray = explode(' ', $tags);
+        
+        // Add the tags XML to the layout
+        $layoutObject = new Layout($db);
+        
+        if (!$layoutObject->EditTags($layoutId, $tagsArray))
+            return false;
+
+        // Maintain the name on the campaign
+        Kit::ClassLoader('campaign');
+        $campaign = new Campaign($db);
+        $campaignId = $campaign->GetCampaignId($layoutId);
+        $campaign->Edit($campaignId, $layout);
+
+        // Notify (dont error)
+        Kit::ClassLoader('display');
+        $displayObject = new Display($db);
+        $displayObject->NotifyDisplays($layoutId);
+
+        return true;
     }
 
     /**
@@ -545,6 +640,26 @@ END;
     }
 
     /**
+     * Retire a layout
+     * @param int $layoutId [description]
+     */
+    public function Retire($layoutId) {
+        
+        $db =& $this->db;
+
+        // Make sure the layout id is present
+        if ($layoutId == 0)
+            return $this->SetError(__('No Layout selected'));
+        
+        $SQL = sprintf("UPDATE layout SET retired = 1 WHERE layoutID = %d", $layoutId);
+    
+        if (!$db->query($SQL)) {
+            trigger_error($db->error());
+            return $this->SetError(__('Unable to retire this layout.'));
+        }
+    }
+
+    /**
      * Deletes a layout
      * @param <type> $layoutId
      * @return <type>
@@ -552,6 +667,10 @@ END;
     public function Delete($layoutId)
     {
         $db =& $this->db;
+
+        // Make sure the layout id is present
+        if ($layoutId == 0)
+            return $this->SetError(__('No Layout selected'));
 
         $campaign = new Campaign($db);
         $campaignId = $campaign->GetCampaignId($layoutId);
@@ -610,6 +729,75 @@ END;
         Debug::LogEntry($this->db, 'audit', sprintf('Checking to see if %s is RegionSpecific with SQL %s', $type, $sql), 'layout', 'Copy');
 
         return ($this->db->GetSingleValue($sql, 'RegionSpecific', _INT) == 1) ? true : false;
+    }
+
+    /**
+     * Set the Background Image
+     * @param int $layoutId          [description]
+     * @param int $resolutionId      [description]
+     * @param string $color          [description]
+     * @param int $backgroundImageId [description]
+     */
+    public function SetBackground($layoutId, $resolutionId, $color, $backgroundImageId) {
+
+        $db =& $this->db;
+
+        if ($layoutId == 0)
+            return $response->SetError(__('Layout not selected'));
+
+        if ($layoutId == 0)
+            return $response->SetError(__('Resolution not selected'));
+
+
+        // Allow for the 0 media idea (no background image)
+        if ($backgroundImageId == 0)
+        {
+            $bg_image = '';
+        }
+        else
+        {
+            // Get the file URI
+            $SQL = sprintf("SELECT StoredAs FROM media WHERE MediaID = %d", $backgroundImageId);
+
+            // Look up the bg image from the media id given
+            if (!$bg_image = $db->GetSingleValue($SQL, 'StoredAs', _STRING))
+                return $this->SetError(__('Cannot find the background image selected'));
+        }
+
+        // Look up the width and the height
+        $SQL = sprintf("SELECT width, height FROM resolution WHERE resolutionID = %d ", $resolutionId);
+        
+        if (!$results = $db->query($SQL)) 
+        {
+            trigger_error($db->error());
+            return $this->SetError(__('Unable to get the Resolution information'));
+        }
+        
+        $row    = $db->get_row($results) ;
+        $width  =  Kit::ValidateParam($row[0], _INT);
+        $height =  Kit::ValidateParam($row[1], _INT);
+        
+        include_once("lib/data/region.data.class.php");
+        
+        $region = new region($db);
+        
+        if (!$region->EditBackground($layoutId, '#' . $color, $bg_image, $width, $height))
+        {
+            //there was an ERROR
+            $response->SetError($region->errorMsg);
+            $response->Respond();
+        }
+        
+        // Update the layout record with the new background
+        $SQL = sprintf("UPDATE layout SET background = '%s' WHERE layoutid = %d ", $bg_image, $layoutId);
+        
+        if (!$db->query($SQL)) 
+        {
+            trigger_error($db->error());
+            return $this->SetError(__("Unable to update background information"));
+        }
+
+        return true;
     }
 }
 ?>

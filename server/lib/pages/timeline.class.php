@@ -54,9 +54,9 @@ class timelineDAO {
 		
 		include_once("lib/data/region.data.class.php");
 
-		$region = new region($db, $user);
+		$region = new region($db);
 		
-		if (!$region->AddRegion($layoutid))
+		if (!$region->AddRegion($layoutid, $user->userid))
 		{
 			//there was an ERROR
 			trigger_error($region->errorMsg, E_USER_ERROR);
@@ -86,7 +86,7 @@ class timelineDAO {
 		}
 
         Kit::ClassLoader('region');
-        $region = new region($db, $user);
+        $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutid, $regionid);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
@@ -130,7 +130,7 @@ class timelineDAO {
         $layoutHeight = Kit::GetParam('layoutHeight', _GET, _INT);
 
         Kit::ClassLoader('region');
-        $region = new region($db, $this->user);
+        $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutid, $regionid);
         $regionName = $region->GetRegionName($layoutid, $regionid);
 
@@ -241,7 +241,7 @@ END;
         $direction = Kit::GetParam('transitionDirection', _POST, _WORD, '');
 
         Kit::ClassLoader('region');
-        $region = new region($db, $this->user);
+        $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutid, $regionid);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
@@ -298,7 +298,7 @@ END;
 		$left 	= str_replace("px", '', $left);
 		
         Kit::ClassLoader('region');
-        $region = new region($db, $this->user);
+        $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutid, $regionid);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
@@ -329,7 +329,7 @@ END;
         $regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
 
         Kit::ClassLoader('region');
-        $region = new region($db, $this->user);
+        $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutid, $regionid);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
@@ -385,7 +385,7 @@ END;
 
         // Make sure we have permission to edit this region
         Kit::ClassLoader('region');
-        $region = new region($db, $user);
+        $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -478,7 +478,7 @@ END;
 		// Get some region imformation
 		$return		= "";
 		$xml		= new DOMDocument("1.0");
-		$region 	= new region($db, $user);
+		$region 	= new region($db);
 		
 		if (!$xmlString = $region->GetLayoutXml($layoutid))
 		{
@@ -546,7 +546,7 @@ END;
         $regionid = Kit::GetParam('regionid', _GET, _STRING);
 
         Kit::ClassLoader('region');
-        $region = new region($db, $user);
+        $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutid, $regionid);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
@@ -621,7 +621,7 @@ END;
         $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
 
         Kit::ClassLoader('region');
-        $region = new region($db, $user);
+        $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionId, true);
@@ -709,7 +709,7 @@ END;
 
         // Make sure we have permission to edit this region
         Kit::ClassLoader('region');
-        $region = new region($db, $user);
+        $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -901,7 +901,7 @@ END;
 
         // Check the user has permission
         Kit::ClassLoader('region');
-        $region = new region($db, $user);
+        $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);

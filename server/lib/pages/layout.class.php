@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -99,6 +99,7 @@ class layoutDAO
 		switch ($this->sub_page) 
 		{	
 			case 'view':
+
 				// Default options
 		        if (Kit::IsFilterPinned('layout', 'LayoutFilter')) {
 		            Theme::Set('filter_pinned', 'checked');
@@ -144,6 +145,7 @@ class layoutDAO
    				// Set up the theme variables for the Layout Jump List
    				$this->LayoutJumpListFilter();
 
+   				// Call the render the template
    				Theme::Render('layout_designer');
 
 				break;
@@ -173,7 +175,7 @@ class layoutDAO
         // Add this layout
         $layoutObject = new Layout($db);
 
-        if(!$id = $layoutObject->Add($layout, $description, $tags, $userid, $templateId))
+        if (!$id = $layoutObject->Add($layout, $description, $tags, $userid, $templateId))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
         // Successful layout creation
@@ -191,94 +193,18 @@ class layoutDAO
 		$db 			=& $this->db;
 		$response		= new ResponseManager();
 
+		$layoutid 		= Kit::GetParam('layoutid', _POST, _INT);
 		$layout 		= Kit::GetParam('layout', _POST, _STRING);
 		$description 	= Kit::GetParam('description', _POST, _STRING);
 		$tags		 	= Kit::GetParam('tags', _POST, _STRING);
 		$retired 		= Kit::GetParam('retired', _POST, _INT, 0);
-		
 		$userid 		= Kit::GetParam('userid', _SESSION, _INT);
-		$currentdate 	= date("Y-m-d H:i:s");
+		
+		// Add this layout
+        $layoutObject = new Layout($db);
 
-		//validation
-		if (strlen($layout) > 50 || strlen($layout) < 1) 
-		{
-			$response->SetError(__("Layout Name must be between 1 and 50 characters"));
-			$response->Respond();
-		}
-		
-		if (strlen($description) > 254) 
-		{
-			$response->SetError(__("Description can not be longer than 254 characters"));
-			$response->Respond();
-		}
-		
-		if (strlen($tags) > 254) 
-		{
-			$response->SetError(__("Tags can not be longer than 254 characters"));
-			$response->Respond();
-		}
-		
-		$check = sprintf("SELECT layout FROM layout WHERE layout = '%s' AND userID = %d AND layoutid <> %d ", $db->escape_string($layout), $userid, $this->layoutid);
-		$result = $db->query($check) or trigger_error($db->error());
-		
-		//Layouts with the same name?
-		if($db->num_rows($result) != 0) 
-		{
-			$response->SetError(sprintf(__("You already own a layout called '%s'. Please choose another."), $layout));
-			$response->Respond();
-		}
-		//end validation
-
-		$SQL = <<<END
-
-		UPDATE layout SET
-			layout = '%s',
-			description = '%s',
-			modifiedDT = '%s',
-			retired = %d,
-			tags = '%s'
-		
-		WHERE layoutID = %s;		
-END;
-
-		$SQL = sprintf($SQL, 
-						$db->escape_string($layout),
-						$db->escape_string($description), 
-						$db->escape_string($currentdate), $retired, 
-						$db->escape_string($tags), $this->layoutid);
-		
-		Debug::LogEntry($db, 'audit', $SQL);
-
-		if(!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$response->SetError(sprintf(__("Unknown error editing %s"), $layout));
-			$response->Respond();
-		}
-		
-		// Create an array out of the tags
-		$tagsArray = explode(' ', $tags);
-		
-		// Add the tags XML to the layout
-		$layoutObject = new Layout($db);
-		
-		if (!$layoutObject->EditTags($this->layoutid, $tagsArray))
-		{
-			//there was an ERROR
-			trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
-		}
-
-                // Maintain the name on the campaign
-                Kit::ClassLoader('campaign');
-                $campaign = new Campaign($db);
-                $campaignId = $campaign->GetCampaignId($this->layoutid);
-                $campaign->Edit($campaignId, $layout);
-
-                // Notify (dont error)
-                Kit::ClassLoader('display');
-                $displayObject = new Display($db);
-                $displayObject->NotifyDisplays($this->layoutid);
-
+        if (!$layoutObject->Edit($layoutid, $layout, $description, $tags, $userid, $retired))
+            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
 		$response->SetFormSubmitResponse(__('Layout Details Changed.'));
 		$response->Respond();
@@ -342,8 +268,8 @@ END;
         $response = new ResponseManager();
         $layoutId = Kit::GetParam('layoutid', _POST, _INT, 0);
 
-        if ($layoutId == 0)
-            trigger_error(__('No Layout selected'), E_USER_ERROR);
+        if (!$this->auth->del)
+            trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
 
         $layoutObject = new Layout($db);
 
@@ -360,25 +286,22 @@ END;
 	 */
 	function retire() 
 	{
-		$db 			=& $this->db;
-		$response		= new ResponseManager();
-		$layoutid 		= Kit::GetParam('layoutid', _POST, _INT, 0);
-		
-		if ($layoutId == 0)
-            trigger_error(__('No Layout selected'), E_USER_ERROR);
-		
-		$SQL = sprintf("UPDATE layout SET retired = 1 WHERE layoutID = %d", $layoutid);
-	
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			
-			$response->SetError(__("Failed to retire, Unknown Error."));
-			$response->Respond();
-		}
+		$db =& $this->db;
+        $response = new ResponseManager();
+        $layoutId = Kit::GetParam('layoutid', _POST, _INT, 0);
 
-		$response->SetFormSubmitResponse(__('Layout Retired.'));
-		$response->Respond();
+        // Permission to retire?
+        if (!$this->auth->del)
+            trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
+
+        // Action the retire
+        $layoutObject = new Layout($db);
+
+        if (!$layoutObject->Retire($layoutId))
+            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('The Layout has been Retired'));
+        $response->Respond();
 	}
 	
 	/**
@@ -545,114 +468,83 @@ END;
 	
 	/**
 	 * Generates a form for the background edit
-	 * @return 
 	 */
 	function BackgroundForm() 
 	{
 		$db 		=& $this->db;
 		$user		=& $this->user;
 
-		$helpManager	= new HelpManager($db, $user);
 		$response	= new ResponseManager();
 
+		// Permission to retire?
+        if (!$this->auth->edit)
+            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
 
-		//load the XML into a SimpleXML OBJECT
+		// Load the XML into a SimpleXML OBJECT
 		$xml                = simplexml_load_string($this->xml);
 
 		$backgroundImage    = (string) $xml['background'];
 		$backgroundColor    = (string) $xml['bgcolor'];
 		$width              = (string) $xml['width'];
 		$height             = (string) $xml['height'];
-                $bgImageId          = 0;
+        $bgImageId          = 0;
 
-                // Do we need to override the background with one passed in?
-                $bgOveride          = Kit::GetParam('backgroundOveride', _GET, _STRING);
+        // Do we need to override the background with one passed in?
+        $bgOveride          = Kit::GetParam('backgroundOveride', _GET, _STRING);
 
-                if ($bgOveride != '')
-                    $backgroundImage = $bgOveride;
+        if ($bgOveride != '')
+            $backgroundImage = $bgOveride;
 		
 		// Manipulate the images slightly
-		if ($backgroundImage != "")
+		if ($backgroundImage != '')
 		{
-                    // Get the ID for the background image
-                    $bgImageInfo = explode('.', $backgroundImage);
-                    $bgImageId = $bgImageInfo[0];
+            // Get the ID for the background image
+            $bgImageInfo = explode('.', $backgroundImage);
+            $bgImageId = $bgImageInfo[0];
 
-                    $thumbBgImage = "index.php?p=module&q=GetImage&id=$bgImageId&width=80&height=80&dynamic";
+            $thumbBgImage = "index.php?p=module&q=GetImage&id=$bgImageId&width=80&height=80&dynamic";
 		}
 		else
 		{
-                    $thumbBgImage = "theme/default/img/forms/filenotfound.png";
+            $thumbBgImage = "theme/default/img/forms/filenotfound.png";
 		}
 
+		// Configure some template variables.
+		Theme::Set('form_id', 'LayoutBackgroundForm');
+		Theme::Set('form_action', 'index.php?p=layout&q=EditBackground');
+		Theme::Set('form_meta', '<input type="hidden" id="layoutid" name="layoutid" value="' . $this->layoutid . '">');
+		Theme::Set('background_thumbnail_url', $thumbBgImage);
+
 		// A list of available backgrounds
-                $backgrounds = $user->MediaList('image');
-                array_unshift($backgrounds, array('mediaid' => '0', 'media' => 'None'));
-                $backgroundList = Kit::SelectList('bg_image', $backgrounds, 'mediaid', 'media', $bgImageId, "onchange=\"background_button_callback()\"");
+        $backgrounds = $user->MediaList('image');
+        array_unshift($backgrounds, array('mediaid' => '0', 'media' => 'None'));
+
+        Theme::Set('background_image_list', $backgrounds);
+        Theme::Set('background_id', $bgImageId);
+        
+		// A list of web safe colors
+		// Strip the # from the currently set color
+		Theme::Set('background_color', trim($backgroundColor,'#'));
+		Theme::Set('background_color_list', gwsc());
 		
-		//A list of web safe colors
-		//Strip the # from the currently set color
-		$backgroundColor = trim($backgroundColor,'#');
-		
-		$webSafeColors = gwsc("bg_color", $backgroundColor);
-		
-		//Get the ID of the current resolution
+		// Get the ID of the current resolution
 		$SQL = sprintf("SELECT resolutionID FROM resolution WHERE width = %d AND height = %d", $width, $height);
 		
-		if (!$results = $db->query($SQL)) 
+		if (!$resolutionid = $db->GetSingleValue($SQL, 'resolutionID', _INT)) 
 		{
 			trigger_error($db->error());
 			trigger_error(__("Unable to get the Resolution information"), E_USER_ERROR);
 		}
-		
-		$row 		= $db->get_row($results) ;
-		$resolutionid 	=  Kit::ValidateParam($row[0], _INT);
-		
-		//Make up the list
-		$resolution_list = dropdownlist("SELECT resolutionID, resolution FROM resolution ORDER BY width", "resolutionid", $resolutionid);
-		
-		// Help text for fields
-		$resolutionHelp = $helpManager->HelpIcon(__("Pick the resolution"), true);
-		$bgImageHelp	= $helpManager->HelpIcon(__("Select the background image from the library."), true);
-		$bgColorHelp	= $helpManager->HelpIcon(__("Use the color picker to select the background color."), true);
-		
-		$helpButton 	= $helpManager->HelpButton("content/layout/layouteditor", true);
-		
-		$msgBg				= __('Background Color');
-		$msgBgTitle			= __('Use the color picker to select the background color');
-		$msgBgImage			= __('Background Image');
-		$msgBgImageTitle	= __('Select the background image from the library');
-		$msgRes				= __('Resolution');
-		$msgResTitle		= __('Pick the resolution');
+
+		Theme::Set('resolutionid', $resolutionid);
+		Theme::Set('resolution_field_list', $db->GetArray('SELECT resolutionid, resolution FROM resolution ORDER BY resolution'));
 		
 		// Begin the form output
-		$form = <<<FORM
-		<form id="LayoutBackgroundForm" class="XiboForm" method="post" action="index.php?p=layout&q=EditBackground">
-			<input type="hidden" id="layoutid" name="layoutid" value="$this->layoutid">
-			<table>
-				<tr>
-					<td><label for="bg_color" title="$msgBgTitle">$msgBg</label></td>
-					<td>$bgColorHelp $webSafeColors</td>
-				</tr>
-				<tr>
-					<td><label for="bg_image" title="$msgBgImageTitle">$msgBgImage</label></td>
-					<td>$bgImageHelp $backgroundList</td>
-					<td rowspan="3"><img id="bg_image_image" src="$thumbBgImage" alt="Thumb" />
-				</tr>
-				<tr>
-					<td><label for="resolutionid" title="$msgResTitle">$msgRes<span class="required">*</span></label></td>
-					<td>$resolutionHelp $resolution_list</td>
-				</tr>
-				<tr>
-					<td></td>
-				</tr>
-			</table>
-		</form>
-FORM;
-		
+		$form = Theme::RenderReturn('layout_form_background');
+
 		$response->SetFormRequestResponse($form, __('Change the Background Properties'), '550px', '240px');
-                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Layout', 'Background') . '")');
-                $response->AddButton(__('Add Image'), 'XiboFormRender("index.php?p=module&q=Exec&mod=image&method=AddForm&backgroundImage=true&layoutid=' . $this->layoutid . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Background') . '")');
+        $response->AddButton(__('Add Image'), 'XiboFormRender("index.php?p=module&q=Exec&mod=image&method=AddForm&backgroundImage=true&layoutid=' . $this->layoutid . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#LayoutBackgroundForm").submit()');
 		$response->Respond();
@@ -660,7 +552,6 @@ FORM;
 	
 	/**
 	 * Edits the background of the layout
-	 * @return 
 	 */
 	function EditBackground()
 	{
@@ -669,61 +560,21 @@ FORM;
 		$response		= new ResponseManager();
 
 		$layoutid 		= Kit::GetParam('layoutid', _POST, _INT);
-		$bg_color 		= '#'.Kit::GetParam('bg_color', _POST, _STRING);
+		$bg_color 		= Kit::GetParam('bg_color', _POST, _STRING);
 		$mediaID 		= Kit::GetParam('bg_image', _POST, _INT);
-		$resolutionid		= Kit::GetParam('resolutionid', _POST, _INT);
+		$resolutionid	= Kit::GetParam('resolutionid', _POST, _INT);
 
-                // Get the file URI
-                $SQL = sprintf("SELECT StoredAs FROM media WHERE MediaID = %d", $mediaID);
+		// Permission to retire?
+        if (!$this->auth->edit)
+            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
 
-                // Allow for the 0 media idea (no background image)
-                if ($mediaID == 0)
-                {
-                    $bg_image = '';
-                }
-                else
-                {
-                    // Look up the bg image from the media id given
-                    if (!$bg_image = $db->GetSingleValue($SQL, 'StoredAs', _STRING))
-                        trigger_error('No media found for that media ID', E_USER_ERROR);
-                }
+		Kit::ClassLoader('Layout');
+        $layoutObject = new Layout($db);
 
-		// Look up the width and the height
-		$SQL = sprintf("SELECT width, height FROM resolution WHERE resolutionID = %d ", $resolutionid);
+        if (!$layoutObject->SetBackground($layoutid, $resolutionid, $bg_color, $mediaID))
+            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 		
-		if (!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$response->SetError(__("Unable to get the Resolution information"));
-			$response->Respond();
-		}
-		
-		$row 	= $db->get_row($results) ;
-		$width  =  Kit::ValidateParam($row[0], _INT);
-		$height =  Kit::ValidateParam($row[1], _INT);
-		
-		include_once("lib/data/region.data.class.php");
-		
-		$region = new region($db, $user);
-		
-		if (!$region->EditBackground($layoutid, $bg_color, $bg_image, $width, $height))
-		{
-			//there was an ERROR
-			$response->SetError($region->errorMsg);
-			$response->Respond();
-		}
-		
-		// Update the layout record with the new background
-		$SQL = sprintf("UPDATE layout SET background = '%s' WHERE layoutid = %d ", $bg_image, $layoutid);
-		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$response->SetError(__("Unable to update background information"));
-			$response->Respond();
-		}
-		
-		$response->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $this->layoutid));
+		$response->SetFormSubmitResponse(__('Layout Background Changed'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $layoutid));
 		$response->Respond();
 	}
 	

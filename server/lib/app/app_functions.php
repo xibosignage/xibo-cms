@@ -296,15 +296,11 @@ function sec2hms($sec, $padHours = false)
  * Gets web safe colors
  * @return 
  */
-function gwsc($list_name, $selected) 
+function gwsc() 
 {
-	
+	$colors = array();
     $cs = array('00', '33', '66', '99', 'CC', 'FF');
 	
-	$list = <<<END
-	<select name="$list_name" id="$list_name">
-END;
-
     for($i=0; $i<6; $i++) 
 	{
         for($j=0; $j<6; $j++) 
@@ -312,22 +308,12 @@ END;
             for($k=0; $k<6; $k++) 
 			{
                 $c = $cs[$i] .$cs[$j] .$cs[$k];
-				
-				if ($c == $selected) 
-				{
-                    $list .= "<option value='".$c."' selected style='background: #$c; color:#$c'>#$c</option>";
-				}
-				else 
-				{
-                    $list .= "<option value='".$c."' style='background: #$c; color:#$c'>#$c</option>";
-				}
-            }
+				$colors[] = array('colorid' => $c, 'color' => '#' . $c);
+			}
         }
     }
 	
-	$list .= "</select>\n";
-	
-	return $list;
+	return $colors;
 }
 
 /**
