@@ -20,10 +20,8 @@
  *
  * Theme variables:
  * 	table_rows = Array containing the table rows
- * 	  layout = The layout name
- * 	  description = The layout description
- * 	  owner = The Layout Owner
- * 	  permissions = The Permissions for the layout
+ * 	  campaign = The Campaign Name
+ * 	  num_layouts = The Number of Layouts associated to this Campaign
  * 	  buttons = The buttons enabled for the layout
  * 	    id = The ID of the button
  * 	    text = The Text for the button
@@ -36,22 +34,18 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<thead>
 			<tr>
 				<th><?php echo Theme::Translate('Name'); ?></th>
-				<th><?php echo Theme::Translate('Description'); ?></th>
-				<th><?php echo Theme::Translate('Owner'); ?></th>
-				<th><?php echo Theme::Translate('Permissions'); ?></th>
+				<th><?php echo Theme::Translate('# Layouts'); ?></th>
 				<th><?php echo Theme::Translate('Action'); ?></th>	
 			</tr>
 		</thead>
 		<tbody>
 			<?php foreach(Theme::Get('table_rows') as $row) { ?>
-			<tr ondblclick="return XiboFormRender('<?php echo $row['layout_form_edit_url']; ?>')">
-				<td><?php echo $row['layout']; ?></td>
-				<td><?php echo $row['description']; ?></td>
-				<td><?php echo $row['owner']; ?></td>
-				<td><?php echo $row['permissions']; ?></td>
+			<tr>
+				<td><?php echo $row['campaign']; ?></td>
+				<td><?php echo $row['numlayouts']; ?></td>
 				<td class="nobr">
 					<?php foreach($row['buttons'] as $button) { ?>
-					<button class="<?php echo (($button['id'] == 'layout_button_design') ? 'XiboRedirectButton' : 'XiboFormButton'); ?>" href="<?php echo $button['url']; ?>"><span><?php echo $button['text']; ?></span></button>
+					<button class="XiboFormButton" href="<?php echo $button['url']; ?>"><span><?php echo $button['text']; ?></span></button>
 					<?php } ?>
 				</td>
 			</tr>

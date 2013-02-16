@@ -853,35 +853,31 @@ HTML;
         // Layout filter?
         $layoutName = Kit::GetParam('name', _POST, _STRING, '');
         setSession('layoutDesigner', 'JumpList', Kit::GetParam('XiboJumpListPinned', _REQUEST, _CHECKBOX, 'off'));
-        setSession('layoutDesigner', 'Name', $layoutName);
-
-        // Show a list of layouts we have permission to jump to
-        $output = '<div class="info_table">';
-        $output .= '<table style="width:100%">';
-        $output .= '    <thead>';
-        $output .= '    <tr>';
-        $output .= '    <th>' . __('Layout') . '</th>';
-        $output .= '    </tr>';
-        $output .= '    </thead>';
-        $output .= '    <tbody>';
+        setSession('layoutDesigner', 'Name', $layoutName);       
 
         // Get a layout list
         $layoutList = $user->LayoutList($layoutName);
 
-        foreach($layoutList as $layout)
+        $rows = array();
+
+        foreach ($layoutList as $layout)
         {
             if (!$layout['edit'] == 1)
                 continue;
 
             // We have permission to edit this layout
-            $output .= '<tr>';
-            $output .= '    <td><a href="index.php?p=layout&modify=true&layoutid=' . $layout['layoutid'] . '">' . $layout['layout'] . '</a></td>';
-            $output .= '</tr>';
+            $row = array();
+            $row['layoutid'] = $layout['layoutid'];
+            $row['layout'] = $layout['layout'];
+            $row['jump_to_url'] = 'index.php?p=layout&modify=true&layoutid=' . $layout['layoutid'];
+
+            $rows[] = $row;
         }
 
-        $output .= '    </tbody>';
-        $output .= '</table>';
-        $output .= '</div>';
+        // Store the table rows
+    	Theme::Set('table_rows', $rows);
+
+    	$output = Theme::RenderReturn('layout_jumplist_grid');
 
         $response->SetGridResponse($output);
         $response->Respond();
