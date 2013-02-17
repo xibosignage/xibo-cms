@@ -197,3 +197,7 @@ table.ScheduleFormSelectDetails td {
 .scheduleFormCheckAll {
     float: right;
 }
+
+.strong_text {
+    font-weight: bold;
+}

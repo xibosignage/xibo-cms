@@ -20,17 +20,12 @@
  *
  * Theme variables:
  *  form_id = The ID of the Form
- * 	form_meta = Extra META information required by the Transation
  * 	form_action = The URL for calling the Transaction
+ * 	form_meta = Extra META information required by the Transation
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
 	<?php echo Theme::Get('form_meta'); ?>
-	<table>
-        <tr>
-            <td><label for="Name" title="<?php echo Theme::Translate('The Name for this Campaign'); ?>"><?php echo Theme::Translate('Name'); ?></label></td>
-            <td><input class="required" type="text" name="Name" value="<?php echo Theme::Get('campaign'); ?>" maxlength="254"></td>
-        </tr>
-    </table>
+	<p><?php echo Theme::Translate('Are you sure you want to delete?'); ?></p>
 </form>

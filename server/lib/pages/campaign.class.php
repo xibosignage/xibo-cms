@@ -264,15 +264,14 @@ class campaignDAO
         if (!$auth->del)
             trigger_error(__('You do not have permission to delete this campaign'), E_USER_ERROR);
 
+        // Set some information about the form
+        Theme::Set('form_id', 'CampaignDeleteForm');
+        Theme::Set('form_action', 'index.php?p=campaign&q=Delete');
+        Theme::Set('form_meta', '<input type="hidden" name="CampaignID" value="' . $campaignId . '" />');
+
         $msgWarn = __('Are you sure you want to delete?');
 
-        //we can delete
-        $form = <<<END
-        <form id="CampaignDeleteForm" class="XiboForm" method="post" action="index.php?p=campaign&q=Delete">
-            <input type="hidden" name="CampaignID" value="$campaignId" />
-            <p>$msgWarn</p>
-        </form>
-END;
+        $form = Theme::RenderReturn('campaign_form_delete');
 
         $response->SetFormRequestResponse($form, __('Delete Campaign'), '350px', '175px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Delete') . '")');
@@ -327,17 +326,10 @@ END;
         if (!$auth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this campaign'), E_USER_ERROR);
 
-        // Form content
-        $form = '<form id="CampaignPermissionsForm" class="XiboForm" method="post" action="index.php?p=campaign&q=Permissions">';
-	$form .= '<input type="hidden" name="campaignId" value="' . $campaignId . '" />';
-        $form .= '<div class="dialog_table">';
-	$form .= '  <table style="width:100%">';
-        $form .= '      <tr>';
-        $form .= '          <th>' . __('Group') . '</th>';
-        $form .= '          <th>' . __('View') . '</th>';
-        $form .= '          <th>' . __('Edit') . '</th>';
-        $form .= '          <th>' . __('Delete') . '</th>';
-        $form .= '      </tr>';
+        // Set some information about the form
+        Theme::Set('form_id', 'CampaignDeleteForm');
+        Theme::Set('form_action', 'index.php?p=campaign&q=Permissions');
+        Theme::Set('form_meta', '<input type="hidden" name="campaignId" value="' . $campaignId . '" />');
 
         // List of all Groups with a view/edit/delete checkbox
         $SQL = '';
@@ -356,22 +348,31 @@ END;
             trigger_error(__('Unable to get permissions for this Campaign'), E_USER_ERROR);
         }
 
-        while($row = $db->get_assoc_row($results))
+        $checkboxes = array();
+
+        while ($row = $db->get_assoc_row($results))
         {
             $groupId = $row['GroupID'];
-            $group = ($row['IsUserSpecific'] == 0) ? '<strong>' . $row['Group'] . '</strong>' : $row['Group'];
+            $rowClass = ($row['IsUserSpecific'] == 0) ? 'strong_text' : '';
 
-            $form .= '<tr>';
-            $form .= ' <td>' . $group . '</td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_view" ' . (($row['View'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_edit" ' . (($row['Edit'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_del" ' . (($row['Del'] == 1) ? 'checked' : '') . '></td>';
-            $form .= '</tr>';
+            $checkbox = array(
+                    'id' => $groupId,
+                    'name' => Kit::ValidateParam($row['Group'], _STRING),
+                    'class' => $rowClass,
+                    'value_view' => $groupId . '_view',
+                    'value_view_checked' => (($row['View'] == 1) ? 'checked' : ''),
+                    'value_edit' => $groupId . '_edit',
+                    'value_edit_checked' => (($row['Edit'] == 1) ? 'checked' : ''),
+                    'value_del' => $groupId . '_del',
+                    'value_del_checked' => (($row['Del'] == 1) ? 'checked' : ''),
+                );
+
+            $checkboxes[] = $checkbox;
         }
 
-        $form .= '</table>';
-        $form .= '</div>';
-        $form .= '</form>';
+        Theme::Set('form_rows', $checkboxes);
+
+        $form = Theme::RenderReturn('campaign_form_permissions');
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Permissions') . '")');
@@ -467,28 +468,13 @@ END;
     public function MembersForm()
     {
         $db =& $this->db;
+        $user =& $this->user;
         $response = new ResponseManager();
         $campaignId = Kit::GetParam('CampaignID', _GET, _INT);
 
         // There needs to be two lists here.
         // One of which is the Layouts currently assigned to this group
         // The other is a list of layouts that are available to be assigned (i.e. the opposite of the first list)
-
-        // Layouts in group
-        $SQL  = "";
-        $SQL .= "SELECT layout.LayoutID, ";
-        $SQL .= "       layout.layout ";
-        $SQL .= "FROM   layout ";
-        $SQL .= "       INNER JOIN lkcampaignlayout ";
-        $SQL .= "       ON     lkcampaignlayout.LayoutID = layout.LayoutID ";
-        $SQL .= sprintf("WHERE  lkcampaignlayout.CampaignID   = %d", $campaignId);
-        $SQL .= " ORDER BY lkcampaignlayout.DisplayOrder ";
-
-        if (!$resultIn = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Layouts'), E_USER_ERROR);
-        }
 
         // Layouts not in group
         $SQL  = "";
@@ -510,39 +496,43 @@ END;
             trigger_error(__('Error getting Layouts'), E_USER_ERROR);
         }
 
-        // Now we have an IN and an OUT results object which we can use to build our lists
-        $listIn = '<ul id="layoutsIn" href="index.php?p=campaign&q=SetMembers&CampaignID=' . $campaignId . '" class="connectedSortable">';
+        // Set some information about the form
+        Theme::Set('layouts_assigned_id', 'layoutsIn');
+        Theme::Set('layouts_available_id', 'layoutsOut');
+        Theme::Set('layouts_assigned_url', 'index.php?p=campaign&q=SetMembers&CampaignID=' . $campaignId);
 
-        while($row = $db->get_assoc_row($resultIn))
+        // Layouts in group
+        $SQL  = "";
+        $SQL .= "SELECT layout.LayoutID, ";
+        $SQL .= "       layout.layout, ";
+        $SQL .= "       'LayoutID_' + layout.LayoutID AS list_id ";
+        $SQL .= "FROM   layout ";
+        $SQL .= "       INNER JOIN lkcampaignlayout ";
+        $SQL .= "       ON     lkcampaignlayout.LayoutID = layout.LayoutID ";
+        $SQL .= sprintf("WHERE  lkcampaignlayout.CampaignID   = %d", $campaignId);
+        $SQL .= " ORDER BY lkcampaignlayout.DisplayOrder ";
+
+        $layoutsAssigned = $db->GetArray($SQL);
+
+        if (!is_array($layoutsAssigned))
         {
-                // For each item output a LI
-                $layoutId = Kit::ValidateParam($row['LayoutID'], _INT);
-                $layout = Kit::ValidateParam($row['layout'], _STRING);
-
-                $listIn	.= '<li id="LayoutID_' . $layoutId . '"class="li-sortable">' . $layout . '</li>';
+            trigger_error($db->error());
+            trigger_error(__('Error getting Layouts'), E_USER_ERROR);
         }
-        $listIn	.= '</ul>';
 
-        $listOut = '<ul id="layoutsOut" class="connectedSortable">';
+        // Set the layouts assigned
+        Theme::Set('layouts_assigned', $layoutsAssigned);
 
-        while($row = $db->get_assoc_row($resultOut))
-        {
-            // For each item output a LI
-            $layoutId = Kit::ValidateParam($row['LayoutID'], _INT);
-            $layout = Kit::ValidateParam($row['layout'], _STRING);
-
-            // Authenticate
-            $auth = $this->user->LayoutAuth($layoutId, true);
-            if (!$auth->view)
-                continue;
-
-            $listOut .= '<li id="LayoutID_' . $layoutId . '" class="li-sortable">' . $layout . '</li>';
+        // All available layouts
+        $layoutsAvailable = array();
+        foreach ($user->LayoutList() as $layout) {
+            $layout['list_id'] = 'LayoutID_' . $layout['layoutid'];
+            $layoutsAvailable[] = $layout;
         }
-        $listOut .= '</ul>';
 
-        // Build the final form.
-        $helpText = '<center>' . __('Drag or double click to move items between lists') . '</center>';
-        $form = $helpText . '<div class="connectedlist"><h3>' . __('Assigned Layouts') . '</h3>' . $listIn . '</div><div class="connectedlist"><h3>' . __('Available Layouts') . '</h3>' . $listOut . '</div>';
+        Theme::Set('layouts_available', $layoutsAvailable);
+
+        $form = Theme::RenderReturn('campaign_form_layout_assign');
 
         $response->SetFormRequestResponse($form, __('Layouts on Campaign'), '400', '375', 'ManageMembersCallBack');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Layouts') . '")');
