@@ -1009,15 +1009,49 @@ END;
         return $layouts;
     }
 
-    public function TemplateList()
+    /**
+     * A List of Templates the User has access to
+     * @param string $template [description]
+     * @param string $tags     [description]
+     * @param string $isSystem [description]
+     */
+    public function TemplateList($template = '', $tags = '', $isSystem = '')
     {
+    	$db =& $this->db;
+
         $SQL  = "";
         $SQL .= "SELECT  template.templateID, ";
         $SQL .= "        template.template, ";
         $SQL .= "        CASE WHEN template.issystem = 1 THEN 'Yes' ELSE 'No' END AS issystem, ";
         $SQL .= "        template.tags, ";
         $SQL .= "        template.userID ";
-        $SQL .= "FROM    template ";
+        $SQL .= "  FROM  template ";
+        $SQL .= " WHERE 1 = 1 ";
+
+        if ($template != '') 
+		{
+            // convert into a space delimited array
+            $names = explode(' ', $template);
+            
+            foreach ($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (template.template NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (template.template LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+            }
+		}
+
+		if ($tags != '') 
+		{
+			$SQL .= " AND template.tags LIKE '%" . $db->escape_string($tags) . "%' ";
+		}
+		
+		if ($isSystem != '-1') 
+		{
+			$SQL .= sprintf(" AND template.issystem = %d ", $isSystem);
+		}
 
         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of templates for %s with SQL: %s', $this->userName, $SQL));
 
@@ -1046,6 +1080,8 @@ END;
             {
                 $item['view'] = (int) $auth->view;
                 $item['edit'] = (int) $auth->edit;
+                $item['del'] = (int) $auth->del;
+                $item['modifyPermissions'] = (int) $auth->modifyPermissions;
 
                 $templates[] = $item;
             }

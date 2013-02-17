@@ -336,7 +336,7 @@ class layoutDAO
 		// Get all layouts
 		$layouts = $user->LayoutList($name, $filter_userid, $filter_retired, $filter_tags);
 
-		if ($layouts === FALSE)
+		if (!is_array($layouts))
 			trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
 
         $rows = array();
