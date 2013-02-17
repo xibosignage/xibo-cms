@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -33,45 +33,28 @@ class resolutionDAO
         include_once('lib/data/resolution.data.class.php');
     }
 
+    /**
+     * Display the Resolution Page
+     */
     function displayPage()
     {
         $db =& $this->db;
 
-        require("template/pages/resolution_view.php");
+        // Configure the theme
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('resolution_form_add_url', 'index.php?p=resolution&q=AddForm');
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="resolution"><input type="hidden" name="q" value="ResolutionGrid">');
+        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
+        Theme::Set('pager', ResponseManager::Pager($id));
+
+        // Render the Theme and output
+        Theme::Render('resolution_page');
     }
 
-    function ResolutionFilter()
-    {
-        $db 	=& $this->db;
-        $user 	=& $this->user;
-        $response = new ResponseManager();
-
-        $filterForm = <<<END
-            <div class="FilterDiv" id="ResolutionFilter">
-                <form onsubmit="return false">
-                    <input type="hidden" name="p" value="resolution">
-                    <input type="hidden" name="q" value="ResolutionGrid">
-                </form>
-            </div>
-END;
-
-            $id = uniqid();
-            $pager = ResponseManager::Pager($id);
-
-            $xiboGrid = <<<HTML
-            <div class="XiboGrid" id="$id">
-                <div class="XiboFilter">
-                    $filterForm
-                </div>
-                $pager
-                <div class="XiboData">
-
-                </div>
-            </div>
-HTML;
-            echo $xiboGrid;
-    }
-
+    /**
+     * Resolution Grid
+     */
     function ResolutionGrid()
     {
         $db 	=& $this->db;
@@ -86,80 +69,67 @@ HTML;
             trigger_error('Unable to Query for resolutions.');
         }
 
-        $output = <<<END
-            <div class="info_table">
-                <table style="width:100%">
-                    <thead>
-                        <tr>
-                            <th>Resolution</th>
-                            <th>Designer Width</th>
-                            <th>Designer Height</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-END;
+        $rows = array();
 
         while($row = $db->get_assoc_row($results))
         {
             $resolutionID = Kit::ValidateParam($row['resolutionID'], _INT);
-            $resolution = Kit::ValidateParam($row['resolution'], _STRING);
-            $width      = Kit::ValidateParam($row['width'], _INT);
-            $height     = Kit::ValidateParam($row['height'], _INT);
+            $row['resolution'] = Kit::ValidateParam($row['resolution'], _STRING);
+            $row['width'] = Kit::ValidateParam($row['width'], _INT);
+            $row['height'] = Kit::ValidateParam($row['height'], _INT);
+            $row['intended_width'] = Kit::ValidateParam($row['intended_width'], _INT);
+            $row['intended_height'] = Kit::ValidateParam($row['intended_height'], _INT);
 
-            $output .= '<tr>';
-            $output .= '<td>' . $resolution . '</td>';
-            $output .= '<td>' . $width . '</td>';
-            $output .= '<td>' . $height . '</td>';
-            $output .= '<td>';
-            $output .= '  <button class="XiboFormButton" href="index.php?p=resolution&q=EditForm&resolutionid=' . $resolutionID . '"><span>Edit</span></button>';
-            $output .= '  <button class="XiboFormButton" href="index.php?p=resolution&q=DeleteForm&resolutionid=' . $resolutionID . '"><span>Delete</span></button>';
-            $output .= '</td>';
-            $output .= '</tr>';
+            // Edit Button
+            $row['buttons'][] = array(
+                    'id' => 'resolution_button_edit',
+                    'url' => 'index.php?p=resolution&q=EditForm&resolutionid=' . $resolutionID,
+                    'text' => __('Edit')
+                );
+
+            // Delete Button
+            $row['buttons'][] = array(
+                    'id' => 'resolution_button_delete',
+                    'url' => 'index.php?p=resolution&q=DeleteForm&resolutionid=' . $resolutionID,
+                    'text' => __('Delete')
+                );
+
+            // Add to the rows objects
+            $rows[] = $row;
         }
 
-        $output .= '</tbody></table></div>';
+        Theme::Set('table_rows', $rows);
+
+        $output = Theme::RenderReturn('resolution_page_grid');
 
         $response->SetGridResponse($output);
         $response->Respond();
     }
 
+    /**
+     * Resolution Add
+     */
     function AddForm()
     {
         $db 	=& $this->db;
         $user 	=& $this->user;
         $response = new ResponseManager();
 
-        $form = <<<END
-            <form class="XiboForm" method="post" action="index.php?p=resolution&q=Add">
-                <table>
-                    <tr>
-                        <td><label for="resolution" title="A name for this resolution">Resolution<span class="required">*</span></label></td>
-                        <td><input name="resolution" type="text" id="resolution" tabindex="1" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="width" title="Width">Width<span class="required">*</span></label></td>
-                        <td><input name="width" type="text" id="width" tabindex="2" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="height" title="Height">Height<span class="required">*</span></label></td>
-                        <td><input name="height" type="text" id="height" tabindex="3" /></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td>
-                            <input type="submit" value="Save" tabindex="4" />
-                            <input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />
-                        </td>
-                    </tr>
-                </table>
-            </form>
-END;
+        Theme::Set('form_id', 'AddForm');
+        Theme::Set('form_action', 'index.php?p=resolution&q=Add');
 
-        $response->SetFormRequestResponse($form, 'Add new resolution', '350px', '250px');
+        $form = Theme::RenderReturn('resolution_form_add');
+
+        $response->SetFormRequestResponse($form, __('Add Resolution'), '350px', '250px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Resolution', 'Add') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#AddForm").submit()');
         $response->Respond();
     }
 
+    /**
+     * Resolution Edit Form
+     */
     function EditForm()
     {
         $db 	=& $this->db;
@@ -168,54 +138,39 @@ END;
 
         $resolutionID   = Kit::GetParam('resolutionid', _GET, _INT);
 
-        $SQL = sprintf("SELECT resolution, width, height FROM resolution WHERE resolutionID = %d", $resolutionID);
+        $SQL = sprintf("SELECT resolution, width, height, intended_width, intended_height FROM resolution WHERE resolutionID = %d", $resolutionID);
 
         if (!$result = $db->query($SQL))
         {
             trigger_error($db->error());
-            trigger_error('Unable to edit this resolution', E_USER_ERROR);
+            trigger_error(__('Unable to edit this resolution'), E_USER_ERROR);
         }
 
         if ($db->num_rows($result) == 0)
-            trigger_error('Incorrect resolution id', E_USER_ERROR);
+            trigger_error(__('Incorrect resolution id'), E_USER_ERROR);
 
-        $row        = $db->get_assoc_row($result);
+        $row = $db->get_assoc_row($result);
 
-        $resolution = Kit::ValidateParam($row['resolution'], _STRING);
-        $width      = Kit::ValidateParam($row['width'], _INT);
-        $height     = Kit::ValidateParam($row['height'], _INT);
+        Theme::Set('resolution', Kit::ValidateParam($row['resolution'], _STRING));
+        Theme::Set('width', Kit::ValidateParam($row['intended_width'], _INT));
+        Theme::Set('height', Kit::ValidateParam($row['intended_height'], _INT));
 
-        $form = <<<END
-            <form class="XiboForm" method="post" action="index.php?p=resolution&q=Edit">
-                <input type="hidden" name="resolutionid" value="$resolutionID" />
-                <table>
-                    <tr>
-                        <td><label for="resolution" title="A name for this resolution">Resolution<span class="required">*</span></label></td>
-                        <td><input name="resolution" type="text" id="resolution" value="$resolution" tabindex="1" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="width" title="Width">Width<span class="required">*</span></label></td>
-                        <td><input name="width" type="text" id="width" tabindex="2" value="$width" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="height" title="Height">Height<span class="required">*</span></label></td>
-                        <td><input name="height" type="text" id="height" tabindex="3" value="$height" /></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td>
-                            <input type="submit" value="Save" tabindex="4" />
-                            <input id="btnCancel" type="button" title="No / Cancel" onclick="$('#div_dialog').dialog('close');return false; " value="Cancel" />
-                        </td>
-                    </tr>
-                </table>
-            </form>
-END;
+        Theme::Set('form_id', 'ResolutionForm');
+        Theme::Set('form_action', 'index.php?p=resolution&q=Edit');
+        Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolutionID . '" >');
 
-        $response->SetFormRequestResponse($form, 'Edit Resolution', '350px', '250px');
+        $form = Theme::RenderReturn('resolution_form_edit');
+
+        $response->SetFormRequestResponse($form, __('Edit Resolution'), '350px', '250px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Template', 'Add') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#ResolutionForm").submit()');
         $response->Respond();
     }
 
+    /**
+     * Resolution Delete Form
+     */
     function DeleteForm()
     {
         $db 	=& $this->db;
@@ -224,17 +179,17 @@ END;
 
         $resolutionid   = Kit::GetParam('resolutionid', _GET, _INT);
 
-        // Output the delete form
-        $form = <<<END
-        <form class="XiboForm" method="post" action="index.php?p=resolution&q=Delete">
-            <input type="hidden" name="resolutionid" value="$resolutionid">
-            <p>Are you sure you want to delete this resolution?</p>
-            <input type="submit" value="Yes" tabindex="1">
-            <input type="submit" value="No" onclick="$('#div_dialog').dialog('close');return false; ">
-        </form>
-END;
+        // Set some information about the form
+        Theme::Set('form_id', 'DeleteForm');
+        Theme::Set('form_action', 'index.php?p=resolution&q=Delete');
+        Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolutionid . '" />');
 
-        $response->SetFormRequestResponse($form, 'Confirm Delete', '250px', '150px');
+        $form = Theme::RenderReturn('resolution_form_delete');
+
+        $response->SetFormRequestResponse($form, __('Delete Resolution'), '250px', '150px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Delete') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#DeleteForm").submit()');
         $response->Respond();
     }
 
@@ -245,29 +200,14 @@ END;
         $response = new ResponseManager();
 
         $resolution = Kit::GetParam('resolution', _POST, _STRING);
-        $width_old  = Kit::GetParam('width', _POST, _INT);
-        $height_old = Kit::GetParam('height', _POST, _INT);
-
-        if ($resolution == '' || $width_old == '' || $height_old == '')
-        {
-            trigger_error('All fields must be filled in', E_USER_ERROR);
-        }
-
-        // Alter the width / height to fit with 800 px
-        $width          = 800;
-        $height         = 800;
-        $factor         = min ( $width / $width_old, $height / $height_old);
-
-        $final_width    = round ($width_old * $factor);
-        $final_height   = round ($height_old * $factor);
+        $width = Kit::GetParam('width', _POST, _INT);
+        $height = Kit::GetParam('height', _POST, _INT);
 
         // Add the resolution
         $resObject = new Resolution($db);
 
-        if (!$resObject->Add($resolution, $final_width, $final_height))
-        {
+        if (!$resObject->Add($resolution, $width, $height))
             trigger_error($resObject->GetErrorMessage(), E_USER_ERROR);
-        }
 
         $response->SetFormSubmitResponse('New resolution added');
         $response->Respond();
@@ -281,29 +221,14 @@ END;
 
         $resolutionID = Kit::GetParam('resolutionid', _POST, _INT);
         $resolution = Kit::GetParam('resolution', _POST, _STRING);
-        $width_old  = Kit::GetParam('width', _POST, _INT);
-        $height_old = Kit::GetParam('height', _POST, _INT);
-
-        if ($resolutionID == '' || $resolution == '' || $height_old == '' || $height_old == '')
-        {
-            trigger_error('All fields must be filled in', E_USER_ERROR);
-        }
-
-        // Alter the width / height to fit with 800 px
-        $width          = 800;
-        $height         = 800;
-        $factor         = min ( $width / $width_old, $height / $height_old);
-
-        $final_width    = round ($width_old * $factor);
-        $final_height   = round ($height_old * $factor);
+        $width = Kit::GetParam('width', _POST, _INT);
+        $height = Kit::GetParam('height', _POST, _INT);
 
         // Edit the resolution
         $resObject = new Resolution($db);
 
-        if (!$resObject->Edit($resolutionID, $resolution, $final_width, $final_height))
-        {
+        if (!$resObject->Edit($resolutionID, $resolution, $width, $height))
             trigger_error($resObject->GetErrorMessage(), E_USER_ERROR);
-        }
 
         $response->SetFormSubmitResponse('Resolution edited');
         $response->Respond();
@@ -321,11 +246,10 @@ END;
         $resObject = new Resolution($db);
 
         if (!$resObject->Delete($resolutionID))
-        {
             trigger_error($resObject->GetErrorMessage(), E_USER_ERROR);
-        }
 
         $response->SetFormSubmitResponse('Resolution deleted');
         $response->Respond();
     }
 }
+?>

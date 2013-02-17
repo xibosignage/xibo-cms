@@ -24,24 +24,31 @@ class Resolution extends Data
 {
     /**
      * Adds a resolution
-     * @param <type> $resolution
-     * @param <type> $width
-     * @param <type> $height
+     * @param string $resolution
+     * @param int $width
+     * @param int $height
      * @return <type>
      */
     public function Add($resolution, $width, $height)
     {
         $db =& $this->db;
-        
-        $SQL = "INSERT INTO resolution (resolution, width, height) VALUES ('%s', %d, %d)";
-        $SQL = sprintf($SQL, $db->escape_string($resolution), $width, $height);
 
-        if(!$db->query($SQL))
+        if ($resolution == '' || $width == '' || $height == '')
+            return $this->SetError(__('All fields must be filled in'), E_USER_ERROR);
+
+        // Alter the width / height to fit with 800 px
+        $factor = min (800 / $width, 800 / $height);
+
+        $final_width    = round ($width * $factor);
+        $final_height   = round ($height * $factor);
+        
+        $SQL = "INSERT INTO resolution (resolution, width, height, intended_width, intended_height) VALUES ('%s', %d, %d, %d, %d)";
+        $SQL = sprintf($SQL, $db->escape_string($resolution), $final_width, $final_height, $width, $height);
+
+        if (!$db->query($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25000, 'Cannot add this resolution.');
-
-            return false;
+            return $this->SetError(25000, __('Cannot add this resolution.'));
         }
 
         return true;
@@ -59,15 +66,22 @@ class Resolution extends Data
     {
         $db =& $this->db;
 
-        $SQL = "UPDATE resolution SET resolution = '%s', width = %d, height = %d WHERE resolutionID = %d ";
-        $SQL = sprintf($SQL, $db->escape_string($resolution), $width, $height, $resolutionID);
+        if ($resolution == '' || $width == '' || $height == '')
+            return $this->SetError(__('All fields must be filled in'), E_USER_ERROR);
+
+        // Alter the width / height to fit with 800 px
+        $factor = min (800 / $width, 800 / $height);
+
+        $final_width    = round ($width * $factor);
+        $final_height   = round ($height * $factor);
+
+        $SQL = "UPDATE resolution SET resolution = '%s', width = %d, height = %d, intended_width = %d, intended_height = %d WHERE resolutionID = %d ";
+        $SQL = sprintf($SQL, $db->escape_string($resolution), $final_width, $final_height, $width, $height, $resolutionID);
 
         if(!$db->query($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25000, 'Cannot edit this resolution.');
-
-            return false;
+            return $this->SetError(25000, __('Cannot edit this resolution.'));
         }
 
         return true;
@@ -88,7 +102,7 @@ class Resolution extends Data
         if(!$db->query($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25000, 'Cannot delete this resolution.');
+            $this->SetError(25000, __('Cannot delete this resolution.'));
 
             return false;
         }
