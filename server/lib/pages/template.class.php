@@ -163,67 +163,22 @@ class templateDAO
 	 */
 	function AddTemplate() 
 	{
-		$db 			=& $this->db;
-		$response		= new ResponseManager();
+		$db =& $this->db;
+		$user =& $this->user;
+		$response = new ResponseManager();
 
-		$template 		= $_POST['template'];
-		$tags		 	= $_POST['tags'];
-		$description	= $_POST['description'];
+		$template = Kit::GetParam('template', _POST, _STRING);
+		$tags = Kit::GetParam('tags', _POST, _STRING);
+		$description = Kit::GetParam('description', _POST, _STRING);
+		$layoutid = Kit::GetParam('layoutid', _POST, _INT);
 		
-		$layoutid		= $_POST['layoutid'];
-		
-		$userid 		= $_SESSION['userid'];
-		$currentdate 	= date("Y-m-d H:i:s");
-		
-		//validation
-		if (strlen($template) > 50 || strlen($template) < 1) 
-		{
-			$response->SetError("Template Name must be between 1 and 50 characters");
-			$response->Respond();
-		}
-		
-		if (strlen($description) > 254) 
-		{
-			$response->SetError("Description can not be longer than 254 characters");
-			$response->Respond();
-		}
-		
-		if (strlen($tags) > 254) 
-		{
-			$response->SetError("Tags can not be longer than 254 characters");
-			$response->Respond();
-		}
-		
-		//Check on the name the user has selected
-		$check = "SELECT template FROM template WHERE template = '$template' AND userID = $userid ";
-		
-		$result = $db->query($check) or trigger_error($db->error());
-		
-		//Template with the same name?
-		if($db->num_rows($result) != 0) 
-		{
-			$response->SetError("You already own a template called '$template'. Please choose another name.");
-			$response->Respond();
-		}
-		//end validation
-		
-		//Get the Layout XML (but reconstruct so that there are no media nodes in it)
-		if (!$xml = $this->GetLayoutXmlNoMedia($layoutid))
-		{
-			$response->SetError("Cannot get the Layout Structure.");
-			$response->Respond();
-		}
-		
-		//Insert the template
-		$SQL = "INSERT INTO template (template, tags, issystem, retired, description, createdDT, modifiedDT, userID, xml) ";
-		$SQL.= "	   VALUES ('$template', '$tags', 0, 0, '$description', '$currentdate', '$currentdate', $userid, '$xml') ";
-		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$response->SetError("Unexpected error adding Template.");
-			$response->Respond();
-		}
+		// Use the data class
+        Kit::ClassLoader('template');
+        $templateObject = new Template($db);
+
+        // Delete the template
+        if (!$templateObject->Add($template, $description, $tags, $layoutid, $user->userid))
+            trigger_error($template->GetErrorMessage(), E_USER_ERROR);
 		
 		$response->SetFormSubmitResponse('Template Added.');
 		$response->Respond();
@@ -256,7 +211,7 @@ class templateDAO
 
         // Delete the template
         if (!$template->Delete($templateId))
-            trigger_error($layout->GetErrorMessage(), E_USER_ERROR);
+            trigger_error($template->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('The Template has been Deleted'));
         $response->Respond();
@@ -270,67 +225,31 @@ class templateDAO
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
 
-        if (!$this->auth->del)
-            trigger_error(__('You do not have permissions to delete this template'), E_USER_ERROR);
-        
         $templateId = Kit::GetParam('templateid', _GET, _INT);
 
         if ($templateId == 0)
-            trigger_error(__('No template found'), E_USER_ERROR);
+            trigger_error(__('No template selected'), E_USER_ERROR);
+
+        // Is this user allowed to delete this template?
+        $auth = $this->user->TemplateAuth($templateId, true);
         
-        // Construct some messages to display
-        $msgWarn = __('Are you sure you want to delete this template?');
+        if (!$auth->del)
+            trigger_error(__('Access denied'), E_USER_ERROR);
 
-        $form = <<<END
-        <form id="DeleteTemplateForm" class="XiboForm" method="post" action="index.php?p=template&q=DeleteTemplate">
-            <input type="hidden" name="templateId" value="$templateId">
-            <p>$msgWarn</p>
-        </form>
-END;
+        // Set some information about the form
+        Theme::Set('form_id', 'DeleteTemplateForm');
+        Theme::Set('form_action', 'index.php?p=template&q=DeleteTemplate');
+        Theme::Set('form_meta', '<input type="hidden" name="templateid" value="' . $templateId . '" />');
 
-        $response->SetFormRequestResponse($form, __('Delete a Template'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Template', 'Delete') . '")');
+        $form = Theme::RenderReturn('campaign_form_delete');
+
+        $response->SetFormRequestResponse($form, __('Delete a Template'), '350px', '150px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Template', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteTemplateForm").submit()');
         $response->Respond();
     }
-	
-	/**
-	 * Gets the Xml for the specified layout
-	 * @return 
-	 * @param $layoutid Object
-	 */
-	private function GetLayoutXmlNoMedia($layoutid)
-	{
-		$db =& $this->db;
-		
-		//Get the Xml for this Layout from the DB
-		$SQL = "SELECT xml FROM layout WHERE layoutID = $layoutid ";
-		if (!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$errMsg = "Unable to Query for that layout, there is a database error.";
-			return false;
-		}
-		$row = $db->get_row($results) ;
-		
-		$xml = new DOMDocument("1.0");
-		$xml->loadXML($row[0]);
-		
-		$xpath = new DOMXPath($xml);
-		
-		//We want to get all the media nodes
-		$mediaNodes = $xpath->query('//media');
-		
-		foreach ($mediaNodes as $node) 
-		{
-			$node->parentNode->removeChild($node);
-		}
-		
-		return $xml->saveXML();
-	}
      
      /**
      * Get a list of group names for a layout
@@ -369,6 +288,9 @@ END;
         return $groups;
     }
 
+    /**
+     * Permissions form
+     */
     public function PermissionsForm()
     {
         $db =& $this->db;
@@ -378,20 +300,16 @@ END;
 
         $templateId = Kit::GetParam('templateid', _GET, _INT);
 
-        if (!$this->auth->modifyPermissions)
-            trigger_error(__('You do not have permissions to edit this template'), E_USER_ERROR);
+        if ($templateId == 0)
+            trigger_error(__('No template selected'), E_USER_ERROR);
 
-        // Form content
-        $form = '<form id="TemplatePermissionsForm" class="XiboForm" method="post" action="index.php?p=template&q=Permissions">';
-	$form .= '<input type="hidden" name="templateid" value="' . $templateId . '" />';
-        $form .= '<div class="dialog_table">';
-	$form .= '  <table style="width:100%">';
-        $form .= '      <tr>';
-        $form .= '          <th>' . __('Group') . '</th>';
-        $form .= '          <th>' . __('View') . '</th>';
-        $form .= '          <th>' . __('Edit') . '</th>';
-        $form .= '          <th>' . __('Delete') . '</th>';
-        $form .= '      </tr>';
+        // Is this user allowed to delete this template?
+        $auth = $this->user->TemplateAuth($templateId, true);
+
+        // Set some information about the form
+        Theme::Set('form_id', 'TemplatePermissionsForm');
+        Theme::Set('form_action', 'index.php?p=template&q=Permissions');
+        Theme::Set('form_meta', '<input type="hidden" name="templateid" value="' . $templateId . '" />');
 
         // List of all Groups with a view/edit/delete checkbox
         $SQL = '';
@@ -411,22 +329,31 @@ END;
             trigger_error(__('Unable to get permissions for this template'), E_USER_ERROR);
         }
 
-        while($row = $db->get_assoc_row($results))
+        $checkboxes = array();
+
+        while ($row = $db->get_assoc_row($results))
         {
             $groupId = $row['GroupID'];
-            $group = ($row['IsUserSpecific'] == 0) ? '<strong>' . $row['Group'] . '</strong>' : $row['Group'];
+            $rowClass = ($row['IsUserSpecific'] == 0) ? 'strong_text' : '';
 
-            $form .= '<tr>';
-            $form .= ' <td>' . $group . '</td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_view" ' . (($row['View'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_edit" ' . (($row['Edit'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_del" ' . (($row['Del'] == 1) ? 'checked' : '') . '></td>';
-            $form .= '</tr>';
+            $checkbox = array(
+                    'id' => $groupId,
+                    'name' => Kit::ValidateParam($row['Group'], _STRING),
+                    'class' => $rowClass,
+                    'value_view' => $groupId . '_view',
+                    'value_view_checked' => (($row['View'] == 1) ? 'checked' : ''),
+                    'value_edit' => $groupId . '_edit',
+                    'value_edit_checked' => (($row['Edit'] == 1) ? 'checked' : ''),
+                    'value_del' => $groupId . '_del',
+                    'value_del_checked' => (($row['Del'] == 1) ? 'checked' : ''),
+                );
+
+            $checkboxes[] = $checkbox;
         }
 
-        $form .= '</table>';
-        $form .= '</div>';
-        $form .= '</form>';
+        Theme::Set('form_rows', $checkboxes);
+
+        $form = Theme::RenderReturn('campaign_form_permissions');
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Template', 'Permissions') . '")');
@@ -435,20 +362,27 @@ END;
         $response->Respond();
     }
 
+    /**
+     * Set this templates permissions
+     */
     public function Permissions()
     {
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
-        Kit::ClassLoader('templategroupsecurity');
-
+        
         $templateId = Kit::GetParam('templateid', _POST, _INT);
+
+        if ($templateId == 0)
+            trigger_error(__('No template selected'), E_USER_ERROR);
+
+        // Is this user allowed to delete this template?
+        $auth = $this->user->TemplateAuth($templateId, true);
+
         $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
 
-        if (!$this->auth->modifyPermissions)
-            trigger_error(__('You do not have permissions to edit this template'), E_USER_ERROR);
-
         // Unlink all
+		Kit::ClassLoader('templategroupsecurity');
         $security = new TemplateGroupSecurity($db);
         if (!$security->UnlinkAll($templateId))
             trigger_error(__('Unable to set permissions'), E_USER_ERROR);

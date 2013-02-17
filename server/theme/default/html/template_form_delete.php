@@ -20,24 +20,12 @@
  *
  * Theme variables:
  *  form_id = The ID of the Form
- * 	form_action = The URL for calling the Layout Add Transaction
+ * 	form_action = The URL for calling the Transaction
+ * 	form_meta = Extra META information required by the Transation
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div>
-	<p style="text-align:center"><?php echo Theme::Translate('Please provide your credentials to continue using the Xibo CMS'); ?></p>
-	<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
-		<div class="login_table">
-			<table>
-				<tr>
-					<td><label for="username"><?php echo Theme::Translate('User'); ?></label></td>
-					<td><input class="username" type="text" id="username" name="username" tabindex="1" size="12" /></td>
-				</tr>
-				<tr>
-					<td><label for="password"><?php echo Theme::Translate('Password'); ?></label></td>
-					<td><input class="password" id="password" type="password" name="password" tabindex="2" size="12" /></td>
-				</tr>
-			</table>
-		</div>
-	</form>
-</div>
+<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+	<?php echo Theme::Get('form_meta'); ?>
+	<p><?php echo Theme::Translate('Are you sure you want to delete?'); ?></p>
+</form>

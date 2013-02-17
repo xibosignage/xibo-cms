@@ -269,8 +269,6 @@ class campaignDAO
         Theme::Set('form_action', 'index.php?p=campaign&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="CampaignID" value="' . $campaignId . '" />');
 
-        $msgWarn = __('Are you sure you want to delete?');
-
         $form = Theme::RenderReturn('campaign_form_delete');
 
         $response->SetFormRequestResponse($form, __('Delete Campaign'), '350px', '175px');
