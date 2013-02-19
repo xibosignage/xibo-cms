@@ -100,8 +100,8 @@ FORM;
             return $this->response;
         }
 		
-        $windowsCommand = $this->GetOption('windowsCommand');
-        $linuxCommand = $this->GetOption('linuxCommand');
+        $windowsCommand = htmlentities(urldecode($this->GetOption('windowsCommand')));
+        $linuxCommand = htmlentities(urldecode($this->GetOption('linuxCommand')));
 
         $msgWindows = __('Windows Command');
         $msgLinux = __('Linux Command');
@@ -171,9 +171,9 @@ FORM;
             return $this->response;
         }
 
-        // Any Options
-        $this->SetOption('windowsCommand', $windowsCommand);
-        $this->SetOption('linuxCommand', $linuxCommand);
+        // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
+        $this->SetOption('windowsCommand', urlencode($windowsCommand));
+        $this->SetOption('linuxCommand', urlencode($linuxCommand));
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -223,8 +223,8 @@ FORM;
 
         // Any Options
         $this->duration = 1;
-        $this->SetOption('windowsCommand', $windowsCommand);
-        $this->SetOption('linuxCommand', $linuxCommand);
+        $this->SetOption('windowsCommand', urlencode($windowsCommand));
+        $this->SetOption('linuxCommand', urlencode($linuxCommand));
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -252,8 +252,8 @@ FORM;
         $msgLinux = __('Linux Command');
 
         $preview = '';
-        $preview .= '<p>' . $msgWindows . ': ' . $this->GetOption('windowsCommand') . '</p>';
-        $preview .= '<p>' . $msgLinux . ': ' . $this->GetOption('linuxCommand') . '</p>';
+        $preview .= '<p>' . $msgWindows . ': ' . urldecode($this->GetOption('windowsCommand')) . '</p>';
+        $preview .= '<p>' . $msgLinux . ': ' . urldecode($this->GetOption('linuxCommand')) . '</p>';
 
         return $preview;
     }

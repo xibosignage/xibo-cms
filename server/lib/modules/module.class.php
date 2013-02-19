@@ -185,7 +185,9 @@ class Module implements ModuleInterface
             if ($lkid == '')
                 $this->lkid = $mediaNode->getAttribute('lkid');
 
-            $this->originalUserId = $mediaNode->getAttribute('userId');
+            // If the userId is blank, then set it to be the layout user id
+            if (!$this->originalUserId = $mediaNode->getAttribute('userId'))
+                $this->originalUserId = $db->GetSingleValue(sprintf("SELECT userid FROM layout WHERE layoutid = %d", $this->layoutid), 'userid', _INT);
 
             // Make sure we have permissions
             $this->auth = $this->user->MediaAssignmentAuth($this->originalUserId, $this->layoutid, $this->regionid, $this->mediaid, true);

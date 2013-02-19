@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,123 +20,117 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-// I think this will be where the magic happens.
-// This will control the callouts from the included page
+
 class PageManager
 {
-	private $db;
-	private $user;
-	
-	private $p;
-	private $q;
+    private $db;
+    private $user;
 
-	private $page;
-	private $path;
-	private $ajax;
-	private $userid;
-	private $authed;
-	private $thePage;
+    private $p;
+    private $q;
+
+    private $page;
+    private $path;
+    private $ajax;
+    private $userid;
+    private $authed;
+    private $thePage;
+    
+    // Maintain a list of pages/functions we are allowed to get to without going through the authentication system
+    private $nonAuthedPages = array('index', 'clock');
+    private $nonAuthedFunctions = array('login', 'logout', 'GetClock', 'About');
 	
-	function __construct(database $db, user $user, $page)
-	{
-		$this->db 		=& $db;
-		$this->user 	=& $user;
-		$this->path 	= 'lib/pages/' . $page . '.class.php';
-		$this->page 	= $page . 'DAO';
-		$this->p	 	= $page;
-		$this->authed 	= false;
-		
-		$this->ajax		= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
-		$this->q		= Kit::GetParam('q', _REQUEST, _WORD);
-		$this->userid 	= Kit::GetParam('userid', _SESSION, _INT);
-		
-		if(!class_exists($this->page)) 
-		{
-			require_once($this->path);
-		}
-		
-		return;
-	}
+    function __construct(database $db, user $user, $page)
+    {
+        $this->db =& $db;
+        $this->user =& $user;
+        $this->path = 'lib/pages/' . $page . '.class.php';
+        $this->page = $page . 'DAO';
+        $this->p = $page;
+
+        $this->ajax = Kit::GetParam('ajax', _REQUEST, _BOOL, false);
+        $this->q = Kit::GetParam('q', _REQUEST, _WORD);
+        $this->userid = $this->user->userid;
+        
+        // Default not authourised
+        $this->authed = false;
+    }
 	
-	/**
-	 * Checks the Security of the logged in user
-	 * @return 
-	 */
-	public function Authenticate()
-	{
-		$db 		=& $this->db;
-		$user 		=& $this->user;
-		
-		// create a user object (will try to login)
-		// we must do this after executing any functions otherwise we will be logged
-		// out again before exec any log in function calls		
-		if ($this->q != 'login' && $this->q != 'logout' && $this->q != 'GetClock' && $this->q != 'About')
-		{ 
-			// Attempt a user login
-			if (!$user->attempt_login($this->ajax))
-			{
-				return false;
-			}
-			
-			$this->authed = $user->PageAuth($this->p);
-		}
-		else
-		{
-			// automatically have permission for the login / forgotten details functions
-			// these are the only 2 functions at the moment that allow anonomous access
-			$this->authed = true;
-		}
-		
-		return true;
-	}
+    /**
+     * Checks the Security of the logged in user
+     * @return 
+     */
+    public function Authenticate()
+    {
+        $user =& $this->user;
+        
+        // The user MUST be logged in unless they are trying to assess some of the public facing pages
+        if (in_array($this->p, $this->nonAuthedPages) && in_array($this->q, $this->nonAuthedFunctions))
+        {
+            // Automatically authed
+            $this->authed = true;
+        }
+        else
+        {
+            // User MUST be logged in.
+            if (!$user->attempt_login($this->ajax))
+                return false;
+
+            $this->authed = $user->PageAuth($this->p);
+        }
+    }
 	
-	/**
-	 * Renders this page
-	 * @return 
-	 */
-	public function Render()
-	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-		
-		if (!$this->authed)
-		{
-			// Output some message to say that we are not authed
-			trigger_error(__("You do not have permission to access this page."), E_USER_ERROR);
-			exit;
-		}
-		
-		// Create the requested page
-		$this->thePage = new $this->page($db, $user);
-		
-		if ($this->q != '') 
-		{
-			if (method_exists($this->thePage, $this->q)) 
-			{
-				$function		= $this->q;
-				$reloadLocation = $this->thePage->$function();
-			}
-			else 
-			{
-				trigger_error($this->p . ' does not support the function: ' . $this->q, E_USER_ERROR);
-			}
-			
-			if ($this->ajax) exit;
-		
-		    // once we have dealt with it, reload the page      	
-		    Kit::Redirect($reloadLocation);
-		}
-		else 
-		{
-			// Display a page instead
-			include("template/header.php");
-			
-			$this->thePage->displayPage();
-			
-			include("template/footer.php");
-		}
-		
-		return;
-	}
+    /**
+     * Renders this page
+     * @return 
+     */
+    public function Render()
+    {
+        $db 	=& $this->db;
+        $user 	=& $this->user;
+
+        if (!$this->authed)
+        {
+            // Output some message to say that we are not authed
+            trigger_error(__('You do not have permission to access this page.'), E_USER_ERROR);
+            exit;
+        }
+        
+        // Load the file in question
+        if (!class_exists($this->page)) 
+            require_once($this->path);
+
+        // Create the requested page
+        $this->thePage = new $this->page($db, $user);
+
+        // Are we calling a method
+        if ($this->q != '') 
+        {
+            // Check the method exists
+            if (method_exists($this->thePage, $this->q)) 
+            {
+                // Call the method
+                $function = $this->q;
+                $reloadLocation = $this->thePage->$function();
+            }
+            else 
+                trigger_error($this->p . ' does not support the function: ' . $this->q, E_USER_ERROR);
+
+            if ($this->ajax) 
+                exit;
+
+            // once we have dealt with it, reload the page      	
+            Kit::Redirect($reloadLocation);
+        }
+        else 
+        {
+            // Display a page instead
+            include("template/header.php");
+
+            $this->thePage->displayPage();
+
+            include("template/footer.php");
+        }
+    }
 }
 ?>
