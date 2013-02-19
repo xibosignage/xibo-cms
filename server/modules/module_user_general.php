@@ -1287,17 +1287,20 @@ END;
 
     /**
      * Authenticates the current user and returns an array ofcampaigns this user is authenticated on
+     * @param $isRetired Return retired Campaigns
      * @return
      */
-    public function CampaignList()
+    public function CampaignList($isRetired = false)
     {
         $db 		=& $this->db;
         $userid		=& $this->userid;
 
-        $SQL  = "SELECT campaign.CampaignID, Campaign, IsLayoutSpecific, COUNT(lkcampaignlayout.LayoutID) AS NumLayouts ";
+        $SQL  = "SELECT campaign.CampaignID, Campaign, IsLayoutSpecific, COUNT(lkcampaignlayout.LayoutID) AS NumLayouts, MIN(layout.retired) AS Retired ";
         $SQL .= "  FROM `campaign` ";
         $SQL .= "   LEFT OUTER JOIN `lkcampaignlayout` ";
         $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $SQL .= "	LEFT OUTER JOIN `layout` ";
+        $SQL .= "	ON lkcampaignlayout.LayoutID = layout.LayoutID ";
         $SQL .= "GROUP BY campaign.CampaignID, Campaign, IsLayoutSpecific ";
         $SQL .= "ORDER BY Campaign";
 
@@ -1318,6 +1321,11 @@ END;
             $campaignItem['campaign'] = Kit::ValidateParam($row['Campaign'], _STRING);
             $campaignItem['numlayouts'] = Kit::ValidateParam($row['NumLayouts'], _INT);
             $campaignItem['islayoutspecific'] = Kit::ValidateParam($row['IsLayoutSpecific'], _INT);
+            $campaignItem['retired'] = Kit::ValidateParam($row['Retired'], _BOOLEAN);
+
+            // return retired layouts?
+            if (!$isRetired && $campaignItem['retired'])
+            	continue;
 
             $auth = $this->CampaignAuth($campaignItem['campaignid'], true);
 

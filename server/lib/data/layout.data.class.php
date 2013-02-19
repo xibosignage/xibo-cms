@@ -556,22 +556,18 @@ END;
         $campaign = new Campaign($db);
         $campaignId = $campaign->GetCampaignId($layoutId);
 
-        // Remove all campaign links
-        if (!$campaign->UnlinkAll($campaignId))
-            return $this->SetError(25008, __('Unable to delete campaign links'));
-
         // Remove all LK records for this layout
         $db->query(sprintf('DELETE FROM lklayoutmediagroup WHERE layoutid = %d', $layoutId));
         $db->query(sprintf('DELETE FROM lklayoutregiongroup WHERE layoutid = %d', $layoutId));
         $db->query(sprintf('DELETE FROM lklayoutmedia WHERE layoutid = %d', $layoutId));
 
-        // Remove the Layout
-        if (!$db->query(sprintf('DELETE FROM layout WHERE layoutid = %d', $layoutId)))
-            return $this->SetError(25008, __('Unable to delete layout'));
-
-        // Remove the Campaign
+        // Remove the Campaign (will remove links to this layout - orphaning the layout)
         if (!$campaign->Delete($campaignId))
             return $this->SetError(25008, __('Unable to delete campaign'));
+
+        // Remove the Layout (now it is orphaned it can be deleted safely)
+        if (!$db->query(sprintf('DELETE FROM layout WHERE layoutid = %d', $layoutId)))
+            return $this->SetError(25008, __('Unable to delete layout'));
 
         return true;
     }

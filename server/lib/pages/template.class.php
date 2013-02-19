@@ -453,10 +453,13 @@ END;
         $response = new ResponseManager();
         $helpManager = new HelpManager($db, $user);
 
-        if (!$this->auth->del)
-            trigger_error(__('You do not have permissions to delete this template'), E_USER_ERROR);
+        // Get the template id
+        $templateId = Kit::GetParam('templateID', _POST, _INT);
 
-        $templateId = Kit::GetParam('templateid', _POST, _INT);
+        // Do we have permissions to delete
+        $auth = $user->TemplateAuth($templateId, true);
+        if (!$auth->del)
+            trigger_error(__('You do not have permissions to delete this template'), E_USER_ERROR);
 
         if ($templateId == 0)
             trigger_error(__('No template found'), E_USER_ERROR);
@@ -500,7 +503,7 @@ END;
 
         $form = <<<END
         <form id="DeleteTemplateForm" class="XiboForm" method="post" action="index.php?p=template&q=DeleteTemplate">
-            <input type="hidden" name="templateId" value="$templateId">
+            <input type="hidden" name="templateID" value="$templateId">
             <p>$msgWarn</p>
         </form>
 END;

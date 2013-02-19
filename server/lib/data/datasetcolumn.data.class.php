@@ -123,5 +123,27 @@ class DataSetColumn extends Data
 
         return true;
     }
+
+
+    // Delete All Data Set columns
+    public function DeleteAll($dataSetId)
+    {
+        $db =& $this->db;
+
+        $SQL  = "DELETE FROM datasetcolumn ";
+        $SQL .= " WHERE DataSetId = %d";
+
+        $SQL = sprintf($SQL, $dataSetId);
+
+        if (!$db->query($SQL))
+        {
+            trigger_error($db->error());
+            return $this->SetError(25005, __('Could not delete DataSet Columns'));
+        }
+
+        Debug::LogEntry($db, 'audit', 'Complete', 'DataSetColumn', 'Delete');
+
+        return true;
+    }
 }
 ?>

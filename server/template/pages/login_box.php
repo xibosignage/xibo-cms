@@ -23,7 +23,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Xibo Admin - Please Login</title>
+	<title>Xibo Digital Signage</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<link rel="stylesheet" type="text/css" href="template/css/login_box.css" />
 	<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/ui-elements.css" />
@@ -75,7 +75,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			
 			<div class="login_body">
 				<h1>Login</h1>
-				<p>You must log in to access the Admin Interface!</p>
+				<p>Please login to access the CMS</p>
 				<form method="post" action="index.php?q=login&referingPage=<?php echo $referingPage; ?>">
 					<input type="hidden" name="token" value="<?php echo CreateFormToken() ?>" />
 					<div class="login_table">
@@ -89,11 +89,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				</form>
 				
 				<br />
-				<?php displayMessage(); ?>
-				<br />
 				<p><a href="http://www.xibo.org.uk"><img src='img/login/complogo.png'></a></p>
 
-				<p>Version <?php echo VERSION; ?> | <a href="https://launchpad.net/xibo/1.2">Source</a> | <a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo __('About Xibo'); ?>"><?php echo __('About'); ?></a></p>
+				<p>Version <?php echo VERSION; ?> | <a href="https://launchpad.net/xibo/1.4">Source</a> | <a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo __('About Xibo'); ?>"><?php echo __('About'); ?></a></p>
 			</div>
 			
 			<div class="login_foot">

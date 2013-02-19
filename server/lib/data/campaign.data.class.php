@@ -90,6 +90,13 @@ class Campaign extends Data
         if (!$this->UnlinkAll($campaignId))
             return false;
 
+        // Remove all permissions
+        Kit::ClassLoader('campaignsecurity');
+        $security = new CampaignSecurity($this->db);
+
+        if (!$security->UnlinkAll($campaignId))
+            trigger_error(__('Unable to set permissions'));
+
         // Delete the Campaign record
         $SQL = "DELETE FROM `campaign` WHERE CampaignID = %d ";
         $SQL = sprintf($SQL, $campaignId);

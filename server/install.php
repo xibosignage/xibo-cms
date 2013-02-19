@@ -272,24 +272,9 @@ elseif ($xibo_step == 5) {
     flush();
     
     # Load from sql files to db - HOW?
-    $sql_files = ls('*.sql','install/database',false,array('return_files'));
+    $sql_files = array('structure.sql', 'data.sql');
 
-    // Sort the files in to sensible order, ie
-    //   0.sql
-    //	 1.sql
-    //	10.sql
-    //
-    // NOT
-    //
-    //	 0.sql
-    //	10.sql
-    //	 1.sql
-    //
-    // NB this is broken for 0 padded files
-    // eg 01.sql would be incorrectly sorted in the above example.
-    
     $sqlStatementCount = 0;
-    natcasesort($sql_files);
 
     foreach ($sql_files as $filename) {
       ?>
@@ -298,13 +283,13 @@ elseif ($xibo_step == 5) {
         flush();
         
         $delimiter = ';';
-        $sql_file = @file_get_contents('install/database/' . $filename);
+        $sql_file = @file_get_contents('install/master/' . $filename);
         $sql_file = remove_remarks($sql_file);
         $sql_file = split_sql_file($sql_file, $delimiter);
     
         foreach ($sql_file as $sql) {
           print ".";
-	  $sqlStatementCount++;
+          $sqlStatementCount++;
           flush();
           if (! @mysql_query($sql,$db)) {
             reportError("4", __("An error occured populating the database.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error() . "<br /><br />SQL executed:<br />" . $sql . "<br /><br />Statement number: " . $sqlStatementCount);

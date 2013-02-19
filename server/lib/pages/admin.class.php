@@ -146,7 +146,7 @@ class adminDAO
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			trigger_error(__('Can\'t get the setting catagories'), E_USER_ERROR);
+			trigger_error(__("Can't get the setting catagories"), E_USER_ERROR);
 		}
 		
 		while ($row = $db->get_row($results)) 

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2012 Daniel Garner
+ * Copyright (C) 2009-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -526,7 +526,7 @@ class XMDSSoap
         $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
         $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate - 3600);
         $SQL .= "   AND layout.retired = 0  ";
-        $SQL .= " ORDER BY schedule_detail.DisplayOrder, lkcampaignlayout.DisplayOrder ";
+        $SQL .= " ORDER BY schedule_detail.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID ";
 
         if ($this->isAuditing == 1)
             Debug::LogEntry($db, "audit", $SQL, "xmds", "Schedule");

@@ -283,7 +283,7 @@ class Kit
 					break;	
 				}
 				
-				$return = (string) preg_replace( '/[^A-Z_]\\-/i', '', $return );
+				$return = (string) preg_replace( '/[^A-Z_-]/i', '', $return );
 				break;
 				
 			case _USERNAME :
