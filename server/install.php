@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Alex Harrington
+ * Copyright (C) 2009-2013 Alex Harrington
  *
  * This file is part of Xibo.
  *
@@ -416,7 +416,7 @@ elseif ($xibo_step == 8) {
 }
 elseif ($xibo_step == 9) {
 
-  $server_key = Kit::GetParam('server_key',_POST,_WORD);
+  $server_key = Kit::GetParam('server_key',_POST,_STRING);
   $library_location = Kit::GetParam('library_location',_POST,_STRING);
   $stats = Kit::GetParam('stats',_POST,_BOOL);
   
