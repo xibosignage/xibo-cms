@@ -34,6 +34,8 @@ INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES (NULL, 'timeline', 
 
 UPDATE `module` SET `ImageUri` = REPLACE(ImageUri, 'img/forms/', 'theme/default/img/forms/') WHERE ImageUri IS NOT NULL;
 
+UPDATE `menuitem` SET `Img` = REPLACE(Img, 'img/dashboard/', 'theme/default/img/dashboard/') WHERE Img IS NOT NULL;
+
 ALTER TABLE  `resolution` ADD  `intended_width` INT NOT NULL ,
 ADD  `intended_height` INT NOT NULL;
 

@@ -1308,6 +1308,73 @@ END;
 
         return $displayGroups;
     }
+
+    /**
+     * List of Displays this user has access to view
+     */
+    public function DisplayList() {
+
+		$SQL  = 'SELECT display.displayid, ';
+		$SQL .= '    display.display, ';
+		$SQL .= '    layout.layout, ';
+		$SQL .= '    display.loggedin, ';
+		$SQL .= '    display.lastaccessed, ';
+		$SQL .= '    display.inc_schedule, ';
+		$SQL .= '    display.licensed, ';
+		$SQL .= '    display.email_alert, ';
+		$SQL .= '    displaygroup.DisplayGroupID, ';
+		$SQL .= '    display.ClientAddress, ';
+		$SQL .= '    display.MediaInventoryStatus, ';
+		$SQL .= '    display.MacAddress ';
+		$SQL .= '  FROM display ';
+		$SQL .= '    INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID ';
+		$SQL .= '    INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID ';
+		$SQL .= '    LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid ';
+		$SQL .= ' WHERE displaygroup.IsDisplaySpecific = 1 ';
+		$SQL .= 'ORDER BY display.displayid ';
+
+		if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $displays = array();
+
+        while ($row = $this->db->get_assoc_row($result))
+        {
+            $displayItem = array();
+
+            // Validate each param and add it to the array.
+            $displayItem['displayid'] = Kit::ValidateParam($row['displayid'], _INT);
+            $displayItem['display'] = Kit::ValidateParam($row['display'], _STRING);
+            $displayItem['layout'] = Kit::ValidateParam($row['layout'], _STRING);
+            $displayItem['loggedin'] = Kit::ValidateParam($row['loggedin'], _INT);
+            $displayItem['lastaccessed'] = Kit::ValidateParam($row['lastaccessed'], _STRING);
+            $displayItem['inc_schedule'] = Kit::ValidateParam($row['inc_schedule'], _INT);
+            $displayItem['licensed'] = Kit::ValidateParam($row['licensed'], _INT);
+            $displayItem['email_alert'] = Kit::ValidateParam($row['email_alert'], _INT);
+            $displayItem['displaygroupid'] = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $displayItem['clientaddress'] = Kit::ValidateParam($row['ClientAddress'], _STRING);
+            $displayItem['mediainventorystatus'] = Kit::ValidateParam($row['MediaInventoryStatus'], _INT);
+            $displayItem['macaddress'] = Kit::ValidateParam($row['MacAddress'], _STRING);
+
+            $auth = $this->DisplayGroupAuth($displayItem['displaygroupid'], true);
+
+            if ($auth->view)
+            {
+                $displayItem['view'] = (int) $auth->view;
+                $displayItem['edit'] = (int) $auth->edit;
+                $displayItem['del'] = (int) $auth->del;
+                $displayItem['modifypermissions'] = (int) $auth->modifyPermissions;
+
+                $displays[] = $displayItem;
+            }
+        }
+
+        return $displays;
+
+    }
     
     /**
      * Authorises a user against a campaign

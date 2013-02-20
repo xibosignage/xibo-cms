@@ -92,7 +92,7 @@ class indexDAO
 			exit;
 		}
 
-		if($user->login($username,$password)) 
+		if ($user->login($username,$password)) 
 		{
 			$userid 	= Kit::GetParam('userid', _SESSION, _INT);
 			$username 	= Kit::GetParam('username', _SESSION, _USERNAME);
@@ -106,11 +106,11 @@ class indexDAO
 		
 		if ($referingpage == '') 
 		{
-                    header('Location:index.php?p=index');
+            header('Location:index.php?p=index');
 		}
 		else 
 		{
-                    header('Location:index.php?' . $referingpage);
+            header('Location:index.php?' . $referingpage);
 		}
 
 		exit;

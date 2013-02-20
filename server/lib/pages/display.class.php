@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner and James Packer
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -130,15 +130,22 @@ SQL;
         return true;
     }
 
-    function on_page_load()
+    /**
+     * Include display page template page based on sub page selected
+     * @return
+     */
+    function displayPage()
     {
-        return "";
-    }
+        // Configure the theme
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('campaign_form_add_url', 'index.php?p=campaign&q=AddForm');
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="display"><input type="hidden" name="q" value="DisplayGrid">');
+        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
+        Theme::Set('pager', ResponseManager::Pager($id));
 
-    function echo_page_heading()
-    {
-        echo __("Display Administration");
-        return true;
+        // Render the Theme and output
+        Theme::Render('display_page');
     }
 
     /**
@@ -337,34 +344,6 @@ END;
         $response->Respond();
     }
 
-    public function DisplayFilter()
-    {
-        $filterForm = <<<END
-		<div class="FilterDiv" id="LayoutFilter">
-			<form onsubmit="return false">
-				<input type="hidden" name="p" value="display">
-				<input type="hidden" name="q" value="DisplayGrid">
-			</form>
-		</div>
-END;
-
-        $id = uniqid();
-        $pager = ResponseManager::Pager($id);
-
-        $xiboGrid = <<<HTML
-        <div class="XiboGrid" id="$id">
-                <div class="XiboFilter">
-                        $filterForm
-                </div>
-                $pager
-                <div class="XiboData">
-
-                </div>
-        </div>
-HTML;
-        echo $xiboGrid;
-    }
-
     /**
      * Grid of Displays
      * @return
@@ -375,194 +354,116 @@ HTML;
         $user		=& $this->user;
         $response	= new ResponseManager();
 
-        //display the display table
-        $SQL = <<<SQL
-        SELECT display.displayid,
-                display.display,
-                layout.layout,
-                CASE WHEN display.loggedin = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS loggedin,
-                display.lastaccessed,
-                CASE WHEN display.inc_schedule = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS inc_schedule,
-                CASE WHEN display.licensed = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS licensed,
-                CASE WHEN display.email_alert = 1 THEN '<img src="img/act.gif">' ELSE '<img src="img/disact.gif">' END AS email_alert,
-                displaygroup.DisplayGroupID,
-                display.ClientAddress,
-                CASE WHEN display.MediaInventoryStatus = 1 THEN '<img src="img/act.gif">'
-                     WHEN display.MediaInventoryStatus = 2 THEN '<img src="img/warn.gif">'
-                     ELSE '<img src="img/disact.gif">'
-                END AS MediaInventoryStatus,
-                display.MediaInventoryXml,
-                display.MacAddress
-          FROM display
-            INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID
-            INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
-            LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid
-         WHERE displaygroup.IsDisplaySpecific = 1
-        ORDER BY display.displayid
-SQL;
+        $displays = $user->DisplayList();
 
-        if(!($results = $db->query($SQL)))
+        if (!is_array($displays))
         {
             trigger_error($db->error());
-            trigger_error(__("Can not list displays"), E_USER_ERROR);
+            trigger_error(__('Unable to get list of displays'), E_USER_ERROR);
         }
 
-        // Messages
-        $msgDisplay	= __('Display');
-        $msgDefault	= __('Default Layout');
-        $msgInterL	= __('Interleave Default');
-        $msgAudit	= __('Auditing');
-        $msgLicense	= __('License');
-        $msgAlert       = __('Email Alert');
-        $msgSave	= __('Save');
-        $msgCancel	= __('Cancel');
-        $msgAction	= __('Action');
-        $msgLastA	= __('Last Accessed');
-        $msgLogIn	= __('Logged In');
-        $msgEdit	= __('Edit');
-        $msgDelete	= __('Delete');
-        $msgClientAddress = __('IP Address');
-        $msgDefault = __('Default Layout');
-        $msgStatus = __('Status');
-        $msgMediaInventory = __('Media Inventory');
-        $msgMacAddress = __('Mac Address');
-        $msgWakeOnLan = __('Wake on LAN');
+        // Do we want to make a VNC link out of the display name?
+        $vncTemplate = Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK');
+        $linkTarget = Kit::ValidateParam(Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
+        
+        $rows = array();
 
-        $output = <<<END
-            <div class="info_table">
-                <table style="width:100%">
-                    <thead>
-                    <tr>
-                        <th>$msgDisplay ID</th>
-                        <th>$msgLicense</th>
-                        <th>$msgDisplay</th>
-                        <th>$msgDefault</th>
-                        <th>$msgInterL</th>
-                        <th>$msgAlert</th>
-                        <th>$msgLogIn</th>
-                        <th>$msgLastA</th>
-                        <th>$msgClientAddress</th>
-                        <th>$msgMacAddress</th>
-                        <th>$msgStatus</th>
-                        <th>$msgAction</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-END;
-
-        while($aRow = $db->get_row($results))
+        foreach($displays as $row)
         {
-            // Check that we have permission to access this display record
-            $displayGroupID = Kit::ValidateParam($aRow[8], _INT);
-
-            // Auth
-            $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
-
-            if (!$auth->view)
-                continue;
-
-            $displayid 	= $aRow[0];
-            $display 	= $aRow[1];
-            $defaultlayoutid = $aRow[2];
-            $loggedin 	= $aRow[3];
-            $lastaccessed 	= date('Y-m-d H:i:s', $aRow[4]);
-            $inc_schedule 	= $aRow[5];
-            $licensed 	= $aRow[6];
-            $email_alert    = $aRow[7];
-			
-            $clientAddress  = Kit::ValidateParam($aRow[9], _STRING);
-            $displayName    = $display;
-
-            // Do we want to make a VNC link out of the display name?
-            $vncTemplate = Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK');
-            $linkTarget = Kit::ValidateParam(Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
-            $mediaInventoryStatusLight = Kit::ValidateParam($aRow[10], _STRING);
-            $macAddress = Kit::ValidateParam($aRow[12], _STRING);
-
-            if ($vncTemplate != '' && $clientAddress != '')
+            // VNC Template as display name?
+            if ($vncTemplate != '' && $row['clientaddress'] != '')
             {
                 if ($linkTarget == '')
-                {
                     $linkTarget = '_top';
-                }
 
-                $display = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $display . '" target="' . $linkTarget . '">' . $display . '</a>', $clientAddress);
+                $row['display'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . $row['display'] . '</a>', $row['clientaddress']);
             }
 
-            $buttons = '';
+            // Format last accessed
+            $row['lastaccessed'] = date("Y-m-d H:i:s", $row['lastaccessed']);
 
-            // We always get some buttons
-            $buttons .= '<button class="XiboFormButton" href="index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $displayGroupID . '"><span>' . __('Schedule Now') . '</span></button>';
-            $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=MediaInventory&DisplayId=' . $displayid . '"><span>' . $msgMediaInventory . '</span></button>';
+            // Create some login lights
+            $row['licensed'] = ($row['licensed'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+            $row['inc_schedule'] = ($row['inc_schedule'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+            $row['email_alert'] = ($row['email_alert'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+            $row['loggedin'] = ($row['loggedin'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? Theme::Image('act.gif') : (($row['mediainventorystatus'] == 2) ? Theme::Image('disact.gif') : Theme::Image('warn.gif'));
 
-            // Decide what buttons we get based on permissions
-            if ($auth->edit)
-            {
-                $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $displayid . '"><span>' . $msgDefault . '</span></button>';
-                $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=displayForm&displayid=' . $displayid . '"><span>' . $msgEdit . '</span></button>';
-                $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=WakeOnLanForm&DisplayId=' . $displayid . '"><span>' . $msgWakeOnLan . '</span></button>';
+            // Schedule Now
+            $row['buttons'][] = array(
+                    'id' => 'display_button_schedulenow',
+                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $row['displaygroupid'],
+                    'text' => __('Schedule Now')
+                );
+
+            // Media Inventory
+            $row['buttons'][] = array(
+                    'id' => 'display_button_mediainventory',
+                    'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $row['displayid'],
+                    'text' => __('Media Inventory')
+                );
+
+            if ($row['edit'] == 1) {
+
+                // Default Layout
+                $row['buttons'][] = array(
+                        'id' => 'display_button_defaultlayout',
+                        'url' => 'index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $row['displayid'],
+                        'text' => __('Default Layout')
+                    );
+
+                // Edit
+                $row['buttons'][] = array(
+                        'id' => 'display_button_edit',
+                        'url' => 'index.php?p=display&q=displayForm&displayid=' . $row['displayid'],
+                        'text' => __('Edit')
+                    );
+
+                // Wake On LAN
+                $row['buttons'][] = array(
+                        'id' => 'display_button_wol',
+                        'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $row['displayid'],
+                        'text' => __('Wake on LAN')
+                    );
             }
 
-            if ($auth->del)
-            {
-                $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=DeleteForm&displayid=' . $displayid . '"><span>' . $msgDelete . '</span></button>';
+            if ($row['del'] == 1) {
+
+                // Delete
+                $row['buttons'][] = array(
+                        'id' => 'display_button_delete',
+                        'url' => 'index.php?p=display&q=DeleteForm&displayid=' . $row['displayid'],
+                        'text' => __('Delete')
+                    );
             }
 
-            if ($auth->modifyPermissions)
-            {
-                $buttons .= '<button class="XiboFormButton" href="index.php?p=display&q=MemberOfForm&DisplayID=' . $displayid . '"><span>' . __('Display Groups') . '</span></button>';
-                $buttons .= '<button class="XiboFormButton" href="index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $displayGroupID . '"><span>' . __('Permissions') . '</span></button>';
+            if ($row['modifypermissions'] == 1) {
 
+                // Display Groups
+                $row['buttons'][] = array(
+                        'id' => 'display_button_group_membership',
+                        'url' => 'index.php?p=display&q=MemberOfForm&DisplayID=' . $row['displayid'],
+                        'text' => __('Display Groups')
+                    );
+
+                // Permissions
+                $row['buttons'][] = array(
+                        'id' => 'display_button_group_membership',
+                        'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $row['displaygroupid'],
+                        'text' => __('Permissions')
+                    );
             }
-            $output .= <<<END
 
-            <tr>
-            <td>$displayid</td>
-            <td>$licensed</td>
-            <td>$display</td>
-            <td>$defaultlayoutid</td>
-            <td>$inc_schedule</td>
-            <td>$email_alert</td>
-            <td>$loggedin</td>
-            <td>$lastaccessed</td>
-            <td>$clientAddress</td>
-            <td>$macAddress</td>
-            <td>$mediaInventoryStatusLight</td>
-            <td>$buttons</td>
-END;
+            // Assign this to the table row
+            $rows[] = $row;
         }
 
-        $output .= "</tbody></table></div>";
+        Theme::Set('table_rows', $rows);
+
+        $output = Theme::RenderReturn('display_page_grid');
 
         $response->SetGridResponse($output);
         $response->Respond();
-    }
-
-    /**
-     * Include display page template page based on sub page selected
-     * @return
-     */
-    function displayPage()
-    {
-        $db =& $this->db;
-
-        if (!$this->has_permissions)
-        {
-            trigger_error(__("You do not have permissions to access this page"), E_USER_ERROR);
-            return false;
-        }
-
-        switch ($this->sub_page)
-        {
-            case 'view':
-                require("template/pages/display_view.php");
-                break;
-
-            default:
-                break;
-        }
-
-        return false;
     }
 
     /**

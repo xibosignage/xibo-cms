@@ -103,6 +103,26 @@ class Theme {
 	}
 
 	/**
+	 * Get an image from the Theme
+	 * @param string $item The image filename
+	 */
+	public static function Image($item) {
+
+		$theme = Theme::GetInstance();
+		
+		// See if we have the requested file in the theme folder
+		if (file_exists('theme/' . $theme->name . '/img/' . $item)) {
+			return '<img src="theme/' . $theme->name . '/img/' . $item . '" />';
+		}
+		// If not, then use the default folder
+		elseif (file_exists('theme/default/img/' . $item)) {
+			return '<img src="theme/default/img/' . $item . '" />';
+		}
+		else
+			throw new Exception(__('The requested theme item does not exist. [%s, %s]', array($item, $theme->name)));
+	}
+
+	/**
 	 * Translate a string into the user language
 	 * @param string $string The String to Translate
 	 * @param array $args   Variables to insert (will replace %d %s in order)
