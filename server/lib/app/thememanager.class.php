@@ -105,21 +105,22 @@ class Theme {
 	/**
 	 * Get an image from the Theme
 	 * @param string $item The image filename
+	 * @param string $class The class to apply [optional]
 	 */
-	public static function Image($item) {
+	public static function Image($item, $class = '') {
 
 		$theme = Theme::GetInstance();
 		
 		// See if we have the requested file in the theme folder
 		if (file_exists('theme/' . $theme->name . '/img/' . $item)) {
-			return '<img src="theme/' . $theme->name . '/img/' . $item . '" />';
+			return '<img ' . (($class != '') ? $class : '') . ' src="theme/' . $theme->name . '/img/' . $item . '" />';
 		}
 		// If not, then use the default folder
 		elseif (file_exists('theme/default/img/' . $item)) {
-			return '<img src="theme/default/img/' . $item . '" />';
+			return '<img ' . (($class != '') ? $class : '') . ' src="theme/default/img/' . $item . '" />';
 		}
 		else
-			throw new Exception(__('The requested theme item does not exist. [%s, %s]', array($item, $theme->name)));
+			return '';
 	}
 
 	/**
@@ -189,6 +190,8 @@ class Theme {
 			$item['args'] = Kit::ValidateParam($menuItem['Args'], _STRING);
 			$item['class'] = Kit::ValidateParam($menuItem['Class'], _WORD);
 			$item['title'] = __(Kit::ValidateParam($menuItem['Text'], _STRING));
+			$item['img'] = Kit::ValidateParam($menuItem['Img'], _STRING);
+
 			$item['selected'] = ($item['page'] == $theme->pageName);
 			$item['link'] = 'index.php?p=' . $item['page'] . '&' . $item['args'];
 			$item['li'] = '<li class="' . $item['class'] . '"><a href="' . $item['link'] . '" class="' . $item['class'] . (($item['selected']) ? ' current' : '') . '">' . $item['title'] . '</a></li>';
