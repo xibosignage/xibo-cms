@@ -65,7 +65,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             <td><?php echo Theme::Translate('The Display License'); ?></td>
             <td><input type="text" readonly value="<?php echo Theme::Get('license'); ?>"></td>
             <td><label for="licensed"><?php echo Theme::Translate('Use one of the available licenses for this display?'); ?></label></td>
-            <td><?php echo Theme::SelectList('licenced', Theme::Get('license_field_list'), 'licensedid', 'licensed', Theme::Get('licensed')); ?></td>
+            <td><?php echo Theme::SelectList('licensed', Theme::Get('license_field_list'), 'licensedid', 'licensed', Theme::Get('licensed')); ?></td>
         </tr>
     </table>
 </form>
