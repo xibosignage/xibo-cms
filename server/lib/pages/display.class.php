@@ -176,16 +176,9 @@ SQL;
         $cidr = Kit::GetParam('cidr', _POST, _INT);
 
         // Do we take, or revoke a license
-        if (isset($_POST['takeLicense']))
-        {
-            $licensed = Kit::GetParam('takeLicense', _POST, _INT);
-        }
-        if (isset($_POST['revokeLicense']))
-        {
-            $licensed = Kit::GetParam('revokeLicense', _POST, _INT);
-        }
-
-        //Validation
+        $licensed = Kit::GetParam('licensed', _POST, _INT);
+        
+        // Validation
         if ($display == '')
             trigger_error(__("Can not have a display without a name"), E_USER_ERROR);
 
@@ -213,132 +206,50 @@ SQL;
         $user			=& $this->user;
         $response		= new ResponseManager();
 
-        $helpManager	= new HelpManager($db, $user);
-
-        //get some vars
-        $displayid 			= $this->displayid;
+        // Get the display Id
+        $displayid = $this->displayid;
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
-        $display 			= $this->display;
-        $layoutid 			= $this->layoutid;
-        $license 			= $this->license;
-        $licensed		 	= $this->licensed;
-        $inc_schedule		= $this->inc_schedule;
-        $auditing			= $this->auditing;
-        $email_alert        = $this->email_alert;
-        $alert_timeout      = $this->alert_timeout;
+        // Set some information about the form
+        Theme::Set('form_id', 'DisplayEditForm');
+        Theme::Set('form_action', 'index.php?p=display&q=modify');
+        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayid . '" />');
+        
 
-        // Help UI
-        $nameHelp		= $helpManager->HelpIcon(__("The Name of the Display - (1 - 50 characters)."), true);
-        $defaultHelp	= $helpManager->HelpIcon(__("The Default Layout to Display where there is no other content."), true);
-        $interleveHelp	= $helpManager->HelpIcon(__("Whether to always put the default into the cycle."), true);
-        $licenseHelp	= $helpManager->HelpIcon(__("Control the licensing on this display."), true);
-        $auditHelp		= $helpManager->HelpIcon(__("Collect auditing from this client. Should only be used if there is a problem with the display."), true);
-        $emailHelp      = $helpManager->HelpIcon(__("Do you want to be notified by email if there is a problem with this display?"), true);
-        $alertHelp      = $helpManager->HelpIcon(__("How long in minutes after the display last connected to the webservice should we send an alert. Set this value higher than the collection interval on the client. Set to 0 to use global default."), true);
-        $wolHelp = $helpManager->HelpIcon(__('Wake on Lan requires the correct network configuration to route the magic packet to the display PC'), true);
-        $wolTimeHelp = $helpManager->HelpIcon(_('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), true);
+        Theme::Set('display', $this->display);
+        Theme::Set('defaultlayoutid', $this->layoutid);
+        Theme::Set('license', $this->license);
+        Theme::Set('licensed', $this->licensed);
+        Theme::Set('inc_schedule', $this->inc_schedule);
+        Theme::Set('auditing', $this->auditing);
+        Theme::Set('email_alert', $this->email_alert);
+        Theme::Set('alert_timeout', $this->alert_timeout);
+        Theme::Set('wake_on_lan_enabled', $this->wakeOnLan);
+        Theme::Set('wake_on_lan_time', $this->wakeOnLanTime);
+        Theme::Set('secureon', $this->secureOn);
+        Theme::Set('cidr', $this->cidr);
+        
+        // If the broadcast address has not been set, then default to the client ip address
+        Theme::Set('broadcastaddress', (($this->broadCastAddress == '') ? $this->clientIpAddress : $this->broadCastAddress));
 
-        // List of layouts
-        $layoutList = Kit::SelectList('defaultlayoutid', $this->user->LayoutList(), 'layoutid', 'layout', $layoutid);
-
-        $inc_schedule_list = listcontent("1|Yes,0|No","inc_schedule",$inc_schedule);
-        $auditing_list = listcontent("1|Yes,0|No","auditing",$auditing);
-        $email_alert_list = listcontent("1|Yes,0|No","email_alert",$email_alert);
+        // List of Layouts
+        Theme::Set('default_layout_field_list', $this->user->LayoutList());
+        Theme::Set('interleave_default_field_list', array(array('inc_scheduleid' => '1', 'inc_schedule' => 'Yes'), array('inc_scheduleid' => '0', 'inc_schedule' => 'No')));
+        Theme::Set('auditing_field_list', array(array('auditingid' => '1', 'auditing' => 'Yes'), array('auditingid' => '0', 'auditing' => 'No')));
+        Theme::Set('email_alert_field_list', array(array('email_alertid' => '1', 'email_alert' => 'Yes'), array('email_alertid' => '0', 'email_alert' => 'No')));
+        Theme::Set('license_field_list', array(array('licensedid' => '1', 'licensed' => 'Yes'), array('licensedid' => '0', 'licensed' => 'No')));
 
         // Is the wake on lan field checked?
-        $wakeOnLanChecked = ($this->wakeOnLan == 1) ? ' checked' : '';
-        $license_list = "";
+        Theme::Set('wake_on_lan_checked', (($this->wakeOnLan == 1) ? ' checked' : ''));
+        
+        // Render the form and output
+        $form = Theme::RenderReturn('display_form_edit');
 
-        //Are we licensed
-        if ($licensed == 0)
-        {
-            //There are licenses to take, shall we take them?
-            $license_list = '<td><label for="takeLicense" title="' . __('Will use one of the available licenses for this display') . '">' . __('License Display') . '</label></td>';
-            $license_list .= "<td>" . listcontent("1|Yes,0|No", "takeLicense", "1") . "</td>";
-        }
-        else
-        {
-            // Give an option to revoke
-            $license_list = '<td><label for="revokeLicense" title="' . __('Revoke License') . '. ' . __('Make the license available for another display.') . '">' . __('Revoke License') . '</label></td>';
-            $license_list .= "<td>" . listcontent("0|Yes,1|No", "revokeLicense", "1") . "</td>";
-        }
-
-        // Messages
-        $msgDisplay	= __('Display');
-        $msgDefault	= __('Default Layout');
-        $msgInterL	= __('Interleave Default');
-        $msgAudit	= __('Auditing');
-        $msgLicense	= __('License');
-        $msgAlert   = __('Email Alerts');
-        $msgTimeout = __('Alert Timeout');
-        $msgWakeOnLan = __('Enable Wake On LAN');
-        $msgWakeOnLanTime = __('Wake On LAN Time');
-        $msgBroadCastAddress = __('BroadCast Address');
-        $msgSecureOn = __('Wake On LAN Secure On');
-        $msgCidr = __('Wake On LAN CIDR');
-
-        $helpBroadCastAddress = $helpManager->HelpIcon(__('The IP address of the remote host\'s broadcast address (or gateway)'), true);
-        $helpSecureOn = $helpManager->HelpIcon(__('Enter a hexidecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn).'), true);
-        $helpCidr = $helpManager->HelpIcon(__('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unkown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), true);
-
-        // If the broadcast address has not been set, then default to the client ip address
-        $broadCastAddress = ($this->broadCastAddress == '') ? $this->clientIpAddress : $this->broadCastAddress;
-
-
-        $form = <<<END
-            <form id="DisplayEditForm" class="XiboForm" method="post" action="index.php?p=display&q=modify&id=$displayid">
-                <input type="hidden" name="displayid" value="$displayid">
-                <table>
-                    <tr>
-                        <td>$msgDisplay<span class="required">*</span></td>
-                        <td>$nameHelp <input name="display" type="text" value="$display"></td>
-                        <td>$msgDefault<span class="required">*</span></td>
-                        <td>$defaultHelp $layoutList</td>
-                    </tr>
-                    <tr>
-                        <td>$msgInterL<span class="required">*</span></td>
-                        <td>$interleveHelp $inc_schedule_list</td>
-                    </tr>
-                    <tr>
-                        <td>$msgAudit?<span class="required">*</span></td>
-                        <td>$auditHelp $auditing_list</td>
-                    </tr>
-                    <tr>
-                        <td>$msgAlert<span class="required">*</span></td>
-                        <td>$emailHelp $email_alert_list</td>
-                        <td>$msgTimeout<span class="required">*</span></td>
-                        <td>$alertHelp <input name="alert_timeout" type="text" value="$alert_timeout"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><label for="wakeOnLanEnabled">$msgWakeOnLan</label>$wolHelp<input type="checkbox" id="wakeOnLanEnabled" name="wakeOnLanEnabled" $wakeOnLanChecked></td>
-                        <td>$msgWakeOnLanTime</td>
-                        <td>$wolTimeHelp<input name="wakeOnLanTime" type="text" value="$this->wakeOnLanTime"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="broadCastAddress">$msgBroadCastAddress</label></td>
-                        <td>$helpBroadCastAddress<input type="text" id="broadCastAddress" name="broadCastAddress" value="$broadCastAddress"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="secureOn">$msgSecureOn</label></td>
-                        <td>$helpSecureOn<input id="secureOn" name="secureOn" type="text" value="$this->secureOn"></td>
-                        <td><label for="cidr">$msgCidr</label></td>
-                        <td>$helpCidr<input id="cidr" name="cidr" type="text" value="$this->cidr" class="number"></td>
-                    </tr>
-                    <tr>
-                        <td>$msgLicense</td>
-                        <td>$licenseHelp <input type="text" readonly value="$license"></td>
-                        $license_list
-                    </tr>
-                </table>
-            </form>
-END;
-
-        $response->SetFormRequestResponse($form, __('Edit a Display'), '650px', '300px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Display', 'Edit') . '")');
+        $response->SetFormRequestResponse($form, __('Edit a Display'), '650px', '350px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayEditForm").submit()');
         $response->Respond();
