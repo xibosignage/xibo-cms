@@ -378,116 +378,6 @@ SQL;
     }
 
     /**
-     * Output some display tabs based on displays that are licensed
-     * @return
-     * @param $defaulted_displayid Object
-     * @param $link Object
-     * @param $currently_playing Object[optional]
-     */
-    function display_tabs($defaulted_displayid, $link, $currently_playing = true)
-    {
-        $db =& $this->db;
-        $output = "";
-
-        //get the number of displays allowed in the license
-        $SQL  = "SELECT display.displayid, ";
-        $SQL .= "       display.display ";
-        $SQL .= "  FROM display ";
-        $SQL .= " WHERE display.licensed = 1 ";
-
-        if(!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__("Can not list displays"), E_USER_ERROR);
-        }
-
-        $output .= "<div class='buttons'>";
-
-        while ($row = $db->get_row($results))
-        {
-            $displayid = $row[0];
-            $display = substr($row[1], 0, 8);
-
-            if ($displayid == $defaulted_displayid)
-            {
-                    $output .= "<a class='defaulted_tab' href='$link&displayid=$displayid'><div class='button_text'>$display</div></a>";
-            }
-            else
-            {
-                    $output .= "<a class='normal_tab' href='$link&displayid=$displayid'><div class='button_text'>$display</div></a>";
-            }
-        }
-
-        $output .= "</div>";
-
-        return $output;
-    }
-
-    /**
-     * Display what is currently playing on this display
-     * @return
-     * @param $displayid Object
-     */
-    function currently_playing($displayid)
-    {
-            $db =& $this->db;
-            $currentdate = date("Y-m-d H:i:s");
-            $return = "<div class='display_info'>" . __('Currently Playing'); //return string
-            /*
-              * Generates the currently playing list, defaulted to the display ID given
-              */
-            #now i know what display i am find out what i am ment to be playing
-            $SQL  = "";
-            $SQL .= "SELECT  layoutdisplay.layoutDisplayID, ";
-            $SQL .= "        layout.Name, ";
-            $SQL .= "		 layout.layoutID, ";
-            $SQL .= "		 layoutdisplay.starttime ";
-            $SQL .= "FROM    display, ";
-            $SQL .= "        layoutdisplay, ";
-            $SQL .= "        layout ";
-            $SQL .= "WHERE   display.displayid            = layoutdisplay.displayid ";
-            $SQL .= "        AND layoutdisplay.layoutID = layout.layoutID ";
-            $SQL .= "        AND display.displayid          = " . $displayid;
-            $SQL .= "        AND layoutdisplay.starttime  < '" . $currentdate . "'";
-            $SQL .= "        AND layoutdisplay.endtime    > '" . $currentdate . "'";
-
-            if(!$results = $db->query($SQL))  trigger_error($db->error(), E_USER_ERROR);
-
-            if($db->num_rows($results)==0)
-            {
-                    //check to see if there is a default layout assigned instead
-                    $SQL  = "";
-                    $SQL .= "SELECT  1, layout.Name, ";
-                    $SQL .= "		 layout.layoutID, 1 ";
-                    $SQL .= "FROM    display, ";
-                    $SQL .= "        layout ";
-                    $SQL .= "WHERE   layout.layoutID 			= display.defaultlayoutid ";
-                    $SQL .= "        AND display.displayid          = " . $displayid;
-
-                    if(!$results = $db->query($SQL))  trigger_error($db->error(), E_USER_ERROR);
-
-                    if($db->num_rows($results)==0)
-                    {
-                            $return .= __('Nothing') . "</div>";
-                            return $return;
-                    }
-            }
-
-            $count = 1;
-
-            while ($row = $db->get_row($results))
-            {
-                    $name = $row[1];
-
-                    $return .= "$count. $name.   ";
-                    $count++;
-            }
-            $return .= "</div>";
-
-            return $return;
-    }
-
-    /**
      * Assess each Display to correctly set the logged in flag based on last accessed time
      * @return
      */
@@ -532,64 +422,57 @@ SQL;
         }
     }
 
+    /**
+     * Delete form
+     */
     function DeleteForm()
     {
-            $db 		=& $this->db;
-            $user           =& $this->user;
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $displayid = Kit::GetParam('displayid', _REQUEST, _INT);
 
-            $response 	= new ResponseManager();
-            $displayid 	= Kit::GetParam('displayid', _REQUEST, _INT);
-            $helpManager    = new HelpManager($db, $user);
+        // Auth
+        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
+        if (!$auth->del)
+            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
-            // Auth
-            $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
-            if (!$auth->del)
-                trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
+        Theme::Set('form_id', 'DisplayDeleteForm');
+        Theme::Set('form_action', 'index.php?p=display&q=Delete');
+        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayid . '">');
 
-            // Output the delete form
-            $msgInfo	= __('Deleting a display cannot be undone.');
-            $msgWarn	= __('Are you sure you want to delete this display?');
-            $msgYes		= __('Yes');
-            $msgNo		= __('No');
+        $form = Theme::RenderReturn('display_form_delete');
 
-            $form = <<<END
-            <form id="DisplayDeleteForm" class="XiboForm" method="post" action="index.php?p=display&q=Delete">
-                    <input type="hidden" name="displayid" value="$displayid">
-                    <p>$msgInfo<br />
-                    <p>$msgWarn</p>
-            </form>
-END;
-
-            $response->SetFormRequestResponse($form, __('Delete this Display?'), '350px', '210');
-            $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Delete') . '")');
-            $response->AddButton(__('No'), 'XiboDialogClose()');
-            $response->AddButton(__('Yes'), '$("#DisplayDeleteForm").submit()');
-            $response->Respond();
+        $response->SetFormRequestResponse($form, __('Delete this Display?'), '350px', '210');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Delete') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#DisplayDeleteForm").submit()');
+        $response->Respond();
     }
 
+    /**
+     * Delete a display
+     */
     function Delete()
     {
-            $db 		=& $this->db;
-            $response	= new ResponseManager();
-            $displayid 	= Kit::GetParam('displayid', _POST, _INT, 0);
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $displayid = Kit::GetParam('displayid', _POST, _INT, 0);
 
-            $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
-            if (!$auth->del)
-                trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
+        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
+        if (!$auth->del)
+            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
-            if ($displayid == 0)
-            {
-                    $response->SetError(__("No Display selected for Deletion."));
-                    $response->Respond();
-            }
+        if ($displayid == 0)
+            trigger_error(__("No Display selected for Deletion."));
 
-            $displayObject = new Display($db);
+        $displayObject = new Display($db);
 
-            if (!$displayObject->Delete($displayid))
-                trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
+        if (!$displayObject->Delete($displayid))
+            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 
-            $response->SetFormSubmitResponse(__("The Display has been Deleted"));
-            $response->Respond();
+        $response->SetFormSubmitResponse(__("The Display has been Deleted"));
+        $response->Respond();
     }
 
     /**
@@ -606,27 +489,19 @@ END;
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
-        if (!$defaultLayoutId = $this->db->GetSingleValue(sprintf("SELECT defaultlayoutid FROM display WHERE displayid = %d", $displayId),
-                'defaultlayoutid', _INT))
+        if (!$defaultLayoutId = $this->db->GetSingleValue(sprintf("SELECT defaultlayoutid FROM display WHERE displayid = %d", $displayId), 'defaultlayoutid', _INT))
         {
             trigger_error($db->error());
             trigger_error(__('Unable to get the default layout'), E_USER_ERROR);
         }
 
-        $msgDefault = __('Default Layout');
-	$layoutList = Kit::SelectList('defaultlayoutid', $this->user->LayoutList(), 'layoutid', 'layout', $defaultLayoutId);
+        Theme::Set('form_id', 'DefaultLayoutForm');
+        Theme::Set('form_action', 'index.php?p=display&q=DefaultLayout');
+        Theme::Set('form_meta', '<input type="hidden" name="DisplayId" value="' . $displayId . '">');
+        Theme::Set('layout_field_list', $this->user->LayoutList());
+        Theme::Set('defaultlayoutid', $defaultLayoutId);
 
-        $form = <<<END
-            <form id="DefaultLayoutForm" class="XiboForm" method="post" action="index.php?p=display&q=DefaultLayout&DisplayId=$displayId">
-                <input type="hidden" name="DisplayId" value="$displayId">
-                <table>
-                    <tr>
-                        <td>$msgDefault<span class="required">*</span></td>
-                        <td>$layoutList</td>
-                    </tr>
-                </table>
-            </form>
-END;
+        $form = Theme::RenderReturn('display_form_default_layout');
 
         $response->SetFormRequestResponse($form, __('Edit Default Layout'), '300px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'DefaultLayout') . '")');
@@ -652,9 +527,7 @@ END;
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
         if (!$displayObject->EditDefaultLayout($displayId, $defaultLayoutId))
-        {
             trigger_error(__('Cannot Edit this Display'), E_USER_ERROR);
-        }
 
         $response->SetFormSubmitResponse(__('Display Saved.'));
         $response->Respond();
@@ -692,31 +565,31 @@ END;
         if (!$document->loadXML($mediaInventoryXml))
             trigger_error(__('Invalid Media Inventory'), E_USER_ERROR);
 
-        // Output a table
-        $table = '<table><tr><th>Type</th><th>Id</th><th>Complete</th><th>Last Checked</th><th>MD5</th></tr>';
-
+        // Need to parse the XML and return a set of rows
         $xpath = new DOMXPath($document);
-	$fileNodes = $xpath->query("//file");
+        $fileNodes = $xpath->query("//file");
+
+        $rows = array();
 
         foreach ($fileNodes as $node)
         {
-            $type = $node->getAttribute('type');
-            $id = $node->getAttribute('id');
-            $complete = $node->getAttribute('complete');
-            $lastChecked = $node->getAttribute('lastChecked');
-            $md5 = $node->getAttribute('md5');
+            $row = array();
+            $row['type'] = $node->getAttribute('type');
+            $row['id'] = $node->getAttribute('id');
+            $row['complete'] = ($node->getAttribute('complete') == 0) ? __('No') : __('Yes');
+            $row['last_checked'] = $node->getAttribute('lastChecked');
+            $row['md5'] = $node->getAttribute('md5');
 
-            if ($complete == 0)
-                $complete = __('No');
-            else
-                $complete = __('Yes');
-
-            $table .= sprintf('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>', $type, $id, $complete, $lastChecked, $md5);
+            $rows[] = $row;
         }
 
-        $table .= '</table>';
+        // Store the table rows
+        Theme::Set('table_rows', $rows);
 
-        $response->SetFormRequestResponse($table, __('Media Inventory'), '550px', '350px');
+        // Initialise the theme and capture the output
+        $output = Theme::RenderReturn('display_form_mediainventory');
+
+        $response->SetFormRequestResponse($output, __('Media Inventory'), '550px', '350px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'MediaInventory') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
