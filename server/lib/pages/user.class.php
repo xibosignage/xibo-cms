@@ -132,7 +132,7 @@ class userDAO
         foreach ($users as $row) {
 
             $row['loggedin'] = ($row['loggedin'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
-            $row['groupid'] = $user->getGroupFromID($row['UserID']);
+            $row['groupid'] = $user->getGroupFromID($row['UserID'], true);
 
             // Super admins have some buttons
             if ($user->usertypeid == 1) {

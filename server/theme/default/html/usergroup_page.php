@@ -46,8 +46,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<div id="form_body">
 		<div class="SecondNav">
 			<ul>
-				<li><a title="<?php echo Theme::Translate('Add a new User'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('user_form_add_url'); ?>" ><span><?php echo Theme::Translate('Add User'); ?></span></a></li>
-				<li><a title="<?php echo Theme::Translate('View my authenticated applications'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('myapplications_form_add_url'); ?>" ><span><?php echo Theme::Translate('My Applications'); ?></span></a></li>
+				<li><a title="<?php echo Theme::Translate('Add a new User Group'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('usergroup_form_add_url'); ?>" ><span><?php echo Theme::Translate('Add User Group'); ?></span></a></li>
 				<li><a title="<?php echo Theme::Translate('Open the filter form'); ?>" href="#" onclick="ToggleFilterView('Filter')"><span><?php echo Theme::Translate('Filter'); ?></span></a></li>
 			</ul>
 		</div>
@@ -58,10 +57,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 						<?php echo Theme::Get('form_meta'); ?>
 						<table class="user_filterform">
 							<tr>
-								<td><label for="filter_username"><?php echo Theme::Translate('Name') ?></label></td>
-								<td><input type="text" id="filter_username" name="filter_username" value="<?php echo Theme::Get('filter_username'); ?>"></td>
-								<td><label for="filter_usertypeid"><?php echo Theme::Translate('User Type') ?></label></td>
-								<td><?php echo Theme::SelectList('filter_usertypeid', Theme::Get('usertype_field_list'), 'usertypeID', 'usertype', Theme::Get('filter_usertypeid')); ?></td>
+								<td><label for="filter_name"><?php echo Theme::Translate('Name') ?></label></td>
+								<td><input type="text" id="filter_name" name="filter_name" value="<?php echo Theme::Get('filter_name'); ?>"></td>
 			                    <td><label for="<?php echo Theme::Get('filter_id'); ?>"><?php echo Theme::Translate('Keep filter open') ?></label></td>
 			                    <td><input type="checkbox" id="<?php echo Theme::Get('filter_id'); ?>" name="XiboFilterPinned" class="XiboFilterPinned" <?php echo Theme::Get('filter_pinned'); ?> /></td>
 							</tr>

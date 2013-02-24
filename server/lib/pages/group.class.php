@@ -72,82 +72,44 @@ END;
             // Include the group data classes
             include_once('lib/data/usergroup.data.class.php');
 	}
-	
-	function on_page_load() 
-	{
-		return "";
-	}
-	
-	function echo_page_heading() 
-	{
-		echo __("Group Admin");
-		return true;
-	}
-	
+
 	/**
-	 * Filter Form for the group page
-	 * Included by the template view
-	 * Not AJAX
-	 * @return 
+	 * Display page logic
 	 */
-	function GroupGrid() 
+	function displayPage() 
 	{
-		//filter form defaults
-		$filter_name = "";
-		if (isset($_SESSION['group']['name'])) $filter_name = $_SESSION['group']['name'];
-		
-		$msgName	= __('Name');
-                $msgKeepFilterOpen = __('Keep filter open');
-                $filterPinned = (Kit::IsFilterPinned('usergroup', 'Filter')) ? 'checked' : '';
-                $filterId = uniqid('filter');
-		
-		$filterForm = <<<END
-		<div id="GroupFilter" class="FilterDiv">
-			<form>
-				<input type="hidden" name="p" value="group">
-				<input type="hidden" name="q" value="group_view">
-				<table>
-					<tr>
-						<td>$msgName</td>
-						<td><input type="text" name="name" value="$filter_name"></td>
-                                                <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
-                                                <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
-					</tr>
-				</table>
-			</form>
-		</div>
-END;
-		$id = uniqid();
-                $pager = ResponseManager::Pager($id);
-		
-		$xiboGrid = <<<HTML
-		<div class="XiboGrid" id="$id">
-			<div class="XiboFilter">
-				$filterForm
-			</div>
-                        $pager
-			<div class="XiboData">
-			
-			</div>
-		</div>
-HTML;
-		echo $xiboGrid;
+		// Configure the theme
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('usergroup_form_add_url', 'index.php?p=group&q=GroupForm');
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="Grid">');
+        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
+        Theme::Set('pager', ResponseManager::Pager($id));
+
+        // Default options
+        if (Kit::IsFilterPinned('usergroup', 'Filter')) {
+            Theme::Set('filter_pinned', 'checked');
+            Theme::Set('filter_name', Session::Get('usergroup', 'filter_name'));
+        }
+
+        // Render the Theme and output
+        Theme::Render('usergroup_page');
 	}
-	
+
 	/**
 	 * Group Grid
 	 * Called by AJAX
 	 * @return 
 	 */
-	function group_view() 
+	function Grid() 
 	{
-		$db 		=& $this->db;
-		$user		=& $this->user;
+		$db =& $this->db;
+		$user =& $this->user;
 		
-		$filter_name = Kit::GetParam('name', _POST, _STRING);
+		$filter_name = Kit::GetParam('filter_name', _POST, _STRING);
                 
 		setSession('usergroup', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-		setSession('group', 'name', $filter_name);
+		setSession('usergroup', 'filter_name', $filter_name);
 	
 		$SQL = <<<END
 		SELECT 	group.group,
@@ -155,10 +117,9 @@ HTML;
 		FROM `group`
 		WHERE IsUserSpecific = 0 AND IsEveryone = 0
 END;
+
 		if ($filter_name != '') 
-		{
 			$SQL .= sprintf(" AND group.group LIKE '%%%s%%' ", $db->escape_string($filter_name));
-		}
 		
 		$SQL .= " ORDER BY group.group ";
 		
@@ -169,90 +130,65 @@ END;
 			trigger_error($db->error());
 			trigger_error(__("Can not get group information."), E_USER_ERROR);
 		}
-		
-		$msgName	= __('Name');
-		$msgAction	= __('Action');
-		$msgEdit	= __('Edit');
-		$msgMembers	= __('Group Members');
-		$msgPageSec	= __('Page Security');
-		$msgMenuSec	= __('Menu Security');
-		$msgDispSec	= __('Display Security');
-		$msgDel		= __('Delete');
-		
-		$table = <<<END
-		<div class="info_table">
-		<table style="width:100%;">
-			<thead>
-				<tr>
-					<th>$msgName</th>
-					<th>$msgAction</th>
-				</tr>
-			</thead>
-			<tbody>
-END;
-		
+
+		$rows = array();
+
 		while ($row = $db->get_assoc_row($results)) 
 		{
 			$groupid	= Kit::ValidateParam($row['groupID'], _INT);
 			$group 		= Kit::ValidateParam($row['group'], _STRING);
-			
-			Debug::LogEntry($db, 'audit', 'UserTypeID is: ' . $user->GetUserTypeID());
-			
+
+			$row['usergroup'] = $group;
+
 			// we only want to show certain buttons, depending on the user logged in
-			if ($user->GetUserTypeID() != 1) 
+			if ($user->GetUserTypeID() == 1) 
 			{
-				//dont any actions
-				$buttons = __("No available Actions");
+				// Edit
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_edit',
+	                    'url' => 'index.php?p=group&q=GroupForm&groupid=' . $groupid,
+	                    'text' => __('Edit')
+	                );
+
+				// Delete
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_delete',
+	                    'url' => 'index.php?p=group&q=delete_form&groupid=' . $groupid,
+	                    'text' => __('Delete')
+	                );
+
+				// Members
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_members',
+	                    'url' => 'index.php?p=group&q=MembersForm&groupid=' . $groupid,
+	                    'text' => __('Members')
+	                );
+
+				// Page Security
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_page_security',
+	                    'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $groupid,
+	                    'text' => __('Page Security')
+	                );
+
+				// Menu Security
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_menu_security',
+	                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $groupid,
+	                    'text' => __('Menu Security')
+	                );
 			}
-			else 
-			{
-				$buttons = <<<END
-				<button class="XiboFormButton" href="index.php?p=group&q=GroupForm&groupid=$groupid"><span>$msgEdit</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=MembersForm&groupid=$groupid"><span>$msgMembers</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=PageSecurityForm&groupid=$groupid"><span>$msgPageSec</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=MenuItemSecurityForm&groupid=$groupid"><span>$msgMenuSec</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=delete_form&groupid=$groupid"><span>$msgDel</span></button>
-END;
-			}
-			
-			$table .= <<<END
-			<tr>
-				<td>$group</td>
-				<td>$buttons</td>
-			</tr>
-END;
+
+			$rows[] = $row;
 		}
-		$table .= "</tbody></table></div>";
-		
-		// Construct the Response
-		$response 				= array();
-		$response['html'] 		= $table;
-		$response['success']	= true;
-		$response['sortable']	= true;
-                $response['paging'] = true;
-		$response['sortingDiv']	= '.info_table table';
-		
-		Kit::Redirect($response);
-	}
-	
-	/**
-	 * Display page logic
-	 * @return 
-	 */
-	function displayPage() 
-	{
-		switch ($this->sub_page) 
-		{
-				
-			case 'view':
-				require("template/pages/group_view.php");
-				break;
-					
-			default:
-				break;
-		}
-		
-		return false;
+
+		Theme::Set('table_rows', $rows);
+
+        $output = Theme::RenderReturn('usergroup_page_grid');
+
+		$response = new ResponseManager();
+        $response->SetGridResponse($output);
+        $response->Respond();
 	}
 	
 	/**
@@ -261,44 +197,39 @@ END;
 	 */
 	function GroupForm() 
 	{
-		$db				=& $this->db;
-		$user			=& $this->user;
-		
-		$helpManager	= new HelpManager($db, $user);
-		$response		= new ResponseManager();
+		$db =& $this->db;
+		$user =& $this->user;
+		$response = new ResponseManager();
 				
+		Theme::Set('form_id', 'UserGroupForm');
+
 		// alter the action variable depending on which form we are after
 		if ($this->groupid == "") 
 		{
-			$action = "index.php?p=group&q=add";
+        	Theme::Set('form_action', 'index.php?p=group&q=Add');
+
+        	$theme_file = 'usergroup_form_add';
+        	$form_name = 'Add User Group';
+        	$form_help_link = HelpManager::Link('UserGroup', 'Add');
 		}
 		else 
 		{
-			$action = "index.php?p=group&q=edit";
+        	Theme::Set('form_action', 'index.php?p=group&q=Edit');
+        	Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $this->groupid . '">');
+        	Theme::Set('group', $this->group);
+
+        	$theme_file = 'usergroup_form_edit';
+        	$form_name = 'Edit User Group';
+        	$form_help_link = HelpManager::Link('UserGroup', 'Edit');
 		}
 		
-		// Help UI
-		$nameHelp		= $helpManager->HelpIcon(__("The Name of this Group."), true);
-		
-		$msgName		= __('Name');
-		
-		$form = <<<END
-		<form id="GroupForm" class="XiboForm" action="$action" method="post">
-			<input type="hidden" name="groupid" value="$this->groupid">
-			<table>
-				<tr>
-					<td>$msgName<span class="required">*</span></td>
-					<td>$nameHelp <input type="text" name="group" value="$this->group"></td>
-				</tr>
-			</table>
-		</form>
-END;
+		$form = Theme::RenderReturn($theme_file);
 
 		// Construct the Response		
-		$response->SetFormRequestResponse($form, (($this->groupid == '') ? __('Add User Group') : __('Edit User Group')), '400', '180');
-		$response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->groupid == '') ? HelpManager::Link('UserGroup', 'Add') : HelpManager::Link('UserGroup', 'Edit')) . '")');
+		$response->SetFormRequestResponse($form, $form_name, '400', '180');
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . $form_help_link . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
-		$response->AddButton(__('Save'), '$("#GroupForm").submit()');
+		$response->AddButton(__('Save'), '$("#UserGroupForm").submit()');
 		$response->Respond();
 
 		return true;
@@ -311,41 +242,18 @@ END;
 	function PageSecurityForm()
 	{
 		$response	= new ResponseManager();
-
-		$msgName	= __('Name');
-		
-		$form = <<<HTML
-		<form>
-			<input type="hidden" name="p" value="group">
-			<input type="hidden" name="q" value="data_grid">
-			<input type="hidden" name="groupid" value="$this->groupid">
-			<table style="display:none;" id="group_filterform" class="filterform">
-				<tr>
-					<td>$msgName</td>
-					<td><input type="text" name="name" id="name"></td>
-				</tr>
-			</table>
-		</form>
-HTML;
 		
 		$id = uniqid();
-		
-		$xiboGrid = <<<HTML
-		<div class="XiboGrid" id="$id">
-			<div class="XiboFilter">
-				$form
-			</div>
-			<div class="XiboData">
-			
-			</div>
-		</div>
-HTML;
+        Theme::Set('id', $id);
+		Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="PageSecurityFormGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
+
+		$xiboGrid = Theme::RenderReturn('usergroup_form_pagesecurity');
 			
 		// Construct the Response		
 		$response->SetFormRequestResponse($xiboGrid, __('Page Security'), '500', '380');
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'PageSecurity') . '")');
 		$response->AddButton(__('Close'), 'XiboDialogClose()');
-		$response->AddButton(__('Assign / Unassign'), '$("#GroupForm").submit()');
+		$response->AddButton(__('Assign / Unassign'), '$("#UserGroupForm").submit()');
 		$response->Respond();
 
 		return true;
@@ -355,18 +263,18 @@ HTML;
 	 * Assign Page Security Grid
 	 * @return 
 	 */
-	function data_grid() 
+	function PageSecurityFormGrid() 
 	{
 		$db 		=& $this->db;
 		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
+
+		Theme::Set('form_id', 'UserGroupForm');
+		Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupid . '">');
+		Theme::Set('form_action', 'index.php?p=group&q=assign');
 		
 		$SQL = <<<END
 		SELECT 	pagegroup.pagegroup,
 				pagegroup.pagegroupID,
-				CASE WHEN pages_assigned.pagegroupID IS NULL 
-					THEN '<img src="img/disact.gif">'
-		        	ELSE '<img src="img/act.gif">'
-		        END AS Assigned,
 				CASE WHEN pages_assigned.pagegroupID IS NULL 
 					THEN 0
 		        	ELSE 1
@@ -380,7 +288,8 @@ HTML;
 				) pages_assigned
 		ON pagegroup.pagegroupID = pages_assigned.pagegroupID
 END;
-		if(!$results = $db->query($SQL)) 
+		
+		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
 			trigger_error(__("Can't get this groups information"), E_USER_ERROR);
@@ -392,56 +301,27 @@ END;
 			exit;
 		}
 		
-		$msgSecGroup	= __('Security Group');
-		$msgAssigned	= __('Assigned');
-
-		//some table headings
-		$form = <<<END
-		<form id="GroupForm" class="XiboForm" method="post" action="index.php?p=group&q=assign">
-			<input type="hidden" name="groupid" value="$groupid">
-			<div class="dialog_table">
-			<table style="width:100%">
-				<thead>
-					<tr>
-						<th></th>
-						<th>$msgSecGroup</th>
-						<th>$msgAssigned</th>
-					</tr>
-				</thead>
-				<tbody>
-END;
-
 		// while loop
-		while ($row = $db->get_row($results)) 
+		$rows = array(); 
+		
+		while ($row = $db->get_assoc_row($results)) 
 		{
-			$name		= $row[0];
-			$pageid		= $row[1];
-			$assigned	= $row[2];
-			$assignedid	= $row[3];
+			$row ['name'] = $row['pagegroup'];
+			$row ['pageid'] = $row['pagegroupID'];
+			$row ['assigned'] = (($row['AssignedID'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif'));
+			$row ['assignedid'] = $row['AssignedID'];
+			$row ['checkbox_value'] = $row['AssignedID'] . ',' . $row['pagegroupID'];
 			
-			$form .= "<tr>";
-			$form .= "<td><input type='checkbox' name='pageids[]' value='$assignedid,$pageid'></td>";
-			$form .= "<td>$name</td>";
-			$form .= "<td>$assigned</td>";
-			$form .= "</tr>";
+			$rows[] = $row;
 		}
 
-		//table ending
-		$form .= <<<END
-			</tbody>
-		</table>
-		</div>
-	</form>
-END;
-		
-		// Construct the Response
-		$response 				= array();
-		$response['html'] 		= $form;
-		$response['success']	= true;
-		$response['sortable']	= false;
-		$response['sortingDiv']	= '.info_table table';
-		
-		Kit::Redirect($response);
+		Theme::Set('table_rows', $rows);
+
+        $output = Theme::RenderReturn('usergroup_form_pagesecurity_grid');
+
+		$response = new ResponseManager();
+        $response->SetGridResponse($output);
+        $response->Respond();
 	}
 	
 	/**
@@ -478,7 +358,7 @@ END;
 	 * Adds a group
 	 * @return 
 	 */
-	function add() 
+	function Add() 
 	{
             $db 	=& $this->db;
             $response	= new ResponseManager();
@@ -507,7 +387,7 @@ END;
 	 * Edits the Group Information
 	 * @return 
 	 */
-	function edit() 
+	function Edit() 
 	{
 		$db 		=& $this->db;
 		
@@ -542,7 +422,7 @@ END;
 	 * Deletes a Group
 	 * @return 
 	 */
-	function delete() 
+	function Delete() 
 	{
 		$db 		=& $this->db;		
 		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
