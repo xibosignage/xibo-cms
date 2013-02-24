@@ -35,6 +35,8 @@ class ResponseManager
         public $paging;
         public $pageSize;
         public $pageNumber;
+    public $initialSortColumn;
+    public $initialSortOrder;
 	
 	public $dialogSize;
 	public $dialogWidth;
@@ -64,11 +66,13 @@ class ResponseManager
 		$this->success = true;
 		$this->clockUpdate = false;
 		$this->focusInFirstInput = true;
-                $this->appendHiddenSubmit = true;
-                $this->uniqueReference = '';
+        $this->appendHiddenSubmit = true;
+        $this->uniqueReference = '';
 		$this->buttons = '';
-                $this->pageSize = 10;
-                $this->pageNumber = 0;
+        $this->pageSize = 10;
+        $this->pageNumber = 0;
+        $this->initialSortColumn = 1;
+        $this->initialSortOrder = 1;
 		
 		return true;
 	}
@@ -221,7 +225,7 @@ class ResponseManager
 			// General
 			$response['html'] 			= $this->html;
 			$response['buttons']		= $this->buttons;
-                        $response['uniqueReference'] = $this->uniqueReference;
+            $response['uniqueReference'] = $this->uniqueReference;
 			
 			$response['success']		= $this->success;
 			$response['callBack']		= $this->callBack;
@@ -231,9 +235,11 @@ class ResponseManager
 			// Grids
 			$response['sortable']		= $this->sortable;
 			$response['sortingDiv']		= $this->sortingDiv;
-                        $response['paging'] = $this->paging;
-                        $response['pageSize'] = $this->pageSize;
-                        $response['pageNumber'] = $this->pageNumber;
+            $response['paging'] = $this->paging;
+            $response['pageSize'] = $this->pageSize;
+            $response['pageNumber'] = $this->pageNumber;
+            $response['initialSortColumn'] = $this->initialSortColumn - 1;
+            $response['initialSortOrder'] = $this->initialSortOrder - 1;
 			
 			// Dialogs
 			$response['dialogSize']		= $this->dialogSize;
@@ -257,9 +263,9 @@ class ResponseManager
 			// Login
 			$response['login']			= $this->login;
 
-                        // Log the response if we are auditing
-                        //global $db;
-                        //Debug::LogEntry($db, 'audit', json_encode($response), 'Response Manager', 'Respond');
+            // Log the response if we are auditing
+            //global $db;
+            //Debug::LogEntry($db, 'audit', json_encode($response), 'Response Manager', 'Respond');
 			
 			echo json_encode($response);
 			

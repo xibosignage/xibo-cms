@@ -20,12 +20,6 @@
  *
  * Theme variables:
  * 	table_rows = Array containing the table rows
- * 	  campaign = The Campaign Name
- * 	  num_layouts = The Number of Layouts associated to this Campaign
- * 	  buttons = The buttons enabled for the layout
- * 	    id = The ID of the button
- * 	    text = The Text for the button
- * 	    url = The URL of the button
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
@@ -36,7 +30,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<thead>
 				<tr>
 					<th></th>
-					<th><?php echo Theme::Translate('Security Group'); ?></th>
+					<th><?php echo Theme::Translate('Menu Item'); ?></th>
 					<th><?php echo Theme::Translate('Assigned'); ?></th>	
 				</tr>
 			</thead>
@@ -44,7 +38,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<?php foreach(Theme::Get('table_rows') as $row) { ?>
 				<tr>
 					<td><input type="checkbox" name="pageids[]" value="<?php echo $row['checkbox_value']; ?>" <?php echo $row['checkbox_ticked']; ?>></td>
-					<td><?php echo $row['pagegroup']; ?></td>
+					<td><?php echo $row['name']; ?></td>
 					<td><?php echo $row['assigned']; ?></td>
 				</tr>
 				<?php } ?>

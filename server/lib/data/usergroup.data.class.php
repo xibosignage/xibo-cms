@@ -40,6 +40,10 @@ class UserGroup extends Data
 
         Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'Add');
 
+        // Validation
+        if ($group == '')
+            return $this->SetError(__('Group Name cannot be empty.'));
+
         // Create the SQL
         $SQL  = "";
         $SQL .= "INSERT ";
@@ -56,10 +60,8 @@ class UserGroup extends Data
 
         if (!$groupID = $db->insert_query($SQL))
         {
-                trigger_error($db->error());
-                $this->SetError(25000, __('Could not add User Group'));
-
-                return false;
+            trigger_error($db->error());
+            return $this->SetError(25000, __('Could not add User Group'));
         }
 
         Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'Add');
@@ -79,6 +81,13 @@ class UserGroup extends Data
 
         Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'Edit');
 
+        // Validation
+        if ($userGroupID == 0)
+            return $this->SetError(__('User Group not selected'));
+        
+        if ($userGroup == '')
+            return $this->SetError(__('User Group Name cannot be empty.'));
+
         // Create the SQL
         $SQL  = "";
         $SQL .= "UPDATE `group` ";
@@ -87,10 +96,8 @@ class UserGroup extends Data
 
         if (!$db->query($SQL))
         {
-                trigger_error($db->error());
-                $this->SetError(25005, __('Could not edit User Group'));
-
-                return false;
+            trigger_error($db->error());
+            return $this->SetError(25005, __('Could not edit User Group'));
         }
 
         Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'Edit');
@@ -123,8 +130,7 @@ class UserGroup extends Data
         if (!$db->query($SQL))
         {
             trigger_error($db->error());
-            $this->SetError(25015,__('Unable to delete User Group.'));
-            return false;
+            return $this->SetError(25015,__('Unable to delete User Group.'));
         }
 
         Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'Delete');

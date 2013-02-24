@@ -231,7 +231,7 @@ function XiboGridRender(gridId){
                 // See if we have the order stored
                 var sortOrder = $('#' + gridId).data("sorting");
                 if (sortOrder == undefined)
-                    sortOrder = [[0,0]];
+                    sortOrder = [[response.initialSortColumn,response.initialSortOrder]];
                 
                 if (hasRows) {
                     $(sortingDiv).tablesorter({
