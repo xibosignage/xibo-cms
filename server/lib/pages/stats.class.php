@@ -31,81 +31,32 @@ class statsDAO
 		$this->user =& $user;
 	}
 	
+    /**
+     * Stats page
+     */
 	function displayPage() 
 	{
-	
-		include("template/pages/stats_view.php");
-		
-		return false;
-	}
-	
-	function on_page_load() 
-	{
-		return '';
-	}
-	
-	function echo_page_heading() 
-	{
-		echo 'Display Statistics';
-		return true;
-	}
-
-    /**
-     * Shows the stats form
-     */
-    public function StatsForm()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-
-        $fromdt = date("Y-m-d", time() - 86400);
-        $todt = date("Y-m-d");
+		// Configure the theme
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="StatsGrid">');
+        
+        Theme::Set('fromdt', date("Y-m-d", time() - 86400));
+        Theme::Set('todt', date("Y-m-d"));
 
         // List of Displays this user has permission for
         $displays = $this->user->DisplayGroupList(1);
-        $displays[] = array('displayid' => 0, 'displaygroup' => 'All');
-        $displayList = Kit::SelectList('displayid', $displays, 'displayid', 'displaygroup', 0);
+        array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
+        Theme::Set('display_field_list', $displays);
 
         // List of Media this user has permission for
         $media = $this->user->MediaList();
-        $media[] = array('mediaid' => 0, 'media' => 'All');
-        $mediaList = Kit::SelectList('mediaid', $media, 'mediaid', 'media', 0);
-
-        // We want to build a form which will sit on the page and allow a button press to generate a CSV file.
-        $output = '';
-        $output .= '<div id="StatsFilter">';
-        $output .= ' <form onsubmit="return false">';
-        $output .= ' <input type="hidden" name="p" value="stats">';
-        $output .= ' <input type="hidden" name="q" value="StatsGrid">';
-        $output .= ' <table>';
-        $output .= '  <tr>';
-        $output .= '   <td>From Date</td>';
-        $output .= '   <td><input type="text" class="date-pick" name="fromdt" value="' . $fromdt . '"/></td>';
-        $output .= '   <td>To Date</td>';
-        $output .= '   <td><input type="text" class="date-pick" name="todt" value="' . $todt . '" /></td>';
-        $output .= '  </tr>';
-        $output .= '  <tr>';
-        $output .= '   <td>' . __('Display') . '</td>';
-        $output .= '   <td>' . $displayList . '</td>';
-        $output .= '   <td>' . __('Media') . '</td>';
-        $output .= '   <td>' . $mediaList . '</td>';
-        $output .= '  </tr>';
-        $output .= ' </table>';
-        $output .= '</form>';
-        $output .= '</div>';
-
-        $id = uniqid();
-
-        $xiboGrid = <<<HTML
-        <div class="XiboGrid" id="$id">
-            <div class="XiboFilter">
-                $output
-            </div>
-            <div class="XiboData"></div>
-        </div>
-HTML;
-        echo $xiboGrid;
-    }
+        array_unshift($media, array('mediaid' => 0, 'media' => 'All'));
+        Theme::Set('media_field_list', $media);
+        
+        // Render the Theme and output
+        Theme::Render('stats_page');
+	}
 
     /**
      * Shows the stats grid
@@ -121,19 +72,9 @@ HTML;
         $displayId = Kit::GetParam('displayid', _POST, _INT);
         $mediaId = Kit::GetParam('mediaid', _POST, _INT);
 
-        $output = '';
-
-        // Output CSV button
-        $output .= '<p>' . __('Export raw data to CSV') . '</p>';
-        $output .= '<form action="index.php" method="post">';
-        $output .= ' <input type="hidden" name="p" value="stats" />';
-        $output .= ' <input type="hidden" name="q" value="OutputCSV" />';
-        $output .= ' <input type="hidden" name="displayid" value="' . $displayId . '" />';
-        $output .= ' <input type="hidden" name="fromdt" value="' . $fromDt . '" />';
-        $output .= ' <input type="hidden" name="todt" value="' . $toDt . '" />';
-        $output .= ' <input type="submit" value="Export" />';
-        $output .= '</form>';
-
+        Theme::Set('form_action', 'index.php?p=stats&q=OutputCSV');
+        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayId . '" /><input type="hidden" name="fromdt" value="' . $fromDt . '" /><input type="hidden" name="todt" value="' . $toDt . '" />');
+        
         // 3 grids showing different stats.
 
         // Layouts Ran
@@ -151,40 +92,28 @@ HTML;
         $SQL .= 'GROUP BY display.Display, layout.Layout ';
         $SQL .= 'ORDER BY display.Display, layout.Layout';
 
-        $output .= '<p>' . __('Layouts ran') . '</p>';
-        $output .= '<table>';
-        $output .= '<thead>';
-        $output .= '<th>' . __('Display') . '</th>';
-        $output .= '<th>' . __('Layout') . '</th>';
-        $output .= '<th>' . __('Number of Plays') . '</th>';
-        $output .= '<th>' . __('Total Duration (s)') . '</th>';
-        $output .= '<th>' . __('Total Duration') . '</th>';
-        $output .= '<th>' . __('First Shown') . '</th>';
-        $output .= '<th>' . __('Last Shown') . '</th>';
-        $output .= '</thead>';
-        $output .= '<tbody>';
-
         if (!$results = $this->db->query($SQL))
         {
             trigger_error($db->error());
-            trigger_error(__('Unable to get Layouts Ran'), E_USER_ERROR);
+            trigger_error(__('Unable to get Layouts Shown'), E_USER_ERROR);
         }
+
+        $rows = array();
 
         while ($row = $db->get_assoc_row($results))
         {
-            $output .= '<tr>';
-            $output .= '<td>' . Kit::ValidateParam($row['Display'], _STRING) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['Layout'], _STRING) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['NumberPlays'], _INT) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['Duration'], _INT) . '</td>';
-            $output .= '<td>' . sec2hms(Kit::ValidateParam($row['Duration'], _INT)) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['MinStart'], _STRING) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['MaxEnd'], _STRING) . '</td>';
-            $output .= '</tr>';
+            $row['Display'] = Kit::ValidateParam($row['Display'], _STRING);
+            $row['Layout'] = Kit::ValidateParam($row['Layout'], _STRING);
+            $row['NumberPlays'] = Kit::ValidateParam($row['NumberPlays'], _INT);
+            $row['DurationSec'] = Kit::ValidateParam($row['Duration'], _INT);
+            $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
+            $row['MinStart'] = Kit::ValidateParam($row['MinStart'], _STRING);
+            $row['MaxEnd'] = Kit::ValidateParam($row['MaxEnd'], _STRING);
+
+            $rows[] = $row;
         }
 
-        $output .= '</tbody>';
-        $output .= '</table>';
+        Theme::Set('table_layouts_shown', $rows);
 
         // Media Ran
         $SQL =  'SELECT display.Display, media.Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ';
@@ -204,40 +133,28 @@ HTML;
         $SQL .= 'GROUP BY display.Display, media.Name ';
         $SQL .= 'ORDER BY display.Display, media.Name';
 
-        $output .= '<p>' . __('Library Media ran') . '</p>';
-        $output .= '<table>';
-        $output .= '<thead>';
-        $output .= '<th>' . __('Display') . '</th>';
-        $output .= '<th>' . __('Media') . '</th>';
-        $output .= '<th>' . __('Number of Plays') . '</th>';
-        $output .= '<th>' . __('Total Duration (s)') . '</th>';
-        $output .= '<th>' . __('Total Duration') . '</th>';
-        $output .= '<th>' . __('First Shown') . '</th>';
-        $output .= '<th>' . __('Last Shown') . '</th>';
-        $output .= '</thead>';
-        $output .= '<tbody>';
-
         if (!$results = $this->db->query($SQL))
         {
             trigger_error($db->error());
             trigger_error(__('Unable to get Library Media Ran'), E_USER_ERROR);
         }
 
+        $rows = array();
+
         while ($row = $db->get_assoc_row($results))
         {
-            $output .= '<tr>';
-            $output .= '<td>' . Kit::ValidateParam($row['Display'], _STRING) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['Name'], _STRING) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['NumberPlays'], _INT) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['Duration'], _INT) . '</td>';
-            $output .= '<td>' . sec2hms(Kit::ValidateParam($row['Duration'], _INT)) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['MinStart'], _STRING) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['MaxEnd'], _STRING) . '</td>';
-            $output .= '</tr>';
+            $row['Display'] = Kit::ValidateParam($row['Display'], _STRING);
+            $row['Media'] = Kit::ValidateParam($row['Name'], _STRING);
+            $row['NumberPlays'] = Kit::ValidateParam($row['NumberPlays'], _INT);
+            $row['DurationSec'] = Kit::ValidateParam($row['Duration'], _INT);
+            $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
+            $row['MinStart'] = Kit::ValidateParam($row['MinStart'], _STRING);
+            $row['MaxEnd'] = Kit::ValidateParam($row['MaxEnd'], _STRING);
+
+            $rows[] = $row;
         }
 
-        $output .= '</tbody>';
-        $output .= '</table>';
+        Theme::Set('table_media_shown', $rows);
 
         // Media on Layouts Ran
         $SQL =  "SELECT display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') AS Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ";
@@ -258,42 +175,31 @@ HTML;
         $SQL .= "GROUP BY display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') ";
         $SQL .= "ORDER BY display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage')";
 
-        $output .= '<p>' . __('Media on Layouts ran') . '</p>';
-        $output .= '<table>';
-        $output .= '<thead>';
-        $output .= '<th>' . __('Display') . '</th>';
-        $output .= '<th>' . __('Layout') . '</th>';
-        $output .= '<th>' . __('Media') . '</th>';
-        $output .= '<th>' . __('Number of Plays') . '</th>';
-        $output .= '<th>' . __('Total Duration (s)') . '</th>';
-        $output .= '<th>' . __('Total Duration') . '</th>';
-        $output .= '<th>' . __('First Shown') . '</th>';
-        $output .= '<th>' . __('Last Shown') . '</th>';
-        $output .= '</thead>';
-        $output .= '<tbody>';
-
         if (!$results = $this->db->query($SQL))
         {
             trigger_error($db->error());
             trigger_error(__('Unable to get Library Media Ran'), E_USER_ERROR);
         }
 
+        $rows = array();
+
         while ($row = $db->get_assoc_row($results))
         {
-            $output .= '<tr>';
-            $output .= '<td>' . Kit::ValidateParam($row['Display'], _STRING) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['Layout'], _STRING) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['Name'], _STRING) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['NumberPlays'], _INT) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['Duration'], _INT) . '</td>';
-            $output .= '<td>' . sec2hms(Kit::ValidateParam($row['Duration'], _INT)) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['MinStart'], _STRING) . '</td>';
-            $output .= '<td>' . Kit::ValidateParam($row['MaxEnd'], _STRING) . '</td>';
-            $output .= '</tr>';
+            $row['Display'] = Kit::ValidateParam($row['Display'], _STRING);
+            $row['Layout'] = Kit::ValidateParam($row['Layout'], _STRING);
+            $row['Media'] = Kit::ValidateParam($row['Name'], _STRING);
+            $row['NumberPlays'] = Kit::ValidateParam($row['NumberPlays'], _INT);
+            $row['DurationSec'] = Kit::ValidateParam($row['Duration'], _INT);
+            $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
+            $row['MinStart'] = Kit::ValidateParam($row['MinStart'], _STRING);
+            $row['MaxEnd'] = Kit::ValidateParam($row['MaxEnd'], _STRING);
+
+            $rows[] = $row;
         }
 
-        $output .= '</tbody>';
-        $output .= '</table>';
+        Theme::Set('table_media_on_layouts_shown', $rows);
+
+        $output = Theme::RenderReturn('stats_page_grid');
 
         $response->SetGridResponse($output);
         $response->Respond();
@@ -333,7 +239,7 @@ HTML;
 			$SQL .= sprintf("  AND stat.displayID = %d ", $displayID);
 		}
 
-                $SQL .= " ORDER BY stat.start ";
+        $SQL .= " ORDER BY stat.start ";
 		
 		Debug::LogEntry($db, 'audit', $SQL, 'Stats', 'OutputCSV');
 		
