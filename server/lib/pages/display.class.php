@@ -218,7 +218,7 @@ SQL;
         Theme::Set('form_action', 'index.php?p=display&q=modify');
         Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayid . '" />');
         
-
+        // Set the field values
         Theme::Set('display', $this->display);
         Theme::Set('defaultlayoutid', $this->layoutid);
         Theme::Set('license', $this->license);
@@ -615,6 +615,9 @@ SQL;
         return $id;
     }
 
+    /**
+     * Member of Display Groups Form
+     */
     public function MemberOfForm()
     {
         $db =& $this->db;
@@ -630,26 +633,37 @@ SQL;
         //  - DisplayGroups this Display is already assigned to
         //  - DisplayGroups this Display could be assigned to
 
+        // Set some information about the form
+        Theme::Set('displaygroups_assigned_id', 'displaygroupsIn');
+        Theme::Set('displaygroups_available_id', 'displaygroupsOut');
+        Theme::Set('displaygroups_assigned_url', 'index.php?p=display&q=SetMemberOf&DisplayID=' . $displayID);
+
         // Display Groups Assigned
         $SQL  = "";
         $SQL .= "SELECT displaygroup.DisplayGroupID, ";
-        $SQL .= "       displaygroup.DisplayGroup ";
+        $SQL .= "       displaygroup.DisplayGroup, ";
+        $SQL .= "       CONCAT('DisplayGroupID_', displaygroup.DisplayGroupID) AS list_id ";
         $SQL .= "FROM   displaygroup ";
         $SQL .= "   INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
         $SQL .= sprintf("WHERE  lkdisplaydg.DisplayID   = %d ", $displayID);
         $SQL .= " AND displaygroup.IsDisplaySpecific = 0 ";
         $SQL .= " ORDER BY displaygroup.DisplayGroup ";
 
-        if(!$resultIn = $db->query($SQL))
+        $displaygroupsAssigned = $db->GetArray($SQL);
+
+        if (!is_array($displaygroupsAssigned))
         {
             trigger_error($db->error());
             trigger_error(__('Error getting Display Groups'), E_USER_ERROR);
         }
 
+        Theme::Set('displaygroups_assigned', $displaygroupsAssigned);
+
         // Display Groups not assigned
         $SQL  = "";
         $SQL .= "SELECT displaygroup.DisplayGroupID, ";
-        $SQL .= "       displaygroup.DisplayGroup ";
+        $SQL .= "       displaygroup.DisplayGroup, ";
+        $SQL .= "       CONCAT('DisplayGroupID_', displaygroup.DisplayGroupID) AS list_id ";
         $SQL .= "  FROM displaygroup ";
         $SQL .= " WHERE displaygroup.IsDisplaySpecific = 0 ";
         $SQL .= " AND displaygroup.DisplayGroupID NOT IN ";
@@ -659,40 +673,20 @@ SQL;
         $SQL .= "       )";
         $SQL .= " ORDER BY displaygroup.DisplayGroup ";
 
-        if(!$resultOut = $db->query($SQL))
+        Debug::LogEntry($db, 'audit', $SQL);
+
+        $displaygroups_available = $db->GetArray($SQL);
+
+        if (!is_array($displaygroups_available))
         {
             trigger_error($db->error());
-            trigger_error(__('Error getting Displays'), E_USER_ERROR);
+            trigger_error(__('Error getting Display Groups'), E_USER_ERROR);
         }
+        
+        Theme::Set('displaygroups_available', $displaygroups_available);
 
-        // Now we have an IN and an OUT results object which we can use to build our lists
-        $listIn = '<ul id="displaygroupsIn" href="index.php?p=display&q=SetMemberOf&DisplayID=' . $displayID . '" class="connectedSortable">';
-
-        while($row = $db->get_assoc_row($resultIn))
-        {
-            // For each item output a LI
-            $displayID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
-            $display	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
-
-            $listIn .= '<li id="DisplayGroupID_' . $displayID . '"class="li-sortable">' . $display . '</li>';
-        }
-        $listIn	.= '</ul>';
-
-        $listOut = '<ul id="displaygroupsOut" class="connectedSortable">';
-
-        while($row = $db->get_assoc_row($resultOut))
-        {
-            // For each item output a LI
-            $displayID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
-            $display	= Kit::ValidateParam($row['DisplayGroup'], _STRING);
-
-            $listOut .= '<li id="DisplayGroupID_' . $displayID . '" class="li-sortable">' . $display . '</li>';
-        }
-        $listOut .= '</ul>';
-
-        // Build the final form.
-        $helpText   = '<center>' . __('Drag or double click to move items between lists') . '</center>';
-        $form       = $helpText . '<div class="connectedlist"><h3>' . __('Member Of') . '</h3>' . $listIn . '</div><div class="connectedlist"><h3>' . __('Available') . '</h3>' . $listOut . '</div>';
+        // Render the theme
+        $form = Theme::RenderReturn('display_form_group_assign');
 
         $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Members') . '")');
@@ -777,27 +771,20 @@ SQL;
 
         $displayId = Kit::GetParam('DisplayId', _GET, _INT);
 
-        $msg = __('Are you sure you want to send a Wake On Lan message to this display?');
-
         // Get the MAC Address
         $macAddress = $db->GetSingleValue(sprintf("SELECT MacAddress FROM `display` WHERE DisplayID = %d", $displayId), 'MacAddress', _STRING);
 
         if (!$macAddress || $macAddress == '')
-                trigger_error(__('This display has no mac address recorded against it yet. Make sure the display is running.'), E_USER_ERROR);
+            trigger_error(__('This display has no mac address recorded against it yet. Make sure the display is running.'), E_USER_ERROR);
 
-        $form = <<<END
-            <form id="WakeOnLanForm" class="XiboForm" method="post" action="index.php?p=display&q=WakeOnLan">
-                <input type="hidden" name="DisplayId" value="$displayId">
-                <inpput type="hidden" name="MacAddress" value="$macAddress">
-                <table>
-                    <tr>
-                        <td>$msg</td>
-                    </tr>
-                </table>
-            </form>
-END;
+        // Set some information about the form
+        Theme::Set('form_id', 'WakeOnLanForm');
+        Theme::Set('form_action', 'index.php?p=display&q=WakeOnLan');
+        Theme::Set('form_meta', '<input type="hidden" name="DisplayId" value="' . $displayId . '"><input type="hidden" name="MacAddress" value="' . $macAddress . '">');
 
-        $response->SetFormRequestResponse($form, __('Wake On Lan'), '300px', '150px');
+        $form = Theme::RenderReturn('display_form_wakeonlan');
+
+        $response->SetFormRequestResponse($form, __('Wake On Lan'), '300px', '250px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Send'), '$("#WakeOnLanForm").submit()');
         $response->Respond();
@@ -815,9 +802,7 @@ END;
         $displayId = Kit::GetParam('DisplayId', _POST, _INT);
 
         if (!$displayObject->WakeOnLan($displayId))
-        {
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-        }
 
         $response->SetFormSubmitResponse(__('Wake on Lan command sent.'));
         $response->Respond();

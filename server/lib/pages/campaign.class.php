@@ -503,7 +503,7 @@ class campaignDAO
         $SQL  = "";
         $SQL .= "SELECT layout.LayoutID, ";
         $SQL .= "       layout.layout, ";
-        $SQL .= "       'LayoutID_' + layout.LayoutID AS list_id ";
+        $SQL .= "       CONCAT('LayoutID_', layout.LayoutID) AS list_id ";
         $SQL .= "FROM   layout ";
         $SQL .= "       INNER JOIN lkcampaignlayout ";
         $SQL .= "       ON     lkcampaignlayout.LayoutID = layout.LayoutID ";
