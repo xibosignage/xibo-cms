@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner and James Packer
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -33,23 +33,16 @@ class adminDAO
 		require_once('lib/data/setting.data.class.php');
 	}
 	
-	function displayPage() 
-	{
+	function displayPage() {
 	
-		include("template/pages/settings_view.php");
-		
-		return false;
-	}
-	
-	function on_page_load() 
-	{
-		return '';
-	}
-	
-	function echo_page_heading() 
-	{
-		echo __('Settings');
-		return true;
+		// Set some information about the form
+        Theme::Set('form_id', 'SettingsForm');
+        Theme::Set('form_action', 'index.php?p=group&q=Delete');
+		Theme::Set('settings_help_button_url', HelpManager::Link('Content', 'Config'));
+		Theme::Set('settings_form', $this->display_settings());
+
+		// Render the Theme and output
+        Theme::Render('settings_page');
 	}
 
 	function modify() 
@@ -121,9 +114,9 @@ class adminDAO
 			}
 		}
 
-		setMessage(__("Settings changed"));
-
-		return $refer;
+		$response = new ResponseManager();
+		$response->SetFormSubmitResponse(__('Settings Updated'), false);
+        $response->Respond();
 	}
 	
 	function display_settings() 
@@ -136,7 +129,7 @@ class adminDAO
 		$helpButton 	= $helpObject->HelpButton("content/config/settings", true);
 		
 		//one giant form, split into tabs
-		$form = '<form method="post" action="index.php?p=admin&q=modify">';
+		$form = '<form id="SettingsForm" method="post" class="XiboForm" action="index.php?p=admin&q=modify">';
 		$tabs = '';
 		$pages = '';
 		
@@ -178,18 +171,12 @@ PAGES;
 			</ul>
 			$pages
 		</div>
-		<input type="hidden" name="location" value="index.php?p=admin&q=modify">
-		<input type="hidden" name="refer" value="index.php?p=admin">
-		<input type="submit" value="$msgSave" />
-		$helpButton
 FORM;
 	
 		//end the form and output
 		$form .= "</form>";
 		
-		echo $form;
-		
-		return false;
+		return $form;
 	}
 
 	function display_cat($cat) 
