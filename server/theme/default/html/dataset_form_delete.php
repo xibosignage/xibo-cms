@@ -19,33 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Theme variables:
- * 	id = The GridID for rendering AJAX layout table return
- * 	filter_id = The Filter Form ID
- * 	form_meta = Extra form meta that needs to be sent to the CMS to return the list of layouts
- * 	pager = A paging control for this Xibo Grid
+ *  form_id = The ID of the Form
+ * 	form_action = The URL for calling the Transaction
+ * 	form_meta = Extra META information required by the Transation
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div id="form_container">
-	<div id="form_header">
-		<div id="form_header_left"></div>
-		<div id="form_header_right"></div>
-	</div>
-	
-	<div id="form_body">
-		<div id="dashbuttons">
-			<?php foreach (Theme::GetMenu('Dashboard') as $item) { ?>
-				<div class="dashicons">
-					<a id="<?php echo $item['class']; ?>" alt="<?php echo $item['title']; ?>" href="<?php echo $item['link']; ?>">
-					<?php echo Theme::Image($item['img'], 'dash_button'); ?>
-					<span class="dash_text"><?php echo $item['title']; ?></span></a>
-				</div>
-			<?php } ?>
-		</div>
-	</div>
-		
-	<div id="form_footer">
-		<div id="form_footer_left"></div>
-		<div id="form_footer_right"></div>
-	</div>
-</div>
+<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+	<?php echo Theme::Get('form_meta'); ?>
+	<p><?php echo Theme::Translate('Are you sure you want to delete?'); ?></p>
+</form>

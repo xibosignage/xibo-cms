@@ -29,18 +29,34 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <div id="form_container">
 	<div id="form_header">
 		<div id="form_header_left"></div>
+            <div id="secondaryMenu">
+                <ul id="menu" style="padding-left: 26.5em;">
+            		<?php
+						foreach (Theme::GetMenu('Library Menu') as $item) {
+							echo $item['li'];
+						}
+					?>
+            	</ul>
+            </div>
 		<div id="form_header_right"></div>
 	</div>
 	
 	<div id="form_body">
-		<div id="dashbuttons">
-			<?php foreach (Theme::GetMenu('Dashboard') as $item) { ?>
-				<div class="dashicons">
-					<a id="<?php echo $item['class']; ?>" alt="<?php echo $item['title']; ?>" href="<?php echo $item['link']; ?>">
-					<?php echo Theme::Image($item['img'], 'dash_button'); ?>
-					<span class="dash_text"><?php echo $item['title']; ?></span></a>
+		<div class="SecondNav">
+			<ul>
+				<li><a title="<?php echo Theme::Translate('Add a new DataSet'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('dataset_form_add_url'); ?>" ><span><?php echo Theme::Translate('Add DataSet'); ?></span></a></li>
+			</ul>
+		</div>
+		<div class="XiboGrid" id="<?php echo Theme::Get('id'); ?>">
+			<div class="XiboFilter">
+				<div class="FilterDiv" id="Filter">
+					<form>
+						<?php echo Theme::Get('form_meta'); ?>
+					</form>
 				</div>
-			<?php } ?>
+			</div>
+			<?php echo Theme::Get('pager'); ?>
+			<div class="XiboData"></div>
 		</div>
 	</div>
 		

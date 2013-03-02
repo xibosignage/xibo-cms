@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2011-2012 Daniel Garner
+ * Copyright (C) 2011-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -35,42 +35,17 @@ class datasetDAO
         Kit::ClassLoader('datasetdata');
     }
 
-    function on_page_load()
+    public function displayPage()
     {
-            return "";
-    }
-
-    function echo_page_heading()
-    {
-            echo __("Layouts");
-            return true;
-    }
-
-    function displayPage()
-    {
-        require('template/pages/dataset_view.php');
-    }
-
-    public function DataSetFilter()
-    {
+        // Configure the theme
         $id = uniqid();
-        $pager = ResponseManager::Pager($id);
+        Theme::Set('id', $id);
+        Theme::Set('dataset_form_add_url', 'index.php?p=dataset&q=AddDataSetForm');
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetGrid">');
+        Theme::Set('pager', ResponseManager::Pager($id));
 
-        $xiboGrid = <<<HTML
-        <div class="XiboGrid" id="$id">
-                <div class="XiboFilter">
-                        <form onsubmit="return false">
-				<input type="hidden" name="p" value="dataset">
-				<input type="hidden" name="q" value="DataSetGrid">
-                        </form>
-                </div>
-                $pager
-                <div class="XiboData">
-
-                </div>
-        </div>
-HTML;
-        echo $xiboGrid;
+        // Render the Theme and output
+        Theme::Render('dataset_page');
     }
 
     public function DataSetGrid()
@@ -79,56 +54,66 @@ HTML;
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $msgEdit = __('Edit');
-        $msgDelete = __('Delete');
-        $msgPermissions = __('Permissions');
+        $rows = array();
 
-        $output = <<<END
-        <div class="info_table">
-        <table style="width:100%">
-            <thead>
-                <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Owner</th>
-                <th>$msgPermissions</th>
-                <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-END;
-
-        foreach($this->user->DataSetList() as $dataSet)
+        foreach ($this->user->DataSetList() as $dataSet)
         {
-            $auth = $user->DataSetAuth($dataSet['datasetid'], true);
-            $owner = $user->getNameFromID($dataSet['ownerid']);
-            $groups = $this->GroupsForDataSet($dataSet['datasetid']);
+            // Add some additional info
+            $dataSet['owner'] = $user->getNameFromID($dataSet['ownerid']);
+            $dataSet['groups'] = $this->GroupsForDataSet($dataSet['datasetid']);
+            $dataSet['buttons'] = array();
 
-            $output .= '<tr>';
-            $output .= '    <td>' . $dataSet['dataset'] . '</td>';
-            $output .= '    <td>' . $dataSet['description'] . '</td>';
-            $output .= '    <td>' . $owner . '</td>';
-            $output .= '    <td>' . $groups . '</td>';
-            $output .= '    <td>';
+            if ($dataSet['edit']) {
+                
+                // View Data
+                $dataSet['buttons'][] = array(
+                        'id' => 'dataset_button_viewdata',
+                        'url' => 'index.php?p=dataset&q=DataSetDataForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'text' => __('View Data')
+                    );
 
-            if ($auth->edit)
-            {
-                $output .= '<button class="XiboFormButton" href="index.php?p=dataset&q=DataSetDataForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'] . '"><span>' . __('View Data') . '</span></button>';
-                $output .= '<button class="XiboFormButton" href="index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'] . '"><span>' . __('View Columns') . '</span></button>';
-                $output .= '<button class="XiboFormButton" href="index.php?p=dataset&q=EditDataSetForm&datasetid=' . $dataSet['datasetid'] . '"><span>' . $msgEdit . '</span></button>';
+                // View Columns
+                $dataSet['buttons'][] = array(
+                        'id' => 'dataset_button_viewcolumns',
+                        'url' => 'index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'text' => __('View Columns')
+                    );
+
+                // Edit DataSet
+                $dataSet['buttons'][] = array(
+                        'id' => 'dataset_button_edit',
+                        'url' => 'index.php?p=dataset&q=EditDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'text' => __('Edit')
+                    );               
             }
 
-            if ($auth->del)
-                $output .= '<button class="XiboFormButton" href="index.php?p=dataset&q=DeleteDataSetForm&datasetid=' . $dataSet['datasetid'] . '"><span>' . $msgDelete . '</span></button>';
+            if ($dataSet['del']) {
 
-            if ($auth->modifyPermissions)
-                $output .= '<button class="XiboFormButton" href="index.php?p=dataset&q=PermissionsForm&datasetid=' . $dataSet['datasetid'] . '"><span>' . $msgPermissions . '</span></button>';
+                // Delete DataSet
+                $dataSet['buttons'][] = array(
+                        'id' => 'dataset_button_delete',
+                        'url' => 'index.php?p=dataset&q=DeleteDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'text' => __('Delete')
+                    ); 
+            }
+                
+            if ($dataSet['modifyPermissions']) {
 
-            $output .= '    </td>';
-            $output .= '</tr>';
+                // Edit Permissions
+                $dataSet['buttons'][] = array(
+                        'id' => 'dataset_button_delete',
+                        'url' => 'index.php?p=dataset&q=PermissionsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'text' => __('Permissions')
+                    ); 
+            }
+
+            $rows[] = $dataSet;
         }
 
-        $output .= '</tbody></table></div>';
+        Theme::Set('table_rows', $rows);
+        
+        $output = Theme::RenderReturn('dataset_page_grid');
+
         $response->SetGridResponse($output);
         $response->Respond();
     }
@@ -139,29 +124,14 @@ END;
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $helpManager = new HelpManager($db, $user);
+        // Set some information about the form
+        Theme::Set('form_id', 'AddDataSetForm');
+        Theme::Set('form_action', 'index.php?p=dataset&q=AddDataSet');
 
-        $msgName = __('Name');
-        $msgDesc = __('Description');
-
-        $form = <<<END
-        <form id="AddDataSetForm" class="XiboForm" method="post" action="index.php?p=dataset&q=AddDataSet">
-            <table>
-                <tr>
-                    <td><label for="dataset" accesskey="n">$msgName<span class="required">*</span></label></td>
-                    <td><input name="dataset" class="required" type="text" id="dataset" tabindex="1" /></td>
-                </tr>
-                <tr>
-                    <td><label for="description" accesskey="d">$msgDesc</label></td>
-                    <td><input name="description" type="text" id="description" tabindex="2" /></td>
-                </tr>
-            </table>
-        </form>
-END;
-
+        $form = Theme::RenderReturn('dataset_form_add');
 
         $response->SetFormRequestResponse($form, __('Add DataSet'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Add') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Add'), '$("#AddDataSetForm").submit()');
         $response->Respond();
@@ -197,8 +167,6 @@ END;
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $helpManager = new HelpManager($db, $user);
-
         $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
 
         $auth = $user->DataSetAuth($dataSetId, true);
@@ -211,31 +179,18 @@ END;
         if (!$row = $db->GetSingleRow($SQL))
             trigger_error(__('Unable to get DataSet information'));
 
-        $dataSet = $row['DataSet'];
-        $description = $row['Description'];
+        // Set some information about the form
+        Theme::Set('form_id', 'EditDataSetForm');
+        Theme::Set('form_action', 'index.php?p=dataset&q=EditDataSet');
+        Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
-        $msgName = __('Name');
-        $msgDesc = __('Description');
+        Theme::Set('dataset', Kit::ValidateParam($row['DataSet'], _STRING));
+        Theme::Set('description', Kit::ValidateParam($row['Description'], _STRING));
 
-        $form = <<<END
-        <form id="EditDataSetForm" class="XiboForm" method="post" action="index.php?p=dataset&q=EditDataSet">
-            <input type="hidden" name="datasetid" value="$dataSetId" />
-            <table>
-                <tr>
-                    <td><label for="dataset" accesskey="n">$msgName<span class="required">*</span></label></td>
-                    <td><input name="dataset" class="required" type="text" id="dataset" tabindex="1" value="$dataSet" /></td>
-                </tr>
-                <tr>
-                    <td><label for="description" accesskey="d">$msgDesc</label></td>
-                    <td><input name="description" type="text" id="description" tabindex="2" value="$description" /></td>
-                </tr>
-            </table>
-        </form>
-END;
-
+        $form = Theme::RenderReturn('dataset_form_edit');
 
         $response->SetFormRequestResponse($form, __('Edit DataSet'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Edit') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Edit'), '$("#EditDataSetForm").submit()');
         $response->Respond();
@@ -272,29 +227,22 @@ END;
     {
         $db =& $this->db;
         $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $this->user);
-
+        
         $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->del)
             trigger_error(__('Access Denied'));
 
-        // Translate messages
-        $msgDelete		= __('Are you sure you want to delete this DataSet?');
-        $msgYes			= __('Yes');
-        $msgNo			= __('No');
+        // Set some information about the form
+        Theme::Set('form_id', 'DataSetDeleteForm');
+        Theme::Set('form_action', 'index.php?p=dataset&q=DeleteDataSet');
+        Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
-        //we can delete
-        $form = <<<END
-        <form id="DataSetDeleteForm" class="XiboForm" method="post" action="index.php?p=dataset&q=DeleteDataSet">
-            <input type="hidden" name="datasetid" value="$dataSetId">
-            <p>$msgDelete</p>
-        </form>
-END;
+        $form = Theme::RenderReturn('dataset_form_delete');
 
         $response->SetFormRequestResponse($form, __('Delete this DataSet?'), '350px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'Delete') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Delete'), '$("#DataSetDeleteForm").submit()');
         $response->Respond();

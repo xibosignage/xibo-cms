@@ -1180,6 +1180,7 @@ END;
                 $dataSetItem['view'] = (int) $auth->view;
                 $dataSetItem['edit'] = (int) $auth->edit;
                 $dataSetItem['del'] = (int) $auth->del;
+                $dataSetItem['modifyPermissions'] = (int) $auth->modifyPermissions;
 
                 $dataSets[] = $dataSetItem;
             }
