@@ -57,7 +57,7 @@ class userDAO
         Theme::Set('user_form_add_url', 'index.php?p=user&q=DisplayForm');
         Theme::Set('myapplications_form_add_url', 'index.php?p=user&q=MyApplications');
 
-        if (Kit::IsFilterPinned('layout', 'LayoutFilter')) {
+        if (Kit::IsFilterPinned('user', 'Filter')) {
             Theme::Set('filter_pinned', 'checked');
             Theme::Set('filter_username', Session::Get('user', 'filter_username'));
             Theme::Set('filter_usertypeid', Session::Get('user', 'filter_usertypeid'));

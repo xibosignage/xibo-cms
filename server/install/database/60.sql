@@ -44,6 +44,12 @@ SELECT 9, `PageID`, NULL, 'Help Links', NULL, NULL, 6
   FROM `pages`
  WHERE `name` = 'help';
 
+UPDATE `pages` SET name = 'log' WHErE name = 'report';
+INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES (NULL, 'sessions', '9');
+
+UPDATE `menuitem` SET Args = NULL, PageID = (SELECT PageID FROM `pages` WHERE name = 'sessions' LIMIT 1) WHERE PageID = (SELECT PageID FROM `pages` WHERE name = 'log' LIMIT 1) AND `Args` = 'sp=sessions';
+UPDATE `menuitem` SET Args = NULL WHERE PageID = (SELECT PageID FROM `pages` WHERE name = 'log' LIMIT 1) AND `Args` = 'sp=log';
+
 UPDATE `version` SET `app_ver` = '1.5.0', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '60';
