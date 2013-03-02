@@ -49,6 +49,7 @@ INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES (NULL, 'sessions', 
 
 UPDATE `menuitem` SET Args = NULL, PageID = (SELECT PageID FROM `pages` WHERE name = 'sessions' LIMIT 1) WHERE PageID = (SELECT PageID FROM `pages` WHERE name = 'log' LIMIT 1) AND `Args` = 'sp=sessions';
 UPDATE `menuitem` SET Args = NULL WHERE PageID = (SELECT PageID FROM `pages` WHERE name = 'log' LIMIT 1) AND `Args` = 'sp=log';
+UPDATE `menuitem` SET `Text` = 'About' WHERE `Text` = 'License';
 
 UPDATE `version` SET `app_ver` = '1.5.0', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

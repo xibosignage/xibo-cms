@@ -19,30 +19,28 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Theme variables:
- * 	id = The GridID for rendering AJAX layout table return
- * 	filter_id = The Filter Form ID
- * 	form_meta = Extra form meta that needs to be sent to the CMS to return the list of layouts
- * 	pager = A paging control for this Xibo Grid
- * 	resolution_form_add_url = The Add URL for adding a Resolution
+ * 	text = The License text (from theme file about_text)
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div id="form_container">
 	<div id="form_header">
 		<div id="form_header_left"></div>
+            <div id="secondaryMenu">
+                <ul id="menu" style="padding-left: 26.5em;">
+            		<?php
+						foreach (Theme::GetMenu('Advanced Menu') as $item) {
+							echo $item['li'];
+						}
+					?>
+            	</ul>
+            </div>
 		<div id="form_header_right"></div>
 	</div>
 	
 	<div id="form_body">
-		<div id="dashbuttons">
-			<?php foreach (Theme::GetMenu('Dashboard') as $item) { ?>
-				<div class="dashicons">
-					<a id="<?php echo $item['class']; ?>" alt="<?php echo $item['title']; ?>" href="<?php echo $item['link']; ?>">
-					<?php echo Theme::Image($item['img'], 'dash_button'); ?>
-					<span class="dash_text"><?php echo $item['title']; ?></span></a>
-				</div>
-			<?php } ?>
-		</div>
+		<div class="SecondNav"></div>
+		<?php echo Theme::Get('text'); ?>
 	</div>
 		
 	<div id="form_footer">
