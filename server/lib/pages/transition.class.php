@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -45,53 +45,14 @@ class transitionDAO
      */
     function displayPage()
     {
-        include('template/pages/transition_view.php');
-        return false;
-    }
-
-    /**
-     * No onload
-     * @return
-     */
-    function on_page_load()
-    {
-        return '';
-    }
-
-    /**
-     * No page heading
-     * @return
-     */
-    function echo_page_heading()
-    {
-        return true;
-    }
-
-    public function Filter()
-    {
-        $filterForm = <<<END
-        <div id="GroupFilter" class="FilterDiv">
-                <form>
-                        <input type="hidden" name="p" value="transition">
-                        <input type="hidden" name="q" value="Grid">
-                </form>
-        </div>
-END;
+        // Configure the theme
         $id = uniqid();
-        $pager = ResponseManager::Pager($id);
+        Theme::Set('id', $id);
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="transition"><input type="hidden" name="q" value="Grid">');
+        Theme::Set('pager', ResponseManager::Pager($id));
 
-        $xiboGrid = <<<HTML
-        <div class="XiboGrid" id="$id">
-                <div class="XiboFilter">
-                        $filterForm
-                </div>
-                $pager
-                <div class="XiboData">
-
-                </div>
-        </div>
-HTML;
-        echo $xiboGrid;
+        // Render the Theme and output
+        Theme::Render('transition_page');
     }
 
     public function Grid()
@@ -111,45 +72,48 @@ HTML;
         $SQL .= '  FROM `transition` ';
         $SQL .= ' ORDER BY Transition ';
 
-        if (!$rows = $db->GetArray($SQL))
+        if (!$transitions = $db->GetArray($SQL))
         {
             trigger_error($db->error());
             trigger_error(__('Unable to get the list of transitions'), E_USER_ERROR);
         }
 
-        $output  = '<div class="info_table"><table style="width:100%">';
-        $output .= '    <thead>';
-        $output .= '    <tr>';
-        $output .= '    <th>' . __('Name') .'</th>';
-        $output .= '    <th>' . __('Has Duration') .'</th>';
-        $output .= '    <th>' . __('Has Direction') .'</th>';
-        $output .= '    <th>' . __('Enabled for In') .'</th>';
-        $output .= '    <th>' . __('Enabled for Out') .'</th>';
-        $output .= '    <th>' . __('Actions') .'</th>';
-        $output .= '    </tr>';
-        $output .= '    </thead>';
-        $output .= '    <tbody>';
+        $rows = array();
 
-        foreach($rows as $transition)
+        foreach($transitions as $transition)
         {
-            $transitionId = Kit::ValidateParam($transition['TransitionID'], _INT);
-            $name = Kit::ValidateParam($transition['Transition'], _STRING);
-            $hasDuration = Kit::ValidateParam($transition['HasDuration'], _INT);
-            $hasDirection = Kit::ValidateParam($transition['HasDirection'], _INT);
-            $enabledForIn = Kit::ValidateParam($transition['AvailableAsIn'], _INT);
-            $enabledForOut = Kit::ValidateParam($transition['AvailableAsOut'], _INT);
+            $row = array();
+            $row['transitionid'] = Kit::ValidateParam($transition['TransitionID'], _INT);
+            $row['name'] = Kit::ValidateParam($transition['Transition'], _STRING);
+            $row['hasduration'] = Kit::ValidateParam($transition['HasDuration'], _INT);
+            $row['hasduration_image'] = ($row['hasduration'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+            $row['hasdirection'] = Kit::ValidateParam($transition['HasDirection'], _INT);
+            $row['hasdirection_image'] = ($row['hasdirection'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+            $row['enabledforin'] = Kit::ValidateParam($transition['AvailableAsIn'], _INT);
+            $row['enabledforin_image'] = ($row['enabledforin'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+            $row['enabledforout'] = Kit::ValidateParam($transition['AvailableAsOut'], _INT);
+            $row['enabledforout_image'] = ($row['enabledforout'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
 
-            $output .= '<tr>';
-            $output .= '<td>' . $name . '</td>';
-            $output .= '<td>' . (($hasDuration == 1) ? '<img src="img/act.gif" />' : '<img src="img/disact.gif" />') . '</td>';
-            $output .= '<td>' . (($hasDirection == 1) ? '<img src="img/act.gif" />' : '<img src="img/disact.gif" />') . '</td>';
-            $output .= '<td>' . (($enabledForIn == 1) ? '<img src="img/act.gif" />' : '<img src="img/disact.gif" />') . '</td>';
-            $output .= '<td>' . (($enabledForOut == 1) ? '<img src="img/act.gif" />' : '<img src="img/disact.gif" />') . '</td>';
-            $output .= '<td>' . ((Config::GetSetting($db, 'TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked') ? __('Transition Config Locked') : '<button class="XiboFormButton" href="index.php?p=transition&q=EditForm&TransitionID=' . $transitionId . '"><span>' . __('Edit') . '</span></button>') . '</td>';
-            $output .= '</tr>';
+            // Initialise array of buttons, because we might not have any
+            $row['buttons'] = array();
+
+            // If the module config is not locked, present some buttons
+            if (Config::GetSetting($db, 'TRANSITION_CONFIG_LOCKED_CHECKB') != 'Checked') {
+                
+                // Edit button
+                $row['buttons'][] = array(
+                        'id' => 'transition_button_edit',
+                        'url' => 'index.php?p=transition&q=EditForm&TransitionID=' . $row['transitionid'],
+                        'text' => __('Edit')
+                    );
+            }
+
+            $rows[] = $row;
         }
 
-        $output .= "</tbody></table></div>";
+        Theme::Set('table_rows', $rows);
+
+        $output = Theme::RenderReturn('transition_page_grid');
 
         $response->SetGridResponse($output);
         $response->Respond();
@@ -185,40 +149,20 @@ HTML;
         }
 
         $name = Kit::ValidateParam($row['Transition'], _STRING);
-        $enabledForIn = Kit::ValidateParam($row['AvailableAsIn'], _INT);
-        $enabledForOut = Kit::ValidateParam($row['AvailableAsOut'], _INT);
-        
-        // Check boxes
-        $enabledForInChecked = ($enabledForIn) ? 'checked' : '';
-        $enabledForOutChecked = ($enabledForOut) ? 'checked' : '';
-        
-        // Messages
-        $msgSave = __('Save');
-        $msgCancel = __('Cancel');
-        
-        $msgEnabledForIn = __('Available for In Transitions?');
-        $msgEnabledForOut = __('Available for Out Transitions?');
-        
-        $form = <<<END
-        <form id="TransitionEditForm" class="XiboForm" action="index.php?p=transition&q=Edit" method="post">
-            <input type="hidden" name="TransitionID" value="$transitionId" />
-            <table>
-                <tr>
-                    <td>$msgEnabledForIn</span></td>
-                    <td><input type="checkbox" name="EnabledForIn" $enabledForInChecked></td>
-                </tr>
-                <tr>
-                    <td>$msgEnabledForOut</span></td>
-                    <td><input type="checkbox" name="EnabledForOut" $enabledForOutChecked></td>
-                </tr>
-            </table>
-        </form>
-END;
+        Theme::Set('enabledforin_checked', ((Kit::ValidateParam($row['AvailableAsIn'], _INT) == 1) ? 'Checked' : ''));
+        Theme::Set('enabledforout_checked', ((Kit::ValidateParam($row['AvailableAsOut'], _INT) == 1) ? 'Checked' : ''));        
 
-        $response->SetFormRequestResponse($form, __('Edit ') . $name, '350px', '325px');
+        // Set some information about the form
+        Theme::Set('form_id', 'TransitionEditForm');
+        Theme::Set('form_action', 'index.php?p=transition&q=Edit');
+        Theme::Set('form_meta', '<input type="hidden" name="TransitionID" value="'. $transitionId . '" />');
+        
+        $form = Theme::RenderReturn('transition_form_edit');
+
+        $response->SetFormRequestResponse($form, sprintf(__('Edit %s'), $name), '350px', '325px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Transition', 'Edit') . '")');
-        $response->AddButton($msgCancel, 'XiboDialogClose()');
-        $response->AddButton($msgSave, '$("#TransitionEditForm").submit()');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#TransitionEditForm").submit()');
         $response->Respond();
     }
 
