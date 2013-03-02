@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,14 +22,14 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Module implements ModuleInterface
 {
-	//Media information
+	// Media information
 	protected $db;
 	protected $user;
 	protected $region;
 	protected $response;
-        public $auth;
+    public $auth;
 	protected $type;
-      	public $displayType;
+  	public $displayType;
 
 	protected $layoutid;
 	protected $regionid;
@@ -47,9 +47,9 @@ class Module implements ModuleInterface
 
 	protected $existingMedia;
 	protected $deleteFromRegion;
-        protected $showRegionOptions;
-        protected $originalUserId;
-        protected $assignedMedia;
+    protected $showRegionOptions;
+    protected $originalUserId;
+    protected $assignedMedia;
 
     /**
      * Constructor - sets up this media object with all the available information

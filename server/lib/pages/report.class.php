@@ -52,7 +52,7 @@ class reportDAO
 		
 		if (!$this->has_permissions) 
 		{
-			displayMessage(MSG_MODE_MANUAL, __('You do not have permissions to access this page'));
+			trigger_error(__('You do not have permissions to access this page'), E_USER_ERROR);
 			return false;
 		}
 		

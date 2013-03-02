@@ -39,6 +39,11 @@ UPDATE `menuitem` SET `Img` = REPLACE(Img, 'img/dashboard/', 'dashboard/') WHERE
 ALTER TABLE  `resolution` ADD  `intended_width` INT NOT NULL ,
 ADD  `intended_height` INT NOT NULL;
 
+INSERT INTO `menuitem` (`MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`)
+SELECT 9, `PageID`, NULL, 'Help Links', NULL, NULL, 6
+  FROM `pages`
+ WHERE `name` = 'help';
+
 UPDATE `version` SET `app_ver` = '1.5.0', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '60';

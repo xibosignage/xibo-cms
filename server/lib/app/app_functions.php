@@ -40,29 +40,6 @@ function setMessage($message) {
 	$_SESSION['message'] .= $message;
 }
 
-function displayMessage($mode = MSG_MODE_AUTO, $msg="", $show_back = true, $template = "template/pages/message_page.php") 
-{
-	switch ($mode) 
-	{
-	
-		case MSG_MODE_AUTO:
-			if (isset($_SESSION['message'])) 
-			{
-				echo $_SESSION['message'];
-				unset($_SESSION['message']);
-			}
-		break;
-		
-		//Displays a manual message
-		case MSG_MODE_MANUAL:
-			$errorMessage = $msg;
-			//clear the object buffer - so we only see this error message
-			//ob_get_clean();
-			include($template);
-		break;
-	}
-}
-
 // Returns a drop down list based on the provided SQL - the ID should be the first field, and the name the second
 function dropdownlist($SQL, $list_name, $selected = "", $callback = "", $flat_list = false, $checkPermissions = false, $userid = "", $permissionLevel = "see", $useQueryId = false) {
 	global $db;

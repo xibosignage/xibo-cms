@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2010-12 Daniel Garner
+ * Copyright (C) 2010-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
