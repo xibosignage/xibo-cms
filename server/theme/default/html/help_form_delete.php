@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2012 Daniel Garner
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -17,33 +17,15 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Theme variables:
+ *  form_id = The ID of the Form
+ * 	form_action = The URL for calling the Transaction
+ * 	form_meta = Extra META information required by the Transation
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-
-$msgAdd	= __('Add Help Link');
-
 ?>
-<div id="form_container">
-	<div id="form_header">
-		<div id="form_header_left">
-		</div>
-		<div id="form_header_right">
-		</div>
-	</div>
-	
-	<div id="form_body">
-		<div class="SecondNav">
-			<!-- Maybe at a later date we could have these buttons generated from the DB - and therefore passed through the security system ? -->
-			<ul>
-				<li><a title="<?php echo $msgAdd; ?>" class="XiboFormButton" href="index.php?p=help&q=AddForm" ><span><?php echo $msgAdd; ?></span></a></li>
-			</ul>
-		</div>
-		<?php $this->Filter(); ?>
-	</div>
-	<div id="form_footer">
-		<div id="form_footer_left">
-		</div>
-		<div id="form_footer_right">
-		</div>
-	</div>
-</div>	
+<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+	<?php echo Theme::Get('form_meta'); ?>
+	<p><?php echo Theme::Translate('Are you sure you want to delete?'); ?></p>
+</form>
