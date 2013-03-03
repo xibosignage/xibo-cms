@@ -325,7 +325,7 @@ class campaignDAO
             trigger_error(__('You do not have permissions to edit this campaign'), E_USER_ERROR);
 
         // Set some information about the form
-        Theme::Set('form_id', 'CampaignDeleteForm');
+        Theme::Set('form_id', 'CampaignPermissionsForm');
         Theme::Set('form_action', 'index.php?p=campaign&q=Permissions');
         Theme::Set('form_meta', '<input type="hidden" name="campaignId" value="' . $campaignId . '" />');
 

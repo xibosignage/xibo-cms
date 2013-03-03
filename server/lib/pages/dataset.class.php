@@ -281,51 +281,51 @@ class datasetDAO
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        $msgEdit = __('Edit');
-        $msgDelete = __('Delete');
-
-        $form = <<<END
-        <div class="info_table">
-        <table style="width:100%">
-            <thead>
-                <tr>
-                <th>Heading</th>
-                <th>Data Type</th>
-                <th>List Content</th>
-                <th>Column Order</th>
-                <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-END;
-
         $SQL  = "";
         $SQL .= "SELECT DataSetColumnID, Heading, DataTypeID, ListContent, ColumnOrder ";
         $SQL .= "  FROM datasetcolumn ";
         $SQL .= sprintf(" WHERE DataSetID = %d ", $dataSetId);
         $SQL .= "ORDER BY ColumnOrder ";
 
-        if (!$results = $db->query($SQL))
-            trigger_error(__('Unable to get columns for DataSet'));
+        // Load results into an array
+        $dataSetColumns = $db->GetArray($SQL);
 
-        while ($row = $db->get_assoc_row($results))
+        if (!is_array($dataSetColumns)) 
         {
-            $form .= '<tr>';
-            $form .= '  <td>' . $row['Heading'] . '</td>';
-            $form .= '  <td>String</td>';
-            $form .= '  <td>' . $row['ListContent'] . '</td>';
-            $form .= '  <td>' . $row['ColumnOrder'] . '</td>';
-            $form .= '  <td>';
-            $form .= '      <button class="XiboFormButton" href="index.php?p=dataset&q=EditDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['DataSetColumnID'] . '&dataset=' . $dataSet . '"><span>' . $msgEdit . '</span></button>';
-
-            if ($auth->del)
-                $form .= '      <button class="XiboFormButton" href="index.php?p=dataset&q=DeleteDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['DataSetColumnID'] . '&dataset=' . $dataSet . '"><span>' . $msgDelete . '</span></button>';
-
-            $form .= '  </td>';
-            $form .= '</tr>';
+            trigger_error($db->error());
+            trigger_error(__('Error getting list of dataSetColumns'), E_USER_ERROR);
         }
 
-        $form .= '</tbody></table></div>';
+        $rows = array();
+
+        foreach ($dataSetColumns as $row) {
+
+            $row['heading'] = Kit::ValidateParam($row['Heading'], _STRING);
+            $row['listcontent'] = Kit::ValidateParam($row['ListContent'], _STRING);
+            $row['columnorder'] = Kit::ValidateParam($row['ColumnOrder'], _INT);
+
+            // Edit        
+            $row['buttons'][] = array(
+                    'id' => 'dataset_button_edit',
+                    'url' => 'index.php?p=dataset&q=EditDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['DataSetColumnID'] . '&dataset=' . $dataSet,
+                    'text' => __('Edit')
+                );
+
+            if ($auth->del) {
+                // Delete
+                $row['buttons'][] = array(
+                        'id' => 'dataset_button_delete',
+                        'url' => 'index.php?p=dataset&q=DeleteDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['DataSetColumnID'] . '&dataset=' . $dataSet,
+                        'text' => __('Delete')
+                    );
+            }
+
+            $rows[] = $row;
+        }
+
+        Theme::Set('table_rows', $rows);
+        
+        $form = Theme::RenderReturn('dataset_form_column_grid');
         
         $response->SetFormRequestResponse($form, sprintf(__('Columns for %s'), $dataSet), '550px', '400px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'ViewColumns') . '")');
@@ -347,35 +347,17 @@ END;
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        $msgHeading = __('Heading');
-        $msgListContent = __('List Content');
-        $msgColumnOrder = __('Column Order');
+        // Set some information about the form
+        Theme::Set('form_id', 'DataSetColumnAddForm');
+        Theme::Set('form_action', 'index.php?p=dataset&q=AddDataSetColumn');
+        Theme::Set('form_meta', '<input type="hidden" name="dataset" value="' . $dataSet . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
-        $form = <<<END
-        <form id="DataSetColumnEditForm" class="XiboForm" method="post" action="index.php?p=dataset&q=AddDataSetColumn">
-            <input type="hidden" name="dataset" value="$dataSet" />
-            <input type="hidden" name="datasetid" value="$dataSetId" />
-            <table>
-                <tr>
-                    <td><label for="heading" accesskey="h">$msgHeading<span class="required">*</span></label></td>
-                    <td><input name="heading" class="required" type="text" id="heading" tabindex="1" /></td>
-                </tr>
-                <tr>
-                    <td><label for="listcontent" accesskey="l">$msgListContent</label></td>
-                    <td><input name="listcontent" type="text" id="listcontent" tabindex="2" /></td>
-                </tr>
-                <tr>
-                    <td><label for="columnorder" accesskey="c">$msgColumnOrder</label></td>
-                    <td><input name="columnorder" type="text" id="columnorder" tabindex="3" /></td>
-                </tr>
-            </table>
-        </form>
-END;
+        $form = Theme::RenderReturn('dataset_form_column_add');
 
-        $response->SetFormRequestResponse($form, __('Add Column'), '450px', '400px');
+        $response->SetFormRequestResponse($form, __('Add Column'), '350px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'AddColumn') . '")');
         $response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
-        $response->AddButton(__('Save'), '$("#DataSetColumnEditForm").submit()');
+        $response->AddButton(__('Save'), '$("#DataSetColumnAddForm").submit()');
         $response->Respond();
     }
 
@@ -421,43 +403,24 @@ END;
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
+        // Set some information about the form
+        Theme::Set('form_id', 'DataSetColumnEditForm');
+        Theme::Set('form_action', 'index.php?p=dataset&q=EditDataSetColumn');
+        Theme::Set('form_meta', '<input type="hidden" name="dataset" value="' . $dataSet . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '" /><input type="hidden" name="datasetcolumnid" value="' . $dataSetColumnId . '" />');
+
         // Get some information about this data set column
         $SQL = sprintf("SELECT Heading, ListContent, ColumnOrder FROM datasetcolumn WHERE DataSetColumnID = %d", $dataSetColumnId);
         
         if (!$row = $db->GetSingleRow($SQL))
             trigger_error(__('Unabled to get Data Column information'), E_USER_ERROR);
 
-        $heading = Kit::ValidateParam($row['Heading'], _WORD);
-        $listContent = Kit::ValidateParam($row['ListContent'], _STRING);
-        $columnOrder = Kit::ValidateParam($row['ColumnOrder'], _INT);
+        Theme::Set('heading',  Kit::ValidateParam($row['Heading'], _WORD));
+        Theme::Set('listcontent',  Kit::ValidateParam($row['ListContent'], _STRING));
+        Theme::Set('columnorder',  Kit::ValidateParam($row['ColumnOrder'], _INT));
 
-        $msgHeading = __('Heading');
-        $msgListContent = __('List Content');
-        $msgColumnOrder = __('Column Order');
+        $form = Theme::RenderReturn('dataset_form_column_edit');
 
-        $form = <<<END
-        <form id="DataSetColumnEditForm" class="XiboForm" method="post" action="index.php?p=dataset&q=EditDataSetColumn">
-            <input type="hidden" name="dataset" value="$dataSet" />
-            <input type="hidden" name="datasetid" value="$dataSetId" />
-            <input type="hidden" name="datasetcolumnid" value="$dataSetColumnId" />
-            <table>
-                <tr>
-                    <td><label for="heading" accesskey="h">$msgHeading<span class="required">*</span></label></td>
-                    <td><input name="heading" class="required" type="text" id="heading" tabindex="1" value="$heading" /></td>
-                </tr>
-                <tr>
-                    <td><label for="listcontent" accesskey="l">$msgListContent</label></td>
-                    <td><input name="listcontent" type="text" id="listcontent" tabindex="2" value="$listContent" /></td>
-                </tr>
-                <tr>
-                    <td><label for="columnorder" accesskey="c">$msgColumnOrder</label></td>
-                    <td><input name="columnorder" type="text" id="columnorder" tabindex="3" value="$columnOrder" /></td>
-                </tr>
-            </table>
-        </form>
-END;
-
-        $response->SetFormRequestResponse($form, __('Edit Column'), '450px', '400px');
+        $response->SetFormRequestResponse($form, __('Edit Column'), '350px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'EditColumn') . '")');
         $response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
         $response->AddButton(__('Save'), '$("#DataSetColumnEditForm").submit()');
@@ -508,24 +471,12 @@ END;
 
         $dataSetColumnId = Kit::GetParam('datasetcolumnid', _GET, _INT);
 
-        $auth = $this->user->DataSetAuth($dataSetId, true);
-        if (!$auth->del)
-            trigger_error(__('Access Denied'));
+         // Set some information about the form
+        Theme::Set('form_id', 'DataSetColumnDeleteForm');
+        Theme::Set('form_action', 'index.php?p=dataset&q=DeleteDataSetColumn');
+        Theme::Set('form_meta', '<input type="hidden" name="dataset" value="' . $dataSet . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '" /><input type="hidden" name="datasetcolumnid" value="' . $dataSetColumnId . '" />');
 
-        // Translate messages
-        $msgDelete		= __('Are you sure you want to delete this Column?');
-        $msgYes			= __('Yes');
-        $msgNo			= __('No');
-
-        //we can delete
-        $form = <<<END
-        <form id="DataSetColumnDeleteForm" class="XiboForm" method="post" action="index.php?p=dataset&q=DeleteDataSetColumn">
-            <input type="hidden" name="datasetid" value="$dataSetId">
-            <input type="hidden" name="dataset" value="$dataSet">
-            <input type="hidden" name="datasetcolumnid" value="$dataSetColumnId">
-            <p>$msgDelete</p>
-        </form>
-END;
+        $form = Theme::RenderReturn('dataset_form_column_delete');
 
         $response->SetFormRequestResponse($form, __('Delete this Column?'), '350px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'DeleteColumn') . '")');
@@ -609,7 +560,7 @@ END;
         $form .= '   <tr>';
         $form .= '      <th>' . __('Row Number') . '</th>';
 
-	while ($row = $db->get_assoc_row($results))
+        while ($row = $db->get_assoc_row($results))
         {
             $columnDefinition[] = $row;
             $heading = $row['Heading'];
@@ -834,17 +785,10 @@ END;
         if (!$auth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this dataset'), E_USER_ERROR);
 
-        // Form content
-        $form = '<form id="DataSetPermissionsForm" class="XiboForm" method="post" action="index.php?p=dataset&q=Permissions">';
-	$form .= '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />';
-        $form .= '<div class="dialog_table">';
-	$form .= '  <table style="width:100%">';
-        $form .= '      <tr>';
-        $form .= '          <th>' . __('Group') . '</th>';
-        $form .= '          <th>' . __('View') . '</th>';
-        $form .= '          <th>' . __('Edit') . '</th>';
-        $form .= '          <th>' . __('Delete') . '</th>';
-        $form .= '      </tr>';
+        // Set some information about the form
+        Theme::Set('form_id', 'DataSetPermissionsForm');
+        Theme::Set('form_action', 'index.php?p=dataset&q=Permissions');
+        Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
         // List of all Groups with a view/edit/delete checkbox
         $SQL = '';
@@ -864,22 +808,31 @@ END;
             trigger_error(__('Unable to get permissions for this dataset'), E_USER_ERROR);
         }
 
-        while($row = $db->get_assoc_row($results))
+        $checkboxes = array();
+
+        while ($row = $db->get_assoc_row($results))
         {
             $groupId = $row['GroupID'];
-            $group = ($row['IsUserSpecific'] == 0) ? '<strong>' . $row['Group'] . '</strong>' : $row['Group'];
+            $rowClass = ($row['IsUserSpecific'] == 0) ? 'strong_text' : '';
 
-            $form .= '<tr>';
-            $form .= ' <td>' . $group . '</td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_view" ' . (($row['View'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_edit" ' . (($row['Edit'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_del" ' . (($row['Del'] == 1) ? 'checked' : '') . '></td>';
-            $form .= '</tr>';
+            $checkbox = array(
+                    'id' => $groupId,
+                    'name' => Kit::ValidateParam($row['Group'], _STRING),
+                    'class' => $rowClass,
+                    'value_view' => $groupId . '_view',
+                    'value_view_checked' => (($row['View'] == 1) ? 'checked' : ''),
+                    'value_edit' => $groupId . '_edit',
+                    'value_edit_checked' => (($row['Edit'] == 1) ? 'checked' : ''),
+                    'value_del' => $groupId . '_del',
+                    'value_del_checked' => (($row['Del'] == 1) ? 'checked' : ''),
+                );
+
+            $checkboxes[] = $checkbox;
         }
 
-        $form .= '</table>';
-        $form .= '</div>';
-        $form .= '</form>';
+        Theme::Set('form_rows', $checkboxes);
+
+        $form = Theme::RenderReturn('dataset_form_permissions');
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Permissions') . '")');
