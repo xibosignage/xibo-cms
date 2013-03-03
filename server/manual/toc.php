@@ -1,11 +1,13 @@
+<?php include('template.php'); ?>
+
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title>Xibo Documentation</title>
+		<title><?php echo PRODUCT_NAME; ?> Documentation</title>
 		<link rel=stylesheet type="text/css" href="css/doc.css">
 		<meta http-equiv="Content-Type" content="text/html" />
 		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-		<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
 
 		<link href="img/favicon.ico" rel="shortcut icon"/>
 		<!-- Javascript Libraries -->
@@ -24,7 +26,7 @@
 <body bgcolor="#ffffff" text="#000000" link="#cc0000" vlink="#990066" alink="#cc0000">
 
 <div id="preamble" align="center">
-<img src="img/logo.png" alt="Xibo Logo" width="150px">
+<img src="img/logo.png" alt="<?php echo PRODUCT_NAME; ?> Logo" width="150px">
 </div>
 
 <div style="width:300px;">
@@ -48,14 +50,14 @@
 		<li><span class="folder">Configuration</span>
 			<ul>
 				<li><a class="file" href="content/config/config.html" target="main">Configuration</a></li>
-				<li><a class="file" href="content/config/client_feature.html" target="main">Xibo Client Features</a></li>
-				<li><a class="file" href="content/config/client.html" target="main">Xibo Client</a></li>
+				<li><a class="file" href="content/config/client_feature.html" target="main"><?php echo PRODUCT_NAME; ?> Client Features</a></li>
+				<li><a class="file" href="content/config/client.html" target="main"><?php echo PRODUCT_NAME; ?> Client</a></li>
 				<li><a class="file" href="content/config/windows.html" target="main">Windows Modifications</a></li>
 				<li><a class="file" href="content/config/settings.html" target="main">Admin Panel Settings</a></li>
 			</ul>
 		</li>
 
-		<li><span class="folder">Using Xibo: Components and Navigation</span>
+		<li><span class="folder">Using <?php echo PRODUCT_NAME; ?>: Components and Navigation</span>
 			<ul>
 				<li><a class="file" href="content/dashboard/overview.html" target="main">Overview</a></li>
 				<li><a class="file" href="content/dashboard/dashboard.html" target="main">Dashboard</a></li>
@@ -139,8 +141,8 @@
 				<li><a class="file" href="content/admin/overview.html" target="main">Overview</a></li>
 				<li><a class="file" href="content/admin/displays.html" target="main">Client Displays</a></li>
 				<li><a class="file" href="content/admin/settings.html" target="main">Server Settings</a></li>
-				<li><a class="file" href="content/admin/modules.html" target="main">Xibo Modules</a></li>
-				<li><a class="file" href="content/admin/xibo_api.html" target="main">Xibo API</a></li>
+				<li><a class="file" href="content/admin/modules.html" target="main"><?php echo PRODUCT_NAME; ?> Modules</a></li>
+				<li><a class="file" href="content/admin/api.html" target="main"><?php echo PRODUCT_NAME; ?> API</a></li>
 				<li><a class="file" href="content/admin/advanced.html" target="main">Advanced</a></li>
       </ul> 
  	</ul>
