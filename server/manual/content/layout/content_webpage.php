@@ -1,12 +1,12 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
+<?php include('../../template.php'); ?>
 <html>
 <head>
   	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title>Xibo Documentation</title>
+  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
   	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-	<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
   	<link href="img/favicon.ico" rel="shortcut icon">
   	<!-- Javascript Libraries -->
   	<script type="text/javascript" src="lib/jquery.pack.js"> </script>
@@ -20,10 +20,9 @@
 	<blockquote>
 
 	<h3> Webpage scale functionality in Windows Client</h3>
-	<p>In Xibo it is possible to show a webpage in a region. Because websites are not build for showing on a big screen, 
+	<p>In <?php echo PRODUCT_NAME; ?> it is possible to show a webpage in a region. Because websites are not build for showing on a big screen, 
 	it has a scale functionality in which you can show the webpage in a larger or smaller scale. This is great for 
-	showing websites that are too big or too small for the region. Unfortunately, this functionality only works with 
-	the Python (Linux) client.</p>
+	showing websites that are too big or too small for the region.</p>
 
 	<p>Add a webpage</p>
 
@@ -49,6 +48,6 @@
 	</ul>
 	</blockquote>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 </body>
 </html>

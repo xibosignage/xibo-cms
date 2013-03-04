@@ -1,12 +1,12 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 <head>
   	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title>Xibo Documentation</title>
+  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
   	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-	<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
   	<link href="img/favicon.ico" rel="shortcut icon">
   	<!-- Javascript Libraries -->
   	<script type="text/javascript" src="lib/jquery.pack.js"></script>
@@ -30,7 +30,7 @@
 
 	<p>On the left of the Region Timeline is a set of icons representing the different types of media you can assign to the region.</p>
 	<p>Your administrator may have turned some of these content types off, or added new ones. We will look at each of 
-	the standard Xibo media types in detail here.</p>
+	the standard <?php echo PRODUCT_NAME; ?> media types in detail here.</p>
 
 <blockquote>
 	<h3>Library</h3>
@@ -101,6 +101,6 @@
     </ul>
 </blockquote>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 </body>
 </html>

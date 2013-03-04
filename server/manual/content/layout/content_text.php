@@ -1,12 +1,12 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 <head>
   	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title>Xibo Documentation</title>
+  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
   	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-	<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
   	<link href="img/favicon.ico" rel="shortcut icon">
   	<!-- Javascript Libraries -->
   	<script type="text/javascript" src="lib/jquery.pack.js"></script>
@@ -37,11 +37,10 @@
 		style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 		width="631" height="442"></p></li>
 	
-		<li>You'll see the text editor. Xibo uses FCKeditor for text input. The format is very similar to many word processing applications 
-			you may have used in the past. Complete documentation for all the buttons is available over at FCKEditor's website here: 
+		<li>You'll see the text editor. <?php echo PRODUCT_NAME; ?> uses CKeditor for text input. The format is very similar to many word processing applications 
+			you may have used in the past. Complete documentation for all the buttons is available over at CKEditor's website here: 
 	
-			<a href="http://docs.cksource.com/FCKeditor_2.x/Users_Guide/Common_Tasks/Text_Formatting" class="external autonumber" 
-			title="http://docs.cksource.com/FCKeditor_2.x/Users_Guide/Common_Tasks/Text_Formatting" rel="nofollow">[1]</a></li>
+			<a href="http://docs.cksource.com/CKEditor_3.x/Users_Guide" target="_blank">http://docs.cksource.com/CKEditor_3.x/Users_Guide</a></li>
 
 		<li>Type in the text you want to add.</li>
 		<li>To change the font, highlight your text and choose a new font from the "Font" dropdown menu.</li>
@@ -63,6 +62,6 @@
 	</ul>
 </blockquote>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 </body>
 </html>

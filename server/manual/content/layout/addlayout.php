@@ -1,12 +1,12 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 <head>
   	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title>Xibo Documentation</title>
+  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
   	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-	<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
   	<link href="img/favicon.ico" rel="shortcut icon">
   	<!-- Javascript Libraries -->
   	<script type="text/javascript" src="lib/jquery.pack.js"></script>
@@ -47,18 +47,18 @@
 
   	<h3>Tags</h3>
   	<p>A space-separated list of keywords to apply to the layout. These could be used to identify groups of layouts 
-	or sometimes have special meaning if you have specialised versions of the Xibo client. Tags are used to help 
+	or sometimes have special meaning if you have specialised versions of the <?php echo PRODUCT_NAME; ?> client. Tags are used to help 
 	search for the layout, and it is a good idea to provide as much detail as possible in case you require searching
 	for it at a later time.</p>
 
   	<h3>Template</h3>
   	<p>Optionally you can choose a template to base your new layout on (defaults or templates that you have already saved).
-	This can help reduce the time it takes to setup a new layout. Please go to the <a href="../templates/overview.html">Template</a> 
+	This can help reduce the time it takes to setup a new layout. Please go to the <a href="../templates/overview.php">Template</a> 
   	section for more details on how to create or choose a template.</p>
 	</blockquote>
 
 	<a name="Edit_Layout" id="Edit_Layout"></a><h2>Retire Layout</h2>
-	<p>When you are finished with an old layout, you can optionally hide it in the Xibo Server (incase you want to reuse it at a later date).
+	<p>When you are finished with an old layout, you can optionally hide it in the <?php echo PRODUCT_NAME; ?> Server (incase you want to reuse it at a later date).
 		We call this retiring a layout - or you can delete it completely.</p>
 
 	<p><img alt="Edit Layout Form" src="Ss_layout_edit.png"
@@ -111,7 +111,7 @@
 	<p>Notes:</p>
 	<ul>
   	<li>Copy media option duplicate both the embedded contents of the regions in layout and media contents 
-  	that are saved in the xibo library.</li>
+  	that are saved in the <?php echo PRODUCT_NAME; ?> library.</li>
  	<li>It would not attempt to copy any of the scheduling information.</li>
   	<li>After copying there would be no link between the two layouts.</li>
 	</ul>
@@ -121,7 +121,7 @@
 	<a href="layoutdesigner.html">Layout Designer</a> page where the specific details for the layout are shown.</p>
 
 	<a name="Layout_Permission" id="Layout_Permission"></a><h2>Permissions</h2>
-	<p>Click "Permissions" button to define the access right for other Xibo system users on the created layout.</p>
+	<p>Click "Permissions" button to define the access right for other <?php echo PRODUCT_NAME; ?> system users on the created layout.</p>
 
 	<p><img alt="Layout Permission" src="layoutpermission.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
@@ -130,13 +130,13 @@
 	<p>Tick the appropriate access rights in the form and click "save".</p>
 
 	<ul>
-		<li>Everyone: all users that have been defined in the Xibo server database.</li>
+		<li>Everyone: all users that have been defined in the <?php echo PRODUCT_NAME; ?> server database.</li>
 		<li>Users: All members that are included in the "Users" group.</li>
-		<li>xibo_admin: Individual user of Xibo</li>
+		<li><?php echo PRODUCT_NAME; ?>_admin: Individual user of <?php echo PRODUCT_NAME; ?></li>
 	</ul>
 
 	<p>Leaving all boxes unticked means only you (and Admins) have access to the layout.</p>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 </body>
 </html>

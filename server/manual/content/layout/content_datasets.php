@@ -1,12 +1,12 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 <head>
   	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title>Xibo Documentation</title>
+  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
   	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-	<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
   	<link href="img/favicon.ico" rel="shortcut icon">
   	<!-- Javascript Libraries -->
   	<script type="text/javascript" src="lib/jquery.pack.js"></script>
@@ -18,7 +18,7 @@
 	<a name="DataSets" id="DataSets"></a><h2>DataSets</h2>
 <blockquote>
   	<h3>Overview</h3>
-  	<p>DataSets are a new Xibo feature to design and display tabular data, formatted nicely, in a region on a layout.</p>
+  	<p>DataSets are a new <?php echo PRODUCT_NAME; ?> feature to design and display tabular data, formatted nicely, in a region on a layout.</p>
   	<p>Examples of where this could be used are:</p>
   	<ul>
     	<li>A drinks menu at a bar</li>
@@ -37,7 +37,7 @@
   	<a name="Create_Dataset" id="Create_Dataset"></a><h3>Creating a DataSet</h3>
   
     <p>DataSets are accessed using the &#8220;DataSets&#8221; link in the &#8220;Library&#8221; menu, navigating here will bring you
-    to a very familiar Xibo &#8220;table&#8221; view of all the data sets you have permission to access. You can add a new dataset 
+    to a very familiar <?php echo PRODUCT_NAME; ?> &#8220;table&#8221; view of all the data sets you have permission to access. You can add a new dataset 
     by giving it a name and an optional description, you can also edit existing ones and add data.</p>
     
 	<p><img alt="Add Dataset" src="ss_layout_add_dataset.png"
@@ -64,7 +64,7 @@
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="558" height="256"></p>
 
-    <p>There is not a theoretical limit to the number of columns Xibo can support; although a smaller DataSet is often easier to enter 
+    <p>There is not a theoretical limit to the number of columns <?php echo PRODUCT_NAME; ?> can support; although a smaller DataSet is often easier to enter 
      and display than an overly large one. Columns may be extended in the future to have support for different data types. Currently only 
      strings are supported.</p>
 
@@ -80,7 +80,7 @@
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="758" height="557"></p>
 
-    <p>There is no &#8220;save&#8221; button on this interface, Xibo will automatically save your changes after each data entry.</p>
+    <p>There is no &#8220;save&#8221; button on this interface, <?php echo PRODUCT_NAME; ?> will automatically save your changes after each data entry.</p>
     <p>Note: If all the rows are taken, more rows can be added to the data set by clicking the &#8220;Add Rows&#8221; button.</p>
     <p>The DataSet is ready to be used on a layout!</p>
 
@@ -108,7 +108,7 @@
       <li><strong>Order</strong>: The Ordering of the data (column name ASC|DESC)</li>
       <li><strong>Filter</strong>: A filter option to filter the data with (Column Name=Value, Column Name=Value)</li>
       <li><strong>Show Table Headings</strong>: Whether to show the column headings in the table</li>
-      <li><strong>Columns Selected</strong>: The columns to display�(drag or double click to move between lists)</li>
+      <li><strong>Columns Selected</strong>: The columns to display (drag or double click to move between lists)</li>
       <li><strong>Columns Available</strong>: The columns available to select (drag or double click to move between lists)</li>
       <li><strong>Stylesheet</strong>: A CSS Stylesheet to render with the table</li>
     </ul>
@@ -180,6 +180,6 @@ span.DataSetColumnSpan {
     multiple views on the same DataSet can be created.</p>
 </blockquote>	
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 </body>
 </html>

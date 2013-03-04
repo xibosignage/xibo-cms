@@ -1,12 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 <head>
   	<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
-  	<title>Xibo Documentation</title>
+  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
   	<link href="../../css/doc.css" rel="stylesheet" type="text/css">
   	<link href="../../css/doc.css" rel="stylesheet" type="text/css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-	<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
 </head>
 
 <body>
@@ -21,7 +22,7 @@
 	<p>Here we can see the new layout we have created. Since we based it on one of the Full Screen templates, you can see it is a 
 	wide screen aspect ratio and has one region that fills the entire screen.</p>
 
-	<p>A layout is made up of a background picture or colour. On top of that, one or more grey boxes are drawn - �regions� - 
+	<p>A layout is made up of a background picture or colour. On top of that, one or more grey boxes are drawn - regions - 
 	which can contain one or more media items (pictures, videos etc).</p> 
 
 	<a name="Background" id="Background"></a><h2>Changing the Background</h2>
@@ -39,7 +40,7 @@
 	<p>Choose a background image that has been uploaded already.</p>
 
 	<h3>Resolution</h3>
-	<p>Choose the aspect ratio of the layout. Since you used one of the Full Screen templates that came with Xibo, there is usually no need to change this.</p>
+	<p>Choose the aspect ratio of the layout. Since you used one of the Full Screen templates that came with <?php echo PRODUCT_NAME; ?>, there is usually no need to change this.</p>
 
 	<p>Try choosing a new background colour and click Save.</p>
 	</blockquote>
@@ -57,17 +58,17 @@
 
 	<h2>Layout Designer Jump List</h2>
 
-	<p>Xibo has a small but useful enhancement - Layout Designer Jump List. This feature allows navigation between layouts that 
+	<p><?php echo PRODUCT_NAME; ?> has a small but useful enhancement - Layout Designer Jump List. This feature allows navigation between layouts that 
 	a user has permissions to edit, without having to jump out to the list of layouts each and every time. It is accessible from 
 	a new icon on the layout designer, called "Jump to"</p>
 
-	<p>Once clicked, it presents a list of�accessible�layouts with a "Design" button - selecting the button will load�corresponding�
+	<p>Once clicked, it presents a list of accessible layouts with a "Design" button - selecting the button will load corresponding
 	layout into the designer window.</p>
  
 	<p><img alt="Layout Designer Jump" src="ss_layout_designer_jumpto.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="358" height="341"></p>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 </body>
 </html>

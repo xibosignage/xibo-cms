@@ -1,12 +1,12 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 <head>
   	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title>Xibo Documentation</title>
+  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
   	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-	<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
   	<link href="img/favicon.ico" rel="shortcut icon">
   	<!-- Javascript Libraries -->
   	<script type="text/javascript" src="lib/jquery.pack.js"></script>
@@ -19,8 +19,8 @@
 
 <blockquote>
 
-	<p>In Xibo it is possible to embed html code as content in a region e.g. a clock or weather forcast</p>
-	<p>To get Xibo to show embedded HTML with Active-X content, you would need to adjust the security settings of IE 
+	<p>In <?php echo PRODUCT_NAME; ?> it is possible to embed html code as content in a region e.g. a clock or weather forcast</p>
+	<p>To get <?php echo PRODUCT_NAME; ?> to show embedded HTML with Active-X content, you would need to adjust the security settings of IE 
 	so that local files were allowed to run active content by default. This can be done in 
 	Tools -> Internet Options -> Advanced -> Security -> "Allow Active content to run in files on My Computer"</p>
 
@@ -66,6 +66,6 @@ showClock(obj);
 	</li></ul>
 </blockquote>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 </body>
 </html>

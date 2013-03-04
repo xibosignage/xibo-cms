@@ -1,12 +1,12 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 <head>
   	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title>Xibo Documentation</title>
+  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
   	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-	<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
   	<link href="img/favicon.ico" rel="shortcut icon">
   	<!-- Javascript Libraries -->
   	<script type="text/javascript" src="lib/jquery.pack.js"></script>
@@ -17,11 +17,11 @@
 <body>
 	<h1>Campaign Layout</h1>
 
- 	<p>Xibo supports scheduling more than one layout at once. Say you have two layouts, each that last a total of 40 seconds.
+ 	<p><?php echo PRODUCT_NAME; ?> supports scheduling more than one layout at once. Say you have two layouts, each that last a total of 40 seconds.
   	If you wanted them to show in sequence between 10:00 and 11:00am, you would schedule both layouts to run from 10:00am to 11:00am on the 
   	same display. The client will automatically switch between the two layouts every 40 seconds between those times.</p>
   
-  	<p>In Xibo, this is done using Campaign that comprises multiple Layouts.</p>
+  	<p>In <?php echo PRODUCT_NAME; ?>, this is done using Campaign that comprises multiple Layouts.</p>
   	<p>Note:<br />
     At the moment you cannot control the playing order of those layouts in Campaign.<br />
     The Campaign cannot be assigned as Default Layout for a Display, excpet to use it during Display schedule.</p>
@@ -55,6 +55,6 @@
 		<li>Click "save" once you have all the Campaign Layouts added.</li>
 	</ul>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 </body>
 </html>
