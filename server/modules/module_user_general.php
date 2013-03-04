@@ -1516,7 +1516,7 @@ END;
             $campaignItem['campaign'] = Kit::ValidateParam($row['Campaign'], _STRING);
             $campaignItem['numlayouts'] = Kit::ValidateParam($row['NumLayouts'], _INT);
             $campaignItem['islayoutspecific'] = Kit::ValidateParam($row['IsLayoutSpecific'], _INT);
-            $campaignItem['retired'] = Kit::ValidateParam($row['Retired'], _BOOLEAN);
+            $campaignItem['retired'] = Kit::ValidateParam($row['Retired'], _BOOL);
 
             // return retired layouts?
             if (!$isRetired && $campaignItem['retired'])
