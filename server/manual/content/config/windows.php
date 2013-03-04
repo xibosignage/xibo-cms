@@ -1,12 +1,12 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-	<title>Xibo Documentation</title>
+	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
 	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-	<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />  <link href="img/favicon.ico" rel="shortcut icon">
+	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />  <link href="img/favicon.ico" rel="shortcut icon">
 	<!-- Javascript Libraries -->
 	<script type="text/javascript" src="lib/jquery.pack.js"></script>
 	  <script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
@@ -15,7 +15,7 @@
 
 <body>
 	<h1 lang="en-GB" class="western">Windows Modifications</h1>
-	<p>Here are some suggested settings for Windows / Powerpoint for a Display Client:</p>
+	<p>Here are some suggested settings for Windows / PowerPoint for a Display Client:</p>
 	<ul>
 	<li>Turn off all <a href="http://www.microsoft.com/windowsxp/using/setup/personalize/screensaver.mspx" 
 		title="http://www.microsoft.com/windowsxp/using/setup/personalize/screensaver.mspx" rel="nofollow">screensavers</a></li>
@@ -27,7 +27,7 @@
 		title="http://www.microsoft.com/windowsxp/using/accessibility/soundscheme.mspx" rel="nofollow">Sound Scheme</a>
 		(Control Panel -&gt; Sounds and Audio Devices Properties)</li>
 
-	<li>Set a plain wallpaper (Hopefully nobody will see it, but you might need to reboot the client, or restart Xibo and a sane wallpaper is a help)</li>
+	<li>Set a plain wallpaper (Hopefully nobody will see it, but you might need to reboot the client, or restart <?php echo PRODUCT_NAME; ?> and a sane wallpaper is a help)</li>
 	
 	<li>If the client is accessible from where you manage your displays from, you might want to install <a href="http://www.uvnc.com/" 
 		title="http://www.uvnc.com/" rel="nofollow">UltraVNC</a> server so you can connect in and check on the client from time to time. 
@@ -39,8 +39,8 @@
 	<li>Disable <a href="http://support.microsoft.com/kb/307729" title="http://support.microsoft.com/kb/307729" rel="nofollow">
 		balloon tips in the notification area</a></li>
 	
-	<li>Disable Windows Error Reporting. Occasionally Powerpoint seems to "crash" when Xibo closes it. Unfortunately this leaves an unsightly
-		"Powerpoint has encountered a problem and needs to close" message on the display. Follow the steps 
+	<li>Disable Windows Error Reporting. Occasionally PowerPoint seems to "crash" when <?php echo PRODUCT_NAME; ?> closes it. Unfortunately this leaves an unsightly
+		"PowerPoint has encountered a problem and needs to close" message on the display. Follow the steps 
 		<a href="http://www.windowsnetworking.com/articles_tutorials/Disable-Error-Reporting-Windows-XP-Server-2003.html"
 		title="http://www.windowsnetworking.com/articles_tutorials/Disable-Error-Reporting-Windows-XP-Server-2003.html" rel="nofollow">here</a>
 		to disable Windows Error Reporting completely - including notifications.</li>
@@ -50,13 +50,16 @@
 		title="DWNeverUpload.reg"> this registry patch</a>.</li>
 	</ul>
 
-	<p>If you're using Powerpoint, then there are a couple of extra steps:</p>
+	<p>If you're using PowerPoint, then there are a couple of extra steps:</p>
+    <p>First consider if you would be better converting your PowerPoint content to video files. PowerPoint 2010 and later can "Save As" a WMV file
+       which can be loaded straight in to Xibo and is far more reliable. If however you still need to play PowerPoint files, please ensure you action
+       the following:</p>
 
 	<ul>
-	<li>The first time you run Xibo with a Powerpoint, you might get a popup appear that asks what Xibo should do with the Powerpoint file.
+	<li>The first time you run <?php echo PRODUCT_NAME; ?> with a PowerPoint, you might get a popup appear that asks what <?php echo PRODUCT_NAME; ?> should do with the PowerPoint file.
 		The popup actually originates from Internet Explorer. Choose to "Open" the file, and untick the box so you won't be prompted again.</li>
 		
-	<li>In some circumstances, you may find that Powerpoint, the application, loads instead of the file opening within Xibo itself. If that happens,
+	<li>In some circumstances, you may find that PowerPoint, the application, loads instead of the file opening within <?php echo PRODUCT_NAME; ?> itself. If that happens,
 		try merging <a href="/images/b/bf/Powerpoint-fix.reg" title="Powerpoint-fix.reg"> this registry patch</a>. (Taken from 
 		<a href="http://www.pptfaq.com/FAQ00189.htm" title="http://www.pptfaq.com/FAQ00189.htm" rel="nofollow">pptfaq.com</a>).
 		Users of Powerpoint 2007 should go to Microsoft <a href="http://support.microsoft.com/kb/927009" 
@@ -64,15 +67,15 @@
 		should go here instead <a href="http://support.microsoft.com/kb/982995/en-us" title="http://support.microsoft.com/kb/982995/en-us" 
 		rel="nofollow">KB982995</a></li>
 		
-	<li>Note also that Powerpoint will put scroll bars up the side of your presentation, unless you do the following for each Powerpoint file BEFORE you upload it:</li>
+	<li>Note also that PowerPoint will put scroll bars up the side of your presentation, unless you do the following for each PowerPoint file BEFORE you upload it:</li>
 	</ul>
 
 	<ul>
-		o Open your Powerpoint Document<br />
+		o Open your PowerPoint Document<br />
  		o Slide Show -&gt; Setup Show<br />
  		o Under "Show Type", choose "Browsed by an individual (window)" and then untick "Show scrollbar"
 	</ul>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 </body>
 </html>
