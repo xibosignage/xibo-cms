@@ -26,7 +26,17 @@
 <body bgcolor="#ffffff" text="#000000" link="#cc0000" vlink="#990066" alink="#cc0000">
 
 <div id="preamble" align="center">
-<img src="img/logo.png" alt="<?php echo PRODUCT_NAME; ?> Logo" width="150px">
+
+<?php
+if (is_file('img/logo_custom.png')) {
+    $logo = 'img/logo_custom.png';
+}
+else {
+    $logo = 'img/logo.png';
+}
+?>
+
+<img src="<?php echo $logo; ?>" alt="<?php echo PRODUCT_NAME; ?> Logo" width="150px">
 </div>
 
 <div style="width:300px;">
