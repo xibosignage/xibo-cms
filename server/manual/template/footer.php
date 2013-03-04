@@ -1,8 +1,5 @@
 <?php
-if (is_file('template/footer_custom.php')) {
-    include('template/footer_custom.php');
-}
-else {
+if (! include('footer_custom.php')) {
 ?>
 <div style="text-align:center; font-family:Arial, Helvetica, sans-serif; font-size:10pt">
 	<br />
