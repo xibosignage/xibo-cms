@@ -1,11 +1,12 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 <head>
   	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title>Xibo Documentation</title>
+  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
   	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-	<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />  <link href="img/favicon.ico" rel="shortcut icon">
+	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />  <link href="img/favicon.ico" rel="shortcut icon">
  	 <!-- Javascript Libraries -->
   	<script type="text/javascript" src="lib/jquery.pack.js"></script>
   	<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
@@ -15,8 +16,8 @@
 <body>
 	<h1>Navigation</h1>
 	
-	<p>The navigation bar appears on every page in the Xibo server interface. It provides user direct access
-		to all parts of the Xibo interface from within any part of the Xibo interface.</p>
+	<p>The navigation bar appears on every page in the <?php echo PRODUCT_NAME; ?> server interface. It provides user direct access
+		to all parts of the <?php echo PRODUCT_NAME; ?> interface from within any part of the <?php echo PRODUCT_NAME; ?> interface.</p>
 	 
 	<p><img alt="The navigation bar" src="navbar.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
@@ -27,7 +28,7 @@
 	
 	<h2>Dashboard</h2>
 	
-	<p>The dashboard link returns you to your Xibo dashboard, this will either be
+	<p>The dashboard link returns you to your <?php echo PRODUCT_NAME; ?> dashboard, this will either be
 	the default dashboard, or your media manager dashboard.</p>
 	
 	<h2>Schedule</h2>
@@ -124,7 +125,7 @@
 	</ul>
 	
 	<h3>Settings</h3>
-	<p>Settings is used to provide a set of defaults for content and Xibo server configurations including:</p>
+	<p>Settings is used to provide a set of defaults for content and <?php echo PRODUCT_NAME; ?> server configurations including:</p>
 	<ul>
 	  <li>Error log &amp; actions</li>
 	  <li>Server key setting</li>
@@ -133,14 +134,14 @@
 	
 	<h3>Applications</h3>
 	<p>It is a REST API using oauth; the applications menu will contain authourised applications for that server.</p>
-	<p>More information is available on <a href="../admin/xibo_api.html">Xibo API</a> page.</p>
+	<p>More information is available on <a href="../admin/api.php"><?php echo PRODUCT_NAME; ?> API</a> page.</p>
 	
 	<h3>Modules</h3>
-	<p>Here you can define the parameter settings for each of the Xibo modules e.g. media supported extensions etc.</p>
+	<p>Here you can define the parameter settings for each of the <?php echo PRODUCT_NAME; ?> modules e.g. media supported extensions etc.</p>
 	</blockquote>
 	
 	<h2>Advanced</h2>
-	<p>The advanced link takes you to the xibo maintenace page options</p>
+	<p>The advanced link takes you to the <?php echo PRODUCT_NAME; ?> maintenace page options</p>
 	
 	<blockquote>
 	<h3>Log</h3>
@@ -148,7 +149,7 @@
 	normally required when reporting bugs or requesting for help.</p>
 	
 	<h3>Sessions</h3>
-	<p>Sessions provide details of all the current users' activities on the network connection with the Xibo Server.</p>
+	<p>Sessions provide details of all the current users' activities on the network connection with the <?php echo PRODUCT_NAME; ?> Server.</p>
 	
 	<h3>Report Fault</h3>
 	<p>Provide some simple steps to generate debug messages; and to report bugs.</p>
@@ -168,7 +169,7 @@
 	<p>Click on Time for more details time information.</p>
 	
 	<h3>About</h3>
-	<p>Display Xibo License Information.</p>
+	<p>Display <?php echo PRODUCT_NAME; ?> License Information.</p>
 	
 	<h3>Help</h3>
 	<p>Provide links to online help.</p>
@@ -177,6 +178,6 @@
 	<p>This link closes and exits the current user session.</p>
 	</blockquote>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 </body>
 </html>
