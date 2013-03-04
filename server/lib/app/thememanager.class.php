@@ -215,12 +215,12 @@ class Theme {
      */
     public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = '', $callBack = '', $classColumn = '')
     {
-        $list = '<select name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
+    	$list = '<select name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
 
         foreach ($listValues as $listItem)
         {
             $class = ($classColumn == '') ? '' : 'class="' . $listItem[$classColumn] . '"';
-            $list .= '<option ' . $class . ' value="' . $listItem[$idColumn] . '" ' . (($listItem[$idColumn] == $selectedId) ? 'selected' : '') . '>' . $listItem[$nameColumn] . '</option>';
+            $list .= '<option ' . $class . ' value="' . $listItem[$idColumn] . '" ' . (($listItem[$idColumn] === $selectedId) ? 'selected' : '') . '>' . $listItem[$nameColumn] . '</option>';
         }
 
         $list .= '</select>';

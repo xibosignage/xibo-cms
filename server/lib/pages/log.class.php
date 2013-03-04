@@ -65,11 +65,11 @@ class logDAO
         $types = array(array('typeid' => 0, 'type' => 'All'), array('typeid' => 'audit', 'type' => 'Audit'), array('typeid' => 'error', 'type' => 'Error'));
         Theme::Set('type_field_list', $types);
 
-		$pages = $db->GetArray('SELECT DISTINCT page AS pageid, page FROM log ORDER BY 2');
+		$pages = $db->GetArray("SELECT DISTINCT IFNULL(page, '-1') AS pageid, page FROM log ORDER BY 2");
         array_unshift($pages, array('pageid' => 0, 'page' => 'All'));
         Theme::Set('page_field_list', $pages);
 
-        $functions = $db->GetArray('SELECT DISTINCT function AS functionid, function FROM log ORDER BY 2');
+        $functions = $db->GetArray("SELECT DISTINCT IFNULL(function, '-1') AS functionid, function FROM log ORDER BY 2");
         array_unshift($functions, array('functionid' => 0, 'function' => 'All'));
         Theme::Set('function_field_list', $functions);
 

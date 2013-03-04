@@ -1683,7 +1683,14 @@ FORM;
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != 0) ? $helpManager->Link('LayoutMedia', 'Permissions') : $helpManager->Link('Media', 'Permissions')) . '")');
-        $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+        
+        if ($this->assignedMedia) {
+        	$response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+    	}
+    	else {
+			$response->AddButton(__('Cancel'), 'XiboDialogClose()');
+    	}
+
         $response->AddButton(__('Save'), '$("#LayoutPermissionsForm").submit()');
 
         return $response;

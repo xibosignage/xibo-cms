@@ -121,7 +121,7 @@ class layoutDAO
 				Theme::Set('form_meta', '<input type="hidden" name="p" value="layout"><input type="hidden" name="q" value="LayoutGrid">');
 				
 				// Field list for a "retired" dropdown list
-		        Theme::Set('retired_field_list', array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')));
+		        Theme::Set('retired_field_list', array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')));
 				
 				// Field list for a "owner" dropdown list
 				Theme::Set('owner_field_list', $db->GetArray("SELECT 0 AS UserID, 'All' AS UserName UNION SELECT DISTINCT user.UserID, user.UserName FROM `layout` INNER JOIN `user` ON layout.UserID = user.UserID "));

@@ -784,19 +784,50 @@ END;
     /**
      * Returns an array of Media the current user has access to
      */
-    public function MediaList($type = '')
+    public function MediaList($type = '', $name = '', $ownerid = 0, $retired = 0)
     {
-        $SQL  = "";
+    	$SQL  = '';
         $SQL .= "SELECT  media.mediaID, ";
-        $SQL .= "        media.name, ";
-        $SQL .= "        media.type, ";
-        $SQL .= "        media.duration, ";
-        $SQL .= "        media.userID ";
-        $SQL .= "FROM    media ";
-        $SQL .= "WHERE   1 = 1  AND isEdited = 0 ";
+		$SQL .= " 	media.name, ";
+		$SQL .= " 	media.type, ";
+		$SQL .= " 	media.duration, ";
+		$SQL .= " 	media.userID, ";
+		$SQL .= " 	media.FileSize, ";
+		$SQL .= " 	IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
+		$SQL .= " 	media.originalFileName ";
+		$SQL .= " FROM media ";
+		$SQL .= "	LEFT OUTER JOIN media parentmedia ";
+		$SQL .= " 	ON parentmedia.MediaID = media.MediaID ";
+		$SQL .= " WHERE   media.isEdited = 0 ";
+		
+		if ($name != '') 
+		{
+            // convert into a space delimited array
+            $names = explode(' ', $name);
+            
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (media.name NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (media.name LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+            }
+		}
 
         if ($type != '')
-            $SQL .= sprintf(" AND type = '%s'", $this->db->escape_string($type));
+            $SQL .= sprintf(" AND media.type = '%s'", $this->db->escape_string($type));
+
+		if ($ownerid != 0) 
+			$SQL .= sprintf(" AND media.userid = %d ", $ownerid);
+		
+		if ($retired == 1) 
+			$SQL .= " AND media.retired = 1 ";
+		
+		if ($retired == 0) 
+			$SQL .= " AND media.retired = 0 ";			
+		
+		$SQL .= " ORDER BY media.name ";
 
         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of media for %s with SQL: %s', $this->userName, $SQL));
 
@@ -813,18 +844,23 @@ END;
             $mediaItem = array();
 
             // Validate each param and add it to the array.
-            $mediaItem['mediaid']   = Kit::ValidateParam($row['mediaID'], _INT);
-            $mediaItem['media']     = Kit::ValidateParam($row['name'], _STRING);
+            $mediaItem['mediaid'] = Kit::ValidateParam($row['mediaID'], _INT);
+            $mediaItem['media'] = Kit::ValidateParam($row['name'], _STRING);
             $mediaItem['mediatype'] = Kit::ValidateParam($row['type'], _WORD);
-            $mediaItem['length']    = Kit::ValidateParam($row['duration'], _DOUBLE);
-            $mediaItem['ownerid']   = Kit::ValidateParam($row['userID'], _INT);
+            $mediaItem['duration'] = Kit::ValidateParam($row['duration'], _DOUBLE);
+            $mediaItem['ownerid'] = Kit::ValidateParam($row['userID'], _INT);
+            $mediaItem['filesize'] = Kit::ValidateParam($row['FileSize'], _INT);
+            $mediaItem['parentid'] = Kit::ValidateParam($row['ParentID'], _INT);
+            $mediaItem['filename'] = Kit::ValidateParam($row['originalFileName'], _STRING);
 
             $auth = $this->MediaAuth($mediaItem['mediaid'], true);
 
             if ($auth->view)
             {
-                $mediaItem['view'] = $auth->view;
-                $mediaItem['edit'] = $auth->edit;
+                $mediaItem['view'] = (int)$auth->view;
+                $mediaItem['edit'] = (int)$auth->edit;
+                $mediaItem['del'] = (int)$auth->del;
+                $mediaItem['modifyPermissions'] = (int)$auth->modifyPermissions;
                 $media[] = $mediaItem;
             }
         }
