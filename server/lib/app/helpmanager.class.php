@@ -74,7 +74,7 @@ class HelpManager
 	 * @param $image Object[optional]
 	 * @param $alt Object[optional]
 	 */
-	public function HelpIcon($title, $return = false, $image = "img/forms/info_icon.gif", $alt = "Hover for more info")
+	public function HelpIcon($title, $return = false, $image = "theme/default/img/forms/info_icon.gif", $alt = "Hover for more info")
 	{
 		$button = <<<END
 		<img src="$image" alt="$alt" title="$title">

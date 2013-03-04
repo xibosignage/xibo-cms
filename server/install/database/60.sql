@@ -28,6 +28,29 @@ INSERT INTO `transition` (`TransitionID`, `Transition`, `Code`, `HasDuration`, `
 (2, 'Fade Out', 'fadeOut', 1, 0, 0, 1),
 (3, 'Fly', 'fly', 1, 1, 1, 1);
 
+INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES (NULL, 'GLOBAL_THEME_NAME', 'default', 'text', 'The Theme to apply to all pages by default', NULL, 'general', '1');
+
+INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES (NULL, 'timeline', '3');
+
+UPDATE `module` SET `ImageUri` = REPLACE(ImageUri, 'img/forms/', 'forms/') WHERE ImageUri IS NOT NULL;
+
+UPDATE `menuitem` SET `Img` = REPLACE(Img, 'img/dashboard/', 'dashboard/') WHERE Img IS NOT NULL;
+
+ALTER TABLE  `resolution` ADD  `intended_width` INT NOT NULL ,
+ADD  `intended_height` INT NOT NULL;
+
+INSERT INTO `menuitem` (`MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`)
+SELECT 9, `PageID`, NULL, 'Help Links', NULL, NULL, 6
+  FROM `pages`
+ WHERE `name` = 'help';
+
+UPDATE `pages` SET name = 'log' WHErE name = 'report';
+INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES (NULL, 'sessions', '9');
+
+UPDATE `menuitem` SET Args = NULL, PageID = (SELECT PageID FROM `pages` WHERE name = 'sessions' LIMIT 1) WHERE PageID = (SELECT PageID FROM `pages` WHERE name = 'log' LIMIT 1) AND `Args` = 'sp=sessions';
+UPDATE `menuitem` SET Args = NULL WHERE PageID = (SELECT PageID FROM `pages` WHERE name = 'log' LIMIT 1) AND `Args` = 'sp=log';
+UPDATE `menuitem` SET `Text` = 'About' WHERE `Text` = 'License';
+
 UPDATE `version` SET `app_ver` = '1.5.0', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '60';

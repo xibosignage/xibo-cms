@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner and James Packer
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -29,17 +29,6 @@ class indexDAO
 	{
 		$this->db 	=& $db;
 		$this->user =& $user;
-	}
-	
-	function on_page_load() 
-	{
-    	return "";
-	}
-	
-	function echo_page_heading() 
-	{
-		echo "Schedule";
-		return true;
 	}
 
 	function login() 
@@ -92,7 +81,7 @@ class indexDAO
 			exit;
 		}
 
-		if($user->login($username,$password)) 
+		if ($user->login($username,$password)) 
 		{
 			$userid 	= Kit::GetParam('userid', _SESSION, _INT);
 			$username 	= Kit::GetParam('username', _SESSION, _USERNAME);
@@ -106,11 +95,11 @@ class indexDAO
 		
 		if ($referingpage == '') 
 		{
-                    header('Location:index.php?p=index');
+            header('Location:index.php?p=index');
 		}
 		else 
 		{
-                    header('Location:index.php?' . $referingpage);
+            header('Location:index.php?' . $referingpage);
 		}
 
 		exit;
@@ -266,35 +255,11 @@ class indexDAO
 	function About()
 	{
 		$response = new ResponseManager();
-                $version = VERSION;
+        
+        Theme::Set('version', VERSION);
 		
-		$output = <<<END
-		<h1>License Information</h1>
-		<p>Xibo - Digitial Signage - <a href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>. Version $version<br />
-		Copyright &copy 2006-2012 Daniel Garner and the <a href="https://launchpad.net/~xibo-developers/+members" title="Xibo Developers">Xibo Developers</a>.</p>
-		 
-		<p>Xibo is free software: you can redistribute it and/or modify
-		it under the terms of the GNU Affero General Public License as published by
-		the Free Software Foundation, either version 3 of the License, or
-		any later version. </p>
-		 
-		<p>Xibo is distributed in the hope that it will be useful,
-		but WITHOUT ANY WARRANTY; without even the implied warranty of
-		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-		GNU Affero General Public License for more details.</p>
-		 
-		<p>You should have received a copy of the GNU Affero General Public License
-		along with Xibo.  If not, see <a href="http://www.gnu.org/licenses/">www.gnu.org/licenses</a>. </p>
-		
-		<h2>Third Party Licenses</h2>
-		<p>Xibo uses some third party libraries and tools - these are provided to you along with Xibo under the following licenses:</p>
-		
-		<h3>jQuery</h3>
-		<p><a href="http://jquery.com/">Jquery</a> (and plugins) are provided under the <a href="http://dev.jquery.com/browser/trunk/jquery/MIT-LICENSE.txt">MIT license.</a></p>
-		
-		<h3>CK Editor</h3>
-		<p><a href="http://ckeditor.com/">CK Editor</a> is provided as the text editor, and is made available under GPL/LGPL/MPL</p>
-END;
+		// Render the Theme and output
+        $output = Theme::RenderReturn('about_text');
 		
 		$response->SetFormRequestResponse($output, __('About Xibo'), '500', '500');
 		$response->AddButton(__('Close'), 'XiboDialogClose()');

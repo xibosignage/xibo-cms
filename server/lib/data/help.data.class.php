@@ -35,6 +35,16 @@ class Help extends Data
      */
     public function Add($topic, $category, $link)
     {
+        // Validation
+        if ($topic == '')
+            return $this->SetError(__('Topic is a required field. It must be between 1 and 254 characters.'));
+
+        if ($category == '')
+            return $this->SetError(__('Category is a required field. It must be between 1 and 254 characters.'));
+
+        if ($link == '')
+            return $this->SetError(__('Link is a required field. It must be between 1 and 254 characters.'));
+
         $SQL = "INSERT INTO `help` (Topic, Category, Link) VALUES ('%s', '%s', '%s') ";
         $SQL = sprintf($SQL, $this->db->escape_string($topic), $this->db->escape_string($category), $this->db->escape_string($link));
 
@@ -56,6 +66,19 @@ class Help extends Data
      */
     public function Edit($helpId, $topic, $category, $link)
     {
+        // Validation
+        if ($helpId == 0)
+            return $this->SetError(__('Help Link not selected'));
+
+        if ($topic == '')
+            return $this->SetError(__('Topic is a required field. It must be between 1 and 254 characters.'));
+
+        if ($category == '')
+            return $this->SetError(__('Category is a required field. It must be between 1 and 254 characters.'));
+
+        if ($link == '')
+            return $this->SetError(__('Link is a required field. It must be between 1 and 254 characters.'));
+
         $SQL = "UPDATE `help` SET Topic = '%s', Category = '%s', Link = '%s' WHERE HelpID = %d ";
         $SQL = sprintf($SQL, $this->db->escape_string($topic), $this->db->escape_string($category), $this->db->escape_string($link), $helpId);
 
@@ -74,6 +97,10 @@ class Help extends Data
      */
     public function Delete($helpId)
     {
+        // Validation
+        if ($helpId == 0)
+            return $this->SetError(__('Help Link not selected'));
+
         $SQL = "DELETE FROM `help` WHERE HelpID = %d ";
         $SQL = sprintf($SQL, $helpId);
 

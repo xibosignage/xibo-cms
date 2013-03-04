@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2012 Daniel Garner
+ * Copyright (C) 2012-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -31,118 +31,96 @@ class campaignDAO
         $this->user =& $user;
     }
 
-    function on_page_load()
-    {
-        return "";
-    }
-
-    function echo_page_heading()
-    {
-        echo __("Campaign Administration");
-        return true;
-    }
-
     public function displayPage()
     {
-        require("template/pages/campaign_view.php");
+        // Configure the theme
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('campaign_form_add_url', 'index.php?p=campaign&q=AddForm');
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="Grid">');
+        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
+        Theme::Set('pager', ResponseManager::Pager($id));
 
-        return false;
+        // Render the Theme and output
+        Theme::Render('campaign_page');
     }
 
     /**
-     * Shows the Filter form for display groups
-     * @return
+     * Returns a Grid of Campaigns
      */
-    public function Filter()
-    {
-        $filterForm = <<<END
-        <div class="FilterDiv" id="CampaignFilter">
-            <form onsubmit="return false">
-                    <input type="hidden" name="p" value="campaign">
-                    <input type="hidden" name="q" value="Grid">
-            </form>
-        </div>
-END;
-
-        $id = uniqid();
-
-        $xiboGrid = <<<HTML
-        <div class="XiboGrid" id="$id">
-            <div class="XiboFilter">
-                    $filterForm
-            </div>
-            <div class="XiboData">
-
-            </div>
-        </div>
-HTML;
-        echo $xiboGrid;
-    }
-
     public function Grid()
     {
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $rows = $user->CampaignList();
+        $campaigns = $user->CampaignList();
 
-        if (!is_array($rows))
+        if (!is_array($campaigns))
         {
             trigger_error($db->error());
             trigger_error(__('Unable to get list of campaigns'), E_USER_ERROR);
         }
 
-        $output  = '<div class="info_table"><table style="width:100%">';
-        $output .= '    <thead>';
-        $output .= '    <tr>';
-        $output .= '    <th>' . __('Name') .'</th>';
-        $output .= '    <th>' . __('# Layouts') .'</th>';
-        $output .= '    <th>' . __('Actions') .'</th>';
-        $output .= '    </tr>';
-        $output .= '    </thead>';
-        $output .= '    <tbody>';
+        $rows = array();
 
-        foreach($rows as $row)
+        foreach($campaigns as $row)
         {
             if ($row['islayoutspecific'] == 1)
                 continue;
 
-            $campaignId = Kit::ValidateParam($row['campaignid'], _INT);
-            $campaign = Kit::ValidateParam($row['campaign'], _STRING);
-            $numLayouts = Kit::ValidateParam($row['numlayouts'], _INT);
-
-            $buttons = '';
-            $buttons .= '<button class="XiboFormButton" href="index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $campaignId . '"><span>' . __('Schedule Now') . '</span></button>';
+            // Schedule Now
+            $row['buttons'][] = array(
+                    'id' => 'campaign_button_schedulenow',
+                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $row['campaignid'],
+                    'text' => __('Schedule Now')
+                );
             
             // Buttons based on permissions
             if ($row['edit'] == 1)
             {
-                // Show the edit button, members button
-                $buttons .= '<button class="XiboFormButton" href="index.php?p=campaign&q=MembersForm&CampaignID=' . $campaignId . '&Campaign=' . $campaign . '"><span>' . __('Layouts') . '</span></button>';
-                $buttons .= '<button class="XiboFormButton" href="index.php?p=campaign&q=EditForm&CampaignID=' . $campaignId . '"><span>' . __('Edit') . '</span></button>';
+                // Assign Layouts
+                $row['buttons'][] = array(
+                        'id' => 'campaign_button_layouts',
+                        'url' => 'index.php?p=campaign&q=MembersForm&CampaignID=' . $row['campaignid'] . '&Campaign=' . $row['campaign'],
+                        'text' => __('Layouts')
+                    );
+                
+                // Edit the Campaign
+                $row['buttons'][] = array(
+                        'id' => 'campaign_button_edit',
+                        'url' => 'index.php?p=campaign&q=EditForm&CampaignID=' . $row['campaignid'],
+                        'text' => __('Edit')
+                    );
             }
 
             if ($row['del'] == 1)
             {
-                // Show the delete button
-                $buttons .= '<button class="XiboFormButton" href="index.php?p=campaign&q=DeleteForm&CampaignID=' . $campaignId . '"><span>' . __('Delete') . '</span></button>';
+                // Delete Campaign
+                $row['buttons'][] = array(
+                        'id' => 'campaign_button_delete',
+                        'url' => 'index.php?p=campaign&q=DeleteForm&CampaignID=' . $row['campaignid'],
+                        'text' => __('Delete')
+                    );
             }
 
             if ($row['modifypermissions'] == 1)
             {
-                // Show the modify permissions button
-                $buttons .= '<button class="XiboFormButton" href="index.php?p=campaign&q=PermissionsForm&CampaignID=' . $campaignId . '"><span>' . __('Permissions') . '</span></button>';
+                // Permissions for Campaign
+                $row['buttons'][] = array(
+                        'id' => 'campaign_button_delete',
+                        'url' => 'index.php?p=campaign&q=PermissionsForm&CampaignID=' . $row['campaignid'],
+                        'text' => __('Permissions')
+                    );
             }
 
-            $output .= '<tr>';
-            $output .= '    <td>' . $campaign . '</td>';
-            $output .= '    <td>' . $numLayouts . '</td>';
-            $output .= '    <td>' . $buttons . '</td>';
-            $output .= '</tr>';
+            // Assign this to the table row
+            $rows[] = $row;
         }
 
-        $output .= "</tbody></table></div>";
+        Theme::Set('table_rows', $rows);
+
+        $output = Theme::RenderReturn('campaign_page_grid');
 
         $response->SetGridResponse($output);
         $response->Respond();
@@ -156,34 +134,16 @@ HTML;
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
 
-        // Help UI
-        $iconCampaignName = $helpManager->HelpIcon(__('The Name for this Campaign'), true);
+        Theme::Set('form_id', 'CampaignAddForm');
+        Theme::Set('form_action', 'index.php?p=campaign&q=Add');
 
-        $msgSave = __('Save');
-        $msgCancel = __('Cancel');
-        $msgAction = __('Action');
-        $msgEdit = __('Edit');
-        $msgDelete = __('Delete');
+        $form = Theme::RenderReturn('campaign_form_add');
 
-        $msgCampaignName = __('Name');
-
-        $form = <<<END
-        <form id="CampaignAddForm" class="XiboForm" action="index.php?p=campaign&q=Add" method="post">
-            <table>
-                <tr>
-                    <td>$msgCampaignName</span></td>
-                    <td>$iconCampaignName <input class="required" type="text" name="Name" maxlength="254"></td>
-                </tr>
-            </table>
-        </form>
-END;
-
-        $response->SetFormRequestResponse($form, __('Add Campaign'), '350px', '325px');
+        $response->SetFormRequestResponse($form, __('Add Campaign'), '350px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Add') . '")');
-        $response->AddButton($msgCancel, 'XiboDialogClose()');
-        $response->AddButton($msgSave, '$("#CampaignAddForm").submit()');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#CampaignAddForm").submit()');
         $response->Respond();
     }
 
@@ -196,10 +156,6 @@ END;
         $response = new ResponseManager();
 
         $name = Kit::GetParam('Name', _POST, _STRING);
-
-        // Validation
-        if ($name == '')
-            trigger_error(__('Name is a required field.'), E_USER_ERROR);
 
         Kit::ClassLoader('campaign');
         $campaignObject = new Campaign($db);
@@ -219,8 +175,7 @@ END;
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
-
+        
         $campaignId = Kit::GetParam('CampaignID', _GET, _INT);
 
         // Authenticate this user
@@ -241,36 +196,20 @@ END;
             trigger_error(__('Error getting Campaign'));
         }
 
-        $campaign = $campaign = Kit::ValidateParam($row['Campaign'], _STRING);
-        $isLayoutSpecific = Kit::ValidateParam($row['IsLayoutSpecific'], _INT);
+        $campaign = Kit::ValidateParam($row['Campaign'], _STRING);
 
-        // Help UI
-        $iconCampaignName = $helpManager->HelpIcon(__('The Name for this Campaign'), true);
+        // Set some information about the form
+        Theme::Set('form_id', 'CampaignEditForm');
+        Theme::Set('form_action', 'index.php?p=campaign&q=Edit');
+        Theme::Set('form_meta', '<input type="hidden" name="CampaignID" value="' . $campaignId . '" />');
+        Theme::Set('campaign', $campaign);
+        
+        $form = Theme::RenderReturn('campaign_form_edit');
 
-        $msgSave = __('Save');
-        $msgCancel = __('Cancel');
-        $msgAction = __('Action');
-        $msgEdit = __('Edit');
-        $msgDelete = __('Delete');
-
-        $msgCampaignName = __('Name');
-
-        $form = <<<END
-        <form id="CampaignEditForm" class="XiboForm" action="index.php?p=campaign&q=Edit" method="post">
-            <input type="hidden" name="CampaignID" value="$campaignId" />
-            <table>
-                <tr>
-                    <td>$msgCampaignName</span></td>
-                    <td>$iconCampaignName <input class="required" type="text" name="Name" value="$campaign" maxlength="254"></td>
-                </tr>
-            </table>
-        </form>
-END;
-
-        $response->SetFormRequestResponse($form, __('Edit Campaign'), '350px', '325px');
+        $response->SetFormRequestResponse($form, __('Edit Campaign'), '350px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Edit') . '")');
-        $response->AddButton($msgCancel, 'XiboDialogClose()');
-        $response->AddButton($msgSave, '$("#CampaignEditForm").submit()');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#CampaignEditForm").submit()');
         $response->Respond();
     }
 
@@ -325,15 +264,12 @@ END;
         if (!$auth->del)
             trigger_error(__('You do not have permission to delete this campaign'), E_USER_ERROR);
 
-        $msgWarn = __('Are you sure you want to delete?');
+        // Set some information about the form
+        Theme::Set('form_id', 'CampaignDeleteForm');
+        Theme::Set('form_action', 'index.php?p=campaign&q=Delete');
+        Theme::Set('form_meta', '<input type="hidden" name="CampaignID" value="' . $campaignId . '" />');
 
-        //we can delete
-        $form = <<<END
-        <form id="CampaignDeleteForm" class="XiboForm" method="post" action="index.php?p=campaign&q=Delete">
-            <input type="hidden" name="CampaignID" value="$campaignId" />
-            <p>$msgWarn</p>
-        </form>
-END;
+        $form = Theme::RenderReturn('campaign_form_delete');
 
         $response->SetFormRequestResponse($form, __('Delete Campaign'), '350px', '175px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Delete') . '")');
@@ -388,17 +324,10 @@ END;
         if (!$auth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this campaign'), E_USER_ERROR);
 
-        // Form content
-        $form = '<form id="CampaignPermissionsForm" class="XiboForm" method="post" action="index.php?p=campaign&q=Permissions">';
-	$form .= '<input type="hidden" name="campaignId" value="' . $campaignId . '" />';
-        $form .= '<div class="dialog_table">';
-	$form .= '  <table style="width:100%">';
-        $form .= '      <tr>';
-        $form .= '          <th>' . __('Group') . '</th>';
-        $form .= '          <th>' . __('View') . '</th>';
-        $form .= '          <th>' . __('Edit') . '</th>';
-        $form .= '          <th>' . __('Delete') . '</th>';
-        $form .= '      </tr>';
+        // Set some information about the form
+        Theme::Set('form_id', 'CampaignPermissionsForm');
+        Theme::Set('form_action', 'index.php?p=campaign&q=Permissions');
+        Theme::Set('form_meta', '<input type="hidden" name="campaignId" value="' . $campaignId . '" />');
 
         // List of all Groups with a view/edit/delete checkbox
         $SQL = '';
@@ -417,22 +346,31 @@ END;
             trigger_error(__('Unable to get permissions for this Campaign'), E_USER_ERROR);
         }
 
-        while($row = $db->get_assoc_row($results))
+        $checkboxes = array();
+
+        while ($row = $db->get_assoc_row($results))
         {
             $groupId = $row['GroupID'];
-            $group = ($row['IsUserSpecific'] == 0) ? '<strong>' . $row['Group'] . '</strong>' : $row['Group'];
+            $rowClass = ($row['IsUserSpecific'] == 0) ? 'strong_text' : '';
 
-            $form .= '<tr>';
-            $form .= ' <td>' . $group . '</td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_view" ' . (($row['View'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_edit" ' . (($row['Edit'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_del" ' . (($row['Del'] == 1) ? 'checked' : '') . '></td>';
-            $form .= '</tr>';
+            $checkbox = array(
+                    'id' => $groupId,
+                    'name' => Kit::ValidateParam($row['Group'], _STRING),
+                    'class' => $rowClass,
+                    'value_view' => $groupId . '_view',
+                    'value_view_checked' => (($row['View'] == 1) ? 'checked' : ''),
+                    'value_edit' => $groupId . '_edit',
+                    'value_edit_checked' => (($row['Edit'] == 1) ? 'checked' : ''),
+                    'value_del' => $groupId . '_del',
+                    'value_del_checked' => (($row['Del'] == 1) ? 'checked' : ''),
+                );
+
+            $checkboxes[] = $checkbox;
         }
 
-        $form .= '</table>';
-        $form .= '</div>';
-        $form .= '</form>';
+        Theme::Set('form_rows', $checkboxes);
+
+        $form = Theme::RenderReturn('campaign_form_permissions');
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Permissions') . '")');
@@ -528,28 +466,13 @@ END;
     public function MembersForm()
     {
         $db =& $this->db;
+        $user =& $this->user;
         $response = new ResponseManager();
         $campaignId = Kit::GetParam('CampaignID', _GET, _INT);
 
         // There needs to be two lists here.
         // One of which is the Layouts currently assigned to this group
         // The other is a list of layouts that are available to be assigned (i.e. the opposite of the first list)
-
-        // Layouts in group
-        $SQL  = "";
-        $SQL .= "SELECT layout.LayoutID, ";
-        $SQL .= "       layout.layout ";
-        $SQL .= "FROM   layout ";
-        $SQL .= "       INNER JOIN lkcampaignlayout ";
-        $SQL .= "       ON     lkcampaignlayout.LayoutID = layout.LayoutID ";
-        $SQL .= sprintf("WHERE  lkcampaignlayout.CampaignID   = %d", $campaignId);
-        $SQL .= " ORDER BY lkcampaignlayout.DisplayOrder ";
-
-        if (!$resultIn = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Layouts'), E_USER_ERROR);
-        }
 
         // Layouts not in group
         $SQL  = "";
@@ -571,39 +494,43 @@ END;
             trigger_error(__('Error getting Layouts'), E_USER_ERROR);
         }
 
-        // Now we have an IN and an OUT results object which we can use to build our lists
-        $listIn = '<ul id="layoutsIn" href="index.php?p=campaign&q=SetMembers&CampaignID=' . $campaignId . '" class="connectedSortable">';
+        // Set some information about the form
+        Theme::Set('layouts_assigned_id', 'layoutsIn');
+        Theme::Set('layouts_available_id', 'layoutsOut');
+        Theme::Set('layouts_assigned_url', 'index.php?p=campaign&q=SetMembers&CampaignID=' . $campaignId);
 
-        while($row = $db->get_assoc_row($resultIn))
+        // Layouts in group
+        $SQL  = "";
+        $SQL .= "SELECT layout.LayoutID, ";
+        $SQL .= "       layout.layout, ";
+        $SQL .= "       CONCAT('LayoutID_', layout.LayoutID) AS list_id ";
+        $SQL .= "FROM   layout ";
+        $SQL .= "       INNER JOIN lkcampaignlayout ";
+        $SQL .= "       ON     lkcampaignlayout.LayoutID = layout.LayoutID ";
+        $SQL .= sprintf("WHERE  lkcampaignlayout.CampaignID   = %d", $campaignId);
+        $SQL .= " ORDER BY lkcampaignlayout.DisplayOrder ";
+
+        $layoutsAssigned = $db->GetArray($SQL);
+
+        if (!is_array($layoutsAssigned))
         {
-                // For each item output a LI
-                $layoutId = Kit::ValidateParam($row['LayoutID'], _INT);
-                $layout = Kit::ValidateParam($row['layout'], _STRING);
-
-                $listIn	.= '<li id="LayoutID_' . $layoutId . '"class="li-sortable">' . $layout . '</li>';
+            trigger_error($db->error());
+            trigger_error(__('Error getting Layouts'), E_USER_ERROR);
         }
-        $listIn	.= '</ul>';
 
-        $listOut = '<ul id="layoutsOut" class="connectedSortable">';
+        // Set the layouts assigned
+        Theme::Set('layouts_assigned', $layoutsAssigned);
 
-        while($row = $db->get_assoc_row($resultOut))
-        {
-            // For each item output a LI
-            $layoutId = Kit::ValidateParam($row['LayoutID'], _INT);
-            $layout = Kit::ValidateParam($row['layout'], _STRING);
-
-            // Authenticate
-            $auth = $this->user->LayoutAuth($layoutId, true);
-            if (!$auth->view)
-                continue;
-
-            $listOut .= '<li id="LayoutID_' . $layoutId . '" class="li-sortable">' . $layout . '</li>';
+        // All available layouts
+        $layoutsAvailable = array();
+        foreach ($user->LayoutList() as $layout) {
+            $layout['list_id'] = 'LayoutID_' . $layout['layoutid'];
+            $layoutsAvailable[] = $layout;
         }
-        $listOut .= '</ul>';
 
-        // Build the final form.
-        $helpText = '<center>' . __('Drag or double click to move items between lists') . '</center>';
-        $form = $helpText . '<div class="connectedlist"><h3>' . __('Assigned Layouts') . '</h3>' . $listIn . '</div><div class="connectedlist"><h3>' . __('Available Layouts') . '</h3>' . $listOut . '</div>';
+        Theme::Set('layouts_available', $layoutsAvailable);
+
+        $form = Theme::RenderReturn('campaign_form_layout_assign');
 
         $response->SetFormRequestResponse($form, __('Layouts on Campaign'), '400', '375', 'ManageMembersCallBack');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Layouts') . '")');

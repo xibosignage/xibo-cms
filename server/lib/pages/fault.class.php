@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -33,97 +33,16 @@ class faultDAO
 	
 	function displayPage() 
 	{
-	
-		include("template/pages/fault_view.php");
-		
-		return false;
-	}
-	
-	function on_page_load() 
-	{
-		return '';
-	}
-	
-	function echo_page_heading() 
-	{
-		echo __('Report a Fault');
-		return true;
-	}
-	
-	function ReportForm()
-	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-		$output = '';
-		
+		$db =& $this->db;
+		$user =& $this->user;
 		$config = new Config($db);
-		
-		$output .= '<h2>' . __('Report a fault with Xibo') . '</h2>';
-		$output .= '<p>' . __('Before reporting a fault it would be appreciated if you follow the below steps.') . '</p>';
 
-		$output .= '<div class="ReportFault">';		
-		$output .= '<ol>';		
-		$output .= '<li><p>' . __('Check that the Environment passes all the Xibo Environment checks.') . '</p>';		
-		$output .= $config->CheckEnvironment();
-		$output .= '</li>';
+		// Configure the theme
+        Theme::Set('environment_check', $config->CheckEnvironment());
+        Theme::Set('collect_data_url', 'index.php?p=fault&q=CollectData');
 
-		$output .= '<li><p>' . __('Turn ON full auditing and debugging.') . '</p>';
-		$output .= '	<form id="1" class="XiboAutoForm" action="index.php?p=admin" method="post">';
-		$output .= '		<input type="hidden" name="q" value="SetMaxDebug" />';
-		$output .= '		<input type="submit" value="' . __('Turn ON Debugging') . '" />';
-		$output .= '	</form>';
-		$output .= '</li>';
-
-		$output .= '<li><p>' . __('Recreate the Problem in a new window.') . '</p>';		
-		$output .= '</li>';
-		
-		$output .= '<li><p>' . __('Automatically collect and export relevant information into a text file.') . ' ' . __('Please save this file to your PC.') . '</p>';
-		$output .= '<a href="index.php?p=fault&q=CollectData" title="Collect Data">' . __('Collect and Save Data') . '</a>';	
-		$output .= '</li>';
-
-		$output .= '<li><p>' . __('Turn full auditing and debugging OFF.') . '</p>';	
-		$output .= '	<form id="2" class="XiboAutoForm" action="index.php?p=admin" method="post">';
-		$output .= '		<input type="hidden" name="q" value="SetMinDebug" />';
-		$output .= '		<input type="submit" value="' . __('Turn OFF Debugging') . '" />';
-		$output .= '	</form>';	
-		$output .= '</li>';
-		
-		$output .= '<li><p>' . __('Click on the below link to open the bug report page for this Xibo release.') . ' ' . __('Describe the problem and upload the file you obtained earlier.') . '</p>';		
-		$output .= '<a href="https://bugs.launchpad.net/xibo/1.1/+filebug" title="File a bug report" target="_blank">' . __('File a bug report in Launchpad') . '</a>';
-		$output .= '</li>';
-		
-		$output .= '</ol>';
-		$output .= '</div>';
-		
-		$output .= '<div class="ReportFault">';
-		$output .= ' <h2>Further Action</h2>';
-		$output .= ' <p>' . __('We will do our best to use the information collected above to solve your issue.');
-		$output .= ' ' . __('However sometimes this will not be enough and you will be asked to put your Xibo installation into "Test" mode.') . '</p>';
-		
-		$output .= '<ol>';
-		
-		$output .= '<li><p>' . __('Switch to Test Mode.') . '</p>';
-		$output .= '	<form class="XiboAutoForm" action="index.php?p=admin" method="post">';
-		$output .= '		<input type="hidden" name="q" value="SetServerTestMode" />';
-		$output .= '		<input type="submit" value="' . __('Switch to Test Mode') . '" />';
-		$output .= '	</form>';
-		$output .= '</li>';
-		
-		$output .= '<li><p>' . __('Recreate the Problem in a new window and Capture a screenshot.') . ' ' . __('You should send your screenshot to info@xibo.org.uk with a reference to the Launchpad Question/Bug you have created previously.') . '</p>';		
-		$output .= '</li>';
-		
-		$output .= '<li><p>' . __('Switch to Production Mode.') . '</p>';
-		$output .= '	<form class="XiboAutoForm" action="index.php?p=admin" method="post">';
-		$output .= '		<input type="hidden" name="q" value="SetServerProductionMode" />';
-		$output .= '		<input type="submit" value="' . __('Switch to Production Mode') . '" />';
-		$output .= '	</form>';
-		$output .= '</li>';
-			
-		$output .= '</ol>';
-		$output .= '</div>';
-
-		echo $output;	
-		return;
+        // Render the Theme and output
+        Theme::Render('fault_page');
 	}
 	
 	function CollectData()

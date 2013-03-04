@@ -32,6 +32,11 @@ class ResponseManager
 	
 	public $sortable;
 	public $sortingDiv;
+        public $paging;
+        public $pageSize;
+        public $pageNumber;
+    public $initialSortColumn;
+    public $initialSortOrder;
 	
 	public $dialogSize;
 	public $dialogWidth;
@@ -61,26 +66,28 @@ class ResponseManager
 		$this->success = true;
 		$this->clockUpdate = false;
 		$this->focusInFirstInput = true;
-                $this->appendHiddenSubmit = true;
-                $this->uniqueReference = '';
+        $this->appendHiddenSubmit = true;
+        $this->uniqueReference = '';
 		$this->buttons = '';
+        $this->pageSize = 10;
+        $this->pageNumber = 0;
+        $this->initialSortColumn = 1;
+        $this->initialSortOrder = 1;
 		
 		return true;
 	}
 	
 	/**
 	 * Sets the Default response if for a login box
-	 * @return 
 	 */	
 	function Login() 
 	{
-		//prints out the login box
-		$login_form 	= file_get_contents("template/pages/login_box_ajax.php");
-		$this->message	= $login_form;
+		Theme::Set('form_id', 'XiboLoginForm');
+		Theme::Set('form_action', 'index.php?q=login');
+
+		$this->message	= Theme::RenderReturn('login_form');
 		$this->login	= true;
 		$this->success	= false;
-		
-		return;
 	}
 	
 	function decode_response($success, $message) 
@@ -154,6 +161,7 @@ class ResponseManager
 		$this->success		= true;
 		$this->sortable		= true;
 		$this->sortingDiv	= $sortingDiv;
+                $this->paging = true;
 		
 		return;
 	}
@@ -217,7 +225,7 @@ class ResponseManager
 			// General
 			$response['html'] 			= $this->html;
 			$response['buttons']		= $this->buttons;
-                        $response['uniqueReference'] = $this->uniqueReference;
+            $response['uniqueReference'] = $this->uniqueReference;
 			
 			$response['success']		= $this->success;
 			$response['callBack']		= $this->callBack;
@@ -227,6 +235,11 @@ class ResponseManager
 			// Grids
 			$response['sortable']		= $this->sortable;
 			$response['sortingDiv']		= $this->sortingDiv;
+            $response['paging'] = $this->paging;
+            $response['pageSize'] = $this->pageSize;
+            $response['pageNumber'] = $this->pageNumber;
+            $response['initialSortColumn'] = $this->initialSortColumn - 1;
+            $response['initialSortOrder'] = $this->initialSortOrder - 1;
 			
 			// Dialogs
 			$response['dialogSize']		= $this->dialogSize;
@@ -250,9 +263,9 @@ class ResponseManager
 			// Login
 			$response['login']			= $this->login;
 
-                        // Log the response if we are auditing
-                        //global $db;
-                        //Debug::LogEntry($db, 'audit', json_encode($response), 'Response Manager', 'Respond');
+            // Log the response if we are auditing
+            //global $db;
+            //Debug::LogEntry($db, 'audit', json_encode($response), 'Response Manager', 'Respond');
 			
 			echo json_encode($response);
 			
@@ -288,6 +301,29 @@ class ResponseManager
 		
 		return;
 	}
+        
+    public static function Pager($id)
+    {
+        // Output a pager
+        $output  = '<div class="pager" id="XiboPager_' . $id . '">';
+        $output .= '    <form>';
+        $output .= '        <img src="3rdparty/jQuery/css/images/first.png" class="first"/>';
+        $output .= '        <img src="3rdparty/jQuery/css/images/prev.png" class="prev"/>';
+        $output .= '        <input type="text" class="pagedisplay"/>';
+        $output .= '        <img src="3rdparty/jQuery/css/images/next.png" class="next"/>';
+        $output .= '        <img src="3rdparty/jQuery/css/images/last.png" class="last"/>';
+        $output .= '        <select class="pagesize">';
+        $output .= '            <option value="5">5</option>';
+        $output .= '            <option value="10">10</option>';
+        $output .= '            <option value="20">20</option>';
+        $output .= '            <option value="30">30</option>';
+        $output .= '            <option value="40">40</option>';
+        $output .= '        </select>';
+        $output .= '    </form>';                
+        $output .= '</div>';
+        
+        return $output;
+    }
 }
 
 ?>

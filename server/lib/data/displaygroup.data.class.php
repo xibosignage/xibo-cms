@@ -42,6 +42,23 @@ class DisplayGroup extends Data
 		$db	=& $this->db;
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Add');
+
+		// Validation
+		if ($displayGroup == '')
+			return $this->SetError(__('Please enter a display group name'));
+		
+		if (strlen($description) > 254) 
+			return $this->SetError(__("Description can not be longer than 254 characters"));
+		
+		$check 	= sprintf("SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = '%s' AND IsDisplaySpecific = 0", $displayGroup);
+		$result = $db->query($check) or trigger_error($db->error());
+		
+		// Check for groups with the same name?
+		if($db->num_rows($result) != 0) 
+		{
+			return $this->SetError(sprintf(__('You already own a display group called "%s". Please choose another name.'), $displayGroup));
+		}
+		// End Validation
 		
 		// Create the SQL
 		$SQL  = "";
@@ -62,9 +79,7 @@ class DisplayGroup extends Data
 		if (!$displayGroupID = $db->insert_query($SQL)) 
 		{
 			trigger_error($db->error());
-			$this->SetError(25000, __('Could not add Display Group'));
-			
-			return false;
+			return $this->SetError(25000, __('Could not add Display Group'));
 		}
 		
 		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Add');
@@ -84,6 +99,26 @@ class DisplayGroup extends Data
 		$db	=& $this->db;
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Edit');
+
+		// Validation
+		if ($displayGroupID == 0) 
+			return $this->SetError(__('No Display Group Selected'));
+		
+		if ($displayGroup == '')
+			return $this->SetError(__('Please enter a display group name'));
+		
+		if (strlen($description) > 254) 
+			return $this->SetError(__("Description can not be longer than 254 characters"));
+		
+		$check 	= sprintf("SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = '%s' AND IsDisplaySpecific = 0", $displayGroup);
+		$result = $db->query($check) or trigger_error($db->error());
+		
+		// Check for groups with the same name?
+		if($db->num_rows($result) != 0) 
+		{
+			return $this->SetError(sprintf(__('You already own a display group called "%s". Please choose another name.'), $displayGroup));
+		}
+		// End Validation
 		
 		// Create the SQL
 		$SQL  = "";

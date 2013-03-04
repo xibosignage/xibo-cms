@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner and James Packer
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -24,313 +24,135 @@ class contentDAO
 {
 	private $db;
 	private $user;
-	private $isadmin = false;
-	private $has_permissions = true;
-	private $sub_page = "";
 
 	function __construct(database $db, user $user) 
 	{
 		$this->db 	=& $db;
 		$this->user =& $user;
-		
-		$usertype = Kit::GetParam('usertype', _SESSION, _INT, 0);
-		
-		if ($usertype == 1) $this->isadmin = true;
-		
-		$this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
-		
-		return;
 	}
-	
-	function on_page_load() 
-	{
-		return '';
-	}
-	
-	function echo_page_heading() 
-	{
-		echo __("Library");
-		
-		return true;
-	}
-	
+
 	/**
-	 * Library Filter form
-	 * @return 
-	 */	
-	function LibraryFilter() 
+	 * Displays the page logic
+	 */
+	function displayPage() 
 	{
-		// Messages
-		$msgName	= __('Name');
-		$msgType	= __('Type');
-		$msgRetired	= __('Retired');
-		$msgOwner	= __('Owner');
-                $msgShowOriginal = __('Show the original file name for each media item?');
-                $msgKeepFilterOpen = __('Keep filter open');
-                $filterId = uniqid('filter');
-
-		// Defaults
-                if (Kit::IsFilterPinned('content', 'ContentFilter'))
-                {
-                    $filterPinned = 'checked';
-                    $filterName = Session::Get('content', 'name');
-                    $mediatype = Session::Get('content', 'mediatype');
-                    $usertype = Session::Get('content', 'usertype');
-                    $filter_userid = Session::Get('content', 'filter_userid');
-                    $retired = Session::Get('content', 'filter_retired');
-                }
-                else
-                {
-                    $filterPinned = '';
-                    $filterName = '';
-                    $mediatype = ''; //1
-                    $usertype = 0; //3
-                    $filter_userid = '';
-                    $retired = '0';
-                }
-                
-		// User List
-		$user_list = listcontent("all|All,".userlist("SELECT DISTINCT userid FROM layout"),"filter_userid", $filter_userid);
+		$db =& $this->db;
 		
-		// Retired list
-		$retired_list = listcontent("all|All,1|Yes,0|No","filter_retired",$retired);
-
-		// Type list query to get all playlists that are in the database which have NOT been assigned to the display
-		$sql = "SELECT 'all', 'all' ";
-		$sql .= "UNION ";
-		$sql .= "SELECT type, type ";
-		$sql .= "FROM media ";
-		$sql .= "GROUP BY type ";
+		// Default options
+        if (Kit::IsFilterPinned('content', 'Filter')) {
+            Theme::Set('filter_pinned', 'checked');
+            Theme::Set('filter_name', Session::Get('content', 'filter_name'));
+            Theme::Set('filter_type', Session::Get('content', 'filter_type'));
+            Theme::Set('filter_retired', Session::Get('content', 'filter_retired'));
+            Theme::Set('filter_owner', Session::Get('content', 'filter_owner'));
+        }
+        else {
+			Theme::Set('filter_retired', 0);
+        }
 		
-		$type_list =  dropdownlist($sql, 'mediatype', $mediatype);
+    	Theme::Set('library_form_add_url', 'index.php?p=content&q=displayForms');
+
+		$id = uniqid();
+		Theme::Set('id', $id);
+		Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
+		Theme::Set('pager', ResponseManager::Pager($id));
+		Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryGrid">');
 		
-                // Filter
-		$filterForm = <<<END
-			<div class="FilterDiv" id="LibraryFilter">
-				<form>
-					<input type="hidden" name="p" value="content">
-					<input type="hidden" name="q" value="LibraryGrid">
-					<input type="hidden" name="pages" id="pages">
-					
-					<table id="content_filterform" class="filterform">
-						<tr>
-							<td>$msgName</td>
-							<td><input type='text' name='2' id='2' value="$filterName" /></td>
-							<td>$msgType</td>
-							<td>$type_list</td>
-							<td>$msgRetired</td>
-							<td>$retired_list</td>
-                                                        <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
-                                                        <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
-						</tr>
-						<tr>
-							<td>$msgOwner</td>
-							<td>$user_list</td>
-							<td colspan="4"><input type="checkbox" name="filter_showOriginal" id="filter_showOriginal" /><label for="filter_showOriginal">$msgShowOriginal</label></td>
-						</tr>
-					</table>
-			</form>
-		</div>
-END;
+		// Field list for a "retired" dropdown list
+        Theme::Set('retired_field_list', array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')));
+		
+		// Field list for a "owner" dropdown list
+		Theme::Set('owner_field_list', $db->GetArray("SELECT 0 AS UserID, 'All' AS UserName UNION SELECT DISTINCT user.UserID, user.UserName FROM `media` INNER JOIN `user` ON media.UserID = user.UserID "));
 
-            $id = uniqid();
+		// Module types filter
+		$types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
+        array_unshift($types, array('moduleid' => '', 'module' => 'All'));
+        Theme::Set('module_field_list', $types);
 
-            $xiboGrid = <<<HTML
-            <div class="XiboGrid" id="$id">
-                <div class="XiboFilter">
-                        $filterForm
-                </div>
-                <div class="XiboData">
-
-                </div>
-            </div>
-HTML;
-            echo $xiboGrid;
+		// Call to render the template
+		Theme::Render('library_page');
 	}
 	
 	/**
 	 * Prints out a Table of all media items
-	 *
 	 */
 	function LibraryGrid() 
 	{
-		$db 		=& $this->db;
-		$user		=& $this->user;
-		$response	= new ResponseManager();
+		$db =& $this->db;
+		$user =& $this->user;
+		$response = new ResponseManager();
 
 		//Get the input params and store them
-		$mediatype 		= Kit::GetParam('mediatype', _REQUEST, _WORD, 'all');
-		$name 			= Kit::GetParam('2', _REQUEST, _STRING);
-		$shared 		= Kit::GetParam('shared', _REQUEST, _STRING);
-		$filter_userid 	= Kit::GetParam('filter_userid', _REQUEST, _STRING, 'all');
-		$filter_retired = Kit::GetParam('filter_retired', _REQUEST, _STRING, 'all');
-                $filterShowOriginal = Kit::GetParam('filter_showOriginal', _REQUEST, _CHECKBOX, 'off');
+		$filter_type = Kit::GetParam('filter_type', _REQUEST, _WORD);
+		$filter_name = Kit::GetParam('filter_name', _REQUEST, _STRING);
+		$filter_userid = Kit::GetParam('filter_owner', _REQUEST, _INT);
+		$filter_retired = Kit::GetParam('filter_retired', _REQUEST, _INT);
                 
-		setSession('content', 'mediatype', $mediatype);
-		setSession('content', 'name', $name);
-		setSession('content', 'shared', $shared);
-		setSession('content', 'filter_userid', $filter_userid);
+		setSession('content', 'filter_type', $filter_type);
+		setSession('content', 'filter_name', $filter_name);
+		setSession('content', 'filter_owner', $filter_userid);
 		setSession('content', 'filter_retired', $filter_retired);
-		setSession('content', 'filter_showOriginal', $filterShowOriginal);
-                setSession('content', 'LibraryFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('content', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		// Construct the SQL
-		$SQL  = "";
-		$SQL .= "SELECT  media.mediaID, ";
-		$SQL .= "        media.name, ";
-		$SQL .= "        media.type, ";
-		$SQL .= "        media.duration, ";
-		$SQL .= "        media.userID, ";
-		$SQL .= "        media.FileSize, ";
-		$SQL .= "        IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
-		$SQL .= "        media.originalFileName ";
-		$SQL .= "FROM    media ";
-		$SQL .= " LEFT OUTER JOIN media parentmedia ";
-		$SQL .= " ON parentmedia.MediaID = media.MediaID ";
-		$SQL .= "WHERE   media.isEdited = 0 ";
-		if ($mediatype != "all") 
-		{
-			$SQL .= sprintf(" AND media.type = '%s'", $db->escape_string($mediatype));
-		}
-		if ($name != "") 
-		{
-			$SQL .= " AND media.name LIKE '%$name%' ";
-		}
-		if ($filter_userid != 'all') 
-		{
-			$SQL .= sprintf(" AND media.userid = %d ", $filter_userid);
-		}
-		//retired options
-		if ($filter_retired == '1') 
-		{
-			$SQL .= " AND media.retired = 1 ";
-		}
-		elseif ($filter_retired == '0') 
-		{
-			$SQL .= " AND media.retired = 0 ";			
-		}
-		$SQL .= " ORDER BY media.name ";
+		$mediaList = $user->MediaList($filter_type, $filter_name, $filter_userid, $filter_retired);
 
-		Debug::LogEntry($db, 'audit', $SQL);
+		$rows = array();
 
-		if (!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error(__('Cant get content list'), E_USER_ERROR);			
-		}
-		
-		// Messages
-		$msgName	= __('Name');
-		$msgType	= __('Type');
-		$msgOwner	= __('Owner');
-		$msgFileSize	= __('Size');
-                $msgRevisions = __('Revised');
-                $msgOriginal = __('Original Filename');
-		$msgShared	= __('Permissions');
-		$msgAction	= __('Action');
+		// Add some additional row content
+		foreach ($mediaList as $row) {
 
-    	$output = '';
-	$output.= '<div class="info_table">';
-	$output.= ' <table style="width:100%">';
-	$output.= '     <thead>';
-	$output.= '         <tr>';
-	$output.= '             <th>' . $msgName . '</th>';
-	$output.= '             <th>' . $msgType . '</th>';
-	$output.= '             <th>h:mi:ss</th>';         
-	$output.= '             <th>' . $msgFileSize . '</th>';
-        $output.= '             <th>' . $msgOwner . '</th>';
-	$output.= '             <th>' . $msgShared . '</th>';      
-	$output.= '             <th>' . $msgRevisions . '</th>';
-        
-        if ($filterShowOriginal == 1)
-            $output.= '             <th>' . $msgOriginal . '</th>';
-        
-	$output.= '             <th>' . $msgAction . '</th>'; 
-	$output.= '         </tr>';
-	$output.= '     </thead>';
-	$output.= '     <tbody>';
-		
-        while ($aRow = $db->get_row($results))
-        {
-            $mediaid 		= Kit::ValidateParam($aRow[0], _INT);
-            $media 			= Kit::ValidateParam($aRow[1], _STRING);
-            $mediatype 		= Kit::ValidateParam($aRow[2], _WORD);
-            $length 		= sec2hms(Kit::ValidateParam($aRow[3], _DOUBLE));
-            $ownerid 		= Kit::ValidateParam($aRow[4], _INT);
-            $fileSize = Kit::ValidateParam($aRow[5], _INT);
-            $revisions = (Kit::ValidateParam($aRow[6], _INT) != 0) ? '<img src="img/act.gif" />' : '';
-            $originalFileName = Kit::ValidateParam($aRow[7], _STRING);
-            
-            // Size in MB
-            $sz = 'BKMGTP';
-            $factor = floor((strlen($fileSize) - 1) / 3);
-            $fileSize = sprintf('%.2f', $fileSize / pow(1024, $factor)) . @$sz[$factor];
+			$row['duration_text'] = sec2hms($row['duration']);
+			$row['owner'] = $user->getNameFromID($row['ownerid']);
+			$row['permissions'] = $group = $this->GroupsForMedia($row['mediaid']);
+			$row['revised'] = ($row['parentid'] != 0) ? Theme::Image('act.gif') : '';
 
-            //get the username from the userID using the user module
-            $username = $user->getNameFromID($ownerid);
+			// Display a friendly filesize
+			$sz = 'BKMGTP';
+            $factor = floor((strlen($row['filesize']) - 1) / 3);
+            $fileSize = sprintf('%.2f', $row['filesize'] / pow(1024, $factor)) . @$sz[$factor];
+			$row['size_text'] = $fileSize;
 
-            $group = $this->GroupsForMedia($mediaid);
+			$row['buttons'] = array();
 
-            // Permissions
-            $auth = $this->user->MediaAuth($mediaid, true);
-
-            if ($auth->view) //is this user allowed to see this
-            {
-                if ($auth->edit)
-                {
-                    //double click action - depends on what type of media we are
-                    $output .= <<<END
-                    <tr href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid' ondblclick="XiboFormRender($(this).attr('href'))">
-END;
-                }
-                else
-                {
-                    $output .= '<tr ondblclick="alert(' . __('You do not have permission to edit this media') . ')">';
-                }
-
-                $output .= "<td>$media</td>\n";
-                $output .= "<td>$mediatype</td>\n";
-                $output .= "<td>$length</td>\n";
-                $output .= "<td>$fileSize</td>\n";
-                $output .= "<td>$username</td>";
-                $output .= "<td>$group</td>";
-                $output .= '<td>' . $revisions . '</td>';
+			// Buttons
+            if ($row['edit'] == 1) {
                 
-                if ($filterShowOriginal == 1)
-                    $output .= '<td>' . $originalFileName . '</td>';
-
-                // ACTION buttons
-                if ($auth->edit)
-                {
-                    $msgEdit	= __('Edit');
-                    $msgDelete	= __('Delete');
-
-                    $buttons 	= "<button class='XiboFormButton' title='$msgEdit' href='index.php?p=module&mod=$mediatype&q=Exec&method=EditForm&mediaid=$mediaid'><span>$msgEdit</span></button>";
-                    
-                    if ($auth->del)
-                        $buttons .= "<button class='XiboFormButton' title='$msgDelete' href='index.php?p=module&mod=$mediatype&q=Exec&method=DeleteForm&mediaid=$mediaid'><span>$msgDelete</span></button>";
-
-                    if ($auth->modifyPermissions)
-                        $buttons .= "<button class='XiboFormButton' title='$msgShared' href='index.php?p=module&mod=$mediatype&q=Exec&method=PermissionsForm&mediaid=$mediaid'><span>$msgShared</span></button>";
-                }
-                else
-                {
-                    $buttons = __("No available actions.");
-                }
-
-                $output .= <<<END
-                <td>
-                        <div class='buttons'>
-                                $buttons
-                        </div>
-                </td>
-END;
-
-                $output .= "</tr>\n";
+                // Edit
+                $row['buttons'][] = array(
+                        'id' => 'content_button_edit',
+                        'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=EditForm&mediaid=' . $row['mediaid'],
+                        'text' => __('Edit')
+                    );
             }
-        }
+            
+            if ($row['del'] == 1) {
+				
+				// Delete
+                $row['buttons'][] = array(
+                        'id' => 'content_button_delete',
+                        'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=DeleteForm&mediaid=' . $row['mediaid'],
+                        'text' => __('Delete')
+                    );
+            }
+
+            if ($row['modifyPermissions'] == 1) {
+
+        		// Permissions
+                $row['buttons'][] = array(
+                        'id' => 'content_button_permissions',
+                        'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=PermissionsForm&mediaid=' . $row['mediaid'],
+                        'text' => __('Permissions')
+                    );
+            }
+
+            // Add to the collection
+			$rows[] = $row;
+		}
 		
-    	$output .= "</tbody></table>\n</div>\n";
+    	Theme::Set('table_rows', $rows);
+        
+        $output = Theme::RenderReturn('library_page_grid');
 
     	$response->SetGridResponse($output);
         $response->Respond();
@@ -338,88 +160,44 @@ END;
 	
 	/**
 	 * Display the forms
-	 * @return 
 	 */
 	function displayForms() 
 	{
 		$db 	=& $this->db;
 		$user 	=& $this->user;
-                $helpManager    = new HelpManager($db, $user);
 		
 		//displays all the content add forms - tabbed.
 		$response = new ResponseManager();
 		
 		// Get a list of the enabled modules and then create buttons for them
 		if (!$enabledModules = new ModuleManager($db, $user, 0)) 
-                    trigger_error($enabledModules->message, E_USER_ERROR);
+            trigger_error($enabledModules->message, E_USER_ERROR);
 		
-		$buttons = '';
+		$buttons = array();
 		
 		// Loop through the buttons we have and output store HTML for each one in $buttons.
 		while ($modulesItem = $enabledModules->GetNextModule())
 		{
-			$mod 		= Kit::ValidateParam($modulesItem['Module'], _STRING);
-			$caption 	= __('Add') . ' ' . Kit::ValidateParam($modulesItem['Name'], _STRING);
-			$mod		= strtolower($mod);
-			$title 		= Kit::ValidateParam($modulesItem['Description'], _STRING);
-			$img 		= Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
+			$button['mod'] = Kit::ValidateParam($modulesItem['Module'], _STRING);
+			$button['caption'] = __('Add') . ' ' . Kit::ValidateParam($modulesItem['Name'], _STRING);
+			$button['mod'] = strtolower($button['mod']);
+			$button['title'] = Kit::ValidateParam($modulesItem['Description'], _STRING);
+			$button['img'] = Theme::Image(Kit::ValidateParam($modulesItem['ImageUri'], _STRING));
+			$button['uri'] = 'index.php?p=module&q=Exec&mod=' . $button['mod'] . '&method=AddForm';
 			
-			$uri		= 'index.php?p=module&q=Exec&mod=' . $mod . '&method=AddForm';
-			
-			$buttons .= <<<HTML
-			<div class="regionicons">
-				<a class="XiboFormButton" title="$title" href="$uri">
-				<img class="dash_button" src="$img" />
-				<span class="dash_text">$caption</span></a>
-			</div>
-HTML;
+			$buttons[] = $button;
 		}
+
+		Theme::Set('buttons', $buttons);
 		
-		$options = <<<END
-		<div id="canvas">
-			<div id="buttons">
-				$buttons
-			</div>
-		</div>
-END;
-		
-		$response->html 		= $options;
+		$response->html = Theme::RenderReturn('library_form_add');
 		$response->dialogTitle 	= __('Add Media to the Library');
 		$response->dialogSize 	= true;
 		$response->dialogWidth 	= '650px';
 		$response->dialogHeight = '280px';
-                $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Content', 'AddtoLibrary') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Content', 'AddtoLibrary') . '")');
 		$response->AddButton(__('Close'), 'XiboDialogClose()');
-
 		$response->Respond();
-	}
-
-	/**
-	 * Displays the page logic
-	 *
-	 * @return unknown
-	 */
-	function displayPage() 
-	{
-		$db =& $this->db;
-		
-		if (!$this->has_permissions) 
-		{
-			trigger_error(__("You do not have permissions to access this page"), E_USER_ERROR);
-			return false;
-		}
-		
-		switch ($this->sub_page) 
-		{	
-			case 'view':
-				require("template/pages/content_view.php");
-				break;
-					
-			default:
-				break;
-		}
-		
-		return false;
 	}
 	
     /**
@@ -536,12 +314,24 @@ HTML;
         $SQL .= " WHERE retired = 0 AND isEdited = 0 ";
 
         // Filter on media type
-        if($mediatype != "all") 
+        if($mediatype != 'all') 
             $SQL.= sprintf(" AND media.type = '%s'", $mediatype);
             
         // Filter on name
-        if ($name != "all") 
-            $SQL.= " AND media.name LIKE '%" . sprintf('%s', $name) . "%'";
+        if ($name != 'all') 
+        {
+            // convert into a space delimited array
+            $names = explode(' ', $name);
+
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (media.name NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (media.name LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+            }
+        }
 
         $SQL .= " ORDER BY media.name ";
 

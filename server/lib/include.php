@@ -21,8 +21,8 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 // No errors reported until we read the settings from the DB
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 ini_set('gd.jpeg_ignore_warning', 1);
 
 // Required Library Files
@@ -42,6 +42,7 @@ require_once("lib/modules/module.interface.php");
 require_once("lib/modules/module.class.php");
 require_once("lib/data/data.class.php");
 require_once("lib/app/session.class.php");
+require_once("lib/app/thememanager.class.php");
 
 // Required Config Files
 require_once("config/config.class.php");
@@ -139,9 +140,14 @@ $page 		= Kit::GetParam('p', _REQUEST, _WORD, 'index');
 $session->set_page(session_id(), $page);
 
 // Create Page
-$pageManager = new PageManager($db, $user, $page);
-$pageManager->Authenticate();
-$pageManager->Render();
+try {
+    $pageManager = new PageManager($db, $user, $page);
+    $pageManager->Authenticate();
+    $pageManager->Render();    
+}
+catch (Exception $e) {
+    print $e->getMessage();
+}
 
 die();
 ?>

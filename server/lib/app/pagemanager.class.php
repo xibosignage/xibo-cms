@@ -54,6 +54,10 @@ class PageManager
         
         // Default not authourised
         $this->authed = false;
+
+        // Create a theme
+		new Theme($db, $user);
+		Theme::SetPagename($this->p);
     }
 	
     /**
@@ -125,11 +129,11 @@ class PageManager
         else 
         {
             // Display a page instead
-            include("template/header.php");
-
-            $this->thePage->displayPage();
-
-            include("template/footer.php");
+			Theme::Render('header');
+			
+			$this->thePage->displayPage();
+			
+			Theme::Render('footer');
         }
     }
 }

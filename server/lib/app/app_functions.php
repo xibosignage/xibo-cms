@@ -40,29 +40,6 @@ function setMessage($message) {
 	$_SESSION['message'] = $message;
 }
 
-function displayMessage($mode = MSG_MODE_AUTO, $msg="", $show_back = true, $template = "template/pages/message_page.php") 
-{
-	switch ($mode) 
-	{
-	
-		case MSG_MODE_AUTO:
-			if (isset($_SESSION['message'])) 
-			{
-				echo $_SESSION['message'];
-				unset($_SESSION['message']);
-			}
-		break;
-		
-		//Displays a manual message
-		case MSG_MODE_MANUAL:
-			$errorMessage = $msg;
-			//clear the object buffer - so we only see this error message
-			//ob_get_clean();
-			include($template);
-		break;
-	}
-}
-
 // Returns a drop down list based on the provided SQL - the ID should be the first field, and the name the second
 function dropdownlist($SQL, $list_name, $selected = "", $callback = "", $flat_list = false, $checkPermissions = false, $userid = "", $permissionLevel = "see", $useQueryId = false) {
 	global $db;
@@ -296,15 +273,11 @@ function sec2hms($sec, $padHours = false)
  * Gets web safe colors
  * @return 
  */
-function gwsc($list_name, $selected) 
+function gwsc() 
 {
-	
+	$colors = array();
     $cs = array('00', '33', '66', '99', 'CC', 'FF');
 	
-	$list = <<<END
-	<select name="$list_name" id="$list_name">
-END;
-
     for($i=0; $i<6; $i++) 
 	{
         for($j=0; $j<6; $j++) 
@@ -312,22 +285,12 @@ END;
             for($k=0; $k<6; $k++) 
 			{
                 $c = $cs[$i] .$cs[$j] .$cs[$k];
-				
-				if ($c == $selected) 
-				{
-                    $list .= "<option value='".$c."' selected style='background: #$c; color:#$c'>#$c</option>";
-				}
-				else 
-				{
-                    $list .= "<option value='".$c."' style='background: #$c; color:#$c'>#$c</option>";
-				}
-            }
+				$colors[] = array('colorid' => $c, 'color' => '#' . $c);
+			}
         }
     }
 	
-	$list .= "</select>\n";
-	
-	return $list;
+	return $colors;
 }
 
 /**
@@ -508,7 +471,9 @@ function CheckFormToken($token, $tokenName = "token")
 	}
 	else
 	{
-		Debug::LogEntry($db, 'error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [$token]");
+		unset($_SESSION[$tokenName]);
+
+		Debug::LogEntry($db, 'error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [$token] for session_id [" . session_id() . ']');
 		return false;
 	}
 }

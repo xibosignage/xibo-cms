@@ -30,30 +30,11 @@ class dashboardDAO
 		$this->db 	=& $db;
 		$this->user =& $user;
 	}
-	
-	function on_page_load() 
-	{
-		return '';
-	}
-	
-	function echo_page_heading() 
-	{
-		$user 	=& $this->user;
-		
-		$userid = Kit::GetParam('userid', _SESSION, _INT);
-		
-		$uid = $user->getNameFromID($userid);
-		
-		echo $uid.'\'s ' . __('Dashboard');
-		return true;
-	}
 
 	function displayPage() 
 	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-
-		include_once("template/pages/dashboard.php");
+		// Render the Theme and output
+        Theme::Render('dashboard_page');
 	}
 }
 ?>

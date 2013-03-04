@@ -24,9 +24,6 @@ class groupDAO
 {
 	private $db;
 	private $user;
-	private $isadmin = false;
-	
-	private $sub_page = "";
 	
 	//general fields
 	private $groupid;
@@ -38,12 +35,9 @@ class groupDAO
 	{
 		$this->db 		=& $db;
 		$this->user 	=& $user;
-		$this->sub_page = Kit::GetParam('sp', _REQUEST, _WORD, 'view');
 		
 		$usertype 		= Kit::GetParam('usertype', _SESSION, _INT, 0);
 		$this->groupid	= Kit::GetParam('groupid', _REQUEST, _INT, 0);
-		
-		if ($usertype == 1) $this->isadmin = true;
 		
 		// Do we have a user group selected?
 		if ($this->groupid != 0) 
@@ -72,80 +66,44 @@ END;
             // Include the group data classes
             include_once('lib/data/usergroup.data.class.php');
 	}
-	
-	function on_page_load() 
-	{
-		return "";
-	}
-	
-	function echo_page_heading() 
-	{
-		echo __("Group Admin");
-		return true;
-	}
-	
+
 	/**
-	 * Filter Form for the group page
-	 * Included by the template view
-	 * Not AJAX
-	 * @return 
+	 * Display page logic
 	 */
-	function GroupGrid() 
+	function displayPage() 
 	{
-		//filter form defaults
-		$filter_name = "";
-		if (isset($_SESSION['group']['name'])) $filter_name = $_SESSION['group']['name'];
-		
-		$msgName	= __('Name');
-                $msgKeepFilterOpen = __('Keep filter open');
-                $filterPinned = (Kit::IsFilterPinned('usergroup', 'Filter')) ? 'checked' : '';
-                $filterId = uniqid('filter');
-		
-		$filterForm = <<<END
-		<div id="GroupFilter" class="FilterDiv">
-			<form>
-				<input type="hidden" name="p" value="group">
-				<input type="hidden" name="q" value="group_view">
-				<table>
-					<tr>
-						<td>$msgName</td>
-						<td><input type="text" name="name" value="$filter_name"></td>
-                                                <td><label for="XiboFilterPinned$filterId">$msgKeepFilterOpen</label></td>
-                                                <td><input type="checkbox" id="XiboFilterPinned$filterId" name="XiboFilterPinned" class="XiboFilterPinned" $filterPinned /></td>
-					</tr>
-				</table>
-			</form>
-		</div>
-END;
-		$id = uniqid();
-		
-		$xiboGrid = <<<HTML
-		<div class="XiboGrid" id="$id">
-			<div class="XiboFilter">
-				$filterForm
-			</div>
-			<div class="XiboData">
-			
-			</div>
-		</div>
-HTML;
-		echo $xiboGrid;
+		// Configure the theme
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('usergroup_form_add_url', 'index.php?p=group&q=GroupForm');
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="Grid">');
+        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
+        Theme::Set('pager', ResponseManager::Pager($id));
+
+        // Default options
+        if (Kit::IsFilterPinned('usergroup', 'Filter')) {
+            Theme::Set('filter_pinned', 'checked');
+            Theme::Set('filter_name', Session::Get('usergroup', 'filter_name'));
+        }
+
+        // Render the Theme and output
+        Theme::Render('usergroup_page');
 	}
-	
+
 	/**
 	 * Group Grid
 	 * Called by AJAX
 	 * @return 
 	 */
-	function group_view() 
+	function Grid() 
 	{
-		$db 		=& $this->db;
-		$user		=& $this->user;
+		$db =& $this->db;
+		$user =& $this->user;
 		
-		$filter_name = Kit::GetParam('name', _POST, _STRING);
+		$filter_name = Kit::GetParam('filter_name', _POST, _STRING);
                 
 		setSession('usergroup', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-		setSession('group', 'name', $filter_name);
+		setSession('usergroup', 'filter_name', $filter_name);
 	
 		$SQL = <<<END
 		SELECT 	group.group,
@@ -153,10 +111,9 @@ HTML;
 		FROM `group`
 		WHERE IsUserSpecific = 0 AND IsEveryone = 0
 END;
+
 		if ($filter_name != '') 
-		{
 			$SQL .= sprintf(" AND group.group LIKE '%%%s%%' ", $db->escape_string($filter_name));
-		}
 		
 		$SQL .= " ORDER BY group.group ";
 		
@@ -167,89 +124,65 @@ END;
 			trigger_error($db->error());
 			trigger_error(__("Can not get group information."), E_USER_ERROR);
 		}
-		
-		$msgName	= __('Name');
-		$msgAction	= __('Action');
-		$msgEdit	= __('Edit');
-		$msgMembers	= __('Group Members');
-		$msgPageSec	= __('Page Security');
-		$msgMenuSec	= __('Menu Security');
-		$msgDispSec	= __('Display Security');
-		$msgDel		= __('Delete');
-		
-		$table = <<<END
-		<div class="info_table">
-		<table style="width:100%;">
-			<thead>
-				<tr>
-					<th>$msgName</th>
-					<th>$msgAction</th>
-				</tr>
-			</thead>
-			<tbody>
-END;
-		
+
+		$rows = array();
+
 		while ($row = $db->get_assoc_row($results)) 
 		{
 			$groupid	= Kit::ValidateParam($row['groupID'], _INT);
 			$group 		= Kit::ValidateParam($row['group'], _STRING);
-			
-			Debug::LogEntry($db, 'audit', 'UserTypeID is: ' . $user->GetUserTypeID());
-			
+
+			$row['usergroup'] = $group;
+
 			// we only want to show certain buttons, depending on the user logged in
-			if ($user->GetUserTypeID() != 1) 
+			if ($user->GetUserTypeID() == 1) 
 			{
-				//dont any actions
-				$buttons = __("No available Actions");
+				// Edit
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_edit',
+	                    'url' => 'index.php?p=group&q=GroupForm&groupid=' . $groupid,
+	                    'text' => __('Edit')
+	                );
+
+				// Delete
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_delete',
+	                    'url' => 'index.php?p=group&q=DeleteForm&groupid=' . $groupid,
+	                    'text' => __('Delete')
+	                );
+
+				// Members
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_members',
+	                    'url' => 'index.php?p=group&q=MembersForm&groupid=' . $groupid,
+	                    'text' => __('Members')
+	                );
+
+				// Page Security
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_page_security',
+	                    'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $groupid,
+	                    'text' => __('Page Security')
+	                );
+
+				// Menu Security
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_menu_security',
+	                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $groupid,
+	                    'text' => __('Menu Security')
+	                );
 			}
-			else 
-			{
-				$buttons = <<<END
-				<button class="XiboFormButton" href="index.php?p=group&q=GroupForm&groupid=$groupid"><span>$msgEdit</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=MembersForm&groupid=$groupid"><span>$msgMembers</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=PageSecurityForm&groupid=$groupid"><span>$msgPageSec</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=MenuItemSecurityForm&groupid=$groupid"><span>$msgMenuSec</span></button>
-				<button class="XiboFormButton" href="index.php?p=group&q=delete_form&groupid=$groupid"><span>$msgDel</span></button>
-END;
-			}
-			
-			$table .= <<<END
-			<tr>
-				<td>$group</td>
-				<td>$buttons</td>
-			</tr>
-END;
+
+			$rows[] = $row;
 		}
-		$table .= "</tbody></table></div>";
-		
-		// Construct the Response
-		$response 				= array();
-		$response['html'] 		= $table;
-		$response['success']	= true;
-		$response['sortable']	= true;
-		$response['sortingDiv']	= '.info_table table';
-		
-		Kit::Redirect($response);
-	}
-	
-	/**
-	 * Display page logic
-	 * @return 
-	 */
-	function displayPage() 
-	{
-		switch ($this->sub_page) 
-		{
-				
-			case 'view':
-				require("template/pages/group_view.php");
-				break;
-					
-			default:
-				break;
-		}
-		
-		return false;
+
+		Theme::Set('table_rows', $rows);
+
+        $output = Theme::RenderReturn('usergroup_page_grid');
+
+		$response = new ResponseManager();
+        $response->SetGridResponse($output);
+        $response->Respond();
 	}
 	
 	/**
@@ -258,44 +191,39 @@ END;
 	 */
 	function GroupForm() 
 	{
-		$db				=& $this->db;
-		$user			=& $this->user;
-		
-		$helpManager	= new HelpManager($db, $user);
-		$response		= new ResponseManager();
+		$db =& $this->db;
+		$user =& $this->user;
+		$response = new ResponseManager();
 				
+		Theme::Set('form_id', 'UserGroupForm');
+
 		// alter the action variable depending on which form we are after
 		if ($this->groupid == "") 
 		{
-			$action = "index.php?p=group&q=add";
+        	Theme::Set('form_action', 'index.php?p=group&q=Add');
+
+        	$theme_file = 'usergroup_form_add';
+        	$form_name = 'Add User Group';
+        	$form_help_link = HelpManager::Link('UserGroup', 'Add');
 		}
 		else 
 		{
-			$action = "index.php?p=group&q=edit";
+        	Theme::Set('form_action', 'index.php?p=group&q=Edit');
+        	Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $this->groupid . '">');
+        	Theme::Set('group', $this->group);
+
+        	$theme_file = 'usergroup_form_edit';
+        	$form_name = 'Edit User Group';
+        	$form_help_link = HelpManager::Link('UserGroup', 'Edit');
 		}
 		
-		// Help UI
-		$nameHelp		= $helpManager->HelpIcon(__("The Name of this Group."), true);
-		
-		$msgName		= __('Name');
-		
-		$form = <<<END
-		<form id="GroupForm" class="XiboForm" action="$action" method="post">
-			<input type="hidden" name="groupid" value="$this->groupid">
-			<table>
-				<tr>
-					<td>$msgName<span class="required">*</span></td>
-					<td>$nameHelp <input type="text" name="group" value="$this->group"></td>
-				</tr>
-			</table>
-		</form>
-END;
+		$form = Theme::RenderReturn($theme_file);
 
 		// Construct the Response		
-		$response->SetFormRequestResponse($form, (($this->groupid == '') ? __('Add User Group') : __('Edit User Group')), '400', '180');
-		$response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->groupid == '') ? HelpManager::Link('UserGroup', 'Add') : HelpManager::Link('UserGroup', 'Edit')) . '")');
+		$response->SetFormRequestResponse($form, $form_name, '400', '180');
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . $form_help_link . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
-		$response->AddButton(__('Save'), '$("#GroupForm").submit()');
+		$response->AddButton(__('Save'), '$("#UserGroupForm").submit()');
 		$response->Respond();
 
 		return true;
@@ -308,41 +236,18 @@ END;
 	function PageSecurityForm()
 	{
 		$response	= new ResponseManager();
-
-		$msgName	= __('Name');
-		
-		$form = <<<HTML
-		<form>
-			<input type="hidden" name="p" value="group">
-			<input type="hidden" name="q" value="data_grid">
-			<input type="hidden" name="groupid" value="$this->groupid">
-			<table style="display:none;" id="group_filterform" class="filterform">
-				<tr>
-					<td>$msgName</td>
-					<td><input type="text" name="name" id="name"></td>
-				</tr>
-			</table>
-		</form>
-HTML;
 		
 		$id = uniqid();
-		
-		$xiboGrid = <<<HTML
-		<div class="XiboGrid" id="$id">
-			<div class="XiboFilter">
-				$form
-			</div>
-			<div class="XiboData">
-			
-			</div>
-		</div>
-HTML;
+        Theme::Set('id', $id);
+		Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="PageSecurityFormGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
+
+		$xiboGrid = Theme::RenderReturn('usergroup_form_pagesecurity');
 			
 		// Construct the Response		
 		$response->SetFormRequestResponse($xiboGrid, __('Page Security'), '500', '380');
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'PageSecurity') . '")');
 		$response->AddButton(__('Close'), 'XiboDialogClose()');
-		$response->AddButton(__('Assign / Unassign'), '$("#GroupForm").submit()');
+		$response->AddButton(__('Assign / Unassign'), '$("#UserGroupForm").submit()');
 		$response->Respond();
 
 		return true;
@@ -352,18 +257,18 @@ HTML;
 	 * Assign Page Security Grid
 	 * @return 
 	 */
-	function data_grid() 
+	function PageSecurityFormGrid() 
 	{
 		$db 		=& $this->db;
 		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
+
+		Theme::Set('form_id', 'UserGroupForm');
+		Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupid . '">');
+		Theme::Set('form_action', 'index.php?p=group&q=assign');
 		
 		$SQL = <<<END
 		SELECT 	pagegroup.pagegroup,
 				pagegroup.pagegroupID,
-				CASE WHEN pages_assigned.pagegroupID IS NULL 
-					THEN '<img src="img/disact.gif">'
-		        	ELSE '<img src="img/act.gif">'
-		        END AS Assigned,
 				CASE WHEN pages_assigned.pagegroupID IS NULL 
 					THEN 0
 		        	ELSE 1
@@ -377,7 +282,8 @@ HTML;
 				) pages_assigned
 		ON pagegroup.pagegroupID = pages_assigned.pagegroupID
 END;
-		if(!$results = $db->query($SQL)) 
+		
+		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
 			trigger_error(__("Can't get this groups information"), E_USER_ERROR);
@@ -389,83 +295,53 @@ END;
 			exit;
 		}
 		
-		$msgSecGroup	= __('Security Group');
-		$msgAssigned	= __('Assigned');
-
-		//some table headings
-		$form = <<<END
-		<form id="GroupForm" class="XiboForm" method="post" action="index.php?p=group&q=assign">
-			<input type="hidden" name="groupid" value="$groupid">
-			<div class="dialog_table">
-			<table style="width:100%">
-				<thead>
-					<tr>
-						<th></th>
-						<th>$msgSecGroup</th>
-						<th>$msgAssigned</th>
-					</tr>
-				</thead>
-				<tbody>
-END;
-
 		// while loop
-		while ($row = $db->get_row($results)) 
+		$rows = array(); 
+		
+		while ($row = $db->get_assoc_row($results)) 
 		{
-			$name		= $row[0];
-			$pageid		= $row[1];
-			$assigned	= $row[2];
-			$assignedid	= $row[3];
+			$row['name'] = $row['pagegroup'];
+			$row['pageid'] = $row['pagegroupID'];
+			$row['assigned'] = (($row['AssignedID'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif'));
+			$row['assignedid'] = $row['AssignedID'];
+			$row['checkbox_value'] = $row['AssignedID'] . ',' . $row['pagegroupID'];
+			$row['checkbox_ticked'] = (($row['AssignedID'] == 1) ? ' checked' : '');
 			
-			$form .= "<tr>";
-			$form .= "<td><input type='checkbox' name='pageids[]' value='$assignedid,$pageid'></td>";
-			$form .= "<td>$name</td>";
-			$form .= "<td>$assigned</td>";
-			$form .= "</tr>";
+			$rows[] = $row;
 		}
 
-		//table ending
-		$form .= <<<END
-			</tbody>
-		</table>
-		</div>
-	</form>
-END;
-		
-		// Construct the Response
-		$response 				= array();
-		$response['html'] 		= $form;
-		$response['success']	= true;
-		$response['sortable']	= false;
-		$response['sortingDiv']	= '.info_table table';
-		
-		Kit::Redirect($response);
+		Theme::Set('table_rows', $rows);
+
+        $output = Theme::RenderReturn('usergroup_form_pagesecurity_grid');
+
+		$response = new ResponseManager();
+        $response->SetGridResponse($output);
+        $response->initialSortColumn = 2;
+        $response->Respond();
 	}
 	
 	/**
 	 * Shows the Delete Group Form
 	 * @return 
 	 */
-	function delete_form() 
+	function DeleteForm() 
 	{
-		$db 		=& $this->db;
-		$groupid 	= $this->groupid;
-		$response	= new ResponseManager();
+		$db =& $this->db;
+		$groupid = $this->groupid;
+		$response = new ResponseManager();
 		
-		$msgWarn	= __('Are you sure you want to delete');
-		
-		//we can delete
-		$form = <<<END
-		<form id="GroupForm" class="XiboForm" method="post" action="index.php?p=group&q=delete">
-			<input type="hidden" name="groupid" value="$groupid">
-			<p>$msgWarn $this->group?</p>
-		</form>
-END;
+		// Set some information about the form
+        Theme::Set('form_id', 'UserGroupDeleteForm');
+        Theme::Set('form_action', 'index.php?p=group&q=Delete');
+        Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupid . '">');
+
+        $form = Theme::RenderReturn('usergroup_form_delete');
 				
 		// Construct the Response		
 		$response->SetFormRequestResponse($form, __('Delete Group'), '400', '180');
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('UserGroup', 'Delete') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
-		$response->AddButton(__('Yes'), '$("#GroupForm").submit()');
+		$response->AddButton(__('Yes'), '$("#UserGroupDeleteForm").submit()');
 		$response->Respond();
 
 		return true;
@@ -475,89 +351,60 @@ END;
 	 * Adds a group
 	 * @return 
 	 */
-	function add() 
+	function Add() 
 	{
-            $db 	=& $this->db;
-            $response	= new ResponseManager();
+        $db =& $this->db;
+        $response = new ResponseManager();
 
-            $group 	= Kit::GetParam('group', _POST, _STRING);
-            $userid 	= $_SESSION['userid'];
+        $group 	= Kit::GetParam('group', _POST, _STRING);
 
-            //check on required fields
-            if ($group == '')
-            {
-                trigger_error(__('Group Name cannot be empty.'), E_USER_ERROR);
-            }
+        $userGroupObject = new UserGroup($db);
 
-            $userGroupObject = new UserGroup($db);
+        if (!$userGroupObject->Add($group, 0))
+            trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
 
-            if (!$userGroupObject->Add($group, 0))
-            {
-                trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
-            }
-
-            $response->SetFormSubmitResponse(__('Added the Group'), false);
-            $response->Respond();
+        $response->SetFormSubmitResponse(__('User Group Added'), false);
+        $response->Respond();
 	}
 	
 	/**
 	 * Edits the Group Information
 	 * @return 
 	 */
-	function edit() 
+	function Edit() 
 	{
-		$db 		=& $this->db;
+		$db =& $this->db;
 		
-		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
-		$group 		= Kit::GetParam('group', _POST, _STRING);
-		
-		$userid 	= $_SESSION['userid'];
-		
-		//check on required fields
-		if ($group == "") 
-		{
-			Kit::Redirect(array('success'=>false, 'message' => __('Group Name cannot be empty.')));
-		}
-		
-		$SQL = sprintf("UPDATE `group` SET `group` = '%s' WHERE groupid = %d ", $db->escape_string($group), $groupid);
-		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			Kit::Redirect(array('success'=>false, 'message' => __('Unexpected error editing the Group')));
-		}
+		$groupid = Kit::GetParam('groupid', _POST, _INT);
+		$group = Kit::GetParam('group', _POST, _STRING);
 
-		// Construct the Response
-		$response 					= array();
-		$response['success']		= true;
-		$response['message']		= __('Edited the Group');
+		$userGroupObject = new UserGroup($db);
+
+        if (!$userGroupObject->Edit($groupid, $group))
+            trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
 		
-		Kit::Redirect($response);	
+		$response = new ResponseManager();
+		$response->SetFormSubmitResponse(__('User Group Edited'), false);
+        $response->Respond();
 	}
 	
 	/**
 	 * Deletes a Group
 	 * @return 
 	 */
-	function delete() 
+	function Delete() 
 	{
-		$db 		=& $this->db;		
-		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
+		$db =& $this->db;		
+		$groupid = Kit::GetParam('groupid', _POST, _INT);
 		
-		$SQL = sprintf("DELETE FROM `group` WHERE groupid = %d", $groupid);
-	
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			Kit::Redirect(array('success'=>false, 'message' => __('You can not delete this group. There are either page permissions assigned, or users with this group.')));
-		}
+		$userGroupObject = new UserGroup($db);
+
+        if (!$userGroupObject->Delete($groupid))
+            trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
 		
-		// Construct the Response
-		$response 					= array();
-		$response['success']		= true;
-		$response['message']		= __('Deleted the Group');
-		
-		Kit::Redirect($response);	
+		$response = new ResponseManager();
+		$response->SetFormSubmitResponse(__('User Group Deleted'), false);
+        $response->Respond();
 	}
 	
 	/**
@@ -575,11 +422,11 @@ END;
 		{
 			$row = explode(",",$pagegroupid);
 			
-			// The page ID actuall refers to the pagegroup ID - we have to look up all the page ID's for this
+			// The page ID actually refers to the pagegroup ID - we have to look up all the page ID's for this
 			// PageGroupID
 			$SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . Kit::ValidateParam($row[1], _INT);
 			
-			if(!$results = $db->query($SQL))
+			if (!$results = $db->query($SQL))
 			{
 				trigger_error($db->error());
 				Kit::Redirect(array('success'=>false, 'message' => __('Can\'t assign this page to this group') . ' [error getting pages]'));
@@ -613,14 +460,11 @@ END;
 				}	
 			}
 		}
-		
-		// Construct the Response
-		$response 					= array();
-		$response['success']		= true;
-		$response['message']		= __('Edited the Group Page Security');
-		$response['keepOpen']		= true;
-		
-		Kit::Redirect($response);
+
+		$response = new ResponseManager();
+		$response->SetFormSubmitResponse(__('User Group Page Security Edited'));
+		$response->keepOpen = true;
+        $response->Respond();
 	}
 	
 	/**
@@ -629,47 +473,22 @@ END;
 	 */
 	function MenuItemSecurityForm()
 	{
-		$db 			=& $this->db;
-		$user 			=& $this->user;
-		$formMgr 		= new FormManager($db, $user);
-		$response		= new ResponseManager();
-		
-		$filterMenuList = $formMgr->DropDown("SELECT MenuID, Menu FROM menu", 'filterMenu');
-		
-		$msgMenu	= __('Menu');
-		
-		$form = <<<HTML
-		<form>
-			<input type="hidden" name="p" value="group">
-			<input type="hidden" name="q" value="MenuItemSecurityGrid">
-			<input type="hidden" name="groupid" value="$this->groupid">
-			<table>
-				<tr>
-					<td>$msgMenu</td>
-					<td>$filterMenuList</td>
-				</tr>
-			</table>
-		</form>
-HTML;
+		$db =& $this->db;
+		$user =& $this->user;
 		
 		$id = uniqid();
+        Theme::Set('id', $id);
+		Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="MenuItemSecurityGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
+		Theme::Set('menu_field_list', $db->GetArray("SELECT MenuID, Menu FROM menu"));
+
+		$xiboGrid = Theme::RenderReturn('usergroup_form_menusecurity');
 		
-		$xiboGrid = <<<HTML
-		<div class="XiboGrid" id="$id">
-			<div class="XiboFilter">
-				$form
-			</div>
-			<div class="XiboData">
-			
-			</div>
-		</div>
-HTML;
-		
-		// Construct the Response		
+		// Construct the Response
+		$response = new ResponseManager();		
 		$response->SetFormRequestResponse($xiboGrid, __('Menu Item Security'), '500', '380');
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'MenuSecurity') . '")');
 		$response->AddButton(__('Close'), 'XiboDialogClose()');
-		$response->AddButton(__('Assign / Unassign'), '$("#GroupForm").submit()');
+		$response->AddButton(__('Assign / Unassign'), '$("#UserGroupMenuForm").submit()');
 		$response->Respond();
 
 		return true;
@@ -681,21 +500,19 @@ HTML;
 	 */
 	function MenuItemSecurityGrid() 
 	{
-		$db 		=& $this->db;
-		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
+		$db =& $this->db;
+		$groupid = Kit::GetParam('groupid', _POST, _INT);
 		
-		$filter_menu = Kit::GetParam('filterMenu', _POST, _STRING);
+		$filter_menu = Kit::GetParam('filter_menu', _POST, _STRING);
 		
-		setSession('group', 'menu', $filter_menu);
+		Theme::Set('form_id', 'UserGroupMenuForm');
+		Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupid . '">');
+		Theme::Set('form_action', 'index.php?p=group&q=MenuItemSecurityAssign');
 		
 		$SQL = <<<END
 		SELECT 	menu.Menu,
 				menuitem.Text,
 				menuitem.MenuItemID,
-				CASE WHEN menuitems_assigned.MenuItemID IS NULL 
-					THEN '<img src="img/disact.gif">'
-		        	ELSE '<img src="img/act.gif">'
-		        END AS Assigned,
 				CASE WHEN menuitems_assigned.MenuItemID IS NULL 
 					THEN 0
 		        	ELSE 1
@@ -714,69 +531,40 @@ END;
 		
 		$SQL = sprintf($SQL, $filter_menu);
 
-		if(!$results = $db->query($SQL)) 
+		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			Kit::Redirect(array('success' => false, 'message' => __('Cannot get the menu items for this Group.')));
+			trigger_error(__('Cannot get the menu items for this Group.'), E_USER_ERROR);
 		}
 		
 		if ($db->num_rows($results) == 0) 
 		{
-			Kit::Redirect(array('success' => false, 'message' => __('Cannot get the menu items for this Group.')));
+			trigger_error(__('Cannot get the menu items for this Group.'), E_USER_ERROR);
 		}
 		
-		$msgMenu	= __('Menu Item');
-		$msgAssign	= __('Assigned');
-		$msgSubmit	= __('Assign / Unassign');
-		
-		//some table headings
-		$form = <<<END
-		<form id="GroupForm" class="XiboForm" method="post" action="index.php?p=group&q=MenuItemSecurityAssign">
-			<input type="hidden" name="groupid" value="$groupid">
-			<div class="dialog_table">
-			<table style="width:100%">
-				<thead>
-					<tr>
-					<th></th>
-					<th>$msgMenu</th>
-					<th>$msgAssign</th>
-					</tr>
-				</thead>
-				<tbody>
-END;
-
 		// while loop
+		$rows = array(); 
+		
 		while ($row = $db->get_assoc_row($results)) 
-		{			
-			$menuItemId		= Kit::ValidateParam($row['MenuItemID'], _INT);
-			$menuName		= Kit::ValidateParam($row['Menu'], _STRING);
-			$itemName		= Kit::ValidateParam($row['Text'], _STRING);
-			$assigned		= Kit::ValidateParam($row['Assigned'], _HTMLSTRING);
-			$assignedId		= Kit::ValidateParam($row['AssignedID'], _INT);
+		{
+			$row['name'] = $row['Text'];
+			$row['pageid'] = $row['MenuItemID'];
+			$row['assigned'] = (($row['AssignedID'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif'));
+			$row['assignedid'] = $row['AssignedID'];
+			$row['checkbox_value'] = $row['AssignedID'] . ',' . $row['MenuItemID'];
+			$row['checkbox_ticked'] = (($row['AssignedID'] == 1) ? ' checked' : '');
 			
-			$form .= "<tr>";
-			$form .= "<td><input type='checkbox' name='pageids[]' value='$assignedId,$menuItemId'></td>";
-			$form .= "<td>$itemName</td>";
-			$form .= "<td>$assigned</td>";
-			$form .= "</tr>";
+			$rows[] = $row;
 		}
 
-		//table ending
-		$form .= <<<END
-				</tbody>
-			</table>
-		</div>
-	</form>
-END;
+		Theme::Set('table_rows', $rows);
+
+		$output = Theme::RenderReturn('usergroup_form_menusecurity_grid');
 		
-		// Construct the Response
-		$response 				= array();
-		$response['html'] 		= $form;
-		$response['success']	= true;
-		$response['sortable']	= false;
-		$response['sortingDiv']	= '.info_table table';
-		
-		Kit::Redirect($response);
+		$response = new ResponseManager();
+        $response->SetGridResponse($output);
+        $response->initialSortColumn = 2;
+        $response->Respond();
 	}
 	
 	/**
@@ -785,10 +573,10 @@ END;
 	 */
 	function MenuItemSecurityAssign()
 	{
-		$db 		=& $this->db;
-		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
+		$db =& $this->db;
+		$groupid = Kit::GetParam('groupid', _POST, _INT);
 
-		$pageids 	= $_POST['pageids'];
+		$pageids = $_POST['pageids'];
 		
 		foreach ($pageids as $menuItemId) 
 		{
@@ -821,94 +609,80 @@ END;
 			}
 		}
 		
-		// Construct the Response
-		$response 					= array();
-		$response['success']		= true;
-		$response['message']		= __('Edited the MenuItem Group Security');
-		$response['keepOpen']		= true;
-		
-		Kit::Redirect($response);
+		// Response
+		$response = new ResponseManager();
+		$response->SetFormSubmitResponse(__('User Group Menu Security Edited'));
+		$response->keepOpen = true;
+        $response->Respond();
 	}
 
-        /**
-         * Shows the Members of a Group
-         */
-        public function MembersForm()
+    /**
+     * Shows the Members of a Group
+     */
+    public function MembersForm()
 	{
-            $db 	=& $this->db;
-            $response	= new ResponseManager();
-            $groupID	= Kit::GetParam('groupid', _REQUEST, _INT);
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $groupID = Kit::GetParam('groupid', _REQUEST, _INT);
 
-            // There needs to be two lists here.
+        // There needs to be two lists here.
+        
+        // Set some information about the form
+        Theme::Set('users_assigned_id', 'usersIn');
+        Theme::Set('users_available_id', 'usersOut');
+        Theme::Set('users_assigned_url', 'index.php?p=group&q=SetMembers&GroupID=' . $groupID);
 
-            // Users in group
-            $SQL  = "";
-            $SQL .= "SELECT user.UserID, ";
-            $SQL .= "       user.UserName ";
-            $SQL .= "FROM   `user` ";
-            $SQL .= "       INNER JOIN lkusergroup ";
-            $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
-            $SQL .= sprintf("WHERE  lkusergroup.GroupID   = %d", $groupID);
+        // Users in group
+        $SQL  = "";
+        $SQL .= "SELECT user.UserID, ";
+        $SQL .= "       user.UserName, ";
+        $SQL .= "       CONCAT('UserID_', user.userID) AS list_id ";
+        $SQL .= "FROM   `user` ";
+        $SQL .= "       INNER JOIN lkusergroup ";
+        $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
+        $SQL .= sprintf("WHERE  lkusergroup.GroupID   = %d", $groupID);
 
-            if(!$resultIn = $db->query($SQL))
-            {
-                trigger_error($db->error());
-                trigger_error(__('Error getting Groups'), E_USER_ERROR);
-            }
+        $usersAssigned = $db->GetArray($SQL);
 
-            // Users not in group
-            $SQL  = "";
-            $SQL .= "SELECT user.UserID, ";
-            $SQL .= "       user.UserName ";
-            $SQL .= "FROM   `user` ";
-            $SQL .= " WHERE user.UserID NOT       IN ( ";
-            $SQL .= "   SELECT user.UserID ";
-            $SQL .= "  FROM   `user` ";
-            $SQL .= "  INNER JOIN lkusergroup ";
-            $SQL .= "  ON     lkusergroup.UserID = user.UserID ";
-            $SQL .= sprintf("WHERE  lkusergroup.GroupID   = %d", $groupID);
-            $SQL .= "       )";
+        if (!is_array($usersAssigned))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Error getting users'), E_USER_ERROR);
+        }
 
-            if(!$resultOut = $db->query($SQL))
-            {
-                trigger_error($db->error());
-                trigger_error(__('Error getting Users'), E_USER_ERROR);
-            }
+        Theme::Set('users_assigned', $usersAssigned);
 
-            // Now we have an IN and an OUT results object which we can use to build our lists
-            $listIn 	= '<ul id="usersIn" href="index.php?p=group&q=SetMembers&GroupID=' . $groupID . '" class="connectedSortable">';
+        // Users not in group
+        $SQL  = "";
+        $SQL .= "SELECT user.UserID, ";
+        $SQL .= "       user.UserName, ";
+        $SQL .= "       CONCAT('UserID_', user.userID) AS list_id ";
+        $SQL .= "FROM   `user` ";
+        $SQL .= " WHERE user.UserID NOT       IN ( ";
+        $SQL .= "   SELECT user.UserID ";
+        $SQL .= "  FROM   `user` ";
+        $SQL .= "  INNER JOIN lkusergroup ";
+        $SQL .= "  ON     lkusergroup.UserID = user.UserID ";
+        $SQL .= sprintf("WHERE  lkusergroup.GroupID   = %d", $groupID);
+        $SQL .= "       )";
 
-            while($row = $db->get_assoc_row($resultIn))
-            {
-                // For each item output a LI
-                $userID     = Kit::ValidateParam($row['UserID'], _INT);
-                $userName   = Kit::ValidateParam($row['UserName'], _STRING);
+        $usersAvailable = $db->GetArray($SQL);
+		
+		if (!is_array($usersAvailable))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Error getting users'), E_USER_ERROR);
+        }
 
-                $listIn		.= '<li id="UserID_' . $userID . '"class="li-sortable">' . $userName . '</li>';
-            }
-            $listIn		.= '</ul>';
+        Theme::Set('users_available', $usersAvailable);
+		
+        $form = Theme::RenderReturn('usergroup_form_user_assign');
 
-            $listOut 	= '<ul id="usersOut" class="connectedSortable">';
-
-            while($row = $db->get_assoc_row($resultOut))
-            {
-                // For each item output a LI
-                $userID     = Kit::ValidateParam($row['UserID'], _INT);
-                $userName   = Kit::ValidateParam($row['UserName'], _STRING);
-
-                $listOut    .= '<li id="UserID_' . $userID . '" class="li-sortable">' . $userName . '</li>';
-            }
-            $listOut 	.= '</ul>';
-
-            // Build the final form.
-            $helpText   = '<center>' . __('Drag or double click to move items between lists') . '</center>';
-            $form       = $helpText . '<div class="connectedlist"><h3>Members</h3>' . $listIn . '</div><div class="connectedlist"><h3>Non-members</h3>' . $listOut . '</div>';
-
-            $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
-            $response->AddButton(__('Help'), "XiboHelpRender(". HelpManager::Link('UserGroup', 'Members') .")");
-            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-            $response->AddButton(__('Save'), 'MembersSubmit()');
-            $response->Respond();
+        $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
+        $response->AddButton(__('Help'), "XiboHelpRender(". HelpManager::Link('UserGroup', 'Members') .")");
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), 'MembersSubmit()');
+        $response->Respond();
 	}
 
         /**
@@ -917,63 +691,63 @@ END;
 	 */
 	public function SetMembers()
 	{
-            $db             =& $this->db;
-            $response       = new ResponseManager();
-            $groupObject    = new UserGroup($db);
+        $db             =& $this->db;
+        $response       = new ResponseManager();
+        $groupObject    = new UserGroup($db);
 
-            $groupID	= Kit::GetParam('GroupID', _REQUEST, _INT);
-            $users	= Kit::GetParam('UserID', _POST, _ARRAY, array());
-            $members	= array();
+        $groupID	= Kit::GetParam('GroupID', _REQUEST, _INT);
+        $users	= Kit::GetParam('UserID', _POST, _ARRAY, array());
+        $members	= array();
 
-            // Users in group
-            $SQL  = "";
-            $SQL .= "SELECT user.UserID, ";
-            $SQL .= "       user.UserName ";
-            $SQL .= "FROM   `user` ";
-            $SQL .= "       INNER JOIN lkusergroup ";
-            $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
-            $SQL .= sprintf("WHERE  lkusergroup.GroupID   = %d", $groupID);
+        // Users in group
+        $SQL  = "";
+        $SQL .= "SELECT user.UserID, ";
+        $SQL .= "       user.UserName ";
+        $SQL .= "FROM   `user` ";
+        $SQL .= "       INNER JOIN lkusergroup ";
+        $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
+        $SQL .= sprintf("WHERE  lkusergroup.GroupID   = %d", $groupID);
 
-            if(!$resultIn = $db->query($SQL))
+        if(!$resultIn = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Error getting Users'));
+        }
+
+        while($row = $db->get_assoc_row($resultIn))
+        {
+            // Test whether this ID is in the array or not
+            $userID	= Kit::ValidateParam($row['UserID'], _INT);
+
+            if (!in_array($userID, $users))
             {
-                trigger_error($db->error());
-                trigger_error(__('Error getting Users'));
-            }
-
-            while($row = $db->get_assoc_row($resultIn))
-            {
-                // Test whether this ID is in the array or not
-                $userID	= Kit::ValidateParam($row['UserID'], _INT);
-
-                if(!in_array($userID, $users))
+                // Its currently assigned but not in the $displays array
+                //  so we unassign
+                if (!$groupObject->Unlink($groupID, $userID))
                 {
-                    // Its currently assigned but not in the $displays array
-                    //  so we unassign
-                    if (!$groupObject->Unlink($groupID, $userID))
-                    {
-                        trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
-                    }
-                }
-                else
-                {
-                    $members[] = $userID;
+                    trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
                 }
             }
-
-            foreach($users as $userID)
+            else
             {
-                    // Add any that are missing
-                    if(!in_array($userID, $members))
-                    {
-                        if (!$groupObject->Link($groupID, $userID))
-                        {
-                            trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
-                        }
-                    }
+                $members[] = $userID;
             }
+        }
 
-            $response->SetFormSubmitResponse(__('Group membership set'), false);
-            $response->Respond();
+        foreach($users as $userID)
+        {
+            // Add any that are missing
+            if(!in_array($userID, $members))
+            {
+                if (!$groupObject->Link($groupID, $userID))
+                {
+                    trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
+                }
+            }
+        }
+
+        $response->SetFormSubmitResponse(__('Group membership set'), false);
+        $response->Respond();
 	}
 }
 ?>

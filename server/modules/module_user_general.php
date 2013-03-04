@@ -41,30 +41,34 @@
 	
 	/**
 	 * Validate the User is Logged In
-	 * @return 
 	 * @param $ajax Object[optional] Indicates if this request came from an AJAX call or otherwise
 	 */
 	function attempt_login($ajax = false) 
 	{
-		$db 		=& $this->db;
+		$db =& $this->db;
 
-                // Referring Page is anything after the ?
+        // Referring Page is anything after the ?
 		$requestUri = rawurlencode(Kit::GetCurrentPage());
 		
 		if(!$this->checkforUserid()) 
 		{
-			//print out the login form
+			// Print out the login form
 			if ($ajax) 
 			{
-                            //create the AJAX request object
-                            $response = new ResponseManager();
+                //create the AJAX request object
+                $response = new ResponseManager();
 
-                            $response->Login();
-                            $response->Respond();
+                $response->Login();
+                $response->Respond();
 			}
 			else 
 			{
-                            $this->printLoginBox($requestUri);
+				Theme::Set('form_meta', '<input type="hidden" name="token" value="' . CreateFormToken() . '" />');
+				Theme::Set('form_action', 'index.php?q=login&referingPage=' . $requestUri);
+				Theme::Set('about_url', 'index.php?p=index&q=About');
+				Theme::Set('source_url', 'https://launchpad.net/xibo/1.5');
+                Theme::Render('login_page');
+                exit;
 			}
 			
 			return false;
@@ -78,7 +82,7 @@
 			
 			$results = $db->query($SQL) or trigger_error("Can not write last accessed info.", E_USER_ERROR);
 
-                        // Load the information about this user
+            // Load the information about this user
 			$this->LoginServices($userid);
 			
 			return true;
@@ -219,16 +223,6 @@
 				return true;
 			}
 		}
-	}
-
-	//prints the login box
-	function printLoginBox($referingPage) 
-	{
-		global $pageObject;
-		
-		include("template/pages/login_box.php");
-
-        exit;
 	}
 	
 	function getNameFromID($id) 
@@ -790,19 +784,50 @@ END;
     /**
      * Returns an array of Media the current user has access to
      */
-    public function MediaList($type = '')
+    public function MediaList($type = '', $name = '', $ownerid = 0, $retired = 0)
     {
-        $SQL  = "";
+    	$SQL  = '';
         $SQL .= "SELECT  media.mediaID, ";
-        $SQL .= "        media.name, ";
-        $SQL .= "        media.type, ";
-        $SQL .= "        media.duration, ";
-        $SQL .= "        media.userID ";
-        $SQL .= "FROM    media ";
-        $SQL .= "WHERE   1 = 1  AND isEdited = 0 ";
+		$SQL .= " 	media.name, ";
+		$SQL .= " 	media.type, ";
+		$SQL .= " 	media.duration, ";
+		$SQL .= " 	media.userID, ";
+		$SQL .= " 	media.FileSize, ";
+		$SQL .= " 	IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
+		$SQL .= " 	media.originalFileName ";
+		$SQL .= " FROM media ";
+		$SQL .= "	LEFT OUTER JOIN media parentmedia ";
+		$SQL .= " 	ON parentmedia.MediaID = media.MediaID ";
+		$SQL .= " WHERE   media.isEdited = 0 ";
+		
+		if ($name != '') 
+		{
+            // convert into a space delimited array
+            $names = explode(' ', $name);
+            
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (media.name NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (media.name LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+            }
+		}
 
         if ($type != '')
-            $SQL .= sprintf(" AND type = '%s'", $this->db->escape_string($type));
+            $SQL .= sprintf(" AND media.type = '%s'", $this->db->escape_string($type));
+
+		if ($ownerid != 0) 
+			$SQL .= sprintf(" AND media.userid = %d ", $ownerid);
+		
+		if ($retired == 1) 
+			$SQL .= " AND media.retired = 1 ";
+		
+		if ($retired == 0) 
+			$SQL .= " AND media.retired = 0 ";			
+		
+		$SQL .= " ORDER BY media.name ";
 
         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of media for %s with SQL: %s', $this->userName, $SQL));
 
@@ -819,18 +844,23 @@ END;
             $mediaItem = array();
 
             // Validate each param and add it to the array.
-            $mediaItem['mediaid']   = Kit::ValidateParam($row['mediaID'], _INT);
-            $mediaItem['media']     = Kit::ValidateParam($row['name'], _STRING);
+            $mediaItem['mediaid'] = Kit::ValidateParam($row['mediaID'], _INT);
+            $mediaItem['media'] = Kit::ValidateParam($row['name'], _STRING);
             $mediaItem['mediatype'] = Kit::ValidateParam($row['type'], _WORD);
-            $mediaItem['length']    = Kit::ValidateParam($row['duration'], _DOUBLE);
-            $mediaItem['ownerid']   = Kit::ValidateParam($row['userID'], _INT);
+            $mediaItem['duration'] = Kit::ValidateParam($row['duration'], _DOUBLE);
+            $mediaItem['ownerid'] = Kit::ValidateParam($row['userID'], _INT);
+            $mediaItem['filesize'] = Kit::ValidateParam($row['FileSize'], _INT);
+            $mediaItem['parentid'] = Kit::ValidateParam($row['ParentID'], _INT);
+            $mediaItem['filename'] = Kit::ValidateParam($row['originalFileName'], _STRING);
 
             $auth = $this->MediaAuth($mediaItem['mediaid'], true);
 
             if ($auth->view)
             {
-                $mediaItem['view'] = $auth->view;
-                $mediaItem['edit'] = $auth->edit;
+                $mediaItem['view'] = (int)$auth->view;
+                $mediaItem['edit'] = (int)$auth->edit;
+                $mediaItem['del'] = (int)$auth->del;
+                $mediaItem['modifyPermissions'] = (int)$auth->modifyPermissions;
                 $media[] = $mediaItem;
             }
         }
@@ -928,7 +958,7 @@ END;
     /**
      * Returns an array of layouts that this user has access to
      */
-    public function LayoutList($filterLayout = '')
+    public function LayoutList($filterLayout = '', $filterUserId = 0, $filterRetired = 0, $filterTags = '')
     {
         $SQL  = "";
         $SQL .= "SELECT layout.layoutID, ";
@@ -947,11 +977,36 @@ END;
         $SQL .= " WHERE 1 = 1 ";
 
         if ($filterLayout != '')
-            $SQL .= "   AND layout LIKE '%" . $filterLayout . "%'";
+        {
+            // convert into a space delimited array
+            $names = explode(' ', $filterLayout);
 
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (layout.layout NOT LIKE '%" . sprintf('%s', ltrim($this->db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (layout.layout LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
+            }
+        }
+
+        // Owner filter
+		if ($filterUserId != 0) 
+			$SQL .= sprintf(" AND layout.userid = %d ", $filterUserId);
+		
+		// Retired options
+		if ($filterRetired != 0) 
+			$SQL .= sprintf(" AND layout.retired = %d ", $filterRetired);
+		
+		// Tags
+		if ($filterTags != '')
+			$SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $filterTags) . "%' ";
+		
+        
         $SQL .= " ORDER BY Layout ";
 
-        //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -981,6 +1036,7 @@ END;
                 $layoutItem['view'] = (int) $auth->view;
                 $layoutItem['edit'] = (int) $auth->edit;
                 $layoutItem['del'] = (int) $auth->del;
+                $layoutItem['modifyPermissions'] = (int) $auth->modifyPermissions;
                 
                 $layouts[] = $layoutItem;
             }
@@ -989,15 +1045,49 @@ END;
         return $layouts;
     }
 
-    public function TemplateList()
+    /**
+     * A List of Templates the User has access to
+     * @param string $template [description]
+     * @param string $tags     [description]
+     * @param string $isSystem [description]
+     */
+    public function TemplateList($template = '', $tags = '', $isSystem = '')
     {
+    	$db =& $this->db;
+
         $SQL  = "";
         $SQL .= "SELECT  template.templateID, ";
         $SQL .= "        template.template, ";
         $SQL .= "        CASE WHEN template.issystem = 1 THEN 'Yes' ELSE 'No' END AS issystem, ";
         $SQL .= "        template.tags, ";
         $SQL .= "        template.userID ";
-        $SQL .= "FROM    template ";
+        $SQL .= "  FROM  template ";
+        $SQL .= " WHERE 1 = 1 ";
+
+        if ($template != '') 
+		{
+            // convert into a space delimited array
+            $names = explode(' ', $template);
+            
+            foreach ($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (template.template NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (template.template LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+            }
+		}
+
+		if ($tags != '') 
+		{
+			$SQL .= " AND template.tags LIKE '%" . $db->escape_string($tags) . "%' ";
+		}
+		
+		if ($isSystem != '-1') 
+		{
+			$SQL .= sprintf(" AND template.issystem = %d ", $isSystem);
+		}
 
         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of templates for %s with SQL: %s', $this->userName, $SQL));
 
@@ -1026,6 +1116,8 @@ END;
             {
                 $item['view'] = (int) $auth->view;
                 $item['edit'] = (int) $auth->edit;
+                $item['del'] = (int) $auth->del;
+                $item['modifyPermissions'] = (int) $auth->modifyPermissions;
 
                 $templates[] = $item;
             }
@@ -1124,6 +1216,7 @@ END;
                 $dataSetItem['view'] = (int) $auth->view;
                 $dataSetItem['edit'] = (int) $auth->edit;
                 $dataSetItem['del'] = (int) $auth->del;
+                $dataSetItem['modifyPermissions'] = (int) $auth->modifyPermissions;
 
                 $dataSets[] = $dataSetItem;
             }
@@ -1179,7 +1272,7 @@ END;
      * Authenticates the current user and returns an array of display groups this user is authenticated on
      * @return 
      */
-    public function DisplayGroupList($isDisplaySpecific = 0)
+    public function DisplayGroupList($isDisplaySpecific = 0, $name = '')
     {
         $db 		=& $this->db;
         $userid		=& $this->userid;
@@ -1195,8 +1288,27 @@ END;
         {
             $SQL .= "   INNER JOIN lkdisplaydg ";
             $SQL .= "   ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
-            $SQL .= " WHERE displaygroup.IsDisplaySpecific = 1 ";
         }
+        
+        $SQL .= " WHERE 1 = 1 ";
+        
+        if ($name != '')
+        {
+            // convert into a space delimited array
+            $names = explode(' ', $name);
+
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (displaygroup.DisplayGroup NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (displaygroup.DisplayGroup LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+            }
+        }
+        
+        if ($isDisplaySpecific == 1)
+            $SQL .= " AND displaygroup.IsDisplaySpecific = 1 ";
 
         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
 
@@ -1232,6 +1344,73 @@ END;
         }
 
         return $displayGroups;
+    }
+
+    /**
+     * List of Displays this user has access to view
+     */
+    public function DisplayList() {
+
+		$SQL  = 'SELECT display.displayid, ';
+		$SQL .= '    display.display, ';
+		$SQL .= '    layout.layout, ';
+		$SQL .= '    display.loggedin, ';
+		$SQL .= '    display.lastaccessed, ';
+		$SQL .= '    display.inc_schedule, ';
+		$SQL .= '    display.licensed, ';
+		$SQL .= '    display.email_alert, ';
+		$SQL .= '    displaygroup.DisplayGroupID, ';
+		$SQL .= '    display.ClientAddress, ';
+		$SQL .= '    display.MediaInventoryStatus, ';
+		$SQL .= '    display.MacAddress ';
+		$SQL .= '  FROM display ';
+		$SQL .= '    INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID ';
+		$SQL .= '    INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID ';
+		$SQL .= '    LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid ';
+		$SQL .= ' WHERE displaygroup.IsDisplaySpecific = 1 ';
+		$SQL .= 'ORDER BY display.displayid ';
+
+		if (!$result = $this->db->query($SQL))
+        {
+            trigger_error($this->db->error());
+            return false;
+        }
+
+        $displays = array();
+
+        while ($row = $this->db->get_assoc_row($result))
+        {
+            $displayItem = array();
+
+            // Validate each param and add it to the array.
+            $displayItem['displayid'] = Kit::ValidateParam($row['displayid'], _INT);
+            $displayItem['display'] = Kit::ValidateParam($row['display'], _STRING);
+            $displayItem['layout'] = Kit::ValidateParam($row['layout'], _STRING);
+            $displayItem['loggedin'] = Kit::ValidateParam($row['loggedin'], _INT);
+            $displayItem['lastaccessed'] = Kit::ValidateParam($row['lastaccessed'], _STRING);
+            $displayItem['inc_schedule'] = Kit::ValidateParam($row['inc_schedule'], _INT);
+            $displayItem['licensed'] = Kit::ValidateParam($row['licensed'], _INT);
+            $displayItem['email_alert'] = Kit::ValidateParam($row['email_alert'], _INT);
+            $displayItem['displaygroupid'] = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $displayItem['clientaddress'] = Kit::ValidateParam($row['ClientAddress'], _STRING);
+            $displayItem['mediainventorystatus'] = Kit::ValidateParam($row['MediaInventoryStatus'], _INT);
+            $displayItem['macaddress'] = Kit::ValidateParam($row['MacAddress'], _STRING);
+
+            $auth = $this->DisplayGroupAuth($displayItem['displaygroupid'], true);
+
+            if ($auth->view)
+            {
+                $displayItem['view'] = (int) $auth->view;
+                $displayItem['edit'] = (int) $auth->edit;
+                $displayItem['del'] = (int) $auth->del;
+                $displayItem['modifypermissions'] = (int) $auth->modifyPermissions;
+
+                $displays[] = $displayItem;
+            }
+        }
+
+        return $displays;
+
     }
     
     /**
@@ -1287,10 +1466,9 @@ END;
 
     /**
      * Authenticates the current user and returns an array ofcampaigns this user is authenticated on
-     * @param $isRetired Return retired Campaigns
      * @return
      */
-    public function CampaignList($isRetired = false)
+    public function CampaignList($name = '', $isRetired = false)
     {
         $db 		=& $this->db;
         $userid		=& $this->userid;
@@ -1301,6 +1479,23 @@ END;
         $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
         $SQL .= "	LEFT OUTER JOIN `layout` ";
         $SQL .= "	ON lkcampaignlayout.LayoutID = layout.LayoutID ";
+        $SQL .= " WHERE 1 = 1 ";
+        
+        if ($name != '')
+        {
+            // convert into a space delimited array
+            $names = explode(' ', $name);
+
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (campaign.Campaign NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (campaign.Campaign LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+            }
+        }
+        
         $SQL .= "GROUP BY campaign.CampaignID, Campaign, IsLayoutSpecific ";
         $SQL .= "ORDER BY Campaign";
 

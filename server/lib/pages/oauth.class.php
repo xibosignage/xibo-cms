@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2010-12 Daniel Garner
+ * Copyright (C) 2010-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -31,45 +31,31 @@ class oauthDAO
         $this->user =& $user;
     }
 
-    function displayPage()
+    /**
+     * Display Page
+     */
+    public function displayPage()
     {
-        // Just a normal call to this page.
-        include('template/pages/oauth_view.php');
-
-        return false;
-    }
-
-    public function Filter()
-    {
-        $filterForm = <<<END
-            <div class="FilterDiv" id="DisplayGroupFilter">
-                <form onsubmit="return false">
-                    <input type="hidden" name="p" value="oauth">
-                    <input type="hidden" name="q" value="Grid">
-                </form>
-            </div>
-END;
-
+        // Configure the theme
         $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('application_form_add_url', 'index.php?p=oauth&q=RegisterForm');
+        Theme::Set('oauth_log_button_url', 'index.php?p=oauth&q=ViewLog');
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="oauth"><input type="hidden" name="q" value="Grid">');
+        Theme::Set('pager', ResponseManager::Pager($id));
 
-        $xiboGrid = <<<HTML
-        <div class="XiboGrid" id="$id">
-            <div class="XiboFilter">
-                $filterForm
-            </div>
-            <div class="XiboData">
-
-            </div>
-        </div>
-HTML;
-            echo $xiboGrid;
+        // Render the Theme and output
+        Theme::Render('applications_page');
     }
 
+    /**
+     * Display page grid
+     */
     public function Grid()
     {
-        $db         =& $this->db;
-        $user       =& $this->user;
-        $response   = new ResponseManager();
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
 
         $store = OAuthStore::instance();
 
@@ -82,57 +68,31 @@ HTML;
             trigger_error($e->getMessage());
             trigger_error(__('Error listing Applications.'), E_USER_ERROR);
         }
-        
-        $msgTitle   = __('App Title');
-        $msgDesc    = __('App Desc');
-        $msgUri     = __('App Homepage');
-        
-        $msgConKey  = __('App Key');
-        $msgConSecret = __('App Secret');
-        
-        $msgAction  = __('Action');
-        $msgEdit    = __('Edit');
 
-        $output = <<<END
-<div class="info_table">
-    <table style="width:100%">
-        <thead>
-        <tr>
-            <th>$msgTitle</th>
-            <th>$msgDesc</th>
-            <th>$msgUri</th>
-            <th>$msgConKey</th>
-            <th>$msgConSecret</th>
-            <th>$msgAction</th>
-        </tr>
-        </thead>
-        <tbody>
-END;
+        $rows = array();
 
-        foreach($list as $app)
+        foreach ($list as $app)
         {
-            $appId  = Kit::ValidateParam($app['id'], _INT);
-            $title  = Kit::ValidateParam($app['application_title'], _STRING);
-            $desc   = Kit::ValidateParam($app['application_descr'], _STRING);
-            $url    = Kit::ValidateParam($app['application_uri'], _URI);
-            $conKey = Kit::ValidateParam($app['consumer_key'], _STRING);
-            $conSecret = Kit::ValidateParam($app['consumer_secret'], _STRING);
+            $app['application_title'] = Kit::ValidateParam($app['application_title'], _STRING);
+            $app['application_descr'] = Kit::ValidateParam($app['application_descr'], _STRING);
+            $app['application_uri'] = Kit::ValidateParam($app['application_uri'], _URI);
+            $app['consumer_key'] = Kit::ValidateParam($app['consumer_key'], _STRING);
+            $app['consumer_secret'] = Kit::ValidateParam($app['consumer_secret'], _STRING);
 
-            $output .= '<tr>';
-            $output .= '    <td>' . $title . '</td>';
-            $output .= '    <td>' . $desc . '</td>';
-            $output .= '    <td>' . $url . '</td>';
-            $output .= '    <td>' . $conKey . '</td>';
-            $output .= '    <td>' . $conSecret . '</td>';
-            $output .= '</tr>';
+            $rows[] = $app;
         }
 
-        $output .= "</tbody></table></div>";
+        Theme::Set('table_rows', $rows);
+
+        $output = Theme::RenderReturn('applications_page_grid');
 
         $response->SetGridResponse($output);
         $response->Respond();
     }
 
+    /**
+     * View the Log
+     */
     public function ViewLog()
     {
         $db         =& $this->db;
@@ -143,7 +103,7 @@ END;
 
         try
         {
-            $list = $store->listLog($this->user->userid);
+            $list = $store->listLog(null, $this->user->userid);
         }
         catch (OAuthException $e)
         {
@@ -151,31 +111,20 @@ END;
             trigger_error(__('Error listing Log.'), E_USER_ERROR);
         }
 
-        $output  = '<div class="info_table">';
-        $output .= '    <table style="width:100%">';
-        $output .= '        <thead>';
-        $output .= sprintf('    <th>%s</th>', __('Header'));
-        $output .= sprintf('    <th>%s</th>', __('Notes'));
-        $output .= sprintf('    <th>%s</th>', __('Timestamp'));
-        $output .= '        </thead>';
-        $output .= '        <tbody>';
+        $rows = array();
 
-        foreach($list as $logEntry)
+        foreach($list as $row)
         {
-            $header     = Kit::ValidateParam($logEntry['received'], _STRING);
-            $notes      = Kit::ValidateParam($logEntry['notes'], _STRING);
-            $timestamp  = Kit::ValidateParam($logEntry['timestamp'], _STRING);
+            $row['received'] = Kit::ValidateParam($logEntry['received'], _STRING);
+            $row['notes'] = Kit::ValidateParam($logEntry['notes'], _STRING);
+            $row['timestamp'] = Kit::ValidateParam($logEntry['timestamp'], _STRING);
 
-            $output .= '<tr>';
-            $output .= '<td>' . $header . '</td>';
-            $output .= '<td>' . $notes . '</td>';
-            $output .= '<td>' . $timestamp . '</td>';
-            $output .= '</tr>';
+            $rows[] = $row;
         }
 
-        $output .= '        </tbody>';
-        $output .= '    </table>';
-        $output .= '</div>';
+        Theme::Set('table_rows', $rows);
+
+        $output = Theme::RenderReturn('applications_form_view_log');
 
         $response->SetFormRequestResponse($output, __('OAuth Access Log'), '1000', '600');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Services&Category=Log')");
@@ -216,11 +165,17 @@ END;
            }
            else
            {
-               // Not submitted the form, therefore we must show the login box.
-               $store = OAuthStore::instance();
-               $consumer = $store->getConsumer($consumerDetails['consumer_key'], $userid, true);
-               
-               include('template/pages/oauth_verify.php');
+                // Not submitted the form, therefore we must show the login box.
+                $store = OAuthStore::instance();
+                $consumer = $store->getConsumer($consumerDetails['consumer_key'], $userid, true);
+
+                Theme::Set('application_title', $consumer['application_title']);
+                Theme::Set('application_descr', $consumer['application_descr']);
+                Theme::Set('application_uri', $consumer['application_uri']);
+
+                Theme::Render('header');
+                Theme::Render('application_verify');
+                Theme::Render('footer');
            }
         }
         catch (OAuthException $e)
@@ -240,47 +195,15 @@ END;
         $user		=& $this->user;
         $response	= new ResponseManager();
 
-        $msgCancel      = __('Cancel');
-        $msgRegister    = __('Register');
+        Theme::Set('form_id', 'RegisterOAuth');
+        Theme::Set('form_action', 'index.php?p=oauth&q=Register');
 
-        $form = <<<END
-
-<form id="RegisterOAuth" class="XiboForm" method="post" action="index.php?p=oauth&q=Register">
-    <fieldset>
-	<legend>About You</legend>
-
-	<p>
-	    <label for="requester_name">Your name</label><br/>
-	    <input class="text required" id="requester_name"  name="requester_name" type="text" value="" />
-	</p>
-
-	<p>
-	    <label for="requester_email">Your email address</label><br/>
-	    <input class="email required" id="requester_email"  name="requester_email" type="text" value="" />
-	</p>
-    </fieldset>
-
-    <fieldset>
-	<legend>Location Of Your Application Or Site</legend>
-
-	<p>
-	    <label for="application_uri">URL of your application or site</label><br/>
-	    <input id="application_uri" class="text" name="application_uri" type="text" value="" />
-	</p>
-
-	<p>
-	    <label for="callback_uri">Callback URL</label><br/>
-	    <input id="callback_uri" class="text" name="callback_uri" type="text" value="" />
-	</p>
-    </fieldset>
-</form>
-
-END;
+        $form = Theme::RenderReturn('application_form_register');
 
         $response->SetFormRequestResponse($form, __('Registration for Consumer Information'), '550px', '475px');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Services&Category=Register')");
-        $response->AddButton($msgCancel, 'XiboDialogClose()');
-        $response->AddButton($msgRegister, '$("#RegisterOAuth").submit()');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Register'), '$("#RegisterOAuth").submit()');
         $response->Respond();
     }
 
@@ -289,15 +212,15 @@ END;
      */
     public function Register()
     {
-        $db 		=& $this->db;
-        $user		=& $this->user;
-        $response	= new ResponseManager();
-        $userid         = Kit::GetParam('userid', _SESSION, _INT);
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $userid = Kit::GetParam('userid', _SESSION, _INT);
 
-        $message        = '';
+        $message = '';
 
         try
-	{
+    	{
             $store = OAuthStore::instance();
             $key   = $store->updateConsumer($_POST, $userid);
 
@@ -305,24 +228,14 @@ END;
 
             $message .= sprintf(__('Your consumer key is: %s'),$c['consumer_key']) . '<br />';
             $message .= sprintf(__('Your consumer secret is: %s'), $c['consumer_secret']) . '<br />';
-	}
-	catch (OAuthException $e)
-	{
+    	}
+    	catch (OAuthException $e)
+    	{
             trigger_error('Error: ' . $e->getMessage(), E_USER_ERROR);
-	}
+    	}
 
         $response->SetFormSubmitResponse($message, false);
-	$response->Respond();
-    }
-
-    function on_page_load()
-    {
-        return '';
-    }
-
-    function echo_page_heading()
-    {
-        return true;
+        $response->Respond();
     }
 
     /**
@@ -346,31 +259,20 @@ END;
             trigger_error(__('Error listing Log.'), E_USER_ERROR);
         }
 
-        $output  = '<div class="info_table">';
-        $output .= '    <table style="width:100%">';
-        $output .= '        <thead>';
-        $output .= sprintf('    <th>%s</th>', __('Application'));
-        $output .= sprintf('    <th>%s</th>', __('Enabled'));
-        $output .= sprintf('    <th>%s</th>', __('Status'));
-        $output .= '        </thead>';
-        $output .= '        <tbody>';
+        $rows = array();
 
-        foreach($list as $app)
+        foreach ($list as $app)
         {
-            $title      = Kit::ValidateParam($app['application_title'], _STRING);
-            $enabled    = Kit::ValidateParam($app['enabled'], _STRING);
-            $status     = Kit::ValidateParam($app['status'], _STRING);
+            $row['application_title'] = Kit::ValidateParam($app['application_title'], _STRING);
+            $row['enabled'] = Kit::ValidateParam($app['enabled'], _STRING);
+            $row['status'] = Kit::ValidateParam($app['status'], _STRING);
 
-            $output .= '<tr>';
-            $output .= '<td>' . $title . '</td>';
-            $output .= '<td>' . $enabled . '</td>';
-            $output .= '<td>' . $status . '</td>';
-            $output .= '</tr>';
+            $rows[] = $app;
         }
 
-        $output .= '        </tbody>';
-        $output .= '    </table>';
-        $output .= '</div>';
+        Theme::Set('table_rows', $rows);
+
+        $output = Theme::RenderReturn('applications_form_view_log');
 
         $response->SetFormRequestResponse($output, __('Authorized applications for user'), '650', '450');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");

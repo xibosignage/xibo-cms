@@ -75,12 +75,19 @@ class Data
 	protected function SetError($errNo, $errMessage = '')
 	{
 		$this->error		= true;
+
+		// Is an error No provided?
+		if (!is_numeric($errNo)) {
+			$errMessage = $errNo;
+			$errNo = -1;
+		}
+
 		$this->errorNo 		= $errNo;
 		$this->errorMessage	= $errMessage;
 		
 		Debug::LogEntry($this->db, 'audit', sprintf('Data Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Data Module', 'SetError');
 
-                // Return false so that we can use this method as the return call for parent methods
+        // Return false so that we can use this method as the return call for parent methods
 		return false;
 	}
 } 

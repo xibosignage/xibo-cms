@@ -116,18 +116,16 @@ class TranslationEngine
  * @return 
  * @param $string Object
  */ 
-function __($string)
+function __($string, $args = null)
 {
-	global $db;
-        global $transEngine;
-        $orignial = $string;
-
-        if (!$transEngine) return $string;
-	
-	$string = $transEngine->translate($string);
-
-        //Debug::LogEntry($db, 'audit', 'Translating [' . $orignial .']  to [' . $string .']', '', '__');
+	global $transEngine;
         
-        return $string;
+    if ($transEngine != '')
+	   $string = $transEngine->translate($string);
+
+    if (count($args) > 0)
+        $string = vsprintf($string, $args);
+
+    return $string;
 }
 ?>

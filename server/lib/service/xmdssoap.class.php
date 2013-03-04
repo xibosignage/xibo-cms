@@ -993,13 +993,9 @@ class XMDSSoap
             throw new SoapFault('Receiver', "This display client is not licensed");
         }
 
-        $user = new User($db);
-        $user->userid = 0;
-        $user->usertypeid = 1;
-
         // What type of module is this?
         Kit::ClassLoader('region');
-        $region = new region($db, $user);
+        $region = new region($db);
         $type = $region->GetMediaNodeType($layoutId, $regionId, $mediaId);
 
         if ($type == '')
