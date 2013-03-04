@@ -43,12 +43,18 @@
 	  <li>RAM: 2GB</li>
 	  <li>Hard drive Space: 40 GB</li>
 	</ul>
-	
+
+<?php
+if (! HOSTED) {
+?>	
 	<h3 lang="en-GB" class="western"><?php echo PRODUCT_NAME; ?> Server Requirements</h3>
 	<p>The <?php echo PRODUCT_NAME; ?> server requires a PHP enabled webserver (e.g. Apache), PHP v5.1.4 or later and MySQL, as well as some SQL extensions.</p>
 	<p>Minimum specification depends largely on the number of clients to be supported, and the frequency of client updates. Any hardware capable of running
 	a reasonably modern Linux distribution, or Microsoft Windows 7/XP should be capable of supporting a few clients.</p>
 	<p><?php echo PRODUCT_NAME; ?> stores all the content you schedule for display on the server. Disk space is therefore a function of the amount of content you upload.</p>
+<?php
+}
+?>
 </blockquote>
 
     <?php include('../../template/footer.php'); ?>

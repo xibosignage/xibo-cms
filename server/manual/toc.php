@@ -52,7 +52,13 @@ else {
 			<ul>
 				<li><a class="file" href="content/install/prerequisites.php" target="main">Prerequisites</a></li>
 				<li><a class="file" href="content/install/install_client.php" target="main">Client Installation</a></li>
+<?php
+if (! HOSTED) {
+?>
 				<li><a class="file" href="content/install/install_server.php" target="main">Server Installation</a></li>
+<?php
+}
+?>
 				<li><a class="file" href="content/install/troubleshooting.php" target="main">Troubleshooting</a></li>
 			</ul>
 		</li>
