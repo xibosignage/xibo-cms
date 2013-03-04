@@ -29,6 +29,6 @@
 		<h2>License</h2>
 		<p><?php echo PRODUCT_NAME; ?> is released under the Affero GNU Public License v3 or any later version.</p>
 
-		<iframe src="./template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+<?php include('template/footer.php'); ?>
 	</body>
 </html>

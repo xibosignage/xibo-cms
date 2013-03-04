@@ -33,117 +33,117 @@
 	<ul id="toc" class="filetree">
 		<li><span class="folder">Introduction</span>
 			<ul>
-				<li><a class="file" href="intro.html" target="main">Introduction</a></li>
-				<li><a class="file" href="content/license/licenses.html" target="main">Licenses</a></li>
+				<li><a class="file" href="intro.php" target="main">Introduction</a></li>
+				<li><a class="file" href="content/license/licenses.php" target="main">Licenses</a></li>
 			</ul>
 		</li>
 
 		<li><span class="folder">Installation</span>
 			<ul>
-				<li><a class="file" href="content/install/prerequisites.html" target="main">Prerequisites</a></li>
-				<li><a class="file" href="content/install/install_client.html" target="main">Client Installation</a></li>
-				<li><a class="file" href="content/install/install_server.html" target="main">Server Installation</a></li>
-				<li><a class="file" href="content/install/troubleshooting.html" target="main">Troubleshooting</a></li>
+				<li><a class="file" href="content/install/prerequisites.php" target="main">Prerequisites</a></li>
+				<li><a class="file" href="content/install/install_client.php" target="main">Client Installation</a></li>
+				<li><a class="file" href="content/install/install_server.php" target="main">Server Installation</a></li>
+				<li><a class="file" href="content/install/troubleshooting.php" target="main">Troubleshooting</a></li>
 			</ul>
 		</li>
 
 		<li><span class="folder">Configuration</span>
 			<ul>
-				<li><a class="file" href="content/config/config.html" target="main">Configuration</a></li>
-				<li><a class="file" href="content/config/client_feature.html" target="main"><?php echo PRODUCT_NAME; ?> Client Features</a></li>
-				<li><a class="file" href="content/config/client.html" target="main"><?php echo PRODUCT_NAME; ?> Client</a></li>
-				<li><a class="file" href="content/config/windows.html" target="main">Windows Modifications</a></li>
-				<li><a class="file" href="content/config/settings.html" target="main">Admin Panel Settings</a></li>
+				<li><a class="file" href="content/config/config.php" target="main">Configuration</a></li>
+				<li><a class="file" href="content/config/client_feature.php" target="main"><?php echo PRODUCT_NAME; ?> Client Features</a></li>
+				<li><a class="file" href="content/config/client.php" target="main"><?php echo PRODUCT_NAME; ?> Client</a></li>
+				<li><a class="file" href="content/config/windows.php" target="main">Windows Modifications</a></li>
+				<li><a class="file" href="content/config/settings.php" target="main">Admin Panel Settings</a></li>
 			</ul>
 		</li>
 
 		<li><span class="folder">Using <?php echo PRODUCT_NAME; ?>: Components and Navigation</span>
 			<ul>
-				<li><a class="file" href="content/dashboard/overview.html" target="main">Overview</a></li>
-				<li><a class="file" href="content/dashboard/dashboard.html" target="main">Dashboard</a></li>
-				<li><a class="file" href="content/dashboard/navbar.html" target="main">Navigation</a></li>
+				<li><a class="file" href="content/dashboard/overview.php" target="main">Overview</a></li>
+				<li><a class="file" href="content/dashboard/dashboard.php" target="main">Dashboard</a></li>
+				<li><a class="file" href="content/dashboard/navbar.php" target="main">Navigation</a></li>
 			</ul>
 		</li>
 
 		<li><span class="folder">Layouts</span>
 			<ul>
-				<li><a class="file" href="content/layout/overview.html" target="main">Overview</a></li>
-				<li><a class="file" href="content/layout/addlayout.html" target="main">Adding Layouts</a></li>
+				<li><a class="file" href="content/layout/overview.php" target="main">Overview</a></li>
+				<li><a class="file" href="content/layout/addlayout.php" target="main">Adding Layouts</a></li>
 				<li><span class="folder">Designing Layouts</span>
 					<ul>
-						<li><a class="file" href="content/layout/layoutdesigner.html" target="main">Layout Designer</a></li>
-						<li><a class="file" href="content/layout/addregion.html" target="main">Adding Regions</a></li>
+						<li><a class="file" href="content/layout/layoutdesigner.php" target="main">Layout Designer</a></li>
+						<li><a class="file" href="content/layout/addregion.php" target="main">Adding Regions</a></li>
 					</ul>
 				</li>
 
 				<li><span class="folder">Assigning Contents</span>
 					<ul>
-						<li><a class="file" href="content/layout/assigncontent.html" target="main">Assigning Region Content</a></li>
-						<li><a class="file" href="content/layout/content_video.html" target="main">Content - Video</a></li>
-						<li><a class="file" href="content/layout/content_flash.html" target="main">Content - Flash</a></li>
-						<li><a class="file" href="content/layout/content_image.html" target="main">Content - Image</a></li>
-						<li><a class="file" href="content/layout/content_powerpoint.html" target="main">Content - PowerPoint</a></li>
-						<li><a class="file" href="content/layout/content_datasets.html" target="main">Content - Datasets </a></li>
-						<li><a class="file" href="content/layout/content_text.html" target="main">Content - Text</a></li>
-						<li><a class="file" href="content/layout/content_ticker.html" target="main">Content - Ticker</a></li>
-						<li><a class="file" href="content/layout/content_microblog.html" target="main">Content - MicroBlog</a></li>
-						<li><a class="file" href="content/layout/content_counter.html" target="main">Content - Counter</a></li>
-						<li><a class="file" href="content/layout/content_webpage.html" target="main">Content - Webpage</a></li>
-						<li><a class="file" href="content/layout/content_embedded.html" target="main">Content - Embedded</a></li>
-						<li><a class="file" href="content/layout/content_shellcommand.html" target="main">Content - Shell Command</a></li>
+						<li><a class="file" href="content/layout/assigncontent.php" target="main">Assigning Region Content</a></li>
+						<li><a class="file" href="content/layout/content_video.php" target="main">Content - Video</a></li>
+						<li><a class="file" href="content/layout/content_flash.php" target="main">Content - Flash</a></li>
+						<li><a class="file" href="content/layout/content_image.php" target="main">Content - Image</a></li>
+						<li><a class="file" href="content/layout/content_powerpoint.php" target="main">Content - PowerPoint</a></li>
+						<li><a class="file" href="content/layout/content_datasets.php" target="main">Content - Datasets </a></li>
+						<li><a class="file" href="content/layout/content_text.php" target="main">Content - Text</a></li>
+						<li><a class="file" href="content/layout/content_ticker.php" target="main">Content - Ticker</a></li>
+						<li><a class="file" href="content/layout/content_microblog.php" target="main">Content - MicroBlog</a></li>
+						<li><a class="file" href="content/layout/content_counter.php" target="main">Content - Counter</a></li>
+						<li><a class="file" href="content/layout/content_webpage.php" target="main">Content - Webpage</a></li>
+						<li><a class="file" href="content/layout/content_embedded.php" target="main">Content - Embedded</a></li>
+						<li><a class="file" href="content/layout/content_shellcommand.php" target="main">Content - Shell Command</a></li>
 					</ul>
 				</li>
 
-				<li><a class="file" href="content/layout/region_preview_timeline.html" target="main">Region Preview &amp; Timeline</a></li>
-				<li><a class="file" href="content/layout/campaign_layout.html" target="main">Campaign Layout</a></li>
+				<li><a class="file" href="content/layout/region_preview_timeline.php" target="main">Region Preview &amp; Timeline</a></li>
+				<li><a class="file" href="content/layout/campaign_layout.php" target="main">Campaign Layout</a></li>
 			</ul>
 		</li>
 		
     <li><span class="folder">Scheduling</span>
 			<ul>
-				<li><a class="file" href="content/schedule/overview.html" target="main">Overview</a></li>
-				<li><a class="file" href="content/schedule/schedule_calendar.html" target="main">Calendar Chart View</a></li>
-				<li><a class="file" href="content/schedule/schedule_event.html" target="main">Schedule &amp; Edit Event</a></li>
-				<li><a class="file" href="content/schedule/schedule_now.html" target="main">Schedule Now</a></li>
+				<li><a class="file" href="content/schedule/overview.php" target="main">Overview</a></li>
+				<li><a class="file" href="content/schedule/schedule_calendar.php" target="main">Calendar Chart View</a></li>
+				<li><a class="file" href="content/schedule/schedule_event.php" target="main">Schedule &amp; Edit Event</a></li>
+				<li><a class="file" href="content/schedule/schedule_now.php" target="main">Schedule Now</a></li>
 			</ul>
 		</li>
 		
     <li><span class="folder">Content</span>
 			<ul>
-				<li><a class="file" href="content/content/overview.html" target="main">Overview</a></li>
-				<li><a class="file" href="content/content/types.html" target="main">Types of Content</a></li>
-				<li><a class="file" href="content/content/adding.html" target="main">Adding Content</a></li>
-				<li><a class="file" href="content/content/licensing.html" target="main">Licensing</a></li>
+				<li><a class="file" href="content/content/overview.php" target="main">Overview</a></li>
+				<li><a class="file" href="content/content/types.php" target="main">Types of Content</a></li>
+				<li><a class="file" href="content/content/adding.php" target="main">Adding Content</a></li>
+				<li><a class="file" href="content/content/licensing.php" target="main">Licensing</a></li>
 			</ul>
 		</li>  
 
 		<li><span class="folder">Templates</span>
 			<ul>
-				<li><a class="file" href="content/templates/overview.html" target="main">Overview</a></li>
-				<li><a class="file" href="content/templates/template_resolution.html" target="main">Template Resolution</a></li>
-				<li><a class="file" href="content/templates/choosetemplate.html" target="main">Choosing Template</a></li>
+				<li><a class="file" href="content/templates/overview.php" target="main">Overview</a></li>
+				<li><a class="file" href="content/templates/template_resolution.php" target="main">Template Resolution</a></li>
+				<li><a class="file" href="content/templates/choosetemplate.php" target="main">Choosing Template</a></li>
 			</ul>
 		</li>
 
 		<li><span class="folder">Admin: Users, Types and Groups</span>
 			<ul>
-				<li><a class="file" href="content/users/overview.html" target="main">Overview</a></li>
-				<li><a class="file" href="content/users/users.html" target="main">User Administration</a></li>
-				<li><a class="file" href="content/users/menu_page_security.html" target="main">Page &amp; Menu Security</a></li>
-				<li><a class="file" href="content/users/user_types.html" target="main">User Types</a></li>
-				<li><a class="file" href="content/users/groups.html" target="main">User Groups and Group Permissions</a></li>
-				<li><a class="file" href="content/users/user_permissions.html" target="main">Permissions Model</a></li>
+				<li><a class="file" href="content/users/overview.php" target="main">Overview</a></li>
+				<li><a class="file" href="content/users/users.php" target="main">User Administration</a></li>
+				<li><a class="file" href="content/users/menu_page_security.php" target="main">Page &amp; Menu Security</a></li>
+				<li><a class="file" href="content/users/user_types.php" target="main">User Types</a></li>
+				<li><a class="file" href="content/users/groups.php" target="main">User Groups and Group Permissions</a></li>
+				<li><a class="file" href="content/users/user_permissions.php" target="main">Permissions Model</a></li>
 			</ul>
 		</li>
 
 		<li><span class="folder">System Administration</span>
 			<ul>
-				<li><a class="file" href="content/admin/overview.html" target="main">Overview</a></li>
-				<li><a class="file" href="content/admin/displays.html" target="main">Client Displays</a></li>
-				<li><a class="file" href="content/admin/settings.html" target="main">Server Settings</a></li>
-				<li><a class="file" href="content/admin/modules.html" target="main"><?php echo PRODUCT_NAME; ?> Modules</a></li>
-				<li><a class="file" href="content/admin/api.html" target="main"><?php echo PRODUCT_NAME; ?> API</a></li>
-				<li><a class="file" href="content/admin/advanced.html" target="main">Advanced</a></li>
+				<li><a class="file" href="content/admin/overview.php" target="main">Overview</a></li>
+				<li><a class="file" href="content/admin/displays.php" target="main">Client Displays</a></li>
+				<li><a class="file" href="content/admin/settings.php" target="main">Server Settings</a></li>
+				<li><a class="file" href="content/admin/modules.php" target="main"><?php echo PRODUCT_NAME; ?> Modules</a></li>
+				<li><a class="file" href="content/admin/api.php" target="main"><?php echo PRODUCT_NAME; ?> API</a></li>
+				<li><a class="file" href="content/admin/advanced.php" target="main">Advanced</a></li>
       </ul> 
  	</ul>
 </div>
