@@ -22,9 +22,9 @@
 		<p>This documentation applies to <?php echo PRODUCT_NAME; ?> Version <?php echo PRODUCT_VERSION; ?></p>
 
 		<h2>Getting Help</h2>
-		<p>The official <?php echo PRODUCT_NAME; ?> FAQ is hosted on Launchpad here: <a href="https://answers.launchpad.net/xibo/+faqs" target="_blank">https://answers.launchpad.net/xibo/+faqs</a></p>
+		<p>The official <?php echo PRODUCT_NAME; ?> FAQ is here: <a href="<?php echo PRODUCT_FAQ_URL; ?>" target="_blank"><?php echo PRODUCT_FAQ_URL; ?></a></p>
 		<p>If you would like any further help with the information contained in this document, or the software package
-		in general, please visit:<br /><a href="https://answers.launchpad.net/xibo" title="Launchpad <?php echo PRODUCT_NAME; ?> Answers"  target="_blank">https://answers.launchpad.net/xibo</a>.
+		in general, please visit: <a href="<?php echo PRODUCT_SUPPORT_URL; ?>" title="<?php echo PRODUCT_NAME; ?> Support"  target="_blank"><?php echo PRODUCT_SUPPORT_URL; ?></a>.
 		
 		<h2>License</h2>
 		<p><?php echo PRODUCT_NAME; ?> is released under the Affero GNU Public License v3 or any later version.</p>
