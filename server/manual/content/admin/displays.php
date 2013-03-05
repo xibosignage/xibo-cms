@@ -1,12 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title>Xibo Documentation</title>
+		<title><?php echo PRODUCT_NAME; ?> Documentation</title>
 		<link rel=stylesheet type="text/css" href="../../css/doc.css">
 		<meta http-equiv="Content-Type" content="text/html" />
-		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-		<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
 
 		<link href="img/favicon.ico" rel="shortcut icon"/>
 		<!-- Javascript Libraries -->
@@ -17,8 +18,8 @@
 	<body>
 	<a name="Displays" id="Displays"></a><h1>Displays</h1>
     
-    <p>Displays are how you output your layouts with Xibo.</p>
-    <p>Each client application registered with the server creates a new display record in Xibo server. You can then choose a 
+    <p>Displays are how you output your layouts with <?php echo PRODUCT_NAME; ?>.</p>
+    <p>Each client application registered with the server creates a new display record in <?php echo PRODUCT_NAME; ?> server. You can then choose a 
     default layout for that display, schedule further layouts on the display and control who has access to the display, 
     as well as monitor its status from the Display Management page.</p>
      
@@ -29,7 +30,7 @@
 	   width="820" height="262"></p>
     <blockquote>	   
 		<a name="Display_Edit" id="Display_Edit"></a><h3>Display Edit</h3>
-		<p>After a new display client is registered with Xibo server, you need to perform Edit granting license to the client 
+		<p>After a new display client is registered with <?php echo PRODUCT_NAME; ?> server, you need to perform Edit granting license to the client 
     	to work.</p>
     	<p> Click on the 'Edit" button of the Display loads its editing window. You can then proceed to change the settings for
     	the chosen Display. </p>                                                                                         
@@ -39,7 +40,7 @@
 	   width="493" height="231"></p> 
 
 		<a name="Display_Delete" id="Display_Delete"></a><h3>Display Delete</h3>
-		<p>After a display client is registered and licensed with Xibo server, you can "unlicense" a client which will prevent it from connecting
+		<p>After a display client is registered and licensed with <?php echo PRODUCT_NAME; ?> server, you can "unlicense" a client which will prevent it from connecting
 			to the server.</p>
     	<p> Click on the 'Delete" button of the Display you want to unlicense; and the below form is loaded. </p>                                                                                         
 
@@ -51,7 +52,7 @@
 	   
     	<a name="Media_Inventory" id="Media_Inventory"></a><h3>Media Inventory</h3>
     	<p>When you schedule new content, or change existing content, it is helpful to know that the displays have updated with the new 
-    	information. In a Xibo server and client system, the client applications will connect in to the server periodically 
+    	information. In a <?php echo PRODUCT_NAME; ?> server and client system, the client applications will connect in to the server periodically 
     	and update itself on the media items that they have stored locally. Media Inventory allows you to look at a glance to check if 
     	your updates were pulled by the clients yet.</p>
     	<p>On the display management page, you'll see a column "Status". The status light can be one of either green, amber or red.</p>
@@ -86,10 +87,10 @@
 	<h2>Wake On LAN (WOL)</h2>
     <blockquote>
     	<h3>Introducing Wake On Lan for Display Clients</h3>
- 		<p>This section will look at the Wake On Lan (WOL) feature of Xibo.</p>
+ 		<p>This section will look at the Wake On Lan (WOL) feature of <?php echo PRODUCT_NAME; ?>.</p>
 
-   	 	<p>There has been a lot of interest over the years Xibo has been running for a solution to be "green", "save power" and 
-    	generally not have the Xibo display screen solution on unnecessarily.</p>
+   	 	<p>There has been a lot of interest over the years <?php echo PRODUCT_NAME; ?> has been running for a solution to be "green", "save power" and 
+    	generally not have the <?php echo PRODUCT_NAME; ?> display screen solution on unnecessarily.</p>
 
     	<p>The WOL function is intended to be used for display clients that are addressable by the server, by this we mean that there 
     	has to be a clear addressable network route between the server and the client that needs to wake up. It is also required that
@@ -115,17 +116,17 @@
     	a form for confirmation, once this is pressed the command is send immediately to the client.</p>
 
     	<h3>Wake On LAN Time - Maintenance Script</h3>
-    	<p>In addition to the WOL now function, the Xibo maintenance module has been altered to send a WOL packet to any display which has 
+    	<p>In addition to the WOL now function, the <?php echo PRODUCT_NAME; ?> maintenance module has been altered to send a WOL packet to any display which has 
     	a "Wake On LAN Time" specified. It will only send the command once, as the time window is passed.</p>
 
     	<p>The maintenance script has to be running for this to work correctly. Maintenance instructions can be found on the 
-    	<a title="Maintenance Instructions" href="settings.html">Settings -> Maintenance</a>.</p>
+    	<a title="Maintenance Instructions" href="settings.php">Settings -> Maintenance</a>.</p>
 
     	<h3>Putting the client to sleep</h3>
    	 	<p>There are a few different options for putting the client to sleep - such as a scheduled task. However, the next article in this series 
-    	will look at an option built into Xibo. The "Shell Command" module.</p>
+    	will look at an option built into <?php echo PRODUCT_NAME; ?>. The "Shell Command" module.</p>
 
-    	<p>Note: WOL is not routable. The Xibo server is unable to see clients over the internet that are behind NAT,  
+    	<p>Note: WOL is not routable. The <?php echo PRODUCT_NAME; ?> server is unable to see clients over the internet that are behind NAT,  
     	or on a different subnet.</p>
     </blockquote>
 
@@ -134,7 +135,7 @@
     It could be that you want certain users to only have access to certain components or that certain users 
     should not be able to share their content, playlists and schedules with each other.</p>
     
-    <p><strong>Components</strong> refer to parts of Xibo, e.g. Content, or Playlists.</p>
+    <p><strong>Components</strong> refer to parts of <?php echo PRODUCT_NAME; ?>, e.g. Content, or Playlists.</p>
         
     <blockquote>
     	<a name="Adding_a_Group" id="Adding_a_Group"></a><h3>Adding a Group</h3>
@@ -183,6 +184,6 @@
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="648" height="650"></p>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 	</body>
 </html>

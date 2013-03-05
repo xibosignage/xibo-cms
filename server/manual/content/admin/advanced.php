@@ -1,12 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title>Xibo Documentation</title>
+		<title><?php echo PRODUCT_NAME; ?> Documentation</title>
 		<link rel=stylesheet type="text/css" href="../../css/doc.css">
 		<meta http-equiv="Content-Type" content="text/html" />
-		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-		<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
 
 		<link href="img/favicon.ico" rel="shortcut icon"/>
 		<!-- Javascript Libraries -->
@@ -18,7 +19,7 @@
 
 		<h1>Advanced</h1>
 		<p>The Advanced page is mainly used by system administrator to help troubleshooting system problem or reporting fault 
-		to the Xibo xstreamedia team for assistance</p>
+		to the <?php echo PRODUCT_NAME; ?> xstreamedia team for assistance</p>
     	<p>Click Advanced from the Navigation Bar. System loads the Log page by default.</p>
 
  	<blockquote>
@@ -28,7 +29,7 @@
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="803" height="161"></p>
 
-    	<p>The system log is used to help troubleshoot problems with Xibo. When you encounter an error it will be logged
+    	<p>The system log is used to help troubleshoot problems with <?php echo PRODUCT_NAME; ?>. When you encounter an error it will be logged
     	and listed in the system here. These error messages can help the xstreamedia team solve your problem.</p>
    	 	<p>Truncating the log helps you to troubleshoot a problem by clearing the current error messages</p>
     	<p>The page and sub page items helps locate where the error has been generated from.</p>
@@ -45,12 +46,12 @@
 	   	width="805" height="208"></p>
 
    		<a name="Report_Fault" id="Report_Fault"></a><h3>Report Fault</h3>
-   		<p>Simple instruaction on the collection of system error and report fault to Xibo xsteamedia team.</p>
+   		<p>Simple instruaction on the collection of system error and report fault to <?php echo PRODUCT_NAME; ?> xsteamedia team.</p>
 
    		<a name="License" id="License"></a><h3>License Information</h3>
    		<p>The license page provides details of all the relevant licenses for the system.</p>
  </blockquote>
 
-		<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+		<?php include('../../template/footer.php'); ?>
 	</body>
 </html>

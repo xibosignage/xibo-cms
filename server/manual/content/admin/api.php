@@ -1,12 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title>Xibo Documentation</title>
+		<title><?php echo PRODUCT_NAME; ?> Documentation</title>
 		<link rel=stylesheet type="text/css" href="../../css/doc.css">
 		<meta http-equiv="Content-Type" content="text/html" />
-		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-		<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
 
 		<link href="img/favicon.ico" rel="shortcut icon"/>
 		<!-- Javascript Libraries -->
@@ -15,14 +16,14 @@
 		<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
 	</head>
 	<body>
-	<h1>Xibo API</h1>
+	<h1><?php echo PRODUCT_NAME; ?> API</h1>
 
-    <p><img alt="SA Xibo API" src="sa_xibo_api.png"
+    <p><img alt="SA <?php echo PRODUCT_NAME; ?> API" src="sa_xibo_api.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="805" height="149"></p>
 
     <a name="Authorization" id="Authorization"></a><h2>Authorization</h2>
-    <p>OAuth will be used to provide authorization for access to the Xibo API.</p>
+    <p>OAuth will be used to provide authorization for access to the <?php echo PRODUCT_NAME; ?> API.</p>
  
 <blockquote>    
     <a name="OAuth_Information" id="OAuth_Information"></a><h3>OAuth Information</h3>
@@ -74,8 +75,8 @@
 
   	<a name="Registered_Applications" id="Registered_Applications"></a><h3>Registered Applications</h3>
   	<p>You must obtain a consumer_key and consumer_secret for your application. Keys for "Supported" applications 
-  	will be shipped with Xibo meaning no extra steps are required. If you have made your own application you will need
- 	to register it with your Xibo Server using the following address:</p>
+  	will be shipped with <?php echo PRODUCT_NAME; ?> meaning no extra steps are required. If you have made your own application you will need
+ 	to register it with your <?php echo PRODUCT_NAME; ?> Server using the following address:</p>
   	<p>Register Service: index.php?p=oauth</p>
   	<p>You will be asked for:</p>
   	<ul>
@@ -84,29 +85,29 @@
   		<li> A URL for your Application</li>
   		<li> A Callback URL</li>
  	</ul>
-  	<p>Xibo will (at a later date) have a UI for displaying all registered applications.</p>
+  	<p><?php echo PRODUCT_NAME; ?> will (at a later date) have a UI for displaying all registered applications.</p>
 
   	<a name="Callback_URL" id="Callback_URL"></a><h3>Callback URL</h3>
-   	<p>The Callback URL will be automatically called by Xibo on a completely Authorize request. It will be called regardless 
+   	<p>The Callback URL will be automatically called by <?php echo PRODUCT_NAME; ?> on a completely Authorize request. It will be called regardless 
    	of whether the authorization was successful and will contain an OAuth message indicating the authorize success.</p>
-   	<p>If you do not specify a Callback URL Xibo will show a message requesting the user return to the application once authorized.</p>
+   	<p>If you do not specify a Callback URL <?php echo PRODUCT_NAME; ?> will show a message requesting the user return to the application once authorized.</p>
 </blockquote>    
 
     <a name="Request_Formats" id="Request_Formats"></a><h2>Request Formats</h2>
-    <p>Xibo supports the following request formats</p>
+    <p><?php echo PRODUCT_NAME; ?> supports the following request formats</p>
 
     <ul><li>REST</li></ul>
 
 <blockquote>    
     <a name="REST" id="REST"></a><h3>REST</h3>
     <p>A simple POST or GET.</p>
-    <p>To request the Xibo Version method:</p>
+    <p>To request the <?php echo PRODUCT_NAME; ?> Version method:</p>
     <pre>services.php?service=rest&amp;method=version</pre>
     <p>By default the response type is xml. To get a different response type send "&amp;response="</p>
 </blockquote>    
 
     <a name="Response_Types" id="Response_Types"></a><h2>Response Types</h2>
-    <p>Xibo supports the following response types</p>
+    <p><?php echo PRODUCT_NAME; ?> supports the following response types</p>
 
     <blockquote>    
     <ul><li>JSON</li>
@@ -115,14 +116,14 @@
     <a name="JSON" id="JSON"></a><h3>JSON</h3>
     <p>To return a JSON object specify the response to be JSON (response="json")</p>
     <p>A method call returns:</p>
-    <pre>xiboApi({
+    <pre><?php echo PRODUCT_NAME; ?>Api({
       "stat":"ok",
       "response": {...}
     })
     </pre>
   
     <p>A failure call returns:</p>
-    <pre>xiboApi({
+    <pre><?php echo PRODUCT_NAME; ?>Api({
     "stat":"error",
     "error": {
        "code": "[error-code]",
@@ -147,12 +148,12 @@
 </blockquote>    
 
       <a name="Error_Codes" id="Error_Codes"></a><h2>Error Codes</h2>
-      <p>A complete list of error codes can be found here: <a href="http://wiki.xibo.org.uk/wiki/Error_codes" 
-      class="external free" title="http://wiki.xibo.org.uk/wiki/Error_codes" rel="nofollow">http://wiki.xibo.org.uk/wiki/Error_codes</a></p>
+      <p>A complete list of error codes can be found here: <a href="http://wiki.<?php echo PRODUCT_NAME; ?>.org.uk/wiki/Error_codes" 
+      class="external free" title="http://wiki.<?php echo PRODUCT_NAME; ?>.org.uk/wiki/Error_codes" rel="nofollow">http://wiki.<?php echo PRODUCT_NAME; ?>.org.uk/wiki/Error_codes</a></p>
       <p>A list of the potential error codes from each method call can be found with the documentation of that call.</p>
 
       <a name="Methods" id="Methods"></a><h2>Methods</h2>
-      <p>Transactions supported by Xibo</p>
+      <p>Transactions supported by <?php echo PRODUCT_NAME; ?></p>
 
   <blockquote>    
       <a name="Displays" id="Displays"></a><h3>Displays</h3>
@@ -390,6 +391,6 @@
 	</pre>
 	</blockquote>    
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 	</body>
 </html>
