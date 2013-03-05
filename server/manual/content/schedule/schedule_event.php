@@ -1,18 +1,16 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
-
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
     <head>
         <meta name="generator" content="HTML Tidy, see www.w3.org">
         <meta http-equiv="Content-Type" content=
         "text/html; charset=iso-8859-1">
 
-        <title>Xibo Documentation</title>
-        <link rel="stylesheet" type="text/css" href=
-        "../../css/doc.css">
+        <title><?php echo PRODUCT_NAME; ?> Documentation</title>
+        <link rel="stylesheet" type="text/css" href="../../css/doc.css">
         <meta http-equiv="Content-Type" content="text/html">
-		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-		<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
         <link href="img/favicon.ico" rel="shortcut icon">
         <!-- Javascript Libraries -->
 		<script type="text/javascript" src="lib/jquery.pack.js"></script>
@@ -36,7 +34,7 @@
   		<p>To remove the a particular Display from the assigned schedule event, just uncheck the diplay member.</p>      
 
   		<a name="Recurrence" id="Recurrence"></a><h3>Recurrence</h3>
-  		<p>The Xibo scheduler features the ability to create recurring events. To set recurrence for events, select the
+  		<p>The <?php echo PRODUCT_NAME; ?> scheduler features the ability to create recurring events. To set recurrence for events, select the
   		required "Repeats" value from the list and the appropriate additional fields will be revealed.</p>
   		<p>A scheduled event can be repeated at defined interval (hourly, daily, weekly, monthly or yearly) until the specified date/time.</p>
 
@@ -54,7 +52,7 @@
   		way as non-priority layouts would be.</p>
 	</blockquote>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
     </body>
 </html>
 

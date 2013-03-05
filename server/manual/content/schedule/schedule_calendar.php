@@ -1,22 +1,16 @@
-<!-- 
-last edit by: @dan
-on: @17/01/08
--->
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
-
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
     <head>
-        <meta name="generator" content="HTML Tidy, see www.w3.org">
         <meta http-equiv="Content-Type" content=
         "text/html; charset=iso-8859-1">
 
-        <title>Xibo Documentation</title>
+        <title><?php echo PRODUCT_NAME; ?> Documentation</title>
         <link rel="stylesheet" type="text/css" href=
         "../../css/doc.css">
         <meta http-equiv="Content-Type" content="text/html">
-		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-		<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
         <link href="img/favicon.ico" rel="shortcut icon">
         <!-- Javascript Libraries -->
 		<script type="text/javascript" src="lib/jquery.pack.js"></script>
@@ -31,7 +25,7 @@ on: @17/01/08
       navigation bar, a month calendar schedule chart is displayed.
     <p>From the calendar schedule chart you can:</p>
 	<ul>
-    	<li>View all the events scheduled for the selected displays managed by Xibo.</li>
+    	<li>View all the events scheduled for the selected displays managed by <?php echo PRODUCT_NAME; ?>.</li>
 		<li>Schedule new events</li>
 		<li>Edit existing events</li>
 		<li>View the currently broadcasting events</li>
@@ -45,8 +39,8 @@ on: @17/01/08
 	<p>Playlists that span over a day in length, are denoted by a coloured bar. This
      provides a visual representation of how many days that playlist has been scheduled across.</p>
 
- 	<p>Xibo supports scheduling more than one layout at once using Campaign. The client will automatically alternate 
-   	between the two layouts. Refer to <a href ="../layout/campaign_layout.html">Campaign Layout</a> for detail.</p>
+ 	<p><?php echo PRODUCT_NAME; ?> supports scheduling more than one layout at once using Campaign. The client will automatically alternate 
+   	between the two layouts. Refer to <a href ="../layout/campaign_layout.php">Campaign Layouts</a> for detail.</p>
 
   <blockquote>
   	<a name="Navigating" id="Navigating"></a><h3>Navigating</h3>
@@ -61,18 +55,18 @@ on: @17/01/08
   	viewable to you.</p>
   
 	<h3>Events</h3>
-	<p>When a playlist is scheduled in Xibo it becomes an event. </p>
+	<p>When a playlist is scheduled in <?php echo PRODUCT_NAME; ?> it becomes an event. </p>
 
 	<h3>Schedule &amp; Edit Event</h3>
 	<p>Events can be added to the month calendar schedule chart by double clicking on a day in the chart, or by 
 	clicking on the day heading. In either case, a form will load to collect the details for the new event 
-	<a href="schedule_event.html" title="How to schedule an event">(see Schedule &amp; Edit Event).</a></p>
+	<a href="schedule_event.php" title="How to schedule an event">(see Schedule &amp; Edit Event).</a></p>
 
 	<p>To edit an event, click on that event and the "Edit Scheduled Event" form will be loaded. Except for the form title, 
 	both forms presents the same information for edit.</p>
   </blockquote>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
     </body>
 </html>
 

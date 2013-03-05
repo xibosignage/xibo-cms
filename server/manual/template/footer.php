@@ -5,7 +5,8 @@ if (! include('footer_custom.php')) {
 	<br />
 	<p><a rel="license" href="http://creativecommons.org/licenses/by-sa/2.0/uk/" target="_blank">
 	<img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/2.0/uk/88x31.png" /></a><br /><br />
-	The Xibo Manual is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/2.0/uk/" target="_blank">Creative Commons Licence</a></p>
+	The <?php echo PRODUCT_NAME; ?> Manual is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/2.0/uk/" target="_blank">Creative Commons Licence</a></p>
+    <p>Manual by the <a href="http://www.xibo.org.uk" target="_blank">Xibo Project</a></p>
 </div>
 <?php
 }

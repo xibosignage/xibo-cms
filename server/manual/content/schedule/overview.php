@@ -1,23 +1,17 @@
-<!-- 
-last edit by: @dan
-on: @17/01/08
--->
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
-
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
     <head>
         <meta name="generator" content="HTML Tidy, see www.w3.org">
         <meta http-equiv="Content-Type" content=
         "text/html; charset=iso-8859-1">
 
-        <title>Xibo Documentation</title>
+        <title><?php echo PRODUCT_NAME; ?> Documentation</title>
         <link rel="stylesheet" type="text/css" href=
         "../../css/doc.css">
         <meta http-equiv="Content-Type" content="text/html">
-		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-		<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
         <link href="img/favicon.ico" rel="shortcut icon">
         <!-- Javascript Libraries -->
 		<script type="text/javascript" src="lib/jquery.pack.js"></script>
@@ -29,15 +23,15 @@ on: @17/01/08
 		<a name="Scheduling" id="Scheduling"></a><h1>Scheduling</h1>
 
  		<div id="tutorial_icon">
-		<a href="http://www.xibo.org.uk/manual/content/schedule/video_tutorial_overview.html">
+		<a href="video_tutorial_overview.php">
     	<img src="../../img/video_icon.png" alt="Video Tutorial" width="100px"><br />Video Tutorial</a>
 		</div>
 
 		<a name="Overview" id="Overview"></a><h2>Overview</h2>
 
-    	<p>Xibo is not designed to show a blank screen at any time. In display Management when you set each client up, you are asked 
+    	<p><?php echo PRODUCT_NAME; ?> is not designed to show a blank screen at any time. In display Management when you set each client up, you are asked 
     	to choose a default layout for that display.</p> 
-    	<p>The Xibo Schedule is used to set what will be shown on what display and at what time. The schedule
+    	<p>The <?php echo PRODUCT_NAME; ?> Schedule is used to set what will be shown on what display and at what time. The schedule
     	consists of a Month Calendar for each display. When a playlist is scheduled it becomes an event on the calendar.</p>
 		
 		<p>The features of the schedule	are as follows:</p>
@@ -70,7 +64,7 @@ on: @17/01/08
 
         <p>Once these tasks have been completed the playlist is ready to be scheduled.</p>	
 
-		<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+		<?php include('../../template/footer.php'); ?>
     </body>
 </html>
 

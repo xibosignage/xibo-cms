@@ -38,7 +38,7 @@
 		<li>Once your PowerPoint file is prepared, click the "Add PowerPoint" icon</li>
 		<li>A new dialogue will appear:<br />
 
-		<p><img alt="Ss_layout_designer_add_PowerPoint" src="Ss_layout_designer_add_PowerPoint.png"
+		<p><img alt="Ss_layout_designer_add_PowerPoint" src="Ss_layout_designer_add_powerpoint.png"
 		style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 		width="458" height="288" border="1px"></p></li>
 	
