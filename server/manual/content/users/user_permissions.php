@@ -1,12 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title>Xibo Documentation</title>
+		<title><?php echo PRODUCT_NAME; ?> Documentation</title>
 		<link rel=stylesheet type="text/css" href="../../css/doc.css">
 		<meta http-equiv="Content-Type" content="text/html" />
-		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-		<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
 
 		<link href="img/favicon.ico" rel="shortcut icon"/>
 		<!-- Javascript Libraries -->
@@ -19,8 +20,8 @@
 		<h1>Permissions Model</h1>
 		<h2>Introducing an Improved Permissions Model</h2>
 
-    <p>This section will take a look at the improvements made to the permissions model in Xibo. Xibo has improved the permissions model 
-    in one key way - allowed users and�administrators�to set view, edit and delete permissions on:</p>
+    <p>This section will take a look at the improvements made to the permissions model in <?php echo PRODUCT_NAME; ?>. <?php echo PRODUCT_NAME; ?> has improved the permissions model 
+    in one key way - allowed users and administrators to set view, edit and delete permissions on:</p>
 
     <ul>
     <li>Library Media</li>
@@ -42,16 +43,16 @@
 
     <p>Here are some key facts about the new system:</p>
     <ul>
-    <li>The Highest permission is used (if a user belongs to 2 groups, one has edit permissions and the other doesn&#8217;t &#8211; 
+    <li>The Highest permission is used (if a user belongs to 2 groups, one has edit permissions and the other doesn't, 
     the user will have edit permissions)</li>
     <li>Permissions are tested with each transaction</li>
-    <li>Permissions on an item can only be changed by the owner or a super�administrator�(for displays and display groups that have 
+    <li>Permissions on an item can only be changed by the owner or a super administrator (for displays and display groups that have 
     no owner, this is super admin only)</li>
     </ul>
 
     <p>These permissions are then reflected in all tables, forms, lists and on the layout designer. The improved permissions hopefully 
-    will make it easier to manage Xibo, particularly in environments where there are many users accessing the system.</p>	   
+    will make it easier to manage <?php echo PRODUCT_NAME; ?>, particularly in environments where there are many users accessing the system.</p>	   
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 	</body>
 </html>

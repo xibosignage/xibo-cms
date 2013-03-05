@@ -1,12 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title>Xibo Documentation</title>
+		<title><?php echo PRODUCT_NAME; ?> Documentation</title>
 		<link rel=stylesheet type="text/css" href="../../css/doc.css">
 		<meta http-equiv="Content-Type" content="text/html" />
-		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-		<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
 
 		<link href="img/favicon.ico" rel="shortcut icon"/>
 		<!-- Javascript Libraries -->
@@ -17,11 +18,11 @@
 
 	<body>
 		<h2>Page &amp; Menu Security</h2>
-		<p>Xibo system adminstrator has full control on access right for each user/group on the system. The security components 
+		<p><?php echo PRODUCT_NAME; ?> system adminstrator has full control on access right for each user/group on the system. The security components 
     	that are assigned/unassigned to the user/group determine the permissions of the individual or 
     	users belonging to that group.</p>
 	
-		<p>The list of components available is managed by the Xibo software and cannot be changed.</p>
+		<p>The list of components available is managed by the <?php echo PRODUCT_NAME; ?> software and cannot be changed.</p>
 	
 		<p>Editing which components are assigned to is done by ticking the checkboxes next to the assignment to be changed.<br />
     	Note: It is a toggle operation, therefore if the assignment is "unassigned" it will become "assigned" and visa versa.
@@ -73,6 +74,6 @@
 		</ul>
     </blockquote>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 	</body>
 </html>

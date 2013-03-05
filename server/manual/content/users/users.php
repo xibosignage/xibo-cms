@@ -1,12 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title>Xibo Documentation</title>
+		<title><?php echo PRODUCT_NAME; ?> Documentation</title>
 		<link rel=stylesheet type="text/css" href="../../css/doc.css">
 		<meta http-equiv="Content-Type" content="text/html" />
-		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-		<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
 
 		<link href="img/favicon.ico" rel="shortcut icon"/>
 		<!-- Javascript Libraries -->
@@ -18,7 +19,7 @@
 		<h1>User Administration</h1>
 		<p>This section refers to Users Adminstration from the built in "General" user module. For information on any of the User module plugins refer
 		to the appropriate page within this section (an overview of the available user modules can be found 
-		<a href="overview.html" title="Overview Page">here</a>).</p>
+		<a href="overview.php" title="Overview Page">here</a>).</p>
 		
 		<h2>User Administration Page</h2>
 		<p>The user admin page can be accessed from either the "Users" dashboard button - or the "Administration > Users" nagivation menu button. 
@@ -31,7 +32,7 @@
 	    <ul>
 			<li>
 				<h3>User Name</h3>
-				<p>This is the name the user will have to enter to log into Xibo.</p>
+				<p>This is the name the user will have to enter to log into <?php echo PRODUCT_NAME; ?>.</p>
 			</li>
 			<li>
 				<h3>Homepage</h3>
@@ -40,11 +41,11 @@
 			</li>
 			<li>
 				<h3>Email</h3>
-				<p>The users email address will be used to send them important information from Xibo. For example if they forget their password.</p>
+				<p>The users email address will be used to send them important information from <?php echo PRODUCT_NAME; ?>. For example if they forget their password.</p>
 			</li>
 			<li>
 				<h3>Add User Button</h3>
-				<p>Loads the "Add User" form - the details on the form will need to be entered before a user can be added to Xibo.</p>
+				<p>Loads the "Add User" form - the details on the form will need to be entered before a user can be added to <?php echo PRODUCT_NAME; ?>.</p>
 			</li>
 			<li>
 				<h3>Edit / Delete Buttons</h3>
@@ -83,8 +84,8 @@
 		<a name="Delete_User" id="Delete_User"></a><h2>Deleting Users</h2>
 		<p>To delete a user click on the delete button on the row belonging to the unwanted user. A confirm form will be opened up.</p>
 		<p><strong>Note:</strong> Deleting a user that has media would create "orphaned" content, playlist and schedule records if that user has
-		been active in the system. For this reason any "orphaned" items will be associated with the "xibo_admin" user created during the install process.</p>
+		been active in the system. For this reason any "orphaned" items will be associated with the "<?php echo PRODUCT_NAME; ?>_admin" user created during the install process.</p>
 	
-		<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+		<?php include('../../template/footer.php'); ?>
 	</body>
 </html>
