@@ -1,12 +1,12 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
 <head>
   	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title>Xibo Documentation</title>
+  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
   	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-	<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
   	<link href="img/favicon.ico" rel="shortcut icon">
   	<!-- Javascript Libraries -->
   	<script type="text/javascript" src="lib/jquery.pack.js"></script>
@@ -16,10 +16,10 @@
 
 <body>
 	<h2>Choosing the right template</h2> 
-	<p>Xibo comes with a selection of default templates that caters for most digital signage applications (e.g. LCD TVs, projectors, 
+	<p><?php echo PRODUCT_NAME; ?> comes with a selection of default templates that caters for most digital signage applications (e.g. LCD TVs, projectors, 
 	portrait screens).</p>
 
-	<p>The Xibo client will make its best effort to fit whatever shape layout you choose on to the screen. However sending a client 
+	<p>The <?php echo PRODUCT_NAME; ?> client will make its best effort to fit whatever shape layout you choose on to the screen. However sending a client 
 	a layout in a 4:3 aspect ratio when it is connected to a 16:9 TV wastes two bars on either side of your content.</p>
 
 	<p>You should choose a template with the closest aspect ratio to the screen you will be showing the layout on. 
@@ -44,9 +44,9 @@
 	</ul>
 
  	<p>There are also specialist versions of all the above displays that are turned on their side. Called "Portrait" displays, 
- 	they are taller than they are wide. Xibo supports all the above aspect ratios for portrait screens - 2:3, 3:4, 9:16, 10:16. 
+ 	they are taller than they are wide. <?php echo PRODUCT_NAME; ?> supports all the above aspect ratios for portrait screens - 2:3, 3:4, 9:16, 10:16. 
  	Consult your display manufacturer to find out which aspect ratio to choose.</p>
 
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+	<?php include('../../template/footer.php'); ?>
 </body>
 </html>
