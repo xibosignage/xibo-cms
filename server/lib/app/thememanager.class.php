@@ -113,7 +113,7 @@ class Theme {
 		
 		// See if we have the requested file in the theme folder
 		if (file_exists('theme/' . $theme->name . '/img/' . $item)) {
-			return '<img ' . (($class != '') ? $class : '') . ' src="theme/' . $theme->name . '/img/' . $item . '" />';
+			return '<img ' . (($class != '') ? 'class="' . $class . '"' : '') . ' src="theme/' . $theme->name . '/img/' . $item . '" />';
 		}
 		// If not, then use the default folder
 		elseif (file_exists('theme/default/img/' . $item)) {

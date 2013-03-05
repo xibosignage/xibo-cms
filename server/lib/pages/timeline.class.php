@@ -445,7 +445,7 @@ END;
         // We want to load a new form
         $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));
         $response->loadForm = true;
-        $response->loadFormUri = "index.php?p=layout&layoutid=$layoutId&regionid=$regionId&q=RegionOptions";
+        $response->loadFormUri = "index.php?p=timeline&layoutid=$layoutId&regionid=$regionId&q=Timeline";
         $response->Respond();
     }
 
@@ -748,7 +748,7 @@ END;
 
             $response->html .= '<li class="timelineModuleListItem">';
             $response->html .= '    <a class="XiboFormButton timelineModuleButtonAnchor" title="' . $title . '" href="' . $uri . '">';
-            $response->html .= '        <img class="timelineModuleButtonImage" src="' . $img . '" alt="' . __('Module Image') . '" />';
+            $response->html .= Theme::Image($img, 'timelineModuleButtonImage');
             $response->html .= '        <span class="timelineModuleButtonText">' . $caption . '</span>';
             $response->html .= '    </a>';
             $response->html .= '</li>';

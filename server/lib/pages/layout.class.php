@@ -104,7 +104,7 @@ class layoutDAO
 		        if (Kit::IsFilterPinned('layout', 'LayoutFilter')) {
 		            Theme::Set('filter_pinned', 'checked');
 		            Theme::Set('layout', Session::Get('layout', 'filter_layout'));
-		            Theme::Set('retired', Session::Get('layout', 'retired'));
+		            Theme::Set('retired', Session::Get('layout', 'filter_retired'));
 		            Theme::Set('filter_userid', Session::Get('layout', 'filter_userid'));
 		            Theme::Set('filter_tags', Session::Get('layout', 'filter_tags'));
 		        }
