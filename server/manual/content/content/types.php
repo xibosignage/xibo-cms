@@ -1,18 +1,15 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-"http://www.w3.org/TR/html4/strict.dtd">
-
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<?php include('../../template.php'); ?>
 <html>
     <head>
         <meta name="generator" content="HTML Tidy, see www.w3.org">
-        <meta http-equiv="Content-Type" content=
-        "text/html; charset=iso-8859-1">
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 
-        <title>Xibo Documentation</title>
-        <link rel="stylesheet" type="text/css" href=
-        "../../css/doc.css">
+        <title><?php echo PRODUCT_NAME; ?> Documentation</title>
+        <link rel="stylesheet" type="text/css" href="../../css/doc.css">
         <meta http-equiv="Content-Type" content="text/html">
-		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-		<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
+		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
         <link href="img/favicon.ico" rel="shortcut icon">
         <!-- Javascript Libraries -->
 		<script type="text/javascript" src="lib/jquery.pack.js"></script>
@@ -50,8 +47,8 @@
 			<p><strong>JPG</strong> is the common type of file used for still photos</p>
         	<p><strong>WMV</strong> stands for Windows Media Video files. These files allow full motion video to be shown on your display</p>
 			<p><strong>SWF</strong> these are flash animation files.</p>
-			<p><strong>PPT</strong> Powerpoint files can also be media types. If you wish to set an automated powerpoint presentation to display all your slides you must configure this prior to upload. Powerpoint
-				support is only available under Internet Explorer and with client machines that have MS Office installed.</p>
+			<p><strong>PPT</strong> PowerPoint files can also be media types. If you wish to set an automated PowerPoint presentation to display all your slides you must configure this prior to upload. PowerPoint
+				support is only available under Internet Explorer and with client machines that have Microsoft Office installed.</p>
         </ul>
 
         <h3>RSS</h3>
@@ -64,9 +61,9 @@
         each story/item one at a time or if you would like a scroll effect. New custom effects can be built in 
         the RSS Styles page and will appear in the drop down list when adding a RSS item.</p>
        
-        <p>Xibo has default RSS Styles which are available for selection when adding RSS content
+        <p><?php echo PRODUCT_NAME; ?> has default RSS Styles which are available for selection when adding RSS content
         items. The RSS styles control how the RSS Feed is displayed. If the default RSS Styles do not achieve 
-        the desired effect for a particular RSS feed additional RSS Styles can be added by an Xibo admin.</p>
+        the desired effect for a particular RSS feed additional RSS Styles can be added by an <?php echo PRODUCT_NAME; ?> admin.</p>
 
         <p>Note: This involves a knowledge of the way RSS, XSL and CSS are constructed.</p>
         
@@ -78,18 +75,18 @@
 
         <h3>Website</h3>
 
-        <p>Xibo allows an entire web page to be added to a slide. Possible uses for this would
+        <p><?php echo PRODUCT_NAME; ?> allows an entire web page to be added to a slide. Possible uses for this would
         be a news article on a intranet news site.</p>
 
-        <p>Please note that Xibo can not guarantee that the website will fit on the displays
+        <p>Please note that <?php echo PRODUCT_NAME; ?> can not guarantee that the website will fit on the displays
         that it gets scheduled on. The area that the website takes up on the slide will resize to fit, 
         but due to its design the containing website may not.</p>
 
         <h3>Datasets</h3>
-        <p>DataSets are a new Xibo feature to design and display tabular data, formatted nicely, in a region on a layout.</p>
+        <p>DataSets are a new <?php echo PRODUCT_NAME; ?> feature to design and display tabular data, formatted nicely, in a region on a layout.</p>
       </blockquote>
 
-		<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
+		<?php include('../../template/footer.php'); ?>
     </body>
 </html>
 
