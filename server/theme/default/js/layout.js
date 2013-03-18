@@ -117,7 +117,7 @@ var LibraryAssignSubmit = function(layoutId, regionId)
 
     $.ajax({
         type: "post",
-        url: "index.php?p=layout&q=AddFromLibrary&layoutid="+layoutId+"&ajax=true",
+        url: "index.php?p=timeline&q=AddFromLibrary&layoutid="+layoutId+"&ajax=true",
         cache: false,
         dataType: "json",
         data: mediaList,

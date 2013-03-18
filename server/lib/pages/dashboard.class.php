@@ -34,7 +34,7 @@ class dashboardDAO
 	function displayPage() 
 	{
 		// Render the Theme and output
-        Theme::Render('dashboard_page');
+        Theme::Render('homepage_dashboard');
 	}
 }
 ?>

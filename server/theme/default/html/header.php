@@ -54,6 +54,11 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<script type="text/javascript" src="theme/default/js/ping.js"></script>
 		<script type="text/javascript" src="theme/default/js/core.js"></script>
         <script type="text/javascript" src="theme/default/js/<?php echo Theme::GetPageName(); ?>.js"></script>
+
+        <script type="text/javascript" src="theme/default/js/text-render.js"></script>
+        <script type="text/javascript" src="3rdparty/ckeditor/ckeditor.js"></script>
+        <script type="text/javascript" src="3rdparty/ckeditor/adapters/jquery.js"></script>
+        <link rel="stylesheet" type="text/css" href="theme/default/css/timeline.css" />
 	</head>
 	<body>
     
