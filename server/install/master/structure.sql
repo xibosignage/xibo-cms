@@ -441,6 +441,8 @@ CREATE TABLE IF NOT EXISTS `resolution` (
   `resolution` varchar(20) NOT NULL,
   `width` smallint(6) NOT NULL,
   `height` smallint(6) NOT NULL,
+  `intended_width` smallint(6) NOT NULL,
+  `intended_height` smallint(6) NOT NULL,
   PRIMARY KEY (`resolutionID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Supported Resolutions' AUTO_INCREMENT=9 ;
 
@@ -531,6 +533,17 @@ CREATE TABLE IF NOT EXISTS `template` (
   PRIMARY KEY (`templateID`),
   KEY `userID` (`userID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Templates for use on Layouts' AUTO_INCREMENT=9 ;
+
+CREATE TABLE IF NOT EXISTS `transition` (
+  `TransitionID` int(11) NOT NULL AUTO_INCREMENT,
+  `Transition` varchar(254) NOT NULL,
+  `Code` varchar(50) NOT NULL,
+  `HasDuration` tinyint(4) NOT NULL,
+  `HasDirection` tinyint(4) NOT NULL,
+  `AvailableAsIn` tinyint(4) NOT NULL,
+  `AvailableAsOut` tinyint(4) NOT NULL,
+  PRIMARY KEY (`TransitionID`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
 
 CREATE TABLE IF NOT EXISTS `user` (
   `UserID` int(11) NOT NULL AUTO_INCREMENT,

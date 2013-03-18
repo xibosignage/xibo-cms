@@ -80,7 +80,8 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (73, 'Campaign', 'General', 'manual/content/layout/campaign_layout.php'),
 (74, 'License', 'General', 'manual/content/license/licenses.php'),
 (75, 'DataSet', 'ViewColumns', 'manual/content/layout/content_datasets.php#Dataset_Column'),
-(76, 'Campaign', 'Permissions', 'manual/content/layout/addlayout.php#Layout_Permission');
+(76, 'Campaign', 'Permissions', 'manual/content/layout/addlayout.php#Layout_Permission'),
+(77, 'Transition', 'Edit', 'manual/content/transitions/transitions.php#Edit');
 
 INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
 (8, 'Administration Menu'),
@@ -92,19 +93,19 @@ INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
 (1, 'Top Nav');
 
 INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`) VALUES
-(1, 'Image', 'Image', 1, 0, 'Images. PNG, JPG, BMP, GIF', 'img/forms/image.gif', 1, 'jpg,jpeg,png,bmp,gif', 1),
-(2, 'Video', 'Video', 1, 0, 'Videos. WMV.', 'img/forms/video.gif', 1, 'wmv,avi,mpg,mpeg', 1),
-(3, 'Flash', 'Flash', 1, 0, 'Flash', 'img/forms/flash.gif', 1, 'swf', 1),
-(4, 'PowerPoint', 'PowerPoint', 1, 0, 'Powerpoint. PPT, PPS', 'img/forms/powerpoint.gif', 1, 'ppt,pps,pptx', 1),
-(5, 'Webpage', 'Webpage', 1, 1, 'Webpages.', 'img/forms/webpage.gif', 1, NULL, 1),
-(6, 'Ticker', 'Ticker', 1, 1, 'RSS Ticker.', 'img/forms/ticker.gif', 1, NULL, 1),
-(7, 'Text', 'Text', 1, 1, 'Text. With Directional Controls.', 'img/forms/text.gif', 1, NULL, 1),
-(8, 'Embedded', 'Embedded', 1, 1, 'Embedded HTML', 'img/forms/webpage.gif', 1, NULL, 1),
-(9, 'MicroBlog', 'MicroBlog', 1, 1, NULL, 'img/forms/microblog.gif', 1, NULL, 1),
-(10, 'Counter', 'Counter', 1, 1, 'Customer Counter connected to a Remote Control', 'img/forms/counter.gif', 1, NULL, 1),
-(11, 'datasetview', 'Data Set', 1, 1, 'A view on a DataSet', 'img/forms/datasetview.gif', 1, NULL, 1),
-(12, 'shellcommand', 'Shell Command', 1, 1, 'Execute a shell command on the client', 'img/forms/shellcommand.gif', 1, NULL, 1),
-(13, 'localvideo', 'Local Video', 0, 1, 'Play a video locally stored on the client', 'img/forms/video.gif', 1, NULL, 1);
+(1, 'Image', 'Image', 1, 0, 'Images. PNG, JPG, BMP, GIF', 'forms/image.gif', 1, 'jpg,jpeg,png,bmp,gif', 1),
+(2, 'Video', 'Video', 1, 0, 'Videos. WMV.', 'forms/video.gif', 1, 'wmv,avi,mpg,mpeg', 1),
+(3, 'Flash', 'Flash', 1, 0, 'Flash', 'forms/flash.gif', 1, 'swf', 1),
+(4, 'PowerPoint', 'PowerPoint', 1, 0, 'Powerpoint. PPT, PPS', 'forms/powerpoint.gif', 1, 'ppt,pps,pptx', 1),
+(5, 'Webpage', 'Webpage', 1, 1, 'Webpages.', 'forms/webpage.gif', 1, NULL, 1),
+(6, 'Ticker', 'Ticker', 1, 1, 'RSS Ticker.', 'forms/ticker.gif', 1, NULL, 1),
+(7, 'Text', 'Text', 1, 1, 'Text. With Directional Controls.', 'forms/text.gif', 1, NULL, 1),
+(8, 'Embedded', 'Embedded', 1, 1, 'Embedded HTML', 'forms/webpage.gif', 1, NULL, 1),
+(9, 'MicroBlog', 'MicroBlog', 1, 1, NULL, 'forms/microblog.gif', 1, NULL, 1),
+(10, 'Counter', 'Counter', 1, 1, 'Customer Counter connected to a Remote Control', 'forms/counter.gif', 1, NULL, 1),
+(11, 'datasetview', 'Data Set', 1, 1, 'A view on a DataSet', 'forms/datasetview.gif', 1, NULL, 1),
+(12, 'shellcommand', 'Shell Command', 1, 1, 'Execute a shell command on the client', 'forms/shellcommand.gif', 1, NULL, 1),
+(13, 'localvideo', 'Local Video', 0, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 1);
 
 INSERT INTO `pagegroup` (`pagegroupID`, `pagegroup`) VALUES
 (1, 'Schedule'),
@@ -147,51 +148,56 @@ INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES
 (34, 'help', 2),
 (35, 'clock', 2),
 (36, 'dataset', 14),
-(37, 'campaign', 3);
+(37, 'campaign', 3),
+(38, 'transition', 4),
+(39, 'timeline', 3);
 
-INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`) VALUES
-(1, 1, 2, NULL, 'Schedule', NULL, NULL, 1),
-(2, 1, 5, NULL, 'Design', NULL, NULL, 2),
-(3, 1, 7, NULL, 'Library', NULL, NULL, 3),
-(4, 1, 17, NULL, 'Administration', NULL, NULL, 5),
-(7, 7, 11, NULL, 'Displays', NULL, NULL, 1),
-(8, 8, 15, NULL, 'User Groups', NULL, NULL, 2),
-(9, 8, 17, NULL, 'Users', NULL, NULL, 1),
-(10, 9, 16, 'sp=log', 'Log', NULL, NULL, 1),
-(11, 9, 18, NULL, 'License', NULL, NULL, 4),
-(12, 9, 16, 'sp=sessions', 'Sessions', NULL, NULL, 2),
-(13, 8, 14, NULL, 'Settings', NULL, NULL, 3),
-(14, 2, 2, 'sp=month', 'Schedule', 'schedule_button', 'img/dashboard/scheduleview.png', 1),
-(15, 2, 5, NULL, 'Layouts', 'playlist_button', 'img/dashboard/presentations.png', 2),
-(16, 2, 7, NULL, 'Library', 'content_button', 'img/dashboard/content.png', 3),
-(17, 2, 25, NULL, 'Templates', 'layout_button', 'img/dashboard/layouts.png', 4),
-(18, 2, 17, NULL, 'Users', 'user_button', 'img/dashboard/users.png', 5),
-(19, 2, 14, NULL, 'Settings', 'settings_button', 'img/dashboard/settings.png', 6),
-(20, 2, 18, NULL, 'License', 'license_button', 'img/dashboard/license.png', 7),
-(22, 9, 26, NULL, 'Report Fault', NULL, NULL, 3),
-(23, 7, 27, NULL, 'Statistics', NULL, NULL, 3),
-(24, 2, 28, 'http://wiki.xibo.org.uk/wiki/Manual:TOC', 'Manual', 'help_button', 'img/dashboard/help.png', 10),
-(25, 6, 29, NULL, 'Resolutions', NULL, NULL, 4),
-(26, 6, 25, NULL, 'Templates', NULL, NULL, 3),
-(27, 7, 32, NULL, 'Display Groups', NULL, NULL, 2),
-(28, 8, 33, NULL, 'Applications', NULL, NULL, 4),
-(29, 5, 36, NULL, 'DataSets', NULL, NULL, 2),
-(30, 5, 7, NULL, 'Media', NULL, NULL, 1),
-(33, 6, 5, NULL, 'Layouts', NULL, NULL, 2),
-(34, 1, 11, NULL, 'Displays', NULL, NULL, 4),
-(35, 1, 16, 'sp=log', 'Advanced', NULL, NULL, 6),
-(36, 8, 24, NULL, 'Modules', NULL, NULL, 5),
-(37, 6, 37, NULL, 'Campaigns', NULL, NULL, 1);
+INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`, `External`) VALUES
+(1, 1, 2, NULL, 'Schedule', NULL, NULL, 1, 0),
+(2, 1, 5, NULL, 'Design', NULL, NULL, 2, 0),
+(3, 1, 7, NULL, 'Library', NULL, NULL, 3, 0),
+(4, 1, 17, NULL, 'Administration', NULL, NULL, 5, 0),
+(7, 7, 11, NULL, 'Displays', NULL, NULL, 1, 0),
+(8, 8, 15, NULL, 'User Groups', NULL, NULL, 2, 0),
+(9, 8, 17, NULL, 'Users', NULL, NULL, 1, 0),
+(10, 9, 16, NULL, 'Log', NULL, NULL, 1, 0),
+(11, 9, 18, NULL, 'About', NULL, NULL, 4, 0),
+(12, 9, 41, NULL, 'Sessions', NULL, NULL, 2, 0),
+(13, 8, 14, NULL, 'Settings', NULL, NULL, 3, 0),
+(14, 2, 2, 'sp=month', 'Schedule', 'schedule_button', 'dashboard/scheduleview.png', 1, 0),
+(15, 2, 5, NULL, 'Layouts', 'playlist_button', 'dashboard/presentations.png', 2, 0),
+(16, 2, 7, NULL, 'Library', 'content_button', 'dashboard/content.png', 3, 0),
+(17, 2, 25, NULL, 'Templates', 'layout_button', 'dashboard/layouts.png', 4, 0),
+(18, 2, 17, NULL, 'Users', 'user_button', 'dashboard/users.png', 5, 0),
+(19, 2, 14, NULL, 'Settings', 'settings_button', 'dashboard/settings.png', 6, 0),
+(20, 2, 18, NULL, 'About', 'license_button', 'dashboard/license.png', 7, 0),
+(22, 9, 26, NULL, 'Report Fault', NULL, NULL, 3, 0),
+(23, 7, 27, NULL, 'Statistics', NULL, NULL, 3, 0),
+(24, 2, 28, 'manual/index.php', 'Manual', 'help_button', 'dashboard/help.png', 10, 1),
+(25, 6, 29, NULL, 'Resolutions', NULL, NULL, 4, 0),
+(26, 6, 25, NULL, 'Templates', NULL, NULL, 3, 0),
+(27, 7, 32, NULL, 'Display Groups', NULL, NULL, 2, 0),
+(28, 8, 33, NULL, 'Applications', NULL, NULL, 4, 0),
+(29, 5, 36, NULL, 'DataSets', NULL, NULL, 2, 0),
+(30, 5, 7, NULL, 'Media', NULL, NULL, 1, 0),
+(33, 6, 5, NULL, 'Layouts', NULL, NULL, 2, 0),
+(34, 1, 11, NULL, 'Displays', NULL, NULL, 4, 0),
+(35, 1, 16, NULL, 'Advanced', NULL, NULL, 6, 0),
+(36, 8, 24, NULL, 'Modules', NULL, NULL, 5, 0),
+(37, 6, 37, NULL, 'Campaigns', NULL, NULL, 1, 0),
+(38, 8, 38, NULL, 'Transitions', NULL, NULL, 6, 0),
+(39, 9, 30, NULL, 'Help Links', NULL, NULL, 6, 0);
 
-INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`) VALUES
-(1, '4:3 Monitor', 800, 600),
-(2, '3:2 Tv', 720, 480),
-(3, '16:10 Widescreen Mon', 800, 500),
-(4, '16:9 HD Widescreen', 800, 450),
-(5, '3:4 Monitor', 600, 800),
-(6, '2:3 Tv', 480, 720),
-(7, '10:16 Widescreen', 500, 800),
-(8, '9:16 HD Widescreen', 450, 800);
+
+INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`) VALUES
+(1, '4:3 Monitor', 800, 600, 1024, 768),
+(2, '3:2 Tv', 720, 480, 1440, 960),
+(3, '16:10 Widescreen Mon', 800, 500, 1680, 1050),
+(4, '16:9 HD Widescreen', 800, 450, 1920, 1080),
+(5, '3:4 Monitor', 600, 800, 768, 1024),
+(6, '2:3 Tv', 480, 720, 960, 1440),
+(7, '10:16 Widescreen', 500, 800, 1050, 1680),
+(8, '9:16 HD Widescreen', 450, 800, 1080, 1920);
 
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES
 (1, 'MEDIA_DEFAULT', 'private', 'dropdown', 'Media will be created with these settings. If public everyone will be able to view and use this media.', 'private|public', 'default', 1),
@@ -238,8 +244,9 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 (58, 'MODULE_CONFIG_LOCKED_CHECKB', 'Unchecked', 'dropdown', 'Is the module config locked? Useful for Service providers.', 'Checked|Unchecked', 'general', 0),
 (59, 'LIBRARY_SIZE_LIMIT_KB', '0', 'text', 'The Limit for the Library Size in KB', NULL, 'content', 0),
 (60, 'MONTHLY_XMDS_TRANSFER_LIMIT_KB', '0', 'text', 'XMDS Transfer Limit in KB/month', NULL, 'general', 0),
-(61, 'DEFAULT_LANGUAGE', 'en_GB', 'text', 'The default language to use', NULL, 'general', 1);
-
+(61, 'DEFAULT_LANGUAGE', 'en_GB', 'text', 'The default language to use', NULL, 'general', 1),
+(62, 'TRANSITION_CONFIG_LOCKED_CHECKB', 'Unchecked', 'dropdown', 'Is the Transition config locked?', 'Checked|Unchecked', 'general', 0),
+(63, 'GLOBAL_THEME_NAME', 'default', 'text', 'The Theme to apply to all pages by default', NULL, 'general', 1);
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -303,3 +310,8 @@ INSERT INTO `lktemplategroup` (`LkTemplateGroupID`, `TemplateID`, `GroupID`, `Vi
 
 INSERT INTO `lkusergroup` (`LkUserGroupID`, `GroupID`, `UserID`) VALUES
 (10, 3, 1);
+
+INSERT INTO `transition` (`TransitionID`, `Transition`, `Code`, `HasDuration`, `HasDirection`, `AvailableAsIn`, `AvailableAsOut`) VALUES
+(1, 'Fade In', 'fadeIn', 1, 0, 1, 0),
+(2, 'Fade Out', 'fadeOut', 1, 0, 0, 1),
+(3, 'Fly', 'fly', 1, 1, 1, 1);

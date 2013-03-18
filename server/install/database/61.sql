@@ -1,4 +1,4 @@
-TRUNCATE `help`;
+TRUNCATE TABLE `help`;
 
 INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (1, 'Layout', 'General', 'manual/content/layout/overview.php'),
@@ -74,7 +74,8 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (73, 'Campaign', 'General', 'manual/content/layout/campaign_layout.php'),
 (74, 'License', 'General', 'manual/content/license/licenses.php'),
 (75, 'DataSet', 'ViewColumns', 'manual/content/layout/content_datasets.php#Dataset_Column'),
-(76, 'Campaign', 'Permissions', 'manual/content/layout/addlayout.php#Layout_Permission');
+(76, 'Campaign', 'Permissions', 'manual/content/layout/addlayout.php#Layout_Permission'),
+(77, 'Transition', 'Edit', 'manual/content/transitions/transitions.php#Edit');
 
 ALTER TABLE  `menuitem` ADD  `External` TINYINT NOT NULL DEFAULT '0';
 

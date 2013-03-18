@@ -36,8 +36,20 @@ UPDATE `module` SET `ImageUri` = REPLACE(ImageUri, 'img/forms/', 'forms/') WHERE
 
 UPDATE `menuitem` SET `Img` = REPLACE(Img, 'img/dashboard/', 'dashboard/') WHERE Img IS NOT NULL;
 
-ALTER TABLE  `resolution` ADD  `intended_width` INT NOT NULL ,
-ADD  `intended_height` INT NOT NULL;
+TRUNCATE TABLE `resolution`;
+
+ALTER TABLE  `resolution` ADD  `intended_width` SMALLINT NOT NULL ,
+ADD  `intended_height` SMALLINT NOT NULL;
+
+INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`) VALUES
+(1, '4:3 Monitor', 800, 600, 1024, 768),
+(2, '3:2 Tv', 720, 480, 1440, 960),
+(3, '16:10 Widescreen Mon', 800, 500, 1680, 1050),
+(4, '16:9 HD Widescreen', 800, 450, 1920, 1080),
+(5, '3:4 Monitor', 600, 800, 768, 1024),
+(6, '2:3 Tv', 480, 720, 960, 1440),
+(7, '10:16 Widescreen', 500, 800, 1050, 1680),
+(8, '9:16 HD Widescreen', 450, 800, 1080, 1920);
 
 INSERT INTO `menuitem` (`MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`)
 SELECT 9, `PageID`, NULL, 'Help Links', NULL, NULL, 6
