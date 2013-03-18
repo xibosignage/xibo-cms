@@ -223,9 +223,17 @@ class Theme {
 			$item['class'] = Kit::ValidateParam($menuItem['Class'], _WORD);
 			$item['title'] = __(Kit::ValidateParam($menuItem['Text'], _STRING));
 			$item['img'] = Kit::ValidateParam($menuItem['Img'], _STRING);
+			$item['external'] = Kit::ValidateParam($menuItem['External'], _INT);
 
 			$item['selected'] = ($item['page'] == $theme->pageName);
-			$item['link'] = 'index.php?p=' . $item['page'] . '&' . $item['args'];
+
+			if ($item['external'] == 0) {
+				$item['link'] = 'index.php?p=' . $item['page'] . '&' . $item['args'];
+			}
+			else {
+				$item['link'] = $item['args'];
+			}
+
 			$item['li'] = '<li class="' . $item['class'] . '"><a href="' . $item['link'] . '" class="' . $item['class'] . (($item['selected']) ? ' current' : '') . '">' . $item['title'] . '</a></li>';
 
 			$array[] = $item;
