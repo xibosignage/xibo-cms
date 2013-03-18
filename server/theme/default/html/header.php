@@ -26,7 +26,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<head>
 		<title>Xibo: Digital Signage</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-		<link rel="shortcut icon" href="theme/default/img/favicon.ico" />
+		<link rel="shortcut icon" href="<?php echo Theme::ImageUrl('favicon.ico'); ?>" />
 
 		<!-- Javascript Libraries -->
 		<script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
@@ -46,6 +46,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		
 		<!-- Our own -->
 		<link rel="stylesheet" type="text/css" href="theme/default/css/presentation.css" />
+		<link rel="stylesheet" type="text/css" href="theme/default/css/images.css" />
         <!--[if gte IE 8]>
         <link rel="stylesheet" type="text/css" href="theme/default/css/ie8.css" />
         <![endif]-->
@@ -58,7 +59,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <script type="text/javascript" src="theme/default/js/text-render.js"></script>
         <script type="text/javascript" src="3rdparty/ckeditor/ckeditor.js"></script>
         <script type="text/javascript" src="3rdparty/ckeditor/adapters/jquery.js"></script>
-        <link rel="stylesheet" type="text/css" href="theme/default/css/timeline.css" />
 	</head>
 	<body>
     

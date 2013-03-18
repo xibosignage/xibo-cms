@@ -31,6 +31,7 @@ class Theme {
 	private $name = '';
 	private $pageName = '';
 	private $vars = null;
+	private $config = null;
 	
 	public function __construct(database $db, user $user) {
 
@@ -51,6 +52,13 @@ class Theme {
 		
 		// Store the theme name for later
 		$this->name = $globalTheme;
+
+		// Get config
+		if (!file_exists('theme/' . $this->name . '/config.php'))
+			throw new Exception(__('The theme "%s" config file does not exist', $globalTheme));
+
+		require_once('theme/' . $this->name . '/config.php');
+		$this->config = $config;
 
 		static::$instance = $this;
 	}
@@ -124,6 +132,26 @@ class Theme {
 	}
 
 	/**
+	 * Get an image URL
+	 * @param [string] $item the image
+	 */
+	public static function ImageUrl($item) {
+
+		$theme = Theme::GetInstance();
+		
+		// See if we have the requested file in the theme folder
+		if (file_exists('theme/' . $theme->name . '/img/' . $item)) {
+			return 'theme/' . $theme->name . '/img/' . $item;
+		}
+		// If not, then use the default folder
+		elseif (file_exists('theme/default/img/' . $item)) {
+			return 'theme/default/img/' . $item;
+		}
+		else
+			return '';
+	}
+
+	/**
 	 * Translate a string into the user language
 	 * @param string $string The String to Translate
 	 * @param array $args   Variables to insert (will replace %d %s in order)
@@ -169,6 +197,10 @@ class Theme {
 
 	public static function GetClock() {
 		return Theme::GetInstance()->dateManager->GetClock();
+	}
+
+	public static function ApplicationName() {
+		return Theme::GetInstance()->config['app_name'];
 	}
 
 	/**

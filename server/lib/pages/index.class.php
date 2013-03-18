@@ -261,7 +261,7 @@ class indexDAO
 		// Render the Theme and output
         $output = Theme::RenderReturn('about_text');
 		
-		$response->SetFormRequestResponse($output, __('About Xibo'), '500', '500');
+		$response->SetFormRequestResponse($output, __('About'), '500', '500');
 		$response->AddButton(__('Close'), 'XiboDialogClose()');
 		$response->Respond();
 	}
