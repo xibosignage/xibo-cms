@@ -61,9 +61,9 @@ class templateDAO
         
         // Field list for a "retired" dropdown list
         Theme::Set('is_system_field_list', array(
-                    array('is_systemid' => '-1', 'is_system' => 'All'), 
-                    array('is_systemid' => '1', 'is_system' => 'Yes'),
-                    array('is_systemid' => '0', 'is_system' => 'No')
+                    array('is_systemid' => -1, 'is_system' => 'All'), 
+                    array('is_systemid' => 1, 'is_system' => 'Yes'),
+                    array('is_systemid' => 0, 'is_system' => 'No')
                 )
             );
 

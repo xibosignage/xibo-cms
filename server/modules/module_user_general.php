@@ -1051,7 +1051,7 @@ END;
      * @param string $tags     [description]
      * @param string $isSystem [description]
      */
-    public function TemplateList($template = '', $tags = '', $isSystem = '')
+    public function TemplateList($template = '', $tags = '', $isSystem = -1)
     {
     	$db =& $this->db;
 
@@ -1084,7 +1084,7 @@ END;
 			$SQL .= " AND template.tags LIKE '%" . $db->escape_string($tags) . "%' ";
 		}
 		
-		if ($isSystem != '-1') 
+		if ($isSystem != -1) 
 		{
 			$SQL .= sprintf(" AND template.issystem = %d ", $isSystem);
 		}
