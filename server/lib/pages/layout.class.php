@@ -655,8 +655,8 @@ class layoutDAO
 			// get dimensions
             $tipWidth       = round($region->getAttribute('width') * $scaleFactor, 0);
             $tipHeight      = round($region->getAttribute('height') * $scaleFactor, 0);
-            $tipTop         = $region->getAttribute('top');
-            $tipLeft        = $region->getAttribute('left');
+            $tipTop         = round($region->getAttribute('top') * $scaleFactor, 0);
+            $tipLeft        = round($region->getAttribute('left') * $scaleFactor, 0);
 
 			$regionWidth 	= $region->getAttribute('width') . "px";
 			$regionHeight 	= $region->getAttribute('height') . "px";

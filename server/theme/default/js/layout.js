@@ -336,7 +336,7 @@ $(document).ready(function() {
 function updateRegionInfo(e, ui) {
     var pos = $(this).position();
     var scale = $(this).attr("scale");
-    $('.regionInfo', this).html(Math.round($(this).width() * scale, 0) + " x " + Math.round($(this).height() * scale, 0) + " (" + pos.left + "," + pos.top + ")");
+    $('.regionInfo', this).html(Math.round($(this).width() * scale, 0) + " x " + Math.round($(this).height() * scale, 0) + " (" + Math.round(pos.left * scale, 0) + "," + Math.round(pos.top * scale, 0) + ")");
 }
 
 /**
