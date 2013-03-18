@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.4.2', 3, 1, 52);
+('1.5.0', 3, 1, 61);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
 (1, 'Users', 0, 0),
@@ -150,7 +150,8 @@ INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES
 (36, 'dataset', 14),
 (37, 'campaign', 3),
 (38, 'transition', 4),
-(39, 'timeline', 3);
+(39, 'timeline', 3),
+(40, 'sessions', 9);
 
 INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`, `External`) VALUES
 (1, 1, 2, NULL, 'Schedule', NULL, NULL, 1, 0),
@@ -162,7 +163,7 @@ INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class
 (9, 8, 17, NULL, 'Users', NULL, NULL, 1, 0),
 (10, 9, 16, NULL, 'Log', NULL, NULL, 1, 0),
 (11, 9, 18, NULL, 'About', NULL, NULL, 4, 0),
-(12, 9, 41, NULL, 'Sessions', NULL, NULL, 2, 0),
+(12, 9, 40, NULL, 'Sessions', NULL, NULL, 2, 0),
 (13, 8, 14, NULL, 'Settings', NULL, NULL, 3, 0),
 (14, 2, 2, 'sp=month', 'Schedule', 'schedule_button', 'dashboard/scheduleview.png', 1, 0),
 (15, 2, 5, NULL, 'Layouts', 'playlist_button', 'dashboard/presentations.png', 2, 0),
