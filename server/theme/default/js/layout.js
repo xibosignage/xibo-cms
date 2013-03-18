@@ -335,7 +335,8 @@ $(document).ready(function() {
  */
 function updateRegionInfo(e, ui) {
     var pos = $(this).position();
-    $('.regionInfo', this).html($(this).width() + " x " + $(this).height() + " (" + pos.left + "," + pos.top + ")");
+    var scale = $(this).attr("scale");
+    $('.regionInfo', this).html(Math.round($(this).width() * scale, 0) + " x " + Math.round($(this).height() * scale, 0) + " (" + pos.left + "," + pos.top + ")");
 }
 
 /**

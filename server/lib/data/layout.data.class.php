@@ -777,7 +777,7 @@ END;
         
         $region = new region($db);
         
-        if (!$region->EditBackground($layoutId, '#' . $color, $bg_image, $width, $height))
+        if (!$region->EditBackground($layoutId, '#' . $color, $bg_image, $width, $height, $resolutionId))
         {
             //there was an ERROR
             $response->SetError($region->errorMsg);

@@ -470,7 +470,7 @@ class region
 		return true;
 	}
 	
-	public function EditBackground($layoutid, $bg_color, $bg_image, $width, $height)
+	public function EditBackground($layoutid, $bg_color, $bg_image, $width, $height, $resolutionId)
 	{
 		$db =& $this->db;
 		
@@ -483,6 +483,7 @@ class region
 		$xml->documentElement->setAttribute("bgcolor", $bg_color);
 		$xml->documentElement->setAttribute('width', $width);
 		$xml->documentElement->setAttribute('height', $height);
+		$xml->documentElement->setAttribute('resolutionid', $resolutionId);
 		$xml->documentElement->setAttribute("schemaVersion", Config::Version($db, 'XlfVersion'));
 		
 		//Convert back to XML		
