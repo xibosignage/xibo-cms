@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -26,42 +26,71 @@ class scheduleDAO
     private $user;
     
     private $lastEventID;
-        private $eventsList;
+    private $eventsList;
 
     /**
      * Constructor
-     * @return 
-     * @param $db Object
      */
     function __construct(database $db, user $user) 
     {
-        $this->db           =& $db;
-        $this->user         =& $user;
+        $this->db =& $db;
+        $this->user =& $user;
         
         require_once('lib/data/schedule.data.class.php');
                 
         return true;
     }
-    
-    function on_page_load() 
-    {
-        return '';
-    }
-    
-    function echo_page_heading() 
-    {
-        echo 'Schedule';
-        return true;
-    }
-    
+
     function displayPage() 
     {
         $db     =& $this->db;
-        $user   =& $this->user;
         
-        include_once("template/pages/schedule_view.php");
-        
-        return false;
+        // Configure the theme
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="schedule"><input type="hidden" name="q" value="DisplayList">');
+        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
+        Theme::Set('pager', ResponseManager::Pager($id));
+
+        // Render the Theme and output
+        Theme::Render('schedule_page');
+    }
+    
+    /**
+     * Shows a list of displays
+     */
+    public function DisplayList()
+    {
+        $user =& $this->user;
+
+        $response = new ResponseManager();
+        $displayGroupIDs = Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
+
+        // Build 2 lists
+        $groups = array();
+        $displays = array();
+
+        foreach ($user->DisplayGroupList() as $display) {
+
+            $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIDs)) ? 'checked' : '';
+
+            if ($display['isdisplayspecific'] == 1) {
+                $displays[] = $display;
+            }
+            else {
+                $groups[] = $display;
+            }
+        }
+
+        Theme::Set('id', 'DisplayList');
+        Theme::Set('group_list_items', $groups);
+        Theme::Set('display_list_items', $displays);
+
+        $output = Theme::RenderReturn('schedule_page_display_list');
+
+        $response->SetGridResponse($output);
+        $response->callBack = 'DisplayListRender';
+        $response->Respond();
     }
     
     /**
@@ -74,7 +103,7 @@ class scheduleDAO
         $displayGroupIDs    = Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
         
         // if we have some displaygroupids then add them to the session info so we can default everything else.
-                Session::Set('DisplayGroupIDs', $displayGroupIDs);
+        Session::Set('DisplayGroupIDs', $displayGroupIDs);
         
         if ($view == 'month')
         {
@@ -1015,56 +1044,7 @@ HTML;
         return $events;
     }
     
-    /**
-     * Shows a list of display groups and displays
-     * @return 
-     */
-    public function DisplayFilter()
-    {
-        $db             =& $this->db;
-        $user           =& $this->user;
-        
-        $filterForm = <<<END
-        <div id="DisplayListFilter">
-            <form onsubmit="return false">
-                <input type="hidden" name="p" value="schedule">
-                <input type="hidden" name="q" value="DisplayList">
-                <input class="DisplayListInput" type="text" name="name" />
-            </form>
-        </div>
-END;
-        
-        $id = uniqid();
-        
-        $xiboGrid = <<<HTML
-        <div class="XiboGrid" id="$id">
-            <div class="XiboFilter">
-                $filterForm
-            </div>
-            <div class="XiboData">
-            
-            </div>
-        </div>
-HTML;
-        echo $xiboGrid;
-    }
     
-    /**
-     * Shows a list of displays
-     * @return 
-     */
-    public function DisplayList()
-    {
-        $response = new ResponseManager();
-        $displayGroupIDs = Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
-        $output = '';
-        $output .= '<div id="checkAllForDisplayList" class="scheduleFormCheckAll"><label for="checkAll">' . __('Check All') . '</label><input type="checkbox" name="checkAll"></div>';
-        $output .= $this->UnorderedListofDisplays(true, $displayGroupIDs);
-
-        $response->SetGridResponse($output);
-        $response->callBack = 'DisplayListRender';
-        $response->Respond();
-    }
     
     /**
      * Outputs an unordered list of displays optionally with a form
