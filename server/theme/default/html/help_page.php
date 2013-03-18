@@ -44,7 +44,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<div id="form_body">
 		<div class="SecondNav">
 			<ul>
-				<li><a title="<?php echo Theme::Translate('Add a new Help page'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('help_form_add_url'); ?>" ><span><?php echo Theme::Translate('Add Page'); ?></span></a></li>
+				<li><a title="<?php echo Theme::Translate('Add a new Help page'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('help_form_add_url'); ?>" ><span><?php echo Theme::Translate('Add Help Link'); ?></span></a></li>
 			</ul>
 		</div>
 		<div class="XiboGrid" id="<?php echo Theme::Get('id'); ?>">

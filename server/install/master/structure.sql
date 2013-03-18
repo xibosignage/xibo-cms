@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS `help` (
   `Category` varchar(254) NOT NULL DEFAULT 'General',
   `Link` varchar(254) NOT NULL,
   PRIMARY KEY (`HelpID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=73 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=78 ;
 
 CREATE TABLE IF NOT EXISTS `layout` (
   `layoutID` int(11) NOT NULL AUTO_INCREMENT,
@@ -329,10 +329,11 @@ CREATE TABLE IF NOT EXISTS `menuitem` (
   `Class` varchar(50) DEFAULT NULL,
   `Img` varchar(254) DEFAULT NULL,
   `Sequence` smallint(6) NOT NULL DEFAULT '1',
+  `External` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`MenuItemID`),
   KEY `PageID` (`PageID`),
   KEY `MenuID` (`MenuID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=38 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=40 ;
 
 CREATE TABLE IF NOT EXISTS `module` (
   `ModuleID` int(11) NOT NULL AUTO_INCREMENT,
@@ -434,7 +435,7 @@ CREATE TABLE IF NOT EXISTS `pages` (
   `pagegroupID` int(11) NOT NULL,
   PRIMARY KEY (`pageID`),
   KEY `pagegroupID` (`pagegroupID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Available Pages' AUTO_INCREMENT=38 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Available Pages' AUTO_INCREMENT=40 ;
 
 CREATE TABLE IF NOT EXISTS `resolution` (
   `resolutionID` int(11) NOT NULL AUTO_INCREMENT,

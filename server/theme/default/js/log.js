@@ -20,10 +20,7 @@
 $(document).ready(function() {
 	
 	$('.date-pick').datepicker({
-		dateFormat: "dd/mm/yy",
-		showOn: "button", 
-    	buttonImage: "img/calendar.png", 
-    	buttonImageOnly: true
+		dateFormat: "dd/mm/yy"
 	});
 	
 });
