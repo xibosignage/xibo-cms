@@ -262,10 +262,11 @@ $(document).ready(function() {
                     var left 	= $(region).css("left");
                     var regionid = $(region).attr("regionid");
                     var layoutid = $(region).attr("layoutid");
+                    var scale = $(region).attr("scale");
 
                     var layout = $('#layout');
 
-                    XiboFormRender("index.php?p=timeline&q=ManualRegionPositionForm&layoutid="+layoutid+"&regionid="+regionid+"&top="+top+"&left="+left+"&width="+width+"&height="+height+"&layoutWidth="+layout.width()+"&layoutHeight="+layout.height());
+                    XiboFormRender("index.php?p=timeline&q=ManualRegionPositionForm&layoutid="+layoutid+"&regionid="+regionid+"&top="+top+"&left="+left+"&width="+width+"&height="+height+"&layoutWidth="+layout.width()+"&layoutHeight="+layout.height()+"&scale="+scale);
                 },
 		'deleteRegion': function(t) {
 	            deleteRegion(t);

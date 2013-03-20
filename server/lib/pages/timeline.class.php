@@ -128,6 +128,7 @@ class timelineDAO {
         $height 	= Kit::GetParam('height', _GET, _INT);
         $layoutWidth = Kit::GetParam('layoutWidth', _GET, _INT);
         $layoutHeight = Kit::GetParam('layoutHeight', _GET, _INT);
+        $scale = Kit::GetParam('scale', _GET, _DOUBLE);
 
         Kit::ClassLoader('region');
         $region = new region($db);
@@ -137,18 +138,30 @@ class timelineDAO {
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+
+        // Scale the layout width/height
+        $layoutWidth = round($layoutWidth * $scale, 0);
+        $layoutHeight = round($layoutHeight * $scale, 0);
+
+        // Set some information about the form
+        Theme::Set('form_id', 'RegionProperties');
+        Theme::Set('form_action', 'index.php?p=timeline&q=ManualRegionPosition');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid .'"><input type="hidden" name="regionid" value="' . $regionid . '"><input id="layoutWidth" type="hidden" name="layoutWidth" value="' . $layoutWidth . '"><input id="layoutHeight" type="hidden" name="layoutHeight" value="' . $layoutHeight . '"><input type="hidden" name="scale" value="' . $scale .'">');
         
-        // Include some logic for the region exit transition?
-        $transition = $region->GetOption($layoutid, $regionid, 'transOut', '');
-        $duration = $region->GetOption($layoutid, $regionid, 'transOutDuration', 0);
-        $direction = $region->GetOption($layoutid, $regionid, 'transOutDirection', '');
+        // Theme Variables
+        Theme::Set('width', round($width * $scale, 0));
+        Theme::Set('height', round($height * $scale, 0));
+        Theme::Set('top', round($top * $scale, 0));
+        Theme::Set('left', round($left * $scale, 0));
+        Theme::Set('transition', $region->GetOption($layoutid, $regionid, 'transOut', ''));
+        Theme::Set('duration', $region->GetOption($layoutid, $regionid, 'transOutDuration', 0));
+        Theme::Set('direction', $region->GetOption($layoutid, $regionid, 'transOutDirection', ''));
         
         // Add none to the list
         $transitions = $this->user->TransitionAuth('out');
         $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
-        
-        // Prepare a list of options
-        $transitionDropdown = Kit::SelectList('transitionType', $transitions, 'code', 'transition', $transition, '', 'class');
+
+        Theme::Set('transition_field_list', $transitions);
         
         // Compass points for direction
         $compassPoints = array(
@@ -161,60 +174,12 @@ class timelineDAO {
             array('id' => 'W', 'name' => __('West')),
             array('id' => 'NW', 'name' => __('North West'))
         );
-        
-        // Prepare a list of compass points
-        $directionDropdown = Kit::SelectList('transitionDirection', $compassPoints, 'id', 'name', $direction);
-        
-        // Some messages for the form
-        $msgTransition = __('What transition should be applied when this region is finished?');
-        $msgDuration = __('The duration for this transition, in milliseconds.');
-        $msgDirection = __('The direction for this transtion.');
-        
-        // Construct the form
-        $form = <<<END
-            <form id="RegionProperties" class="XiboForm" method="post" action="index.php?p=layout&q=ManualRegionPosition">
-                <input type="hidden" name="layoutid" value="$layoutid">
-                <input type="hidden" name="regionid" value="$regionid">
-                <input id="layoutWidth" type="hidden" name="layoutWidth" value="$layoutWidth">
-                <input id="layoutHeight" type="hidden" name="layoutHeight" value="$layoutHeight">
-                <table>
-                    <tr>
-                        <td><label for="name" title="Name of the Region">Name</label></td>
-                        <td><input name="name" type="text" id="name" value="$regionName" tabindex="1" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="top" title="Offset from the Top Corner">Top Offset</label></td>
-                        <td><input name="top" type="text" id="top" value="$top" tabindex="2" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="left" title="Offset from the Left Corner">Left Offset</label></td>
-                        <td><input name="left" type="text" id="left" value="$left" tabindex="3" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="width" title="Width of the Region">Width</label></td>
-                        <td><input name="width" type="text" id="width" value="$width" tabindex="4" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="height" title="Height of the Region">Height</label></td>
-                        <td><input name="height" type="text" id="height" value="$height" tabindex="5" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="tranisitionType" title="$msgTransition">$msgTransition</label></td>
-                        <td>$transitionDropdown</td>
-                    </tr>
-                    <tr class="transitionDuration">
-                        <td><label for="transitionDuration">$msgDuration</label></td>
-                        <td><input type="text" class="numeric" name="transitionDuration" id="transitionDuration" value="$duration" /></td>
-                    </tr>
-                    <tr class="transitionDirection">
-                        <td><label for="transitionDirection">$msgDirection</label></td>
-                        <td>$directionDropdown</td>
-                    </tr>
-                </table>
-            </form>
-END;
 
-        $response->SetFormRequestResponse($form, __('Manual Region Positioning'), '350px', '275px', 'transitionFormLoad');
+        Theme::Set('direction_field_list', $compassPoints);
+
+        $form = Theme::RenderReturn('region_form_options');
+        
+        $response->SetFormRequestResponse($form, __('Region Options'), '350px', '275px', 'transitionFormLoad');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#RegionProperties").submit()');
         $response->AddButton(__('Set Full Screen'), 'setFullScreenLayout()');
@@ -234,6 +199,13 @@ END;
         $left       = Kit::GetParam('left', _POST, _INT);
         $width      = Kit::GetParam('width', _POST, _INT);
         $height 	= Kit::GetParam('height', _POST, _INT);
+        $scale = Kit::GetParam('scale', _POST, _DOUBLE);
+
+        // Adjust the dimensions
+        $top = $top / $scale;
+        $left = $left / $scale;
+        $width = $width / $scale;
+        $height = $height / $scale;
         
         // Transitions?
         $transitionType = Kit::GetParam('transitionType', _POST, _WORD);

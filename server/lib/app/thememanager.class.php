@@ -125,7 +125,7 @@ class Theme {
 		}
 		// If not, then use the default folder
 		elseif (file_exists('theme/default/img/' . $item)) {
-			return '<img ' . (($class != '') ? $class : '') . ' src="theme/default/img/' . $item . '" />';
+			return '<img ' . (($class != '') ? 'class="' . $class . '"' : '') . ' src="theme/default/img/' . $item . '" />';
 		}
 		else
 			return '';
