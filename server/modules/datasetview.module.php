@@ -450,7 +450,7 @@ tr#row_1 {
 
 }
 
-td#col_1 {
+td#column_1 {
 
 }
 
