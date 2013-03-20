@@ -122,10 +122,10 @@ class timelineDAO {
 
         $regionid 	= Kit::GetParam('regionid', _GET, _STRING);
         $layoutid 	= Kit::GetParam('layoutid', _GET, _INT);
-        $top 	= Kit::GetParam('top', _GET, _INT);
-        $left 	= Kit::GetParam('left', _GET, _INT);
-        $width 	= Kit::GetParam('width', _GET, _INT);
-        $height 	= Kit::GetParam('height', _GET, _INT);
+        $top 	= Kit::GetParam('top', _GET, _DOUBLE);
+        $left 	= Kit::GetParam('left', _GET, _DOUBLE);
+        $width 	= Kit::GetParam('width', _GET, _DOUBLE);
+        $height 	= Kit::GetParam('height', _GET, _DOUBLE);
         $layoutWidth = Kit::GetParam('layoutWidth', _GET, _INT);
         $layoutHeight = Kit::GetParam('layoutHeight', _GET, _INT);
         $scale = Kit::GetParam('scale', _GET, _DOUBLE);

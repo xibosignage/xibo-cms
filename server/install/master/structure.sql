@@ -549,13 +549,14 @@ CREATE TABLE IF NOT EXISTS `transition` (
 CREATE TABLE IF NOT EXISTS `user` (
   `UserID` int(11) NOT NULL AUTO_INCREMENT,
   `usertypeid` int(8) NOT NULL,
-  `UserName` varchar(15) CHARACTER SET latin1 NOT NULL,
-  `UserPassword` varchar(32) CHARACTER SET latin1 NOT NULL,
+  `UserName` varchar(15) CHARACTER NOT NULL,
+  `UserPassword` varchar(128) CHARACTER NOT NULL,
   `loggedin` tinyint(1) NOT NULL DEFAULT '0',
   `lastaccessed` datetime DEFAULT NULL,
-  `email` varchar(50) CHARACTER SET latin1 DEFAULT NULL COMMENT 'The users email address',
+  `email` varchar(50) CHARACTER DEFAULT NULL COMMENT 'The users email address',
   `homepage` varchar(254) NOT NULL DEFAULT 'dashboard.php' COMMENT 'The users homepage',
   `Retired` tinyint(4) NOT NULL DEFAULT '0',
+  `CSPRNG` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`UserID`),
   KEY `usertypeid` (`usertypeid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;

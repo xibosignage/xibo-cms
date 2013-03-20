@@ -256,8 +256,8 @@ $(document).ready(function() {
                     XiboFormRender($(t).attr("href"));
 	        },
                 'options' : function(region) {
-                    var width 	= $(region).css("width");
-                    var height 	= $(region).css("height");
+                    var width 	= $(region).attr("width");
+                    var height 	= $(region).attr("height");
                     var top 	= $(region).css("top");
                     var left 	= $(region).css("left");
                     var regionid = $(region).attr("regionid");
