@@ -15,10 +15,6 @@
 	</head>
 	<body>
 		<h1>Templates</h1>
-		<div id="tutorial_icon">
-		<a href="http://www.<?php echo PRODUCT_NAME; ?>.org.uk/manual/content/schedule/video_tutorial_overview.html">
-    	<img src="../../img/video_icon.png" alt="Video Tutorial" width="100px"><br />Video Tutorial</a>
-		</div>
 
 		<h2>Overview</h2>
 
