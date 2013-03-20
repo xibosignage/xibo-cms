@@ -22,11 +22,6 @@
     <body>
 		<a name="Scheduling" id="Scheduling"></a><h1>Scheduling</h1>
 
- 		<div id="tutorial_icon">
-		<a href="video_tutorial_overview.php">
-    	<img src="../../img/video_icon.png" alt="Video Tutorial" width="100px"><br />Video Tutorial</a>
-		</div>
-
 		<a name="Overview" id="Overview"></a><h2>Overview</h2>
 
     	<p><?php echo PRODUCT_NAME; ?> is not designed to show a blank screen at any time. In display Management when you set each client up, you are asked 

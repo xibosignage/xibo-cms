@@ -16,10 +16,6 @@
 
 <body>
 	<h1 lang="en-GB" class="western">Layouts</h1>
-	<div id="tutorial_icon">
-	<a href="../schedule/video_tutorial_overview.html">
-    <img src="../../img/video_icon.png" alt="Video Tutorial" width="100px"><br />Video Tutorial</a>
-	</div>
 	<h2 lang="en-GB" class="western">Overview</h2>
 
 	<p lang="en-GB" class="western">Layouts are the concept <?php echo PRODUCT_NAME; ?> uses to create
