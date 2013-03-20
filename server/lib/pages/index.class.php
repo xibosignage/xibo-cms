@@ -38,11 +38,10 @@ class indexDAO
 		global $session;
 
 		//this page must be called from a form therefore we expect POST variables		
-		$username 		= Kit::GetParam('username', _POST, _USERNAME);
-		$password 		= Kit::GetParam('password', _POST, _PASSWORD);
-		$password		= md5($password);
+		$username = Kit::GetParam('username', _POST, _USERNAME);
+		$password = Kit::GetParam('password', _POST, _PASSWORD);
 		
-		$referingpage 	= Kit::GetParam('referingPage', _GET, _WORD);
+		$referingpage = Kit::GetParam('referingPage', _GET, _WORD);
 		
 		if (isset($_REQUEST['ajax'])) 
 		{
@@ -88,7 +87,6 @@ class indexDAO
 				
 			setMessage($username . ' logged in');
 			$session->set_user(session_id(), $userid, 'user');
-			
 		}
 		
 		Debug::LogEntry($db, 'audit', 'Login with refering page: ' . $referingpage);

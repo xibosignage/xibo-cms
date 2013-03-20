@@ -97,40 +97,57 @@
 	 */
 	function login($username, $password) 
 	{
-		$db 		=& $this->db;
-		global $session;
-		
-		$sql = sprintf("SELECT UserID, UserName, UserPassword, usertypeid FROM user WHERE UserName = '%s' AND UserPassword = '%s' AND Retired = 0", $db->escape_string($username), $db->escape_string($password));
-		
-		if(!$result = $db->query($sql)) trigger_error('A database error occurred while checking your login details.', E_USER_ERROR);
+		$db =& $this->db;
 
-		if ($db->num_rows($result)==0) 
-		{
-			setMessage("Your user name or password is incorrect.");
-			
-			$remote = Kit::ValidateParam($_SERVER['REMOTE_ADDR'], _STRING);
-			
-			Debug::LogEntry($db, "error", sprintf('Incorrect password for user [%s] from [' . $remote . ']', $username));
-			
+		Kit::ClassLoader('userdata');
+		
+		// Get the SALT for this username
+		if (!$userInfo = $db->GetSingleRow(sprintf("SELECT UserID, UserName, UserPassword, UserTypeID, CSPRNG FROM `user` WHERE UserName = '%s'", $db->escape_string($username)))) {
+			setMessage(__('Username or Password incorrect'));
 			return false;
 		}
 
-		$results = $db->get_row($result);
+		// User Data Object to check the password
+		$userData = new Userdata($db);
+
+		// Is SALT empty
+		if ($userInfo['CSPRNG'] == 0) {
+
+			// Check the password using a MD5
+			if ($userInfo['UserPassword'] != md5($password)) {
+				setMessage(__('Username or Password incorrect'));
+				return false;
+			}
+
+			// Now that we are validated, generate a new SALT and set the users password.
+			$userData->ChangePassword(Kit::ValidateParam($userInfo['UserID'], _INT), null, $password, $password, true /* Force Change */);
+		}
+		else {
+			
+			// Check the users password using the random SALTED password
+            if ($userData->validate_password($password, $userInfo['UserPassword']) === false) {
+            	setMessage(__('Username or Password incorrect'));
+				return false;
+            }
+		}
 		
 		// there is a result so we store the userID in the session variable
-		$_SESSION['userid']	= Kit::ValidateParam($results[0], _INT);
-		$_SESSION['username']	= Kit::ValidateParam($results[1], _USERNAME);
-		$_SESSION['usertype']	= Kit::ValidateParam($results[3], _INT);
+		$_SESSION['userid']	= Kit::ValidateParam($userInfo['UserID'], _INT);
+		$_SESSION['username'] = Kit::ValidateParam($userInfo['UserName'], _USERNAME);
+		$_SESSION['usertype'] = Kit::ValidateParam($userInfo['UserTypeID'], _INT);
 
-		$this->usertypeid	= $_SESSION['usertype'];
-		$this->userid           = $_SESSION['userid'];
+		// Set the User Object
+		$this->usertypeid = $_SESSION['usertype'];
+		$this->userid = $_SESSION['userid'];
 
 		// update the db
 		// write out to the db that the logged in user has accessed the page
 		$SQL = sprintf("UPDATE user SET lastaccessed = '" . date("Y-m-d H:i:s") . "', loggedin = 1 WHERE userid = %d", $_SESSION['userid']);
 		
-		$db->query($SQL) or trigger_error("Can not write last accessed info.", E_USER_ERROR);
+		$db->query($SQL) or trigger_error(__('Can not write last accessed info.'), E_USER_ERROR);
 
+		// Switch Session ID's
+		global $session;
 		$session->setIsExpired(0);
 		$session->RegenerateSessionID(session_id());
 

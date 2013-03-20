@@ -20,6 +20,8 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
+define('WEBSITE_VERSION', 62);
+
 // No errors reported until we read the settings from the DB
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -109,8 +111,8 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 Config::Version($db);
 
 // Does the version in the DB match the version of the code?
-if (DBVERSION != '61')
-    die(sprintf('Incompatible database version detected. Please ensure your database and website versions match. You have %d and the website for %d', DBVERSION, 60));
+if (DBVERSION != WEBSITE_VERSION)
+    die(sprintf('Incompatible database version detected. Please ensure your database and website versions match. You have database %d and website %d', DBVERSION, WEBSITE_VERSION));
 
 // What is the production mode of the server?
 if(Config::GetSetting($db, 'SERVER_MODE') == 'Test') ini_set('display_errors', 1);
