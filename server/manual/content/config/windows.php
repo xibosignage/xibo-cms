@@ -46,7 +46,7 @@
 		to disable Windows Error Reporting completely - including notifications.</li>
 		
 	<li>Also disable Office Application Error reporting. Follow instructions at <a href="http://support.microsoft.com/kb/325075"
-		title="http://support.microsoft.com/kb/325075" rel="nofollow">KB325075</a> or merge <a href="/images/3/3a/DWNeverUpload.reg"
+		title="http://support.microsoft.com/kb/325075" rel="nofollow">KB325075</a> or merge <a href="DWNeverUpload.reg"
 		title="DWNeverUpload.reg"> this registry patch</a>.</li>
 	</ul>
 
@@ -60,7 +60,7 @@
 		The popup actually originates from Internet Explorer. Choose to "Open" the file, and untick the box so you won't be prompted again.</li>
 		
 	<li>In some circumstances, you may find that PowerPoint, the application, loads instead of the file opening within <?php echo PRODUCT_NAME; ?> itself. If that happens,
-		try merging <a href="/images/b/bf/Powerpoint-fix.reg" title="Powerpoint-fix.reg"> this registry patch</a>. (Taken from 
+		try merging <a href="Powerpoint-fix.reg" title="Powerpoint-fix.reg"> this registry patch</a>. (Taken from 
 		<a href="http://www.pptfaq.com/FAQ00189.htm" title="http://www.pptfaq.com/FAQ00189.htm" rel="nofollow">pptfaq.com</a>).
 		Users of Powerpoint 2007 should go to Microsoft <a href="http://support.microsoft.com/kb/927009" 
 		title="http://support.microsoft.com/kb/927009" rel="nofollow">KB927009</a> and run the FixIT application instead. Users of PowerPoint 2010 

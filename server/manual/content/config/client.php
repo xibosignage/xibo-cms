@@ -19,7 +19,7 @@
 	<p>All newly installed client must be configured and registered with the <?php echo PRODUCT_NAME; ?> Server before it can be used. The <?php echo PRODUCT_NAME; ?> Configuration
 	Options are accessible on each client installation from the Start Menu -&gt; All programs</p>
 	
-	<p><img alt="Program Menu" src="xibo_pm.png"
+	<p><img alt="Program Menu" src="pm.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="230" height="62" border="1px"></p>
 	
@@ -44,7 +44,7 @@
 	machine the <?php echo PRODUCT_NAME; ?> server is installed on - for example "http://192.168.0.4/<?php echo PRODUCT_NAME; ?>" or "http://www.my-server.com/<?php echo PRODUCT_NAME; ?>" or similar.<br /><br /></li>
 
 	<li>Server Key: Enter your server key in the "Server Key" box. If you cannot remember the key you can find it in the 
- 	Settings dialogue on the <a href="../admin/settings.html#server_key">Administration->Settings</a> menu in the
+ 	Settings dialogue on the <a href="../admin/settings.php#server_key">Administration->Settings</a> menu in the
   	web interface on the server.<br /><br /></li>
 
 	<li>Local Library Location: defaults to a folder called "<?php echo PRODUCT_NAME; ?> Library" It is used to cache content from the <?php echo PRODUCT_NAME; ?> server so that
@@ -65,7 +65,7 @@
 	leave this set to 1px for smooth viewing.<br /><br /></li>
 
 	<li>Enable Powerpoint: Tick the box if you have the full version of PowerPoint 2003 or later installed and want to use PowerPoint media items.
-	Be sure to read the notes on Powerpoint setup here: <a href="windows.html"> Windows Modifications.</a><br /><br /></li>
+	Be sure to read the notes on Powerpoint setup here: <a href="windows.php"> Windows Modifications.</a><br /><br /></li>
 
 	<li>Enable Statistics: Tick the box if you want the client to send statistics back to the <?php echo PRODUCT_NAME; ?> server. This will generate alot of data that will be 
 	stored in the <?php echo PRODUCT_NAME; ?> database. If you don't have any specific use for statistics, we recommend you turn this option off.

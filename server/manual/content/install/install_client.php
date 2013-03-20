@@ -73,7 +73,7 @@
 	width="499" height="392"></p>
 	</blockquote>
 
-	<p><a href="../config/config.html">Please click here to proceed to the
+	<p><a href="../config/config.php">Please click here to proceed to the
 	configuration section of this manual.</a></p>
 
 	<?php include('../../template/footer.php'); ?>
