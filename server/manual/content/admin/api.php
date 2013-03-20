@@ -18,7 +18,7 @@
 	<body>
 	<h1><?php echo PRODUCT_NAME; ?> API</h1>
 
-    <p><img alt="SA <?php echo PRODUCT_NAME; ?> API" src="sa_xibo_api.png"
+    <p><img alt="SA <?php echo PRODUCT_NAME; ?> API" src="sa_api.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="805" height="149"></p>
 
