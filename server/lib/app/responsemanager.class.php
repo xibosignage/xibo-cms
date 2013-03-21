@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -32,9 +32,9 @@ class ResponseManager
 	
 	public $sortable;
 	public $sortingDiv;
-        public $paging;
-        public $pageSize;
-        public $pageNumber;
+    public $paging;
+    public $pageSize;
+    public $pageNumber;
     public $initialSortColumn;
     public $initialSortOrder;
 	
@@ -50,12 +50,13 @@ class ResponseManager
 	public $refresh;
 	public $refreshLocation;
 	public $focusInFirstInput;
-        public $appendHiddenSubmit;
+    public $appendHiddenSubmit;
+    public $modal;
 	
 	public $login;
 	public $clockUpdate;
 
-        public $uniqueReference;
+    public $uniqueReference;
 	
 	public function __construct()
 	{		
@@ -73,6 +74,7 @@ class ResponseManager
         $this->pageNumber = 0;
         $this->initialSortColumn = 1;
         $this->initialSortOrder = 1;
+        $this->modal = false;
 		
 		return true;
 	}
@@ -259,6 +261,7 @@ class ResponseManager
 			$response['refresh']		= $this->refresh;
 			$response['refreshLocation']= $this->refreshLocation;
 			$response['focusInFirstInput']= $this->focusInFirstInput;
+			$response['modal'] = $this->modal;
 			
 			// Login
 			$response['login']			= $this->login;

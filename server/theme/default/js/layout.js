@@ -364,8 +364,12 @@ function submitBackground(region)
 	var regionid = $(region).attr("regionid");
 	var layoutid = $(region).attr("layoutid");
 
-        var preview = Preview.instances[regionid];
-        preview.SetSequence(preview.seq);
+    // Update the region width / height attributes
+    $(region).attr("width", width).attr("height", height);
+
+    // Update the Preview for the new sizing
+    var preview = Preview.instances[regionid];
+    preview.SetSequence(preview.seq);
 	
 	$.ajax({type:"post", url:"index.php?p=timeline&q=RegionChange&layoutid="+layoutid+"&ajax=true", cache:false, dataType:"json", 
 		data:{"width":width,"height":height,"top":top,"left":left,"regionid":regionid},success: XiboSubmitResponse});
