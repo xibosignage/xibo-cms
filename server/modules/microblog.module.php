@@ -97,7 +97,7 @@ FORM;
 
         if ($this->showRegionOptions)
         {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         else
         {
@@ -215,7 +215,7 @@ FORM;
         $this->response->AddButton(__('Help'), 'XiboHelpRender("index.php?p=help&q=Display&Topic=Microblog&Category=Media")');
         if ($this->showRegionOptions)
         {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         else
         {
@@ -236,7 +236,7 @@ FORM;
 
         $layoutid 	= $this->layoutid;
         $regionid 	= $this->regionid;
-        $url 		= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+        $url 		= "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
         //Other properties
         $searchTerm	= Kit::GetParam('searchTerm', _POST, _STRING);
@@ -300,7 +300,7 @@ FORM;
         $layoutid 	= $this->layoutid;
         $regionid 	= $this->regionid;
         $mediaid	= $this->mediaid;
-        $url 		= "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+        $url 		= "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
         if (!$this->auth->edit)
         {

@@ -316,7 +316,7 @@ class timelineDAO {
 
         //we can delete
         $form = <<<END
-        <form id="RegionDeleteForm" class="XiboForm" method="post" action="index.php?p=layout&q=DeleteRegion">
+        <form id="RegionDeleteForm" class="XiboForm" method="post" action="index.php?p=timeline&q=DeleteRegion">
                 <input type="hidden" name="layoutid" value="$layoutid">
                 <input type="hidden" name="regionid" value="$regionid">
                 <p>$msgDelete $msgDelete2</p>

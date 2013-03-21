@@ -1373,7 +1373,7 @@ END;
 		$SQL .= '    display.display, ';
 		$SQL .= '    layout.layout, ';
 		$SQL .= '    display.loggedin, ';
-		$SQL .= '    display.lastaccessed, ';
+		$SQL .= '    IFNULL(display.lastaccessed, 0) AS lastaccessed, ';
 		$SQL .= '    display.inc_schedule, ';
 		$SQL .= '    display.licensed, ';
 		$SQL .= '    display.email_alert, ';

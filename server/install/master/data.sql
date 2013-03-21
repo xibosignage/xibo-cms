@@ -131,7 +131,7 @@ INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES
 (12, 'update', 11),
 (14, 'admin', 10),
 (15, 'group', 8),
-(16, 'report', 9),
+(16, 'log', 9),
 (17, 'user', 8),
 (18, 'license', 10),
 (19, 'index', 2),
