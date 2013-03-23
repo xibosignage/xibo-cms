@@ -758,7 +758,7 @@ HTML;
         $copyMediaChecked = (Config::GetSetting($db, 'LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 'checked' : '';
 
         Theme::Set('form_id', 'LayoutCopyForm');
-        Theme::Set('form_url', 'index.php?p=layout&q=Copy');
+        Theme::Set('form_action', 'index.php?p=layout&q=Copy');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
         Theme::Set('copy_media_checked', $copyMediaChecked);
         Theme::Set('new_layout_default', $oldLayout . ' 2');

@@ -989,9 +989,7 @@ class XMDSSoap
 
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
-        {
             throw new SoapFault('Receiver', "This display client is not licensed");
-        }
 
         // What type of module is this?
         Kit::ClassLoader('region');
@@ -1000,6 +998,11 @@ class XMDSSoap
 
         if ($type == '')
             throw new SoapFault('Receiver', 'Unable to get the media node type');
+
+        // Dummy User Object
+        $user = new User($db);
+        $user->userid = 0;
+        $user->usertypeid = 1;
 
         // Get the resource from the module
         require_once('modules/' . $type . '.module.php');
