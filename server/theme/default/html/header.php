@@ -24,7 +24,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
-		<title>Xibo: Digital Signage</title>
+		<title><?php echo Theme::GetConfig('theme_title'); ?></title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<link rel="shortcut icon" href="<?php echo Theme::ImageUrl('favicon.ico'); ?>" />
 
@@ -47,6 +47,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<!-- Our own -->
 		<link rel="stylesheet" type="text/css" href="theme/default/css/presentation.css" />
 		<link rel="stylesheet" type="text/css" href="theme/default/css/images.css" />
+		<link rel="stylesheet" type="text/css" href="theme/<?php echo Theme::ThemeFolder(); ?>/css/images_override.css" />
         <!--[if gte IE 8]>
         <link rel="stylesheet" type="text/css" href="theme/default/css/ie8.css" />
         <![endif]-->

@@ -203,6 +203,23 @@ class Theme {
 		return Theme::GetInstance()->config['app_name'];
 	}
 
+	public static function ThemeName() {
+		return Theme::GetInstance()->config['theme_name'];
+	}
+
+	public static function ThemeFolder() {
+		return Theme::GetInstance()->name;
+	}
+
+	public static function GetConfig($settingName) {
+		$theme = Theme::GetInstance();
+
+		if (isset($theme->config[$settingName]))
+			return $theme->config[$settingName];
+		else
+			return '';
+	}
+
 	/**
 	 * Get Menu
 	 * @param string $menu The Name of the Menu
