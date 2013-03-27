@@ -60,17 +60,17 @@ class Theme {
 		require_once('theme/' . $this->name . '/config.php');
 		$this->config = $config;
 
-		static::$instance = $this;
+		self::$instance = $this;
 	}
 
 	/**
 	 * GetInstance of Theme
 	 */
 	private static function GetInstance() {
-		if (!isset(static::$instance))
+		if (!isset(self::$instance))
 			throw new Exception(__("Theme not initialised"));
 
-		return static::$instance;
+		return self::$instance;
 	}
 
 	/**

@@ -1411,7 +1411,7 @@ END;
         <tr>
             <td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
             <td>$rec_range
-                <input id="repeatTime" type="text" size="12" name="repeatTime" value="00:00" />
+                <input id="repeatTime" class="time-pick" type="text" size="12" name="repeatTime" value="00:00" />
             </td>
         </tr>
 END;
@@ -1558,7 +1558,7 @@ END;
         <tr>
             <td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
             <td>$rec_range
-                <input id="repeatTime" type="text" size="12" name="repeatTime" value="$recToDtText" />
+                <input id="repeatTime" class="time-pick" type="text" size="12" name="repeatTime" value="$recToTimeText" />
             </td>
         </tr>
 END;
@@ -1610,16 +1610,15 @@ END;
         Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
         
         // Validate the times
-        if (!strstr($fromTime, ':') || !strstr($toTime, ':'))
-        {
+        $regEx = '/([01]?[0-9]|2[0-3]):([0-5][0-9])/';
+        if (!preg_match($regEx, $fromTime) || !preg_match($regEx, $toTime) || ($repeatTime != '' && !preg_match($regEx, $repeatTime)))
             trigger_error(__('Times must be in the format 00:00'), E_USER_ERROR);
-        }
         
         $fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
         $toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
 
-                if ($recToDT != '')
-                    $recToDT = $datemanager->GetDateFromUS($recToDT, $repeatTime);
+        if ($recToDT != '')
+            $recToDT = $datemanager->GetDateFromUS($recToDT, $repeatTime);
         
         // Validate layout
         if ($campaignId == 0)
@@ -1699,10 +1698,9 @@ END;
         Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
         
         // Validate the times
-        if (!strstr($fromTime, ':') || !strstr($toTime, ':'))
-        {
+        $regEx = '/([01]?[0-9]|2[0-3]):([0-5][0-9])/';
+        if (!preg_match($regEx, $fromTime) || !preg_match($regEx, $toTime) || ($repeatTime != '' && !preg_match($regEx, $repeatTime)))
             trigger_error(__('Times must be in the format 00:00'), E_USER_ERROR);
-        }
         
         $fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
         $toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
