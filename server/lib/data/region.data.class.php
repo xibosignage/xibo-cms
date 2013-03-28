@@ -75,11 +75,16 @@ class region
 			return false;
 		}
 
-                // Notify (dont error)
-                Kit::ClassLoader('display');
-                $displayObject = new Display($db);
-                $displayObject->NotifyDisplays($layoutid);
-		
+		// Get the Campaign ID
+        Kit::ClassLoader('campaign');
+        $campaign = new Campaign($db);
+        $campaignId = $campaign->GetCampaignId($layoutid);
+
+        // Notify (dont error)
+        Kit::ClassLoader('display');
+        $displayObject = new Display($db);
+        $displayObject->NotifyDisplays($campaignId);
+
 		return true;
 	}
 	

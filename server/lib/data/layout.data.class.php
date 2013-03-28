@@ -230,7 +230,7 @@ END;
         // Notify (dont error)
         Kit::ClassLoader('display');
         $displayObject = new Display($db);
-        $displayObject->NotifyDisplays($layoutId);
+        $displayObject->NotifyDisplays($campaignId);
 
         return true;
     }
