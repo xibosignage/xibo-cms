@@ -1593,15 +1593,16 @@ END;
         
         $SQL .= ' ORDER BY Transition ';
 
-        if (!$rows = $this->db->GetArray($SQL))
-        {
+		$rows = $this->db->GetArray($SQL);
+        
+        if (!is_array($rows)) {
             trigger_error($this->db->error());
             return false;
         }
         
         $transitions = array();
 
-        foreach($rows as $transition)
+        foreach ($rows as $transition)
         {
             $transitionItem = array();
             
