@@ -827,9 +827,9 @@ END;
             {
                 // Not like, or like?
                 if (substr($searchName, 0, 1) == '-')
-                    $SQL.= " AND  (media.name NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                    $SQL.= " AND  (media.name NOT LIKE '%" . sprintf('%s', ltrim($this->db->escape_string($searchName), '-')) . "%') ";
                 else
-                    $SQL.= " AND  (media.name LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+                    $SQL.= " AND  (media.name LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
             }
 		}
 

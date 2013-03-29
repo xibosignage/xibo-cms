@@ -291,7 +291,7 @@ END;
 		
 		if ($db->num_rows($results) == 0) 
 		{
-			echo "";
+			echo '';
 			exit;
 		}
 		
@@ -305,7 +305,7 @@ END;
 			$row['assigned'] = (($row['AssignedID'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif'));
 			$row['assignedid'] = $row['AssignedID'];
 			$row['checkbox_value'] = $row['AssignedID'] . ',' . $row['pagegroupID'];
-			$row['checkbox_ticked'] = (($row['AssignedID'] == 1) ? ' checked' : '');
+			$row['checkbox_ticked'] = '';
 			
 			$rows[] = $row;
 		}
@@ -552,7 +552,7 @@ END;
 			$row['assigned'] = (($row['AssignedID'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif'));
 			$row['assignedid'] = $row['AssignedID'];
 			$row['checkbox_value'] = $row['AssignedID'] . ',' . $row['MenuItemID'];
-			$row['checkbox_ticked'] = (($row['AssignedID'] == 1) ? ' checked' : '');
+			$row['checkbox_ticked'] = '';
 			
 			$rows[] = $row;
 		}

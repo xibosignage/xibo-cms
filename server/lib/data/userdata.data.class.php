@@ -49,6 +49,10 @@ class Userdata extends Data
      */
     public function ChangePassword($userId, $oldPassword, $newPassword, $retypedNewPassword, $forceChange = false)
     {
+        // Validate
+        if ($userId == 0)
+            return $this->SetError(26001, __('User not selected'));
+
         // We can force the users password to change without having to provide the old one.
         // Is this a potential security hole - we must have validated that we are an admin to get to this point
         if (!$forceChange)
@@ -73,8 +77,12 @@ class Userdata extends Data
         // Generate a new SALT and Password
         $hash = $this->create_hash($newPassword);
 
+        $SQL = sprintf("UPDATE `user` SET UserPassword = '%s', CSPRNG = 1 WHERE UserID = %d", $hash, $userId);
+
+        Debug::LogEntry($this->db, 'audit', $SQL);
+
         // Run the update
-        if (!$this->db->query(sprintf("UPDATE `user` SET UserPassword = '%s', CSPRNG = 1 WHERE UserID = %d", $hash, $userId)))
+        if (!$this->db->query($SQL))
         {
             trigger_error($this->db->error());
             return $this->SetError(25000, __('Could not edit Password'));

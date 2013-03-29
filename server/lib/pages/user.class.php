@@ -666,7 +666,6 @@ class userDAO
         // Set some information about the form
         Theme::Set('form_id', 'ChangePasswordForm');
         Theme::Set('form_action', 'index.php?p=user&q=ChangePassword');
-        Theme::Set('form_meta', '<input type="hidden" name="UserId" value="' . $userId . '" />');
 
         $form = Theme::RenderReturn('user_form_change_password');
 
@@ -717,7 +716,7 @@ class userDAO
 
         $form = Theme::RenderReturn('user_form_set_password');
 
-        $response->SetFormRequestResponse($form, __('Change Password'), '450', '300');
+        $response->SetFormRequestResponse($form, __('Set Password'), '450', '300');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'SetPassword') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#SetPasswordForm").submit()');
@@ -735,7 +734,7 @@ class userDAO
         $newPassword = Kit::GetParam('newPassword', _POST, _STRING);
         $retypeNewPassword = Kit::GetParam('retypeNewPassword', _POST, _STRING);
 
-        $userId = Kit::GetParam('userId', _GET, _INT);
+        $userId = Kit::GetParam('UserId', _POST, _INT);
         
         // Check we are an admin
         if ($this->user->usertypeid != 1)
