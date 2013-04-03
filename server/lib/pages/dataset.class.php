@@ -374,7 +374,7 @@ class datasetDAO
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        $heading = Kit::GetParam('heading', _POST, _WORD);
+        $heading = Kit::GetParam('heading', _POST, _STRING);
         $listContent = Kit::GetParam('listcontent', _POST, _STRING);
         $columnOrder = Kit::GetParam('columnorder', _POST, _INT);
 
@@ -414,7 +414,7 @@ class datasetDAO
         if (!$row = $db->GetSingleRow($SQL))
             trigger_error(__('Unabled to get Data Column information'), E_USER_ERROR);
 
-        Theme::Set('heading',  Kit::ValidateParam($row['Heading'], _WORD));
+        Theme::Set('heading',  Kit::ValidateParam($row['Heading'], _STRING));
         Theme::Set('listcontent',  Kit::ValidateParam($row['ListContent'], _STRING));
         Theme::Set('columnorder',  Kit::ValidateParam($row['ColumnOrder'], _INT));
 
@@ -441,7 +441,7 @@ class datasetDAO
             trigger_error(__('Access Denied'));
             
         $dataSetColumnId = Kit::GetParam('datasetcolumnid', _POST, _INT);
-        $heading = Kit::GetParam('heading', _POST, _WORD);
+        $heading = Kit::GetParam('heading', _POST, _STRING);
         $listContent = Kit::GetParam('listcontent', _POST, _STRING);
         $columnOrder = Kit::GetParam('columnorder', _POST, _INT);
 
