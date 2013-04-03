@@ -379,10 +379,10 @@ class datasetDAO
         $columnOrder = Kit::GetParam('columnorder', _POST, _INT);
 
         $dataSetObject = new DataSetColumn($db);
-        if (!$dataSetObject->Add($dataSetId, $heading, 1, $listContent))
+        if (!$dataSetObject->Add($dataSetId, $heading, 1, $listContent, $columnOrder))
             trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
 
-        $response->SetFormSubmitResponse(__('Column Edited'));
+        $response->SetFormSubmitResponse(__('Column Added'));
         $response->hideMessage = true;
         $response->loadForm = true;
         $response->loadFormUri = 'index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet;

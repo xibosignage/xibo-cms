@@ -22,12 +22,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class DataSetColumn extends Data
 {
-    public function Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder = '')
+    public function Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder = 0)
     {
         $db =& $this->db;
 
         // Is the column order provided?
-        if ($columnOrder == '')
+        if ($columnOrder == 0)
         {
             $SQL  = "";
             $SQL .= "SELECT IFNULL(MAX(ColumnOrder), 1) AS ColumnOrder ";
