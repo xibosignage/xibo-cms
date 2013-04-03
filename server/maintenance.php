@@ -93,10 +93,9 @@ TranslationEngine::InitLocale($db);
 print '<html>';
 print '  <head>';
 print '    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />';
-print '    <title>Xibo Open Source Digital Signage - Maintenance</title>';
+print '    <title>Open Source Digital Signage - Maintenance</title>';
 print '  </head>';
 print '<body>';
-print '  <!-- Copyright 2010 - Alex Harrington, part of Xibo Open Source Digital Signage -->';
 
 // Should the Scheduled Task script be running at all?
 if(Config::GetSetting($db, "MAINTENANCE_ENABLED")=="Off")
@@ -195,7 +194,7 @@ else
                 {
                     if ((($email_alert == 1) && $alwaysAlert) || (($loggedin == 1) && ($email_alert == 1)))
                     {
-                        $subject  = sprintf(__("Xibo Email Alert for Display %s"),$display_name);
+                        $subject  = sprintf(__("Email Alert for Display %s"),$display_name);
                         $body     = sprintf(__("Display %s with ID %d was last seen at %s."),$display_name,$displayid,$last_seen);
 
                         if (Kit::SendEmail($msgTo, $msgFrom, $subject, $body))

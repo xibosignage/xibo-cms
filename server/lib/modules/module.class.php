@@ -487,7 +487,7 @@ XML;
 
             // Messages
             $msgTitle = __('Return to the Region Options');
-            $msgWarn = __('Are you sure you want to remove this item from Xibo?');
+            $msgWarn = __('Are you sure you want to remove this item?');
             $msgWarnLost = __('It will be lost');
             $msgYes = __('Yes');
             $msgNo = __('No');

@@ -94,12 +94,12 @@ $db = new database();
 
 if (!$db->connect_db($dbhost, $dbuser, $dbpass))
 {
-    die('Xibo has a database connection problem.');
+    die('Database connection problem.');
 }
 
 if (!$db->select_db($dbname))
 {
-    die('Xibo has a database connection problem.');
+    die('Database connection problem.');
 }
 
 date_default_timezone_set(Config::GetSetting($db, "defaultTimezone"));
