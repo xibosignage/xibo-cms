@@ -76,11 +76,10 @@ class Session
 		$this->gc($this->max_lifetime);
 		
 		// Get this session		
-		$SQL  = " SELECT session_data, IsExpired, SecurityToken FROM session ";
+		$SQL  = " SELECT session_data, IsExpired, SecurityToken, UserAgent FROM session ";
 		$SQL .= " WHERE session_id = '%s' ";
-		$SQL .= " AND UserAgent = '%s' ";
 		
-		$SQL 	= sprintf($SQL, $db->escape_string($key), $db->escape_string($userAgent));
+		$SQL 	= sprintf($SQL, $db->escape_string($key));
 		
 		$result = $db->query($SQL);
 		
@@ -88,6 +87,15 @@ class Session
 		{
 			// Get the row
 			$row = $db->get_row($result);
+
+			// What happens if the UserAgent has changed?
+			if ($row[3] != $userAgent) {
+				// Make sure we are logged out (delete all data)
+				$db->query(sprintf("DELETE FROM session WHERE session_id = '%s' ", $db->escape_string($key)));
+
+				$empty = '';
+				return settype($empty, "string");
+			}
 			
 			// We have the Key and the Remote Address.
 			if ($securityToken == null)
