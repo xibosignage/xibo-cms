@@ -80,6 +80,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 						</div>
 					</form>
 
+					<div class="login_message"><?php echo Theme::Get('login_message'); ?></div>
+
 					<p><a href="<?php echo Theme::GetConfig('theme_url'); ?>"><img src='<?php echo Theme::ImageUrl('login/complogo.png'); ?>'></a></p>
 
 					<p><?php echo Theme::Translate('Version %s', VERSION); ?> | <a href="<?php echo Theme::Get('source_url'); ?>"><?php echo Theme::Translate('Source'); ?></a> | <a class="XiboFormButton" href="<?php echo Theme::Get('about_url'); ?>" title="<?php echo Theme::Translate('About'); ?>"><?php echo Theme::Translate('About'); ?></a></p>
