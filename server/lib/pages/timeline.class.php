@@ -596,7 +596,7 @@ END;
         $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionId, true);
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
         if (!$regionAuth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this regions permissions'), E_USER_ERROR);
 
