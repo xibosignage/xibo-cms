@@ -24,9 +24,9 @@ CREATE TABLE IF NOT EXISTS `transition` (
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
 
 INSERT INTO `transition` (`TransitionID`, `Transition`, `Code`, `HasDuration`, `HasDirection`, `AvailableAsIn`, `AvailableAsOut`) VALUES
-(1, 'Fade In', 'fadeIn', 1, 0, 1, 0),
-(2, 'Fade Out', 'fadeOut', 1, 0, 0, 1),
-(3, 'Fly', 'fly', 1, 1, 1, 1);
+(1, 'Fade In', 'fadeIn', 1, 0, 0, 0),
+(2, 'Fade Out', 'fadeOut', 1, 0, 0, 0),
+(3, 'Fly', 'fly', 1, 1, 0, 0);
 
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES (NULL, 'GLOBAL_THEME_NAME', 'default', 'text', 'The Theme to apply to all pages by default', NULL, 'general', '1');
 

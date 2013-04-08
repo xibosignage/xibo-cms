@@ -293,7 +293,7 @@ function gwsc()
             for($k=0; $k<6; $k++) 
 			{
                 $c = $cs[$i] .$cs[$j] .$cs[$k];
-				$colors[] = array('colorid' => $c, 'color' => '#' . $c);
+				$colors[] = array('colorid' => $c, 'color' => '#' . $c, 'style' => 'background-color:#' . $c . ';color:#' . $c);
 			}
         }
     }

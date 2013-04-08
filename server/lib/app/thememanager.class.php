@@ -270,14 +270,15 @@ class Theme {
      * @param string Key for item class
      * @return string
      */
-    public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = null, $callBack = '', $classColumn = '')
+    public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = null, $callBack = '', $classColumn = '', $styleColumn = '')
     {
     	$list = '<select name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
 
         foreach ($listValues as $listItem)
         {
             $class = ($classColumn == '') ? '' : 'class="' . $listItem[$classColumn] . '"';
-            $list .= '<option ' . $class . ' value="' . $listItem[$idColumn] . '" ' . (($listItem[$idColumn] == $selectedId) ? 'selected' : '') . '>' . $listItem[$nameColumn] . '</option>';
+            $style = ($styleColumn == '') ? '' : 'style="' . $listItem[$styleColumn] . '"';
+            $list .= '<option ' . $style . ' ' . $class . ' value="' . $listItem[$idColumn] . '" ' . (($listItem[$idColumn] == $selectedId) ? 'selected' : '') . '>' . $listItem[$nameColumn] . '</option>';
         }
 
         $list .= '</select>';

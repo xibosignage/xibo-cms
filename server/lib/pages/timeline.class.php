@@ -177,7 +177,13 @@ class timelineDAO {
 
         Theme::Set('direction_field_list', $compassPoints);
 
-        $form = Theme::RenderReturn('region_form_options');
+        if (count($this->user->TransitionAuth('out')) > 0) {
+            $form = Theme::RenderReturn('region_form_options');
+        }
+        else {
+            $form = Theme::RenderReturn('region_form_options_no_transition');
+        }
+
         
         $response->SetFormRequestResponse($form, __('Region Options'), '350px', '275px', 'transitionFormLoad');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');

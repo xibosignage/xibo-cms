@@ -313,6 +313,6 @@ INSERT INTO `lkusergroup` (`LkUserGroupID`, `GroupID`, `UserID`) VALUES
 (10, 3, 1);
 
 INSERT INTO `transition` (`TransitionID`, `Transition`, `Code`, `HasDuration`, `HasDirection`, `AvailableAsIn`, `AvailableAsOut`) VALUES
-(1, 'Fade In', 'fadeIn', 1, 0, 1, 0),
-(2, 'Fade Out', 'fadeOut', 1, 0, 0, 1),
-(3, 'Fly', 'fly', 1, 1, 1, 1);
+(1, 'Fade In', 'fadeIn', 1, 0, 0, 0),
+(2, 'Fade Out', 'fadeOut', 1, 0, 0, 0),
+(3, 'Fly', 'fly', 1, 1, 1, 0);
