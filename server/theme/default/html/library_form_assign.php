@@ -27,7 +27,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="XiboGrid LibraryAssign" id="<?php echo Theme::Get('id'); ?>">
+<div class="XiboGrid" id="<?php echo Theme::Get('id'); ?>">
 	<div class="XiboFilter">
 		<div class="FilterDiv" id="Filter">
 			<form>
@@ -44,14 +44,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			</form>
 		</div>
 	</div>
-	<center><?php echo Theme::Translate('Drag or double click to move items between lists') ?></center>
-    <div class="XiboData LibraryAssignLeftSortableList connectedlist">
+	<?php echo Theme::Get('pager'); ?>
+	<div class="XiboData"></div>
+</div>
+<div id="LibraryAssign">
+    <h3><?php echo Theme::Translate('Media to Assign') ?></h3>
+    <ul id="LibraryAssignSortable">
 
-    </div>
-    <div class="LibraryAssignRightSortableList connectedlist">
-        <h3><?php echo Theme::Translate('Media to Assign') ?></h3>
-        <ul id="LibraryAssignSortable" class="connectedSortable">
-
-        </ul>
-    </div>
+    </ul>
 </div>

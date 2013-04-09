@@ -213,6 +213,7 @@ class contentDAO
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryAssignView">');
+        Theme::Set('pager', ResponseManager::Pager($id));
         
         // Module types filter
         $types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
@@ -252,7 +253,7 @@ class contentDAO
         $response = new ResponseManager();
 
         //Input vars
-        $mediatype = Kit::GetParam('filter_name', _POST, _STRING);
+        $mediatype = Kit::GetParam('filter_type', _POST, _STRING);
         $name = Kit::GetParam('filter_name', _POST, _STRING);
 
         // Get a list of media
@@ -265,18 +266,14 @@ class contentDAO
 
             $row['duration_text'] = sec2hms($row['duration']);
             $row['list_id'] = 'MediaID_' . $row['mediaid'];
-            $row['list_text'] = $row['media'] . ' (' . $row['mediatype'] . ') - Duration (sec): ' . $row['duration_text'];
 
             $rows[] = $row;
-        }        
+        }
 
-        Theme::Set('list_items', $rows);
+        Theme::Set('table_rows', $rows);
 
         // Render the Theme
-        $response->html = Theme::RenderReturn('library_form_assign_list');
-
-        // Construct the Response
-        $response->success = true;
+        $response->SetGridResponse(Theme::RenderReturn('library_form_assign_list'));
         $response->callBack = 'LibraryAssignCallback';
         $response->Respond();
     }
