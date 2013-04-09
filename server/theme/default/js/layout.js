@@ -84,7 +84,7 @@ var LibraryAssignCallback = function()
         $("<li/>", {
             text: row.attr("litext"),
             id: row.attr("rowid"),
-            class: "li-sortable",
+            "class": "li-sortable",
             dblclick: function(){
                 $(this).remove();
             }
