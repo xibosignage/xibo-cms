@@ -138,11 +138,12 @@ class Config
 		}
 		else if ($this->CheckPHP() == 2)
 		{
+			$this->envWarning = true;
 			$output .= $imgWarn.$message.'<br />';
 			$output .= <<<END
 			<div class="check_explain">
-			<p>Xibo requires PHP version 5.2.0 or later. It may run on PHP 5.1.0 and we have provided compatibility functions to enable that.</p>
-			<p>However, we recommend upgrading your version of PHP to 5.2.0 or later.</p>
+			<p>Xibo requires PHP version 5.2.4 or later. It may run on PHP 5.1.0 and we have provided compatibility functions to enable that.</p>
+			<p>However, we recommend upgrading your version of PHP to 5.2.4 or later.</p>
 			</div>
 END;
 		}
@@ -334,8 +335,23 @@ END;
 			$output .= '<div class="check_explain"><p>' . __('PHP DOM XML extension to function.') . '</p></div>';
 		}
 		
+		// Check for Mcrypt
+		$message = __('Mcrypt Extension');
+
+		if ($this->CheckMcrypt()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('PHP Mcrypt extension to function.') . '</p></div>';
+		}
+		
 		// Check to see if we are allowed to open remote URLs (homecall will not work otherwise)
-		$message = __("Allow PHP to open external URLs");
+		$message = __('Allow PHP to open external URLs');
 
 		if (ini_get('allow_url_fopen')) 
 		{
@@ -362,6 +378,21 @@ END;
 			$this->envWarning = true;
 			
 			$output .= $imgWarn.$message.'<br />';
+		}
+		
+		// Check to see if large file uploads enabled
+		$message = 'Large File Uploads';
+
+		if ($this->CheckPHPUploads()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envWarning = true;
+			$output .= $imgWarn.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('You probably want to allow larger files to be uploaded than is currently available with your PHP configuration.') . '<br />';
+			$output .= __('We suggest setting your PHP post_max_size and upload_max_size to at least 128M, and also increasing your max_execution_time to at least 120 seconds.') . '</p></div>';
 		}
 				
 		$output .= '</div>';
@@ -412,7 +443,7 @@ END;
 	 */
 	function CheckPHP() 
 	{
-		if (phpversion() >= '5.2.0') 
+		if (phpversion() >= '5.2.4') 
 		{
 			return 1;
 		}
@@ -489,6 +520,15 @@ END;
 	}
 	
 	/**
+	 * Check PHP has the Mcrypt functionality installed
+	 * @return 
+	 */
+	function CheckMcrypt()
+	{
+		return extension_loaded("mcrypt");
+	}
+	
+	/**
 	 * Check PHP has the DOM functionality installed
 	 * @return 
 	 */
@@ -514,6 +554,53 @@ END;
 	{
 		return extension_loaded("pcre");
 	}
-}
+	
+	/**
+	 * Check PHP is setup for large file uploads
+	 * @return
+	 */
+	function CheckPHPUploads()
+	{
+		# Consider 0 - 128M warning / < 120 seconds
+		# Variables to check:
+		#    post_max_size
+		#    upload_max_filesize
+		#    max_execution_time
+		
+		minSize = $this->return_bytes('128M');
+		
+		if ($this->return_bytes(ini_get('post_max_size') < minSize))
+		{
+			return false;
+	        }
+	        
+	        if ($this->return_bytes(ini_get('upload_max_filesize') < minSize))
+	        {
+	        	return false;
+		}
+		
+		if (ini_get('max_execution_time') < 120)
+		{
+			return false;
+		}
+		
+		return true;
+	}
 
-?>
+	/**
+	 * Helper function to convert strings like 8M or 3G into bytes
+	 * by Stas Trefilov. Assumed Public Domain.
+	 * Taken from the PHP Manual (http://www.php.net/manual/en/function.ini-get.php#96996)
+	 * @return
+	 */
+	function return_bytes($size_str)
+	{
+		switch (substr ($size_str, -1))
+		{
+                	case 'M': case 'm': return (int)$size_str * 1048576;
+                        case 'K': case 'k': return (int)$size_str * 1024;
+                        case 'G': case 'g': return (int)$size_str * 1073741824;
+                        default: return $size_str;
+                }
+        }
+}
