@@ -115,9 +115,9 @@ class oauthDAO
 
         foreach($list as $row)
         {
-            $row['received'] = Kit::ValidateParam($logEntry['received'], _STRING);
-            $row['notes'] = Kit::ValidateParam($logEntry['notes'], _STRING);
-            $row['timestamp'] = Kit::ValidateParam($logEntry['timestamp'], _STRING);
+            $row['received'] = Kit::ValidateParam($row['received'], _STRING);
+            $row['notes'] = Kit::ValidateParam($row['notes'], _STRING);
+            $row['timestamp'] = Kit::ValidateParam($row['timestamp'], _STRING);
 
             $rows[] = $row;
         }
@@ -263,16 +263,16 @@ class oauthDAO
 
         foreach ($list as $app)
         {
-            $row['application_title'] = Kit::ValidateParam($app['application_title'], _STRING);
-            $row['enabled'] = Kit::ValidateParam($app['enabled'], _STRING);
-            $row['status'] = Kit::ValidateParam($app['status'], _STRING);
+            $app['application_title'] = Kit::ValidateParam($app['application_title'], _STRING);
+            $app['enabled'] = Kit::ValidateParam($app['enabled'], _STRING);
+            $app['status'] = Kit::ValidateParam($app['status'], _STRING);
 
             $rows[] = $app;
         }
 
         Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('applications_form_view_log');
+        $output = Theme::RenderReturn('application_form_user_applications');
 
         $response->SetFormRequestResponse($output, __('Authorized applications for user'), '650', '450');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");

@@ -40,6 +40,14 @@ function setMessage($message) {
 	$_SESSION['message'] = $message;
 }
 
+function getMessage() {
+	$message = Kit::GetParam('message', _SESSION, _STRING, '');
+
+	unset($_SESSION['message']);
+
+	return $message;
+}
+
 // Returns a drop down list based on the provided SQL - the ID should be the first field, and the name the second
 function dropdownlist($SQL, $list_name, $selected = "", $callback = "", $flat_list = false, $checkPermissions = false, $userid = "", $permissionLevel = "see", $useQueryId = false) {
 	global $db;
@@ -285,7 +293,7 @@ function gwsc()
             for($k=0; $k<6; $k++) 
 			{
                 $c = $cs[$i] .$cs[$j] .$cs[$k];
-				$colors[] = array('colorid' => $c, 'color' => '#' . $c);
+				$colors[] = array('colorid' => $c, 'color' => '#' . $c, 'style' => 'background-color:#' . $c . ';color:#' . $c);
 			}
         }
     }

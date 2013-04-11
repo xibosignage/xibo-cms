@@ -20,7 +20,7 @@
 body {
 	font-size:76.1%;
 	font-family:Verdana, Arial, Helvetica, sans-serif;
-	background: url(../img/headerback.png) repeat-x;
+	background: url(../theme/default/img/headerback.png) repeat-x;
 }
 
 img {
@@ -48,7 +48,7 @@ img {
 	float:left;
 	width: 10px;
 	height: 10px;
-	background:url(../img/login/login_topleft.png) no-repeat;
+	background:url(../theme/default/img/login/login_topleft.png) no-repeat;
 	
 }
 
@@ -56,7 +56,7 @@ img {
 	float:right;
 	width: 10px;
 	height: 10px;
-	background:url(../img/login/login_topright.png) no-repeat;
+	background:url(../theme/default/img/login/login_topright.png) no-repeat;
 	
 }
 
@@ -67,11 +67,11 @@ h1 {
 
 
 .install_body {
-	background: url(../img/login/login_body.png) repeat-x #e5f0ff;
+	background: url(../theme/default/img/login/login_body.png) repeat-x #e5f0ff;
 	padding: 25px 0 15px 10px;
 }
 .install_foot{
-	background: url(../img/login/login_foot.png) repeat-x;
+	background: url(../theme/default/img/login/login_foot.png) repeat-x;
 	height: 19px;
 	width: 500px;
 }
@@ -80,7 +80,7 @@ h1 {
 	float:left;
 	width: 11px;
 	height: 19px;
-	background:url(../img/login/login_bottomleft.png) no-repeat;
+	background:url(../theme/default/img/login/login_bottomleft.png) no-repeat;
 	
 }
 
@@ -88,7 +88,7 @@ h1 {
 	float:right;
 	width: 11px;
 	height: 19px;
-	background:url(../img/login/login_bottomright.png) no-repeat;
+	background:url(../theme/default/img/login/login_bottomright.png) no-repeat;
 	
 }
 .install_box form {

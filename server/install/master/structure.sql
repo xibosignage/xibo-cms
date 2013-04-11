@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS `help` (
   `Category` varchar(254) NOT NULL DEFAULT 'General',
   `Link` varchar(254) NOT NULL,
   PRIMARY KEY (`HelpID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=73 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=78 ;
 
 CREATE TABLE IF NOT EXISTS `layout` (
   `layoutID` int(11) NOT NULL AUTO_INCREMENT,
@@ -329,10 +329,11 @@ CREATE TABLE IF NOT EXISTS `menuitem` (
   `Class` varchar(50) DEFAULT NULL,
   `Img` varchar(254) DEFAULT NULL,
   `Sequence` smallint(6) NOT NULL DEFAULT '1',
+  `External` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`MenuItemID`),
   KEY `PageID` (`PageID`),
   KEY `MenuID` (`MenuID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=38 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=40 ;
 
 CREATE TABLE IF NOT EXISTS `module` (
   `ModuleID` int(11) NOT NULL AUTO_INCREMENT,
@@ -434,13 +435,15 @@ CREATE TABLE IF NOT EXISTS `pages` (
   `pagegroupID` int(11) NOT NULL,
   PRIMARY KEY (`pageID`),
   KEY `pagegroupID` (`pagegroupID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Available Pages' AUTO_INCREMENT=38 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Available Pages' AUTO_INCREMENT=40 ;
 
 CREATE TABLE IF NOT EXISTS `resolution` (
   `resolutionID` int(11) NOT NULL AUTO_INCREMENT,
   `resolution` varchar(20) NOT NULL,
   `width` smallint(6) NOT NULL,
   `height` smallint(6) NOT NULL,
+  `intended_width` smallint(6) NOT NULL,
+  `intended_height` smallint(6) NOT NULL,
   PRIMARY KEY (`resolutionID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Supported Resolutions' AUTO_INCREMENT=9 ;
 
@@ -532,16 +535,28 @@ CREATE TABLE IF NOT EXISTS `template` (
   KEY `userID` (`userID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Templates for use on Layouts' AUTO_INCREMENT=9 ;
 
+CREATE TABLE IF NOT EXISTS `transition` (
+  `TransitionID` int(11) NOT NULL AUTO_INCREMENT,
+  `Transition` varchar(254) NOT NULL,
+  `Code` varchar(50) NOT NULL,
+  `HasDuration` tinyint(4) NOT NULL,
+  `HasDirection` tinyint(4) NOT NULL,
+  `AvailableAsIn` tinyint(4) NOT NULL,
+  `AvailableAsOut` tinyint(4) NOT NULL,
+  PRIMARY KEY (`TransitionID`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
+
 CREATE TABLE IF NOT EXISTS `user` (
   `UserID` int(11) NOT NULL AUTO_INCREMENT,
   `usertypeid` int(8) NOT NULL,
-  `UserName` varchar(15) CHARACTER SET latin1 NOT NULL,
-  `UserPassword` varchar(32) CHARACTER SET latin1 NOT NULL,
+  `UserName` varchar(15) NOT NULL,
+  `UserPassword` varchar(128) NOT NULL,
   `loggedin` tinyint(1) NOT NULL DEFAULT '0',
   `lastaccessed` datetime DEFAULT NULL,
-  `email` varchar(50) CHARACTER SET latin1 DEFAULT NULL COMMENT 'The users email address',
+  `email` varchar(50) DEFAULT NULL COMMENT 'The users email address',
   `homepage` varchar(254) NOT NULL DEFAULT 'dashboard.php' COMMENT 'The users homepage',
   `Retired` tinyint(4) NOT NULL DEFAULT '0',
+  `CSPRNG` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`UserID`),
   KEY `usertypeid` (`usertypeid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;

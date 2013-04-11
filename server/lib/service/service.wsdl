@@ -102,7 +102,7 @@
     </message>
     <portType name="xmdsPortType">
         <operation name="RegisterDisplay">
-            <documentation>Registered the Display on the Xibo Network</documentation>
+            <documentation>Register the Display with the CMS</documentation>
             <input message="tns:RegisterDisplayRequest"/>
             <output message="tns:RegisterDisplayResponse"/>
         </operation>

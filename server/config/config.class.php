@@ -90,7 +90,7 @@ class Config
 	{
 		if (!$results = $db->query("SELECT app_ver, XlfVersion, XmdsVersion, DBVersion FROM version")) 
 		{
-			trigger_error("No Version information - please contact Xibo support", E_USER_WARNING);
+			trigger_error("No Version information - please contact technical support", E_USER_WARNING);
 		}
 		
 		$row 		= $db->get_assoc_row($results);
@@ -151,7 +151,7 @@ END;
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"> <p>' . __("Xibo requires PHP version 5.2.4 or later.") . '</p></div>';
+			$output .= '<div class="check_explain"> <p>' . __("PHP version 5.2.4 or later required.") . '</p></div>';
 		}
 		
 		// Check for file system permissions
@@ -166,7 +166,7 @@ END;
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __("Xibo needs to be able to write to the following:");
+			$output .= '<div class="check_explain"><p>' . __("Write access required for the following:");
 			$output .= <<<END
       			<ul>
         			<li> settings.php
@@ -178,7 +178,7 @@ END;
 		}
 		
 		// Check for MySQL
-		$message = __('Xibo requires a MySQL database. Ensure PHP MySQL client extension is installed');
+		$message = __('MySQL database required. Ensure PHP MySQL client extension is installed');
 
 		if ($this->CheckMySQL()) 
 		{
@@ -208,7 +208,7 @@ END;
 			$this->envFault = true;
 
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP JSON extension to function.') . '</p></div>';
+			$output .= '<div class="check_explain"><p>' . __('PHP JSON extension required to function.') . '</p></div>';
 		}
 
                 // Check for SOAP
@@ -223,7 +223,7 @@ END;
 			$this->envFault = true;
 
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP SOAP extension to function.') . '</p></div>';
+			$output .= '<div class="check_explain"><p>' . __('PHP SOAP extension required to function.') . '</p></div>';
 		}
 		
 		// Check for GD (graphics)
@@ -238,7 +238,7 @@ END;
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP GD extension to function.') . '</p></div>';
+			$output .= '<div class="check_explain"><p>' . __('PHP GD extension to function.') . '</p></div>';
 		}
 
 		// Check for PHP Session
@@ -253,7 +253,7 @@ END;
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP session support to function.') . '</p></div>';
+			$output .= '<div class="check_explain"><p>' . __('PHP session support to function.') . '</p></div>';
 		}
 		
 		// Check for PHP PCRE
@@ -268,7 +268,7 @@ END;
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('Xibo needs PHP PCRE support to function.') . '</p></div>';
+			$output .= '<div class="check_explain"><p>' . __('PHP PCRE support to function.') . '</p></div>';
 		}
 		
 		// Check for PHP Gettext
@@ -286,7 +286,7 @@ END;
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('Xibo needs PHP Gettext support to function.') . '</p></div>';
+			$output .= '<div class="check_explain"><p>' . __('PHP Gettext support to function.') . '</p></div>';
 		}
 	
 		// Check for Calendar
@@ -301,7 +301,7 @@ END;
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP Calendar extension to function.') . '</p></div>';
+			$output .= '<div class="check_explain"><p>' . __('PHP Calendar extension to function.') . '</p></div>';
 		}
 		
 		// Check for DOM
@@ -316,7 +316,7 @@ END;
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP DOM core functionality enabled.') . '</p></div>';
+			$output .= '<div class="check_explain"><p>' . __('PHP DOM core functionality enabled.') . '</p></div>';
 		}
 		
 		// Check for DOM XML
@@ -331,7 +331,7 @@ END;
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('Xibo needs the PHP DOM XML extension to function.') . '</p></div>';
+			$output .= '<div class="check_explain"><p>' . __('PHP DOM XML extension to function.') . '</p></div>';
 		}
 		
 		// Check to see if we are allowed to open remote URLs (homecall will not work otherwise)

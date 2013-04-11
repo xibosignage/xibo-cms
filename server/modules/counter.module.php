@@ -77,7 +77,7 @@ FORM;
 
         if ($this->showRegionOptions)
         {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         else
         {
@@ -161,7 +161,7 @@ FORM;
 
         if ($this->showRegionOptions)
         {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         else
         {
@@ -193,7 +193,7 @@ FORM;
         $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
         $popupNotification = Kit::GetParam('popupNotification', _POST, _CHECKBOX);
 
-        $url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+        $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
         //validation
         if ($text == '')
@@ -267,7 +267,7 @@ FORM;
 
         Debug::LogEntry($db, 'audit', 'Text received: ' . $text);
 
-        $url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+        $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
         // Validation
         if ($text == '')

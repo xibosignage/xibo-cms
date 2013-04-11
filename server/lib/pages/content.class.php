@@ -206,82 +206,37 @@ class contentDAO
      */
     function LibraryAssignForm()
     {
-        $db 			=& $this->db;
-        $user			=& $this->user;
-        $response		= new ResponseManager();
-        $formMgr 		= new FormManager($db, $user);
-        $helpManager            = new HelpManager($db, $user);
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
 
-        $mediatype              = '';
-        $name                   = '';
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryAssignView">');
+        Theme::Set('pager', ResponseManager::Pager($id));
+        
+        // Module types filter
+        $types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
+        array_unshift($types, array('moduleid' => '', 'module' => 'All'));
+        Theme::Set('module_field_list', $types);
 
-        if (isset($_SESSION['content']['mediatype'])) $mediatype = $_SESSION['content']['mediatype'];
+        // Call to render the template
+        $output = Theme::RenderReturn('library_form_assign');
 
-        //Media Type drop down list
-        $sql = "SELECT 'all', 'all' ";
-        $sql .= "UNION ";
-        $sql .= "SELECT type, type ";
-        $sql .= "FROM media WHERE 1=1 ";
-        $sql .= "  GROUP BY type ";
-
-        $type_list 	= $formMgr->DropDown($sql, 'type', $mediatype);
-
-        //Input vars
+        // Input vars
         $layoutId = Kit::GetParam('layoutid', _REQUEST, _INT);
         $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
 
-        // Messages
-        $msgName	= __('Name');
-        $msgType	= __('Type');
-
-        $form = <<<HTML
-        <form>
-            <input type="hidden" name="p" value="content">
-            <input type="hidden" name="q" value="LibraryAssignView">
-            <table>
-                <tr>
-                    <td>$msgName</td>
-                    <td><input type="text" name="name" id="name" value="$name"></td>
-                    <td>$msgType</td>
-                    <td>$type_list</td>
-                </tr>
-            </table>
-        </form>
-HTML;
-		
-        $id = uniqid();
-
-        $msgAssignBox = __('Media to Assign');
-        $msgInfoMessage = __('Drag or double click to move items between lists');
-
-        $xiboGrid = <<<HTML
-        <div class="XiboGrid LibraryAssign" id="$id">
-            <div class="XiboFilter">
-                $form
-            </div>
-            <center>$msgInfoMessage</center>
-            <div class="XiboData LibraryAssignLeftSortableList connectedlist">
-
-            </div>
-            <div class="LibraryAssignRightSortableList connectedlist">
-                <h3>$msgAssignBox</h3>
-                <ul id="LibraryAssignSortable" class="connectedSortable">
-
-                </ul>
-            </div>
-        </div>
-HTML;
-		
         // Construct the Response
-        $response->html         = $xiboGrid;
-        $response->success	= true;
-        $response->dialogSize	= true;
-        $response->dialogWidth	= '780px';
+        $response->html = $output;
+        $response->success = true;
+        $response->dialogSize = true;
+        $response->dialogWidth = '780px';
         $response->dialogHeight = '580px';
-        $response->dialogTitle	= __('Assign an item from the Library');
+        $response->dialogTitle = __('Assign an item from the Library');
 
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Library', 'Assign') . '")');
-        $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutId . '&regionid=' . $regionId . '&q=RegionOptions")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Library', 'Assign') . '")');
+        $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutId . '&regionid=' . $regionId . '&q=RegionOptions")');
         $response->AddButton(__('Assign'), 'LibraryAssignSubmit("' . $layoutId . '","' . $regionId . '")');
 
         $response->Respond();
@@ -298,73 +253,27 @@ HTML;
         $response = new ResponseManager();
 
         //Input vars
-        $mediatype = Kit::GetParam('type', _POST, _STRING, 'all');
-        $name = Kit::GetParam('name', _POST, _STRING, 'all');
+        $mediatype = Kit::GetParam('filter_type', _POST, _STRING);
+        $name = Kit::GetParam('filter_name', _POST, _STRING);
 
-        setSession('content', 'mediatype', $mediatype);
-        setSession('content', 'name', $name);
+        // Get a list of media
+        $mediaList = $user->MediaList($mediatype, $name);
 
-        // query to get all media that is in the database ready to display
-        $SQL  = "";
-        $SQL .= "SELECT media.mediaID, ";
-        $SQL .= "       media.name, ";
-        $SQL .= "       media.type, ";
-        $SQL .= "       media.duration ";
-        $SQL .= "  FROM media ";
-        $SQL .= " WHERE retired = 0 AND isEdited = 0 ";
+        $rows = array();
 
-        // Filter on media type
-        if($mediatype != 'all') 
-            $SQL.= sprintf(" AND media.type = '%s'", $mediatype);
-            
-        // Filter on name
-        if ($name != 'all') 
-        {
-            // convert into a space delimited array
-            $names = explode(' ', $name);
+        // Add some extra information
+        foreach ($mediaList as $row) {
 
-            foreach($names as $searchName)
-            {
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-')
-                    $SQL.= " AND  (media.name NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
-                else
-                    $SQL.= " AND  (media.name LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
-            }
+            $row['duration_text'] = sec2hms($row['duration']);
+            $row['list_id'] = 'MediaID_' . $row['mediaid'];
+
+            $rows[] = $row;
         }
 
-        $SQL .= " ORDER BY media.name ";
+        Theme::Set('table_rows', $rows);
 
-        if(!$results = $db->query($SQL)) 
-        {
-            trigger_error($db->error());
-            trigger_error(__('Cannot get list of media in the library'), E_USER_ERROR);			
-        }
-
-        $response->html  = '<h3>' . __('Library') . '</h3>';
-        $response->html .= '<ul id="LibraryAvailableSortable" class="connectedSortable">';
-
-        // while loop
-        while ($row = $db->get_row($results)) 
-        {			
-            $mediaId = Kit::ValidateParam($row[0], _INT);
-            $media = Kit::ValidateParam($row[1], _STRING);
-            $mediatype = Kit::ValidateParam($row[2], _WORD);
-            $length = sec2hms(Kit::ValidateParam($row[3], _DOUBLE));
-            
-            // Permissions
-            $auth = $this->user->MediaAuth($mediaId, true);
-            
-            // Is this user allowed to see this
-            if ($auth->view) 
-                $response->html .= '<li class="li-sortable" id="MediaID_' . $mediaId . '">' . $media . ' (' . $mediatype . ') - Duration (sec): ' . $length . '</li>';
-        }
-
-        //table ending
-        $response->html .= '</ul>';
-
-        // Construct the Response
-        $response->success = true;
+        // Render the Theme
+        $response->SetGridResponse(Theme::RenderReturn('library_form_assign_list'));
         $response->callBack = 'LibraryAssignCallback';
         $response->Respond();
     }

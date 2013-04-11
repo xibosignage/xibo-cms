@@ -354,6 +354,7 @@ function XiboFormRender(formUrl) {
                     resizable: false,
                     bgiframe: true,
                     autoOpen: true,
+                    modal: response.modal,
                     buttons: buttons
                 });
 

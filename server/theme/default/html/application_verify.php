@@ -10,7 +10,7 @@
         
         <h2>Xibo API - Authorization Requested</h2>
         <div style="text-align:left;">
-            <p>Are you sure you want to authorize this application to have access to your Xibo account?</p>
+            <p>Are you sure you want to authorize this application to have access to your CMS account?</p>
             <p>
                 <strong>Application Name</strong>: <?php echo $consumer['application_title']; ?><br />
                 <strong>Application Description</strong>: <?php echo $consumer['application_descr']; ?><br />

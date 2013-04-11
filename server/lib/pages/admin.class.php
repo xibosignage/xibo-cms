@@ -101,7 +101,7 @@ class adminDAO
 				
 				if (!is_writable($value . 'temp'))
 				{
-					trigger_error(__('The Library Location you have picked is not writable to the Xibo Server.'), E_USER_ERROR);
+					trigger_error(__('The Library Location you have picked is not writable'), E_USER_ERROR);
 				}
 			}
 			
@@ -560,7 +560,7 @@ END;
         $mail_to        = Kit::ValidateParam(Config::GetSetting($db, "mail_to"),_PASSWORD);
         $mail_from      = Kit::ValidateParam(Config::GetSetting($db, "mail_from"),_PASSWORD);
         $subject        = __('Email Test');
-        $body           = __('Test email sent from Xibo');
+        $body           = __('Test email sent');
         $headers        = sprintf("From: %s",$mail_from);
         		
         $output  = sprintf(__('Sending test email to %s.'),$mail_to);
@@ -593,7 +593,7 @@ END;
 
         $form = '';
         $form .= '<p>' . __('This will create a dump file of your database that you can restore later using the import functionality.') . '</p>';
-        $form .= '<p>' . __('You should also manually take a backup of your Xibo library.') . '</p>';
+        $form .= '<p>' . __('You should also manually take a backup of your library.') . '</p>';
         $form .= '<p>' . __('Please note: The folder location for mysqldump must be available in your path environment variable for this to work and the php "exec" command must be enabled.') . '</p>';
         $form .= '<a href="index.php?p=admin&q=BackupDatabase" title="' . __('Export Database. Right click to save as.') . '">' . __('Click here to Export') . '</a>';
         

@@ -31,6 +31,7 @@ class Theme {
 	private $name = '';
 	private $pageName = '';
 	private $vars = null;
+	private $config = null;
 	
 	public function __construct(database $db, user $user) {
 
@@ -52,17 +53,24 @@ class Theme {
 		// Store the theme name for later
 		$this->name = $globalTheme;
 
-		static::$instance = $this;
+		// Get config
+		if (!file_exists('theme/' . $this->name . '/config.php'))
+			throw new Exception(__('The theme "%s" config file does not exist', $globalTheme));
+
+		require_once('theme/' . $this->name . '/config.php');
+		$this->config = $config;
+
+		self::$instance = $this;
 	}
 
 	/**
 	 * GetInstance of Theme
 	 */
 	private static function GetInstance() {
-		if (!isset(static::$instance))
+		if (!isset(self::$instance))
 			throw new Exception(__("Theme not initialised"));
 
-		return static::$instance;
+		return self::$instance;
 	}
 
 	/**
@@ -113,11 +121,31 @@ class Theme {
 		
 		// See if we have the requested file in the theme folder
 		if (file_exists('theme/' . $theme->name . '/img/' . $item)) {
-			return '<img ' . (($class != '') ? $class : '') . ' src="theme/' . $theme->name . '/img/' . $item . '" />';
+			return '<img ' . (($class != '') ? 'class="' . $class . '"' : '') . ' src="theme/' . $theme->name . '/img/' . $item . '" />';
 		}
 		// If not, then use the default folder
 		elseif (file_exists('theme/default/img/' . $item)) {
-			return '<img ' . (($class != '') ? $class : '') . ' src="theme/default/img/' . $item . '" />';
+			return '<img ' . (($class != '') ? 'class="' . $class . '"' : '') . ' src="theme/default/img/' . $item . '" />';
+		}
+		else
+			return '';
+	}
+
+	/**
+	 * Get an image URL
+	 * @param [string] $item the image
+	 */
+	public static function ImageUrl($item) {
+
+		$theme = Theme::GetInstance();
+		
+		// See if we have the requested file in the theme folder
+		if (file_exists('theme/' . $theme->name . '/img/' . $item)) {
+			return 'theme/' . $theme->name . '/img/' . $item;
+		}
+		// If not, then use the default folder
+		elseif (file_exists('theme/default/img/' . $item)) {
+			return 'theme/default/img/' . $item;
 		}
 		else
 			return '';
@@ -171,6 +199,27 @@ class Theme {
 		return Theme::GetInstance()->dateManager->GetClock();
 	}
 
+	public static function ApplicationName() {
+		return Theme::GetInstance()->config['app_name'];
+	}
+
+	public static function ThemeName() {
+		return Theme::GetInstance()->config['theme_name'];
+	}
+
+	public static function ThemeFolder() {
+		return Theme::GetInstance()->name;
+	}
+
+	public static function GetConfig($settingName) {
+		$theme = Theme::GetInstance();
+
+		if (isset($theme->config[$settingName]))
+			return $theme->config[$settingName];
+		else
+			return '';
+	}
+
 	/**
 	 * Get Menu
 	 * @param string $menu The Name of the Menu
@@ -191,9 +240,17 @@ class Theme {
 			$item['class'] = Kit::ValidateParam($menuItem['Class'], _WORD);
 			$item['title'] = __(Kit::ValidateParam($menuItem['Text'], _STRING));
 			$item['img'] = Kit::ValidateParam($menuItem['Img'], _STRING);
+			$item['external'] = Kit::ValidateParam($menuItem['External'], _INT);
 
 			$item['selected'] = ($item['page'] == $theme->pageName);
-			$item['link'] = 'index.php?p=' . $item['page'] . '&' . $item['args'];
+
+			if ($item['external'] == 0) {
+				$item['link'] = 'index.php?p=' . $item['page'] . '&' . $item['args'];
+			}
+			else {
+				$item['link'] = $item['args'];
+			}
+
 			$item['li'] = '<li class="' . $item['class'] . '"><a href="' . $item['link'] . '" class="' . $item['class'] . (($item['selected']) ? ' current' : '') . '">' . $item['title'] . '</a></li>';
 
 			$array[] = $item;
@@ -213,14 +270,15 @@ class Theme {
      * @param string Key for item class
      * @return string
      */
-    public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = '', $callBack = '', $classColumn = '')
+    public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = null, $callBack = '', $classColumn = '', $styleColumn = '')
     {
     	$list = '<select name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
 
         foreach ($listValues as $listItem)
         {
             $class = ($classColumn == '') ? '' : 'class="' . $listItem[$classColumn] . '"';
-            $list .= '<option ' . $class . ' value="' . $listItem[$idColumn] . '" ' . (($listItem[$idColumn] === $selectedId) ? 'selected' : '') . '>' . $listItem[$nameColumn] . '</option>';
+            $style = ($styleColumn == '') ? '' : 'style="' . $listItem[$styleColumn] . '"';
+            $list .= '<option ' . $style . ' ' . $class . ' value="' . $listItem[$idColumn] . '" ' . (($listItem[$idColumn] == $selectedId) ? 'selected' : '') . '>' . $listItem[$nameColumn] . '</option>';
         }
 
         $list .= '</select>';

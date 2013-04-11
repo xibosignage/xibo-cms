@@ -118,7 +118,7 @@ class Debug
 		$from = Config::GetSetting($db, "mail_from");
 		if ($from == "") return true;
 		
-		$subject = "Error message from Xibo";
+		$subject = "Error message from Digital Signage System";
 		$message = wordwrap("$errmsg\n$err");
 
 		$headers = "From: $from" . "\r\n" . "Reply-To: $from" . "\r\n" .

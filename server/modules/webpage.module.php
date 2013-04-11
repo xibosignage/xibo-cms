@@ -86,7 +86,7 @@ FORM;
             $this->response->html 		= $form;
         if ($this->showRegionOptions)
         {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         else
         {
@@ -150,7 +150,7 @@ FORM;
                         <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
 			<table>
                         <tr>
-                            <td><label for="uri" title="The Location (URL) of the webpage. E.g. http://www.xibo.org.uk">Link<span class="required">*</span></label></td>
+                            <td><label for="uri" title="The Location (URL) of the webpage.">Link<span class="required">*</span></label></td>
                             <td><input id="uri" name="uri" value="$uri" type="text"></td>
                             <td><label for="duration" title="The duration in seconds this webpage should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
                             <td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
@@ -178,7 +178,7 @@ FORM;
             $this->response->html 		= $form;
         if ($this->showRegionOptions)
         {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         else
         {
@@ -213,7 +213,7 @@ FORM;
                 $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
                 $offsetTop = Kit::GetParam('offsetTop', _POST, _INT);
 		
-		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+		$url 		  = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
 		//Validate the URL?
 		if ($uri == "" || $uri == "http://")
@@ -288,7 +288,7 @@ FORM;
         if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
 
-	$url = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+	$url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
 		//Validate the URL?
 		if ($uri == "" || $uri == "http://")

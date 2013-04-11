@@ -22,12 +22,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Xibo Admin - Please Login</title>
+	<title><?php echo Theme::ApplicationName(); ?> Admin - Please Login</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<link rel="stylesheet" type="text/css" href="theme/default/css/login_box.css" />
 	<link rel="stylesheet" type="text/css" href="3rdparty/jQuery/ui-elements.css" />
 	
-	<link rel="shortcut icon" href="theme/default/img/favicon.ico" />
+	<link rel="shortcut icon" href="<?php echo Theme::ImageUrl('favicon.ico'); ?>" />
 	
     <!-- Javascript Libraries -->
     <script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
@@ -45,7 +45,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<script type="text/javascript" src="theme/default/js/core.js"></script>
 	
 	<script type="text/javascript">
-		$(document).ready(function(){
+		$(document).ready(function() {
 			$('input[type=text]').eq(0).focus();
 		});
 	</script>
@@ -80,7 +80,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 						</div>
 					</form>
 
-					<p><a href="http://www.xibo.org.uk"><img src='theme/default/img/login/complogo.png'></a></p>
+					<div class="login_message"><?php echo Theme::Get('login_message'); ?></div>
+
+					<p><a href="<?php echo Theme::GetConfig('theme_url'); ?>"><img src='<?php echo Theme::ImageUrl('login/complogo.png'); ?>'></a></p>
 
 					<p><?php echo Theme::Translate('Version %s', VERSION); ?> | <a href="<?php echo Theme::Get('source_url'); ?>"><?php echo Theme::Translate('Source'); ?></a> | <a class="XiboFormButton" href="<?php echo Theme::Get('about_url'); ?>" title="<?php echo Theme::Translate('About'); ?>"><?php echo Theme::Translate('About'); ?></a></p>
 				</div>

@@ -104,7 +104,7 @@ class layoutDAO
 		        if (Kit::IsFilterPinned('layout', 'LayoutFilter')) {
 		            Theme::Set('filter_pinned', 'checked');
 		            Theme::Set('layout', Session::Get('layout', 'filter_layout'));
-		            Theme::Set('retired', Session::Get('layout', 'retired'));
+		            Theme::Set('retired', Session::Get('layout', 'filter_retired'));
 		            Theme::Set('filter_userid', Session::Get('layout', 'filter_userid'));
 		            Theme::Set('filter_tags', Session::Get('layout', 'filter_tags'));
 		        }
@@ -487,6 +487,7 @@ class layoutDAO
 		$backgroundColor    = (string) $xml['bgcolor'];
 		$width              = (string) $xml['width'];
 		$height             = (string) $xml['height'];
+		$resolutionid = (int)$xml['resolutionid'];
         $bgImageId          = 0;
 
         // Do we need to override the background with one passed in?
@@ -528,14 +529,16 @@ class layoutDAO
 		Theme::Set('background_color_list', gwsc());
 		
 		// Get the ID of the current resolution
-		$SQL = sprintf("SELECT resolutionID FROM resolution WHERE width = %d AND height = %d", $width, $height);
-		
-		if (!$resolutionid = $db->GetSingleValue($SQL, 'resolutionID', _INT)) 
-		{
-			trigger_error($db->error());
-			trigger_error(__("Unable to get the Resolution information"), E_USER_ERROR);
+		if ($resolutionid == 0) {
+			$SQL = sprintf("SELECT resolutionID FROM resolution WHERE width = %d AND height = %d", $width, $height);
+			
+			if (!$resolutionid = $db->GetSingleValue($SQL, 'resolutionID', _INT)) 
+			{
+				trigger_error($db->error());
+				trigger_error(__("Unable to get the Resolution information"), E_USER_ERROR);
+			}
 		}
-
+		
 		Theme::Set('resolutionid', $resolutionid);
 		Theme::Set('resolution_field_list', $db->GetArray('SELECT resolutionid, resolution FROM resolution ORDER BY resolution'));
 		
@@ -591,8 +594,32 @@ class layoutDAO
 		$xml->loadXML($this->xml);
 		
 		// get the width and the height
+		$resolutionid = (int)$xml->documentElement->getAttribute('resolutionid');
 		$width 	= $xml->documentElement->getAttribute('width');
 		$height = $xml->documentElement->getAttribute('height');
+
+		// Get the display width / height
+		if ($resolutionid != 0) {
+			$SQL = sprintf("SELECT intended_width, intended_height FROM `resolution` WHERE resolutionid = %d", $resolutionid);
+		}
+		else {
+			$SQL = sprintf("SELECT intended_width, intended_height FROM `resolution`  WHERE width = %d AND height = %d", $width, $height);
+		}
+
+		if (!$resolution = $db->GetSingleRow($SQL)) {
+			trigger_error(__('Unable to determine display resolution'));
+
+			$intended_width = $width;
+			$intended_height = $height;
+		}
+		else {
+			$intended_width = $resolution['intended_width'];
+			$intended_height = $resolution['intended_height'];
+		}
+
+		// Work out the scaling factor for the tip
+		// _scaleFactor = Math.Min(_clientSize.Width / _layoutWidth, _clientSize.Height / _layoutHeight);
+		$scaleFactor = min($intended_width / $width, $intended_height / $height);
 		
 		// do we have a background? Or a background color (or both)
 		$bgImage = $xml->documentElement->getAttribute('background');
@@ -626,10 +653,10 @@ class layoutDAO
 		foreach ($regionNodeList as $region)
 		{
 			// get dimensions
-            $tipWidth       = $region->getAttribute('width');
-            $tipHeight      = $region->getAttribute('height');
-            $tipTop         = $region->getAttribute('top');
-            $tipLeft        = $region->getAttribute('left');
+            $tipWidth       = round($region->getAttribute('width') * $scaleFactor, 0);
+            $tipHeight      = round($region->getAttribute('height') * $scaleFactor, 0);
+            $tipTop         = round($region->getAttribute('top') * $scaleFactor, 0);
+            $tipLeft        = round($region->getAttribute('left') * $scaleFactor, 0);
 
 			$regionWidth 	= $region->getAttribute('width') . "px";
 			$regionHeight 	= $region->getAttribute('height') . "px";
@@ -650,7 +677,7 @@ class layoutDAO
 			$regionTransparency  = '<div class="regionTransparency ' . $regionAuthTransparency . '" style="width:100%; height:100%;"></div>';
 			$doubleClickLink = ($regionAuth->edit) ? "XiboFormRender($(this).attr('href'))" : '';
 
-			$regionHtml .= "<div id='region_$regionid' regionEnabled='$regionAuth->edit' regionid='$regionid' layoutid='$this->layoutid' href='index.php?p=timeline&layoutid=$this->layoutid&regionid=$regionid&q=Timeline' ondblclick=\"$doubleClickLink\"' class='$regionDisabledClass $regionPreviewClass' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
+			$regionHtml .= "<div id='region_$regionid' regionEnabled='$regionAuth->edit' regionid='$regionid' layoutid='$this->layoutid' scale='$scaleFactor' width='$regionWidth' height='$regionHeight' href='index.php?p=timeline&layoutid=$this->layoutid&regionid=$regionid&q=Timeline' ondblclick=\"$doubleClickLink\"' class='$regionDisabledClass $regionPreviewClass' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
 					  $regionTransparency";
                                           
 			if ($regionAuth->view)
@@ -731,7 +758,7 @@ HTML;
         $copyMediaChecked = (Config::GetSetting($db, 'LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 'checked' : '';
 
         Theme::Set('form_id', 'LayoutCopyForm');
-        Theme::Set('form_url', 'index.php?p=layout&q=Copy');
+        Theme::Set('form_action', 'index.php?p=layout&q=Copy');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
         Theme::Set('copy_media_checked', $copyMediaChecked);
         Theme::Set('new_layout_default', $oldLayout . ' 2');

@@ -67,6 +67,7 @@
 				Theme::Set('form_action', 'index.php?q=login&referingPage=' . $requestUri);
 				Theme::Set('about_url', 'index.php?p=index&q=About');
 				Theme::Set('source_url', 'https://launchpad.net/xibo/1.5');
+				Theme::Set('login_message', getMessage());
                 Theme::Render('login_page');
                 exit;
 			}
@@ -97,40 +98,57 @@
 	 */
 	function login($username, $password) 
 	{
-		$db 		=& $this->db;
-		global $session;
-		
-		$sql = sprintf("SELECT UserID, UserName, UserPassword, usertypeid FROM user WHERE UserName = '%s' AND UserPassword = '%s' AND Retired = 0", $db->escape_string($username), $db->escape_string($password));
-		
-		if(!$result = $db->query($sql)) trigger_error('A database error occurred while checking your login details.', E_USER_ERROR);
+		$db =& $this->db;
 
-		if ($db->num_rows($result)==0) 
-		{
-			setMessage("Your user name or password is incorrect.");
-			
-			$remote = Kit::ValidateParam($_SERVER['REMOTE_ADDR'], _STRING);
-			
-			Debug::LogEntry($db, "error", sprintf('Incorrect password for user [%s] from [' . $remote . ']', $username));
-			
+		Kit::ClassLoader('userdata');
+		
+		// Get the SALT for this username
+		if (!$userInfo = $db->GetSingleRow(sprintf("SELECT UserID, UserName, UserPassword, UserTypeID, CSPRNG FROM `user` WHERE UserName = '%s'", $db->escape_string($username)))) {
+			setMessage(__('Username or Password incorrect'));
 			return false;
 		}
 
-		$results = $db->get_row($result);
+		// User Data Object to check the password
+		$userData = new Userdata($db);
+
+		// Is SALT empty
+		if ($userInfo['CSPRNG'] == 0) {
+
+			// Check the password using a MD5
+			if ($userInfo['UserPassword'] != md5($password)) {
+				setMessage(__('Username or Password incorrect'));
+				return false;
+			}
+
+			// Now that we are validated, generate a new SALT and set the users password.
+			$userData->ChangePassword(Kit::ValidateParam($userInfo['UserID'], _INT), null, $password, $password, true /* Force Change */);
+		}
+		else {
+			
+			// Check the users password using the random SALTED password
+            if ($userData->validate_password($password, $userInfo['UserPassword']) === false) {
+            	setMessage(__('Username or Password incorrect'));
+				return false;
+            }
+		}
 		
 		// there is a result so we store the userID in the session variable
-		$_SESSION['userid']	= Kit::ValidateParam($results[0], _INT);
-		$_SESSION['username']	= Kit::ValidateParam($results[1], _USERNAME);
-		$_SESSION['usertype']	= Kit::ValidateParam($results[3], _INT);
+		$_SESSION['userid']	= Kit::ValidateParam($userInfo['UserID'], _INT);
+		$_SESSION['username'] = Kit::ValidateParam($userInfo['UserName'], _USERNAME);
+		$_SESSION['usertype'] = Kit::ValidateParam($userInfo['UserTypeID'], _INT);
 
-		$this->usertypeid	= $_SESSION['usertype'];
-		$this->userid           = $_SESSION['userid'];
+		// Set the User Object
+		$this->usertypeid = $_SESSION['usertype'];
+		$this->userid = $_SESSION['userid'];
 
 		// update the db
 		// write out to the db that the logged in user has accessed the page
 		$SQL = sprintf("UPDATE user SET lastaccessed = '" . date("Y-m-d H:i:s") . "', loggedin = 1 WHERE userid = %d", $_SESSION['userid']);
 		
-		$db->query($SQL) or trigger_error("Can not write last accessed info.", E_USER_ERROR);
+		$db->query($SQL) or trigger_error(__('Can not write last accessed info.'), E_USER_ERROR);
 
+		// Switch Session ID's
+		global $session;
 		$session->setIsExpired(0);
 		$session->RegenerateSessionID(session_id());
 
@@ -505,7 +523,8 @@
 		$SQL .= "         menuitem.Args , ";
 		$SQL .= "         menuitem.Text , ";
 		$SQL .= "         menuitem.Class, ";
-		$SQL .= "         menuitem.Img ";
+		$SQL .= "         menuitem.Img, ";
+		$SQL .= "         menuitem.External ";
 		$SQL .= "FROM     menuitem ";
 		$SQL .= "         INNER JOIN menu ";
 		$SQL .= "         ON       menuitem.MenuID = menu.MenuID ";
@@ -809,9 +828,9 @@ END;
             {
                 // Not like, or like?
                 if (substr($searchName, 0, 1) == '-')
-                    $SQL.= " AND  (media.name NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                    $SQL.= " AND  (media.name NOT LIKE '%" . sprintf('%s', ltrim($this->db->escape_string($searchName), '-')) . "%') ";
                 else
-                    $SQL.= " AND  (media.name LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+                    $SQL.= " AND  (media.name LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
             }
 		}
 
@@ -1051,7 +1070,7 @@ END;
      * @param string $tags     [description]
      * @param string $isSystem [description]
      */
-    public function TemplateList($template = '', $tags = '', $isSystem = '')
+    public function TemplateList($template = '', $tags = '', $isSystem = -1)
     {
     	$db =& $this->db;
 
@@ -1084,7 +1103,7 @@ END;
 			$SQL .= " AND template.tags LIKE '%" . $db->escape_string($tags) . "%' ";
 		}
 		
-		if ($isSystem != '-1') 
+		if ($isSystem != -1) 
 		{
 			$SQL .= sprintf(" AND template.issystem = %d ", $isSystem);
 		}
@@ -1355,7 +1374,7 @@ END;
 		$SQL .= '    display.display, ';
 		$SQL .= '    layout.layout, ';
 		$SQL .= '    display.loggedin, ';
-		$SQL .= '    display.lastaccessed, ';
+		$SQL .= '    IFNULL(display.lastaccessed, 0) AS lastaccessed, ';
 		$SQL .= '    display.inc_schedule, ';
 		$SQL .= '    display.licensed, ';
 		$SQL .= '    display.email_alert, ';
@@ -1516,7 +1535,7 @@ END;
             $campaignItem['campaign'] = Kit::ValidateParam($row['Campaign'], _STRING);
             $campaignItem['numlayouts'] = Kit::ValidateParam($row['NumLayouts'], _INT);
             $campaignItem['islayoutspecific'] = Kit::ValidateParam($row['IsLayoutSpecific'], _INT);
-            $campaignItem['retired'] = Kit::ValidateParam($row['Retired'], _BOOLEAN);
+            $campaignItem['retired'] = Kit::ValidateParam($row['Retired'], _BOOL);
 
             // return retired layouts?
             if (!$isRetired && $campaignItem['retired'])
@@ -1575,15 +1594,16 @@ END;
         
         $SQL .= ' ORDER BY Transition ';
 
-        if (!$rows = $this->db->GetArray($SQL))
-        {
+		$rows = $this->db->GetArray($SQL);
+        
+        if (!is_array($rows)) {
             trigger_error($this->db->error());
             return false;
         }
         
         $transitions = array();
 
-        foreach($rows as $transition)
+        foreach ($rows as $transition)
         {
             $transitionItem = array();
             

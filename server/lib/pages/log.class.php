@@ -54,23 +54,23 @@ class logDAO
             Theme::Set('filter_seconds', Session::Get('user', 'filter_seconds'));
         }
         else {
-            Theme::Set('filter_type', 0);
+            Theme::Set('filter_type', '0');
             Theme::Set('filter_seconds', 120);
-            Theme::Set('filter_page', 0);
-            Theme::Set('filter_function', 0);
+            Theme::Set('filter_page', '0');
+            Theme::Set('filter_function', '0');
 			Theme::Set('filter_display', 0);
         }
 
         // Lists
-        $types = array(array('typeid' => 0, 'type' => 'All'), array('typeid' => 'audit', 'type' => 'Audit'), array('typeid' => 'error', 'type' => 'Error'));
+        $types = array(array('typeid' => '0', 'type' => 'All'), array('typeid' => 'audit', 'type' => 'Audit'), array('typeid' => 'error', 'type' => 'Error'));
         Theme::Set('type_field_list', $types);
 
 		$pages = $db->GetArray("SELECT DISTINCT IFNULL(page, '-1') AS pageid, page FROM log ORDER BY 2");
-        array_unshift($pages, array('pageid' => 0, 'page' => 'All'));
+        array_unshift($pages, array('pageid' => '0', 'page' => 'All'));
         Theme::Set('page_field_list', $pages);
 
         $functions = $db->GetArray("SELECT DISTINCT IFNULL(function, '-1') AS functionid, function FROM log ORDER BY 2");
-        array_unshift($functions, array('functionid' => 0, 'function' => 'All'));
+        array_unshift($functions, array('functionid' => '0', 'function' => 'All'));
         Theme::Set('function_field_list', $functions);
 
         $displays = $db->GetArray('SELECT displayid, display FROM display WHERE licensed = 1 ORDER BY 2');

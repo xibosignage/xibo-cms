@@ -59,7 +59,7 @@ class XMDSSoap
 
 	// Make sure we are talking the same language
 	if (!$this->CheckVersion($version))
-            throw new SoapFault('Sender', 'Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk');
+            throw new SoapFault('Sender', 'Your client is not of the correct version for communication with this server.');
 
 	Debug::LogEntry($db, "audit", "[IN]", "xmds", "RegisterDisplay");
 	Debug::LogEntry($db, "audit", "serverKey [$serverKey], hardwareKey [$hardwareKey], displayName [$displayName]", "xmds", "RegisterDisplay");
@@ -144,7 +144,7 @@ class XMDSSoap
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
-            throw new SoapFault('Sender', 'Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk');
+            throw new SoapFault('Sender', 'Your client is not of the correct version for communication with this server.');
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
@@ -403,7 +403,7 @@ class XMDSSoap
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
         {
-            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
+            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
         }
 
         // Make sure we are sticking to our bandwidth limit
@@ -485,7 +485,7 @@ class XMDSSoap
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
-            throw new SoapFault('Sender', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
+            throw new SoapFault('Sender', "Your client is not of the correct version for communication with this server.");
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
@@ -615,7 +615,7 @@ class XMDSSoap
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
         {
-                throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk", $serverKey);
+                throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.", $serverKey);
         }
 
         // Make sure we are sticking to our bandwidth limit
@@ -699,7 +699,7 @@ class XMDSSoap
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
         {
-            throw new SoapFault('Sender', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
+            throw new SoapFault('Sender', "Your client is not of the correct version for communication with this server.");
         }
 
         // Make sure we are sticking to our bandwidth limit
@@ -815,7 +815,7 @@ class XMDSSoap
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
         {
-            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
+            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
         }
 
         // Make sure we are sticking to our bandwidth limit
@@ -909,7 +909,7 @@ class XMDSSoap
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
-            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
+            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
@@ -981,7 +981,7 @@ class XMDSSoap
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
-            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server. You can get the latest from http://www.xibo.org.uk");
+            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
@@ -989,9 +989,7 @@ class XMDSSoap
 
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
-        {
             throw new SoapFault('Receiver', "This display client is not licensed");
-        }
 
         // What type of module is this?
         Kit::ClassLoader('region');
@@ -1000,6 +998,11 @@ class XMDSSoap
 
         if ($type == '')
             throw new SoapFault('Receiver', 'Unable to get the media node type');
+
+        // Dummy User Object
+        $user = new User($db);
+        $user->userid = 0;
+        $user->usertypeid = 1;
 
         // Get the resource from the module
         require_once('modules/' . $type . '.module.php');
@@ -1053,7 +1056,7 @@ class XMDSSoap
             $msgTo    = Kit::ValidateParam(Config::GetSetting($db, "mail_to"),_PASSWORD);
             $msgFrom  = Kit::ValidateParam(Config::GetSetting($db, "mail_from"),_PASSWORD);
 
-            $subject  = sprintf(__("Xibo Recovery for Display %s"),$row[7]);
+            $subject  = sprintf(__("Recovery for Display %s"),$row[7]);
             $body     = sprintf(__("Display %s with ID %d is now back online."), $row[7], $row[3]);
 
             Kit::SendEmail($msgTo, $msgFrom, $subject, $body);

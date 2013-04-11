@@ -122,12 +122,13 @@ class timelineDAO {
 
         $regionid 	= Kit::GetParam('regionid', _GET, _STRING);
         $layoutid 	= Kit::GetParam('layoutid', _GET, _INT);
-        $top 	= Kit::GetParam('top', _GET, _INT);
-        $left 	= Kit::GetParam('left', _GET, _INT);
-        $width 	= Kit::GetParam('width', _GET, _INT);
-        $height 	= Kit::GetParam('height', _GET, _INT);
+        $top 	= Kit::GetParam('top', _GET, _DOUBLE);
+        $left 	= Kit::GetParam('left', _GET, _DOUBLE);
+        $width 	= Kit::GetParam('width', _GET, _DOUBLE);
+        $height 	= Kit::GetParam('height', _GET, _DOUBLE);
         $layoutWidth = Kit::GetParam('layoutWidth', _GET, _INT);
         $layoutHeight = Kit::GetParam('layoutHeight', _GET, _INT);
+        $scale = Kit::GetParam('scale', _GET, _DOUBLE);
 
         Kit::ClassLoader('region');
         $region = new region($db);
@@ -137,18 +138,30 @@ class timelineDAO {
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+
+        // Scale the layout width/height
+        $layoutWidth = round($layoutWidth * $scale, 0);
+        $layoutHeight = round($layoutHeight * $scale, 0);
+
+        // Set some information about the form
+        Theme::Set('form_id', 'RegionProperties');
+        Theme::Set('form_action', 'index.php?p=timeline&q=ManualRegionPosition');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid .'"><input type="hidden" name="regionid" value="' . $regionid . '"><input id="layoutWidth" type="hidden" name="layoutWidth" value="' . $layoutWidth . '"><input id="layoutHeight" type="hidden" name="layoutHeight" value="' . $layoutHeight . '"><input type="hidden" name="scale" value="' . $scale .'">');
         
-        // Include some logic for the region exit transition?
-        $transition = $region->GetOption($layoutid, $regionid, 'transOut', '');
-        $duration = $region->GetOption($layoutid, $regionid, 'transOutDuration', 0);
-        $direction = $region->GetOption($layoutid, $regionid, 'transOutDirection', '');
+        // Theme Variables
+        Theme::Set('width', round($width * $scale, 0));
+        Theme::Set('height', round($height * $scale, 0));
+        Theme::Set('top', round($top * $scale, 0));
+        Theme::Set('left', round($left * $scale, 0));
+        Theme::Set('transition', $region->GetOption($layoutid, $regionid, 'transOut', ''));
+        Theme::Set('duration', $region->GetOption($layoutid, $regionid, 'transOutDuration', 0));
+        Theme::Set('direction', $region->GetOption($layoutid, $regionid, 'transOutDirection', ''));
         
         // Add none to the list
         $transitions = $this->user->TransitionAuth('out');
         $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
-        
-        // Prepare a list of options
-        $transitionDropdown = Kit::SelectList('transitionType', $transitions, 'code', 'transition', $transition, '', 'class');
+
+        Theme::Set('transition_field_list', $transitions);
         
         // Compass points for direction
         $compassPoints = array(
@@ -161,60 +174,18 @@ class timelineDAO {
             array('id' => 'W', 'name' => __('West')),
             array('id' => 'NW', 'name' => __('North West'))
         );
-        
-        // Prepare a list of compass points
-        $directionDropdown = Kit::SelectList('transitionDirection', $compassPoints, 'id', 'name', $direction);
-        
-        // Some messages for the form
-        $msgTransition = __('What transition should be applied when this region is finished?');
-        $msgDuration = __('The duration for this transition, in milliseconds.');
-        $msgDirection = __('The direction for this transtion.');
-        
-        // Construct the form
-        $form = <<<END
-            <form id="RegionProperties" class="XiboForm" method="post" action="index.php?p=layout&q=ManualRegionPosition">
-                <input type="hidden" name="layoutid" value="$layoutid">
-                <input type="hidden" name="regionid" value="$regionid">
-                <input id="layoutWidth" type="hidden" name="layoutWidth" value="$layoutWidth">
-                <input id="layoutHeight" type="hidden" name="layoutHeight" value="$layoutHeight">
-                <table>
-                    <tr>
-                        <td><label for="name" title="Name of the Region">Name</label></td>
-                        <td><input name="name" type="text" id="name" value="$regionName" tabindex="1" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="top" title="Offset from the Top Corner">Top Offset</label></td>
-                        <td><input name="top" type="text" id="top" value="$top" tabindex="2" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="left" title="Offset from the Left Corner">Left Offset</label></td>
-                        <td><input name="left" type="text" id="left" value="$left" tabindex="3" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="width" title="Width of the Region">Width</label></td>
-                        <td><input name="width" type="text" id="width" value="$width" tabindex="4" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="height" title="Height of the Region">Height</label></td>
-                        <td><input name="height" type="text" id="height" value="$height" tabindex="5" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="tranisitionType" title="$msgTransition">$msgTransition</label></td>
-                        <td>$transitionDropdown</td>
-                    </tr>
-                    <tr class="transitionDuration">
-                        <td><label for="transitionDuration">$msgDuration</label></td>
-                        <td><input type="text" class="numeric" name="transitionDuration" id="transitionDuration" value="$duration" /></td>
-                    </tr>
-                    <tr class="transitionDirection">
-                        <td><label for="transitionDirection">$msgDirection</label></td>
-                        <td>$directionDropdown</td>
-                    </tr>
-                </table>
-            </form>
-END;
 
-        $response->SetFormRequestResponse($form, __('Manual Region Positioning'), '350px', '275px', 'transitionFormLoad');
+        Theme::Set('direction_field_list', $compassPoints);
+
+        if (count($this->user->TransitionAuth('out')) > 0) {
+            $form = Theme::RenderReturn('region_form_options');
+        }
+        else {
+            $form = Theme::RenderReturn('region_form_options_no_transition');
+        }
+
+        
+        $response->SetFormRequestResponse($form, __('Region Options'), '350px', '275px', 'transitionFormLoad');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#RegionProperties").submit()');
         $response->AddButton(__('Set Full Screen'), 'setFullScreenLayout()');
@@ -234,6 +205,13 @@ END;
         $left       = Kit::GetParam('left', _POST, _INT);
         $width      = Kit::GetParam('width', _POST, _INT);
         $height 	= Kit::GetParam('height', _POST, _INT);
+        $scale = Kit::GetParam('scale', _POST, _DOUBLE);
+
+        // Adjust the dimensions
+        $top = $top / $scale;
+        $left = $left / $scale;
+        $width = $width / $scale;
+        $height = $height / $scale;
         
         // Transitions?
         $transitionType = Kit::GetParam('transitionType', _POST, _WORD);
@@ -344,7 +322,7 @@ END;
 
         //we can delete
         $form = <<<END
-        <form id="RegionDeleteForm" class="XiboForm" method="post" action="index.php?p=layout&q=DeleteRegion">
+        <form id="RegionDeleteForm" class="XiboForm" method="post" action="index.php?p=timeline&q=DeleteRegion">
                 <input type="hidden" name="layoutid" value="$layoutid">
                 <input type="hidden" name="regionid" value="$regionid">
                 <p>$msgDelete $msgDelete2</p>
@@ -445,7 +423,7 @@ END;
         // We want to load a new form
         $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));
         $response->loadForm = true;
-        $response->loadFormUri = "index.php?p=layout&layoutid=$layoutId&regionid=$regionId&q=RegionOptions";
+        $response->loadFormUri = "index.php?p=timeline&layoutid=$layoutId&regionid=$regionId&q=Timeline";
         $response->Respond();
     }
 
@@ -554,7 +532,7 @@ END;
             trigger_error(__("You do not have permissions to edit this regions permissions"), E_USER_ERROR);
 
         // Form content
-        $form = '<form id="RegionPermissionsForm" class="XiboForm" method="post" action="index.php?p=layout&q=RegionPermissions">';
+        $form = '<form id="RegionPermissionsForm" class="XiboForm" method="post" action="index.php?p=timeline&q=RegionPermissions">';
 	$form .= '<input type="hidden" name="layoutid" value="' . $layoutid . '" />';
 	$form .= '<input type="hidden" name="regionid" value="' . $regionid . '" />';
         $form .= '<div class="dialog_table">';
@@ -624,7 +602,7 @@ END;
         $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionId, true);
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
         if (!$regionAuth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this regions permissions'), E_USER_ERROR);
 
@@ -748,7 +726,7 @@ END;
 
             $response->html .= '<li class="timelineModuleListItem">';
             $response->html .= '    <a class="XiboFormButton timelineModuleButtonAnchor" title="' . $title . '" href="' . $uri . '">';
-            $response->html .= '        <img class="timelineModuleButtonImage" src="' . $img . '" alt="' . __('Module Image') . '" />';
+            $response->html .= Theme::Image($img, 'timelineModuleButtonImage');
             $response->html .= '        <span class="timelineModuleButtonText">' . $caption . '</span>';
             $response->html .= '    </a>';
             $response->html .= '</li>';
@@ -829,9 +807,11 @@ END;
             if ($auth->modifyPermissions)
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="Click to change permissions for this media">' . __('Permissions') . '</a></li>';
 
-            $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a></li>';
-            $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=out&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . '</a></li>';
-
+            if (count($this->user->TransitionAuth('in')) > 0)
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a></li>';
+            
+            if (count($this->user->TransitionAuth('out')) > 0)
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=out&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . '</a></li>';
             
             $response->html .= '        </ul>';
 

@@ -168,16 +168,24 @@ div.timelineMediaItemColouring_disabled{
     background:url(../img/forms/grey_bar.gif) no-repeat;
 }
 
-div.LibraryAssign .connectedlist {
-    width: 345px;
+ul#LibraryAssignSortable {
+    width: 80%;
+    height: 70px;
+    background-color: #EEEEEE;
+    padding: 5px;
 }
 
-div.LibraryAssign .connectedlist ul {
-    width: 340px;
+span.library_assign_list_select {
+    cursor: pointer;
 }
 
-div.LibraryAssign .connectedlist .li-sortable {
-    width: 315px;
+#LibraryAssignSortable .li-sortable {
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid #8080ff;
+    background-color: #E5F0FF;
+    cursor: pointer;
+    float: left;
 }
 
 div.timelineLink {

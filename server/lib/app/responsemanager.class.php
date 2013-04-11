@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -32,9 +32,9 @@ class ResponseManager
 	
 	public $sortable;
 	public $sortingDiv;
-        public $paging;
-        public $pageSize;
-        public $pageNumber;
+    public $paging;
+    public $pageSize;
+    public $pageNumber;
     public $initialSortColumn;
     public $initialSortOrder;
 	
@@ -50,12 +50,13 @@ class ResponseManager
 	public $refresh;
 	public $refreshLocation;
 	public $focusInFirstInput;
-        public $appendHiddenSubmit;
+    public $appendHiddenSubmit;
+    public $modal;
 	
 	public $login;
 	public $clockUpdate;
 
-        public $uniqueReference;
+    public $uniqueReference;
 	
 	public function __construct()
 	{		
@@ -73,6 +74,7 @@ class ResponseManager
         $this->pageNumber = 0;
         $this->initialSortColumn = 1;
         $this->initialSortOrder = 1;
+        $this->modal = false;
 		
 		return true;
 	}
@@ -259,6 +261,7 @@ class ResponseManager
 			$response['refresh']		= $this->refresh;
 			$response['refreshLocation']= $this->refreshLocation;
 			$response['focusInFirstInput']= $this->focusInFirstInput;
+			$response['modal'] = $this->modal;
 			
 			// Login
 			$response['login']			= $this->login;
@@ -307,11 +310,11 @@ class ResponseManager
         // Output a pager
         $output  = '<div class="pager" id="XiboPager_' . $id . '">';
         $output .= '    <form>';
-        $output .= '        <img src="3rdparty/jQuery/css/images/first.png" class="first"/>';
-        $output .= '        <img src="3rdparty/jQuery/css/images/prev.png" class="prev"/>';
+        $output .= '        <img src="theme/default/3rdparty/jQuery/css/images/first.png" class="first"/>';
+        $output .= '        <img src="theme/default/3rdparty/jQuery/css/images/prev.png" class="prev"/>';
         $output .= '        <input type="text" class="pagedisplay"/>';
-        $output .= '        <img src="3rdparty/jQuery/css/images/next.png" class="next"/>';
-        $output .= '        <img src="3rdparty/jQuery/css/images/last.png" class="last"/>';
+        $output .= '        <img src="theme/default/3rdparty/jQuery/css/images/next.png" class="next"/>';
+        $output .= '        <img src="theme/default/3rdparty/jQuery/css/images/last.png" class="last"/>';
         $output .= '        <select class="pagesize">';
         $output .= '            <option value="5">5</option>';
         $output .= '            <option value="10">10</option>';

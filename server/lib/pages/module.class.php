@@ -213,6 +213,7 @@ class moduleDAO
         $validExtensions = Kit::GetParam('ValidExtensions', _POST, _STRING, '');
         $imageUri = Kit::GetParam('ImageUri', _POST, _STRING);
         $enabled = Kit::GetParam('Enabled', _POST, _CHECKBOX);
+        $previewEnabled = Kit::GetParam('PreviewEnabled', _POST, _CHECKBOX);
 
         // Validation
         if ($moduleId == 0 || $moduleId == '')
@@ -222,8 +223,8 @@ class moduleDAO
             trigger_error(__('Image Uri is a required field.'), E_USER_ERROR);
 
         // Deal with the Edit
-        $SQL = "UPDATE `module` SET ImageUri = '%s', ValidExtensions = '%s', Enabled = %d WHERE ModuleID = %d";
-        $SQL = sprintf($SQL, $db->escape_string($imageUri), $db->escape_string($validExtensions), $enabled, $moduleId);
+        $SQL = "UPDATE `module` SET ImageUri = '%s', ValidExtensions = '%s', Enabled = %d, PreviewEnabled = %d WHERE ModuleID = %d";
+        $SQL = sprintf($SQL, $db->escape_string($imageUri), $db->escape_string($validExtensions), $enabled, $previewEnabled, $moduleId);
 
         if (!$db->query($SQL))
         {

@@ -487,7 +487,7 @@ XML;
 
             // Messages
             $msgTitle = __('Return to the Region Options');
-            $msgWarn = __('Are you sure you want to remove this item from Xibo?');
+            $msgWarn = __('Are you sure you want to remove this item?');
             $msgWarnLost = __('It will be lost');
             $msgYes = __('Yes');
             $msgNo = __('No');
@@ -502,7 +502,7 @@ XML;
                         <p>$msgWarn <span class="required">$msgWarnLost</span>.</p>
                 </form>
 END;
-                $this->response->AddButton(__('No'), 'XiboFormRender("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+                $this->response->AddButton(__('No'), 'XiboFormRender("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
                 $this->response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
             }
             else
@@ -1689,7 +1689,7 @@ FORM;
         $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != 0) ? $helpManager->Link('LayoutMedia', 'Permissions') : $helpManager->Link('Media', 'Permissions')) . '")');
         
         if ($this->assignedMedia) {
-        	$response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+        	$response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
     	}
     	else {
 			$response->AddButton(__('Cancel'), 'XiboDialogClose()');
@@ -1938,7 +1938,7 @@ END;
         
         // Decide where the cancel button will take us
         if ($this->showRegionOptions)
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
         else
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
 
@@ -2001,7 +2001,7 @@ END;
         {
             // We want to load a new form
             $this->response->loadForm = true;
-            $this->response->loadFormUri = 'index.php?p=layout&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions';
+            $this->response->loadFormUri = 'index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions';
         }
 
         return $this->response;

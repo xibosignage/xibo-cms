@@ -75,11 +75,16 @@ class region
 			return false;
 		}
 
-                // Notify (dont error)
-                Kit::ClassLoader('display');
-                $displayObject = new Display($db);
-                $displayObject->NotifyDisplays($layoutid);
-		
+		// Get the Campaign ID
+        Kit::ClassLoader('campaign');
+        $campaign = new Campaign($db);
+        $campaignId = $campaign->GetCampaignId($layoutid);
+
+        // Notify (dont error)
+        Kit::ClassLoader('display');
+        $displayObject = new Display($db);
+        $displayObject->NotifyDisplays($campaignId);
+
 		return true;
 	}
 	
@@ -470,7 +475,7 @@ class region
 		return true;
 	}
 	
-	public function EditBackground($layoutid, $bg_color, $bg_image, $width, $height)
+	public function EditBackground($layoutid, $bg_color, $bg_image, $width, $height, $resolutionId)
 	{
 		$db =& $this->db;
 		
@@ -483,6 +488,7 @@ class region
 		$xml->documentElement->setAttribute("bgcolor", $bg_color);
 		$xml->documentElement->setAttribute('width', $width);
 		$xml->documentElement->setAttribute('height', $height);
+		$xml->documentElement->setAttribute('resolutionid', $resolutionId);
 		$xml->documentElement->setAttribute("schemaVersion", Config::Version($db, 'XlfVersion'));
 		
 		//Convert back to XML		

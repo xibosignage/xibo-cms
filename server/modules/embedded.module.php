@@ -85,7 +85,7 @@ FORM;
 
         if ($this->showRegionOptions)
         {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         else
         {
@@ -169,7 +169,7 @@ FORM;
 
         if ($this->showRegionOptions)
         {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         else
         {
@@ -203,7 +203,7 @@ FORM;
 		$embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		
-		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+		$url 		  = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
 		//Validate the URL?
 		if ($embedHtml == "")
@@ -271,7 +271,7 @@ FORM;
         if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
 		
-		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+		$url 		  = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
 		// Validate the URL?
 		if ($embedHtml == "")

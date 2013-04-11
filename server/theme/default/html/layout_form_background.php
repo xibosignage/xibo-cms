@@ -37,7 +37,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<table>
 		<tr>
 			<td><label for="bg_color" title="<?php echo Theme::Translate('Use the color picker to select the background color'); ?>"><?php echo Theme::Translate('Background Color'); ?></label></td>
-			<td><?php echo Theme::SelectList('bg_color', Theme::Get('background_color_list'), 'colorid', 'color', Theme::Get('background_color')); ?></td>
+			<td><?php echo Theme::SelectList('bg_color', Theme::Get('background_color_list'), 'colorid', 'color', Theme::Get('background_color'), '', '', 'style'); ?></td>
 		</tr>
 		<tr>
 			<td><label for="bg_image" title="<?php echo Theme::Translate('Select the background image from the library'); ?>"><?php echo Theme::Translate('Background Image'); ?></label></td>

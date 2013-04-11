@@ -231,7 +231,14 @@ class DataSet extends Data
             foreach ($filter as $filterPair)
             {
                 $filterPair = explode('=', $filterPair);
-                $where .= sprintf(" AND %s = '%s' ", $filterPair[0], $db->escape_string($filterPair[1]));
+
+                // Validate filter pair 1 doesn't contain any disallowed words
+                $disallowedKeywords = array('AND', 'OR');
+
+                if (in_array($filterPair[1], $disallowedKeywords))
+                    continue;
+
+                $where .= sprintf(" AND %s = %s ", $filterPair[0], $filterPair[1]);
             }
 
             $SQL .= $where . ' ';

@@ -1,6 +1,6 @@
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -75,35 +75,34 @@ var XiboTimelineSaveOrder = function(mediaListId, layoutId, regionId) {
  */
 var LibraryAssignCallback = function()
 {
-    // Connect the two lists.
-    $("#LibraryAvailableSortable").sortable({
-        connectWith: '.connectedSortable',
-        dropOnEmpty: true,
-        remove: function(event, ui) {
-            ui.item.clone().appendTo('#LibraryAssignSortable');
+    // Attach a click handler to all of the little pointers in the grid.
+    $("#LibraryAssignTable .library_assign_list_select").click(function(){
+        // Get the row that this is in.
+        var row = $(this).parent().parent();
 
-            $(".li-sortable", "#LibraryAssignSortable").dblclick(function(e){
+        // Construct a new list item for the lower list and append it.
+        $("<li/>", {
+            text: row.attr("litext"),
+            id: row.attr("rowid"),
+            "class": "li-sortable",
+            dblclick: function(){
                 $(this).remove();
-            });
-            
-            $(this).sortable('cancel');
-        },
-        revert: true
-    }).disableSelection();
+            }
+        })
+        .appendTo("#LibraryAssignSortable");
 
-    $("#LibraryAssignSortable").sortable({
-        dropOnEmpty: true
-    }).disableSelection();
+        // Add a span to that new item
+        $("<span/>", {
+            text: " [x]",
+            click: function(){
+                $(this).parent().remove();
+            }
+        })
+        .appendTo("#" + row.attr("rowid"));
 
-    $(".li-sortable", "#LibraryAvailableSortable").dblclick(function(e){
-        var otherList = $($(e.currentTarget).parent().sortable("option","connectWith")).not($(e.currentTarget).parent());
-
-        otherList.append($(e.currentTarget).clone());
     });
 
-    $(".li-sortable", "#LibraryAssignSortable").dblclick(function(e){
-        $(this).remove();
-    });
+    $("#LibraryAssignSortable").sortable().disableSelection();
 }
 
 var LibraryAssignSubmit = function(layoutId, regionId)
@@ -113,11 +112,11 @@ var LibraryAssignSubmit = function(layoutId, regionId)
 
     mediaList = mediaList + "&regionid=" + regionId;
 
-    console.log(mediaList);
+    //console.log(mediaList);
 
     $.ajax({
         type: "post",
-        url: "index.php?p=layout&q=AddFromLibrary&layoutid="+layoutId+"&ajax=true",
+        url: "index.php?p=timeline&q=AddFromLibrary&layoutid="+layoutId+"&ajax=true",
         cache: false,
         dataType: "json",
         data: mediaList,
@@ -256,16 +255,17 @@ $(document).ready(function() {
                     XiboFormRender($(t).attr("href"));
 	        },
                 'options' : function(region) {
-                    var width 	= $(region).css("width");
-                    var height 	= $(region).css("height");
+                    var width 	= $(region).attr("width");
+                    var height 	= $(region).attr("height");
                     var top 	= $(region).css("top");
                     var left 	= $(region).css("left");
                     var regionid = $(region).attr("regionid");
                     var layoutid = $(region).attr("layoutid");
+                    var scale = $(region).attr("scale");
 
                     var layout = $('#layout');
 
-                    XiboFormRender("index.php?p=timeline&q=ManualRegionPositionForm&layoutid="+layoutid+"&regionid="+regionid+"&top="+top+"&left="+left+"&width="+width+"&height="+height+"&layoutWidth="+layout.width()+"&layoutHeight="+layout.height());
+                    XiboFormRender("index.php?p=timeline&q=ManualRegionPositionForm&layoutid="+layoutid+"&regionid="+regionid+"&top="+top+"&left="+left+"&width="+width+"&height="+height+"&layoutWidth="+layout.width()+"&layoutHeight="+layout.height()+"&scale="+scale);
                 },
 		'deleteRegion': function(t) {
 	            deleteRegion(t);
@@ -335,7 +335,8 @@ $(document).ready(function() {
  */
 function updateRegionInfo(e, ui) {
     var pos = $(this).position();
-    $('.regionInfo', this).html($(this).width() + " x " + $(this).height() + " (" + pos.left + "," + pos.top + ")");
+    var scale = $(this).attr("scale");
+    $('.regionInfo', this).html(Math.round($(this).width() * scale, 0) + " x " + Math.round($(this).height() * scale, 0) + " (" + Math.round(pos.left * scale, 0) + "," + Math.round(pos.top * scale, 0) + ")");
 }
 
 /**
@@ -362,8 +363,12 @@ function submitBackground(region)
 	var regionid = $(region).attr("regionid");
 	var layoutid = $(region).attr("layoutid");
 
-        var preview = Preview.instances[regionid];
-        preview.SetSequence(preview.seq);
+    // Update the region width / height attributes
+    $(region).attr("width", width).attr("height", height);
+
+    // Update the Preview for the new sizing
+    var preview = Preview.instances[regionid];
+    preview.SetSequence(preview.seq);
 	
 	$.ajax({type:"post", url:"index.php?p=timeline&q=RegionChange&layoutid="+layoutid+"&ajax=true", cache:false, dataType:"json", 
 		data:{"width":width,"height":height,"top":top,"left":left,"regionid":regionid},success: XiboSubmitResponse});

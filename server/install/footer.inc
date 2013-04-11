@@ -1,5 +1,5 @@
 				<br />
-				<p><a href="http://www.xibo.org.uk"><img src='img/login/complogo.png'></a></p>	
+				<p><a href="http://www.xibo.org.uk"><img src='theme/default/img/login/complogo.png'></a></p>	
 			</div>
 
 			

@@ -109,7 +109,7 @@ FORM;
 		$this->response->dialogTitle = 'Add New Ticker';
         if ($this->showRegionOptions)
         {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         else
         {
@@ -231,7 +231,7 @@ FORM;
             $this->response->dialogTitle = 'Edit Ticker.';
         if ($this->showRegionOptions)
         {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         else
         {
@@ -267,7 +267,7 @@ FORM;
 		$durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
                 $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
 
-		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+		$url 		  = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
 		//validation
 		if ($text == '')
@@ -372,7 +372,7 @@ FORM;
         if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
                 
-		$url 		  = "index.php?p=layout&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+		$url 		  = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 		
 		//validation
 		if ($text == '')
