@@ -21,16 +21,12 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 
-					<!-- These DIV's are used by Xibo to display dialog forms and other AJAX components -->
-					<div id="system_working" style="display:none;"><img src="theme/default/img/loading.gif"></div>
-					<div id="system_message" style="text-align: center;">
-						<span>Message</span>
-					</div>
-					<div id="div_dialog"></div>
-					<div id="help_dialog"></div>
 
 				</div> <!-- Ends the content div -->
 			</div> <!-- Ends contentwrap div -->
 		</div> <!-- Ends the container div -->
+
+		<script src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
+    	<script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
 	</body>
 </html>
