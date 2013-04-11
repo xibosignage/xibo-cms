@@ -27,33 +27,42 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<link rel="shortcut icon" href="<?php echo Theme::ImageUrl('favicon.ico'); ?>" />
 
-		<link href="theme/default/libraries/bootscrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+		<link href="theme/default/libraries/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
 	</head>
 	<body>
 		<!-- Copyright 2006-2013 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
-		<div id="container">
-			<div id="headercontainer">
-		  		<div id="header"></div>
-				<div id="headerback">
-					<ul>
-						<li><a class="XiboFormButton" href="index.php?p=user&q=ChangePasswordForm" title="<?php echo Theme::Translate('Change Password') ?>"><?php echo Theme::GetUsername(); ?></a></li>
-						<li><a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo Theme::Translate('Click to show more time information'); ?>"><?php echo Theme::GetClock(); ?></a></li>
-						<li><a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo Theme::Translate('About the CMS'); ?>"><?php echo Theme::Translate('About'); ?></a></li>
-						<li><a title="Show Help" class="XiboHelpButton" href="<?php echo Theme::GetPageHelpLink(); ?>"><?php echo Theme::Translate('Help'); ?></a></li>
-						<li><a title="Logout" href="index.php?q=logout"><?php echo Theme::Translate("Logout"); ?></a></li>
+		<div class="container">
+			<div class="row">
+				<div class="span10"></div>
+				<div class="span2">
+					<a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo Theme::Translate('Click to show more time information'); ?>"><?php echo Theme::GetClock(); ?></a>
+				</div>
+			</div>
+			<div class="navbar">
+				<div class="navbar-inner">
+					<ul class="nav">
+						<li><a href="<?php echo Theme::GetUserHomeLink(); ?>"><?php echo Theme::Translate('Dashboard'); ?></a></li>
+						<?php
+							foreach (Theme::GetMenu('Top Nav') as $item) {
+								echo $item['li'];
+							}
+						?>
+					</ul>
+					<ul class="nav pull-right">
+						<li class="dropdown">
+							<a href="#" id="prefs" role="button" class="dropdown-toggle" data-toggle="dropdown">
+								<?php echo Theme::Translate("Preferences"); ?>
+								<b class="caret"></b>
+							</a>
+							<ul class="dropdown-menu" role="menu" aria-labelledby="prefs">
+								<li><a class="XiboFormButton" href="index.php?p=user&q=ChangePasswordForm" title="<?php echo Theme::Translate('Change Password') ?>"><?php echo Theme::Translate('Change Password') ?></a></li>
+								<li><a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo Theme::Translate('About the CMS'); ?>"><?php echo Theme::Translate('About'); ?></a></li>
+								<li><a title="Show Help" class="XiboHelpButton" href="<?php echo Theme::GetPageHelpLink(); ?>"><?php echo Theme::Translate('Help'); ?></a></li>
+								<li><a title="Logout" href="index.php?q=logout"><?php echo Theme::Translate("Logout"); ?></a></li>
+							</ul>
+						</li>
 					</ul>
 				</div>
 			</div>
-			<div id="navigation">
-				<ul id="nav">
-					<li><a href="<?php echo Theme::GetUserHomeLink(); ?>"><?php echo Theme::Translate('Dashboard'); ?></a></li>
-					<?php
-						foreach (Theme::GetMenu('Top Nav') as $item) {
-							echo $item['li'];
-						}
-					?>
-				</ul>
-			</div>
-			<div id="contentwrap">
-				<div id="content">
-				<?php //The remaining content follows here in the page that included this template file. The footer.php file then closes off any block elements that remain open ?>
+
+<?php //The remaining content follows here in the page that included this template file. The footer.php file then closes off any block elements that remain open ?>
