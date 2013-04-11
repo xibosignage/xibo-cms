@@ -567,14 +567,14 @@ END;
 		#    upload_max_filesize
 		#    max_execution_time
 		
-		minSize = $this->return_bytes('128M');
+		$minSize = $this->return_bytes('128M');
 		
-		if ($this->return_bytes(ini_get('post_max_size') < minSize))
+		if ($this->return_bytes(ini_get('post_max_size') < $minSize))
 		{
 			return false;
 	        }
 	        
-	        if ($this->return_bytes(ini_get('upload_max_filesize') < minSize))
+	        if ($this->return_bytes(ini_get('upload_max_filesize') < $minSize))
 	        {
 	        	return false;
 		}
