@@ -29,20 +29,20 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<link rel="shortcut icon" href="<?php echo Theme::ImageUrl('favicon.ico'); ?>" />
 
 		<!-- Javascript Libraries -->
-		<script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
-		<script type="text/javascript" src="3rdparty/jQuery/jquery-ui.min.js"></script>
-        <link rel="stylesheet" type="text/css" href="3rdparty/jQuery/css/jquery-ui.css" />
-        <link rel="stylesheet" type="text/css" href="3rdparty/jQuery/css/jquery.tablesorter.pager.css" />
+		<script type="text/javascript" src="theme/default/3rdparty/jQuery/jquery.min.js"></script>
+		<script type="text/javascript" src="theme/default/3rdparty/jQuery/jquery-ui.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="theme/default/3rdparty/jQuery/css/jquery-ui.css" />
+        <link rel="stylesheet" type="text/css" href="theme/default/3rdparty/jQuery/css/jquery.tablesorter.pager.css" />
 
-		<script type="text/javascript" src="3rdparty/jQuery/jquery.form.js"></script>
-		<script type="text/javascript" src="3rdparty/jQuery/jquery.validate.min.js"></script>
-		<script type="text/javascript" src="3rdparty/jQuery/jquery.tablesorter.pack.js"></script>
-		<script type="text/javascript" src="3rdparty/jQuery/jquery.tablesorter.pager.js"></script>
-        <script type="text/javascript" src="3rdparty/jQuery/jquery.metadata.js"></script>
-        <script type="text/javascript" src="3rdparty/jQuery/jquery.meiomask.js"  charset="utf-8"></script>
-		<script type="text/javascript" src="3rdparty/jQuery/jquery.ifixpng.js"></script>
-		<script type="text/javascript" src="3rdparty/jQuery/jquery.contextmenu.r2.packed.js"></script>
-		<script type="text/javascript" src="3rdparty/jQuery/jquery.corner.js"></script>
+		<script type="text/javascript" src="theme/default/3rdparty/jQuery/jquery.form.js"></script>
+		<script type="text/javascript" src="theme/default/3rdparty/jQuery/jquery.validate.min.js"></script>
+		<script type="text/javascript" src="theme/default/3rdparty/jQuery/jquery.tablesorter.pack.js"></script>
+		<script type="text/javascript" src="theme/default/3rdparty/jQuery/jquery.tablesorter.pager.js"></script>
+        <script type="text/javascript" src="theme/default/3rdparty/jQuery/jquery.metadata.js"></script>
+        <script type="text/javascript" src="theme/default/3rdparty/jQuery/jquery.meiomask.js"  charset="utf-8"></script>
+		<script type="text/javascript" src="theme/default/3rdparty/jQuery/jquery.ifixpng.js"></script>
+		<script type="text/javascript" src="theme/default/3rdparty/jQuery/jquery.contextmenu.r2.packed.js"></script>
+		<script type="text/javascript" src="theme/default/3rdparty/jQuery/jquery.corner.js"></script>
 		
 		<!-- Our own -->
 		<link rel="stylesheet" type="text/css" href="theme/default/css/presentation.css" />
@@ -58,8 +58,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <script type="text/javascript" src="theme/default/js/<?php echo Theme::GetPageName(); ?>.js"></script>
 
         <script type="text/javascript" src="theme/default/js/text-render.js"></script>
-        <script type="text/javascript" src="3rdparty/ckeditor/ckeditor.js"></script>
-        <script type="text/javascript" src="3rdparty/ckeditor/adapters/jquery.js"></script>
+        <script type="text/javascript" src="theme/default/3rdparty/ckeditor/ckeditor.js"></script>
+        <script type="text/javascript" src="theme/default/3rdparty/ckeditor/adapters/jquery.js"></script>
 	</head>
 	<body>
     

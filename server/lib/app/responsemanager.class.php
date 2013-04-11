@@ -310,11 +310,11 @@ class ResponseManager
         // Output a pager
         $output  = '<div class="pager" id="XiboPager_' . $id . '">';
         $output .= '    <form>';
-        $output .= '        <img src="3rdparty/jQuery/css/images/first.png" class="first"/>';
-        $output .= '        <img src="3rdparty/jQuery/css/images/prev.png" class="prev"/>';
+        $output .= '        <img src="theme/default/3rdparty/jQuery/css/images/first.png" class="first"/>';
+        $output .= '        <img src="theme/default/3rdparty/jQuery/css/images/prev.png" class="prev"/>';
         $output .= '        <input type="text" class="pagedisplay"/>';
-        $output .= '        <img src="3rdparty/jQuery/css/images/next.png" class="next"/>';
-        $output .= '        <img src="3rdparty/jQuery/css/images/last.png" class="last"/>';
+        $output .= '        <img src="theme/default/3rdparty/jQuery/css/images/next.png" class="next"/>';
+        $output .= '        <img src="theme/default/3rdparty/jQuery/css/images/last.png" class="last"/>';
         $output .= '        <select class="pagesize">';
         $output .= '            <option value="5">5</option>';
         $output .= '            <option value="10">10</option>';
