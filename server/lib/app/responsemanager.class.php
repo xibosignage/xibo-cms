@@ -42,6 +42,7 @@ class ResponseManager
 	public $dialogWidth;
 	public $dialogHeight;
 	public $dialogTitle;
+	public $dialogClass;
 	
 	public $keepOpen;
 	public $hideMessage;
@@ -78,6 +79,7 @@ class ResponseManager
         $this->initialSortOrder = 1;
         $this->modal = false;
         $this->extra = array();
+        $this->dialogClass = '';
 		
 		return true;
 	}
@@ -251,6 +253,7 @@ class ResponseManager
 			$response['dialogWidth']	= $this->dialogWidth;
 			$response['dialogHeight'] 	= $this->dialogHeight;
 			$response['dialogTitle']	= $this->dialogTitle;
+			$response['dialogClass'] = $this->dialogClass;
 			
 			// Tweak the width and height
 			$response['dialogWidth'] 	= (int) str_replace('px', '', $response['dialogWidth']);

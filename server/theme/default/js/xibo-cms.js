@@ -272,6 +272,9 @@ function XiboGridRender(gridId){
  */
 function XiboFormRender(formUrl) {
 
+	// Currently only support one of these at once.
+	bootbox.hideAll();
+
     // Call with AJAX
     $.ajax({
         type: "get",
@@ -325,6 +328,12 @@ function XiboFormRender(formUrl) {
             				"header": dialogTitle
                 		}
                 	).attr("id", id);
+
+                if (response.dialogClass != '') {
+                	dialog.addClass(
+                        'modal-big'
+                    );
+                }
 
                 // Do we have to call any functions due to this success?
                 if (response.callBack != "" && response.callBack != undefined) {
@@ -484,7 +493,7 @@ function XiboSubmitResponse(response, form) {
             // File forms give the URI back with &amp's in it
             uri = unescape(uri);
 
-            XiboFormRender(uri);
+            XiboSwapDialog(uri);
         }
 
         // Should we refresh the window or refresh the Grids?

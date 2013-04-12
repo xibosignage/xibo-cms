@@ -140,7 +140,7 @@ label.error {
 .previewNav {
 	position: absolute;
 	left: 2px;
-	bottom: 2px;
+	bottom: -20px;
 }
 
 .preview-media-information {

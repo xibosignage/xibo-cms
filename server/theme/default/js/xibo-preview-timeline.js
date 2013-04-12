@@ -65,7 +65,7 @@ function Preview(regionElement)
 		var currentSeq = preview.seq;
 		currentSeq++;
 		
-		if (currentSeq > maxSeq)
+		if (currentSeq > maxSeq + 1)
 		{
 			currentSeq = 1;
 		}

@@ -693,17 +693,15 @@ END;
         $libraryLocation = Config::GetSetting($db, 'LIBRARY_LOCATION');
 
         // Present a canvas with 2 columns, left column for the media icons
-        $response->html .= '<div class="timelineLeftColumn">';
-        $response->html .= '    <ul class="timelineModuleButtons">';
+        $buttons = array();
 
         // Always output a Library assignment button
-        $response->html .= '<li class="timelineModuleListItem">';
-        $response->html .= '    <a class="XiboFormButton timelineModuleButtonAnchor" title="' . __('Assign from Library') . '" href="index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '">';
-        $response->html .= '        <img class="timelineModuleButtonImage" src="theme/default/img/forms/library.gif" alt="' . __('Library Image') . '" />';
-        $response->html .= '        <span class="timelineModuleButtonText">' . __('Library') . '</span>';
-        $response->html .= '    </a>';
-        $response->html .= '</li>';
-        
+        $buttons[] = array(
+                'id' => 'media_button_library',
+                'url' => 'index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutId . '&regionid=' . $regionId,
+                'text' => __('Library')
+            );
+
         // Get a list of the enabled modules and then create buttons for them
         if (!$enabledModules = new ModuleManager($db, $user))
             trigger_error($enabledModules->message, E_USER_ERROR);
@@ -717,18 +715,17 @@ END;
             $title = Kit::ValidateParam($modulesItem['Description'], _STRING);
             $img = Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
 
-            $uri = 'index.php?p=module&q=Exec&mod=' . $mod . '&method=AddForm&layoutid=' . $layoutId . '&regionid=' . $regionId;
-
-            $response->html .= '<li class="timelineModuleListItem">';
-            $response->html .= '    <a class="XiboFormButton timelineModuleButtonAnchor" title="' . $title . '" href="' . $uri . '">';
-            $response->html .= Theme::Image($img, 'timelineModuleButtonImage');
-            $response->html .= '        <span class="timelineModuleButtonText">' . $caption . '</span>';
-            $response->html .= '    </a>';
-            $response->html .= '</li>';
+            
+            $buttons[] = array(
+                'id' => 'media_button_' . $mod,
+                'url' => 'index.php?p=module&q=Exec&mod=' . $mod . '&method=AddForm&layoutid=' . $layoutId . '&regionid=' . $regionId,
+                'text' => __($caption)
+            );
         }
+
+        Theme::Set('media_buttons', $buttons);
         
-        $response->html .= '    </ul>';
-        $response->html .= '</div>';
+        $response->html .= Theme::RenderReturn('layout_designer_form_timeline');
 
         // Load the XML for this layout and region, we need to get the media nodes.
         // These form the timeline and go in the right column
@@ -845,6 +842,7 @@ END;
 
         // Finish constructing the response
         $response->callBack = 'LoadTimeLineCallback';
+        $response->dialogClass = 'modal-big';
         $response->dialogTitle 	= __('Region Timeline');
         $response->dialogSize 	= true;
         $response->dialogWidth 	= '1000px';
