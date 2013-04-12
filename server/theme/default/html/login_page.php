@@ -70,22 +70,22 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 	    <div class="container">
 
-			<form class="form-signin" action="<?php echo Theme::Get('form_action'); ?>" method="post">
-				<?php echo Theme::Get('form_meta'); ?>
-				<p><a href="<?php echo Theme::GetConfig('theme_url'); ?>"><img src='<?php echo Theme::ImageUrl('xibologo.png'); ?>'></a></p>
-				
-				<h2><?php echo Theme::Translate('Login'); ?></h2>
-				<p><?php echo Theme::Translate('Please enter a username and password to access the CMS'); ?></p>
-			
-				<input name="username" type="text" class="input-block-level" placeholder="<?php echo Theme::Translate('User'); ?>">
-				<input name="password" type="password" class="input-block-level" placeholder="Password">
+			<form class="form-signin text-center" action="<?php echo Theme::Get('form_action'); ?>" method="post">
+        <?php echo Theme::Get('form_meta'); ?>
+        <p><a href="<?php echo Theme::GetConfig('theme_url'); ?>"><img src='<?php echo Theme::ImageUrl('xibologo.png'); ?>'></a></p>
 
-				<div class="login_message"><?php echo Theme::Get('login_message'); ?></div>
+        <h2><?php echo Theme::Translate('Login'); ?></h2>
+        <p><?php echo Theme::Translate('Please enter a username and password to access the CMS'); ?></p>
 
-				<button class="btn btn-large btn-primary" type="submit"><?php echo Theme::Translate('Login'); ?></button>
+        <input name="username" type="text" class="input-block-level" placeholder="<?php echo Theme::Translate('User'); ?>">
+        <input name="password" type="password" class="input-block-level" placeholder="<?php echo Theme::Translate('Password'); ?>">
+
+        <div class="login_message"><?php echo Theme::Get('login_message'); ?></div>
+
+        <button class="btn btn-large btn-primary" type="submit"><?php echo Theme::Translate('Login'); ?></button>
 			</form>
 
-			<p><?php echo Theme::Translate('Version %s', VERSION); ?> | <a href="<?php echo Theme::Get('source_url'); ?>"><?php echo Theme::Translate('Source'); ?></a> | <a class="XiboFormButton" href="<?php echo Theme::Get('about_url'); ?>" title="<?php echo Theme::Translate('About'); ?>"><?php echo Theme::Translate('About'); ?></a></p>
+			<p class="text-center"><?php echo Theme::Translate('Version %s', VERSION); ?> | <a href="<?php echo Theme::Get('source_url'); ?>"><?php echo Theme::Translate('Source'); ?></a> | <a class="XiboFormButton" href="<?php echo Theme::Get('about_url'); ?>" title="<?php echo Theme::Translate('About'); ?>"><?php echo Theme::Translate('About'); ?></a></p>
 	    </div> <!-- /container -->
 
 

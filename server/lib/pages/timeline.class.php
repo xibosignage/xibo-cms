@@ -460,7 +460,7 @@ END;
 		
 		if (!$xmlString = $region->GetLayoutXml($layoutid))
 		{
-                    trigger_error($region->errorMsg, E_USER_ERROR);
+            trigger_error($region->errorMsg, E_USER_ERROR);
 		}
 		
 		$xml->loadXML($xmlString);
@@ -468,12 +468,7 @@ END;
 		// This will be all the media nodes in the region provided
 		$xpath 		= new DOMXPath($xml);
 		$nodeList 	= $xpath->query("//region[@id='$regionid']/media");
-		
-		$return = "<input type='hidden' id='maxSeq' value='{$nodeList->length}' />";
-		$return .= "<div class='seqInfo' style='position:absolute; right:15px; top:31px; color:#FFF; background-color:#000; z-index:50; padding: 5px;'>
-                                <span style='font-family: Verdana;'>$seqGiven / {$nodeList->length}</span>
-                            </div>";
-                $return .= '<div class="regionPreviewOverlay"></div>';
+        $return = '';
 		
 		if ($nodeList->length == 0)
 		{
@@ -487,30 +482,31 @@ END;
 		$node = $nodeList->item($seq);
 			
 		// We have our node.
-		$type 			= (string) $node->getAttribute("type");
-		$mediaDurationText 	= (string) $node->getAttribute("duration");
-                $mediaid                = (string) $node->getAttribute("id");
+		$type = (string) $node->getAttribute("type");
+		$mediaDurationText = (string) $node->getAttribute("duration");
+        $mediaid = (string) $node->getAttribute("id");
 
-		$return .= "
-                   <div class='previewInfo' style='position:absolute; right:15px; top:61px; color:#FFF; background-color:#000; z-index:50; padding: 5px; font-family: Verdana;'>
-                        <span style='font-family: Verdana;'>Type: $type <br />
-                        Duration: $mediaDurationText (s)</span>
-                    </div>";
+        // Create a module to deal with this
+        if (!file_exists('modules/' . $type . '.module.php'))
+        {
+            $return .= 'Unknow module type';
+        }
 
-		// Create a module to deal with this
-                if (!file_exists('modules/' . $type . '.module.php'))
-                {
-                    $return .= 'Unknow module type';
-                }
+        require_once("modules/$type.module.php");
 
-                require_once("modules/$type.module.php");
+        $moduleObject = new $type($db, $user, $mediaid, $layoutid, $regionid);
 
-                $moduleObject = new $type($db, $user, $mediaid, $layoutid, $regionid);
-
-                $return .= $moduleObject->Preview($width, $height);
+        $return .= '<div class="regionPreviewOverlay"></div>';
+        $return .= $moduleObject->Preview($width, $height);
 
 		$response->html = $return;
-		$response->Respond();
+		$this->response->extra['type'] = $type;
+        $this->response->extra['duration'] = $mediaDurationText;
+        $this->response->extra['number_items'] = $nodeList->length;
+        $this->response->extra['text'] = $moduleObject->displayType . ' lasting ' . $mediaDurationText . ' seconds';
+        $this->response->extra['current_item'] = $seqGiven;
+
+        $response->Respond();
 	}
 
 	public function RegionPermissionsForm()

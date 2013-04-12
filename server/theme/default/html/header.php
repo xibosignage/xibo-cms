@@ -28,14 +28,20 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<link rel="shortcut icon" href="<?php echo Theme::ImageUrl('favicon.ico'); ?>" />
 
 		<link href="theme/default/libraries/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+		<link href="theme/default/libraries/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+		<link href="theme/default/libraries/jquery/jquery.tablesorter.pager.css" rel="stylesheet">
+		<link href="theme/default/libraries/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css" rel="stylesheet">
+		<link href="theme/default/css/xibo.css" rel="stylesheet" media="screen">
 	</head>
 	<body>
 		<!-- Copyright 2006-2013 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
 		<div class="container">
 			<div class="row">
-				<div class="span10"></div>
-				<div class="span2">
-					<a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo Theme::Translate('Click to show more time information'); ?>"><?php echo Theme::GetClock(); ?></a>
+				<div class="span3">
+					<img class="xibo-logo" src='<?php echo Theme::ImageUrl('xibologo.png'); ?>'>
+				</div>
+				<div class="span2 pull-right">
+					
 				</div>
 			</div>
 			<div class="navbar">
@@ -49,6 +55,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 						?>
 					</ul>
 					<ul class="nav pull-right">
+						<li><a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo Theme::Translate('Click to show more time information'); ?>"><?php echo Theme::GetClock(); ?></a></li>
 						<li class="dropdown">
 							<a href="#" id="prefs" role="button" class="dropdown-toggle" data-toggle="dropdown">
 								<?php echo Theme::Translate("Preferences"); ?>

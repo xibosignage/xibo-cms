@@ -25,7 +25,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
 	<?php echo Theme::Get('form_meta'); ?>
 	<p><?php echo Theme::Translate('Are you sure you want to delete this layout? All media will be unassigned. Any layout specific media such as text/rss will be lost.'); ?></p>
 </form>

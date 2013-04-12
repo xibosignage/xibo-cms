@@ -27,18 +27,20 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
     <?php echo Theme::Get('form_meta'); ?>
-    <table>
-        <tr>
-            <td><label for="layout" accesskey="n" title="<?php echo Theme::Translate('The name for the new layout'); ?>"><?php echo Theme::Translate('New Name'); ?></label></td>
-            <td><input name="layout" class="required" type="text" id="layout" value="<?php echo Theme::Get('new_layout_default'); ?>" tabindex="1" /></td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <input type="checkbox" id="copyMediaFiles" name="copyMediaFiles" <?php echo Theme::Get('copy_media_checked'); ?> />
+    <fieldset>
+        <div class="control-group">
+            <label class="control-label" for="layout" accesskey="n" title="<?php echo Theme::Translate('The name for the new layout'); ?>"><?php echo Theme::Translate('New Name'); ?></label>
+            <div class="controls">
+                <input name="layout" class="required" type="text" id="layout" value="<?php echo Theme::Get('new_layout_default'); ?>" tabindex="1" />
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="controls">
+                <input class="checkbox" type="checkbox" id="copyMediaFiles" name="copyMediaFiles" <?php echo Theme::Get('copy_media_checked'); ?> />
                 <label for="copyMediaFiles" accesskey="c" title="<?php echo Theme::Translate('Make new copies of all media on this layout?'); ?>"><?php echo Theme::Translate('Make new copies of all media on this layout?'); ?></label>
-            </td>
-        </tr>
-    </table>
+            </div>
+        </div>
+    </fieldset>
 </form>

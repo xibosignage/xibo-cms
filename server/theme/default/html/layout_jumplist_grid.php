@@ -24,19 +24,17 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="info_table">
-	<table style="width:100%">
-    	<thead>
-        	<tr>
-        		<th><?php echo Theme::Translate('Layout'); ?></th>
-        	</tr>
-        </thead>
-        <tbody>
-			<?php foreach(Theme::Get('table_rows') as $row) { ?>
-			<tr>
-				<td><a href="<?php echo $row['jump_to_url']; ?>"><?php echo $row['layout']; ?></td>
-			</tr>
-			<?php } ?>
-		</tbody>
-    </table>
-</div>
+<table class="table">
+	<thead>
+    	<tr>
+    		<th><?php echo Theme::Translate('Layout'); ?></th>
+    	</tr>
+    </thead>
+    <tbody>
+		<?php foreach(Theme::Get('table_rows') as $row) { ?>
+		<tr>
+			<td><a href="<?php echo $row['jump_to_url']; ?>"><?php echo $row['layout']; ?></td>
+		</tr>
+		<?php } ?>
+	</tbody>
+</table>

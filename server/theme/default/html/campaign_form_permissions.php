@@ -34,22 +34,20 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
 	<?php echo Theme::Get('form_meta'); ?>
-	<div class="dialog_table">
-	  	<table style="width:100%">
-          	<tr>
-	              <th><?php echo Theme::Translate('Group'); ?></th>
-	              <th><?php echo Theme::Translate('View'); ?></th>
-	              <th><?php echo Theme::Translate('Edit'); ?></th>
-	              <th><?php echo Theme::Translate('Delete'); ?></th>
-          	</tr>
-          	<?php foreach(Theme::Get('form_rows') as $row) { ?>
-			<tr>
-				<td><span class="<?php echo $row['class']; ?>"><?php echo $row['name']; ?></span></td>
-				<td><input type="checkbox" name="groupids[]" value="<?php echo $row['value_view']; ?>" <?php echo $row['value_view_checked']; ?>></td>
-				<td><input type="checkbox" name="groupids[]" value="<?php echo $row['value_edit']; ?>" <?php echo $row['value_edit_checked']; ?>></td>
-				<td><input type="checkbox" name="groupids[]" value="<?php echo $row['value_del']; ?>" <?php echo $row['value_del_checked']; ?>></td>
-			</tr>
-			<?php } ?>
-      	</table>
-  	</div>
+  	<table class="table table-bordered">
+      	<tr>
+              <th><?php echo Theme::Translate('Group'); ?></th>
+              <th><?php echo Theme::Translate('View'); ?></th>
+              <th><?php echo Theme::Translate('Edit'); ?></th>
+              <th><?php echo Theme::Translate('Delete'); ?></th>
+      	</tr>
+      	<?php foreach(Theme::Get('form_rows') as $row) { ?>
+		<tr>
+			<td><span class="<?php echo $row['class']; ?>"><?php echo $row['name']; ?></span></td>
+			<td><input type="checkbox" name="groupids[]" value="<?php echo $row['value_view']; ?>" <?php echo $row['value_view_checked']; ?>></td>
+			<td><input type="checkbox" name="groupids[]" value="<?php echo $row['value_edit']; ?>" <?php echo $row['value_edit_checked']; ?>></td>
+			<td><input type="checkbox" name="groupids[]" value="<?php echo $row['value_del']; ?>" <?php echo $row['value_del_checked']; ?>></td>
+		</tr>
+		<?php } ?>
+  	</table>
 </form>

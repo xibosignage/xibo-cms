@@ -251,7 +251,7 @@ class Theme {
 				$item['link'] = $item['args'];
 			}
 
-			$item['li'] = '<li class="' . $item['class'] . '"><a href="' . $item['link'] . '" class="' . $item['class'] . (($item['selected']) ? ' current' : '') . '">' . $item['title'] . '</a></li>';
+			$item['li'] = '<li class="' . $item['class'] . (($item['selected']) ? ' active' : '') . '"><a href="' . $item['link'] . '" class="' . $item['class'] . (($item['selected']) ? ' active' : '') . '">' . $item['title'] . '</a></li>';
 
 			$array[] = $item;
 		}

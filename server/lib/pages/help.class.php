@@ -102,7 +102,7 @@ class helpDAO
         }
 
         $helpLink 	= $this->helpLink;
-        $out 		= '<iframe src="' . $helpLink . '" width="' . ($width - 35) . '" height="' . ($height - 60) . '"></iframe>';
+        $out 		= '<iframe class="full-iframe" src="' . $helpLink . '"></iframe>';
 
         $response->SetFormRequestResponse($out, __('Help'), $width, $height);
         $response->Respond();
