@@ -137,12 +137,13 @@ label.error {
     height: 100%;
 }
 
-.preview .region-preview-sequence-info {
+.previewNav {
 	position: absolute;
-	bottom: 1px;
-	left: 1px;
+	left: 2px;
+	bottom: 2px;
 }
 
-.preview .region-preview-media-info {
-
+.preview-media-information {
+	display: block;
+	margin-top: 2px;
 }

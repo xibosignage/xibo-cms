@@ -473,9 +473,8 @@ END;
 		if ($nodeList->length == 0)
 		{
 			// No media to preview
-			$return .= "<h1>" . __('Empty Region') . "</h1>";
-			
-			$response->html = $return;
+			$response->extra['text']  = __('Empty Region');
+			$response->html = '';
 			$response->Respond();
 		}
 		
@@ -500,11 +499,11 @@ END;
         $return .= $moduleObject->Preview($width, $height);
 
 		$response->html = $return;
-		$this->response->extra['type'] = $type;
-        $this->response->extra['duration'] = $mediaDurationText;
-        $this->response->extra['number_items'] = $nodeList->length;
-        $this->response->extra['text'] = $moduleObject->displayType . ' lasting ' . $mediaDurationText . ' seconds';
-        $this->response->extra['current_item'] = $seqGiven;
+		$response->extra['type'] = $type;
+        $response->extra['duration'] = $mediaDurationText;
+        $response->extra['number_items'] = $nodeList->length;
+        $response->extra['text'] = $seqGiven . ' / ' . $nodeList->length . ' ' . $moduleObject->displayType . ' lasting ' . $mediaDurationText . ' seconds';
+        $response->extra['current_item'] = $seqGiven;
 
         $response->Respond();
 	}

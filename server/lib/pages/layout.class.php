@@ -709,7 +709,7 @@ class layoutDAO
 
 			$regionHtml .= '	<div class="preview">';
 			$regionHtml .= '		<div class="previewContent"></div>';
-			$regionHtml .= '		<div class="previewNav"></div>';
+			$regionHtml .= '		<div class="previewNav label label-info"></div>';
 			$regionHtml .= '	</div>';
 			$regionHtml .= '</div>';
 		}

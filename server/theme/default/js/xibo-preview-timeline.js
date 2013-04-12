@@ -38,13 +38,14 @@ function Preview(regionElement)
 	Preview.instances[this.regionid] = this;
 	
 	// Create the Nav Buttons
-	$('.previewNav',this.previewElement)	
-		.append("<div class='prevSeq ' style='position:absolute; left:1px; top:"+ arrowsTop +"px'><img src='theme/default/img/arrow_left.gif' /></div>")
-		.append("<div class='nextSeq' style='position:absolute; right:1px; top:"+ arrowsTop +"px'><img src='theme/default/img/arrow_right.gif' /></div>");
+	$('.previewNav', this.previewElement)
+		.append("<div class='prevSeq icon-arrow-left'></div>")
+		.append("<div class='nextSeq icon-arrow-right'></div>")
+		.append("<div class='preview-media-information'></div>");
 
 	$('.prevSeq', $(this.previewElement)).click(function() {
 		var preview = Preview.instances[regionid];
-		var maxSeq 	= $('#maxSeq', preview.previewContent[0]).val();
+		var maxSeq 	= $('.preview-media-information', this.previewElement).data("maxSeq");
 				
 		var currentSeq = preview.seq;
 		currentSeq--;
@@ -59,7 +60,7 @@ function Preview(regionElement)
 	
 	$('.nextSeq', $(this.previewElement)).click(function() {
 		var preview = Preview.instances[regionid];
-		var maxSeq 	= $('#maxSeq', preview.previewContent[0]).val();
+		var maxSeq 	= $('.preview-media-information', this.previewElement).data("maxSeq");
 		
 		var currentSeq = preview.seq;
 		currentSeq++;
@@ -84,6 +85,7 @@ Preview.prototype.SetSequence = function(seq)
 	var layoutid 		= this.layoutid;
 	var regionid 		= this.regionid;
 	var previewContent 	= this.previewContent;
+	var previewElement = this.previewElement;
 
 	this.width	= $(this.regionElement).width();
 	this.height = $(this.regionElement).height();
@@ -105,6 +107,11 @@ Preview.prototype.SetSequence = function(seq)
 			if (response.success) {
 				// Success - what do we do now?
 				$(previewContent).html(response.html);
+
+				// Get the extra
+				$('.preview-media-information', previewElement)
+					.html(response.extra.text)
+					.data("maxSeq", response.extra.number_items);
 			}
 			else {
 				// Why did we fail? 

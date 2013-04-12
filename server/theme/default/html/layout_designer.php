@@ -35,7 +35,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <div class="row">
 	<div class="span1">
-		<div class="btn-group pull-right">
+		<div class="btn-group">
 			<button class="btn dropdown-toggle" data-toggle="dropdown">
 				<?php echo Theme::Translate('Options'); ?>
 				<span class="caret"></span>
@@ -50,12 +50,16 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			</ul>
 		</div>
 	</div>
-	<div class="span11">
+	<div class="span5">
 		<h4><?php echo Theme::Translate('Layout Design'); ?> - <?php echo Theme::Get('layout'); ?></h4>
+	</div>
+	<div class="span6 layout-meta">
 	</div>
 </div>
 <div class="row">
-	<?php echo Theme::Get('layout_designer_editor'); ?>
+	<div class="span12">
+		<?php echo Theme::Get('layout_designer_editor'); ?>
+	</div>
 </div>
 <div class="row">
 	<!-- Layout Jump list -->

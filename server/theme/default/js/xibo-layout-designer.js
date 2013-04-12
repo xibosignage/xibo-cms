@@ -84,10 +84,28 @@ function regionPositionUpdate(e, ui) {
     preview.SetSequence(preview.seq);
 
     // Expose a new button to save the positions
+    if ($("#layout-save-all").length <= 0) {
+
+	    $("<button/>",  {
+	    		"class": "btn",
+	    		id: "layout-save-all",
+	    		html: "Save Position"
+		    })
+	    	.click(function() {
+	    		// Save positions for all layouts / regions
+	    		savePositions();
+	    		return false;
+		    })
+		    .appendTo(".layout-meta");
+    }
 }
 
 function savePositions() {
 
+	// Ditch the button
+	$("#layout-save-all").remove();
+
+	// Update all layouts
 	$("#layout").each(function(){
 
 		$(this).find(".region").each(function(){
@@ -151,4 +169,106 @@ function transitionSelectListChanged() {
         $("tr.transitionDirection").hide();
     else
         $("tr.transitionDirection").show();
+}
+
+var LoadTimeLineCallback = function() {
+
+    // Refresh the preview
+    var preview = Preview.instances[$('#timelineControl').attr('regionid')];
+    preview.SetSequence(preview.seq);
+
+    $("li.timelineMediaListItem").hover(function() {
+
+        var position = $(this).position();
+
+        //Change the hidden div's content
+        $("div#timelinePreview").html($("div.timelineMediaPreview", this).html()).css("margin-top", position.top + $('#timelineControl').scrollTop()).show();
+
+    }, function() {
+        return false;
+    });
+
+    $(".timelineSortableListOfMedia").sortable();
+}
+
+
+var XiboTimelineSaveOrder = function(mediaListId, layoutId, regionId) {
+
+    //console.log(mediaListId);
+
+    // Load the media id's into an array
+    var mediaList = "";
+
+    $('#' + mediaListId + ' li.timelineMediaListItem').each(function(){
+        mediaList = mediaList + $(this).attr("mediaid") + "&" + $(this).attr("lkid") + "|";
+    });
+
+    //console.log("Media List: " + mediaList);
+
+    // Call the server to do the reorder
+    $.ajax({
+        type:"post",
+        url:"index.php?p=timeline&q=TimelineReorder&layoutid="+layoutId+"&ajax=true",
+        cache:false,
+        dataType:"json",
+        data:{
+            "regionid": regionId,
+            "medialist": mediaList
+        },
+        success: XiboSubmitResponse
+    });
+}
+
+/**
+ * Library Assignment Form Callback
+ */
+var LibraryAssignCallback = function()
+{
+    // Attach a click handler to all of the little pointers in the grid.
+    $("#LibraryAssignTable .library_assign_list_select").click(function(){
+        // Get the row that this is in.
+        var row = $(this).parent().parent();
+
+        // Construct a new list item for the lower list and append it.
+        $("<li/>", {
+            text: row.attr("litext"),
+            id: row.attr("rowid"),
+            "class": "li-sortable",
+            dblclick: function(){
+                $(this).remove();
+            }
+        })
+        .appendTo("#LibraryAssignSortable");
+
+        // Add a span to that new item
+        $("<span/>", {
+            text: " [x]",
+            click: function(){
+                $(this).parent().remove();
+            }
+        })
+        .appendTo("#" + row.attr("rowid"));
+
+    });
+
+    $("#LibraryAssignSortable").sortable().disableSelection();
+}
+
+var LibraryAssignSubmit = function(layoutId, regionId)
+{
+    // Serialize the data from the form and call submit
+    var mediaList = $("#LibraryAssignSortable").sortable('serialize');
+
+    mediaList = mediaList + "&regionid=" + regionId;
+
+    //console.log(mediaList);
+
+    $.ajax({
+        type: "post",
+        url: "index.php?p=timeline&q=AddFromLibrary&layoutid="+layoutId+"&ajax=true",
+        cache: false,
+        dataType: "json",
+        data: mediaList,
+        success: XiboSubmitResponse
+    });
 }
