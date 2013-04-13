@@ -23,27 +23,25 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="info_table">
-	<table style="width:100%">
-		<thead>
-			<tr>
-				<th><?php echo Theme::Translate('LogId'); ?></th>
-				<th><?php echo Theme::Translate('Date'); ?></th>
-				<th><?php echo Theme::Translate('Page'); ?></th>	
-				<th><?php echo Theme::Translate('Function'); ?></th>	
-				<th><?php echo Theme::Translate('Message'); ?></th>	
-			</tr>
-		</thead>
-		<tbody>
-			<?php foreach(Theme::Get('table_rows') as $row) { ?>
-			<tr>
-				<td><?php echo $row['logid']; ?></td>
-				<td><?php echo $row['logdate']; ?></td>
-				<td><?php echo $row['page']; ?></td>
-				<td><?php echo $row['function']; ?></td>
-				<td><?php echo $row['message']; ?></td>
-			</tr>
-			<?php } ?>
-		</tbody>
-	</table>
-</div>
+<table class="table">
+	<thead>
+		<tr>
+			<th><?php echo Theme::Translate('LogId'); ?></th>
+			<th><?php echo Theme::Translate('Date'); ?></th>
+			<th><?php echo Theme::Translate('Page'); ?></th>	
+			<th><?php echo Theme::Translate('Function'); ?></th>	
+			<th><?php echo Theme::Translate('Message'); ?></th>	
+		</tr>
+	</thead>
+	<tbody>
+		<?php foreach(Theme::Get('table_rows') as $row) { ?>
+		<tr>
+			<td><?php echo $row['logid']; ?></td>
+			<td><?php echo $row['logdate']; ?></td>
+			<td><?php echo $row['page']; ?></td>
+			<td><?php echo $row['function']; ?></td>
+			<td><?php echo $row['message']; ?></td>
+		</tr>
+		<?php } ?>
+	</tbody>
+</table>

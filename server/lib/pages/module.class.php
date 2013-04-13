@@ -114,9 +114,9 @@ class moduleDAO
             $row['imageuri'] = Kit::ValidateParam($module['ImageUri'], _STRING);
             $row['enabled'] = Kit::ValidateParam($module['Enabled'], _INT);
             $row['preview_enabled'] = Kit::ValidateParam($module['PreviewEnabled'], _INT);
-            $row['isregionspecific_image'] = ($row['isregionspecific'] == 0) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
-            $row['enabled_image'] = ($row['enabled'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
-            $row['preview_enabled_image'] = ($row['preview_enabled'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+            $row['isregionspecific_image'] = ($row['isregionspecific'] == 0) ? 'icon-ok' : 'icon-remove';
+            $row['enabled_image'] = ($row['enabled'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['preview_enabled_image'] = ($row['preview_enabled'] == 1) ? 'icon-ok' : 'icon-remove';
 
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();

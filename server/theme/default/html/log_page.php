@@ -26,68 +26,52 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div id="form_container">
-	<div id="form_header">
-		<div id="form_header_left"></div>
-            <div id="secondaryMenu">
-                <ul id="menu" style="padding-left: 26.5em;">
-            		<?php
-						foreach (Theme::GetMenu('Advanced Menu') as $item) {
-							echo $item['li'];
-						}
-					?>
-            	</ul>
-            </div>
-		<div id="form_header_right"></div>
-	</div>
-	
-	<div id="form_body">
-		<div class="SecondNav">
-			<ul>
-				<li><a title="<?php echo Theme::Translate('Refresh the Report'); ?>" onclick="XiboGridRender('<?php echo Theme::Get('id'); ?>')"><span><?php echo Theme::Translate('Refresh'); ?></span></a></li>
-				<li><a title="<?php echo Theme::Translate('Truncate the Log'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('truncate_url'); ?>"><span><?php echo Theme::Translate('Truncate'); ?></span></a></li>
-				<li><a title="<?php echo Theme::Translate('Open the filter form'); ?>" href="#" onclick="ToggleFilterView('Filter')"><span><?php echo Theme::Translate('Filter'); ?></span></a></li>
-			</ul>
-		</div>
-		<div class="XiboGrid" id="<?php echo Theme::Get('id'); ?>">
-			<div class="XiboFilter">
-				<div class="FilterDiv" id="Filter">
-					<form>
-						<?php echo Theme::Get('form_meta'); ?>
-						<table class="filterform" id="report_filterform">
-							<tr>
-								<td><label for="filter_type"><?php echo Theme::Translate('Type') ?></label></td>
-								<td><?php echo Theme::SelectList('filter_type', Theme::Get('type_field_list'), 'typeid', 'type', Theme::Get('filter_typeid')); ?></td>
-								<td><label for="filter_fromdt"><?php echo Theme::Translate('From DT') ?></label></td>
-								<td><input class="date-pick" type="text" id="filter_fromdt" name="filter_fromdt" value="<?php echo Theme::Get('filter_fromdt'); ?>"></td>
-								<td><label for="<?php echo Theme::Get('filter_id'); ?>"><?php echo Theme::Translate('Keep filter open') ?></label></td>
-			                    <td><input type="checkbox" id="<?php echo Theme::Get('filter_id'); ?>" name="XiboFilterPinned" class="XiboFilterPinned" <?php echo Theme::Get('filter_pinned'); ?> /></td>
-							</tr>
-							<tr>
-								<td><label for="filter_page"><?php echo Theme::Translate('Page') ?></label></td>
-								<td><?php echo Theme::SelectList('filter_page', Theme::Get('page_field_list'), 'pageid', 'page', Theme::Get('filter_page')); ?></td>
-								<td><label for="filter_seconds"><?php echo Theme::Translate('Seconds back') ?></label></td>
-								<td><input type="text" id="filter_seconds" name="filter_seconds" value="<?php echo Theme::Get('filter_seconds'); ?>"></td>
-							</tr>
-							<tr>
-								<td><label for="filter_function"><?php echo Theme::Translate('Function') ?></label></td>
-								<td><?php echo Theme::SelectList('filter_function', Theme::Get('function_field_list'), 'functionid', 'function', Theme::Get('filter_function')); ?></td>
-							</tr>
-							<tr>
-								<td><label for="filter_display"><?php echo Theme::Translate('Display') ?></label></td>
-								<td><?php echo Theme::SelectList('filter_display', Theme::Get('display_field_list'), 'displayid', 'display', Theme::Get('filter_display')); ?></td>
-							</tr>
-						</table>
-					</form>
-				</div>
+<div class="row">
+	<ul class="nav nav-pills span12">
+		<?php
+			foreach (Theme::GetMenu('Advanced Menu') as $item) {
+				echo $item['li'];
+			}
+		?>
+		<li class="pull-right"><a title="<?php echo Theme::Translate('Truncate the Log'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('truncate_url'); ?>"><span><?php echo Theme::Translate('Truncate'); ?></span></a></li>
+		<li class="pull-right"><a title="<?php echo Theme::Translate('Refresh the Report'); ?>" href="#" onclick="XiboGridRender('<?php echo Theme::Get('id'); ?>')"><span><?php echo Theme::Translate('Refresh'); ?></span></a></li>
+		<li class="pull-right"><a title="<?php echo Theme::Translate('Open the filter form'); ?>" href="#" onclick="ToggleFilterView('Filter')"><span><?php echo Theme::Translate('Filter'); ?></span></a></li>
+	</ul>
+</div>
+<div class="row">
+	<div class="XiboGrid span12" id="<?php echo Theme::Get('id'); ?>">
+		<div class="XiboFilter">
+			<div class="FilterDiv" id="Filter">
+				<form>
+					<?php echo Theme::Get('form_meta'); ?>
+					<table class="filterform" id="report_filterform">
+						<tr>
+							<td><label for="filter_type"><?php echo Theme::Translate('Type') ?></label></td>
+							<td><?php echo Theme::SelectList('filter_type', Theme::Get('type_field_list'), 'typeid', 'type', Theme::Get('filter_typeid')); ?></td>
+							<td><label for="filter_fromdt"><?php echo Theme::Translate('From DT') ?></label></td>
+							<td><input class="date-pick" type="text" id="filter_fromdt" name="filter_fromdt" value="<?php echo Theme::Get('filter_fromdt'); ?>"></td>
+							<td><label for="<?php echo Theme::Get('filter_id'); ?>"><?php echo Theme::Translate('Keep filter open') ?></label></td>
+		                    <td><input type="checkbox" id="<?php echo Theme::Get('filter_id'); ?>" name="XiboFilterPinned" class="XiboFilterPinned" <?php echo Theme::Get('filter_pinned'); ?> /></td>
+						</tr>
+						<tr>
+							<td><label for="filter_page"><?php echo Theme::Translate('Page') ?></label></td>
+							<td><?php echo Theme::SelectList('filter_page', Theme::Get('page_field_list'), 'pageid', 'page', Theme::Get('filter_page')); ?></td>
+							<td><label for="filter_seconds"><?php echo Theme::Translate('Seconds back') ?></label></td>
+							<td><input type="text" id="filter_seconds" name="filter_seconds" value="<?php echo Theme::Get('filter_seconds'); ?>"></td>
+						</tr>
+						<tr>
+							<td><label for="filter_function"><?php echo Theme::Translate('Function') ?></label></td>
+							<td><?php echo Theme::SelectList('filter_function', Theme::Get('function_field_list'), 'functionid', 'function', Theme::Get('filter_function')); ?></td>
+						</tr>
+						<tr>
+							<td><label for="filter_display"><?php echo Theme::Translate('Display') ?></label></td>
+							<td><?php echo Theme::SelectList('filter_display', Theme::Get('display_field_list'), 'displayid', 'display', Theme::Get('filter_display')); ?></td>
+						</tr>
+					</table>
+				</form>
 			</div>
-			<?php echo Theme::Get('pager'); ?>
-			<div class="XiboData"></div>
 		</div>
-	</div>
-		
-	<div id="form_footer">
-		<div id="form_footer_left"></div>
-		<div id="form_footer_right"></div>
+		<div class="XiboData"></div>
+		<?php echo Theme::Get('pager'); ?>
 	</div>
 </div>
