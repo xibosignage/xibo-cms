@@ -27,42 +27,26 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div id="form_container">
-	<div id="form_header">
-		<div id="form_header_left"></div>
-            <div id="secondaryMenu">
-                <ul id="menu" style="padding-left: 26.5em;">
-            		<?php
-						foreach (Theme::GetMenu('Design Menu') as $item) {
-							echo $item['li'];
-						}
-					?>
-            	</ul>
-            </div>
-		<div id="form_header_right"></div>
-	</div>
-	
-	<div id="form_body">
-		<div class="SecondNav">
-			<ul>
-				<li><a title="<?php echo Theme::Translate('Add a new Layout and jump to the layout designer.'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('campaign_form_add_url'); ?>" ><span><?php echo Theme::Translate('Add Campaign'); ?></span></a></li>
-			</ul>
-		</div>
-		<div class="XiboGrid" id="<?php echo Theme::Get('id'); ?>">
-			<div class="XiboFilter">
-				<div class="FilterDiv" id="Filter">
-					<form>
-						<?php echo Theme::Get('form_meta'); ?>
-					</form>
-				</div>
+<div class="row">
+	<ul class="nav nav-pills span12">
+		<?php
+			foreach (Theme::GetMenu('Design Menu') as $item) {
+				echo $item['li'];
+			}
+		?>
+		<li class="pull-right"><a title="<?php echo Theme::Translate('Add a new Layout and jump to the layout designer.'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('campaign_form_add_url'); ?>" ><span><?php echo Theme::Translate('Add Campaign'); ?></span></a></li>
+	</ul>
+</div>
+<div class="row">
+	<div class="XiboGrid span12" id="<?php echo Theme::Get('id'); ?>">
+		<div class="XiboFilter">
+			<div class="FilterDiv" id="Filter">
+				<form>
+					<?php echo Theme::Get('form_meta'); ?>
+				</form>
 			</div>
-			<?php echo Theme::Get('pager'); ?>
-			<div class="XiboData"></div>
 		</div>
-	</div>
-		
-	<div id="form_footer">
-		<div id="form_footer_left"></div>
-		<div id="form_footer_right"></div>
+		<div class="XiboData"></div>
+		<?php echo Theme::Get('pager'); ?>
 	</div>
 </div>

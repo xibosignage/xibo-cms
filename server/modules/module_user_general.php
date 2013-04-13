@@ -1296,7 +1296,7 @@ END;
         $db 		=& $this->db;
         $userid		=& $this->userid;
 
-        $SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific ";
+        $SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific, displaygroup.Description ";
         if ($isDisplaySpecific == 1)
             $SQL .= " , lkdisplaydg.DisplayID ";
 
@@ -1346,6 +1346,7 @@ END;
             // Validate each param and add it to the array.
             $displayGroupItem['displaygroupid'] = Kit::ValidateParam($row['DisplayGroupID'], _INT);
             $displayGroupItem['displaygroup']   = Kit::ValidateParam($row['DisplayGroup'], _STRING);
+            $displayGroupItem['description']   = Kit::ValidateParam($row['Description'], _STRING);
             $displayGroupItem['isdisplayspecific'] = Kit::ValidateParam($row['IsDisplaySpecific'], _STRING);
             $displayGroupItem['displayid'] = (($isDisplaySpecific == 1) ? Kit::ValidateParam($row['DisplayID'], _INT) : 0);
 

@@ -294,11 +294,11 @@ SQL;
             $row['lastaccessed'] = date("Y-m-d H:i:s", $row['lastaccessed']);
 
             // Create some login lights
-            $row['licensed'] = ($row['licensed'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
-            $row['inc_schedule'] = ($row['inc_schedule'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
-            $row['email_alert'] = ($row['email_alert'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
-            $row['loggedin'] = ($row['loggedin'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
-            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? Theme::Image('act.gif') : (($row['mediainventorystatus'] == 2) ? Theme::Image('disact.gif') : Theme::Image('warn.gif'));
+            $row['licensed'] = ($row['licensed'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['inc_schedule'] = ($row['inc_schedule'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['email_alert'] = ($row['email_alert'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['loggedin'] = ($row['loggedin'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'error' : 'warning');
 
             // Schedule Now
             $row['buttons'][] = array(

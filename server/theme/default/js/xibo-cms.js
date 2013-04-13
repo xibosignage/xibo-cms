@@ -239,7 +239,7 @@ function XiboGridRender(gridId){
                 if ($("#XiboPager_" + gridId).length > 0 && hasRows) {
                     $("#XiboPager_" + gridId).show();
                     
-                    $(sortingDiv).tablesorterPager({
+                    $(sortingDiv + ".tablesorter").tablesorterPager({
                        container: $("#XiboPager_" + gridId),
                        positionFixed: false,
                        page: pageNumber,
@@ -706,7 +706,7 @@ function LoginBox(message) {
 	                return false;
 	            }
     		}], {
-				"header": 'Please Login to Proceed'
+				
     		}
     	);
 

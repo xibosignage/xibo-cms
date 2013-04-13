@@ -693,7 +693,7 @@ class layoutDAO
 				$regionHtml .= '	</button>';
 				$regionHtml .= '	<ul class="dropdown-menu">';
 				$regionHtml .= '    	<li><a class="XiboFormButton" href="index.php?p=timeline&q=Timeline&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '" title="' . __('Timeline') . '">' . __('Edit Timeline') . '</a></li>';
-				$regionHtml .= '    	<li><a class="XiboFormButton" href="index.php?p=timeline&q=ManualRegionPositionForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '&top=' . $regionTop . '&left=' . $regionLeft . '&scale=' . $scaleFactor . '&layoutWidth=' . $width . '&layoutHeight= ' . $height . '" title="' . __('Options') . '">' . __('Options') . '</a></li>';
+				$regionHtml .= '    	<li><a class="XiboFormButton" href="index.php?p=timeline&q=ManualRegionPositionForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '&top=' . $regionTop . '&left=' . $regionLeft . '&width=' . $regionWidth . '&height=' . $regionHeight . '&scale=' . $scaleFactor . '&layoutWidth=' . $width . '&layoutHeight= ' . $height . '" title="' . __('Options') . '">' . __('Options') . '</a></li>';
 				$regionHtml .= '    	<li><a class="XiboFormButton" href="index.php?p=timeline&q=DeleteRegionForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '" title="' . __('Delete') . '">' . __('Delete') . '</a></li>';
 				$regionHtml .= '    	<li><a class="XiboFormButton" href="index.php?p=timeline&q=RegionPermissionsForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '" title="' . __('Permissions') . '">' . __('Permissions') . '</a></li>';
 				$regionHtml .= '	</ul>';

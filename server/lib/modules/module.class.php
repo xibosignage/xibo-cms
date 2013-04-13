@@ -1590,7 +1590,8 @@ FORM;
         $msgDuration = __('Duration');
 
         // Default Hover window contains a thumbnail, media type and duration
-        $output = '<div class="thumbnail"><img alt="' . $this->displayType . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif"></div>';
+        $output = '<div class="well">';
+        $output .= '<div class="preview-module-image"><img alt="' . $this->displayType . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif"></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';
@@ -1600,6 +1601,7 @@ FORM;
 
         $output .= '    <li>' . $msgDuration . ': ' . $this->duration . ' ' . __('seconds') . '</li>';
         $output .= '    </ul>';
+        $output .= '</div>';
         $output .= '</div>';
 
         return $output;

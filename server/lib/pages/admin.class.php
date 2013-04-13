@@ -149,7 +149,7 @@ class adminDAO
 			$cat_tab = $cat."_tab";
 			
 			// generate the li and a for this tab
-			$tabs .= "<li><a href='#$cat_tab'><span>$ucat</span></a></li>";
+			$tabs .= "<li><a href='#$cat_tab'><span>$ucat</span><i class='icon-chevron-right pull-right'></i></a></li>";
 		
 			// for each one, call display_cat to get the settings specific to that cat
 			$cat_page = $this->display_cat($cat);
@@ -162,13 +162,19 @@ PAGES;
 		}
 		
 		$msgSave = __('Save');
+		$msgCategories = __('Categories');
 
 		// Output it all
 		$form .= <<<FORM
-		<div id="tabs">
-			<ul class="tabs-nav">
-				$tabs
-			</ul>
+		<div class="span2">
+			<div class="well affix">
+				<ul class="nav nav-list ">
+					<li class="nav-header">$msgCategories</li>
+					$tabs
+				</ul>
+			</div>
+		</div>
+		<div class="span10">
 			$pages
 		</div>
 FORM;

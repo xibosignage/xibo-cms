@@ -19,26 +19,16 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Theme variables:
- * 	id = The GridID for rendering AJAX layout table return
- * 	filter_id = The Filter Form ID
- * 	form_meta = Extra form meta that needs to be sent to the CMS to return the list of layouts
- * 	pager = A paging control for this Xibo Grid
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="row">
-	<ul class="nav nav-pills span12">
-		<?php
-			foreach (Theme::GetMenu('Administration Menu') as $item) {
-				echo $item['li'];
-			}
-		?>
-		<li class="pull-right"><a title="<?php echo Theme::Translate('View Help'); ?>" class="XiboHelpButton" href="<?php echo Theme::Get('settings_help_button_url'); ?>"><span><?php echo Theme::Translate('Help'); ?></span></a></li>
-		<li class="pull-right"><a title="<?php echo Theme::Translate('Save Settings'); ?>" onclick="$('#<?php echo Theme::Get('form_id'); ?>').submit()" ><span><?php echo Theme::Translate('Save'); ?></span></a></li>
-	</ul>
-</div>
-<div class="row">
-
-	<?php echo Theme::Get('settings_form'); ?>
-
+<div class="span2">
+	<div class="well">
+		<ul class="nav nav-list">
+			<li class="nav-header"><?php echo Theme::Translate('Add Media'); ?></li>
+			<?php foreach(Theme::Get('media_buttons') as $button) { ?>
+			<li class="XiboFormButton" href="<?php echo $button['url']; ?>"><a tabindex="-1" href="#"><?php echo $button['text']; ?></a></li>
+			<?php } ?>
+		</ul>
+	</div>
 </div>

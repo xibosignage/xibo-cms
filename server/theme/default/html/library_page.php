@@ -28,7 +28,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="row">
-	<ul class="nav nav-pills">
+	<ul class="nav nav-pills span12">
 		<?php
 			foreach (Theme::GetMenu('Library Menu') as $item) {
 				echo $item['li'];
@@ -39,7 +39,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	</ul>
 </div>
 <div class="row">
-	<div class="XiboGrid" id="<?php echo Theme::Get('id'); ?>">
+	<div class="XiboGrid span12" id="<?php echo Theme::Get('id'); ?>">
 		<div class="XiboFilter">
 			<div class="FilterDiv" id="Filter">
 				<form class="form-inline">

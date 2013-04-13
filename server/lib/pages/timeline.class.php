@@ -733,7 +733,8 @@ END;
         // Generate an ID for the list (this is passed into the reorder function)
         $timeListMediaListId = uniqid('timelineMediaList_');
 
-        $response->html .= '<div id="timelineControl" class="timelineRightColumn" layoutid="' . $layoutId . '" regionid="' . $regionId . '">';
+        $response->html .= '<div class="span10">';
+        $response->html .= '<div id="timelineControl" class="timelineColumn" layoutid="' . $layoutId . '" regionid="' . $regionId . '">';
         $response->html .= '    <div class="timelineMediaVerticalList">';
         $response->html .= '        <ul id="' . $timeListMediaListId . '" class="timelineSortableListOfMedia">';
 
@@ -810,7 +811,6 @@ END;
             // Put the media name in
             $response->html .= '        <div class="timelineMediaDetails ' . $mediaBlockColouringClass . '">';
             $response->html .= '            <h3>' . (($mediaName == '') ? $tmpModule->displayType : $mediaName) . ' (' . $mediaDuration . ' seconds)</h3>';
-            $response->html .= '            <div class="timelineMediaImageThumbnail">' . $tmpModule->ImageThumbnail() . '</div>';
             $response->html .= '        </div>';
 
             // Put the media hover preview in
@@ -838,6 +838,7 @@ END;
         // Output a div to contain the preview for this media item
         $response->html .= '    <div id="timelinePreview"></div>';
 
+        $response->html .= '    </div>';
         $response->html .= '</div>';
 
         // Finish constructing the response
