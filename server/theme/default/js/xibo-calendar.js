@@ -66,7 +66,7 @@ function CallGenerateCalendar() {
 		data: data,
         dataType: "json",
         success: function(response) {
-        
+
             var respHtml;
             
             if (response.success) {
@@ -88,6 +88,9 @@ function CallGenerateCalendar() {
 			
 			// Call XiboInitialise for this form
 			XiboInitialise('#Calendar');
+
+            // Make sure the calendar will fit in the window
+            $("#Calendar .gridContainer").height($("body").height());
             
             return false;
         }
