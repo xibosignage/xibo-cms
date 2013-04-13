@@ -194,7 +194,7 @@ function XiboGridRender(gridId){
 
             // Do we have to call any functions due to this success?
             if (response.callBack != "" && response.callBack != undefined) {
-                eval(response.callBack)(name);
+                eval(response.callBack)(gridId);
             }
 
             // Call XiboInitialise for this form
@@ -330,14 +330,12 @@ function XiboFormRender(formUrl) {
                 	).attr("id", id);
 
                 if (response.dialogClass != '') {
-                	dialog.addClass(
-                        'modal-big'
-                    );
+                	dialog.addClass(response.dialogClass);
                 }
 
                 // Do we have to call any functions due to this success?
                 if (response.callBack != "" && response.callBack != undefined) {
-                    eval(response.callBack)(name);
+                    eval(response.callBack)(this);
                 }
 
                 // Focus in the first form element

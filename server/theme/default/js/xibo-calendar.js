@@ -17,23 +17,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 $(document).ready(function() {
 	// Store the default view for first load
 	$('#Calendar').data('view', 'month');
 
-        // The Calendar will be generated when the display list is loaded
-	
-	// Navigational Calendar
-	$('#NavCalendar').datepicker({
-		onChangeMonthYear: function(year, month) {
-			// Store the date on our hidden form (or in the data object)
-			$('#Calendar').data('view', 'month').data("date", { year: year, month: month });
-			
-			// Call the AJAX to refresh
-			CallGenerateCalendar();
-		}
-	});
+    var picker = $('#main-calendar-picker').datetimepicker({
+            language: "en",
+            pickTime: false
+        });
+        
+    picker.on('changeDate', function(e) {
+            console.log(e.date.toString());
+            console.log(e.localDate.toString());
+
+            // Store the date on our hidden form (or in the data object)
+            $('#Calendar').data({
+                view: 'month',
+                date: e.date,
+                localDate: e.localDate
+            });
+            
+            // Call the AJAX to refresh
+            CallGenerateCalendar();
+        });
+
+    picker.data('datetimepicker').setDate(new Date());
 });
 
 /**
@@ -44,12 +52,13 @@ function CallGenerateCalendar() {
 	var url				= 'index.php?p=schedule&q=GenerateCalendar&ajax=true';
 	var calendar 		= $('#Calendar');
 	var view 			= calendar.data('view') || 'month';
-	var date			= calendar.data('date') || {year:'', month:''};
+	var date			= calendar.data('date') || new Date().getTime();
 	var displayGroups	= $('#DisplayList').serialize();
 	
-	var data 			= $.extend(date, {view: view});
+	var data 			= $.extend({date: date}, {view: view});
 	
-	if (displayGroups != '') url += '&' + displayGroups;
+	if (displayGroups != '') 
+        url += '&' + displayGroups;
 	
 	$.ajax({
         type: "post",
@@ -79,8 +88,6 @@ function CallGenerateCalendar() {
 			
 			// Call XiboInitialise for this form
 			XiboInitialise('#Calendar');
-			
-			$('div.LongEvent').corner('5px');
             
             return false;
         }
@@ -88,18 +95,18 @@ function CallGenerateCalendar() {
 }
 
 /**
- * Callback for the display list renderer
+ * Callback fired when the Display Select List on the left hand pane is rendered
  */
 function DisplayListRender() {
     // Bind a click event to all the display list checkboxes
-    $('#DisplayList input[type=checkbox]').click(function(){
+    $('.DisplayListForm input[type=checkbox]').click(function(){
             CallGenerateCalendar();
     });
 
     CallGenerateCalendar();
         
     $('input:checkbox[name=checkAll]', '#checkAllForDisplayList').click(function(){
-        $("input:checkbox[name='DisplayGroupIDs[]']", "#DisplayList").attr("checked", this.checked);
+        $("input:checkbox[name='DisplayGroupIDs[]']", ".DisplayListForm").prop("checked", this.checked);
         
         CallGenerateCalendar();
     });
@@ -110,37 +117,26 @@ function DisplayListRender() {
  */
 function setupScheduleForm() {
     //set up any date fields we have with the date picker
-    $('.date-pick').datepicker({
-        dateFormat: "dd/mm/yy",
-        beforeShow: customRange
-    });
+    $('.date-pick').datetimepicker({
+            language: "en"
+        });
     
     // We submit this form ourselves (outside framework)
     $('.XiboScheduleForm').validate({
         submitHandler: ScheduleFormSubmit
-    });
-    
-    $(".time-pick", "#div_dialog").setMask({
-        mask: "29:59",
-        autoTab: false
-    }).keypress(function() {
-        var currentMask = $(this).data('mask').mask;
-        var newMask = $(this).val().match(/^2.*/) ? "23:59" : "29:59";
-        if (newMask != currentMask) {
-            $(this).setMask({
-                mask: newMask,
-                autoTab: false
-            });
-        }
-    }).click(function(){
-        $(this)[0].select();
-    });
+    });    
 }
 
-function displayGridCallback() {
+/**
+ * Call back fired by the Display Grid on the Add/Edit Event Form.
+ * @return {[type]} [description]
+ */
+function displayGridCallback(gridId) {
 
-    $('input:checkbox[name=checkAll]', '#div_dialog').click(function(){
-        $("input:checkbox[name='DisplayGroupIDs[]']", "#div_dialog").attr("checked", this.checked);
+    var modal = $('#' + gridId).closest(".modal");
+
+    $('input:checkbox[name=checkAll]', modal).click(function(){
+        $("input:checkbox[name='DisplayGroupIDs[]']", modal).prop("checked", this.checked);
     });
 }
 
@@ -167,13 +163,4 @@ function ScheduleFormSubmit(form) {
     });
 
     return;
-}
-
-/**
- * Custom range function for date pickers
- * @param {Object} input
- */
-function customRange(input) { 
-    return {minDate: (input.id == "endtime" ? $("#starttime").datepicker("getDate") : null), 
-        maxDate: (input.id == "starttime" ? $("#endtime").datepicker("getDate") : null)}; 
 }

@@ -24,20 +24,36 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div id="checkAllForDisplayList" class="scheduleFormCheckAll">
-	<label for="checkAll"><?php echo Theme::Translate('Check All'); ?></label><input type="checkbox" name="checkAll">
+<div class="well">
+	<form id="<?php echo Theme::Get('id'); ?>" class="DisplayListForm">
+		<ul class="nav nav-list DisplayList">
+			<li class="nav-header"><?php echo Theme::Translate('Misc'); ?></li>
+			<li id="checkAllForDisplayList">
+				<label for="checkAll">
+					<input type="checkbox" name="checkAll">
+					<?php echo Theme::Translate('Check All'); ?>
+				</label>
+			</li>
+
+			<li class="nav-header"><?php echo Theme::Translate('Groups'); ?></li>
+			<?php foreach(Theme::Get('group_list_items') as $row) { ?>
+			<li>
+				<label for="displaygroup_<?php echo $row['displaygroupid']; ?>">
+					<input type="checkbox" id="displaygroup_<?php echo $row['displaygroupid']; ?>" name="DisplayGroupIDs[]" value="<?php echo $row['displaygroupid']; ?>" <?php echo $row['checked_text']; ?> />
+					<?php echo $row['displaygroup']; ?>
+				</label>
+			</li>
+			<?php } ?>
+
+			<li class="nav-header"><?php echo Theme::Translate('Displays'); ?></li>
+			<?php foreach(Theme::Get('display_list_items') as $row) { ?>
+			<li>
+				<label for="displaygroup_<?php echo $row['displaygroupid']; ?>">
+					<input type="checkbox" id="displaygroup_<?php echo $row['displaygroupid']; ?>" name="DisplayGroupIDs[]" value="<?php echo $row['displaygroupid']; ?>" <?php echo $row['checked_text']; ?> />
+					<?php echo $row['displaygroup']; ?>
+				</label>
+			</li>	
+			<?php } ?>
+		</ul>
+	</form>
 </div>
-<form id="<?php echo Theme::Get('id'); ?>" class="DisplayListForm">
-	<?php echo Theme::Translate('Groups'); ?>
-	<ul class="DisplayList">
-		<?php foreach(Theme::Get('group_list_items') as $row) { ?>
-		<li><label for="displaygroup_<?php echo $row['displaygroupid']; ?>"><?php echo $row['displaygroup']; ?></label><input type="checkbox" id="displaygroup_<?php echo $row['displaygroupid']; ?>" name="DisplayGroupIDs[]" value="<?php echo $row['displaygroupid']; ?>" <?php echo $row['checked_text']; ?> /></li>	
-		<?php } ?>
-	</ul>
-	<?php echo Theme::Translate('Displays'); ?>
-	<ul class="DisplayList">
-		<?php foreach(Theme::Get('display_list_items') as $row) { ?>
-		<li><label for="displaygroup_<?php echo $row['displaygroupid']; ?>"><?php echo $row['displaygroup']; ?></label><input type="checkbox" id="displaygroup_<?php echo $row['displaygroupid']; ?>" name="DisplayGroupIDs[]" value="<?php echo $row['displaygroupid']; ?>" <?php echo $row['checked_text']; ?> /></li>	
-		<?php } ?>
-	</ul>
-</form>
