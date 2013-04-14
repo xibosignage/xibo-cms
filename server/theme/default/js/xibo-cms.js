@@ -693,6 +693,8 @@ function XiboSwapDialog(formUrl) {
  * @param {String} message
  */
 function LoginBox(message) {
+
+    bootbox.hideAll();
     
     // Create the dialog with our parameters
     var dialog = bootbox.dialog(

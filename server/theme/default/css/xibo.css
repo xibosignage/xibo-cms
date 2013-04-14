@@ -52,11 +52,11 @@
 /* Define some modal widths and heights */
 body .modal-big {
     width:80%;
-	margin-left:-40%;
+    margin-left:-40%;
 }
 
 body .modal-big .modal-body {
-	max-height: 800px;
+	max-height: 500px;
 }
 
 @media (max-width: 767px) {

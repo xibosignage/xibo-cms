@@ -132,11 +132,14 @@ class scheduleDAO
             $db                 =& $this->db;
             $response           = new ResponseManager();
 
-            $displayGroupIDs    = Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY, Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY));
-            $year       = Kit::GetParam('year', _POST, _INT, date('Y', time()));
-            $month      = Kit::GetParam('month', _POST, _INT, date('m', time()));
-            $day        = Kit::GetParam('day', _POST, _INT, date('d', time()));
-            $date       = mktime(0, 0, 0, $month, $day, $year);
+            $displayGroupIDs = Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY, Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY));
+            $date = DateManager::GetDateFromString(Kit::GetParam('date', _POST, _STRING));
+
+            // Extract the month and the year
+            $month = date('m', $date);
+            $year = date('Y', $date);
+
+            Debug::LogEntry($db, 'audit', 'Month: ' . $month . ' Year: ' . $year . ' [' . $date . ']' . ' [Raw Date:' . Kit::GetParam('date', _POST, _STRING) . ']');
 
             // Get the first day of the month
             $month_start    = mktime(0, 0, 0, $month, 1, $year);
@@ -1352,7 +1355,8 @@ HTML;
         $response = new ResponseManager();
 
         $date = Kit::GetParam('date', _GET, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
-        $dateText = date("d/m/Y h:i:s", $date);
+        $dateText = date("d/m/Y H:i", $date);
+        $toDateText = date("d/m/Y H:i", $date + 86400);
         $displayGroupIds = Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
 
         // Filter forms for selecting layouts and displays
@@ -1379,7 +1383,7 @@ HTML;
             <td><label for="starttime" title="Select the start time for this event">Start Time</label></td>
             <td>
                 <div class="date-pick input-append date">
-                    <input data-format="dd/MM/yyyy hh:mm:ss" type="text" class="input-medium" name="starttime" id="starttime" value="$dateText"></input>
+                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="starttime" id="starttime" value="$dateText"></input>
                     <span class="add-on">
                         <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
                     </span>
@@ -1388,7 +1392,7 @@ HTML;
             <td><label for="endtime" title="Select the end time for this event">End Time</label></td>
             <td>
                 <div class="date-pick input-append date">
-                    <input data-format="dd/MM/yyyy hh:mm:ss" type="text" class="input-medium" name="endtime" id="endtime"></input>
+                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="endtime" id="endtime" value="$toDateText"></input>
                     <span class="add-on">
                         <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
                     </span>
@@ -1420,7 +1424,7 @@ END;
             <td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
             <td>
                 <div class="date-pick input-append date">
-                    <input data-format="dd/MM/yyyy hh:mm:ss" type="text" class="input-medium" name="rec_range" id="rec_range"></input>
+                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="rec_range" id="rec_range"></input>
                     <span class="add-on">
                         <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
                     </span>
@@ -1502,14 +1506,14 @@ END;
         $isPriority = (Kit::ValidateParam($row['is_priority'], _CHECKBOX) == 1) ? 'checked' : '';
         $displayOrder = Kit::ValidateParam($row['DisplayOrder'], _INT);
 
-        $fromDtText = date("d/m/Y H:i:s", $fromDT);
-        $toDtText = date("d/m/Y H:i:s", $toDT);
+        $fromDtText = date("d/m/Y H:i", $fromDT);
+        $toDtText = date("d/m/Y H:i", $toDT);
         $recToDtText = '';
         $recToTimeText = '';
 
         if ($recType != '')
         {
-            $recToDtText = date("d/m/Y H:i:s", $recToDT);
+            $recToDtText = date("d/m/Y H:i", $recToDT);
         }
 
         // Check that we have permission to edit this event.
@@ -1542,7 +1546,7 @@ END;
             <td><label for="starttime" title="Select the start time for this event">Start Time</label></td>
             <td>
                 <div class="date-pick input-append date">
-                    <input data-format="dd/MM/yyyy hh:mm:ss" type="text" class="input-medium" name="starttime" id="starttime" value="$fromDtText"></input>
+                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="starttime" id="starttime" value="$fromDtText"></input>
                     <span class="add-on">
                         <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
                     </span>
@@ -1551,7 +1555,7 @@ END;
             <td><label for="endtime" title="Select the end time for this event">End Time</label></td>
             <td>
                 <div class="date-pick input-append date">
-                    <input data-format="dd/MM/yyyy hh:mm:ss" type="text" class="input-medium" name="endtime" id="endtime" value="$toDtText"></input>
+                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="endtime" id="endtime" value="$toDtText"></input>
                     <span class="add-on">
                         <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
                     </span>
@@ -1582,7 +1586,7 @@ END;
         <tr>
             <td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
             <td><div class="date-pick input-append date">
-                <input data-format="dd/MM/yyyy hh:mm:ss" type="text" class="input-medium" name="rec_range" id="rec_range" value="$recToDtText"></input>
+                <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="rec_range" id="rec_range" value="$recToDtText"></input>
                 <span class="add-on">
                     <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
                 </span>
@@ -1619,28 +1623,28 @@ END;
         $datemanager        = new DateManager($db);
 
         $campaignId           = Kit::GetParam('CampaignID', _POST, _INT, 0);
-        $fromDT             = Kit::GetParam('starttime', _POST, _STRING);
-        $toDT               = Kit::GetParam('endtime', _POST, _STRING);
+        $fromDT             = Kit::GetParam('iso_starttime', _POST, _STRING);
+        $toDT               = Kit::GetParam('iso_endtime', _POST, _STRING);
         $displayGroupIDs    = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
         $isPriority         = Kit::GetParam('is_priority', _POST, _CHECKBOX);
 
         $rec_type           = Kit::GetParam('rec_type', _POST, _STRING);
         $rec_detail         = Kit::GetParam('rec_detail', _POST, _INT);
-        $repeatTime            = Kit::GetParam('repeatTime', _POST, _STRING, '00:00');
+        $recToDT            = Kit::GetParam('iso_rec_range', _POST, _STRING);
         
         $userid             = Kit::GetParam('userid', _SESSION, _INT);
         $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
 
-                $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
+        $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
         
         Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
         Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
         
-        $fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
-        $toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
+        $fromDT = $datemanager->GetDateFromString($fromDT);
+        $toDT = $datemanager->GetDateFromString($toDT);
 
         if ($recToDT != '')
-            $recToDT = $datemanager->GetDateFromUS($recToDT, $repeatTime);
+            $recToDT = $datemanager->GetDateFromString($recToDT);
         
         // Validate layout
         if ($campaignId == 0)
@@ -1699,28 +1703,29 @@ END;
         $eventID            = Kit::GetParam('EventID', _POST, _INT, 0);
         $eventDetailID      = Kit::GetParam('EventDetailID', _POST, _INT, 0);
         $campaignId         = Kit::GetParam('CampaignID', _POST, _INT, 0);
-        $fromDT             = Kit::GetParam('starttime', _POST, _STRING);
-        $toDT               = Kit::GetParam('endtime', _POST, _STRING);
+        $fromDT             = Kit::GetParam('iso_starttime', _POST, _STRING);
+        $toDT               = Kit::GetParam('iso_endtime', _POST, _STRING);
         $displayGroupIDs    = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
         $isPriority         = Kit::GetParam('is_priority', _POST, _CHECKBOX);
 
         $rec_type           = Kit::GetParam('rec_type', _POST, _STRING);
         $rec_detail         = Kit::GetParam('rec_detail', _POST, _INT);
-        $recToDT            = Kit::GetParam('rec_range', _POST, _STRING);
+        $recToDT            = Kit::GetParam('iso_rec_range', _POST, _STRING);
         
         $userid             = Kit::GetParam('userid', _SESSION, _INT);
                 $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
         
-        if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
+        if ($eventID == 0) 
+            trigger_error('No event selected.', E_USER_ERROR);
         
         Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
         Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
         
-        $fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
-        $toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
+        $fromDT = $datemanager->GetDateFromString($fromDT);
+        $toDT = $datemanager->GetDateFromString($toDT);
 
         if ($recToDT != '')
-            $recToDT = $datemanager->GetDateFromUS($recToDT, $repeatTime);
+            $recToDT = $datemanager->GetDateFromString($recToDT);
 
         // Validate layout
         if ($campaignId == 0)

@@ -27,9 +27,7 @@ $(document).ready(function() {
         });
         
     picker.on('changeDate', function(e) {
-            console.log(e.date.toString());
-            console.log(e.localDate.toString());
-
+            
             // Store the date on our hidden form (or in the data object)
             $('#Calendar').data({
                 view: 'month',
@@ -52,10 +50,10 @@ function CallGenerateCalendar() {
 	var url				= 'index.php?p=schedule&q=GenerateCalendar&ajax=true';
 	var calendar 		= $('#Calendar');
 	var view 			= calendar.data('view') || 'month';
-	var date			= calendar.data('date') || new Date().getTime();
+	var date			= calendar.data('date') || new Date();
 	var displayGroups	= $('#DisplayList').serialize();
 	
-	var data 			= $.extend({date: date}, {view: view});
+	var data 			= $.extend({date: date.toISOString()}, {view: view});
 	
 	if (displayGroups != '') 
         url += '&' + displayGroups;
@@ -121,7 +119,8 @@ function DisplayListRender() {
 function setupScheduleForm() {
     //set up any date fields we have with the date picker
     $('.date-pick').datetimepicker({
-            language: "en"
+            language: "en",
+            pickSeconds: false
         });
     
     // We submit this form ourselves (outside framework)
@@ -148,20 +147,25 @@ function ScheduleFormSubmit(form) {
     var url = $(form).attr("action") + "&ajax=true";
 
     // Get additional fields from the form
-    var layoutId = $('input:radio[name=CampaignID]:checked', '#div_dialog').val();
+    var layoutId = $('input:radio[name=CampaignID]:checked', $(form).closest(".modal")).val();
     if (layoutId == undefined)
         layoutId = 0;
     
-    var displayGroupIds = $("input:checkbox[name='DisplayGroupIDs[]']:checked", "#div_dialog").serialize();
+    var displayGroupIds = $("input:checkbox[name='DisplayGroupIDs[]']:checked", $(form).closest(".modal")).serialize();
     if (displayGroupIds == undefined)
         displayGroupIds = 0;
+
+    // Get the values from our datepickers
+    var startDate = $("#starttime").closest(".date-pick").data('datetimepicker').getDate().toISOString();
+    var endDate = $("#starttime").closest(".date-pick").data('datetimepicker').getDate().toISOString();
+    var recurUntil = $("#starttime").closest(".date-pick").data('datetimepicker').getDate().toISOString();
 
     $.ajax({
         type:"post",
         url:url,
         cache:false,
         dataType:"json",
-        data:$(form).serialize() + "&CampaignID=" + layoutId + "&" + displayGroupIds,
+        data:$(form).serialize() + "&CampaignID=" + layoutId + "&" + displayGroupIds + "&iso_starttime=" + startDate + "&iso_endtime=" + endDate + "&iso_rec_range=" + recurUntil,
         success: XiboSubmitResponse
     });
 

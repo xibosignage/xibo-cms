@@ -29,7 +29,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <div class="row">
 	<div class="span2">
 		<div id="main-calendar-picker" class="input-append date">
-			<input data-format="dd/MM/yyyy" type="text" class="input-medium"></input>
+			<input data-format="MM/yyyy" type="text" class="input-medium"></input>
 			<span class="add-on">
 				<i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
 			</span>
