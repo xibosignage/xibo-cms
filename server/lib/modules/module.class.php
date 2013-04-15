@@ -776,34 +776,23 @@ END;
         {
             setSession('content','mediatype', $this->type);
 
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" disabled />
-            <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-            <input class="XiboFormButton" type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" title="Library" value="Library" />
-END;
-        }
+            $this->response->AddButton(__('Library'), 'XiboSwapDialog("index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutid . '&regionid=' . $regionid . '")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+		}
         elseif ($regionid != '' && !$this->showRegionOptions)
         {
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" disabled />
-            <input class="XiboFormButton" id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
-END;
-        }
+        	$this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		}
         elseif ($backgroundImage)
         {
-            // Show the save button, and make cancel go back to the background form
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" disabled />
-            <input class="XiboFormButton" id="btnCancel" type="button" title="Close" href="index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid" value="Cancel" />
-END;
+        	$this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&q=BackgroundForm&modify=true&layoutid=' . $layoutid . '")');
         }
         else
         {
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" disabled />
-            <input class="XiboFormButton" id="btnCancel" type="button" title="Close" href="index.php?p=content&q=displayForms&sp=add" value="Cancel" />
-END;
+        	$this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=content&q=displayForms&sp=add")');
         }
+
+        $this->response->AddButton(__('Save'), '$("#AddLibraryBasedMedia").submit()');
 
         $form = <<<FORM
         <div style="display:none"><iframe name="fileupload" width="1px" height="1px"></iframe></div>
@@ -823,7 +812,7 @@ END;
                 </form>
         </div>
         <div id="uploadProgress" style="display:none">
-                <img src="img/loading.gif"><span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
+            <span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
         </div>
         <form class="XiboForm" id="AddLibraryBasedMedia" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
                 <input type="hidden" name="layoutid" value="$layoutid">
@@ -844,10 +833,6 @@ END;
                         <tr>
                                 <td></td>
                                 <td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
-                        </tr>
-                        <tr>
-                                <td></td>
-                                <td colspan="3">$save_button</td>
                         </tr>
                 </table>
         </form>
@@ -926,37 +911,31 @@ FORM;
         $editedMediaID = $row['editedMediaID'];
         $ext = strtolower(substr(strrchr($originalFilename, '.'), 1));
 
-        // Save button is different depending on if we are on a region or not
+		// Save button is different depending on if we are on a region or not
         if ($regionid != '' && $this->showRegionOptions)
         {
             setSession('content', 'mediatype', $this->type);
 
             $extraNotes = '<em>Note: Uploading a new ' . $this->displayType . ' here will replace it on this layout only.</em>';
 
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" />
-            <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-END;
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         elseif ($regionid != '' && !$this->showRegionOptions)
         {
             $extraNotes = '<em>Note: Uploading a new ' . $this->displayType . ' here will replace it on this layout only.</em>';
             
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" />
-            <input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
-END;
+        	$this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
         else
         {
             $updateMediaChecked = (Config::GetSetting($db, 'LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 'checked' : '';
             $extraNotes = '<input type="checkbox" id="replaceInLayouts" name="replaceInLayouts" ' . $updateMediaChecked . '><label for="replaceInLayouts">' . __('Update this media in all layouts it is assigned to. Note: It will only be replaced in layouts you have permission to edit.') . '</label>';
 
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" />
-            <input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
-END;
+        	$this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
+
+        $this->response->AddButton(__('Save'), '$("#EditLibraryBasedMedia").submit()');
+
 
         $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
 
@@ -978,9 +957,9 @@ END;
                 </form>
         </div>
         <div id="uploadProgress" style="display:none">
-                <img src="img/loading.gif"><span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
+            <span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
         </div>
-        <form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
+        <form class="XiboForm" id="EditLibraryBasedMedia" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
                 <input type="hidden" name="hidFileID" id="hidFileID" value="" />
                 <input type="hidden" id="txtFileName" name="txtFileName" readonly="true" />
                 <input type="hidden" name="layoutid" value="$layoutid">
@@ -1004,10 +983,6 @@ END;
                         <tr>
                                 <td></td>
                                 <td colspan="2">$extraNotes</td>
-                        </tr>
-                        <tr>
-                                <td></td>
-                                <td colspan="3">$save_button</td>
                         </tr>
                 </table>
         </form>
