@@ -804,3 +804,58 @@ function switchLists(e) {
 
    otherList.append(e.currentTarget);
 }
+
+function fileFormSubmit() {
+    // Update the UI to say its submitting
+    $('#uploadProgress').fadeIn("slow");
+    $('#file_upload').hide();
+}
+
+/**
+ * 
+ * @param {Object} fileName
+ * @param {Object} fileId
+ * @param {Object} errorCode
+ */
+function fileUploadReport(fileName, fileId, errorCode) {
+    
+    var uploadProgress = $('#uploadProgress');
+    
+    if (errorCode == 0)
+    {
+        $('#txtFileName').val(fileName);
+        $('#hidFileID').val(fileId);
+        
+        uploadProgress.html("File upload complete.");
+    }
+    else
+    {
+        uploadProgress.hide();
+        $('#file_upload').show();
+        
+        if (errorCode == 1)
+        {
+            SystemMessage("The file exceeds the maximum allowed file size. [Code 1]");
+        }
+        else if (errorCode == 2)
+        {
+            SystemMessage("The file exceeds the maximum allowed file size. [Code 2]");
+        }
+        else if (errorCode == 3)
+        {
+            SystemMessage("The file upload was interrupted, please retry. [Code 3]");
+        }
+        else if (errorCode == 25000)
+        {
+            SystemMessage("Could not encrypt this file. [Code 25000]");
+        }
+        else if (errorCode == 25001)
+        {
+            SystemMessage("Could not save this file after encryption. [Code 25001]");
+        }
+        else
+        {
+            SystemMessage("There was an error uploading this file [Code " + errorCode + "]");
+        }
+    }
+}
