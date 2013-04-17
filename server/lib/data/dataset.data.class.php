@@ -270,9 +270,16 @@ class DataSet extends Data
             $SQL .= "ORDER BY RowNumber ";
         }
 
-        if ($lowerLimit != 0)
+        if ($lowerLimit != 0 || $upperLimit != 0)
         {
-            $upperLimit = $upperLimit - $lowerLimit + 1;
+            // Lower limit should be 0 based
+            if ($lowerLimit != 0)
+                $lowerLimit = $lowerLimit - 1;
+
+            // Upper limit should be the distance between upper and lower
+            $upperLimit = $upperLimit - $lowerLimit;
+
+            // Substitute in
             $SQL .= sprintf('LIMIT %d, %d ', $lowerLimit, $upperLimit);
         }
 

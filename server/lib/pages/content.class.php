@@ -231,6 +231,7 @@ class contentDAO
         $response->html = $output;
         $response->success = true;
         $response->dialogSize = true;
+        $response->dialogClass = 'modal-big';
         $response->dialogWidth = '780px';
         $response->dialogHeight = '580px';
         $response->dialogTitle = __('Assign an item from the Library');
@@ -275,6 +276,7 @@ class contentDAO
         // Render the Theme
         $response->SetGridResponse(Theme::RenderReturn('library_form_assign_list'));
         $response->callBack = 'LibraryAssignCallback';
+        $response->pageSize = 5;
         $response->Respond();
     }
 	

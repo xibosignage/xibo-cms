@@ -230,24 +230,25 @@ var LibraryAssignCallback = function()
         var row = $(this).parent().parent();
 
         // Construct a new list item for the lower list and append it.
-        $("<li/>", {
+        var newItem = $("<li/>", {
             text: row.attr("litext"),
             id: row.attr("rowid"),
             "class": "li-sortable",
             dblclick: function(){
                 $(this).remove();
             }
-        })
-        .appendTo("#LibraryAssignSortable");
+        });
+
+        newItem.appendTo("#LibraryAssignSortable");
 
         // Add a span to that new item
         $("<span/>", {
-            text: " [x]",
+            "class": "icon-minus-sign",
             click: function(){
                 $(this).parent().remove();
             }
         })
-        .appendTo("#" + row.attr("rowid"));
+        .appendTo(newItem);
 
     });
 

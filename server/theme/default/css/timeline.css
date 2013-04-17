@@ -150,15 +150,12 @@ div.timelineMediaItemColouring_disabled{
     background:url(../img/timeline/grey_bar.gif) no-repeat;
 }
 
-ul#LibraryAssignSortable {
-    width: 80%;
-    height: 70px;
-    background-color: #EEEEEE;
-    padding: 5px;
-}
-
 span.library_assign_list_select {
     cursor: pointer;
+}
+
+ul#LibraryAssignSortable {
+    display: inline-block;
 }
 
 #LibraryAssignSortable .li-sortable {
@@ -168,6 +165,7 @@ span.library_assign_list_select {
     background-color: #E5F0FF;
     cursor: pointer;
     float: left;
+    list-style: none;
 }
 
 div.timelineLink {
