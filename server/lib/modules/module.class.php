@@ -1473,7 +1473,7 @@ END;
          */
         public function Preview($width, $height)
         {
-            return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.png" /></div>';
+            return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
         }
 
     /**

@@ -47,33 +47,13 @@ class counter extends Module
         $rWidth		= Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 
-        $form = <<<FORM
-            <form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
-                <input type="hidden" name="layoutid" value="$layoutid">
-                <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-                <table>
-                    <tr>
-                        <td colspan="2"><center>Python Client Only</center></td>
-                    </tr>
-                    <tr>
-                        <td><label for="duration" title="The duration in seconds this counter should be displayed">Duration<span class="required">*</span></label></td>
-                        <td><input id="duration" name="duration" type="text"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">
-                            <input id="popupNotification" name="popupNotification" type="checkbox">
-                            <label for="popupNotification" title="Popup a notification when the counter changes">Popup Notification?</label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="4">
-                            <textarea id="ta_text" name="ta_text">[Counter]</textarea>
-                        </td>
-                    </tr>
-                </table>
-            </form>
-FORM;
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_url', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+
+        // Output the form
+        $form = Theme::RenderReturn('media_form_counter_add');
+
 
         if ($this->showRegionOptions)
         {
@@ -129,35 +109,17 @@ FORM;
         $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
         $popupNotificationChecked = ($popupNotification) ? 'checked' : '';
 
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_url', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="mediaid" value="' . $mediaid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+
+        Theme::Set('duration', $this->duration);
+        Theme::Set('is_duration_enabled', $durationFieldEnabled);
+        Theme::Set('is_popup_notification_checked', $popupNotificationChecked);
+        Theme::Set('text_template', $text);
+
         // Output the form
-        $form = <<<FORM
-            <form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
-                <input type="hidden" name="layoutid" value="$layoutid">
-                <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                <input type="hidden" name="mediaid" value="$mediaid">
-                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-                <table>
-                    <tr>
-                        <td colspan="2"><center>Python Client Only</center></td>
-                    </tr>
-                    <tr>
-                        <td><label for="duration" title="The duration in seconds this counter should be displayed">Duration<span class="required">*</span></label></td>
-                        <td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">
-                            <input id="popupNotification" name="popupNotification" type="checkbox" $popupNotificationChecked>
-                            <label for="popupNotification" title="Popup a notification when the counter changes">Popup Notification?</label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="4">
-                            <textarea id="ta_text" name="ta_text">$text</textarea>
-                        </td>
-                    </tr>
-                </table>
-            </form>
-FORM;
+        $form = Theme::RenderReturn('media_form_counter_edit');
 
         if ($this->showRegionOptions)
         {
