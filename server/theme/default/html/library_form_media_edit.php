@@ -42,7 +42,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     <div class="control-group">
 		<label class="control-label" for="name" accesskey="n" title="<?php echo Theme::Translate('The Name of this item - Leave blank to use the file name'); ?>"><?php echo Theme::Translate('Name'); ?></label>
 		<div class="controls">
-			<input name="name" type="text" id="name" tabindex="2" />
+			<input name="name" type="text" id="name" value="<?php echo Theme::Get('name'); ?>" tabindex="2" />
 		</div>
 	</div>
 	<div class="control-group">

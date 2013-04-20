@@ -686,7 +686,7 @@ class layoutDAO
                                           
 			if ($regionAuth->edit) {
 
-				$regionHtml .= '<div class="btn-group regionInfo">';
+				$regionHtml .= '<div class="btn-group regionInfo pull-right">';
 				$regionHtml .= '	<button class="btn dropdown-toggle" data-toggle="dropdown">';
 				$regionHtml .= '<span class="region-tip">' . $tipWidth . ' x ' . $tipHeight . ' (' . $tipLeft . ',' . $tipTop . ')' . '</span>';
 				$regionHtml .= '		<span class="caret"></span>';

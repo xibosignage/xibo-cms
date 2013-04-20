@@ -29,7 +29,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<div class="control-group">
 		<label class="control-label" for="duration" accesskey="n" title="<?php echo Theme::Translate('The duration in seconds this counter should be displayed'); ?>"><?php echo Theme::Translate('Duration'); ?></label>
 		<div class="controls">
-			<input name="duration" type="text" id="duration" tabindex="1" />
+			<input class="required number" name="duration" type="text" id="duration" tabindex="1" />
 		</div>
 	</div>
 	<div class="control-group">

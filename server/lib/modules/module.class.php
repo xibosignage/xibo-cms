@@ -911,6 +911,7 @@ END;
         Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
 		Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSizeBytes . '" />');
 
+		Theme::Set('name', $name);
 		Theme::Set('duration', $this->duration);
 		Theme::Set('is_duration_field_enabled', $durationFieldEnabled);
 		Theme::Set('valid_extensions', 'This form accepts: ' . $this->validExtensionsText . ' files up to a maximum size of ' . $this->maxFileSize);

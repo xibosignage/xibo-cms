@@ -280,3 +280,18 @@ var background_button_callback = function() {
 
 	$('#bg_image_image').attr("src", "index.php?p=module&q=GetImage&id=" + id + "&width=80&height=80&dynamic");
 }
+
+var text_callback = function(dialog)
+{
+    // Conjure up a text editor
+    CKEDITOR.replace("ta_text");
+
+    // Make sure when we close the dialog we also destroy the editor
+    dialog.on("hide", function() {
+        if (CKEDITOR.instances["ta_text"] != undefined) {
+            CKEDITOR.instances["ta_text"].destroy();
+        }
+    });
+    
+    return false;
+}

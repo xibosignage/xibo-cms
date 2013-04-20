@@ -26,11 +26,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
 	<?php echo Theme::Get('form_meta'); ?>
 	<p class="text-warning text-center"><?php echo Theme::Translate('Python Client Only'); ?></p>
-<table>
 	<div class="control-group">
 		<label class="control-label" for="duration" accesskey="n" title="<?php echo Theme::Translate('The duration in seconds this counter should be displayed'); ?>"><?php echo Theme::Translate('Duration'); ?></label>
 		<div class="controls">
-			<input name="duration" type="text" id="duration" tabindex="1" value="<?php echo Theme::Get('duration'); ?>" <?php echo Theme::Get('is_duration_enabled'); ?> />
+			<input class="required number" name="duration" type="text" id="duration" tabindex="1" value="<?php echo Theme::Get('duration'); ?>" <?php echo Theme::Get('is_duration_enabled'); ?> />
 		</div>
 	</div>
 	<div class="control-group">
@@ -42,7 +41,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		</div>
 	</div>
 	<div class="control-group">
-		<textarea id="ta_text" name="ta_text" rows="5"><?php echo Theme::Get('text'); ?></textarea>
+		<textarea id="ta_text" name="ta_text" rows="5"><?php echo Theme::Get('text_template'); ?></textarea>
 	</div>
-</table>
 </form>

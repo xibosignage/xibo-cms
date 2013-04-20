@@ -21,25 +21,30 @@ $(document).ready(function() {
 	// Store the default view for first load
 	$('#Calendar').data('view', 'month');
 
-    var picker = $('#main-calendar-picker').datetimepicker({
-            language: "en",
-            pickTime: false
-        });
-        
-    picker.on('changeDate', function(e) {
-            
-            // Store the date on our hidden form (or in the data object)
-            $('#Calendar').data({
-                view: 'month',
-                date: e.date,
-                localDate: e.localDate
+    $('#Calendar').each(function (){
+
+
+        var picker = $('#main-calendar-picker').datetimepicker({
+                language: "en",
+                pickTime: false
             });
             
-            // Call the AJAX to refresh
-            CallGenerateCalendar();
-        });
+        picker.on('changeDate', function(e) {
+                
+                // Store the date on our hidden form (or in the data object)
+                $('#Calendar').data({
+                    view: 'month',
+                    date: e.date,
+                    localDate: e.localDate
+                });
+                
+                // Call the AJAX to refresh
+                CallGenerateCalendar();
+            });
 
-    picker.data('datetimepicker').setDate(new Date());
+        picker.data('datetimepicker').setDate(new Date());
+    });
+
 });
 
 /**

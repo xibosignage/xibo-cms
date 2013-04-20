@@ -137,10 +137,16 @@ function XiboInitialise(scope) {
     });
 
     // Search for any text forms that will need submitting
-    $(scope + ' .XiboTextForm').submit(function(){
-        XiboFormSubmit(this);
-
-        return false;
+    $(scope + ' .XiboTextForm').validate({
+        submitHandler: XiboFormSubmit,
+        highlight: function(element) {
+            $(element).closest('.control-group').removeClass('success').addClass('error');
+        },
+        success: function(element) {
+            element
+                .text('OK!').addClass('valid')
+                .closest('.control-group').removeClass('error').addClass('success');
+        }
     });
 
     // Search for any help enabled elements
@@ -325,7 +331,8 @@ function XiboFormRender(formUrl) {
                 var dialog = bootbox.dialog(
                 		response.html,
                 		buttons, {
-            				"header": dialogTitle
+            				"header": dialogTitle,
+                            "animate": false
                 		}
                 	).attr("id", id);
 
@@ -335,7 +342,7 @@ function XiboFormRender(formUrl) {
 
                 // Do we have to call any functions due to this success?
                 if (response.callBack != "" && response.callBack != undefined) {
-                    eval(response.callBack)(this);
+                    eval(response.callBack)(dialog);
                 }
 
                 // Focus in the first form element
@@ -774,9 +781,9 @@ function SystemMessageInline(messageText, modal) {
     $(".text-error", modal).remove();
 
     $("<div/>", {
-    	class: "well text-error",
+    	class: "well text-error text-center",
     	html: messageText
-    }).appendTo(modal.find(".modal-body"));
+    }).appendTo(modal.find(".modal-footer"));
 }
 
 /**

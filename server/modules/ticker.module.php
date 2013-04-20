@@ -58,55 +58,91 @@ class ticker extends Module
                 $msgFitText = __('Fit text to region');
                 
 		$form = <<<FORM
-		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=AddMedia">
+		<form id="ModuleForm" class="XiboTextForm form-horizontal" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=AddMedia">
 			<input type="hidden" name="layoutid" value="$layoutid">
 			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                        <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-			<table>
-				<tr>
-					<td><label for="uri" title="The Link for the RSS feed">Link<span class="required">*</span></label></td>
-					<td><input id="uri" name="uri" value="http://" type="text"></td>
-					<td><label for="copyright" title="Copyright information to display as the last item in this feed.">Copyright</label></td>
-					<td><input id="copyright" name="copyright" type="text" /></td>
-				</td>
-				<tr>
-		    		<td><label for="direction" title="The Direction this text should move, if any">Direction<span class="required">*</span></label></td>
-		    		<td>$direction_list</td>
-		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
-		    		<td><input id="duration" name="duration" type="text"></td>		
-				</tr>
-				<tr>
-		    		<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (higher is faster)</label></td>
-		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="2"></td>
-		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval (mins)<span class="required">*</span></label></td>
-		    		<td><input id="updateInterval" name="updateInterval" type="text" value="360"></td>
-				</tr>
-                                <tr>
-                                    <td><label for="numItems" title="$numItemsLabel">$numItemsText</label></td>
-                                    <td><input id="numItems" name="numItems" type="text" /></td>
-                                    <td><label for="takeItemsFrom" title="$takeItemsFromLabel">$takeItemsFromText</label></td>
-                                    <td>$takeItemsFromList</td>
-                                </tr>
-                                <tr>
-                                    <td><label for="fitText" title="$msgFitText">$msgFitText</label></td>
-                                    <td><input id="fitText" name="fitText" type="checkbox"></td>
-                                    <td><label for="durationIsPerItem" title="$durationIsPerItemLabel">$durationIsPerItemText</label></td>
-                                    <td><input id="durationIsPerItem" name="durationIsPerItem" type="checkbox" /></td>
-                                </tr>
-				<tr>
-					<td colspan="4">
-						<textarea id="ta_text" name="ta_text">
-							[Title] - [Date] - [Description]
-						</textarea>
-					</td>
-				</tr>
-			</table>
+            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
+            <div class="row">
+            	<div class="span6">
+					<div class="control-group">
+						<label class="control-label" for="uri" title="The Link for the RSS feed">Link</label>
+						<div class="control">
+							<input class="required" id="uri" name="uri" value="http://" type="text">
+						</div>
+					</div>
+					<div class="control-group">
+			    		<label class="control-label" for="direction" title="The Direction this text should move, if any">Direction</label>
+			    		<div class="control">
+			    			$direction_list
+	    				</div>
+	    			</div>
+	    			<div class="control-group">
+			    		<label class="control-label" for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed (higher is faster)</label>
+			    		<div class="control">
+			    			<input class="required number" id="scrollSpeed" name="scrollSpeed" type="text" value="2">
+		    			</div>
+		    		</div>
+		    		<div class="control-group">
+	                    <label class="control-label" for="numItems" title="$numItemsLabel">$numItemsText</label>
+	                    <div class="control">
+	                    	<input class="number" id="numItems" name="numItems" type="text" />
+	                	</div>
+                	</div>
+                	<div class="control-group">
+	                    <div class="control">
+	                    	<label class="control-label" for="fitText" title="$msgFitText">$msgFitText
+	                    		<input id="fitText" name="fitText" type="checkbox">
+                    		</label>
+	                	</div>
+                	</div>
+            	</div>
+            	<div class="span6">
+					<div class="control-group">
+						<label class="control-label" for="copyright" title="Copyright information to display as the last item in this feed.">Copyright</label>
+						<div class="control">
+							<input id="copyright" name="copyright" type="text" />
+						</div>
+					</div>
+					<div class="control-group">
+			    		<label class="control-label" for="duration" title="The duration in seconds this webpage should be displayed">Duration</label>
+			    		<div class="control">
+			    			<input class="required number" id="duration" name="duration" type="text" />
+		    			</div>
+					</div>
+					<div class="control-group">
+			    		<label class="control-label" for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval (mins)</label>
+			    		<div class="control">
+			    			<input class="required number" id="updateInterval" name="updateInterval" type="text" value="360">
+		    			</div>
+					</div>
+					<div class="control-group">
+	                    <label class="control-label" for="takeItemsFrom" title="$takeItemsFromLabel">$takeItemsFromText</label>
+			    		<div class="control">
+	                    	$takeItemsFromList
+	                	</div>
+	                </div>
+	                <div class="control-group">
+	                    <div class="control">
+	                    	<label class="control-label" for="durationIsPerItem" title="$durationIsPerItemLabel">$durationIsPerItemText
+	                    		<input id="durationIsPerItem" name="durationIsPerItem" type="checkbox" />
+                    		</label>
+	                	</div>
+	                </div>
+				</div>
+			</div>
+			<div class="control-group span12">
+				<textarea id="ta_text" name="ta_text">
+					[Title] - [Date] - [Description]
+				</textarea>					
+			</div>
 		</form>
 FORM;
 
 		$this->response->html 		= $form;
 		$this->response->callBack 	= 'text_callback';
-		$this->response->dialogTitle = 'Add New Ticker';
+		$this->response->dialogTitle = __('Add New Ticker');
+		$this->response->dialogClass = 'modal-big';
+
         if ($this->showRegionOptions)
         {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
@@ -189,7 +225,7 @@ FORM;
 			<table>
 				<tr>
 					<td><label for="uri" title="The Link for the RSS feed">Link<span class="required">*</span></label></td>
-					<td><input id="uri" name="uri" value="$uri" type="text"></td>
+					<input id="uri" name="uri" value="$uri" type="text"></td>
 					<td><label for="copyright" title="Copyright information to display as the last item in this feed.">Copyright</label></td>
 					<td><input id="copyright" name="copyright" type="text" value="$copyright" /></td>
 				</td>

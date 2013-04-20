@@ -48,7 +48,7 @@ class counter extends Module
         $rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 
         Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_url', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
         // Output the form
@@ -110,7 +110,7 @@ class counter extends Module
         $popupNotificationChecked = ($popupNotification) ? 'checked' : '';
 
         Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_url', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="mediaid" value="' . $mediaid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
         Theme::Set('duration', $this->duration);
