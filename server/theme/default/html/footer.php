@@ -37,5 +37,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     	<script src="theme/default/js/xibo-layout-designer.js"></script>
     	<script src="theme/default/js/xibo-preview-timeline.js"></script>
     	<script src="theme/default/js/xibo-calendar.js"></script>
+    	<script src="theme/default/js/xibo-datasets.js"></script>
 	</body>
 </html>

@@ -76,15 +76,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         </div>
     </div>
     <div class="row">
-        <div class="span12">
-            <div class="connectedlist">
-                <h3><?php echo Theme::Translate('Columns Selected'); ?></h3>
-                <?php echo Theme::Get('columns_selected_list'); ?>
-            </div>
-            <div class="connectedlist">
-                <h3><?php echo Theme::Translate('Columns Available'); ?></h3>
-                <?php echo Theme::Get('columns_available_list'); ?>
-            </div>
+        <div class="connectedlist span6">
+            <p class="text-info"><?php echo Theme::Translate('Columns Selected'); ?></p>
+            <?php echo Theme::Get('columns_selected_list'); ?>
+        </div>
+        <div class="connectedlist span6">
+            <p class="text-info"><?php echo Theme::Translate('Columns Available'); ?></p>
+            <?php echo Theme::Get('columns_available_list'); ?>
         </div>
     </div>
     <div class="row">
