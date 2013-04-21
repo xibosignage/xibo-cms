@@ -68,28 +68,16 @@ class datasetview extends Module
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
 
-        // Layout list
-        $dataSets = $user->DataSetList();
-        $dataSetList = Kit::SelectList('datasetid', $dataSets, 'datasetid', 'dataset');
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
-        $form = <<<FORM
-        <form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
-            <input type="hidden" name="layoutid" value="$layoutid">
-            <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-            <table>
-                <tr>
-                    <td><label for="dataset" title="The DataSet for this View">DataSet<span class="required">*</span></label></td>
-                    <td>$dataSetList</td>
-                </tr>
-                <tr>
-                    <td><label for="duration" title="The duration in seconds this DataSet View should be displayed">Duration<span class="required">*</span></label></td>
-                    <td><input id="duration" name="duration" type="text"></td>
-                </tr>
-            </table>
-        </form>
-FORM;
+        // Data set list
+        Theme::Set('dataset_field_list', $user->DataSetList());
+        
+        $form = Theme::RenderReturn('media_form_datasetview_add');
 
+        
         $this->response->SetFormRequestResponse($form, __('Add DataSet View'), '350px', '275px');
 
         // Cancel button
@@ -129,24 +117,24 @@ FORM;
             return $this->response;
         }
 
-        $msgUpperLimit = __('Upper Row Limit');
-        $msgLowerLimit = __('Lower Row Limit');
-        $msgDuration = __('Duration');
-        $msgFilter = __('Filter');
-        $msgOrdering = __('Order');
-        $msgShowHeadings = __('Show the table headings?');
-        $msgStyleSheet = __('Stylesheet for the Table');
-        $msgUpdateInterval = __('Update Interval (mins)');
-        
-        $updateInterval = $this->GetOption('updateInterval', 0);
         $dataSetId = $this->GetOption('datasetid');
-        $upperLimit = $this->GetOption('upperLimit');
-        $lowerLimit = $this->GetOption('lowerLimit');
-        $filter = $this->GetOption('filter');
-        $ordering = $this->GetOption('ordering');
-        $showHeadings = $this->GetOption('showHeadings');
-        $showHeadingsChecked = ($showHeadings == 1) ? ' checked' : '';
+
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '"><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
+
+        Theme::Set('dataSetId', $dataSetId);
+        Theme::Set('updateInterval', $this->GetOption('updateInterval', 0));
+        Theme::Set('upperLimit', $this->GetOption('upperLimit'));
+        Theme::Set('lowerLimit', $this->GetOption('lowerLimit'));
+        Theme::Set('filter', $this->GetOption('filter'));
+        Theme::Set('ordering', $this->GetOption('ordering'));
+        Theme::Set('showHeadings', $this->GetOption('showHeadings'));
+        Theme::Set('showHeadingsChecked', ($this->GetOption('showHeadings') == 1) ? ' checked' : '');
+        Theme::Set('duration', $this->duration);
+
         $columns = $this->GetOption('columns');
+        Theme::Set('columns', $columns);
 
         // Get the embedded HTML out of RAW
         $rawXml = new DOMDocument();
@@ -155,12 +143,12 @@ FORM;
 
         if ($rawNodes->length == 0)
         {
-            $styleSheet = $this->DefaultStyleSheet();
+            Theme::Set('styleSheet', $this->DefaultStyleSheet());
         }
         else
         {
             $rawNode = $rawNodes->item(0);
-            $styleSheet = $rawNode->nodeValue;
+            Theme::Set('styleSheet', $rawNode->nodeValue);
         }
 
         if ($columns != '')
@@ -200,49 +188,12 @@ FORM;
 
         $columnsNotSelected .= '</ul>';
 
-        $columnsList = '<div class="connectedlist"><h3>Columns Selected</h3>' . $columnsSelected . '</div><div class="connectedlist"><h3>Columns Available</h3>' . $columnsNotSelected . '</div>';
+        Theme::Set('columns_selected_list', $columnsSelected);
+        Theme::Set('columns_available_list', $columnsNotSelected);
+        Theme::Set('durationFieldEnabled', (($this->auth->modifyPermissions) ? '' : ' readonly'));
 
-
-        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
-
-        $form = <<<FORM
-        <form id="ModuleForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
-            <input type="hidden" name="layoutid" value="$layoutid">
-            <input type="hidden" name="datasetid" value="$dataSetId">
-            <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-            <input type="hidden" id="mediaid" name="mediaid" value="$mediaid">
-            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-            <table>
-                <tr>
-                    <td><label for="duration">$msgDuration<span class="required">*</span></label></td>
-                    <td><input id="duration" name="duration" type="text" value="$this->duration" $durationFieldEnabled></td>
-                    <td><label for="updateInterval">$msgUpdateInterval<span class="required">*</span></label></td>
-                    <td><input id="updateInterval" name="updateInterval" type="text" value="$updateInterval"></td>
-                </tr>
-                <tr>
-                    <td><label for="lowerLimit">$msgLowerLimit</label></td>
-                    <td><input class="numeric required" id="lowerLimit" name="lowerLimit" type="text" value="$lowerLimit"></td>
-                    <td><label for="upperLimit">$msgUpperLimit</label></td>
-                    <td><input class="numeric required" id="upperLimit" name="upperLimit" type="text" value="$upperLimit"></td>
-                </tr>
-                <tr>
-                    <td><label for="ordering">$msgOrdering</label></td>
-                    <td><input id="ordering" name="ordering" type="text" value="$ordering"></td>
-                    <td><label for="filter">$msgFilter</label></td>
-                    <td><input id="filter" name="filter" type="text" value="$filter"></td>
-                </tr>
-                <tr>
-                    <td colspan="2"><input id="showHeadings" name="showHeadings" type="checkbox" $showHeadingsChecked><label for="showHeadings">$msgShowHeadings</label></td>
-                </tr>
-                <tr>
-                    <td colspan="4">$columnsList<td>
-                </tr>
-                <tr>
-                    <td colspan="4">$msgStyleSheet<br /><textarea cols="80" rows="10" id="styleSheet" name="styleSheet">$styleSheet</textarea></td>
-                </tr>
-            </table>
-        </form>
-FORM;
+        // Render the Theme
+        $form = Theme::RenderReturn('media_form_datasetview_edit');
 
         $this->response->SetFormRequestResponse($form, __('Edit DataSet View'), '650px', '575px');
 
@@ -258,6 +209,7 @@ FORM;
 
         $this->response->AddButton(__('Save'), 'DataSetViewSubmit()');
         $this->response->callBack = 'datasetview_callback';
+        $this->response->dialogClass = 'modal-big';
 
         return $this->response;
     }

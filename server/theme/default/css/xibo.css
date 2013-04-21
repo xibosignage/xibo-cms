@@ -147,3 +147,32 @@ label.error {
 	display: block;
 	margin-top: 2px;
 }
+
+.wide_textarea {
+  width: 100%;
+}
+
+.connectedlist {
+  float: left;
+  width: 160px;
+  margin: 5px;
+}
+
+.connectedlist h3 {
+  padding: 5px;
+}
+
+.connectedlist .ui-sortable {
+  width: 150px;
+  background-color: #EEEEEE;
+  padding: 5px;
+}
+
+.connectedlist .li-sortable {
+  padding: 5px;
+  margin: 5px;
+  border: 1px solid #8080ff;
+  background-color: #E5F0FF;
+  width: 130px;
+  cursor: pointer;
+}
