@@ -45,29 +45,13 @@ class embedded extends Module
 		$regionid	= $this->regionid;
 		$rWidth		= Kit::GetParam('rWidth', _REQUEST, _STRING);
 		$rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
-		
-		$form = <<<FORM
-		<form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
-			<input type="hidden" name="layoutid" value="$layoutid">
-			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                        <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-			<table>
-				<tr>
-		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
-		    		<td><input id="duration" name="duration" type="text"></td>	
-				</tr>
-				<tr>
-		    		<td colspan="2">
-						<label for="embedHtml" title="The HTML you want to Embed in this Layout.">Embed HTML<span class="required">*</span></label><br />
-<textarea id="embedHtml" name="embedHtml">
+	
+		Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
-</textarea>
-					</td>
-				</tr>
-				<tr>
-		    		<td colspan="2">
-						<label for="embedScript" title="The JavaScript you want to Embed in this Layout.">Embed Script<span class="required">*</span></label><br />
-<textarea id="embedScript" name="embedScript">
+
+		Theme::Set('default_head_content', '
 <script type="text/javascript">
 function EmbedInit()
 {
@@ -75,13 +59,9 @@ function EmbedInit()
 	
 	return;
 }
-</script>
-</textarea>
-					</td>
-				</tr>
-			</table>
-		</form>
-FORM;
+</script>');
+
+		$form = Theme::RenderReturn('media_form_embedded_add');
 
         if ($this->showRegionOptions)
         {
@@ -114,13 +94,17 @@ FORM;
 		$regionid	= $this->regionid;
 		$mediaid  	= $this->mediaid;
 
-            // Can this user edit?
-            if (!$this->auth->edit)
-            {
-                $this->response->SetError('You do not have permission to edit this media.');
-                $this->response->keepOpen = false;
-                return $this->response;
-            }
+        // Can this user edit?
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this media.');
+            $this->response->keepOpen = false;
+            return $this->response;
+        }
+
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
 		
 		// Get the embedded HTML out of RAW
 		$rawXml = new DOMDocument();
@@ -131,41 +115,17 @@ FORM;
 		// Get the HTML Node out of this
 		$textNodes 	= $rawXml->getElementsByTagName('embedHtml');
 		$textNode 	= $textNodes->item(0);
-		$embedHtml	= $textNode->nodeValue;
+		Theme::Set('embedHtml', $textNode->nodeValue);
 		
 		$textNodes 	= $rawXml->getElementsByTagName('embedScript');
 		$textNode 	= $textNodes->item(0);
-		$embedScript= $textNode->nodeValue;
+		Theme::Set('embedScript', $textNode->nodeValue);
 
-        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
+		Theme::Set('duration', $this->duration);
+        Theme::Set('durationFieldEnabled', (($this->auth->modifyPermissions) ? '' : ' readonly'));
 		
 		//Output the form
-		$form = <<<FORM
-		<form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
-			<input type="hidden" name="layoutid" value="$layoutid">
-			<input type="hidden" name="mediaid" value="$mediaid">
-			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                        <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-			<table>
-				<tr>
-		    		<td><label for="duration" title="The duration in seconds this $this->type should be displayed">Duration<span class="required">*</span></label></td>
-                                <td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
-				</tr>
-				<tr>
-		    		<td colspan="2">
-						<label for="embedHtml" title="The HTML you want to Embed in this Layout.">Embed HTML<span class="required">*</span></label><br />
-		    			<textarea id="embedHtml" name="embedHtml">$embedHtml</textarea>
-					</td>
-				</tr>
-				<tr>
-		    		<td colspan="2">
-						<label for="embedScript" title="The JavaScript you want to Embed in this Layout.">Embed Script<span class="required">*</span></label><br />
-						<textarea id="embedScript" name="embedScript">$embedScript</textarea>
-					</td>
-				</tr>				
-			</table>
-		</form>
-FORM;
+		$form = Theme::RenderReturn('media_form_embedded_edit');
 
         if ($this->showRegionOptions)
         {

@@ -770,10 +770,10 @@ END;
             $transitionOut = $tmpModule->GetTransition('out');
             
             // Colouring for the media block
-            if ($timeBarColouring == 'Media Colouring')
-                $mediaBlockColouringClass = 'timelineMediaItemColouring_' . $mediaType;
-            else
+            if ($timeBarColouring == 'Permissions')
                 $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($auth->edit) ? 'enabled' : 'disabled');
+            else
+                $mediaBlockColouringClass = 'timelineMediaItemColouring_' . $mediaType;
             
             // Create the list item
             $response->html .= '<li class="timelineMediaListItem" mediaid="' . $mediaId . '" lkid="' . $lkId . '">';

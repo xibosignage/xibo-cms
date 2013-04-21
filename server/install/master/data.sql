@@ -236,7 +236,7 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 (49, 'MAINTENANCE_ALWAYS_ALERT', 'Off', 'dropdown', 'Should Xibo send an email if a display is in an error state every time the maintenance script runs?', 'On|Off', 'maintenance', 1),
 (50, 'SCHEDULE_LOOKAHEAD', 'On', 'dropdown', 'Should Xibo send future schedule information to clients?', 'On|Off', 'general', 0),
 (51, 'REQUIRED_FILES_LOOKAHEAD', '172800', 'text', 'How many seconds in to the future should the calls to RequiredFiles look?', NULL, 'general', 1),
-(52, 'REGION_OPTIONS_COLOURING', 'media', 'dropdown', NULL, 'Media Colouring|Permissions Colouring', 'permissions', 1),
+(52, 'REGION_OPTIONS_COLOURING', 'Media Colouring', 'dropdown', NULL, 'Media Colouring|Permissions Colouring', 'permissions', 1),
 (53, 'LAYOUT_COPY_MEDIA_CHECKB', 'Unchecked', 'dropdown', 'Default the checkbox for making duplicates of media when copying layouts', 'Checked|Unchecked', 'default', 1),
 (54, 'MAX_LICENSED_DISPLAYS', '0', 'text', 'The maximum number of licensed clients for this server installation. 0 = unlimited', NULL, 'general', 0),
 (55, 'LIBRARY_MEDIA_UPDATEINALL_CHECKB', 'Unchecked', 'dropdown', 'Default the checkbox for updating media on all layouts when editing in the library', 'Checked|Unchecked', 'default', 1),
@@ -315,4 +315,4 @@ INSERT INTO `lkusergroup` (`LkUserGroupID`, `GroupID`, `UserID`) VALUES
 INSERT INTO `transition` (`TransitionID`, `Transition`, `Code`, `HasDuration`, `HasDirection`, `AvailableAsIn`, `AvailableAsOut`) VALUES
 (1, 'Fade In', 'fadeIn', 1, 0, 0, 0),
 (2, 'Fade Out', 'fadeOut', 1, 0, 0, 0),
-(3, 'Fly', 'fly', 1, 1, 1, 0);
+(3, 'Fly', 'fly', 1, 1, 0, 0);
