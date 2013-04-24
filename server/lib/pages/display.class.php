@@ -688,10 +688,10 @@ SQL;
         // Render the theme
         $form = Theme::RenderReturn('display_form_group_assign');
 
-        $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
+        $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'DisplayGroupManageMembersCallBack');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Members') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), 'MembersSubmit()');
+        $response->AddButton(__('Save'), 'DisplayGroupMembersSubmit()');
         $response->Respond();
     }
 

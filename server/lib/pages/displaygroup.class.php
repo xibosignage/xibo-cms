@@ -288,10 +288,10 @@ class displaygroupDAO
 		
         $form = Theme::RenderReturn('displaygroup_form_display_assign');
 
-		$response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
+		$response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'DisplayGroupManageMembersCallBack');
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Members') . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
-		$response->AddButton(__('Save'), 'MembersSubmit()');
+		$response->AddButton(__('Save'), 'DisplayGroupMembersSubmit()');
 		$response->Respond();
 	}
 	
