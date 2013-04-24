@@ -228,7 +228,7 @@ class Theme {
 	public static function GetMenu($menu) {
 
 		$theme = Theme::GetInstance();
-		$array = null;
+		$array = array();
 
 		if (!$menu = new MenuManager($theme->db, $theme->user, $menu))
 			trigger_error($menu->message, E_USER_ERROR);

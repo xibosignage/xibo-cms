@@ -1,17 +1,14 @@
-				<br />
-				<p><a href="http://www.xibo.org.uk"><img src='theme/default/img/login/complogo.png'></a></p>	
-			</div>
+				
 
-			
-			<div class="install_foot">
-				<div class="install_foot_left">
 				</div>
-				<div class="install_foot_right">
+				<div class="row text-center">
+					<img src="theme/default/img/xibologo.png" />
 				</div>
 			</div>
-		</div>
 		
-</div>
+		</div>
 
-</body>
+		<script src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
+		<script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
+	</body>
 </html>
