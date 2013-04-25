@@ -24,6 +24,7 @@ class microblog extends Module
     {
         // Must set the type of the class
         $this->type = 'microblog';
+        $this->displayType = __('Microblog');
 
         // Must call the parent class
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -46,53 +47,16 @@ class microblog extends Module
 
         $direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
 
-        $form = <<<FORM
-        <form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
-            <input type="hidden" name="layoutid" value="$layoutid">
-            <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-            <table>
-                <tr>
-                    <td colspan="2"><input type="checkbox" name="twitter" /><label for="twitter" title="">Twitter</label></td>
-                    <td colspan="2"><input type="checkbox" name="identica" /><label for="identica" title="">Identica</label></td>
-                </tr>
-                <tr>
-                    <td><label for="searchTerm" title="">Search Term<span class="required">*</span></label></td>
-                    <td><input id="searchTerm" name="searchTerm" type="text"></td>
-                    <td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration (s)<span class="required">*</span></label></td>
-                    <td><input id="duration" name="duration" type="text"></td>
-                </tr>
-                <tr>
-                    <td><label for="fadeInterval" title="">Fade Interval</label></td>
-                    <td><input id="fadeInterval" name="fadeInterval" type="text" /></td>
-                    <td><label for="speedInterval" title="">Speed (s)</label></td>
-                    <td><input id="speedInterval" name="speedInterval" type="text" /></td>
-                </tr>
-                <tr>
-                    <td><label for="updateInterval" title="">Update Interval</label></td>
-                    <td><input id="updateInterval" name="updateInterval" type="text" /></td>
-                    <td><label for="historySize" title="">History Size (items)</label></td>
-                    <td><input id="historySize" name="historySize" type="text" /></td>
-                </tr>
-                <tr>
-                    <td colspan="4">
-                        <span>Message Template<span class="required">*</span></span>
-                        <textarea id="ta_template" name="template"></textarea>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="4">
-                        <span>Message to display when there are no messages</span>
-                        <textarea id="ta_nocontent" name="nocontent"></textarea>
-                    </td>
-                </tr>
-            </table>
-        </form>
-FORM;
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
-        $this->response->html 		= $form;
-        $this->response->dialogTitle    = 'Add Microblog';
-        $this->response->callBack 	= 'microblog_callback';
+        $form = Theme::RenderReturn('media_form_microblog_add');
+
+        $this->response->html = $form;
+        $this->response->dialogTitle = __('Add Microblog');
+        $this->response->dialogClass = __('modal-big');
+        $this->response->callBack = 'microblog_callback';
         $this->response->AddButton(__('Help'), 'XiboHelpRender("index.php?p=help&q=Display&Topic=Microblog&Category=Media")');
 
         if ($this->showRegionOptions)
@@ -129,23 +93,25 @@ FORM;
             return $this->response;
         }
 
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
+        
         // Get some options
-        $searchTerm     = $this->GetOption('searchTerm');
-        $fadeInterval   = $this->GetOption('fadeInterval');
-        $speedInterval  = $this->GetOption('speedInterval');
-        $updateInterval = $this->GetOption('updateInterval');
-        $historySize    = $this->GetOption('historySize');
-        $twitter        = $this->GetOption('twitter');
-        $twitterChecked = '';
-        $identica       = $this->GetOption('identica');
-        $identicaChecked = '';
-
+        Theme::Set('searchTerm', $this->GetOption('searchTerm'));
+        Theme::Set('fadeInterval', $this->GetOption('fadeInterval'));
+        Theme::Set('speedInterval', $this->GetOption('speedInterval'));
+        Theme::Set('updateInterval', $this->GetOption('updateInterval'));
+        Theme::Set('historySize', $this->GetOption('historySize'));
+        $twitter = $this->GetOption('twitter');
+        $identica = $this->GetOption('identica');
+        
         // Is the transparency option set?
         if ($twitter)
-            $twitterChecked = 'checked';
+            Theme::Set('twitter_checked', ' checked');
 
         if ($identica)
-            $identicaChecked = 'checked';
+            Theme::Set('identica_checked', ' checked');
 
         // Get Raw
         $rawXml = new DOMDocument();
@@ -153,66 +119,27 @@ FORM;
 
         Debug::LogEntry($db, 'audit', 'Raw XML returned: ' . $this->GetRaw());
 
-        $templateNodes 	= $rawXml->getElementsByTagName('template');
-        $templateNode 	= $templateNodes->item(0);
-        $template	= $templateNode->nodeValue;
+        $templateNodes = $rawXml->getElementsByTagName('template');
+        $templateNode = $templateNodes->item(0);
+        Theme::Set('template', $templateNode->nodeValue);
 
         $nocontentNodes	= $rawXml->getElementsByTagName('nocontent');
-        $nocontentNode 	= $nocontentNodes->item(0);
-        $nocontent	= $nocontentNode->nodeValue;
+        $nocontentNode = $nocontentNodes->item(0);
+        Theme::Set('nocontent', $nocontentNode->nodeValue);
 
-        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
-
+        // Duration
+        Theme::Set('duration', $this->duration);
+        Theme::Set('is_duration_enabled', ($this->auth->modifyPermissions) ? '' : ' readonly');
+        
         //Output the form
-        $form = <<<FORM
-        <form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
-            <input type="hidden" name="layoutid" value="$layoutid">
-            <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-            <input type="hidden" name="mediaid" value="$mediaid">
-            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-            <table>
-                <tr>
-                    <td colspan="2"><input type="checkbox" name="twitter" $twitterChecked /><label for="twitter" title="">Twitter</label></td>
-                    <td colspan="2"><input type="checkbox" name="identica" $identicaChecked /><label for="identica" title="">Identica</label></td>
-                </tr>
-                <tr>
-                    <td><label for="searchTerm" title="">Search Term<span class="required">*</span></label></td>
-                    <td><input id="searchTerm" name="searchTerm" type="text" value="$searchTerm"></td>
-                    <td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration (s)<span class="required">*</span></label></td>
-                    <td><input id="duration" name="duration" type="text" value="$this->duration" $durationFieldEnabled></td>
-                </tr>
-                <tr>
-                    <td><label for="fadeInterval" title="">Fade Interval</label></td>
-                    <td><input id="fadeInterval" name="fadeInterval" type="text" value="$fadeInterval" /></td>
-                    <td><label for="speedInterval" title="">Speed (s)</label></td>
-                    <td><input id="speedInterval" name="speedInterval" type="text" value="$speedInterval" /></td>
-                </tr>
-                <tr>
-                    <td><label for="updateInterval" title="">Update Interval</label></td>
-                    <td><input id="updateInterval" name="updateInterval" type="text" value="$updateInterval" /></td>
-                    <td><label for="historySize" title="">History Size (items)</label></td>
-                    <td><input id="historySize" name="historySize" type="text" value="$historySize" /></td>
-                </tr>
-                <tr>
-                    <td colspan="4">
-                        <span>Message Template<span class="required">*</span></span>
-                        <textarea id="ta_template" name="template">$template</textarea>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="4">
-                        <span>Message to show when there are no messages</span>
-                        <textarea id="ta_nocontent" name="nocontent">$nocontent</textarea>
-                    </td>
-                </tr>
-            </table>
-        </form>
-FORM;
+        $form = Theme::RenderReturn('media_form_microblog_edit');
 
-        $this->response->html 		= $form;
-        $this->response->dialogTitle    = 'Edit MicroBlog';
-        $this->response->callBack 	= 'microblog_callback';
+        $this->response->html = $form;
+        $this->response->dialogTitle = __('Edit MicroBlog');
+        $this->response->dialogClass = __('modal-big');
+        $this->response->callBack = 'microblog_callback';
         $this->response->AddButton(__('Help'), 'XiboHelpRender("index.php?p=help&q=Display&Topic=Microblog&Category=Media")');
+
         if ($this->showRegionOptions)
         {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
@@ -221,6 +148,7 @@ FORM;
         {
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
+
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
         
         return $this->response;

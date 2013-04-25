@@ -1,3 +1,67 @@
+var text_callback = function(dialog)
+{
+    // Conjure up a text editor
+    CKEDITOR.replace("ta_text");
+
+    // Make sure when we close the dialog we also destroy the editor
+    dialog.on("hide", function() {
+        if (CKEDITOR.instances["ta_text"] != undefined) {
+            CKEDITOR.instances["ta_text"].destroy();
+        }
+    });
+    
+    return false;
+}
+
+var microblog_callback = function(dialog)
+{
+    // Conjure up a text editor
+    CKEDITOR.replace("ta_template");
+    CKEDITOR.replace("ta_nocontent");
+
+    // Make sure when we close the dialog we also destroy the editor
+    dialog.on("hide", function() {
+        if (CKEDITOR.instances["ta_template"] != undefined) {
+            CKEDITOR.instances["ta_template"].destroy();
+        }
+        
+        if (CKEDITOR.instances["ta_nocontent"] != undefined) {
+            CKEDITOR.instances["ta_nocontent"].destroy();
+        }
+    });
+
+    return false;
+}
+
+var datasetview_callback = function(dialog)
+{
+    $("#columnsIn, #columnsOut").sortable({
+        connectWith: '.connectedSortable',
+        dropOnEmpty: true
+    }).disableSelection();
+
+    return false; //prevent submit
+}
+
+var DataSetViewSubmit = function() {
+    // Serialise the form and then submit it via Ajax.
+    var href = $("#ModuleForm").attr('action') + "&ajax=true";
+
+    // Get the two lists
+    serializedData = $("#columnsIn").sortable('serialize') + "&" + $("#ModuleForm").serialize();
+
+    $.ajax({
+        type: "post",
+        url: href,
+        cache: false,
+        dataType: "json",
+        data: serializedData,
+        success: XiboSubmitResponse
+    });
+
+    return;
+}
+
 function ManageMembersCallBack()
 {
     $("#usersIn, #usersOut").sortable({
