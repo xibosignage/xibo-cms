@@ -47,40 +47,25 @@ class text extends Module
         $rWidth		= Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 
-        $direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
+        // Direction Options
+        $directionOptions = array(
+            array('directionid' => 'none', 'direction' => __('None')), 
+            array('directionid' => 'left', 'direction' => __('Left')), 
+            array('directionid' => 'right', 'direction' => __('Right')), 
+            array('directionid' => 'up', 'direction' => __('Up')), 
+            array('directionid' => 'down', 'direction' => __('Down'))
+        );
+        Theme::Set('direction_field_list', $directionOptions);
 
-        $msgFitText = __('Fit text to region');
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+    
+        $this->response->html = Theme::RenderReturn('media_form_text_add');
+        $this->response->callBack = 'text_callback';
+        $this->response->dialogTitle = __('Add Text');
+        $this->response->dialogClass = 'modal-big';
 
-            $form = <<<FORM
-            <form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=AddMedia">
-                    <input type="hidden" name="layoutid" value="$layoutid">
-                    <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                    <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-                    <table>
-                            <tr>
-                            <td><label for="direction" title="The Direction this text should move, if any">Direction<span class="required">*</span></label></td>
-                            <td>$direction_list</td>
-                            <td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
-                            <td><input id="duration" name="duration" type="text"></td>
-                            </tr>
-                            <tr>
-                                <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (higher is faster)</label></td>
-                                <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="2"></td>
-                                <td><label for="fitText" title="$msgFitText">$msgFitText</label></td>
-                                <td><input id="fitText" name="fitText" type="checkbox"></td>
-                            </tr>
-                            <tr>
-                                    <td colspan="4">
-                                            <textarea id="ta_text" name="ta_text"></textarea>
-                                    </td>
-                            </tr>
-                    </table>
-            </form>
-FORM;
-
-        $this->response->html 		= $form;
-        $this->response->callBack 	= 'text_callback';
-        $this->response->dialogTitle    = __('Add Text');
         if ($this->showRegionOptions)
         {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
@@ -114,11 +99,16 @@ FORM;
             return $this->response;
         }
 
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
+        
         // Other properties
-        $direction = $this->GetOption('direction');
-        $scrollSpeed = $this->GetOption('scrollSpeed');
+        Theme::Set('direction', $this->GetOption('direction'));
+        Theme::Set('scrollSpeed', $this->GetOption('scrollSpeed'));
+        
         $fitText = $this->GetOption('fitText', 0);
-        $fitTextChecked = ($fitText == 0) ? '' : ' checked';
+        Theme::Set('fitTextChecked', ($fitText == 0) ? '' : ' checked');
 
         // Get the text out of RAW
         $rawXml = new DOMDocument();
@@ -129,45 +119,27 @@ FORM;
         // Get the Text Node out of this
         $textNodes = $rawXml->getElementsByTagName('text');
         $textNode = $textNodes->item(0);
-        $text = $textNode->nodeValue;
+        Theme::Set('text', $textNode->nodeValue);
 
-        $direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
+        // Direction Options
+        $directionOptions = array(
+            array('directionid' => 'none', 'direction' => __('None')), 
+            array('directionid' => 'left', 'direction' => __('Left')), 
+            array('directionid' => 'right', 'direction' => __('Right')), 
+            array('directionid' => 'up', 'direction' => __('Up')), 
+            array('directionid' => 'down', 'direction' => __('Down'))
+        );
+        Theme::Set('direction_field_list', $directionOptions);
 
-        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
+        Theme::Set('duration', $this->duration);
+        Theme::Set('is_duration_enabled', ($this->auth->modifyPermissions) ? '' : ' readonly');
 
         $msgFitText = __('Fit text to region');
 
-        // Output the form
-        $form = <<<FORM
-        <form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=EditMedia">
-                <input type="hidden" name="layoutid" value="$layoutid">
-                <input type="hidden" name="mediaid" value="$mediaid">
-                <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-                <table>
-                        <tr>
-                        <td><label for="direction" title="The Direction this text should move, if any">Direction<span class="required">*</span></label></td>
-                        <td>$direction_list</td>
-                        <td><label for="duration" title="The duration in seconds this text should be displayed">Duration<span class="required">*</span></label></td>
-                        <td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
-                        </tr>
-                        <tr>
-                            <td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (higher is faster)</label></td>
-                            <td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>
-                                <td><label for="fitText" title="$msgFitText">$msgFitText</label></td>
-                                <td><input id="fitText" name="fitText" type="checkbox" $fitTextChecked></td>
-                        </tr>
-                        <tr>
-                                <td colspan="4">
-                                        <textarea id="ta_text" name="ta_text">$text</textarea>
-                                </td>
-                        </tr>
-                </table>
-        </form>
-FORM;
-
-        $this->response->html = $form;
+        
+        $this->response->html = Theme::RenderReturn('media_form_text_edit');
         $this->response->callBack = 'text_callback';
+        $this->response->dialogClass = 'modal-big';
         $this->response->dialogTitle = __('Edit Text');
         if ($this->showRegionOptions)
         {

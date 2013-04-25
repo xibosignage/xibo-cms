@@ -45,8 +45,6 @@ class microblog extends Module
         $rWidth		= Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 
-        $direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
-
         Theme::Set('form_id', 'ModuleForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');

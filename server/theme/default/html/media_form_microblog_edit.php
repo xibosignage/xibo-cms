@@ -62,7 +62,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     		<div class="control-group">
                 <label class="control-label" for="duration" accesskey="n" title="<?php echo Theme::Translate('The duration in seconds this media should be displayed'); ?>"><?php echo Theme::Translate('Duration'); ?></label>
                 <div class="controls">
-                    <input class="required number" name="duration" type="text" id="duration" tabindex="1" value="<?php echo Theme::Get('duration'); ?>" <?php echo Theme::Get('is_duration_enabled'); ?> <?php echo Theme::Get('durationFieldEnabled'); ?> />
+                    <input class="required number" name="duration" type="text" id="duration" tabindex="1" value="<?php echo Theme::Get('duration'); ?>" <?php echo Theme::Get('is_duration_enabled'); ?> />
                 </div>
             </div>
             <div class="control-group">

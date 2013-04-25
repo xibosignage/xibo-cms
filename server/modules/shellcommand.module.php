@@ -85,33 +85,16 @@ class shellcommand extends Module
             $this->response->keepOpen = true;
             return $this->response;
         }
-		
-        $windowsCommand = htmlentities(urldecode($this->GetOption('windowsCommand')));
-        $linuxCommand = htmlentities(urldecode($this->GetOption('linuxCommand')));
 
-        $msgWindows = __('Windows Command');
-        $msgLinux = __('Linux Command');
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
+        		
+        Theme::Set('windowsCommand', htmlentities(urldecode($this->GetOption('windowsCommand'))));
+        Theme::Set('linuxCommand', htmlentities(urldecode($this->GetOption('linuxCommand'))));
 
-        $form = <<<FORM
-        <form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
-            <input type="hidden" name="layoutid" value="$layoutid">
-            <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-            <input type="hidden" name="mediaid" value="$mediaid">
-            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-            <table>
-                <tr>
-                    <td><label for="windowsCommand" title="">$msgWindows</label></td>
-                    <td><input id="windowsCommand" name="windowsCommand" type="text" value="$windowsCommand"></td>
-                </tr>
-                <tr>
-                    <td><label for="linuxCommand" title="">$msgLinux</label></td>
-                    <td><input id="linuxCommand" name="linuxCommand" type="text" value="$linuxCommand"></td>
-                </tr>
-            </table>
-        </form>
-FORM;
 
-        $this->response->html = $form;
+        $this->response->html = Theme::RenderReturn('media_form_shellcommand_edit');
 
         if ($this->showRegionOptions)
         {
