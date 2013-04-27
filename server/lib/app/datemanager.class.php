@@ -41,28 +41,20 @@ class DateManager
 	
 	public static function GetLocalDate($format = 'Y-m-d H:i:s', $timestamp = '')
 	{
-		$db	=& $this->db;
-		
 		if ($timestamp == '')
 		{
 			$timestamp = time();
 		}
-		
-		Debug::LogEntry($db, 'audit', 'Converting ' . $timestamp . ' to a Local Date');
 		
 		return date($format, $timestamp);
 	}
 	
 	public static function GetSystemDate($format = 'Y-m-d H:i:s', $timestamp = '')
 	{
-		$db	=& $this->db;
-				
 		if ($timestamp == '')
 		{
 			$timestamp = time();
 		}
-		
-		Debug::LogEntry($db, 'audit', 'Converting ' . $timestamp . ' to a System Date');
 		
 		return gmdate($format, $timestamp);
 	}

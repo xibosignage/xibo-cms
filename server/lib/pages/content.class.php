@@ -318,11 +318,11 @@ class contentDAO
         }
         else
         {
-            Debug::LogEntry($db, 'audit', 'Error uploading the file. Error Number: ' . $_FILES['media_file']['error'] , 'FileUpload');
-
-            $error      = $_FILES['media_file']['error'];
+            $error      = (isset($_FILES['media_file'])) ? $_FILES['media_file']['error'] : -1;
             $fileName   = 'Error';
             $fileId     = 0;
+            
+            Debug::LogEntry($db, 'audit', 'Error uploading the file. Error Number: ' . $error , 'FileUpload');
         }
 
         $complete_page = <<<HTML

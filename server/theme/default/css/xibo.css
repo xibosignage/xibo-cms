@@ -167,3 +167,28 @@ label.error {
   cursor: pointer;
   list-style: none;
 }
+
+#dashbuttons{ 
+  text-align: center;
+}
+
+.dashicons {
+  height:125px;
+  display: block;
+  float: left;
+  margin: 5px 5px;
+  padding: 35px;
+}
+
+.dash_button {
+  display:block;
+  text-align: center;
+}
+
+.dash_text {
+  display:block;
+}
+
+.dashicons a:hover {
+  color: #808080;
+}

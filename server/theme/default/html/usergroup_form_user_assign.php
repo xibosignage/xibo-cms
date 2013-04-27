@@ -30,7 +30,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <center><?php echo Theme::Translate('Drag or double click to move items between lists'); ?></center>
 <div class="connectedlist">
-	<h3><?php echo Theme::Translate('Assigned Groups'); ?></h3>
+	<h3><?php echo Theme::Translate('Assigned'); ?></h3>
 	<ul id="<?php echo Theme::Get('users_assigned_id'); ?>" href="<?php echo Theme::Get('users_assigned_url'); ?>" class="connectedSortable">
 		<?php foreach(Theme::Get('users_assigned') as $row) { ?>
 		<li id="<?php echo $row['list_id']; ?>" class="li-sortable"><?php echo $row['UserName']; ?></li>
@@ -38,7 +38,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	</ul>
 </div>
 <div class="connectedlist">
-	<h3><?php echo Theme::Translate('Available Groups'); ?></h3>
+	<h3><?php echo Theme::Translate('Available'); ?></h3>
 	<ul id="<?php echo Theme::Get('users_available_id'); ?>" class="connectedSortable">
 		<?php foreach(Theme::Get('users_available') as $row) { ?>
 		<li id="<?php echo $row['list_id']; ?>" class="li-sortable"><?php echo $row['UserName']; ?></li>

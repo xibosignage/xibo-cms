@@ -37,16 +37,6 @@ class clockDAO
 		return false;
 	}
 	
-	function on_page_load() 
-	{
-		return '';
-	}
-	
-	function echo_page_heading() 
-	{
-		return true;
-	}
-	
 	/**
 	 * Shows the Time Information
 	 * @return 
