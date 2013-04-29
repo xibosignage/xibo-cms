@@ -62,14 +62,14 @@ var DataSetViewSubmit = function() {
     return;
 }
 
-function ManageMembersCallBack()
+function ManageMembersCallBack(dialog)
 {
     $("#usersIn, #usersOut").sortable({
             connectWith: '.connectedSortable',
             dropOnEmpty: true
     }).disableSelection();
 
-    $(".li-sortable", "#div_dialog").dblclick(switchLists);
+    $(".li-sortable", dialog).dblclick(switchLists);
 }
 
 function MembersSubmit() {
@@ -186,14 +186,14 @@ function switchLists(e) {
    otherList.append(e.currentTarget);
 }
 
-function GroupSecurityCallBack()
+function GroupSecurityCallBack(dialog)
 {
     $("#groupsIn, #groupsOut").sortable({
         connectWith: '.connectedSortable',
         dropOnEmpty: true
     }).disableSelection();
 
-        $(".li-sortable", "#div_dialog").dblclick(switchLists);
+    $(".li-sortable", dialog).dblclick(switchLists);
 }
 
 function GroupSecuritySubmit() {
@@ -215,22 +215,22 @@ function GroupSecuritySubmit() {
     return;
 }
 
-function DisplayGroupMembersCallBack()
+function DisplayGroupManageMembersCallBack(dialog)
 {
-    $("#displaygroupsIn, #displaygroupsOut").sortable({
+    $("#displaysIn, #displaysOut").sortable({
         connectWith: '.connectedSortable',
         dropOnEmpty: true
     }).disableSelection();
 
-        $(".li-sortable", "#div_dialog").dblclick(switchLists);
+    $(".li-sortable", dialog).dblclick(switchLists);
 }
 
 function DisplayGroupMembersSubmit() {
     // Serialise the form and then submit it via Ajax.
-    var href = $("#displaygroupsIn").attr('href') + "&ajax=true";
+    var href = $("#displaysIn").attr('href') + "&ajax=true";
 
     // Get the two lists
-    serializedData = $("#displaygroupsIn").sortable('serialize');
+    serializedData = $("#displaysIn").sortable('serialize');
 
     $.ajax({
         type: "post",

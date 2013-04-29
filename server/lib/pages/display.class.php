@@ -634,8 +634,8 @@ SQL;
         //  - DisplayGroups this Display could be assigned to
 
         // Set some information about the form
-        Theme::Set('displaygroups_assigned_id', 'displaygroupsIn');
-        Theme::Set('displaygroups_available_id', 'displaygroupsOut');
+        Theme::Set('displaygroups_assigned_id', 'displaysIn');
+        Theme::Set('displaygroups_available_id', 'displaysOut');
         Theme::Set('displaygroups_assigned_url', 'index.php?p=display&q=SetMemberOf&DisplayID=' . $displayID);
 
         // Display Groups Assigned
