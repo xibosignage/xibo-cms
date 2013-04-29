@@ -34,7 +34,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			}
 		?>
 		<li class="pull-right"><a title="<?php echo Theme::Translate('View Help'); ?>" class="XiboHelpButton" href="<?php echo Theme::Get('settings_help_button_url'); ?>"><span><?php echo Theme::Translate('Help'); ?></span></a></li>
-		<li class="pull-right"><a title="<?php echo Theme::Translate('Save Settings'); ?>" onclick="$('#<?php echo Theme::Get('form_id'); ?>').submit()" ><span><?php echo Theme::Translate('Save'); ?></span></a></li>
+		<li class="pull-right"><a title="<?php echo Theme::Translate('Save Settings'); ?>" href="#" onclick="$('#<?php echo Theme::Get('form_id'); ?>').submit()"><span><?php echo Theme::Translate('Save'); ?></span></a></li>
 	</ul>
 </div>
 <div class="row">
