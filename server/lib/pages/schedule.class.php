@@ -456,8 +456,7 @@ HTML;
         // Query for all events that sit in this day
         $events = $this->GetEventsForDay($date, $displayGroupIDs);
 
-        $output .= '<div class="info_table">';
-        $output .= '    <table style="width:100%">';
+        $output = '    <table class="table">';
         $output .= '        <thead>';
         $output .= '            <th>' . __('Display / Group') . '</th>';
         $output .= '            <th>' . __('Name') . '</th>';
@@ -486,7 +485,6 @@ HTML;
 
         $output .= '        </tbody>';
         $output .= '    </table>';
-        $output .= '</div>';
         
         $response->SetGridResponse($output);
         $response->focusInFirstInput = false;
