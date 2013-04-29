@@ -302,7 +302,7 @@ END;
 		{
 			$row['name'] = $row['pagegroup'];
 			$row['pageid'] = $row['pagegroupID'];
-			$row['assigned'] = (($row['AssignedID'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif'));
+			$row['assigned'] = (($row['AssignedID'] == 1) ? 'icon-ok' : 'icon-remove');
 			$row['assignedid'] = $row['AssignedID'];
 			$row['checkbox_value'] = $row['AssignedID'] . ',' . $row['pagegroupID'];
 			$row['checkbox_ticked'] = '';
@@ -549,7 +549,7 @@ END;
 		{
 			$row['name'] = $row['Text'];
 			$row['pageid'] = $row['MenuItemID'];
-			$row['assigned'] = (($row['AssignedID'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif'));
+			$row['assigned'] = (($row['AssignedID'] == 1) ? 'icon-ok' : 'icon-remove');
 			$row['assignedid'] = $row['AssignedID'];
 			$row['checkbox_value'] = $row['AssignedID'] . ',' . $row['MenuItemID'];
 			$row['checkbox_ticked'] = '';

@@ -39,7 +39,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<tr>
 					<td><input type="checkbox" name="pageids[]" value="<?php echo $row['checkbox_value']; ?>" <?php echo $row['checkbox_ticked']; ?>></td>
 					<td><?php echo $row['name']; ?></td>
-					<td><?php echo $row['assigned']; ?></td>
+					<td><span class="<?php echo $row['assigned']; ?>"></span></td>
 				</tr>
 				<?php } ?>
 			</tbody>

@@ -81,7 +81,8 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (74, 'License', 'General', 'manual/content/license/licenses.php'),
 (75, 'DataSet', 'ViewColumns', 'manual/content/layout/content_datasets.php#Dataset_Column'),
 (76, 'Campaign', 'Permissions', 'manual/content/layout/addlayout.php#Layout_Permission'),
-(77, 'Transition', 'Edit', 'manual/content/transitions/transitions.php#Edit');
+(77, 'Transition', 'Edit', 'manual/content/transitions/transitions.php#Edit'),
+(78, 'User', 'SetPassword', 'manual/content/users/users.php#Set_Password');
 
 INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
 (8, 'Administration Menu'),
