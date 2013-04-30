@@ -152,7 +152,7 @@ function ScheduleFormSubmit(form) {
     var url = $(form).attr("action") + "&ajax=true";
 
     // Get additional fields from the form
-    var layoutId = $('input:radio[name=CampaignID]:checked', $(form).closest(".modal")).val();
+    var layoutId = $('input:radio[name=CampaignID]:checked').val();
     if (layoutId == undefined)
         layoutId = 0;
     
@@ -162,8 +162,8 @@ function ScheduleFormSubmit(form) {
 
     // Get the values from our datepickers
     var startDate = $("#starttime").closest(".date-pick").data('datetimepicker').getDate().toISOString();
-    var endDate = $("#starttime").closest(".date-pick").data('datetimepicker').getDate().toISOString();
-    var recurUntil = $("#starttime").closest(".date-pick").data('datetimepicker').getDate().toISOString();
+    var endDate = $("#endtime").closest(".date-pick").data('datetimepicker').getDate().toISOString();
+    var recurUntil = $("#rec_range").closest(".date-pick").data('datetimepicker').getDate().toISOString();
 
     $.ajax({
         type:"post",

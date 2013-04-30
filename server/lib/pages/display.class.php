@@ -249,6 +249,7 @@ SQL;
         $form = Theme::RenderReturn('display_form_edit');
 
         $response->SetFormRequestResponse($form, __('Edit a Display'), '650px', '350px');
+        $response->dialogClass = 'modal-big';
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayEditForm").submit()');
