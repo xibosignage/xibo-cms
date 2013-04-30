@@ -55,9 +55,9 @@ body .modal-big {
     margin-left:-40%;
 }
 
-body .modal-big .modal-body {
+/*body .modal-big .modal-body {
 	max-height: 500px;
-}
+}*/
 
 @media (max-width: 767px) {
     body .modal-big {

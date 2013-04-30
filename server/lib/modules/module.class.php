@@ -1536,8 +1536,7 @@ END;
 	$form .= '<input type="hidden" name="layoutid" value="' . $this->layoutid . '" />';
 	$form .= '<input type="hidden" name="regionid" value="' . $this->regionid . '" />';
 	$form .= '<input type="hidden" name="mediaid" value="' . $this->mediaid . '" />';
-        $form .= '<div class="dialog_table">';
-	$form .= '  <table style="width:100%">';
+	$form .= '  <table class="table table-bordered">';
         $form .= '      <tr>';
         $form .= '          <th>' . __('Group') . '</th>';
         $form .= '          <th>' . __('View') . '</th>';
@@ -1590,7 +1589,6 @@ END;
         }
 
         $form .= '</table>';
-        $form .= '</div>';
         $form .= '</form>';
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
