@@ -110,7 +110,7 @@ class sessionsDAO
 
             $row['userid'] = Kit::ValidateParam($row['userID'], _INT);
 			$row['username'] = Kit::ValidateParam($row['UserName'], _STRING);
-			$row['isexpired'] = (Kit::ValidateParam($row['IsExpired'], _INT) == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+			$row['isexpired'] = (Kit::ValidateParam($row['IsExpired'], _INT) == 1) ? 'icon-ok' : 'icon-remove';
 			$row['lastpage'] = Kit::ValidateParam($row['LastPage'], _STRING);
 			$row['lastaccessed'] = Kit::ValidateParam($row['LastAccessed'], _STRING);
 			$row['ip'] = Kit::ValidateParam($row['RemoteAddr'], _STRING);

@@ -1,6 +1,6 @@
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -16,152 +16,82 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */
+ */ 
 
-/* This file contains the new styles for elements that I have added after Jim stopped doing the CSS */
-.XiboGrid {
-	clear: both;
+.xibo-logo {
+	width: 100px;
+	margin-bottom: 20px;
+	margin-top: 10px;
+}
+
+.form-signin {
+    max-width: 300px;
+    padding: 19px 29px 29px;
+    margin: 0 auto 20px;
+    background-color: #fff;
+    border: 1px solid #e5e5e5;
+    -webkit-border-radius: 5px;
+       -moz-border-radius: 5px;
+            border-radius: 5px;
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+       -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            box-shadow: 0 1px 2px rgba(0,0,0,.05);
+  }
+  .form-signin .form-signin-heading,
+  .form-signin .checkbox {
+    margin-bottom: 10px;
+  }
+  .form-signin input[type="text"],
+  .form-signin input[type="password"] {
+    font-size: 16px;
+    height: auto;
+    margin-bottom: 15px;
+    padding: 7px 9px;
+  }
+
+/* Define some modal widths and heights */
+body .modal-big {
+    width:80%;
+    margin-left:-40%;
+}
+
+/*body .modal-big .modal-body {
+	max-height: 500px;
+}*/
+
+@media (max-width: 767px) {
+    body .modal-big {
+        width: auto;
+        margin-left: auto;
+    }
+}
+
+/* Full width iframe (for inside the help windows) */
+.full-iframe {
 	width: 100%;
+	height: 600px;
+	border: none;
 }
 
-.SecondNav, #headerback {
-	text-align: center;
+/* Some small tweaks for the validation plugin to work nicely with bootstrap */
+label.valid {
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  text-indent: -9999px;
 }
 
-.SecondNav ul li, #headerback ul li {
-	display: inline;
-	padding-left: 15px;
-	padding-right: 15px;
+label.error {
+  font-weight: bold;
+  color: red;
+  padding: 2px 8px;
+  margin-top: 2px;
 }
 
-#headerback, #headerback a {
-	color: #003399;
-}
-
-.ReportFault ol li {
-	display: list-item;
-}
-
-
-.HelpLink {
-	float:right;
-}
-
-.moduleButtonImage {
-	width: 55px;
-}
-
-.HelpLink a {
-	padding-left: 10px;
-	padding-right: 10px;
-}
-
-#embedHtml {
-	width: 500px;
-	height: 310px;
-}
-
-#embedScript {
-	width: 500px;
-	height: 140px;
-}
-
-.xiboformtextarea {
-	width: 500px;
-	height: 140px;
-}
-
-.regionTransparency {
-	position: absolute;
-	background-color: #FFF; 
-	opacity: .80;
-	filter: alpha(opacity=80);
-}
-
-.regionDisabled {
-    opacity: .65;
-    filter: alpha(opacity=65);
-}
-
-.footer {
-    position:relative;
-    font-size:0.8em;
-}
-
-#system_working {
-	position: absolute;
-	left: 20px;
-	top: 100px;
-}
-
-.nobr {
-    white-space: nowrap;
-}
-
-.regionInfo {
-    color:#FFF;
-    background-color:#000;
-    z-index:50;
-    padding: 5px;
-    position:absolute;
-    right:15px;
-    font-family: Verdana;
-}
-
-.seqInfo, .previewInfo {
-    font-family: Verdana;
-}
-
-.seqInfo span, .previewInfo span {
-    font-family: Verdana;
-}
-
-#aspectRatioOption {
-    padding-bottom: 2px;
-}
-
-
-.preview {
-    position:absolute;
-    top:0px;
-    left:0px;
-    width: 100%;
-    height: 100%;
-}
-
-.ui-dialog-buttonset .ui-button {
-    float: right;
-}
-
-#secondaryMenu ul {
-    padding: 0;
-}
-
-#secondaryMenu {
-    float: left;
-}
-
-#secondaryMenu li {
-    display: inline;
-    padding-right: 55px;
-}
-
-#secondaryMenu .current {
-    color: red;
-}
-
-.timelineMediaOutTransition, .timelineMediaInTransition {
-    width: 400px;
-    text-align: center;
-}
-
-.timelineMediaInTransition {
-    margin-bottom: 8px;
-}
-
+/* Layout Jump List */
 #LayoutJumpList {
     position: absolute;
-    width: 350px;
+    width: 450px;
     right: 25px;
     bottom: 55px;
 }
@@ -183,21 +113,82 @@
     font-weight: bold;
 }
 
-table.ScheduleFormSelectDetails {
-    border: 0;
-    background: none;
+.regionTransparency {
+	position: absolute;
+	background-color: #FFF; 
+	opacity: .80;
+	filter: alpha(opacity=80);
 }
 
-table.ScheduleFormSelectDetails td {
-    border: 0;
-    background: none;
-    vertical-align: top;
+.regionDisabled {
+    opacity: .65;
+    filter: alpha(opacity=65);
 }
 
-.scheduleFormCheckAll {
-    float: right;
+.regionInfo {
+    z-index:50;
 }
 
-.strong_text {
-    font-weight: bold;
+.preview {
+    position:absolute;
+    top:0px;
+    left:0px;
+    width: 100%;
+    height: 100%;
+}
+
+.previewNav {
+	position: absolute;
+	left: 2px;
+	bottom: -20px;
+}
+
+.preview-media-information {
+	display: block;
+	margin-top: 2px;
+}
+
+.wide_textarea {
+  width: 100%;
+}
+
+.connectedlist .ui-sortable {
+  width: 150px;
+  background-color: #EEEEEE;
+  padding: 5px;
+}
+
+.connectedlist .li-sortable {
+  padding: 5px;
+  margin: 5px;
+  border: 1px solid #8080ff;
+  background-color: #E5F0FF;
+  width: 130px;
+  cursor: pointer;
+  list-style: none;
+}
+
+#dashbuttons{ 
+  text-align: center;
+}
+
+.dashicons {
+  height:125px;
+  display: block;
+  float: left;
+  margin: 5px 5px;
+  padding: 35px;
+}
+
+.dash_button {
+  display:block;
+  text-align: center;
+}
+
+.dash_text {
+  display:block;
+}
+
+.dashicons a:hover {
+  color: #808080;
 }

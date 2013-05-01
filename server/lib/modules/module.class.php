@@ -776,82 +776,37 @@ END;
         {
             setSession('content','mediatype', $this->type);
 
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" disabled />
-            <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-            <input class="XiboFormButton" type="button" href="index.php?p=content&q=LibraryAssignForm&layoutid=$layoutid&regionid=$regionid" title="Library" value="Library" />
-END;
-        }
+            $this->response->AddButton(__('Library'), 'XiboSwapDialog("index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutid . '&regionid=' . $regionid . '")');
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+		}
         elseif ($regionid != '' && !$this->showRegionOptions)
         {
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" disabled />
-            <input class="XiboFormButton" id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
-END;
-        }
+        	$this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+		}
         elseif ($backgroundImage)
         {
-            // Show the save button, and make cancel go back to the background form
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" disabled />
-            <input class="XiboFormButton" id="btnCancel" type="button" title="Close" href="index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid" value="Cancel" />
-END;
+        	$this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&q=BackgroundForm&modify=true&layoutid=' . $layoutid . '")');
         }
         else
         {
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" disabled />
-            <input class="XiboFormButton" id="btnCancel" type="button" title="Close" href="index.php?p=content&q=displayForms&sp=add" value="Cancel" />
-END;
+        	$this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=content&q=displayForms&sp=add")');
         }
 
-        $form = <<<FORM
-        <div style="display:none"><iframe name="fileupload" width="1px" height="1px"></iframe></div>
-        <div>
-                <form id="file_upload" method="post" action="index.php?p=content&q=FileUpload" enctype="multipart/form-data" target="fileupload">
-                        <input type="hidden" id="PHPSESSID" value="$sessionId" />
-                        <input type="hidden" id="SecurityToken" value="$securityToken" />
-                        <input type="hidden" name="MAX_FILE_SIZE" value="$this->maxFileSizeBytes" />
-                        <table>
-                                <tr>
-                                        <td><label for="file">$this->displayType File<span class="required">*</span></label></td>
-                                        <td colspan="3">
-                                                <input type="file" name="media_file" onchange="fileFormSubmit();this.form.submit();" />
-                                        </td>
-                                </tr>
-                        </table>
-                </form>
-        </div>
-        <div id="uploadProgress" style="display:none">
-                <img src="img/loading.gif"><span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
-        </div>
-        <form class="XiboForm" id="AddLibraryBasedMedia" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
-                <input type="hidden" name="layoutid" value="$layoutid">
-                <input type="hidden" name="regionid" value="$regionid">
-                <input type="hidden" name="backgroundImage" value="$backgroundImage" />
-                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-                <input type="hidden" id="txtFileName" name="txtFileName" readonly="true" />
-                <input type="hidden" name="hidFileID" id="hidFileID" value="" />
-                <table width="100%">
-                        <tr>
-                        <td><label for="name" title="The name of the $this->type. Leave this blank to use the file name">Name</label></td>
-                        <td><input id="name" name="name" type="text"></td>
-                        </tr>
-                        <tr>
-                        <td><label for="duration" title="The duration in seconds this image should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
-                        <td><input id="duration" name="duration" type="text" value="$defaultDuration"></td>
-                        </tr>
-                        <tr>
-                                <td></td>
-                                <td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
-                        </tr>
-                        <tr>
-                                <td></td>
-                                <td colspan="3">$save_button</td>
-                        </tr>
-                </table>
-        </form>
-FORM;
+        $this->response->AddButton(__('Save'), '$("#AddLibraryBasedMedia").submit()');
+
+        // Setup the theme
+        Theme::Set('form_id', 'AddLibraryBasedMedia');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+		Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '"><input type="hidden" name="backgroundImage" value="' . $backgroundImage . '" /><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
+
+		Theme::Set('form_upload_id', 'file_upload');
+        Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
+		Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSizeBytes . '" />');
+
+		Theme::Set('valid_extensions', 'This form accepts: ' . $this->validExtensionsText . ' files up to a maximum size of ' . $this->maxFileSize);
+		Theme::Set('default_duration', $defaultDuration);
+
+		$form = Theme::RenderReturn('library_form_media_add');
 
         $this->response->html = $form;
         $this->response->dialogTitle = 'Add New ' . $this->displayType;
@@ -926,92 +881,43 @@ FORM;
         $editedMediaID = $row['editedMediaID'];
         $ext = strtolower(substr(strrchr($originalFilename, '.'), 1));
 
-        // Save button is different depending on if we are on a region or not
+		// Save button is different depending on if we are on a region or not
         if ($regionid != '' && $this->showRegionOptions)
         {
             setSession('content', 'mediatype', $this->type);
 
-            $extraNotes = '<em>Note: Uploading a new ' . $this->displayType . ' here will replace it on this layout only.</em>';
-
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" />
-            <input class="XiboFormButton" id="btnCancel" type="button" title="Return to the Region Options" href="index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions" value="Cancel" />
-END;
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         elseif ($regionid != '' && !$this->showRegionOptions)
         {
-            $extraNotes = '<em>Note: Uploading a new ' . $this->displayType . ' here will replace it on this layout only.</em>';
-            
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" />
-            <input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
-END;
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
         else
         {
-            $updateMediaChecked = (Config::GetSetting($db, 'LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 'checked' : '';
-            $extraNotes = '<input type="checkbox" id="replaceInLayouts" name="replaceInLayouts" ' . $updateMediaChecked . '><label for="replaceInLayouts">' . __('Update this media in all layouts it is assigned to. Note: It will only be replaced in layouts you have permission to edit.') . '</label>';
-
-            $save_button = <<<END
-            <input id="btnSave" type="submit" value="Save" />
-            <input id="btnCancel" type="button" title="Close" onclick="$('#div_dialog').dialog('close')" value="Cancel" />
-END;
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
+
+        $this->response->AddButton(__('Save'), '$("#EditLibraryBasedMedia").submit()');
+
 
         $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
 
-        $form = <<<FORM
-        <div style="display:none"><iframe name="fileupload" width="1px" height="1px"></iframe></div>
-        <div>
-                <form id="file_upload" method="post" action="index.php?p=content&q=FileUpload" enctype="multipart/form-data" target="fileupload">
-                        <input type="hidden" id="PHPSESSID" value="$sessionId" />
-                        <input type="hidden" id="SecurityToken" value="$securityToken" />
-                        <input type="hidden" name="MAX_FILE_SIZE" value="$this->maxFileSizeBytes" />
-                        <table>
-                                <tr>
-                                        <td><label for="file">New $this->displayType File<span class="required">*</span></label></td>
-                                        <td colspan="3">
-                                                <input type="file" name="media_file" onchange="fileFormSubmit();this.form.submit();" />
-                                        </td>
-                                </tr>
-                        </table>
-                </form>
-        </div>
-        <div id="uploadProgress" style="display:none">
-                <img src="img/loading.gif"><span style="padding-left:10px">You may fill in the form while your file is uploading.</span>
-        </div>
-        <form class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
-                <input type="hidden" name="hidFileID" id="hidFileID" value="" />
-                <input type="hidden" id="txtFileName" name="txtFileName" readonly="true" />
-                <input type="hidden" name="layoutid" value="$layoutid">
-                <input type="hidden" name="regionid" value="$regionid">
-                <input type="hidden" name="mediaid" value="$mediaid">
-                <input type="hidden" name="lkid" value="$lkid">
-                <input type="hidden" id="PHPSESSID" value="$sessionId" />
-                <input type="hidden" id="SecurityToken" value="$securityToken" />
-                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-                <table>
-                        <tr>
-                        <td><label for="name" title="The name of the $this->displayType. Leave this blank to use the file name">Name</label></td>
-                        <td><input id="name" name="name" type="text" value="$name"></td>
-                        <td><label for="duration" title="The duration in seconds this media should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
-                        <td><input id="duration" name="duration" type="text" value="$this->duration" $durationFieldEnabled></td>
-                        </tr>
-                        <tr>
-                                <td></td>
-                                <td>This form accepts: <span class="required">$this->validExtensionsText</span> files up to a maximum size of <span class="required">$this->maxFileSize</span>.</td>
-                        </tr>
-                        <tr>
-                                <td></td>
-                                <td colspan="2">$extraNotes</td>
-                        </tr>
-                        <tr>
-                                <td></td>
-                                <td colspan="3">$save_button</td>
-                        </tr>
-                </table>
-        </form>
-FORM;
+		// Setup the theme
+        Theme::Set('form_id', 'EditLibraryBasedMedia');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+		Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '"><input type="hidden" name="mediaid" value="' . $mediaid . '"><input type="hidden" name="lkid" value="' . $lkid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
+
+		Theme::Set('form_upload_id', 'file_upload');
+        Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
+		Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSizeBytes . '" />');
+
+		Theme::Set('name', $name);
+		Theme::Set('duration', $this->duration);
+		Theme::Set('is_duration_field_enabled', $durationFieldEnabled);
+		Theme::Set('valid_extensions', 'This form accepts: ' . $this->validExtensionsText . ' files up to a maximum size of ' . $this->maxFileSize);
+		Theme::Set('is_replace_field_checked', ((Config::GetSetting($db, 'LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 'checked' : ''));
+
+		$form = Theme::RenderReturn('library_form_media_edit');
 
         $this->response->html 		= $form;
         $this->response->dialogTitle 	= 'Edit ' . $this->displayType;
@@ -1466,11 +1372,11 @@ FORM;
             $db->query(sprintf("UPDATE media SET duration = %d WHERE mediaID = %d", $this->duration, $this->mediaid));
 
             $this->response->message = 'Edited the ' . $this->displayType;
-
-            // Edit from the library - check to see if we are replacing this media in *all* layouts.
-            if (Kit::GetParam('replaceInLayouts', _POST, _CHECKBOX) == 1)
-                $this->ReplaceMediaInAllLayouts($mediaid, $this->mediaid, $this->duration);
         }
+
+        // Edit from the library - check to see if we are replacing this media in *all* layouts.
+        if (Kit::GetParam('replaceInLayouts', _POST, _CHECKBOX) == 1)
+            $this->ReplaceMediaInAllLayouts($mediaid, $this->mediaid, $this->duration);
 
         return $this->response;
     }
@@ -1568,7 +1474,7 @@ FORM;
          */
         public function Preview($width, $height)
         {
-            return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.png" /></div>';
+            return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
         }
 
     /**
@@ -1590,7 +1496,8 @@ FORM;
         $msgDuration = __('Duration');
 
         // Default Hover window contains a thumbnail, media type and duration
-        $output = '<div class="thumbnail"><img alt="' . $this->displayType . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif"></div>';
+        $output = '<div class="well">';
+        $output .= '<div class="preview-module-image"><img alt="' . $this->displayType . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif"></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';
@@ -1600,6 +1507,7 @@ FORM;
 
         $output .= '    <li>' . $msgDuration . ': ' . $this->duration . ' ' . __('seconds') . '</li>';
         $output .= '    </ul>';
+        $output .= '</div>';
         $output .= '</div>';
 
         return $output;
@@ -1628,8 +1536,7 @@ FORM;
 	$form .= '<input type="hidden" name="layoutid" value="' . $this->layoutid . '" />';
 	$form .= '<input type="hidden" name="regionid" value="' . $this->regionid . '" />';
 	$form .= '<input type="hidden" name="mediaid" value="' . $this->mediaid . '" />';
-        $form .= '<div class="dialog_table">';
-	$form .= '  <table style="width:100%">';
+	$form .= '  <table class="table table-bordered">';
         $form .= '      <tr>';
         $form .= '          <th>' . __('Group') . '</th>';
         $form .= '          <th>' . __('View') . '</th>';
@@ -1682,7 +1589,6 @@ FORM;
         }
 
         $form .= '</table>';
-        $form .= '</div>';
         $form .= '</form>';
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');

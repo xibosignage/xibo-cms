@@ -134,6 +134,8 @@ class layoutDAO
 				
    				Theme::Set('layout_form_edit_url', 'index.php?p=layout&q=displayForm&modify=true&layoutid=' . $this->layoutid);
    				Theme::Set('layout_form_edit_background_url', 'index.php?p=layout&q=BackgroundForm&modify=true&layoutid=' . $this->layoutid);
+   				Theme::Set('layout_form_savetemplate_url', 'index.php?p=template&q=TemplateForm&layoutid=' . $this->layoutid);
+   				Theme::Set('layout_form_addregion_url', 'index.php?p=timeline&q=AddRegion&layoutid=' . $this->layoutid);
 				Theme::Set('layout', $this->layout);
 
 				Kit::ClassLoader('campaign');
@@ -459,7 +461,9 @@ class layoutDAO
 		// Initialise the template and capture the output
 		$form = Theme::RenderReturn($theme);
 
-		$response->SetFormRequestResponse($form, __('Add/Edit a Layout.'), '350px', '275px');
+		$dialogTitle = ($this->layoutid == 0) ? __('Add Layout') : __('Edit Layout');
+
+		$response->SetFormRequestResponse($form, $dialogTitle, '350px', '275px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != '') ? HelpManager::Link('Layout', 'Edit') : HelpManager::Link('Layout', 'Add')) . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#LayoutForm").submit()');
@@ -655,8 +659,8 @@ class layoutDAO
 			// get dimensions
             $tipWidth       = round($region->getAttribute('width') * $scaleFactor, 0);
             $tipHeight      = round($region->getAttribute('height') * $scaleFactor, 0);
-            $tipTop         = round($region->getAttribute('top') * $scaleFactor, 0);
             $tipLeft        = round($region->getAttribute('left') * $scaleFactor, 0);
+            $tipTop         = round($region->getAttribute('top') * $scaleFactor, 0);
 
 			$regionWidth 	= $region->getAttribute('width') . "px";
 			$regionHeight 	= $region->getAttribute('height') . "px";
@@ -680,63 +684,41 @@ class layoutDAO
 			$regionHtml .= "<div id='region_$regionid' regionEnabled='$regionAuth->edit' regionid='$regionid' layoutid='$this->layoutid' scale='$scaleFactor' width='$regionWidth' height='$regionHeight' href='index.php?p=timeline&layoutid=$this->layoutid&regionid=$regionid&q=Timeline' ondblclick=\"$doubleClickLink\"' class='$regionDisabledClass $regionPreviewClass' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
 					  $regionTransparency";
                                           
-			if ($regionAuth->view)
-			{
-				$regionHtml .= "
-					<div class='regionInfo'>
-                        $tipWidth x $tipHeight ($tipLeft,$tipTop)
-                    </div>
-					<div class='preview'>
-						<div class='previewContent'></div>
-						<div class='previewNav'></div>
-					</div>";
-			}
+			if ($regionAuth->edit) {
 
-			if ($regionAuth->edit)
-			{
-				$regionHtml .= '<div class="timelineLink">';
-				$regionHtml .= '    <a class="XiboFormButton" href="index.php?p=timeline&q=Timeline&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '" title="' . __('Timeline') . '">' . __('Edit Timeline') . '</a>';
+				$regionHtml .= '<div class="btn-group regionInfo pull-right">';
+				$regionHtml .= '	<button class="btn dropdown-toggle" data-toggle="dropdown">';
+				$regionHtml .= '<span class="region-tip">' . $tipWidth . ' x ' . $tipHeight . ' (' . $tipLeft . ',' . $tipTop . ')' . '</span>';
+				$regionHtml .= '		<span class="caret"></span>';
+				$regionHtml .= '	</button>';
+				$regionHtml .= '	<ul class="dropdown-menu">';
+				$regionHtml .= '    	<li><a class="XiboFormButton" href="index.php?p=timeline&q=Timeline&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '" title="' . __('Timeline') . '">' . __('Edit Timeline') . '</a></li>';
+				$regionHtml .= '    	<li><a class="XiboFormButton" href="index.php?p=timeline&q=ManualRegionPositionForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '&top=' . $regionTop . '&left=' . $regionLeft . '&width=' . $regionWidth . '&height=' . $regionHeight . '&scale=' . $scaleFactor . '&layoutWidth=' . $width . '&layoutHeight= ' . $height . '" title="' . __('Options') . '">' . __('Options') . '</a></li>';
+				$regionHtml .= '    	<li><a class="XiboFormButton" href="index.php?p=timeline&q=DeleteRegionForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '" title="' . __('Delete') . '">' . __('Delete') . '</a></li>';
+				$regionHtml .= '    	<li><a class="XiboFormButton" href="index.php?p=timeline&q=RegionPermissionsForm&layoutid=' . $this->layoutid . '&regionid=' . $regionid . '" title="' . __('Permissions') . '">' . __('Permissions') . '</a></li>';
+				$regionHtml .= '	</ul>';
 				$regionHtml .= '</div>';
+				
+			}
+			else if ($regionAuth->view)
+			{
+				$regionHtml .= '<div class="regionInfo">';
+				$regionHtml .= '<span class="region-tip">' . $tipWidth . ' x ' . $tipHeight . ' (' . $tipLeft . ',' . $tipTop . ')' . '</span>';
+                $regionHtml .= '</div>';
 			}
 
+			$regionHtml .= '	<div class="preview">';
+			$regionHtml .= '		<div class="previewContent"></div>';
+			$regionHtml .= '		<div class="previewNav label label-info"></div>';
+			$regionHtml .= '	</div>';
 			$regionHtml .= '</div>';
 		}
 		
-		// Translate messages
-		$msgTimeLine		= __('Timeline');
-		$msgOptions			= __('Options');
-		$msgDelete			= __('Delete');
-		$msgSetAsHome		= __('Permissions');
-		
-		$msgAddRegion		= __('Add Region');
-		$msgEditBg			= __('Edit Background');
-		$msgProperties		= __('Properties');
-		$msgSaveTemplate	= __('Save Template');
-		
 		//render the view pane
 		$surface = <<<HTML
-                <!--<div id="aspectRatioOption">
-                    <input id="lockAspectRatio" type="checkbox" /><label for="lockAspectRatio">Lock Aspect Ratio?</label>
-                </div>-->
+
 		<div id="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; border: 1px solid #000; background:$background_css;">
 		$regionHtml
-		</div>
-
-		<div class="contextMenu" id="regionMenu">
-			<ul>
-                <li id="btnTimeline">$msgTimeLine</li>
-				<li id="options">$msgOptions</li>
-				<li id="deleteRegion">$msgDelete</li>
-				<li id="setAsHomepage">$msgSetAsHome</li>
-			</ul>
-		</div>
-		<div class="contextMenu" id="layoutMenu">
-			<ul>
-				<li id="addRegion">$msgAddRegion</li>
-				<li id="editBackground">$msgEditBg</li>
-				<li id="layoutProperties">$msgProperties</li>
-				<li id="templateSave">$msgSaveTemplate</li>
-			</ul>
 		</div>
 HTML;
 		

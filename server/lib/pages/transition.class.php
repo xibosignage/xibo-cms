@@ -86,13 +86,13 @@ class transitionDAO
             $row['transitionid'] = Kit::ValidateParam($transition['TransitionID'], _INT);
             $row['name'] = Kit::ValidateParam($transition['Transition'], _STRING);
             $row['hasduration'] = Kit::ValidateParam($transition['HasDuration'], _INT);
-            $row['hasduration_image'] = ($row['hasduration'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+            $row['hasduration_image'] = ($row['hasduration'] == 1) ? 'icon-ok' : 'icon-remove';
             $row['hasdirection'] = Kit::ValidateParam($transition['HasDirection'], _INT);
-            $row['hasdirection_image'] = ($row['hasdirection'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+            $row['hasdirection_image'] = ($row['hasdirection'] == 1) ? 'icon-ok' : 'icon-remove';
             $row['enabledforin'] = Kit::ValidateParam($transition['AvailableAsIn'], _INT);
-            $row['enabledforin_image'] = ($row['enabledforin'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+            $row['enabledforin_image'] = ($row['enabledforin'] == 1) ? 'icon-ok' : 'icon-remove';
             $row['enabledforout'] = Kit::ValidateParam($transition['AvailableAsOut'], _INT);
-            $row['enabledforout_image'] = ($row['enabledforout'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
+            $row['enabledforout_image'] = ($row['enabledforout'] == 1) ? 'icon-ok' : 'icon-remove';
 
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();

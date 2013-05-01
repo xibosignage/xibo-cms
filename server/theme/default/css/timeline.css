@@ -18,33 +18,26 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-div.timelineLeftColumn, div.timelineRightColumn {
-     float: left;
-}
-
-div.timelineLeftColumn {
-    width: 185px;
-}
-
-div.timelineRightColumn {
-    width: 778px;
-    height: 450px;
-    overflow-y: scroll;
-}
-
 div.timelineMediaVerticalList {
     float: left;
-    width: 480px;
+    width: 580px;
 }
 
 div#timelinePreview {
     float: left;
     width: 281px;
-    height: 445px;
+}
+
+div.timelineMediaDetails h3 {
+    font-size: 16px;
+}
+
+ul.timelineSortableListOfMedia {
+    list-style: none;
 }
 
 li.timelineModuleListItem {
-     list-style: none;
+    list-style: none;
 }
 
 img.timelineModuleButtonImage {
@@ -64,7 +57,7 @@ a.timelineModuleButtonAnchor {
 }
 
 div.timelineMediaItem {
-    width: 400px;
+    width: 500px;
 }
 
 li.timelineMediaListItem {
@@ -101,82 +94,68 @@ div.timelineMediaDetails h3 {
     color: whiteSmoke;
 }
 
-div.timelineMediaImageThumbnail {
-    float:right;
-    width: 35px;
-    height: 35px;
-}
-
-div.timelineMediaImageThumbnail img {
-    width: 70px;
-    height: 70px;
-}
-
 div.timelineMediaItemColouring_powerpoint {
-    background:url(../img/forms/blue_bar.gif) no-repeat;
+    background:url(../img/timeline/blue_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_image {
-    background:url(../img/forms/red_bar.gif) no-repeat;
+    background:url(../img/timeline/red_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_webpage {
-    background:url(../img/forms/green_bar.gif) no-repeat;
+    background:url(../img/timeline/green_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_shellcommand {
-    background:url(../img/forms/green_bar.gif) no-repeat;
+    background:url(../img/timeline/green_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_microblog {
-    background:url(../img/forms/orange_bar.gif) no-repeat;
+    background:url(../img/timeline/orange_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_embedded {
-    background:url(../img/forms/green_bar.gif) no-repeat;
+    background:url(../img/timeline/green_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_text {
-    background:url(../img/forms/yellow_bar.gif) no-repeat;
+    background:url(../img/timeline/yellow_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_ticker {
-    background:url(../img/forms/orange_bar.gif) no-repeat;
+    background:url(../img/timeline/orange_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_video {
-    background:url(../img/forms/purple_bar.gif) no-repeat;
+    background:url(../img/timeline/purple_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_flash {
-    background:url(../img/forms/grey_bar.gif) no-repeat;
+    background:url(../img/timeline/grey_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_counter {
-    background:url(../img/forms/grey_bar.gif) no-repeat;
+    background:url(../img/timeline/grey_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_datasetview {
-    background:url(../img/forms/grey_bar.gif) no-repeat;
+    background:url(../img/timeline/grey_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_enabled {
-    background:url(../img/forms/green_bar.gif) no-repeat;
+    background:url(../img/timeline/green_bar.gif) no-repeat;
 }
 
 div.timelineMediaItemColouring_disabled{
-    background:url(../img/forms/grey_bar.gif) no-repeat;
-}
-
-ul#LibraryAssignSortable {
-    width: 80%;
-    height: 70px;
-    background-color: #EEEEEE;
-    padding: 5px;
+    background:url(../img/timeline/grey_bar.gif) no-repeat;
 }
 
 span.library_assign_list_select {
     cursor: pointer;
+}
+
+ul#LibraryAssignSortable {
+    display: inline-block;
 }
 
 #LibraryAssignSortable .li-sortable {
@@ -186,6 +165,7 @@ span.library_assign_list_select {
     background-color: #E5F0FF;
     cursor: pointer;
     float: left;
+    list-style: none;
 }
 
 div.timelineLink {

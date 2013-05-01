@@ -29,28 +29,25 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="info_table">
-	<table style="width:100%">
-		<thead>
-			<tr>
-				<th><?php echo Theme::Translate('Title'); ?></th>
-				<th><?php echo Theme::Translate('Description'); ?></th>
-				<th><?php echo Theme::Translate('Homepage'); ?></th>
-				<th><?php echo Theme::Translate('Key'); ?></th>
-				<th><?php echo Theme::Translate('Secret'); ?></th>
-				<th><?php echo Theme::Translate('Action'); ?></th>	
-			</tr>
-		</thead>
-		<tbody>
-			<?php foreach(Theme::Get('table_rows') as $row) { ?>
-			<tr>
-				<td><?php echo $row['application_title']; ?></td>
-				<td><?php echo $row['application_descr']; ?></td>
-				<td><?php echo $row['application_uri']; ?></td>
-				<td><?php echo $row['consumer_key']; ?></td>
-				<td><?php echo $row['consumer_secret']; ?></td>
-			</tr>
-			<?php } ?>
-		</tbody>
-	</table>
-</div>
+<table class="table">
+	<thead>
+		<tr>
+			<th><?php echo Theme::Translate('Title'); ?></th>
+			<th><?php echo Theme::Translate('Description'); ?></th>
+			<th><?php echo Theme::Translate('Homepage'); ?></th>
+			<th><?php echo Theme::Translate('Key'); ?></th>
+			<th><?php echo Theme::Translate('Secret'); ?></th>
+		</tr>
+	</thead>
+	<tbody>
+		<?php foreach(Theme::Get('table_rows') as $row) { ?>
+		<tr>
+			<td><?php echo $row['application_title']; ?></td>
+			<td><?php echo $row['application_descr']; ?></td>
+			<td><?php echo $row['application_uri']; ?></td>
+			<td><?php echo $row['consumer_key']; ?></td>
+			<td><?php echo $row['consumer_secret']; ?></td>
+		</tr>
+		<?php } ?>
+	</tbody>
+</table>

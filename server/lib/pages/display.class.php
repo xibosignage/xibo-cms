@@ -249,6 +249,7 @@ SQL;
         $form = Theme::RenderReturn('display_form_edit');
 
         $response->SetFormRequestResponse($form, __('Edit a Display'), '650px', '350px');
+        $response->dialogClass = 'modal-big';
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayEditForm").submit()');
@@ -294,11 +295,11 @@ SQL;
             $row['lastaccessed'] = date("Y-m-d H:i:s", $row['lastaccessed']);
 
             // Create some login lights
-            $row['licensed'] = ($row['licensed'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
-            $row['inc_schedule'] = ($row['inc_schedule'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
-            $row['email_alert'] = ($row['email_alert'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
-            $row['loggedin'] = ($row['loggedin'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
-            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? Theme::Image('act.gif') : (($row['mediainventorystatus'] == 2) ? Theme::Image('disact.gif') : Theme::Image('warn.gif'));
+            $row['licensed'] = ($row['licensed'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['inc_schedule'] = ($row['inc_schedule'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['email_alert'] = ($row['email_alert'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['loggedin'] = ($row['loggedin'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'error' : 'warning');
 
             // Schedule Now
             $row['buttons'][] = array(
@@ -634,8 +635,8 @@ SQL;
         //  - DisplayGroups this Display could be assigned to
 
         // Set some information about the form
-        Theme::Set('displaygroups_assigned_id', 'displaygroupsIn');
-        Theme::Set('displaygroups_available_id', 'displaygroupsOut');
+        Theme::Set('displaygroups_assigned_id', 'displaysIn');
+        Theme::Set('displaygroups_available_id', 'displaysOut');
         Theme::Set('displaygroups_assigned_url', 'index.php?p=display&q=SetMemberOf&DisplayID=' . $displayID);
 
         // Display Groups Assigned
@@ -688,10 +689,10 @@ SQL;
         // Render the theme
         $form = Theme::RenderReturn('display_form_group_assign');
 
-        $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
+        $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'DisplayGroupManageMembersCallBack');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Members') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), 'MembersSubmit()');
+        $response->AddButton(__('Save'), 'DisplayGroupMembersSubmit()');
         $response->Respond();
     }
 

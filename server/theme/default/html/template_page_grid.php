@@ -29,33 +29,38 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="info_table">
-	<table style="width:100%">
-		<thead>
-			<tr>
-				<th><?php echo Theme::Translate('Name'); ?></th>
-				<th><?php echo Theme::Translate('Is System'); ?></th>
-				<th><?php echo Theme::Translate('Tags'); ?></th>
-				<th><?php echo Theme::Translate('Owner'); ?></th>
-				<th><?php echo Theme::Translate('Permissions'); ?></th>
-				<th><?php echo Theme::Translate('Action'); ?></th>	
-			</tr>
-		</thead>
-		<tbody>
-			<?php foreach(Theme::Get('table_rows') as $row) { ?>
-			<tr>
-				<td><?php echo $row['template']; ?></td>
-				<td><?php echo $row['issystem']; ?></td>
-				<td><?php echo $row['tags']; ?></td>
-				<td><?php echo $row['owner']; ?></td>
-				<td><?php echo $row['permissions']; ?></td>
-				<td class="nobr">
-					<?php foreach($row['buttons'] as $button) { ?>
-					<button class="XiboFormButton" href="<?php echo $button['url']; ?>"><span><?php echo $button['text']; ?></span></button>
-					<?php } ?>
-				</td>
-			</tr>
-			<?php } ?>
-		</tbody>
-	</table>
-</div>
+<table class="table">
+	<thead>
+		<tr>
+			<th><?php echo Theme::Translate('Name'); ?></th>
+			<th><?php echo Theme::Translate('Is System'); ?></th>
+			<th><?php echo Theme::Translate('Tags'); ?></th>
+			<th><?php echo Theme::Translate('Owner'); ?></th>
+			<th><?php echo Theme::Translate('Permissions'); ?></th>
+		</tr>
+	</thead>
+	<tbody>
+		<?php foreach(Theme::Get('table_rows') as $row) { ?>
+		<tr>
+			<td><?php echo $row['template']; ?></td>
+			<td><?php echo $row['issystem']; ?></td>
+			<td><?php echo $row['tags']; ?></td>
+			<td><?php echo $row['owner']; ?></td>
+			<td><?php echo $row['permissions']; ?></td>
+			<td>
+				<div class="btn-group pull-right">
+    				<button class="btn dropdown-toggle" data-toggle="dropdown">
+      					<?php echo Theme::Translate('Action'); ?>
+      					<span class="icon-tasks"></span>
+    				</button>
+    				<ul class="dropdown-menu">
+						<?php foreach($row['buttons'] as $button) { ?>
+						<li class="XiboFormButton" href="<?php echo $button['url']; ?>"><a tabindex="-1" href="#"><?php echo $button['text']; ?></a></li>
+						<?php } ?>
+    				</ul>
+  				</div>
+			</td>
+		</tr>
+		<?php } ?>
+	</tbody>
+</table>

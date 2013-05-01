@@ -49,6 +49,9 @@ along with Xibo.  If not, see <a href="http://www.gnu.org/licenses/">www.gnu.org
 <h3>jQuery</h3>
 <p><a href="http://jquery.com/">Jquery</a> (and plugins) are provided under the <a href="http://dev.jquery.com/browser/trunk/jquery/MIT-LICENSE.txt">MIT license.</a></p>
 
+<h3>Bootstrap</h3>
+<p>Licensed under the Apache License v2.0 <a href="http://www.apache.org/licenses/LICENSE-2.0"></a></p>
+
 <h3>CK Editor</h3>
 <p><a href="http://ckeditor.com/">CK Editor</a> is provided as the text editor, and is made available under GPL/LGPL/MPL</p>
 

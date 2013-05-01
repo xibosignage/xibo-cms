@@ -228,7 +228,7 @@ class Theme {
 	public static function GetMenu($menu) {
 
 		$theme = Theme::GetInstance();
-		$array = null;
+		$array = array();
 
 		if (!$menu = new MenuManager($theme->db, $theme->user, $menu))
 			trigger_error($menu->message, E_USER_ERROR);
@@ -251,7 +251,7 @@ class Theme {
 				$item['link'] = $item['args'];
 			}
 
-			$item['li'] = '<li class="' . $item['class'] . '"><a href="' . $item['link'] . '" class="' . $item['class'] . (($item['selected']) ? ' current' : '') . '">' . $item['title'] . '</a></li>';
+			$item['li'] = '<li class="' . $item['class'] . (($item['selected']) ? ' active' : '') . '"><a href="' . $item['link'] . '" class="' . $item['class'] . (($item['selected']) ? ' active' : '') . '">' . $item['title'] . '</a></li>';
 
 			$array[] = $item;
 		}

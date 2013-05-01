@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -29,55 +29,43 @@ class DateManager
 		$this->db 	=& $db;
 	}
 	
-	public function GetClock()
+	public static function GetClock()
 	{
 		return date("H:i T");
 	}
 	
-	public function GetSystemClock()
+	public static function GetSystemClock()
 	{
 		return gmdate("H:i T");
 	}
 	
-	public function GetLocalDate($format = 'Y-m-d H:i:s', $timestamp = '')
+	public static function GetLocalDate($format = 'Y-m-d H:i:s', $timestamp = '')
 	{
-		$db	=& $this->db;
-		
 		if ($timestamp == '')
 		{
 			$timestamp = time();
 		}
-		
-		Debug::LogEntry($db, 'audit', 'Converting ' . $timestamp . ' to a Local Date');
 		
 		return date($format, $timestamp);
 	}
 	
-	public function GetSystemDate($format = 'Y-m-d H:i:s', $timestamp = '')
+	public static function GetSystemDate($format = 'Y-m-d H:i:s', $timestamp = '')
 	{
-		$db	=& $this->db;
-				
 		if ($timestamp == '')
 		{
 			$timestamp = time();
 		}
 		
-		Debug::LogEntry($db, 'audit', 'Converting ' . $timestamp . ' to a System Date');
-		
 		return gmdate($format, $timestamp);
 	}
 
-        /**
-         * Gets an ISO date from a US formatted date string
-         * @param <string> $usDate
-         * @param <string> $time
-         */
-        public function GetDateFromUS($usDate, $time)
-        {
-            // Split the US date by /
-            $datePart = explode('/', $usDate);
-
-            return (int) strtotime($datePart[2] . '-' . $datePart[1] . '-' . $datePart[0] . ' ' . $time);
-        }
+    /**
+     * Gets an ISO date from a US formatted date string
+     * @param <string> $date
+     */
+    public static function GetDateFromString($date)
+    {
+        return strtotime($date);
+    }
 } 
 ?>

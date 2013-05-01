@@ -42,6 +42,7 @@ class ResponseManager
 	public $dialogWidth;
 	public $dialogHeight;
 	public $dialogTitle;
+	public $dialogClass;
 	
 	public $keepOpen;
 	public $hideMessage;
@@ -57,6 +58,8 @@ class ResponseManager
 	public $clockUpdate;
 
     public $uniqueReference;
+
+    public $extra;
 	
 	public function __construct()
 	{		
@@ -75,6 +78,8 @@ class ResponseManager
         $this->initialSortColumn = 1;
         $this->initialSortOrder = 1;
         $this->modal = false;
+        $this->extra = array();
+        $this->dialogClass = '';
 		
 		return true;
 	}
@@ -157,13 +162,13 @@ class ResponseManager
 	 * @param $table Object
 	 * @param $sortingDiv Object[optional]
 	 */
-	public function SetGridResponse($table, $sortingDiv = '.info_table table')
+	public function SetGridResponse($table, $sortingDiv = 'table')
 	{		
 		$this->html 		= $table;
 		$this->success		= true;
 		$this->sortable		= true;
 		$this->sortingDiv	= $sortingDiv;
-                $this->paging = true;
+        $this->paging = true;
 		
 		return;
 	}
@@ -248,6 +253,7 @@ class ResponseManager
 			$response['dialogWidth']	= $this->dialogWidth;
 			$response['dialogHeight'] 	= $this->dialogHeight;
 			$response['dialogTitle']	= $this->dialogTitle;
+			$response['dialogClass'] = $this->dialogClass;
 			
 			// Tweak the width and height
 			$response['dialogWidth'] 	= (int) str_replace('px', '', $response['dialogWidth']);
@@ -265,6 +271,9 @@ class ResponseManager
 			
 			// Login
 			$response['login']			= $this->login;
+
+			// Extra
+			$response['extra'] = $this->extra;
 
             // Log the response if we are auditing
             //global $db;
@@ -307,25 +316,9 @@ class ResponseManager
         
     public static function Pager($id)
     {
-        // Output a pager
-        $output  = '<div class="pager" id="XiboPager_' . $id . '">';
-        $output .= '    <form>';
-        $output .= '        <img src="theme/default/3rdparty/jQuery/css/images/first.png" class="first"/>';
-        $output .= '        <img src="theme/default/3rdparty/jQuery/css/images/prev.png" class="prev"/>';
-        $output .= '        <input type="text" class="pagedisplay"/>';
-        $output .= '        <img src="theme/default/3rdparty/jQuery/css/images/next.png" class="next"/>';
-        $output .= '        <img src="theme/default/3rdparty/jQuery/css/images/last.png" class="last"/>';
-        $output .= '        <select class="pagesize">';
-        $output .= '            <option value="5">5</option>';
-        $output .= '            <option value="10">10</option>';
-        $output .= '            <option value="20">20</option>';
-        $output .= '            <option value="30">30</option>';
-        $output .= '            <option value="40">40</option>';
-        $output .= '        </select>';
-        $output .= '    </form>';                
-        $output .= '</div>';
+        Theme::Set('pager_id', 'XiboPager_' . $id);
         
-        return $output;
+        return Theme::RenderReturn('grid_pager');
     }
 }
 

@@ -532,10 +532,10 @@ class campaignDAO
 
         $form = Theme::RenderReturn('campaign_form_layout_assign');
 
-        $response->SetFormRequestResponse($form, __('Layouts on Campaign'), '400', '375', 'ManageMembersCallBack');
+        $response->SetFormRequestResponse($form, __('Layouts on Campaign'), '400', '375', 'LayoutAssignmentCallBack');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Layouts') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), 'MembersSubmit()');
+        $response->AddButton(__('Save'), 'LayoutsSubmit()');
         $response->Respond();
     }
 

@@ -34,37 +34,42 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="info_table">
-	<table style="width:100%">
-		<thead>
-			<tr>
-				<th><?php echo Theme::Translate('Name'); ?></th>
-				<th><?php echo Theme::Translate('Description'); ?></th>
-				<th><?php echo Theme::Translate('Library Media'); ?></th>	
-				<th><?php echo Theme::Translate('Valid Extensions'); ?></th>	
-				<th><?php echo Theme::Translate('Image Uri'); ?></th>	
-				<th><?php echo Theme::Translate('Preview Enabled'); ?></th>	
-				<th><?php echo Theme::Translate('Enabled'); ?></th>	
-				<th><?php echo Theme::Translate('Action'); ?></th>	
-			</tr>
-		</thead>
-		<tbody>
-			<?php foreach(Theme::Get('table_rows') as $row) { ?>
-			<tr>
-				<td><?php echo $row['name']; ?></td>
-				<td><?php echo $row['description']; ?></td>
-				<td><?php echo $row['isregionspecific_image']; ?></td>
-				<td><?php echo $row['validextensions']; ?></td>
-				<td><?php echo $row['imageuri']; ?></td>
-				<td><?php echo $row['preview_enabled_image']; ?></td>
-				<td><?php echo $row['enabled_image']; ?></td>
-				<td>
-					<?php foreach($row['buttons'] as $button) { ?>
-					<button class="XiboFormButton" href="<?php echo $button['url']; ?>"><span><?php echo $button['text']; ?></span></button>
-					<?php } ?>
-				</td>
-			</tr>
-			<?php } ?>
-		</tbody>
-	</table>
-</div>
+<table class="table">
+	<thead>
+		<tr>
+			<th><?php echo Theme::Translate('Name'); ?></th>
+			<th><?php echo Theme::Translate('Description'); ?></th>
+			<th><?php echo Theme::Translate('Library Media'); ?></th>	
+			<th><?php echo Theme::Translate('Valid Extensions'); ?></th>	
+			<th><?php echo Theme::Translate('Image Uri'); ?></th>	
+			<th><?php echo Theme::Translate('Preview Enabled'); ?></th>	
+			<th><?php echo Theme::Translate('Enabled'); ?></th>	
+		</tr>
+	</thead>
+	<tbody>
+		<?php foreach(Theme::Get('table_rows') as $row) { ?>
+		<tr>
+			<td><?php echo $row['name']; ?></td>
+			<td><?php echo $row['description']; ?></td>
+			<td><span class="<?php echo $row['isregionspecific_image']; ?>"></span></td>
+			<td><?php echo $row['validextensions']; ?></td>
+			<td><?php echo $row['imageuri']; ?></td>
+			<td><span class="<?php echo $row['preview_enabled_image']; ?>"></span></td>
+			<td><span class="<?php echo $row['enabled_image']; ?>"></span></td>
+			<td>
+				<div class="btn-group pull-right">
+    				<button class="btn dropdown-toggle" data-toggle="dropdown">
+      					<?php echo Theme::Translate('Action'); ?>
+      					<span class="icon-tasks"></span>
+    				</button>
+    				<ul class="dropdown-menu">
+						<?php foreach($row['buttons'] as $button) { ?>
+						<li class="XiboFormButton" href="<?php echo $button['url']; ?>"><a tabindex="-1" href="#"><?php echo $button['text']; ?></a></li>
+						<?php } ?>
+    				</ul>
+  				</div>
+			</td>
+		</tr>
+		<?php } ?>
+	</tbody>
+</table>

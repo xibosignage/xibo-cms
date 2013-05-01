@@ -555,8 +555,7 @@ class datasetDAO
 
         $columnDefinition = array();
         
-        $form  = '<div class="info_table">';
-        $form .= '<table style="width:100%">';
+        $form = '<table class="table table-bordered">';
         $form .= '   <tr>';
         $form .= '      <th>' . __('Row Number') . '</th>';
 
@@ -642,7 +641,7 @@ class datasetDAO
                 
                 $form .= <<<END
                 <td>
-                    <form id="$fieldId" class="XiboDataSetDataForm" action="index.php?p=dataset&q=$action">
+                    <form id="$fieldId" class="XiboDataSetDataForm form-inline" action="index.php?p=dataset&q=$action">
                         <input type="hidden" name="fieldid" value="$fieldId">
                         <input type="hidden" name="datasetid" value="$dataSetId">
                         <input type="hidden" name="datasetcolumnid" value="$dataSetColumnId">
@@ -658,9 +657,10 @@ END;
             $form .= '</tr>';
         } //rows loop
 
-        $form .= '</table></div>';
+        $form .= '</table>';
         
         $response->SetFormRequestResponse($form, $dataSet, '750px', '600px', 'dataSetData');
+        $response->dialogClass = 'modal-big';
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Data') . '")');
         $response->AddButton(__('Add Rows'), 'XiboFormRender("index.php?p=dataset&q=DataSetDataForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
         $response->AddButton(__('Done'), 'XiboDialogClose()');

@@ -22,24 +22,17 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div id="form_container">
-	<div id="form_header">
-		<div id="form_header_left"></div>
-            <div id="secondaryMenu">
-                <ul id="menu" style="padding-left: 26.5em;">
-            		<?php
-						foreach (Theme::GetMenu('Advanced Menu') as $item) {
-							echo $item['li'];
-						}
-					?>
-            	</ul>
-            </div>
-		<div id="form_header_right"></div>
-	</div>
-	
-	<div id="form_body">
-		<div class="SecondNav"></div>
-
+<div class="row">
+	<ul class="nav nav-pills span12">
+		<?php
+			foreach (Theme::GetMenu('Advanced Menu') as $item) {
+				echo $item['li'];
+			}
+		?>
+	</ul>
+</div>
+<div class="row">
+	<div class="span12">
 		<h2><?php echo Theme::Translate('Report a fault with Xibo'); ?></h2>
 		<p><?php echo Theme::Translate('Before reporting a fault it would be appreciated if you follow the below steps.'); ?></p>
 
@@ -103,11 +96,5 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			
 		</ol>
 		</div>
-		
-	</div>
-		
-	<div id="form_footer">
-		<div id="form_footer_left"></div>
-		<div id="form_footer_right"></div>
 	</div>
 </div>

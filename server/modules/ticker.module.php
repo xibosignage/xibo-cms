@@ -44,69 +44,35 @@ class ticker extends Module
 		$regionid	= $this->regionid;
 		$rWidth		= Kit::GetParam('rWidth', _REQUEST, _STRING);
 		$rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
-		
-		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down,single|Single", "direction");
-                $takeItemsFromList = listcontent('start|start of the feed,end|end of the feed', 'takeItemsFrom');
 
-                // Translations
-                $numItemsText = __('Number of Items');
-                $numItemsLabel = __('The Number of RSS items you want to display');
-                $takeItemsFromText = __('from the ');
-                $takeItemsFromLabel = __('Take the items from the beginning or the end of the list');
-                $durationIsPerItemText = __('Duration is per item');
-                $durationIsPerItemLabel = __('The duration speficied is per item otherwise it is per feed.');
-                $msgFitText = __('Fit text to region');
-                
-		$form = <<<FORM
-		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=AddMedia">
-			<input type="hidden" name="layoutid" value="$layoutid">
-			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                        <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-			<table>
-				<tr>
-					<td><label for="uri" title="The Link for the RSS feed">Link<span class="required">*</span></label></td>
-					<td><input id="uri" name="uri" value="http://" type="text"></td>
-					<td><label for="copyright" title="Copyright information to display as the last item in this feed.">Copyright</label></td>
-					<td><input id="copyright" name="copyright" type="text" /></td>
-				</td>
-				<tr>
-		    		<td><label for="direction" title="The Direction this text should move, if any">Direction<span class="required">*</span></label></td>
-		    		<td>$direction_list</td>
-		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
-		    		<td><input id="duration" name="duration" type="text"></td>		
-				</tr>
-				<tr>
-		    		<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (higher is faster)</label></td>
-		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="2"></td>
-		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval (mins)<span class="required">*</span></label></td>
-		    		<td><input id="updateInterval" name="updateInterval" type="text" value="360"></td>
-				</tr>
-                                <tr>
-                                    <td><label for="numItems" title="$numItemsLabel">$numItemsText</label></td>
-                                    <td><input id="numItems" name="numItems" type="text" /></td>
-                                    <td><label for="takeItemsFrom" title="$takeItemsFromLabel">$takeItemsFromText</label></td>
-                                    <td>$takeItemsFromList</td>
-                                </tr>
-                                <tr>
-                                    <td><label for="fitText" title="$msgFitText">$msgFitText</label></td>
-                                    <td><input id="fitText" name="fitText" type="checkbox"></td>
-                                    <td><label for="durationIsPerItem" title="$durationIsPerItemLabel">$durationIsPerItemText</label></td>
-                                    <td><input id="durationIsPerItem" name="durationIsPerItem" type="checkbox" /></td>
-                                </tr>
-				<tr>
-					<td colspan="4">
-						<textarea id="ta_text" name="ta_text">
-							[Title] - [Date] - [Description]
-						</textarea>
-					</td>
-				</tr>
-			</table>
-		</form>
-FORM;
+    	Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+    
+		// Direction Options
+        $directionOptions = array(
+            array('directionid' => 'none', 'direction' => __('None')), 
+            array('directionid' => 'left', 'direction' => __('Left')), 
+            array('directionid' => 'right', 'direction' => __('Right')), 
+            array('directionid' => 'up', 'direction' => __('Up')), 
+            array('directionid' => 'down', 'direction' => __('Down')),
+            array('directionid' => 'single', 'direction' => __('Single'))
+        );
+        Theme::Set('direction_field_list', $directionOptions);
 
-		$this->response->html 		= $form;
-		$this->response->callBack 	= 'text_callback';
-		$this->response->dialogTitle = 'Add New Ticker';
+    	// "Take from" Options
+    	$takeItemsFrom = array(
+    		array('takeitemsfromid' => 'start', 'takeitemsfrom' => __('Start of the Feed')),
+    		array('takeitemsfromid' => 'end', 'takeitemsfrom' => __('End of the Feed'))
+		);
+        Theme::Set('takeitemsfrom_field_list', $takeItemsFrom);
+		        
+		// Return
+		$this->response->html = Theme::RenderReturn('media_form_ticker_add');
+		$this->response->callBack = 'text_callback';
+		$this->response->dialogTitle = __('Add New Ticker');
+		$this->response->dialogClass = 'modal-big';
+
         if ($this->showRegionOptions)
         {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
@@ -115,7 +81,8 @@ FORM;
         {
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
-                $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+        
+        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
 		return $this->response;
 	}
@@ -139,20 +106,41 @@ FORM;
             $this->response->keepOpen = true;
             return $this->response;
         }
-		
-		$direction		= $this->GetOption('direction');
-		$copyright		= $this->GetOption('copyright');
-		$scrollSpeed 	= $this->GetOption('scrollSpeed');
-		$updateInterval = $this->GetOption('updateInterval');
-		$uri			= urldecode($this->GetOption('uri'));
-		$numItems = $this->GetOption('numItems');
-		$takeItemsFrom = $this->GetOption('takeItemsFrom');
-		$durationIsPerItem = $this->GetOption('durationIsPerItem');
-                $fitText = $this->GetOption('fitText', 0);
-                $fitTextChecked = ($fitText == 0) ? '' : ' checked';
-                
-                // Is duration per item checked or not
-                $durationIsPerItemChecked = ($durationIsPerItem == '1') ? 'checked' : '';
+
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
+        
+        // Direction Options
+        $directionOptions = array(
+            array('directionid' => 'none', 'direction' => __('None')), 
+            array('directionid' => 'left', 'direction' => __('Left')), 
+            array('directionid' => 'right', 'direction' => __('Right')), 
+            array('directionid' => 'up', 'direction' => __('Up')), 
+            array('directionid' => 'down', 'direction' => __('Down')),
+            array('directionid' => 'single', 'direction' => __('Single'))
+        );
+        Theme::Set('direction_field_list', $directionOptions);
+
+    	// "Take from" Options
+    	$takeItemsFrom = array(
+    		array('takeitemsfromid' => 'start', 'takeitemsfrom' => __('Start of the Feed')),
+    		array('takeitemsfromid' => 'end', 'takeitemsfrom' => __('End of the Feed'))
+		);
+        Theme::Set('takeitemsfrom_field_list', $takeItemsFrom);
+
+        // Set up the variables we already have
+		Theme::Set('direction', $this->GetOption('direction'));
+		Theme::Set('copyright', $this->GetOption('copyright'));
+		Theme::Set('scrollSpeed', $this->GetOption('scrollSpeed'));
+		Theme::Set('updateInterval', $this->GetOption('updateInterval'));
+		Theme::Set('uri', urldecode($this->GetOption('uri')));
+		Theme::Set('numItems', $this->GetOption('numItems'));
+		Theme::Set('takeItemsFrom', $this->GetOption('takeItemsFrom'));
+
+		// Checkboses
+		Theme::Set('fitTextChecked', ($this->GetOption('fitText', 0) == 0) ? '' : ' checked');
+        Theme::Set('durationIsPerItemChecked', ($this->GetOption('durationIsPerItem') == '1') ? 'checked' : '');
 		
 		// Get the text out of RAW
 		$rawXml = new DOMDocument();
@@ -161,75 +149,21 @@ FORM;
 		Debug::LogEntry($db, 'audit', 'Raw XML returned: ' . $this->GetRaw());
 		
 		// Get the Text Node out of this
-		$textNodes 	= $rawXml->getElementsByTagName('template');
-		$textNode 	= $textNodes->item(0);
-		$text 		= $textNode->nodeValue;
-		
-		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down,single|Single", "direction", $direction);
-                $takeItemsFromList = listcontent('start|start of the feed,end|end of the feed', 'takeItemsFrom', $takeItemsFrom);
-
-                // Translations
-                $numItemsText = __('Number of Items');
-                $numItemsLabel = __('The Number of RSS items you want to display');
-                $takeItemsFromText = __('from the ');
-                $takeItemsFromLabel = __('Take the items from the beginning or the end of the list');
-                $durationIsPerItemText = __('Duration is per item');
-                $durationIsPerItemLabel = __('The duration speficied is per item otherwise it is per feed.');
-                $msgFitText = __('Fit text to region');
+		$textNodes = $rawXml->getElementsByTagName('template');
+		$textNode = $textNodes->item(0);
+		Theme::Set('text', $textNode->nodeValue);
                 
-                $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
+        // Duration
+        Theme::Set('duration', $this->duration);
+        Theme::Set('is_duration_enabled', ($this->auth->modifyPermissions) ? '' : ' readonly');
+        
+        // Output the form
+        $this->response->html = Theme::RenderReturn('media_form_ticker_edit');
+        $this->response->callBack 	= 'text_callback';
+        $this->response->dialogTitle = __('Edit Ticker');
+    	$this->response->dialogClass = 'modal-big';
 
-		//Output the form
-		$form = <<<FORM
-		<form id="ModuleForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=ticker&q=Exec&method=EditMedia">
-			<input type="hidden" name="layoutid" value="$layoutid">
-			<input type="hidden" name="mediaid" value="$mediaid">
-			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                        <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-			<table>
-				<tr>
-					<td><label for="uri" title="The Link for the RSS feed">Link<span class="required">*</span></label></td>
-					<td><input id="uri" name="uri" value="$uri" type="text"></td>
-					<td><label for="copyright" title="Copyright information to display as the last item in this feed.">Copyright</label></td>
-					<td><input id="copyright" name="copyright" type="text" value="$copyright" /></td>
-				</td>
-				<tr>
-		    		<td><label for="direction" title="The Direction this text should move, if any">Direction<span class="required">*</span></label></td>
-		    		<td>$direction_list</td>
-		    		<td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration<span class="required">*</span></label></td>
-		    		<td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
-				</tr>
-				<tr>
-		    		<td><label for="scrollSpeed" title="The scroll speed of the ticker.">Scroll Speed<span class="required">*</span> (higher is faster)</label></td>
-		    		<td><input id="scrollSpeed" name="scrollSpeed" type="text" value="$scrollSpeed"></td>		
-		    		<td><label for="updateInterval" title="The Interval at which the client should cache the feed.">Update Interval (mins)<span class="required">*</span></label></td>
-		    		<td><input id="updateInterval" name="updateInterval" type="text" value="$updateInterval"></td>
-				</tr>
-                                <tr>
-                                    <td><label for="numItems" title="$numItemsLabel">$numItemsText</td>
-                                    <td><input id="numItems" name="numItems" type="text" value="$numItems" /></td>
-                                    <td><label for="takeItemsFrom" title="$takeItemsFromLabel">$takeItemsFromText</label></td>
-                                    <td>$takeItemsFromList</td>
-                                </tr>
-                                <tr>
-                                    <td><label for="fitText" title="$msgFitText">$msgFitText</label></td>
-                                    <td><input id="fitText" name="fitText" type="checkbox" $fitTextChecked></td>
-                                    <td><label for="durationIsPerItem" title="$durationIsPerItemLabel">$durationIsPerItemText</label></td>
-                                    <td><input id="durationIsPerItem" name="durationIsPerItem" type="checkbox" $durationIsPerItemChecked /></td>
-                                </tr>
-				<tr>
-					<td colspan="4">
-						<textarea id="ta_text" name="ta_text">$text</textarea>
-					</td>
-				</tr>
-			</table>
-		</form>
-FORM;
-		
-            $this->response->html 		= $form;
-            $this->response->callBack 	= 'text_callback';
-            $this->response->dialogTitle = 'Edit Ticker.';
-        if ($this->showRegionOptions)
+    	if ($this->showRegionOptions)
         {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
@@ -237,9 +171,10 @@ FORM;
         {
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
-            $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
-            return $this->response;
+        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+
+        return $this->response;
 	}
 	
 	/**

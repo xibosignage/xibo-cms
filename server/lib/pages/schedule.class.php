@@ -66,11 +66,13 @@ class scheduleDAO
         $response = new ResponseManager();
         $displayGroupIDs = Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
 
+        $filter_name = Kit::GetParam('filter_name', _POST, _STRING);
+
         // Build 2 lists
         $groups = array();
         $displays = array();
 
-        foreach ($user->DisplayGroupList() as $display) {
+        foreach ($user->DisplayGroupList(0 /*IsDisplaySpecific*/, $filter_name) as $display) {
 
             $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIDs)) ? 'checked' : '';
 
@@ -130,11 +132,14 @@ class scheduleDAO
             $db                 =& $this->db;
             $response           = new ResponseManager();
 
-            $displayGroupIDs    = Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY, Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY));
-            $year       = Kit::GetParam('year', _POST, _INT, date('Y', time()));
-            $month      = Kit::GetParam('month', _POST, _INT, date('m', time()));
-            $day        = Kit::GetParam('day', _POST, _INT, date('d', time()));
-            $date       = mktime(0, 0, 0, $month, $day, $year);
+            $displayGroupIDs = Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY, Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY));
+            $date = DateManager::GetDateFromString(Kit::GetParam('date', _POST, _STRING));
+
+            // Extract the month and the year
+            $month = date('m', $date);
+            $year = date('Y', $date);
+
+            Debug::LogEntry($db, 'audit', 'Month: ' . $month . ' Year: ' . $year . ' [' . $date . ']' . ' [Raw Date:' . Kit::GetParam('date', _POST, _STRING) . ']');
 
             // Get the first day of the month
             $month_start    = mktime(0, 0, 0, $month, 1, $year);
@@ -451,8 +456,7 @@ HTML;
         // Query for all events that sit in this day
         $events = $this->GetEventsForDay($date, $displayGroupIDs);
 
-        $output .= '<div class="info_table">';
-        $output .= '    <table style="width:100%">';
+        $output = '    <table class="table">';
         $output .= '        <thead>';
         $output .= '            <th>' . __('Display / Group') . '</th>';
         $output .= '            <th>' . __('Name') . '</th>';
@@ -481,7 +485,6 @@ HTML;
 
         $output .= '        </tbody>';
         $output .= '    </table>';
-        $output .= '</div>';
         
         $response->SetGridResponse($output);
         $response->focusInFirstInput = false;
@@ -1162,8 +1165,8 @@ HTML;
             <div class="XiboFilter">
                 $form
             </div>
-            $pager
             <div class="XiboData"></div>
+            $pager
         </div>
 HTML;
         
@@ -1185,13 +1188,11 @@ HTML;
         $layouts = $user->CampaignList($layoutName, false /* isRetired */);
         
         // Show a list of layouts we have permission to jump to
-        $output = '<div class="info_table">';
-        $output .= '<table style="width:100%">';
+        $output  = '<table class="table">';
         $output .= '    <thead>';
         $output .= '    <tr>';
         $output .= '    <th>' . __('Name') . '</th>';
         $output .= '    <th>' . __('Type') . '</th>';
-        $output .= '    <th></th>';
         $output .= '    </tr>';
         $output .= '    </thead>';
         $output .= '    <tbody>';
@@ -1227,7 +1228,6 @@ HTML;
 
         $output .= '    </tbody>';
         $output .= '</table>';
-        $output .= '</div>';
 
         $response->SetGridResponse($output);
         $response->paging = true;
@@ -1258,6 +1258,7 @@ HTML;
 
         $form = <<<HTML
         <div class="XiboFilterInner">     
+            <div class="scheduleFormCheckAll pull-right"><label for"checkAll"><input type="checkbox" name="checkAll">Check All</label></div>
             <form onsubmit="return false">
                 <input type="hidden" name="p" value="schedule">
                 <input type="hidden" name="q" value="EventFormDisplay">
@@ -1284,8 +1285,8 @@ HTML;
             <div class="XiboFilter">
                 $form
             </div>
-            $pager
             <div class="XiboData"></div>
+            $pager
         </div>
 HTML;
         
@@ -1307,13 +1308,12 @@ HTML;
         $displays = $user->DisplayGroupList(0, $displayName);
         
         // Show a list of layouts we have permission to jump to
-        $output = '<div class="info_table">';
-        $output .= '<table style="width:100%">';
+        $output = '<table class="table">';
         $output .= '    <thead>';
         $output .= '    <tr>';
         $output .= '    <th>' . __('Name') . '</th>';
         $output .= '    <th>' . __('Type') . '</th>';
-        $output .= '    <th></th>';
+        $output .= '    <th data-sorter="false"></th>';
         $output .= '    </tr>';
         $output .= '    </thead>';
         $output .= '    <tbody>';
@@ -1333,8 +1333,6 @@ HTML;
 
         $output .= '    </tbody>';
         $output .= '</table>';
-        $output .= '<div class="scheduleFormCheckAll"><label for="checkAll">Check All</label><input type="checkbox" name="checkAll"></div>';
-        $output .= '</div>';
 
         $response->SetGridResponse($output);
         $response->paging = true;
@@ -1355,7 +1353,8 @@ HTML;
         $response = new ResponseManager();
 
         $date = Kit::GetParam('date', _GET, _INT, mktime(date('H'), 0, 0, date('m'), date('d'), date('Y')));
-        $dateText = date("d/m/Y", $date);
+        $dateText = date("d/m/Y H:i", $date);
+        $toDateText = date("d/m/Y H:i", $date + 86400);
         $displayGroupIds = Kit::GetParam('DisplayGroupIDs', _SESSION, _ARRAY);
 
         // Filter forms for selecting layouts and displays
@@ -1363,27 +1362,39 @@ HTML;
         $displayFilter = $this->EventFormDisplayFilter($displayGroupIds);
         
         $form = <<<END
-<table class="ScheduleFormSelectDetails" style="width:100%;">
-    <tr>
-        <td>$layoutFilter</td>
-        <td>$displayFilter</td>
-    </tr>
-</table>
+<div class="row">
+    <div class="span6">
+        $layoutFilter
+    </div>
+    <div class="span6">
+        $displayFilter
+    </div>
+</div>
+<div class="row">
+    <div class="span12">
 <form id="AddEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=AddEvent" method="post">
     <table style="width:100%;">
         <tr>
             <td colspan="4"><center><h3>Event Schedule</h3></center></td>
         </tr>
         <tr>
-            <td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
+            <td><label for="starttime" title="Select the start time for this event">Start Time</label></td>
             <td>
-                <input id="starttime" class="date-pick required" type="text" size="12" name="starttime" value="$dateText" />
-                <input id="sTime" class="time-pick required" type="text" size="12" name="sTime" value="00:00" />
+                <div class="date-pick input-append date">
+                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="starttime" id="starttime" value="$dateText"></input>
+                    <span class="add-on">
+                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+                    </span>
+                </div>
             </td>
-            <td><label for="endtime" title="Select the end time for this event">End Time<span class="required">*</span></label></td>
+            <td><label for="endtime" title="Select the end time for this event">End Time</label></td>
             <td>
-                <input id="endtime" class="date-pick required" type="text" size="12" name="endtime" value="" />
-                <input id="eTime" class="time-pick required" type="text" size="12" name="eTime" value="00:00" />
+                <div class="date-pick input-append date">
+                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="endtime" id="endtime" value="$toDateText"></input>
+                    <span class="add-on">
+                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+                    </span>
+                </div>
             </td>
         </tr>
         <tr>
@@ -1396,7 +1407,6 @@ END;
 
         //recurrance part of the form
         $rec_type = listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type");
-        $rec_range = '<input class="date-pick" type="text" id="rec_range" name="rec_range" size="12" />';
 
         $form .= <<<END
         <tr>
@@ -1410,8 +1420,13 @@ END;
         </tr>
         <tr>
             <td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
-            <td>$rec_range
-                <input id="repeatTime" class="time-pick" type="text" size="12" name="repeatTime" value="00:00" />
+            <td>
+                <div class="date-pick input-append date">
+                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="rec_range" id="rec_range"></input>
+                    <span class="add-on">
+                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+                    </span>
+                </div>
             </td>
         </tr>
 END;
@@ -1419,6 +1434,8 @@ END;
         $form .= <<<END
         </table>
     </form>
+    </div>
+</div>
 END;
         
         $response->SetFormRequestResponse($form, __('Schedule Event'), '800px', '600px');
@@ -1427,6 +1444,7 @@ END;
         $response->AddButton(__('Next'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=1").submit()');
         $response->AddButton(__('Save'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=0").submit()');
         $response->callBack = 'setupScheduleForm';
+        $response->dialogClass = 'modal-big';
         $response->Respond();
     }
     
@@ -1486,17 +1504,14 @@ END;
         $isPriority = (Kit::ValidateParam($row['is_priority'], _CHECKBOX) == 1) ? 'checked' : '';
         $displayOrder = Kit::ValidateParam($row['DisplayOrder'], _INT);
 
-        $fromDtText = date("d/m/Y", $fromDT);
-        $fromTimeText = date("H:i", $fromDT);
-        $toDtText = date("d/m/Y", $toDT);
-        $toTimeText = date("H:i", $toDT);
+        $fromDtText = date("d/m/Y H:i", $fromDT);
+        $toDtText = date("d/m/Y H:i", $toDT);
         $recToDtText = '';
         $recToTimeText = '';
 
         if ($recType != '')
         {
-            $recToDtText = date("d/m/Y", $recToDT);
-            $recToTimeText = date("H:i", $recToDT);
+            $recToDtText = date("d/m/Y H:i", $recToDT);
         }
 
         // Check that we have permission to edit this event.
@@ -1508,12 +1523,16 @@ END;
         $displayFilter = $this->EventFormDisplayFilter($displayGroupIds);
         
         $form = <<<END
-<table class="ScheduleFormSelectDetails" style="width:100%;">
-    <tr>
-        <td>$layoutFilter</td>
-        <td>$displayFilter</td>
-    </tr>
-</table>
+<div class="row">
+    <div class="span6">
+        $layoutFilter
+    </div>
+    <div class="span6">
+        $displayFilter
+    </div>
+</div>
+<div class="row">
+    <div class="span12">
 <form id="EditEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=EditEvent" method="post">
     <input type="hidden" id="EventID" name="EventID" value="$eventID" />
     <input type="hidden" id="EventDetailID" name="EventDetailID" value="$eventDetailID" />
@@ -1522,15 +1541,23 @@ END;
             <td colspan="4"><center><h3>Event Schedule</h3></center></td>
         </tr>
         <tr>
-            <td><label for="starttime" title="Select the start time for this event">Start Time<span class="required">*</span></label></td>
+            <td><label for="starttime" title="Select the start time for this event">Start Time</label></td>
             <td>
-                <input id="starttime" class="date-pick required" type="text" size="12" name="starttime" value="$fromDtText" />
-                <input id="sTime" class="time-pick required" type="text" size="12" name="sTime" value="$fromTimeText" />
+                <div class="date-pick input-append date">
+                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="starttime" id="starttime" value="$fromDtText"></input>
+                    <span class="add-on">
+                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+                    </span>
+                </div>
             </td>
-            <td><label for="endtime" title="Select the end time for this event">End Time<span class="required">*</span></label></td>
+            <td><label for="endtime" title="Select the end time for this event">End Time</label></td>
             <td>
-                <input id="endtime" class="date-pick required" type="text" size="12" name="endtime" value="$toDtText" />
-                <input id="eTime" class="time-pick required" type="text" size="12" name="eTime" value="$toTimeText" />
+                <div class="date-pick input-append date">
+                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="endtime" id="endtime" value="$toDtText"></input>
+                    <span class="add-on">
+                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+                    </span>
+                </div>
             </td>
         </tr>
         <tr>
@@ -1543,7 +1570,6 @@ END;
 
         //recurrance part of the form
         $rec_type = listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type", $recType);
-        $rec_range = '<input class="date-pick" type="text" id="rec_range" name="rec_range" value="' . $recToDtText . '" size="12" />';
         
         $form .= <<<END
         <tr>
@@ -1557,15 +1583,20 @@ END;
         </tr>
         <tr>
             <td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
-            <td>$rec_range
-                <input id="repeatTime" class="time-pick" type="text" size="12" name="repeatTime" value="$recToTimeText" />
-            </td>
+            <td><div class="date-pick input-append date">
+                <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="rec_range" id="rec_range" value="$recToDtText"></input>
+                <span class="add-on">
+                    <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+                </span>
+            </div></td>
         </tr>
 END;
 
         $form .= <<<END
         </table>
     </form>
+    </div>
+</div>
 END;
         
         $response->SetFormRequestResponse($form, __('Edit Event'), '800px', '600px');
@@ -1574,6 +1605,7 @@ END;
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#EditEventForm").attr("action", $("#EditEventForm").attr("action") + "&next=0").submit()');
         $response->callBack = 'setupScheduleForm';
+        $response->dialogClass = 'modal-big';
         $response->Respond();
     }
     
@@ -1589,36 +1621,28 @@ END;
         $datemanager        = new DateManager($db);
 
         $campaignId           = Kit::GetParam('CampaignID', _POST, _INT, 0);
-        $fromDT             = Kit::GetParam('starttime', _POST, _STRING);
-        $toDT               = Kit::GetParam('endtime', _POST, _STRING);
-        $fromTime           = Kit::GetParam('sTime', _POST, _STRING, '00:00');
-        $toTime             = Kit::GetParam('eTime', _POST, _STRING, '00:00');
+        $fromDT             = Kit::GetParam('iso_starttime', _POST, _STRING);
+        $toDT               = Kit::GetParam('iso_endtime', _POST, _STRING);
         $displayGroupIDs    = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
         $isPriority         = Kit::GetParam('is_priority', _POST, _CHECKBOX);
 
         $rec_type           = Kit::GetParam('rec_type', _POST, _STRING);
         $rec_detail         = Kit::GetParam('rec_detail', _POST, _INT);
-        $recToDT            = Kit::GetParam('rec_range', _POST, _STRING);
-        $repeatTime            = Kit::GetParam('repeatTime', _POST, _STRING, '00:00');
+        $recToDT            = Kit::GetParam('iso_rec_range', _POST, _STRING);
         
         $userid             = Kit::GetParam('userid', _SESSION, _INT);
         $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
 
-                $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
+        $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
         
         Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
         Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
         
-        // Validate the times
-        $regEx = '/([01]?[0-9]|2[0-3]):([0-5][0-9])/';
-        if (!preg_match($regEx, $fromTime) || !preg_match($regEx, $toTime) || ($repeatTime != '' && !preg_match($regEx, $repeatTime)))
-            trigger_error(__('Times must be in the format 00:00'), E_USER_ERROR);
-        
-        $fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
-        $toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
+        $fromDT = $datemanager->GetDateFromString($fromDT);
+        $toDT = $datemanager->GetDateFromString($toDT);
 
         if ($recToDT != '')
-            $recToDT = $datemanager->GetDateFromUS($recToDT, $repeatTime);
+            $recToDT = $datemanager->GetDateFromString($recToDT);
         
         // Validate layout
         if ($campaignId == 0)
@@ -1677,35 +1701,29 @@ END;
         $eventID            = Kit::GetParam('EventID', _POST, _INT, 0);
         $eventDetailID      = Kit::GetParam('EventDetailID', _POST, _INT, 0);
         $campaignId         = Kit::GetParam('CampaignID', _POST, _INT, 0);
-        $fromDT             = Kit::GetParam('starttime', _POST, _STRING);
-        $toDT               = Kit::GetParam('endtime', _POST, _STRING);
-        $fromTime           = Kit::GetParam('sTime', _POST, _STRING, '00:00');
-        $toTime             = Kit::GetParam('eTime', _POST, _STRING, '00:00');
+        $fromDT             = Kit::GetParam('iso_starttime', _POST, _STRING);
+        $toDT               = Kit::GetParam('iso_endtime', _POST, _STRING);
         $displayGroupIDs    = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
         $isPriority         = Kit::GetParam('is_priority', _POST, _CHECKBOX);
 
         $rec_type           = Kit::GetParam('rec_type', _POST, _STRING);
         $rec_detail         = Kit::GetParam('rec_detail', _POST, _INT);
-        $recToDT            = Kit::GetParam('rec_range', _POST, _STRING);
-        $repeatTime         = Kit::GetParam('repeatTime', _POST, _STRING, '00:00');
+        $recToDT            = Kit::GetParam('iso_rec_range', _POST, _STRING);
         
         $userid             = Kit::GetParam('userid', _SESSION, _INT);
                 $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
         
-        if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
+        if ($eventID == 0) 
+            trigger_error('No event selected.', E_USER_ERROR);
         
         Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
         Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
         
-        // Validate the times
-        $regEx = '/([01]?[0-9]|2[0-3]):([0-5][0-9])/';
-        if (!preg_match($regEx, $fromTime) || !preg_match($regEx, $toTime) || ($repeatTime != '' && !preg_match($regEx, $repeatTime)))
-            trigger_error(__('Times must be in the format 00:00'), E_USER_ERROR);
-        
-        $fromDT     = $datemanager->GetDateFromUS($fromDT, $fromTime);
-        $toDT       = $datemanager->GetDateFromUS($toDT, $toTime);
+        $fromDT = $datemanager->GetDateFromString($fromDT);
+        $toDT = $datemanager->GetDateFromString($toDT);
+
         if ($recToDT != '')
-                    $recToDT = $datemanager->GetDateFromUS($recToDT, $repeatTime);
+            $recToDT = $datemanager->GetDateFromString($recToDT);
 
         // Validate layout
         if ($campaignId == 0)

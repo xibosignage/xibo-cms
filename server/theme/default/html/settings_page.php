@@ -26,35 +26,19 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div id="form_container">
-	<div id="form_header">
-		<div id="form_header_left"></div>
-            <div id="secondaryMenu">
-                <ul id="menu" style="padding-left: 26.5em;">
-            		<?php
-						foreach (Theme::GetMenu('Administration Menu') as $item) {
-							echo $item['li'];
-						}
-					?>
-            	</ul>
-            </div>
-		<div id="form_header_right"></div>
-	</div>
-	
-	<div id="form_body">
-		<div class="SecondNav">
-			<ul>
-				<li><a title="<?php echo Theme::Translate('Save Settings'); ?>" onclick="$('#<?php echo Theme::Get('form_id'); ?>').submit()" ><span><?php echo Theme::Translate('Save'); ?></span></a></li>
-				<li><a title="<?php echo Theme::Translate('View Help'); ?>" class="XiboHelpButton" href="<?php echo Theme::Get('settings_help_button_url'); ?>"><span><?php echo Theme::Translate('Help'); ?></span></a></li>
-			</ul>
-		</div>
-		<div id="settings">
-			<?php echo Theme::Get('settings_form'); ?>
-		</div>
-	</div>
-		
-	<div id="form_footer">
-		<div id="form_footer_left"></div>
-		<div id="form_footer_right"></div>
-	</div>
+<div class="row">
+	<ul class="nav nav-pills span12">
+		<?php
+			foreach (Theme::GetMenu('Administration Menu') as $item) {
+				echo $item['li'];
+			}
+		?>
+		<li class="pull-right"><a title="<?php echo Theme::Translate('View Help'); ?>" class="XiboHelpButton" href="<?php echo Theme::Get('settings_help_button_url'); ?>"><span><?php echo Theme::Translate('Help'); ?></span></a></li>
+		<li class="pull-right"><a title="<?php echo Theme::Translate('Save Settings'); ?>" href="#" onclick="$('#<?php echo Theme::Get('form_id'); ?>').submit()"><span><?php echo Theme::Translate('Save'); ?></span></a></li>
+	</ul>
+</div>
+<div class="row">
+
+	<?php echo Theme::Get('settings_form'); ?>
+
 </div>

@@ -25,7 +25,7 @@ class webpage extends Module
 	{
 		// Must set the type of the class
 		$this->type = 'webpage';
-                $this->displayType = 'Webpage';
+        $this->displayType = 'Webpage';
 	
 		// Must call the parent class	
 		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -46,44 +46,22 @@ class webpage extends Module
 		$rWidth		= Kit::GetParam('rWidth', _REQUEST, _STRING);
 		$rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 		
-		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction");
+		// Direction Options
+        $directionOptions = array(
+            array('directionid' => 'none', 'direction' => __('None')), 
+            array('directionid' => 'left', 'direction' => __('Left')), 
+            array('directionid' => 'right', 'direction' => __('Right')), 
+            array('directionid' => 'up', 'direction' => __('Up')), 
+            array('directionid' => 'down', 'direction' => __('Down'))
+        );
+        Theme::Set('direction_field_list', $directionOptions);
 
-                $msgOffsetLeft = __('Offset Left');
-                $msgOffsetTop = __('Offset Top');
-		
-		$form = <<<FORM
-		<form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
-                    <input type="hidden" name="layoutid" value="$layoutid">
-                    <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                    <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-                    <table>
-                        <tr>
-                            <td><label for="uri" title="The Location (URL) of the webpage. E.g. http://www.xibo.org.uk">Link<span class="required">*</span></label></td>
-                            <td><input id="uri" name="uri" type="text"></td>
-                            <td><label for="duration" title="The duration in seconds this webpage should be displayed">Duration (s)<span class="required">*</span></label></td>
-                            <td><input id="duration" name="duration" type="text"></td>
-                        </tr>
-                        <tr>
-                            <td><label for="offsetTop" title="$msgOffsetTop">$msgOffsetTop</label></td>
-                            <td><input id="offsetTop" name="offsetTop" type="text"></td>
-                            <td><label for="offsetLeft" title="$msgOffsetLeft">$msgOffsetLeft</label></td>
-                            <td><input id="offsetLeft" name="offsetLeft" type="text"></td>
-                        </tr>
-                        <tr>
-                            <td><label for="scaling" title="">Scale Percentage</label></td>
-                            <td><input id="scaling" name="scaling" type="text" /></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">
-                                <input id="transparency" name="transparency" type="checkbox">
-                                <label for="transparency" title="Make webpage background transparent?">Background transparent? (python only)</label>
-                            </td>
-                        </tr>
-                    </table>
-		</form>
-FORM;
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
-            $this->response->html 		= $form;
+        $this->response->html = Theme::RenderReturn('media_form_webpage_add');
+
         if ($this->showRegionOptions)
         {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
@@ -92,13 +70,13 @@ FORM;
         {
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
-            $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
-            $this->response->dialogTitle = __('Add Webpage');
-            $this->response->dialogSize 	= true;
-            $this->response->dialogWidth 	= '450px';
-            $this->response->dialogHeight 	= '250px';
+        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+        $this->response->dialogTitle = __('Add Webpage');
+        $this->response->dialogSize 	= true;
+        $this->response->dialogWidth 	= '450px';
+        $this->response->dialogHeight 	= '250px';
 
-            return $this->response;
+        return $this->response;
 	}
 	
 	/**
@@ -120,62 +98,37 @@ FORM;
             $this->response->keepOpen = true;
             return $this->response;
         }
-		
-		$direction	= $this->GetOption('direction');
-		$copyright	= $this->GetOption('copyright');
-		$scaling	= $this->GetOption('scaling');
-		$transparency	= $this->GetOption('transparency');
-                $transparencyChecked = '';
-		$uri		= urldecode($this->GetOption('uri'));
-                $offsetLeft = $this->GetOption('offsetLeft');
-                $offsetTop = $this->GetOption('offsetTop');
 
-                // Is the transparency option set?
-                if ($transparency)
-                    $transparencyChecked = 'checked';
-		
-		$direction_list = listcontent("none|None,left|Left,right|Right,up|Up,down|Down", "direction", $direction);
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
+        	
+		// Direction Options
+        $directionOptions = array(
+            array('directionid' => 'none', 'direction' => __('None')), 
+            array('directionid' => 'left', 'direction' => __('Left')), 
+            array('directionid' => 'right', 'direction' => __('Right')), 
+            array('directionid' => 'up', 'direction' => __('Up')), 
+            array('directionid' => 'down', 'direction' => __('Down'))
+        );
+        Theme::Set('direction_field_list', $directionOptions);
 
-        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
+		Theme::Set('direction', $this->GetOption('direction'));
+		Theme::Set('copyright', $this->GetOption('copyright'));
+		Theme::Set('scaling', $this->GetOption('scaling'));
+		Theme::Set('uri', urldecode($this->GetOption('uri')));
+        Theme::Set('offsetLeft', $this->GetOption('offsetLeft'));
+        Theme::Set('offsetTop', $this->GetOption('offsetTop'));
 
-                $msgOffsetLeft = __('Offset Left');
-                $msgOffsetTop = __('Offset Top');
+        // Is the transparency option set?		
+		if ($this->GetOption('transparency'))
+            Theme::Set('transparency_checked', 'checked');
+
+        Theme::Set('duration', $this->duration);
+        Theme::Set('is_duration_enabled', ($this->auth->modifyPermissions) ? '' : ' readonly');
+
+        $this->response->html = Theme::RenderReturn('media_form_webpage_edit');
 		
-		//Output the form
-		$form = <<<FORM
-		<form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
-			<input type="hidden" name="layoutid" value="$layoutid">
-			<input type="hidden" name="mediaid" value="$mediaid">
-			<input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                        <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-			<table>
-                        <tr>
-                            <td><label for="uri" title="The Location (URL) of the webpage.">Link<span class="required">*</span></label></td>
-                            <td><input id="uri" name="uri" value="$uri" type="text"></td>
-                            <td><label for="duration" title="The duration in seconds this webpage should be displayed (may be overridden on each layout)">Duration<span class="required">*</span></label></td>
-                            <td><input id="duration" name="duration" value="$this->duration" type="text" $durationFieldEnabled></td>
-                        </tr>
-                        <tr>
-                            <td><label for="offsetTop" title="$msgOffsetTop">$msgOffsetTop</label></td>
-                            <td><input id="offsetTop" name="offsetTop" type="text" value="$offsetTop"></td>
-                            <td><label for="offsetLeft" title="$msgOffsetLeft">$msgOffsetLeft</label></td>
-                            <td><input id="offsetLeft" name="offsetLeft" type="text" value="$offsetLeft"></td>
-                        </tr>
-                        <tr>
-                            <td><label for="scaling" title="">Scale Percentage</label></td>
-                            <td><input id="scaling" name="scaling" type="text" value="$scaling"/></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">
-                                <input id="transparency" name="transparency" type="checkbox" $transparencyChecked>
-                                <label for="transparency" title="Make webpage background transparent?">Background transparency (python only)</label>
-                            </td>
-                        </tr>
-			</table>
-		</form>
-FORM;
-		
-            $this->response->html 		= $form;
         if ($this->showRegionOptions)
         {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');

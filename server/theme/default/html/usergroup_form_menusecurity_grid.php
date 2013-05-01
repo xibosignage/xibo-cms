@@ -26,7 +26,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <div class="info_table">
 	<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
 		<?php echo Theme::Get('form_meta'); ?>
-		<table style="width:100%">
+		<table class="table table-bordered">
 			<thead>
 				<tr>
 					<th></th>
@@ -39,7 +39,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<tr>
 					<td><input type="checkbox" name="pageids[]" value="<?php echo $row['checkbox_value']; ?>" <?php echo $row['checkbox_ticked']; ?>></td>
 					<td><?php echo $row['name']; ?></td>
-					<td><?php echo $row['assigned']; ?></td>
+					<td><span class="<?php echo $row['assigned']; ?>"></span></td>
 				</tr>
 				<?php } ?>
 			</tbody>

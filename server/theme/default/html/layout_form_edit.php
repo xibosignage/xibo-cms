@@ -30,24 +30,32 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
 	<?php echo Theme::Get('form_meta'); ?>
-	<table>
-		<tr>
-			<td><label for="layout" accesskey="n" title="<?php echo Theme::Translate('The Name of the Layout - (1 - 50 characters)'); ?>"><?php echo Theme::Translate('Name'); ?></label></td>
-			<td><input name="layout" type="text" id="layout" tabindex="1" value="<?php echo Theme::Get('layout'); ?>" /></td>
-		</tr>
-		<tr>
-			<td><label for="description" accesskey="d" title="<?php echo Theme::Translate('An optional description of the Layout. (1 - 250 characters)'); ?>"><?php echo Theme::Translate('Description'); ?></label></td>
-			<td><input name="description" type="text" id="description" tabindex="2" value="<?php echo Theme::Get('description'); ?>" /></td>
-		</tr>
-		<tr>
-			<td><label for="tags" accesskey="t" title="<?php echo Theme::Translate('Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)'); ?>"><?php echo Theme::Translate('Tags'); ?></label></td>
-			<td><input name="tags" type="text" id="tags" tabindex="3" value="<?php echo Theme::Get('tags'); ?>" /></td>
-		</tr>
-		<tr>
-			<td><label for='retired' accesskey="r" title="<?php echo Theme::Translate('Retire this layout or not? It will no longer be visible in lists'); ?>"><?php echo Theme::Translate('Retired'); ?></label></td>
-			<td><?php echo Theme::SelectList('retiredid', Theme::Get('retired_field_list'), 'retiredid', 'retired', Theme::Get('retired')); ?></td>
-		</tr>
-	</table>
+	<fieldset>
+		<div class="control-group">
+			<label class="control-label" for="layout" accesskey="n" title="<?php echo Theme::Translate('The Name of the Layout - (1 - 50 characters)'); ?>"><?php echo Theme::Translate('Name'); ?></label>
+			<div class="controls">
+				<input name="layout" type="text" id="layout" tabindex="1" value="<?php echo Theme::Get('layout'); ?>" />
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label" for="description" accesskey="d" title="<?php echo Theme::Translate('An optional description of the Layout. (1 - 250 characters)'); ?>"><?php echo Theme::Translate('Description'); ?></label>
+			<div class="controls">
+				<input name="description" type="text" id="description" tabindex="2" value="<?php echo Theme::Get('description'); ?>" />
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label" for="tags" accesskey="t" title="<?php echo Theme::Translate('Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)'); ?>"><?php echo Theme::Translate('Tags'); ?></label>
+			<div class="controls">
+				<input name="tags" type="text" id="tags" tabindex="3" value="<?php echo Theme::Get('tags'); ?>" />
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label" for='retired' accesskey="r" title="<?php echo Theme::Translate('Retire this layout or not? It will no longer be visible in lists'); ?>"><?php echo Theme::Translate('Retired'); ?></label>
+			<div class="controls">
+				<?php echo Theme::SelectList('retiredid', Theme::Get('retired_field_list'), 'retiredid', 'retired', Theme::Get('retired')); ?>
+			</div>
+		</div>
+	</fieldset>
 </form>

@@ -72,7 +72,6 @@ class Layout extends Data
 
         if ($db->GetSingleRow($SQL))
         {
-            trigger_error($db->error());
             $this->SetError(25004, sprintf(__("You already own a layout called '%s'. Please choose another name."), $layout));
             return false;
         }

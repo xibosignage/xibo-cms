@@ -27,50 +27,38 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div id="form_container">
-	<div id="form_header">
-		<div id="form_header_left"></div>
-		<div id="form_header_right"></div>
-	</div>
-	
-	<div id="form_body">
-		<div class="SecondNav">
-			<ul>
-				<li><a title="<?php echo Theme::Translate('Open the filter form'); ?>" href="#" onclick="ToggleFilterView('Filter')"><span><?php echo Theme::Translate('Filter'); ?></span></a></li>
-			</ul>
-		</div>
-		<div class="XiboGrid" id="<?php echo Theme::Get('id'); ?>">
-			<div class="XiboFilter">
-				<div class="FilterDiv" id="Filter">
-					<form>
-						<?php echo Theme::Get('form_meta'); ?>
-					
-						<table class="filterform">
-							<tr>
-								<td><?php echo Theme::Translate('Layout') ?></td>
-								<td><input type="text" name="filter_layout_name" value="<?php echo Theme::Get('filter_layout_name'); ?>"></td>
-								<td><?php echo Theme::Translate('Media') ?></td>
-								<td><input type="text" name="filter_media_name" value="<?php echo Theme::Get('filter_media_name'); ?>"></td>
-								<td><label for="<?php echo Theme::Get('filter_id'); ?>"><?php echo Theme::Translate('Keep filter open') ?></label></td>
-			                    <td><input type="checkbox" id="<?php echo Theme::Get('filter_id'); ?>" name="XiboFilterPinned" class="XiboFilterPinned" <?php echo Theme::Get('filter_pinned'); ?> /></td>
-							</tr>
-							<tr>
-								<td><?php echo Theme::Translate('Region') ?></td>
-								<td><input type="text" name="filter_region_name" value="<?php echo Theme::Get('filter_region_name'); ?>"></td>
-								<td><?php echo Theme::Translate('Type') ?></td>
-								<td><?php echo Theme::SelectList('filter_type', Theme::Get('module_field_list'), 'moduleid', 'module', Theme::Get('filter_type')); ?></td>
-							</tr>
-						</table>
-					</form>
-				</div>
+<div class="row">
+	<ul class="nav nav-pills span12">
+		<li class="pull-right"><a title="<?php echo Theme::Translate('Open the filter form'); ?>" href="#" onclick="ToggleFilterView('Filter')"><span><?php echo Theme::Translate('Filter'); ?></span></a></li>
+	</ul>
+</div>
+<div class="row">
+	<div class="XiboGrid span12" id="<?php echo Theme::Get('id'); ?>">
+		<div class="XiboFilter">
+			<div class="FilterDiv" id="Filter">
+				<form>
+					<?php echo Theme::Get('form_meta'); ?>
+				
+					<table class="filterform">
+						<tr>
+							<td><?php echo Theme::Translate('Layout') ?></td>
+							<td><input type="text" name="filter_layout_name" value="<?php echo Theme::Get('filter_layout_name'); ?>"></td>
+							<td><?php echo Theme::Translate('Media') ?></td>
+							<td><input type="text" name="filter_media_name" value="<?php echo Theme::Get('filter_media_name'); ?>"></td>
+							<td><label for="<?php echo Theme::Get('filter_id'); ?>"><?php echo Theme::Translate('Keep filter open') ?></label></td>
+		                    <td><input type="checkbox" id="<?php echo Theme::Get('filter_id'); ?>" name="XiboFilterPinned" class="XiboFilterPinned" <?php echo Theme::Get('filter_pinned'); ?> /></td>
+						</tr>
+						<tr>
+							<td><?php echo Theme::Translate('Region') ?></td>
+							<td><input type="text" name="filter_region_name" value="<?php echo Theme::Get('filter_region_name'); ?>"></td>
+							<td><?php echo Theme::Translate('Type') ?></td>
+							<td><?php echo Theme::SelectList('filter_type', Theme::Get('module_field_list'), 'moduleid', 'module', Theme::Get('filter_type')); ?></td>
+						</tr>
+					</table>
+				</form>
 			</div>
-			<?php echo Theme::Get('pager'); ?>
-			<div class="XiboData"></div>
 		</div>
-	</div>
-		
-	<div id="form_footer">
-		<div id="form_footer_left"></div>
-		<div id="form_footer_right"></div>
+		<div class="XiboData"></div>
+		<?php echo Theme::Get('pager'); ?>
 	</div>
 </div>

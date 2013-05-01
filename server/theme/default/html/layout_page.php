@@ -34,60 +34,43 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div id="form_container">
-	<div id="form_header">
-		<div id="form_header_left"></div>
-            <div id="secondaryMenu">
-                <ul id="menu" style="padding-left: 26.5em;">
-            		<?php
-						foreach (Theme::GetMenu('Design Menu') as $item) {
-							echo $item['li'];
-						}
-					?>
-            	</ul>
-            </div>
-		<div id="form_header_right"></div>
-	</div>
-	
-	<div id="form_body">
-		<div class="SecondNav">
-			<ul>
-				<li><a title="<?php echo Theme::Translate('Add a new Layout and jump to the layout designer.'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('layout_form_add_url'); ?>" ><span><?php echo Theme::Translate('Add Layout'); ?></span></a></li>
-				<li><a title="<?php echo Theme::Translate('Open the filter form'); ?>" href="#" onclick="ToggleFilterView('LayoutFilter')"><span><?php echo Theme::Translate('Filter'); ?></span></a></li>
-			</ul>
-		</div>
-		<div class="XiboGrid" id="<?php echo Theme::Get('id'); ?>">
-			<div class="XiboFilter">
-				<div class="FilterDiv" id="LayoutFilter">
-					<form>
-						<?php echo Theme::Get('form_meta'); ?>
-					
-						<table class="layout_filterform">
-							<tr>
-								<td><?php echo Theme::Translate('Name') ?></td>
-								<td><input type="text" name="filter_layout" value="<?php echo Theme::Get('layout'); ?>"></td>
-								<td><?php echo Theme::Translate('Owner') ?></td>
-								<td><?php echo Theme::SelectList('filter_userid', Theme::Get('owner_field_list'), 'UserID', 'UserName', Theme::Get('filter_userid')); ?></td>
-			                    <td><label for="<?php echo Theme::Get('filter_id'); ?>"><?php echo Theme::Translate('Keep filter open') ?></label></td>
-			                    <td><input type="checkbox" id="<?php echo Theme::Get('filter_id'); ?>" name="XiboFilterPinned" class="XiboFilterPinned" <?php echo Theme::Get('filter_pinned'); ?> /></td>
-							</tr>
-							<tr>
-								<td><?php echo Theme::Translate('Tags') ?></td>
-								<td><input type="text" name="filter_tags" value="<?php echo Theme::Get('filter_tags'); ?>" /></td>
-								<td><?php echo Theme::Translate('Retired') ?></td>
-								<td><?php echo Theme::SelectList('filter_retired', Theme::Get('retired_field_list'), 'retiredid', 'retired', Theme::Get('retired')); ?></td>
-							</tr>
-						</table>
-					</form>
-				</div>
+<div class="row">
+	<ul class="nav nav-pills span12">
+		<?php
+			foreach (Theme::GetMenu('Design Menu') as $item) {
+				echo $item['li'];
+			}
+		?>
+		<li class="pull-right"><a title="<?php echo Theme::Translate('Open the filter form'); ?>" href="#" onclick="ToggleFilterView('LayoutFilter')"><span><?php echo Theme::Translate('Filter'); ?></span></a></li>
+		<li class="pull-right"><a title="<?php echo Theme::Translate('Add a new Layout and jump to the layout designer.'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('layout_form_add_url'); ?>" ><span><?php echo Theme::Translate('Add Layout'); ?></span></a></li>
+	</ul>
+</div>
+<div class="row">
+	<div class="XiboGrid span12" id="<?php echo Theme::Get('id'); ?>">
+		<div class="XiboFilter">
+			<div class="FilterDiv" id="LayoutFilter">
+				<form class="form-inline">
+					<?php echo Theme::Get('form_meta'); ?>
+					<input type="text" name="filter_layout" placeholder="<?php echo Theme::Translate('Name') ?>" value="<?php echo Theme::Get('layout'); ?>">
+					<label class="select"><?php echo Theme::Translate('Owner') ?>
+						<?php echo Theme::SelectList('filter_userid', Theme::Get('owner_field_list'), 'UserID', 'UserName', Theme::Get('filter_userid')); ?>
+					</label>
+						
+					<input type="text" name="filter_tags" placeholder="<?php echo Theme::Translate('Tags') ?>" value="<?php echo Theme::Get('filter_tags'); ?>" />
+
+					<label type="select">
+						<?php echo Theme::Translate('Retired') ?>
+						<?php echo Theme::SelectList('filter_retired', Theme::Get('retired_field_list'), 'retiredid', 'retired', Theme::Get('retired')); ?>
+					</label>
+
+					<label class="checkbox">
+						<?php echo Theme::Translate('Keep Open') ?>
+						<input type="checkbox" id="<?php echo Theme::Get('filter_id'); ?>" name="XiboFilterPinned" class="XiboFilterPinned" <?php echo Theme::Get('filter_pinned'); ?> />
+					</label>
+				</form>
 			</div>
-			<?php echo Theme::Get('pager'); ?>
-			<div class="XiboData"></div>
 		</div>
-	</div>
-		
-	<div id="form_footer">
-		<div id="form_footer_left"></div>
-		<div id="form_footer_right"></div>
+		<div class="XiboData"></div>
+		<?php echo Theme::Get('pager'); ?>
 	</div>
 </div>

@@ -460,7 +460,7 @@ END;
 		
 		if (!$xmlString = $region->GetLayoutXml($layoutid))
 		{
-                    trigger_error($region->errorMsg, E_USER_ERROR);
+            trigger_error($region->errorMsg, E_USER_ERROR);
 		}
 		
 		$xml->loadXML($xmlString);
@@ -468,49 +468,44 @@ END;
 		// This will be all the media nodes in the region provided
 		$xpath 		= new DOMXPath($xml);
 		$nodeList 	= $xpath->query("//region[@id='$regionid']/media");
-		
-		$return = "<input type='hidden' id='maxSeq' value='{$nodeList->length}' />";
-		$return .= "<div class='seqInfo' style='position:absolute; right:15px; top:31px; color:#FFF; background-color:#000; z-index:50; padding: 5px;'>
-                                <span style='font-family: Verdana;'>$seqGiven / {$nodeList->length}</span>
-                            </div>";
-                $return .= '<div class="regionPreviewOverlay"></div>';
+        $return = '';
 		
 		if ($nodeList->length == 0)
 		{
 			// No media to preview
-			$return .= "<h1>" . __('Empty Region') . "</h1>";
-			
-			$response->html = $return;
+			$response->extra['text']  = __('Empty Region');
+			$response->html = '';
 			$response->Respond();
 		}
 		
 		$node = $nodeList->item($seq);
 			
 		// We have our node.
-		$type 			= (string) $node->getAttribute("type");
-		$mediaDurationText 	= (string) $node->getAttribute("duration");
-                $mediaid                = (string) $node->getAttribute("id");
+		$type = (string) $node->getAttribute("type");
+		$mediaDurationText = (string) $node->getAttribute("duration");
+        $mediaid = (string) $node->getAttribute("id");
 
-		$return .= "
-                   <div class='previewInfo' style='position:absolute; right:15px; top:61px; color:#FFF; background-color:#000; z-index:50; padding: 5px; font-family: Verdana;'>
-                        <span style='font-family: Verdana;'>Type: $type <br />
-                        Duration: $mediaDurationText (s)</span>
-                    </div>";
+        // Create a module to deal with this
+        if (!file_exists('modules/' . $type . '.module.php'))
+        {
+            $return .= 'Unknow module type';
+        }
 
-		// Create a module to deal with this
-                if (!file_exists('modules/' . $type . '.module.php'))
-                {
-                    $return .= 'Unknow module type';
-                }
+        require_once("modules/$type.module.php");
 
-                require_once("modules/$type.module.php");
+        $moduleObject = new $type($db, $user, $mediaid, $layoutid, $regionid);
 
-                $moduleObject = new $type($db, $user, $mediaid, $layoutid, $regionid);
-
-                $return .= $moduleObject->Preview($width, $height);
+        $return .= '<div class="regionPreviewOverlay"></div>';
+        $return .= $moduleObject->Preview($width, $height);
 
 		$response->html = $return;
-		$response->Respond();
+		$response->extra['type'] = $type;
+        $response->extra['duration'] = $mediaDurationText;
+        $response->extra['number_items'] = $nodeList->length;
+        $response->extra['text'] = $seqGiven . ' / ' . $nodeList->length . ' ' . $moduleObject->displayType . ' lasting ' . $mediaDurationText . ' seconds';
+        $response->extra['current_item'] = $seqGiven;
+
+        $response->Respond();
 	}
 
 	public function RegionPermissionsForm()
@@ -698,17 +693,15 @@ END;
         $libraryLocation = Config::GetSetting($db, 'LIBRARY_LOCATION');
 
         // Present a canvas with 2 columns, left column for the media icons
-        $response->html .= '<div class="timelineLeftColumn">';
-        $response->html .= '    <ul class="timelineModuleButtons">';
+        $buttons = array();
 
         // Always output a Library assignment button
-        $response->html .= '<li class="timelineModuleListItem">';
-        $response->html .= '    <a class="XiboFormButton timelineModuleButtonAnchor" title="' . __('Assign from Library') . '" href="index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '">';
-        $response->html .= '        <img class="timelineModuleButtonImage" src="theme/default/img/forms/library.gif" alt="' . __('Library Image') . '" />';
-        $response->html .= '        <span class="timelineModuleButtonText">' . __('Library') . '</span>';
-        $response->html .= '    </a>';
-        $response->html .= '</li>';
-        
+        $buttons[] = array(
+                'id' => 'media_button_library',
+                'url' => 'index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutId . '&regionid=' . $regionId,
+                'text' => __('Library')
+            );
+
         // Get a list of the enabled modules and then create buttons for them
         if (!$enabledModules = new ModuleManager($db, $user))
             trigger_error($enabledModules->message, E_USER_ERROR);
@@ -722,18 +715,17 @@ END;
             $title = Kit::ValidateParam($modulesItem['Description'], _STRING);
             $img = Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
 
-            $uri = 'index.php?p=module&q=Exec&mod=' . $mod . '&method=AddForm&layoutid=' . $layoutId . '&regionid=' . $regionId;
-
-            $response->html .= '<li class="timelineModuleListItem">';
-            $response->html .= '    <a class="XiboFormButton timelineModuleButtonAnchor" title="' . $title . '" href="' . $uri . '">';
-            $response->html .= Theme::Image($img, 'timelineModuleButtonImage');
-            $response->html .= '        <span class="timelineModuleButtonText">' . $caption . '</span>';
-            $response->html .= '    </a>';
-            $response->html .= '</li>';
+            
+            $buttons[] = array(
+                'id' => 'media_button_' . $mod,
+                'url' => 'index.php?p=module&q=Exec&mod=' . $mod . '&method=AddForm&layoutid=' . $layoutId . '&regionid=' . $regionId,
+                'text' => __($caption)
+            );
         }
+
+        Theme::Set('media_buttons', $buttons);
         
-        $response->html .= '    </ul>';
-        $response->html .= '</div>';
+        $response->html .= Theme::RenderReturn('layout_designer_form_timeline');
 
         // Load the XML for this layout and region, we need to get the media nodes.
         // These form the timeline and go in the right column
@@ -741,7 +733,8 @@ END;
         // Generate an ID for the list (this is passed into the reorder function)
         $timeListMediaListId = uniqid('timelineMediaList_');
 
-        $response->html .= '<div id="timelineControl" class="timelineRightColumn" layoutid="' . $layoutId . '" regionid="' . $regionId . '">';
+        $response->html .= '<div class="span10">';
+        $response->html .= '<div id="timelineControl" class="timelineColumn" layoutid="' . $layoutId . '" regionid="' . $regionId . '">';
         $response->html .= '    <div class="timelineMediaVerticalList">';
         $response->html .= '        <ul id="' . $timeListMediaListId . '" class="timelineSortableListOfMedia">';
 
@@ -777,10 +770,10 @@ END;
             $transitionOut = $tmpModule->GetTransition('out');
             
             // Colouring for the media block
-            if ($timeBarColouring == 'Media Colouring')
-                $mediaBlockColouringClass = 'timelineMediaItemColouring_' . $mediaType;
-            else
+            if ($timeBarColouring == 'Permissions')
                 $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($auth->edit) ? 'enabled' : 'disabled');
+            else
+                $mediaBlockColouringClass = 'timelineMediaItemColouring_' . $mediaType;
             
             // Create the list item
             $response->html .= '<li class="timelineMediaListItem" mediaid="' . $mediaId . '" lkid="' . $lkId . '">';
@@ -818,7 +811,6 @@ END;
             // Put the media name in
             $response->html .= '        <div class="timelineMediaDetails ' . $mediaBlockColouringClass . '">';
             $response->html .= '            <h3>' . (($mediaName == '') ? $tmpModule->displayType : $mediaName) . ' (' . $mediaDuration . ' seconds)</h3>';
-            $response->html .= '            <div class="timelineMediaImageThumbnail">' . $tmpModule->ImageThumbnail() . '</div>';
             $response->html .= '        </div>';
 
             // Put the media hover preview in
@@ -846,10 +838,12 @@ END;
         // Output a div to contain the preview for this media item
         $response->html .= '    <div id="timelinePreview"></div>';
 
+        $response->html .= '    </div>';
         $response->html .= '</div>';
 
         // Finish constructing the response
         $response->callBack = 'LoadTimeLineCallback';
+        $response->dialogClass = 'modal-big';
         $response->dialogTitle 	= __('Region Timeline');
         $response->dialogSize 	= true;
         $response->dialogWidth 	= '1000px';

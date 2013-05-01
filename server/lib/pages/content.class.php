@@ -231,6 +231,7 @@ class contentDAO
         $response->html = $output;
         $response->success = true;
         $response->dialogSize = true;
+        $response->dialogClass = 'modal-big';
         $response->dialogWidth = '780px';
         $response->dialogHeight = '580px';
         $response->dialogTitle = __('Assign an item from the Library');
@@ -275,6 +276,7 @@ class contentDAO
         // Render the Theme
         $response->SetGridResponse(Theme::RenderReturn('library_form_assign_list'));
         $response->callBack = 'LibraryAssignCallback';
+        $response->pageSize = 5;
         $response->Respond();
     }
 	
@@ -316,17 +318,16 @@ class contentDAO
         }
         else
         {
-            Debug::LogEntry($db, 'audit', 'Error uploading the file. Error Number: ' . $_FILES['media_file']['error'] , 'FileUpload');
-
-            $error      = $_FILES['media_file']['error'];
+            $error      = (isset($_FILES['media_file'])) ? $_FILES['media_file']['error'] : -1;
             $fileName   = 'Error';
             $fileId     = 0;
+            
+            Debug::LogEntry($db, 'audit', 'Error uploading the file. Error Number: ' . $error , 'FileUpload');
         }
 
         $complete_page = <<<HTML
         <html>
             <head>
-                <script type="text/javascript" src="3rdparty/jQuery/jquery.min.js"></script>
                 <script type="text/javascript">
 
                     var fileId = '$fileId';

@@ -20,26 +20,22 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<h3><?php echo Theme::Translate('Library') ?></h3>
-<div id="LibraryAssignTable" class="info_table">
-	<table style="width:100%">
-		<thead>
-			<tr>
-				<th><?php echo Theme::Translate('Name'); ?></th>
-				<th><?php echo Theme::Translate('Type'); ?></th>
-				<th><?php echo Theme::Translate('Duration'); ?></th>
-				<th></th>
-			</tr>
-		</thead>
-		<tbody>
-			<?php foreach(Theme::Get('table_rows') as $row) { ?>
-			<tr rowid="<?php echo $row['list_id']; ?>" litext="<?php echo $row['media']; ?>">
-				<td><?php echo $row['media']; ?></td>
-				<td><?php echo $row['mediatype']; ?></td>
-				<td><?php echo $row['duration_text']; ?></td>
-				<td><span class="library_assign_list_select">[+]</span>
-			</tr>
-			<?php } ?>
-		</tbody>
-	</table>
-</div>
+<table id="LibraryAssignTable" class="table table-bordered">
+	<thead>
+		<tr>
+			<th><?php echo Theme::Translate('Name'); ?></th>
+			<th><?php echo Theme::Translate('Type'); ?></th>
+			<th><?php echo Theme::Translate('Duration'); ?></th>
+		</tr>
+	</thead>
+	<tbody>
+		<?php foreach(Theme::Get('table_rows') as $row) { ?>
+		<tr rowid="<?php echo $row['list_id']; ?>" litext="<?php echo $row['media']; ?>">
+			<td><?php echo $row['media']; ?></td>
+			<td><?php echo $row['mediatype']; ?></td>
+			<td><?php echo $row['duration_text']; ?></td>
+			<td><span class="library_assign_list_select icon-plus-sign"></span>
+		</tr>
+		<?php } ?>
+	</tbody>
+</table>
