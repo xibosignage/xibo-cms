@@ -1109,9 +1109,8 @@ class XMDSSoap
 
         // Test bandwidth for the current month
         $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
-        $endOfMonth = strtotime('-1 second',strtotime('+1 month',strtotime(date('m').'/01/'.date('Y').' 00:00:00')));
 
-        $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE DateTime > %d AND DateTime <= %d', $startOfMonth, $endOfMonth);
+        $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = %d', $startOfMonth);
         $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
 
         return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? false : true;
@@ -1125,8 +1124,11 @@ class XMDSSoap
      */
     private function LogBandwidth($displayId, $type, $sizeInBytes)
     {
-        $sql = "INSERT INTO `bandwidth` (DateTime, Type, DisplayID, Size) VALUES (%d, %d, %d, %d) ";
-        $sql = sprintf($sql, time(), $type, $displayId, $sizeInBytes);
+        $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
+    
+        $sql  = "INSERT INTO `bandwidth` (Month, Type, DisplayID, Size) VALUES (%d, %d, %d, %d) ";
+        $sql .= "ON DUPLICATE KEY UPDATE Size = Size + %d ";
+        $sql  = sprintf($sql, $startOfMonth, $type, $displayId, $sizeInBytes, $sizeInBytes);
 
         $this->db->query($sql);
 

@@ -258,9 +258,8 @@ END;
                     // Monthly bandwitdh - optionally tested against limits
                     $xmdsLimit = Config::GetSetting($db, 'MONTHLY_XMDS_TRANSFER_LIMIT_KB');
                     $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
-                    $endOfMonth = strtotime('-1 second',strtotime('+1 month',strtotime(date('m').'/01/'.date('Y').' 00:00:00')));
 
-                    $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE DateTime > %d AND DateTime <= %d', $startOfMonth, $endOfMonth);
+                    $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = %d', $startOfMonth);
                     $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
 
                     Debug::LogEntry($db, 'audit', $sql);
