@@ -1,12 +1,11 @@
 
 CREATE TABLE IF NOT EXISTS `bandwidth` (
-  `BandwidthID` int(11) NOT NULL AUTO_INCREMENT,
-  `DateTime` int(11) NOT NULL,
-  `Type` tinyint(4) NOT NULL,
   `DisplayID` int(11) NOT NULL,
-  `Size` int(11) NOT NULL,
-  PRIMARY KEY (`BandwidthID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+  `Type` tinyint(4) NOT NULL,
+  `Month` int(11) NOT NULL,
+  `Size` bigint(20) NOT NULL,
+  PRIMARY KEY (`DisplayID`, `Type`, `Month`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE IF NOT EXISTS `blacklist` (
   `BlackListID` int(11) NOT NULL AUTO_INCREMENT,
