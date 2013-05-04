@@ -45,7 +45,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     <div class="control-group">
         <div class="controls">
             <input class="checkbox" name="overwrite" type="checkbox" id="overwrite" tabindex="1" />
-    		<label class="checkbox" for="overwrite" accesskey="n" title="<?php echo Theme::Translate('Overwrite existing data'); ?>"><?php echo Theme::Translate('Overwrite existing data'); ?></label>
+    		<label class="checkbox" for="overwrite" accesskey="n" title="<?php echo Theme::Translate('Overwrite existing data'); ?>"><?php echo Theme::Translate('Overwrite existing data?'); ?></label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <input class="checkbox" name="ignorefirstrow" type="checkbox" id="ignorefirstrow" tabindex="1" />
+    		<label class="checkbox" for="ignorefirstrow" accesskey="n" title="<?php echo Theme::Translate('Ignore the first row? Useful if the CSV has headings.'); ?>"><?php echo Theme::Translate('Ignore first row?'); ?></label>
         </div>
     </div>
     <?php foreach(Theme::Get('fields') as $field) { ?>

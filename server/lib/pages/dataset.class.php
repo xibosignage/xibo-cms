@@ -1029,6 +1029,7 @@ END;
         $response = new ResponseManager();
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
         $overwrite = Kit::GetParam('overwrite', _POST, _CHECKBOX);
+        $ignorefirstrow = Kit::GetParam('ignorefirstrow', _POST, _CHECKBOX);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -1081,7 +1082,7 @@ END;
 
         $dataSetObject = new DataSetData($db);
 
-        if (!$dataSetObject->ImportCsv($dataSetId, $csvFileLocation, $spreadSheetMapping, ($overwrite == 1)))
+        if (!$dataSetObject->ImportCsv($dataSetId, $csvFileLocation, $spreadSheetMapping, ($overwrite == 1), ($ignorefirstrow == 1)))
             trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('CSV File Imported'));

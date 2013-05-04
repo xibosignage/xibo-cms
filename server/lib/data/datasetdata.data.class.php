@@ -99,7 +99,7 @@ class DataSetData extends Data
         return true;
     }
 
-    public function ImportCsv($dataSetId, $csvFile, $spreadSheetMapping, $overwrite = false) {
+    public function ImportCsv($dataSetId, $csvFile, $spreadSheetMapping, $overwrite = false, $ignoreFirstRow = true) {
 
         $db =& $this->db;
 
@@ -122,8 +122,18 @@ class DataSetData extends Data
         // Load the file
         ini_set('auto_detect_line_endings', true);
 
+        $firstRow = true;
+
         $handle = fopen($csvFile, 'r');
         while (($data = fgetcsv($handle)) !== FALSE ) {
+
+            // The CSV file might have headings, so ignore the first row.
+            if ($firstRow) {
+                $firstRow = false;
+
+                if ($ignoreFirstRow)
+                    continue;
+            }
             
             for ($cell = 0; $cell < count($data); $cell++) {
                 
