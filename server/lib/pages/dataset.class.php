@@ -84,7 +84,14 @@ class datasetDAO
                         'id' => 'dataset_button_edit',
                         'url' => 'index.php?p=dataset&q=EditDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
                         'text' => __('Edit')
-                    );               
+                    );
+
+                // Edit DataSet
+                $dataSet['buttons'][] = array(
+                        'id' => 'dataset_button_import',
+                        'url' => 'index.php?p=dataset&q=ImportCsvForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'text' => __('Import CSV')
+                    );            
             }
 
             if ($dataSet['del']) {
@@ -553,7 +560,7 @@ class datasetDAO
         $SQL .= "  FROM datasetdata ";
         $SQL .= "   RIGHT OUTER JOIN datasetcolumn ";
         $SQL .= "   ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID ";
-        $SQL .= sprintf("WHERE datasetcolumn.DataSetID = %d ", $dataSetId);
+        $SQL .= sprintf("WHERE datasetcolumn.DataSetID = %d  AND datasetcolumn.DataSetColumnTypeID = 1 ", $dataSetId);
 
         Debug::LogEntry($db, 'audit', $SQL, 'dataset', 'DataSetDataForm');
 
@@ -567,7 +574,7 @@ class datasetDAO
         $maxCols = $maxResult['ColNumber'];
 
         // Get some information about the columns in this dataset
-        $SQL  = "SELECT Heading, DataSetColumnID, ListContent, ColumnOrder FROM datasetcolumn WHERE DataSetID = %d ";
+        $SQL  = "SELECT Heading, DataSetColumnID, ListContent, ColumnOrder FROM datasetcolumn WHERE DataSetID = %d  AND DataSetColumnTypeID = 1 ";
         $SQL .= "ORDER BY ColumnOrder ";
         
         if (!$results = $db->query(sprintf($SQL, $dataSetId)))
@@ -942,6 +949,142 @@ END;
         }
 
         $response->SetFormSubmitResponse(__('Permissions Changed'));
+        $response->Respond();
+    }
+
+    public function ImportCsvForm() {
+        global $session;
+        $db =& $this->db;
+        $response = new ResponseManager();
+        
+        $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
+        $dataSet = Kit::GetParam('dataset', _GET, _STRING);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            trigger_error(__('Access Denied'), E_USER_ERROR);
+
+        // Set the Session / Security information
+        $sessionId = session_id();
+        $securityToken = CreateFormToken();
+
+        $session->setSecurityToken($securityToken);
+
+        // Find the max file size
+        $maxFileSizeBytes = convertBytes(ini_get('upload_max_filesize'));
+
+         // Set some information about the form
+        Theme::Set('form_id', 'DataSetImportCsvForm');
+        Theme::Set('form_action', 'index.php?p=dataset&q=ImportCsv');
+        Theme::Set('form_meta', '<input type="hidden" name="dataset" value="' . $dataSet . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '" /><input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
+
+        Theme::Set('form_upload_id', 'file_upload');
+        Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
+        Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $maxFileSizeBytes . '" />');
+
+        // Enumerate over the columns in the DataSet and offer a column mapping for each one (from the file)
+        $SQL  = "";
+        $SQL .= "SELECT DataSetColumnID, Heading ";
+        $SQL .= "  FROM datasetcolumn ";
+        $SQL .= sprintf(" WHERE DataSetID = %d ", $dataSetId);
+        $SQL .= "   AND DataSetColumnTypeID = 1 ";
+        $SQL .= "ORDER BY ColumnOrder ";
+
+        // Load results into an array
+        $dataSetColumns = $db->GetArray($SQL);
+
+        if (!is_array($dataSetColumns)) 
+        {
+            trigger_error($db->error());
+            trigger_error(__('Error getting list of dataSetColumns'), E_USER_ERROR);
+        }
+
+        $rows = array();
+        $i = 0;
+
+        foreach ($dataSetColumns as $row) {
+            $i++;
+
+            $row['heading'] = Kit::ValidateParam($row['Heading'], _STRING);
+            $row['formfieldid'] = 'csvImport_' . Kit::ValidateParam($row['DataSetColumnID'], _INT);
+            $row['auto_column_number'] = $i;
+
+            $rows[] = $row;
+        }
+
+        Theme::Set('fields', $rows);
+
+        $form = Theme::RenderReturn('dataset_form_csv_import');
+
+        $response->SetFormRequestResponse($form, __('CSV Import'), '350px', '200px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'ImportCsv') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Import'), '$("#DataSetImportCsvForm").submit()');
+        $response->Respond();
+    }
+
+    public function ImportCsv() {
+
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
+        $overwrite = Kit::GetParam('overwrite', _POST, _CHECKBOX);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            trigger_error(__('Access Denied'), E_USER_ERROR);
+
+        // File data
+        $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
+
+        if ($tmpName == '')
+            trigger_error(__('Please ensure you have picked a file and it has finished uploading'), E_USER_ERROR);
+
+        // File name and extension (orignial name)
+        $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
+        $fileName = basename($fileName);
+        $ext = strtolower(substr(strrchr($fileName, "."), 1));
+
+        // Check it is a CSV file
+        if ($ext != 'csv')
+            trigger_error(__('Files with a CSV extention only.'));
+
+        // File upload directory.. get this from the settings object
+        $csvFileLocation = Config::GetSetting($db, 'LIBRARY_LOCATION') . 'temp/' . $tmpName;
+
+        // Enumerate over the columns in the DataSet and offer a column mapping for each one (from the file)
+        $SQL  = "";
+        $SQL .= "SELECT DataSetColumnID ";
+        $SQL .= "  FROM datasetcolumn ";
+        $SQL .= sprintf(" WHERE DataSetID = %d ", $dataSetId);
+        $SQL .= "   AND DataSetColumnTypeID = 1 ";
+        $SQL .= "ORDER BY ColumnOrder ";
+
+        // Load results into an array
+        $dataSetColumns = $db->GetArray($SQL);
+
+        if (!is_array($dataSetColumns)) 
+        {
+            trigger_error($db->error());
+            trigger_error(__('Error getting list of dataSetColumns'), E_USER_ERROR);
+        }
+
+        $spreadSheetMapping = array();
+
+        foreach ($dataSetColumns as $row) {
+
+            $dataSetColumnId = Kit::ValidateParam($row['DataSetColumnID'], _INT);
+            $spreadSheetColumn = Kit::GetParam('csvImport_' . $dataSetColumnId, _POST, _INT);
+            
+            $spreadSheetMapping[($spreadSheetColumn - 1)] = $dataSetColumnId;
+        }
+
+        $dataSetObject = new DataSetData($db);
+
+        if (!$dataSetObject->ImportCsv($dataSetId, $csvFileLocation, $spreadSheetMapping, ($overwrite == 1)))
+            trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('CSV File Imported'));
         $response->Respond();
     }
 }

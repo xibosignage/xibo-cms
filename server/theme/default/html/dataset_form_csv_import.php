@@ -37,23 +37,25 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <div id="uploadProgress" class="well" style="display:none">
     <span><?php echo Theme::Translate('You may fill in the form while your file is uploading.'); ?></span>
 </div>
+<div class="well">
+	<p class="text-center"><?php echo Theme::Translate('Please choose a column number from the source CSV file to map to each DataSet Column. If no mapping exists, leave blank.'); ?></p>
+</div>
 <form class="XiboForm form-horizontal" id="<?php echo Theme::Get('form_id'); ?>" method="post" action="<?php echo Theme::Get('form_action'); ?>">
     <?php echo Theme::Get('form_meta'); ?>
     <div class="control-group">
-		<label class="control-label" for="name" accesskey="n" title="<?php echo Theme::Translate('The Name of this item - Leave blank to use the file name'); ?>"><?php echo Theme::Translate('Name'); ?></label>
-		<div class="controls">
-			<input name="name" type="text" id="name" tabindex="2" />
-		</div>
-	</div>
-	<div class="control-group">
-		<label class="control-label" for="duration" accesskey="n" title="<?php echo Theme::Translate('The duration in seconds this image should be displayed (may be overridden on each layout)'); ?>"><?php echo Theme::Translate('Duration'); ?></label>
-		<div class="controls">
-			<input name="duration" type="text" id="duration" tabindex="3" value="<?php echo Theme::Get('default_duration'); ?>" />
-		</div>
-	</div>
-	<div class="well">
-		<?php echo Theme::Get('valid_extensions'); ?>
-	</div>
+        <div class="controls">
+            <input class="checkbox" name="overwrite" type="checkbox" id="overwrite" tabindex="1" />
+    		<label class="checkbox" for="overwrite" accesskey="n" title="<?php echo Theme::Translate('Overwrite existing data'); ?>"><?php echo Theme::Translate('Overwrite existing data'); ?></label>
+        </div>
+    </div>
+    <?php foreach(Theme::Get('fields') as $field) { ?>
+	    <div class="control-group">
+	    	<label class="control-label" for="<?php echo $field['formfieldid'] ?>" title="<?php echo $field['heading'] ?>"><?php echo $field['heading'] ?></label>
+	        <div class="controls">
+	            <input class="" name="<?php echo $field['formfieldid'] ?>" type="text" id="<?php echo $field['formfieldid'] ?>" value="<?php echo $field['auto_column_number'] ?>" />
+	        </div>
+	    </div>
+	<?php } ?>
 </form>
 <div style="display:none">
 	<iframe name="fileupload" width="1px" height="1px"></iframe>

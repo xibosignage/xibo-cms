@@ -80,5 +80,74 @@ class DataSetData extends Data
 
         return true;
     }
+
+    public function DeleteAll($dataSetId) {
+
+        $db =& $this->db;
+
+        $SQL  = "";
+        $SQL .= "DELETE FROM datasetdata WHERE DataSetColumnId IN ( ";
+        $SQL .= "   SELECT DataSetColumnID FROM datasetcolumn WHERE DataSetID = %d ";
+        $SQL .= "   )";
+
+        if (!$db->query(sprintf($SQL, $dataSetId)))
+        {
+            trigger_error($db->error());
+            return $this->SetError(25005, __('Could not delete Data for entire DataSet'));
+        }
+
+        return true;
+    }
+
+    public function ImportCsv($dataSetId, $csvFile, $spreadSheetMapping, $overwrite = false) {
+
+        $db =& $this->db;
+
+        // Are we overwriting or appending?
+        if ($overwrite) {
+            // We need to delete all the old data and start from row 1
+            if (!$this->DeleteAll($dataSetId))
+                return false;
+            
+            $rowNumber = 1;
+        }
+        else {
+            // We need to get the MAX row number that currently exists in the data set
+            $rowNumber = $db->GetSingleValue(sprintf("SELECT IFNULL(MAX(RowNumber), 0) AS RowNumber FROM datasetdata INNER JOIN datasetcolumn ON datasetcolumn.dataSetColumnId = datasetdata.DataSetColumnID WHERE datasetcolumn.DataSetID = %d", $dataSetId), 'RowNumber', _INT);
+            $rowNumber++;
+        }
+
+        // Match the file content with the column mappings
+
+        // Load the file
+        ini_set('auto_detect_line_endings', true);
+
+        $handle = fopen($csvFile, 'r');
+        while (($data = fgetcsv($handle)) !== FALSE ) {
+            
+            for ($cell = 0; $cell < count($data); $cell++) {
+                
+                // Insert the data into the correct column
+                if (isset($spreadSheetMapping[$cell])) {
+
+                    if (!$this->Add($spreadSheetMapping[$cell], $rowNumber, $data[$cell]))
+                        return false;
+                }
+            }
+
+            // Move on to the next row
+            $rowNumber++;
+        }
+
+        ini_set('auto_detect_line_endings', false);
+
+        // Delete the temporary file
+        @unlink($csvFile);
+
+
+        // TODO: Update list content definitions
+
+        return true;
+    }
 }
 ?>
