@@ -43,8 +43,10 @@ CREATE TABLE IF NOT EXISTS `datasetcolumn` (
   `DataSetID` int(11) NOT NULL,
   `Heading` varchar(50) NOT NULL,
   `DataTypeID` smallint(6) NOT NULL,
+  `DataSetColumnTypeID` smallint(6) NOT NULL,
   `ListContent` varchar(255) DEFAULT NULL,
   `ColumnOrder` smallint(6) NOT NULL,
+  `Formula` VARCHAR( 1000 ) NULL,
   PRIMARY KEY (`DataSetColumnID`),
   KEY `DataSetID` (`DataSetID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -572,6 +574,18 @@ CREATE TABLE IF NOT EXISTS `version` (
   `XlfVersion` smallint(6) NOT NULL,
   `DBVersion` int(11) NOT NULL DEFAULT '1'
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Version information';
+
+
+
+CREATE TABLE IF NOT EXISTS `datatype` (
+  `DataTypeID` smallint(6) NOT NULL,
+  `DataType` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `datasetcolumntype` (
+  `DataSetColumnTypeID` smallint(6) NOT NULL,
+  `DataSetColumnType` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Constraints for dumped tables

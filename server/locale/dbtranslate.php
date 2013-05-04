@@ -95,4 +95,12 @@ echo __('Fade In');
 echo __('Fade Out');
 echo __('Fly');
 
+// Data Sets
+echo __('String');
+echo __('Number');
+echo __('Date');
+
+echo __('Value');
+echo __('Formula');
+
 ?>

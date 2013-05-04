@@ -317,3 +317,12 @@ INSERT INTO `transition` (`TransitionID`, `Transition`, `Code`, `HasDuration`, `
 (1, 'Fade In', 'fadeIn', 1, 0, 0, 0),
 (2, 'Fade Out', 'fadeOut', 1, 0, 0, 0),
 (3, 'Fly', 'fly', 1, 1, 0, 0);
+
+INSERT INTO `datatype` (`DataTypeID`, `DataType`) VALUES
+(1, 'String'),
+(2, 'Number'),
+(3, 'Date');
+
+INSERT INTO `datasetcolumntype` (`DataSetColumnTypeID`, `DataSetColumnType`) VALUES
+(1, 'Value'),
+(2, 'Formula');

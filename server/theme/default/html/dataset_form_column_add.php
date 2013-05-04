@@ -20,25 +20,49 @@
  * 
  * Theme variables:
  *  form_id = The ID of the Form
- * 	form_action = The URL for calling the Layout Edit Transaction
- * 	form_meta = Additional META information required by Xibo in the form submit call
+ *  form_action = The URL for calling the Layout Edit Transaction
+ *  form_meta = Additional META information required by Xibo in the form submit call
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
-	<?php echo Theme::Get('form_meta'); ?>
-	<table>
-        <tr>
-            <td><label for="heading" accesskey="h"><?php echo Theme::Translate('Heading'); ?></label></td>
-            <td><input name="heading" class="required" type="text" id="heading" tabindex="1" /></td>
-        </tr>
-        <tr>
-            <td><label for="listcontent" accesskey="l"><?php echo Theme::Translate('List Content'); ?></label></td>
-            <td><input name="listcontent" type="text" id="listcontent" tabindex="2" /></td>
-        </tr>
-        <tr>
-            <td><label for="columnorder" accesskey="c"><?php echo Theme::Translate('Column Order'); ?></label></td>
-            <td><input name="columnorder" type="text" id="columnorder" tabindex="3" /></td>
-        </tr>
-    </table>
+<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+    <?php echo Theme::Get('form_meta'); ?>
+    <fieldset>
+        <div class="control-group">
+            <label class="control-label" for="heading" accesskey="h" title="<?php echo Theme::Translate(''); ?>"><?php echo Theme::Translate('Heading'); ?></label>
+            <div class="controls">
+                <input class="required" name="heading" type="text" id="heading" tabindex="1" />
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="datasetcolumntypeid" accesskey="t" title="<?php echo Theme::Translate(''); ?>"><?php echo Theme::Translate('Column Type'); ?></label>
+            <div class="controls">
+                <?php echo Theme::SelectList('datasetcolumntypeid', Theme::Get('datasetcolumntype_field_list'), 'datasetcolumntypeid', 'datasetcolumntype'); ?>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="datatypeid" accesskey="d" title="<?php echo Theme::Translate(''); ?>"><?php echo Theme::Translate('Data Type'); ?></label>
+            <div class="controls">
+                <?php echo Theme::SelectList('datatypeid', Theme::Get('datatype_field_list'), 'datatypeid', 'datatype'); ?>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="listcontent" accesskey="l" title="<?php echo Theme::Translate(''); ?>"><?php echo Theme::Translate('List Content'); ?></label>
+            <div class="controls">
+                <input class="" name="listcontent" type="text" id="listcontent" tabindex="4" />
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="columnorder" accesskey="c" title="<?php echo Theme::Translate(''); ?>"><?php echo Theme::Translate('Column Order'); ?></label>
+            <div class="controls">
+                <input class="required number" name="columnorder" type="text" id="columnorder" tabindex="5" />
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="formula" accesskey="f" title="<?php echo Theme::Translate(''); ?>"><?php echo Theme::Translate('Formula'); ?></label>
+            <div class="controls">
+                <input class="" name="formula" type="text" id="formula" tabindex="6" />
+            </div>
+        </div>
+    </fieldset>
 </form>

@@ -22,7 +22,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class DataSetColumn extends Data
 {
-    public function Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder = 0)
+    public function Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder = 0, $dataSetColumnTypeId, $formula = null)
     {
         $db =& $this->db;
 
@@ -41,9 +41,9 @@ class DataSetColumn extends Data
             }
         }
 
-        $SQL  = "INSERT INTO datasetcolumn (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder) ";
-        $SQL .= "    VALUES (%d, '%s', %d, '%s', %d) ";
-        $SQL = sprintf($SQL, $dataSetId, $heading, $dataTypeId, $listContent, $columnOrder);
+        $SQL  = "INSERT INTO datasetcolumn (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula) ";
+        $SQL .= "    VALUES (%d, '%s', %d, '%s', %d, %d, '%s') ";
+        $SQL = sprintf($SQL, $dataSetId, $heading, $dataTypeId, $listContent, $columnOrder, $dataTypeId, $dataSetColumnTypeId, $formula);
 
         if (!$id = $db->insert_query($SQL))
         {
@@ -56,7 +56,7 @@ class DataSetColumn extends Data
         return $id;
     }
 
-    public function Edit($dataSetColumnId, $heading, $dataTypeId, $listContent, $columnOrder)
+    public function Edit($dataSetColumnId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula = '')
     {
         $db =& $this->db;
 
@@ -88,10 +88,10 @@ class DataSetColumn extends Data
                 return $this->SetError(25005, __('New list content value is invalid as it doesnt include values for existing data'));
         }
 
-        $SQL  = "UPDATE datasetcolumn SET Heading = '%s', ListContent = '%s', ColumnOrder = %d ";
+        $SQL  = "UPDATE datasetcolumn SET Heading = '%s', ListContent = '%s', ColumnOrder = %d, DataTypeID = %d, DataSetColumnTypeID = %d, Formula = '%s' ";
         $SQL .= " WHERE DataSetColumnID = %d";
 
-        $SQL = sprintf($SQL, $heading, $listContent, $columnOrder, $dataSetColumnId);
+        $SQL = sprintf($SQL, $heading, $listContent, $columnOrder, $dataTypeId, $dataSetColumnTypeId, $formula, $dataSetColumnId);
 
         if (!$db->query($SQL))
         {
