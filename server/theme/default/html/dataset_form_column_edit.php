@@ -29,37 +29,37 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     <?php echo Theme::Get('form_meta'); ?>
     <fieldset>
         <div class="control-group">
-            <label class="control-label" for="heading" accesskey="h" title="<?php echo Theme::Translate(''); ?>"><?php echo Theme::Translate('Heading'); ?></label>
+            <label class="control-label" for="heading" accesskey="h" title="<?php echo Theme::Translate('The heading for this Column'); ?>"><?php echo Theme::Translate('Heading'); ?></label>
             <div class="controls">
                 <input class="required" name="heading" type="text" id="heading" tabindex="1" value="<?php echo Theme::Get('heading'); ?>" />
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label" for="datasetcolumntypeid" accesskey="t" title="<?php echo Theme::Translate(''); ?>"><?php echo Theme::Translate('Column Type'); ?></label>
+            <label class="control-label" for="datasetcolumntypeid" accesskey="t" title="<?php echo Theme::Translate('Whether this column is a value or a formula'); ?>"><?php echo Theme::Translate('Column Type'); ?></label>
             <div class="controls">
                 <?php echo Theme::SelectList('datasetcolumntypeid', Theme::Get('datasetcolumntype_field_list'), 'datasetcolumntypeid', 'datasetcolumntype', Theme::Get('datasetcolumntypeid')); ?>
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label" for="datatypeid" accesskey="d" title="<?php echo Theme::Translate(''); ?>"><?php echo Theme::Translate('Data Type'); ?></label>
+            <label class="control-label" for="datatypeid" accesskey="d" title="<?php echo Theme::Translate('The DataType of the Intended Data'); ?>"><?php echo Theme::Translate('Data Type'); ?></label>
             <div class="controls">
                 <?php echo Theme::SelectList('datatypeid', Theme::Get('datatype_field_list'), 'datatypeid', 'datatype', Theme::Get('datatypeid')); ?>
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label" for="listcontent" accesskey="l" title="<?php echo Theme::Translate(''); ?>"><?php echo Theme::Translate('List Content'); ?></label>
+            <label class="control-label" for="listcontent" accesskey="l" title="<?php echo Theme::Translate('A comma seperated list of items to present in a combo box'); ?>"><?php echo Theme::Translate('List Content'); ?></label>
             <div class="controls">
                 <input class="" name="listcontent" type="text" id="listcontent" tabindex="4" value="<?php echo Theme::Get('listcontent'); ?>" />
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label" for="columnorder" accesskey="c" title="<?php echo Theme::Translate(''); ?>"><?php echo Theme::Translate('Column Order'); ?></label>
+            <label class="control-label" for="columnorder" accesskey="c" title="<?php echo Theme::Translate('The order this column should be displayed in when entering data'); ?>"><?php echo Theme::Translate('Column Order'); ?></label>
             <div class="controls">
                 <input class="required number" name="columnorder" type="text" id="columnorder" tabindex="5" value="<?php echo Theme::Get('columnorder'); ?>" />
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label" for="formula" accesskey="f" title="<?php echo Theme::Translate(''); ?>"><?php echo Theme::Translate('Formula'); ?></label>
+            <label class="control-label" for="formula" accesskey="f" title="<?php echo Theme::Translate('A formular to use as a calculation for formula column types'); ?>"><?php echo Theme::Translate('Formula'); ?></label>
             <div class="controls">
                 <input class="" name="formula" type="text" id="formula" tabindex="6" value="<?php echo Theme::Get('formula'); ?>" />
             </div>

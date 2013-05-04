@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS `display` (
   `BroadCastAddress` varchar(100) DEFAULT NULL,
   `SecureOn` varchar(17) DEFAULT NULL,
   `Cidr` smallint(6) DEFAULT NULL,
+  `GeoLocation` POINT NULL,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;

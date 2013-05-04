@@ -111,7 +111,7 @@ class Display extends Data
 	 * @param $licensed Object
 	 * @param $incSchedule Object
 	 */
-	public function Edit($displayID, $display, $isAuditing, $defaultLayoutID, $licensed, $incSchedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr)
+	public function Edit($displayID, $display, $isAuditing, $defaultLayoutID, $licensed, $incSchedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr, $latitude, $longitude)
 	{
 		$db	=& $this->db;
 		
@@ -169,16 +169,17 @@ class Display extends Data
 		$SQL .= "		inc_schedule = %d, ";
 		$SQL .= " 		licensed = %d, ";
 		$SQL .= "		isAuditing = %d, ";
-                $SQL .= "       email_alert = %d, ";
-                $SQL .= "       alert_timeout = %d, ";
-                $SQL .= "       WakeOnLan = %d, ";
-                $SQL .= "       WakeOnLanTime = '%s', ";
-                $SQL .= "       BroadCastAddress = '%s', ";
-                $SQL .= "       SecureOn = '%s', ";
-                $SQL .= "       Cidr = %d ";
+        $SQL .= "       email_alert = %d, ";
+        $SQL .= "       alert_timeout = %d, ";
+        $SQL .= "       WakeOnLan = %d, ";
+        $SQL .= "       WakeOnLanTime = '%s', ";
+        $SQL .= "       BroadCastAddress = '%s', ";
+        $SQL .= "       SecureOn = '%s', ";
+        $SQL .= "       Cidr = %d, ";
+        $SQL .= "       GeoLocation = GeomFromText('POINT(%F %F)') ";
 		$SQL .= "WHERE displayid = %d ";
 		
-		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr, $displayID);
+		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr, $latitude, $longitude, $displayID);
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 		
