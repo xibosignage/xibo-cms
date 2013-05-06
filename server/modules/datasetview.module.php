@@ -461,7 +461,7 @@ END;
 
         foreach($dataSetResults['Rows'] as $row)
         {
-            if (($rowsPerPage > 0 && $rowCountThisPage < $rowsPerPage) || $rowCount == 1) {
+            if (($rowsPerPage > 0 && $rowCountThisPage > $rowsPerPage) || $rowCount == 1) {
 
                 if ($rowCount > 1) {
                     $table .= '</tbody>';
@@ -469,7 +469,7 @@ END;
                 }
 
                 // Output the table header
-                $table  = '<table class="DataSetTable">';
+                $table .= '<table class="DataSetTable">';
 
                 if ($showHeadings == 1)
                 {
