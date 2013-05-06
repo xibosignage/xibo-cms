@@ -1749,7 +1749,7 @@ END;
         return true;
     }
 
-    public function GetResource()
+    public function GetResource($displayId = 0)
     {
         return false;
     }

@@ -22,7 +22,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class DataSetColumn extends Data
 {
-    public function Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder = 0, $dataSetColumnTypeId, $formula = null)
+    public function Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder = 0, $dataSetColumnTypeId = 1, $formula = '')
     {
         $db =& $this->db;
 
@@ -43,7 +43,7 @@ class DataSetColumn extends Data
 
         $SQL  = "INSERT INTO datasetcolumn (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula) ";
         $SQL .= "    VALUES (%d, '%s', %d, '%s', %d, %d, '%s') ";
-        $SQL = sprintf($SQL, $dataSetId, $heading, $dataTypeId, $listContent, $columnOrder, $dataTypeId, $dataSetColumnTypeId, $formula);
+        $SQL = sprintf($SQL, $dataSetId, $db->escape_string($heading), $dataTypeId, $db->escape_string($listContent), $columnOrder, $dataSetColumnTypeId, $db->escape_string($formula));
 
         if (!$id = $db->insert_query($SQL))
         {
@@ -91,7 +91,7 @@ class DataSetColumn extends Data
         $SQL  = "UPDATE datasetcolumn SET Heading = '%s', ListContent = '%s', ColumnOrder = %d, DataTypeID = %d, DataSetColumnTypeID = %d, Formula = '%s' ";
         $SQL .= " WHERE DataSetColumnID = %d";
 
-        $SQL = sprintf($SQL, $heading, $listContent, $columnOrder, $dataTypeId, $dataSetColumnTypeId, $formula, $dataSetColumnId);
+        $SQL = sprintf($SQL, $heading, $db->escape_string($listContent), $db->escape_string($columnOrder), $dataTypeId, $dataSetColumnTypeId, $db->escape_string($formula), $dataSetColumnId);
 
         if (!$db->query($SQL))
         {

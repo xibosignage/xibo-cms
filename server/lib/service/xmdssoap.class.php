@@ -1007,7 +1007,7 @@ class XMDSSoap
         // Get the resource from the module
         require_once('modules/' . $type . '.module.php');
         $module = new $type($db, $user, $mediaId, $layoutId, $regionId);
-        $resource = $module->GetResource();
+        $resource = $module->GetResource($this->displayId);
 
         if (!$resource || $resource == '')
             throw new SoapFault('Receiver', 'Unable to get the media resource');

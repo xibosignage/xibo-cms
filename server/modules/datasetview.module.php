@@ -265,7 +265,7 @@ class datasetview extends Module
         //Set this as the session information
         setSession('content', 'type', 'datasetview');
 
-	if ($this->showRegionOptions)
+        if ($this->showRegionOptions)
         {
             // We want to load a new form
             $this->response->loadForm = true;
@@ -338,7 +338,7 @@ class datasetview extends Module
         //Set this as the session information
         setSession('content', 'type', 'datasetview');
 
-	if ($this->showRegionOptions)
+        if ($this->showRegionOptions)
         {
             // We want to load a new form
             $this->response->loadForm = true;
@@ -357,7 +357,7 @@ class datasetview extends Module
         return $this->DataSetTableHtml();
     }
 
-    public function GetResource()
+    public function GetResource($displayId = 0)
     {
         $db =& $this->db;
 
@@ -382,7 +382,7 @@ class datasetview extends Module
         $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
 
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $styleSheet, $template);
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml(), $template);
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml($displayId), $template);
 
         return $template;
     }
@@ -429,7 +429,7 @@ END;
         return $styleSheet;
     }
 
-    public function DataSetTableHtml()
+    public function DataSetTableHtml($displayId = 0)
     {
         $db =& $this->db;
 
@@ -448,7 +448,7 @@ END;
         // Create a data set view object, to get the results.
         Kit::ClassLoader('dataset');
         $dataSet = new DataSet($db);
-        $dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $ordering, $lowerLimit, $upperLimit);
+        $dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $ordering, $lowerLimit, $upperLimit, $displayId);
 
         $table  = '<table class="DataSetTable">';
 

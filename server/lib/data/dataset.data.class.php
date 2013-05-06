@@ -168,7 +168,7 @@ class DataSet extends Data
      * @param <type> $upperLimit
      * @return <type>
      */
-    public function DataSetResults($dataSetId, $columnIds, $filter = '', $ordering = '', $lowerLimit = 0, $upperLimit = 0)
+    public function DataSetResults($dataSetId, $columnIds, $filter = '', $ordering = '', $lowerLimit = 0, $upperLimit = 0, $displayId = 0)
     {
         $db =& $this->db;
 
@@ -176,20 +176,54 @@ class DataSet extends Data
         $outserSelect = '';
         $results = array();
         $headings = array();
+        $depends = array();
         
         $columns = explode(',', $columnIds);
 
+        // Get the Latitude and Longitude ( might be used in a formula )
+        if ($displayId == 0)
+            $displayGeoLocation = "GEOMFROMTEXT('POINT(51.504 -0.104)')";
+        else
+            $displayGeoLocation = sprintf("(SELECT GeoLocation FROM `display` WHERE DisplayID = %d)", $displayId);
+
         // Get all columns for the cross tab
-        $allColumns = $db->GetArray(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d' , $dataSetId));
+        $allColumns = $db->GetArray(sprintf('SELECT DataSetColumnID, Heading, DataSetColumnTypeID, Formula FROM datasetcolumn WHERE DataSetID = %d' , $dataSetId));
 
         foreach($allColumns as $col)
         {
             $heading = $col;
             
-            if (in_array($col['DataSetColumnID'], $columns))
-                $headings[] = $heading;
+            if (!in_array($col['DataSetColumnID'], $columns))
+                continue;                
 
-            $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $col['DataSetColumnID'], $heading['Heading']);
+            // Is this column a formula column or a value column?
+            if ($col['DataSetColumnTypeID'] == 2) {
+                // Formula
+                $heading['Heading'] = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $col['Formula']) . ' AS ' . $heading['Heading'];
+
+                // Capture any source columns
+                preg_match_all('/\`(.*?)\`/', $col['Formula'], $matches);
+                
+                $first = true;
+                foreach($matches as $match) {
+
+                    if ($first) {
+                        $first = false;
+                        continue;
+                    }
+
+                    foreach($match as $item) {
+
+                        $depends[] = $item;
+                    }
+                }
+            }
+            else {
+                // Value
+                $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $col['DataSetColumnID'], $heading['Heading']);
+            }
+
+            $headings[] = $heading;
         }
 
         // For each heading, put it in the correct order (according to $columns)
@@ -200,10 +234,24 @@ class DataSet extends Data
             {
                 if ($heading['DataSetColumnID'] == $visibleColumn)
                 {
-                    $outserSelect .= sprintf(' `%s`,', $heading['Heading']);
+                    if ($heading['DataSetColumnTypeID'] == 2)
+                        // This is a formula, so the heading has been morphed into some SQL to run
+                        $outserSelect .= sprintf(' %s,', $heading['Heading']);
+                    else
+                        $outserSelect .= sprintf(' `%s`,', $heading['Heading']);
+
                     $results['Columns'][] = $heading['Heading'];
                 }
             }
+        }
+
+        // Add any additional dependants to the inner select sql
+        foreach(array_unique($depends) as $heading) {
+
+            // Get the data set column id for this dependant column
+            $depColumnId = $db->GetSingleValue(sprintf("SELECT DataSetColumnID FROM datasetcolumn WHERE DataSetID = %d AND Heading = '%s'", $dataSetId, $heading), 'DataSetColumnID', _INT);
+
+            $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $depColumnId, $heading);
         }
 
         $outserSelect = rtrim($outserSelect, ',');
@@ -287,6 +335,9 @@ class DataSet extends Data
 
         if (!$rows = $db->GetArray($SQL, false))
             trigger_error($db->error());
+
+        if (!is_array($rows))
+            $rows = array();
             
         $results['Rows'] = $rows;
 
