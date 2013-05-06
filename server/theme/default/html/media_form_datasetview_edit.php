@@ -73,6 +73,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                     <input id="filter" name="filter" type="text" value="<?php echo Theme::Get('filter'); ?>">
                 </div>
             </div>
+            <div class="control-group">
+                <label class="control-label" for="rowsPerPage" accesskey="n" title="<?php echo Theme::Translate('The number of rows per page'); ?>"><?php echo Theme::Translate('Rows per page'); ?></label>
+                <div class="controls">
+                    <input class="number" name="rowsPerPage" type="text" id="rowsPerPage" tabindex="1" value="<?php echo Theme::Get('rowsPerPage'); ?>" />
+                </div>
+            </div>
         </div>
     </div>
     <div class="row">

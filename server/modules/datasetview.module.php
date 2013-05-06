@@ -129,6 +129,7 @@ class datasetview extends Module
         Theme::Set('lowerLimit', $this->GetOption('lowerLimit'));
         Theme::Set('filter', $this->GetOption('filter'));
         Theme::Set('ordering', $this->GetOption('ordering'));
+        Theme::Set('rowsPerPage', $this->GetOption('rowsPerPage'));
         Theme::Set('showHeadings', $this->GetOption('showHeadings'));
         Theme::Set('showHeadingsChecked', ($this->GetOption('showHeadings') == 1) ? ' checked' : '');
         Theme::Set('duration', $this->duration);
@@ -316,6 +317,7 @@ class datasetview extends Module
         $showHeadings = Kit::GetParam('showHeadings', _POST, _CHECKBOX);
         $styleSheet = Kit::GetParam('styleSheet', _POST, _STRING);
         $updateInterval = Kit::GetParam('updateInterval', _POST, _STRING);
+        $rowsPerPage = Kit::GetParam('rowsPerPage', _POST, _INT);
 
         if (count($columns) == 0)
             $this->SetOption('columns', '');
@@ -329,6 +331,7 @@ class datasetview extends Module
         $this->SetOption('showHeadings', $showHeadings);
         $this->SetOption('duration', $this->duration);
         $this->SetOption('updateInterval', $updateInterval);
+        $this->SetOption('rowsPerPage', $rowsPerPage);
         $this->SetRaw('<styleSheet><![CDATA[' . $styleSheet . ']]></styleSheet>');
 
         // Should have built the media object entirely by this time
@@ -441,6 +444,7 @@ END;
         $ordering = $this->GetOption('ordering');
         $columnIds = $this->GetOption('columns');
         $showHeadings = $this->GetOption('showHeadings');
+        $rowsPerPage = $this->GetOption('rowsPerPage');
 
         if ($columnIds == '')
             return 'No columns';
@@ -450,26 +454,38 @@ END;
         $dataSet = new DataSet($db);
         $dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $ordering, $lowerLimit, $upperLimit, $displayId);
 
-        $table  = '<table class="DataSetTable">';
-
-        if ($showHeadings == 1)
-        {
-            $table .= '<thead>';
-            $table .= ' <tr class="HeaderRow">';
-
-            foreach($dataSetResults['Columns'] as $col)
-                $table .= '<th class="DataSetColumnHeaderCell">' . $col . '</th>';
-
-            $table .= ' </tr>';
-            $table .= '</thead>';
-        }
-
-        $table .= '<tbody>';
+        $table = '';
 
         $rowCount = 1;
+        $rowCountThisPage = 1;
 
         foreach($dataSetResults['Rows'] as $row)
         {
+            if (($rowsPerPage > 0 && $rowCountThisPage < $rowsPerPage) || $rowCount == 1) {
+
+                if ($rowCount > 1) {
+                    $table .= '</tbody>';
+                    $table .= '</table>';
+                }
+
+                // Output the table header
+                $table  = '<table class="DataSetTable">';
+
+                if ($showHeadings == 1)
+                {
+                    $table .= '<thead>';
+                    $table .= ' <tr class="HeaderRow">';
+
+                    foreach($dataSetResults['Columns'] as $col)
+                        $table .= '<th class="DataSetColumnHeaderCell">' . $col . '</th>';
+
+                    $table .= ' </tr>';
+                    $table .= '</thead>';
+                }
+
+                $table .= '<tbody>';
+            }
+
             $table .= '<tr class="DataSetRow" id="row_' . $rowCount . '">';
 
             for($i = 0; $i < count($dataSetResults['Columns']); $i++)
@@ -478,6 +494,7 @@ END;
             $table .= '</tr>';
 
             $rowCount++;
+            $rowCountThisPage++;
         }
 
         $table .= '</tbody>';
