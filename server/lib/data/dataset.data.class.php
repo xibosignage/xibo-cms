@@ -177,6 +177,7 @@ class DataSet extends Data
         $results = array();
         $headings = array();
         $depends = array();
+        $selectedCols = array();
         
         $columns = explode(',', $columnIds);
 
@@ -224,6 +225,7 @@ class DataSet extends Data
             }
 
             $headings[] = $heading;
+            $selectedCols[] = $heading['Heading'];
         }
 
         // For each heading, put it in the correct order (according to $columns)
@@ -246,7 +248,8 @@ class DataSet extends Data
         }
 
         // Add any additional dependants to the inner select sql
-        foreach(array_unique($depends) as $heading) {
+        // they cannot already be there.
+        foreach(array_diff(array_unique($depends), $selectedCols) as $heading) {
 
             // Get the data set column id for this dependant column
             $depColumnId = $db->GetSingleValue(sprintf("SELECT DataSetColumnID FROM datasetcolumn WHERE DataSetID = %d AND Heading = '%s'", $dataSetId, $heading), 'DataSetColumnID', _INT);
