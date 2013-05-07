@@ -1,8 +1,10 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
     <head>
         <title>Xibo Open Source Digital Signage</title>
-        <meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<!-- Copyright 2006-2013 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
 
         <script type="text/javascript">
 /*! jQuery v1.9.1 | (c) 2005, 2012 jQuery Foundation, Inc. | jquery.org/license
@@ -26,7 +28,6 @@ return(!i||i!==r&&!b.contains(r,i))&&(e.type=o.origType,n=o.handler.apply(this,a
 * author Remy Sharp
 * url http://remysharp.com/tag/marquee
 */
-
 (function ($) {
     $.fn.marquee = function (klass) {
         var newMarquee = [],
@@ -179,6 +180,7 @@ return(!i||i!==r&&!b.contains(r,i))&&(e.type=o.origType,n=o.handler.apply(this,a
     };
 }(jQuery));
         </script>
+
         <script type="text/javascript">
 /*global jQuery */
 /*!
@@ -226,6 +228,7 @@ return(!i||i!==r&&!b.contains(r,i))&&(e.type=o.origType,n=o.handler.apply(this,a
 
 })( jQuery );
         </script>
+
         <script type="text/javascript">
 /**
 * Xibo - Digital Signage - http://www.xibo.org.uk
@@ -371,19 +374,14 @@ jQuery.fn.extend({
         <!--[[[HEADCONTENT]]]-->
 
         <script type="text/javascript">
-        // Init - do we need to call any of our substituted functions
-        $(document).ready(function()
-        {
-            if (typeof(init) != "undefined")
-            {
-                init();
-            }
+	        // Do we need to call any of our substituted functions
+	        $(document).ready(function() {
+	            if (typeof(init) != "undefined")
+	                init();
 
-            if (typeof(EmbedInit) != "undefined")
-            {
-                EmbedInit();
-            }
-        });
+	            if (typeof(EmbedInit) != "undefined")
+	                EmbedInit();
+	        });
         </script>
 
         <style type="text/css">

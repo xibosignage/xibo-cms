@@ -174,6 +174,7 @@ class DataSet extends Data
 
         $selectSQL = '';
         $outserSelect = '';
+        $finalSelect = '';
         $results = array();
         $headings = array();
         $depends = array();
@@ -195,9 +196,6 @@ class DataSet extends Data
             $heading = $col;
             $heading['Text'] = $heading['Heading'];
             
-            if (!in_array($col['DataSetColumnID'], $columns))
-                continue;                
-
             // Is this column a formula column or a value column?
             if ($col['DataSetColumnTypeID'] == 2) {
                 // Formula
@@ -229,24 +227,31 @@ class DataSet extends Data
             $selectedCols[] = $heading['Heading'];
         }
 
+        // Build our select statement including formulas
+        foreach($headings as $heading)
+        {
+            if ($heading['DataSetColumnTypeID'] == 2)
+                // This is a formula, so the heading has been morphed into some SQL to run
+                $outserSelect .= sprintf(' %s,', $heading['Heading']);
+            else
+                $outserSelect .= sprintf(' `%s`,', $heading['Heading']);
+        }
+        $outserSelect = rtrim($outserSelect, ',');
+
         // For each heading, put it in the correct order (according to $columns)
         foreach($columns as $visibleColumn)
         {
-            // Check to see if this column is in the headings
             foreach($headings as $heading)
             {
                 if ($heading['DataSetColumnID'] == $visibleColumn)
                 {
-                    if ($heading['DataSetColumnTypeID'] == 2)
-                        // This is a formula, so the heading has been morphed into some SQL to run
-                        $outserSelect .= sprintf(' %s,', $heading['Heading']);
-                    else
-                        $outserSelect .= sprintf(' `%s`,', $heading['Heading']);
-
+                    $finalSelect .= sprintf(' `%s`,', $heading['Heading']);
+                    
                     $results['Columns'][] = $heading['Text'];
                 }
             }
         }
+        $finalSelect = rtrim($finalSelect, ',');
 
         // Add any additional dependants to the inner select sql
         // they cannot already be there.
@@ -258,22 +263,23 @@ class DataSet extends Data
             $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $depColumnId, $heading);
         }
 
-        $outserSelect = rtrim($outserSelect, ',');
 
         // We are ready to build the select and from part of the SQL
-        $SQL  = "SELECT $outserSelect ";
+        $SQL  = "SELECT $finalSelect ";
         $SQL .= "  FROM ( ";
-        $SQL .= "   SELECT $selectSQL ";
-        $SQL .= "       RowNumber ";
-        $SQL .= "     FROM (";
-        $SQL .= "       SELECT datasetcolumn.DataSetColumnID, datasetdata.RowNumber, datasetdata.`Value` ";
-        $SQL .= "         FROM datasetdata ";
-        $SQL .= "           INNER JOIN datasetcolumn ";
-        $SQL .= "           ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID ";
+        $SQL .= "   SELECT $outserSelect ";
+        $SQL .= "     FROM ( ";
+        $SQL .= "      SELECT $selectSQL ";
+        $SQL .= "          RowNumber ";
+        $SQL .= "        FROM (";
+        $SQL .= "          SELECT datasetcolumn.DataSetColumnID, datasetdata.RowNumber, datasetdata.`Value` ";
+        $SQL .= "            FROM datasetdata ";
+        $SQL .= "              INNER JOIN datasetcolumn ";
+        $SQL .= "              ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID ";
         $SQL .= sprintf("       WHERE datasetcolumn.DataSetID = %d ", $dataSetId);
-        $SQL .= "       ) datasetdatainner ";
-        $SQL .= "   GROUP BY RowNumber ";
-        $SQL .= " ) datasetdata ";
+        $SQL .= "          ) datasetdatainner ";
+        $SQL .= "      GROUP BY RowNumber ";
+        $SQL .= "    ) datasetdata ";
         if ($filter != '')
         {
             $where = ' WHERE 1 = 1 ';
@@ -295,6 +301,7 @@ class DataSet extends Data
 
             $SQL .= $where . ' ';
         }
+        $SQL .= ' ) finalselect ';
 
         if ($ordering != '')
         {
@@ -319,7 +326,7 @@ class DataSet extends Data
         }
         else
         {
-            $SQL .= "ORDER BY RowNumber ";
+            $SQL .= " ORDER BY RowNumber ";
         }
 
         if ($lowerLimit != 0 || $upperLimit != 0)
@@ -332,7 +339,7 @@ class DataSet extends Data
             $upperLimit = $upperLimit - $lowerLimit;
 
             // Substitute in
-            $SQL .= sprintf('LIMIT %d, %d ', $lowerLimit, $upperLimit);
+            $SQL .= sprintf(' LIMIT %d, %d ', $lowerLimit, $upperLimit);
         }
 
         Debug::LogEntry($db, 'audit', $SQL);
