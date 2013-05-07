@@ -356,8 +356,18 @@ class datasetview extends Module
         if ($this->previewEnabled == 0)
             return parent::Preview ($width, $height);
         
-        // Show a preview of the data set table output.
-        return $this->DataSetTableHtml();
+        $layoutId = $this->layoutid;
+        $regionId = $this->regionid;
+
+        $mediaId = $this->mediaid;
+        $lkId = $this->lkid;
+        $mediaType = $this->type;
+        $mediaDuration = $this->duration;
+
+        $widthPx    = $width.'px';
+        $heightPx   = $height.'px';
+
+        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&raw=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
 
     public function GetResource($displayId = 0)
@@ -379,12 +389,18 @@ class datasetview extends Module
             $styleSheet = $rawNode->nodeValue;
         }
 
-        $styleSheet = '<style type="text/css">' . $styleSheet . '</style>';
+        $headContent = '<style type="text/css">' . $styleSheet . '</style>';
+
+        if ($this->GetOption('rowsPerPage') != 0) {
+
+            // Include some JavaScript to kick off the cycle plugin
+            $headContent .= '<script type="text/javascript">function init() { $("#DataSetTableContainer").dataSetRender({duration: ' . $this->GetOption('duration') . '}); }</script>';
+        }
 
         // Load the HtmlTemplate
         $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
 
-        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $styleSheet, $template);
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml($displayId), $template);
 
         return $template;
@@ -454,14 +470,23 @@ END;
         $dataSet = new DataSet($db);
         $dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $ordering, $lowerLimit, $upperLimit, $displayId);
 
-        $table = '';
-
         $rowCount = 1;
         $rowCountThisPage = 1;
+        $totalRows = count($dataSetResults['Rows']);
+
+        if ($rowsPerPage > 0)
+            $totalPages = $totalRows / $rowsPerPage;
+        else
+            $totalPages = 1;
+        
+        $table = '<div id="DataSetTableContainer" totalRows="' . $totalRows . '" totalPages="' . $totalPages . '">';
 
         foreach($dataSetResults['Rows'] as $row)
         {
             if (($rowsPerPage > 0 && $rowCountThisPage > $rowsPerPage) || $rowCount == 1) {
+
+                // Reset the row count on this page
+                $rowCountThisPage = 1;
 
                 if ($rowCount > 1) {
                     $table .= '</tbody>';
@@ -499,6 +524,7 @@ END;
 
         $table .= '</tbody>';
         $table .= '</table>';
+        $table .= '</div>';
 
         return $table;
     }

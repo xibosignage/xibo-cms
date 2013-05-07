@@ -1,6 +1,6 @@
 /**
 * Xibo - Digital Signage - http://www.xibo.org.uk
-* Copyright (C) 2009-2012 Daniel Garner
+* Copyright (C) 2009-2013 Daniel Garner
 *
 * This file is part of Xibo.
 *
@@ -116,5 +116,24 @@ jQuery.fn.extend({
                 $(this).marquee();
             }
         });
+    },
+    dataSetRender: function(options) {
+
+        // Any options?
+        if (options === undefined || options === null) {
+            options = {
+                duration : 5,
+                transition: "fade"
+            };
+        }
+
+        var numberItems = $(this).attr("totalPages");
+
+        // Cycle handles this for us
+       $(this).cycle({
+           fx: options.transition,
+           timeout: (options.duration * 1000) / numberItems,
+           slides: '> table'
+       });
     }
 });

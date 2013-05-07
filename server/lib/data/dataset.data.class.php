@@ -193,6 +193,7 @@ class DataSet extends Data
         foreach($allColumns as $col)
         {
             $heading = $col;
+            $heading['Text'] = $heading['Heading'];
             
             if (!in_array($col['DataSetColumnID'], $columns))
                 continue;                
@@ -242,7 +243,7 @@ class DataSet extends Data
                     else
                         $outserSelect .= sprintf(' `%s`,', $heading['Heading']);
 
-                    $results['Columns'][] = $heading['Heading'];
+                    $results['Columns'][] = $heading['Text'];
                 }
             }
         }
