@@ -177,8 +177,6 @@ class DataSet extends Data
         $finalSelect = '';
         $results = array();
         $headings = array();
-        $depends = array();
-        $selectedCols = array();
         
         $columns = explode(',', $columnIds);
 
@@ -200,23 +198,6 @@ class DataSet extends Data
             if ($col['DataSetColumnTypeID'] == 2) {
                 // Formula
                 $heading['Heading'] = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $col['Formula']) . ' AS ' . $heading['Heading'];
-
-                // Capture any source columns
-                preg_match_all('/\`(.*?)\`/', $col['Formula'], $matches);
-                
-                $first = true;
-                foreach($matches as $match) {
-
-                    if ($first) {
-                        $first = false;
-                        continue;
-                    }
-
-                    foreach($match as $item) {
-
-                        $depends[] = $item;
-                    }
-                }
             }
             else {
                 // Value
@@ -224,7 +205,6 @@ class DataSet extends Data
             }
 
             $headings[] = $heading;
-            $selectedCols[] = $heading['Heading'];
         }
 
         // Build our select statement including formulas
@@ -252,17 +232,6 @@ class DataSet extends Data
             }
         }
         $finalSelect = rtrim($finalSelect, ',');
-
-        // Add any additional dependants to the inner select sql
-        // they cannot already be there.
-        foreach(array_diff(array_unique($depends), $selectedCols) as $heading) {
-
-            // Get the data set column id for this dependant column
-            $depColumnId = $db->GetSingleValue(sprintf("SELECT DataSetColumnID FROM datasetcolumn WHERE DataSetID = %d AND Heading = '%s'", $dataSetId, $heading), 'DataSetColumnID', _INT);
-
-            $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $depColumnId, $heading);
-        }
-
 
         // We are ready to build the select and from part of the SQL
         $SQL  = "SELECT $finalSelect ";
