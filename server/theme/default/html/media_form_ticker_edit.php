@@ -28,7 +28,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<div class="row">
     	<div class="span6">
 			<div class="control-group">
-				<label class="control-label" for="uri" title="The Link for the RSS feed"><?php echo Theme::Translate('Link'); ?></label>
+				<label class="control-label" for="uri" title="The Link for the RSS feed"><?php echo Theme::Translate('Feed URL'); ?></label>
 				<div class="controls">
 					<input class="required url" id="uri" name="uri" value="<?php echo Theme::Get('uri'); ?>" type="text">
 				</div>
@@ -50,6 +50,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                 <div class="controls">
                 	<input class="number" id="numItems" name="numItems" type="text" value="<?php echo Theme::Get('numItems'); ?>" />
             	</div>
+        	</div>
+        	<div class="control-group">
+        		<label class="control-label" for="itemsPerPage" accesskey="n" title="<?php echo Theme::Translate('When in single mode how many items per page should be shown.'); ?>"><?php echo Theme::Translate('Items per Page'); ?></label>
+        	    <div class="controls">
+        	        <input class="number" name="itemsPerPage" type="text" id="itemsPerPage" tabindex="1" value="<?php echo Theme::Get('itemsPerPage'); ?>" />
+        	    </div>
         	</div>
         	<div class="control-group">
                 <div class="controls">

@@ -9,6 +9,19 @@ var text_callback = function(dialog)
             CKEDITOR.instances["ta_text"].destroy();
         }
     });
+
+    // Do we have any items to click on that we might want to insert? (these will be our items and not CKEditor ones)
+    $('.ckeditor_snippits', dialog).dblclick(function(){
+        // Linked to?
+        var linkedTo = $(this).attr("linkedto");
+
+        if (CKEDITOR.instances[linkedTo] != undefined) {
+            var text = "[" + $(this).html() + "|" + $(this).attr("datasetcolumnid") + "]"
+            CKEDITOR.instances[linkedTo].insertText(text);
+        }
+
+        return false;
+    });
     
     return false;
 }

@@ -49,29 +49,17 @@ class ticker extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
     
-		// Direction Options
-        $directionOptions = array(
-            array('directionid' => 'none', 'direction' => __('None')), 
-            array('directionid' => 'left', 'direction' => __('Left')), 
-            array('directionid' => 'right', 'direction' => __('Right')), 
-            array('directionid' => 'up', 'direction' => __('Up')), 
-            array('directionid' => 'down', 'direction' => __('Down')),
-            array('directionid' => 'single', 'direction' => __('Single'))
-        );
-        Theme::Set('direction_field_list', $directionOptions);
+        // Source list
+        Theme::Set('source_field_list', array(array('sourceid' => '1', 'source' => 'Feed'),array('sourceid' => '2', 'source' => 'DataSet')));
 
-    	// "Take from" Options
-    	$takeItemsFrom = array(
-    		array('takeitemsfromid' => 'start', 'takeitemsfrom' => __('Start of the Feed')),
-    		array('takeitemsfromid' => 'end', 'takeitemsfrom' => __('End of the Feed'))
-		);
-        Theme::Set('takeitemsfrom_field_list', $takeItemsFrom);
+		// Data set list
+		$datasets = $user->DataSetList();
+		array_unshift($datasets, array('datasetid' => '0', 'dataset' => 'None'));
+        Theme::Set('dataset_field_list', $datasets);
 		        
 		// Return
 		$this->response->html = Theme::RenderReturn('media_form_ticker_add');
-		$this->response->callBack = 'text_callback';
 		$this->response->dialogTitle = __('Add New Ticker');
-		$this->response->dialogClass = 'modal-big';
 
         if ($this->showRegionOptions)
         {
@@ -93,11 +81,11 @@ class ticker extends Module
 	 */
 	public function EditForm()
 	{
-		$db 		=& $this->db;
+		$db =& $this->db;
 		
-		$layoutid	= $this->layoutid;
-		$regionid	= $this->regionid;
-		$mediaid  	= $this->mediaid;
+		$layoutid = $this->layoutid;
+		$regionid = $this->regionid;
+		$mediaid = $this->mediaid;
 
         // Permissions
         if (!$this->auth->edit)
@@ -111,6 +99,21 @@ class ticker extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
         
+		// What is the source for this ticker?
+        $sourceId = $this->GetOption('sourceId');
+        $dataSetId = $this->GetOption('datasetid');
+        Theme::Set('sourceId', $sourceId);
+
+        // Data Set Source
+        if ($sourceId == 2) {
+        	// Extra Fields for the DataSet
+        	Theme::Set('columns', $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId)));
+        	Theme::Set('upperLimit', $this->GetOption('upperLimit'));
+	        Theme::Set('lowerLimit', $this->GetOption('lowerLimit'));
+	        Theme::Set('filter', $this->GetOption('filter'));
+	        Theme::Set('ordering', $this->GetOption('ordering'));
+        }
+
         // Direction Options
         $directionOptions = array(
             array('directionid' => 'none', 'direction' => __('None')), 
@@ -137,8 +140,10 @@ class ticker extends Module
 		Theme::Set('uri', urldecode($this->GetOption('uri')));
 		Theme::Set('numItems', $this->GetOption('numItems'));
 		Theme::Set('takeItemsFrom', $this->GetOption('takeItemsFrom'));
+		Theme::Set('itemsPerPage', $this->GetOption('itemsPerPage'));
+		Theme::Set('datasetid', $this->GetOption('datasetid'));
 
-		// Checkboses
+		// Checkboxes
 		Theme::Set('fitTextChecked', ($this->GetOption('fitText', 0) == 0) ? '' : ' checked');
         Theme::Set('durationIsPerItemChecked', ($this->GetOption('durationIsPerItem') == '1') ? 'checked' : '');
 		
@@ -158,7 +163,14 @@ class ticker extends Module
         Theme::Set('is_duration_enabled', ($this->auth->modifyPermissions) ? '' : ' readonly');
         
         // Output the form
-        $this->response->html = Theme::RenderReturn('media_form_ticker_edit');
+        if ($sourceId == 2) {
+        	$this->response->html = Theme::RenderReturn('media_form_ticker_dataset_edit');
+        }
+        else {
+        	$this->response->html = Theme::RenderReturn('media_form_ticker_edit');
+        }
+
+        // Generate the Response
         $this->response->callBack 	= 'text_callback';
         $this->response->dialogTitle = __('Edit Ticker');
     	$this->response->dialogClass = 'modal-big';
@@ -183,90 +195,73 @@ class ticker extends Module
 	 */
 	public function AddMedia()
 	{
-		$db 		=& $this->db;
+		$db =& $this->db;
 		
-		$layoutid 	= $this->layoutid;
-		$regionid 	= $this->regionid;
-		$mediaid	= $this->mediaid;
+		$layoutid = $this->layoutid;
+		$regionid = $this->regionid;
+		$mediaid = $this->mediaid;
 		
-		//Other properties
-		$uri		  = Kit::GetParam('uri', _POST, _URI);
-		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
-		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
-		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 2);
-		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 360);
-		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
-		$numItems = Kit::GetParam('numItems', _POST, _STRING);
-		$takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
-		$durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
-                $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
-
-		$url 		  = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-						
-		//validation
-		if ($text == '')
-		{
-			$this->response->SetError('Please enter some text');
-			$this->response->keepOpen = true;
-			return $this->response;
-		}
+		// Other properties
+		$sourceId = Kit::GetParam('sourceid', _POST, _INT);
+		$uri = Kit::GetParam('uri', _POST, _URI);
+        $dataSetId = Kit::GetParam('datasetid', _POST, _INT, 0);
+		$duration = Kit::GetParam('duration', _POST, _INT, 0);
+		$template = '';
 		
-		//Validate the URL?
-		if ($uri == "" || $uri == "http://")
-		{
-			$this->response->SetError('Please enter a Link for this Ticker');
-			$this->response->keepOpen = true;
-			return $this->response;
-		}
-		
+		// Must have a duration
 		if ($duration == 0)
-		{
-			$this->response->SetError('You must enter a duration.');
-			$this->response->keepOpen = true;
-			return $this->response;
-		}
+			trigger_error(__('Please enter a duration'), E_USER_ERROR);
 
-                if ($numItems != '')
-                {
-                    // Make sure we have a number in here
-                    if (!is_numeric($numItems))
-                    {
-                        $this->response->SetError(__('The value in Number of Items must be numeric.'));
-			$this->response->keepOpen = true;
-			return $this->response;
-                    }
-                }
+		if ($sourceId == 1) {
+			// Feed
+			
+			// Validate the URL
+			if ($uri == "" || $uri == "http://")
+				trigger_error(__('Please enter a Link for this Ticker'), E_USER_ERROR);
+
+			$template = '[Title] [Description] [Date]';
+		}
+		else if ($sourceId == 2) {
+			// DataSet
+			
+			// Validate Data Set Selected
+			if ($dataSetId == 0)
+				trigger_error(__('Please select a DataSet'), E_USER_ERROR);
+
+			// Check we have permission to use this DataSetId
+	        if (!$this->user->DataSetAuth($dataSetId))
+	            trigger_error(__('You do not have permission to use that dataset'), E_USER_ERROR);
+		}
+		else {
+			// Only supported two source types at the moment
+			trigger_error(__('Unknown Source Type'));
+		}
 		
 		// Required Attributes
 		$this->mediaid	= md5(uniqid());
 		$this->duration = $duration;
 		
 		// Any Options
-		$this->SetOption('direction', $direction);
-		$this->SetOption('copyright', $copyright);
-		$this->SetOption('scrollSpeed', $scrollSpeed);
-		$this->SetOption('updateInterval', $updateInterval);
+		$this->SetOption('sourceId', $sourceId);
 		$this->SetOption('uri', $uri);
-		$this->SetOption('numItems', $numItems);
-		$this->SetOption('takeItemsFrom', $takeItemsFrom);
-		$this->SetOption('durationIsPerItem', $durationIsPerItem);
-                $this->SetOption('fitText', $fitText);
+		$this->SetOption('datasetid', $dataSetId);
+		$this->SetOption('updateInterval', 120);
+		$this->SetOption('scrollSpeed', 2);
 
-		$this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
+		$this->SetRaw('<template><![CDATA[' . $template . ']]></template>');
 		
 		// Should have built the media object entirely by this time
 		// This saves the Media Object to the Region
 		$this->UpdateRegion();
 		
 		//Set this as the session information
-		setSession('content', 'type', 'text');
+		setSession('content', 'type', 'ticker');
 		
-	if ($this->showRegionOptions)
+		if ($this->showRegionOptions)
         {
             // We want to load a new form
             $this->response->loadForm = true;
-            $this->response->loadFormUri = $url;
+            $this->response->loadFormUri = "index.php?p=module&mod=ticker&q=Exec&method=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$this->mediaid";
         }
 		
 		return $this->response;
@@ -290,6 +285,8 @@ class ticker extends Module
             $this->response->keepOpen = false;
             return $this->response;
         }
+
+        $sourceId = $this->GetOption('sourceId', 1);
 		
 		//Other properties
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
@@ -299,30 +296,34 @@ class ticker extends Module
 		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 360);
 		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
 		$numItems = Kit::GetParam('numItems', _POST, _STRING);
-                $takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
+		$takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
 		$durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
         $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
-
+        
+        // DataSet Specific Options
+        $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
+        $lowerLimit = Kit::GetParam('lowerLimit', _POST, _INT);
+        $filter = Kit::GetParam('filter', _POST, _STRING);
+        $ordering = Kit::GetParam('ordering', _POST, _STRING);
+        
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
-                
-		$url 		  = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 		
-		//validation
+		// Validation
 		if ($text == '')
 		{
 			$this->response->SetError('Please enter some text');
 			$this->response->keepOpen = true;
 			return $this->response;
 		}
-		
-		//Validate the URL?
-		if ($uri == "" || $uri == "http://")
-		{
-			$this->response->SetError('Please enter a Link for this Ticker');
-			$this->response->keepOpen = true;
-			return $this->response;
+
+		if ($sourceId == 1) {
+			// Feed
+			
+			// Validate the URL
+			if ($uri == "" || $uri == "http://")
+				trigger_error(__('Please enter a Link for this Ticker'), E_USER_ERROR);
 		}
 		
 		if ($this->duration == 0)
@@ -332,16 +333,16 @@ class ticker extends Module
 			return $this->response;
 		}
 
-                if ($numItems != '')
-                {
-                    // Make sure we have a number in here
-                    if (!is_numeric($numItems))
-                    {
-                        $this->response->SetError(__('The value in Number of Items must be numeric.'));
-			$this->response->keepOpen = true;
-			return $this->response;
-                    }
-                }
+        if ($numItems != '')
+        {
+            // Make sure we have a number in here
+            if (!is_numeric($numItems))
+            {
+                $this->response->SetError(__('The value in Number of Items must be numeric.'));
+				$this->response->keepOpen = true;
+				return $this->response;
+            }
+        }
 		
 		// Any Options
 		$this->SetOption('direction', $direction);
@@ -349,11 +350,16 @@ class ticker extends Module
 		$this->SetOption('scrollSpeed', $scrollSpeed);
 		$this->SetOption('updateInterval', $updateInterval);
 		$this->SetOption('uri', $uri);
-                $this->SetOption('numItems', $numItems);
-                $this->SetOption('takeItemsFrom', $takeItemsFrom);
+        $this->SetOption('numItems', $numItems);
+        $this->SetOption('takeItemsFrom', $takeItemsFrom);
 		$this->SetOption('durationIsPerItem', $durationIsPerItem);
-                $this->SetOption('fitText', $fitText);
-
+        $this->SetOption('fitText', $fitText);
+        $this->SetOption('upperLimit', $upperLimit);
+        $this->SetOption('lowerLimit', $lowerLimit);
+        $this->SetOption('filter', $filter);
+        $this->SetOption('ordering', $ordering);
+        
+        // Text Template
 		$this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
 		
 		// Should have built the media object entirely by this time
@@ -361,13 +367,13 @@ class ticker extends Module
 		$this->UpdateRegion();
 		
 		//Set this as the session information
-		setSession('content', 'type', 'text');
+		setSession('content', 'type', 'ticker');
 		
-	if ($this->showRegionOptions)
+		if ($this->showRegionOptions)
         {
             // We want to load a new form
             $this->response->loadForm = true;
-            $this->response->loadFormUri = $url;
+            $this->response->loadFormUri = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
         }
 		
 		return $this->response;	
@@ -417,13 +423,13 @@ class ticker extends Module
         $widthPx	= $width.'px';
         $heightPx	= $height.'px';
 
-        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=RawPreview&raw=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&raw=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
 
     /**
      * Raw Preview
      */
-    public function RawPreview()
+    public function GetResource()
     {
         // Behave exactly like the client.
 

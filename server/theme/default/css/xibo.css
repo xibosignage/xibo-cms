@@ -168,6 +168,16 @@ label.error {
   list-style: none;
 }
 
+#TickerDataSetColumns li {
+  float: left;
+  list-style: none;
+  margin-left: 5px;
+  cursor: pointer;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+}
+
 #dashbuttons{ 
   text-align: center;
 }
