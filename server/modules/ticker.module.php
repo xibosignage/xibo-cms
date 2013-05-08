@@ -427,17 +427,16 @@ class ticker extends Module
     }
 
     /**
-     * Raw Preview
+     * Get Resource
      */
     public function GetResource()
     {
-        // Behave exactly like the client.
+        // Load the HtmlTemplate
+        $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
 
-        // Load in the template
-        $template = file_get_contents('modules/preview/HtmlTemplate.htm');
+        $sourceId = $this->GetOption('sourceid', 1);
 
-        $width = Kit::GetParam('width', _REQUEST, _INT);
-        $height = Kit::GetParam('height', _REQUEST, _INT);
+        // Information from the Module
         $direction = $this->GetOption('direction');
         $scrollSpeed = $this->GetOption('scrollSpeed');
         $fitText = $this->GetOption('fitText', 0);
@@ -454,58 +453,37 @@ class ticker extends Module
         $textNode = $textNodes->item(0);
         $text = $textNode->nodeValue;
 
+        $options = array('type' => 'ticker',
+        	'direction' => $direction,
+        	'duration' => $duration,
+        	'durationIsPerItem' => (($durationIsPerItem == 0) ? 'false' : 'true'),
+        	'numItems' => $numItems,
+        	'scrollSpeed' => $scrollSpeed,
+        	'scaleMode' => (($fitText == 0) ? 'scale' : 'fit'),
+        	'scaleFactor' => '[[Factor]]'
+    	);
+
+        // Generate a JSON string of substituted items.
+        if ($sourceId == 2) {
+        	$options['items'] = array('Item 1' . $text, 'Item 2' . $text);
+        }
+        else {
+        	$options['items'] = array('Item 1' . $text, 'Item 2' . $text);
+        }
+
         // Replace the head content
         $headContent  = '<script type="text/javascript">';
         $headContent .= '   function init() { ';
-        $headContent .= '       $("#text").xiboRender({ ';
-        $headContent .= '           type: "ticker",';
-        $headContent .= '           direction: "' . $direction . '",';
-        $headContent .= '           duration: ' . $duration . ',';
-        $headContent .= '           durationIsPerItem: ' . (($durationIsPerItem == 0) ? 'false' : 'true') . ',';
-        $headContent .= '           numItems: ' . $numItems . ',';
-        $headContent .= '           width: ' . $width . ',';
-        $headContent .= '           height: ' . $height . ',';
-        $headContent .= '           scrollSpeed: ' . $scrollSpeed . ',';
-        $headContent .= '           fitText: ' . (($fitText == 0) ? 'false' : 'true') . ',';
-        $headContent .= '           scaleText: ' . (($fitText == 1) ? 'false' : 'true') . ',';
-        $headContent .= '           scaleFactor: 1';
-        $headContent .= '       });';
+        $headContent .= '       $("#text").xiboRender();';
         $headContent .= '   } ';
+        $headContent .= '	var options = ' . json_encode($options);
         $headContent .= '</script>';
 
         // Replace the Head Content with our generated javascript
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
-        // Generate the body content
-        $bodyContent  = '';
-        $bodyContent .= '<div id="contentPane" style="overflow: none; width:' . $width . 'px; height:' . $height . 'px;">';
-        $bodyContent .= '   <div id="text">';
-
-        // As we are pretending to be the client, we will duplicate the text template (as if we had 2 RSS items)
-        if ($direction == 'left' || $direction == 'right')
-        {
-            // Wrap each item in a span
-            $bodyContent .= '<nobr>';
-            $bodyContent .= '<span class="article">Item 1: ' . $text . '</span>';
-            $bodyContent .= '<span class="article">Item 2: ' . $text . '</span>';
-            $bodyContent .= '</nobr>';
-        }
-        else if ($direction == 'single')
-        {
-            // Wrap each item in a div
-            $bodyContent .= '<div class="XiboRssItem">Item 1: ' . $text . '</div>';
-            $bodyContent .= '<div class="XiboRssItem">Item 2: ' . $text . '</div>';
-        }
-        else
-        {
-            $bodyContent .= '       ' . $text;
-        }
-
-        $bodyContent .= '   </div>';
-        $bodyContent .= '</div>';
-
         // Replace the Body Content with our generated text
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $bodyContent, $template);
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', json_encode($options), $template);
 
         return $template;
     }
