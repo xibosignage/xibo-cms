@@ -309,20 +309,30 @@ class datasetview extends Module
             return $this->response;
         }
 
-        $columns = Kit::GetParam('DataSetColumnId', _POST, _ARRAY, array());
+        $columns = Kit::GetParam('DataSetColumnId', _GET, _ARRAY, array());
         $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
         $lowerLimit = Kit::GetParam('lowerLimit', _POST, _INT);
         $filter = Kit::GetParam('filter', _POST, _STRING);
         $ordering = Kit::GetParam('ordering', _POST, _STRING);
         $showHeadings = Kit::GetParam('showHeadings', _POST, _CHECKBOX);
         $styleSheet = Kit::GetParam('styleSheet', _POST, _STRING);
-        $updateInterval = Kit::GetParam('updateInterval', _POST, _STRING);
+        $updateInterval = Kit::GetParam('updateInterval', _POST, _INT);
         $rowsPerPage = Kit::GetParam('rowsPerPage', _POST, _INT);
 
         if (count($columns) == 0)
             $this->SetOption('columns', '');
         else
             $this->SetOption('columns', implode(',', $columns));
+
+        // Validate some content
+        if (!is_numeric($upperLimit) || !is_numeric($lowerLimit))
+            trigger_error(__('Limits must be numbers'), E_USER_ERROR);
+
+        if ($upperLimit < 0 || $lowerLimit < 0)
+            trigger_error(__('Limits cannot be lower than 0'), E_USER_ERROR);
+
+        if ($updateInterval < 0)
+            trigger_error(__('Update Interval must be greater than or equal to 0'), E_USER_ERROR);
 
         $this->SetOption('upperLimit', $upperLimit);
         $this->SetOption('lowerLimit', $lowerLimit);

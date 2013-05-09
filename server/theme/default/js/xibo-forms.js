@@ -57,21 +57,9 @@ var datasetview_callback = function(dialog)
 }
 
 var DataSetViewSubmit = function() {
-    // Serialise the form and then submit it via Ajax.
-    var href = $("#ModuleForm").attr('action') + "&ajax=true";
-
+    
     // Get the two lists
-    serializedData = $("#columnsIn").sortable('serialize') + "&" + $("#ModuleForm").serialize();
-
-    $.ajax({
-        type: "post",
-        url: href,
-        cache: false,
-        dataType: "json",
-        data: serializedData,
-        success: XiboSubmitResponse
-    });
-
+    $("#ModuleForm").attr('action', $("#ModuleForm").attr('action') + "&ajax=true&" + $("#columnsIn").sortable('serialize')).submit();
     return;
 }
 

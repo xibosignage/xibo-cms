@@ -225,7 +225,7 @@ class DataSet extends Data
             {
                 if ($heading['DataSetColumnID'] == $visibleColumn)
                 {
-                    $finalSelect .= sprintf(' `%s`,', $heading['Heading']);
+                    $finalSelect .= sprintf(' `%s`,', $heading['Text']);
                     
                     $results['Columns'][] = $heading['Text'];
                 }
