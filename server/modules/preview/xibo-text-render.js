@@ -26,6 +26,8 @@ jQuery.fn.extend({
                 direction: "none",
                 width: 100,
                 height: 100,
+                originalWidth: 100,
+                originalHeight: 100,
                 scrollSpeed: 2,
                 scaleText: false,
                 fitText: false,
@@ -36,12 +38,11 @@ jQuery.fn.extend({
         this.each(function() {
             // Scale text to fit the box
             if (options.scaleText) {
-                // Go through every <span> element, and scale it accordingly.
-                $("span, p", this).each(function(){
-                    // Already has a font?
-                    var fontSize = $(this).css("font-size");
-
-                    $(this).css("font-size", Math.round(fontSize.replace("px", "") * options.scaleFactor));
+                // Apply the ZOOM attribute to the body
+                $(this).css({
+                    zoom: options.scaleFactor,
+                    width: options.originalWidth,
+                    height: options.originalHeight
                 });
             }
 
@@ -71,7 +72,7 @@ jQuery.fn.extend({
 
                 $(".XiboRssItem", this).css({
                     display: "block",
-                    width: options.width
+                    width: options.originalWidth
                 });
             }
 
@@ -105,15 +106,22 @@ jQuery.fn.extend({
 
                 // Set some options on the node, before calling marquee (behaviour, direction, scrollAmount, width, height)
                 $(this).attr({
-                    direction: options.direction,
-                    width: options.width,
-                    height: options.height,
-                    scrollamount: options.scrollSpeed,
-                    behaviour: "scroll"
+                    width: options.originalWidth,
+                    height: options.originalHeight                    
                 });
-
-                // Create a marquee out of it
-                $(this).marquee();
+                
+                // Wrap in an extra DIV - this will be what is scrolled.
+                $(this).wrap("<div class='scroll'>");
+                
+                // Set some options on the extra DIV and make it a marquee
+                $(this).parent().attr({
+                    scrollamount: options.scrollSpeed,
+                    scaleFactor: options.scaleFactor,
+                    behaviour: "scroll",
+                    direction: options.direction,
+                    height: options.height,
+                    width: options.width
+                }).marquee();
             }
         });
     },

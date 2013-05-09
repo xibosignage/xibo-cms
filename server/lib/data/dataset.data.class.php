@@ -168,7 +168,7 @@ class DataSet extends Data
      * @param <type> $upperLimit
      * @return <type>
      */
-    public function DataSetResults($dataSetId, $columnIds, $filter = '', $ordering = '', $lowerLimit = 0, $upperLimit = 0, $displayId = 0)
+    public function DataSetResults($dataSetId, $columnIds, $filter = '', $ordering = '', $lowerLimit = 0, $upperLimit = 0, $displayId = 0, $associative = false)
     {
         $db =& $this->db;
 
@@ -236,7 +236,8 @@ class DataSet extends Data
         // We are ready to build the select and from part of the SQL
         $SQL  = "SELECT $finalSelect ";
         $SQL .= "  FROM ( ";
-        $SQL .= "   SELECT $outserSelect ";
+        $SQL .= "   SELECT $outserSelect ,";
+        $SQL .= "           RowNumber ";
         $SQL .= "     FROM ( ";
         $SQL .= "      SELECT $selectSQL ";
         $SQL .= "          RowNumber ";
@@ -313,7 +314,7 @@ class DataSet extends Data
 
         Debug::LogEntry($db, 'audit', $SQL);
 
-        if (!$rows = $db->GetArray($SQL, false))
+        if (!$rows = $db->GetArray($SQL, $associative))
             trigger_error($db->error());
 
         if (!is_array($rows))

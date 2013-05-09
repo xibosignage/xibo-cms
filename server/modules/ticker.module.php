@@ -429,12 +429,13 @@ class ticker extends Module
     /**
      * Get Resource
      */
-    public function GetResource()
+    public function GetResource($displayId = 0)
     {
         // Load the HtmlTemplate
         $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
 
-        $sourceId = $this->GetOption('sourceid', 1);
+        // What is the data source for this ticker?
+        $sourceId = $this->GetOption('sourceId', 1);
 
         // Information from the Module
         $direction = $this->GetOption('direction');
@@ -460,21 +461,26 @@ class ticker extends Module
         	'numItems' => $numItems,
         	'scrollSpeed' => $scrollSpeed,
         	'scaleMode' => (($fitText == 0) ? 'scale' : 'fit'),
-        	'scaleFactor' => '[[Factor]]'
+        	'scaleFactor' => '[[Factor]]',
+        	'width' => '[[Width]]',
+        	'height' => '[[Height]]',
+        	'originalWidth' => '[[OriginalWidth]]',
+        	'originalHeight' => '[[OriginalHeight]]',
+        	'scaleFactor' => '[[scaleFactor]]'
     	);
 
         // Generate a JSON string of substituted items.
         if ($sourceId == 2) {
-        	$options['items'] = array('Item 1' . $text, 'Item 2' . $text);
+			$options['items'] = $this->GetDataSetItems($displayId, $text);
         }
         else {
-        	$options['items'] = array('Item 1' . $text, 'Item 2' . $text);
+        	$options['items'] = $this->GetRssItems($text);
         }
 
         // Replace the head content
         $headContent  = '<script type="text/javascript">';
         $headContent .= '   function init() { ';
-        $headContent .= '       $("#text").xiboRender();';
+        $headContent .= '       $("body").xiboRender();';
         $headContent .= '   } ';
         $headContent .= '	var options = ' . json_encode($options);
         $headContent .= '</script>';
@@ -483,9 +489,62 @@ class ticker extends Module
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
         // Replace the Body Content with our generated text
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', json_encode($options), $template);
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', '', $template);
+
+        //var_dump($options);
 
         return $template;
+    }
+
+    private function GetRssItems($text) {
+    	return array('Item 1' . $text, 'Item 2' . $text);
+    }
+
+    private function GetDataSetItems($displayId, $text) {
+
+    	$db =& $this->db;
+
+    	// Extra fields for data sets
+    	$dataSetId = $this->GetOption('datasetid');
+    	$upperLimit = $this->GetOption('upperLimit');
+        $lowerLimit = $this->GetOption('lowerLimit');
+        $filter = $this->GetOption('filter');
+        $ordering = $this->GetOption('ordering');
+
+        // Combine the column id's with the dataset data
+        $matches = '';
+        preg_match_all('/\[(.*)\]/', $text, $matches);
+
+        $columnIds = array();
+        
+        foreach ($matches[1] as $match) {
+        	// Get the column id's we are interested in
+        	$col = explode('|', $match);
+        	$columnIds[] = $col[1];
+        }
+
+        // Get the dataset results
+        Kit::ClassLoader('dataset');
+        $dataSet = new DataSet($db);
+        $dataSetResults = $dataSet->DataSetResults($dataSetId, implode(',', $columnIds), $filter, $ordering, $lowerLimit, $upperLimit, $displayId, true /* Associative */);
+
+        $items = array();
+
+        foreach ($dataSetResults['Rows'] as $row) {
+        	// For each row, substitute into our template
+        	$rowString = $text;
+
+        	foreach ($matches[1] as $sub) {
+    			// Pick the appropriate column out
+    			$subs = explode('|', $sub);
+
+        		$rowString = str_replace('[' . $sub . ']', $row[$subs[0]], $rowString);
+        	}
+
+        	$items[] = $rowString;
+        }
+
+        return $items;
     }
 }
 ?>
