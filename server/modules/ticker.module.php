@@ -289,7 +289,7 @@ class ticker extends Module
 
         $sourceId = $this->GetOption('sourceId', 1);
 		
-		//Other properties
+		// Other properties
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
@@ -326,6 +326,11 @@ class ticker extends Module
 			// Validate the URL
 			if ($uri == "" || $uri == "http://")
 				trigger_error(__('Please enter a Link for this Ticker'), E_USER_ERROR);
+		}
+		else if ($sourceId == 2) {
+			// Make sure we havent entered a silly value in the filter
+			if (strstr($filter, 'DESC'))
+				trigger_error(__('Cannot user ordering criteria in the Filter Clause'), E_USER_ERROR);
 		}
 		
 		if ($this->duration == 0)
@@ -478,7 +483,6 @@ class ticker extends Module
         	'itemsPerPage' => $itemsPerPage,
         	'scrollSpeed' => $scrollSpeed,
         	'scaleMode' => (($fitText == 0) ? 'scale' : 'fit'),
-        	'scaleFactor' => '[[Factor]]',
         	'originalWidth' => $this->width,
         	'originalHeight' => $this->height
     	);

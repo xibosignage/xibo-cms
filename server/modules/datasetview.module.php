@@ -334,6 +334,11 @@ class datasetview extends Module
         if ($updateInterval < 0)
             trigger_error(__('Update Interval must be greater than or equal to 0'), E_USER_ERROR);
 
+        // Make sure we havent entered a silly value in the filter
+        if (strstr($filter, 'DESC'))
+            trigger_error(__('Cannot user ordering criteria in the Filter Clause'), E_USER_ERROR);
+
+        // Store the values on the XLF
         $this->SetOption('upperLimit', $upperLimit);
         $this->SetOption('lowerLimit', $lowerLimit);
         $this->SetOption('filter', $filter);

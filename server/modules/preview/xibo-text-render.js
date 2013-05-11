@@ -71,7 +71,7 @@ jQuery.fn.extend({
                     //  items, 
                     //  numItems (ticker number of items from the start/end),
                     //  takeItemsFrom (ticker sort or reverse sort the array)
-                    if (takeItemsFrom == "end") {
+                    if (options.takeItemsFrom == "end") {
                         console.log("[Xibo] Reversing items");
                         options.items.reverse();
                     }
@@ -83,10 +83,10 @@ jQuery.fn.extend({
                         options.numItems = options.items.length;
 
                     // Get a new array with only the first N elements
-                    options.items = options.items.slice(0, (options.numItems - 1));
+                    options.items = options.items.slice(0, options.numItems);
 
                     // Reverse the items again (so they are in the correct order)
-                    if (takeItemsFrom == "end") {
+                    if (options.takeItemsFrom == "end") {
                         console.log("[Xibo] Reversing items");
                         options.items.reverse();
                     }

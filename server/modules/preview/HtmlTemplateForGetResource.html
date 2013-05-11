@@ -28,157 +28,7 @@ return(!i||i!==r&&!b.contains(r,i))&&(e.type=o.origType,n=o.handler.apply(this,a
 * author Remy Sharp
 * url http://remysharp.com/tag/marquee
 */
-
-(function ($) {
-    $.fn.marquee = function (klass) {
-        var newMarquee = [],
-            last = this.length;
-
-        // works out the left or right hand reset position, based on scroll
-        // behavior, current direction and new direction
-        function getReset(newDir, marqueeRedux, marqueeState) {
-            var behavior = marqueeState.behavior, width = marqueeState.width, dir = marqueeState.dir;
-            var r = 0;
-            if (behavior == 'alternate') {
-                r = newDir == 1 ? marqueeRedux[marqueeState.widthAxis] - (width*2) : width;
-            } else if (behavior == 'slide') {
-                if (newDir == -1) {
-                    r = dir == -1 ? marqueeRedux[marqueeState.widthAxis] : width;
-                } else {
-                    r = dir == -1 ? marqueeRedux[marqueeState.widthAxis] - (width*2) : 0;
-                }
-            } else {
-                r = newDir == -1 ? marqueeRedux[marqueeState.widthAxis] : 0;
-            }
-            return r;
-        }
-
-        // single "thread" animation
-        function animateMarquee() {
-            var i = newMarquee.length,
-                marqueeRedux = null,
-                $marqueeRedux = null,
-                marqueeState = {},
-                newMarqueeList = [],
-                hitedge = false;
-                
-            while (i--) {
-                marqueeRedux = newMarquee[i];
-                $marqueeRedux = $(marqueeRedux);
-                marqueeState = $marqueeRedux.data('marqueeState');
-                
-                if ($marqueeRedux.data('paused') !== true) {
-                    // TODO read scrollamount, dir, behavior, loops and last from data
-                    marqueeRedux[marqueeState.axis] += (marqueeState.scrollamount * marqueeState.dir);
-
-                    // only true if it's hit the end
-                    hitedge = marqueeState.dir == -1 ? marqueeRedux[marqueeState.axis] <= getReset(marqueeState.dir * -1, marqueeRedux, marqueeState) : marqueeRedux[marqueeState.axis] >= getReset(marqueeState.dir * -1, marqueeRedux, marqueeState);
-                    
-                    if ((marqueeState.behavior == 'scroll' && marqueeState.last == marqueeRedux[marqueeState.axis]) || (marqueeState.behavior == 'alternate' && hitedge && marqueeState.last != -1) || (marqueeState.behavior == 'slide' && hitedge && marqueeState.last != -1)) {                        
-                        if (marqueeState.behavior == 'alternate') {
-                            marqueeState.dir *= -1; // flip
-                        }
-                        marqueeState.last = -1;
-
-                        $marqueeRedux.trigger('stop');
-
-                        marqueeState.loops--;
-                        if (marqueeState.loops === 0) {
-                            if (marqueeState.behavior != 'slide') {
-                                marqueeRedux[marqueeState.axis] = getReset(marqueeState.dir, marqueeRedux, marqueeState);
-                            } else {
-                                // corrects the position
-                                marqueeRedux[marqueeState.axis] = getReset(marqueeState.dir * -1, marqueeRedux, marqueeState);
-                            }
-
-                            $marqueeRedux.trigger('end');
-                        } else {
-                            // keep this marquee going
-                            newMarqueeList.push(marqueeRedux);
-                            $marqueeRedux.trigger('start');
-                            marqueeRedux[marqueeState.axis] = getReset(marqueeState.dir, marqueeRedux, marqueeState);
-                        }
-                    } else {
-                        newMarqueeList.push(marqueeRedux);
-                    }
-                    marqueeState.last = marqueeRedux[marqueeState.axis];
-
-                    // store updated state only if we ran an animation
-                    $marqueeRedux.data('marqueeState', marqueeState);
-                } else {
-                    // even though it's paused, keep it in the list
-                    newMarqueeList.push(marqueeRedux);                    
-                }
-            }
-
-            newMarquee = newMarqueeList;
-            
-            if (newMarquee.length) {
-                setTimeout(animateMarquee, 25);
-            }            
-        }
-        
-        // TODO consider whether using .html() in the wrapping process could lead to loosing predefined events...
-        this.each(function (i) {
-            var $marquee = $(this),
-                width = $marquee.attr('width') || $marquee.width(),
-                height = $marquee.attr('height') || $marquee.height(),
-                $marqueeRedux = $marquee.after('<div ' + (klass ? 'class="' + klass + '" ' : '') + 'style="display: block-inline; width: ' + width + 'px; height: ' + height + 'px; overflow: hidden;"><div style="float: left; white-space: nowrap;">' + $marquee.html() + '</div></div>').next(),
-                marqueeRedux = $marqueeRedux.get(0),
-                hitedge = 0,
-                direction = ($marquee.attr('direction') || 'left').toLowerCase(),
-                marqueeState = {
-                    dir : /down|right/.test(direction) ? -1 : 1,
-                    axis : /left|right/.test(direction) ? 'scrollLeft' : 'scrollTop',
-                    widthAxis : /left|right/.test(direction) ? 'scrollWidth' : 'scrollHeight',
-                    last : -1,
-                    loops : $marquee.attr('loop') || -1,
-                    scrollamount : $marquee.attr('scrollamount') || this.scrollAmount || 2,
-                    behavior : ($marquee.attr('behavior') || 'scroll').toLowerCase(),
-                    width : /left|right/.test(direction) ? width : height
-                };
-            
-            // corrects a bug in Firefox - the default loops for slide is -1
-            if ($marquee.attr('loop') == -1 && marqueeState.behavior == 'slide') {
-                marqueeState.loops = 1;
-            }
-
-            $marquee.remove();
-            
-            // add padding
-            if (/left|right/.test(direction)) {
-                $marqueeRedux.find('> div').css('padding', '0 ' + width + 'px');
-            } else {
-                $marqueeRedux.find('> div').css('padding', height + 'px 0');
-            }
-            
-            // events
-            $marqueeRedux.bind('stop', function () {
-                $marqueeRedux.data('paused', true);
-            }).bind('pause', function () {
-                $marqueeRedux.data('paused', true);
-            }).bind('start', function () {
-                $marqueeRedux.data('paused', false);
-            }).bind('unpause', function () {
-                $marqueeRedux.data('paused', false);
-            }).data('marqueeState', marqueeState); // finally: store the state
-            
-            // todo - rerender event allowing us to do an ajax hit and redraw the marquee
-
-            newMarquee.push(marqueeRedux);
-
-            marqueeRedux[marqueeState.axis] = getReset(marqueeState.dir, marqueeRedux, marqueeState);
-            $marqueeRedux.trigger('start');
-            
-            // on the very last marquee, trigger the animation
-            if (i+1 == last) {
-                animateMarquee();
-            }
-        });            
-
-        return $(newMarquee);
-    };
-}(jQuery));
+(function(e){e.fn.marquee=function(t){function i(e,t,n){var r=n.behavior,i=n.width,s=n.dir;var o=0;if(r=="alternate"){o=e==1?t[n.widthAxis]-i*2:i}else if(r=="slide"){if(e==-1){o=s==-1?t[n.widthAxis]:i}else{o=s==-1?t[n.widthAxis]-i*2:0}}else{o=e==-1?t[n.widthAxis]:0}return o}function s(){var t=n.length,r=null,o=null,u={},a=[],f=false;while(t--){r=n[t];o=e(r);u=o.data("marqueeState");if(o.data("paused")!==true){r[u.axis]+=u.scrollamount*u.dir;f=u.dir==-1?r[u.axis]<=i(u.dir*-1,r,u):r[u.axis]>=i(u.dir*-1,r,u);if(u.behavior=="scroll"&&u.last==r[u.axis]||u.behavior=="alternate"&&f&&u.last!=-1||u.behavior=="slide"&&f&&u.last!=-1){if(u.behavior=="alternate"){u.dir*=-1}u.last=-1;o.trigger("stop");u.loops--;if(u.loops===0){if(u.behavior!="slide"){r[u.axis]=i(u.dir,r,u)}else{r[u.axis]=i(u.dir*-1,r,u)}o.trigger("end")}else{a.push(r);o.trigger("start");r[u.axis]=i(u.dir,r,u)}}else{a.push(r)}u.last=r[u.axis];o.data("marqueeState",u)}else{a.push(r)}}n=a;if(n.length){setTimeout(s,25)}}var n=[],r=this.length;this.each(function(o){var u=e(this),a=u.attr("width")||u.width(),f=u.attr("height")||u.height(),l=u.after("<div "+(t?'class="'+t+'" ':"")+'style="display: block-inline; width: '+a+"px; height: "+f+'px; overflow: hidden;"><div style="float: left; white-space: nowrap;">'+u.html()+"</div></div>").next(),c=l.get(0),h=0,p=(u.attr("direction")||"left").toLowerCase(),d={dir:/down|right/.test(p)?-1:1,axis:/left|right/.test(p)?"scrollLeft":"scrollTop",widthAxis:/left|right/.test(p)?"scrollWidth":"scrollHeight",last:-1,loops:u.attr("loop")||-1,scrollamount:u.attr("scrollamount")||this.scrollAmount||2,behavior:(u.attr("behavior")||"scroll").toLowerCase(),width:/left|right/.test(p)?a:f};if(u.attr("loop")==-1&&d.behavior=="slide"){d.loops=1}u.remove();if(/left|right/.test(p)){l.find("> div").css("padding","0 "+a+"px")}else{l.find("> div").css("padding",f+"px 0")}l.bind("stop",function(){l.data("paused",true)}).bind("pause",function(){l.data("paused",true)}).bind("start",function(){l.data("paused",false)}).bind("unpause",function(){l.data("paused",false)}).data("marqueeState",d);n.push(c);c[d.axis]=i(d.dir,c,d);l.trigger("start");if(o+1==r){s()}});return e(n)}})(jQuery)
         </script>
 
         <script type="text/javascript">
@@ -192,41 +42,7 @@ return(!i||i!==r&&!b.contains(r,i))&&(e.type=o.origType,n=o.handler.apply(this,a
 *
 * Date: Thu May 05 14:23:00 2011 -0600
 */
-
-(function( $ ){
-
-    $.fn.fitText = function( kompressor, options ) {
-
-        var settings = {
-            'minFontSize' : Number.NEGATIVE_INFINITY,
-            'maxFontSize' : Number.POSITIVE_INFINITY
-        };
-
-        return this.each(function(){
-            var $this = $(this);              // store the object
-            var compressor = kompressor || 1; // set the compressor
-
-            if ( options ) {
-                $.extend( settings, options );
-            }
-
-            // Resizer() resizes items based on the object width divided by the compressor * 10
-            // Dan Garner: Modified to resize the children
-            var resizer = function () {
-                $this.children().css('font-size', Math.max(Math.min($this.width() / (compressor*10), parseFloat(settings.maxFontSize)), parseFloat(settings.minFontSize)));
-            };
-
-            // Call once to set.
-            resizer();
-
-            // Call on resize. Opera debounces their resize by default.
-            $(window).resize(resizer);
-
-        });
-
-    };
-
-})( jQuery );
+(function(e){e.fn.fitText=function(t,n){var r={minFontSize:Number.NEGATIVE_INFINITY,maxFontSize:Number.POSITIVE_INFINITY};return this.each(function(){var i=e(this);var s=t||1;if(n){e.extend(r,n)}var o=function(){i.children().css("font-size",Math.max(Math.min(i.width()/(s*10),parseFloat(r.maxFontSize)),parseFloat(r.minFontSize)))};o();e(window).resize(o)})}})(jQuery)
         </script>
 
         <script type="text/javascript">
@@ -249,8 +65,9 @@ return(!i||i!==r&&!b.contains(r,i))&&(e.type=o.origType,n=o.handler.apply(this,a
 * You should have received a copy of the GNU Affero General Public License
 * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 */
-jQuery.fn.extend({xiboRender:function(e){console.log("[Xibo] Render");var t={type:"ticker",direction:"single",duration:"50",durationIsPerItem:false,numItems:0,takeItemsFrom:"start",itemsPerPage:0,scrollSpeed:"2",scaleMode:"scale",items:[]};var e=$.extend({},t,e);e.width=$(window).width();e.height=$(window).height();e.scaleFactor=Math.min(e.width/e.originalWidth,e.height/e.originalHeight);this.each(function(){console.log("[Xibo] Selected: "+this.tagName.toLowerCase());console.log("[Xibo] Options: "+JSON.stringify(e));if(e.type=="ticker"){console.log("[Xibo] Ticker");console.log("[Xibo] There are "+e.items.length+" items.");if(e.sourceid==undefined){console.error("Source ID undefined - assuming 1");e.sourceid=1}console.log("[Xibo] SourceId: "+e.sourceid);if(e.sourceid==1){if(takeItemsFrom=="end"){console.log("[Xibo] Reversing items");e.items.reverse()}console.log("[Xibo] Module requested "+e.numItems+" there are "+e.items.length+" in the array of items");if(e.numItems>e.items.length||e.numItems==0)e.numItems=e.items.length;e.items=e.items.slice(0,e.numItems-1);if(takeItemsFrom=="end"){console.log("[Xibo] Reversing items");e.items.reverse()}}else{e.numItems=e.items.length}}console.log("[Xibo] Putting "+e.numItems+" Items on the page");var t=e.numItems;var n=e.itemsPerPage>0?Math.ceil(e.numItems/e.itemsPerPage):e.numItems;var r=1;console.log("[Xibo] We need to have "+n+" pages");var i=this;for(var s=0;s<e.items.length;s++){if(e.direction=="single"&&e.itemsPerPage>0&&(r>=e.itemsPerPage||s==0)){i=$("<div/>").addClass("page").appendTo(this);r=0}$("<div/>").addClass("item").html(e.items[s]).appendTo(i);r++}if(e.scaleMode=="fit"){console.log("[Xibo] Applying jQuery FitText");$("*",this).css("font-size","");$(this).css({width:e.originalWidth,height:e.originalHeight}).fitText(1.75)}else if(e.scaleMode=="scale"){console.log("[Xibo] Applying CSS ZOOM");$(this).css({zoom:e.scaleFactor,width:e.originalWidth,height:e.originalHeight})}var o=false;if(e.direction=="single"){var u=e.itemsPerPage>0?"> .page":"> .item";var a=e.itemsPerPage>0?n:t;var f=e.durationIsPerItem?e.duration:e.duration/a;console.log("[Xibo] initialising the cycle2 plugin with "+a+" slides and selector "+u+". Duration per slide is "+f+" seconds.");$(this).cycle({fx:e.transition,timeout:f*1e3,slides:u})}else if(e.direction=="left"||e.direction=="right"){o=true;$(" .item",this).css({display:"inline","padding-left":"4px"});$(" .item p",this).css({display:"inline"})}else if(e.direction=="up"||e.direction=="down"){o=true}if(o){var l=$("<div/>").addClass("scroll").attr({scrollamount:e.scrollSpeed,scaleFactor:e.scaleFactor,behaviour:"scroll",direction:e.direction,height:e.originalHeight,width:e.originalWidth});$(this).wrapInner(l);$(this).find(".scroll").marquee()}})},dataSetRender:function(e){if(e===undefined||e===null){e={duration:5,transition:"fade"}}$(this).each(function(){var t=$(this).attr("totalPages");$(this).cycle({fx:e.transition,timeout:e.duration*1e3/t,slides:"> table"})})}});if(!window.console){(function(){var e=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"],t,n=e.length;window.console={};for(t=0;t<n;t++){window.console[e[t]]=function(){}}})()}
+jQuery.fn.extend({xiboRender:function(e){console.log("[Xibo] Render");var t={type:"ticker",direction:"single",duration:"50",durationIsPerItem:false,numItems:0,takeItemsFrom:"start",itemsPerPage:0,scrollSpeed:"2",scaleMode:"scale",items:[]};var e=$.extend({},t,e);e.width=$(window).width();e.height=$(window).height();e.scaleFactor=Math.min(e.width/e.originalWidth,e.height/e.originalHeight);this.each(function(){console.log("[Xibo] Selected: "+this.tagName.toLowerCase());console.log("[Xibo] Options: "+JSON.stringify(e));if(e.type=="ticker"){console.log("[Xibo] Ticker");console.log("[Xibo] There are "+e.items.length+" items.");if(e.sourceid==undefined){console.error("Source ID undefined - assuming 1");e.sourceid=1}console.log("[Xibo] SourceId: "+e.sourceid);if(e.sourceid==1){if(e.takeItemsFrom=="end"){console.log("[Xibo] Reversing items");e.items.reverse()}console.log("[Xibo] Module requested "+e.numItems+" there are "+e.items.length+" in the array of items");if(e.numItems>e.items.length||e.numItems==0)e.numItems=e.items.length;e.items=e.items.slice(0,e.numItems);if(e.takeItemsFrom=="end"){console.log("[Xibo] Reversing items");e.items.reverse()}}else{e.numItems=e.items.length}}console.log("[Xibo] Putting "+e.numItems+" Items on the page");var t=e.numItems;var n=e.itemsPerPage>0?Math.ceil(e.numItems/e.itemsPerPage):e.numItems;var r=1;console.log("[Xibo] We need to have "+n+" pages");var i=this;for(var s=0;s<e.items.length;s++){if(e.direction=="single"&&e.itemsPerPage>0&&(r>=e.itemsPerPage||s==0)){i=$("<div/>").addClass("page").appendTo(this);r=0}$("<div/>").addClass("item").html(e.items[s]).appendTo(i);r++}if(e.scaleMode=="fit"){console.log("[Xibo] Applying jQuery FitText");$("*",this).css("font-size","");$(this).css({width:e.originalWidth,height:e.originalHeight}).fitText(1.75)}else if(e.scaleMode=="scale"){console.log("[Xibo] Applying CSS ZOOM");$(this).css({zoom:e.scaleFactor,width:e.originalWidth,height:e.originalHeight})}var o=false;if(e.direction=="single"){var u=e.itemsPerPage>0?"> .page":"> .item";var a=e.itemsPerPage>0?n:t;var f=e.durationIsPerItem?e.duration:e.duration/a;console.log("[Xibo] initialising the cycle2 plugin with "+a+" slides and selector "+u+". Duration per slide is "+f+" seconds.");$(this).cycle({fx:e.transition,timeout:f*1e3,slides:u})}else if(e.direction=="left"||e.direction=="right"){o=true;$(" .item",this).css({display:"inline","padding-left":"4px"});$(" .item p",this).css({display:"inline"})}else if(e.direction=="up"||e.direction=="down"){o=true}if(o){var l=$("<div/>").addClass("scroll").attr({scrollamount:e.scrollSpeed,scaleFactor:e.scaleFactor,behaviour:"scroll",direction:e.direction,height:e.originalHeight,width:e.originalWidth});$(this).wrapInner(l);$(this).find(".scroll").marquee()}})},dataSetRender:function(e){if(e===undefined||e===null){e={duration:5,transition:"fade"}}$(this).each(function(){var t=$(this).attr("totalPages");$(this).cycle({fx:e.transition,timeout:e.duration*1e3/t,slides:"> table"})})}});if(!window.console){(function(){var e=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"],t,n=e.length;window.console={};for(t=0;t<n;t++){window.console[e[t]]=function(){}}})()}
         </script>
+        <!--script type="text/javascript" src="modules/preview/xibo-text-render.js"></script-->
 
         <!--[[[HEADCONTENT]]]-->
 
