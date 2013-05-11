@@ -446,10 +446,8 @@ class ticker extends Module
      */
     public function GetResource($displayId = 0)
     {
-        // Load the HtmlTemplate
-        $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
-
-        // Get the region width/height
+		// Load the HtmlTemplate
+		$template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
 
         // What is the data source for this ticker?
         $sourceId = $this->GetOption('sourceId', 1);
