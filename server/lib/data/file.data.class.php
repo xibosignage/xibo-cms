@@ -159,6 +159,9 @@ class File extends Data
         if (!file_exists($libraryFolder . '/temp'))
             mkdir($libraryFolder . '/temp', 0777, true);
 
+        if (!file_exists($libraryFolder . '/cache'))
+            mkdir($libraryFolder . '/cache', 0777, true);
+
         // Check that we are now writable - if not then error
         if (!is_writable($libraryFolder))
         {
@@ -167,6 +170,15 @@ class File extends Data
         }
 
         return true;
+    }
+
+    public function GetLibraryCacheUri() {
+
+        $db =& $this->db;
+        
+        $libraryFolder  = Config::GetSetting($db, 'LIBRARY_LOCATION');
+
+        return $libraryFolder . '/cache';
     }
 }
 ?>

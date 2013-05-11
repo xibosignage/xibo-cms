@@ -515,7 +515,42 @@ class ticker extends Module
     }
 
     private function GetRssItems($text) {
-    	return array('Item 1' . $text, 'Item 2' . $text);
+
+    	// Make sure we have the cache location configured
+    	Kit::ClassLoader('file');
+    	$file = new File($this->db);
+    	$file->EnsureLibraryExists();
+
+    	// Parse the text template
+    	$matches = '';
+        preg_match_all('/\[.*?\]/', $text, $matches);
+    	
+    	// Use SimplePie to get the feed
+    	include_once('3rdparty/simplepie/autoloader.php');
+
+    	$feed = new SimplePie();
+    	$feed->set_cache_location($file->GetLibraryCacheUri());
+    	$feed->set_feed_url(urldecode($this->GetOption('uri')));
+    	$feed->init();
+
+    	// Store our formatted items
+    	$items = array();
+
+    	foreach ($feed->get_items() as $item) {
+
+    		// Substitute for all matches in the template
+        	$rowString = $item->get_title();
+
+        	//foreach ($matches as $sub) {
+    			// Pick the appropriate column out
+    		//	$rowString = str_replace('[' . $sub . ']', $item[$sub], $rowString);
+        	//}
+
+        	$items[] = $rowString;
+    	}
+
+    	// Return the formatted items
+    	return $items;
     }
 
     private function GetDataSetItems($displayId, $text) {
