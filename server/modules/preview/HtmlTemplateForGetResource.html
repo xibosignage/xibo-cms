@@ -229,7 +229,28 @@ return(!i||i!==r&&!b.contains(r,i))&&(e.type=o.origType,n=o.handler.apply(this,a
 })( jQuery );
         </script>
 
-        <script type="text/javascript" src="modules/preview/xibo-text-render.js"></script>
+        <script type="text/javascript">
+/**
+* Xibo - Digital Signage - http://www.xibo.org.uk
+* Copyright (C) 2009-2013 Daniel Garner
+*
+* This file is part of Xibo.
+*
+* Xibo is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* Xibo is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+*/
+jQuery.fn.extend({xiboRender:function(e){console.log("[Xibo] Render");var t={type:"ticker",direction:"single",duration:"50",durationIsPerItem:false,numItems:0,takeItemsFrom:"start",itemsPerPage:0,scrollSpeed:"2",scaleMode:"scale",items:[]};var e=$.extend({},t,e);e.width=$(window).width();e.height=$(window).height();e.scaleFactor=Math.min(e.width/e.originalWidth,e.height/e.originalHeight);this.each(function(){console.log("[Xibo] Selected: "+this.tagName.toLowerCase());console.log("[Xibo] Options: "+JSON.stringify(e));if(e.type=="ticker"){console.log("[Xibo] Ticker");console.log("[Xibo] There are "+e.items.length+" items.");if(e.sourceid==undefined){console.error("Source ID undefined - assuming 1");e.sourceid=1}console.log("[Xibo] SourceId: "+e.sourceid);if(e.sourceid==1){if(takeItemsFrom=="end"){console.log("[Xibo] Reversing items");e.items.reverse()}console.log("[Xibo] Module requested "+e.numItems+" there are "+e.items.length+" in the array of items");if(e.numItems>e.items.length||e.numItems==0)e.numItems=e.items.length;e.items=e.items.slice(0,e.numItems-1);if(takeItemsFrom=="end"){console.log("[Xibo] Reversing items");e.items.reverse()}}else{e.numItems=e.items.length}}console.log("[Xibo] Putting "+e.numItems+" Items on the page");var t=e.numItems;var n=e.itemsPerPage>0?Math.ceil(e.numItems/e.itemsPerPage):e.numItems;var r=1;console.log("[Xibo] We need to have "+n+" pages");var i=this;for(var s=0;s<e.items.length;s++){if(e.direction=="single"&&e.itemsPerPage>0&&(r>=e.itemsPerPage||s==0)){i=$("<div/>").addClass("page").appendTo(this);r=0}$("<div/>").addClass("item").html(e.items[s]).appendTo(i);r++}if(e.scaleMode=="fit"){console.log("[Xibo] Applying jQuery FitText");$("*",this).css("font-size","");$(this).css({width:e.originalWidth,height:e.originalHeight}).fitText(1.75)}else if(e.scaleMode=="scale"){console.log("[Xibo] Applying CSS ZOOM");$(this).css({zoom:e.scaleFactor,width:e.originalWidth,height:e.originalHeight})}var o=false;if(e.direction=="single"){var u=e.itemsPerPage>0?"> .page":"> .item";var a=e.itemsPerPage>0?n:t;var f=e.durationIsPerItem?e.duration:e.duration/a;console.log("[Xibo] initialising the cycle2 plugin with "+a+" slides and selector "+u+". Duration per slide is "+f+" seconds.");$(this).cycle({fx:e.transition,timeout:f*1e3,slides:u})}else if(e.direction=="left"||e.direction=="right"){o=true;$(" .item",this).css({display:"inline","padding-left":"4px"});$(" .item p",this).css({display:"inline"})}else if(e.direction=="up"||e.direction=="down"){o=true}if(o){var l=$("<div/>").addClass("scroll").attr({scrollamount:e.scrollSpeed,scaleFactor:e.scaleFactor,behaviour:"scroll",direction:e.direction,height:e.originalHeight,width:e.originalWidth});$(this).wrapInner(l);$(this).find(".scroll").marquee()}})},dataSetRender:function(e){if(e===undefined||e===null){e={duration:5,transition:"fade"}}$(this).each(function(){var t=$(this).attr("totalPages");$(this).cycle({fx:e.transition,timeout:e.duration*1e3/t,slides:"> table"})})}});if(!window.console){(function(){var e=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"],t,n=e.length;window.console={};for(t=0;t<n;t++){window.console[e[t]]=function(){}}})()}
+        </script>
 
         <!--[[[HEADCONTENT]]]-->
 
