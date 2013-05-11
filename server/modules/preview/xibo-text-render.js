@@ -51,6 +51,7 @@ jQuery.fn.extend({
             console.log("[Xibo] Selected: " + this.tagName.toLowerCase());
             console.log("[Xibo] Options: " + JSON.stringify(options));
 
+            // Deal with the array of items.
             if (options.type == "ticker") {
                 // This is a ticker - expect an array of items that we need to work on.
                 console.log("[Xibo] Ticker");
@@ -160,15 +161,17 @@ jQuery.fn.extend({
             //  direction (the way we are moving effects the HTML required)
             //  scrollSpeed (how fast we need to move)
             //  scaleMode (using CSS zoom speeds up or slows down the movement)
+            var marquee = false;
+
             if (options.direction == "single") {
 
                 // Cycle slides are either page or item
                 var slides = (options.itemsPerPage > 0) ? "> .page" : "> .item";
                 var numberOfSlides = (options.itemsPerPage > 0) ? numberOfPages : numberOfItems;
 
-                var duration = (options.durationIsPerItem) ? numberOfSlides * options.duration : options.duration;
+                var duration = (options.durationIsPerItem) ? options.duration : options.duration / numberOfSlides;
 
-                console.log("[Xibo] initialising the cycle2 plugin with " + numberOfSlides + " slides and selector " + slides + ". Total Duration for them all is " + duration + " seconds.");
+                console.log("[Xibo] initialising the cycle2 plugin with " + numberOfSlides + " slides and selector " + slides + ". Duration per slide is " + duration + " seconds.");
 
                 // Cycle handles this for us
                 $(this).cycle({
@@ -178,72 +181,19 @@ jQuery.fn.extend({
                 });
             }
             else if (options.direction == "left" || options.direction == "right") {
-
+                marquee = true;
+                
+                // Stack the articles up and move them across the screen
+                $(' .item', this).css({
+                    display: "in-line"
+                });              
             }
             else if (options.direction == "up" || options.direction == "down") {
-                
-            }
-            
-
-            // Scale text to fit the box
-            if (options.scaleText) {
-                // Apply the ZOOM attribute to the body
-                
+                // We want a marquee
+                marquee = true;
             }
 
-            // Fit text?
-            else if (options.fitText) {
-
-                
-            }
-
-            // Ticker?
-            if (options.type == "ticker") {
-                $(".article", this).css({
-                    "padding-left": "4px",
-                    display: "inline"
-                });
-
-                $(".XiboRssItem", this).css({
-                    display: "block",
-                    width: options.originalWidth
-                });
-            }
-
-            // Animated somehow?
-            if (options.direction == "single") {
-                // Use the cycle plugin to switch between the items
-                var totalDuration = options.duration * 1000;
-                var itemCount = $('.XiboRssItem').size();
-                var itemTime;
-
-                if (options.durationIsPerItem)
-                    itemTime = totalDuration / itemCount;
-                else
-                    itemTime = totalDuration;
-
-                if (itemTime < 2000)
-                    itemTime = 2000;
-
-               // Cycle handles this for us
-               $('#text').cycle({
-                   fx: 'fade',
-                   timeout:itemTime
-               });
-            }
-            else if (options.direction == "left" || options.direction == "right") {
-                $("p", this).css("display", "inline");
-            }
-
-            // Marquee?
-            if (options.direction != "none" && options.direction != "single") {
-
-                // Set some options on the node, before calling marquee (behaviour, direction, scrollAmount, width, height)
-                $(this).attr({
-                    width: options.originalWidth,
-                    height: options.originalHeight                    
-                });
-                
+            if (marquee) {
                 // Wrap in an extra DIV - this will be what is scrolled.
                 $(this).wrap("<div class='scroll'>");
                 
