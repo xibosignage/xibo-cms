@@ -52,6 +52,9 @@ class Module implements ModuleInterface
     protected $originalUserId;
     protected $assignedMedia;
 
+    protected $width;
+    protected $height;
+
     /**
      * Constructor - sets up this media object with all the available information
      * @return
@@ -178,6 +181,10 @@ class Module implements ModuleInterface
 
             $mediaNode = $mediaNodeXpath->item(0);
             $mediaNode->setAttribute('schemaVersion', $this->schemaVersion);
+
+            // Get the width and height of this region (original width and height)
+            $this->width = $mediaNode->parentNode->getAttribute('width');
+            $this->height = $mediaNode->parentNode->getAttribute('height');
 
             $this->duration = $mediaNode->getAttribute('duration');
             

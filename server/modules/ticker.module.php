@@ -242,6 +242,7 @@ class ticker extends Module
 		$this->duration = $duration;
 		
 		// Any Options
+		$this->SetOption('xmds', true);
 		$this->SetOption('sourceId', $sourceId);
 		$this->SetOption('uri', $uri);
 		$this->SetOption('datasetid', $dataSetId);
@@ -301,6 +302,7 @@ class ticker extends Module
         $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
         
         // DataSet Specific Options
+		$itemsPerPage = Kit::GetParam('itemsPerPage', _POST, _INT);
         $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
         $lowerLimit = Kit::GetParam('lowerLimit', _POST, _INT);
         $filter = Kit::GetParam('filter', _POST, _STRING);
@@ -345,6 +347,7 @@ class ticker extends Module
         }
 		
 		// Any Options
+		$this->SetOption('xmds', true);
 		$this->SetOption('direction', $direction);
 		$this->SetOption('copyright', $copyright);
 		$this->SetOption('scrollSpeed', $scrollSpeed);
@@ -358,6 +361,7 @@ class ticker extends Module
         $this->SetOption('lowerLimit', $lowerLimit);
         $this->SetOption('filter', $filter);
         $this->SetOption('ordering', $ordering);
+        $this->SetOption('itemsPerPage', $itemsPerPage);
         
         // Text Template
 		$this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
@@ -382,17 +386,23 @@ class ticker extends Module
     public function HoverPreview()
     {
         $msgType = __('Type');
-        $msgUrl = __('Feed');
+        $msgUrl = __('Source');
         $msgDuration = __('Duration');
 
         $url = urldecode($this->GetOption('uri'));
+        $sourceId = $this->GetOption('sourceId', 1);
 
         // Default Hover window contains a thumbnail, media type and duration
         $output = '<div class="thumbnail"><img alt="' . $this->displayType . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif"></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';
-        $output .= '    <li>' . $msgUrl . ': <a href="' . $url . '" target="_blank" title="' . $msgUrl . '">' . $url . '</a></li>';
+
+        if ($sourceId == 2)
+        	$output .= '    <li>' . $msgUrl . ': DataSet</li>';
+        else
+        	$output .= '    <li>' . $msgUrl . ': <a href="' . $url . '" target="_blank" title="' . $msgUrl . '">' . $url . '</a></li>';
+
 
         $output .= '    <li>' . $msgDuration . ': ' . $this->duration . ' ' . __('seconds') . '</li>';
         $output .= '    </ul>';
@@ -434,6 +444,8 @@ class ticker extends Module
         // Load the HtmlTemplate
         $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
 
+        // Get the region width/height
+
         // What is the data source for this ticker?
         $sourceId = $this->GetOption('sourceId', 1);
 
@@ -444,6 +456,8 @@ class ticker extends Module
         $duration = $this->duration;
         $durationIsPerItem = $this->GetOption('durationIsPerItem', 0);
         $numItems = $this->GetOption('numItems', 0);
+        $takeItemsFrom = $this->GetOption('takeItemsFrom', 'start');
+        $itemsPerPage = $this->GetOption('itemsPerPage', 0);
 
         // Get the text out of RAW
         $rawXml = new DOMDocument();
@@ -455,18 +469,18 @@ class ticker extends Module
         $text = $textNode->nodeValue;
 
         $options = array('type' => 'ticker',
+        	'sourceid' => $sourceId,
         	'direction' => $direction,
         	'duration' => $duration,
         	'durationIsPerItem' => (($durationIsPerItem == 0) ? 'false' : 'true'),
         	'numItems' => $numItems,
+        	'takeItemsFrom' => $takeItemsFrom,
+        	'itemsPerPage' => $itemsPerPage,
         	'scrollSpeed' => $scrollSpeed,
         	'scaleMode' => (($fitText == 0) ? 'scale' : 'fit'),
         	'scaleFactor' => '[[Factor]]',
-        	'width' => '[[Width]]',
-        	'height' => '[[Height]]',
-        	'originalWidth' => '[[OriginalWidth]]',
-        	'originalHeight' => '[[OriginalHeight]]',
-        	'scaleFactor' => '[[scaleFactor]]'
+        	'originalWidth' => $this->width,
+        	'originalHeight' => $this->height
     	);
 
         // Generate a JSON string of substituted items.
@@ -480,7 +494,7 @@ class ticker extends Module
         // Replace the head content
         $headContent  = '<script type="text/javascript">';
         $headContent .= '   function init() { ';
-        $headContent .= '       $("body").xiboRender();';
+        $headContent .= '       $("body").xiboRender(options);';
         $headContent .= '   } ';
         $headContent .= '	var options = ' . json_encode($options);
         $headContent .= '</script>';

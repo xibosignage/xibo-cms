@@ -18,6 +18,24 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 $(document).ready(function() {
+
+    // Code from: http://stackoverflow.com/questions/7585351/testing-for-console-log-statements-in-ie/7585409#7585409
+    // Handles console.log calls when there is no console
+    if ( ! window.console ) {
+
+        (function() {
+          var names = ["log", "debug", "info", "warn", "error",
+              "assert", "dir", "dirxml", "group", "groupEnd", "time",
+              "timeEnd", "count", "trace", "profile", "profileEnd"],
+              i, l = names.length;
+
+          window.console = {};
+
+          for ( i = 0; i < l; i++ ) {
+            window.console[ names[i] ] = function() {};
+          }
+        }());
+    }
 	
 	setInterval("XiboPing('index.php?p=clock&q=GetClock')", 1000 * 60); // Every minute
 	
@@ -786,6 +804,8 @@ function SystemMessageInline(messageText, modal) {
 
     if (messageText == '' || messageText == null) 
     	return;
+
+    // TODO: if modal is null (or not a form), then pick the nearest .text error instead.
 
     // Remove existing errors
     $(".text-error", modal).remove();

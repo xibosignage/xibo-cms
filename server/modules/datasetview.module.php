@@ -496,7 +496,7 @@ END;
             if (($rowsPerPage > 0 && $rowCountThisPage > $rowsPerPage) || $rowCount == 1) {
 
                 // Reset the row count on this page
-                $rowCountThisPage = 1;
+                $rowCountThisPage = 0;
 
                 if ($rowCount > 1) {
                     $table .= '</tbody>';
