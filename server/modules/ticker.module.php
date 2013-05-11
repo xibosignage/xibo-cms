@@ -489,18 +489,19 @@ class ticker extends Module
 
         // Generate a JSON string of substituted items.
         if ($sourceId == 2) {
-			$options['items'] = $this->GetDataSetItems($displayId, $text);
+			$items = $this->GetDataSetItems($displayId, $text);
         }
         else {
-        	$options['items'] = $this->GetRssItems($text);
+        	$items = $this->GetRssItems($text);
         }
 
         // Replace the head content
         $headContent  = '<script type="text/javascript">';
         $headContent .= '   function init() { ';
-        $headContent .= '       $("body").xiboRender(options);';
+        $headContent .= '       $("body").xiboRender(options, items);';
         $headContent .= '   } ';
-        $headContent .= '	var options = ' . json_encode($options);
+        $headContent .= '	var options = ' . json_encode($options) . ';';
+        $headContent .= '	var items = ' . json_encode($items) . ';';
         $headContent .= '</script>';
 
         // Replace the Head Content with our generated javascript
@@ -508,8 +509,6 @@ class ticker extends Module
 
         // Replace the Body Content with our generated text
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', '', $template);
-
-        //var_dump($options);
 
         return $template;
     }
@@ -531,6 +530,8 @@ class ticker extends Module
     	$feed = new SimplePie();
     	$feed->set_cache_location($file->GetLibraryCacheUri());
     	$feed->set_feed_url(urldecode($this->GetOption('uri')));
+    	$feed->set_cache_duration(($this->GetOption('updateInterval', 3600) * 60));
+    	$feed->handle_content_type();
     	$feed->init();
 
     	// Store our formatted items
@@ -540,6 +541,8 @@ class ticker extends Module
 
     		// Substitute for all matches in the template
         	$rowString = $item->get_title();
+
+        	//Debug::LogEntry($this->db, 'audit', $rowString);
 
         	//foreach ($matches as $sub) {
     			// Pick the appropriate column out

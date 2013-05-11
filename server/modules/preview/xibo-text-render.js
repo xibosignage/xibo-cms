@@ -18,7 +18,7 @@
 * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 */
 jQuery.fn.extend({
-    xiboRender: function(options) {
+    xiboRender: function(options, items) {
 
         console.log("[Xibo] Render");
 
@@ -32,8 +32,7 @@ jQuery.fn.extend({
             "takeItemsFrom": "start",
             "itemsPerPage": 0,
             "scrollSpeed": "2",
-            "scaleMode": "scale",
-            "items": []
+            "scaleMode": "scale"
         };
 
         var options = $.extend({}, defaults, options);
@@ -55,7 +54,7 @@ jQuery.fn.extend({
             if (options.type == "ticker") {
                 // This is a ticker - expect an array of items that we need to work on.
                 console.log("[Xibo] Ticker");
-                console.log("[Xibo] There are " + options.items.length + " items.");
+                console.log("[Xibo] There are " + items.length + " items.");
 
                 // What source does this data come from?
                 if (options.sourceid == undefined) {
@@ -73,26 +72,26 @@ jQuery.fn.extend({
                     //  takeItemsFrom (ticker sort or reverse sort the array)
                     if (options.takeItemsFrom == "end") {
                         console.log("[Xibo] Reversing items");
-                        options.items.reverse();
+                        items.reverse();
                     }
 
                     // Make sure the num items is not greater than the actual number of items
-                    console.log("[Xibo] Module requested " + options.numItems + " there are " + options.items.length + " in the array of items");
+                    console.log("[Xibo] Module requested " + options.numItems + " there are " + items.length + " in the array of items");
 
-                    if (options.numItems > options.items.length || options.numItems == 0)
-                        options.numItems = options.items.length;
+                    if (options.numItems > items.length || options.numItems == 0)
+                        options.numItems = items.length;
 
                     // Get a new array with only the first N elements
-                    options.items = options.items.slice(0, options.numItems);
+                    options.items = items.slice(0, options.numItems);
 
                     // Reverse the items again (so they are in the correct order)
                     if (options.takeItemsFrom == "end") {
                         console.log("[Xibo] Reversing items");
-                        options.items.reverse();
+                        items.reverse();
                     }
                 }
                 else {
-                    options.numItems = options.items.length;
+                    options.numItems = items.length;
                 }
             }
 
@@ -114,7 +113,7 @@ jQuery.fn.extend({
             var appendTo = this;
             
             // Loop around each of the items we have been given and append them to this element (in a div)
-            for (var i = 0; i < options.items.length; i++) {
+            for (var i = 0; i < items.length; i++) {
 
                 // If we need to set pages, have we switched over to a new page?
                 if (options.direction == "single" && (options.itemsPerPage > 0 && (itemsThisPage >= options.itemsPerPage || i == 0))) {
@@ -128,7 +127,7 @@ jQuery.fn.extend({
                 // For each item output a DIV
                 $("<div/>")
                     .addClass("item")
-                    .html(options.items[i]).appendTo(appendTo);
+                    .html(items[i]).appendTo(appendTo);
 
                 itemsThisPage++;
             }
