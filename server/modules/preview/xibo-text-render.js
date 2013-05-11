@@ -105,10 +105,10 @@ jQuery.fn.extend({
             var numberOfItems = options.numItems;
 
             // How many pages to we need?
-            var numberOfItemsPerPage = (options.itemsPerPage > 0) ? Math.ceil(options.numItems / options.itemsPerPage) : options.numItems;
+            var numberOfPages = (options.itemsPerPage > 0) ? Math.ceil(options.numItems / options.itemsPerPage) : options.numItems;
             var itemsThisPage = 1;
 
-            console.log("[Xibo] We need to have " + numberOfItemsPerPage + " items per page");
+            console.log("[Xibo] We need to have " + numberOfPages + " pages");
 
             var appendTo = this;
             
@@ -116,7 +116,7 @@ jQuery.fn.extend({
             for (var i = 0; i < options.items.length; i++) {
 
                 // If we need to set pages, have we switched over to a new page?
-                if (options.direction == "single" && ((numberOfItemsPerPage > 0 && itemsThisPage > numberOfItemsPerPage) || i == 0)) {
+                if (options.direction == "single" && ((options.itemsPerPage > 0 && itemsThisPage >= options.itemsPerPage) || i == 0)) {
                     // Append a new page to the body
                     appendTo = $("<div/>").addClass("page").appendTo(this);
 
@@ -162,6 +162,20 @@ jQuery.fn.extend({
             //  scaleMode (using CSS zoom speeds up or slows down the movement)
             if (options.direction == "single") {
 
+                // Cycle slides are either page or item
+                var slides = (options.itemsPerPage > 0) ? "> .page" : "> .item";
+                var numberOfSlides = (options.itemsPerPage > 0) ? numberOfPages : numberOfItems;
+
+                var duration = (options.durationIsPerItem) ? numberOfSlides * options.duration : options.duration;
+
+                console.log("[Xibo] initialising the cycle2 plugin with " + numberOfSlides + " slides and selector " + slides + ". Total Duration for them all is " + duration + " seconds.");
+
+                // Cycle handles this for us
+                $(this).cycle({
+                    fx: options.transition,
+                    timeout: (duration * 1000),
+                    slides: slides
+                });
             }
             else if (options.direction == "left" || options.direction == "right") {
 

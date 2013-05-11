@@ -493,7 +493,7 @@ END;
 
         foreach($dataSetResults['Rows'] as $row)
         {
-            if (($rowsPerPage > 0 && $rowCountThisPage > $rowsPerPage) || $rowCount == 1) {
+            if (($rowsPerPage > 0 && $rowCountThisPage >= $rowsPerPage) || $rowCount == 1) {
 
                 // Reset the row count on this page
                 $rowCountThisPage = 0;
