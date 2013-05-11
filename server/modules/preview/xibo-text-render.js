@@ -27,7 +27,7 @@ jQuery.fn.extend({
             "type": "ticker",
             "direction": "single",
             "duration": "50",
-            "durationIsPerItem": "true",
+            "durationIsPerItem": false,
             "numItems": 0,
             "takeItemsFrom": "start",
             "itemsPerPage": 0,
@@ -117,7 +117,7 @@ jQuery.fn.extend({
             for (var i = 0; i < options.items.length; i++) {
 
                 // If we need to set pages, have we switched over to a new page?
-                if (options.direction == "single" && ((options.itemsPerPage > 0 && itemsThisPage >= options.itemsPerPage) || i == 0)) {
+                if (options.direction == "single" && (options.itemsPerPage > 0 && (itemsThisPage >= options.itemsPerPage || i == 0))) {
                     // Append a new page to the body
                     appendTo = $("<div/>").addClass("page").appendTo(this);
 
@@ -136,7 +136,7 @@ jQuery.fn.extend({
             // 3rd Objective Scale the entire thing accoring to the scaleMode
             // settings involved:
             //  scaleMode
-            if (options.scaleMode == "fittext") {
+            if (options.scaleMode == "fit") {
 
                 console.log("[Xibo] Applying jQuery FitText");
 
@@ -144,7 +144,12 @@ jQuery.fn.extend({
                 $("*", this).css("font-size", "");
 
                 // Run the Fit Text plugin
-                $(this).fitText(1.75);
+                $(this)
+                    .css({
+                        width: options.originalWidth,
+                        height: options.originalHeight
+                    })
+                    .fitText(1.75);
             }
             else if (options.scaleMode == "scale") {
                 console.log("[Xibo] Applying CSS ZOOM");
@@ -185,8 +190,13 @@ jQuery.fn.extend({
                 
                 // Stack the articles up and move them across the screen
                 $(' .item', this).css({
-                    display: "in-line"
-                });              
+                    display: "inline",
+                    "padding-left": "4px"
+                });
+
+                $(' .item p', this).css({
+                    display: "inline"
+                });
             }
             else if (options.direction == "up" || options.direction == "down") {
                 // We want a marquee
@@ -194,18 +204,23 @@ jQuery.fn.extend({
             }
 
             if (marquee) {
-                // Wrap in an extra DIV - this will be what is scrolled.
-                $(this).wrap("<div class='scroll'>");
                 
+                // Create a DIV to scroll, and put this inside the body
+                var scroller = $("<div/>")
+                    .addClass("scroll")
+                    .attr({
+                        scrollamount: options.scrollSpeed,
+                        scaleFactor: options.scaleFactor,
+                        behaviour: "scroll",
+                        direction: options.direction,
+                        height: options.originalHeight,
+                        width: options.originalWidth
+                    });
+
+                $(this).wrapInner(scroller);
+
                 // Set some options on the extra DIV and make it a marquee
-                $(this).parent().attr({
-                    scrollamount: options.scrollSpeed,
-                    scaleFactor: options.scaleFactor,
-                    behaviour: "scroll",
-                    direction: options.direction,
-                    height: options.height,
-                    width: options.width
-                }).marquee();
+                $(this).find('.scroll').marquee();
             }
         });
     },

@@ -472,7 +472,7 @@ class ticker extends Module
         	'sourceid' => $sourceId,
         	'direction' => $direction,
         	'duration' => $duration,
-        	'durationIsPerItem' => (($durationIsPerItem == 0) ? 'false' : 'true'),
+        	'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
         	'numItems' => $numItems,
         	'takeItemsFrom' => $takeItemsFrom,
         	'itemsPerPage' => $itemsPerPage,
@@ -525,14 +525,18 @@ class ticker extends Module
         $filter = $this->GetOption('filter');
         $ordering = $this->GetOption('ordering');
 
+        Debug::LogEntry($db, 'audit', 'Then template for each row is: ' . $text);
+
         // Combine the column id's with the dataset data
         $matches = '';
-        preg_match_all('/\[(.*)\]/', $text, $matches);
+        preg_match_all('/\[(.*?)\]/', $text, $matches);
 
         $columnIds = array();
         
         foreach ($matches[1] as $match) {
         	// Get the column id's we are interested in
+        	Debug::LogEntry($db, 'audit', 'Matched column: ' . $match);
+
         	$col = explode('|', $match);
         	$columnIds[] = $col[1];
         }
