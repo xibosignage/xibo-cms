@@ -242,7 +242,7 @@ class ticker extends Module
 		$this->duration = $duration;
 		
 		// Any Options
-		$this->SetOption('xmds', true);
+		$this->SetOption('xmds', ($sourceId == 2));
 		$this->SetOption('sourceId', $sourceId);
 		$this->SetOption('uri', $uri);
 		$this->SetOption('datasetid', $dataSetId);
@@ -352,7 +352,7 @@ class ticker extends Module
         }
 		
 		// Any Options
-		$this->SetOption('xmds', true);
+		$this->SetOption('xmds', ($sourceId == 2));
 		$this->SetOption('direction', $direction);
 		$this->SetOption('copyright', $copyright);
 		$this->SetOption('scrollSpeed', $scrollSpeed);
@@ -438,7 +438,7 @@ class ticker extends Module
         $widthPx	= $width.'px';
         $heightPx	= $height.'px';
 
-        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&raw=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
 
     /**
@@ -446,7 +446,7 @@ class ticker extends Module
      */
     public function GetResource($displayId = 0)
     {
-		// Load the HtmlTemplate
+    	// Load the HtmlTemplate
 		$template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
 
         // What is the data source for this ticker?
@@ -501,6 +501,10 @@ class ticker extends Module
         $headContent .= '	var options = ' . json_encode($options) . ';';
         $headContent .= '	var items = ' . json_encode($items) . ';';
         $headContent .= '</script>';
+
+        // Replace the View Port Width?
+    	if (isset($_GET['preview']))
+        	$template = str_replace('[[ViewPortWidth]]', $this->width . 'px', $template);
 
         // Replace the Head Content with our generated javascript
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
