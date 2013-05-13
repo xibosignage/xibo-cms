@@ -792,9 +792,31 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        // TODO:
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _INT);
+        $mediaList = $this->GetParam('mediaList', _ARRAY);
 
-        return $this->Error(1000, 'Not implemented');
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Check the user has permission
+        Kit::ClassLoader('region');
+        $region = new region($db);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // TODO: Validate the media list in some way (make sure there are the correct number of items)
+        
+
+        // Hand off to the region object to do the actual reorder
+        if (!$region->ReorderTimeline($layoutId, $regionId, $mediaList))
+            return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
