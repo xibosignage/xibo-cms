@@ -79,6 +79,9 @@ class Kit
 	 */
 	static public function GetParam($param, $source = _POST, $type = _STRING, $default = '')
 	{
+		// lower case param (we dont care)
+		$param = strtolower($param);
+
 		if (is_array($source))
 		{
 			if(!isset($source[$param])) 
@@ -95,6 +98,9 @@ class Kit
 			switch ($source)
 			{
 				case 'session':
+
+					if (isset($_SESSION))
+						$_SESSION = array_change_key_case($_SESSION);
 				
 					if(!isset($_SESSION[$param])) 
 					{
@@ -120,6 +126,8 @@ class Kit
 					break;
 				
 				case 'request':
+
+					$_REQUEST = array_change_key_case($_REQUEST);
 				
 					if(!isset($_REQUEST[$param])) 
 					{
@@ -140,6 +148,8 @@ class Kit
 					break;
 					
 				case 'get':
+
+					$_GET = array_change_key_case($_GET);
 				
 					if(!isset($_GET[$param])) 
 					{
@@ -160,6 +170,8 @@ class Kit
 					break;
 					
 				case 'post':
+
+					$_POST = array_change_key_case($_POST);
 		
 					if(!isset($_POST[$param])) 
 					{

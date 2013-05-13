@@ -742,9 +742,9 @@ END;
         $timeBarColouring = Config::GetSetting($db, 'REGION_OPTIONS_COLOURING');
 
         // Create a layout object
-        $layout = new Layout($db);
+        $region = new Region($db);
 
-        foreach($layout->GetMediaNodeList($layoutId, $regionId) as $mediaNode)
+        foreach($region->GetMediaNodeList($layoutId, $regionId) as $mediaNode)
         {
             // Put this node vertically in the region timeline
             $mediaId = $mediaNode->getAttribute('id');

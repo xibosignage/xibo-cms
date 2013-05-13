@@ -428,24 +428,6 @@ END;
     }
 
     /**
-     * Get media node list
-     * @param <type> $layoutId
-     * @param <type> $regionId
-     */
-    public function GetMediaNodeList($layoutId, $regionId)
-    {
-        if (!$xml = $this->GetLayoutXml($layoutId))
-            return false;
-
-        // Load the XML into a new DOMDocument
-        $document = new DOMDocument();
-        $document->loadXML($xml);
-
-        $xpath = new DOMXPath($document);
-        return $xpath->query("//region[@id='$regionId']/media");
-    }
-
-    /**
      * Sets the Layout Xml and writes it back to the database
      * @return
      * @param $layoutid Object

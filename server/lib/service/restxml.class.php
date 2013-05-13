@@ -83,5 +83,67 @@ class RestXml extends Rest
         // Return it as a string
         return $xmlDoc->saveXML();
     }
+
+    /**
+     * Returns an ID only response
+     * @param <string> $nodeName
+     * @param <string> $id
+     * @param <string> $idAttributeName
+     * @return <DOMDocument::XmlElement>
+     */
+    protected function ReturnId($nodeName, $id, $idAttributeName = 'id')
+    {
+        $xmlDoc = new DOMDocument();
+        $xmlElement = $xmlDoc->createElement($nodeName);
+        $xmlElement->setAttribute($idAttributeName, $id);
+
+        return $xmlElement;
+    }
+
+    /**
+     * Returns a single node with the attributes contained in a key/value array
+     * @param <type> $nodeName
+     * @param <type> $attributes
+     * @return <DOMDocument::XmlElement>
+     */
+    protected function ReturnAttributes($nodeName, $attributes)
+    {
+        $xmlDoc = new DOMDocument();
+        $xmlElement = $xmlDoc->createElement($nodeName);
+
+        foreach ($attributes as $key => $value)
+        {
+            $xmlElement->setAttribute($key, $value);
+        }
+
+        return $xmlElement;
+    }
+
+    /**
+     * Creates a node list from an array
+     * @param <type> $array
+     * @param <type> $node
+     */
+    protected function NodeListFromArray($array, $nodeName)
+    {
+        Debug::LogEntry($this->db, 'audit', sprintf('Building node list containing %d items', count($array)));
+
+        $xmlDoc = new DOMDocument();
+        $xmlElement = $xmlDoc->createElement($nodeName . 'Items');
+        $xmlElement->setAttribute('length', count($array));
+
+        // Create the XML nodes
+        foreach($array as $arrayItem)
+        {
+            $node = $xmlDoc->createElement($nodeName);
+            foreach($arrayItem as $key => $value)
+            {
+                $node->setAttribute($key, $value);
+            }
+            $xmlElement->appendChild($node);
+        }
+
+        return $xmlElement;
+    }
 }
 ?>

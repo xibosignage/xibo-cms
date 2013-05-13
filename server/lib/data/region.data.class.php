@@ -20,12 +20,11 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class region 
+class Region extends Data
 {
-	private $db;
 	public $errorMsg;
 	
-	function __construct(database $db) 
+	public function __construct(database $db) 
 	{
 		$this->db 	=& $db;
 		
@@ -794,6 +793,24 @@ class region
             // Replace the old node we found with XPath with the new node we just created
             $optionNode->replaceChild($newNode, $userOptions->item(0));
         }
+    }
+
+    /**
+     * Get media node list
+     * @param <type> $layoutId
+     * @param <type> $regionId
+     */
+    public function GetMediaNodeList($layoutId, $regionId)
+    {
+        if (!$xml = $this->GetLayoutXml($layoutId))
+            return false;
+
+        // Load the XML into a new DOMDocument
+        $document = new DOMDocument();
+        $document->loadXML($xml);
+
+        $xpath = new DOMXPath($document);
+        return $xpath->query("//region[@id='$regionId']/media");
     }
 }
 ?>

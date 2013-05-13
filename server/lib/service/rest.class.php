@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2010-2012 Daniel Garner
+ * Copyright (C) 2010-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -701,7 +701,43 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _INT);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Create a region object
+        Kit::ClassLoader('region');
+        $region = new Region($this->db);
+
+        // Region Assignment needs the Owner Id
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // We have permission to be here.
+        // Return a list of media items
+        if (!$items = $region->GetMediaNodeList($layoutId, $regionId))
+            return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
+
+        $regionItems = array();
+
+        foreach ($items as $item) {
+            // Get the Type, ID, duration, etc (the generic information)
+            $mediaId = $mediaNode->getAttribute('id');
+            $lkId = $mediaNode->getAttribute('lkid');
+            $mediaType = $mediaNode->getAttribute('type');
+            $mediaDuration = $mediaNode->getAttribute('duration');
+
+            // Add these items to an array
+            $regionItems[] = array('mediaid' => $mediaId, 'lkid' => $lkId, 'type' => $mediaType, 'duration' => $mediaDuration);
+        }
+
+        return $this->Respond($this->NodeListFromArray($regionItems, 'media'));
     }
 
     /**
@@ -710,8 +746,11 @@ class Rest
      */
     public function LayoutRegionMediaAdd()
     {
+        // Does this user have permission to call this webservice method?
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
+
+        // TODO: How do we know what the parameters should be? The module needs to do this and set the XML.
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -725,6 +764,8 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
+        // TODO: 
+
         return $this->Error(1000, 'Not implemented');
     }
 
@@ -736,6 +777,8 @@ class Rest
     {
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
+
+        // TODO:
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -749,6 +792,8 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
+        // TODO:
+
         return $this->Error(1000, 'Not implemented');
     }
 
@@ -761,6 +806,8 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
+        // TODO: 
+
         return $this->Error(1000, 'Not implemented');
     }
 
@@ -772,6 +819,8 @@ class Rest
     {
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
+
+        // TODO: 
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -897,68 +946,6 @@ class Rest
     protected function GetParam($param, $type, $default = null)
     {
         return Kit::GetParam($param, $this->POST, $type, $default);
-    }
-
-    /**
-     * Returns an ID only response
-     * @param <string> $nodeName
-     * @param <string> $id
-     * @param <string> $idAttributeName
-     * @return <DOMDocument::XmlElement>
-     */
-    protected function ReturnId($nodeName, $id, $idAttributeName = 'id')
-    {
-        $xmlDoc = new DOMDocument();
-        $xmlElement = $xmlDoc->createElement($nodeName);
-        $xmlElement->setAttribute($idAttributeName, $id);
-
-        return $xmlElement;
-    }
-
-    /**
-     * Returns a single node with the attributes contained in a key/value array
-     * @param <type> $nodeName
-     * @param <type> $attributes
-     * @return <DOMDocument::XmlElement>
-     */
-    protected function ReturnAttributes($nodeName, $attributes)
-    {
-        $xmlDoc = new DOMDocument();
-        $xmlElement = $xmlDoc->createElement($nodeName);
-
-        foreach ($attributes as $key => $value)
-        {
-            $xmlElement->setAttribute($key, $value);
-        }
-
-        return $xmlElement;
-    }
-
-    /**
-     * Creates a node list from an array
-     * @param <type> $array
-     * @param <type> $node
-     */
-    protected function NodeListFromArray($array, $nodeName)
-    {
-        Debug::LogEntry($this->db, 'audit', sprintf('Building node list containing %d items', count($array)));
-
-        $xmlDoc = new DOMDocument();
-        $xmlElement = $xmlDoc->createElement($nodeName . 'Items');
-        $xmlElement->setAttribute('length', count($array));
-
-        // Create the XML nodes
-        foreach($array as $arrayItem)
-        {
-            $node = $xmlDoc->createElement($nodeName);
-            foreach($arrayItem as $key => $value)
-            {
-                $node->setAttribute($key, $value);
-            }
-            $xmlElement->appendChild($node);
-        }
-
-        return $xmlElement;
     }
 }
 ?>
