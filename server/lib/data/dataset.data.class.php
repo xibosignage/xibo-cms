@@ -181,8 +181,11 @@ class DataSet extends Data
         $columns = explode(',', $columnIds);
 
         // Get the Latitude and Longitude ( might be used in a formula )
-        if ($displayId == 0)
-            $displayGeoLocation = "GEOMFROMTEXT('POINT(51.504 -0.104)')";
+        if ($displayId == 0) {
+            $defaultLat = Config::GetSetting($db, 'DEFAULT_LAT');
+            $defaultLong = Config::GetSetting($db, 'DEFAULT_LONG');
+            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $defaultLat . " " . $defaultLong . ")')";
+        }
         else
             $displayGeoLocation = sprintf("(SELECT GeoLocation FROM `display` WHERE DisplayID = %d)", $displayId);
 
@@ -252,24 +255,7 @@ class DataSet extends Data
         $SQL .= "    ) datasetdata ";
         if ($filter != '')
         {
-            $where = ' WHERE 1 = 1 ';
-
-            $filter = explode(',', $filter);
-
-            foreach ($filter as $filterPair)
-            {
-                $filterPair = explode('=', $filterPair);
-
-                // Validate filter pair 1 doesn't contain any disallowed words
-                $disallowedKeywords = array('AND', 'OR');
-
-                if (in_array($filterPair[1], $disallowedKeywords))
-                    continue;
-
-                $where .= sprintf(" AND %s = %s ", $filterPair[0], $filterPair[1]);
-            }
-
-            $SQL .= $where . ' ';
+            $SQL .= ' WHERE ' . $filter;
         }
         $SQL .= ' ) finalselect ';
 
