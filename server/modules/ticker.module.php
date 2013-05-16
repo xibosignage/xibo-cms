@@ -145,7 +145,7 @@ class ticker extends Module
 
 		// Checkboxes
 		Theme::Set('fitTextChecked', ($this->GetOption('fitText', 0) == 0) ? '' : ' checked');
-		Theme::Set('pagesSideBySideChecked', ($this->GetOption('pagesSideBySide', 0) == 0) ? '' : ' checked');
+		Theme::Set('itemsSideBySideChecked', ($this->GetOption('itemsSideBySide', 0) == 0) ? '' : ' checked');
         Theme::Set('durationIsPerItemChecked', ($this->GetOption('durationIsPerItem') == '1') ? 'checked' : '');
 		
 		// Get the text out of RAW
@@ -301,7 +301,7 @@ class ticker extends Module
 		$takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
 		$durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
         $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
-        $pagesSideBySide = Kit::GetParam('pagesSideBySide', _POST, _CHECKBOX);
+        $itemsSideBySide = Kit::GetParam('itemsSideBySide', _POST, _CHECKBOX);
         
         // DataSet Specific Options
 		$itemsPerPage = Kit::GetParam('itemsPerPage', _POST, _INT);
@@ -377,7 +377,7 @@ class ticker extends Module
         $this->SetOption('takeItemsFrom', $takeItemsFrom);
 		$this->SetOption('durationIsPerItem', $durationIsPerItem);
         $this->SetOption('fitText', $fitText);
-        $this->SetOption('pagesSideBySide', $pagesSideBySide);
+        $this->SetOption('itemsSideBySide', $itemsSideBySide);
         $this->SetOption('upperLimit', $upperLimit);
         $this->SetOption('lowerLimit', $lowerLimit);
         $this->SetOption('filter', $filter);
@@ -472,7 +472,7 @@ class ticker extends Module
         $direction = $this->GetOption('direction');
         $scrollSpeed = $this->GetOption('scrollSpeed');
         $fitText = $this->GetOption('fitText', 0);
-        $pagesSideBySide = $this->GetOption('pagesSideBySide', 0);
+        $itemsSideBySide = $this->GetOption('itemsSideBySide', 0);
         $duration = $this->duration;
         $durationIsPerItem = $this->GetOption('durationIsPerItem', 0);
         $numItems = $this->GetOption('numItems', 0);
@@ -519,7 +519,7 @@ class ticker extends Module
         $headContent .= '	var items = ' . json_encode($items) . ';';
         $headContent .= '</script>';
 
-        if ($pagesSideBySide == 1) {
+        if ($itemsSideBySide == 1) {
 	        $headContent .= '<style type="text/css">';
 	        $headContent .= ' .item, .page { float: left; }';
 	        $headContent .= '</style>';

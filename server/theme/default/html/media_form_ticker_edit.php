@@ -65,8 +65,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         	</div>
             <div class="control-group">
                 <div class="controls">
-                    <label class="checkbox" for="pagesSideBySide" title="<?php echo Theme::Translate('Show pages side by side?n'); ?>"><?php echo Theme::Translate('Show pages side by side?'); ?>
-                        <input id="pagesSideBySide" name="pagesSideBySide" type="checkbox" <?php echo Theme::Get('pagesSideBySideChecked'); ?>>
+                    <label class="checkbox" for="itemsSideBySide" title="<?php echo Theme::Translate('Show items side by side?'); ?>"><?php echo Theme::Translate('Show items side by side?'); ?>
+                        <input id="itemsSideBySide" name="itemsSideBySide" type="checkbox" <?php echo Theme::Get('itemsideChecked'); ?>>
                     </label>
                 </div>
             </div>
