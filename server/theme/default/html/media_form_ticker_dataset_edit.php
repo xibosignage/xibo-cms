@@ -92,6 +92,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             </div>
             <div class="control-group">
                 <div class="controls">
+                    <label class="checkbox" for="pagesSideBySide" title="<?php echo Theme::Translate('Show pages side by side?n'); ?>"><?php echo Theme::Translate('Show pages side by side?'); ?>
+                        <input id="pagesSideBySide" name="pagesSideBySide" type="checkbox" <?php echo Theme::Get('pagesSideBySideChecked'); ?>>
+                    </label>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
                     <label class="checkbox" for="fitText" title="<?php echo Theme::Translate('Fit text to region'); ?>"><?php echo Theme::Translate('Fit text to region'); ?>
                         <input id="fitText" name="fitText" type="checkbox" <?php echo Theme::Get('fitTextChecked'); ?>>
                     </label>
