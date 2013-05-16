@@ -331,6 +331,16 @@ class ticker extends Module
 			// Make sure we havent entered a silly value in the filter
 			if (strstr($filter, 'DESC'))
 				trigger_error(__('Cannot user ordering criteria in the Filter Clause'), E_USER_ERROR);
+
+			if (!is_numeric($upperLimit) || !is_numeric($lowerLimit))
+	            trigger_error(__('Limits must be numbers'), E_USER_ERROR);
+
+	        if ($upperLimit < 0 || $lowerLimit < 0)
+	            trigger_error(__('Limits cannot be lower than 0'), E_USER_ERROR);
+
+	        // Check the bounds of the limits
+	        if ($upperLimit < $lowerLimit)
+	        	trigger_error(__('Upper limit must be higher than lower limit'), E_USER_ERROR);
 		}
 		
 		if ($this->duration == 0)
@@ -350,6 +360,9 @@ class ticker extends Module
 				return $this->response;
             }
         }
+
+		if ($updateInterval < 0)
+            trigger_error(__('Update Interval must be greater than or equal to 0'), E_USER_ERROR);
 		
 		// Any Options
 		$this->SetOption('xmds', ($sourceId == 2));
