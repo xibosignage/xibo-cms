@@ -52,6 +52,8 @@ class Module implements ModuleInterface
     protected $originalUserId;
     protected $assignedMedia;
 
+    public $errorMessage;
+
     /**
      * Constructor - sets up this media object with all the available information
      * @return
@@ -621,104 +623,84 @@ END;
 	 */
 	public function DeleteMedia()
 	{
-            $db =& $this->db;
+        $db =& $this->db;
 
-            $layoutid = $this->layoutid;
-            $regionid = $this->regionid;
-            $mediaid = $this->mediaid;
+        Kit::ClassLoader('Media');
+        $mediaObject = new Media($db);
 
-            // Check permissions
-            if (!$this->auth->del)
-            {
-                $this->response->SetError('You do not have permission to delete this assignment.');
-                $this->response->keepOpen = false;
-                return $this->response;
-            }
+        $layoutid = $this->layoutid;
+        $regionid = $this->regionid;
+        $mediaid = $this->mediaid;
 
-            // Extra work if we are on a layout
-            if ($layoutid != '')
-            {
-                Kit::ClassLoader('layoutmediagroupsecurity');
-                $security = new LayoutMediaGroupSecurity($db);
-
-                if (!$security->UnlinkAll($layoutid, $regionid, $this->mediaid))
-                    trigger_error($security->GetErrorMessage(), E_USER_ERROR);
-
-                $this->deleteFromRegion = true;
-                $this->UpdateRegion();
-            }
-
-            // Are we region specific media?
-            if (!$this->regionSpecific)
-            {
-                $options = Kit::GetParam('options', _POST, _WORD);
-
-                // If we are set to retire we retire
-		if ($options == 'retire')
-		{
-                    //Update the media record to say it is retired
-                    $SQL = sprintf("UPDATE media SET retired = 1 WHERE mediaid = %d ", $mediaid);
-
-                    if (!$db->query($SQL))
-                    {
-                        trigger_error($db->error());
-
-                        $this->response->SetError(__('Database error retiring this media record.'));
-                        $this->response->keepOpen = true;
-                        return $this->response;
-                    }
-		}
-
-		// If we are set to delete, we delete
-		if ($options == 'delete')
-		{
-                    // Get the file location from the database
-                    $storedAs = $db->GetSingleValue(sprintf("SELECT storedAs FROM media WHERE mediaid = %d", $mediaid), 'storedAs', _FILENAME);
-
-                    // Remove permission assignments
-                    Kit::ClassLoader('mediagroupsecurity');
-
-                    $security = new MediaGroupSecurity($db);
-
-                    if (!$security->UnlinkAll($mediaid))
-                        trigger_error($security->GetErrorMessage(), E_USER_ERROR);
-
-                    //Update the media record to say it is retired
-                    $SQL = sprintf("DELETE FROM media WHERE mediaid = %d ", $mediaid);
-
-                    if (!$db->query($SQL))
-                    {
-                        trigger_error($db->error());
-
-                        $this->response->SetError(__('Database error deleting this media record.'));
-                        $this->response->keepOpen = true;
-                        return $this->response;
-                    }
-
-                    $this->DeleteMediaFiles($storedAs);
-
-                    // Bring back the previous revision of this media (if there is one)
-                    $editedMediaRow = $db->GetSingleRow(sprintf('SELECT IFNULL(MediaID, 0) AS MediaID FROM media WHERE EditedMediaID = %d', $mediaid));
-
-                    if (count($editedMediaRow) > 0)
-                    {
-                        // Unretire this edited record
-                        $editedMediaId = Kit::ValidateParam($editedMediaRow['MediaID'], _INT);
-                        $db->query(sprintf('UPDATE media SET IsEdited = 0, EditedMediaID = NULL WHERE mediaid = %d', $editedMediaId));
-                    }
-		}
-
-                $this->response->message = __('Media Deleted');
-            }
-
-            // We want to load the region timeline form back again
-            if ($layoutid != '')
-            {
-                $this->response->loadForm = true;
-                $this->response->loadFormUri= "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-            }
-                
+        // Check permissions
+        if (!$this->auth->del)
+        {
+            $this->response->SetError('You do not have permission to delete this assignment.');
+            $this->response->keepOpen = false;
             return $this->response;
+        }
+
+        // Extra work if we are on a layout
+        if ($layoutid != '')
+        {
+            if (!$this->ApiDeleteRegionMedia($layoutid, $regionid, $mediaid)) {
+				$this->response->keepOpen = true;
+            	$this->response->SetError($this->errorMessage);
+				return $this->response;
+            }
+        }
+
+        // Are we region specific media?
+        if (!$this->regionSpecific)
+        {
+            $options = Kit::GetParam('options', _POST, _WORD);
+
+            // If we are set to retire we retire
+			if ($options == 'retire')
+			{
+	            if (!$mediaObject->Retire($mediaid)) {
+	            	$this->response->SetError($mediaObject->GetErrorMessage());
+					$this->response->keepOpen = true;
+					return $this->response;
+	            }
+			}
+
+			// If we are set to delete, we delete
+			if ($options == 'delete')
+			{
+                if (!$mediaObject->Delete($mediaid)) {
+            		$this->response->SetError($mediaObject->GetErrorMessage());
+	            	$this->response->keepOpen = true;
+					return $this->response;
+                }
+			}
+
+            $this->response->message = __('Media Deleted');
+        }
+
+        // We want to load the region timeline form back again
+        if ($layoutid != '')
+        {
+            $this->response->loadForm = true;
+            $this->response->loadFormUri= "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+        }
+                
+        return $this->response;
+	}
+
+	public function ApiDeleteRegionMedia($layoutid, $regionid, $mediaid) {
+		$db =& $this->db;
+
+		Kit::ClassLoader('layoutmediagroupsecurity');
+        $security = new LayoutMediaGroupSecurity($db);
+
+        if (!$security->UnlinkAll($layoutid, $regionid, $this->mediaid)) {
+        	$this->errorMessage = $security->GetErrorMessage();
+        	return false;
+        }
+
+        $this->deleteFromRegion = true;
+        $this->UpdateRegion();
 	}
 
 	/**

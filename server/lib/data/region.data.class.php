@@ -812,5 +812,60 @@ class Region extends Data
         $xpath = new DOMXPath($document);
         return $xpath->query("//region[@id='$regionId']/media");
     }
+
+    /**
+     * Add Existing Media from the Library
+     * @param [int] $layoutId  [The LayoutID to Add on]
+     * @param [int] $regionId  [The RegionID to Add on]
+     * @param [array] $mediaList [A list of media ids from the library that should be added to to supplied layout/region]
+     */
+    public function AddFromLibrary($layoutId, $regionId, $mediaList) {
+
+    	$db =& $this->db;
+
+    	// Check that some media assignments have been made
+        if (count($mediaList) == 0)
+            return $this->SetError(25006, __('No media to assign'));
+
+        // Loop through all the media
+        foreach ($mediaList as $mediaId)
+        {
+            $mediaId = Kit::ValidateParam($mediaId, _INT);
+
+            // Check we have permissions to use this media (we will use this to copy the media later)
+            $mediaAuth = $this->user->MediaAuth($mediaId, true);
+
+            if (!$mediaAuth->view)
+                return $this->SetError(__('You have selected media that you no longer have permission to use. Please reload Library form.'));
+
+            // Get the type from this media
+            $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
+
+            if (!$mod = $db->GetSingleValue($SQL, 'type', _STRING))
+            {
+                trigger_error($db->error());
+                return $this->SetError(__('Error getting type from a media item.'));
+            }
+
+            require_once("modules/$mod.module.php");
+
+            // Create the media object without any region and layout information
+            $this->module = new $mod($db, $user, $mediaId);
+
+            if ($this->module->SetRegionInformation($layoutId, $regionId))
+                $this->module->UpdateRegion();
+            else {
+                return $this->SetError(__('Cannot set region information.'));
+            }
+
+            // Need to copy over the permissions from this media item & also the delete permission
+            Kit::ClassLoader('layoutmediagroupsecurity');
+            $security = new LayoutMediaGroupSecurity($db);
+            $security->Link($layoutId, $regionId, $mediaId, $this->user->getGroupFromID($this->user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
+
+        }
+
+        return true;
+    }
 }
 ?>

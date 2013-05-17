@@ -370,55 +370,8 @@ END;
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        // Check that some media assignments have been made
-        if (count($mediaList) == 0)
-            trigger_error(__('No media to assign'), E_USER_ERROR);
-
-        // Loop through all the media
-        foreach ($mediaList as $mediaId)
-        {
-            $mediaId = Kit::ValidateParam($mediaId, _INT);
-
-            // Check we have permissions to use this media (we will use this to copy the media later)
-            $mediaAuth = $this->user->MediaAuth($mediaId, true);
-
-            if (!$mediaAuth->view)
-            {
-                $response->SetError(__('You have selected media that you no longer have permission to use. Please reload Library form.'));
-                $response->keepOpen = true;
-                return $response;
-            }
-
-            // Get the type from this media
-            $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
-
-            if (!$mod = $db->GetSingleValue($SQL, 'type', _STRING))
-            {
-                trigger_error($db->error());
-                $response->SetError(__('Error getting type from a media item.'));
-                $response->keepOpen = false;
-                return $response;
-            }
-
-            require_once("modules/$mod.module.php");
-
-            // Create the media object without any region and layout information
-            $this->module = new $mod($db, $user, $mediaId);
-
-            if ($this->module->SetRegionInformation($layoutId, $regionId))
-                $this->module->UpdateRegion();
-            else
-            {
-                $response->SetError(__('Cannot set region information.'));
-                $response->keepOpen = true;
-                return $response;
-            }
-
-            // Need to copy over the permissions from this media item & also the delete permission
-            Kit::ClassLoader('layoutmediagroupsecurity');
-            $security = new LayoutMediaGroupSecurity($db);
-            $security->Link($layoutId, $regionId, $mediaId, $this->user->getGroupFromID($this->user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
-        }
+        if (!$region->AddFromLibrary($layoutId, $regionId, $mediaList))
+            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 
         // We want to load a new form
         $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));

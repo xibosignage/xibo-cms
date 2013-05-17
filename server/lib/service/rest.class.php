@@ -732,7 +732,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
-        $regionId = $this->GetParam('regionId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
 
         // Does the user have permissions to view this region?
         if (!$this->user->LayoutAuth($layoutId))
@@ -836,7 +836,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
-        $regionId = $this->GetParam('regionId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
         $mediaList = $this->GetParam('mediaList', _ARRAY);
 
         // Does the user have permissions to view this region?
@@ -871,9 +871,38 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        // TODO: 
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+        $mediaId = $this->GetParam('mediaId', _STRING);
 
-        return $this->Error(1000, 'Not implemented');
+        // Load the media information from the provided ids
+        // Get the type from this media
+        $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
+
+        if (!$mod = $db->GetSingleValue($SQL, 'type', _STRING))
+        {
+            trigger_error($db->error());
+            return $this->SetError(__('Error getting type from a media item.'));
+        }
+
+        require_once("modules/$mod.module.php");
+
+        // Create the media object without any region and layout information
+        $module = new $mod($db, $user, $mediaId);
+
+        // Delete the assignment from the region
+        if (!$module->ApiDeleteRegionMedia($layoutId, $regionId, $mediaId)) {
+            return $this->Error($module->errorMessage);
+        }
+
+        // Delete the actual media record
+        Kit::ClassLoader('Media');
+        $media = new Media($db);
+
+        if (!$media->Delete($mediaId))
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
@@ -885,9 +914,27 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        // TODO: 
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+        $mediaList = $this->GetParam('mediaList', _ARRAY);
 
-        return $this->Error(1000, 'Not implemented');
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Make sure we have permission to edit this region
+        Kit::ClassLoader('region');
+        $region = new region($db);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        if (!$region->AddFromLibrary($layoutId, $regionId, $mediaList))
+            return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
