@@ -653,7 +653,37 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Get a list of region items
+        Kit::ClassLoader('layout');
+        $layout = new Layout($this->db);
+
+        if (!$regions = $layout->GetRegions($layoutId))
+            return false;
+
+        $regionsWithPermissions = array();
+
+        // Go through each one and say if we have permissions to use it or not
+        foreach ($regions as $region) {
+
+            $auth = $this->user->RegionAssignmentAuth($region['ownerid'], $layoutId, $region['regionid'], true);
+            if (!$auth->view)
+                continue;
+
+            // Add in the permissions model
+            $mediaItem['permission_edit'] = (int)$auth->edit;
+            $mediaItem['permissions_del'] = (int)$auth->del;
+            $mediaItem['permissions_update_permissions'] = (int)$auth->modifyPermissions;
+
+            $regionsWithPermissions[] = $region;                
+        }
+
+        return $this->Respond($this->NodeListFromArray($regionsWithPermissions, 'region'));
     }
 
     /**
@@ -722,19 +752,32 @@ class Rest
         // We have permission to be here.
         // Return a list of media items
         if (!$items = $region->GetMediaNodeList($layoutId, $regionId))
-            return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
+            return false;
 
         $regionItems = array();
 
         foreach ($items as $item) {
             // Get the Type, ID, duration, etc (the generic information)
-            $mediaId = $mediaNode->getAttribute('id');
-            $lkId = $mediaNode->getAttribute('lkid');
-            $mediaType = $mediaNode->getAttribute('type');
-            $mediaDuration = $mediaNode->getAttribute('duration');
+            $mediaItem['mediaid'] = $mediaNode->getAttribute('id');
+            $mediaItem['lkid'] = $mediaNode->getAttribute('lkid');
+            $mediaItem['mediatype'] = $mediaNode->getAttribute('type');
+            $mediaItem['mediaduration'] = $mediaNode->getAttribute('duration');
+            $mediaItem['mediaownerid'] = $mediaNode->getAttribute('userId');
+
+            // Permissions for this assignment
+            $auth = $this->user->MediaAssignmentAuth($mediaItem['mediaownerid'], $layoutId, $regionId, $mediaItem['mediaid'], true);
+
+            // Skip over media assignments that we do not have permission to see
+            if (!$auth->view)
+                continue;
+
+            $mediaItem['permission_edit'] = (int)$auth->edit;
+            $mediaItem['permissions_del'] = (int)$auth->del;
+            $mediaItem['permissions_update_duration'] = (int)$auth->modifyPermissions;
+            $mediaItem['permissions_update_permissions'] = (int)$auth->modifyPermissions;
 
             // Add these items to an array
-            $regionItems[] = array('mediaid' => $mediaId, 'lkid' => $lkId, 'type' => $mediaType, 'duration' => $mediaDuration);
+            $regionItems[] = $mediaItem;
         }
 
         return $this->Respond($this->NodeListFromArray($regionItems, 'media'));

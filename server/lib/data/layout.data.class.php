@@ -776,5 +776,36 @@ END;
 
         return true;
     }
+
+    /**
+     * Gets a list of regions in the provided layout
+     * @param [int] $layoutId [The Layout ID]
+     */
+    public function GetRegionList($layoutId) {
+        
+        if (!$this->SetDomXml($layoutId))
+            return false;
+
+        // Get region nodes
+        $regionNodes = $this->DomXml->getElementsByTagName('region');
+
+        $regions = array();
+
+        // Loop through each and build an array
+        foreach ($regionNodes as $region) {
+
+            $item = array();
+            $item['width'] = $region->getAttribute('width');
+            $item['height'] = $region->getAttribute('height');
+            $item['left'] = $region->getAttribute('left');
+            $item['top'] = $region->getAttribute('top');
+            $item['regionid'] = $region->getAttribute('id');
+            $item['ownerid'] = $region->getAttribute('userId');
+
+            $regions[] = $item;
+        }
+
+        return $regions;
+    }
 }
 ?>
