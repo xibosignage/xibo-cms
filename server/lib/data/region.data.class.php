@@ -815,11 +815,12 @@ class Region extends Data
 
     /**
      * Add Existing Media from the Library
+     * @param [int] $user [A user object for the currently logged in user]
      * @param [int] $layoutId  [The LayoutID to Add on]
      * @param [int] $regionId  [The RegionID to Add on]
      * @param [array] $mediaList [A list of media ids from the library that should be added to to supplied layout/region]
      */
-    public function AddFromLibrary($layoutId, $regionId, $mediaList) {
+    public function AddFromLibrary($user, $layoutId, $regionId, $mediaList) {
 
     	$db =& $this->db;
 
@@ -833,7 +834,7 @@ class Region extends Data
             $mediaId = Kit::ValidateParam($mediaId, _INT);
 
             // Check we have permissions to use this media (we will use this to copy the media later)
-            $mediaAuth = $this->user->MediaAuth($mediaId, true);
+            $mediaAuth = $user->MediaAuth($mediaId, true);
 
             if (!$mediaAuth->view)
                 return $this->SetError(__('You have selected media that you no longer have permission to use. Please reload Library form.'));
@@ -861,7 +862,7 @@ class Region extends Data
             // Need to copy over the permissions from this media item & also the delete permission
             Kit::ClassLoader('layoutmediagroupsecurity');
             $security = new LayoutMediaGroupSecurity($db);
-            $security->Link($layoutId, $regionId, $mediaId, $this->user->getGroupFromID($this->user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
+            $security->Link($layoutId, $regionId, $mediaId, $user->getGroupFromID($user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
 
         }
 

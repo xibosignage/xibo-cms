@@ -931,7 +931,7 @@ class Rest
         if (!$regionAuth->edit)
             return $this->Error(1, 'Access Denied');
 
-        if (!$region->AddFromLibrary($layoutId, $regionId, $mediaList))
+        if (!$region->AddFromLibrary($this->user, $layoutId, $regionId, $mediaList))
             return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
 
         return $this->Respond($this->ReturnId('success', true));

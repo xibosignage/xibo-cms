@@ -701,6 +701,8 @@ END;
 
         $this->deleteFromRegion = true;
         $this->UpdateRegion();
+
+        return true;
 	}
 
 	/**

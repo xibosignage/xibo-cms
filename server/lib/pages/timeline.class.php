@@ -370,7 +370,7 @@ END;
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        if (!$region->AddFromLibrary($layoutId, $regionId, $mediaList))
+        if (!$region->AddFromLibrary($user, $layoutId, $regionId, $mediaList))
             trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 
         // We want to load a new form
