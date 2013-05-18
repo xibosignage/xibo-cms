@@ -512,7 +512,6 @@ class UploadHandler
         // Handle form data, e.g. $_REQUEST['description'][$index]
         
         // Link the file to the module
-        $file_path = $this->get_upload_path($file->name);
         $name = $_REQUEST['name'][$index];
         $duration = $_REQUEST['duration'][$index];
 
@@ -525,13 +524,16 @@ class UploadHandler
         // We want to create a module for each of the uploaded files.
         require_once("modules/$type.module.php");
         if (!$module = new $type($this->db, $this->user, '', $layoutid, $regionid, '')) {
-            $this->error = 'Unable to create module';
+            $file->error = $module->GetErrorMessage();
         }
 
         // We want to add this item to our library (and potentially to the region we are working in)
         if (!$module->AddLibraryMedia($file->name, $name, $duration, $file->name)) {
-            $this->error = 'Unable to add media to library';
+            $file->error = $module->GetErrorMessage();
         }
+
+        // Delete the file
+        @unlink($this->get_upload_path($file->name));
     }
 
     protected function orient_image($file_path) {

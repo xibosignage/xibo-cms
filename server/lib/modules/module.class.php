@@ -941,7 +941,6 @@ END;
         $db =& $this->db;
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
 
         // The media name might be empty here, because the user isn't forced to select it
         if ($mediaName == '')
@@ -951,9 +950,11 @@ END;
         Kit::ClassLoader('media');
         $mediaObject = new Media($db);
 
-        if (!$newMediaId = $mediaObject->Add($fileId, $this->type, $mediaName, $duration, $fileName, $this->user->userid)) {
+        if (!$mediaid = $mediaObject->Add($fileId, $this->type, $mediaName, $duration, $fileName, $this->user->userid)) {
         	return $this->SetError($mediaObject->GetErrorMessage());
         }
+
+        Debug::LogEntry($db, 'audit', 'Returned MediaId: ' . $mediaid, 'module', 'AddLibraryMedia');
 
         // Required Attributes
         $this->mediaid	= $mediaid;

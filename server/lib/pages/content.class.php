@@ -411,7 +411,8 @@ HTML;
                 'upload_dir' => $libraryFolder . 'temp/', 
                 'download_via_php' => true,
                 'script_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
-                'upload_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload'
+                'upload_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
+                'image_versions' => array()
             );
 
         // Hand off to the Upload Handler provided by jquery-file-upload
