@@ -47,6 +47,7 @@ class Module implements ModuleInterface
 	protected $xml;
 
 	protected $existingMedia;
+	protected $assignedMedia;
 	protected $deleteFromRegion;
     protected $showRegionOptions;
     protected $originalUserId;
@@ -90,6 +91,7 @@ class Module implements ModuleInterface
         $this->response = new ResponseManager();
 
         $this->existingMedia 	= false;
+        $this->assignedMedia = false;
         $this->deleteFromRegion = false;
         $this->duration = '';
 
@@ -232,6 +234,8 @@ class Module implements ModuleInterface
                     $this->name = $row[1];
                     $this->originalUserId = $row[2];
                 }
+                else
+                	return $this->SetError(__('Unable to find media record with the provided ID'));
 
                 $this->auth = $this->user->MediaAuth($this->mediaid, true);
             }
@@ -438,7 +442,7 @@ XML;
             }
             else
             {
-                    if ($this->existingMedia)
+                    if ($this->assignedMedia)
                     {
                             // We call region swap with the same media id
                             if (!$this->region->SwapMedia($layoutid, $regionid, $this->lkid, $this->mediaid, $this->mediaid, $this->AsXml()))
@@ -1933,6 +1937,95 @@ END;
         $transition = $this->user->TransitionAuth('', $code);
         
         return __($transition[0]['transition']);
+    }
+
+    /**
+     * Add/Edit via setting the entire XLF
+     * @param [type] $xml [description]
+     */
+    public function SetMediaXml($xml) {
+    	$db =& $this->db;
+
+    	// Load the XML into a document
+    	$xmlDoc = new DOMDocument();
+    	$xmlDoc->loadXML($xml);
+
+    	// Validate the XML Document
+    	if (!$this->ValidateMediaXml())
+    		return false;
+
+    	// Switch the XML with the XML currently held for this media node
+    	$this->xml = $xmlDoc;
+
+    	// Call region update
+    	if (!$this->UpdateRegion())
+    		return false;
+
+    	return true;
+    }
+
+    protected function ValidateMediaXml($xmlDoc) {
+    	// Compare the XML we have been given, with the XML of the existing media item OR compare as a new item
+    	$mediaNodes = $xmlDoc->selectNodes('media');
+
+    	if ($mediaNodes->length > 1)
+    		return $this->SetError(__('Too many media nodes'));
+
+    	$mediaNode = $mediaNodes->item(0);
+
+    	// Do some basic checks regardless of whether it is an add or edit
+    	// Check the schema version
+		if ($mediaNode->getAttribute('schemaVersion') != $this->schemaVersion)
+			return $this->SetError(__('SchemaVersion does not match'));
+
+		// Check the type
+		if ($mediaNode->getAttribute('type') != $this->type)
+			return $this->SetError(__('Media Type does not match'));
+
+		// Do we have a new item or an existing item
+    	if ($this->assignedMedia) {
+    		// An existing item
+    		Debug::LogEntry($db, 'audit', 'A existing media entry', 'module', 'ValidateMediaXml');
+
+    		// Check the ID
+    		if ($mediaNode->getAttribute('id') != $this->mediaid)
+    			return $this->SetError(__('ID does not match'));
+
+    		// Check that the "owner" userId on the media item has not changed
+    		if ($mediaNode->getAttribute('userId') != $this->originalUserId)
+    			return $this->SetError(__('UserId does not match'));
+    	}
+    	else {
+    		// A new item
+    		Debug::LogEntry($db, 'audit', 'A new media entry', 'module', 'ValidateMediaXml');
+    		
+    		// New media items may not have a media id on them (region media is born without an ID)
+    		if ($this->regionSpecific == 1) {
+    			// Create a new media id and set it on this object
+    			$this->mediaid = md5(uniqid());
+				$mediaNode->setAttribute('id', $this->mediaid);
+    		}
+    		else {
+    			// We already know that the media id exists, now check it matches
+    			if ($mediaNode->getAttribute('id') != $this->mediaid)
+	    			return $this->SetError(__('ID does not match'));
+    		}
+    	}
+
+    	// Check we have some core attributes (and set them on the media object - this gives us the new values to save)
+    	// (we have already validated that the media id and the type are the same, we dont need to check them again)
+		$this->duration = $mediaNode->getAttribute('duration');
+
+		if ($this->duration == '')
+			return $this->SetError(__('Duration not provided'));
+
+        $this->originalUserId = $mediaNode->getAttribute('userId');
+
+        if ($this->originalUserId == '')
+			return $this->SetError(__('UserId not provided'));
+
+		// The "core" items appear to be ok
+		return true;
     }
 
     /**

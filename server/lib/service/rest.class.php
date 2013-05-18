@@ -815,12 +815,14 @@ class Rest
         require_once("modules/$type.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $type($db, $user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $type($db, $user, '', $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         // Set the XML (causes save)
+        if (!$id = $module->SetMediaXml($xlf))
+            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
-        return $this->Respond($this->ReturnId('success', true));
+        return $this->Respond($this->ReturnId('media', $id));
     }
 
     /**
@@ -868,9 +870,11 @@ class Rest
         if (!$module->auth->edit)
             return $this->Error(1, 'Access Denied');
 
-        // Set the XML (triggers save)
+        // Set the XML (causes save)
+        if (!$id = $module->SetMediaXml($xlf))
+            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
-        return $this->Respond($this->ReturnId('success', true));
+        return $this->Respond($this->ReturnId('media', $id));
     }
 
     /**
