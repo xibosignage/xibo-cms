@@ -51,7 +51,6 @@ class Module implements ModuleInterface
 	protected $deleteFromRegion;
     protected $showRegionOptions;
     protected $originalUserId;
-    protected $assignedMedia;
 
     // Track the error state
 	private $error;
