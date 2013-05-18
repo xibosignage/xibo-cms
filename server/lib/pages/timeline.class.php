@@ -446,7 +446,8 @@ END;
 
         require_once("modules/$type.module.php");
 
-        $moduleObject = new $type($db, $user, $mediaid, $layoutid, $regionid);
+        if (!$moduleObject = new $type($db, $user, $mediaid, $layoutid, $regionid))
+            trigger_error($moduleObject->GetErrorMessage(), E_USER_ERROR);
 
         $return .= '<div class="regionPreviewOverlay"></div>';
         $return .= $moduleObject->Preview($width, $height);

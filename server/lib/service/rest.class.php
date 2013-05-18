@@ -815,7 +815,8 @@ class Rest
         require_once("modules/$type.module.php");
 
         // Create the media object without any region and layout information
-        $module = new $type($db, $user, $mediaId, $layoutId, $regionId);
+        if (!$module = new $type($db, $user, $mediaId, $layoutId, $regionId))
+            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         // Set the XML (causes save)
 
@@ -861,7 +862,8 @@ class Rest
         require_once("modules/$mod.module.php");
 
         // Create the media object without any region and layout information
-        $module = new $mod($db, $user, $mediaId, $layoutId, $regionId);
+        if (!$module = new $mod($db, $user, $mediaId, $layoutId, $regionId))
+            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->edit)
             return $this->Error(1, 'Access Denied');
@@ -910,7 +912,8 @@ class Rest
         require_once("modules/$mod.module.php");
 
         // Create the media object without any region and layout information
-        $module = new $mod($db, $user, $mediaId, $layoutId, $regionId);
+        if (!$module = new $mod($db, $user, $mediaId, $layoutId, $regionId))
+            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->view)
             return $this->Error(1, 'Access Denied');
@@ -993,7 +996,8 @@ class Rest
         require_once("modules/$mod.module.php");
 
         // Create the media object without any region and layout information
-        $module = new $mod($db, $user, $mediaId, $layoutId, $regionId);
+        if (!$module = new $mod($db, $user, $mediaId, $layoutId, $regionId))
+            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->del)
             return $this->Error(1, 'Access Denied');

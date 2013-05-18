@@ -271,7 +271,7 @@ class microblog extends Module
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
         if (!$this->UpdateRegion())
-            $this->response->Error($this->message, true);
+            trigger_error($this->GetErrorMessage(), E_USER_ERROR);
 
         //Set this as the session information
         setSession('content', 'type', 'microblog');

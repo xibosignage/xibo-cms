@@ -858,10 +858,9 @@ END;
 
         if (!$row = $db->GetSingleRow($SQL))
         {
-            trigger_error($db->error()); //log the error
-
-            $this->message = __('Error querying for the Media information');
-            return false;
+        	// log the error
+            trigger_error($db->error());
+            trigger_error(__('Error querying for the Media information'), E_USER_ERROR);
         }
 
         $name = $row['name'];
