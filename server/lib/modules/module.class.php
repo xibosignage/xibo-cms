@@ -781,22 +781,19 @@ END;
         elseif ($backgroundImage)
         {
         	$this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&q=BackgroundForm&modify=true&layoutid=' . $layoutid . '")');
+
+        	// Background override url is used on the theme to add a button next to each uploaded file (if in background override)
+			Theme::Set('background_override_url', "index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid&backgroundOveride=");
         }
         else
         {
         	$this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=content&q=displayForms&sp=add")');
         }
 
-        $this->response->AddButton(__('Save'), '$("#AddLibraryBasedMedia").submit()');
-
         // Setup the theme
-        Theme::Set('form_id', 'AddLibraryBasedMedia');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
-		Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '"><input type="hidden" name="backgroundImage" value="' . $backgroundImage . '" /><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
-
-		Theme::Set('form_upload_id', 'file_upload');
-        Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
-		Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSizeBytes . '" />');
+		Theme::Set('form_upload_id', 'fileupload');
+        Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload');
+		Theme::Set('form_meta', '<input type="hidden" name="type" value="' . $this->type . '"><input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '">');
 
 		Theme::Set('valid_extensions', 'This form accepts: ' . $this->validExtensionsText . ' files up to a maximum size of ' . $this->maxFileSize);
 		Theme::Set('default_duration', $defaultDuration);
@@ -808,6 +805,8 @@ END;
         $this->response->dialogSize = true;
         $this->response->dialogWidth = '450px';
         $this->response->dialogHeight = '280px';
+        $this->response->callBack = 'MediaFormInitUpload';
+        $this->response->dialogClass = 'modal-big';
 
         return $this->response;
     }
@@ -893,7 +892,6 @@ END;
 
         $this->response->AddButton(__('Save'), '$("#EditLibraryBasedMedia").submit()');
 
-
         $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
 
 		// Setup the theme
@@ -913,11 +911,11 @@ END;
 
 		$form = Theme::RenderReturn('library_form_media_edit');
 
-        $this->response->html 		= $form;
-        $this->response->dialogTitle 	= 'Edit ' . $this->displayType;
-        $this->response->dialogSize 	= true;
-        $this->response->dialogWidth 	= '450px';
-        $this->response->dialogHeight 	= '280px';
+        $this->response->html = $form;
+        $this->response->dialogTitle = 'Edit ' . $this->displayType;
+        $this->response->dialogSize = true;
+        $this->response->dialogWidth = '450px';
+        $this->response->dialogHeight = '280px';
 
         return $this->response;
     }
@@ -934,184 +932,47 @@ END;
 		return $this->response;	
 	}
 
-    protected function AddLibraryMedia()
+	/**
+	 * Adds Library Media
+	 *  called from inside the FileUpload Handler
+	 */
+    public function AddLibraryMedia($fileId, $mediaName, $duration, $fileName)
     {
         $db =& $this->db;
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
         $mediaid = $this->mediaid;
-        $userid	= $this->user->userid;
-        $backgroundImage = Kit::GetParam('backgroundImage', _POST, _BOOL, false);
 
-        // Check we have room in the library
-        $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+        // The media name might be empty here, because the user isn't forced to select it
+        if ($mediaName == '')
+        	$mediaName = $fileName;
 
-        if ($libraryLimit > 0)
-        {
-            $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
+        // Hand off to the media module
+        Kit::ClassLoader('media');
+        $mediaObject = new Media($db);
 
-            if (($fileSize / 1024) > $libraryLimit)
-            {
-                $this->response->SetError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
-                $this->response->keepOpen = true;
-                return $this->response;
-            }
-        }
-
-        // File data
-        $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
-
-        if ($tmpName == '')
-        {
-            $this->response->SetError('Cannot save Image details. <br/> You must have picked a file.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        // File name and extension (orignial name)
-        $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
-        $fileName = basename($fileName);
-        $ext = strtolower(substr(strrchr($fileName, "."), 1));
-
-        // Other properties
-        $name = Kit::GetParam('name', _POST, _STRING);
-        $duration = Kit::GetParam('duration', _POST, _INT, -1);
-
-        if ($name == '')
-            $name = Kit::ValidateParam($fileName, _FILENAME);
-
-        // Validation
-        if (!$this->IsValidExtension($ext))
-        {
-            $this->response->SetError(sprintf(__('Your file has an extension not supported by Media Type %s'), $this->displayType));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        // Make sure the name isnt too long
-        if (strlen($name) > 100)
-        {
-            $this->response->SetError(__('The name cannot be longer than 100 characters'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        if ($duration < 0)
-        {
-            $this->response->SetError(__('You must enter a duration.'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        // Ensure the name is not already in the database
-        $SQL = sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d", $db->escape_string($name), $userid);
-
-        if(!$result = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->response->SetError('Error checking whether the media name is ok. Try choosing a different name.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        if ($db->num_rows($result) != 0)
-        {
-            $this->response->SetError('Some media you own already has this name. Please choose another.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        // All OK to insert this record
-        $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired ) ";
-        $SQL .= "VALUES ('%s', '$this->type', '%s', '%s', %d, 0) ";
-
-        $SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($duration), $db->escape_string($fileName), $userid);
-
-        if (!$mediaid = $db->insert_query($SQL))
-        {
-            trigger_error($db->error());
-            $this->response->SetError(__('Database error adding this media record.'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        // File upload directory.. get this from the settings object
-        $databaseDir = Config::GetSetting($db, 'LIBRARY_LOCATION');
-
-        // What are we going to store this media as...
-        $storedAs = $mediaid . '.' . $ext;
-
-        // Now we need to move the file
-        if (!$result = rename($databaseDir . 'temp/' . $tmpName, $databaseDir . $storedAs))
-        {
-            // If we couldnt move it - we need to delete the media record we just added
-            $SQL = sprintf("DELETE FROM media WHERE mediaID = %d ", $mediaid);
-
-            if (!$db->query($SQL))
-            {
-                trigger_error($db->error());
-                $this->response->SetError(__('Error storing file'));
-                $this->response->keepOpen = true;
-                return $this->response;
-            }
-        }
-
-        // Calculate the MD5 and the file size
-        $md5 = md5_file($databaseDir.$storedAs);
-        $fileSize = filesize($databaseDir.$storedAs);
-
-        // Update the media record to include this information
-        $SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $storedAs, $md5, $fileSize, $mediaid);
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            return true;
+        if (!$newMediaId = $mediaObject->Add($fileId, $this->type, $mediaName, $duration, $fileName, $this->user->userid)) {
+        	return $this->SetError($mediaObject->GetErrorMessage());
         }
 
         // Required Attributes
         $this->mediaid	= $mediaid;
         $this->duration = $duration;
 
+        // Find out what we stored this item as
+        $storedAs = $db->GetSingleValue(sprintf("SELECT StoredAs FROM `media` WHERE mediaid = %d", $mediaid), 'StoredAs', _STRING);
+
         // Any Options
         $this->SetOption('uri', $storedAs);
 
         // Should have built the media object entirely by this time
-        if ($regionid != '' && $this->showRegionOptions)
+        if ($regionid != '')
         {
             // This saves the Media Object to the Region
             $this->UpdateRegion();
-            $this->response->loadFormUri = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
-        }
-        elseif ($regionid != '' && !$this->showRegionOptions)
-        {
-            $this->UpdateRegion();
-            $this->response->loadForm = false;
-        }
-        else
-        {
-            $this->response->loadFormUri = "index.php?p=content&q=displayForms&sp=add";
         }
 
-        // We want to load a new form
-        $this->response->loadForm = true;
-
-        // If we just added a background we should load the background form
-        if ($backgroundImage)
-        {
-            $this->response->loadFormUri = "index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid&backgroundOveride=$storedAs";
-        }
-
-        // What permissions should we assign this with?
-        if (Config::GetSetting($db, 'MEDIA_DEFAULT') == 'public')
-        {
-            Kit::ClassLoader('mediagroupsecurity');
-
-            $security = new MediaGroupSecurity($db);
-            $security->LinkEveryone($mediaid, 1, 0, 0);
-        }
-
-        return $this->response;
+        return true;
     }
 
 	/**

@@ -390,5 +390,35 @@ HTML;
 
         return $groups;
     }
+
+    /**
+     * End point for jQuery file uploader
+     */
+    public function JqueryFileUpload() {
+        $db =& $this->db;
+
+        require_once("3rdparty/jquery-file-upload/UploadHandler.php");
+
+        Kit::ClassLoader('file');
+        $fileObject = new File($db);
+        
+        $libraryFolder = Config::GetSetting($db, 'LIBRARY_LOCATION');
+
+        // Make sure the library exists
+        $fileObject->EnsureLibraryExists();
+
+        $options = array(
+                'upload_dir' => $libraryFolder . 'temp/', 
+                'download_via_php' => true,
+                'script_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
+                'upload_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload'
+            );
+
+        // Hand off to the Upload Handler provided by jquery-file-upload
+        $handler = new UploadHandler($db, $this->user, $options);
+
+        // Must prevent from continuing (framework will try to issue a response)
+        exit;
+    }
 }
 ?>

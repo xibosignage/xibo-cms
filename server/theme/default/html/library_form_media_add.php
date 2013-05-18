@@ -23,38 +23,104 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<form class="form-horizontal" id="<?php echo Theme::Get('form_upload_id'); ?>" method="post" action="<?php echo Theme::Get('form_upload_action'); ?>" enctype="multipart/form-data" target="fileupload">
-	<fieldset>
-        <?php echo Theme::Get('form_upload_meta'); ?>
-        <div class="control-group">
-			<label class="control-label" for="media_file" accesskey="n" title="<?php echo Theme::Translate('Select the file to upload'); ?>"><?php echo Theme::Translate('File'); ?></label>
-			<div class="controls">
-				<input name="media_file" type="file" id="media_file" tabindex="1" onchange="fileFormSubmit();this.form.submit();" />
-			</div>
-		</div>
-	</fieldset>	
-</form>
-<div id="uploadProgress" class="well" style="display:none">
-    <span>You may fill in the form while your file is uploading.</span>
-</div>
-<form class="XiboForm form-horizontal" id="<?php echo Theme::Get('form_id'); ?>" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+<form id="<?php echo Theme::Get('form_upload_id'); ?>" action="<?php echo Theme::Get('form_action'); ?>" method="POST" enctype="multipart/form-data">
     <?php echo Theme::Get('form_meta'); ?>
-    <div class="control-group">
-		<label class="control-label" for="name" accesskey="n" title="<?php echo Theme::Translate('The Name of this item - Leave blank to use the file name'); ?>"><?php echo Theme::Translate('Name'); ?></label>
-		<div class="controls">
-			<input name="name" type="text" id="name" tabindex="2" />
-		</div>
+	<div class="row fileupload-buttonbar">
+	    <div class="span7">
+			<div class="well">
+				<?php echo Theme::Get('valid_extensions'); ?>
+			</div>
+	        <!-- The fileinput-button span is used to style the file input field as button -->
+	        <span class="btn btn-success fileinput-button">
+	            <i class="icon-plus icon-white"></i>
+	            <span><?php echo Theme::Translate('Add files'); ?></span>
+	            <input type="file" name="files[]" multiple>
+	        </span>
+	        <button type="submit" class="btn btn-primary start">
+	            <i class="icon-upload icon-white"></i>
+	            <span>Start upload</span>
+	        </button>
+	        <button type="reset" class="btn btn-warning cancel">
+	            <i class="icon-ban-circle icon-white"></i>
+	            <span>Cancel upload</span>
+	        </button>
+	        <input type="checkbox" class="toggle">
+	        <!-- The loading indicator is shown during file processing -->
+	        <span class="fileupload-loading"></span>
+	    </div>
+	    <!-- The global progress information -->
+	    <div class="span4 fileupload-progress fade">
+	        <!-- The global progress bar -->
+	        <div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+	            <div class="bar" style="width:0%;"></div>
+	        </div>
+	        <!-- The extended global progress information -->
+	        <div class="progress-extended">&nbsp;</div>
+	    </div>
 	</div>
-	<div class="control-group">
-		<label class="control-label" for="duration" accesskey="n" title="<?php echo Theme::Translate('The duration in seconds this image should be displayed (may be overridden on each layout)'); ?>"><?php echo Theme::Translate('Duration'); ?></label>
-		<div class="controls">
-			<input name="duration" type="text" id="duration" tabindex="3" value="<?php echo Theme::Get('default_duration'); ?>" />
-		</div>
-	</div>
-	<div class="well">
-		<?php echo Theme::Get('valid_extensions'); ?>
-	</div>
+	<!-- The table listing the files available for upload/download -->
+	<table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
 </form>
-<div style="display:none">
-	<iframe name="fileupload" width="1px" height="1px"></iframe>
-</div>
+<!-- The template to display files available for upload -->
+<script id="template-upload" type="text/x-tmpl">
+{% for (var i=0, file; file=o.files[i]; i++) { %}
+    <tr class="template-upload fade">
+        <td>
+            <span class="fileupload-preview"></span>
+        </td>
+        <td class="title">
+            <label for="name[]" title="<?php echo Theme::Translate('The Name of this item - Leave blank to use the file name'); ?>"><?php echo Theme::Translate('Name'); ?>: <input name="name[]" type="text" id="name" /></label>
+            {% if (file.error) { %}
+                <div><span class="label label-important">Error</span> {%=file.error%}</div>
+            {% } %}
+        </td>
+        <td class="title">
+			<label for="duration[]" title="<?php echo Theme::Translate('The duration in seconds this image should be displayed (may be overridden on each layout)'); ?>"><?php echo Theme::Translate('Duration'); ?>: <input name="duration[]" type="text" id="duration" value="<?php echo Theme::Get('default_duration'); ?>" required /></label>
+        </td>
+        <td>
+            <p class="size">{%=o.formatFileSize(file.size)%}</p>
+            {% if (!o.files.error) { %}
+                <div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="bar" style="width:0%;"></div></div>
+            {% } %}
+        </td>
+        <td>
+            {% if (!o.files.error && !i && !o.options.autoUpload) { %}
+                <button class="btn btn-primary start">
+                    <i class="icon-upload icon-white"></i>
+                    <span>Start</span>
+                </button>
+            {% } %}
+            {% if (!i) { %}
+                <button class="btn btn-warning cancel">
+                    <i class="icon-ban-circle icon-white"></i>
+                    <span>Cancel</span>
+                </button>
+            {% } %}
+            <?php if (Theme::Get('background-override-url') != '') { ?>
+            	<button class="btn XiboFormButton" href="<?php echo Theme::Get('background-override-url'); ?>">
+                    <i class="icon-ban-circle icon-white"></i>
+                    <span>Set Background</span>
+                </button>
+        	<?php } ?>
+        </td>
+    </tr>
+{% } %}
+</script>
+<!-- The template to display files available for download -->
+<script id="template-download" type="text/x-tmpl">
+{% for (var i=0, file; file=o.files[i]; i++) { %}
+    <tr class="template-download fade">
+       <td>
+            <p class="name">
+                <a href="{%=file.url%}" title="{%=file.name%}" data-gallery="{%=file.thumbnail_url&&'gallery'%}" download="{%=file.name%}">{%=file.name%}</a>
+            </p>
+            {% if (file.error) { %}
+                <div><span class="label label-important">Error</span> {%=file.error%}</div>
+            {% } %}
+        </td>
+        <td>
+            <span class="size">{%=o.formatFileSize(file.size)%}</span>
+        </td>
+    </tr>
+{% } %}
+</script>
