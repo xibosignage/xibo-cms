@@ -108,7 +108,7 @@ class Config
 		
 		if ($object != '')
 		{
-			return Kit::GetParam($object, $row, _STRING, false);
+			return Kit::GetParam($object, $row, _STRING, '');
 		}
 		
 		return $row;

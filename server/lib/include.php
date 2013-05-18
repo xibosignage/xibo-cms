@@ -23,8 +23,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 define('WEBSITE_VERSION', 64);
 
 // No errors reported until we read the settings from the DB
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 ini_set('gd.jpeg_ignore_warning', 1);
 
 // Required Library Files
@@ -115,10 +115,12 @@ if (DBVERSION != WEBSITE_VERSION)
     die(sprintf('Incompatible database version detected. Please ensure your database and website versions match. You have database %d and website %d', DBVERSION, WEBSITE_VERSION));
 
 // What is the production mode of the server?
-if(Config::GetSetting($db, 'SERVER_MODE') == 'Test') ini_set('display_errors', 1);
+if(Config::GetSetting($db, 'SERVER_MODE') == 'Test') 
+    ini_set('display_errors', 1);
 
 // Debugging?
-if(Config::GetSetting($db, "debug")=="On") error_reporting(E_ALL);
+if(Config::GetSetting($db, "debug")=="On") 
+    error_reporting(E_ALL);
 
 // Setup the translations for gettext
 TranslationEngine::InitLocale($db);

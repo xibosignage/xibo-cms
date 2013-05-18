@@ -84,6 +84,8 @@ class Kit
 
 		if (is_array($source))
 		{
+			$source = array_change_key_case($source);
+			
 			if(!isset($source[$param])) 
 			{
 				$return = $default;
