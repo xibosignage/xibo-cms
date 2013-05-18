@@ -42,7 +42,7 @@ class Module implements ModuleInterface
 	protected $lkid;
 	protected $validExtensions;
 	protected $validExtensionsText;
-        protected $previewEnabled;
+    protected $previewEnabled;
         
 	protected $xml;
 
@@ -52,7 +52,10 @@ class Module implements ModuleInterface
     protected $originalUserId;
     protected $assignedMedia;
 
-    public $errorMessage;
+    // Track the error state
+	private $error;
+    private $errorNo;
+	private $errorMessage;
 
     /**
      * Constructor - sets up this media object with all the available information
@@ -65,32 +68,43 @@ class Module implements ModuleInterface
      */
     public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
     {
-        include_once("lib/data/region.data.class.php");
+        require_once("lib/data/region.data.class.php");
 
         $this->db 	=& $db;
         $this->user 	=& $user;
 
+        // Initialise the error state
+        $this->error = false;
+		$this->errorNo = 0;
+		$this->errorMessage = '';
+
+		// Initialise the module state
         $this->mediaid 	= $mediaid;
         $this->name 	= '';
         $this->layoutid = $layoutid;
         $this->regionid = $regionid;
         $this->lkid     = $lkid;
 
+        // New region and response
         $this->region 	= new region($db);
         $this->response = new ResponseManager();
 
         $this->existingMedia 	= false;
         $this->deleteFromRegion = false;
-        $this->showRegionOptions = Kit::GetParam('showRegionOptions', _REQUEST, _INT, 1);
         $this->duration = '';
 
+        // Members used by forms (routed through the CMS)
+        $this->showRegionOptions = Kit::GetParam('showRegionOptions', _REQUEST, _INT, 1);
+
         // Determine which type this module is
-        $this->SetModuleInformation();
+        if (!$this->SetModuleInformation())
+        	return false;
 
         Debug::LogEntry($db, 'audit', 'Module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 
         // Either the information from the region - or some blanks
-        $this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid);
+        if (!$this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid))
+        	return false;
 
         return true;
     }
@@ -101,28 +115,19 @@ class Module implements ModuleInterface
 	 */
 	final private function SetModuleInformation()
 	{
-		$db 		=& $this->db;
-		$type		= $this->type;
+		$db =& $this->db;
+		$type = $this->type;
 
 		if ($type == '')
-		{
-			$this->response->SetError(__('Unable to create Module [No type given] - please refer to the Module Documentation.'));
-			$this->response->Respond();
-		}
+			return $this->SetError(__('Unable to create Module [No type given] - please refer to the Module Documentation.'));
 
 		$SQL = sprintf("SELECT * FROM module WHERE Module = '%s'", $db->escape_string($type));
 
 		if (!$result = $db->query($SQL))
-		{
-			$this->response->SetError(__('Unable to create Module [Cannot find type in the database] - please refer to the Module Documentation.'));
-			$this->response->Respond();
-		}
+			return $this->SetError(__('Unable to create Module [Cannot find type in the database] - please refer to the Module Documentation.'));
 
 		if ($db->num_rows($result) != 1)
-		{
-			$this->response->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
-			$this->response->Respond();
-		}
+			return $this->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
 
 		$row = $db->get_assoc_row($result);
 
@@ -131,7 +136,7 @@ class Module implements ModuleInterface
 		$this->validExtensionsText 	= Kit::ValidateParam($row['ValidExtensions'], _STRING);
 		$this->validExtensions 		= explode(',', $this->validExtensionsText);
 		$this->validExtensionsText	= str_replace(',', ', ', $this->validExtensionsText);
-                $this->previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
+        $this->previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
 
 		return true;
 	}
@@ -173,7 +178,7 @@ class Module implements ModuleInterface
 
             // Test to make sure we got a node
             if ($mediaNodeXpath->length <= 0)
-                trigger_error(__('Cannot find this media item. Please refresh the region options.'), E_USER_ERROR);
+                return $this->SetError(__('Cannot find this media item. Please refresh the region options.'));
 
             // Create a Media node in the DOMDocument for us to replace
             $xmlDoc->loadXML('<root/>');
@@ -216,7 +221,8 @@ class Module implements ModuleInterface
 
                 if (!$result = $db->query($SQL))
                 {
-                    trigger_error($db->error()); //log the error
+                	// log the error
+                    trigger_error($db->error());
                 }
 
                 if ($db->num_rows($result) != 0)
@@ -284,7 +290,7 @@ XML;
 		$mediaNode->setAttribute('id', $this->mediaid);
 		$mediaNode->setAttribute('duration', $this->duration);
 		$mediaNode->setAttribute('type', $this->type);
-                $mediaNode->setAttribute('userId', $this->originalUserId);
+        $mediaNode->setAttribute('userId', $this->originalUserId);
 
 		return $this->xml->saveXML($mediaNode);
 	}
@@ -298,7 +304,9 @@ XML;
 	final protected function SetOption($name, $value)
 	{
 		$db =& $this->db;
-		if ($name == '') return;
+		
+		if ($name == '') 
+			return;
 
 		Debug::LogEntry($db, 'audit', sprintf('IN with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
 
@@ -340,7 +348,8 @@ XML;
 	{
 		$db =& $this->db;
 
-		if ($name == '') return false;
+		if ($name == '') 
+			return false;
 
 		// Check to see if we already have this option or not
 		$xpath = new DOMXPath($this->xml);
@@ -370,12 +379,13 @@ XML;
 	 */
 	final protected function SetRaw($xml, $replace = false)
 	{
-		if ($xml == '') return;
+		if ($xml == '') 
+			return;
 
 		// Load the XML we are given into its own document
 		$rawNode = new DOMDocument();
 		if (!$rawNode->loadXML('<raw>' . $xml . '</raw>'))
-                    trigger_error(__('There is an error in the HTML/XML'), E_USER_ERROR);
+            return $this->SetError(__('There is an error in the HTML/XML'));
 
 		// Import the Raw node into this document (with all sub nodes)
 		$importedNode = $this->xml->importNode($rawNode->documentElement, true);
@@ -423,8 +433,7 @@ XML;
                     // We call region delete
                     if (!$this->region->RemoveMedia($layoutid, $regionid, $this->lkid, $this->mediaid))
                     {
-                            $this->message = __("Unable to Remove this media from the Layout");
-                            return false;
+                            return $this->SetError(__("Unable to Remove this media from the Layout"));
                     }
             }
             else
@@ -434,8 +443,7 @@ XML;
                             // We call region swap with the same media id
                             if (!$this->region->SwapMedia($layoutid, $regionid, $this->lkid, $this->mediaid, $this->mediaid, $this->AsXml()))
                             {
-                                    $this->message = __("Unable to assign to the Region");
-                                    return false;
+                                    return $this->SetError(__("Unable to assign to the Region"));
                             }
                     }
                     else
@@ -443,8 +451,7 @@ XML;
                             // We call region add
                             if (!$this->region->AddMedia($layoutid, $regionid, $this->regionSpecific, $this->AsXml()))
                             {
-                                    $this->message = __("Error adding this media to the library");
-                                    return false;
+                                    return $this->SetError(__("Error adding this media to the library"));
                             }
                     }
             }
@@ -695,12 +702,14 @@ END;
         $security = new LayoutMediaGroupSecurity($db);
 
         if (!$security->UnlinkAll($layoutid, $regionid, $this->mediaid)) {
-        	$this->errorMessage = $security->GetErrorMessage();
-        	return false;
+        	return $this->SetError($security->GetErrorMessage());
         }
 
         $this->deleteFromRegion = true;
-        $this->UpdateRegion();
+
+        // Attempt to update the region
+        if (!$this->UpdateRegion())
+        	return false;
 
         return true;
 	}
@@ -712,7 +721,6 @@ END;
 	public function AddForm()
 	{
 		$form = '<p>' . __('Not yet implemented by this module.') . '</p>';
-END;
 
 		$this->response->html 		 	= $form;
 		$this->response->dialogTitle 	= __('Add Item');
@@ -1408,10 +1416,12 @@ END;
                 require_once('modules/' . $type . '.module.php');
 
                 // Create a new module as if we were assigning it for the first time
-                $module = new $type($db, $this->user, $newMediaId);
+                if (!$module = new $type($db, $this->user, $newMediaId))
+                	return false;
 
                 // Sets the URI field
-                $module->SetRegionInformation($layoutId, $regionId);
+                if (!$module->SetRegionInformation($layoutId, $regionId))
+                	return false;
 
                 // Get the media xml string to use in the swap.
                 $mediaXmlString = $module->AsXml();
@@ -1925,5 +1935,57 @@ END;
         
         return __($transition[0]['transition']);
     }
+
+    /**
+	 * Gets the error state
+	 * @return 
+	 */
+	public function IsError()
+	{
+		return $this->error;
+	}
+	
+	/**
+	 * Gets the Error Number
+	 * @return 
+	 */
+	public function GetErrorNumber()
+	{
+		return $this->errorNo;
+	}
+	
+	/**
+	 * Gets the Error Message
+	 * @return 
+	 */
+	public function GetErrorMessage()
+	{
+		return $this->errorMessage;
+	}
+	
+	/**
+	 * Sets the Error for this Data object
+	 * @return 
+	 * @param $errNo Object
+	 * @param $errMessage Object
+	 */
+	protected function SetError($errNo, $errMessage = '')
+	{
+		$this->error		= true;
+
+		// Is an error No provided?
+		if (!is_numeric($errNo)) {
+			$errMessage = $errNo;
+			$errNo = -1;
+		}
+
+		$this->errorNo 		= $errNo;
+		$this->errorMessage	= $errMessage;
+		
+		Debug::LogEntry($this->db, 'audit', sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Media Module', 'SetError');
+
+        // Return false so that we can use this method as the return call for parent methods
+		return false;
+	}
 }
 ?>
