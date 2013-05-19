@@ -272,9 +272,7 @@ function MediaFormInitUpload(dialog) {
     // Initialize the jQuery File Upload widget:
     $('#fileupload').fileupload('option', {
         url: url,
-        disableImageResize: false,
-        maxFileSize: 5000000,
-        acceptFileTypes: /(\.|\/)(gif|jpe?g|png)$/i
+        disableImageResize: false
     });
 
     // Enable iframe cross-domain access via redirect option:

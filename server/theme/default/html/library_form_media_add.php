@@ -23,7 +23,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<form id="<?php echo Theme::Get('form_upload_id'); ?>" action="<?php echo Theme::Get('form_action'); ?>" method="POST" enctype="multipart/form-data">
+<form id="<?php echo Theme::Get('form_upload_id'); ?>" action="<?php echo Theme::Get('form_action'); ?>" method="POST" enctype="multipart/form-data" data-max-file-size="<?php echo Theme::Get('form_max_size'); ?>" data-accept-file-types="<?php echo Theme::Get('form_valid_ext'); ?>">
     <?php echo Theme::Get('form_meta'); ?>
 	<div class="row fileupload-buttonbar">
 	    <div class="span7">
@@ -117,7 +117,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         </td>
         <td>
 			<?php if (Theme::Get('background_override_url') != '') { ?>
-            	<button class="btn XiboFormButton" href="<?php echo Theme::Get('background_override_url'); ?>{%=file.storedas%}">
+            	<button class="btn XiboFormButton" href="#" onclick="XiboSwapDialog('<?php echo Theme::Get('background_override_url'); ?>{%=file.storedas%}')">
                     <i class="icon-ban-circle icon-white"></i>
                     <span>Set Background</span>
                 </button>

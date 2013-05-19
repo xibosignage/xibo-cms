@@ -373,6 +373,23 @@ class Media extends Data
     }
 
     /**
+     * Valid Extensions
+     * @param [string] $type [The Type of Media Item]
+     * @return [array] Array containing the valid extensions
+     */
+    public function ValidExtensions($type) {
+        $db =& $this->db;
+
+        if (!$this->moduleInfoLoaded)
+        {
+            if (!$this->LoadModuleInfo($type))
+                return false;
+        }
+
+        return $this->validExtensions;
+    }
+
+    /**
      * List of available modules
      * @return <array>
      */

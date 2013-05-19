@@ -398,6 +398,7 @@ HTML;
         $db =& $this->db;
 
         require_once("3rdparty/jquery-file-upload/UploadHandler.php");
+        $type = Kit::GetParam('type', _REQUEST, _WORD);
 
         Kit::ClassLoader('file');
         $fileObject = new File($db);
@@ -407,12 +408,18 @@ HTML;
         // Make sure the library exists
         $fileObject->EnsureLibraryExists();
 
+        // Get Valid Extensions
+        Kit::ClassLoader('media');
+        $media = new Media($db);
+        $validExt = $media->ValidExtensions($type);
+
         $options = array(
                 'upload_dir' => $libraryFolder . 'temp/', 
                 'download_via_php' => true,
                 'script_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
                 'upload_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
-                'image_versions' => array()
+                'image_versions' => array(),
+                'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i'
             );
 
         // Hand off to the Upload Handler provided by jquery-file-upload
