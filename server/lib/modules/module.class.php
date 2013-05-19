@@ -778,7 +778,7 @@ END;
         }
         else
         {
-        	$this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=content&q=displayForms&sp=add")');
+        	$this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=content&q=displayForms&sp=add");XiboRefreshAllGrids()');
         }
 
         // Setup the theme
