@@ -96,12 +96,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                     <span>Cancel</span>
                 </button>
             {% } %}
-            <?php if (Theme::Get('background-override-url') != '') { ?>
-            	<button class="btn XiboFormButton" href="<?php echo Theme::Get('background-override-url'); ?>">
-                    <i class="icon-ban-circle icon-white"></i>
-                    <span>Set Background</span>
-                </button>
-        	<?php } ?>
         </td>
     </tr>
 {% } %}
@@ -112,7 +106,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     <tr class="template-download fade">
        <td>
             <p class="name">
-                <a href="{%=file.url%}" title="{%=file.name%}" data-gallery="{%=file.thumbnail_url&&'gallery'%}" download="{%=file.name%}">{%=file.name%}</a>
+                {%=file.name%}
             </p>
             {% if (file.error) { %}
                 <div><span class="label label-important">Error</span> {%=file.error%}</div>
@@ -120,6 +114,14 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         </td>
         <td>
             <span class="size">{%=o.formatFileSize(file.size)%}</span>
+        </td>
+        <td>
+			<?php if (Theme::Get('background_override_url') != '') { ?>
+            	<button class="btn XiboFormButton" href="<?php echo Theme::Get('background_override_url'); ?>{%=file.storedas%}">
+                    <i class="icon-ban-circle icon-white"></i>
+                    <span>Set Background</span>
+                </button>
+        	<?php } ?>
         </td>
     </tr>
 {% } %}

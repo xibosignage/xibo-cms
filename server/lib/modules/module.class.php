@@ -772,15 +772,15 @@ END;
             setSession('content','mediatype', $this->type);
 
             $this->response->AddButton(__('Library'), 'XiboSwapDialog("index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutid . '&regionid=' . $regionid . '")');
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
 		}
         elseif ($regionid != '' && !$this->showRegionOptions)
         {
-        	$this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        	$this->response->AddButton(__('Close'), 'XiboDialogClose()');
 		}
         elseif ($backgroundImage)
         {
-        	$this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=layout&q=BackgroundForm&modify=true&layoutid=' . $layoutid . '")');
+        	$this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=layout&q=BackgroundForm&modify=true&layoutid=' . $layoutid . '")');
 
         	// Background override url is used on the theme to add a button next to each uploaded file (if in background override)
 			Theme::Set('background_override_url', "index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid&backgroundOveride=");
@@ -935,6 +935,11 @@ END;
 	/**
 	 * Adds Library Media
 	 *  called from inside the FileUpload Handler
+	 * @param [type] $fileId    [description]
+	 * @param [type] $mediaName [description]
+	 * @param [type] $duration  [description]
+	 * @param [type] $fileName  [description]
+	 * @return [string] [The filename of the media in the library]
 	 */
     public function AddLibraryMedia($fileId, $mediaName, $duration, $fileName)
     {
@@ -970,10 +975,12 @@ END;
         if ($regionid != '')
         {
             // This saves the Media Object to the Region
-            $this->UpdateRegion();
+            if (!$this->UpdateRegion())
+            	return false;
         }
 
-        return true;
+        // Return the "stored as" value
+        return $storedAs;
     }
 
 	/**
@@ -1004,171 +1011,36 @@ END;
             return $this->response;
         }
 
+        // Hand off to the media module
+        Kit::ClassLoader('media');
+        $mediaObject = new Media($db);
+
         // Stored As from the XML
         $storedAs = $this->GetOption('uri');
 
         // File data
         $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
-
-        if ($tmpName == '')
-        {
-            $fileRevision = false;
-        }
-        else
-        {
-            // Check we have room in the library
-            $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
-
-            if ($libraryLimit > 0)
-            {
-                $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
-
-                if (($fileSize / 1024) > $libraryLimit)
-                {
-                    $this->response->SetError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
-                    $this->response->keepOpen = true;
-                    return $this->response;
-                }
-            }
-
-            $fileRevision = true;
-
-            // File name and extension (orignial name)
-            $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
-            $fileName = basename($fileName);
-            $ext = strtolower(substr(strrchr($fileName, "."), 1));
-
-            if (!$this->IsValidExtension($ext))
-            {
-                $this->response->SetError('Your file has an extension not supported by this Media Type.');
-                $this->response->keepOpen = true;
-                return $this->response;
-            }
-        }
-
-        // Other properties
         $name = Kit::GetParam('name', _POST, _STRING);
         
         if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
 
-        if ($name == '')
-        {
-            if ($fileRevision)
-            {
-                $name = Kit::ValidateParam($fileName, _FILENAME);
-            }
-            else
-            {
-                $this->response->SetError(__('The Name cannot be blank.'));
-                $this->response->keepOpen = true;
-                return $this->response;
-            }
-        }
+        // Revise this file?
+        if ($tmpName != '') {
 
-        // Make sure the name isnt too long
-        if (strlen($name) > 100)
-        {
-            $this->response->SetError(__('The name cannot be longer than 100 characters'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+        	Debug::LogEntry($db, 'audit', 'Uploading a new revision', 'module', 'EditLibraryMedia');
+        	
+            // File name and extension (orignial name)
+            $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
 
-        if ($this->duration < 0)
-        {
-            $this->response->SetError(__('You must enter a duration.'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            if ($name == '')
+            	$name = $fileName;
 
-        // Ensure the name is not already in the database
-        $SQL = sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d AND mediaid <> %d  AND IsEdited = 0", $db->escape_string($name), $userid, $mediaid);
-
-        if(!$result = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->response->SetError(__('Error checking whether the media name is ok. Try choosing a different name.'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        if ($db->num_rows($result) != 0)
-        {
-            $this->response->SetError(__('Some media you own already has this name. Please choose another.'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        //Are we revising this media - or just plain editing
-        if ($fileRevision)
-        {
-            // All OK to insert this record
-            $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired ) ";
-            $SQL .= "VALUES ('%s', '$this->type', '%s', '%s', %d, 0) ";
-
-            $SQL = sprintf($SQL, $db->escape_string($name), $db->escape_string($this->duration), $db->escape_string($fileName), $userid);
-
-            if (!$new_mediaid = $db->insert_query($SQL))
-            {
-                trigger_error($db->error());
-                trigger_error('Error inserting replacement media record.', E_USER_ERROR);
-            }
-
-            //What are we going to store this media as...
-            $storedAs = $new_mediaid . '.' . $ext;
-
-            // File upload directory.. get this from the settings object
-            $databaseDir = Config::GetSetting($db, 'LIBRARY_LOCATION');
-
-            //Now we need to move the file
-            if (!$result = rename($databaseDir . '/temp/' . $tmpName, $databaseDir . $storedAs))
-            {
-                //If we couldnt move it - we need to delete the media record we just added
-                $SQL = "DELETE FROM media WHERE mediaID = $new_mediaid ";
-
-                if (!$db->insert_query($SQL))
-                {
-                    $this->response->SetError('Error rolling back transcation.');
-                    $this->response->keepOpen = true;
-                    return $this->response;
-                }
-            }
-
-            // Calculate the MD5 and the file size
-            $md5 = md5_file($databaseDir.$storedAs);
-            $fileSize = filesize($databaseDir.$storedAs);
-
-            // Update the media record to include this information
-            $SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $storedAs, $md5, $fileSize, $new_mediaid);
-
-            if (!$db->query($SQL))
-            {
-                trigger_error($db->error());
-                $this->response->SetError('Error updating media with Library location.');
-                $this->response->keepOpen = true;
-                return $this->response;
-            }
-
-            // Update the existing record with the new record's id
-            $SQL =  "UPDATE media SET isEdited = 1, editedMediaID = $new_mediaid ";
-            $SQL .= " WHERE IFNULL(editedMediaID,0) <> $new_mediaid AND mediaID = $mediaid ";
-
-            Debug::LogEntry($db, 'audit', $SQL);
-
-            if (!$db->query($SQL))
-            {
-                trigger_error($db->error());
-
-                $this->response->SetError('Database error editing this media record.');
-                $this->response->keepOpen = true;
-                return $this->response;
-            }
-
-            // We need to assign all permissions for the old media id to the new media id
-            Kit::ClassLoader('mediagroupsecurity');
-
-            $security = new MediaGroupSecurity($db);
-            $security->Copy($mediaid, $new_mediaid);
+            if (!$new_mediaid = $mediaObject->FileRevise($mediaid, $tmpName, $fileName)) {
+            	$this->response->SetError($mediaObject->GetErrorMessage());
+	            $this->response->keepOpen = true;
+	            return $this->response;
+            }            	
 
             // Are we on a region
             if ($regionid != '')
@@ -1178,33 +1050,23 @@ END;
                 $security = new LayoutMediaGroupSecurity($db);
                 $security->Copy($layoutid, $regionid, $mediaid, $new_mediaid);
             }
-        }
-        else
-        {
-            // Editing the existing record
-            $new_mediaid = $mediaid;
 
-            $SQL =  "UPDATE media SET name = '%s' ";
-            $SQL .= " WHERE mediaID = %d ";
-            $SQL = sprintf($SQL, $db->escape_string($name), $mediaid);
+            // Required Attributes
+        	$this->mediaid	= $new_mediaid;
+        	
+        	// Find out what we stored this item as
+        	$storedAs = $db->GetSingleValue(sprintf("SELECT StoredAs FROM `media` WHERE mediaid = %d", $new_mediaid), 'StoredAs', _STRING);
+        	$this->SetOption('uri', $storedAs);
 
-            Debug::LogEntry($db, 'audit', $SQL);
-
-            if (!$db->query($SQL))
-            {
-                trigger_error($db->error());
-
-                $this->response->SetError('Database error editing this media record.');
-                $this->response->keepOpen = true;
-                return $this->response;
-            }
+        	Debug::LogEntry($db, 'audit', 'New revision uploaded: ' . $storedAs, 'module', 'EditLibraryMedia');
         }
 
-        // Required Attributes
-        $this->mediaid	= $new_mediaid;
-
-        // Any Options
-        $this->SetOption('uri', $storedAs);
+        // Edit the media record
+        if (!$mediaObject->Edit($new_mediaid, $name, $this->duration, $userid)) {
+        	$this->response->SetError($mediaObject->GetErrorMessage());
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
 
         // Should have built the media object entirely by this time
         if ($regionid != '' && $this->showRegionOptions)

@@ -34,9 +34,10 @@ class Media extends Data
      * @param <type> $duration
      * @param <type> $fileName
      * @param <type> $userId
+     * @param <int> [$oldMediaId] [The old media id during a file revision]
      * @return <type>
      */
-    public function Add($fileId, $type, $name, $duration, $fileName, $userId)
+    public function Add($fileId, $type, $name, $duration, $fileName, $userId, $oldMediaId = 0)
     {
         $db =& $this->db;
 
@@ -68,7 +69,15 @@ class Media extends Data
         if ($duration == 0)
             return $this->SetError(11, __('You must enter a duration.'));
 
-        if ($db->GetSingleRow(sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d", $db->escape_string($name), $userId)))
+        // Check the naming of this item to ensure it doesnt conflict
+        $checkSQL = sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d ", $db->escape_string($name), $userId);
+        
+        if ($oldMediaId != 0)
+            $checkSQL .= sprintf(" AND mediaid <> %d  AND IsEdited = 0 ", $oldMediaId);
+
+        Debug::LogEntry($db, 'audit', 'Checking the name is unique: ' . $checkSQL, 'media', 'Add');
+
+        if ($db->GetSingleRow($checkSQL))
             return $this->SetError(12, __('Media you own already has this name. Please choose another.'));
 
         // All OK to insert this record
@@ -88,7 +97,7 @@ class Media extends Data
         // Now move the file
         $libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
 
-        if (!rename($libraryFolder . 'temp/' . $fileId, $libraryFolder . $mediaId . '.' . $extension))
+        if (!@rename($libraryFolder . 'temp/' . $fileId, $libraryFolder . $mediaId . '.' . $extension))
         {
             // If we couldnt move it - we need to delete the media record we just added
             $SQL = sprintf("DELETE FROM media WHERE mediaID = %d ", $mediaId);
@@ -143,7 +152,8 @@ class Media extends Data
         if ($duration == 0)
             return $this->SetError(11, __('You must enter a duration.'));
 
-        if ($db->GetSingleRow(sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d", $db->escape_string($name), $userId)))
+        // Any media (not this one) already has this name?
+        if ($db->GetSingleRow(sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d AND mediaid <> %d AND IsEdited = 0", $db->escape_string($name), $userId, $mediaId)))
             return $this->SetError(12, __('Media you own already has this name. Please choose another.'));
        
         $SQL = "UPDATE media SET name = '%s', duration = %d WHERE MediaID = %d";
@@ -191,12 +201,19 @@ class Media extends Data
             return $this->SetError(31, 'Unable to get information about existing media record.');
         }
 
-        if (!$newMediaId = $this->Add($fileId, $row['type'], $row['name'], $row['duration'], $fileName, $row['UserID']))
+        // Pass in the old media id ($mediaid) so that we don't validate against it during the name check
+        if (!$newMediaId = $this->Add($fileId, $row['type'], $row['name'], $row['duration'], $fileName, $row['UserID'], $mediaId))
             return false;
+
+        // We need to assign all permissions for the old media id to the new media id
+        Kit::ClassLoader('mediagroupsecurity');
+
+        $security = new MediaGroupSecurity($db);
+        $security->Copy($mediaId, $newMediaId);
 
         // Update the existing record with the new record's id
         $SQL =  "UPDATE media SET isEdited = 1, editedMediaID = %d ";
-        $SQL .= " WHERE IFNULL(editedMediaID,0) <> %d AND mediaID = %d ";
+        $SQL .= " WHERE IFNULL(editedMediaID, 0) <> %d AND mediaID = %d ";
         $SQL = sprintf($SQL, $newMediaId, $newMediaId, $mediaId);
 
         if (!$db->query($SQL))

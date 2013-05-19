@@ -528,9 +528,12 @@ class UploadHandler
         }
 
         // We want to add this item to our library (and potentially to the region we are working in)
-        if (!$module->AddLibraryMedia($file->name, $name, $duration, $file->name)) {
+        if (!$storedAs = $module->AddLibraryMedia($file->name, $name, $duration, $file->name)) {
             $file->error = $module->GetErrorMessage();
         }
+
+        // Set new file details
+        $file->storedas = $storedAs;
 
         // Delete the file
         @unlink($this->get_upload_path($file->name));
