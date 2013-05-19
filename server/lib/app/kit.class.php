@@ -102,9 +102,9 @@ class Kit
 				case 'session':
 
 					if (isset($_SESSION))
-						$_SESSION = array_change_key_case($_SESSION);
+						$_tempSESSION = array_change_key_case($_SESSION);
 				
-					if(!isset($_SESSION[$param])) 
+					if(!isset($_tempSESSION[$param])) 
 					{
 						$return = $default;
 					}
@@ -115,13 +115,13 @@ class Kit
 					}
 					else 
 					{
-						if ($_SESSION[$param] == '')
+						if ($_tempSESSION[$param] == '')
 						{
 							$return = $default;
 						} 
 						else
 						{
-							$return = $_SESSION[$param];
+							$return = $_tempSESSION[$param];
 						}
 					}
 				
@@ -129,21 +129,21 @@ class Kit
 				
 				case 'request':
 
-					$_REQUEST = array_change_key_case($_REQUEST);
+					$_tempREQUEST = array_change_key_case($_REQUEST);
 				
-					if(!isset($_REQUEST[$param])) 
+					if(!isset($_tempREQUEST[$param])) 
 					{
 						$return = $default;
 					}
 					else 
 					{
-						if ($_REQUEST[$param] == '')
+						if ($_tempREQUEST[$param] == '')
 						{
 							$return = $default;
 						} 
 						else
 						{
-							$return = $_REQUEST[$param];
+							$return = $_tempREQUEST[$param];
 						}	
 					}
 				
@@ -151,21 +151,21 @@ class Kit
 					
 				case 'get':
 
-					$_GET = array_change_key_case($_GET);
+					$_tempGET = array_change_key_case($_GET);
 				
-					if(!isset($_GET[$param])) 
+					if(!isset($_tempGET[$param])) 
 					{
 						$return = $default;
 					}
 					else 
 					{
-						if ($_GET[$param] == '')
+						if ($_tempGET[$param] == '')
 						{
 							$return = $default;
 						} 
 						else
 						{
-							$return = $_GET[$param];
+							$return = $_tempGET[$param];
 						}		
 					}
 				
@@ -173,9 +173,9 @@ class Kit
 					
 				case 'post':
 
-					$_POST = array_change_key_case($_POST);
+					$_tempPOST = array_change_key_case($_POST);
 		
-					if(!isset($_POST[$param])) 
+					if(!isset($_tempPOST[$param])) 
 					{
 						$return = $default;
 					}
@@ -186,13 +186,13 @@ class Kit
 					}
 					else 
 					{
-						if ($_POST[$param] == '')
+						if ($_tempPOST[$param] == '')
 						{
 							$return = $default;
 						} 
 						else
 						{
-							$return = $_POST[$param];
+							$return = $_tempPOST[$param];
 						}		
 					}
 				

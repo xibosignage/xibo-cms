@@ -922,7 +922,7 @@ class Rest
         if (!$module->auth->view)
             return $this->Error(1, 'Access Denied');
 
-        return $this->Respond($this->NodeListFromArray(array('xlf' => $module->AsXml(), 'media'));
+        return $this->Respond($this->NodeListFromArray(array('xlf' => $module->AsXml(), 'media')));
     }
 
     /**
@@ -1152,6 +1152,8 @@ class Rest
     public function Version()
     {
         $version = Config::Version($this->db);
+
+        Debug::LogEntry($this->db, 'audit', 'Called Version');
 
         $xmlDoc = new DOMDocument();
         $xmlElement = $xmlDoc->createElement('version');
