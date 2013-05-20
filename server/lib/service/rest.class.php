@@ -667,8 +667,8 @@ class Rest
         Kit::ClassLoader('layout');
         $layout = new Layout($this->db);
 
-        if (!$regions = $layout->GetRegions($layoutId))
-            return false;
+        if (!$regions = $layout->GetRegionList($layoutId))
+            return $this->Error(10019, 'Unable to get regions');
 
         $regionsWithPermissions = array();
 

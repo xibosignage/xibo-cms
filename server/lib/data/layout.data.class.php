@@ -786,6 +786,8 @@ END;
         if (!$this->SetDomXml($layoutId))
             return false;
 
+        Debug::LogEntry($this->db, 'audit', '[IN] Loaded XML into DOM', 'layout', 'GetRegionList');
+
         // Get region nodes
         $regionNodes = $this->DomXml->getElementsByTagName('region');
 
