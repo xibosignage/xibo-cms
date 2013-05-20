@@ -27,7 +27,7 @@ class RestXml extends Rest
      */
     public function Respond(DOMElement $xmlElement)
     {
-        $xmlDoc = new DOMDocument('1.0');
+        $xmlDoc = new DOMDocument();
         $xmlDoc->formatOutput = true;
 
         // Create the response node

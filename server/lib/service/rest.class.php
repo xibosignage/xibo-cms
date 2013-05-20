@@ -469,7 +469,11 @@ class Rest
         $layout = $this->user->LayoutList();
 
         if (!is_array($layout))
-            return $this->Error(2);
+            return $this->Error(2, 'No layouts');
+
+        // Remove the XML from the array
+        for ($i = 0; $i < count($layout); $i++)
+            unset($layout[$i]['xml']);
 
         return $this->Respond($this->NodeListFromArray($layout, 'layout'));
     }
