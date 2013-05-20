@@ -27,6 +27,8 @@ class RestXml extends Rest
      */
     public function Respond(DOMElement $xmlElement)
     {
+        header('Content-Type: text/xml; charset=utf8');
+
         $xmlDoc = new DOMDocument();
         $xmlDoc->formatOutput = true;
 
