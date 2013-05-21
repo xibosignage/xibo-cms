@@ -35,5 +35,82 @@ class RestJson extends Rest
 
         return json_encode($array);
     }
+
+    /**
+     *
+     * @param DOMElement $xmlElement
+     * @return <string>
+     */
+    public function Respond($array)
+    {
+        header('Content-Type: text/json; charset=utf8');
+
+        $array['rsp']['status'] = 'error';
+        
+
+        // Log it
+        Debug::LogEntry($this->db, 'audit', $xmlDoc->saveXML(), 'RestXml', 'Respond');
+
+        // Return it as a string
+        return $xmlDoc->saveXML();
+    }
+
+    public function Error($errorNo, $errorMessage = '')
+    {
+        Debug::LogEntry($this->db, 'audit', $errorMessage, 'RestXml', 'Error');
+
+        header('Content-Type: text/json; charset=utf8');
+
+        // Output the error doc
+        $xmlDoc = new DOMDocument('1.0');
+        $xmlDoc->formatOutput = true;
+
+        $response['rsp']['status'] = 'error';
+        $response['rsp']['status']['error']['code'] = $errorNo;
+        $response['rsp']['status']['error']['message'] = $errorMessage;
+
+        $return = json_encode($response);
+
+        // Log it
+        Debug::LogEntry($this->db, 'audit', $return);
+
+        // Return it as a string
+        return $return;
+    }
+
+    /**
+     * Returns an ID only response
+     * @param <string> $nodeName
+     * @param <string> $id
+     * @param <string> $idAttributeName
+     * @return <DOMDocument::XmlElement>
+     */
+    protected function ReturnId($nodeName, $id, $idAttributeName = 'id')
+    {
+        return array($nodeName => array($idAttributeName => $id));
+    }
+
+    /**
+     * Returns a single node with the attributes contained in a key/value array
+     * @param <type> $nodeName
+     * @param <type> $attributes
+     * @return <DOMDocument::XmlElement>
+     */
+    protected function ReturnAttributes($nodeName, $attributes)
+    {
+        return array($nodeName => $attributes);
+    }
+
+    /**
+     * Creates a node list from an array
+     * @param <type> $array
+     * @param <type> $node
+     */
+    protected function NodeListFromArray($array, $nodeName)
+    {
+        Debug::LogEntry($this->db, 'audit', sprintf('Building node list containing %d items', count($array)));
+
+        return array($nodeName => $array);
+    }
 }
 ?>

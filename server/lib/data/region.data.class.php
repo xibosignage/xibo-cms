@@ -89,11 +89,11 @@ class Region extends Data
 	
 	/**
 	 * Adds a region to the specified layoutid
-	 * @return 
 	 * @param $layoutid Object
 	 * @param $regionid Object[optional]
+	 * @return string The region id
 	 */
-	public function AddRegion($layoutid, $userid, $regionid = "")
+	public function AddRegion($layoutid, $userid, $regionid = "", $width = 50, $height = 50, $top = 50, $left = 50)
 	{
             $db =& $this->db;
 
@@ -109,10 +109,10 @@ class Region extends Data
             $newRegion = $xml->createElement("region");
             $newRegion->setAttribute('id', $regionid);
             $newRegion->setAttribute('userId', $userid);
-            $newRegion->setAttribute('width', 50);
-            $newRegion->setAttribute('height', 50);
-            $newRegion->setAttribute('top', 50);
-            $newRegion->setAttribute('left', 50);
+            $newRegion->setAttribute('width', $width);
+            $newRegion->setAttribute('height', $height);
+            $newRegion->setAttribute('top', $top);
+            $newRegion->setAttribute('left', $left);
 
             $xml->firstChild->appendChild($newRegion);
 
@@ -126,7 +126,7 @@ class Region extends Data
                 $security->LinkEveryone($layoutid, $regionid, 1, 0, 0);
             }
 
-            return true;
+            return $regionid;
 	}
 	
 	public function DeleteRegion($layoutid, $regionid)

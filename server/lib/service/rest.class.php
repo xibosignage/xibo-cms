@@ -667,7 +667,10 @@ class Rest
         Kit::ClassLoader('layout');
         $layout = new Layout($this->db);
 
-        if (!$regions = $layout->GetRegionList($layoutId))
+        // Get the list of regions for this layout
+        $regions = $layout->GetRegionList($layoutId);
+
+        if (!is_array($regions))
             return $this->Error(10019, 'Unable to get regions');
 
         $regionsWithPermissions = array();
@@ -699,7 +702,24 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $width = $this->GetParam('width', _INT);
+        $height = $this->GetParam('height', _INT);
+        $top = $this->GetParam('top', _INT);
+        $left = $this->GetParam('left', _INT);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Create a region object
+        Kit::ClassLoader('region');
+        $region = new Region($this->db);
+
+        if (!$regionId = $region->AddRegion($layoutId, $this->user->userid, '', $width, $height, $top, $left))
+            return $this->Error($region->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('region', $regionId));
     }
 
     /**
@@ -711,7 +731,35 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+        $width = $this->GetParam('width', _INT);
+        $height = $this->GetParam('height', _INT);
+        $top = $this->GetParam('top', _INT);
+        $left = $this->GetParam('left', _INT);
+        $name = $this->GetParam('name', _STRING);
+        $options = $this->GetParam('options', _ARRAY);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Create a region object
+        Kit::ClassLoader('region');
+        $region = new Region($this->db);
+
+        // Region Assignment needs the Owner Id
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // Edit the region
+        if (!$regionId = $region->EditRegion($layoutId, $regionId, $width, $height, $top, $left, $name = '', $options = ''))
+            return $this->Error($region->GetErrorMessage());
+        
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
