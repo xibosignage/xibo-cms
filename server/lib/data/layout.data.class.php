@@ -761,7 +761,7 @@ END;
         if (!$region->EditBackground($layoutId, '#' . $color, $bg_image, $width, $height, $resolutionId))
         {
             //there was an ERROR
-            $response->SetError($region->errorMsg);
+            $response->SetError($region->GetErrorMessage());
             $response->Respond();
         }
         

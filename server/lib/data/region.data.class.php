@@ -22,8 +22,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Region extends Data
 {
-	public $errorMsg;
-	
 	public function __construct(database $db) 
 	{
 		$this->db 	=& $db;
@@ -45,8 +43,7 @@ class Region extends Data
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$this->errorMsg = __("Unable to Query for that layout, there is a database error.");
-			return false;
+			return $this->SetError(__("Unable to Query for that layout, there is a database error."));
 		}
 		
 		$row = $db->get_row($results) ;
@@ -70,8 +67,7 @@ class Region extends Data
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$this->errMsg = __("Unable to Update that layouts XML with a new Media Node");
-			return false;
+			return $this->SetError(__("Unable to Update that layouts XML with a new Media Node"));
 		}
 
 		// Get the Campaign ID
@@ -93,7 +89,7 @@ class Region extends Data
 	 * @param $regionid Object[optional]
 	 * @return string The region id
 	 */
-	public function AddRegion($layoutid, $userid, $regionid = "", $width = 50, $height = 50, $top = 50, $left = 50)
+	public function AddRegion($layoutid, $userid, $regionid = "", $width = 100, $height = 100, $top = 50, $left = 50, $name = '')
 	{
             $db =& $this->db;
 
@@ -107,6 +103,10 @@ class Region extends Data
 
             // make a new region node
             $newRegion = $xml->createElement("region");
+
+            if ($name != '') 
+				$newRegion->setAttribute('name', $name);
+
             $newRegion->setAttribute('id', $regionid);
             $newRegion->setAttribute('userId', $userid);
             $newRegion->setAttribute('width', $width);
@@ -116,7 +116,8 @@ class Region extends Data
 
             $xml->firstChild->appendChild($newRegion);
 
-            if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;
+            if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
+            	return false;
 
             // What permissions should we create this with?
             if (Config::GetSetting($db, 'LAYOUT_DEFAULT') == 'public')
@@ -140,8 +141,7 @@ class Region extends Data
 		//Do we have a region ID provided?
 		if ($regionid == "")
 		{
-			$this->errMsg = __("No region ID provided, cannot delete");
-			return false;
+			return $this->SetError(__("No region ID provided, cannot delete"));
 		}
 		
 		//Get this region from the layout (xpath)
@@ -162,14 +162,16 @@ class Region extends Data
 			//If there is, then Remove that link
 			if ($lkid != "")
 			{
-				if (!$this->RemoveDbLink($lkid)) return false;
+				if (!$this->RemoveDbLink($lkid)) 
+					return false;
 			}
 		}
 		
 		//Remove the region node
 		$xml->firstChild->removeChild($regionNode);
 		
-		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
+			return false;
 		
 		return true;
 	}
@@ -233,7 +235,8 @@ class Region extends Data
             $security->LinkEveryone($layoutid, $regionid, $mediaid, 1, 0, 0);
         }
 		
-		if (!$this->SetLayoutXml($layoutid, $xml)) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml)) 
+			return false;
 		
 		return true;
 	}
@@ -254,8 +257,7 @@ class Region extends Data
 		if (!$id = $db->insert_query($SQL))
 		{
 			trigger_error($db->error());
-			$this->errorMsg = __("Database error adding this link record.");
-			return false;
+			return $this->SetError(__("Database error adding this link record."));
 		}
 		
 		return $id;
@@ -276,8 +278,7 @@ class Region extends Data
 		if (!$db->query($SQL))
 		{
 			trigger_error($db->error());
-			$this->errorMsg = __("Database error updating this link record.");
-			return false;
+			return $this->SetError(__("Database error updating this link record."));
 		}
 		
 		return true;
@@ -296,8 +297,7 @@ class Region extends Data
 		if (!$db->query($SQL))
 		{
 			trigger_error($db->error());
-			$this->errorMsg = __("Database error deleting this link record.");
-			return false;
+			return $this->SetError(__("Database error deleting this link record."));
 		}
 		
 		return true;
@@ -317,7 +317,8 @@ class Region extends Data
 			//Get the media node
 			$xpathQuery = "//region[@id='$regionid']/media[@lkid='$lkid']";
 			
-			if (!$this->RemoveDbLink($lkid)) return false;
+			if (!$this->RemoveDbLink($lkid)) 
+				return false;
 		}
 		else
 		{
@@ -336,7 +337,8 @@ class Region extends Data
 		//Convert back to XML
 		$xml = $xml->saveXML();
 		
-		if (!$this->SetLayoutXml($layoutid, $xml)) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml)) 
+			return false;
 		
 		return true;
 	}
@@ -387,7 +389,8 @@ class Region extends Data
 		$xml = $xml->saveXML();
 		
 		//Save it
-		if (!$this->SetLayoutXml($layoutid, $xml)) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml)) 
+			return false;
 		
 		//Its swapped
 		return true;
@@ -468,7 +471,8 @@ class Region extends Data
 		$xml = $xml->saveXML();
 		
 		//Save it
-		if (!$this->SetLayoutXml($layoutid, $xml)) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml)) 
+			return false;
 		
 		//Its swapped
 		return true;
@@ -491,7 +495,8 @@ class Region extends Data
 		$xml->documentElement->setAttribute("schemaVersion", Config::Version($db, 'XlfVersion'));
 		
 		//Convert back to XML		
-		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
+			return false;
 		
 		//Its swapped
 		return true;
@@ -514,8 +519,7 @@ class Region extends Data
 		//Do a little error checking on the widths given
 		if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))
 		{
-			$this->errorMsg = __("Non numerics, try refreshing the browser");
-			return false;
+			return $this->SetError(__("Non numerics, try refreshing the browser"));
 		}
 		
 		//Load the XML for this layout
@@ -528,7 +532,9 @@ class Region extends Data
 		$regionNodeList = $xpath->query("//region[@id='$regionid']");
 		$regionNode = $regionNodeList->item(0);
 		
-		if ($name != '') $regionNode->setAttribute('name', $name);
+		if ($name != '') 
+			$regionNode->setAttribute('name', $name);
+		
 		$regionNode->setAttribute('width',$width);
 		$regionNode->setAttribute('height', $height);
 		$regionNode->setAttribute('top', $top);
@@ -550,7 +556,8 @@ class Region extends Data
                 }
 		
 		//Convert back to XML		
-		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
+			return false;
 		
 		//Its swapped
 		return true;

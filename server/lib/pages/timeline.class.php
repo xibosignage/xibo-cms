@@ -59,7 +59,7 @@ class timelineDAO {
 		if (!$region->AddRegion($layoutid, $user->userid))
 		{
 			//there was an ERROR
-			trigger_error($region->errorMsg, E_USER_ERROR);
+			trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 		}
 		
 		$response->SetFormSubmitResponse(__('Region Added.'), true, "index.php?p=layout&modify=true&layoutid=$layoutid");
@@ -103,7 +103,7 @@ class timelineDAO {
             if (!$region->DeleteRegion($layoutid, $regionid))
             {
                     //there was an ERROR
-                    $response->SetError($region->errorMsg);
+                    $response->SetError($region->GetErrorMessage());
                     $response->Respond();
             }
 
@@ -243,7 +243,7 @@ class timelineDAO {
 
         // Edit the region 
         if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName, $options))
-            trigger_error($region->errorMsg, E_USER_ERROR);
+            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid");
         $response->Respond();
@@ -286,7 +286,7 @@ class timelineDAO {
 		if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
 		{
 			//there was an ERROR
-			trigger_error($region->errorMsg, E_USER_ERROR);
+			trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 		}
 		
 		$response->SetFormSubmitResponse('');
@@ -413,7 +413,7 @@ END;
 		
 		if (!$xmlString = $region->GetLayoutXml($layoutid))
 		{
-            trigger_error($region->errorMsg, E_USER_ERROR);
+            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 		}
 		
 		$xml->loadXML($xmlString);
@@ -859,7 +859,7 @@ END;
 
         // Hand off to the region object to do the actual reorder
         if (!$region->ReorderTimeline($layoutId, $regionId, $resolvedMedia))
-            trigger_error($region->errorMsg, E_USER_ERROR);
+            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Order Changed'));
         $response->keepOpen = true;

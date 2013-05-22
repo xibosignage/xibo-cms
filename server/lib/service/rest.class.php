@@ -629,26 +629,6 @@ class Rest
     }
 
     /**
-     * Get the Xlf for a Layout
-     * @return <XiboAPIResponse>
-     */
-    public function LayoutGetXlf()
-    {
-        if (!$this->user->PageAuth('layout'))
-            return $this->Error(1, 'Access Denied');
-
-        Kit::ClassLoader('Layout');
-
-        $layout     = new Layout($this->db);
-        $layoutId   = $this->GetParam('layoutId', _INT);
-
-        if (!$this->user->LayoutAuth($layoutId))
-            return $this->Error(1, 'Access Denied');
-
-        return $this->Error(1000, 'Not implemented');
-    }
-
-    /**
      * List Regions on a layout
      * @return <XiboAPIResponse>
      */
@@ -703,10 +683,11 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
-        $width = $this->GetParam('width', _INT);
-        $height = $this->GetParam('height', _INT);
-        $top = $this->GetParam('top', _INT);
-        $left = $this->GetParam('left', _INT);
+        $width = $this->GetParam('width', _INT, 100);
+        $height = $this->GetParam('height', _INT, 100);
+        $top = $this->GetParam('top', _INT, 50);
+        $left = $this->GetParam('left', _INT, 50);
+        $name = $this->GetParam('name', _STRING);
 
         // Does the user have permissions to view this region?
         if (!$this->user->LayoutAuth($layoutId))
@@ -716,7 +697,7 @@ class Rest
         Kit::ClassLoader('region');
         $region = new Region($this->db);
 
-        if (!$regionId = $region->AddRegion($layoutId, $this->user->userid, '', $width, $height, $top, $left))
+        if (!$regionId = $region->AddRegion($layoutId, $this->user->userid, '', $width, $height, $top, $left, $name))
             return $this->Error($region->GetErrorMessage());
 
         return $this->Respond($this->ReturnId('region', $regionId));
@@ -738,7 +719,6 @@ class Rest
         $top = $this->GetParam('top', _INT);
         $left = $this->GetParam('left', _INT);
         $name = $this->GetParam('name', _STRING);
-        $options = $this->GetParam('options', _ARRAY);
 
         // Does the user have permissions to view this region?
         if (!$this->user->LayoutAuth($layoutId))
@@ -756,22 +736,44 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Edit the region
-        if (!$regionId = $region->EditRegion($layoutId, $regionId, $width, $height, $top, $left, $name = '', $options = ''))
+        if (!$regionId = $region->EditRegion($layoutId, $regionId, $width, $height, $top, $left, $name = ''))
             return $this->Error($region->GetErrorMessage());
         
         return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
-     * Position Region on a Layout
+     * Delete Region on a layout
      * @return <XiboAPIResponse>
      */
-    public function LayoutRegionPosition()
+    public function LayoutRegionDelete()
     {
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Create a region object
+        Kit::ClassLoader('region');
+        $region = new Region($this->db);
+
+        // Region Assignment needs the Owner Id
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->delete)
+            return $this->Error(1, 'Access Denied');
+
+        // Edit the region
+        if (!$regionId = $region->DeleteRegion($layoutId, $regionId))
+            return $this->Error($region->GetErrorMessage());
+        
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
