@@ -149,6 +149,7 @@ class timelineDAO {
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid .'"><input type="hidden" name="regionid" value="' . $regionid . '"><input id="layoutWidth" type="hidden" name="layoutWidth" value="' . $layoutWidth . '"><input id="layoutHeight" type="hidden" name="layoutHeight" value="' . $layoutHeight . '"><input type="hidden" name="scale" value="' . $scale .'">');
         
         // Theme Variables
+        Theme::Set('regionName', $regionName);
         Theme::Set('width', round($width * $scale, 0));
         Theme::Set('height', round($height * $scale, 0));
         Theme::Set('top', round($top * $scale, 0));

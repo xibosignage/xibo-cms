@@ -93,6 +93,8 @@ class Region extends Data
 	{
             $db =& $this->db;
 
+            Debug::LogEntry($db, 'audit', 'LayoutId: ' . $layoutid . ', Width: ' . $width . ', Height: ' . $height . ', Top: ' . $top . ', Left: ' . $left . ', Name: ' . $name . '.', 'region', 'AddRegion');
+
             //Load the XML for this layout
             $xml = new DOMDocument("1.0");
             $xml->loadXML($this->GetLayoutXml($layoutid));

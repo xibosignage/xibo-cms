@@ -803,6 +803,7 @@ END;
             $item['top'] = $region->getAttribute('top');
             $item['regionid'] = $region->getAttribute('id');
             $item['ownerid'] = $region->getAttribute('userId');
+            $item['name'] = $region->getAttribute('name');
 
             $regions[] = $item;
         }
