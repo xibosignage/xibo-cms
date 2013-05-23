@@ -698,7 +698,7 @@ class Rest
         $region = new Region($this->db);
 
         if (!$regionId = $region->AddRegion($layoutId, $this->user->userid, '', $width, $height, $top, $left, $name))
-            return $this->Error($region->GetErrorMessage());
+            return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
 
         return $this->Respond($this->ReturnId('region', $regionId));
     }
@@ -737,7 +737,7 @@ class Rest
 
         // Edit the region
         if (!$regionId = $region->EditRegion($layoutId, $regionId, $width, $height, $top, $left, $name = ''))
-            return $this->Error($region->GetErrorMessage());
+            return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
         
         return $this->Respond($this->ReturnId('success', true));
     }
@@ -771,7 +771,7 @@ class Rest
 
         // Edit the region
         if (!$regionId = $region->DeleteRegion($layoutId, $regionId))
-            return $this->Error($region->GetErrorMessage());
+            return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
         
         return $this->Respond($this->ReturnId('success', true));
     }
@@ -869,7 +869,7 @@ class Rest
         require_once("modules/$type.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $type($this->db, $user, '', $layoutId, $regionId))
+        if (!$module = new $type($this->db, $this->user, '', $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         // Set the XML (causes save)
@@ -918,7 +918,7 @@ class Rest
         require_once("modules/$mod.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $mod($this->db, $user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $mod($this->db, $this->user, $mediaId, $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->edit)
@@ -970,7 +970,7 @@ class Rest
         require_once("modules/$mod.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $mod($this->db, $user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $mod($this->db, $this->user, $mediaId, $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->view)
@@ -1054,7 +1054,7 @@ class Rest
         require_once("modules/$mod.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $mod($this->db, $user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $mod($this->db, $this->user, $mediaId, $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->del)
