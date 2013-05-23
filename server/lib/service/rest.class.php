@@ -858,7 +858,7 @@ class Rest
 
         // Check the user has permission
         Kit::ClassLoader('region');
-        $region = new region($db);
+        $region = new region($this->db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -869,7 +869,7 @@ class Rest
         require_once("modules/$type.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $type($db, $user, '', $layoutId, $regionId))
+        if (!$module = new $type($this->db, $user, '', $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         // Set the XML (causes save)
@@ -899,7 +899,7 @@ class Rest
 
         // Check the user has permission
         Kit::ClassLoader('region');
-        $region = new region($db);
+        $region = new region($this->db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -909,16 +909,16 @@ class Rest
         // Get the Media Type
         $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
 
-        if (!$mod = $db->GetSingleValue($SQL, 'type', _STRING))
+        if (!$mod = $$this->db->GetSingleValue($SQL, 'type', _STRING))
         {
-            trigger_error($db->error());
+            trigger_error($this->db->error());
             return $this->SetError(__('Error getting type from a media item.'));
         }
 
         require_once("modules/$mod.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $mod($db, $user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $mod($this->db, $user, $mediaId, $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->edit)
@@ -950,7 +950,7 @@ class Rest
 
         // Check the user has permission
         Kit::ClassLoader('region');
-        $region = new region($db);
+        $region = new region($this->db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -961,16 +961,16 @@ class Rest
         // Get the type from this media
         $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
 
-        if (!$mod = $db->GetSingleValue($SQL, 'type', _STRING))
+        if (!$mod = $this->db->GetSingleValue($SQL, 'type', _STRING))
         {
-            trigger_error($db->error());
+            trigger_error($this->db->error());
             return $this->SetError(__('Error getting type from a media item.'));
         }
 
         require_once("modules/$mod.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $mod($db, $user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $mod($this->db, $user, $mediaId, $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->view)
@@ -998,7 +998,7 @@ class Rest
 
         // Check the user has permission
         Kit::ClassLoader('region');
-        $region = new region($db);
+        $region = new region($this->db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -1034,7 +1034,7 @@ class Rest
 
         // Check the user has permission
         Kit::ClassLoader('region');
-        $region = new region($db);
+        $region = new region($this->db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -1045,16 +1045,16 @@ class Rest
         // Get the type from this media
         $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
 
-        if (!$mod = $db->GetSingleValue($SQL, 'type', _STRING))
+        if (!$mod = $this->db->GetSingleValue($SQL, 'type', _STRING))
         {
-            trigger_error($db->error());
+            trigger_error($this->db->error());
             return $this->SetError(__('Error getting type from a media item.'));
         }
 
         require_once("modules/$mod.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $mod($db, $user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $mod($this->db, $user, $mediaId, $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->del)
@@ -1067,7 +1067,7 @@ class Rest
 
         // Delete the actual media record
         Kit::ClassLoader('Media');
-        $media = new Media($db);
+        $media = new Media($this->db);
 
         if (!$media->Delete($mediaId))
             return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
@@ -1094,7 +1094,7 @@ class Rest
 
         // Make sure we have permission to edit this region
         Kit::ClassLoader('region');
-        $region = new region($db);
+        $region = new region($this->db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
