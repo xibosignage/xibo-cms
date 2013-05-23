@@ -103,6 +103,16 @@ class Region extends Data
             if ($regionid == '')
                 $regionid = uniqid();
 
+            // Validation
+    		if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))
+				return $this->SetError(__('Size and coordinates must be generic'));
+
+            if ($width <= 0)
+            	return $this->SetError(__('Width must be greater than 0'));
+
+            if ($height <= 0)
+            	return $this->SetError(__('Height must be greater than 0'));
+
             // make a new region node
             $newRegion = $xml->createElement("region");
 
@@ -518,11 +528,15 @@ class Region extends Data
 	{
 		$db =& $this->db;
 		
-		//Do a little error checking on the widths given
+		// Validation
 		if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))
-		{
-			return $this->SetError(__("Non numerics, try refreshing the browser"));
-		}
+			return $this->SetError(__('Size and coordinates must be generic'));
+
+        if ($width <= 0)
+        	return $this->SetError(__('Width must be greater than 0'));
+
+        if ($height <= 0)
+        	return $this->SetError(__('Height must be greater than 0'));
 		
 		//Load the XML for this layout
 		$xml = new DOMDocument("1.0");
