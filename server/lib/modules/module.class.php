@@ -1661,12 +1661,16 @@ END;
     public function SetMediaXml($xml) {
     	$db =& $this->db;
 
+        // Validation
+        if ($xml == '')
+            return $this->SetError(__('No XML provided'));
+
     	// Load the XML into a document
     	$xmlDoc = new DOMDocument();
     	$xmlDoc->loadXML($xml);
 
     	// Validate the XML Document
-    	if (!$this->ValidateMediaXml())
+    	if (!$this->ValidateMediaXml($xmlDoc))
     		return false;
 
     	// Switch the XML with the XML currently held for this media node
