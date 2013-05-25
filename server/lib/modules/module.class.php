@@ -1663,11 +1663,17 @@ END;
 
         // Validation
         if ($xml == '')
-            return $this->SetError(__('No XML provided'));
+            return $this->SetError(__('No XLF provided'));
+
+        Debug::LogEntry($db, 'audit', 'Setting the media XML for this item directly', 'module', 'SetMediaXml');
 
     	// Load the XML into a document
     	$xmlDoc = new DOMDocument();
-    	$xmlDoc->loadXML($xml);
+
+    	if (!$xmlDoc->loadXML($xml))
+            return $this->SetError(__('Invalid XLF'));
+
+        Debug::LogEntry($db, 'audit', 'Provided XML Loaded', 'module', 'SetMediaXml');
 
     	// Validate the XML Document
     	if (!$this->ValidateMediaXml($xmlDoc))
@@ -1680,12 +1686,17 @@ END;
     	if (!$this->UpdateRegion())
     		return false;
 
-    	return true;
+        // Send back the media id
+    	return $this->mediaid;
     }
 
     protected function ValidateMediaXml($xmlDoc) {
+        $db =& $this->db;
+
+        Debug::LogEntry($db, 'audit', 'Validating provided XLF', 'module', 'ValidateMediaXml');
+
     	// Compare the XML we have been given, with the XML of the existing media item OR compare as a new item
-    	$mediaNodes = $xmlDoc->selectNodes('media');
+    	$mediaNodes = $xmlDoc->getElementsByTagName('media');
 
     	if ($mediaNodes->length > 1)
     		return $this->SetError(__('Too many media nodes'));
@@ -1704,11 +1715,11 @@ END;
 		// Do we have a new item or an existing item
     	if ($this->assignedMedia) {
     		// An existing item
-    		Debug::LogEntry($db, 'audit', 'A existing media entry', 'module', 'ValidateMediaXml');
+    		Debug::LogEntry($db, 'audit', 'An existing media entry', 'module', 'ValidateMediaXml');
 
     		// Check the ID
     		if ($mediaNode->getAttribute('id') != $this->mediaid)
-    			return $this->SetError(__('ID does not match'));
+    			return $this->SetError(sprintf(__('ID does not match [%s vs %s]'), $mediaNode->getAttribute('id'), $this->mediaid));
 
     		// Check that the "owner" userId on the media item has not changed
     		if ($mediaNode->getAttribute('userId') != $this->originalUserId)
@@ -1729,6 +1740,9 @@ END;
     			if ($mediaNode->getAttribute('id') != $this->mediaid)
 	    			return $this->SetError(__('ID does not match'));
     		}
+
+            // The user ID should be that of the new user
+            $this->originalUserId = $this->user->userid;
     	}
 
     	// Check we have some core attributes (and set them on the media object - this gives us the new values to save)
@@ -1737,11 +1751,6 @@ END;
 
 		if ($this->duration == '')
 			return $this->SetError(__('Duration not provided'));
-
-        $this->originalUserId = $mediaNode->getAttribute('userId');
-
-        if ($this->originalUserId == '')
-			return $this->SetError(__('UserId not provided'));
 
 		// The "core" items appear to be ok
 		return true;

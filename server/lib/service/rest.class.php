@@ -766,7 +766,7 @@ class Rest
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
-        if (!$regionAuth->delete)
+        if (!$regionAuth->del)
             return $this->Error(1, 'Access Denied');
 
         // Edit the region
@@ -810,7 +810,7 @@ class Rest
 
         $regionItems = array();
 
-        foreach ($items as $item) {
+        foreach ($items as $mediaNode) {
             // Get the Type, ID, duration, etc (the generic information)
             $mediaItem['mediaid'] = $mediaNode->getAttribute('id');
             $mediaItem['lkid'] = $mediaNode->getAttribute('lkid');
@@ -891,6 +891,7 @@ class Rest
         $layoutId = $this->GetParam('layoutId', _INT);
         $regionId = $this->GetParam('regionId', _STRING);
         $mediaId = $this->GetParam('mediaId', _STRING);
+        $type = $this->GetParam('type', _WORD);
         $xlf = $this->GetParam('xlf', _STRING);
 
         // Does the user have permissions to view this layout?
@@ -906,19 +907,11 @@ class Rest
         if (!$regionAuth->edit)
             return $this->Error(1, 'Access Denied');
 
-        // Get the Media Type
-        $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
-
-        if (!$mod = $$this->db->GetSingleValue($SQL, 'type', _STRING))
-        {
-            trigger_error($this->db->error());
-            return $this->SetError(__('Error getting type from a media item.'));
-        }
-
-        require_once("modules/$mod.module.php");
+        // Include the media type
+        require_once("modules/$type.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $mod($this->db, $this->user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $type($this->db, $this->user, $mediaId, $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->edit)
@@ -943,6 +936,7 @@ class Rest
         $layoutId = $this->GetParam('layoutId', _INT);
         $regionId = $this->GetParam('regionId', _STRING);
         $mediaId = $this->GetParam('mediaId', _STRING);
+        $type = $this->GetParam('type', _WORD);
 
         // Does the user have permissions to view this layout?
         if (!$this->user->LayoutAuth($layoutId))
@@ -958,25 +952,16 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Load the media information from the provided ids
-        // Get the type from this media
-        $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
-
-        if (!$mod = $this->db->GetSingleValue($SQL, 'type', _STRING))
-        {
-            trigger_error($this->db->error());
-            return $this->SetError(__('Error getting type from a media item.'));
-        }
-
-        require_once("modules/$mod.module.php");
+        require_once("modules/$type.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $mod($this->db, $this->user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $type($this->db, $this->user, $mediaId, $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->view)
             return $this->Error(1, 'Access Denied');
 
-        return $this->Respond($this->NodeListFromArray(array('xlf' => $module->AsXml(), 'media')));
+        return $this->Respond($this->ReturnAttributes('media', array('id' => $mediaId, 'base64Xlf' => base64_encode($module->AsXml()))));
     }
 
     /**
