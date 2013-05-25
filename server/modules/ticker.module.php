@@ -257,7 +257,7 @@ class ticker extends Module
 		$this->duration = $duration;
 		
 		// Any Options
-		$this->SetOption('xmds', ($sourceId == 2));
+		$this->SetOption('xmds', true);
 		$this->SetOption('sourceId', $sourceId);
 		$this->SetOption('uri', $uri);
 		$this->SetOption('datasetid', $dataSetId);
@@ -381,7 +381,7 @@ class ticker extends Module
             trigger_error(__('Update Interval must be greater than or equal to 0'), E_USER_ERROR);
 		
 		// Any Options
-		$this->SetOption('xmds', ($sourceId == 2));
+		$this->SetOption('xmds', true);
 		$this->SetOption('direction', $direction);
 		$this->SetOption('copyright', $copyright);
 		$this->SetOption('scrollSpeed', $scrollSpeed);
