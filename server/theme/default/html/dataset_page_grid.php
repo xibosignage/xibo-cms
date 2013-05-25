@@ -54,7 +54,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     				</button>
     				<ul class="dropdown-menu">
 						<?php foreach($row['buttons'] as $button) { ?>
-						<li class="XiboFormButton" href="<?php echo $button['url']; ?>"><a tabindex="-1" href="#"><?php echo $button['text']; ?></a></li>
+						<li class="<?php echo (($button['id'] == 'dataset_button_viewdata') ? 'XiboRedirectButton' : 'XiboFormButton'); ?>" href="<?php echo $button['url']; ?>"><a tabindex="-1" href="#"><?php echo $button['text']; ?></a></li>
 						<?php } ?>
     				</ul>
   				</div>

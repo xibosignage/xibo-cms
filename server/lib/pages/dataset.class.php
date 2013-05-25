@@ -37,15 +37,31 @@ class datasetDAO
 
     public function displayPage()
     {
+        $subpage = Kit::GetParam('sp', _GET, _WORD, '');
+
         // Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
-        Theme::Set('dataset_form_add_url', 'index.php?p=dataset&q=AddDataSetForm');
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetGrid">');
-        Theme::Set('pager', ResponseManager::Pager($id));
+        
+        // Different pages for data entry and admin    
+        if ($subpage == 'DataEntry') {
+            $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
+            $dataSet = Kit::GetParam('dataset', _GET, _STRING);
+            
+            Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetDataForm"><input type="hidden" name="datasetid" value="' . $dataSetId . '"><input type="hidden" name="dataset" value="' . $dataSet . '">');
+            
+            Theme::Render('dataset_dataentry_page');
+        }
+        else {
+            $id = uniqid();
+            Theme::Set('id', $id);
+            Theme::Set('dataset_form_add_url', 'index.php?p=dataset&q=AddDataSetForm');
+            Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetGrid">');
+            Theme::Set('pager', ResponseManager::Pager($id));
 
-        // Render the Theme and output
-        Theme::Render('dataset_page');
+            // Render the Theme and output
+            Theme::Render('dataset_page');
+        }
     }
 
     public function DataSetGrid()
@@ -68,7 +84,7 @@ class datasetDAO
                 // View Data
                 $dataSet['buttons'][] = array(
                         'id' => 'dataset_button_viewdata',
-                        'url' => 'index.php?p=dataset&q=DataSetDataForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'url' => 'index.php?p=dataset&sp=DataEntry&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
                         'text' => __('View Data')
                     );
 
@@ -545,14 +561,13 @@ class datasetDAO
     {
         $db =& $this->db;
         $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $this->user);
 
-        $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
-        $dataSet = Kit::GetParam('dataset', _GET, _STRING);
+        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
+        $dataSet = Kit::GetParam('dataset', _POST, _STRING);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
-            trigger_error(__('Access Denied'));
+            trigger_error(__('Access Denied'), E_USER_ERROR);
 
         // Get the max number of rows
         $SQL  = "";
@@ -574,7 +589,7 @@ class datasetDAO
         $maxCols = $maxResult['ColNumber'];
 
         // Get some information about the columns in this dataset
-        $SQL  = "SELECT Heading, DataSetColumnID, ListContent, ColumnOrder FROM datasetcolumn WHERE DataSetID = %d  AND DataSetColumnTypeID = 1 ";
+        $SQL  = "SELECT Heading, DataSetColumnID, ListContent, ColumnOrder, DataTypeID FROM datasetcolumn WHERE DataSetID = %d  AND DataSetColumnTypeID = 1 ";
         $SQL .= "ORDER BY ColumnOrder ";
         
         if (!$results = $db->query(sprintf($SQL, $dataSetId)))
@@ -587,7 +602,7 @@ class datasetDAO
         
         $form = '<table class="table table-bordered">';
         $form .= '   <tr>';
-        $form .= '      <th>' . __('Row Number') . '</th>';
+        $form .= '      <th>#</th>';
 
         while ($row = $db->get_assoc_row($results))
         {
@@ -611,6 +626,7 @@ class datasetDAO
                 $dataSetColumnId = $columnDefinition[$col]['DataSetColumnID'];
                 $listContent = $columnDefinition[$col]['ListContent'];
                 $columnOrder = $columnDefinition[$col]['ColumnOrder'];
+                $dataTypeId = $columnDefinition[$col]['DataTypeID'];
 
                 // Value for this Col/Row
                 $value = '';
@@ -663,7 +679,14 @@ class datasetDAO
                 }
                 else
                 {
-                    $select = '<input type="text" name="value" value="' . $value . '">';
+                    // Numbers are always small
+                    $size = ($dataTypeId == 2) ? ' class="input-mini"' : '';
+
+                    if ($dataTypeId == 1) {
+                        // Strings should be based on something - not sure what.
+                    }
+
+                    $select = '<input type="text" class="' . $size . '" name="value" value="' . $value . '">';
                 }
 
                 $action = ($value == '') ? 'AddDataSetData' : 'EditDataSetData';
@@ -680,8 +703,6 @@ class datasetDAO
                     </form>
                 </td>
 END;
-
-                
             } //cols loop
 
             $form .= '</tr>';
@@ -689,11 +710,8 @@ END;
 
         $form .= '</table>';
         
-        $response->SetFormRequestResponse($form, $dataSet, '750px', '600px', 'dataSetData');
-        $response->dialogClass = 'modal-big';
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Data') . '")');
-        $response->AddButton(__('Add Rows'), 'XiboFormRender("index.php?p=dataset&q=DataSetDataForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
-        $response->AddButton(__('Done'), 'XiboDialogClose()');
+        $response->SetGridResponse($form);
+        $response->callBack = 'dataSetData';
         $response->Respond();
     }
 
@@ -916,7 +934,7 @@ END;
                 // The groupId has changed, so we need to write the current settings to the db.
                 // Link new permissions
                 if (!$security->Link($dataSetId, $lastGroupId, $view, $edit, $del))
-                    trigger_error(__('Unable to set permissions'));
+                    trigger_error(__('Unable to set permissions'), E_USER_ERROR);
 
                 // Reset
                 $lastGroupId = $groupId;
@@ -945,7 +963,7 @@ END;
         if (!$first)
         {
             if (!$security->Link($dataSetId, $lastGroupId, $view, $edit, $del))
-                    trigger_error(__('Unable to set permissions'));
+                trigger_error(__('Unable to set permissions'), E_USER_ERROR);
         }
 
         $response->SetFormSubmitResponse(__('Permissions Changed'));
