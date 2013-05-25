@@ -129,6 +129,11 @@ var LayoutAssignCallback = function()
 
     });
 
+    // There could be some existing items...
+    $("#LayoutAssignSortable li span").click(function() {
+        $(this).parent().remove();
+    });
+
     $("#LayoutAssignSortable").sortable().disableSelection();
 }
 
