@@ -82,7 +82,7 @@ class campaignDAO
                 // Assign Layouts
                 $row['buttons'][] = array(
                         'id' => 'campaign_button_layouts',
-                        'url' => 'index.php?p=campaign&q=MembersForm&CampaignID=' . $row['campaignid'] . '&Campaign=' . $row['campaign'],
+                        'url' => 'index.php?p=campaign&q=LayoutAssignForm&CampaignID=' . $row['campaignid'] . '&Campaign=' . $row['campaign'],
                         'text' => __('Layouts')
                     );
                 
@@ -461,85 +461,6 @@ class campaignDAO
     }
 
     /**
-     * Show a form with all current members
-     */
-    public function MembersForm()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ResponseManager();
-        $campaignId = Kit::GetParam('CampaignID', _GET, _INT);
-
-        // There needs to be two lists here.
-        // One of which is the Layouts currently assigned to this group
-        // The other is a list of layouts that are available to be assigned (i.e. the opposite of the first list)
-
-        // Layouts not in group
-        $SQL  = "";
-        $SQL .= "SELECT layout.LayoutID, ";
-        $SQL .= "       layout.layout ";
-        $SQL .= "FROM   layout ";
-        $SQL .= " WHERE layout.LayoutID NOT       IN ";
-        $SQL .= "       (SELECT layout.LayoutID ";
-        $SQL .= "       FROM    layout ";
-        $SQL .= "               INNER JOIN lkcampaignlayout ";
-        $SQL .= "               ON      lkcampaignlayout.LayoutID = layout.LayoutID ";
-        $SQL .= sprintf("	WHERE  lkcampaignlayout.CampaignID   = %d", $campaignId);
-        $SQL .= "       )";
-        $SQL .= " ORDER BY layout.layout ";
-
-        if (!$resultOut = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Layouts'), E_USER_ERROR);
-        }
-
-        // Set some information about the form
-        Theme::Set('layouts_assigned_id', 'layoutsIn');
-        Theme::Set('layouts_available_id', 'layoutsOut');
-        Theme::Set('layouts_assigned_url', 'index.php?p=campaign&q=SetMembers&CampaignID=' . $campaignId);
-
-        // Layouts in group
-        $SQL  = "";
-        $SQL .= "SELECT layout.LayoutID, ";
-        $SQL .= "       layout.layout, ";
-        $SQL .= "       CONCAT('LayoutID_', layout.LayoutID) AS list_id ";
-        $SQL .= "FROM   layout ";
-        $SQL .= "       INNER JOIN lkcampaignlayout ";
-        $SQL .= "       ON     lkcampaignlayout.LayoutID = layout.LayoutID ";
-        $SQL .= sprintf("WHERE  lkcampaignlayout.CampaignID   = %d", $campaignId);
-        $SQL .= " ORDER BY lkcampaignlayout.DisplayOrder ";
-
-        $layoutsAssigned = $db->GetArray($SQL);
-
-        if (!is_array($layoutsAssigned))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Layouts'), E_USER_ERROR);
-        }
-
-        // Set the layouts assigned
-        Theme::Set('layouts_assigned', $layoutsAssigned);
-
-        // All available layouts
-        $layoutsAvailable = array();
-        foreach ($user->LayoutList() as $layout) {
-            $layout['list_id'] = 'LayoutID_' . $layout['layoutid'];
-            $layoutsAvailable[] = $layout;
-        }
-
-        Theme::Set('layouts_available', $layoutsAvailable);
-
-        $form = Theme::RenderReturn('campaign_form_layout_assign');
-
-        $response->SetFormRequestResponse($form, __('Layouts on Campaign'), '400', '375', 'LayoutAssignmentCallBack');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Layouts') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), 'LayoutsSubmit()');
-        $response->Respond();
-    }
-
-    /**
      * Sets the Members of a group
      * @return
      */
@@ -577,6 +498,100 @@ class campaignDAO
         }
 
         $response->SetFormSubmitResponse(__('Layouts Added to Campaign'), false);
+        $response->Respond();
+    }
+
+    /**
+     * Displays the Library Assign form
+     * @return
+     */
+    function LayoutAssignForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        // Input vars
+        $campaignId = Kit::GetParam('CampaignID', _GET, _INT);
+
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="LayoutAssignView">');
+        Theme::Set('pager', ResponseManager::Pager($id));
+        
+        // Get the currently assigned layouts and put them in the "well"
+        // // Layouts in group
+        $SQL  = "SELECT layout.Layoutid, ";
+        $SQL .= "       layout.layout, ";
+        $SQL .= "       CONCAT('LayoutID_', layout.LayoutID) AS list_id ";
+        $SQL .= "FROM   layout ";
+        $SQL .= "       INNER JOIN lkcampaignlayout ";
+        $SQL .= "       ON     lkcampaignlayout.LayoutID = layout.LayoutID ";
+        $SQL .= sprintf("WHERE  lkcampaignlayout.CampaignID = %d", $campaignId);
+        $SQL .= " ORDER BY lkcampaignlayout.DisplayOrder ";
+
+        $layoutsAssigned = $db->GetArray($SQL);
+
+        if (!is_array($layoutsAssigned))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Error getting Layouts'), E_USER_ERROR);
+        }
+
+        Debug::LogEntry($db, 'audit', count($layoutsAssigned) . ' layouts assigned already');
+
+        // Set the layouts assigned
+        Theme::Set('layouts_assigned', $layoutsAssigned);
+
+        // Call to render the template
+        $output = Theme::RenderReturn('campaign_form_layout_assign');
+
+        // Construct the Response
+        $response->html = $output;
+        $response->success = true;
+        $response->dialogSize = true;
+        $response->dialogWidth = '780px';
+        $response->dialogHeight = '580px';
+        $response->dialogTitle = __('Layouts on Campaign');
+
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Layouts') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), 'LayoutsSubmit("' . $campaignId . '")');
+
+        $response->Respond();
+    }
+    
+    /**
+     * Show the library
+     * @return 
+     */
+    function LayoutAssignView() 
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+
+        //Input vars
+        $name = Kit::GetParam('filter_name', _POST, _STRING);
+
+        // Get a list of media
+        $layoutList = $user->LayoutList($name);
+
+        $rows = array();
+
+        // Add some extra information
+        foreach ($layoutList as $row) {
+
+            $row['list_id'] = 'LayoutID_' . $row['layoutid'];
+
+            $rows[] = $row;
+        }
+
+        Theme::Set('table_rows', $rows);
+
+        // Render the Theme
+        $response->SetGridResponse(Theme::RenderReturn('campaign_form_layout_assign_list'));
+        $response->callBack = 'LayoutAssignCallback';
+        $response->pageSize = 5;
         $response->Respond();
     }
 }

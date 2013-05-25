@@ -96,29 +96,54 @@ function MembersSubmit() {
     return;
 }
 
-function LayoutAssignmentCallBack()
+/**
+ * Layout Assignment Form Callback
+ */
+var LayoutAssignCallback = function()
 {
-    $("#layoutsIn, #layoutsOut").sortable({
-        connectWith: '.connectedSortable',
-        dropOnEmpty: true
-    }).disableSelection();
+    // Attach a click handler to all of the little pointers in the grid.
+    $("#LayoutAssignTable .layout_assign_list_select").click(function(){
+        // Get the row that this is in.
+        var row = $(this).parent().parent();
 
-        $(".li-sortable", "#div_dialog").dblclick(switchLists);
+        // Construct a new list item for the lower list and append it.
+        var newItem = $("<li/>", {
+            text: row.attr("litext"),
+            id: row.attr("rowid"),
+            "class": "li-sortable",
+            dblclick: function(){
+                $(this).remove();
+            }
+        });
+
+        newItem.appendTo("#LayoutAssignSortable");
+
+        // Add a span to that new item
+        $("<span/>", {
+            "class": "icon-minus-sign",
+            click: function(){
+                $(this).parent().remove();
+            }
+        })
+        .appendTo(newItem);
+
+    });
+
+    $("#LayoutAssignSortable").sortable().disableSelection();
 }
 
-function LayoutsSubmit() {
+function LayoutsSubmit(campaignId) {
     // Serialise the form and then submit it via Ajax.
-    var href = $("#layoutsIn").attr('href') + "&ajax=true";
-    
-    // Get the two lists        
-    serializedData = $("#layoutsIn").sortable('serialize');
+    var layouts = $("#LayoutAssignSortable").sortable('serialize');
+
+    layouts = layouts + "&CampaignID=" + campaignId;
     
     $.ajax({
         type: "post",
-        url: href,
+        url: "index.php?p=campaign&q=SetMembers&ajax=true",
         cache: false,
         dataType: "json",
-        data: serializedData,
+        data: layouts,
         success: XiboSubmitResponse
     });
     
