@@ -16,7 +16,11 @@ var text_callback = function(dialog)
         var linkedTo = $(this).attr("linkedto");
 
         if (CKEDITOR.instances[linkedTo] != undefined) {
-            var text = "[" + $(this).html() + "|" + $(this).attr("datasetcolumnid") + "]"
+            if ($(this).attr("datasetcolumnid") != undefined)
+                var text = "[" + $(this).html() + "|" + $(this).attr("datasetcolumnid") + "]"
+            else
+                var text = "[" + $(this).html() + "]"
+
             CKEDITOR.instances[linkedTo].insertText(text);
         }
 

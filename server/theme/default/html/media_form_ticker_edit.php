@@ -59,17 +59,11 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         	</div>
         	<div class="control-group">
                 <div class="controls">
-            		<input id="fitText" name="fitText" type="checkbox" <?php echo Theme::Get('fitTextChecked'); ?>>
-                	<label class="checkbox" for="fitText" title="<?php echo Theme::Translate('Fit text to region'); ?>"><?php echo Theme::Translate('Fit text to region'); ?></label>
+                    <label class="checkbox" for="fitText" title="<?php echo Theme::Translate('Fit text to region'); ?>"><?php echo Theme::Translate('Fit text to region'); ?>
+                        <input id="fitText" name="fitText" type="checkbox" <?php echo Theme::Get('fitTextChecked'); ?>>
+                	</label>
             	</div>
         	</div>
-            <div class="control-group">
-                <div class="controls">
-                    <label class="checkbox" for="itemsSideBySide" title="<?php echo Theme::Translate('Show items side by side?'); ?>"><?php echo Theme::Translate('Show items side by side?'); ?>
-                        <input id="itemsSideBySide" name="itemsSideBySide" type="checkbox" <?php echo Theme::Get('itemsideChecked'); ?>>
-                    </label>
-                </div>
-            </div>
     	</div>
     	<div class="span6">
 			<div class="control-group">
@@ -98,12 +92,32 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             </div>
             <div class="control-group">
                 <div class="controls">
-            		<input id="durationIsPerItem" name="durationIsPerItem" type="checkbox" <?php echo Theme::Get('durationIsPerItemChecked'); ?> />
-                	<label class="checkbox" for="durationIsPerItem" title="<?php echo Theme::Translate('The duration speficied is per item otherwise it is per feed.'); ?>"><?php echo Theme::Translate('Duration is per item'); ?></label>
+                    <label class="checkbox" for="durationIsPerItem" title="<?php echo Theme::Translate('The duration speficied is per item otherwise it is per feed.'); ?>"><?php echo Theme::Translate('Duration is per item'); ?>
+            		  <input id="durationIsPerItem" name="durationIsPerItem" type="checkbox" <?php echo Theme::Get('durationIsPerItemChecked'); ?> />
+                	</label>
             	</div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox" for="itemsSideBySide" title="<?php echo Theme::Translate('Show items side by side?'); ?>"><?php echo Theme::Translate('Show items side by side?'); ?>
+                        <input id="itemsSideBySide" name="itemsSideBySide" type="checkbox" <?php echo Theme::Get('itemsideChecked'); ?>>
+                    </label>
+                </div>
             </div>
 		</div>
 	</div>
+    <div class="row">
+        <div class="span12">
+            <div class="well">
+                <div class="text-center text-info"><?php echo Theme::Translate('Available Substitutions'); ?></div>
+                    <ul id="TickerDataSetColumns">
+                        <?php foreach(Theme::Get('substitutions') as $column) { ?>
+                        <li class="ckeditor_snippits" linkedto="ta_text"><?php echo $column['Substitute']; ?></li>
+                        <?php } ?>
+                    </ul>
+            </div>
+        </div>
+    </div>
 	<div class="row">
 		<div class="control-group">
 			<div class="span12">

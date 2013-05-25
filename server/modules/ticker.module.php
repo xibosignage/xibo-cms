@@ -113,6 +113,20 @@ class ticker extends Module
 	        Theme::Set('filter', $this->GetOption('filter'));
 	        Theme::Set('ordering', $this->GetOption('ordering'));
         }
+        else {
+        	// Extra Fields for the DataSet
+        	$subs = array(
+        			array('Substitute' => 'Title'),
+        			array('Substitute' => 'Description'),
+        			array('Substitute' => 'Content'),
+        			array('Substitute' => 'Copyright'),
+        			array('Substitute' => 'Link'),
+        			array('Substitute' => 'PermaLink'),
+        			array('Substitute' => 'Link'),
+        			array('Substitute' => 'Tag|Namespace')
+        		);
+        	Theme::Set('substitutions', $subs);
+        }
 
         // Direction Options
         $directionOptions = array(
@@ -548,6 +562,8 @@ class ticker extends Module
     	// Parse the text template
     	$matches = '';
         preg_match_all('/\[.*?\]/', $text, $matches);
+
+        Debug::LogEntry($this->db, 'audit', 'Loading SimplePie to handle RSS parsing');
     	
     	// Use SimplePie to get the feed
     	include_once('3rdparty/simplepie/autoloader.php');
@@ -559,20 +575,68 @@ class ticker extends Module
     	$feed->handle_content_type();
     	$feed->init();
 
+    	if ($feed->error()) {
+        	Debug::LogEntry($this->db, 'audit', 'Feed Error: ' . $feed->error());
+        	return array();
+        }
+
     	// Store our formatted items
     	$items = array();
 
     	foreach ($feed->get_items() as $item) {
 
     		// Substitute for all matches in the template
-        	$rowString = $item->get_title();
+			$rowString = $text;
+        	
+        	// Substitite
+        	foreach ($matches[0] as $sub) {
+        		$replace = '';
 
-        	//Debug::LogEntry($this->db, 'audit', $rowString);
-
-        	//foreach ($matches as $sub) {
     			// Pick the appropriate column out
-    		//	$rowString = str_replace('[' . $sub . ']', $item[$sub], $rowString);
-        	//}
+    			if (strstr($sub, '|') !== false) {
+    				// Use the provided namespace to extract a tag
+    				list($tag, $namespace) = explode('|', $sub);
+
+    				$tags = $item->get_item_tags(str_replace(']', '', $namespace), str_replace('[', '', $tag));
+        			$replace = (is_array($tags)) ? $tags[0]['data'] : '';
+    			}
+    			else {
+    				
+    				// Use the pool of standard tags
+    				switch ($sub) {
+    					case '[Title]':
+    						$replace = $item->get_title();
+    						break;
+
+    					case '[Description]':
+							$replace = $item->get_description();
+    						break;
+
+    					case '[Content]':
+    						$replace = $item->get_content();
+    						break;
+
+						case '[Copyright]':
+							$replace = $item->get_copyright();
+    						break;
+
+    					case '[Date]':
+    						$replace = $item->get_local_date();
+    						break;
+
+    					case '[PermaLink]':
+    						$replace = $item->get_permalink();
+    						break;
+
+    					case '[Link]':
+    						$replace = $item->get_link();
+    						break;
+    				}
+    			}
+
+    			// Substitute the replacement we have found (it might be '')
+				$rowString = str_replace($sub, $replace, $rowString);
+        	}
 
         	$items[] = $rowString;
     	}
