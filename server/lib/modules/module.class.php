@@ -1749,8 +1749,11 @@ END;
     	// (we have already validated that the media id and the type are the same, we dont need to check them again)
 		$this->duration = $mediaNode->getAttribute('duration');
 
-		if ($this->duration == '')
-			return $this->SetError(__('Duration not provided'));
+		if ($this->duration == '' || !is_numeric($this->duration))
+			return $this->SetError(__('Duration not provided or not a number'));
+
+        if ($this->duration < 0)
+            return $this->SetError(__('Cannot be less than zero'));
 
 		// The "core" items appear to be ok
 		return true;
