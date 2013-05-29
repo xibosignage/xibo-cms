@@ -1188,7 +1188,7 @@ HTML;
         $layouts = $user->CampaignList($layoutName, false /* isRetired */);
         
         // Show a list of layouts we have permission to jump to
-        $output  = '<table class="table">';
+        $output  = '<table class="table table-bordered">';
         $output .= '    <thead>';
         $output .= '    <tr>';
         $output .= '    <th>' . __('Name') . '</th>';
@@ -1308,7 +1308,7 @@ HTML;
         $displays = $user->DisplayGroupList(0, $displayName);
         
         // Show a list of layouts we have permission to jump to
-        $output = '<table class="table">';
+        $output = '<table class="table table-bordered">';
         $output .= '    <thead>';
         $output .= '    <tr>';
         $output .= '    <th>' . __('Name') . '</th>';
@@ -1362,7 +1362,8 @@ HTML;
         $displayFilter = $this->EventFormDisplayFilter($displayGroupIds);
         
         $form = <<<END
-<div class="row">
+<div class="container-fluid">
+    <div class="row-fluid">
     <div class="span6">
         $layoutFilter
     </div>
@@ -1370,7 +1371,7 @@ HTML;
         $displayFilter
     </div>
 </div>
-<div class="row">
+<div class="row-fluid">
     <div class="span12">
 <form id="AddEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=AddEvent" method="post">
     <table style="width:100%;">
@@ -1435,6 +1436,7 @@ END;
         </table>
     </form>
     </div>
+</div>
 </div>
 END;
         
@@ -1523,7 +1525,8 @@ END;
         $displayFilter = $this->EventFormDisplayFilter($displayGroupIds);
         
         $form = <<<END
-<div class="row">
+<div class="container-fluid">
+<div class="row-fluid">
     <div class="span6">
         $layoutFilter
     </div>
@@ -1531,7 +1534,7 @@ END;
         $displayFilter
     </div>
 </div>
-<div class="row">
+<div class="row-fluid">
     <div class="span12">
 <form id="EditEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=EditEvent" method="post">
     <input type="hidden" id="EventID" name="EventID" value="$eventID" />
@@ -1596,6 +1599,7 @@ END;
         </table>
     </form>
     </div>
+</div>
 </div>
 END;
         

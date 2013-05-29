@@ -725,6 +725,8 @@ END;
 
         Theme::Set('media_buttons', $buttons);
         
+        $response->html .= '<div class="container-fluid">';
+        $response->html .= '<div class="row-fluid">';
         $response->html .= Theme::RenderReturn('layout_designer_form_timeline');
 
         // Load the XML for this layout and region, we need to get the media nodes.
@@ -839,6 +841,8 @@ END;
         $response->html .= '    <div id="timelinePreview"></div>';
 
         $response->html .= '    </div>';
+        $response->html .= '</div>';
+        $response->html .= '</div>';
         $response->html .= '</div>';
 
         // Finish constructing the response
