@@ -25,16 +25,22 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
-	<?php echo Theme::Get('form_meta'); ?>
-	<table>
-		<tr>
-			<td><label for="dataset" accesskey="t" title="<?php echo Theme::Translate('A name for this DataSet'); ?>"><?php echo Theme::Translate('Name'); ?></label></td>
-			<td><input class="required" name="dataset" type="text" id="dataset" tabindex="1" maxlength="50" value="<?php echo Theme::Get('dataset'); ?>" /></td>
-		</tr>
-		<tr>
-			<td><label for="description" accesskey="t" title="<?php echo Theme::Translate('A description for this DataSet'); ?>"><?php echo Theme::Translate('Description'); ?></label></td>
-			<td><input class="required" name="description" type="text" id="description" tabindex="1" maxlength="254" value="<?php echo Theme::Get('description'); ?>" /></td>
-		</tr>
-	</table>
-</form>
+<div class="container-fluid">
+	<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+		<?php echo Theme::Get('form_meta'); ?>
+		<div class="row-fluid">
+			<div class="control-group">
+				<label class="control-label" for="dataset" accesskey="n" title="<?php echo Theme::Translate('A name for this DataSet'); ?>"><?php echo Theme::Translate('Name'); ?></label>
+			    <div class="controls">
+			        <input class="required" name="dataset" type="text" id="dataset" tabindex="1" value="<?php echo Theme::Get('dataset'); ?>" maxlength="50" />
+			    </div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="description" accesskey="n" title="<?php echo Theme::Translate('A description for this DataSet'); ?>"><?php echo Theme::Translate('Description'); ?></label>
+			    <div class="controls">
+			        <input class="" name="description" type="text" id="description" tabindex="1" value="<?php echo Theme::Get('description'); ?>" maxlength="254" />
+			    </div>
+			</div>
+		</div>
+	</form>
+</div>
