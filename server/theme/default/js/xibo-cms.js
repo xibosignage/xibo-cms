@@ -723,6 +723,17 @@ function XiboSwapDialog(formUrl) {
     XiboFormRender(formUrl);
 }
 
+function XiboRefreshAllGrids() {
+    // We should refresh the grids (this is a global refresh)
+    $(" .XiboGrid").each(function(){
+
+        var gridId = $(this).attr("id");
+
+        // Render
+        XiboGridRender(gridId);
+    });
+}
+
 /**
  * Display a login box
  * @param {String} message

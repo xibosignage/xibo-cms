@@ -129,6 +129,7 @@ class oauthDAO
         $response->SetFormRequestResponse($output, __('OAuth Access Log'), '1000', '600');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Services&Category=Log')");
         $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->dialogClass = 'modal-big';
         $response->Respond();
     }
 
@@ -138,7 +139,7 @@ class oauthDAO
     public function authorize()
     {
         // Do we have an OAuth signed request?
-        $userid = Kit::GetParam('userid', _SESSION, _INT);
+        $userid = $this->user->userid;
 
         $server = new OAuthServer();
 
@@ -150,11 +151,14 @@ class oauthDAO
             // Has the user submitted the form?
             if ($_SERVER['REQUEST_METHOD'] == 'POST')
             {
-                // See if the user clicked the 'allow' submit button (or whatever you choose)
+
+                // See if the user clicked the 'allow' submit button
                 if (isset($_POST['Allow']))
                     $authorized = true;
                 else
                     $authorized = false;
+
+                Debug::LogEntry($this->db, 'audit', 'Allow submitted. Application is ' . (($authorized) ? 'authed' : 'denied'));
 
                 // Set the request token to be authorized or not authorized
                 // When there was a oauth_callback then this will redirect to the consumer

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2010-2012 Daniel Garner
+ * Copyright (C) 2010-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -469,7 +469,11 @@ class Rest
         $layout = $this->user->LayoutList();
 
         if (!is_array($layout))
-            return $this->Error(2);
+            return $this->Error(2, 'No layouts');
+
+        // Remove the XML from the array
+        for ($i = 0; $i < count($layout); $i++)
+            unset($layout[$i]['xml']);
 
         return $this->Respond($this->NodeListFromArray($layout, 'layout'));
     }
@@ -625,26 +629,6 @@ class Rest
     }
 
     /**
-     * Get the Xlf for a Layout
-     * @return <XiboAPIResponse>
-     */
-    public function LayoutGetXlf()
-    {
-        if (!$this->user->PageAuth('layout'))
-            return $this->Error(1, 'Access Denied');
-
-        Kit::ClassLoader('Layout');
-
-        $layout     = new Layout($this->db);
-        $layoutId   = $this->GetParam('layoutId', _INT);
-
-        if (!$this->user->LayoutAuth($layoutId))
-            return $this->Error(1, 'Access Denied');
-
-        return $this->Error(1000, 'Not implemented');
-    }
-
-    /**
      * List Regions on a layout
      * @return <XiboAPIResponse>
      */
@@ -653,7 +637,40 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Get a list of region items
+        Kit::ClassLoader('layout');
+        $layout = new Layout($this->db);
+
+        // Get the list of regions for this layout
+        $regions = $layout->GetRegionList($layoutId);
+
+        if (!is_array($regions))
+            return $this->Error(10019, 'Unable to get regions');
+
+        $regionsWithPermissions = array();
+
+        // Go through each one and say if we have permissions to use it or not
+        foreach ($regions as $region) {
+
+            $auth = $this->user->RegionAssignmentAuth($region['ownerid'], $layoutId, $region['regionid'], true);
+            if (!$auth->view)
+                continue;
+
+            // Add in the permissions model
+            $mediaItem['permission_edit'] = (int)$auth->edit;
+            $mediaItem['permissions_del'] = (int)$auth->del;
+            $mediaItem['permissions_update_permissions'] = (int)$auth->modifyPermissions;
+
+            $regionsWithPermissions[] = $region;                
+        }
+
+        return $this->Respond($this->NodeListFromArray($regionsWithPermissions, 'region'));
     }
 
     /**
@@ -665,7 +682,25 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $width = $this->GetParam('width', _INT, 100);
+        $height = $this->GetParam('height', _INT, 100);
+        $top = $this->GetParam('top', _INT, 50);
+        $left = $this->GetParam('left', _INT, 50);
+        $name = $this->GetParam('name', _STRING);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Create a region object
+        Kit::ClassLoader('region');
+        $region = new Region($this->db);
+
+        if (!$regionId = $region->AddRegion($layoutId, $this->user->userid, '', $width, $height, $top, $left, $name))
+            return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('region', $regionId));
     }
 
     /**
@@ -677,19 +712,68 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+        $width = $this->GetParam('width', _INT);
+        $height = $this->GetParam('height', _INT);
+        $top = $this->GetParam('top', _INT);
+        $left = $this->GetParam('left', _INT);
+        $name = $this->GetParam('name', _STRING);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Create a region object
+        Kit::ClassLoader('region');
+        $region = new Region($this->db);
+
+        // Region Assignment needs the Owner Id
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // Edit the region
+        if (!$regionId = $region->EditRegion($layoutId, $regionId, $width, $height, $top, $left, $name = ''))
+            return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
+        
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
-     * Position Region on a Layout
+     * Delete Region on a layout
      * @return <XiboAPIResponse>
      */
-    public function LayoutRegionPosition()
+    public function LayoutRegionDelete()
     {
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Create a region object
+        Kit::ClassLoader('region');
+        $region = new Region($this->db);
+
+        // Region Assignment needs the Owner Id
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->del)
+            return $this->Error(1, 'Access Denied');
+
+        // Edit the region
+        if (!$regionId = $region->DeleteRegion($layoutId, $regionId))
+            return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
+        
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
@@ -701,7 +785,56 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Create a region object
+        Kit::ClassLoader('region');
+        $region = new Region($this->db);
+
+        // Region Assignment needs the Owner Id
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // We have permission to be here.
+        // Return a list of media items
+        if (!$items = $region->GetMediaNodeList($layoutId, $regionId))
+            return false;
+
+        $regionItems = array();
+
+        foreach ($items as $mediaNode) {
+            // Get the Type, ID, duration, etc (the generic information)
+            $mediaItem['mediaid'] = $mediaNode->getAttribute('id');
+            $mediaItem['lkid'] = $mediaNode->getAttribute('lkid');
+            $mediaItem['mediatype'] = $mediaNode->getAttribute('type');
+            $mediaItem['mediaduration'] = $mediaNode->getAttribute('duration');
+            $mediaItem['mediaownerid'] = $mediaNode->getAttribute('userId');
+
+            // Permissions for this assignment
+            $auth = $this->user->MediaAssignmentAuth($mediaItem['mediaownerid'], $layoutId, $regionId, $mediaItem['mediaid'], true);
+
+            // Skip over media assignments that we do not have permission to see
+            if (!$auth->view)
+                continue;
+
+            $mediaItem['permission_edit'] = (int)$auth->edit;
+            $mediaItem['permissions_del'] = (int)$auth->del;
+            $mediaItem['permissions_update_duration'] = (int)$auth->modifyPermissions;
+            $mediaItem['permissions_update_permissions'] = (int)$auth->modifyPermissions;
+
+            // Add these items to an array
+            $regionItems[] = $mediaItem;
+        }
+
+        return $this->Respond($this->NodeListFromArray($regionItems, 'media'));
     }
 
     /**
@@ -710,10 +843,40 @@ class Rest
      */
     public function LayoutRegionMediaAdd()
     {
+        // Does this user have permission to call this webservice method?
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+        $type = $this->GetParam('type', _WORD);
+        $xlf = $this->GetParam('xlf', _STRING);
+
+        // Does the user have permissions to view this layout?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Check the user has permission
+        Kit::ClassLoader('region');
+        $region = new region($this->db);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // Create a new module based on the XLF we have been given
+        require_once("modules/$type.module.php");
+
+        // Create the media object without any region and layout information
+        if (!$module = new $type($this->db, $this->user, '', $layoutId, $regionId))
+            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
+
+        // Set the XML (causes save)
+        if (!$id = $module->SetMediaXml($xlf))
+            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('media', $id));
     }
 
     /**
@@ -725,7 +888,40 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+        $mediaId = $this->GetParam('mediaId', _STRING);
+        $type = $this->GetParam('type', _WORD);
+        $xlf = $this->GetParam('xlf', _STRING);
+
+        // Does the user have permissions to view this layout?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Check the user has permission
+        Kit::ClassLoader('region');
+        $region = new region($this->db);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // Include the media type
+        require_once("modules/$type.module.php");
+
+        // Create the media object without any region and layout information
+        if (!$module = new $type($this->db, $this->user, $mediaId, $layoutId, $regionId))
+            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
+
+        if (!$module->auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // Set the XML (causes save)
+        if (!$id = $module->SetMediaXml($xlf))
+            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('media', $id));
     }
 
     /**
@@ -737,7 +933,35 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+        $mediaId = $this->GetParam('mediaId', _STRING);
+        $type = $this->GetParam('type', _WORD);
+
+        // Does the user have permissions to view this layout?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Check the user has permission
+        Kit::ClassLoader('region');
+        $region = new region($this->db);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // Load the media information from the provided ids
+        require_once("modules/$type.module.php");
+
+        // Create the media object without any region and layout information
+        if (!$module = new $type($this->db, $this->user, $mediaId, $layoutId, $regionId))
+            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
+
+        if (!$module->auth->view)
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Respond($this->ReturnAttributes('media', array('id' => $mediaId, 'base64Xlf' => base64_encode($module->AsXml()))));
     }
 
     /**
@@ -749,7 +973,31 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+        $mediaList = $this->GetParam('mediaList', _ARRAY);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Check the user has permission
+        Kit::ClassLoader('region');
+        $region = new region($this->db);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // TODO: Validate the media list in some way (make sure there are the correct number of items)
+        
+
+        // Hand off to the region object to do the actual reorder
+        if (!$region->ReorderTimeline($layoutId, $regionId, $mediaList))
+            return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
@@ -761,7 +1009,55 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+        $mediaId = $this->GetParam('mediaId', _STRING);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Check the user has permission
+        Kit::ClassLoader('region');
+        $region = new region($this->db);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // Load the media information from the provided ids
+        // Get the type from this media
+        $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
+
+        if (!$mod = $this->db->GetSingleValue($SQL, 'type', _STRING))
+        {
+            trigger_error($this->db->error());
+            return $this->SetError(__('Error getting type from a media item.'));
+        }
+
+        require_once("modules/$mod.module.php");
+
+        // Create the media object without any region and layout information
+        if (!$module = new $mod($this->db, $this->user, $mediaId, $layoutId, $regionId))
+            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
+
+        if (!$module->auth->del)
+            return $this->Error(1, 'Access Denied');
+
+        // Delete the assignment from the region
+        if (!$module->ApiDeleteRegionMedia($layoutId, $regionId, $mediaId)) {
+            return $this->Error($module->errorMessage);
+        }
+
+        // Delete the actual media record
+        Kit::ClassLoader('Media');
+        $media = new Media($this->db);
+
+        if (!$media->Delete($mediaId))
+            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
@@ -773,7 +1069,27 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $layoutId = $this->GetParam('layoutId', _INT);
+        $regionId = $this->GetParam('regionId', _STRING);
+        $mediaList = $this->GetParam('mediaList', _ARRAY);
+
+        // Does the user have permissions to view this region?
+        if (!$this->user->LayoutAuth($layoutId))
+            return $this->Error(1, 'Access Denied');
+
+        // Make sure we have permission to edit this region
+        Kit::ClassLoader('region');
+        $region = new region($this->db);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        if (!$region->AddFromLibrary($this->user, $layoutId, $regionId, $mediaList))
+            return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
@@ -876,6 +1192,8 @@ class Rest
     {
         $version = Config::Version($this->db);
 
+        Debug::LogEntry($this->db, 'audit', 'Called Version');
+
         $xmlDoc = new DOMDocument();
         $xmlElement = $xmlDoc->createElement('version');
 
@@ -897,68 +1215,6 @@ class Rest
     protected function GetParam($param, $type, $default = null)
     {
         return Kit::GetParam($param, $this->POST, $type, $default);
-    }
-
-    /**
-     * Returns an ID only response
-     * @param <string> $nodeName
-     * @param <string> $id
-     * @param <string> $idAttributeName
-     * @return <DOMDocument::XmlElement>
-     */
-    protected function ReturnId($nodeName, $id, $idAttributeName = 'id')
-    {
-        $xmlDoc = new DOMDocument();
-        $xmlElement = $xmlDoc->createElement($nodeName);
-        $xmlElement->setAttribute($idAttributeName, $id);
-
-        return $xmlElement;
-    }
-
-    /**
-     * Returns a single node with the attributes contained in a key/value array
-     * @param <type> $nodeName
-     * @param <type> $attributes
-     * @return <DOMDocument::XmlElement>
-     */
-    protected function ReturnAttributes($nodeName, $attributes)
-    {
-        $xmlDoc = new DOMDocument();
-        $xmlElement = $xmlDoc->createElement($nodeName);
-
-        foreach ($attributes as $key => $value)
-        {
-            $xmlElement->setAttribute($key, $value);
-        }
-
-        return $xmlElement;
-    }
-
-    /**
-     * Creates a node list from an array
-     * @param <type> $array
-     * @param <type> $node
-     */
-    protected function NodeListFromArray($array, $nodeName)
-    {
-        Debug::LogEntry($this->db, 'audit', sprintf('Building node list containing %d items', count($array)));
-
-        $xmlDoc = new DOMDocument();
-        $xmlElement = $xmlDoc->createElement($nodeName . 'Items');
-        $xmlElement->setAttribute('length', count($array));
-
-        // Create the XML nodes
-        foreach($array as $arrayItem)
-        {
-            $node = $xmlDoc->createElement($nodeName);
-            foreach($arrayItem as $key => $value)
-            {
-                $node->setAttribute($key, $value);
-            }
-            $xmlElement->appendChild($node);
-        }
-
-        return $xmlElement;
     }
 }
 ?>

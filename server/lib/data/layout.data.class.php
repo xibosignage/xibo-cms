@@ -428,24 +428,6 @@ END;
     }
 
     /**
-     * Get media node list
-     * @param <type> $layoutId
-     * @param <type> $regionId
-     */
-    public function GetMediaNodeList($layoutId, $regionId)
-    {
-        if (!$xml = $this->GetLayoutXml($layoutId))
-            return false;
-
-        // Load the XML into a new DOMDocument
-        $document = new DOMDocument();
-        $document->loadXML($xml);
-
-        $xpath = new DOMXPath($document);
-        return $xpath->query("//region[@id='$regionId']/media");
-    }
-
-    /**
      * Sets the Layout Xml and writes it back to the database
      * @return
      * @param $layoutid Object
@@ -779,7 +761,7 @@ END;
         if (!$region->EditBackground($layoutId, '#' . $color, $bg_image, $width, $height, $resolutionId))
         {
             //there was an ERROR
-            $response->SetError($region->errorMsg);
+            $response->SetError($region->GetErrorMessage());
             $response->Respond();
         }
         
@@ -793,6 +775,40 @@ END;
         }
 
         return true;
+    }
+
+    /**
+     * Gets a list of regions in the provided layout
+     * @param [int] $layoutId [The Layout ID]
+     */
+    public function GetRegionList($layoutId) {
+        
+        if (!$this->SetDomXml($layoutId))
+            return false;
+
+        Debug::LogEntry($this->db, 'audit', '[IN] Loaded XML into DOM', 'layout', 'GetRegionList');
+
+        // Get region nodes
+        $regionNodes = $this->DomXml->getElementsByTagName('region');
+
+        $regions = array();
+
+        // Loop through each and build an array
+        foreach ($regionNodes as $region) {
+
+            $item = array();
+            $item['width'] = $region->getAttribute('width');
+            $item['height'] = $region->getAttribute('height');
+            $item['left'] = $region->getAttribute('left');
+            $item['top'] = $region->getAttribute('top');
+            $item['regionid'] = $region->getAttribute('id');
+            $item['ownerid'] = $region->getAttribute('userId');
+            $item['name'] = $region->getAttribute('name');
+
+            $regions[] = $item;
+        }
+
+        return $regions;
     }
 }
 ?>

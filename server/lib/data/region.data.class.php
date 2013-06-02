@@ -20,12 +20,9 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class region 
+class Region extends Data
 {
-	private $db;
-	public $errorMsg;
-	
-	function __construct(database $db) 
+	public function __construct(database $db) 
 	{
 		$this->db 	=& $db;
 		
@@ -46,8 +43,7 @@ class region
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$this->errorMsg = __("Unable to Query for that layout, there is a database error.");
-			return false;
+			return $this->SetError(__("Unable to Query for that layout, there is a database error."));
 		}
 		
 		$row = $db->get_row($results) ;
@@ -71,8 +67,7 @@ class region
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());
-			$this->errMsg = __("Unable to Update that layouts XML with a new Media Node");
-			return false;
+			return $this->SetError(__("Unable to Update that layouts XML with a new Media Node"));
 		}
 
 		// Get the Campaign ID
@@ -90,13 +85,15 @@ class region
 	
 	/**
 	 * Adds a region to the specified layoutid
-	 * @return 
 	 * @param $layoutid Object
 	 * @param $regionid Object[optional]
+	 * @return string The region id
 	 */
-	public function AddRegion($layoutid, $userid, $regionid = "")
+	public function AddRegion($layoutid, $userid, $regionid = "", $width = 100, $height = 100, $top = 50, $left = 50, $name = '')
 	{
             $db =& $this->db;
+
+            Debug::LogEntry($db, 'audit', 'LayoutId: ' . $layoutid . ', Width: ' . $width . ', Height: ' . $height . ', Top: ' . $top . ', Left: ' . $left . ', Name: ' . $name . '.', 'region', 'AddRegion');
 
             //Load the XML for this layout
             $xml = new DOMDocument("1.0");
@@ -106,18 +103,33 @@ class region
             if ($regionid == '')
                 $regionid = uniqid();
 
+            // Validation
+    		if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))
+				return $this->SetError(__('Size and coordinates must be generic'));
+
+            if ($width <= 0)
+            	return $this->SetError(__('Width must be greater than 0'));
+
+            if ($height <= 0)
+            	return $this->SetError(__('Height must be greater than 0'));
+
             // make a new region node
             $newRegion = $xml->createElement("region");
+
+            if ($name != '') 
+				$newRegion->setAttribute('name', $name);
+
             $newRegion->setAttribute('id', $regionid);
             $newRegion->setAttribute('userId', $userid);
-            $newRegion->setAttribute('width', 50);
-            $newRegion->setAttribute('height', 50);
-            $newRegion->setAttribute('top', 50);
-            $newRegion->setAttribute('left', 50);
+            $newRegion->setAttribute('width', $width);
+            $newRegion->setAttribute('height', $height);
+            $newRegion->setAttribute('top', $top);
+            $newRegion->setAttribute('left', $left);
 
             $xml->firstChild->appendChild($newRegion);
 
-            if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;
+            if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
+            	return false;
 
             // What permissions should we create this with?
             if (Config::GetSetting($db, 'LAYOUT_DEFAULT') == 'public')
@@ -127,7 +139,7 @@ class region
                 $security->LinkEveryone($layoutid, $regionid, 1, 0, 0);
             }
 
-            return true;
+            return $regionid;
 	}
 	
 	public function DeleteRegion($layoutid, $regionid)
@@ -141,8 +153,7 @@ class region
 		//Do we have a region ID provided?
 		if ($regionid == "")
 		{
-			$this->errMsg = __("No region ID provided, cannot delete");
-			return false;
+			return $this->SetError(__("No region ID provided, cannot delete"));
 		}
 		
 		//Get this region from the layout (xpath)
@@ -163,14 +174,16 @@ class region
 			//If there is, then Remove that link
 			if ($lkid != "")
 			{
-				if (!$this->RemoveDbLink($lkid)) return false;
+				if (!$this->RemoveDbLink($lkid)) 
+					return false;
 			}
 		}
 		
 		//Remove the region node
 		$xml->firstChild->removeChild($regionNode);
 		
-		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
+			return false;
 		
 		return true;
 	}
@@ -234,7 +247,8 @@ class region
             $security->LinkEveryone($layoutid, $regionid, $mediaid, 1, 0, 0);
         }
 		
-		if (!$this->SetLayoutXml($layoutid, $xml)) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml)) 
+			return false;
 		
 		return true;
 	}
@@ -255,8 +269,7 @@ class region
 		if (!$id = $db->insert_query($SQL))
 		{
 			trigger_error($db->error());
-			$this->errorMsg = __("Database error adding this link record.");
-			return false;
+			return $this->SetError(__("Database error adding this link record."));
 		}
 		
 		return $id;
@@ -277,8 +290,7 @@ class region
 		if (!$db->query($SQL))
 		{
 			trigger_error($db->error());
-			$this->errorMsg = __("Database error updating this link record.");
-			return false;
+			return $this->SetError(__("Database error updating this link record."));
 		}
 		
 		return true;
@@ -297,8 +309,7 @@ class region
 		if (!$db->query($SQL))
 		{
 			trigger_error($db->error());
-			$this->errorMsg = __("Database error deleting this link record.");
-			return false;
+			return $this->SetError(__("Database error deleting this link record."));
 		}
 		
 		return true;
@@ -318,7 +329,8 @@ class region
 			//Get the media node
 			$xpathQuery = "//region[@id='$regionid']/media[@lkid='$lkid']";
 			
-			if (!$this->RemoveDbLink($lkid)) return false;
+			if (!$this->RemoveDbLink($lkid)) 
+				return false;
 		}
 		else
 		{
@@ -337,7 +349,8 @@ class region
 		//Convert back to XML
 		$xml = $xml->saveXML();
 		
-		if (!$this->SetLayoutXml($layoutid, $xml)) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml)) 
+			return false;
 		
 		return true;
 	}
@@ -388,7 +401,8 @@ class region
 		$xml = $xml->saveXML();
 		
 		//Save it
-		if (!$this->SetLayoutXml($layoutid, $xml)) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml)) 
+			return false;
 		
 		//Its swapped
 		return true;
@@ -469,7 +483,8 @@ class region
 		$xml = $xml->saveXML();
 		
 		//Save it
-		if (!$this->SetLayoutXml($layoutid, $xml)) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml)) 
+			return false;
 		
 		//Its swapped
 		return true;
@@ -492,7 +507,8 @@ class region
 		$xml->documentElement->setAttribute("schemaVersion", Config::Version($db, 'XlfVersion'));
 		
 		//Convert back to XML		
-		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
+			return false;
 		
 		//Its swapped
 		return true;
@@ -512,12 +528,15 @@ class region
 	{
 		$db =& $this->db;
 		
-		//Do a little error checking on the widths given
+		// Validation
 		if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))
-		{
-			$this->errorMsg = __("Non numerics, try refreshing the browser");
-			return false;
-		}
+			return $this->SetError(__('Size and coordinates must be generic'));
+
+        if ($width <= 0)
+        	return $this->SetError(__('Width must be greater than 0'));
+
+        if ($height <= 0)
+        	return $this->SetError(__('Height must be greater than 0'));
 		
 		//Load the XML for this layout
 		$xml = new DOMDocument("1.0");
@@ -529,7 +548,9 @@ class region
 		$regionNodeList = $xpath->query("//region[@id='$regionid']");
 		$regionNode = $regionNodeList->item(0);
 		
-		if ($name != '') $regionNode->setAttribute('name', $name);
+		if ($name != '') 
+			$regionNode->setAttribute('name', $name);
+		
 		$regionNode->setAttribute('width',$width);
 		$regionNode->setAttribute('height', $height);
 		$regionNode->setAttribute('top', $top);
@@ -551,7 +572,8 @@ class region
                 }
 		
 		//Convert back to XML		
-		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) return false;
+		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
+			return false;
 		
 		//Its swapped
 		return true;
@@ -794,6 +816,81 @@ class region
             // Replace the old node we found with XPath with the new node we just created
             $optionNode->replaceChild($newNode, $userOptions->item(0));
         }
+    }
+
+    /**
+     * Get media node list
+     * @param <type> $layoutId
+     * @param <type> $regionId
+     */
+    public function GetMediaNodeList($layoutId, $regionId)
+    {
+        if (!$xml = $this->GetLayoutXml($layoutId))
+            return false;
+
+        // Load the XML into a new DOMDocument
+        $document = new DOMDocument();
+        $document->loadXML($xml);
+
+        $xpath = new DOMXPath($document);
+        return $xpath->query("//region[@id='$regionId']/media");
+    }
+
+    /**
+     * Add Existing Media from the Library
+     * @param [int] $user [A user object for the currently logged in user]
+     * @param [int] $layoutId  [The LayoutID to Add on]
+     * @param [int] $regionId  [The RegionID to Add on]
+     * @param [array] $mediaList [A list of media ids from the library that should be added to to supplied layout/region]
+     */
+    public function AddFromLibrary($user, $layoutId, $regionId, $mediaList) {
+
+    	$db =& $this->db;
+
+    	// Check that some media assignments have been made
+        if (count($mediaList) == 0)
+            return $this->SetError(25006, __('No media to assign'));
+
+        // Loop through all the media
+        foreach ($mediaList as $mediaId)
+        {
+            $mediaId = Kit::ValidateParam($mediaId, _INT);
+
+            // Check we have permissions to use this media (we will use this to copy the media later)
+            $mediaAuth = $user->MediaAuth($mediaId, true);
+
+            if (!$mediaAuth->view)
+                return $this->SetError(__('You have selected media that you no longer have permission to use. Please reload Library form.'));
+
+            // Get the type from this media
+            $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
+
+            if (!$mod = $db->GetSingleValue($SQL, 'type', _STRING))
+            {
+                trigger_error($db->error());
+                return $this->SetError(__('Error getting type from a media item.'));
+            }
+
+            require_once("modules/$mod.module.php");
+
+            // Create the media object without any region and layout information
+            if (!$this->module = new $mod($db, $user, $mediaId))
+            	return $this->SetError($this->module->GetErrorMessage());
+
+            if (!$this->module->SetRegionInformation($layoutId, $regionId))
+                return $this->SetError($this->module->GetErrorMessage());
+
+        	if (!$this->module->UpdateRegion())
+        		return $this->SetError($this->module->GetErrorMessage());
+
+            // Need to copy over the permissions from this media item & also the delete permission
+            Kit::ClassLoader('layoutmediagroupsecurity');
+            $security = new LayoutMediaGroupSecurity($db);
+            $security->Link($layoutId, $regionId, $mediaId, $user->getGroupFromID($user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
+
+        }
+
+        return true;
     }
 }
 ?>

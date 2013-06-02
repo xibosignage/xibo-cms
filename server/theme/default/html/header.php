@@ -32,6 +32,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<link href="theme/default/libraries/bootstrap/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 		<link href="theme/default/libraries/jquery/jquery.tablesorter.pager.css" rel="stylesheet">
 		<link href="theme/default/libraries/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css" rel="stylesheet">
+		<link href="theme/default/libraries/jquery-file-upload/css/jquery.fileupload-ui.css" rel="stylesheet">
 		<link href="theme/default/css/xibo.css" rel="stylesheet" media="screen">
 		<link href="theme/default/css/timeline.css" rel="stylesheet" media="screen">
 		<link href="theme/default/css/calendar.css" rel="stylesheet" media="screen">

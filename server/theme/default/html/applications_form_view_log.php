@@ -31,23 +31,21 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="info_table">
-	<table style="width:100%">
-		<thead>
-			<tr>
-				<th><?php echo Theme::Translate('Header'); ?></th>
-				<th><?php echo Theme::Translate('Notes'); ?></th>
-				<th><?php echo Theme::Translate('Timestamp'); ?></th>
-			</tr>
-		</thead>
-		<tbody>
-			<?php foreach(Theme::Get('table_rows') as $row) { ?>
-			<tr>
-				<td><?php echo $row['received']; ?></td>
-				<td><?php echo $row['notes']; ?></td>
-				<td><?php echo $row['timestamp']; ?></td>
-			</tr>
-			<?php } ?>
-		</tbody>
-	</table>
-</div>
+<table class="table">
+	<thead>
+		<tr>
+			<th><?php echo Theme::Translate('Timestamp'); ?></th>
+			<th><?php echo Theme::Translate('Notes'); ?></th>
+			<th><?php echo Theme::Translate('Header'); ?></th>
+		</tr>
+	</thead>
+	<tbody>
+		<?php foreach(Theme::Get('table_rows') as $row) { ?>
+		<tr>
+			<td><?php echo $row['timestamp']; ?></td>
+			<td><?php echo $row['notes']; ?></td>
+			<td><?php echo $row['received']; ?></td>
+		</tr>
+		<?php } ?>
+	</tbody>
+</table>

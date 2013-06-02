@@ -23,6 +23,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class Data
 {
 	protected $db;
+	private $error;
 	private $errorNo;
 	private $errorMessage;
 

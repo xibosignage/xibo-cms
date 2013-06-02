@@ -21,13 +21,14 @@
 DEFINE('XIBO', true);
 
 if (! checkPHP()) {
-  die("Xibo requires PHP 5.2.4 or later");
+  die("Xibo requires PHP 5.3 or later");
 }
 
 error_reporting(0);
 ini_set('display_errors', 0);
 
 include('lib/app/kit.class.php');
+include("lib/data/data.class.php");
 include('lib/app/debug.class.php');
 include('config/db_config.php');
 include('config/config.class.php');
@@ -57,8 +58,10 @@ Config::Load();
 // create a database class instance
 $db = new database();
 
-if (!$db->connect_db($dbhost, $dbuser, $dbpass)) reportError(0, __("Unable to connect to the MySQL database using the settings stored in settings.php.") . "<br /><br />" . __("MySQL Error:") . "<br />" . $db->error());
-if (!$db->select_db($dbname)) reportError(0, __("Unable to select the MySQL database using the settings stored in settings.php.") . "<br /><br />" . __("MySQL Error:") . "<br />" . $db->error());
+if (!$db->connect_db($dbhost, $dbuser, $dbpass)) 
+	reportError(0, __("Unable to connect to the MySQL database using the settings stored in settings.php.") . "<br /><br />" . __("MySQL Error:") . "<br />" . $db->error());
+if (!$db->select_db($dbname)) 
+	reportError(0, __("Unable to select the MySQL database using the settings stored in settings.php.") . "<br /><br />" . __("MySQL Error:") . "<br />" . $db->error());
 
 // Initialise the Translations
 set_error_handler(array(new Debug(), "ErrorHandler"));
@@ -75,6 +78,11 @@ if (Kit::GetParam('skipstep',_POST,_INT) == 1) {
 	// Cheat the $_SESSION['step'] variable if required
 	// Used if there are environment warnings and we want to retest.
 	$_SESSION['step'] = 1;
+}
+
+if (Kit::GetParam('reset', _GET, _INT) == 1) {
+	$_SESSION['step'] = 0;
+	$_SESSION['auth'] = null;
 }
 
 if ($_SESSION['step'] == 0) {
@@ -97,31 +105,49 @@ if ($_SESSION['step'] == 0) {
   <?php
 }
 elseif ($_SESSION['step'] == 1) {
-  $_SESSION['step'] = 2;
+  	$_SESSION['step'] = 2;
   
-  if (! $_SESSION['auth']) {
+  	if (! $_SESSION['auth']) {
 
-	# Check password
+		# Check password
+		$username = 'xibo_admin';
+		$password = Kit::GetParam('password',_POST,_PASSWORD);
 
-	$password = Kit::GetParam('password',_POST,_PASSWORD);
-	$password_hash = md5($password);
+		Kit::ClassLoader('userdata');
+			
+		// Get the SALT for this username
+		if (!$userInfo = $db->GetSingleRow(sprintf("SELECT UserID, UserName, UserPassword, UserTypeID, CSPRNG FROM `user` WHERE UserName = '%s'", $db->escape_string($username)))) {
+			$_SESSION['auth'] = false;
+	   		reportError("0", __("Password incorrect. Please try again."));
+		}
 
-	$SQL = sprintf("SELECT `UserID` FROM `user` WHERE UserPassword='%s' AND UserName='xibo_admin'",
-        	            $db->escape_string($password_hash));
-    	if (! $result = $db->query($SQL)) {
-      	reportError("0", __("An error occured checking your password.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());    
-    	}
- 
-	if ($db->num_rows($result) == 0) {	
-      		$_SESSION['auth'] = false;
-       		reportError("0", __("Password incorrect. Please try again."));
-   	}
-   	else {
+		// User Data Object to check the password
+		$userData = new Userdata($db);
+
+		// Is SALT empty
+		if ($userInfo['CSPRNG'] == 0) {
+
+			// Check the password using a MD5
+			if ($userInfo['UserPassword'] != md5($password)) {
+				$_SESSION['auth'] = false;
+	   			reportError("0", __("Password incorrect. Please try again."));
+			}
+
+			// Now that we are validated, generate a new SALT and set the users password.
+			$userData->ChangePassword(Kit::ValidateParam($userInfo['UserID'], _INT), null, $password, $password, true /* Force Change */);
+		}
+		else {
+			
+			// Check the users password using the random SALTED password
+	        if ($userData->validate_password($password, $userInfo['UserPassword']) === false) {
+	        	$_SESSION['auth'] = false;
+	   			reportError("0", __("Password incorrect. Please try again."));
+	        }
+		}
+
 		$_SESSION['auth'] = true;
 		$_SESSION['db'] = $db;
-    	}
-
-   }
+   	}
 ## Check server meets specs (as specs might have changed in this release)
   ?>
   <p><?php echo __("First we need to check if your server meets Xibo's requirements."); ?></p>
@@ -158,8 +184,8 @@ elseif ($_SESSION['step'] == 1) {
     }    
 }
 elseif ($_SESSION['step'] == 2) {
+	# Calculate the upgrade
 	checkAuth();
-# Calculate the upgrade
       
 	$_SESSION['upgradeFrom'] = Config::Version($db, 'DBVersion');
 
@@ -186,9 +212,12 @@ elseif ($_SESSION['step'] == 2) {
 		reportError("2", __("Unable to calculate the upgradeTo value. Check for non-numeric SQL and PHP files in the 'install/database' directory."), "Retry"); // Fixme : translate Retry ?
 	}
 
+	if ($_SESSION['upgradeTo'] < $_SESSION['upgradeFrom'])
+		$_SESSION['upgradeTo'] = $_SESSION['upgradeFrom'];
+
 	echo '<div class="info">';
 	echo '<p>Upgrading from database version ' . $_SESSION['upgradeFrom'] . ' to ' . $_SESSION['upgradeTo'];
-	echo '</p></div><hr width="25%"/>';
+	echo '</p></div><hr />';
 	echo '<form action="upgrade.php" method="POST">';
 
 	// Loop for $i between upgradeFrom + 1 and upgradeTo.
@@ -215,7 +244,7 @@ elseif ($_SESSION['step'] == 2) {
 	echo __("I agree I have a valid database backup and can restore it should the upgrade process fail:");
 	echo '</p></div><div class="install-table">';
     echo '<input type="checkbox" name="doBackup" />';
-	echo '</div><hr width="25%" />';
+	echo '</div><hr />';
 
 	$_SESSION['step'] = 3;
 	echo '<input type="hidden" name="includes" value="true" />';
@@ -334,7 +363,7 @@ include('install/footer.inc');
 # Functions
 function checkPHP() {
   # Check PHP version > 5
-  return (version_compare("5.2.4",phpversion(), "<="));
+  return (version_compare("5.3",phpversion(), "<="));
 }
 
 function checkMySQL() {

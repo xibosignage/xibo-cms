@@ -52,7 +52,8 @@ class moduleDAO
 
             Debug::LogEntry($db, 'audit', 'Creating new module with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 
-            $this->module = new $mod($db, $user, $mediaid, $layoutid, $regionid, $lkid);
+            if (!$this->module = new $mod($db, $user, $mediaid, $layoutid, $regionid, $lkid))
+                trigger_error($this->module->GetErrorMessage(), E_USER_ERROR);
         }
 
         return true;
@@ -246,7 +247,7 @@ class moduleDAO
         $method = Kit::GetParam('method', _REQUEST, _WORD);
         $raw = Kit::GetParam('raw', _REQUEST, _WORD);
 
-        if (method_exists($this->module,$method))
+        if (method_exists($this->module, $method))
         {
             $response = $this->module->$method();
         }

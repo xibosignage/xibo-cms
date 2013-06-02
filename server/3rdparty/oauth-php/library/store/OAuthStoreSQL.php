@@ -1701,7 +1701,7 @@ abstract class OAuthStoreSQL extends OAuthStoreAbstract
 		$args  = array();
 		if (empty($options))
 		{
-			$where[] = 'olg_usa_id_ref = %d';
+			$where[] = '(olg_usa_id_ref IS NULL OR olg_usa_id_ref = %d)';
 			$args[]  = $user_id;
 		}
 		else

@@ -278,3 +278,53 @@ function DisplayGroupMembersSubmit() {
 
     return;
 }
+
+function MediaFormInitUpload(dialog) {
+    // URL for the file upload handler
+    var url = $('#fileupload').attr("action");
+    //var url = "upload.php";
+
+    // Initialize the jQuery File Upload widget:
+    $('#fileupload').fileupload({
+        // Uncomment the following to send cross-domain cookies:
+        //xhrFields: {withCredentials: true},
+        url: url
+    });
+
+    // Upload server status check for browsers with CORS support:
+    if ($.support.cors) {
+        $.ajax({
+            url: url,
+            type: 'HEAD'
+        }).fail(function () {
+            $('<span class="alert alert-error"/>')
+                .text('Upload server currently unavailable - ' +
+                        new Date())
+                .appendTo('#fileupload');
+        });
+    }
+    
+    // Initialize the jQuery File Upload widget:
+    $('#fileupload').fileupload('option', {
+        url: url,
+        disableImageResize: false
+    });
+
+    // Enable iframe cross-domain access via redirect option:
+    $('#fileupload').fileupload(
+        'option',
+        'redirect',
+        window.location.href.replace(
+            /\/[^\/]*$/,
+            '/cors/result.html?%s'
+        )
+    );
+
+    $('#fileupload').bind('fileuploadsubmit', function (e, data) {
+        var inputs = data.context.find(':input');
+        if (inputs.filter('[required][value=""]').first().focus().length) {
+            return false;
+        }
+        data.formData = inputs.serializeArray().concat($("#fileupload").serializeArray());
+    });
+}

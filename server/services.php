@@ -117,6 +117,8 @@ if (defined('XMDS') || $method != '')
                 // Only signed requests allowed.
                 $serviceResponse->ErrorServerError('Not signed.');
             }
+
+            Debug::LogEntry($db, 'audit', 'Authenticated API call for [' . $method . '] with a [' . $response . '] response. Issued by UserId: ' . $user->userid, 'Services');
                 
             // Authenticated with OAuth.
             Kit::ClassLoader('Rest');
@@ -141,6 +143,8 @@ if (defined('XMDS') || $method != '')
                 default:
                     $serviceResponse->ErrorServerError('Unknown response type');
             }
+
+
 
             // Run the method requested.
             if (method_exists($rest, $method))

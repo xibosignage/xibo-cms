@@ -79,8 +79,13 @@ class Kit
 	 */
 	static public function GetParam($param, $source = _POST, $type = _STRING, $default = '')
 	{
+		// lower case param (we dont care)
+		$param = strtolower($param);
+
 		if (is_array($source))
 		{
+			$source = array_change_key_case($source);
+			
 			if(!isset($source[$param])) 
 			{
 				$return = $default;
@@ -95,8 +100,11 @@ class Kit
 			switch ($source)
 			{
 				case 'session':
+
+					if (isset($_SESSION))
+						$_tempSESSION = array_change_key_case($_SESSION);
 				
-					if(!isset($_SESSION[$param])) 
+					if(!isset($_tempSESSION[$param])) 
 					{
 						$return = $default;
 					}
@@ -107,61 +115,67 @@ class Kit
 					}
 					else 
 					{
-						if ($_SESSION[$param] == '')
+						if ($_tempSESSION[$param] == '')
 						{
 							$return = $default;
 						} 
 						else
 						{
-							$return = $_SESSION[$param];
+							$return = $_tempSESSION[$param];
 						}
 					}
 				
 					break;
 				
 				case 'request':
+
+					$_tempREQUEST = array_change_key_case($_REQUEST);
 				
-					if(!isset($_REQUEST[$param])) 
+					if(!isset($_tempREQUEST[$param])) 
 					{
 						$return = $default;
 					}
 					else 
 					{
-						if ($_REQUEST[$param] == '')
+						if ($_tempREQUEST[$param] == '')
 						{
 							$return = $default;
 						} 
 						else
 						{
-							$return = $_REQUEST[$param];
+							$return = $_tempREQUEST[$param];
 						}	
 					}
 				
 					break;
 					
 				case 'get':
+
+					$_tempGET = array_change_key_case($_GET);
 				
-					if(!isset($_GET[$param])) 
+					if(!isset($_tempGET[$param])) 
 					{
 						$return = $default;
 					}
 					else 
 					{
-						if ($_GET[$param] == '')
+						if ($_tempGET[$param] == '')
 						{
 							$return = $default;
 						} 
 						else
 						{
-							$return = $_GET[$param];
+							$return = $_tempGET[$param];
 						}		
 					}
 				
 					break;
 					
 				case 'post':
+
+					$_tempPOST = array_change_key_case($_POST);
 		
-					if(!isset($_POST[$param])) 
+					if(!isset($_tempPOST[$param])) 
 					{
 						$return = $default;
 					}
@@ -172,13 +186,13 @@ class Kit
 					}
 					else 
 					{
-						if ($_POST[$param] == '')
+						if ($_tempPOST[$param] == '')
 						{
 							$return = $default;
 						} 
 						else
 						{
-							$return = $_POST[$param];
+							$return = $_tempPOST[$param];
 						}		
 					}
 				
@@ -527,6 +541,23 @@ class Kit
             return ($_SESSION[$page][$filter] == 1);
         
         return false;
+    }
+
+    public static function ReturnBytes($val) {
+    	
+    	$val = trim($val);
+	    $last = strtolower($val[strlen($val)-1]);
+	    switch($last) {
+	        // The 'G' modifier is available since PHP 5.1.0
+	        case 'g':
+	            $val *= 1024;
+	        case 'm':
+	            $val *= 1024;
+	        case 'k':
+	            $val *= 1024;
+	    }
+
+	    return $val;
     }
 }
 ?>

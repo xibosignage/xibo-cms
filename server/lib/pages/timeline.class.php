@@ -59,7 +59,7 @@ class timelineDAO {
 		if (!$region->AddRegion($layoutid, $user->userid))
 		{
 			//there was an ERROR
-			trigger_error($region->errorMsg, E_USER_ERROR);
+			trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 		}
 		
 		$response->SetFormSubmitResponse(__('Region Added.'), true, "index.php?p=layout&modify=true&layoutid=$layoutid");
@@ -103,7 +103,7 @@ class timelineDAO {
             if (!$region->DeleteRegion($layoutid, $regionid))
             {
                     //there was an ERROR
-                    $response->SetError($region->errorMsg);
+                    $response->SetError($region->GetErrorMessage());
                     $response->Respond();
             }
 
@@ -149,6 +149,7 @@ class timelineDAO {
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid .'"><input type="hidden" name="regionid" value="' . $regionid . '"><input id="layoutWidth" type="hidden" name="layoutWidth" value="' . $layoutWidth . '"><input id="layoutHeight" type="hidden" name="layoutHeight" value="' . $layoutHeight . '"><input type="hidden" name="scale" value="' . $scale .'">');
         
         // Theme Variables
+        Theme::Set('regionName', $regionName);
         Theme::Set('width', round($width * $scale, 0));
         Theme::Set('height', round($height * $scale, 0));
         Theme::Set('top', round($top * $scale, 0));
@@ -243,7 +244,7 @@ class timelineDAO {
 
         // Edit the region 
         if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName, $options))
-            trigger_error($region->errorMsg, E_USER_ERROR);
+            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid");
         $response->Respond();
@@ -286,7 +287,7 @@ class timelineDAO {
 		if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
 		{
 			//there was an ERROR
-			trigger_error($region->errorMsg, E_USER_ERROR);
+			trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 		}
 		
 		$response->SetFormSubmitResponse('');
@@ -370,55 +371,8 @@ END;
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        // Check that some media assignments have been made
-        if (count($mediaList) == 0)
-            trigger_error(__('No media to assign'), E_USER_ERROR);
-
-        // Loop through all the media
-        foreach ($mediaList as $mediaId)
-        {
-            $mediaId = Kit::ValidateParam($mediaId, _INT);
-
-            // Check we have permissions to use this media (we will use this to copy the media later)
-            $mediaAuth = $this->user->MediaAuth($mediaId, true);
-
-            if (!$mediaAuth->view)
-            {
-                $response->SetError(__('You have selected media that you no longer have permission to use. Please reload Library form.'));
-                $response->keepOpen = true;
-                return $response;
-            }
-
-            // Get the type from this media
-            $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
-
-            if (!$mod = $db->GetSingleValue($SQL, 'type', _STRING))
-            {
-                trigger_error($db->error());
-                $response->SetError(__('Error getting type from a media item.'));
-                $response->keepOpen = false;
-                return $response;
-            }
-
-            require_once("modules/$mod.module.php");
-
-            // Create the media object without any region and layout information
-            $this->module = new $mod($db, $user, $mediaId);
-
-            if ($this->module->SetRegionInformation($layoutId, $regionId))
-                $this->module->UpdateRegion();
-            else
-            {
-                $response->SetError(__('Cannot set region information.'));
-                $response->keepOpen = true;
-                return $response;
-            }
-
-            // Need to copy over the permissions from this media item & also the delete permission
-            Kit::ClassLoader('layoutmediagroupsecurity');
-            $security = new LayoutMediaGroupSecurity($db);
-            $security->Link($layoutId, $regionId, $mediaId, $this->user->getGroupFromID($this->user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
-        }
+        if (!$region->AddFromLibrary($user, $layoutId, $regionId, $mediaList))
+            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 
         // We want to load a new form
         $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));
@@ -460,7 +414,7 @@ END;
 		
 		if (!$xmlString = $region->GetLayoutXml($layoutid))
 		{
-            trigger_error($region->errorMsg, E_USER_ERROR);
+            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 		}
 		
 		$xml->loadXML($xmlString);
@@ -493,7 +447,8 @@ END;
 
         require_once("modules/$type.module.php");
 
-        $moduleObject = new $type($db, $user, $mediaid, $layoutid, $regionid);
+        if (!$moduleObject = new $type($db, $user, $mediaid, $layoutid, $regionid))
+            trigger_error($moduleObject->GetErrorMessage(), E_USER_ERROR);
 
         $return .= '<div class="regionPreviewOverlay"></div>';
         $return .= $moduleObject->Preview($width, $height);
@@ -744,9 +699,9 @@ END;
         $timeBarColouring = Config::GetSetting($db, 'REGION_OPTIONS_COLOURING');
 
         // Create a layout object
-        $layout = new Layout($db);
+        $region = new Region($db);
 
-        foreach($layout->GetMediaNodeList($layoutId, $regionId) as $mediaNode)
+        foreach($region->GetMediaNodeList($layoutId, $regionId) as $mediaNode)
         {
             // Put this node vertically in the region timeline
             $mediaId = $mediaNode->getAttribute('id');
@@ -909,7 +864,7 @@ END;
 
         // Hand off to the region object to do the actual reorder
         if (!$region->ReorderTimeline($layoutId, $regionId, $resolvedMedia))
-            trigger_error($region->errorMsg, E_USER_ERROR);
+            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Order Changed'));
         $response->keepOpen = true;

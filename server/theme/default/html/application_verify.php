@@ -1,32 +1,37 @@
-<div class="login_box">
-    <div class="login_header">
-        <div class="login_header_left">
-        </div>
-        <div class="login_header_right">
-        </div>
-    </div>
+<?php
+/*
+ * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Theme variables:
+ *  form_id = The ID of the Form
+ *  form_action = The URL for calling the Add Transaction
+ */
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
+<h2>Xibo API - Authorization Requested</h2>
 
-    <div class="login_body">
-        
-        <h2>Xibo API - Authorization Requested</h2>
-        <div style="text-align:left;">
-            <p>Are you sure you want to authorize this application to have access to your CMS account?</p>
-            <p>
-                <strong>Application Name</strong>: <?php echo $consumer['application_title']; ?><br />
-                <strong>Application Description</strong>: <?php echo $consumer['application_descr']; ?><br />
-                <strong>Application Site</strong>: <?php echo $consumer['application_uri']; ?>
-            </p>
-        </div>
-        <form method="post">
-            <input type="submit" name="Allow" value="Allow">
-        </form>
-        <p><a href="http://www.xibo.org.uk"><img src='img/login/complogo.png'></a></p>
-    </div>
-
-    <div class="login_foot">
-        <div class="login_foot_left">
-        </div>
-        <div class="login_foot_right">
-        </div>
-    </div>
-</div>
+<p>Are you sure you want to authorize this application to have access to your CMS account?</p>
+<p>
+    <strong>Application Name</strong>: <?php echo Theme::Get('application_title'); ?><br />
+    <strong>Application Description</strong>: <?php echo Theme::Get('application_descr'); ?><br />
+    <strong>Application Site</strong>: <?php echo Theme::Get('application_uri'); ?>
+</p>
+<form method="post">
+    <input type="submit" name="Allow" value="Allow">
+</form>

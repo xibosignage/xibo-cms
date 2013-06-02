@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2010 Daniel Garner
+ * Copyright (C) 2010-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -34,11 +34,23 @@ class Media extends Data
      * @param <type> $duration
      * @param <type> $fileName
      * @param <type> $userId
+     * @param <int> [$oldMediaId] [The old media id during a file revision]
      * @return <type>
      */
-    public function Add($fileId, $type, $name, $duration, $fileName, $userId)
+    public function Add($fileId, $type, $name, $duration, $fileName, $userId, $oldMediaId = 0)
     {
         $db =& $this->db;
+
+        // Check we have room in the library
+        $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+
+        if ($libraryLimit > 0) {
+            $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
+
+            if (($fileSize / 1024) > $libraryLimit) {
+                return $this->SetError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
+            }
+        }
 
         $extension = strtolower(substr(strrchr($fileName, '.'), 1));
 
@@ -57,7 +69,15 @@ class Media extends Data
         if ($duration == 0)
             return $this->SetError(11, __('You must enter a duration.'));
 
-        if ($db->GetSingleRow(sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d", $db->escape_string($name), $userId)))
+        // Check the naming of this item to ensure it doesnt conflict
+        $checkSQL = sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d ", $db->escape_string($name), $userId);
+        
+        if ($oldMediaId != 0)
+            $checkSQL .= sprintf(" AND mediaid <> %d  AND IsEdited = 0 ", $oldMediaId);
+
+        Debug::LogEntry($db, 'audit', 'Checking the name is unique: ' . $checkSQL, 'media', 'Add');
+
+        if ($db->GetSingleRow($checkSQL))
             return $this->SetError(12, __('Media you own already has this name. Please choose another.'));
 
         // All OK to insert this record
@@ -77,7 +97,7 @@ class Media extends Data
         // Now move the file
         $libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
 
-        if (!rename($libraryFolder . 'temp/' . $fileId, $libraryFolder . $mediaId . '.' . $extension))
+        if (!@rename($libraryFolder . 'temp/' . $fileId, $libraryFolder . $mediaId . '.' . $extension))
         {
             // If we couldnt move it - we need to delete the media record we just added
             $SQL = sprintf("DELETE FROM media WHERE mediaID = %d ", $mediaId);
@@ -102,6 +122,15 @@ class Media extends Data
             return $this->SetError(16, 'Updating stored file location and MD5');
         }
 
+        // What permissions should we assign this with?
+        if (Config::GetSetting($db, 'MEDIA_DEFAULT') == 'public')
+        {
+            Kit::ClassLoader('mediagroupsecurity');
+
+            $security = new MediaGroupSecurity($db);
+            $security->LinkEveryone($mediaId, 1, 0, 0);
+        }
+
         return $mediaId;
     }
 
@@ -123,7 +152,8 @@ class Media extends Data
         if ($duration == 0)
             return $this->SetError(11, __('You must enter a duration.'));
 
-        if ($db->GetSingleRow(sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d", $db->escape_string($name), $userId)))
+        // Any media (not this one) already has this name?
+        if ($db->GetSingleRow(sprintf("SELECT name FROM media WHERE name = '%s' AND userid = %d AND mediaid <> %d AND IsEdited = 0", $db->escape_string($name), $userId, $mediaId)))
             return $this->SetError(12, __('Media you own already has this name. Please choose another.'));
        
         $SQL = "UPDATE media SET name = '%s', duration = %d WHERE MediaID = %d";
@@ -148,6 +178,17 @@ class Media extends Data
     {
         $db =& $this->db;
 
+        // Check we have room in the library
+        $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+
+        if ($libraryLimit > 0) {
+            $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
+
+            if (($fileSize / 1024) > $libraryLimit) {
+                return $this->SetError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
+            }
+        }
+
         // Call add with this file Id and then update the existing mediaId with the returned mediaId
         // from the add call.
         // Will need to get some information about the existing media record first.
@@ -160,12 +201,19 @@ class Media extends Data
             return $this->SetError(31, 'Unable to get information about existing media record.');
         }
 
-        if (!$newMediaId = $this->Add($fileId, $row['type'], $row['name'], $row['duration'], $fileName, $row['UserID']))
+        // Pass in the old media id ($mediaid) so that we don't validate against it during the name check
+        if (!$newMediaId = $this->Add($fileId, $row['type'], $row['name'], $row['duration'], $fileName, $row['UserID'], $mediaId))
             return false;
+
+        // We need to assign all permissions for the old media id to the new media id
+        Kit::ClassLoader('mediagroupsecurity');
+
+        $security = new MediaGroupSecurity($db);
+        $security->Copy($mediaId, $newMediaId);
 
         // Update the existing record with the new record's id
         $SQL =  "UPDATE media SET isEdited = 1, editedMediaID = %d ";
-        $SQL .= " WHERE IFNULL(editedMediaID,0) <> %d AND mediaID = %d ";
+        $SQL .= " WHERE IFNULL(editedMediaID, 0) <> %d AND mediaID = %d ";
         $SQL = sprintf($SQL, $newMediaId, $newMediaId, $mediaId);
 
         if (!$db->query($SQL))
@@ -177,7 +225,7 @@ class Media extends Data
         return $newMediaId;
     }
 
-    public function Retire()
+    public function Retire($mediaId)
     {
         $db =& $this->db;
 
@@ -216,6 +264,13 @@ class Media extends Data
         if (!$fileName = $db->GetSingleValue($SQL, 'StoredAs', _STRING))
             return $this->SetError(22, __('Cannot locate the files for this media. Unable to delete.'));
 
+        // Remove permission assignments
+        Kit::ClassLoader('mediagroupsecurity');
+        $security = new MediaGroupSecurity($db);
+
+        if (!$security->UnlinkAll($mediaId))
+            trigger_error($security->GetErrorMessage(), E_USER_ERROR);
+
         // Delete the media
         $SQL = sprintf("DELETE FROM media WHERE MediaID = %d", $mediaId);
 
@@ -227,6 +282,16 @@ class Media extends Data
 
         // Delete the file itself (and any thumbs, etc)
         $this->DeleteMediaFile($fileName);
+
+        // Bring back the previous revision of this media (if there is one)
+        $editedMediaRow = $db->GetSingleRow(sprintf('SELECT IFNULL(MediaID, 0) AS MediaID FROM media WHERE EditedMediaID = %d', $mediaId));
+
+        if (count($editedMediaRow) > 0)
+        {
+            // Unretire this edited record
+            $editedMediaId = Kit::ValidateParam($editedMediaRow['MediaID'], _INT);
+            $db->query(sprintf('UPDATE media SET IsEdited = 0, EditedMediaID = NULL WHERE mediaid = %d', $editedMediaId));
+        }
 
         return true;
     }
@@ -305,6 +370,23 @@ class Media extends Data
         $this->validExtensions 	= explode(',', Kit::ValidateParam($row['ValidExtensions'], _STRING));
         
         return true;
+    }
+
+    /**
+     * Valid Extensions
+     * @param [string] $type [The Type of Media Item]
+     * @return [array] Array containing the valid extensions
+     */
+    public function ValidExtensions($type) {
+        $db =& $this->db;
+
+        if (!$this->moduleInfoLoaded)
+        {
+            if (!$this->LoadModuleInfo($type))
+                return false;
+        }
+
+        return $this->validExtensions;
     }
 
     /**
