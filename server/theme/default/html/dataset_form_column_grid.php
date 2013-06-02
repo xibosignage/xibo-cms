@@ -36,6 +36,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<th><?php echo Theme::Translate('Heading'); ?></th>
 			<th><?php echo Theme::Translate('List Content'); ?></th>
 			<th><?php echo Theme::Translate('Column Order'); ?></th>
+			<th><?php echo Theme::Translate('Data Type'); ?></th>
+			<th><?php echo Theme::Translate('Column Type'); ?></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -44,6 +46,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<td><?php echo $row['heading']; ?></td>
 			<td><?php echo $row['listcontent']; ?></td>
 			<td><?php echo $row['columnorder']; ?></td>
+			<td><?php echo $row['datatype']; ?></td>
+			<td><?php echo $row['datasetcolumntype']; ?></td>
 			<td>
 				<div class="btn-group pull-right">
     				<button class="btn dropdown-toggle" data-toggle="dropdown">

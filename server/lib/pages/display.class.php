@@ -46,6 +46,8 @@ class displayDAO
     private $secureOn;
     private $cidr;
     private $clientIpAddress;
+    private $latitude;
+    private $longitude;
 
     function __construct(database $db, user $user)
     {
@@ -86,7 +88,9 @@ class displayDAO
                     display.BroadCastAddress,
                     display.SecureOn,
                     display.Cidr,
-                    display.ClientAddress
+                    display.ClientAddress,
+                    X(display.GeoLocation) AS Latitude,
+                    Y(display.GeoLocation) AS Longitude
              FROM display
             WHERE display.displayid = %d
 SQL;
@@ -121,6 +125,8 @@ SQL;
                 $this->secureOn = Kit::ValidateParam($row[15], _STRING);
                 $this->cidr = Kit::ValidateParam($row[16], _INT);
                 $this->clientIpAddress = Kit::ValidateParam($row[17], _STRING);
+                $this->latitude = Kit::ValidateParam($row[18], _DOUBLE);
+                $this->longitude = Kit::ValidateParam($row[19], _DOUBLE);
 
                 // Make cidr null if its a 0
                 $this->cidr = ($this->cidr == 0) ? '' : $this->cidr;
@@ -174,6 +180,8 @@ SQL;
         $broadCastAddress = Kit::GetParam('broadCastAddress', _POST, _STRING);
         $secureOn = Kit::GetParam('secureOn', _POST, _STRING);
         $cidr = Kit::GetParam('cidr', _POST, _INT);
+        $latitude = Kit::GetParam('latitude', _POST, _DOUBLE);
+        $longitude = Kit::GetParam('longitude', _POST, _DOUBLE);
 
         // Do we take, or revoke a license
         $licensed = Kit::GetParam('licensed', _POST, _INT);
@@ -187,7 +195,7 @@ SQL;
 
         $displayObject  = new Display($db);
 
-        if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr))
+        if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr, $latitude, $longitude))
         {
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
         }
@@ -227,10 +235,12 @@ SQL;
         Theme::Set('auditing', $this->auditing);
         Theme::Set('email_alert', $this->email_alert);
         Theme::Set('alert_timeout', $this->alert_timeout);
-        Theme::Set('wake_on_lan_enabled', $this->wakeOnLan);
-        Theme::Set('wake_on_lan_time', $this->wakeOnLanTime);
+        Theme::Set('wakeonlanenabled', $this->wakeOnLan);
+        Theme::Set('wakeonlantime', $this->wakeOnLanTime);
         Theme::Set('secureon', $this->secureOn);
         Theme::Set('cidr', $this->cidr);
+        Theme::Set('latitude', $this->latitude);
+        Theme::Set('longitude', $this->longitude);
         
         // If the broadcast address has not been set, then default to the client ip address
         Theme::Set('broadcastaddress', (($this->broadCastAddress == '') ? $this->clientIpAddress : $this->broadCastAddress));

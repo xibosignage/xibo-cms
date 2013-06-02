@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.5.0', 3, 1, 62);
+('1.5.1', 3, 1, 64);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
 (1, 'Users', 0, 0),
@@ -248,7 +248,9 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 (60, 'MONTHLY_XMDS_TRANSFER_LIMIT_KB', '0', 'text', 'XMDS Transfer Limit in KB/month', NULL, 'general', 0),
 (61, 'DEFAULT_LANGUAGE', 'en_GB', 'text', 'The default language to use', NULL, 'general', 1),
 (62, 'TRANSITION_CONFIG_LOCKED_CHECKB', 'Unchecked', 'dropdown', 'Is the Transition config locked?', 'Checked|Unchecked', 'general', 0),
-(63, 'GLOBAL_THEME_NAME', 'default', 'text', 'The Theme to apply to all pages by default', NULL, 'general', 1);
+(63, 'GLOBAL_THEME_NAME', 'default', 'text', 'The Theme to apply to all pages by default', NULL, 'general', 1),
+(64, 'DEFAULT_LAT', '51.504', 'text', 'The Latitude to apply for any Geo aware Previews', NULL, 'general', 1),
+(65, 'DEFAULT_LONG', '-0.104', 'text', 'The Longitude to apply for any Geo aware Previews', NULL, 'general', 1);
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -317,3 +319,12 @@ INSERT INTO `transition` (`TransitionID`, `Transition`, `Code`, `HasDuration`, `
 (1, 'Fade In', 'fadeIn', 1, 0, 0, 0),
 (2, 'Fade Out', 'fadeOut', 1, 0, 0, 0),
 (3, 'Fly', 'fly', 1, 1, 0, 0);
+
+INSERT INTO `datatype` (`DataTypeID`, `DataType`) VALUES
+(1, 'String'),
+(2, 'Number'),
+(3, 'Date');
+
+INSERT INTO `datasetcolumntype` (`DataSetColumnTypeID`, `DataSetColumnType`) VALUES
+(1, 'Value'),
+(2, 'Formula');

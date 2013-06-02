@@ -129,6 +129,7 @@ class datasetview extends Module
         Theme::Set('lowerLimit', $this->GetOption('lowerLimit'));
         Theme::Set('filter', $this->GetOption('filter'));
         Theme::Set('ordering', $this->GetOption('ordering'));
+        Theme::Set('rowsPerPage', $this->GetOption('rowsPerPage'));
         Theme::Set('showHeadings', $this->GetOption('showHeadings'));
         Theme::Set('showHeadingsChecked', ($this->GetOption('showHeadings') == 1) ? ' checked' : '');
         Theme::Set('duration', $this->duration);
@@ -265,7 +266,7 @@ class datasetview extends Module
         //Set this as the session information
         setSession('content', 'type', 'datasetview');
 
-	if ($this->showRegionOptions)
+        if ($this->showRegionOptions)
         {
             // We want to load a new form
             $this->response->loadForm = true;
@@ -308,20 +309,40 @@ class datasetview extends Module
             return $this->response;
         }
 
-        $columns = Kit::GetParam('DataSetColumnId', _POST, _ARRAY, array());
+        $columns = Kit::GetParam('DataSetColumnId', _GET, _ARRAY, array());
         $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
         $lowerLimit = Kit::GetParam('lowerLimit', _POST, _INT);
         $filter = Kit::GetParam('filter', _POST, _STRING);
         $ordering = Kit::GetParam('ordering', _POST, _STRING);
         $showHeadings = Kit::GetParam('showHeadings', _POST, _CHECKBOX);
         $styleSheet = Kit::GetParam('styleSheet', _POST, _STRING);
-        $updateInterval = Kit::GetParam('updateInterval', _POST, _STRING);
+        $updateInterval = Kit::GetParam('updateInterval', _POST, _INT);
+        $rowsPerPage = Kit::GetParam('rowsPerPage', _POST, _INT);
 
         if (count($columns) == 0)
             $this->SetOption('columns', '');
         else
             $this->SetOption('columns', implode(',', $columns));
 
+        // Validate some content
+        if (!is_numeric($upperLimit) || !is_numeric($lowerLimit))
+            trigger_error(__('Limits must be numbers'), E_USER_ERROR);
+
+        if ($upperLimit < 0 || $lowerLimit < 0)
+            trigger_error(__('Limits cannot be lower than 0'), E_USER_ERROR);
+
+        // Check the bounds of the limits
+        if ($upperLimit < $lowerLimit)
+            trigger_error(__('Upper limit must be higher than lower limit'), E_USER_ERROR);
+
+        if ($updateInterval < 0)
+            trigger_error(__('Update Interval must be greater than or equal to 0'), E_USER_ERROR);
+
+        // Make sure we havent entered a silly value in the filter
+        if (strstr($filter, 'DESC'))
+            trigger_error(__('Cannot user ordering criteria in the Filter Clause'), E_USER_ERROR);
+
+        // Store the values on the XLF
         $this->SetOption('upperLimit', $upperLimit);
         $this->SetOption('lowerLimit', $lowerLimit);
         $this->SetOption('filter', $filter);
@@ -329,6 +350,7 @@ class datasetview extends Module
         $this->SetOption('showHeadings', $showHeadings);
         $this->SetOption('duration', $this->duration);
         $this->SetOption('updateInterval', $updateInterval);
+        $this->SetOption('rowsPerPage', $rowsPerPage);
         $this->SetRaw('<styleSheet><![CDATA[' . $styleSheet . ']]></styleSheet>');
 
         // Should have built the media object entirely by this time
@@ -338,7 +360,7 @@ class datasetview extends Module
         //Set this as the session information
         setSession('content', 'type', 'datasetview');
 
-	if ($this->showRegionOptions)
+        if ($this->showRegionOptions)
         {
             // We want to load a new form
             $this->response->loadForm = true;
@@ -353,11 +375,21 @@ class datasetview extends Module
         if ($this->previewEnabled == 0)
             return parent::Preview ($width, $height);
         
-        // Show a preview of the data set table output.
-        return $this->DataSetTableHtml();
+        $layoutId = $this->layoutid;
+        $regionId = $this->regionid;
+
+        $mediaId = $this->mediaid;
+        $lkId = $this->lkid;
+        $mediaType = $this->type;
+        $mediaDuration = $this->duration;
+
+        $widthPx    = $width.'px';
+        $heightPx   = $height.'px';
+
+        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&preview=true&raw=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
 
-    public function GetResource()
+    public function GetResource($displayId = 0)
     {
         $db =& $this->db;
 
@@ -376,13 +408,23 @@ class datasetview extends Module
             $styleSheet = $rawNode->nodeValue;
         }
 
-        $styleSheet = '<style type="text/css">' . $styleSheet . '</style>';
+        $headContent = '<style type="text/css">' . $styleSheet . '</style>';
+
+        if ($this->GetOption('rowsPerPage') != 0) {
+
+            // Include some JavaScript to kick off the cycle plugin
+            $headContent .= '<script type="text/javascript">function init() { $("#DataSetTableContainer").dataSetRender({duration: ' . $this->GetOption('duration') . '}); }</script>';
+        }
 
         // Load the HtmlTemplate
         $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
 
-        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $styleSheet, $template);
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml(), $template);
+        // Preview?
+        if (isset($_GET['preview']))
+            $template = str_replace('[[ViewPortWidth]]', $this->width . 'px', $template);
+
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml($displayId), $template);
 
         return $template;
     }
@@ -429,7 +471,7 @@ END;
         return $styleSheet;
     }
 
-    public function DataSetTableHtml()
+    public function DataSetTableHtml($displayId = 0)
     {
         $db =& $this->db;
 
@@ -441,6 +483,7 @@ END;
         $ordering = $this->GetOption('ordering');
         $columnIds = $this->GetOption('columns');
         $showHeadings = $this->GetOption('showHeadings');
+        $rowsPerPage = $this->GetOption('rowsPerPage');
 
         if ($columnIds == '')
             return 'No columns';
@@ -448,28 +491,49 @@ END;
         // Create a data set view object, to get the results.
         Kit::ClassLoader('dataset');
         $dataSet = new DataSet($db);
-        $dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $ordering, $lowerLimit, $upperLimit);
-
-        $table  = '<table class="DataSetTable">';
-
-        if ($showHeadings == 1)
-        {
-            $table .= '<thead>';
-            $table .= ' <tr class="HeaderRow">';
-
-            foreach($dataSetResults['Columns'] as $col)
-                $table .= '<th class="DataSetColumnHeaderCell">' . $col . '</th>';
-
-            $table .= ' </tr>';
-            $table .= '</thead>';
-        }
-
-        $table .= '<tbody>';
+        $dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $ordering, $lowerLimit, $upperLimit, $displayId);
 
         $rowCount = 1;
+        $rowCountThisPage = 1;
+        $totalRows = count($dataSetResults['Rows']);
+
+        if ($rowsPerPage > 0)
+            $totalPages = $totalRows / $rowsPerPage;
+        else
+            $totalPages = 1;
+        
+        $table = '<div id="DataSetTableContainer" totalRows="' . $totalRows . '" totalPages="' . $totalPages . '">';
 
         foreach($dataSetResults['Rows'] as $row)
         {
+            if (($rowsPerPage > 0 && $rowCountThisPage >= $rowsPerPage) || $rowCount == 1) {
+
+                // Reset the row count on this page
+                $rowCountThisPage = 0;
+
+                if ($rowCount > 1) {
+                    $table .= '</tbody>';
+                    $table .= '</table>';
+                }
+
+                // Output the table header
+                $table .= '<table class="DataSetTable">';
+
+                if ($showHeadings == 1)
+                {
+                    $table .= '<thead>';
+                    $table .= ' <tr class="HeaderRow">';
+
+                    foreach($dataSetResults['Columns'] as $col)
+                        $table .= '<th class="DataSetColumnHeaderCell">' . $col . '</th>';
+
+                    $table .= ' </tr>';
+                    $table .= '</thead>';
+                }
+
+                $table .= '<tbody>';
+            }
+
             $table .= '<tr class="DataSetRow" id="row_' . $rowCount . '">';
 
             for($i = 0; $i < count($dataSetResults['Columns']); $i++)
@@ -478,10 +542,12 @@ END;
             $table .= '</tr>';
 
             $rowCount++;
+            $rowCountThisPage++;
         }
 
         $table .= '</tbody>';
         $table .= '</table>';
+        $table .= '</div>';
 
         return $table;
     }

@@ -23,41 +23,44 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
-    <?php echo Theme::Get('form_meta'); ?>
-    <div class="row">
-    	<div class="span6">
-			<div class="control-group">
-				<label class="control-label" for="direction" accesskey="n" title="<?php echo Theme::Translate('Direction to Scroll'); ?>"><?php echo Theme::Translate('Direction'); ?></label>
-			    <div class="controls">
-			        <?php echo Theme::SelectList('directionid', Theme::Get('direction_field_list'), 'directionid', 'direction'); ?>
-			    </div>
-			</div>
-    		<div class="control-group">
-    			<label class="control-label" for="scrollSpeed" accesskey="n" title="<?php echo Theme::Translate('The scroll speed to apply if a direction is specified. Higher is faster.'); ?>"><?php echo Theme::Translate('Scroll Speed'); ?></label>
-    		    <div class="controls">
-    		        <input class="" name="scrollSpeed" type="text" id="scrollSpeed" tabindex="1" />
-    		    </div>
-    		</div>
-    	</div>
-    	<div class="span6">
-			<div class="control-group">
-                <label class="control-label" for="duration" accesskey="n" title="<?php echo Theme::Translate('The duration in seconds this media should be displayed'); ?>"><?php echo Theme::Translate('Duration'); ?></label>
-                <div class="controls">
-                    <input class="required number" name="duration" type="text" id="duration" tabindex="2" />
+<div class="container-fluid">
+    <form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+        <?php echo Theme::Get('form_meta'); ?>
+        <div class="row-fluid">
+        	<div class="span6">
+    			<div class="control-group">
+    				<label class="control-label" for="direction" accesskey="n" title="<?php echo Theme::Translate('Direction to Scroll'); ?>"><?php echo Theme::Translate('Direction'); ?></label>
+    			    <div class="controls">
+    			        <?php echo Theme::SelectList('direction', Theme::Get('direction_field_list'), 'directionid', 'direction'); ?>
+    			    </div>
+    			</div>
+        		<div class="control-group">
+        			<label class="control-label" for="scrollSpeed" accesskey="n" title="<?php echo Theme::Translate('The scroll speed to apply if a direction is specified. Higher is faster.'); ?>"><?php echo Theme::Translate('Scroll Speed'); ?></label>
+        		    <div class="controls">
+        		        <input class="" name="scrollSpeed" type="text" id="scrollSpeed" tabindex="1" />
+        		    </div>
+        		</div>
+        	</div>
+        	<div class="span6">
+    			<div class="control-group">
+                    <label class="control-label" for="duration" accesskey="n" title="<?php echo Theme::Translate('The duration in seconds this media should be displayed'); ?>"><?php echo Theme::Translate('Duration'); ?></label>
+                    <div class="controls">
+                        <input class="required number" name="duration" type="text" id="duration" tabindex="2" />
+                    </div>
                 </div>
-            </div>
-            <div class="control-group">
-                <div class="controls">
-                    <input class="checkbox" name="fitText" type="checkbox" id="fitText" tabindex="3" />
-            		<label class="checkbox" for="fitText" accesskey="n" title="<?php echo Theme::Translate('Fit text to region'); ?>"><?php echo Theme::Translate('Fit text to region'); ?></label>
+                <div class="control-group">
+                    <div class="controls">
+                        <label class="checkbox" for="fitText" accesskey="n" title="<?php echo Theme::Translate('Fit text to region'); ?>"><?php echo Theme::Translate('Fit text to region'); ?>
+                            <input class="checkbox" name="fitText" type="checkbox" id="fitText" tabindex="3" />
+                		</label>
+                    </div>
                 </div>
-            </div>
-    	</div>
-    </div>
-    <div class="row">
-        <div class="span12">
-            <textarea id="ta_text" class="wide_textarea" cols="80" rows="10" name="ta_text"></textarea>
+        	</div>
         </div>
-    </div>
-</form>
+        <div class="row-fluid">
+            <div class="span12">
+                <textarea id="ta_text" class="wide_textarea" cols="80" rows="10" name="ta_text"></textarea>
+            </div>
+        </div>
+    </form>
+</div>

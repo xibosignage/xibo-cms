@@ -168,6 +168,16 @@ label.error {
   list-style: none;
 }
 
+#TickerDataSetColumns li {
+  float: left;
+  list-style: none;
+  margin-left: 5px;
+  cursor: pointer;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+}
+
 #dashbuttons{ 
   text-align: center;
 }
@@ -191,4 +201,22 @@ label.error {
 
 .dashicons a:hover {
   color: #808080;
+}
+
+span.layout_assign_list_select {
+    cursor: pointer;
+}
+
+ul#LayoutAssignSortable {
+    display: inline-block;
+}
+
+#LayoutAssignSortable .li-sortable {
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid #8080ff;
+    background-color: #E5F0FF;
+    cursor: pointer;
+    float: left;
+    list-style: none;
 }

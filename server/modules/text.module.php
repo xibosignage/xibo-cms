@@ -322,7 +322,7 @@ class text extends Module
         // Behave exactly like the client.
 
         // Load in the template
-        $template = file_get_contents('modules/preview/HtmlTemplate.htm');
+        $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
 
         $width = Kit::GetParam('width', _REQUEST, _INT);
         $height = Kit::GetParam('height', _REQUEST, _INT);

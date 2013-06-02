@@ -89,10 +89,21 @@ echo __('LIBRARY_SIZE_LIMIT_KB');
 echo __('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 echo __('DEFAULT_LANGUAGE');
 echo __('TRANSITION_CONFIG_LOCKED_CHECKB');
+echo __('GLOBAL_THEME_NAME');
+echo __('DEFAULT_LAT');
+echo __('DEFAULT_LONG');
 
 // Transitions
 echo __('Fade In');
 echo __('Fade Out');
 echo __('Fly');
+
+// Data Sets
+echo __('String');
+echo __('Number');
+echo __('Date');
+
+echo __('Value');
+echo __('Formula');
 
 ?>

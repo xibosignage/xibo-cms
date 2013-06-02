@@ -32,7 +32,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     	<script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootstrap-datetimepicker.min.js"></script>
-    	<script src="theme/default/libraries/ckeditor/ckeditor.js"></script>
+        <script src="theme/default/libraries/ckeditor/ckeditor.js"></script>
+    	<script src="theme/default/libraries/date-time-format.js"></script>
     	<script src="theme/default/js/xibo-cms.js"></script>
     	<script src="theme/default/js/xibo-forms.js"></script>
     	<script src="theme/default/js/xibo-layout-designer.js"></script>

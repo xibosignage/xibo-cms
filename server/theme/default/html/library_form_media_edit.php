@@ -35,7 +35,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	</fieldset>	
 </form>
 <div id="uploadProgress" class="well" style="display:none">
-    <span>You may fill in the form while your file is uploading.</span>
+    <span><?php echo Theme::Translate('You may fill in the form while your file is uploading.'); ?></span>
 </div>
 <form class="XiboForm form-horizontal" id="<?php echo Theme::Get('form_id'); ?>" method="post" action="<?php echo Theme::Get('form_action'); ?>">
     <?php echo Theme::Get('form_meta'); ?>

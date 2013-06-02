@@ -182,7 +182,10 @@ var LoadTimeLineCallback = function() {
         var position = $(this).position();
 
         //Change the hidden div's content
-        $("div#timelinePreview").html($("div.timelineMediaPreview", this).html()).css("margin-top", position.top + $('#timelineControl').scrollTop()).show();
+        $("div#timelinePreview")
+            .html($("div.timelineMediaPreview", this).html())
+            .css("margin-top", position.top + $('#timelineControl').closest('.modal-body').scrollTop())
+            .show();
 
     }, function() {
         return false;

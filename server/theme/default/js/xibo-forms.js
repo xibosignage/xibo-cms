@@ -9,6 +9,23 @@ var text_callback = function(dialog)
             CKEDITOR.instances["ta_text"].destroy();
         }
     });
+
+    // Do we have any items to click on that we might want to insert? (these will be our items and not CKEditor ones)
+    $('.ckeditor_snippits', dialog).dblclick(function(){
+        // Linked to?
+        var linkedTo = $(this).attr("linkedto");
+
+        if (CKEDITOR.instances[linkedTo] != undefined) {
+            if ($(this).attr("datasetcolumnid") != undefined)
+                var text = "[" + $(this).html() + "|" + $(this).attr("datasetcolumnid") + "]"
+            else
+                var text = "[" + $(this).html() + "]"
+
+            CKEDITOR.instances[linkedTo].insertText(text);
+        }
+
+        return false;
+    });
     
     return false;
 }
@@ -44,21 +61,9 @@ var datasetview_callback = function(dialog)
 }
 
 var DataSetViewSubmit = function() {
-    // Serialise the form and then submit it via Ajax.
-    var href = $("#ModuleForm").attr('action') + "&ajax=true";
-
+    
     // Get the two lists
-    serializedData = $("#columnsIn").sortable('serialize') + "&" + $("#ModuleForm").serialize();
-
-    $.ajax({
-        type: "post",
-        url: href,
-        cache: false,
-        dataType: "json",
-        data: serializedData,
-        success: XiboSubmitResponse
-    });
-
+    $("#ModuleForm").attr('action', $("#ModuleForm").attr('action') + "&ajax=true&" + $("#columnsIn").sortable('serialize')).submit();
     return;
 }
 
@@ -91,29 +96,59 @@ function MembersSubmit() {
     return;
 }
 
-function LayoutAssignmentCallBack()
+/**
+ * Layout Assignment Form Callback
+ */
+var LayoutAssignCallback = function()
 {
-    $("#layoutsIn, #layoutsOut").sortable({
-        connectWith: '.connectedSortable',
-        dropOnEmpty: true
-    }).disableSelection();
+    // Attach a click handler to all of the little pointers in the grid.
+    $("#LayoutAssignTable .layout_assign_list_select").click(function(){
+        // Get the row that this is in.
+        var row = $(this).parent().parent();
 
-        $(".li-sortable", "#div_dialog").dblclick(switchLists);
+        // Construct a new list item for the lower list and append it.
+        var newItem = $("<li/>", {
+            text: row.attr("litext"),
+            id: row.attr("rowid"),
+            "class": "li-sortable",
+            dblclick: function(){
+                $(this).remove();
+            }
+        });
+
+        newItem.appendTo("#LayoutAssignSortable");
+
+        // Add a span to that new item
+        $("<span/>", {
+            "class": "icon-minus-sign",
+            click: function(){
+                $(this).parent().remove();
+            }
+        })
+        .appendTo(newItem);
+
+    });
+
+    // There could be some existing items...
+    $("#LayoutAssignSortable li span").click(function() {
+        $(this).parent().remove();
+    });
+
+    $("#LayoutAssignSortable").sortable().disableSelection();
 }
 
-function LayoutsSubmit() {
+function LayoutsSubmit(campaignId) {
     // Serialise the form and then submit it via Ajax.
-    var href = $("#layoutsIn").attr('href') + "&ajax=true";
-    
-    // Get the two lists        
-    serializedData = $("#layoutsIn").sortable('serialize');
+    var layouts = $("#LayoutAssignSortable").sortable('serialize');
+
+    layouts = layouts + "&CampaignID=" + campaignId;
     
     $.ajax({
         type: "post",
-        url: href,
+        url: "index.php?p=campaign&q=SetMembers&ajax=true",
         cache: false,
         dataType: "json",
-        data: serializedData,
+        data: layouts,
         success: XiboSubmitResponse
     });
     

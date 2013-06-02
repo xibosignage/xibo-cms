@@ -161,9 +161,9 @@ function ScheduleFormSubmit(form) {
         displayGroupIds = 0;
 
     // Get the values from our datepickers
-    var startDate = $("#starttime").closest(".date-pick").data('datetimepicker').getDate().toISOString();
-    var endDate = $("#endtime").closest(".date-pick").data('datetimepicker').getDate().toISOString();
-    var recurUntil = $("#rec_range").closest(".date-pick").data('datetimepicker').getDate().toISOString();
+    var startDate = dateFormat($("#starttime").closest(".date-pick").data('datetimepicker').getLocalDate(), "isoDateTime");
+    var endDate = dateFormat($("#endtime").closest(".date-pick").data('datetimepicker').getLocalDate(), "isoDateTime");
+    var recurUntil = dateFormat($("#rec_range").closest(".date-pick").data('datetimepicker').getLocalDate(), "isoDateTime");
 
     $.ajax({
         type:"post",
