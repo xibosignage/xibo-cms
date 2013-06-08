@@ -21,7 +21,7 @@
 DEFINE('XIBO', true);
 
 if (! checkPHP()) {
-  die("Xibo requires PHP 5.3 or later");
+  die("Xibo requires PHP 5.2.4 or later");
 }
 
 error_reporting(0);
@@ -111,42 +111,64 @@ elseif ($_SESSION['step'] == 1) {
 
 		# Check password
 		$username = 'xibo_admin';
-		$password = Kit::GetParam('password',_POST,_PASSWORD);
+		$password = Kit::GetParam('password', _POST, _PASSWORD);
 
-		Kit::ClassLoader('userdata');
-			
-		// Get the SALT for this username
-		if (!$userInfo = $db->GetSingleRow(sprintf("SELECT UserID, UserName, UserPassword, UserTypeID, CSPRNG FROM `user` WHERE UserName = '%s'", $db->escape_string($username)))) {
-			$_SESSION['auth'] = false;
-	   		reportError("0", __("Password incorrect. Please try again."));
-		}
+		// Decide what user authentication mode to use depending on the current version.
+		if (Config::Version($db, 'DBVersion') < 62) {
 
-		// User Data Object to check the password
-		$userData = new Userdata($db);
+			// Old auth
+			$SQL = sprintf("SELECT `UserID` FROM `user` WHERE UserPassword='%s' AND UserName='xibo_admin'", $db->escape_string($password_hash));
 
-		// Is SALT empty
-		if ($userInfo['CSPRNG'] == 0) {
-
-			// Check the password using a MD5
-			if ($userInfo['UserPassword'] != md5($password)) {
-				$_SESSION['auth'] = false;
-	   			reportError("0", __("Password incorrect. Please try again."));
-			}
-
-			// Now that we are validated, generate a new SALT and set the users password.
-			$userData->ChangePassword(Kit::ValidateParam($userInfo['UserID'], _INT), null, $password, $password, true /* Force Change */);
+	    	if (! $result = $db->query($SQL)) {
+	      		reportError("0", __("An error occured checking your password.") . "<br /><br />" . __("MySQL Error:") . "<br />" . mysql_error());    
+	    	}
+	 
+			if ($db->num_rows($result) == 0) {	
+	      		$_SESSION['auth'] = false;
+	       		reportError("0", __("Password incorrect. Please try again."));
+	   		}
+	   		else {
+				$_SESSION['auth'] = true;
+				$_SESSION['db'] = $db;
+	    	}
 		}
 		else {
+			// New auth
+			Kit::ClassLoader('userdata');
 			
-			// Check the users password using the random SALTED password
-	        if ($userData->validate_password($password, $userInfo['UserPassword']) === false) {
-	        	$_SESSION['auth'] = false;
-	   			reportError("0", __("Password incorrect. Please try again."));
-	        }
-		}
+			// Get the SALT for this username
+			if (!$userInfo = $db->GetSingleRow(sprintf("SELECT UserID, UserName, UserPassword, UserTypeID, CSPRNG FROM `user` WHERE UserName = '%s'", $db->escape_string($username)))) {
+				$_SESSION['auth'] = false;
+		   		reportError("0", __("Password incorrect. Please try again."));
+			}
 
-		$_SESSION['auth'] = true;
-		$_SESSION['db'] = $db;
+			// User Data Object to check the password
+			$userData = new Userdata($db);
+
+			// Is SALT empty
+			if ($userInfo['CSPRNG'] == 0) {
+
+				// Check the password using a MD5
+				if ($userInfo['UserPassword'] != md5($password)) {
+					$_SESSION['auth'] = false;
+		   			reportError("0", __("Password incorrect. Please try again."));
+				}
+
+				// Now that we are validated, generate a new SALT and set the users password.
+				$userData->ChangePassword(Kit::ValidateParam($userInfo['UserID'], _INT), null, $password, $password, true /* Force Change */);
+			}
+			else {
+				
+				// Check the users password using the random SALTED password
+		        if ($userData->validate_password($password, $userInfo['UserPassword']) === false) {
+		        	$_SESSION['auth'] = false;
+		   			reportError("0", __("Password incorrect. Please try again."));
+		        }
+			}
+
+			$_SESSION['auth'] = true;
+			$_SESSION['db'] = $db;
+		}
    	}
 ## Check server meets specs (as specs might have changed in this release)
   ?>
@@ -363,7 +385,7 @@ include('install/footer.inc');
 # Functions
 function checkPHP() {
   # Check PHP version > 5
-  return (version_compare("5.3",phpversion(), "<="));
+  return (version_compare("5.2.4",phpversion(), "<="));
 }
 
 function checkMySQL() {
