@@ -66,7 +66,8 @@ class Media extends Data
         if (strlen($name) > 100)
             return $this->SetError(10, __('The name cannot be longer than 100 characters'));
 
-        if ($duration == 0)
+        // Test the duration (except for video and localvideo which can have a 0)
+        if ($duration == 0 && $type != 'video' && $type != 'localvideo')
             return $this->SetError(11, __('You must enter a duration.'));
 
         // Check the naming of this item to ensure it doesnt conflict
@@ -145,11 +146,15 @@ class Media extends Data
     {
         $db =& $this->db;
 
+        // Look up the type
+        if (!$type = $db->GetSingleValue(sprintf("SELECT type FROM `media` WHERE MediaID = %d", $mediaId), 'type', _WORD))
+            return $this->SetError(12, __('Unable to find media type'));
+
         // Validation
         if (strlen($name) > 100)
             return $this->SetError(10, __('The name cannot be longer than 100 characters'));
 
-        if ($duration == 0)
+        if ($duration == 0 && $type != 'video' && $type != 'localvideo')
             return $this->SetError(11, __('You must enter a duration.'));
 
         // Any media (not this one) already has this name?

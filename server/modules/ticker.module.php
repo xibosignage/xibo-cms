@@ -160,8 +160,8 @@ class ticker extends Module
 		// Checkboxes
 		Theme::Set('fitTextChecked', ($this->GetOption('fitText', 0) == 0) ? '' : ' checked');
 		Theme::Set('itemsSideBySideChecked', ($this->GetOption('itemsSideBySide', 0) == 0) ? '' : ' checked');
-        Theme::Set('durationIsPerItemChecked', ($this->GetOption('durationIsPerItem') == '1') ? 'checked' : '');
-		
+        Theme::Set('durationIsPerItemChecked', ($this->GetOption('durationIsPerItem') == 1) ? ' checked' : '');
+        
 		// Get the text out of RAW
 		$rawXml = new DOMDocument();
 		$rawXml->loadXML($this->GetRaw());

@@ -1061,7 +1061,7 @@ END;
         }
 
         // Edit the media record
-        if (!$mediaObject->Edit($new_mediaid, $name, $this->duration, $userid)) {
+        if (!$mediaObject->Edit($this->mediaid, $name, $this->duration, $userid)) {
         	$this->response->SetError($mediaObject->GetErrorMessage());
             $this->response->keepOpen = true;
             return $this->response;
