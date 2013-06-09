@@ -70,7 +70,7 @@ TranslationEngine::InitLocale($db);
 
 include('install/header_upgrade.inc');
 
-if (! $_SESSION['step']) {
+if (!isset($_SESSION['step'])) {
 	$_SESSION['step'] = 0;
 }
 
@@ -107,7 +107,7 @@ if ($_SESSION['step'] == 0) {
 elseif ($_SESSION['step'] == 1) {
   	$_SESSION['step'] = 2;
   
-  	if (! $_SESSION['auth']) {
+  	if (!isset($_SESSION['auth']) || $_SESSION['auth'] !== true) {
 
 		# Check password
 		$username = 'xibo_admin';
@@ -117,6 +117,8 @@ elseif ($_SESSION['step'] == 1) {
 		if (Config::Version($db, 'DBVersion') < 62) {
 
 			// Old auth
+			$password_hash = md5($password);
+			
 			$SQL = sprintf("SELECT `UserID` FROM `user` WHERE UserPassword='%s' AND UserName='xibo_admin'", $db->escape_string($password_hash));
 
 	    	if (! $result = $db->query($SQL)) {
@@ -423,7 +425,7 @@ function reportError($step, $message, $button_text="&lt; Back") { // Fixme : Tra
 } 
 
 function checkAuth() {
-	if (! $_SESSION['auth']) {
+	if (!isset($_SESSION['auth']) || $_SESSION['auth'] !== true) {
 		reportError(1, __("You must authenticate to run the upgrade."));
 	}
 }

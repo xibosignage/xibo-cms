@@ -19,7 +19,7 @@ INSERT INTO `datasetcolumntype` (`DataSetColumnTypeID`, `DataSetColumnType`) VAL
 (2, 'Formula');
 
 ALTER TABLE  `datasetcolumn` ADD  `DataSetColumnTypeID` smallint(6) NOT NULL AFTER  `DataTypeID`;
-ALTER TABLE  `datasetcolumn` ADD  `Formula` VARCHAR( 1000 ) NULL
+ALTER TABLE  `datasetcolumn` ADD  `Formula` VARCHAR( 1000 ) NULL;
 
 UPDATE `datasetcolumn` SET `DataSetColumnTypeID` = 1;
 
