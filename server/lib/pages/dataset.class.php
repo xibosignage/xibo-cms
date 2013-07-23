@@ -721,7 +721,7 @@ END;
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $response->uniqueReference = Kit::GetParam('fieldid', _POST, _WORD);
+        $response->uniqueReference = Kit::GetParam('fieldid', _POST, _STRING);
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
         $dataSetColumnId = Kit::GetParam('datasetcolumnid', _POST, _INT);
         $rowNumber = Kit::GetParam('rownumber', _POST, _INT);
@@ -748,7 +748,7 @@ END;
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $response->uniqueReference = Kit::GetParam('fieldid', _POST, _WORD);
+        $response->uniqueReference = Kit::GetParam('fieldid', _POST, _STRING);
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
         $dataSetColumnId = Kit::GetParam('datasetcolumnid', _POST, _INT);
         $rowNumber = Kit::GetParam('rownumber', _POST, _INT);
