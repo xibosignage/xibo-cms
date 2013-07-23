@@ -1010,7 +1010,7 @@ class XMDSSoap
         if (!$module = new $type($db, $user, $mediaId, $layoutId, $regionId))
             throw new SoapFault('Receiver', 'Cannot create module. Check CMS Log');
 
-        $resource = $module->GetResource();
+        $resource = $module->GetResource($this->displayId);
 
         if (!$resource || $resource == '')
             throw new SoapFault('Receiver', 'Unable to get the media resource');
