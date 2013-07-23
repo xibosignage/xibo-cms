@@ -119,16 +119,16 @@ class logDAO
 		$SQL .= sprintf(" WHERE  logdate > '%s' AND logdate <= '%s' ", $fromdt, $todt);
 
 		if ($type != "0") 
-			$SQL .= sprintf("AND type = '%s' ", $type);
+			$SQL .= sprintf("AND type = '%s' ", $db->escape_string($type));
 		
 		if($page != "0") 
-			$SQL .= sprintf("AND page = '%s' ", $page);
+			$SQL .= sprintf("AND page = '%s' ", $db->escape_string($page));
 		
 		if($function != "0") 
-			$SQL .= sprintf("AND function = '%s' ", $function);
+			$SQL .= sprintf("AND function = '%s' ", $db->escape_string($function));
 		
 		if($displayid != "0") 
-			$SQL .= sprintf("AND displayID = '%s' ", $displayid);
+			$SQL .= sprintf("AND displayID = '%s' ", $db->escape_string($displayid));
 
 		// Load results into an array
         $log = $db->GetArray($SQL);
