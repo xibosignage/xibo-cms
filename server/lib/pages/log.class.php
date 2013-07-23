@@ -130,6 +130,8 @@ class logDAO
 		if($displayid != "0") 
 			$SQL .= sprintf("AND displayID = '%s' ", $db->escape_string($displayid));
 
+		$SQL .= " ORDER BY logid ";
+
 		// Load results into an array
         $log = $db->GetArray($SQL);
 
