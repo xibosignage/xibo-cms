@@ -456,6 +456,14 @@ tr.DataSetRow {
 
 }
 
+tr.DataSetRowOdd {
+
+}
+
+tr.DataSetRowEven {
+
+}
+
 th.DataSetColumnHeaderCell {
 
 }
@@ -534,7 +542,7 @@ END;
                 $table .= '<tbody>';
             }
 
-            $table .= '<tr class="DataSetRow" id="row_' . $rowCount . '">';
+            $table .= '<tr class="DataSetRow DataSetRow' . (($rowCount % 2) ? 'Odd' : 'Even') . '" id="row_' . $rowCount . '">';
 
             for($i = 0; $i < count($dataSetResults['Columns']); $i++)
                 $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $row[$i] . '</span></td>';

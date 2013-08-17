@@ -1310,6 +1310,7 @@ END;
         }
         
         $SQL .= " WHERE 1 = 1 ";
+        $SQL .= " ORDER BY displaygroup.DisplayGroup ";
         
         if ($name != '')
         {
