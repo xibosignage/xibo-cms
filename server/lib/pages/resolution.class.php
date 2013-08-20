@@ -195,6 +195,10 @@ class resolutionDAO
 
     function Add()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db 	=& $this->db;
         $user 	=& $this->user;
         $response = new ResponseManager();
@@ -215,6 +219,10 @@ class resolutionDAO
 
     function Edit()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db 	=& $this->db;
         $user 	=& $this->user;
         $response = new ResponseManager();
@@ -236,6 +244,10 @@ class resolutionDAO
 
     function Delete()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db 	=& $this->db;
         $user 	=& $this->user;
         $response = new ResponseManager();

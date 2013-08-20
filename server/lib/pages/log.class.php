@@ -91,7 +91,7 @@ class logDAO
 		$function 	= Kit::GetParam('filter_function', _REQUEST, _STRING, '0');
 		$page 		= Kit::GetParam('filter_page', _REQUEST, _STRING, '0');
 		$fromdt 	= Kit::GetParam('filter_fromdt', _REQUEST, _STRING);
-		$displayid	= Kit::GetParam('filter_display', _REQUEST, _STRING, '0');
+		$displayid	= Kit::GetParam('filter_display', _REQUEST, _INT);
 		$seconds 	= Kit::GetParam('filter_seconds', _POST, _INT, 120);
                 
         setSession('log', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
@@ -127,8 +127,8 @@ class logDAO
 		if($function != "0") 
 			$SQL .= sprintf("AND function = '%s' ", $db->escape_string($function));
 		
-		if($displayid != "0") 
-			$SQL .= sprintf("AND displayID = '%s' ", $db->escape_string($displayid));
+		if($displayid != 0) 
+			$SQL .= sprintf("AND displayID = %d ", $displayid);
 
 		$SQL .= " ORDER BY logid ";
 
@@ -190,6 +190,10 @@ class logDAO
 	 */
 	public function Truncate() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db =& $this->db;
 
 		if ($this->user->usertypeid != 1)

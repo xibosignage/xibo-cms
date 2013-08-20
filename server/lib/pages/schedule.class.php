@@ -1360,6 +1360,8 @@ HTML;
         // Filter forms for selecting layouts and displays
         $layoutFilter = $this->EventFormLayoutFilter();
         $displayFilter = $this->EventFormDisplayFilter($displayGroupIds);
+
+        $token = Kit::Token();
         
         $form = <<<END
 <div class="container-fluid">
@@ -1374,6 +1376,7 @@ HTML;
 <div class="row-fluid">
     <div class="span12">
 <form id="AddEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=AddEvent" method="post">
+    $token
     <table style="width:100%;">
         <tr>
             <td colspan="4"><center><h3>Event Schedule</h3></center></td>
@@ -1523,6 +1526,8 @@ END;
         // Filter forms for selecting layouts and displays
         $layoutFilter = $this->EventFormLayoutFilter($campaignId);
         $displayFilter = $this->EventFormDisplayFilter($displayGroupIds);
+
+        $token = Kit::Token();
         
         $form = <<<END
 <div class="container-fluid">
@@ -1537,6 +1542,7 @@ END;
 <div class="row-fluid">
     <div class="span12">
 <form id="EditEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=EditEvent" method="post">
+    $token
     <input type="hidden" id="EventID" name="EventID" value="$eventID" />
     <input type="hidden" id="EventDetailID" name="EventDetailID" value="$eventDetailID" />
     <table style="width:100%;">
@@ -1619,6 +1625,10 @@ END;
      */
     public function AddEvent() 
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db                 =& $this->db;
         $user               =& $this->user;
         $response           = new ResponseManager();
@@ -1697,6 +1707,10 @@ END;
      */
     public function EditEvent()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db                 =& $this->db;
         $user               =& $this->user;
         $response           = new ResponseManager();
@@ -1783,9 +1797,11 @@ END;
         
         $strQuestion = __('Are you sure you want to delete this event from <b>all</b> displays?');
         $strAdvice = __('If you only want to delete this item from certain displays, please deselect the displays in the edit dialogue and click Save.');
+        $token = Kit::Token();
 
         $form = <<<END
         <form id="DeleteEventForm" class="XiboForm" action="index.php?p=schedule&q=DeleteEvent">
+            $token
             <input type="hidden" name="EventID" value="$eventID" />
             <input type="hidden" name="EventDetailID" value="$eventDetailID" />
             <table>
@@ -1813,6 +1829,10 @@ END;
      */
     public function DeleteEvent()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db                 =& $this->db;
         $user               =& $this->user;
         $response           = new ResponseManager();
@@ -1880,9 +1900,11 @@ END;
         
         $outputForm = false;
         $displayList = $this->UnorderedListofDisplays($outputForm, $displayGroupIds);
+        $token = Kit::Token();
 
         $form = <<<END
             <form id="ScheduleNowForm" class="XiboForm" action="index.php?p=schedule&q=ScheduleNow" method="post">
+                $token
                 <table style="width:100%;">
                     <tr>
                         <td><label for="duration" title="How long should this event be scheduled for">Duration<span class="required">*</span></label></td>
@@ -1920,6 +1942,10 @@ END;
 
     public function ScheduleNow()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
@@ -1977,9 +2003,11 @@ END;
 
         $strQuestion = __('Are you sure you want to delete all events that intersect this day from <b>all</b> displays?');
         $strAdvice = __('This action cannot be undone.');
+        $token = Kit::Token();
 
         $form = <<<END
 <form id="DeleteDayForm" class="XiboForm" action="index.php?p=schedule&q=DeleteDay">
+    $token
     <input type="hidden" name="date" value="$date">
     <table>
         <tr>
@@ -2005,6 +2033,10 @@ END;
     */
     public function DeleteDay()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();

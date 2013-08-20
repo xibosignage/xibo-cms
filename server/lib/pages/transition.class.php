@@ -171,6 +171,10 @@ class transitionDAO
      */
     public function Edit()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
 

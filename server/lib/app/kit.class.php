@@ -226,7 +226,7 @@ class Kit
 			case _INT :
 				// Only use the first integer value
 				if ($return == '')
-                                    return 0;
+					return 0;
 				
 				if (preg_match('/-?[0-9]+/', $return, $matches) == 0)
                                     trigger_error(sprintf(__('No integer match found for %s, and return value is not an int'), $param), E_USER_ERROR);
@@ -264,6 +264,19 @@ class Kit
 				break;
 
 			case _STRING :
+				if ($return == '')
+				{
+					$return = '';
+					break;	
+				}
+				
+				$return = preg_replace('/&#(\d+);/me', "chr(\\1)", $return); // decimal notation
+				// convert hex
+				$return = preg_replace('/&#x([a-f0-9]+);/mei', "chr(0x\\1)", $return); // hex notation
+				$return = htmlspecialchars($return);
+				$return = (string) $return;
+				break;
+
 			case _PASSWORD :
 				if ($return == '')
 				{
@@ -559,5 +572,50 @@ class Kit
 
 	    return $val;
     }
+
+    /**
+	* Creates a form token
+	* @return 
+	*/
+	public static function Token($tokenName = "token")
+	{
+		//Store in the users session
+		$token = md5(uniqid()."xsmsalt".time());
+		
+		$_SESSION[$tokenName] = $token;
+		$_SESSION[$tokenName.'_timeout'] = time();
+		
+		return '<input type="hidden" name="' . $tokenName . '" value="' . $token . '">';
+	}
+
+	/**
+	 * Checks a form token
+	 * @param string token
+	 * @return 
+	 */
+	public static function CheckToken($tokenName = "token")
+	{
+		global $db;
+
+		if (!isset($_POST[$tokenName]))
+			return false;
+		
+		if ($_POST[$tokenName] == $_SESSION[$tokenName])
+		{
+			// See if its still in Date
+			if (($_SESSION[$tokenName.'_timeout'] + 1200) <= time())
+			{
+				return false;
+			}
+			return true;
+		}
+		else
+		{
+			unset($_SESSION[$tokenName]);
+
+			Debug::LogEntry($db, 'error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [$token] for session_id [" . session_id() . ']');
+			return false;
+		}
+	}
 }
 ?>

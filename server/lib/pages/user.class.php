@@ -205,6 +205,10 @@ class userDAO
 	 */
 	function AddUser () 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
 
@@ -291,6 +295,10 @@ class userDAO
 	 */
 	function EditUser() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db 	=& $this->db;
         $response	= new ResponseManager();
 
@@ -360,6 +368,10 @@ class userDAO
 	 */
 	function DeleteUser() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
             $db 	=& $this->db;
             $user       =& $this->user;
 
@@ -595,6 +607,10 @@ class userDAO
      */
     function SetUserHomepage()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
 
@@ -681,6 +697,10 @@ class userDAO
      */
     public function ChangePassword()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
 
@@ -728,6 +748,10 @@ class userDAO
      */
     public function SetPassword()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
 

@@ -160,6 +160,10 @@ SQL;
      */
     function modify()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db             =& $this->db;
         $response       = new ResponseManager();
 
@@ -466,6 +470,10 @@ SQL;
      */
     function Delete()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
         $displayid = Kit::GetParam('displayid', _POST, _INT, 0);
@@ -526,6 +534,10 @@ SQL;
      */
     public function DefaultLayout()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
         $displayObject  = new Display($db);
@@ -806,6 +818,10 @@ SQL;
      */
     public function WakeOnLan()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
         $displayObject  = new Display($db);

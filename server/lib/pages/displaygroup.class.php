@@ -301,6 +301,10 @@ class displaygroupDAO
 	 */
 	public function Add()
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db =& $this->db;
 		$response = new ResponseManager();
 
@@ -324,6 +328,10 @@ class displaygroupDAO
 	 */
 	public function Edit()
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db 			=& $this->db;
 		$response		= new ResponseManager();
 
@@ -354,6 +362,10 @@ class displaygroupDAO
 	 */
 	function Delete() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db 			=& $this->db;	
 		$response		= new ResponseManager();
 	
@@ -517,6 +529,10 @@ class displaygroupDAO
      */
     public function Permissions()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();

@@ -49,6 +49,10 @@ class adminDAO
 	{
 		$db =& $this->db;
 
+		// Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+
 		$refer 		= Kit::GetParam('refer', _POST, _STRING);
 		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT);
 		
@@ -129,7 +133,7 @@ class adminDAO
 		$helpButton 	= $helpObject->HelpButton("content/config/settings", true);
 		
 		//one giant form, split into tabs
-		$form = '<form id="SettingsForm" method="post" class="XiboForm" action="index.php?p=admin&q=modify">';
+		$form = '<form id="SettingsForm" method="post" class="XiboForm" action="index.php?p=admin&q=modify">' . Kit::Token();
 		$tabs = '';
 		$pages = '';
 		

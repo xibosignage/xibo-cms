@@ -165,6 +165,10 @@ class layoutDAO
 	 */
 	function add() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db             =& $this->db;
         $response       = new ResponseManager();
 
@@ -192,6 +196,10 @@ class layoutDAO
 	 */
 	function modify ()
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db 			=& $this->db;
 		$response		= new ResponseManager();
 
@@ -266,6 +274,10 @@ class layoutDAO
 	 */
 	function delete() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
         $layoutId = Kit::GetParam('layoutid', _POST, _INT, 0);
@@ -288,6 +300,10 @@ class layoutDAO
 	 */
 	function retire() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db =& $this->db;
         $response = new ResponseManager();
         $layoutId = Kit::GetParam('layoutid', _POST, _INT, 0);
@@ -582,6 +598,10 @@ class layoutDAO
 	 */
 	function EditBackground()
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db 			=& $this->db;
 		$user 			=& $this->user;
 		$response		= new ResponseManager();
@@ -779,6 +799,10 @@ HTML;
      */
     public function Copy()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();

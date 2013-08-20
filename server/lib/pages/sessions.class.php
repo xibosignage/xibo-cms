@@ -161,6 +161,10 @@ class sessionsDAO
 	 */
 	function LogoutUser()
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db =& $this->db;
 		
 		//ajax request handler

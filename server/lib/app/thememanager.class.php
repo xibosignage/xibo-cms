@@ -170,9 +170,16 @@ class Theme {
 		$theme = Theme::GetInstance();
 
 		if (!isset($theme->vars[$key]))			
-			return null;
+			$return = null;
 		else
-			return $theme->vars[$key];
+			$return = $theme->vars[$key];
+
+		if ($key == 'form_meta') {
+			// Append a token to the end
+			$return = $return . Kit::Token();
+		}
+
+		return $return;
 	}
 
 	public static function SetPagename($pageName) {

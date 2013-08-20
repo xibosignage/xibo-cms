@@ -353,6 +353,10 @@ END;
 	 */
 	function Add() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
 
@@ -373,6 +377,10 @@ END;
 	 */
 	function Edit() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db =& $this->db;
 		
 		$groupid = Kit::GetParam('groupid', _POST, _INT);
@@ -394,6 +402,10 @@ END;
 	 */
 	function Delete() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db =& $this->db;		
 		$groupid = Kit::GetParam('groupid', _POST, _INT);
 		
@@ -573,6 +585,10 @@ END;
 	 */
 	function MenuItemSecurityAssign()
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db =& $this->db;
 		$groupid = Kit::GetParam('groupid', _POST, _INT);
 
