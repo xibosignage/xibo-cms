@@ -231,5 +231,11 @@ class shellcommand extends Module
     {
         return $this->Preview(0,0);
     }
+    
+    
+    public function IsValid() {
+        // Client dependant
+        return 2;
+    }
 }
 ?>

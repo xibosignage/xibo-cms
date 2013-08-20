@@ -285,6 +285,11 @@ class microblog extends Module
 
         return $this->response;
     }
+    
+    public function IsValid() {
+        // Error state
+        return 3;
+    }
 }
 
 ?>

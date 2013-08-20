@@ -301,5 +301,10 @@ class counter extends Module
 END;
         return $return;
     }
+    
+    public function IsValid() {
+        // Client dependant
+        return 2;
+    }
 }
 ?>
