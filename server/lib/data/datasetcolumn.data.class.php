@@ -70,7 +70,7 @@ class DataSetColumn extends Data
 
             for ($i=0; $i < count($list); $i++)
             {
-                $list_val = $list[$i];
+                $list_val = $db->escape_string($list[$i]);
                 $select .= "'$list_val',";
             }
 

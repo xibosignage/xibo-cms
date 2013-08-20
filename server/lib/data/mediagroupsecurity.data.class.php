@@ -172,7 +172,7 @@ class MediaGroupSecurity extends Data
         $SQL .= "   FROM lkmediagroup ";
         $SQL .= "  WHERE MediaID = '%s' ";
 
-        $SQL = sprintf($SQL, $newMediaId, $mediaId);
+        $SQL = sprintf($SQL, $newMediaId, $db->escape_string($mediaId));
 
         if (!$db->query($SQL))
         {

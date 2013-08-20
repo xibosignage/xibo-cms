@@ -47,7 +47,7 @@ class DataSet extends Data
         }
 
         // Ensure there are no layouts with the same name
-        $SQL = sprintf("SELECT DataSet FROM dataset WHERE DataSet = '%s' ", $dataSet);
+        $SQL = sprintf("SELECT DataSet FROM dataset WHERE DataSet = '%s' ", $db->escape_string($dataSet));
 
         if ($db->GetSingleRow($SQL))
         {
@@ -60,7 +60,7 @@ class DataSet extends Data
         $SQL = "INSERT INTO dataset (DataSet, Description, UserID) ";
         $SQL .= " VALUES ('%s', '%s', %d) ";
 
-        if (!$id = $db->insert_query(sprintf($SQL, $dataSet, $description, $userId)))
+        if (!$id = $db->insert_query(sprintf($SQL, $db->escape_string($dataSet), $db->escape_string($description), $userId)))
         {
             trigger_error($db->error());
             $this->SetError(25005, __('Could not add DataSet'));
@@ -97,7 +97,7 @@ class DataSet extends Data
         }
 
         // Ensure there are no layouts with the same name
-        $SQL = sprintf("SELECT DataSet FROM dataset WHERE DataSet = '%s' AND DataSetID <> %d ", $dataSet, $dataSetId);
+        $SQL = sprintf("SELECT DataSet FROM dataset WHERE DataSet = '%s' AND DataSetID <> %d ", $db->escape_string($dataSet), $dataSetId);
 
         if ($db->GetSingleRow($SQL))
         {
@@ -108,7 +108,7 @@ class DataSet extends Data
         // End Validation
 
         $SQL = "UPDATE dataset SET DataSet = '%s', Description = '%s' WHERE DataSetID = %d ";
-        $SQL = sprintf($SQL, $dataSet, $description, $dataSetId);
+        $SQL = sprintf($SQL, $db->escape_string($dataSet), $db->escape_string($description), $dataSetId);
 
         if (!$db->query($SQL))
         {

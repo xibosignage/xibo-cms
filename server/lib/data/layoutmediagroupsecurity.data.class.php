@@ -53,7 +53,7 @@ class LayoutMediaGroupSecurity extends Data
         $SQL .= "       ) ";
         $SQL .= "       VALUES ";
         $SQL .= "       ( ";
-        $SQL .= sprintf("  %d, '%s', '%s', %d, %d, %d, %d ", $layoutId, $regionId, $mediaId, $groupId, $view, $edit, $del);
+        $SQL .= sprintf("  %d, '%s', '%s', %d, %d, %d, %d ", $layoutId, $db->escape_string($regionId), $db->escape_string($mediaId), $groupId, $view, $edit, $del);
         $SQL .= "       )";
 
         if (!$db->query($SQL))
@@ -103,7 +103,7 @@ class LayoutMediaGroupSecurity extends Data
         $SQL  = "";
         $SQL .= "DELETE FROM ";
         $SQL .= "   lklayoutmediagroup ";
-        $SQL .= sprintf("  WHERE LayoutID = %d AND RegionID = '%s' AND MediaID = '%s' AND GroupID = %d ", $layoutId, $regionId, $mediaId, $groupId);
+        $SQL .= sprintf("  WHERE LayoutID = %d AND RegionID = '%s' AND MediaID = '%s' AND GroupID = %d ", $layoutId, $db->escape_string($regionId), $db->escape_string($mediaId), $groupId);
 
         if (!$db->query($SQL))
         {
@@ -133,7 +133,7 @@ class LayoutMediaGroupSecurity extends Data
         $SQL  = "";
         $SQL .= "DELETE FROM ";
         $SQL .= "   lklayoutmediagroup ";
-        $SQL .= sprintf("  WHERE LayoutID = %d AND RegionID = '%s' AND MediaID = '%s' ", $layoutId, $regionId, $mediaId);
+        $SQL .= sprintf("  WHERE LayoutID = %d AND RegionID = '%s' AND MediaID = '%s' ", $layoutId, $db->escape_string($regionId), $db->escape_string($mediaId));
 
         if (!$db->query($SQL))
         {
@@ -178,7 +178,7 @@ class LayoutMediaGroupSecurity extends Data
         $SQL .= "   FROM lklayoutmediagroup ";
         $SQL .= "  WHERE LayoutID = %d AND RegionID = '%s' AND MediaID = '%s' ";
 
-        $SQL = sprintf($SQL, $newMediaId, $layoutId, $regionId, $mediaId);
+        $SQL = sprintf($SQL, $newMediaId, $layoutId, $db->escape_string($regionId), $db->escape_string($mediaId));
 
         if (!$db->query($SQL))
         {
@@ -215,7 +215,7 @@ class LayoutMediaGroupSecurity extends Data
         $SQL .= "              Edit, ";
         $SQL .= "              Del ";
         $SQL .= "       ) ";
-        $SQL .= " SELECT '%s', RegionID, MediaID, GroupID, View, Edit, Del ";
+        $SQL .= " SELECT %d, RegionID, MediaID, GroupID, View, Edit, Del ";
         $SQL .= "   FROM lklayoutmediagroup ";
         $SQL .= "  WHERE LayoutID = %d ";
 
@@ -260,11 +260,11 @@ class LayoutMediaGroupSecurity extends Data
         $SQL .= "              Edit, ";
         $SQL .= "              Del ";
         $SQL .= "       ) ";
-        $SQL .= " SELECT '%s', RegionID, '%s', GroupID, View, Edit, Del ";
+        $SQL .= " SELECT %d, RegionID, '%s', GroupID, View, Edit, Del ";
         $SQL .= "   FROM lklayoutmediagroup ";
         $SQL .= "  WHERE LayoutID = %d AND MediaID = '%s' ";
 
-        $SQL = sprintf($SQL, $newLayoutId, $newMediaId, $layoutId, $oldMediaId);
+        $SQL = sprintf($SQL, $newLayoutId, $db->escape_string($newMediaId), $layoutId, $db->escape_string($oldMediaId));
 
         Debug::LogEntry($db, 'audit', $SQL);
 

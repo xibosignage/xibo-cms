@@ -68,7 +68,7 @@ class Layout extends Data
         }
 
         // Ensure there are no layouts with the same name
-        $SQL = sprintf("SELECT layout FROM layout WHERE layout = '%s' AND userID = %d ", $layout, $userid);
+        $SQL = sprintf("SELECT layout FROM layout WHERE layout = '%s' AND userID = %d ", $db->escape_string($layout), $userid);
 
         if ($db->GetSingleRow($SQL))
         {
@@ -441,7 +441,7 @@ END;
         $xml = addslashes($xml);
 
         // Write it back to the database
-        $SQL = sprintf("UPDATE layout SET xml = '%s' WHERE layoutID = %d ", $xml, $layoutid);
+        $SQL = sprintf("UPDATE layout SET xml = '%s' WHERE layoutID = %d ", $db->escape_string($xml), $layoutid);
 
 
         if (!$db->query($SQL))
@@ -765,7 +765,7 @@ END;
         }
         
         // Update the layout record with the new background
-        $SQL = sprintf("UPDATE layout SET background = '%s' WHERE layoutid = %d ", $bg_image, $layoutId);
+        $SQL = sprintf("UPDATE layout SET background = '%s' WHERE layoutid = %d ", $db->escape_string($bg_image), $layoutId);
         
         if (!$db->query($SQL)) 
         {

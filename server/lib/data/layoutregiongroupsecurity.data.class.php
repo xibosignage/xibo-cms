@@ -52,7 +52,7 @@ class LayoutRegionGroupSecurity extends Data
         $SQL .= "       ) ";
         $SQL .= "       VALUES ";
         $SQL .= "       ( ";
-        $SQL .= sprintf("  %d, '%s', '%s', %d, %d, %d ", $layoutId, $regionId, $groupId, $view, $edit, $del);
+        $SQL .= sprintf("  %d, '%s', %d, %d, %d, %d ", $layoutId, $db->escape_string($regionId), $groupId, $view, $edit, $del);
         $SQL .= "       )";
 
         if (!$db->query($SQL))
@@ -102,7 +102,7 @@ class LayoutRegionGroupSecurity extends Data
         $SQL  = "";
         $SQL .= "DELETE FROM ";
         $SQL .= "   lklayoutregiongroup ";
-        $SQL .= sprintf("  WHERE LayoutID = %d AND RegionID = '%s' AND GroupID = %d ", $layoutId, $regionId, $groupId);
+        $SQL .= sprintf("  WHERE LayoutID = %d AND RegionID = '%s' AND GroupID = %d ", $layoutId, $db->escape_string($regionId), $groupId);
 
         if (!$db->query($SQL))
         {
@@ -132,7 +132,7 @@ class LayoutRegionGroupSecurity extends Data
         $SQL  = "";
         $SQL .= "DELETE FROM ";
         $SQL .= "   lklayoutregiongroup ";
-        $SQL .= sprintf("  WHERE LayoutID = %d AND RegionID = '%s' ", $layoutId, $regionId);
+        $SQL .= sprintf("  WHERE LayoutID = %d AND RegionID = '%s' ", $layoutId, $db->escape_string($regionId));
 
         if (!$db->query($SQL))
         {
@@ -170,7 +170,7 @@ class LayoutRegionGroupSecurity extends Data
         $SQL .= "              Edit, ";
         $SQL .= "              Del ";
         $SQL .= "       ) ";
-        $SQL .= " SELECT '%s', RegionID, GroupID, View, Edit, Del ";
+        $SQL .= " SELECT %d, RegionID, GroupID, View, Edit, Del ";
         $SQL .= "   FROM lklayoutregiongroup ";
         $SQL .= "  WHERE LayoutID = %d ";
 

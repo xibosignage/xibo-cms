@@ -63,7 +63,7 @@ class Region extends Data
 		$xml = addslashes($xml);
 		
 		//Write it back to the database
-		$SQL = sprintf("UPDATE layout SET xml = '%s' WHERE layoutID = %d ", $xml, $layoutid);
+		$SQL = sprintf("UPDATE layout SET xml = '%s' WHERE layoutID = %d ", $db->escape_string($xml), $layoutid);
 		if (!$db->query($SQL)) 
 		{
 			trigger_error($db->error());

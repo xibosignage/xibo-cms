@@ -747,10 +747,10 @@ END;
         $SQL .= '  FROM lklayoutmediagroup ';
         $SQL .= '   INNER JOIN `group` ';
         $SQL .= '   ON `group`.GroupID = lklayoutmediagroup.GroupID ';
-        $SQL .= " WHERE lklayoutmediagroup.MediaID = '%s' AND lklayoutmediagroup.RegionID = '%s' AND lklayoutmediagroup.LayoutID = '%s' ";
+        $SQL .= " WHERE lklayoutmediagroup.MediaID = '%s' AND lklayoutmediagroup.RegionID = '%s' AND lklayoutmediagroup.LayoutID = %d ";
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
-        $SQL = sprintf($SQL, $mediaId, $regionId, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $db->escape_string($mediaId), $db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
         //Debug::LogEntry($this->db, 'audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
@@ -782,10 +782,10 @@ END;
         $SQL .= '  FROM lklayoutregiongroup ';
         $SQL .= '   INNER JOIN `group` ';
         $SQL .= '   ON `group`.GroupID = lklayoutregiongroup.GroupID ';
-        $SQL .= " WHERE lklayoutregiongroup.RegionID = '%s' AND lklayoutregiongroup.LayoutID = '%s' ";
+        $SQL .= " WHERE lklayoutregiongroup.RegionID = '%s' AND lklayoutregiongroup.LayoutID = %d ";
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
-        $SQL = sprintf($SQL, $regionId, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
         //Debug::LogEntry($this->db, 'audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
@@ -1209,6 +1209,7 @@ END;
         $SQL .= "       Description, ";
         $SQL .= "       UserID ";
         $SQL .= "  FROM dataset ";
+        $SQL .= " ORDER BY DataSet ";
 
         //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
@@ -1312,7 +1313,6 @@ END;
         }
         
         $SQL .= " WHERE 1 = 1 ";
-        $SQL .= " ORDER BY displaygroup.DisplayGroup ";
         
         if ($name != '')
         {
@@ -1332,6 +1332,8 @@ END;
         if ($isDisplaySpecific == 1)
             $SQL .= " AND displaygroup.IsDisplaySpecific = 1 ";
 
+		$SQL .= " ORDER BY displaygroup.DisplayGroup ";
+        
         Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))

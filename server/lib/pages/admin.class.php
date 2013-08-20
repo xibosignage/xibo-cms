@@ -316,7 +316,7 @@ END;
 			
 		// Drop downs
 		$SQL = "";
-		$SQL.= sprintf("SELECT settingid, setting, value, helptext, options FROM setting WHERE type = 'dropdown' AND cat='%s' AND userChange = 1", $cat);
+		$SQL.= sprintf("SELECT settingid, setting, value, helptext, options FROM setting WHERE type = 'dropdown' AND cat='%s' AND userChange = 1", $db->escape_string($cat));
 
 		if (!$results = $db->query($SQL))
 		{

@@ -66,7 +66,8 @@ class Template extends Data
         
         // Insert the template
         $SQL = "INSERT INTO template (template, tags, issystem, retired, description, createdDT, modifiedDT, userID, xml) ";
-        $SQL.= sprintf("  VALUES ('%s', '%s', 0, 0, '%s', '%s', '%s', %d, '%s') ", $template, $tags, $description, $currentdate, $currentdate, $userId, $xml);
+        $SQL.= sprintf("  VALUES ('%s', '%s', 0, 0, '%s', '%s', '%s', %d, '%s') ", $db->escape_string($template), $db->escape_string($tags), $db->escape_string($description), 
+            $currentdate, $currentdate, $userId, $db->escape_string($xml));
         
         if (!$db->query($SQL)) 
         {

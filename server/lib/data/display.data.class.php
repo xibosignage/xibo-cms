@@ -179,7 +179,7 @@ class Display extends Data
         $SQL .= "       GeoLocation = GeomFromText('POINT(%F %F)') ";
 		$SQL .= "WHERE displayid = %d ";
 		
-		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr, $latitude, $longitude, $displayID);
+		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $email_alert, $alert_timeout, $wakeOnLanEnabled, $db->escape_string($wakeOnLanTime), $db->escape_string($broadCastAddress), $db->escape_string($secureOn), $cidr, $latitude, $longitude, $displayID);
 		
 		Debug::LogEntry($db, 'audit', $SQL);
 		
@@ -265,7 +265,7 @@ class Display extends Data
 		
 		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'EditDisplayName');
 	
-		$SQL = sprintf("UPDATE display SET display = '%s' WHERE license = '%s' ", $display, $license);
+		$SQL = sprintf("UPDATE display SET display = '%s' WHERE license = '%s' ", $db->escape_string($display), $db->escape_string($license));
 				
 		if (!$db->query($SQL)) 
 		{
@@ -306,42 +306,42 @@ class Display extends Data
 			
 		// Set the last accessed flag on the display
 		$SQL  = "";
-                $SQL .= "UPDATE display SET lastaccessed = %d, loggedin = 1 ";
+        $SQL .= "UPDATE display SET lastaccessed = %d, loggedin = 1 ";
 
-                // We will want to update the client Address if it is given
-                if ($clientAddress != '')
-                    $SQL .= sprintf(" , ClientAddress = '%s' ", $db->escape_string($clientAddress));
+        // We will want to update the client Address if it is given
+        if ($clientAddress != '')
+            $SQL .= sprintf(" , ClientAddress = '%s' ", $db->escape_string($clientAddress));
 
-                // Media Inventory Settings (if appropriate)
-                if ($mediaInventoryComplete != 0)
-                    $SQL .= sprintf(" , MediaInventoryStatus = %d ", $mediaInventoryComplete);
+        // Media Inventory Settings (if appropriate)
+        if ($mediaInventoryComplete != 0)
+            $SQL .= sprintf(" , MediaInventoryStatus = %d ", $mediaInventoryComplete);
 
-                if ($mediaInventoryXml != '')
-                    $SQL .= sprintf(" , MediaInventoryXml = '%s' ", $mediaInventoryXml);
+        if ($mediaInventoryXml != '')
+            $SQL .= sprintf(" , MediaInventoryXml = '%s' ", $db->escape_string($mediaInventoryXml));
 
-                // Mac address storage
-                if ($macAddress != '')
-                {
-                    // Address changed.
-                    $currentAddress = $db->GetSingleValue(sprintf("SELECT MacAddress FROM display WHERE license = '%s'", $license), 'MacAddress', _STRING);
+        // Mac address storage
+        if ($macAddress != '')
+        {
+            // Address changed.
+            $currentAddress = $db->GetSingleValue(sprintf("SELECT MacAddress FROM display WHERE license = '%s'", $db->escape_string($license)), 'MacAddress', _STRING);
 
-                    if ($macAddress != $currentAddress)
-                    {
-                        $SQL .= sprintf(" , MacAddress = '%s', LastChanged = %d, NumberOfMacAddressChanges = NumberOfMacAddressChanges + 1 ", $macAddress, time());
-                    }
-                }
+            if ($macAddress != $currentAddress)
+            {
+                $SQL .= sprintf(" , MacAddress = '%s', LastChanged = %d, NumberOfMacAddressChanges = NumberOfMacAddressChanges + 1 ", $db->escape_string($macAddress), time());
+            }
+        }
 
-                // Restrict to the display license
-                $SQL .= " WHERE license = '%s'";
-                $SQL = sprintf($SQL, $time, $license);
+        // Restrict to the display license
+        $SQL .= " WHERE license = '%s'";
+        $SQL = sprintf($SQL, $time, $db->escape_string($license));
 
-                if (!$result = $db->query($SQL))
-		{
-                    trigger_error($db->error());
-                    $this->SetError(25002, __("Error updating this displays last accessed information."));
+        if (!$result = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            $this->SetError(25002, __("Error updating this displays last accessed information."));
 
-                    return false;
-		}
+            return false;
+        }
 		
 		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Touch');
 		

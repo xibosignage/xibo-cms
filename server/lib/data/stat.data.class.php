@@ -36,14 +36,16 @@ class Stat extends data
 			case 'Media':
 			case 'media':
 				$SQL .= " INSERT INTO stat (Type, statDate, scheduleID, displayID, layoutID, mediaID, start, end)";
-				$SQL .= sprintf("  VALUES ('%s', '%s', %d, %d, %d, '%s', '%s', '%s')", $type, $statDate, $scheduleID, $displayID, $layoutID, $db->escape_string($mediaID), $fromDT, $toDT);
+				$SQL .= sprintf("  VALUES ('%s', '%s', %d, %d, %d, '%s', '%s', '%s')", $db->escape_string($type), $db->escape_string($statDate), $scheduleID, 
+					$displayID, $layoutID, $db->escape_string($mediaID), $db->escape_string($fromDT), $db->escape_string($toDT));
 		
 				break;
 				
 			case 'Layout':
 			case 'layout':
 				$SQL .= " INSERT INTO stat (Type, statDate, scheduleID, displayID, layoutID, start, end)";
-				$SQL .= sprintf("  VALUES ('%s', '%s', %d, %d, %d, '%s', '%s')", $type, $statDate, $scheduleID, $displayID, $layoutID, $fromDT, $toDT);
+				$SQL .= sprintf("  VALUES ('%s', '%s', %d, %d, %d, '%s', '%s')", $db->escape_string($type), $db->escape_string($statDate), $scheduleID, 
+					$displayID, $layoutID, $db->escape_string($fromDT), $db->escape_string($toDT));
 
 				break;
 				
@@ -51,7 +53,8 @@ class Stat extends data
 			case 'event':
 			
 				$SQL .= " INSERT INTO stat (Type, statDate, scheduleID, displayID, layoutID, start, end, Tag)";
-				$SQL .= sprintf("  VALUES ('%s', '%s', %d, %d, %d, '%s', '%s', '%s')", $type, $statDate, $scheduleID, $displayID, 0, $fromDT, $toDT, $db->escape_string($tag));
+				$SQL .= sprintf("  VALUES ('%s', '%s', %d, %d, %d, '%s', '%s', '%s')", $db->escape_string($type), $db->escape_string($statDate), $scheduleID, 
+					$displayID, 0, $db->escape_string($fromDT), $db->escape_string($toDT), $db->escape_string($tag));
 			
 				break;
 				

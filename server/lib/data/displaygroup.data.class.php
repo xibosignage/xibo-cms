@@ -50,7 +50,7 @@ class DisplayGroup extends Data
 		if (strlen($description) > 254) 
 			return $this->SetError(__("Description can not be longer than 254 characters"));
 		
-		$check 	= sprintf("SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = '%s' AND IsDisplaySpecific = 0", $displayGroup);
+		$check 	= sprintf("SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = '%s' AND IsDisplaySpecific = 0", $db->escape_string($displayGroup));
 		$result = $db->query($check) or trigger_error($db->error());
 		
 		// Check for groups with the same name?
@@ -110,7 +110,7 @@ class DisplayGroup extends Data
 		if (strlen($description) > 254) 
 			return $this->SetError(__("Description can not be longer than 254 characters"));
 		
-		$check 	= sprintf("SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = '%s' AND IsDisplaySpecific = 0", $displayGroup);
+		$check 	= sprintf("SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = '%s' AND IsDisplaySpecific = 0", $db->escape_string($displayGroup));
 		$result = $db->query($check) or trigger_error($db->error());
 		
 		// Check for groups with the same name?

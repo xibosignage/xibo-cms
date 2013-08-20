@@ -28,7 +28,7 @@ class DataSetData extends Data
 
         $SQL  = "INSERT INTO datasetdata (DataSetColumnID, RowNumber, Value) ";
         $SQL .= "    VALUES (%d, %d, '%s') ";
-        $SQL = sprintf($SQL, $dataSetColumnId, $rowNumber, $value);
+        $SQL = sprintf($SQL, $dataSetColumnId, $rowNumber, $db->escape_string($value));
 
         if (!$id = $db->insert_query($SQL))
         {
@@ -48,7 +48,7 @@ class DataSetData extends Data
         $SQL  = "UPDATE datasetdata SET Value = '%s' ";
         $SQL .= " WHERE DataSetColumnID = %d AND RowNumber = %d";
 
-        $SQL = sprintf($SQL, $value, $dataSetColumnId, $rowNumber);
+        $SQL = sprintf($SQL, $db->escape_string($value), $dataSetColumnId, $rowNumber);
 
         if (!$db->query($SQL))
         {

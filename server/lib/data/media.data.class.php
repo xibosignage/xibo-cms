@@ -115,7 +115,7 @@ class Media extends Data
         $fileSize   = filesize($storedAs);
 
         // Update the media record to include this information
-        $SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $mediaId . '.' . $extension, $md5, $fileSize, $mediaId);
+        $SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $db->escape_string($mediaId . '.' . $extension), $db->escape_string($md5), $fileSize, $mediaId);
 
         if (!$db->query($SQL))
         {
@@ -481,7 +481,7 @@ class Media extends Data
         $fileSize   = filesize($storedAs);
 
         // Update the media record to include this information
-        $SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $newMediaId . '.' . $extension, $md5, $fileSize, $newMediaId);
+        $SQL = sprintf("UPDATE media SET storedAs = '%s', `MD5` = '%s', FileSize = %d WHERE mediaid = %d", $db->escape_string($newMediaId . '.' . $extension), $db->escape_string($md5), $fileSize, $newMediaId);
 
         if (!$db->query($SQL))
         {
