@@ -986,7 +986,8 @@ END;
         $SQL .= "        layout.tags, ";
         $SQL .= "        layout.userID, ";
         $SQL .= "        layout.xml, ";
-        $SQL .= "        campaign.CampaignID ";
+        $SQL .= "        campaign.CampaignID, ";
+        $SQL .= "        layout.status ";
         $SQL .= "   FROM layout ";
         $SQL .= "  INNER JOIN `lkcampaignlayout` ";
         $SQL .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
@@ -1020,7 +1021,7 @@ END;
 		
 		// Tags
 		if ($filterTags != '')
-			$SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $filterTags) . "%' ";
+			$SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $this->db->escape_string($filterTags)) . "%' ";
 		
         
         $SQL .= " ORDER BY Layout ";
@@ -1047,6 +1048,7 @@ END;
             $layoutItem['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
             $layoutItem['xml']  = Kit::ValidateParam($row['xml'], _HTMLSTRING);
             $layoutItem['campaignid'] = Kit::ValidateParam($row['CampaignID'], _INT);
+            $layoutItem['status'] = Kit::ValidateParam($row['status'], _INT);
 
             $auth = $this->CampaignAuth($layoutItem['campaignid'], true);
 

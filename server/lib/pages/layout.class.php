@@ -351,6 +351,26 @@ class layoutDAO
     		$row['description'] = $layout['description'];
     		$row['owner'] = $user->getNameFromID($layout['ownerid']);
     		$row['permissions'] = $this->GroupsForLayout($layout['layoutid']);
+
+    		switch ($layout['status']) {
+
+				case 1:
+					$row['status'] = '<span title="' . __('This Layout is ready to play') . '" class="icon-ok-circle"></span>';
+					break;
+
+				case 2:
+					$row['status'] = '<span title="' . __('There are items on this Layout that can only be assessed by the client') . '" class="icon-question-sign"></span>';
+					break;
+
+				case 3:
+					$row['status'] = '<span title="' . __('This Layout is invalid and should not be scheduled') . '" class="icon-remove-sign"></span>';
+					break;
+
+				default:
+					$row['status'] = '<span title="' . __('The Status of this Layout is not known') . '" class="icon-warning-sign"></span>';
+    		}
+
+    		
     		$row['layout_form_edit_url'] = 'index.php?p=layout&q=displayForm&layoutid=' . $layout['layoutid'];
 
     		// Add some buttons for this row
@@ -890,6 +910,40 @@ HTML;
 
         $response->SetGridResponse($output);
         $response->Respond();
+    }
+
+    public function LayoutStatus() {
+
+    	$db =& $this->db;
+    	$response = new ResponseManager();
+    	$layoutId = Kit::GetParam('layoutId', _GET, _INT);
+
+    	Kit::ClassLoader('Layout');
+    	$layout = new Layout($db);
+
+    	$status = "";
+
+    	switch ($layout->IsValid($layoutId)) {
+
+			case 1:
+				$status = '<span title="' . __('This Layout is ready to play') . '" class="icon-ok-circle"></span>';
+				break;
+
+			case 2:
+				$status = '<span title="' . __('There are items on this Layout that can only be assessed by the client') . '" class="icon-question-sign"></span>';
+				break;
+
+			case 3:
+				$status = '<span title="' . __('This Layout is invalid and should not be scheduled') . '" class="icon-remove-sign"></span>';
+				break;
+
+			default:
+				$status = '<span title="' . __('The Status of this Layout is not known') . '" class="icon-warning-sign"></span>';
+		}
+
+		$response->html = $status;
+		$response->success = true;
+		$response->Respond();
     }
 }
 ?>

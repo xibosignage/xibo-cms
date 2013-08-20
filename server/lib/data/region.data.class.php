@@ -139,6 +139,11 @@ class Region extends Data
                 $security->LinkEveryone($layoutid, $regionid, 1, 0, 0);
             }
 
+            // Update layout status
+            Kit::ClassLoader('Layout');
+            $layout = new Layout($db);
+            $layout->SetValid($layoutid, true);
+
             return $regionid;
 	}
 	
@@ -181,10 +186,15 @@ class Region extends Data
 		
 		//Remove the region node
 		$xml->firstChild->removeChild($regionNode);
-		
+
 		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
 			return false;
 		
+		// Update layout status
+        Kit::ClassLoader('Layout');
+        $layout = new Layout($db);
+        $layout->SetValid($layoutid, true);
+
 		return true;
 	}
 	
@@ -249,6 +259,11 @@ class Region extends Data
 		
 		if (!$this->SetLayoutXml($layoutid, $xml)) 
 			return false;
+
+		// Update layout status
+        Kit::ClassLoader('Layout');
+        $layout = new Layout($db);
+        $layout->SetValid($layoutid, true);
 		
 		return true;
 	}
@@ -352,6 +367,11 @@ class Region extends Data
 		if (!$this->SetLayoutXml($layoutid, $xml)) 
 			return false;
 		
+		// Update layout status
+        Kit::ClassLoader('Layout');
+        $layout = new Layout($db);
+        $layout->SetValid($layoutid, true);
+
 		return true;
 	}
 	
@@ -403,6 +423,11 @@ class Region extends Data
 		//Save it
 		if (!$this->SetLayoutXml($layoutid, $xml)) 
 			return false;
+
+		// Update layout status
+        Kit::ClassLoader('Layout');
+        $layout = new Layout($db);
+        $layout->SetValid($layoutid, true);
 		
 		//Its swapped
 		return true;
@@ -485,6 +510,11 @@ class Region extends Data
 		//Save it
 		if (!$this->SetLayoutXml($layoutid, $xml)) 
 			return false;
+
+		// Update layout status
+        Kit::ClassLoader('Layout');
+        $layout = new Layout($db);
+        $layout->SetValid($layoutid, true);
 		
 		//Its swapped
 		return true;
@@ -509,6 +539,11 @@ class Region extends Data
 		//Convert back to XML		
 		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
 			return false;
+
+		// Update layout status
+        Kit::ClassLoader('Layout');
+        $layout = new Layout($db);
+        $layout->SetValid($layoutid, true);
 		
 		//Its swapped
 		return true;
@@ -574,6 +609,11 @@ class Region extends Data
 		//Convert back to XML		
 		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
 			return false;
+
+		// Update layout status
+        Kit::ClassLoader('Layout');
+        $layout = new Layout($db);
+        $layout->SetValid($layoutid, true);
 		
 		//Its swapped
 		return true;
@@ -721,6 +761,11 @@ class Region extends Data
         // Save it
         if (!$this->SetLayoutXml($layoutId, $xml->saveXML()))
             return false;
+
+        // Update layout status
+        Kit::ClassLoader('Layout');
+        $layout = new Layout($db);
+        $layout->SetValid($layoutId, true);
 
         return true;
     }
@@ -889,6 +934,11 @@ class Region extends Data
             $security->Link($layoutId, $regionId, $mediaId, $user->getGroupFromID($user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
 
         }
+
+        // Update layout status
+        Kit::ClassLoader('Layout');
+        $layout = new Layout($db);
+        $layout->SetValid($layoutId, true);
 
         return true;
     }

@@ -415,7 +415,7 @@ function XiboFormRender(formUrl) {
  * Xibo Ping
  * @param {String} url
  */
-function XiboPing(url) {
+function XiboPing(url, updateDiv) {
 
     // Call with AJAX
     $.ajax({
@@ -426,7 +426,13 @@ function XiboPing(url) {
         success: function(response){
 
             // Was the Call successful
-            if (!response.success) {
+            if (response.success) {
+
+                if (updateDiv != undefined) {
+                    $(updateDiv).html(response.html);
+                }
+            }
+            else {
                 // Login Form needed?
                 if (response.login) {
                     

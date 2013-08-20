@@ -1817,5 +1817,10 @@ END;
         // Return false so that we can use this method as the return call for parent methods
 		return false;
 	}
+
+    public function IsValid() {
+        // Return 0 (unknown)
+        return 1;
+    }
 }
 ?>

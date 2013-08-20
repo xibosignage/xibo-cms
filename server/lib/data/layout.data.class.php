@@ -85,8 +85,8 @@ class Layout extends Data
         Debug::LogEntry($db, 'audit', 'Retrieved template xml', 'Layout', 'Add');
 
         $SQL = <<<END
-        INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, tags, xml)
-         VALUES ('%s', '%s', %d, '%s', '%s', '%s', '%s')
+        INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, tags, xml, status)
+         VALUES ('%s', '%s', %d, '%s', '%s', '%s', '%s', 3)
 END;
 
         $SQL = sprintf($SQL, $db->escape_string($layout),
@@ -215,9 +215,7 @@ END;
         $tagsArray = explode(' ', $tags);
         
         // Add the tags XML to the layout
-        $layoutObject = new Layout($db);
-        
-        if (!$layoutObject->EditTags($layoutId, $tagsArray))
+        if (!$this->EditTags($layoutId, $tagsArray))
             return false;
 
         // Maintain the name on the campaign
@@ -230,6 +228,9 @@ END;
         Kit::ClassLoader('display');
         $displayObject = new Display($db);
         $displayObject->NotifyDisplays($campaignId);
+
+        // Is this layout valid
+        $this->SetValid($layoutId);
 
         return true;
     }
@@ -322,7 +323,6 @@ END;
         $tagsXmlDoc = new DOMDocument('1.0');
         $tagsXmlDoc->loadXML($tagsXml);
 
-
         // Load the XML for this layout
         $xml = new DOMDocument("1.0");
         $xml->loadXML($this->xml);
@@ -359,10 +359,9 @@ END;
         // Convert back to XML
         $xml = $xml->saveXML();
 
-        Debug::LogEntry($db, 'audit', $xml, 'layout', 'EditTags');
-
         // Save it
-        if (!$this->SetLayoutXml($layoutID, $xml)) return false;
+        if (!$this->SetLayoutXml($layoutID, $xml)) 
+            return false;
 
         Debug::LogEntry($db, 'audit', 'OUT', 'Layout', 'EditTags');
 
@@ -490,8 +489,8 @@ END;
 
         // The Layout ID is the old layout
         $SQL  = "";
-        $SQL .= " INSERT INTO layout (layout, xml, userID, description, tags, templateID, retired, duration, background, createdDT, modifiedDT) ";
-        $SQL .= " SELECT '%s', xml, %d, description, tags, templateID, retired, duration, background, '%s', '%s' ";
+        $SQL .= " INSERT INTO layout (layout, xml, userID, description, tags, templateID, retired, duration, background, createdDT, modifiedDT, status) ";
+        $SQL .= " SELECT '%s', xml, %d, description, tags, templateID, retired, duration, background, '%s', '%s', status ";
         $SQL .= "  FROM layout ";
         $SQL .= " WHERE layoutid = %d";
         $SQL = sprintf($SQL, $db->escape_string($newLayoutName), $userId, $db->escape_string($currentdate), $db->escape_string($currentdate), $oldLayoutId);
@@ -774,6 +773,9 @@ END;
             return $this->SetError(__("Unable to update background information"));
         }
 
+        // Is this layout valid
+        $this->SetValid($layoutId);
+
         return true;
     }
 
@@ -809,6 +811,77 @@ END;
         }
 
         return $regions;
+    }
+
+    /**
+     * Check that the provided layout is valid
+     * @param [int] $layoutId [The Layout ID]
+     */
+    public function IsValid($layoutId, $reassess = false) {
+        $db =& $this->db;
+
+        Kit::ClassLoader('region');
+
+        // Dummy User Object
+        $user = new User($db);
+        $user->userid = 0;
+        $user->usertypeid = 1;
+
+        Debug::LogEntry($this->db, 'audit', '[IN]', 'layout', 'IsValid');
+
+        if (!$reassess) {
+            return $db->GetSingleValue(sprintf("SELECT status FROM `layout` WHERE LayoutID = %d", $layoutId), 'status', _INT);
+        }
+
+        Debug::LogEntry($this->db, 'audit', 'Reassesment Required', 'layout', 'IsValid');
+
+        // Take the layout, loop through its regions, check them and call IsValid on all media in them.
+        $regions = $this->GetRegionList($layoutId);
+
+        if (count($regions) <= 0)
+            return 3;
+
+        // Loop through each and build an array
+        foreach ($regions as $region) {
+            // Create a layout object
+            $regionObject = new Region($db);
+            $mediaNodes = $regionObject->GetMediaNodeList($layoutId, $region['regionid']);
+
+            if ($mediaNodes->length <= 0)
+                return 3;
+
+            foreach($mediaNodes as $mediaNode)
+            {
+                // Put this node vertically in the region timeline
+                $mediaId = $mediaNode->getAttribute('id');
+                $lkId = $mediaNode->getAttribute('lkid');
+                $mediaType = $mediaNode->getAttribute('type');
+                
+                // Create a media module to handle all the complex stuff
+                require_once("modules/$mediaType.module.php");
+                $tmpModule = new $mediaType($db, $user, $mediaId, $layoutId, $region['regionid'], $lkId);
+
+                $status = $tmpModule->IsValid();
+
+                if ($status != 1)
+                    return $status;
+            }
+        }
+
+        Debug::LogEntry($this->db, 'audit', 'Layout looks in good shape', 'layout', 'IsValid');
+
+        // If we get to the end, we are OK!
+        return 1;
+    }
+
+    /**
+     * Set the Validity of this Layout
+     * @param [int] $layoutId [The Layout Id]
+     */
+    public function SetValid($layoutId) {
+        $db =& $this->db;
+
+        $db->query(sprintf("UPDATE `layout` SET status = %d WHERE LayoutID = %d", $this->IsValid($layoutId, true), $layoutId));
     }
 }
 ?>
