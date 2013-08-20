@@ -559,5 +559,10 @@ END;
 
         return $table;
     }
+    
+    public function IsValid() {
+        // DataSet rendering will be valid
+        return 1;
+    }
 }
 ?>

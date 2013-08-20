@@ -397,5 +397,10 @@ class text extends Module
 
         return $output;
     }
+    
+    public function IsValid() {
+        // Text rendering will be valid
+        return 1;
+    }
 }
 ?>

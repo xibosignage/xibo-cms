@@ -695,5 +695,10 @@ class ticker extends Module
 
         return $items;
     }
+	
+    public function IsValid() {
+    	// Can't be sure because the client does the rendering
+    	return ($this->GetOption('xmds')) ? 1 : 2;
+    }
 }
 ?>

@@ -1819,8 +1819,8 @@ END;
 	}
 
     public function IsValid() {
-        // Return 0 (unknown)
-        return 1;
+        // Defaults: Stored media is valid, region specific is unknown
+        return ($this->regionSpecific) ? 0 : 1;
     }
 }
 ?>

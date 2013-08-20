@@ -274,6 +274,11 @@ function EmbedInit()
 		
 		return $this->response;	
 	}
+	
+    public function IsValid() {
+    	// Can't be sure because the client does the rendering
+    	return 2;
+    }
 }
 
 ?>

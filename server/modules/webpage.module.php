@@ -315,5 +315,10 @@ class webpage extends Module
 
         return '<iframe scrolling="no" src="' . $url . '" width="' . $widthPx . '" height="' . $heightPx . '" style="' . $iframeStyle . '"></iframe>';
     }
+
+    public function IsValid() {
+    	// Can't be sure because the client does the rendering
+    	return 2;
+    }
 }
 ?>
