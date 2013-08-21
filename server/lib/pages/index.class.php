@@ -42,6 +42,10 @@ class indexDAO
 		$password = Kit::GetParam('password', _POST, _PASSWORD);
 		
 		$referingpage = Kit::GetParam('referingPage', _GET, _WORD);
+
+		// Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
 		
 		if (isset($_REQUEST['ajax'])) 
 		{
@@ -69,14 +73,6 @@ class indexDAO
 				$response->Respond();
 			}
 			
-			exit;
-		}
-		
-		if (!CheckFormToken($_POST['token'])) 
-		{
-			setMessage(__("Form expired. Please refresh and try again."));
-			
-			header("Location:index.php");
 			exit;
 		}
 

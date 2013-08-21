@@ -38,7 +38,7 @@ class Step46 extends UpgradeStep
         }
 
         // Also run a script to tidy up orphaned media in the library
-        $library = Config::GetSetting($db, 'LIBRARY_LOCATION');
+        $library = Config::GetSetting('LIBRARY_LOCATION');
         $library = rtrim($library, '/') . '/';
 
         // Dump the files in the temp folder

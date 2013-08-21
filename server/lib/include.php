@@ -28,6 +28,7 @@ ini_set('display_errors', 0);
 ini_set('gd.jpeg_ignore_warning', 1);
 
 // Required Library Files
+require_once("lib/app/pdoconnect.class.php");
 require_once("lib/app/translationengine.class.php");
 require_once("lib/app/debug.class.php");
 require_once("lib/app/kit.class.php");
@@ -88,6 +89,14 @@ if (file_exists("upgrade.php"))
 
 // parse and init the settings.php
 Config::Load();
+
+// Test our DB connection through PDO
+try {
+    PDOConnect::init();
+}
+catch (PDOException $e) {
+    die('Database connection problem. ' . $e->getMessage());
+}
 
 // create a database class instance
 $db = new database();

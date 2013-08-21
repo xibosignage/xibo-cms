@@ -58,9 +58,24 @@ class Config
 	 * @param $db Object
 	 * @param $setting Object[optional]
 	 */
-	static function GetSetting(database $db, $setting = "") 
-	{		
-		$SQL = "";
+	static function GetSetting(database $db, $setting) 
+	{	
+		try {
+			$dbh = PDOConnect::init();
+			
+			$sth = $dbh->prepare('SELECT value FROM setting WHERE setting = :setting');
+			$sth->execute(array('setting' => $setting));
+
+			if (!$result = $sth->fetch())
+				return false;
+
+
+		}
+		catch (PDOException $e) {
+			trigger_error($e->getMessage());
+			return false;
+		}
+
 		$SQL.= sprintf("SELECT value FROM setting WHERE setting='%s'", $setting);
 		
 		if(!$results = $db->query($SQL, true))
