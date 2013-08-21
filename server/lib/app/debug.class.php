@@ -24,8 +24,6 @@ class Debug
 {
 	public function __construct()
 	{
-		global $db;
-		
 		if (!defined('AUDIT'))
 		{
 			// Get the setting from the DB and define it
@@ -41,8 +39,6 @@ class Debug
 	}
 	
 	public function ErrorHandler($errno, $errmsg, $filename, $linenum, $vars) {
-
-		global $db;
 
 		// timestamp for the error entry
 		$dt = date("Y-m-d H:i:s (T)");
@@ -109,8 +105,6 @@ class Debug
 	 */
 	function MailError($errmsg, $err) 
 	{
-		global $db;
-		
 		return true;
 
 		$to = 'info@xibo.org.uk';

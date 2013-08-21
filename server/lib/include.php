@@ -98,7 +98,7 @@ catch (PDOException $e) {
     die('Database connection problem. ' . $e->getMessage());
 }
 
-// create a database class instance
+// create a database class instance (legacy)
 $db = new database();
 
 if (!$db->connect_db($dbhost, $dbuser, $dbpass))
@@ -128,7 +128,7 @@ if(Config::GetSetting('SERVER_MODE') == 'Test')
     ini_set('display_errors', 1);
 
 // Debugging?
-if(Config::GetSetting("debug")=="On") 
+if(Config::GetSetting("debug") == "On") 
     error_reporting(E_ALL);
 
 // Setup the translations for gettext
@@ -138,7 +138,7 @@ TranslationEngine::InitLocale();
 require_once('modules/' . Config::GetSetting("userModule"));
 
 $user 		= new User($db);
-$session 	= new Session($db);
+$session 	= new Session();
 
 // Work out the location of this service
 $serviceLocation = Kit::GetXiboRoot();
@@ -147,7 +147,7 @@ $serviceLocation = Kit::GetXiboRoot();
 require_once('lib/oauth.inc.php');
 
 // Page variable set? Otherwise default to index
-$page 		= Kit::GetParam('p', _REQUEST, _WORD, 'index');
+$page = Kit::GetParam('p', _REQUEST, _WORD, 'index');
 
 // Assign the page name to the session
 $session->set_page(session_id(), $page);

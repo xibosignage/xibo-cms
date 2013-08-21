@@ -77,7 +77,7 @@ if (!isset($xibo_step) || $xibo_step == 0) {
 elseif ($xibo_step == 1) {
   # Check environment
   $db = new Database();
-  $cObj = new Config($db);
+  $cObj = new Config();
   ?>
   <p><?php echo __("First we need to check if your server meets Xibo's requirements."); ?></p>
   <div class="checks">

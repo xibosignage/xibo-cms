@@ -22,16 +22,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
  
 class Config 
 {
-	private $db;
 	private $extensions;
 	private $envTested;
 	private $envFault;
 	private $envWarning;
 	
-	public function __construct(database $db)
+	public function __construct()
 	{
-		$this->db			=& $db;
-		
 		// Populate an array of loaded extensions just in case we need it for something.
 		$this->extensions 	= get_loaded_extensions();
 		
@@ -122,8 +119,6 @@ class Config
 	 */
 	public function CheckEnvironment()
 	{
-		$db 	 =& $this->db;
-		
 		$output  = '';
 		$imgGood = '<img src="install/dot_green.gif"> ';
 		$imgBad  = '<img src="install/dot_red.gif"> ';
