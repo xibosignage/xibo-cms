@@ -68,7 +68,7 @@ class DataSet extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'Complete', 'DataSet', 'Add');
+        Debug::LogEntry('audit', 'Complete', 'DataSet', 'Add');
 
         return $id;
     }
@@ -182,8 +182,8 @@ class DataSet extends Data
 
         // Get the Latitude and Longitude ( might be used in a formula )
         if ($displayId == 0) {
-            $defaultLat = Config::GetSetting($db, 'DEFAULT_LAT');
-            $defaultLong = Config::GetSetting($db, 'DEFAULT_LONG');
+            $defaultLat = Config::GetSetting('DEFAULT_LAT');
+            $defaultLong = Config::GetSetting('DEFAULT_LONG');
             $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $defaultLat . " " . $defaultLong . ")')";
         }
         else
@@ -298,7 +298,7 @@ class DataSet extends Data
             $SQL .= sprintf(' LIMIT %d, %d ', $lowerLimit, $upperLimit);
         }
 
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
 
         if (!$rows = $db->GetArray($SQL, $associative))
             trigger_error($db->error());

@@ -139,7 +139,7 @@ class scheduleDAO
             $month = date('m', $date);
             $year = date('Y', $date);
 
-            Debug::LogEntry($db, 'audit', 'Month: ' . $month . ' Year: ' . $year . ' [' . $date . ']' . ' [Raw Date:' . Kit::GetParam('date', _POST, _STRING) . ']');
+            Debug::LogEntry('audit', 'Month: ' . $month . ' Year: ' . $year . ' [' . $date . ']' . ' [Raw Date:' . Kit::GetParam('date', _POST, _STRING) . ']');
 
             // Get the first day of the month
             $month_start    = mktime(0, 0, 0, $month, 1, $year);
@@ -266,7 +266,7 @@ class scheduleDAO
             // Load this months events into an array
             $monthEvents    = $this->GetEventsForMonth($month, $year, $displayGroupIDs);
 
-            Debug::LogEntry($db, 'audit', 'Number of weeks to render: ' . count($weeks), '', 'GenerateMonth');
+            Debug::LogEntry('audit', 'Number of weeks to render: ' . count($weeks), '', 'GenerateMonth');
 
             // Use the number of weeks in this month to work out how much space each week should get, and where to position it
             $monthHeightOffsetPerWeek = 100 / count($weeks);
@@ -335,7 +335,7 @@ class scheduleDAO
                     }
                     else if($outset > 0)
                     {
-                        Debug::LogEntry($db, 'audit', 'Outset is ' . $outset . ' and i is ' . $i, '', 'GenerateMonth');
+                        Debug::LogEntry('audit', 'Outset is ' . $outset . ' and i is ' . $i, '', 'GenerateMonth');
 
                         // Days that do not belond in this month
                         if(($i >= ($num_weeks * 7) - $outset))
@@ -602,7 +602,7 @@ HTML;
             //Ordering
             $SQL.= " ORDER BY schedule_detail.ToDT - schedule_detail.FromDT DESC, 2,3";
         
-            Debug::LogEntry($db, 'audit', $SQL);
+            Debug::LogEntry('audit', $SQL);
 
             if (!$result = $db->query($SQL))
             {
@@ -611,7 +611,7 @@ HTML;
             }
 
             // Number of events
-            Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
+            Debug::LogEntry('audit', 'Number of events: ' . $db->num_rows($result));
 
             while($row = $db->get_assoc_row($result))
             {
@@ -635,7 +635,7 @@ HTML;
                 $dayNo      = (int) date('d', $fromDT);
                 $layoutUri      = sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
 
-                Debug::LogEntry($db, 'audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
+                Debug::LogEntry('audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
 
                 // Create a new Event from these details
                 $event          = new Event();
@@ -674,7 +674,7 @@ HTML;
                     // If we are located by this point, that means we can fill in these blocks
                     if ($located)
                     {
-                        Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
+                        Debug::LogEntry('audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
 
                         for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
                         {
@@ -703,7 +703,7 @@ HTML;
                     // If we are located by this point, that means we can fill in these blocks
                     if ($located)
                     {
-                        Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
+                        Debug::LogEntry('audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
 
                         for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
                         {
@@ -732,7 +732,7 @@ HTML;
                     // If we are located by this point, that means we can fill in these blocks
                     if ($located)
                     {
-                        Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
+                        Debug::LogEntry('audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
 
                         for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
                         {
@@ -749,12 +749,12 @@ HTML;
                         
                     $events[3][$dayNo] = $events[3][$dayNo] + 1;
 
-                    Debug::LogEntry($db, 'audit', sprintf('No space for event with start day no %d and spanning days %d', $dayNo, $spanningDays));
+                    Debug::LogEntry('audit', sprintf('No space for event with start day no %d and spanning days %d', $dayNo, $spanningDays));
                 }
             }
 
-            Debug::LogEntry($db, 'audit', 'Built Month Array');
-            Debug::LogEntry($db, 'audit', var_export($events, true));
+            Debug::LogEntry('audit', 'Built Month Array');
+            Debug::LogEntry('audit', var_export($events, true));
 
             return $events;
     }
@@ -797,7 +797,7 @@ HTML;
         //Ordering
         $SQL.= " ORDER BY 2,3"; 
         
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
         
         if (!$result = $db->query($SQL))
         {
@@ -806,7 +806,7 @@ HTML;
         }
 
         // Number of events
-        Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
+        Debug::LogEntry('audit', 'Number of events: ' . $db->num_rows($result));
         
         // Define some colors:
         $color[1]   = 'CalEvent1';
@@ -900,7 +900,7 @@ HTML;
             //Ordering
             $SQL .= " ORDER BY schedule_detail.FromDT ASC, campaign.Campaign ASC";
 
-            Debug::LogEntry($db, 'audit', $SQL);
+            Debug::LogEntry('audit', $SQL);
 
             if (!$result = $db->query($SQL))
             {
@@ -909,7 +909,7 @@ HTML;
             }
 
             // Number of events
-            Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
+            Debug::LogEntry('audit', 'Number of events: ' . $db->num_rows($result));
 
             while($row = $db->get_assoc_row($result))
             {
@@ -933,7 +933,7 @@ HTML;
                 $layoutUri  = sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
                 $deleteUri  = sprintf('index.php?p=schedule&q=DeleteForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
 
-                Debug::LogEntry($db, 'audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
+                Debug::LogEntry('audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
 
                 // Create a new Event from these details
                 $event          = new Event();
@@ -952,8 +952,8 @@ HTML;
                 $events[]               = $event;
             }
 
-            Debug::LogEntry($db, 'audit', 'Built Day Array');
-            Debug::LogEntry($db, 'audit', var_export($events, true));
+            Debug::LogEntry('audit', 'Built Day Array');
+            Debug::LogEntry('audit', var_export($events, true));
 
             return $events;
         }
@@ -996,7 +996,7 @@ HTML;
         //Ordering
         $SQL.= " ORDER BY 2,3"; 
         
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
         
         if (!$result = $db->query($SQL))
         {
@@ -1005,7 +1005,7 @@ HTML;
         }
 
         // Number of events
-        Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
+        Debug::LogEntry('audit', 'Number of events: ' . $db->num_rows($result));
         
         // Define some colors:
         $color[1] = 'CalEvent1';
@@ -1070,7 +1070,7 @@ HTML;
         }
         $SQL .= " ORDER BY IsDisplaySpecific, displaygroup.DisplayGroup ";
         
-        Debug::LogEntry($db, 'audit', $SQL, 'Schedule', 'UnorderedListofDisplays');
+        Debug::LogEntry('audit', $SQL, 'Schedule', 'UnorderedListofDisplays');
 
 
         if(!($results = $db->query($SQL))) 
@@ -1489,7 +1489,7 @@ END;
         $SQL.= sprintf("   AND schedule.EventID = %d", $eventID);
         $SQL.= sprintf("   AND schedule_detail.schedule_detailID = %d", $eventDetailID);
         
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
 
         if (!$result = $db->query($SQL))
         {
@@ -1649,8 +1649,8 @@ END;
 
         $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
         
-        Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
-        Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
+        Debug::LogEntry('audit', 'From DT: ' . $fromDT);
+        Debug::LogEntry('audit', 'To DT: ' . $toDT);
         
         $fromDT = $datemanager->GetDateFromString($fromDT);
         $toDT = $datemanager->GetDateFromString($toDT);
@@ -1734,8 +1734,8 @@ END;
         if ($eventID == 0) 
             trigger_error('No event selected.', E_USER_ERROR);
         
-        Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
-        Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
+        Debug::LogEntry('audit', 'From DT: ' . $fromDT);
+        Debug::LogEntry('audit', 'To DT: ' . $toDT);
         
         $fromDT = $datemanager->GetDateFromString($fromDT);
         $toDT = $datemanager->GetDateFromString($toDT);

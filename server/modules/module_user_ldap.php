@@ -35,12 +35,12 @@ class user {
 	function user() {
 		global $db;
 		
-		$this->ldap_name = Config::GetSetting($db, "ldap_host");
-		$this->ldap_admin = Config::GetSetting($db, "ldap_admin");
-		$this->ldap_search = Config::GetSetting($db, "ldap_user_group");
-		$this->ldap_base = Config::GetSetting($db, "ldap_base");
-		$this->ldap_pass = Config::GetSetting($db, "ldap_pass");
-		$this->ldap_admin_group = Config::GetSetting($db, "ldap_admin_group");
+		$this->ldap_name = Config::GetSetting("ldap_host");
+		$this->ldap_admin = Config::GetSetting("ldap_admin");
+		$this->ldap_search = Config::GetSetting("ldap_user_group");
+		$this->ldap_base = Config::GetSetting("ldap_base");
+		$this->ldap_pass = Config::GetSetting("ldap_pass");
+		$this->ldap_admin_group = Config::GetSetting("ldap_admin_group");
 		
 		//bind to LDAP
 		$ds = @ldap_connect($this->ldap_name);
@@ -73,9 +73,9 @@ class user {
 		$ds =& $this->ds;
 		$dn =& $this->dn;
 		
-		$uidnumber 	 = Config::GetSetting($db, "ldap_uidnumber_field");
-		$uid		 = Config::GetSetting($db, "ldap_uid_field");
-		$ldap_password	 = Config::GetSetting($db, "ldap_userpassword_field");
+		$uidnumber 	 = Config::GetSetting("ldap_uidnumber_field");
+		$uid		 = Config::GetSetting("ldap_uid_field");
+		$ldap_password	 = Config::GetSetting("ldap_userpassword_field");
 
 		if ($username=="xibo_admin") { //xsm backup admin user
 			
@@ -194,8 +194,8 @@ class user {
 		$ds =& $this->ds;
 		$dn =& $this->dn;
 		
-		$uidnumber 	 = Config::GetSetting($db, "ldap_uidnumber_field");
-		$uid		 = Config::GetSetting($db, "ldap_uid_field");
+		$uidnumber 	 = Config::GetSetting("ldap_uidnumber_field");
+		$uid		 = Config::GetSetting("ldap_uid_field");
 		
 		//check credentials
 		$filter = "$uidnumber=$id";
@@ -216,8 +216,8 @@ class user {
 		$ds =& $this->ds;
 		$dn =& $this->dn;
 		
-		$uidnumber 	 = Config::GetSetting($db, "ldap_uidnumber_field");
-		$email		 = Config::GetSetting($db, "ldap_email_field");
+		$uidnumber 	 = Config::GetSetting("ldap_uidnumber_field");
+		$email		 = Config::GetSetting("ldap_email_field");
 		
 		//check credentials
 		$filter = "$uidnumber=$id";
@@ -240,7 +240,7 @@ class user {
 		$dn =& $this->dn;
 		
 		//check credentials
-		$admin_group = Config::GetSetting($db, "ldap_admin_group");
+		$admin_group = Config::GetSetting("ldap_admin_group");
 
 		$filter = "memberUID=$uidnumber";
 		$these_entries = array("memberuid");

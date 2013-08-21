@@ -41,7 +41,7 @@ class DisplayGroup extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Add');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Add');
 
 		// Validation
 		if ($displayGroup == '')
@@ -82,7 +82,7 @@ class DisplayGroup extends Data
 			return $this->SetError(25000, __('Could not add Display Group'));
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Add');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Add');
 		
 		return $displayGroupID;
 	}
@@ -98,7 +98,7 @@ class DisplayGroup extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Edit');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Edit');
 
 		// Validation
 		if ($displayGroupID == 0) 
@@ -135,7 +135,7 @@ class DisplayGroup extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Edit');		
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');		
 		
 		return true;
 	}
@@ -149,7 +149,7 @@ class DisplayGroup extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Delete');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Delete');
 
                 // Tidy up the schedule detail records.
                 $schedule = new Schedule($db);
@@ -159,7 +159,7 @@ class DisplayGroup extends Data
 
 		$SQL = sprintf("DELETE FROM displaygroup WHERE DisplayGroupID = %d", $displayGroupID);
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 
 		if (!$db->query($SQL)) 
 		{
@@ -168,7 +168,7 @@ class DisplayGroup extends Data
 			return false;
 		}
 
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Delete');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Delete');
 		
 		return true;
 	}
@@ -220,7 +220,7 @@ class DisplayGroup extends Data
             // Unlink all Display Groups from this Display
             $SQL = sprintf("DELETE FROM lkdisplaydg WHERE DisplayID = %d", $displayID);
 
-            Debug::LogEntry($db, 'audit', $SQL);
+            Debug::LogEntry('audit', $SQL);
 
             if (!$db->query($SQL)) 
             {
@@ -231,7 +231,7 @@ class DisplayGroup extends Data
             // Delete this display groups link to any groups
             $SQL = sprintf("DELETE FROM lkdisplaygroupgroup WHERE DisplayGroupId = %d", $displayGroupID);
 		
-            Debug::LogEntry($db, 'audit', $SQL);
+            Debug::LogEntry('audit', $SQL);
 
             if (!$db->query($SQL))
             {
@@ -257,7 +257,7 @@ class DisplayGroup extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Link');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Link');
 		
 		$SQL  = "";
 		$SQL .= "INSERT ";
@@ -279,7 +279,7 @@ class DisplayGroup extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Link');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Link');
 		
 		return true;
 	}
@@ -294,7 +294,7 @@ class DisplayGroup extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Unlink');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Unlink');
 		
 		$SQL  = "";
 		$SQL .= "DELETE FROM ";
@@ -309,7 +309,7 @@ class DisplayGroup extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Unlink');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Unlink');
 		
 		return true;
 	}
@@ -324,7 +324,7 @@ class DisplayGroup extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'EditDisplayGroup');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'EditDisplayGroup');
 		
 		// Get the DisplayGroupID for this DisplayID
 		$SQL  = "";
@@ -383,7 +383,7 @@ class DisplayGroup extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'EditDisplayGroup');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayGroup');
 		
 		return true;
 	}
@@ -398,7 +398,7 @@ class DisplayGroup extends Data
     {
         $db	=& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'Depricated method called.', 'DisplayGroup', 'SetDefaultLayout');
+        Debug::LogEntry('audit', 'Depricated method called.', 'DisplayGroup', 'SetDefaultLayout');
         return true;
     }
 }

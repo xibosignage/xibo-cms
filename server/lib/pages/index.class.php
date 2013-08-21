@@ -85,7 +85,7 @@ class indexDAO
 			$session->set_user(session_id(), $userid, 'user');
 		}
 		
-		Debug::LogEntry($db, 'audit', 'Login with refering page: ' . $referingpage);
+		Debug::LogEntry('audit', 'Login with refering page: ' . $referingpage);
 		
 		if ($referingpage == '') 
 		{
@@ -138,7 +138,7 @@ class indexDAO
 		}
 		
 		//send the email
-		$from = Config::GetSetting($db, "mail_from");
+		$from = Config::GetSetting("mail_from");
 		if ($from == "") 
 		{
 			setMessage("Email is not set up, please contact your IT manager");

@@ -51,7 +51,7 @@ class DataSetColumn extends Data
             return $this->SetError(25005, __('Could not add DataSet Column'));
         }
 
-        Debug::LogEntry($db, 'audit', 'Complete', 'DataSetColumn', 'Add');
+        Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Add');
 
         return $id;
     }
@@ -99,7 +99,7 @@ class DataSetColumn extends Data
             return $this->SetError(25005, __('Could not edit DataSet Column'));
         }
 
-        Debug::LogEntry($db, 'audit', 'Complete', 'DataSetColumn', 'Edit');
+        Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Edit');
 
         return true;
     }
@@ -119,7 +119,7 @@ class DataSetColumn extends Data
             return $this->SetError(25005, __('Could not delete DataSet Column'));
         }
 
-        Debug::LogEntry($db, 'audit', 'Complete', 'DataSetColumn', 'Delete');
+        Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Delete');
 
         return true;
     }
@@ -141,7 +141,7 @@ class DataSetColumn extends Data
             return $this->SetError(25005, __('Could not delete DataSet Columns'));
         }
 
-        Debug::LogEntry($db, 'audit', 'Complete', 'DataSetColumn', 'Delete');
+        Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Delete');
 
         return true;
     }

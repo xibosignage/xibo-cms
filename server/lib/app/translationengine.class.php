@@ -34,12 +34,12 @@ class TranslationEngine
 	public static function InitLocale(database $db)
 	{
             $localeDir	= 'locale';
-            $default    = Config::GetSetting($db, 'DEFAULT_LANGUAGE');
+            $default    = Config::GetSetting('DEFAULT_LANGUAGE');
             
             global $transEngine;
             global $stream;
 
-            //Debug::LogEntry($db, 'audit', 'IN', 'TranslationEngine', 'InitLocal');
+            //Debug::LogEntry('audit', 'IN', 'TranslationEngine', 'InitLocal');
 
             // Try to get the local firstly from _REQUEST (post then get)
             $lang = Kit::GetParam('lang', _REQUEST, _WORD, '');
@@ -50,7 +50,7 @@ class TranslationEngine
             if ($lang != '')
             {
                 // Set the language
-                Debug::LogEntry($db, 'audit', 'Set the Language from REQUEST [' . $lang . ']', 'TranslationEngine', 'InitLocal');
+                Debug::LogEntry('audit', 'Set the Language from REQUEST [' . $lang . ']', 'TranslationEngine', 'InitLocal');
 
                 // Is this language supported?
                 // if not just use the default (eb_GB).
@@ -68,7 +68,7 @@ class TranslationEngine
 
                 if ($langs != '')
                 {
-                    //Debug::LogEntry($db, 'audit', ' HTTP_ACCEPT_LANGUAGE [' . $langs . ']', 'TranslationEngine', 'InitLocal');
+                    //Debug::LogEntry('audit', ' HTTP_ACCEPT_LANGUAGE [' . $langs . ']', 'TranslationEngine', 'InitLocal');
                     $langs = explode(',', $langs);
 
                     foreach ($langs as $lang)
@@ -79,7 +79,7 @@ class TranslationEngine
 
                         if (in_array($lang . '.mo', $supportedLangs))
                         {
-                            //Debug::LogEntry($db, 'audit', 'Obtained the Language from HTTP_ACCEPT_LANGUAGE [' . $lang . ']', 'TranslationEngine', 'InitLocal');
+                            //Debug::LogEntry('audit', 'Obtained the Language from HTTP_ACCEPT_LANGUAGE [' . $lang . ']', 'TranslationEngine', 'InitLocal');
                             break;
                         }
 
@@ -94,7 +94,7 @@ class TranslationEngine
             }
 
             // We have the language
-            //Debug::LogEntry($db, 'audit', 'Creating new file streamer for '. $localeDir . '/' . $lang . '.mo', 'TranslationEngine', 'InitLocal');
+            //Debug::LogEntry('audit', 'Creating new file streamer for '. $localeDir . '/' . $lang . '.mo', 'TranslationEngine', 'InitLocal');
 
             if (!$stream = new CachedFileReader($localeDir . '/' . $lang . '.mo'))
             {
@@ -107,7 +107,7 @@ class TranslationEngine
             $transEngine    = new gettext_reader($stream);
 
             
-            //Debug::LogEntry($db, 'audit', 'OUT', 'TranslationEngine', 'InitLocal');
+            //Debug::LogEntry('audit', 'OUT', 'TranslationEngine', 'InitLocal');
 	}
 }
 

@@ -465,7 +465,7 @@
 		if ($usertype == 1) 
 		{
 			// if the usertype is 1 (admin) then we have access to all the pages
-			Debug::LogEntry($db, 'audit', 'Granted admin access to page: ' . $page);
+			Debug::LogEntry('audit', 'Granted admin access to page: ' . $page);
 			
 			return true;
 		}
@@ -473,7 +473,7 @@
 		// Allow access to the error page
 		if ($page == 'error')
 		{
-			Debug::LogEntry($db, 'audit', 'Granted access to page: ' . $page);
+			Debug::LogEntry('audit', 'Granted access to page: ' . $page);
 			
 			return true;
 		}
@@ -484,7 +484,7 @@
                 $SQL .= "       ON     lkpagegroup.groupID       = lkusergroup.GroupID ";
 		$SQL .= sprintf(" WHERE lkusergroup.UserID = %d AND pages.name = '%s' ", $userid, $db->escape_string($page));
 	
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 	
 		if (!$results = $db->query($SQL)) 
 		{
@@ -514,7 +514,7 @@
 		$userid		=& $this->userid;
 		$usertypeid     =& $this->usertypeid;
 		
-		Debug::LogEntry($db, 'audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
+		Debug::LogEntry('audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
 		
 		// Get some information about this menu
 		// I.e. get the Menu Items this user has access to
@@ -546,7 +546,7 @@
 		}
 		$SQL .= " ORDER BY menuitem.Sequence";
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 		
 		if (!$result = $db->query($SQL))
 		{
@@ -594,7 +594,7 @@
 		
                 $SQL .= "  ORDER BY Name ";
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 		
 		if (!$result = $db->query($SQL))
 		{
@@ -712,7 +712,7 @@ END;
         $SQL .= 'GROUP BY media.UserID ';
 
         $SQL = sprintf($SQL, $mediaId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -751,7 +751,7 @@ END;
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
         $SQL = sprintf($SQL, $db->escape_string($mediaId), $db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -786,7 +786,7 @@ END;
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
         $SQL = sprintf($SQL, $db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -848,7 +848,7 @@ END;
 		
 		$SQL .= " ORDER BY media.name ";
 
-        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of media for %s with SQL: %s', $this->userName, $SQL));
+        Debug::LogEntry('audit', sprintf('Retreiving list of media for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -960,7 +960,7 @@ END;
         $SQL .= 'GROUP BY template.UserID ';
 
         $SQL = sprintf($SQL, $templateId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -1026,7 +1026,7 @@ END;
         
         $SQL .= " ORDER BY Layout ";
 
-        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        Debug::LogEntry('audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1110,7 +1110,7 @@ END;
 			$SQL .= sprintf(" AND template.issystem = %d ", $isSystem);
 		}
 
-        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of templates for %s with SQL: %s', $this->userName, $SQL));
+        Debug::LogEntry('audit', sprintf('Retreiving list of templates for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1184,7 +1184,7 @@ END;
         $SQL .= 'GROUP BY dataset.UserID ';
 
         $SQL = sprintf($SQL, $dataSetId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -1211,7 +1211,7 @@ END;
         $SQL .= "  FROM dataset ";
         $SQL .= " ORDER BY DataSet ";
 
-        //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        //Debug::LogEntry('audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1276,7 +1276,7 @@ END;
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
         $SQL = sprintf($SQL, $displayGroupId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -1334,7 +1334,7 @@ END;
 
 		$SQL .= " ORDER BY displaygroup.DisplayGroup ";
         
-        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
+        Debug::LogEntry('audit', sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1475,7 +1475,7 @@ END;
         $SQL .= 'GROUP BY campaign.UserID ';
 
         $SQL = sprintf($SQL, $campaignId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;

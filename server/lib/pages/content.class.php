@@ -288,7 +288,7 @@ class contentDAO
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'Uploading a file', 'Library', 'FileUpload');
+        Debug::LogEntry('audit', 'Uploading a file', 'Library', 'FileUpload');
 
         Kit::ClassLoader('file');
         $fileObject = new File($db);
@@ -297,10 +297,10 @@ class contentDAO
         // Check we got a valid file
         if (isset($_FILES['media_file']) && is_uploaded_file($_FILES['media_file']['tmp_name']) && $_FILES['media_file']['error'] == 0)
         {
-            Debug::LogEntry($db, 'audit', 'Valid Upload', 'Library', 'FileUpload');
+            Debug::LogEntry('audit', 'Valid Upload', 'Library', 'FileUpload');
 
             // Directory location
-            $libraryFolder  = Config::GetSetting($db, 'LIBRARY_LOCATION');
+            $libraryFolder  = Config::GetSetting('LIBRARY_LOCATION');
             $error          = 0;
             $fileName       = Kit::ValidateParam($_FILES['media_file']['name'], _FILENAME);
             $fileId         = $fileObject->GenerateFileId($this->user->userid);
@@ -310,11 +310,11 @@ class contentDAO
             $fileObject->EnsureLibraryExists();
 
             // Save the FILE
-            Debug::LogEntry($db, 'audit', 'Saving the file to: ' . $fileLocation, 'FileUpload');
+            Debug::LogEntry('audit', 'Saving the file to: ' . $fileLocation, 'FileUpload');
 
             move_uploaded_file($_FILES['media_file']['tmp_name'], $fileLocation);
 
-            Debug::LogEntry($db, 'audit', 'Upload Success', 'FileUpload');
+            Debug::LogEntry('audit', 'Upload Success', 'FileUpload');
         }
         else
         {
@@ -322,7 +322,7 @@ class contentDAO
             $fileName   = 'Error';
             $fileId     = 0;
             
-            Debug::LogEntry($db, 'audit', 'Error uploading the file. Error Number: ' . $error , 'FileUpload');
+            Debug::LogEntry('audit', 'Error uploading the file. Error Number: ' . $error , 'FileUpload');
         }
 
         $complete_page = <<<HTML
@@ -349,8 +349,8 @@ HTML;
 
         echo $complete_page;
 
-        Debug::LogEntry($db, "audit", $complete_page, "FileUpload");
-        Debug::LogEntry($db, "audit", "[OUT]", "FileUpload");
+        Debug::LogEntry("audit", $complete_page, "FileUpload");
+        Debug::LogEntry("audit", "[OUT]", "FileUpload");
         exit;
     }
 
@@ -403,7 +403,7 @@ HTML;
         Kit::ClassLoader('file');
         $fileObject = new File($db);
         
-        $libraryFolder = Config::GetSetting($db, 'LIBRARY_LOCATION');
+        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
         $fileObject->EnsureLibraryExists();

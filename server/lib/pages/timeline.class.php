@@ -231,7 +231,7 @@ class timelineDAO {
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        Debug::LogEntry($db, 'audit', sprintf('Layoutid [%d] Regionid [%s]', $layoutid, $regionid), 'layout', 'ManualRegionPosition');
+        Debug::LogEntry('audit', sprintf('Layoutid [%d] Regionid [%s]', $layoutid, $regionid), 'layout', 'ManualRegionPosition');
 
         // Remove the "px" from them
         $width  = str_replace('px', '', $width);
@@ -649,7 +649,7 @@ END;
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Library location
-        $libraryLocation = Config::GetSetting($db, 'LIBRARY_LOCATION');
+        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
 
         // Present a canvas with 2 columns, left column for the media icons
         $buttons = array();
@@ -700,7 +700,7 @@ END;
         $response->html .= '        <ul id="' . $timeListMediaListId . '" class="timelineSortableListOfMedia">';
 
         // How are we going to colour the bars, my media type or my permissions
-        $timeBarColouring = Config::GetSetting($db, 'REGION_OPTIONS_COLOURING');
+        $timeBarColouring = Config::GetSetting('REGION_OPTIONS_COLOURING');
 
         // Create a layout object
         $region = new Region($db);
@@ -721,7 +721,7 @@ END;
             if (!$auth->view)
                 continue;
 
-            Debug::LogEntry($db, 'audit', sprintf('Permission Granted to View MediaID: %s', $mediaId), 'layout', 'TimeLine');
+            Debug::LogEntry('audit', sprintf('Permission Granted to View MediaID: %s', $mediaId), 'layout', 'TimeLine');
 
             // Create a media module to handle all the complex stuff
             require_once("modules/$mediaType.module.php");

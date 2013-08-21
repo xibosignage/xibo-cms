@@ -85,7 +85,7 @@ if (!$db->select_db($dbname)) trigger_error($db->error(), E_USER_ERROR);
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));
 
-date_default_timezone_set(Config::GetSetting($db, 'defaultTimezone'));
+date_default_timezone_set(Config::GetSetting('defaultTimezone'));
 
 // Work out the location of this service
 $serviceLocation = Kit::GetXiboRoot();

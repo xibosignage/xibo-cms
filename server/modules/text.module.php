@@ -114,7 +114,7 @@ class text extends Module
         $rawXml = new DOMDocument();
         $rawXml->loadXML($this->GetRaw());
 
-        Debug::LogEntry($db, 'audit', 'Raw XML returned: ' . $this->GetRaw());
+        Debug::LogEntry('audit', 'Raw XML returned: ' . $this->GetRaw());
 
         // Get the Text Node out of this
         $textNodes = $rawXml->getElementsByTagName('text');
@@ -247,7 +247,7 @@ class text extends Module
         if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
 
-            Debug::LogEntry($db, 'audit', 'Text received: ' . $text);
+            Debug::LogEntry('audit', 'Text received: ' . $text);
 
             $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 

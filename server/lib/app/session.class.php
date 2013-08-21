@@ -110,13 +110,13 @@ class Session
 				
 				if (!$db->query(sprintf("UPDATE session SET session_expiration = $newExp, isExpired = 0 WHERE session_id = '%s' ", $db->escape_string($key))))
 				{
-					Debug::LogEntry($db, "error", $db->error());
+					Debug::LogEntry("error", $db->error());
 				}
 			}
 			else
 			{
 				// Its set - but its wrong - not good
-				Debug::LogEntry($db, "error", "Incorrect SecurityToken from " . $remoteAddr);
+				Debug::LogEntry("error", "Incorrect SecurityToken from " . $remoteAddr);
 				
 				$this->isExpired = 1;
 			}
@@ -177,7 +177,7 @@ class Session
 		
 		if(!$db->query($SQL)) 
 		{
-			Debug::LogEntry($db, "error", $db->error());
+			Debug::LogEntry("error", $db->error());
 			return(false);
 		}
 		
@@ -266,7 +266,7 @@ class Session
 		
 		if (!$db->query($SQL))
 		{
-			Debug::LogEntry($db, "error", $db->error());
+			Debug::LogEntry("error", $db->error());
 		}
 	}
 	
@@ -278,7 +278,7 @@ class Session
 		
 		if (!$db->query($SQL))
 		{
-			Debug::LogEntry($db, "error", $db->error());
+			Debug::LogEntry("error", $db->error());
 		}
 	}
 	

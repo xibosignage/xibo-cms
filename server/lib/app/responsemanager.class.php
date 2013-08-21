@@ -277,7 +277,7 @@ class ResponseManager
 
             // Log the response if we are auditing
             //global $db;
-            //Debug::LogEntry($db, 'audit', json_encode($response), 'Response Manager', 'Respond');
+            //Debug::LogEntry('audit', json_encode($response), 'Response Manager', 'Respond');
 			
 			echo json_encode($response);
 			

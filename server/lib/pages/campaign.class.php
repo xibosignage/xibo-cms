@@ -557,7 +557,7 @@ class campaignDAO
             trigger_error(__('Error getting Layouts'), E_USER_ERROR);
         }
 
-        Debug::LogEntry($db, 'audit', count($layoutsAssigned) . ' layouts assigned already');
+        Debug::LogEntry('audit', count($layoutsAssigned) . ' layouts assigned already');
 
         // Set the layouts assigned
         Theme::Set('layouts_assigned', $layoutsAssigned);

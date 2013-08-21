@@ -109,7 +109,7 @@ function EmbedInit()
 		$rawXml = new DOMDocument();
 		$rawXml->loadXML($this->GetRaw());
 		
-		Debug::LogEntry($db, 'audit', 'Raw XML returned: ' . $this->GetRaw());
+		Debug::LogEntry('audit', 'Raw XML returned: ' . $this->GetRaw());
 		
 		// Get the HTML Node out of this
 		$textNodes 	= $rawXml->getElementsByTagName('embedHtml');

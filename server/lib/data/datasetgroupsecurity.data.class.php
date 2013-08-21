@@ -37,7 +37,7 @@ class DataSetGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'DataSetGroupSecurity', 'Link');
+        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'Link');
 
         $SQL  = "";
         $SQL .= "INSERT ";
@@ -62,7 +62,7 @@ class DataSetGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'DataSetGroupSecurity', 'Link');
+        Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'Link');
 
         return true;
     }
@@ -79,7 +79,7 @@ class DataSetGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'DataSetGroupSecurity', 'LinkEveryone');
+        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'LinkEveryone');
 
         $groupId = $db->GetSingleValue("SELECT GroupID FROM `group` WHERE IsEveryone = 1", 'GroupID', _INT);
 
@@ -96,7 +96,7 @@ class DataSetGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -111,7 +111,7 @@ class DataSetGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
 
         return true;
     }
@@ -126,7 +126,7 @@ class DataSetGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -141,7 +141,7 @@ class DataSetGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
 
         return true;
     }

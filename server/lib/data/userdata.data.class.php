@@ -79,7 +79,7 @@ class Userdata extends Data
 
         $SQL = sprintf("UPDATE `user` SET UserPassword = '%s', CSPRNG = 1 WHERE UserID = %d", $hash, $userId);
 
-        Debug::LogEntry($this->db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
 
         // Run the update
         if (!$this->db->query($SQL))
@@ -98,11 +98,11 @@ class Userdata extends Data
     public function TestPasswordAgainstPolicy($password)
     {
         // Check password complexity
-        $policy = Config::GetSetting($this->db, 'USER_PASSWORD_POLICY');
+        $policy = Config::GetSetting('USER_PASSWORD_POLICY');
 
         if ($policy != '')
         {
-            $policyError = Config::GetSetting($this->db, 'USER_PASSWORD_ERROR');
+            $policyError = Config::GetSetting('USER_PASSWORD_ERROR');
             $policyError = ($policyError == '') ? __('Your password does not meet the required complexity') : $policyError;
 
             if(!preg_match($policy, $password, $matches))

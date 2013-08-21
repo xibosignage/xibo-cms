@@ -46,7 +46,7 @@ class Layout extends Data
         $db          =& $this->db;
         $currentdate = date("Y-m-d H:i:s");
 
-        Debug::LogEntry($db, 'audit', 'Adding new Layout', 'Layout', 'Add');
+        Debug::LogEntry('audit', 'Adding new Layout', 'Layout', 'Add');
 
         // Validation
         if (strlen($layout) > 50 || strlen($layout) < 1)
@@ -77,12 +77,12 @@ class Layout extends Data
         }
         // End Validation
 
-        Debug::LogEntry($db, 'audit', 'Validation Compelte', 'Layout', 'Add');
+        Debug::LogEntry('audit', 'Validation Compelte', 'Layout', 'Add');
 
         // Get the XML for this template.
         $templateXml = $this->GetTemplateXml($templateId, $userid);
 
-        Debug::LogEntry($db, 'audit', 'Retrieved template xml', 'Layout', 'Add');
+        Debug::LogEntry('audit', 'Retrieved template xml', 'Layout', 'Add');
 
         $SQL = <<<END
         INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, tags, xml, status)
@@ -104,7 +104,7 @@ END;
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'Updating Tags', 'Layout', 'Add');
+        Debug::LogEntry('audit', 'Updating Tags', 'Layout', 'Add');
 
         // Are there any tags?
         if ($tags != '')
@@ -127,14 +127,14 @@ END;
         $campaign->Link($campaignId, $id, 0);
 
         // What permissions should we create this with?
-        if (Config::GetSetting($db, 'LAYOUT_DEFAULT') == 'public')
+        if (Config::GetSetting('LAYOUT_DEFAULT') == 'public')
         {
             Kit::ClassLoader('campaignsecurity');
             $security = new CampaignSecurity($db);
             $security->LinkEveryone($campaignId, 1, 0, 0);
         }
 
-        Debug::LogEntry($db, 'audit', 'Complete', 'Layout', 'Add');
+        Debug::LogEntry('audit', 'Complete', 'Layout', 'Add');
 
         return $id;
     }
@@ -202,7 +202,7 @@ END;
                         $db->escape_string($currentdate), $retired, 
                         $db->escape_string($tags), $layoutId);
         
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
 
         if(!$db->query($SQL)) 
         {
@@ -252,7 +252,7 @@ END;
             $layoutNode->setAttribute("width", 800);
             $layoutNode->setAttribute("height", 450);
             $layoutNode->setAttribute("bgcolor", "#000000");
-            $layoutNode->setAttribute("schemaVersion", Config::Version($db, 'XlfVersion'));
+            $layoutNode->setAttribute("schemaVersion", Config::Version('XlfVersion'));
 
             $xmlDoc->appendChild($layoutNode);
 
@@ -289,7 +289,7 @@ END;
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'Layout', 'EditTags');
+        Debug::LogEntry('audit', 'IN', 'Layout', 'EditTags');
 
         // Make sure we get an array
         if(!is_array($tags))
@@ -301,11 +301,11 @@ END;
         // Set the XML
         if (!$this->SetXml($layoutID))
         {
-            Debug::LogEntry($db, 'audit', 'Failed to Set the layout Xml.', 'Layout', 'EditTags');
+            Debug::LogEntry('audit', 'Failed to Set the layout Xml.', 'Layout', 'EditTags');
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'Got the XML from the DB. Now creating the tags.', 'Layout', 'EditTags');
+        Debug::LogEntry('audit', 'Got the XML from the DB. Now creating the tags.', 'Layout', 'EditTags');
 
         // Create the tags XML
         $tagsXml = '<tags>';
@@ -317,7 +317,7 @@ END;
 
         $tagsXml .= '</tags>';
 
-        Debug::LogEntry($db, 'audit', 'Tags XML is:' . $tagsXml, 'Layout', 'EditTags');
+        Debug::LogEntry('audit', 'Tags XML is:' . $tagsXml, 'Layout', 'EditTags');
 
         // Load the tags XML into a document
         $tagsXmlDoc = new DOMDocument('1.0');
@@ -363,7 +363,7 @@ END;
         if (!$this->SetLayoutXml($layoutID, $xml)) 
             return false;
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'Layout', 'EditTags');
+        Debug::LogEntry('audit', 'OUT', 'Layout', 'EditTags');
 
         return true;
     }
@@ -388,12 +388,12 @@ END;
 
         $this->DomXml = new DOMDocument("1.0");
 
-        Debug::LogEntry($this->db, 'audit', 'Loading LayoutXml into the DOM', 'layout', 'SetDomXML');
+        Debug::LogEntry('audit', 'Loading LayoutXml into the DOM', 'layout', 'SetDomXML');
 
         if (!$this->DomXml->loadXML($this->xml))
             return false;
 
-        Debug::LogEntry($this->db, 'audit', 'Loaded LayoutXml into the DOM', 'layout', 'SetDomXML');
+        Debug::LogEntry('audit', 'Loaded LayoutXml into the DOM', 'layout', 'SetDomXML');
 
         return true;
     }
@@ -407,7 +407,7 @@ END;
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'Layout', 'GetLayoutXml');
+        Debug::LogEntry('audit', 'IN', 'Layout', 'GetLayoutXml');
 
         //Get the Xml for this Layout from the DB
         $SQL = sprintf("SELECT xml FROM layout WHERE layoutID = %d ", $layoutid);
@@ -421,7 +421,7 @@ END;
 
         $row = $db->get_row($results) ;
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'Layout', 'GetLayoutXml');
+        Debug::LogEntry('audit', 'OUT', 'Layout', 'GetLayoutXml');
 
         return $row[0];
     }
@@ -436,7 +436,7 @@ END;
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'Layout', 'SetLayoutXml');
+        Debug::LogEntry('audit', 'IN', 'Layout', 'SetLayoutXml');
 
         $xml = addslashes($xml);
 
@@ -451,7 +451,7 @@ END;
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'Layout', 'SetLayoutXml');
+        Debug::LogEntry('audit', 'OUT', 'Layout', 'SetLayoutXml');
 
         return true;
     }
@@ -495,7 +495,7 @@ END;
         $SQL .= " WHERE layoutid = %d";
         $SQL = sprintf($SQL, $db->escape_string($newLayoutName), $userId, $db->escape_string($currentdate), $db->escape_string($currentdate), $oldLayoutId);
 
-        Debug::LogEntry($db, 'audit', $SQL, 'layout', 'Copy');
+        Debug::LogEntry('audit', $SQL, 'layout', 'Copy');
 
         if (!$newLayoutId = $db->insert_query($SQL))
         {
@@ -518,7 +518,7 @@ END;
             return false;
         }
 
-        Debug::LogEntry($this->db, 'audit', 'Loaded XML into the DOM.', 'layout', 'Copy');
+        Debug::LogEntry('audit', 'Loaded XML into the DOM.', 'layout', 'Copy');
         
         // Get all media nodes
         $xpath = new DOMXpath($this->DomXml);
@@ -526,7 +526,7 @@ END;
         // Create an XPath to get all media nodes
         $mediaNodes = $xpath->query("//media");
 
-        Debug::LogEntry($this->db, 'audit', 'About to loop through media nodes', 'layout', 'Copy');
+        Debug::LogEntry('audit', 'About to loop through media nodes', 'layout', 'Copy');
         
         // On each media node, take the existing LKID and MediaID and create a new LK record in the database
         foreach ($mediaNodes as $mediaNode)
@@ -537,7 +537,7 @@ END;
             // Store the old media id
             $oldMediaId = $mediaId;
 
-            Debug::LogEntry($this->db, 'audit', sprintf('Media %s node found with id %d', $type, $mediaId), 'layout', 'Copy');
+            Debug::LogEntry('audit', sprintf('Media %s node found with id %d', $type, $mediaId), 'layout', 'Copy');
 
             // If this is a non region specific type, then move on
             if ($this->IsRegionSpecific($type))
@@ -603,7 +603,7 @@ END;
             $mediaNode->setAttribute('lkid', $lkId);
         }
 
-        Debug::LogEntry($this->db, 'audit', 'Finished looping through media nodes', 'layout', 'Copy');
+        Debug::LogEntry('audit', 'Finished looping through media nodes', 'layout', 'Copy');
 
         // Set the XML
         $this->SetLayoutXml($newLayoutId, $this->DomXml->saveXML());
@@ -702,7 +702,7 @@ END;
     {
         $sql = sprintf("SELECT RegionSpecific FROM module WHERE Module = '%s'", $this->db->escape_string($type));
 
-        Debug::LogEntry($this->db, 'audit', sprintf('Checking to see if %s is RegionSpecific with SQL %s', $type, $sql), 'layout', 'Copy');
+        Debug::LogEntry('audit', sprintf('Checking to see if %s is RegionSpecific with SQL %s', $type, $sql), 'layout', 'Copy');
 
         return ($this->db->GetSingleValue($sql, 'RegionSpecific', _INT) == 1) ? true : false;
     }
@@ -788,7 +788,7 @@ END;
         if (!$this->SetDomXml($layoutId))
             return false;
 
-        Debug::LogEntry($this->db, 'audit', '[IN] Loaded XML into DOM', 'layout', 'GetRegionList');
+        Debug::LogEntry('audit', '[IN] Loaded XML into DOM', 'layout', 'GetRegionList');
 
         // Get region nodes
         $regionNodes = $this->DomXml->getElementsByTagName('region');
@@ -827,13 +827,13 @@ END;
         $user->userid = 0;
         $user->usertypeid = 1;
 
-        Debug::LogEntry($this->db, 'audit', '[IN]', 'layout', 'IsValid');
+        Debug::LogEntry('audit', '[IN]', 'layout', 'IsValid');
 
         if (!$reassess) {
             return $db->GetSingleValue(sprintf("SELECT status FROM `layout` WHERE LayoutID = %d", $layoutId), 'status', _INT);
         }
 
-        Debug::LogEntry($this->db, 'audit', 'Reassesment Required', 'layout', 'IsValid');
+        Debug::LogEntry('audit', 'Reassesment Required', 'layout', 'IsValid');
 
         // Take the layout, loop through its regions, check them and call IsValid on all media in them.
         $regions = $this->GetRegionList($layoutId);
@@ -868,7 +868,7 @@ END;
             }
         }
 
-        Debug::LogEntry($this->db, 'audit', 'Layout looks in good shape', 'layout', 'IsValid');
+        Debug::LogEntry('audit', 'Layout looks in good shape', 'layout', 'IsValid');
 
         // If we get to the end, we are OK!
         return 1;

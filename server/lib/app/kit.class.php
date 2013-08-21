@@ -613,7 +613,7 @@ class Kit
 		{
 			unset($_SESSION[$tokenName]);
 
-			Debug::LogEntry($db, 'error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [$token] for session_id [" . session_id() . ']');
+			Debug::LogEntry('error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [$token] for session_id [" . session_id() . ']');
 			return false;
 		}
 	}

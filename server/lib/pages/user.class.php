@@ -116,7 +116,7 @@ class userDAO
 
         $sql .= " ORDER by UserName";
         
-        Debug::LogEntry($db, 'audit', $sql);
+        Debug::LogEntry('audit', $sql);
 
         // Load results into an array
         $users = $db->GetArray($sql);
@@ -506,7 +506,7 @@ class userDAO
             Theme::Set('form_action', 'index.php?p=user&q=AddUser');
 
             // We are adding a new user
-            $usertype = Config::GetSetting($db, 'defaultUsertype');
+            $usertype = Config::GetSetting('defaultUsertype');
             
             $SQL = sprintf("SELECT usertypeid FROM usertype WHERE usertype = '%s'", $db->escape_string($usertype));
 

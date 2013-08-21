@@ -37,7 +37,7 @@ class LayoutRegionGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutRegionGroupSecurity', 'Link');
+        Debug::LogEntry('audit', 'IN', 'LayoutRegionGroupSecurity', 'Link');
 
         $SQL  = "";
         $SQL .= "INSERT ";
@@ -63,7 +63,7 @@ class LayoutRegionGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'LayoutRegionGroupSecurity', 'Link');
+        Debug::LogEntry('audit', 'OUT', 'LayoutRegionGroupSecurity', 'Link');
 
         return true;
     }
@@ -80,7 +80,7 @@ class LayoutRegionGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutGroupSecurity', 'LinkEveryone');
+        Debug::LogEntry('audit', 'IN', 'LayoutGroupSecurity', 'LinkEveryone');
 
         $groupId = $db->GetSingleValue("SELECT GroupID FROM `group` WHERE IsEveryone = 1", 'GroupID', _INT);
 
@@ -97,7 +97,7 @@ class LayoutRegionGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutRegionGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'LayoutRegionGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -112,7 +112,7 @@ class LayoutRegionGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'LayoutRegionGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'LayoutRegionGroupSecurity', 'Unlink');
 
         return true;
     }
@@ -127,7 +127,7 @@ class LayoutRegionGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutRegionGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'LayoutRegionGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -142,7 +142,7 @@ class LayoutRegionGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'LayoutRegionGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'LayoutRegionGroupSecurity', 'Unlink');
 
         return true;
     }
@@ -157,7 +157,7 @@ class LayoutRegionGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutRegionGroupSecurity', 'Copy');
+        Debug::LogEntry('audit', 'IN', 'LayoutRegionGroupSecurity', 'Copy');
 
         $SQL  = "";
         $SQL .= "INSERT ";

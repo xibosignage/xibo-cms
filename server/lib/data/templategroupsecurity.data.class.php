@@ -37,7 +37,7 @@ class TemplateGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'TemplateGroupSecurity', 'Link');
+        Debug::LogEntry('audit', 'IN', 'TemplateGroupSecurity', 'Link');
 
         $SQL  = "";
         $SQL .= "INSERT ";
@@ -62,7 +62,7 @@ class TemplateGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'TemplateGroupSecurity', 'Link');
+        Debug::LogEntry('audit', 'OUT', 'TemplateGroupSecurity', 'Link');
 
         return true;
     }
@@ -77,7 +77,7 @@ class TemplateGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'TemplateGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'TemplateGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -92,7 +92,7 @@ class TemplateGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'TemplateGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'TemplateGroupSecurity', 'Unlink');
 
         return true;
     }
@@ -107,7 +107,7 @@ class TemplateGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'TemplateGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'TemplateGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -122,7 +122,7 @@ class TemplateGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'TemplateGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'TemplateGroupSecurity', 'Unlink');
 
         return true;
     }

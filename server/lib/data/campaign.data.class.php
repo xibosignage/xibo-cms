@@ -36,7 +36,7 @@ class Campaign extends Data
      */
     public function Add($campaign, $isLayoutSpecific, $userId)
     {
-        Debug::LogEntry($this->db, 'audit', 'IN', 'Campaign', 'Add');
+        Debug::LogEntry('audit', 'IN', 'Campaign', 'Add');
         
         if ($campaign == '')
             return $this->SetError(25000, __('Campaign name cannot be empty'));
@@ -61,7 +61,7 @@ class Campaign extends Data
      */
     public function Edit($campaignId, $campaign)
     {
-        Debug::LogEntry($this->db, 'audit', 'IN', 'Campaign', 'Edit');
+        Debug::LogEntry('audit', 'IN', 'Campaign', 'Edit');
 
         if ($campaign == '')
             return $this->SetError(25000, __('Campaign name cannot be empty'));
@@ -84,7 +84,7 @@ class Campaign extends Data
      */
     public function Delete($campaignId)
     {
-        Debug::LogEntry($this->db, 'audit', 'IN', 'Campaign', 'Delete');
+        Debug::LogEntry('audit', 'IN', 'Campaign', 'Delete');
 
         // Unlink all Layouts
         if (!$this->UnlinkAll($campaignId))

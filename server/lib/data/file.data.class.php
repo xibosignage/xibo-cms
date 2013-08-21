@@ -60,7 +60,7 @@ class File extends Data
         $db =& $this->db;
 
         // Directory location
-	$libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
+	$libraryFolder 	= Config::GetSetting('LIBRARY_LOCATION');
         $libraryFolder  = $libraryFolder . 'temp';
 
         // Append should only be called on existing files, if this file does not exist then we
@@ -84,7 +84,7 @@ class File extends Data
         $db =& $this->db;
 
         // Directory location
-	$libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
+	$libraryFolder 	= Config::GetSetting('LIBRARY_LOCATION');
         $libraryFolder  = $libraryFolder . 'temp';
 
         if (!$this->EnsureLibraryExists($libraryFolder))
@@ -118,7 +118,7 @@ class File extends Data
     public function Size($fileId)
     {
         // Directory location
-	$libraryFolder 	= Config::GetSetting($this->db, "LIBRARY_LOCATION");
+	$libraryFolder 	= Config::GetSetting("LIBRARY_LOCATION");
         $libraryFolder = $libraryFolder . 'temp';
 
         return filesize($libraryFolder . '/' . $fileId);
@@ -150,7 +150,7 @@ class File extends Data
     {
         $db =& $this->db;
         
-        $libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
+        $libraryFolder 	= Config::GetSetting('LIBRARY_LOCATION');
 
         // Check that this location exists - and if not create it..
         if (!file_exists($libraryFolder))
@@ -176,7 +176,7 @@ class File extends Data
 
         $db =& $this->db;
         
-        $libraryFolder  = Config::GetSetting($db, 'LIBRARY_LOCATION');
+        $libraryFolder  = Config::GetSetting('LIBRARY_LOCATION');
 
         return $libraryFolder . '/cache';
     }

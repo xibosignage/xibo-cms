@@ -39,7 +39,7 @@ class DisplayGroupSecurity extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroupSecurity', 'Link');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroupSecurity', 'Link');
 		
 		$SQL  = "";
 		$SQL .= "INSERT ";
@@ -64,7 +64,7 @@ class DisplayGroupSecurity extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroupSecurity', 'Link');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroupSecurity', 'Link');
 		
 		return true;
 	}
@@ -79,7 +79,7 @@ class DisplayGroupSecurity extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroupSecurity', 'Unlink');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroupSecurity', 'Unlink');
 		
 		$SQL  = "";
 		$SQL .= "DELETE FROM ";
@@ -94,7 +94,7 @@ class DisplayGroupSecurity extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroupSecurity', 'Unlink');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroupSecurity', 'Unlink');
 		
 		return true;
 	}
@@ -109,7 +109,7 @@ class DisplayGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -124,7 +124,7 @@ class DisplayGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
 
         return true;
     }

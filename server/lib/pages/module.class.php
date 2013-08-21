@@ -50,7 +50,7 @@ class moduleDAO
             $mediaid    = Kit::GetParam('mediaid', _REQUEST, _STRING);
             $lkid       = Kit::GetParam('lkid', _REQUEST, _INT);
 
-            Debug::LogEntry($db, 'audit', 'Creating new module with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
+            Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 
             if (!$this->module = new $mod($db, $user, $mediaid, $layoutid, $regionid, $lkid))
                 trigger_error($this->module->GetErrorMessage(), E_USER_ERROR);
@@ -123,7 +123,7 @@ class moduleDAO
             $row['buttons'] = array();
 
             // If the module config is not locked, present some buttons
-            if (Config::GetSetting($db, 'MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
+            if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
                 
                 // Edit button
                 $row['buttons'][] = array(
@@ -155,7 +155,7 @@ class moduleDAO
         $helpManager = new HelpManager($db, $user);
 
         // Can we edit?
-        if (Config::GetSetting($db, 'MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
             trigger_error(__('Module Config Locked'), E_USER_ERROR);
 
         $moduleId = Kit::GetParam('ModuleID', _GET, _INT);
@@ -211,7 +211,7 @@ class moduleDAO
         $response = new ResponseManager();
 
         // Can we edit?
-        if (Config::GetSetting($db, 'MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
             trigger_error(__('Module Config Locked'), E_USER_ERROR);
 
         $moduleId = Kit::GetParam('ModuleID', _POST, _INT);
@@ -295,7 +295,7 @@ class moduleDAO
             die ('No media found for that media ID');
 
         //File upload directory.. get this from the settings object
-        $library = Config::GetSetting($db, "LIBRARY_LOCATION");
+        $library = Config::GetSetting("LIBRARY_LOCATION");
         $fileName = $library . $file;
 
         // If we are a thumb request then output the cached thumbnail
@@ -305,7 +305,7 @@ class moduleDAO
         // If the thumbnail doesnt exist then create one
         if (!file_exists($fileName))
         {
-            Debug::LogEntry($db, 'audit', 'File doesnt exist, creating a thumbnail for ' . $fileName);
+            Debug::LogEntry('audit', 'File doesnt exist, creating a thumbnail for ' . $fileName);
 
             if (!$info = getimagesize($library . $file))
                 die($library . $file . ' is not an image');
@@ -334,7 +334,7 @@ class moduleDAO
         if (!$image = file_get_contents($fileName))
         {
             //not sure
-            Debug::LogEntry($db, 'audit', "Cant find: $uid", 'module', 'GetImage');
+            Debug::LogEntry('audit', "Cant find: $uid", 'module', 'GetImage');
 
             $fileName = 'theme/default/img/forms/filenotfound.png';
             $image  = file_get_contents($fileName);

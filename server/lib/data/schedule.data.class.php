@@ -40,7 +40,7 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'Add');
+		Debug::LogEntry('audit', 'IN', 'Schedule', 'Add');
 
                 if (count($displayGroupIDs) == 0)
                     return $this->SetError(25001, __('No display groups selected'));
@@ -88,7 +88,7 @@ class Schedule extends Data
 		$SQL .= sprintf("              %d                ", $toDT);
 		$SQL .= "       )";
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 		
 		if (!$eventID = $db->insert_query($SQL)) 
 		{
@@ -105,15 +105,15 @@ class Schedule extends Data
 		foreach($displayGroupIDs as $displayGroupID)
 		{
 			// Add the parent detail record for this event
-			Debug::LogEntry($db, 'audit', 'Calling AddDetail for new Schedule record', 'Schedule', 'Add');
+			Debug::LogEntry('audit', 'Calling AddDetail for new Schedule record', 'Schedule', 'Add');
 			
 			if (!$this->AddDetail($displayGroupID, $campaignId, $fromDT, $toDT, $userID, $isPriority, $eventID, $displayOrder))
 			{
-				Debug::LogEntry($db, 'audit', 'Failure in AddDetail - aborting partially done', 'Schedule', 'Add');
+				Debug::LogEntry('audit', 'Failure in AddDetail - aborting partially done', 'Schedule', 'Add');
 				return false;
 			}
 
-			Debug::LogEntry($db, 'audit', 'Success Calling AddDetail for new Schedule record', 'Schedule', 'Add');
+			Debug::LogEntry('audit', 'Success Calling AddDetail for new Schedule record', 'Schedule', 'Add');
 			
 			// Is there any recurrance to take care of?
 			if ($recType != '' && $recType != 'null')
@@ -122,7 +122,7 @@ class Schedule extends Data
 				$t_start_temp 	= $fromDT;
 				$t_end_temp 	= $toDT;
 				
-				Debug::LogEntry($db, 'audit', sprintf('Recurrence detected until %d. Recurrence period is %s and interval is %s.', $recToDT, $recDetail, $recType), 'Schedule', 'Add');
+				Debug::LogEntry('audit', sprintf('Recurrence detected until %d. Recurrence period is %s and interval is %s.', $recToDT, $recDetail, $recType), 'Schedule', 'Add');
 				
 				//loop until we have added the recurring events for the schedule
 				while ($t_start_temp < $recToDT) 
@@ -161,7 +161,7 @@ class Schedule extends Data
 					
 					if (!$this->AddDetail($displayGroupID, $campaignId, $t_start_temp, $t_end_temp, $userID, $isPriority, $eventID, $displayOrder))
 					{
-						Debug::LogEntry($db, 'audit', 'Failure in AddDetail - aborting partially done', 'Schedule', 'Add');
+						Debug::LogEntry('audit', 'Failure in AddDetail - aborting partially done', 'Schedule', 'Add');
 						return false;
 					}
 				}
@@ -173,7 +173,7 @@ class Schedule extends Data
                 $displayObject = new Display($db);
                 $displayObject->NotifyDisplays($campaignId);
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'Add');
+		Debug::LogEntry('audit', 'OUT', 'Schedule', 'Add');
 		
 		return true;
 	}
@@ -198,7 +198,7 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'Edit');
+		Debug::LogEntry('audit', 'IN', 'Schedule', 'Edit');
 
                 // Cant have a 0 increment as it creates a loop
                 if ($rec_detail == 0)
@@ -219,7 +219,7 @@ class Schedule extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'Edit');
+		Debug::LogEntry('audit', 'OUT', 'Schedule', 'Edit');
 		
 		return true;
 	}
@@ -233,7 +233,7 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'Delete');
+		Debug::LogEntry('audit', 'IN', 'Schedule', 'Delete');
 		
 		if(!$this->DeleteScheduleForEvent($eventID))
 		{
@@ -244,7 +244,7 @@ class Schedule extends Data
 		// Delete all Schedule records for this DisplayGroupID
 		$SQL = sprintf("DELETE FROM schedule WHERE eventID = %d", $eventID);
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 
 		if (!$db->query($SQL)) 
 		{
@@ -253,7 +253,7 @@ class Schedule extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'Delete');
+		Debug::LogEntry('audit', 'OUT', 'Schedule', 'Delete');
 		
 		return true;
 	}
@@ -273,7 +273,7 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'AddDetail');
+		Debug::LogEntry('audit', 'IN', 'Schedule', 'AddDetail');
 		
 		$SQL  = "";
 		$SQL .= "INSERT ";
@@ -306,7 +306,7 @@ class Schedule extends Data
 		$SQL .= sprintf("      %d  ", $displayOrder);
 		$SQL .= "       )";
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 			
 		if (!$db->query($SQL)) 
 		{
@@ -316,7 +316,7 @@ class Schedule extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'AddDetail');
+		Debug::LogEntry('audit', 'OUT', 'Schedule', 'AddDetail');
 		
 		return true;	
 	}
@@ -331,7 +331,7 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'EditDetailLayoutID');
+		Debug::LogEntry('audit', 'IN', 'Schedule', 'EditDetailLayoutID');
 		
 		// Update the default layoutdisplay record
 		$SQL = " UPDATE schedule_detail SET CampaignId = %d ";
@@ -339,7 +339,7 @@ class Schedule extends Data
 		
 		$SQL = sprintf($SQL, $campaignId, $scheduleDetailID);
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 			
 		if (!$db->query($SQL)) 
 		{
@@ -349,7 +349,7 @@ class Schedule extends Data
 			return false;
 		}
 
-		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'EditDetailLayoutID');
+		Debug::LogEntry('audit', 'OUT', 'Schedule', 'EditDetailLayoutID');
 		
 		return true;
 	}
@@ -363,12 +363,12 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
 		
 		// Delete all Schedule records for this DisplayGroupID
 		$SQL = sprintf("DELETE FROM schedule_detail WHERE DisplayGroupID = %d", $displayGroupID);
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 
 		if (!$db->query($SQL)) 
 		{
@@ -377,7 +377,7 @@ class Schedule extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
 		
 		return true;
 	}
@@ -391,12 +391,12 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'DeleteScheduleForEvent');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'DeleteScheduleForEvent');
 		
 		// Delete all Schedule records for this DisplayGroupID
 		$SQL = sprintf("DELETE FROM schedule_detail WHERE EventID = %d", $eventID);
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 
 		if (!$db->query($SQL)) 
 		{
@@ -405,7 +405,7 @@ class Schedule extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForEvent');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForEvent');
 		
 		return true;
 	}
@@ -419,12 +419,12 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
 		
 		// Delete all Schedule records for this DisplayGroupID
 		$SQL = sprintf("DELETE FROM schedule_detail WHERE EventID = %d AND DisplayGroupID = %d ", $eventID, $displayGroupID);
 		
-		Debug::LogEntry($db, 'audit', $SQL, 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
+		Debug::LogEntry('audit', $SQL, 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
 
 		if (!$db->query($SQL)) 
 		{
@@ -433,7 +433,7 @@ class Schedule extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
 		
 		return true;
 	}
@@ -447,12 +447,12 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'DeleteEventDetail');
+		Debug::LogEntry('audit', 'IN', 'Schedule', 'DeleteEventDetail');
 		
 		// Delete all Schedule records for this EventDetail
 		$SQL = sprintf("DELETE FROM schedule_detail WHERE schedule_detailID = %d", $eventDetailID);
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 
 		if (!$db->query($SQL)) 
 		{
@@ -461,7 +461,7 @@ class Schedule extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'DeleteEventDetail');
+		Debug::LogEntry('audit', 'OUT', 'Schedule', 'DeleteEventDetail');
 		
 		return true;
 	}
@@ -470,7 +470,7 @@ class Schedule extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'Schedule', 'EditDisplayGroupsForEvent');
+		Debug::LogEntry('audit', 'IN', 'Schedule', 'EditDisplayGroupsForEvent');
 		
 		// Read the display groups from the event
 		$SQL = sprintf('SELECT DisplayGroupIDs FROM schedule WHERE EventID = %d', $eventID);
@@ -495,7 +495,7 @@ class Schedule extends Data
 		}
 		else
 		{
-			Debug::LogEntry($db, 'audit', 'Display Group ID is already removed from the Event - this is strange.', 'Schedule', 'EditDisplayGroupsForEvent');
+			Debug::LogEntry('audit', 'Display Group ID is already removed from the Event - this is strange.', 'Schedule', 'EditDisplayGroupsForEvent');
 			return true;
 		}
 		
@@ -505,7 +505,7 @@ class Schedule extends Data
 		// Delete all Schedule records for this EventDetail
 		$SQL = sprintf("UPDATE schedule SET DisplayGroupIDs = '%d' WHERE EventID = %d", $db->escape_string($displayGroupIDList), $eventID);
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 
 		if (!$db->query($SQL)) 
 		{
@@ -514,7 +514,7 @@ class Schedule extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'Schedule', 'EditDisplayGroupsForEvent');
+		Debug::LogEntry('audit', 'OUT', 'Schedule', 'EditDisplayGroupsForEvent');
 		
 		return true;
 	}

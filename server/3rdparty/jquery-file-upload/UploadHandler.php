@@ -519,7 +519,7 @@ class UploadHandler
         $regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
         $type = Kit::GetParam('type', _REQUEST, _WORD);
 
-        Debug::LogEntry($this->db, 'audit', 'Upload complete for Type: ' . $type . ' and file name: ' . $file->name . '. Name: ' . $name . '. Duration:' . $duration);
+        Debug::LogEntry('audit', 'Upload complete for Type: ' . $type . ' and file name: ' . $file->name . '. Name: ' . $name . '. Duration:' . $duration);
 
         // We want to create a module for each of the uploaded files.
         require_once("modules/$type.module.php");

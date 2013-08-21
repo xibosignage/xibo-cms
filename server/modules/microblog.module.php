@@ -115,7 +115,7 @@ class microblog extends Module
         $rawXml = new DOMDocument();
         $rawXml->loadXML($this->GetRaw());
 
-        Debug::LogEntry($db, 'audit', 'Raw XML returned: ' . $this->GetRaw());
+        Debug::LogEntry('audit', 'Raw XML returned: ' . $this->GetRaw());
 
         $templateNodes = $rawXml->getElementsByTagName('template');
         $templateNode = $templateNodes->item(0);

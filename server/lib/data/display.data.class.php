@@ -43,7 +43,7 @@ class Display extends Data
 	{
             $db	=& $this->db;
 
-            Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Add');
+            Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Add');
 
             // Create the SQL
             $SQL  = "";
@@ -97,7 +97,7 @@ class Display extends Data
                 return false;
             }
 
-            Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Add');
+            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Add');
 
             return $displayID;
 	}
@@ -115,10 +115,10 @@ class Display extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'Display', 'Edit');
+		Debug::LogEntry('audit', 'IN', 'Display', 'Edit');
 
                 // Check the number of licensed displays
-                $maxDisplays = Config::GetSetting($db, 'MAX_LICENSED_DISPLAYS');
+                $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');
 
                 if ($maxDisplays > 0)
                 {
@@ -181,7 +181,7 @@ class Display extends Data
 		
 		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $email_alert, $alert_timeout, $wakeOnLanEnabled, $db->escape_string($wakeOnLanTime), $db->escape_string($broadCastAddress), $db->escape_string($secureOn), $cidr, $latitude, $longitude, $displayID);
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 		
 		if (!$db->query($SQL)) 
 		{
@@ -202,7 +202,7 @@ class Display extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Edit');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');
 		
 		return true;
 	}
@@ -216,7 +216,7 @@ class Display extends Data
 	{
             $db	=& $this->db;
 
-            Debug::LogEntry($db, 'audit', 'IN', 'Display', 'Delete');
+            Debug::LogEntry('audit', 'IN', 'Display', 'Delete');
 
             // Pass over to the DisplayGroup data class so that it can try and delete the
             // display specific group first (it is that group which is linked to schedules)
@@ -229,7 +229,7 @@ class Display extends Data
             // Delete the blacklist
             $SQL = sprintf("DELETE FROM blacklist WHERE DisplayID = %d", $displayID);
 
-            Debug::LogEntry($db, 'audit', $SQL);
+            Debug::LogEntry('audit', $SQL);
 
             if (!$db->query($SQL))
                 return $this->SetError(25016,__('Unable to delete blacklist records.'));
@@ -240,7 +240,7 @@ class Display extends Data
             $SQL .= "DELETE FROM display ";
             $SQL .= sprintf(" WHERE displayid = %d", $displayID);
 
-            Debug::LogEntry($db, 'audit', $SQL);
+            Debug::LogEntry('audit', $SQL);
 
             if (!$db->query($SQL)) 
             {
@@ -248,7 +248,7 @@ class Display extends Data
                 return $this->SetError(25015,__('Unable to delete display record. However it is no longer usable.'));
             }
 
-            Debug::LogEntry($db, 'audit', 'OUT', 'Display', 'Delete');
+            Debug::LogEntry('audit', 'OUT', 'Display', 'Delete');
 
             return true;
 	}
@@ -263,7 +263,7 @@ class Display extends Data
 	{
 		$db	=& $this->db;
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'EditDisplayName');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'EditDisplayName');
 	
 		$SQL = sprintf("UPDATE display SET display = '%s' WHERE license = '%s' ", $db->escape_string($display), $db->escape_string($license));
 				
@@ -286,7 +286,7 @@ class Display extends Data
 			return false;
 		}
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'EditDisplayName');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayName');
 		
 		return true;
 	}
@@ -302,7 +302,7 @@ class Display extends Data
 		$db		=& $this->db;
 		$time 	= time();
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Touch');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Touch');
 			
 		// Set the last accessed flag on the display
 		$SQL  = "";
@@ -343,7 +343,7 @@ class Display extends Data
             return false;
         }
 		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Touch');
+		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Touch');
 		
 		return true;
 	}
@@ -356,7 +356,7 @@ class Display extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', sprintf('Flag DisplayID %d incomplete.', $displayId), 'display', 'NotifyDisplays');
+        Debug::LogEntry('audit', sprintf('Flag DisplayID %d incomplete.', $displayId), 'display', 'NotifyDisplays');
 
         $SQL = sprintf("UPDATE display SET MediaInventoryStatus = 3 WHERE displayID = %d", $displayId);
 
@@ -381,7 +381,7 @@ class Display extends Data
 
         $rfLookahead 	= $currentdate + $rfLookahead;
 
-        Debug::LogEntry($db, 'audit', sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
+        Debug::LogEntry('audit', sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
 
         // Which displays does a change to this layout effect?
         $SQL  = " SELECT DISTINCT display.DisplayID ";
@@ -401,7 +401,7 @@ class Display extends Data
 
         $SQL = sprintf($SQL, $campaignId, $rfLookahead, $currentdate - 3600, $campaignId);
 
-        Debug::LogEntry($db, 'audit', $SQL, 'display', 'NotifyDisplays');
+        Debug::LogEntry('audit', $SQL, 'display', 'NotifyDisplays');
 
         if (!$result = $db->query($SQL))
         {
@@ -427,7 +427,7 @@ class Display extends Data
     {
         $db	=& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'Display', 'EditDefaultLayout');
+        Debug::LogEntry('audit', 'IN', 'Display', 'EditDefaultLayout');
 
         $SQL = sprintf('UPDATE display SET defaultLayoutId = %d WHERE displayID = %d ', $defaultLayoutId, $displayId);
 
@@ -442,7 +442,7 @@ class Display extends Data
         // Flag this display as not having all the content
         $this->FlagIncomplete($displayId);
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'Display', 'EditDefaultLayout');
+        Debug::LogEntry('audit', 'OUT', 'Display', 'EditDefaultLayout');
 
         return true;
     }
@@ -464,7 +464,7 @@ class Display extends Data
         if ($row['MacAddress'] == '' || $row['BroadCastAddress'] == '')
             $this->SetError(25014, __('This display has no mac address recorded against it yet. Make sure the display is running.'));
 
-        Debug::LogEntry($db, 'audit', 'About to send WOL packet to ' . $row['BroadCastAddress'] . ' with Mac Address ' . $row['MacAddress'], 'display', 'WakeOnLan');
+        Debug::LogEntry('audit', 'About to send WOL packet to ' . $row['BroadCastAddress'] . ' with Mac Address ' . $row['MacAddress'], 'display', 'WakeOnLan');
 
         if (!$this->TransmitWakeOnLan($row['MacAddress'], $row['SecureOn'], $row['BroadCastAddress'], $row['Cidr'], "9"))
             return false;
@@ -646,7 +646,7 @@ class Display extends Data
                     
                     unset($socket);
                     
-                    Debug::LogEntry($this->db, 'audit', $sent_fsockopen, 'display', 'WakeOnLan');
+                    Debug::LogEntry('audit', $sent_fsockopen, 'display', 'WakeOnLan');
                     return true;
                 }
                 else
@@ -660,7 +660,7 @@ class Display extends Data
             {
                 unset($socket);
                 
-                Debug::LogEntry($this->db, 'audit', __('Using fsockopen() failed, due to denied permission'));
+                Debug::LogEntry('audit', __('Using fsockopen() failed, due to denied permission'));
             }
         }
 
@@ -702,7 +702,7 @@ class Display extends Data
                     socket_close($socket);
                     unset($socket);
 
-                    Debug::LogEntry($this->db, 'audit', $socket_create, 'display', 'WakeOnLan');
+                    Debug::LogEntry('audit', $socket_create, 'display', 'WakeOnLan');
                     return true;
                 }
                 else

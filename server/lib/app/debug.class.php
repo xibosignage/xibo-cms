@@ -29,7 +29,7 @@ class Debug
 		if (!defined('AUDIT'))
 		{
 			// Get the setting from the DB and define it
-			if (Config::GetSetting($db, 'audit') != 'On')
+			if (Config::GetSetting('audit') != 'On')
 			{
 				define('AUDIT', false);
 			}
@@ -69,13 +69,13 @@ class Debug
 		$err .= "<scriptlinenum>" . $linenum . "</scriptlinenum>\n";
 
 		// Log everything
-		Debug::LogEntry($db, "error", $err);
+		Debug::LogEntry("error", $err);
 		
 		// Test to see if this is a HALT error or not (we do the same if we are in production or not!)
 		if (in_array($errno, $user_errors_halt)) 
 		{
 			// We have a halt error
-			Debug::LogEntry($db, 'audit', 'Creating a Response Manager to deal with the HALT Error.');
+			Debug::LogEntry('audit', 'Creating a Response Manager to deal with the HALT Error.');
 
 			$response = new ResponseManager();
 			
@@ -115,7 +115,7 @@ class Debug
 
 		$to = 'info@xibo.org.uk';
 		
-		$from = Config::GetSetting($db, "mail_from");
+		$from = Config::GetSetting("mail_from");
 		if ($from == "") return true;
 		
 		$subject = "Error message from Digital Signage System";
@@ -142,7 +142,7 @@ class Debug
 	 * @param $layoutid Object[optional]
 	 * @param $mediaid Object[optional]
 	 */	
-	static function LogEntry(database $db, $type, $message, $page = "", $function = "", $logdate = "", $displayid = 0, $scheduleID = 0, $layoutid = 0, $mediaid = 0) 
+	static function LogEntry($type, $message, $page = "", $function = "", $logdate = "", $displayid = 0, $scheduleID = 0, $layoutid = 0, $mediaid = 0) 
 	{
 		if ($type == 'audit' && !AUDIT)
 			return;

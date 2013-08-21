@@ -38,7 +38,7 @@ class UserGroup extends Data
     {
         $db	=& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'Add');
+        Debug::LogEntry('audit', 'IN', 'UserGroup', 'Add');
 
         // Validation
         if ($group == '')
@@ -64,7 +64,7 @@ class UserGroup extends Data
             return $this->SetError(25000, __('Could not add User Group'));
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'Add');
+        Debug::LogEntry('audit', 'OUT', 'UserGroup', 'Add');
 
         return $groupID;
     }
@@ -79,7 +79,7 @@ class UserGroup extends Data
     {
         $db	=& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'Edit');
+        Debug::LogEntry('audit', 'IN', 'UserGroup', 'Edit');
 
         // Validation
         if ($userGroupID == 0)
@@ -100,7 +100,7 @@ class UserGroup extends Data
             return $this->SetError(25005, __('Could not edit User Group'));
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'Edit');
+        Debug::LogEntry('audit', 'OUT', 'UserGroup', 'Edit');
 
         return true;
     }
@@ -114,7 +114,7 @@ class UserGroup extends Data
     {
         $db	=& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'Delete');
+        Debug::LogEntry('audit', 'IN', 'UserGroup', 'Delete');
 
         // Delete all menu links
         $this->db->query(sprintf('DELETE FROM lkmenuitemgroup WHERE GroupID = %d', $userGroupID));
@@ -125,7 +125,7 @@ class UserGroup extends Data
         // Delete the user group
         $SQL = sprintf("DELETE FROM `group` WHERE GroupID = %d", $userGroupID);
 
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
 
         if (!$db->query($SQL))
         {
@@ -133,7 +133,7 @@ class UserGroup extends Data
             return $this->SetError(25015,__('Unable to delete User Group.'));
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'Delete');
+        Debug::LogEntry('audit', 'OUT', 'UserGroup', 'Delete');
 
         return true;
     }
@@ -148,7 +148,7 @@ class UserGroup extends Data
     {
         $db	=& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'Link');
+        Debug::LogEntry('audit', 'IN', 'UserGroup', 'Link');
 
         $SQL  = "";
         $SQL .= "INSERT ";
@@ -170,7 +170,7 @@ class UserGroup extends Data
                 return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'Link');
+        Debug::LogEntry('audit', 'OUT', 'UserGroup', 'Link');
 
         return true;
     }
@@ -185,7 +185,7 @@ class UserGroup extends Data
     {
         $db	=& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'UserGroup', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -200,7 +200,7 @@ class UserGroup extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'UserGroup', 'Unlink');
 
         return true;
     }
@@ -213,7 +213,7 @@ class UserGroup extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'UnlinkAllUsers');
+        Debug::LogEntry('audit', 'IN', 'UserGroup', 'UnlinkAllUsers');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -228,7 +228,7 @@ class UserGroup extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'UnlinkAllUsers');
+        Debug::LogEntry('audit', 'OUT', 'UserGroup', 'UnlinkAllUsers');
 
         return true;
     }
@@ -241,7 +241,7 @@ class UserGroup extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'UnlinkAllGroups');
+        Debug::LogEntry('audit', 'IN', 'UserGroup', 'UnlinkAllGroups');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -256,7 +256,7 @@ class UserGroup extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'UnlinkAllGroups');
+        Debug::LogEntry('audit', 'OUT', 'UserGroup', 'UnlinkAllGroups');
 
         return true;
     }
@@ -271,7 +271,7 @@ class UserGroup extends Data
     {
         $db	=& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'UserGroup', 'EditUserGroup');
+        Debug::LogEntry('audit', 'IN', 'UserGroup', 'EditUserGroup');
 
         // Get the UserGroupID for this UserID
         $SQL  = "";
@@ -320,7 +320,7 @@ class UserGroup extends Data
             if (!$this->Edit($userGroupID, $userName)) return false;
         }
         
-        Debug::LogEntry($db, 'audit', 'OUT', 'UserGroup', 'EditUserGroup');
+        Debug::LogEntry('audit', 'OUT', 'UserGroup', 'EditUserGroup');
 
         return true;
     }

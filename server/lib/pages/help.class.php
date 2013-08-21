@@ -69,13 +69,13 @@ class helpDAO
 
         if ($topic != '')
         {
-            Debug::LogEntry($db, 'audit', 'Help requested for Topic = ' . $topic);
+            Debug::LogEntry('audit', 'Help requested for Topic = ' . $topic);
 
             // Look up this help topic / category in the db
             $SQL = "SELECT Link FROM help WHERE Topic = '%s' and Category = '%s'";
             $SQL = sprintf($SQL, $db->escape_string($topic), $db->escape_string($category));
 
-            Debug::LogEntry($db, 'audit', $SQL);
+            Debug::LogEntry('audit', $SQL);
 
             if(!$results = $db->query($SQL))
             {

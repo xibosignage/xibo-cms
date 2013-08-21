@@ -111,31 +111,31 @@ if (!$db->select_db($dbname))
     die('Database connection problem.');
 }
 
-date_default_timezone_set(Config::GetSetting($db, "defaultTimezone"));
+date_default_timezone_set(Config::GetSetting("defaultTimezone"));
 
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));
 
 // Define the VERSION
-Config::Version($db);
+Config::Version();
 
 // Does the version in the DB match the version of the code?
 if (DBVERSION != WEBSITE_VERSION)
     die(sprintf('Incompatible database version detected. Please ensure your database and website versions match. You have database %d and website %d', DBVERSION, WEBSITE_VERSION));
 
 // What is the production mode of the server?
-if(Config::GetSetting($db, 'SERVER_MODE') == 'Test') 
+if(Config::GetSetting('SERVER_MODE') == 'Test') 
     ini_set('display_errors', 1);
 
 // Debugging?
-if(Config::GetSetting($db, "debug")=="On") 
+if(Config::GetSetting("debug")=="On") 
     error_reporting(E_ALL);
 
 // Setup the translations for gettext
 TranslationEngine::InitLocale($db);
 
 // Create login control system
-require_once('modules/' . Config::GetSetting($db, "userModule"));
+require_once('modules/' . Config::GetSetting("userModule"));
 
 $user 		= new User($db);
 $session 	= new Session($db);

@@ -49,7 +49,7 @@ class RestJson extends Rest
         
 
         // Log it
-        Debug::LogEntry($this->db, 'audit', $xmlDoc->saveXML(), 'RestXml', 'Respond');
+        Debug::LogEntry('audit', $xmlDoc->saveXML(), 'RestXml', 'Respond');
 
         // Return it as a string
         return $xmlDoc->saveXML();
@@ -57,7 +57,7 @@ class RestJson extends Rest
 
     public function Error($errorNo, $errorMessage = '')
     {
-        Debug::LogEntry($this->db, 'audit', $errorMessage, 'RestXml', 'Error');
+        Debug::LogEntry('audit', $errorMessage, 'RestXml', 'Error');
 
         header('Content-Type: text/json; charset=utf8');
 
@@ -72,7 +72,7 @@ class RestJson extends Rest
         $return = json_encode($response);
 
         // Log it
-        Debug::LogEntry($this->db, 'audit', $return);
+        Debug::LogEntry('audit', $return);
 
         // Return it as a string
         return $return;
@@ -108,7 +108,7 @@ class RestJson extends Rest
      */
     protected function NodeListFromArray($array, $nodeName)
     {
-        Debug::LogEntry($this->db, 'audit', sprintf('Building node list containing %d items', count($array)));
+        Debug::LogEntry('audit', sprintf('Building node list containing %d items', count($array)));
 
         return array($nodeName => $array);
     }

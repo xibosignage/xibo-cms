@@ -601,7 +601,7 @@ class datasetDAO
         $SQL .= "   ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID ";
         $SQL .= sprintf("WHERE datasetcolumn.DataSetID = %d  AND datasetcolumn.DataSetColumnTypeID = 1 ", $dataSetId);
 
-        Debug::LogEntry($db, 'audit', $SQL, 'dataset', 'DataSetDataForm');
+        Debug::LogEntry('audit', $SQL, 'dataset', 'DataSetDataForm');
 
         if (!$maxResult = $db->GetSingleRow($SQL))
         {
@@ -665,7 +665,7 @@ class datasetDAO
                     $SQL .= "   AND datasetdata.DataSetColumnID = %d ";
                     $SQL = sprintf($SQL, $row, $dataSetColumnId);
 
-                    Debug::LogEntry($db, 'audit', $SQL, 'dataset');
+                    Debug::LogEntry('audit', $SQL, 'dataset');
 
                     if (!$results = $db->query($SQL))
                     {
@@ -1097,7 +1097,7 @@ END;
             trigger_error(__('Files with a CSV extention only.'));
 
         // File upload directory.. get this from the settings object
-        $csvFileLocation = Config::GetSetting($db, 'LIBRARY_LOCATION') . 'temp/' . $tmpName;
+        $csvFileLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $tmpName;
 
         // Enumerate over the columns in the DataSet and offer a column mapping for each one (from the file)
         $SQL  = "";

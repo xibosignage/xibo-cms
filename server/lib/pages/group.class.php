@@ -117,7 +117,7 @@ END;
 		
 		$SQL .= " ORDER BY group.group ";
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 		
 		if (!$results = $db->query($SQL)) 
 		{

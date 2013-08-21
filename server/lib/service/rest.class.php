@@ -290,9 +290,9 @@ class Rest
         // Checksum the payload
         if ($payloadMd5 != $checkSum)
         {
-            // Debug::LogEntry($this->db, 'audit', 'Sent Checksum: ' . $checkSum, 'RestXml', 'LibraryMediaFileUpload');
-            // Debug::LogEntry($this->db, 'audit', 'Calculated Checksum: ' . $payloadMd5, 'RestXml', 'LibraryMediaFileUpload');
-            // Debug::LogEntry($this->db, 'audit', 'Payload: ' . $payload, 'RestXml', 'LibraryMediaFileUpload');
+            // Debug::LogEntry('audit', 'Sent Checksum: ' . $checkSum, 'RestXml', 'LibraryMediaFileUpload');
+            // Debug::LogEntry('audit', 'Calculated Checksum: ' . $payloadMd5, 'RestXml', 'LibraryMediaFileUpload');
+            // Debug::LogEntry('audit', 'Payload: ' . $payload, 'RestXml', 'LibraryMediaFileUpload');
 
             return $this->Error(2);
         }
@@ -500,7 +500,7 @@ class Rest
         if(!$id = $layoutObject->Add($layout, $description, $tags, $this->user->userid, $templateId))
             return $this->Error($layoutObject->GetErrorNumber(), $layoutObject->GetErrorMessage());
 
-        Debug::LogEntry($this->db, 'audit', 'Added new layout with id' . $id);
+        Debug::LogEntry('audit', 'Added new layout with id' . $id);
 
         return $this->Respond($this->ReturnId('layout', $id));
     }
@@ -1190,9 +1190,9 @@ class Rest
      */
     public function Version()
     {
-        $version = Config::Version($this->db);
+        $version = Config::Version();
 
-        Debug::LogEntry($this->db, 'audit', 'Called Version');
+        Debug::LogEntry('audit', 'Called Version');
 
         $xmlDoc = new DOMDocument();
         $xmlElement = $xmlDoc->createElement('version');

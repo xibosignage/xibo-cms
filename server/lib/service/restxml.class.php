@@ -48,7 +48,7 @@ class RestXml extends Rest
         $xmlDoc->documentElement->appendChild($node);
 
         // Log it
-        Debug::LogEntry($this->db, 'audit', $xmlDoc->saveXML(), 'RestXml', 'Respond');
+        Debug::LogEntry('audit', $xmlDoc->saveXML(), 'RestXml', 'Respond');
 
         // Return it as a string
         return $xmlDoc->saveXML();
@@ -56,7 +56,7 @@ class RestXml extends Rest
 
     public function Error($errorNo, $errorMessage = '')
     {
-        Debug::LogEntry($this->db, 'audit', $errorMessage, 'RestXml', 'Error');
+        Debug::LogEntry('audit', $errorMessage, 'RestXml', 'Error');
 
         // Output the error doc
         $xmlDoc = new DOMDocument('1.0');
@@ -80,7 +80,7 @@ class RestXml extends Rest
         $rootNode->appendChild($errorNode);
 
         // Log it
-        Debug::LogEntry($this->db, 'audit', $xmlDoc->saveXML());
+        Debug::LogEntry('audit', $xmlDoc->saveXML());
 
         // Return it as a string
         return $xmlDoc->saveXML();
@@ -128,7 +128,7 @@ class RestXml extends Rest
      */
     protected function NodeListFromArray($array, $nodeName)
     {
-        Debug::LogEntry($this->db, 'audit', sprintf('Building node list containing %d items', count($array)));
+        Debug::LogEntry('audit', sprintf('Building node list containing %d items', count($array)));
 
         $xmlDoc = new DOMDocument();
         $xmlElement = $xmlDoc->createElement($nodeName . 'Items');

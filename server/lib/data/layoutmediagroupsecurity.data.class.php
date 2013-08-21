@@ -37,7 +37,7 @@ class LayoutMediaGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutMediaGroupSecurity', 'Link');
+        Debug::LogEntry('audit', 'IN', 'LayoutMediaGroupSecurity', 'Link');
 
         $SQL  = "";
         $SQL .= "INSERT ";
@@ -64,7 +64,7 @@ class LayoutMediaGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'LayoutMediaGroupSecurity', 'Link');
+        Debug::LogEntry('audit', 'OUT', 'LayoutMediaGroupSecurity', 'Link');
 
         return true;
     }
@@ -81,7 +81,7 @@ class LayoutMediaGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutMediaGroupSecurity', 'LinkEveryone');
+        Debug::LogEntry('audit', 'IN', 'LayoutMediaGroupSecurity', 'LinkEveryone');
 
         $groupId = $db->GetSingleValue("SELECT GroupID FROM `group` WHERE IsEveryone = 1", 'GroupID', _INT);
 
@@ -98,7 +98,7 @@ class LayoutMediaGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutMediaGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'LayoutMediaGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -113,7 +113,7 @@ class LayoutMediaGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'LayoutMediaGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'LayoutMediaGroupSecurity', 'Unlink');
 
         return true;
     }
@@ -128,7 +128,7 @@ class LayoutMediaGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutMediaGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'LayoutMediaGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -143,7 +143,7 @@ class LayoutMediaGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'LayoutMediaGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'LayoutMediaGroupSecurity', 'Unlink');
 
         return true;
     }
@@ -160,7 +160,7 @@ class LayoutMediaGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutMediaGroupSecurity', 'Copy');
+        Debug::LogEntry('audit', 'IN', 'LayoutMediaGroupSecurity', 'Copy');
 
         $SQL  = "";
         $SQL .= "INSERT ";
@@ -201,7 +201,7 @@ class LayoutMediaGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutMediaGroupSecurity', 'Copy');
+        Debug::LogEntry('audit', 'IN', 'LayoutMediaGroupSecurity', 'Copy');
 
         $SQL  = "";
         $SQL .= "INSERT ";
@@ -221,7 +221,7 @@ class LayoutMediaGroupSecurity extends Data
 
         $SQL = sprintf($SQL, $newLayoutId, $layoutId);
 
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
 
         if (!$db->query($SQL))
         {
@@ -246,7 +246,7 @@ class LayoutMediaGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'LayoutMediaGroupSecurity', 'Copy');
+        Debug::LogEntry('audit', 'IN', 'LayoutMediaGroupSecurity', 'Copy');
 
         $SQL  = "";
         $SQL .= "INSERT ";
@@ -266,7 +266,7 @@ class LayoutMediaGroupSecurity extends Data
 
         $SQL = sprintf($SQL, $newLayoutId, $db->escape_string($newMediaId), $layoutId, $db->escape_string($oldMediaId));
 
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
 
         if (!$db->query($SQL))
         {

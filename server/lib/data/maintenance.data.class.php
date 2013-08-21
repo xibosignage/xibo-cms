@@ -40,7 +40,7 @@ class Maintenance extends Data
         // Run mysqldump to a temporary file
 
         // get temporary file
-        $tempFile = tempnam(Config::GetSetting($this->db, 'LIBRARY_LOCATION'), 'dmp');
+        $tempFile = tempnam(Config::GetSetting('LIBRARY_LOCATION'), 'dmp');
 
         exec('mysqldump --opt --host=' . $dbhost . ' --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' > ' . escapeshellarg($tempFile) . ' ');
 
@@ -65,7 +65,7 @@ class Maintenance extends Data
         // Push the file into msqldump
         exec('mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ');
 
-        Debug::LogEntry($this->db, 'audit', 'mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ' );
+        Debug::LogEntry('audit', 'mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ' );
 
         return true;
     }

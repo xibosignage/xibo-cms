@@ -37,7 +37,7 @@ class MediaGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'MediaGroupSecurity', 'Link');
+        Debug::LogEntry('audit', 'IN', 'MediaGroupSecurity', 'Link');
 
         $SQL  = "";
         $SQL .= "INSERT ";
@@ -62,7 +62,7 @@ class MediaGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'MediaGroupSecurity', 'Link');
+        Debug::LogEntry('audit', 'OUT', 'MediaGroupSecurity', 'Link');
 
         return true;
     }
@@ -79,7 +79,7 @@ class MediaGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'MediaGroupSecurity', 'LinkEveryone');
+        Debug::LogEntry('audit', 'IN', 'MediaGroupSecurity', 'LinkEveryone');
 
         $groupId = $db->GetSingleValue("SELECT GroupID FROM `group` WHERE IsEveryone = 1", 'GroupID', _INT);
 
@@ -96,7 +96,7 @@ class MediaGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'MediaGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'MediaGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -111,7 +111,7 @@ class MediaGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'MediaGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'MediaGroupSecurity', 'Unlink');
 
         return true;
     }
@@ -126,7 +126,7 @@ class MediaGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'MediaGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'MediaGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -141,7 +141,7 @@ class MediaGroupSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'MediaGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'MediaGroupSecurity', 'Unlink');
 
         return true;
     }
@@ -156,7 +156,7 @@ class MediaGroupSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'MediaGroupSecurity', 'Copy');
+        Debug::LogEntry('audit', 'IN', 'MediaGroupSecurity', 'Copy');
 
         $SQL  = "";
         $SQL .= "INSERT ";

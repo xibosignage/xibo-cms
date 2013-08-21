@@ -35,7 +35,7 @@ class Template extends Data
         $db =& $this->db;
         $currentdate = date("Y-m-d H:i:s");
 
-        Debug::LogEntry($db, 'audit', $template);
+        Debug::LogEntry('audit', $template);
 
         // Validation
         if (strlen($template) > 50 || strlen($template) < 1)

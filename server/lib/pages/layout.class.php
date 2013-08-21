@@ -57,7 +57,7 @@ class layoutDAO
             if ($this->layoutid != '')
             {
                 // get the permissions
-                Debug::LogEntry($db, 'audit', 'Loading permissions for layoutid ' . $this->layoutid);
+                Debug::LogEntry('audit', 'Loading permissions for layoutid ' . $this->layoutid);
 
                 $this->auth = $user->LayoutAuth($this->layoutid, true);
 
@@ -670,7 +670,7 @@ class layoutDAO
 		$bgColor = $xml->documentElement->getAttribute('bgcolor');
 
 		// Library location
-		$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
+		$libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
 		
 		// Fix up the background css
 		if ($bgImage == '')
@@ -777,7 +777,7 @@ HTML;
         $layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
         $oldLayout = Kit::GetParam('oldlayout', _REQUEST, _STRING);
 
-        $copyMediaChecked = (Config::GetSetting($db, 'LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 'checked' : '';
+        $copyMediaChecked = (Config::GetSetting('LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 'checked' : '';
 
         Theme::Set('form_id', 'LayoutCopyForm');
         Theme::Set('form_action', 'index.php?p=layout&q=Copy');

@@ -42,7 +42,7 @@ class Media extends Data
         $db =& $this->db;
 
         // Check we have room in the library
-        $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
 
         if ($libraryLimit > 0) {
             $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
@@ -76,7 +76,7 @@ class Media extends Data
         if ($oldMediaId != 0)
             $checkSQL .= sprintf(" AND mediaid <> %d  AND IsEdited = 0 ", $oldMediaId);
 
-        Debug::LogEntry($db, 'audit', 'Checking the name is unique: ' . $checkSQL, 'media', 'Add');
+        Debug::LogEntry('audit', 'Checking the name is unique: ' . $checkSQL, 'media', 'Add');
 
         if ($db->GetSingleRow($checkSQL))
             return $this->SetError(12, __('Media you own already has this name. Please choose another.'));
@@ -96,7 +96,7 @@ class Media extends Data
         }
 
         // Now move the file
-        $libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
+        $libraryFolder 	= Config::GetSetting('LIBRARY_LOCATION');
 
         if (!@rename($libraryFolder . 'temp/' . $fileId, $libraryFolder . $mediaId . '.' . $extension))
         {
@@ -124,7 +124,7 @@ class Media extends Data
         }
 
         // What permissions should we assign this with?
-        if (Config::GetSetting($db, 'MEDIA_DEFAULT') == 'public')
+        if (Config::GetSetting('MEDIA_DEFAULT') == 'public')
         {
             Kit::ClassLoader('mediagroupsecurity');
 
@@ -184,7 +184,7 @@ class Media extends Data
         $db =& $this->db;
 
         // Check we have room in the library
-        $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
 
         if ($libraryLimit > 0) {
             $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
@@ -306,7 +306,7 @@ class Media extends Data
         $db =& $this->db;
 
         // Library location
-        $databaseDir = Config::GetSetting($db, "LIBRARY_LOCATION");
+        $databaseDir = Config::GetSetting("LIBRARY_LOCATION");
 
         //3 things to check for..
         //the actual file, the thumbnail, the background
@@ -462,7 +462,7 @@ class Media extends Data
         }
 
         // Make a copy of the file
-        $libraryFolder 	= Config::GetSetting($db, 'LIBRARY_LOCATION');
+        $libraryFolder 	= Config::GetSetting('LIBRARY_LOCATION');
 
         if (!copy($libraryFolder . $oldMediaId . '.' . $extension, $libraryFolder . $newMediaId . '.' . $extension))
         {

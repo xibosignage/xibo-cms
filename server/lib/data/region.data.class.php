@@ -93,7 +93,7 @@ class Region extends Data
 	{
             $db =& $this->db;
 
-            Debug::LogEntry($db, 'audit', 'LayoutId: ' . $layoutid . ', Width: ' . $width . ', Height: ' . $height . ', Top: ' . $top . ', Left: ' . $left . ', Name: ' . $name . '.', 'region', 'AddRegion');
+            Debug::LogEntry('audit', 'LayoutId: ' . $layoutid . ', Width: ' . $width . ', Height: ' . $height . ', Top: ' . $top . ', Left: ' . $left . ', Name: ' . $name . '.', 'region', 'AddRegion');
 
             //Load the XML for this layout
             $xml = new DOMDocument("1.0");
@@ -132,7 +132,7 @@ class Region extends Data
             	return false;
 
             // What permissions should we create this with?
-            if (Config::GetSetting($db, 'LAYOUT_DEFAULT') == 'public')
+            if (Config::GetSetting('LAYOUT_DEFAULT') == 'public')
             {
                 Kit::ClassLoader('layoutregiongroupsecurity');
                 $security = new LayoutRegionGroupSecurity($db);
@@ -211,7 +211,7 @@ class Region extends Data
 		$xml = new DOMDocument("1.0");
 		$xml->loadXML($this->GetLayoutXml($layoutid));
 			
-		Debug::LogEntry($db, "audit", $mediaXmlString, "region", "AddMedia");
+		Debug::LogEntry("audit", $mediaXmlString, "region", "AddMedia");
 		
 		//Get the media's Xml
 		$mediaXml = new DOMDocument("1.0");
@@ -249,7 +249,7 @@ class Region extends Data
 		$xml = $xml->saveXML();
 
         // What permissions should we assign this with?
-        if (Config::GetSetting($db, 'MEDIA_DEFAULT') == 'public')
+        if (Config::GetSetting('MEDIA_DEFAULT') == 'public')
         {
             Kit::ClassLoader('layoutmediagroupsecurity');
 
@@ -387,7 +387,7 @@ class Region extends Data
 	{
 		$db =& $this->db;
 
-                Debug::LogEntry($db, 'audit', 'LkID = ' . $lkid, 'region', 'ReorderMedia');
+                Debug::LogEntry('audit', 'LkID = ' . $lkid, 'region', 'ReorderMedia');
 
 		//Load the XML for this layout
 		$xml = new DOMDocument("1.0");
@@ -451,7 +451,7 @@ class Region extends Data
 		$xml = new DOMDocument("1.0");
 		$xml->loadXML($this->GetLayoutXml($layoutid));
 			
-		Debug::LogEntry($db, "audit", 'Media String Given: ' . $mediaXmlString, "region", "SwapMedia");
+		Debug::LogEntry("audit", 'Media String Given: ' . $mediaXmlString, "region", "SwapMedia");
 		
 		//Get the media's Xml
 		$mediaXml = new DOMDocument("1.0");
@@ -466,12 +466,12 @@ class Region extends Data
 		//Should we use the LkID or the mediaID
 		if ($lkid == "")
 		{
-			Debug::LogEntry($db, "audit", "No link ID. Using mediaid", "region", "SwapMedia");
+			Debug::LogEntry("audit", "No link ID. Using mediaid", "region", "SwapMedia");
 			$mediaNodeList = $xpath->query("//region[@id='$regionid']/media[@id='$existingMediaid']");
 		}
 		else
 		{
-			Debug::LogEntry($db, "audit",  "Link ID detected, using for Xpath", "region", "SwapMedia");			
+			Debug::LogEntry("audit",  "Link ID detected, using for Xpath", "region", "SwapMedia");			
 			$mediaNodeList = $xpath->query("//region[@id='$regionid']/media[@lkid='$lkid']");
 		}
 		
@@ -485,7 +485,7 @@ class Region extends Data
 		// This repairs records that have been saved without a link ID? Maybe
 		if ($currentLkid != "")
 		{
-			Debug::LogEntry($db, "audit", "Current Link ID = $currentLkid", "region", "SwapMedia");
+			Debug::LogEntry("audit", "Current Link ID = $currentLkid", "region", "SwapMedia");
 			$this->UpdateDbLink($currentLkid, $newMediaid);
 			
 			$lkid = $currentLkid;
@@ -495,10 +495,10 @@ class Region extends Data
 			// Make a new link? Or assume a link already set? Or just give up?
 		}
 		
-		Debug::LogEntry($db, "audit", "Setting Link ID on new media node", "region", "SwapMedia");
+		Debug::LogEntry("audit", "Setting Link ID on new media node", "region", "SwapMedia");
 		$mediaXml->documentElement->setAttribute("lkid", $lkid);
 		
-		Debug::LogEntry($db, "audit", $mediaXml->saveXML(), "region", "SwapMedia");
+		Debug::LogEntry("audit", $mediaXml->saveXML(), "region", "SwapMedia");
 		
 		//Replace the Nodes
 		$newMediaNode = $xml->importNode($mediaXml->documentElement, true);
@@ -534,7 +534,7 @@ class Region extends Data
 		$xml->documentElement->setAttribute('width', $width);
 		$xml->documentElement->setAttribute('height', $height);
 		$xml->documentElement->setAttribute('resolutionid', $resolutionId);
-		$xml->documentElement->setAttribute("schemaVersion", Config::Version($db, 'XlfVersion'));
+		$xml->documentElement->setAttribute("schemaVersion", Config::Version('XlfVersion'));
 		
 		//Convert back to XML		
 		if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
@@ -684,7 +684,7 @@ class Region extends Data
 
         if ($lkId == '')
         {
-            Debug::LogEntry($db, 'audit', 'No link ID. Using mediaid and regionid', 'region', 'GetMediaNodeType');
+            Debug::LogEntry('audit', 'No link ID. Using mediaid and regionid', 'region', 'GetMediaNodeType');
             $mediaNodeList = $xpath->query('//region[@id="' . $regionId . '"]/media[@id="' . $mediaId . '"]');
         }
         else
@@ -717,7 +717,7 @@ class Region extends Data
         $sequence = 0;
         $numberofMediaItems = count($mediaList);
 
-        Debug::LogEntry($this->db, 'audit', 'There are ' . $numberofMediaItems . ' media items to reorder', 'region', 'ReorderTimeline');
+        Debug::LogEntry('audit', 'There are ' . $numberofMediaItems . ' media items to reorder', 'region', 'ReorderTimeline');
 
         foreach($mediaList as $mediaItem)
         {
@@ -725,7 +725,7 @@ class Region extends Data
             $mediaId = $mediaItem['mediaid'];
             $lkId = $mediaItem['lkid'];
 
-            Debug::LogEntry($this->db, 'audit', 'RegionId: ' . $regionId . '. MediaId: ' . $mediaId . '. LkId: ' . $lkId, 'region', 'ReorderTimeline');
+            Debug::LogEntry('audit', 'RegionId: ' . $regionId . '. MediaId: ' . $mediaId . '. LkId: ' . $lkId, 'region', 'ReorderTimeline');
 
             if ($lkId == '')
                 $mediaNodeList = $xpath->query("//region[@id='$regionId']/media[@id='$mediaId']");
@@ -798,13 +798,13 @@ class Region extends Data
         if ($userOptions->length == 0)
         {
             // We do not have an option - return the default
-            Debug::LogEntry($db, 'audit', 'GetOption ' . $name . ': Not Set - returning default ' . $default);
+            Debug::LogEntry('audit', 'GetOption ' . $name . ': Not Set - returning default ' . $default);
             return $default;
         }
         else
         {
             // Replace the old node we found with XPath with the new node we just created
-            Debug::LogEntry($db, 'audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue);
+            Debug::LogEntry('audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue);
             return ($userOptions->item(0)->nodeValue != '') ? $userOptions->item(0)->nodeValue : $default;
         }
     }
@@ -822,7 +822,7 @@ class Region extends Data
         if ($name == '') 
             return;
 
-        Debug::LogEntry($db, 'audit', sprintf('IN with Name=%s and value=%s', $name, $value), 'region', 'Set Option');
+        Debug::LogEntry('audit', sprintf('IN with Name=%s and value=%s', $name, $value), 'region', 'Set Option');
 
         // Get the options node from this document
         $xpath = new DOMXPath($xml);
@@ -846,7 +846,7 @@ class Region extends Data
         // Create a new option node
         $newNode = $xml->createElement($name, $value);
 
-        Debug::LogEntry($db, 'audit', sprintf('Created a new Option Node with Name=%s and value=%s', $name, $value), 'region', 'Set Option');
+        Debug::LogEntry('audit', sprintf('Created a new Option Node with Name=%s and value=%s', $name, $value), 'region', 'Set Option');
 
         // Xpath for it
         $userOptions = $xpath->query('//region[@id="' . $regionId . '"]/options/' . $name);

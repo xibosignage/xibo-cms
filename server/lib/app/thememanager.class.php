@@ -44,7 +44,7 @@ class Theme {
 		// TODO: Perhaps we also allow the user to configure their own theme for their session?
 
 		// What is the currently selected theme?
-		$globalTheme = Config::GetSetting($db, 'GLOBAL_THEME_NAME');
+		$globalTheme = Config::GetSetting('GLOBAL_THEME_NAME');
 
 		// Is this theme valid?
 		if (!is_dir('theme/' . $globalTheme))

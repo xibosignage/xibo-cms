@@ -37,7 +37,7 @@ class CampaignSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'Link');
+        Debug::LogEntry('audit', 'IN', 'CampaignGroupSecurity', 'Link');
 
         $SQL  = "";
         $SQL .= "INSERT ";
@@ -62,7 +62,7 @@ class CampaignSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'CampaignGroupSecurity', 'Link');
+        Debug::LogEntry('audit', 'OUT', 'CampaignGroupSecurity', 'Link');
 
         return true;
     }
@@ -79,7 +79,7 @@ class CampaignSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'LinkEveryone');
+        Debug::LogEntry('audit', 'IN', 'CampaignGroupSecurity', 'LinkEveryone');
 
         $groupId = $db->GetSingleValue("SELECT GroupID FROM `group` WHERE IsEveryone = 1", 'GroupID', _INT);
 
@@ -96,7 +96,7 @@ class CampaignSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'CampaignGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -111,7 +111,7 @@ class CampaignSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'CampaignGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'CampaignGroupSecurity', 'Unlink');
 
         return true;
     }
@@ -126,7 +126,7 @@ class CampaignSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'IN', 'CampaignGroupSecurity', 'Unlink');
 
         $SQL  = "";
         $SQL .= "DELETE FROM ";
@@ -141,7 +141,7 @@ class CampaignSecurity extends Data
             return false;
         }
 
-        Debug::LogEntry($db, 'audit', 'OUT', 'CampaignGroupSecurity', 'Unlink');
+        Debug::LogEntry('audit', 'OUT', 'CampaignGroupSecurity', 'Unlink');
 
         return true;
     }
@@ -156,7 +156,7 @@ class CampaignSecurity extends Data
     {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'Copy');
+        Debug::LogEntry('audit', 'IN', 'CampaignGroupSecurity', 'Copy');
 
         $SQL  = "";
         $SQL .= "INSERT ";
