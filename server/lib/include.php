@@ -132,7 +132,7 @@ if(Config::GetSetting("debug")=="On")
     error_reporting(E_ALL);
 
 // Setup the translations for gettext
-TranslationEngine::InitLocale($db);
+TranslationEngine::InitLocale();
 
 // Create login control system
 require_once('modules/' . Config::GetSetting("userModule"));

@@ -81,13 +81,15 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 Config::Version();
 
 // What is the production mode of the server?
-if(Config::GetSetting("SERVER_MODE")=="Test") ini_set('display_errors', 1);
+if(Config::GetSetting("SERVER_MODE") == "Test") 
+    ini_set('display_errors', 1);
 
 // Debugging?
-if(Config::GetSetting("debug")=="On") error_reporting(E_ALL);
+if(Config::GetSetting("debug") == "On") 
+    error_reporting(E_ALL);
 
 // Setup the translations for gettext
-TranslationEngine::InitLocale($db);
+TranslationEngine::InitLocale();
 
 // Output HTML Headers
 print '<html>';

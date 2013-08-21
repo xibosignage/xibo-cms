@@ -94,5 +94,5 @@ $serviceLocation = Kit::GetXiboRoot();
 require_once('lib/oauth.inc.php');
 
 // Setup the translations for gettext
-TranslationEngine::InitLocale($db);
+TranslationEngine::InitLocale();
 ?>

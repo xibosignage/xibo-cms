@@ -31,7 +31,7 @@ class TranslationEngine
 	 * Gets and Sets the Local 
 	 * @return 
 	 */
-	public static function InitLocale(database $db)
+	public static function InitLocale()
 	{
             $localeDir	= 'locale';
             $default    = Config::GetSetting('DEFAULT_LANGUAGE');
@@ -105,9 +105,6 @@ class TranslationEngine
             }
 
             $transEngine    = new gettext_reader($stream);
-
-            
-            //Debug::LogEntry('audit', 'OUT', 'TranslationEngine', 'InitLocal');
 	}
 }
 

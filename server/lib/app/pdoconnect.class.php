@@ -37,6 +37,8 @@ Class PDOConnect {
 			// Open the connection and set the error mode
 			self::$conn = new PDO('mysql:host=' . $dbhost . ';dbname=' . $dbname . ';', $dbuser, $dbpass);
 			self::$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+			self::$conn->query("SET NAMES 'utf8'");
 		}
 
 		return self::$conn;
