@@ -24,6 +24,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0); //we never want to display errors on the screen
 
 // Required Library Files
+require_once("lib/app/pdoconnect.class.php");
 require_once('lib/app/translationengine.class.php');
 require_once('lib/app/app_functions.php');
 require_once('lib/app/debug.class.php');

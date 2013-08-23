@@ -140,7 +140,7 @@ class XMDSSoap
         $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
         $version 	= Kit::ValidateParam($version, _STRING);
-        $rfLookahead    = Kit::ValidateParam(Config::GetSetting($db,'REQUIRED_FILES_LOOKAHEAD'), _INT);
+        $rfLookahead    = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -307,11 +307,11 @@ class XMDSSoap
         }
 
         // PHONE_HOME if required.
-        if (Config::GetSetting($db,'PHONE_HOME') == 'On')
+        if (Config::GetSetting('PHONE_HOME') == 'On')
         {
             // Find out when we last PHONED_HOME :D
             // If it's been > 28 days since last PHONE_HOME then
-            if (Config::GetSetting($db,'PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28)))
+            if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28)))
             {
                 if ($this->isAuditing == 1)
                 {
@@ -335,7 +335,7 @@ class XMDSSoap
                 // Retrieve version number
                 $PHONE_HOME_VERSION = Config::Version('app_ver');
 
-                $PHONE_HOME_URL = Config::GetSetting($db,'PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting($db,'PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
+                $PHONE_HOME_URL = Config::GetSetting('PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 
                 if ($this->isAuditing == 1)
                 {
@@ -481,7 +481,7 @@ class XMDSSoap
         $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
         $version 	= Kit::ValidateParam($version, _STRING);
-        $sLookahead     = Kit::ValidateParam(Config::GetSetting($db,'REQUIRED_FILES_LOOKAHEAD'), _INT);
+        $sLookahead     = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -505,7 +505,7 @@ class XMDSSoap
 
         $currentdate 	= time();
 
-        if (Config::GetSetting($db,'SCHEDULE_LOOKAHEAD') == 'On')
+        if (Config::GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
         {
             $sLookahead = $currentdate + $sLookahead;
         }

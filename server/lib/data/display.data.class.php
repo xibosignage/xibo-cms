@@ -377,7 +377,7 @@ class Display extends Data
     {
         $db =& $this->db;
         $currentdate 	= time();
-        $rfLookahead    = Kit::ValidateParam(Config::GetSetting($db,'REQUIRED_FILES_LOOKAHEAD'), _INT);
+        $rfLookahead    = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         $rfLookahead 	= $currentdate + $rfLookahead;
 
