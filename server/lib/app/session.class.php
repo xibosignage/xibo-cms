@@ -290,7 +290,7 @@ class Session {
 
 			// Delete sessions older than 10 times the max lifetime
 			$sth = $dbh->prepare('UPDATE session SET isexpired = :isexpired WHERE session_id = :session_id');
-			$sth->execute(array('session_id' => $key, 'isexpired' => $isExpired));
+			$sth->execute(array('session_id' => $this->key, 'isexpired' => $isExpired));
 		}
 		catch (Exception $e) {
 			Debug::LogEntry('error', $e->getMessage());

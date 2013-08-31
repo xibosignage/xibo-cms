@@ -208,7 +208,7 @@ var XiboTimelineSaveOrder = function(mediaListId, layoutId, regionId) {
     var mediaList = "";
 
     $('#' + mediaListId + ' li.timelineMediaListItem').each(function(){
-        mediaList = mediaList + $(this).attr("mediaid") + "&" + $(this).attr("lkid") + "|";
+        mediaList = mediaList + $(this).attr("mediaid") + "," + $(this).attr("lkid") + "|";
     });
 
     //console.log("Media List: " + mediaList);

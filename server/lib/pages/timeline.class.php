@@ -861,7 +861,7 @@ END;
         foreach($mediaList as $mediaNode)
         {
             // Explode the second part of the array
-            $mediaNode = explode('&', $mediaNode);
+            $mediaNode = explode(',', $mediaNode);
 
             $resolvedMedia[] = array('mediaid' => $mediaNode[0], 'lkid' => $mediaNode[1]);
         }

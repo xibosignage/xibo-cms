@@ -764,7 +764,7 @@ class Region extends Data
 
         // Update layout status
         Kit::ClassLoader('Layout');
-        $layout = new Layout($db);
+        $layout = new Layout($this->db);
         $layout->SetValid($layoutId, true);
 
         return true;
