@@ -161,7 +161,7 @@ class Session {
 				$page = Kit::GetParam('p', _REQUEST, _WORD);
 				$query = Kit::GetParam('q', _REQUEST, _WORD);
 
-				if (($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong'))
+				if (($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong') || ($page == 'layout' && $query == 'LayoutStatus'))
 					return true;
 
 				// Update the existing session

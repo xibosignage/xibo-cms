@@ -50,8 +50,11 @@
         // Referring Page is anything after the ?
 		$requestUri = rawurlencode(Kit::GetCurrentPage());
 		
-		if(!$this->checkforUserid()) 
+		if (!$this->checkforUserid()) 
 		{
+			// Log out the user
+			$db->query(sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d ", $userid));
+
 			// Print out the login form
 			if ($ajax) 
 			{
