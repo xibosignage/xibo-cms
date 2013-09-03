@@ -46,6 +46,7 @@
 	function attempt_login($ajax = false) 
 	{
 		$db =& $this->db;
+		$userid = Kit::GetParam('userid', _SESSION, _INT);
 
         // Referring Page is anything after the ?
 		$requestUri = rawurlencode(Kit::GetCurrentPage());
@@ -53,7 +54,8 @@
 		if (!$this->checkforUserid()) 
 		{
 			// Log out the user
-			$db->query(sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d ", $userid));
+			if ($userid != 0)
+				$db->query(sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d ", $userid));
 
 			// Print out the login form
 			if ($ajax) 
@@ -79,8 +81,6 @@
 		}
 		else 
 		{
-			$userid = Kit::GetParam('userid', _SESSION, _INT);
-			
 			//write out to the db that the logged in user has accessed the page still
 			$SQL = sprintf("UPDATE user SET lastaccessed = '" . date("Y-m-d H:i:s") . "', loggedin = 1 WHERE userid = %d ", $userid);
 			

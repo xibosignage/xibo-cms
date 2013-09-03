@@ -595,9 +595,7 @@ class Kit
 	 */
 	public static function CheckToken($tokenName = "token")
 	{
-		global $db;
-
-		if (!isset($_POST[$tokenName]))
+		if (!isset($_POST[$tokenName]) || !isset($_SESSION[$tokenName]))
 			return false;
 		
 		if ($_POST[$tokenName] == $_SESSION[$tokenName])
@@ -613,7 +611,7 @@ class Kit
 		{
 			unset($_SESSION[$tokenName]);
 
-			Debug::LogEntry('error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [$token] for session_id [" . session_id() . ']');
+			Debug::LogEntry('error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [" . $_POST[$tokenName] . "] for session_id [" . session_id() . ']');
 			return false;
 		}
 	}

@@ -161,28 +161,38 @@ class Session {
 				$page = Kit::GetParam('p', _REQUEST, _WORD);
 				$query = Kit::GetParam('q', _REQUEST, _WORD);
 
-				if (($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong') || ($page == 'layout' && $query == 'LayoutStatus'))
-					return true;
+				if (($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong') || ($page == 'layout' && $query == 'LayoutStatus')) {
 
-				// Update the existing session
-				$SQL  = "UPDATE session SET ";
-				$SQL .= " 	session_data = :session_data, ";
-				$SQL .= " 	session_expiration = :session_expiration, ";
-				$SQL .= " 	lastaccessed 	= :lastaccessed, ";
-				$SQL .= " 	remoteaddr 	= :remoteaddr ";
-				$SQL .= " WHERE session_id = :session_id ";
+					// Update the existing session without the expiry
+					$SQL  = "UPDATE session SET session_data = :session_data WHERE session_id = :session_id ";
 
-				$isth = $dbh->prepare($SQL);
+					$isth = $dbh->prepare($SQL);
 
-				$isth->execute(
-						array(
-							'session_id' => $key,
-							'session_data' => $val,
-							'session_expiration' => $newExp,
-							'lastaccessed' => $lastaccessed,
-							'remoteaddr' => $remoteAddr
-						)
-					);
+					$isth->execute(
+							array('session_id' => $key, 'session_data' => $val)
+						);
+				}
+				else {
+					// Update the existing session
+					$SQL  = "UPDATE session SET ";
+					$SQL .= " 	session_data = :session_data, ";
+					$SQL .= " 	session_expiration = :session_expiration, ";
+					$SQL .= " 	lastaccessed 	= :lastaccessed, ";
+					$SQL .= " 	remoteaddr 	= :remoteaddr ";
+					$SQL .= " WHERE session_id = :session_id ";
+
+					$isth = $dbh->prepare($SQL);
+
+					$isth->execute(
+							array(
+								'session_id' => $key,
+								'session_data' => $val,
+								'session_expiration' => $newExp,
+								'lastaccessed' => $lastaccessed,
+								'remoteaddr' => $remoteAddr
+							)
+						);
+				}
 			}
 		}
 		catch (Exception $e) {

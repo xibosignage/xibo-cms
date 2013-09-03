@@ -628,8 +628,8 @@ class XMDSSoap
                 throw new SoapFault('Receiver', "This display client is not licensed", $hardwareKey);
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "[IN]", "xmds", "BlackList", "", $this->displayId);
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "$xml", "xmds", "BlackList", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "[IN]", "xmds", "BlackList", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "$xml", "xmds", "BlackList", "", $this->displayId);
 
         // Check to see if this media/display is already blacklisted (and not ignored)
         $SQL = "SELECT BlackListID FROM blacklist WHERE MediaID = $mediaId AND isIgnored = 0 AND DisplayID = " . $this->displayId;
@@ -670,10 +670,10 @@ class XMDSSoap
         }
         else
         {
-            if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "Media Already BlackListed [$mediaId]", "xmds", "BlackList", "", $this->displayId);
+            if ($this->isAuditing == 1) Debug::LogEntry( "audit", "Media Already BlackListed [$mediaId]", "xmds", "BlackList", "", $this->displayId);
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "[OUT]", "xmds", "BlackList", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "[OUT]", "xmds", "BlackList", "", $this->displayId);
 
         return true;
     }
@@ -712,8 +712,8 @@ class XMDSSoap
             throw new SoapFault('Sender', 'This display client is not licensed.');
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "IN", "xmds", "SubmitLog", "", $this->displayId);
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", 'XML [' . $logXml . ']', "xmds", "SubmitLog", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "IN", "xmds", "SubmitLog", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", 'XML [' . $logXml . ']', "xmds", "SubmitLog", "", $this->displayId);
 
         // Load the XML into a DOMDocument
         $document = new DOMDocument("1.0");
@@ -740,7 +740,7 @@ class XMDSSoap
             // This will be a bunch of trace nodes
             $message = $node->textContent;
 
-            if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", 'Trace Message: [' . $message . ']', "xmds", "SubmitLog", "", $this->displayId);
+            if ($this->isAuditing == 1) Debug::LogEntry( "audit", 'Trace Message: [' . $message . ']', "xmds", "SubmitLog", "", $this->displayId);
 
             // Each element should have a category and a date
 
@@ -789,7 +789,7 @@ class XMDSSoap
             }
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "OUT", "xmds", "SubmitLog", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "OUT", "xmds", "SubmitLog", "", $this->displayId);
 
         return true;
     }
@@ -828,8 +828,8 @@ class XMDSSoap
             throw new SoapFault('Receiver', "This display client is not licensed");
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "IN", "xmds", "SubmitStats", "", $this->displayId);
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "StatXml: [" . $statXml . "]", "xmds", "SubmitStats", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "IN", "xmds", "SubmitStats", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "StatXml: [" . $statXml . "]", "xmds", "SubmitStats", "", $this->displayId);
 
         if ($statXml == "")
         {
@@ -837,12 +837,12 @@ class XMDSSoap
         }
 
         // Log
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "About to create Stat Object.", "xmds", "SubmitStats", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "About to create Stat Object.", "xmds", "SubmitStats", "", $this->displayId);
 
         $statObject = new Stat($db);
 
         // Log
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "About to Create DOMDocument.", "xmds", "SubmitStats", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "About to Create DOMDocument.", "xmds", "SubmitStats", "", $this->displayId);
 
         // Load the XML into a DOMDocument
         $document = new DOMDocument("1.0");
@@ -887,7 +887,7 @@ class XMDSSoap
             }
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "OUT", "xmds", "SubmitStats", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "OUT", "xmds", "SubmitStats", "", $this->displayId);
 
         return true;
     }
@@ -919,7 +919,7 @@ class XMDSSoap
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, 'audit', $inventory, 'xmds', 'MediaInventory', '', $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( 'audit', $inventory, 'xmds', 'MediaInventory', '', $this->displayId);
 
         // Check that the $inventory contains something
         if ($inventory == '')
