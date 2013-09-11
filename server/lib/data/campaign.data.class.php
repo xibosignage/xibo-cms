@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2012 Daniel Garner
+ * Copyright (C) 2012-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,13 +20,7 @@
  */
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.');
 
-class Campaign extends Data
-{
-    public function __construct(database $db)
-    {
-        parent::__construct($db);
-    }
-
+class Campaign extends Data {
     /**
      * Add Campaign
      * @param <string> $campaign
@@ -34,23 +28,28 @@ class Campaign extends Data
      * @param <int> $userId
      * @return <type>
      */
-    public function Add($campaign, $isLayoutSpecific, $userId)
-    {
+    public function Add($campaign, $isLayoutSpecific, $userId) {
         Debug::LogEntry('audit', 'IN', 'Campaign', 'Add');
         
         if ($campaign == '')
             return $this->SetError(25000, __('Campaign name cannot be empty'));
 
-        $SQL = "INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId) VALUES ('%s', %d, %d) ";
-        $SQL = sprintf($SQL, $this->db->escape_string($campaign), $isLayoutSpecific, $userId);
+        try {
+            $dbh = PDOConnect::init();
 
-        if (!$id = $this->db->insert_query($SQL))
-        {
-            trigger_error($this->db->error());
+            $sth = $dbh->prepare('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId) VALUES (:campaign, :islayoutspecific, :userid)');
+            $sth->execute(array(
+                    'campaign' => $campaign,
+                    'islayoutspecific' => $isLayoutSpecific,
+                    'userid' => $userId
+                ));
+
+            return $dbh->lastInsertId();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25500, __('Unable to add Campaign, Step 1'));
         }
-
-        return $id;
     }
 
     /**
@@ -59,55 +58,84 @@ class Campaign extends Data
      * @param <type> $campaign
      * @return <type>
      */
-    public function Edit($campaignId, $campaign)
-    {
+    public function Edit($campaignId, $campaign) {
         Debug::LogEntry('audit', 'IN', 'Campaign', 'Edit');
 
         if ($campaign == '')
             return $this->SetError(25000, __('Campaign name cannot be empty'));
 
-        $SQL = "UPDATE `campaign` SET Campaign = '%s' WHERE CampaignID = %d ";
-        $SQL = sprintf($SQL, $this->db->escape_string($campaign), $campaignId);
+        try {
+            $dbh = PDOConnect::init();
 
-        if (!$this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
+            $sth = $dbh->prepare('UPDATE `campaign` SET Campaign = :campaign WHERE CampaignID = :campaignid');
+            $sth->execute(array(
+                    'campaign' => $campaign,
+                    'campaignid' => $campaignId
+                ));
+
+            return true;
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25500, __('Unable to edit Campaign, Step 1'));
         }
-
-        return true;
     }
 
     /**
      * Delete Campaign
      * @param <type> $campaignId
      */
-    public function Delete($campaignId)
-    {
+    public function Delete($campaignId) {
         Debug::LogEntry('audit', 'IN', 'Campaign', 'Delete');
 
-        // Unlink all Layouts
-        if (!$this->UnlinkAll($campaignId))
-            return false;
-
-        // Remove all permissions
-        Kit::ClassLoader('campaignsecurity');
-        $security = new CampaignSecurity($this->db);
-
-        if (!$security->UnlinkAll($campaignId))
-            trigger_error(__('Unable to set permissions'));
-
-        // Delete the Campaign record
-        $SQL = "DELETE FROM `campaign` WHERE CampaignID = %d ";
-        $SQL = sprintf($SQL, $campaignId);
-
-        if (!$this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
-            return $this->SetError(25500, __('Unable to delete Campaign'));
+        // Start a transaction
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->beginTransaction();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(2, __('Unable to open connection and start transaction'));
         }
 
-        return true;
+        // Delete the Campaign record
+        try {
+            $dbh = PDOConnect::init();
+
+            // Unlink all Layouts
+            if (!$this->UnlinkAll($campaignId))
+                throw new Exception(__('Unable to Unlink'));
+
+            // Remove all permissions
+            Kit::ClassLoader('campaignsecurity');
+            $security = new CampaignSecurity($this->db);
+
+            if (!$security->UnlinkAll($campaignId))
+                throw new Exception(__('Unable to set permissions'));
+
+            // Delete from the Campaign
+            $sth = $dbh->prepare('DELETE FROM `campaign` WHERE CampaignID = :campaignid');
+            $sth->execute(array(
+                    'campaignid' => $campaignId
+                ));
+
+            // Commit
+            $dbh->commit();
+
+            return true;
+        }
+        catch (Exception $e) {
+            
+            // Rollback the connection
+            $dbh->rollBack();
+
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25500, __('Unable to delete Campaign'));
+
+            return false;
+        }
     }
 
     /**
@@ -117,18 +145,23 @@ class Campaign extends Data
      * @param <type> $displayOrder
      * @return <type>
      */
-    public function Link($campaignId, $layoutId, $displayOrder)
-    {
-        $SQL = "INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES (%d, %d, %d)";
-        $SQL = sprintf($SQL, $campaignId, $layoutId, $displayOrder);
+    public function Link($campaignId, $layoutId, $displayOrder) {
+        try {
+            $dbh = PDOConnect::init();
 
-        if (!$this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
+            $sth = $dbh->prepare('INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES (:campaignid, :layoutid, :displayorder)');
+            $sth->execute(array(
+                    'layoutid' => $layoutId,
+                    'displayorder' => $displayOrder,
+                    'campaignid' => $campaignId
+                ));
+
+            return true;
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25500, __('Unable to link Campaign to Layout'));
         }
-
-        return true;
     }
 
     /**
@@ -138,18 +171,23 @@ class Campaign extends Data
      * @param <type> $displayOrder
      * @return <type>
      */
-    public function Unlink($campaignId, $layoutId, $displayOrder)
-    {
-        $SQL = "DELETE FROM `lkcampaignlayout` WHERE CampaignID = %d AND LayoutID = %d AND DisplayOrder = %d";
-        $SQL = sprintf($SQL, $campaignId, $layoutId, $displayOrder);
+    public function Unlink($campaignId, $layoutId, $displayOrder) {
+        try {
+            $dbh = PDOConnect::init();
 
-        if (!$this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
+            $sth = $dbh->prepare('DELETE FROM `lkcampaignlayout` WHERE CampaignID = :campaignid AND LayoutID = :layoutid AND DisplayOrder = :displayorder');
+            $sth->execute(array(
+                    'layoutid' => $layoutId,
+                    'displayorder' => $displayOrder,
+                    'campaignid' => $campaignId
+                ));
+
+            return true;
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25500, __('Unable to unlink Campaign from Layout'));
         }
-
-        return true;
     }
 
     /**
@@ -157,41 +195,56 @@ class Campaign extends Data
      * @param <type> $campaignId
      * @return <type>
      */
-    public function UnlinkAll($campaignId)
-    {
-        $SQL = "DELETE FROM `lkcampaignlayout` WHERE CampaignID = %d";
-        $SQL = sprintf($SQL, $campaignId);
+    public function UnlinkAll($campaignId) {
+        try {
+            $dbh = PDOConnect::init();
 
-        if (!$this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
+            // Delete from the Campaign
+            $sth = $dbh->prepare('DELETE FROM `lkcampaignlayout` WHERE CampaignID = :campaignid');
+            $sth->execute(array(
+                    'campaignid' => $campaignId
+                ));
+
+            return true;
+        }       
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25500, __('Unable to unlink all Layouts'));
         }
-
-        return true;
     }
 
     /**
      * Gets the CampaignId for a layoutspecfic campaign
      * @param <type> $layoutId
      */
-    public function GetCampaignId($layoutId)
-    {
-        // Get the Campaign ID
-        $SQL  = "SELECT campaign.CampaignID ";
-        $SQL .= "  FROM `lkcampaignlayout` ";
-        $SQL .= "   INNER JOIN `campaign` ";
-        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-        $SQL .= " WHERE lkcampaignlayout.LayoutID = %d ";
-        $SQL .= "   AND campaign.IsLayoutSpecific = 1";
+    public function GetCampaignId($layoutId) {
+        try {
+            $dbh = PDOConnect::init();
 
-        if (!$campaignId = $this->db->GetSingleValue(sprintf($SQL, $layoutId), 'CampaignID', _INT))
-        {
-            trigger_error(sprintf('LayoutId %d has no associated campaign', $layoutId));
+            // Get the Campaign ID
+            $SQL  = "SELECT campaign.CampaignID ";
+            $SQL .= "  FROM `lkcampaignlayout` ";
+            $SQL .= "   INNER JOIN `campaign` ";
+            $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+            $SQL .= " WHERE lkcampaignlayout.LayoutID = :layoutid ";
+            $SQL .= "   AND campaign.IsLayoutSpecific = 1";
+
+            // Delete from the Campaign
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'layoutid' => $layoutId
+                ));
+
+            if (!$row = $sth->fetch())
+                throw new Exception('No Campaign returned');
+
+            // Return the Campaign ID
+            return Kit::ValidateParam($row['CampaignID'], _INT);
+        }       
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25000, __('Layout has no associated Campaign, corrupted Layout'));
         }
-
-        return $campaignId;
     }
 }
 ?>

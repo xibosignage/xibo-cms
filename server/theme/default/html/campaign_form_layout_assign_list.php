@@ -21,6 +21,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <table id="LayoutAssignTable" class="table table-bordered">
+	<?php echo Theme::Get('form_meta'); ?>
 	<thead>
 		<tr>
 			<th><?php echo Theme::Translate('Name'); ?></th>

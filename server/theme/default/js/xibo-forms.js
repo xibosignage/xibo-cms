@@ -141,7 +141,7 @@ function LayoutsSubmit(campaignId) {
     // Serialise the form and then submit it via Ajax.
     var layouts = $("#LayoutAssignSortable").sortable('serialize');
 
-    layouts = layouts + "&CampaignID=" + campaignId;
+    layouts = layouts + "&CampaignID=" + campaignId + "&token=" + $('#LayoutAssignTable input[name=token]').val();
     
     $.ajax({
         type: "post",
