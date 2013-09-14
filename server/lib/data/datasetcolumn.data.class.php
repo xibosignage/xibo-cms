@@ -24,36 +24,55 @@ class DataSetColumn extends Data
 {
     public function Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder = 0, $dataSetColumnTypeId = 1, $formula = '')
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', sprintf('IN - DataSetID = %d', $dataSetId), 'DataSetColumn', 'Add');
 
-        // Is the column order provided?
-        if ($columnOrder == 0)
-        {
-            $SQL  = "";
-            $SQL .= "SELECT IFNULL(MAX(ColumnOrder), 1) AS ColumnOrder ";
-            $SQL .= "  FROM datasetcolumn ";
-            $SQL .= sprintf("WHERE datasetID = %d ", $dataSetId);
+        try {
+            $dbh = PDOConnect::init();
 
-            if (!$columnOrder = $db->GetSingleValue($SQL, 'ColumnOrder', _INT))
+            // Is the column order provided?
+            if ($columnOrder == 0)
             {
-                trigger_error($db->error());
-                return $this->SetError(25005, __('Could not determine the Column Order'));
+                $SQL  = "";
+                $SQL .= "SELECT IFNULL(MAX(ColumnOrder), 1) AS ColumnOrder ";
+                $SQL .= "  FROM datasetcolumn ";
+                $SQL .= "WHERE datasetID = :datasetid ";
+
+                $sth = $dbh->prepare($SQL);
+                $sth->execute(array(
+                        'datasetid' => $dataSetId
+                    ));
+
+                if (!$row = $sth->fetch())
+                    return $this->SetError(25005, __('Could not determine the Column Order'));
+                
+                $columnOrder = Kit::ValidateParam($row['ColumnOrder'], _INT);
             }
+
+            // Insert the data set column
+            $SQL  = "INSERT INTO datasetcolumn (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula) ";
+            $SQL .= "    VALUES (:datasetid, :heading, :datatypeid, :listcontent, :columnorder, :datasetcolumntypeid, :formula) ";
+            
+            $sth = $dbh->prepare($SQL);
+                $sth->execute(array(
+                        'datasetid' => $dataSetId,
+                        'heading' => $heading,
+                        'datatypeid' => $dataTypeId,
+                        'listcontent' => $listContent,
+                        'columnorder' => $columnOrder,
+                        'datasetcolumntypeid' => $dataSetColumnTypeId,
+                        'formula' => $formula
+                   ));
+
+            $id = $dbh->lastInsertId();
+
+            Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Add');
+
+            return $id;
         }
-
-        $SQL  = "INSERT INTO datasetcolumn (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula) ";
-        $SQL .= "    VALUES (%d, '%s', %d, '%s', %d, %d, '%s') ";
-        $SQL = sprintf($SQL, $dataSetId, $db->escape_string($heading), $dataTypeId, $db->escape_string($listContent), $columnOrder, $dataSetColumnTypeId, $db->escape_string($formula));
-
-        if (!$id = $db->insert_query($SQL))
-        {
-            trigger_error($db->error());
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25005, __('Could not add DataSet Column'));
         }
-
-        Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Add');
-
-        return $id;
     }
 
     public function Edit($dataSetColumnId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula = '')
