@@ -53,15 +53,15 @@ class DataSetColumn extends Data
             $SQL .= "    VALUES (:datasetid, :heading, :datatypeid, :listcontent, :columnorder, :datasetcolumntypeid, :formula) ";
             
             $sth = $dbh->prepare($SQL);
-                $sth->execute(array(
-                        'datasetid' => $dataSetId,
-                        'heading' => $heading,
-                        'datatypeid' => $dataTypeId,
-                        'listcontent' => $listContent,
-                        'columnorder' => $columnOrder,
-                        'datasetcolumntypeid' => $dataSetColumnTypeId,
-                        'formula' => $formula
-                   ));
+            $sth->execute(array(
+                    'datasetid' => $dataSetId,
+                    'heading' => $heading,
+                    'datatypeid' => $dataTypeId,
+                    'listcontent' => $listContent,
+                    'columnorder' => $columnOrder,
+                    'datasetcolumntypeid' => $dataSetColumnTypeId,
+                    'formula' => $formula
+               ));
 
             $id = $dbh->lastInsertId();
 
@@ -77,92 +77,100 @@ class DataSetColumn extends Data
 
     public function Edit($dataSetColumnId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula = '')
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
 
-        // Validation
-        if ($listContent != '')
-        {
-            $list = explode(',', $listContent);
-
-            // We can check this is valid by building up a NOT IN sql statement, if we get results.. we know its not good
-            $select = '';
-
-            for ($i=0; $i < count($list); $i++)
+            // Validation
+            if ($listContent != '')
             {
-                $list_val = $db->escape_string($list[$i]);
-                $select .= "'$list_val',";
+                $list = explode(',', $listContent);
+
+                // We can check this is valid by building up a NOT IN sql statement, if we get results.. we know its not good
+                $select = '';
+
+                for ($i=0; $i < count($list); $i++)
+                {
+                    $list_val = $dbh->quote($list[$i]);
+                    $select .= $list_val . ',';
+                }
+
+                $select = rtrim($select, ',');
+
+                // $select has been quoted in the for loop
+                $SQL = "SELECT DataSetDataID FROM datasetdata WHERE DataSetColumnID = :datasetcolumnid AND Value NOT IN (" . $select . ")";
+
+                $sth = $dbh->prepare($SQL);
+                $sth->execute(array(
+                        'datasetcolumnid' => $dataSetColumnId
+                    ));
+
+                if ($row = $sth->fetch())
+                    return $this->SetError(25005, __('New list content value is invalid as it doesnt include values for existing data'));
             }
 
-            $select = rtrim($select, ',');
+            $SQL  = "UPDATE datasetcolumn SET Heading = :heading, ListContent = :listcontent, ColumnOrder = :columnorder, DataTypeID = :datatypeid, DataSetColumnTypeID = :datasetcolumntypeid, Formula = :formula ";
+            $SQL .= " WHERE DataSetColumnID = :datasetcolumnid";
 
-            $SQL = sprintf("SELECT DataSetDataID FROM datasetdata WHERE DataSetColumnID = %d AND Value NOT IN (%s)", $dataSetColumnId, $select);
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'datasetcolumnid' => $dataSetColumnId,
+                    'heading' => $heading,
+                    'datatypeid' => $dataTypeId,
+                    'listcontent' => $listContent,
+                    'columnorder' => $columnOrder,
+                    'datasetcolumntypeid' => $dataSetColumnTypeId,
+                    'formula' => $formula
+               ));
 
-            if (!$results = $db->query($SQL))
-            {
-                trigger_error($db->error());
-                return $this->SetError(25005, __('Could not edit DataSet Column'));
-            }
+            Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Edit');
 
-            if ($db->num_rows($results) > 0)
-                return $this->SetError(25005, __('New list content value is invalid as it doesnt include values for existing data'));
+            return true;
         }
-
-        $SQL  = "UPDATE datasetcolumn SET Heading = '%s', ListContent = '%s', ColumnOrder = %d, DataTypeID = %d, DataSetColumnTypeID = %d, Formula = '%s' ";
-        $SQL .= " WHERE DataSetColumnID = %d";
-
-        $SQL = sprintf($SQL, $heading, $db->escape_string($listContent), $db->escape_string($columnOrder), $dataTypeId, $dataSetColumnTypeId, $db->escape_string($formula), $dataSetColumnId);
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25005, __('Could not edit DataSet Column'));
         }
-
-        Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Edit');
-
-        return true;
     }
 
     public function Delete($dataSetColumnId)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
 
-        $SQL  = "DELETE FROM datasetcolumn ";
-        $SQL .= " WHERE DataSetColumnID = %d";
+            $sth = $dbh->prepare('DELETE FROM datasetcolumn WHERE DataSetColumnID = :datasetcolumnid');
+            $sth->execute(array(
+                    'datasetcolumnid' => $dataSetColumnId
+                ));
 
-        $SQL = sprintf($SQL, $dataSetColumnId);
+            Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Delete');
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
+            return true;
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25005, __('Could not delete DataSet Column'));
         }
-
-        Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Delete');
-
-        return true;
     }
-
 
     // Delete All Data Set columns
     public function DeleteAll($dataSetId)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
 
-        $SQL  = "DELETE FROM datasetcolumn ";
-        $SQL .= " WHERE DataSetId = %d";
+            $sth = $dbh->prepare('DELETE FROM datasetcolumn WHERE DataSetId = :datasetid');
+            $sth->execute(array(
+                    'datasetid' => $dataSetId
+                ));
 
-        $SQL = sprintf($SQL, $dataSetId);
+            Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'DeleteAll');
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            return $this->SetError(25005, __('Could not delete DataSet Columns'));
+            return true;
         }
-
-        Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Delete');
-
-        return true;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25005, __('Could not delete DataSet Column'));
+        }
     }
 }
 ?>
