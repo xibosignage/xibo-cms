@@ -91,5 +91,10 @@ class Data
         // Return false so that we can use this method as the return call for parent methods
 		return false;
 	}
+
+	protected function ThrowError($errNo, $errMessage = '') {
+		$this->SetError($errNo, $errMessage);
+		throw new Exception(sprintf('Data Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage));
+	}
 } 
 ?>

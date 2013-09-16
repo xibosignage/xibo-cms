@@ -41,65 +41,69 @@ class Display extends Data
 	 */
 	public function Add($display, $isAuditing, $defaultLayoutID, $license, $licensed, $incSchedule)
 	{
-            $db	=& $this->db;
+        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Add');
+        
+        // Start a transaction
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->beginTransaction();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(2, __('Unable to open connection and start transaction'));
+        }
 
-            Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Add');
+        try {
+            $dbh = PDOConnect::init();
 
             // Create the SQL
             $SQL  = "";
-            $SQL .= "INSERT ";
-            $SQL .= "INTO   display ";
-            $SQL .= "       ( ";
-            $SQL .= "              display        , ";
-            $SQL .= "              isAuditing     , ";
-            $SQL .= "              defaultlayoutid, ";
-            $SQL .= "              license        , ";
-            $SQL .= "              licensed       , ";
-            $SQL .= "              inc_schedule   , ";
-            $SQL .= "              email_alert    , ";
-            $SQL .= "              alert_timeout    ";
-            $SQL .= "       ) ";
-            $SQL .= "       VALUES ";
-            $SQL .= "       ( ";
-            $SQL .= sprintf("      '%s', ", $db->escape_string($display));
-            $SQL .= "              0   , ";
-            $SQL .= "              1   , ";
-            $SQL .= sprintf("      '%s', ", $db->escape_string($license));
-            $SQL .= "              0   , ";
-            $SQL .= "              0   , ";
-            $SQL .= "              1   , ";
-            $SQL .= "              0 ";
-            $SQL .= "       )";
+            $SQL .= "INSERT INTO display (display, isAuditing, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout) ";
+            $SQL .= " VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, alert_timeout) ";
+            
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'display' => $display,
+                    'isauditing' => 0,
+                    'defaultlayoutid' => 1,
+                    'license' => $license,
+                    'licensed' => 0,
+                    'inc_schedule' => 0,
+                    'email_alert' => 1,
+                    'alert_timeout' => 0
+                ));
 		
-            if (!$displayID = $db->insert_query($SQL))
-            {
-                trigger_error($db->error());
-                $this->SetError(25000, __('Could not add display'));
-
-                return false;
-            }
+            // Get the ID of the inserted record
+            $displayId = $dbh->lastInsertId();
 
             // Also want to add the DisplayGroup associated with this Display.
             $displayGroupObject = new DisplayGroup($db);
 
-            if (!$displayGroupID = $displayGroupObject->Add($display, 1, ''))
-            {
-                $this->SetError(25001, __('Could not add a display group for the new display.'));
-
-                return false;
-            }
+            if (!$displayGroupId = $displayGroupObject->Add($display, 1, ''))
+                $this->ThrowError(25001, __('Could not add a display group for the new display.'));
 
             // Link the Two together
-            if (!$displayGroupObject->Link($displayGroupID, $displayID))
-            {
-                $this->SetError(25001, __('Could not link the new display with its group.'));
-
-                return false;
-            }
-
+            if (!$displayGroupObject->Link($displayGroupId, $displayId))
+                $this->ThrowError(25001, __('Could not link the new display with its group.'));
+            
             Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Add');
 
-            return $displayID;
+            // Commit this transaction now
+            $dbh->commit();
+
+            return $displayId;
+        }
+        catch (Exception $e) {
+            // Rollback the connection
+            $dbh->rollBack();
+
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25000, __('Could not add display'));
+
+            return false;
+        }
 	}
 	
 	/**
@@ -112,99 +116,148 @@ class Display extends Data
 	 * @param $incSchedule Object
 	 */
 	public function Edit($displayID, $display, $isAuditing, $defaultLayoutID, $licensed, $incSchedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr, $latitude, $longitude)
-	{
-		$db	=& $this->db;
-		
+    {
 		Debug::LogEntry('audit', 'IN', 'Display', 'Edit');
+        
+        // Start a transaction
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->beginTransaction();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(2, __('Unable to open connection and start transaction'));
+        }
 
-                // Check the number of licensed displays
-                $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Check the number of licensed displays
+            $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');
 
-                if ($maxDisplays > 0)
+            if ($maxDisplays > 0)
+            {
+                // See if this is a license switch
+                $sth = $dbh->prepare('SELECT licensed FROM display WHERE DisplayID = :displayid');
+                $sth->execute(array(
+                        'displayid' => $displayID
+                    ));
+
+                if (!$row = $sth->fetch())
+                    $this->ThrowError(25004, __('Cannot find display record'));
+
+                // Has the licence flag toggled?
+                if (Kit::ValidateParam($row['licensed'], _INT) != $licensed && $licensed == 1)
                 {
-                    // See if this is a license switch
-                    $currentLicense = $db->GetSingleValue(sprintf('SELECT licensed FROM display WHERE DisplayID = %d', $displayID), 'licensed', _INT);
+                    // License change - test number of licensed displays.
+                    $sth = $dbh->prepare('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1');
+                    $sth->execute();
 
-                    if ($currentLicense != $licensed && $licensed == 1)
-                    {
-                        // License change - test number of licensed displays.
-                        $licensedDisplays = $db->GetSingleValue('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed =1 ', 'CountLicensed', _INT);
+                    if (!$row = $sth->fetch())
+                        $this->ThrowError(1, __('Unable to get count of licensed displays.'));
 
-                        if ($licensedDisplays + 1 > $maxDisplays)
-                            return $this->SetError(25000, sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays));
-                    }
+                    $count = Kit::ValidateParam($row['CountLicensed'], _INT);
+
+                    $sth->closeCursor();
+
+                    if ($count + 1 > $maxDisplays)
+                        $this->ThrowError(25000, sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays));
                 }
+            }
 
-                // Validate some parameters
+            // Validate some parameters
 
-                // Fill $addr with client's IP address, if $addr is empty
-                if ($broadCastAddress != '')
-                {
-                    // Resolve broadcast address
-                    // same as (but easier than):  preg_match("/\b(([01]?\d?\d|2[0-4]\d|25[0-5])\.){3}([01]?\d?\d|2[0-4]\d|25[0-5])\b/",$addr)
-                    if (!filter_var ($broadCastAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
-                        return $this->SetError(25015, __('BroadCast Address is not a valid IPv4 Address'));
-                }
+            // Fill $addr with client's IP address, if $addr is empty
+            if ($broadCastAddress != '')
+            {
+                // Resolve broadcast address
+                // same as (but easier than):  preg_match("/\b(([01]?\d?\d|2[0-4]\d|25[0-5])\.){3}([01]?\d?\d|2[0-4]\d|25[0-5])\b/",$addr)
+                if (!filter_var ($broadCastAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
+                    $this->ThrowError(25015, __('BroadCast Address is not a valid IPv4 Address'));
+            }
 
-                // Check whether $cidr is valid
-                if ($cidr != '')
-                {
-                    if ((!is_numeric($cidr)) || ($cidr < 0) || ($cidr > 32))
-                        return $this->SetError(25015, __('CIDR subnet mask is not a number within the range of 0 to 32.'));
-                }
+            // Check whether $cidr is valid
+            if ($cidr != '')
+            {
+                if ((!is_numeric($cidr)) || ($cidr < 0) || ($cidr > 32))
+                    $this->ThrowError(25015, __('CIDR subnet mask is not a number within the range of 0 to 32.'));
+            }
 
-                // Check whether $secureon is valid
-                if ($secureOn != '')
-                {
-                    $secureon = strtoupper($secureon);
-                    $secureon = str_replace(":", "-", $secureon);
+            // Check whether $secureOn is valid
+            if ($secureOn != '')
+            {
+                $secureOn = strtoupper($secureOn);
+                $secureOn = str_replace(":", "-", $secureOn);
 
-                    if ((!preg_match("/([A-F0-9]{2}[-]){5}([0-9A-F]){2}/", $secureon)) || (strlen($secureon) != 17))
-                        return $this->SetError(25015, __('Pattern of SecureOn-password is not "xx-xx-xx-xx-xx-xx" (x = digit or CAPITAL letter)'));
-                }
+                if ((!preg_match("/([A-F0-9]{2}[-]){5}([0-9A-F]){2}/", $secureOn)) || (strlen($secureOn) != 17))
+                    $this->ThrowError(25015, __('Pattern of secureOn-password is not "xx-xx-xx-xx-xx-xx" (x = digit or CAPITAL letter)'));
+            }
 
-		// Update the display record
-		$SQL  = "UPDATE display SET display = '%s', ";
-		$SQL .= "		defaultlayoutid = %d, ";
-		$SQL .= "		inc_schedule = %d, ";
-		$SQL .= " 		licensed = %d, ";
-		$SQL .= "		isAuditing = %d, ";
-        $SQL .= "       email_alert = %d, ";
-        $SQL .= "       alert_timeout = %d, ";
-        $SQL .= "       WakeOnLan = %d, ";
-        $SQL .= "       WakeOnLanTime = '%s', ";
-        $SQL .= "       BroadCastAddress = '%s', ";
-        $SQL .= "       SecureOn = '%s', ";
-        $SQL .= "       Cidr = %d, ";
-        $SQL .= "       GeoLocation = GeomFromText('POINT(%F %F)') ";
-		$SQL .= "WHERE displayid = %d ";
-		
-		$SQL = sprintf($SQL, $db->escape_string($display), $defaultLayoutID, $incSchedule, $licensed, $isAuditing, $email_alert, $alert_timeout, $wakeOnLanEnabled, $db->escape_string($wakeOnLanTime), $db->escape_string($broadCastAddress), $db->escape_string($secureOn), $cidr, $latitude, $longitude, $displayID);
-		
-		Debug::LogEntry('audit', $SQL);
-		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25000, __('Could not update display') . '-' . __('Stage 1'));
-			
-			return false;
-		}
-		
-		// Use a DisplayGroup to handle the default layout and displaygroup name for this display
-		$displayGroupObject = new DisplayGroup($db);
-		
-		// Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
-		if (!$displayGroupObject->EditDisplayGroup($displayID, $display))
-		{
-			$this->SetError(25002, __('Could not update this display with a new name.'));
-			
-			return false;
-		}
-		
-		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');
-		
-		return true;
+            Debug::LogEntry('audit', 'Validation Complete and Passed', 'Display', 'Edit');
+
+    		// Update the display record
+    		$SQL  = "UPDATE display SET display = :display, ";
+    		$SQL .= "		defaultlayoutid = :defaultlayoutid, ";
+    		$SQL .= "		inc_schedule = :incschedule, ";
+    		$SQL .= " 		licensed = :licensed, ";
+    		$SQL .= "		isAuditing = :isauditing, ";
+            $SQL .= "       email_alert = :emailalert, ";
+            $SQL .= "       alert_timeout = :alerttimeout, ";
+            $SQL .= "       WakeOnLan = :wakeonlan, ";
+            $SQL .= "       WakeOnLanTime = :wakeonlantime, ";
+            $SQL .= "       BroadCastAddress = :broadcastaddress, ";
+            $SQL .= "       SecureOn = :secureon, ";
+            $SQL .= "       Cidr = :cidr, ";
+            $SQL .= "       GeoLocation = POINT(:latitude, :longitude) ";
+    		$SQL .= " WHERE displayid = :displayid ";
+
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'display' => $display,
+                    'defaultlayoutid' => $defaultLayoutID,
+                    'incschedule' => $incSchedule,
+                    'licensed' => $licensed,
+                    'isauditing' => $isAuditing,
+                    'emailalert' => $email_alert,
+                    'alerttimeout' => $alert_timeout,
+                    'wakeonlan' => $wakeOnLanEnabled,
+                    'wakeonlantime' => $wakeOnLanTime,
+                    'broadcastaddress' => $broadCastAddress,
+                    'secureon' => $secureOn,
+                    'cidr' => $cidr,
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'displayid' => $displayID
+                ));
+
+            Debug::LogEntry('audit', 'Display Edited', 'Display', 'Edit');
+        
+    		// Use a DisplayGroup to handle the default layout and displaygroup name for this display
+    		$displayGroupObject = new DisplayGroup($this->db);
+    		
+    		// Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
+    		if (!$displayGroupObject->EditDisplayGroup($displayID, $display)) {
+                $this->ThrowError(25002, __('Could not update this display with a new name.'));
+            }
+    		
+            // Commit
+            $dbh->commit();
+
+    		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');
+    		
+    		return true;
+        }
+        catch (Exception $e) {
+            // Rollback the connection
+            $dbh->rollBack();
+
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25000, __('Could not update display'));
+
+            return false;
+        }
 	}
 	
 	/**
@@ -214,43 +267,59 @@ class Display extends Data
 	 */
 	public function Delete($displayID)
 	{
-            $db	=& $this->db;
+        Debug::LogEntry('audit', 'IN', 'Display', 'Delete');
+        
+        // Start a transaction
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->beginTransaction();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(2, __('Unable to open connection and start transaction'));
+        }
 
-            Debug::LogEntry('audit', 'IN', 'Display', 'Delete');
+        try {
+            $dbh = PDOConnect::init();
 
             // Pass over to the DisplayGroup data class so that it can try and delete the
             // display specific group first (it is that group which is linked to schedules)
-            $displayGroupObject = new DisplayGroup($db);
+            $displayGroupObject = new DisplayGroup($this->db);
 
             // Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
             if (!$displayGroupObject->DeleteDisplay($displayID))
-                return $this->SetError($displayGroupObject->GetErrorMessage(), $displayGroupObject->GetErrorMessage());
+                $this->ThrowError($displayGroupObject->GetErrorMessage(), $displayGroupObject->GetErrorMessage());
 
             // Delete the blacklist
-            $SQL = sprintf("DELETE FROM blacklist WHERE DisplayID = %d", $displayID);
+            $sth = $dbh->prepare('DELETE FROM blacklist WHERE DisplayID = :displayid');
+            $sth->execute(array(
+                    'displayid' => $displayID
+                ));
 
-            Debug::LogEntry('audit', $SQL);
-
-            if (!$db->query($SQL))
-                return $this->SetError(25016,__('Unable to delete blacklist records.'));
-		
             // Now we know the Display Group is gone - and so are any links
             // delete the display
-            $SQL = " ";
-            $SQL .= "DELETE FROM display ";
-            $SQL .= sprintf(" WHERE displayid = %d", $displayID);
-
-            Debug::LogEntry('audit', $SQL);
-
-            if (!$db->query($SQL)) 
-            {
-                trigger_error($db->error());
-                return $this->SetError(25015,__('Unable to delete display record. However it is no longer usable.'));
-            }
+            $sth = $dbh->prepare('DELETE FROM display WHERE DisplayID = :displayid');
+            $sth->execute(array(
+                    'displayid' => $displayID
+                ));
 
             Debug::LogEntry('audit', 'OUT', 'Display', 'Delete');
 
+            $dbh->commit();
+
             return true;
+        }
+        catch (Exception $e) {
+            // Rollback the connection
+            $dbh->rollBack();
+
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25015,__('Unable to delete display record.'));
+
+            return false;
+        }
 	}
 	
 	/**
@@ -261,34 +330,52 @@ class Display extends Data
 	 */
 	public function EditDisplayName($license, $display) 
 	{
-		$db	=& $this->db;
-		
 		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'EditDisplayName');
-	
-		$SQL = sprintf("UPDATE display SET display = '%s' WHERE license = '%s' ", $db->escape_string($display), $db->escape_string($license));
-				
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25010, __("Error updating this displays last accessed information."));
+
+        // Start a transaction
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->beginTransaction();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(2, __('Unable to open connection and start transaction'));
+        }
+
+        try {
+            $dbh = PDOConnect::init();
+
+            // Update the display with its new name (using the licence as the key)
+            $sth = $dbh->prepare('UPDATE display SET display = :display WHERE license = :license');
+            $sth->execute(array(
+                    'display' => $display,
+                    'license' => $license
+                ));
 			
-			return false;
-		}
-		
-		// Also need to update the display group name here.
-		$displayGroupObject = new DisplayGroup($db);
-		
-		// Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
-		if (!$displayGroupObject->EditDisplayGroup($displayID, $display))
-		{
-			$this->SetError(25015, __('Could not update this display with a new name.'));
-			
-			return false;
-		}
-		
-		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayName');
-		
-		return true;
+    		// Also need to update the display group name here.
+    		$displayGroupObject = new DisplayGroup($this->db);
+    		
+    		// Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
+    		if (!$displayGroupObject->EditDisplayGroup($displayID, $display))
+    			$this->ThrowError(25015, __('Could not update this display with a new name.'));
+    		
+    		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayName');
+    		
+    		$dbh->commit();
+
+            return true;
+        }
+        catch (Exception $e) {
+            // Rollback the connection
+            $dbh->rollBack();
+
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25015,__('Unable to edit display record.'));
+
+            return false;
+        }
 	}
 	
 	/**
