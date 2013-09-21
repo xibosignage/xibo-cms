@@ -386,53 +386,73 @@ class Display extends Data
 	 */
 	public function Touch($license, $clientAddress = '', $mediaInventoryComplete = 0, $mediaInventoryXml = '', $macAddress = '')
 	{
-		$db		=& $this->db;
-		$time 	= time();
-		
 		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Touch');
-			
-		// Set the last accessed flag on the display
-		$SQL  = "";
-        $SQL .= "UPDATE display SET lastaccessed = %d, loggedin = 1 ";
+        
+        try {
+            $dbh = PDOConnect::init();
 
-        // We will want to update the client Address if it is given
-        if ($clientAddress != '')
-            $SQL .= sprintf(" , ClientAddress = '%s' ", $db->escape_string($clientAddress));
+            // Set the last accessed flag on the display
+            $SQL  = "";
+            $SQL .= "UPDATE display SET lastaccessed = :lastaccessed, loggedin = :loggedin ";
 
-        // Media Inventory Settings (if appropriate)
-        if ($mediaInventoryComplete != 0)
-            $SQL .= sprintf(" , MediaInventoryStatus = %d ", $mediaInventoryComplete);
+            $params = array();
+            $params['lastaccessed'] = time();
+            $params['loggedin'] = 1;
 
-        if ($mediaInventoryXml != '')
-            $SQL .= sprintf(" , MediaInventoryXml = '%s' ", $db->escape_string($mediaInventoryXml));
-
-        // Mac address storage
-        if ($macAddress != '')
-        {
-            // Address changed.
-            $currentAddress = $db->GetSingleValue(sprintf("SELECT MacAddress FROM display WHERE license = '%s'", $db->escape_string($license)), 'MacAddress', _STRING);
-
-            if ($macAddress != $currentAddress)
-            {
-                $SQL .= sprintf(" , MacAddress = '%s', LastChanged = %d, NumberOfMacAddressChanges = NumberOfMacAddressChanges + 1 ", $db->escape_string($macAddress), time());
+            // We will want to update the client Address if it is given
+            if ($clientAddress != '') {
+                $SQL .= " , ClientAddress = :clientaddress ";
+                $params['clientaddress'] = $clientAddress;
             }
+
+            // Media Inventory Settings (if appropriate)
+            if ($mediaInventoryComplete != 0) {
+                $SQL .= " , MediaInventoryStatus = :mediainventorystatus ";
+                $params['mediainventorystatus'] = $mediaInventoryComplete;
+            }
+
+            if ($mediaInventoryXml != '') {
+                $SQL .= " , MediaInventoryXml = '%s' ";
+                $params['mediainventoryxml'] = $mediaInventoryXml;
+            }
+
+            // Mac address storage
+            if ($macAddress != '')
+            {
+                // Address changed.
+                $sth = $dbh->prepare('SELECT MacAddress FROM display WHERE license = :license');
+                $sth->execute(array(
+                        'license' => $license
+                    ));
+
+                if (!$row = $sth->fetch())
+                    $currentAddress = '';
+                else
+                    $currentAddress = $row['MacAddress'];
+
+                if ($macAddress != $currentAddress)
+                {
+                    $SQL .= " , MacAddress = :macaddress, LastChanged = :lastchanged, NumberOfMacAddressChanges = NumberOfMacAddressChanges + 1 ";
+                    $params['macaddress'] = $macAddress;
+                    $params['lastchanged'] = time();
+                }
+            }
+
+            // Restrict to the display license
+            $SQL .= " WHERE license = :license";
+
+            // Update the display with its new name (using the license as the key)
+            $sth = $dbh->prepare($SQL);
+            $sth->execute($params);
+    		
+    		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Touch');
+    		
+    		return true;
         }
-
-        // Restrict to the display license
-        $SQL .= " WHERE license = '%s'";
-        $SQL = sprintf($SQL, $time, $db->escape_string($license));
-
-        if (!$result = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25002, __("Error updating this displays last accessed information."));
-
-            return false;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25002, __("Error updating this displays last accessed information."));
         }
-		
-		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Touch');
-		
-		return true;
 	}
 
     /**
@@ -441,19 +461,22 @@ class Display extends Data
      */
     private function FlagIncomplete($displayId)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', sprintf('Flag DisplayID %d incomplete.', $displayId), 'display', 'NotifyDisplays');
 
-        $SQL = sprintf("UPDATE display SET MediaInventoryStatus = 3 WHERE displayID = %d", $displayId);
+        try {
+            $dbh = PDOConnect::init();
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
+            $sth = $dbh->prepare('UPDATE display SET MediaInventoryStatus = 3 WHERE displayID = :displayid');
+            $sth->execute(array(
+                    'displayid' => $displayId
+                ));
+
+            return true;
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25004, 'Unable to Flag Display as incomplete');
         }
-
-        return true;
     }
 
     /**
@@ -462,45 +485,51 @@ class Display extends Data
      */
     public function NotifyDisplays($campaignId)
     {
-        $db =& $this->db;
-        $currentdate 	= time();
-        $rfLookahead    = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
-
-        $rfLookahead 	= $currentdate + $rfLookahead;
-
         Debug::LogEntry('audit', sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
 
-        // Which displays does a change to this layout effect?
-        $SQL  = " SELECT DISTINCT display.DisplayID ";
-        $SQL .= "   FROM schedule_detail ";
-        $SQL .= " 	INNER JOIN lkdisplaydg ";
-        $SQL .= "	ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
-        $SQL .= " 	INNER JOIN display ";
-        $SQL .= "	ON lkdisplaydg.DisplayID = display.displayID ";
-        $SQL .= " WHERE schedule_detail.CampaignID = %d ";
-        $SQL .= " AND schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d ";
-        $SQL .= " UNION ";
-        $SQL .= " SELECT DISTINCT display.DisplayID ";
-        $SQL .= "   FROM display ";
-        $SQL .= "       INNER JOIN lkcampaignlayout ";
-        $SQL .= "       ON lkcampaignlayout.LayoutID = display.DefaultLayoutID ";
-        $SQL .= " WHERE lkcampaignlayout.CampaignID = %d";
+        try {
+            $dbh = PDOConnect::init();
 
-        $SQL = sprintf($SQL, $campaignId, $rfLookahead, $currentdate - 3600, $campaignId);
+            $currentdate = time();
+            $rfLookahead = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
+            $rfLookahead = $currentdate + $rfLookahead;
 
-        Debug::LogEntry('audit', $SQL, 'display', 'NotifyDisplays');
+            // Which displays does a change to this layout effect?
+            $SQL  = " SELECT DISTINCT display.DisplayID ";
+            $SQL .= "   FROM schedule_detail ";
+            $SQL .= " 	INNER JOIN lkdisplaydg ";
+            $SQL .= "	ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
+            $SQL .= " 	INNER JOIN display ";
+            $SQL .= "	ON lkdisplaydg.DisplayID = display.displayID ";
+            $SQL .= " WHERE schedule_detail.CampaignID = :campaignid ";
+            $SQL .= " AND schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt ";
+            $SQL .= " UNION ";
+            $SQL .= " SELECT DISTINCT display.DisplayID ";
+            $SQL .= "   FROM display ";
+            $SQL .= "       INNER JOIN lkcampaignlayout ";
+            $SQL .= "       ON lkcampaignlayout.LayoutID = display.DefaultLayoutID ";
+            $SQL .= " WHERE lkcampaignlayout.CampaignID = :campaignid";
 
-        if (!$result = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            return $this->SetError(25037, __('Unable to get layouts for Notify'));
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'campaignid' => $campaignid,
+                    'fromdt' => $rfLookahead,
+                    'todt' => $currentdate - 3600
+                ));
+
+            while ($row = $sth->fetch()) {
+                // Notify each display in turn
+                $displayId = Kit::ValidateParam($row['DisplayID'], _INT);
+                $this->FlagIncomplete($displayId);
+            }
         }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
 
-        while ($row = $db->get_assoc_row($result))
-        {
-            // Notify each display in turn
-            $displayId = Kit::ValidateParam($row['DisplayID'], _INT);
-            $this->FlagIncomplete($displayId);
+            if (!$this->IsError())
+                $this->SetError(25004, 'Unable to Flag Display as incomplete');
+
+            return false;
         }
     }
 
@@ -512,26 +541,28 @@ class Display extends Data
      */
     public function EditDefaultLayout($displayId, $defaultLayoutId)
     {
-        $db	=& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'Display', 'EditDefaultLayout');
 
-        $SQL = sprintf('UPDATE display SET defaultLayoutId = %d WHERE displayID = %d ', $defaultLayoutId, $displayId);
+        try {
+            $dbh = PDOConnect::init();
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25012, __('Error updating this displays default layout.'));
+            $sth = $dbh->prepare('UPDATE display SET defaultLayoutId = :defaultlayoutid WHERE displayID = :displayid');
+            $sth->execute(array(
+                    'defaultlayoutid' => $defaultLayoutId,
+                    'displayid' => $displayId
+                ));
+            
+            // Flag this display as not having all the content
+            $this->FlagIncomplete($displayId);
 
-            return false;
+            Debug::LogEntry('audit', 'OUT', 'Display', 'EditDefaultLayout');
+
+            return true;
         }
-
-        // Flag this display as not having all the content
-        $this->FlagIncomplete($displayId);
-
-        Debug::LogEntry('audit', 'OUT', 'Display', 'EditDefaultLayout');
-
-        return true;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25012, __('Error updating this displays default layout.'));
+        }
     }
 
     /**
@@ -541,25 +572,46 @@ class Display extends Data
      */
     public function WakeOnLan($displayId)
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', 'IN', 'Display', 'WakeOnLan');
 
-        // Get the Client Address and the Mac Address
-        if (!$row = $db->GetSingleRow(sprintf("SELECT MacAddress, BroadCastAddress, SecureOn, Cidr FROM `display` WHERE DisplayID = %d", $displayId)))
-            $this->SetError(25013, __('Unable to get the Mac or Client Address'));
+        try {
+            $dbh = PDOConnect::init();
 
-        // Check they are populated
-        if ($row['MacAddress'] == '' || $row['BroadCastAddress'] == '')
-            $this->SetError(25014, __('This display has no mac address recorded against it yet. Make sure the display is running.'));
+            // Get the Client Address and the Mac Address
+            $sth = $dbh->prepare('SELECT MacAddress, BroadCastAddress, SecureOn, Cidr FROM `display` WHERE DisplayID = :displayid');
+            $sth->execute(array(
+                    'displayid' => $displayId
+                ));
 
-        Debug::LogEntry('audit', 'About to send WOL packet to ' . $row['BroadCastAddress'] . ' with Mac Address ' . $row['MacAddress'], 'display', 'WakeOnLan');
+            if (!$row = $sth->fetch())
+                $this->ThrowError(25013, __('Unable to get the Mac or Client Address'));
 
-        if (!$this->TransmitWakeOnLan($row['MacAddress'], $row['SecureOn'], $row['BroadCastAddress'], $row['Cidr'], "9"))
+            // Check they are populated
+            if ($row['MacAddress'] == '' || $row['BroadCastAddress'] == '')
+                $this->SetError(25014, __('This display has no mac address recorded against it yet. Make sure the display is running.'));
+
+            Debug::LogEntry('audit', 'About to send WOL packet to ' . $row['BroadCastAddress'] . ' with Mac Address ' . $row['MacAddress'], 'display', 'WakeOnLan');
+
+            if (!$this->TransmitWakeOnLan($row['MacAddress'], $row['SecureOn'], $row['BroadCastAddress'], $row['Cidr'], "9"))
+                throw new Exception('Error in TransmitWakeOnLan');
+
+            // If we succeeded then update this display with the last WOL time
+            $sth = $dbh->prepare('UPDATE `display` SET LastWakeOnLanCommandSent = :lastaccessed WHERE DisplayID = :displayid');
+            $sth->execute(array(
+                    'displayid' => $displayId,
+                    'lastaccessed' => time()
+                ));
+
+            return true;
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25012, __('Unknown Error.'));
+
             return false;
-
-        // If we succeeded then update this display with the last WOL time
-        $db->query(sprintf("UPDATE `display` SET LastWakeOnLanCommandSent = %d WHERE DisplayID = %d", time(), $displayId));
-
-        return true;
+        }
     }
 
     /**
