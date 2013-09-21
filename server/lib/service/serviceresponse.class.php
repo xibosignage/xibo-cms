@@ -26,6 +26,16 @@ class XiboServiceResponse
     public function __construct()
     {
         $this->serviceLocation = Kit::GetXiboRoot();
+
+        // Start a DB transaction for all returns from the Service Portal
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->beginTransaction();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            trigger_error(__('Unable to open connection and start transaction'), E_USER_ERROR);
+        }
     }
 
     /**
@@ -85,6 +95,16 @@ class XiboServiceResponse
     {
         header('HTTP/1.1 500 Internal Server Error');
         header('Content-Type: text/plain');
+
+        // Roll back any open transactions if we are in an error state
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->rollBack();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('audit', 'Unable to rollBack');
+        }
+
         die($message);
     }
 

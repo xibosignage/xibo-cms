@@ -20,22 +20,6 @@
  */
 class RestJson extends Rest
 {
-    public function Respond(DOMElement $xmlElement)
-    {
-        // Prepare an array to be JSON encoded
-        return '';
-    }
-
-    public function Error($errorNo)
-    {
-        // Error array
-        $errorMessage = '';
-
-        $array = array('resp' => array('status'));
-
-        return json_encode($array);
-    }
-
     /**
      *
      * @param DOMElement $xmlElement
@@ -45,14 +29,22 @@ class RestJson extends Rest
     {
         header('Content-Type: text/json; charset=utf8');
 
-        $array['rsp']['status'] = 'error';
-        
+        // Commit back any open transactions if we are in an error state
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->commit();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('audit', 'Unable to commit');
+        }
+
+        $array['rsp']['status'] = 'success';
 
         // Log it
         Debug::LogEntry('audit', $xmlDoc->saveXML(), 'RestXml', 'Respond');
 
         // Return it as a string
-        return $xmlDoc->saveXML();
+        return json_encode($array);
     }
 
     public function Error($errorNo, $errorMessage = '')
@@ -60,6 +52,15 @@ class RestJson extends Rest
         Debug::LogEntry('audit', $errorMessage, 'RestXml', 'Error');
 
         header('Content-Type: text/json; charset=utf8');
+
+        // Roll back any open transactions if we are in an error state
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->rollBack();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('audit', 'Unable to rollback');
+        }
 
         // Output the error doc
         $xmlDoc = new DOMDocument('1.0');

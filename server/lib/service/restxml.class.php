@@ -29,6 +29,15 @@ class RestXml extends Rest
     {
         header('Content-Type: text/xml; charset=utf8');
 
+        // Commit back any open transactions if we are in an error state
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->commit();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('audit', 'Unable to commit');
+        }
+
         $xmlDoc = new DOMDocument();
         $xmlDoc->formatOutput = true;
 
@@ -56,7 +65,18 @@ class RestXml extends Rest
 
     public function Error($errorNo, $errorMessage = '')
     {
+        header('Content-Type: text/xml; charset=utf8');
+        
         Debug::LogEntry('audit', $errorMessage, 'RestXml', 'Error');
+
+        // Roll back any open transactions if we are in an error state
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->rollBack();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('audit', 'Unable to rollback');
+        }
 
         // Output the error doc
         $xmlDoc = new DOMDocument('1.0');
