@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-12 Daniel Garner
+ * Copyright (C) 2009-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -37,36 +37,33 @@ class DisplayGroupSecurity extends Data
 	 */
 	public function Link($displayGroupId, $groupId, $view, $edit, $del)
 	{
-		$db	=& $this->db;
-		
 		Debug::LogEntry('audit', 'IN', 'DisplayGroupSecurity', 'Link');
 		
-		$SQL  = "";
-		$SQL .= "INSERT ";
-		$SQL .= "INTO   lkdisplaygroupgroup ";
-		$SQL .= "       ( ";
-		$SQL .= "              DisplayGroupID, ";
-		$SQL .= "              GroupID, ";
-		$SQL .= "              View, ";
-		$SQL .= "              Edit, ";
-		$SQL .= "              Del ";
-		$SQL .= "       ) ";
-		$SQL .= "       VALUES ";
-		$SQL .= "       ( ";
-		$SQL .= sprintf(" %d, %d, %d, %d, %d ", $displayGroupId, $groupId, $view, $edit, $del);
-		$SQL .= "       )";
+		try {
+            $dbh = PDOConnect::init();
 		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25005, __('Could not Link Display Group to User Group'));
+			$sth = $dbh->prepare('INSERT INTO lkdisplaygroupgroup (DisplayGroupID, GroupID, View, Edit, Del) VALUES (:displaygroupid, :groupid, :view, :edit, :del)');
+			$sth->execute(array(
+					'displaygroupid' => $displayGroupId,
+					'groupid' => $groupId,
+					'view' => $view,
+					'edit' => $edit,
+					'del' => $del
+				));
 			
-			return false;
+			Debug::LogEntry('audit', 'OUT', 'DisplayGroupSecurity', 'Link');
+			
+			return true;
 		}
-		
-		Debug::LogEntry('audit', 'OUT', 'DisplayGroupSecurity', 'Link');
-		
-		return true;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25005, __('Could not Link Display Group to User Group'));
+
+            return false;
+        }
 	}
 	
 	/**
@@ -77,26 +74,30 @@ class DisplayGroupSecurity extends Data
 	 */
 	public function Unlink($displayGroupId, $groupId)
 	{
-		$db	=& $this->db;
-		
 		Debug::LogEntry('audit', 'IN', 'DisplayGroupSecurity', 'Unlink');
 		
-		$SQL  = "";
-		$SQL .= "DELETE FROM ";
-		$SQL .= "   lkdisplaygroupgroup ";
-		$SQL .= sprintf("  WHERE DisplayGroupID = %d AND GroupID = %d ", $displayGroupId, $groupId);
-		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25007, __('Could not Unlink Display Group from User Group'));
+		try {
+            $dbh = PDOConnect::init();
+
+            $sth = $dbh->prepare('DELETE FROM lkdisplaygroupgroup WHERE DisplayGroupID = :displaygroupid AND GroupID = :groupid');
+			$sth->execute(array(
+					'displaygroupid' => $displayGroupId,
+					'groupid' => $groupId
+				));
+				
+			Debug::LogEntry('audit', 'OUT', 'DisplayGroupSecurity', 'Unlink');
 			
-			return false;
+			return true;
 		}
-		
-		Debug::LogEntry('audit', 'OUT', 'DisplayGroupSecurity', 'Unlink');
-		
-		return true;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25007, __('Could not Unlink Display Group from User Group'));
+
+            return false;
+        }
 	}
 
    /**
@@ -107,26 +108,29 @@ class DisplayGroupSecurity extends Data
      */
     public function UnlinkAll($displayGroupId)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
+        
+        try {
+            $dbh = PDOConnect::init();
 
-        $SQL  = "";
-        $SQL .= "DELETE FROM ";
-        $SQL .= "   lkdisplaygroupgroup ";
-        $SQL .= sprintf("  WHERE DisplayGroupID = %d ", $displayGroupId);
+            $sth = $dbh->prepare('DELETE FROM lkdisplaygroupgroup WHERE DisplayGroupID = :displaygroupid');
+			$sth->execute(array(
+					'displaygroupid' => $displayGroupId
+				));
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25025, __('Could not Unlink DisplayGroup from User Group'));
+	        Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
+
+	        return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25007, __('Could not Unlink All Display Groups from User Group'));
 
             return false;
         }
-
-        Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
-
-        return true;
     }
 } 
 ?>
