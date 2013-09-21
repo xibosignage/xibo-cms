@@ -123,16 +123,6 @@ class DataSetData extends Data
 
     public function ImportCsv($dataSetId, $csvFile, $spreadSheetMapping, $overwrite = false, $ignoreFirstRow = true) {
 
-        // Start a transaction
-        try {
-            $dbh = PDOConnect::init();
-            $dbh->beginTransaction();
-        }
-        catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
-            return $this->SetError(2, __('Unable to open connection and start transaction'));
-        }
-
         try {
             $dbh = PDOConnect::init();
 
@@ -197,14 +187,9 @@ class DataSetData extends Data
 
             // TODO: Update list content definitions
 
-            // Commit
-            $dbh->commit();
-
             return true;
         }
         catch (Exception $e) {
-            // Rollback the connection
-            $dbh->rollBack();
 
             Debug::LogEntry('error', $e->getMessage());
 

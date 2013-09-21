@@ -88,16 +88,6 @@ class Campaign extends Data {
     public function Delete($campaignId) {
         Debug::LogEntry('audit', 'IN', 'Campaign', 'Delete');
 
-        // Start a transaction
-        try {
-            $dbh = PDOConnect::init();
-            $dbh->beginTransaction();
-        }
-        catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
-            return $this->SetError(2, __('Unable to open connection and start transaction'));
-        }
-
         // Delete the Campaign record
         try {
             $dbh = PDOConnect::init();
@@ -119,16 +109,10 @@ class Campaign extends Data {
                     'campaignid' => $campaignId
                 ));
 
-            // Commit
-            $dbh->commit();
-
             return true;
         }
         catch (Exception $e) {
             
-            // Rollback the connection
-            $dbh->rollBack();
-
             Debug::LogEntry('error', $e->getMessage());
 
             if (!$this->IsError())

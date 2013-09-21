@@ -41,17 +41,7 @@ class DisplayGroup extends Data
 	{
 		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Add');
 
-		// Start a transaction
-        try {
-            $dbh = PDOConnect::init();
-            $dbh->beginTransaction();
-        }
-        catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
-            return $this->SetError(2, __('Unable to open connection and start transaction'));
-        }
-
-        try {
+		try {
             $dbh = PDOConnect::init();
 
 			// Validation
@@ -83,14 +73,9 @@ class DisplayGroup extends Data
 			
 			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Add');
 
-			// Commit
-			$dbh->commit();
-			
 			return $displayGroupID;
 		}
         catch (Exception $e) {
-            // Rollback the connection
-            $dbh->rollBack();
 
             Debug::LogEntry('error', $e->getMessage());
 
@@ -112,17 +97,7 @@ class DisplayGroup extends Data
 	{
 		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Edit');
 
-		// Start a transaction
-        try {
-            $dbh = PDOConnect::init();
-            $dbh->beginTransaction();
-        }
-        catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
-            return $this->SetError(2, __('Unable to open connection and start transaction'));
-        }
-
-        try {
+		try {
             $dbh = PDOConnect::init();
 
 			// Validation
@@ -155,16 +130,11 @@ class DisplayGroup extends Data
                 ));
 			
 			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');		
-			
-			// Commit
-			$dbh->commit();
-			
+						
 			return true;
 		}
         catch (Exception $e) {
-            // Rollback the connection
-            $dbh->rollBack();
-
+            
             Debug::LogEntry('error', $e->getMessage());
 
             if (!$this->IsError())
@@ -183,16 +153,6 @@ class DisplayGroup extends Data
 	{
 		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Delete');
 
-	    // Start a transaction
-        try {
-            $dbh = PDOConnect::init();
-            $dbh->beginTransaction();
-        }
-        catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
-            return $this->SetError(2, __('Unable to open connection and start transaction'));
-        }
-
         try {
             $dbh = PDOConnect::init();
 
@@ -209,16 +169,11 @@ class DisplayGroup extends Data
                 ));
 
 			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Delete');
-			
-			// Commit
-			$dbh->commit();
-			
+						
 			return true;
 		}
         catch (Exception $e) {
-            // Rollback the connection
-            $dbh->rollBack();
-
+            
             Debug::LogEntry('error', $e->getMessage());
 
             if (!$this->IsError())
@@ -235,17 +190,7 @@ class DisplayGroup extends Data
 	 */
 	public function DeleteDisplay($displayID)
 	{
-		// Start a transaction
-        try {
-            $dbh = PDOConnect::init();
-            $dbh->beginTransaction();
-        }
-        catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
-            return $this->SetError(2, __('Unable to open connection and start transaction'));
-        }
-
-        try {
+		try {
             $dbh = PDOConnect::init();
 		
 			// Get the DisplaySpecific Group for this Display
@@ -295,15 +240,10 @@ class DisplayGroup extends Data
                 // An error will already be set - so just drop out
                 throw new Exception('Unable to delete');
 
-			// Commit
-			$dbh->commit();
-			
 			return true;
 		}
         catch (Exception $e) {
-            // Rollback the connection
-            $dbh->rollBack();
-
+            
             Debug::LogEntry('error', $e->getMessage());
 
             if (!$this->IsError())

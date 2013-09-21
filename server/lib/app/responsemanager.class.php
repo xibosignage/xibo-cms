@@ -80,6 +80,16 @@ class ResponseManager
         $this->modal = false;
         $this->extra = array();
         $this->dialogClass = '';
+
+        // Start a DB transaction for all returns from the Web Portal
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->beginTransaction();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            trigger_error(__('Unable to open connection and start transaction'), E_USER_ERROR);
+        }
 		
 		return true;
 	}
@@ -223,7 +233,22 @@ class ResponseManager
 	 * @return 
 	 */
 	public function Respond()
-	{	
+	{
+		// Roll back any open transactions if we are in an error state
+		try {
+			$dbh = PDOConnect::init();
+			
+			if (!$this->success) {
+				$dbh->rollBack();
+			}
+			else {
+				$dbh->commit();
+			}
+		}
+		catch (Exception $e) {
+			Debug::LogEntry('audit', 'Unable to commit/rollBack');
+        }
+
 		if ($this->ajax)
 		{
 			// Construct the Response
