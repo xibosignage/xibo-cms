@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2012 Daniel Garner
+ * Copyright (C) 2009-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -361,25 +361,59 @@ class Schedule extends Data
 	 */
 	public function DeleteScheduleForDisplayGroup($displayGroupID)
 	{
-		$db	=& $this->db;
-		
 		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
 		
-		// Delete all Schedule records for this DisplayGroupID
-		$SQL = sprintf("DELETE FROM schedule_detail WHERE DisplayGroupID = %d", $displayGroupID);
-		
-		Debug::LogEntry('audit', $SQL);
+		try {
+		    $dbh = PDOConnect::init();
 
-		if (!$db->query($SQL)) 
-		{
-			$this->SetError(25015,__('Unable to delete schedule records for this Display Group.'));
+			// Delete all Schedule records for this DisplayGroupID
+		    $sth = $dbh->prepare('DELETE FROM schedule_detail WHERE DisplayGroupID = :displaygroupid');
+		    $sth->execute(array(
+		            'displaygroupid' => $displayGroupID
+		        ));
+
+		    // Tidy up the schedule table. There might be orphaned records because of this delete
+		    $this->TidyScheduleTable();
+
+			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
 			
-			return false;
+			return true;  
 		}
+		catch (Exception $e) {
+		    
+		    Debug::LogEntry('error', $e->getMessage());
 		
-		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
+		    if (!$this->IsError())
+		        $this->SetError(25015,__('Unable to delete schedule records for this Display Group.'));
 		
-		return true;
+		    return false;
+		}
+	}
+
+	/**
+	 * Removes any orphaned records from the Schedule Table
+	 * Usually called as a result of an open-ended delete (such as deleting an entire display group)
+	 */
+	private function TidyScheduleTable() {
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'TidyScheduleTable');
+
+		try {
+		    $dbh = PDOConnect::init();
+		
+		    $sth = $dbh->prepare('DELETE FROM `schedule` WHERE EventID NOT IN (SELECT EventID FROM `schedule_detail`)');
+		    $sth->execute();
+		
+			return true;
+		}
+		catch (Exception $e) {
+		    
+		    Debug::LogEntry('error', $e->getMessage());
+		
+		    if (!$this->IsError())
+		        $this->SetError(1, __('Unknown Error'));
+		
+		    return false;
+		}
 	}
 	
 	/**
