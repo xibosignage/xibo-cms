@@ -444,7 +444,7 @@ class Layout extends Data
      * @param $layoutid Object
      * @param $xml Object
      */
-    private function SetLayoutXml($layoutid, $xml)
+    public function SetLayoutXml($layoutid, $xml)
     {
         Debug::LogEntry('audit', 'IN', 'Layout', 'SetLayoutXml');
         
@@ -456,6 +456,16 @@ class Layout extends Data
                     'layoutid' => $layoutid,
                     'xml' => $xml
                 ));
+
+            // Get the Campaign ID
+            Kit::ClassLoader('campaign');
+            $campaign = new Campaign($this->db);
+            $campaignId = $campaign->GetCampaignId($layoutid);
+
+            // Notify (dont error)
+            Kit::ClassLoader('display');
+            $displayObject = new Display($this->db);
+            $displayObject->NotifyDisplays($campaignId);
         
             Debug::LogEntry('audit', 'OUT', 'Layout', 'SetLayoutXml');
         

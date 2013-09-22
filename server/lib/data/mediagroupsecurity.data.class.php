@@ -83,7 +83,7 @@ class MediaGroupSecurity extends Data
             if (!$row = $sth->fetch())
                 throw new Exception("Error Processing Request", 1);
 
-            $groupId = Kit::ValidateParam($row['GroupID'], _INT));
+            $groupId = Kit::ValidateParam($row['GroupID'], _INT);
         
             if (!$this->Link($mediaId, $groupId, $view, $edit, $del))
                 throw new Exception("Error Processing Request", 1);
