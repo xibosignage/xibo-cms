@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-12 Daniel Garner
+ * Copyright (C) 2009-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -34,11 +34,6 @@ define("HASH_PBKDF2_INDEX", 3);
 
 class Userdata extends Data
 {
-    public function __construct(database $db)
-    {
-        parent::__construct($db);
-    }
-    
     /**
      * Change a users password
      * @param <type> $userId
@@ -49,46 +44,61 @@ class Userdata extends Data
      */
     public function ChangePassword($userId, $oldPassword, $newPassword, $retypedNewPassword, $forceChange = false)
     {
-        // Validate
-        if ($userId == 0)
-            return $this->SetError(26001, __('User not selected'));
-
-        // We can force the users password to change without having to provide the old one.
-        // Is this a potential security hole - we must have validated that we are an admin to get to this point
-        if (!$forceChange)
-        {
-            // Get the stored hash
-            if (!$good_hash = $this->db->GetSingleValue(sprintf("SELECT UserPassword FROM `user` WHERE UserID = %d", $userId), 'UserPassword', _STRING))
-                return $this->SetError(26000, __('Incorrect Password Provided'));
-
-            // Check the Old Password is correct
-            if ($this->validate_password($oldPassword, $good_hash) === false)
-                return $this->SetError(26000, __('Incorrect Password Provided'));
-        }
+        try {
+            $dbh = PDOConnect::init();
         
-        // Check the New Password and Retyped Password match
-        if ($newPassword != $retypedNewPassword)
-            return $this->SetError(26001, __('New Passwords do not match'));
+            // Validate
+            if ($userId == 0)
+                $this->ThrowError(26001, __('User not selected'));
+    
+            // We can force the users password to change without having to provide the old one.
+            // Is this a potential security hole - we must have validated that we are an admin to get to this point
+            if (!$forceChange)
+            {
+                // Get the stored hash
+                $sth = $dbh->prepare('SELECT UserPassword FROM `user` WHERE UserID = :userid');
+                $sth->execute(array(
+                        'userid' => $userId
+                    ));
 
-        // Check password complexity
-        if (!$this->TestPasswordAgainstPolicy($newPassword))
-            return false;
+                if (!$row = $sth->fetch())
+                    $this->ThrowError(26000, __('Incorrect Password Provided'));
 
-        // Generate a new SALT and Password
-        $hash = $this->create_hash($newPassword);
-
-        $SQL = sprintf("UPDATE `user` SET UserPassword = '%s', CSPRNG = 1 WHERE UserID = %d", $hash, $userId);
-
-        Debug::LogEntry('audit', $SQL);
-
-        // Run the update
-        if (!$this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
-            return $this->SetError(25000, __('Could not edit Password'));
+                $good_hash = Kit::ValidateParam($row['UserPassword'], _STRING);
+    
+                // Check the Old Password is correct
+                if ($this->validate_password($oldPassword, $good_hash) === false)
+                    $this->ThrowError(26000, __('Incorrect Password Provided'));
+            }
+            
+            // Check the New Password and Retyped Password match
+            if ($newPassword != $retypedNewPassword)
+                $this->ThrowError(26001, __('New Passwords do not match'));
+    
+            // Check password complexity
+            if (!$this->TestPasswordAgainstPolicy($newPassword))
+                throw new Exception("Error Processing Request", 1);
+                
+            // Generate a new SALT and Password
+            $hash = $this->create_hash($newPassword);
+    
+            $sth = $dbh->prepare('UPDATE `user` SET UserPassword = :hash, CSPRNG = 1 WHERE UserID = :userid');
+            $sth->execute(array(
+                    'hash' => $hash,
+                    'userid' => $userId
+                ));
+    
+            return true;  
         }
-
-        return true;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25000, __('Could not edit Password'));
+        
+            return false;
+        }
     }
 
     /**

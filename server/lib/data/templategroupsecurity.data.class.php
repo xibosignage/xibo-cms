@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2011 Daniel Garner
+ * Copyright (C) 2011-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,11 +22,6 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
 
 class TemplateGroupSecurity extends Data
 {
-    public function __construct(database $db)
-    {
-        parent::__construct($db);
-    }
-
     /**
      * Links a Display Group to a Group
      * @return
@@ -35,36 +30,36 @@ class TemplateGroupSecurity extends Data
      */
     public function Link($templateId, $groupId, $view, $edit, $del)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'TemplateGroupSecurity', 'Link');
 
-        $SQL  = "";
-        $SQL .= "INSERT ";
-        $SQL .= "INTO   lktemplategroup ";
-        $SQL .= "       ( ";
-        $SQL .= "              TemplateID, ";
-        $SQL .= "              GroupID, ";
-        $SQL .= "              View, ";
-        $SQL .= "              Edit, ";
-        $SQL .= "              Del ";
-        $SQL .= "       ) ";
-        $SQL .= "       VALUES ";
-        $SQL .= "       ( ";
-        $SQL .= sprintf("  %d, %d, %d, %d, %d ", $templateId, $groupId, $view, $edit, $del);
-        $SQL .= "       )";
+        try {
+            $dbh = PDOConnect::init();
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25024, __('Could not Link Template to Group'));
+            $SQL  = "INSERT INTO lktemplategroup (TemplateID, GroupID, View, Edit, Del) ";
+            $SQL .= " VALUES (:templateid, :groupid, :view, :edit, :del)";
+        
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'templateid' => $templateId,
+                    'groupid' => $groupId,
+                    'view' => $view,
+                    'edit' => $edit,
+                    'del' => $del
+                ));
 
+            Debug::LogEntry('audit', 'OUT', 'TemplateGroupSecurity', 'Link');
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25024, __('Could not Link Template to Group'));
+        
             return false;
         }
-
-        Debug::LogEntry('audit', 'OUT', 'TemplateGroupSecurity', 'Link');
-
-        return true;
     }
 
     /**
@@ -75,26 +70,30 @@ class TemplateGroupSecurity extends Data
      */
     public function Unlink($templateId, $groupId)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'TemplateGroupSecurity', 'Unlink');
-
-        $SQL  = "";
-        $SQL .= "DELETE FROM ";
-        $SQL .= "   lktemplategroup ";
-        $SQL .= sprintf("  WHERE TemplateID = %d AND GroupID = %d ", $templateId, $groupId);
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25025, __('Could not Unlink Template from Group'));
-
+        
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM lktemplategroup WHERE TemplateID = :templateid AND GroupID = :groupid');
+            $sth->execute(array(
+                    'templateid' => $templateId,
+                    'groupid' => $groupId
+                ));
+    
+            Debug::LogEntry('audit', 'OUT', 'TemplateGroupSecurity', 'Unlink');
+    
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25025, __('Could not Unlink Template from Group'));
+        
             return false;
         }
-
-        Debug::LogEntry('audit', 'OUT', 'TemplateGroupSecurity', 'Unlink');
-
-        return true;
     }
 
         /**
@@ -105,26 +104,29 @@ class TemplateGroupSecurity extends Data
      */
     public function UnlinkAll($templateId)
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', 'IN', 'TemplateGroupSecurity', 'UnlinkAll');
 
-        Debug::LogEntry('audit', 'IN', 'TemplateGroupSecurity', 'Unlink');
-
-        $SQL  = "";
-        $SQL .= "DELETE FROM ";
-        $SQL .= "   lktemplategroup ";
-        $SQL .= sprintf("  WHERE TemplateID = %d ", $templateId);
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25025, __('Could not Unlink Template from Group'));
-
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM lktemplategroup WHERE TemplateID = :templateid');
+            $sth->execute(array(
+                    'templateid' => $templateId
+                ));
+        
+            Debug::LogEntry('audit', 'OUT', 'TemplateGroupSecurity', 'UnlinkAll');
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25025, __('Could not Unlink Template from Groups'));
+        
             return false;
         }
-
-        Debug::LogEntry('audit', 'OUT', 'TemplateGroupSecurity', 'Unlink');
-
-        return true;
     }
 }
 ?>
