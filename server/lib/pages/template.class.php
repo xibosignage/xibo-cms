@@ -182,7 +182,7 @@ class templateDAO
 
         // Delete the template
         if (!$templateObject->Add($template, $description, $tags, $layoutid, $user->userid))
-            trigger_error($template->GetErrorMessage(), E_USER_ERROR);
+            trigger_error($templateObject->GetErrorMessage(), E_USER_ERROR);
         
         $response->SetFormSubmitResponse('Template Added.');
         $response->Respond();

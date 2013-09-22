@@ -32,50 +32,63 @@ class Template extends Data
      */
     public function Add($template, $description, $tags, $layoutId, $userId) {
 
-        $db =& $this->db;
-        $currentdate = date("Y-m-d H:i:s");
+        try {
+            $dbh = PDOConnect::init();
+        
+            $currentdate = date("Y-m-d H:i:s");
+    
+            // Validation
+            if (strlen($template) > 50 || strlen($template) < 1)
+                $this->ThrowError("Template Name must be between 1 and 50 characters");
+            
+            if (strlen($description) > 254) 
+                $this->ThrowError("Description can not be longer than 254 characters");
+            
+            if (strlen($tags) > 254) 
+                $this->ThrowError("Tags can not be longer than 254 characters");
+            
+            $sth = $dbh->prepare('SELECT template FROM template WHERE template = :template AND userID = :userid');
+            $sth->execute(array(
+                    'template' => $template,
+                    'userid' => $userId
+                ));
 
-        Debug::LogEntry('audit', $template);
+            if ($row = $sth->fetch())
+                $this->ThrowError(__('You already own a template called "%s". Please choose another name.', $template));
+            // End validation
+            
+            // Get the Layout XML (but reconstruct so that there are no media nodes in it)
+            if (!$xml = $this->GetLayoutXmlNoMedia($layoutId))
+                $this->ThrowError(__('Cannot get the Layout Structure.'));
+            
+            // Insert the template
+            $SQL = "INSERT INTO template (template, tags, issystem, retired, description, createdDT, modifiedDT, userID, xml) ";
+            $SQL.= "  VALUES (:template, :tags, :issystem, :retired, :description, :createddt, :modifieddt, :userid, :xml) ";
+            
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'template' => $template,
+                    'userid' => $userId,
+                    'tags' => $tags,
+                    'issystem' => 0,
+                    'retired' => 0,
+                    'description' => $description,
+                    'createddt' => $currentdate,
+                    'modifieddt' => $currentdate,
+                    'xml' => $xml
+                ));
 
-        // Validation
-        if (strlen($template) > 50 || strlen($template) < 1)
-            return $this->SetError("Template Name must be between 1 and 50 characters");
-        
-        if (strlen($description) > 254) 
-            return $this->SetError("Description can not be longer than 254 characters");
-        
-        if (strlen($tags) > 254) 
-            return $this->SetError("Tags can not be longer than 254 characters");
-        
-        // Check on the name the user has selected
-        $SQL = sprintf("SELECT template FROM template WHERE template = '%s' AND userID = %d", $db->escape_string($template), $userId);
-        
-        if (!$result = $db->query($SQL)) {
-            trigger_error($db->error());
-            return $this->SetError(__('Validation check failed'));
-        } 
-        
-        // Template with the same name?
-        if($db->num_rows($result) != 0) 
-            return $this->SetError(__('You already own a template called "%s". Please choose another name.', $template));
-        // End validation
-        
-        // Get the Layout XML (but reconstruct so that there are no media nodes in it)
-        if (!$xml = $this->GetLayoutXmlNoMedia($layoutId))
-            return $this->SetError(__('Cannot get the Layout Structure.'));
-        
-        // Insert the template
-        $SQL = "INSERT INTO template (template, tags, issystem, retired, description, createdDT, modifiedDT, userID, xml) ";
-        $SQL.= sprintf("  VALUES ('%s', '%s', 0, 0, '%s', '%s', '%s', %d, '%s') ", $db->escape_string($template), $db->escape_string($tags), $db->escape_string($description), 
-            $currentdate, $currentdate, $userId, $db->escape_string($xml));
-        
-        if (!$db->query($SQL)) 
-        {
-            trigger_error($db->error());
-            return $this->SetError("Unexpected error adding Template.");
+            return true;  
         }
-
-        return true;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                return $this->SetError("Unexpected error adding Template.");
+        
+            return false;
+        }
     }
 
     /**
@@ -85,20 +98,31 @@ class Template extends Data
      */
     public function Delete($templateId)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Remove any permissions
+            Kit::ClassLoader('templategroupsecurity');
+            $security = new TemplateGroupSecurity($this->db);
+            $security->UnlinkAll($templateId);
+    
+            // Remove the Template
+            $sth = $dbh->prepare('DELETE FROM template WHERE TemplateId = :templateid');
+            $sth->execute(array(
+                    'templateid' => $templateId
+                ));
 
-        // Remove any permissions
-        Kit::ClassLoader('templategroupsecurity');
-        $security = new TemplateGroupSecurity($db);
-        $security->UnlinkAll($templateId);
-
-        // Remove the Template
-        if (!$db->query(sprintf('DELETE FROM template WHERE TemplateId = %d', $templateId))) {
-            trigger_error($db->error());
-            return $this->SetError(25105, __('Unable to delete template'));
+            return true;  
         }
-
-        return true;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25105, __('Unable to delete template'));
+        
+            return false;
+        }
     }
 
     /**
@@ -108,20 +132,14 @@ class Template extends Data
      */
     private function GetLayoutXmlNoMedia($layoutid)
     {
-        $db =& $this->db;
-        
-        //Get the Xml for this Layout from the DB
-        $SQL = "SELECT xml FROM layout WHERE layoutID = $layoutid ";
-        if (!$results = $db->query($SQL)) 
-        {
-            trigger_error($db->error());
-            $errMsg = "Unable to Query for that layout, there is a database error.";
-            return false;
-        }
-        $row = $db->get_row($results) ;
-        
+        // Get the Xml for this Layout from the DB
+        Kit::ClassLoader('layout');
+
+        $layout = new Layout($this->db);
+        $layoutXml = $layout->GetLayoutXml($layoutid);
+
         $xml = new DOMDocument("1.0");
-        $xml->loadXML($row[0]);
+        $xml->loadXML($layoutXml);
         
         $xpath = new DOMXPath($xml);
         
