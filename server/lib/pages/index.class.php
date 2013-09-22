@@ -51,8 +51,7 @@ class indexDAO
 
 			// Check the token
 	        if (!Kit::CheckToken()) {
-	            trigger_error('Token does not match');
-
+	            
 	            // Reshow the login box
 	            $response->Login();
 	            $response->Respond();

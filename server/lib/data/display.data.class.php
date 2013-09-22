@@ -454,7 +454,7 @@ class Display extends Data
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
-                    'campaignid' => $campaignid,
+                    'campaignid' => $campaignId,
                     'fromdt' => $rfLookahead,
                     'todt' => $currentdate - 3600
                 ));

@@ -84,7 +84,9 @@ class ResponseManager
         // Start a DB transaction for all returns from the Web Portal
         try {
             $dbh = PDOConnect::init();
-            $dbh->beginTransaction();
+
+            if (!$dbh->inTransaction())
+            	$dbh->beginTransaction();
         }
         catch (Exception $e) {
             Debug::LogEntry('error', $e->getMessage());

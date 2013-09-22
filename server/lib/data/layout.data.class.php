@@ -43,100 +43,98 @@ class Layout extends Data
      */
     public function Add($layout, $description, $tags, $userid, $templateId)
     {
-        $db          =& $this->db;
-        $currentdate = date("Y-m-d H:i:s");
-
         Debug::LogEntry('audit', 'Adding new Layout', 'Layout', 'Add');
 
-        // Validation
-        if (strlen($layout) > 50 || strlen($layout) < 1)
-        {
-            $this->SetError(25001, __("Layout Name must be between 1 and 50 characters"));
-            return false;
-        }
+        try {
+            $dbh = PDOConnect::init();
+        
+            $currentdate = date("Y-m-d H:i:s");
+        
+            // Validation
+            if (strlen($layout) > 50 || strlen($layout) < 1)
+                $this->ThrowError(25001, __("Layout Name must be between 1 and 50 characters"));
+    
+            if (strlen($description) > 254)
+                $this->ThrowError(25002, __("Description can not be longer than 254 characters"));
+    
+            if (strlen($tags) > 254)
+                $this->ThrowError(25003, __("Tags can not be longer than 254 characters"));
 
-        if (strlen($description) > 254)
-        {
-            $this->SetError(25002, __("Description can not be longer than 254 characters"));
-            return false;
-        }
+            // Ensure there are no layouts with the same name
+            $sth = $dbh->prepare('SELECT layout FROM `layout` WHERE layout = :layout AND userID = :userid');
+            $sth->execute(array(
+                    'layout' => $layout,
+                    'userid' => $userid
+                ));
+            
+            if ($row = $sth->fetch())
+                $this->ThrowError(25004, sprintf(__("You already own a layout called '%s'. Please choose another name."), $layout));
 
-        if (strlen($tags) > 254)
-        {
-            $this->SetError(25003, __("Tags can not be longer than 254 characters"));
-            return false;
-        }
+            Debug::LogEntry('audit', 'Validation Compelte', 'Layout', 'Add');
+            // End Validation
+        
+            // Get the XML for this template.
+            $templateXml = $this->GetTemplateXml($templateId, $userid);
+        
+            Debug::LogEntry('audit', 'Retrieved template xml', 'Layout', 'Add');
 
-        // Ensure there are no layouts with the same name
-        $SQL = sprintf("SELECT layout FROM layout WHERE layout = '%s' AND userID = %d ", $db->escape_string($layout), $userid);
+            $SQL  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, tags, xml, status)';
+            $SQL .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :tags, :xml, :status)';
 
-        if ($db->GetSingleRow($SQL))
-        {
-            $this->SetError(25004, sprintf(__("You already own a layout called '%s'. Please choose another name."), $layout));
-            return false;
-        }
-        // End Validation
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'layout' => $layout,
+                    'description' => $description,
+                    'userid' => $userid,
+                    'createddt' => $currentdate,
+                    'modifieddt' => $currentdate,
+                    'tags' => $tags,
+                    'xml' => $templateXml,
+                    'status' => 3
+                ));
 
-        Debug::LogEntry('audit', 'Validation Compelte', 'Layout', 'Add');
-
-        // Get the XML for this template.
-        $templateXml = $this->GetTemplateXml($templateId, $userid);
-
-        Debug::LogEntry('audit', 'Retrieved template xml', 'Layout', 'Add');
-
-        $SQL = <<<END
-        INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, tags, xml, status)
-         VALUES ('%s', '%s', %d, '%s', '%s', '%s', '%s', 3)
-END;
-
-        $SQL = sprintf($SQL, $db->escape_string($layout),
-                            $db->escape_string($description), $userid,
-                            $db->escape_string($currentdate),
-                            $db->escape_string($currentdate),
-                            $db->escape_string($tags),
-                            $templateXml);
-
-        if(!$id = $db->insert_query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25005, __('Could not add Layout'));
-
-            return false;
-        }
-
-        Debug::LogEntry('audit', 'Updating Tags', 'Layout', 'Add');
-
-        // Are there any tags?
-        if ($tags != '')
-        {
-            // Create an array out of the tags
-            $tagsArray = explode(' ', $tags);
-
-            // Add the tags XML to the layout
-            if (!$this->EditTags($id, $tagsArray))
+            $id = $dbh->lastInsertId();
+        
+            Debug::LogEntry('audit', 'Updating Tags', 'Layout', 'Add');
+        
+            // Are there any tags?
+            if ($tags != '')
             {
-                $this->Delete($id);
-                return false;
+                // Create an array out of the tags
+                $tagsArray = explode(' ', $tags);
+    
+                // Add the tags XML to the layout
+                if (!$this->EditTags($id, $tagsArray))
+                    $this->ThrowError(__('Unable to edit tags'));
             }
+        
+            // Create a campaign
+            $campaign = new Campaign($this->db);
+    
+            $campaignId = $campaign->Add($layout, 1, $userid);
+            $campaign->Link($campaignId, $id, 0);
+        
+            // What permissions should we create this with?
+            if (Config::GetSetting('LAYOUT_DEFAULT') == 'public')
+            {
+                Kit::ClassLoader('campaignsecurity');
+                $security = new CampaignSecurity($this->db);
+                $security->LinkEveryone($campaignId, 1, 0, 0);
+            }
+    
+            Debug::LogEntry('audit', 'Complete', 'Layout', 'Add');
+    
+            return $id;  
         }
-
-        // Create a campaign
-        $campaign = new Campaign($db);
-
-        $campaignId = $campaign->Add($layout, 1, $userid);
-        $campaign->Link($campaignId, $id, 0);
-
-        // What permissions should we create this with?
-        if (Config::GetSetting('LAYOUT_DEFAULT') == 'public')
-        {
-            Kit::ClassLoader('campaignsecurity');
-            $security = new CampaignSecurity($db);
-            $security->LinkEveryone($campaignId, 1, 0, 0);
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25005, __('Could not add Layout'));
+        
+            return false;
         }
-
-        Debug::LogEntry('audit', 'Complete', 'Layout', 'Add');
-
-        return $id;
     }
 
     /**
@@ -150,89 +148,79 @@ END;
      */
     public function Edit($layoutId, $layout, $description, $tags, $userid, $retired) {
         
-        $db          =& $this->db;
-        $currentdate = date("Y-m-d H:i:s");
+        try {
+            $dbh = PDOConnect::init();
+                    
+            $currentdate = date("Y-m-d H:i:s");
+        
+            // Validation
+            if (strlen($layout) > 50 || strlen($layout) < 1)
+                $this->ThrowError(25001, __("Layout Name must be between 1 and 50 characters"));
+    
+            if (strlen($description) > 254)
+                $this->ThrowError(25002, __("Description can not be longer than 254 characters"));
+    
+            if (strlen($tags) > 254)
+                $this->ThrowError(25003, __("Tags can not be longer than 254 characters"));
 
-        // Validation
-        if ($layoutId == 0)
-            return $response->SetError(__('Layout not selected'));
-        
-        if (strlen($layout) > 50 || strlen($layout) < 1) 
-        {
-            $response->SetError(__("Layout Name must be between 1 and 50 characters"));
-            $response->Respond();
+            // Ensure there are no layouts with the same name
+            $sth = $dbh->prepare('SELECT layout FROM `layout` WHERE layout = :layout AND userID = :userid AND layoutid <> :layoutid');
+            $sth->execute(array(
+                    'layout' => $layout,
+                    'userid' => $userid,
+                    'layoutid' => $layoutId
+                ));
+            
+            if ($row = $sth->fetch())
+                $this->ThrowError(25004, sprintf(__("You already own a layout called '%s'. Please choose another name."), $layout));
+
+            Debug::LogEntry('audit', 'Validation Compelte', 'Layout', 'Add');
+            // End Validation
+            
+            $SQL  = 'UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, tags = :tags WHERE layoutID = :layoutid';
+
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'layout' => $layout,
+                    'description' => $description,
+                    'modifieddt' => $currentdate,
+                    'retired' => $retired,
+                    'tags' => $tags,
+                    'layoutid' => $layoutId
+                ));
+                
+            // Create an array out of the tags
+            $tagsArray = explode(' ', $tags);
+            
+            // Add the tags XML to the layout
+            if (!$this->EditTags($layoutId, $tagsArray))
+                throw new Exception("Error Processing Request", 1);
+                
+            // Maintain the name on the campaign
+            Kit::ClassLoader('campaign');
+            $campaign = new Campaign($this->db);
+            $campaignId = $campaign->GetCampaignId($layoutId);
+            $campaign->Edit($campaignId, $layout);
+    
+            // Notify (dont error)
+            Kit::ClassLoader('display');
+            $displayObject = new Display($this->db);
+            $displayObject->NotifyDisplays($campaignId);
+    
+            // Is this layout valid
+            $this->SetValid($layoutId);
+    
+            return true;
         }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
         
-        if (strlen($description) > 254) 
-        {
-            $response->SetError(__("Description can not be longer than 254 characters"));
-            $response->Respond();
-        }
+            if (!$this->IsError())
+                $this->SetError(sprintf(__('Unknown error editing %s'), $layout));
         
-        if (strlen($tags) > 254) 
-        {
-            $response->SetError(__("Tags can not be longer than 254 characters"));
-            $response->Respond();
-        }
-        
-        // Name check
-        if ($db->GetSingleRow(sprintf("SELECT layout FROM layout WHERE layout = '%s' AND userID = %d AND layoutid <> %d ", $db->escape_string($layout), $userid, $layoutId)))
-        {
-            trigger_error($db->error());
-            $this->SetError(25004, sprintf(__("You already own a layout called '%s'. Please choose another name."), $layout));
             return false;
         }
-        // End Validation
-
-        $SQL = <<<END
-
-        UPDATE layout SET
-            layout = '%s',
-            description = '%s',
-            modifiedDT = '%s',
-            retired = %d,
-            tags = '%s'
-        
-        WHERE layoutID = %s;        
-END;
-
-        $SQL = sprintf($SQL, 
-                        $db->escape_string($layout),
-                        $db->escape_string($description), 
-                        $db->escape_string($currentdate), $retired, 
-                        $db->escape_string($tags), $layoutId);
-        
-        Debug::LogEntry('audit', $SQL);
-
-        if(!$db->query($SQL)) 
-        {
-            trigger_error($db->error());
-            $response->SetError(sprintf(__('Unknown error editing %s'), $layout));
-            $response->Respond();
-        }
-        
-        // Create an array out of the tags
-        $tagsArray = explode(' ', $tags);
-        
-        // Add the tags XML to the layout
-        if (!$this->EditTags($layoutId, $tagsArray))
-            return false;
-
-        // Maintain the name on the campaign
-        Kit::ClassLoader('campaign');
-        $campaign = new Campaign($db);
-        $campaignId = $campaign->GetCampaignId($layoutId);
-        $campaign->Edit($campaignId, $layout);
-
-        // Notify (dont error)
-        Kit::ClassLoader('display');
-        $displayObject = new Display($db);
-        $displayObject->NotifyDisplays($campaignId);
-
-        // Is this layout valid
-        $this->SetValid($layoutId);
-
-        return true;
     }
 
     /**
@@ -241,42 +229,56 @@ END;
      */
     private function GetTemplateXml($templateId, $userId)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
+        
+            if ($templateId == 0) {
+                // make some default XML
+                $xmlDoc = new DOMDocument("1.0");
+                $layoutNode = $xmlDoc->createElement("layout");
+    
+                $layoutNode->setAttribute("width", 800);
+                $layoutNode->setAttribute("height", 450);
+                $layoutNode->setAttribute("bgcolor", "#000000");
+                $layoutNode->setAttribute("schemaVersion", Config::Version('XlfVersion'));
+    
+                $xmlDoc->appendChild($layoutNode);
+    
+                $xml = $xmlDoc->saveXML();
+            }
+            else {
+                // Get the template XML
+                $sth = $dbh->prepare('SELECT xml FROM template WHERE templateID = :templateid');
+                $sth->execute(array(
+                        'templateid' => $templateId
+                    ));
 
-        if ($templateId == 0)
-        {
-            // make some default XML
-            $xmlDoc = new DOMDocument("1.0");
-            $layoutNode = $xmlDoc->createElement("layout");
-
-            $layoutNode->setAttribute("width", 800);
-            $layoutNode->setAttribute("height", 450);
-            $layoutNode->setAttribute("bgcolor", "#000000");
-            $layoutNode->setAttribute("schemaVersion", Config::Version('XlfVersion'));
-
-            $xmlDoc->appendChild($layoutNode);
-
-            $xml = $xmlDoc->saveXML();
+                if (!$row = $sth->fetch())
+                    $this->ThrowError(__('Unknown template'));
+    
+                $xmlDoc = new DOMDocument("1.0");
+                $xmlDoc->loadXML($row['xml']);
+    
+                $regionNodeList = $xmlDoc->getElementsByTagName('region');
+    
+                //get the regions
+                foreach ($regionNodeList as $region)
+                    $region->setAttribute('userId', $userId);
+    
+                $xml = $xmlDoc->saveXML();
+            }
+        
+            return $xml;  
         }
-        else
-        {
-            // Get the template XML
-            if (!$row = $db->GetSingleRow(sprintf("SELECT xml FROM template WHERE templateID = %d ", $templateId)))
-                trigger_error(__('Error getting this template.'), E_USER_ERROR);
-
-            $xmlDoc = new DOMDocument("1.0");
-            $xmlDoc->loadXML($row['xml']);
-
-            $regionNodeList = $xmlDoc->getElementsByTagName('region');
-
-            //get the regions
-            foreach ($regionNodeList as $region)
-                $region->setAttribute('userId', $userId);
-
-            $xml = $xmlDoc->saveXML();
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
         }
-
-        return $xml;
     }
 
     /**
@@ -287,85 +289,88 @@ END;
      */
     public function EditTags($layoutID, $tags)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'Layout', 'EditTags');
-
-        // Make sure we get an array
-        if(!is_array($tags))
-        {
-            $this->SetError(25006, 'Must pass EditTags an array');
+        
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Make sure we get an array
+            if(!is_array($tags))
+                $this->ThrowError(25006, 'Must pass EditTags an array');
+                
+            // Set the XML
+            if (!$this->SetXml($layoutID))
+                $this->ThrowError(__('Unable to set XML'));
+        
+            Debug::LogEntry('audit', 'Got the XML from the DB. Now creating the tags.', 'Layout', 'EditTags');
+        
+            // Create the tags XML
+            $tagsXml = '<tags>';
+    
+            foreach($tags as $tag)
+                $tagsXml .= sprintf('<tag>%s</tag>', $tag);
+    
+            $tagsXml .= '</tags>';
+    
+            Debug::LogEntry('audit', 'Tags XML is:' . $tagsXml, 'Layout', 'EditTags');
+        
+            // Load the tags XML into a document
+            $tagsXmlDoc = new DOMDocument('1.0');
+            $tagsXmlDoc->loadXML($tagsXml);
+    
+            // Load the XML for this layout
+            $xml = new DOMDocument("1.0");
+            $xml->loadXML($this->xml);
+    
+            // Import the new node into this document
+            $newTagsNode = $xml->importNode($tagsXmlDoc->documentElement, true);
+    
+            // Xpath for an existing tags node
+            $xpath     = new DOMXPath($xml);
+            $tagsNode     = $xpath->query("//tags");
+    
+            // Does the tags node exist?
+            if ($tagsNode->length < 1)
+            {
+                // We need to append our new node to the layout node
+                $layoutXpath    = new DOMXPath($xml);
+                $layoutNode     = $xpath->query("//layout");
+                $layoutNode     = $layoutNode->item(0);
+    
+                $layoutNode->appendChild($newTagsNode);
+            }
+            else
+            {
+                // We need to swap our new node with the existing one
+                $tagsNode = $tagsNode->item(0);
+    
+                // Replace the node
+                $tagsNode->parentNode->replaceChild($newTagsNode, $tagsNode);
+            }
+    
+            // Format the output a bit nicer for Alex
+            $xml->formatOutput = true;
+    
+            // Convert back to XML
+            $xml = $xml->saveXML();
+    
+            // Save it
+            if (!$this->SetLayoutXml($layoutID, $xml)) 
+                throw new Exception("Error Processing Request", 1);
+    
+            Debug::LogEntry('audit', 'OUT', 'Layout', 'EditTags');
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
             return false;
         }
-
-        // Set the XML
-        if (!$this->SetXml($layoutID))
-        {
-            Debug::LogEntry('audit', 'Failed to Set the layout Xml.', 'Layout', 'EditTags');
-            return false;
-        }
-
-        Debug::LogEntry('audit', 'Got the XML from the DB. Now creating the tags.', 'Layout', 'EditTags');
-
-        // Create the tags XML
-        $tagsXml = '<tags>';
-
-        foreach($tags as $tag)
-        {
-            $tagsXml .= sprintf('<tag>%s</tag>', $tag);
-        }
-
-        $tagsXml .= '</tags>';
-
-        Debug::LogEntry('audit', 'Tags XML is:' . $tagsXml, 'Layout', 'EditTags');
-
-        // Load the tags XML into a document
-        $tagsXmlDoc = new DOMDocument('1.0');
-        $tagsXmlDoc->loadXML($tagsXml);
-
-        // Load the XML for this layout
-        $xml = new DOMDocument("1.0");
-        $xml->loadXML($this->xml);
-
-        // Import the new node into this document
-        $newTagsNode = $xml->importNode($tagsXmlDoc->documentElement, true);
-
-        // Xpath for an existing tags node
-        $xpath 	= new DOMXPath($xml);
-        $tagsNode 	= $xpath->query("//tags");
-
-        // Does the tags node exist?
-        if ($tagsNode->length < 1)
-        {
-            // We need to append our new node to the layout node
-            $layoutXpath	= new DOMXPath($xml);
-            $layoutNode 	= $xpath->query("//layout");
-            $layoutNode 	= $layoutNode->item(0);
-
-            $layoutNode->appendChild($newTagsNode);
-        }
-        else
-        {
-            // We need to swap our new node with the existing one
-            $tagsNode = $tagsNode->item(0);
-
-            // Replace the node
-            $tagsNode->parentNode->replaceChild($newTagsNode, $tagsNode);
-        }
-
-        // Format the output a bit nicer for Alex
-        $xml->formatOutput = true;
-
-        // Convert back to XML
-        $xml = $xml->saveXML();
-
-        // Save it
-        if (!$this->SetLayoutXml($layoutID, $xml)) 
-            return false;
-
-        Debug::LogEntry('audit', 'OUT', 'Layout', 'EditTags');
-
-        return true;
     }
 
     /**
@@ -405,25 +410,32 @@ END;
      */
     public function GetLayoutXml($layoutid)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'Layout', 'GetLayoutXml');
+        
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT xml FROM layout WHERE layoutID = :layoutid');
+            $sth->execute(array(
+                    'layoutid' => $layoutid
+                ));
 
-        //Get the Xml for this Layout from the DB
-        $SQL = sprintf("SELECT xml FROM layout WHERE layoutID = %d ", $layoutid);
-
-        if (!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25000, 'Layout does not exist.');
+            if (!$row = $sth->fetch())
+                throw new Exception("Layout does not exist", 1);
+                
+            Debug::LogEntry('audit', 'OUT', 'Layout', 'GetLayoutXml');
+        
+            return $row['xml'];  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25000, 'Layout does not exist.');
+        
             return false;
         }
-
-        $row = $db->get_row($results) ;
-
-        Debug::LogEntry('audit', 'OUT', 'Layout', 'GetLayoutXml');
-
-        return $row[0];
     }
 
     /**
@@ -434,26 +446,30 @@ END;
      */
     private function SetLayoutXml($layoutid, $xml)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'Layout', 'SetLayoutXml');
-
-        $xml = addslashes($xml);
-
-        // Write it back to the database
-        $SQL = sprintf("UPDATE layout SET xml = '%s' WHERE layoutID = %d ", $xml, $layoutid);
-
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25007, 'Unable to Update Layout.');
+        
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('UPDATE layout SET xml = :xml WHERE layoutID = :layoutid');
+            $sth->execute(array(
+                    'layoutid' => $layoutid,
+                    'xml' => $xml
+                ));
+        
+            Debug::LogEntry('audit', 'OUT', 'Layout', 'SetLayoutXml');
+        
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25007, 'Unable to Update Layout.');
+        
             return false;
         }
-
-        Debug::LogEntry('audit', 'OUT', 'Layout', 'SetLayoutXml');
-
-        return true;
     }
 
     /**
@@ -466,157 +482,164 @@ END;
      */
     public function Copy($oldLayoutId, $newLayoutName, $userId, $copyMedia = false)
     {
-        $db =& $this->db;
-        $currentdate = date("Y-m-d H:i:s");
-        $campaign = new Campaign($db);
-
-        // Include to media data class?
-        if ($copyMedia)
-        {
-            Kit::ClassLoader('media');
-            Kit::ClassLoader('mediagroupsecurity');
-            $mediaObject = new Media($db);
-            $mediaSecurity = new MediaGroupSecurity($db);
-        }
-
-        // We need the old campaignid
-        $oldCampaignId = $campaign->GetCampaignId($oldLayoutId);
-
-        // Permissions model
-        Kit::ClassLoader('campaignsecurity');
-        Kit::ClassLoader('layoutregiongroupsecurity');
-        Kit::ClassLoader('layoutmediagroupsecurity');
-
-        // The Layout ID is the old layout
-        $SQL  = "";
-        $SQL .= " INSERT INTO layout (layout, xml, userID, description, tags, templateID, retired, duration, background, createdDT, modifiedDT, status) ";
-        $SQL .= " SELECT '%s', xml, %d, description, tags, templateID, retired, duration, background, '%s', '%s', status ";
-        $SQL .= "  FROM layout ";
-        $SQL .= " WHERE layoutid = %d";
-        $SQL = sprintf($SQL, $db->escape_string($newLayoutName), $userId, $db->escape_string($currentdate), $db->escape_string($currentdate), $oldLayoutId);
-
-        Debug::LogEntry('audit', $SQL, 'layout', 'Copy');
-
-        if (!$newLayoutId = $db->insert_query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25000, __('Unable to Copy this Layout'));
-            return false;
-        }
-
-        // Create a campaign
-        $newCampaignId = $campaign->Add($newLayoutName, 1, $userId);
-
-        // Link them
-        $campaign->Link($newCampaignId, $newLayoutId, 0);
-
-        // Open the layout XML and parse for media nodes
-        if (!$this->SetDomXml($newLayoutId))
-        {
-            $this->Delete($newLayoutId);
-            $this->SetError(25000, __('Unable to copy layout'));
-            return false;
-        }
-
-        Debug::LogEntry('audit', 'Loaded XML into the DOM.', 'layout', 'Copy');
+        try {
+            $dbh = PDOConnect::init();
         
-        // Get all media nodes
-        $xpath = new DOMXpath($this->DomXml);
-
-        // Create an XPath to get all media nodes
-        $mediaNodes = $xpath->query("//media");
-
-        Debug::LogEntry('audit', 'About to loop through media nodes', 'layout', 'Copy');
-        
-        // On each media node, take the existing LKID and MediaID and create a new LK record in the database
-        foreach ($mediaNodes as $mediaNode)
-        {
-            $mediaId = $mediaNode->getAttribute('id');
-            $type = $mediaNode->getAttribute('type');
-
-            // Store the old media id
-            $oldMediaId = $mediaId;
-
-            Debug::LogEntry('audit', sprintf('Media %s node found with id %d', $type, $mediaId), 'layout', 'Copy');
-
-            // If this is a non region specific type, then move on
-            if ($this->IsRegionSpecific($type))
-            {
-                // Generate a new media id
-                $newMediaId = md5(uniqid());
-                
-                $mediaNode->setAttribute('id', $newMediaId);
-
-                // Copy media security
-                $security = new LayoutMediaGroupSecurity($db);
-                $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $mediaId, $newMediaId);
-                continue;
-            }
-
-            // Get the regionId
-            $regionNode = $mediaNode->parentNode;
-            $regionId = $regionNode->getAttribute('id');
-
-            // Do we need to copy this media record?
+            $currentdate = date("Y-m-d H:i:s");
+            $campaign = new Campaign($this->db);
+    
+            // Include to media data class?
             if ($copyMedia)
             {
-                // Take this media item and make a hard copy of it.
-                if (!$mediaId = $mediaObject->Copy($mediaId, $newLayoutName))
-                {
-                    $this->Delete($newLayoutId);
-                    return false;
-                }
-
-                // Update the permissions for the new media record
-                $mediaSecurity->Copy($oldMediaId, $mediaId);
-
-                // Copied the media node, so set the ID
-                $mediaNode->setAttribute('id', $mediaId);
-
-                // Also need to set the options node
-                // Get the stored as value of the new node
-                if (!$fileName = $this->db->GetSingleValue(sprintf("SELECT StoredAs FROM media WHERE MediaID = %d", $mediaId), 'StoredAs', _STRING))
-                    return $this->SetError(25000, __('Unable to stored value of newly copied media'));
-
-                $newNode = $this->DomXml->createElement('uri', $fileName);
-
-                // Find the old node
-                $uriNodes = $mediaNode->getElementsByTagName('uri');
-                $uriNode = $uriNodes->item(0);
-
-                // Replace it
-                $uriNode->parentNode->replaceChild($newNode, $uriNode);
+                Kit::ClassLoader('media');
+                Kit::ClassLoader('mediagroupsecurity');
+                $mediaObject = new Media($this->db);
+                $mediaSecurity = new MediaGroupSecurity($this->db);
             }
+    
+            // We need the old campaignid
+            $oldCampaignId = $campaign->GetCampaignId($oldLayoutId);
+    
+            // Permissions model
+            Kit::ClassLoader('campaignsecurity');
+            Kit::ClassLoader('layoutregiongroupsecurity');
+            Kit::ClassLoader('layoutmediagroupsecurity');
+    
+            // The Layout ID is the old layout
+            $SQL  = "";
+            $SQL .= " INSERT INTO layout (layout, xml, userID, description, tags, templateID, retired, duration, background, createdDT, modifiedDT, status) ";
+            $SQL .= " SELECT :layout, xml, :userid, description, tags, templateID, retired, duration, background, :createddt, :modifieddt, status ";
+            $SQL .= "  FROM layout ";
+            $SQL .= " WHERE layoutid = :layoutid";
 
-            // Add the database link for this media record
-            if (!$lkId = $this->AddLk($newLayoutId, $regionId, $mediaId))
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'layout' => $newLayoutName,
+                    'userid' => $userId,
+                    'createddt' => $currentdate,
+                    'modifieddt' => $currentdate,
+                    'layoutid' => $oldLayoutId
+                ));
+
+            $newLayoutId = $dbh->lastInsertId();
+    
+            // Create a campaign
+            $newCampaignId = $campaign->Add($newLayoutName, 1, $userId);
+    
+            // Link them
+            $campaign->Link($newCampaignId, $newLayoutId, 0);
+    
+            // Open the layout XML and parse for media nodes
+            if (!$this->SetDomXml($newLayoutId))
+                $this->ThrowError(25000, __('Unable to copy layout'));
+
+            // Get all media nodes
+            $xpath = new DOMXpath($this->DomXml);
+    
+            // Create an XPath to get all media nodes
+            $mediaNodes = $xpath->query("//media");
+    
+            Debug::LogEntry('audit', 'About to loop through media nodes', 'layout', 'Copy');
+            
+            // On each media node, take the existing LKID and MediaID and create a new LK record in the database
+            $sth = $dbh->prepare('SELECT StoredAs FROM media WHERE MediaID = :mediaid');
+
+            foreach ($mediaNodes as $mediaNode)
             {
-                $this->Delete($newLayoutId);
-                return false;
+                $mediaId = $mediaNode->getAttribute('id');
+                $type = $mediaNode->getAttribute('type');
+    
+                // Store the old media id
+                $oldMediaId = $mediaId;
+    
+                Debug::LogEntry('audit', sprintf('Media %s node found with id %d', $type, $mediaId), 'layout', 'Copy');
+    
+                // If this is a non region specific type, then move on
+                if ($this->IsRegionSpecific($type))
+                {
+                    // Generate a new media id
+                    $newMediaId = md5(uniqid());
+                    
+                    $mediaNode->setAttribute('id', $newMediaId);
+    
+                    // Copy media security
+                    $security = new LayoutMediaGroupSecurity($this->db);
+                    $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $mediaId, $newMediaId);
+                    continue;
+                }
+    
+                // Get the regionId
+                $regionNode = $mediaNode->parentNode;
+                $regionId = $regionNode->getAttribute('id');
+    
+                // Do we need to copy this media record?
+                if ($copyMedia)
+                {
+                    // Take this media item and make a hard copy of it.
+                    if (!$mediaId = $mediaObject->Copy($mediaId, $newLayoutName))
+                        throw new Exception("Error Processing Request", 1);
+                        
+                    // Update the permissions for the new media record
+                    $mediaSecurity->Copy($oldMediaId, $mediaId);
+    
+                    // Copied the media node, so set the ID
+                    $mediaNode->setAttribute('id', $mediaId);
+    
+                    // Also need to set the options node
+                    // Get the stored as value of the new node
+                    $sth->execute(array('mediaid' => $mediaId));
+
+                    if (!$row = $sth->fetch())
+                        $this->ThrowError(25000, __('Unable to find stored value of newly copied media'));
+
+                    $fileName = Kit::ValidateParam($row['fileName'], _STRING);
+                    
+                    $newNode = $this->DomXml->createElement('uri', $fileName);
+    
+                    // Find the old node
+                    $uriNodes = $mediaNode->getElementsByTagName('uri');
+                    $uriNode = $uriNodes->item(0);
+    
+                    // Replace it
+                    $uriNode->parentNode->replaceChild($newNode, $uriNode);
+                }
+    
+                // Add the database link for this media record
+                if (!$lkId = $this->AddLk($newLayoutId, $regionId, $mediaId))
+                    throw new Exception("Error Processing Request", 1);
+    
+                // Update the permissions for this media on this layout
+                $security = new LayoutMediaGroupSecurity($this->db);
+                $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $oldMediaId, $mediaId);
+    
+                // Set this LKID on the media node
+                $mediaNode->setAttribute('lkid', $lkId);
             }
-
-            // Update the permissions for this media on this layout
-            $security = new LayoutMediaGroupSecurity($db);
-            $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $oldMediaId, $mediaId);
-
-            // Set this LKID on the media node
-            $mediaNode->setAttribute('lkid', $lkId);
+    
+            Debug::LogEntry('audit', 'Finished looping through media nodes', 'layout', 'Copy');
+    
+            // Set the XML
+            $this->SetLayoutXml($newLayoutId, $this->DomXml->saveXML());
+    
+            // Layout permissions
+            $security = new CampaignSecurity($this->db);
+            $security->CopyAll($oldCampaignId, $newCampaignId);
+    
+            $security = new LayoutRegionGroupSecurity($this->db);
+            $security->CopyAll($oldLayoutId, $newLayoutId);
+            
+            // Return the new layout id
+            return $newLayoutId;  
         }
-
-        Debug::LogEntry('audit', 'Finished looping through media nodes', 'layout', 'Copy');
-
-        // Set the XML
-        $this->SetLayoutXml($newLayoutId, $this->DomXml->saveXML());
-
-        // Layout permissions
-        $security = new CampaignSecurity($db);
-        $security->CopyAll($oldCampaignId, $newCampaignId);
-
-        $security = new LayoutRegionGroupSecurity($db);
-        $security->CopyAll($oldLayoutId, $newLayoutId);
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
         
-        // Return the new layout id
-        return $newLayoutId;
+            if (!$this->IsError())
+                $this->SetError(25000, __('Unable to Copy this Layout'));
+        
+            return false;
+        }
     }
 
     /**
@@ -625,17 +648,26 @@ END;
      */
     public function Retire($layoutId) {
         
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
 
-        // Make sure the layout id is present
-        if ($layoutId == 0)
-            return $this->SetError(__('No Layout selected'));
+            // Make sure the layout id is present
+            if ($layoutId == 0)
+                $this->ThrowError(__('No Layout selected'));
         
-        $SQL = sprintf("UPDATE layout SET retired = 1 WHERE layoutID = %d", $layoutId);
-    
-        if (!$db->query($SQL)) {
-            trigger_error($db->error());
-            return $this->SetError(__('Unable to retire this layout.'));
+            $sth = $dbh->prepare('UPDATE layout SET retired = 1 WHERE layoutID = :layoutid');
+            $sth->execute(array('layoutid' => $layoutId));
+            
+            return true; 
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                return $this->SetError(__('Unable to retire this layout.'));
+        
+            return false;
         }
     }
 
@@ -646,29 +678,45 @@ END;
      */
     public function Delete($layoutId)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
 
-        // Make sure the layout id is present
-        if ($layoutId == 0)
-            return $this->SetError(__('No Layout selected'));
+            // Make sure the layout id is present
+            if ($layoutId == 0)
+                $this->ThrowError(__('No Layout selected'));
+        
+            $sth = $dbh->prepare('DELETE FROM lklayoutmediagroup WHERE layoutid = :layoutid');
+            $sth->execute(array('layoutid' => $layoutId));
 
-        $campaign = new Campaign($db);
-        $campaignId = $campaign->GetCampaignId($layoutId);
+            $sth = $dbh->prepare('DELETE FROM lklayoutregiongroup WHERE layoutid = :layoutid');
+            $sth->execute(array('layoutid' => $layoutId));
 
-        // Remove all LK records for this layout
-        $db->query(sprintf('DELETE FROM lklayoutmediagroup WHERE layoutid = %d', $layoutId));
-        $db->query(sprintf('DELETE FROM lklayoutregiongroup WHERE layoutid = %d', $layoutId));
-        $db->query(sprintf('DELETE FROM lklayoutmedia WHERE layoutid = %d', $layoutId));
+            $sth = $dbh->prepare('DELETE FROM lklayoutmedia WHERE layoutid = :layoutid');
+            $sth->execute(array('layoutid' => $layoutId));
+        
+            // Handle the deletion of the campaign        
+            $campaign = new Campaign($this->db);
+            $campaignId = $campaign->GetCampaignId($layoutId);
+    
+            // Remove the Campaign (will remove links to this layout - orphaning the layout)
+            if (!$campaign->Delete($campaignId))
+                $this->ThrowError(25008, __('Unable to delete campaign'));
+    
+            // Remove the Layout (now it is orphaned it can be deleted safely)
+            $sth = $dbh->prepare('DELETE FROM layout WHERE layoutid = :layoutid');
+            $sth->execute(array('layoutid' => $layoutId));
 
-        // Remove the Campaign (will remove links to this layout - orphaning the layout)
-        if (!$campaign->Delete($campaignId))
-            return $this->SetError(25008, __('Unable to delete campaign'));
-
-        // Remove the Layout (now it is orphaned it can be deleted safely)
-        if (!$db->query(sprintf('DELETE FROM layout WHERE layoutid = %d', $layoutId)))
-            return $this->SetError(25008, __('Unable to delete layout'));
-
-        return true;
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25008, __('Unable to delete layout'));
+        
+            return false;
+        }
     }
 
     /**
@@ -680,18 +728,27 @@ END;
      */
     private function AddLk($layoutid, $region, $mediaid)
     {
-        $db =& $this->db;
-
-        $SQL = sprintf("INSERT INTO lklayoutmedia (layoutID, regionID, mediaID) VALUES (%d, '%s', %d)", $layoutid, $db->escape_string($region), $mediaid);
-
-        if (!$id = $db->insert_query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError('25999',__("Database error adding this link record."));
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('INSERT INTO lklayoutmedia (layoutID, regionID, mediaID) VALUES (:layoutid, :regionid, :mediaid)');
+            $sth->execute(array(
+                    'layoutid' => $layoutid,
+                    'regionid' => $region,
+                    'mediaid' => $mediaid
+                ));
+        
+            return $dbh->lastInsertId();  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError('25999',__("Database error adding this link record."));
+        
             return false;
         }
-
-        return $id;
     }
 
     /**
@@ -700,11 +757,30 @@ END;
      */
     private function IsRegionSpecific($type)
     {
-        $sql = sprintf("SELECT RegionSpecific FROM module WHERE Module = '%s'", $this->db->escape_string($type));
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT RegionSpecific FROM module WHERE Module = :module');
+            $sth->execute(array(
+                    'module' => $type
+                ));
 
-        Debug::LogEntry('audit', sprintf('Checking to see if %s is RegionSpecific with SQL %s', $type, $sql), 'layout', 'Copy');
-
-        return ($this->db->GetSingleValue($sql, 'RegionSpecific', _INT) == 1) ? true : false;
+            if (!$row = $sth->fetch())
+                $this->ThrowError(__('Unknown Module'));
+        
+            Debug::LogEntry('audit', sprintf('Checking to see if %s is RegionSpecific', $type), 'layout', 'Copy');
+        
+            return (Kit::ValidateParam($row['RegionSpecific'], _INT) == 1) ? true : false;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
     }
 
     /**
@@ -716,67 +792,76 @@ END;
      */
     public function SetBackground($layoutId, $resolutionId, $color, $backgroundImageId) {
 
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
+                
+            if ($layoutId == 0)
+                $this->ThrowError(__('Layout not selected'));
+    
+            if ($layoutId == 0)
+                $this->ThrowError(__('Resolution not selected'));
+    
+            // Allow for the 0 media idea (no background image)
+            if ($backgroundImageId == 0)
+            {
+                $bg_image = '';
+            }
+            else
+            {
+                // Get the file URI
+                $sth = $dbh->prepare('SELECT StoredAs FROM media WHERE MediaID = %d');
+                $sth->execute(array(
+                    'mediaid' => $backgroundImageId
+                ));
+    
+                // Look up the bg image from the media id given
+                if (!$row = $sth->fetch())
+                    $this->ThrowError(__('Cannot find the background image selected'));
 
-        if ($layoutId == 0)
-            return $response->SetError(__('Layout not selected'));
-
-        if ($layoutId == 0)
-            return $response->SetError(__('Resolution not selected'));
-
-
-        // Allow for the 0 media idea (no background image)
-        if ($backgroundImageId == 0)
-        {
-            $bg_image = '';
-        }
-        else
-        {
-            // Get the file URI
-            $SQL = sprintf("SELECT StoredAs FROM media WHERE MediaID = %d", $backgroundImageId);
+                $bg_image = Kit::ValidateParam($row['StoredAs'], _STRING);
+            }
+        
+            // Look up the width and the height
+            $sth = $dbh->prepare('SELECT width, height FROM resolution WHERE resolutionID = :resolutionid');
+            $sth->execute(array(
+                'resolutionid' => $resolutionId
+            ));
 
             // Look up the bg image from the media id given
-            if (!$bg_image = $db->GetSingleValue($SQL, 'StoredAs', _STRING))
-                return $this->SetError(__('Cannot find the background image selected'));
-        }
+            if (!$row = $sth->fetch())
+                return $this->SetError(__('Unable to get the Resolution information'));
 
-        // Look up the width and the height
-        $SQL = sprintf("SELECT width, height FROM resolution WHERE resolutionID = %d ", $resolutionId);
-        
-        if (!$results = $db->query($SQL)) 
-        {
-            trigger_error($db->error());
-            return $this->SetError(__('Unable to get the Resolution information'));
-        }
-        
-        $row    = $db->get_row($results) ;
-        $width  =  Kit::ValidateParam($row[0], _INT);
-        $height =  Kit::ValidateParam($row[1], _INT);
-        
-        include_once("lib/data/region.data.class.php");
-        
-        $region = new region($db);
-        
-        if (!$region->EditBackground($layoutId, '#' . $color, $bg_image, $width, $height, $resolutionId))
-        {
-            //there was an ERROR
-            $response->SetError($region->GetErrorMessage());
-            $response->Respond();
-        }
-        
-        // Update the layout record with the new background
-        $SQL = sprintf("UPDATE layout SET background = '%s' WHERE layoutid = %d ", $db->escape_string($bg_image), $layoutId);
-        
-        if (!$db->query($SQL)) 
-        {
-            trigger_error($db->error());
-            return $this->SetError(__("Unable to update background information"));
-        }
+            $width  =  Kit::ValidateParam($row['width'], _INT);
+            $height =  Kit::ValidateParam($row['height'], _INT);
 
-        // Is this layout valid
-        $this->SetValid($layoutId);
-
-        return true;
+            include_once("lib/data/region.data.class.php");
+            
+            $region = new region($this->db);
+            
+            if (!$region->EditBackground($layoutId, '#' . $color, $bg_image, $width, $height, $resolutionId))
+                throw new Exception("Error Processing Request", 1);
+                    
+            // Update the layout record with the new background
+            $sth = $dbh->prepare('UPDATE layout SET background = :background WHERE layoutid = :layoutid');
+            $sth->execute(array(
+                'background' => $bg_image,
+                'layoutid' => $layoutId
+            ));
+    
+            // Is this layout valid
+            $this->SetValid($layoutId);
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                return $this->SetError(__("Unable to update background information"));
+        
+            return false;
+        }
     }
 
     /**
@@ -810,6 +895,8 @@ END;
             $regions[] = $item;
         }
 
+        Debug::LogEntry('audit', '[OUT]', 'layout', 'GetRegionList');
+
         return $regions;
     }
 
@@ -818,60 +905,86 @@ END;
      * @param [int] $layoutId [The Layout ID]
      */
     public function IsValid($layoutId, $reassess = false) {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
+        
+            Kit::ClassLoader('region');
+    
+            // Dummy User Object
+            $user = new User($this->db);
+            $user->userid = 0;
+            $user->usertypeid = 1;
+    
+            Debug::LogEntry('audit', '[IN]', 'layout', 'IsValid');
+    
+            if (!$reassess) {
+                $sth = $dbh->prepare('SELECT status FROM `layout` WHERE LayoutID = :layoutid');
+                $sth->execute(array(
+                    'layoutid' => $layoutId
+                ));
 
-        Kit::ClassLoader('region');
-
-        // Dummy User Object
-        $user = new User($db);
-        $user->userid = 0;
-        $user->usertypeid = 1;
-
-        Debug::LogEntry('audit', '[IN]', 'layout', 'IsValid');
-
-        if (!$reassess) {
-            return $db->GetSingleValue(sprintf("SELECT status FROM `layout` WHERE LayoutID = %d", $layoutId), 'status', _INT);
-        }
-
-        Debug::LogEntry('audit', 'Reassesment Required', 'layout', 'IsValid');
-
-        // Take the layout, loop through its regions, check them and call IsValid on all media in them.
-        $regions = $this->GetRegionList($layoutId);
-
-        if (count($regions) <= 0)
-            return 3;
-
-        // Loop through each and build an array
-        foreach ($regions as $region) {
-            // Create a layout object
-            $regionObject = new Region($db);
-            $mediaNodes = $regionObject->GetMediaNodeList($layoutId, $region['regionid']);
-
-            if ($mediaNodes->length <= 0)
-                return 3;
-
-            foreach($mediaNodes as $mediaNode)
-            {
-                // Put this node vertically in the region timeline
-                $mediaId = $mediaNode->getAttribute('id');
-                $lkId = $mediaNode->getAttribute('lkid');
-                $mediaType = $mediaNode->getAttribute('type');
+                if (!$row = $sth->fetch())
+                    throw new Exception("Error Processing Request", 1);
                 
-                // Create a media module to handle all the complex stuff
-                require_once("modules/$mediaType.module.php");
-                $tmpModule = new $mediaType($db, $user, $mediaId, $layoutId, $region['regionid'], $lkId);
-
-                $status = $tmpModule->IsValid();
-
-                if ($status != 1)
-                    return $status;
+                return Kit::ValidateParam($row['status'], _INT);
             }
+    
+            Debug::LogEntry('audit', 'Reassesment Required', 'layout', 'IsValid');
+    
+            // Take the layout, loop through its regions, check them and call IsValid on all media in them.
+            $regions = $this->GetRegionList($layoutId);
+    
+            if (count($regions) <= 0)
+                return 3;
+    
+            // Loop through each and build an array
+            foreach ($regions as $region) {
+
+                Debug::LogEntry('audit', 'Assessing Region: ' . $region['regionid'], 'layout', 'IsValid');
+
+                // Create a layout object
+                $regionObject = new Region($this->db);
+                $mediaNodes = $regionObject->GetMediaNodeList($layoutId, $region['regionid']);
+
+                if ($mediaNodes->length <= 0) {
+                    Debug::LogEntry('audit', 'No Media nodes in region, therefore invalid.', 'layout', 'IsValid');
+                    return 3;
+                }
+    
+                foreach($mediaNodes as $mediaNode)
+                {
+                    // Put this node vertically in the region timeline
+                    $mediaId = $mediaNode->getAttribute('id');
+                    $lkId = $mediaNode->getAttribute('lkid');
+                    $mediaType = $mediaNode->getAttribute('type');
+                    
+                    // Create a media module to handle all the complex stuff
+                    require_once("modules/$mediaType.module.php");
+                    $tmpModule = new $mediaType($this->db, $user, $mediaId, $layoutId, $region['regionid'], $lkId);
+    
+                    $status = $tmpModule->IsValid();
+    
+                    if ($status != 1)
+                        return $status;
+                }
+
+                Debug::LogEntry('audit', 'Finished with Region', 'layout', 'IsValid');
+            }
+    
+            Debug::LogEntry('audit', 'Layout looks in good shape', 'layout', 'IsValid');
+    
+            // If we get to the end, we are OK!
+            return 1;  
         }
-
-        Debug::LogEntry('audit', 'Layout looks in good shape', 'layout', 'IsValid');
-
-        // If we get to the end, we are OK!
-        return 1;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return 3;
+        }
     }
 
     /**
@@ -879,9 +992,30 @@ END;
      * @param [int] $layoutId [The Layout Id]
      */
     public function SetValid($layoutId) {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
 
-        $db->query(sprintf("UPDATE `layout` SET status = %d WHERE LayoutID = %d", $this->IsValid($layoutId, true), $layoutId));
+            Debug::LogEntry('audit', 'IN', 'Layout', 'SetValid');
+
+            $status = $this->IsValid($layoutId, true);
+        
+            $sth = $dbh->prepare('UPDATE `layout` SET status = :status WHERE LayoutID = :layoutid');
+            $sth->execute(array(
+                    'status' => $status,
+                    'layoutid' => $layoutId
+                ));
+
+            Debug::LogEntry('audit', 'OUT', 'Layout', 'SetValid');
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
     }
 }
 ?>
