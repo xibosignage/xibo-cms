@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2011 Daniel Garner
+ * Copyright (C) 2011-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,11 +22,6 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
 
 class MediaGroupSecurity extends Data
 {
-    public function __construct(database $db)
-    {
-        parent::__construct($db);
-    }
-
     /**
      * Links a Display Group to a Group
      * @return
@@ -35,36 +30,36 @@ class MediaGroupSecurity extends Data
      */
     public function Link($mediaId, $groupId, $view, $edit, $del)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'MediaGroupSecurity', 'Link');
+        
+        try {
+            $dbh = PDOConnect::init();
+        
+            $SQL  = "INSERT INTO lkmediagroup (MediaID, GroupID, View, Edit, Del) ";
+            $SQL .= " VALUES (:mediaid, :groupid, :view, :edit, :del) ";
 
-        $SQL  = "";
-        $SQL .= "INSERT ";
-        $SQL .= "INTO   lkmediagroup ";
-        $SQL .= "       ( ";
-        $SQL .= "              MediaID, ";
-        $SQL .= "              GroupID, ";
-        $SQL .= "              View, ";
-        $SQL .= "              Edit, ";
-        $SQL .= "              Del ";
-        $SQL .= "       ) ";
-        $SQL .= "       VALUES ";
-        $SQL .= "       ( ";
-        $SQL .= sprintf("  %d, %d, %d, %d, %d ", $mediaId, $groupId, $view, $edit, $del);
-        $SQL .= "       )";
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25026, __('Could not Link Media to Group'));
-
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'mediaid' => $mediaId,
+                    'groupid' => $groupId,
+                    'view' => $view,
+                    'edit' => $edit,
+                    'del' => $del
+                ));
+    
+            Debug::LogEntry('audit', 'OUT', 'MediaGroupSecurity', 'Link');
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25026, __('Could not Link Media to Group'));
+        
             return false;
         }
-
-        Debug::LogEntry('audit', 'OUT', 'MediaGroupSecurity', 'Link');
-
-        return true;
     }
 
     /**
@@ -77,13 +72,33 @@ class MediaGroupSecurity extends Data
      */
     public function LinkEveryone($mediaId, $view, $edit, $del)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'MediaGroupSecurity', 'LinkEveryone');
+        
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT GroupID FROM `group` WHERE IsEveryone = 1');
+            $sth->execute();
 
-        $groupId = $db->GetSingleValue("SELECT GroupID FROM `group` WHERE IsEveryone = 1", 'GroupID', _INT);
+            if (!$row = $sth->fetch())
+                throw new Exception("Error Processing Request", 1);
 
-        return $this->Link($mediaId, $groupId, $view, $edit, $del);
+            $groupId = Kit::ValidateParam($row['GroupID'], _INT));
+        
+            if (!$this->Link($mediaId, $groupId, $view, $edit, $del))
+                throw new Exception("Error Processing Request", 1);
+
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
     }
 
     /**
@@ -94,26 +109,30 @@ class MediaGroupSecurity extends Data
      */
     public function Unlink($mediaId, $groupId)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'MediaGroupSecurity', 'Unlink');
 
-        $SQL  = "";
-        $SQL .= "DELETE FROM ";
-        $SQL .= "   lkmediagroup ";
-        $SQL .= sprintf("  WHERE MediaID = %d AND GroupID = %d ", $mediaId, $groupId);
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25027, __('Could not Unlink Layout from Group'));
-
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM lkmediagroup WHERE MediaID = :mediaid AND GroupID = :groupid');
+            $sth->execute(array(
+                    'groupid' => $groupId,
+                    'mediaid' => $mediaId
+                ));
+    
+            Debug::LogEntry('audit', 'OUT', 'MediaGroupSecurity', 'Unlink');
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25027, __('Could not Unlink Media from Group'));
+        
             return false;
         }
-
-        Debug::LogEntry('audit', 'OUT', 'MediaGroupSecurity', 'Unlink');
-
-        return true;
     }
 
         /**
@@ -124,26 +143,29 @@ class MediaGroupSecurity extends Data
      */
     public function UnlinkAll($mediaId)
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', 'IN', 'MediaGroupSecurity', 'UnlinkAll');
 
-        Debug::LogEntry('audit', 'IN', 'MediaGroupSecurity', 'Unlink');
-
-        $SQL  = "";
-        $SQL .= "DELETE FROM ";
-        $SQL .= "   lkmediagroup ";
-        $SQL .= sprintf("  WHERE MediaID = %d ", $mediaId);
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25028, __('Could not Unlink Media from Group'));
-
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM lkmediagroup WHERE MediaID = :mediaid');
+            $sth->execute(array(
+                    'mediaid' => $mediaId
+                ));
+    
+            Debug::LogEntry('audit', 'OUT', 'MediaGroupSecurity', 'Unlink');
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25027, __('Could not Unlink Media from Groups'));
+        
             return false;
         }
-
-        Debug::LogEntry('audit', 'OUT', 'MediaGroupSecurity', 'Unlink');
-
-        return true;
     }
 
     /**
@@ -154,35 +176,42 @@ class MediaGroupSecurity extends Data
      */
     public function Copy($mediaId, $newMediaId)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'MediaGroupSecurity', 'Copy');
 
-        $SQL  = "";
-        $SQL .= "INSERT ";
-        $SQL .= "INTO   lkmediagroup ";
-        $SQL .= "       ( ";
-        $SQL .= "              MediaID, ";
-        $SQL .= "              GroupID, ";
-        $SQL .= "              View, ";
-        $SQL .= "              Edit, ";
-        $SQL .= "              Del ";
-        $SQL .= "       ) ";
-        $SQL .= " SELECT '%s', GroupID, View, Edit, Del ";
-        $SQL .= "   FROM lkmediagroup ";
-        $SQL .= "  WHERE MediaID = '%s' ";
+        try {
+            $dbh = PDOConnect::init();
+        
+            $SQL  = "";
+            $SQL .= "INSERT ";
+            $SQL .= "INTO   lkmediagroup ";
+            $SQL .= "       ( ";
+            $SQL .= "              MediaID, ";
+            $SQL .= "              GroupID, ";
+            $SQL .= "              View, ";
+            $SQL .= "              Edit, ";
+            $SQL .= "              Del ";
+            $SQL .= "       ) ";
+            $SQL .= " SELECT :mediaid, GroupID, View, Edit, Del ";
+            $SQL .= "   FROM lkmediagroup ";
+            $SQL .= "  WHERE MediaID = :oldmediaid ";
 
-        $SQL = sprintf($SQL, $newMediaId, $db->escape_string($mediaId));
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25028, __('Could not Copy Layout Media Security'));
-
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'mediaid' => $newMediaId,
+                    'oldmediaid' => $mediaId
+                ));
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25028, __('Could not Copy Layout Media Security'));
+        
             return false;
         }
-
-        return true;
     }
 }
 ?>

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2011 Daniel Garner
+ * Copyright (C) 2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,11 +22,6 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
 
 class LayoutRegionGroupSecurity extends Data
 {
-    public function __construct(database $db)
-    {
-        parent::__construct($db);
-    }
-
     /**
      * Links a Display Group to a Group
      * @return
@@ -35,37 +30,38 @@ class LayoutRegionGroupSecurity extends Data
      */
     public function Link($layoutId, $regionId, $groupId, $view, $edit, $del)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'LayoutRegionGroupSecurity', 'Link');
 
-        $SQL  = "";
-        $SQL .= "INSERT ";
-        $SQL .= "INTO   lklayoutregiongroup ";
-        $SQL .= "       ( ";
-        $SQL .= "              LayoutID, ";
-        $SQL .= "              RegionID, ";
-        $SQL .= "              GroupID, ";
-        $SQL .= "              View, ";
-        $SQL .= "              Edit, ";
-        $SQL .= "              Del ";
-        $SQL .= "       ) ";
-        $SQL .= "       VALUES ";
-        $SQL .= "       ( ";
-        $SQL .= sprintf("  %d, '%s', %d, %d, %d, %d ", $layoutId, $db->escape_string($regionId), $groupId, $view, $edit, $del);
-        $SQL .= "       )";
+        try {
+            $dbh = PDOConnect::init();
+        
+            $SQL  = "";
+            $SQL .= "INSERT INTO lklayoutregiongroup (LayoutID, RegionID, GroupID, View, Edit, Del) ";
+            $SQL .= " VALUES (:layoutid, :regionid, :groupid, :view, :edit, :del) ";
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25026, __('Could not Link Layout Region to Group'));
-
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'layoutid' => $layoutId,
+                    'regionid' => $regionId,
+                    'groupid' => $groupId,
+                    'view' => $view,
+                    'edit' => $edit,
+                    'del' => $del
+                ));
+    
+            Debug::LogEntry('audit', 'OUT', 'LayoutRegionGroupSecurity', 'Link');
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25026, __('Could not Link Layout Region to Group'));
+        
             return false;
         }
-
-        Debug::LogEntry('audit', 'OUT', 'LayoutRegionGroupSecurity', 'Link');
-
-        return true;
     }
 
     /**
@@ -78,13 +74,33 @@ class LayoutRegionGroupSecurity extends Data
      */
     public function LinkEveryone($layoutId, $regionId, $view, $edit, $del)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'LayoutGroupSecurity', 'LinkEveryone');
 
-        $groupId = $db->GetSingleValue("SELECT GroupID FROM `group` WHERE IsEveryone = 1", 'GroupID', _INT);
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT GroupID FROM `group` WHERE IsEveryone = 1');
+            $sth->execute();
 
-        return $this->Link($layoutId, $regionId, $groupId, $view, $edit, $del);
+            if (!$row = $sth->fetch())
+                throw new Exception("Error Processing Request", 1);
+
+            $groupId = Kit::ValidateParam($row['GroupID'], _INT));
+        
+            if (!$this->Link($layoutId, $regionId, $groupId, $view, $edit, $del))
+                throw new Exception("Error Processing Request", 1);
+
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
     }
 
     /**
@@ -95,26 +111,31 @@ class LayoutRegionGroupSecurity extends Data
      */
     public function Unlink($layoutId, $regionId, $groupId)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'LayoutRegionGroupSecurity', 'Unlink');
 
-        $SQL  = "";
-        $SQL .= "DELETE FROM ";
-        $SQL .= "   lklayoutregiongroup ";
-        $SQL .= sprintf("  WHERE LayoutID = %d AND RegionID = '%s' AND GroupID = %d ", $layoutId, $db->escape_string($regionId), $groupId);
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM lklayoutregiongroup WHERE LayoutID = :layoutid AND RegionID = :regionid AND GroupID = :groupid');
+            $sth->execute(array(
+                    'layoutid' => $layoutId,
+                    'regionid' => $regionId,
+                    'groupid' => $groupId
+                ));
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25027, __('Could not Unlink Layout Region from Group'));
-
+            Debug::LogEntry('audit', 'OUT', 'LayoutRegionGroupSecurity', 'Unlink');
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25027, __('Could not Unlink Layout Region from Group'));
+        
             return false;
         }
-
-        Debug::LogEntry('audit', 'OUT', 'LayoutRegionGroupSecurity', 'Unlink');
-
-        return true;
     }
 
         /**
@@ -125,26 +146,30 @@ class LayoutRegionGroupSecurity extends Data
      */
     public function UnlinkAll($layoutId, $regionId)
     {
-        $db =& $this->db;
-
-        Debug::LogEntry('audit', 'IN', 'LayoutRegionGroupSecurity', 'Unlink');
-
-        $SQL  = "";
-        $SQL .= "DELETE FROM ";
-        $SQL .= "   lklayoutregiongroup ";
-        $SQL .= sprintf("  WHERE LayoutID = %d AND RegionID = '%s' ", $layoutId, $db->escape_string($regionId));
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25028, __('Could not Unlink Layout Region from Group'));
-
+        Debug::LogEntry('audit', 'IN', 'LayoutRegionGroupSecurity', 'UnlinkAll');
+        
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM lklayoutregiongroup WHERE LayoutID = :layoutid AND RegionID = :regionid');
+            $sth->execute(array(
+                    'layoutid' => $layoutId,
+                    'regionid' => $regionId
+                ));
+    
+            Debug::LogEntry('audit', 'OUT', 'LayoutRegionGroupSecurity', 'UnlinkAll');
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25027, __('Could not Unlink Layout Region from Groups'));
+        
             return false;
         }
-
-        Debug::LogEntry('audit', 'OUT', 'LayoutRegionGroupSecurity', 'Unlink');
-
-        return true;
     }
 
     /**
@@ -155,36 +180,43 @@ class LayoutRegionGroupSecurity extends Data
      */
     public function CopyAll($layoutId, $newLayoutId)
     {
-        $db =& $this->db;
-
         Debug::LogEntry('audit', 'IN', 'LayoutRegionGroupSecurity', 'Copy');
 
-        $SQL  = "";
-        $SQL .= "INSERT ";
-        $SQL .= "INTO   lklayoutregiongroup ";
-        $SQL .= "       ( ";
-        $SQL .= "              LayoutID, ";
-        $SQL .= "              RegionID, ";
-        $SQL .= "              GroupID, ";
-        $SQL .= "              View, ";
-        $SQL .= "              Edit, ";
-        $SQL .= "              Del ";
-        $SQL .= "       ) ";
-        $SQL .= " SELECT %d, RegionID, GroupID, View, Edit, Del ";
-        $SQL .= "   FROM lklayoutregiongroup ";
-        $SQL .= "  WHERE LayoutID = %d ";
-
-        $SQL = sprintf($SQL, $newLayoutId, $layoutId);
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25028, __('Could not Copy All Layout Region Security'));
-
+        try {
+            $dbh = PDOConnect::init();
+        
+            $SQL  = "";
+            $SQL .= "INSERT ";
+            $SQL .= "INTO   lklayoutregiongroup ";
+            $SQL .= "       ( ";
+            $SQL .= "              LayoutID, ";
+            $SQL .= "              RegionID, ";
+            $SQL .= "              GroupID, ";
+            $SQL .= "              View, ";
+            $SQL .= "              Edit, ";
+            $SQL .= "              Del ";
+            $SQL .= "       ) ";
+            $SQL .= " SELECT :layoutid, RegionID, GroupID, View, Edit, Del ";
+            $SQL .= "   FROM lklayoutregiongroup ";
+            $SQL .= "  WHERE LayoutID = :oldlayoutid ";
+    
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'layoutid' => $newLayoutId,
+                    'oldlayoutid' => $layoutId
+                ));
+        
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25028, __('Could not Copy All Layout Region Security'));
+        
             return false;
         }
-
-        return true;
     }
 }
 ?>
