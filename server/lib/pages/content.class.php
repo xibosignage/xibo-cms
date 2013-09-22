@@ -425,6 +425,15 @@ HTML;
         // Hand off to the Upload Handler provided by jquery-file-upload
         $handler = new UploadHandler($db, $this->user, $options);
 
+        // Must commit if in a transaction
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->commit();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('audit', 'Unable to commit/rollBack');
+        }
+
         // Must prevent from continuing (framework will try to issue a response)
         exit;
     }

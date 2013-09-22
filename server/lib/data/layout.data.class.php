@@ -602,7 +602,7 @@ class Layout extends Data
                     if (!$row = $sth->fetch())
                         $this->ThrowError(25000, __('Unable to find stored value of newly copied media'));
 
-                    $fileName = Kit::ValidateParam($row['fileName'], _STRING);
+                    $fileName = Kit::ValidateParam($row['StoredAs'], _STRING);
                     
                     $newNode = $this->DomXml->createElement('uri', $fileName);
     

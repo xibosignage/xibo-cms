@@ -303,9 +303,6 @@ class LayoutMediaGroupSecurity extends Data
             $SQL .= "   FROM lklayoutmediagroup ";
             $SQL .= "  WHERE LayoutID = :oldlayoutid AND MediaID = :oldmediaid ";
     
-            $SQL = sprintf($SQL, $newLayoutId, $db->escape_string($newMediaId), $layoutId, $db->escape_string($oldMediaId));
-    
-            
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
                     'layoutid' => $newLayoutId,

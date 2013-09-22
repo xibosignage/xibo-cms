@@ -790,7 +790,7 @@ END;
 
         // Setup the theme
 		Theme::Set('form_upload_id', 'fileupload');
-        Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload');
+        Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload&type=' . $this->type);
 		Theme::Set('form_meta', '<input type="hidden" name="type" value="' . $this->type . '"><input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '">');
 		Theme::Set('form_valid_ext', '/(\.|\/)' . implode('|', $this->validExtensions) . '$/i');
 		Theme::Set('form_max_size', Kit::ReturnBytes($this->maxFileSize));
@@ -1083,11 +1083,6 @@ END;
         }
         else
         {
-            // We are in the library so we therefore have to update the duration with the new value.
-            // We could do this in the above code, but it is much simpler here until we rewrite
-            // these classes to use a data base class.
-            $db->query(sprintf("UPDATE media SET duration = %d WHERE mediaID = %d", $this->duration, $this->mediaid));
-
             $this->response->message = 'Edited the ' . $this->displayType;
         }
 
