@@ -476,8 +476,8 @@ function XiboFormSubmit(form) {
     // Pull any text editor instances we have
     for (var editor in CKEDITOR.instances) {
 
-        console.log("Name: " + editor);
-        console.log("Content: " + CKEDITOR.instances[editor].getData());
+        //console.log("Name: " + editor);
+        //console.log("Content: " + CKEDITOR.instances[editor].getData());
 
         // Set the appropriate text editor field with this data.
         $("#" + editor).val(CKEDITOR.instances[editor].getData());

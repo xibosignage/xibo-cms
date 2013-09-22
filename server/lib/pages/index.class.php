@@ -43,14 +43,21 @@ class indexDAO
 		
 		$referingpage = Kit::GetParam('referingPage', _GET, _WORD);
 
-		// Check the token
-        if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
-		
+		// AJAX login or not?
 		if (isset($_REQUEST['ajax'])) 
 		{
 			//ajax request handler
 			$response = new ResponseManager();
+
+			// Check the token
+	        if (!Kit::CheckToken()) {
+	            trigger_error('Token does not match');
+
+	            // Reshow the login box
+	            $response->Login();
+	            $response->Respond();
+	            exit;
+	        }
 			
 			//use the ajax login method
 			if($user->login($username,$password)) 
@@ -75,6 +82,10 @@ class indexDAO
 			
 			exit;
 		}
+
+		// Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
 
 		if ($user->login($username,$password)) 
 		{

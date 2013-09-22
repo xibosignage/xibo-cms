@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2010 Daniel Garner
+ * Copyright (C) 2010-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -30,23 +30,31 @@ class File extends Data
      */
     public function NewFile($payload, $userId)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('INSERT INTO file (CreatedDT, UserID) VALUES (:createddt, :userid)');
+            $sth->execute(array(
+                    'createddt' => time(),
+                    'userid' => $userId
+                ));
 
-        // Create a new file record
-        $SQL = sprintf("INSERT INTO file (CreatedDT, UserID) VALUES (%d, %d)", time(), $userId);
+            $fileId = $dbh->lastInsertId();
 
-        if (!$fileId = $db->insert_query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(3);
-
+            if (!$this->WriteToDisk($fileId, $payload))
+                throw new Exception('Unable to WriteToDisk');
+        
+            return $fileId;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(3);
+        
             return false;
         }
-
-        if (!$this->WriteToDisk($fileId, $payload))
-            return false;
-
-        return $fileId;
     }
 
     /**
@@ -57,21 +65,29 @@ class File extends Data
      */
     public function Append($fileId, $payload)
     {
-        $db =& $this->db;
-
-        // Directory location
-	$libraryFolder 	= Config::GetSetting('LIBRARY_LOCATION');
-        $libraryFolder  = $libraryFolder . 'temp';
-
-        // Append should only be called on existing files, if this file does not exist then we
-        // need to error accordingly.
-        if (!file_exists($libraryFolder . '/' . $fileId))
-        {
-            $this->SetError(7);
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Directory location
+            $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+            $libraryFolder = $libraryFolder . 'temp';
+    
+            // Append should only be called on existing files, if this file does not exist then we
+            // need to error accordingly.
+            if (!file_exists($libraryFolder . '/' . $fileId))
+                $this->ThrowError(7);
+        
+            return $this->WriteToDisk($fileId, $payload);  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
             return false;
         }
-
-        return $this->WriteToDisk($fileId, $payload);
     }
 
     /**
@@ -81,33 +97,38 @@ class File extends Data
      */
     public function WriteToDisk($fileId, $payload)
     {
-        $db =& $this->db;
-
-        // Directory location
-	$libraryFolder 	= Config::GetSetting('LIBRARY_LOCATION');
-        $libraryFolder  = $libraryFolder . 'temp';
-
-        if (!$this->EnsureLibraryExists($libraryFolder))
-            return false;
-
-        // Open a file pointer
-        if (!$fp = fopen($libraryFolder . '/' . $fileId, 'a'))
-        {
-            $this->SetError(5);
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Directory location
+            $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+            $libraryFolder = $libraryFolder . 'temp';
+    
+            if (!$this->EnsureLibraryExists($libraryFolder))
+                return false;
+    
+            // Open a file pointer
+            if (!$fp = fopen($libraryFolder . '/' . $fileId, 'a'))
+                $this->ThrowError(5);
+    
+            // Write the payload to the file handle.
+            if (fwrite($fp, $payload) === false)
+                $this->ThrowError(6);
+    
+            // Close the file pointer
+            fclose($fp);
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
             return false;
         }
-
-        // Write the payload to the file handle.
-        if (fwrite($fp, $payload) === false)
-        {
-            $this->SetError(6);
-            return false;
-        }
-
-        // Close the file pointer
-        fclose($fp);
-
-        return true;
     }
 
     /**
@@ -118,7 +139,7 @@ class File extends Data
     public function Size($fileId)
     {
         // Directory location
-	$libraryFolder 	= Config::GetSetting("LIBRARY_LOCATION");
+        $libraryFolder 	= Config::GetSetting("LIBRARY_LOCATION");
         $libraryFolder = $libraryFolder . 'temp';
 
         return filesize($libraryFolder . '/' . $fileId);
@@ -130,26 +151,32 @@ class File extends Data
      */
     public function GenerateFileId($userId)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('INSERT INTO file (CreatedDT, UserID) VALUES (:createddt, :userid)');
+            $sth->execute(array(
+                    'createddt' => time(),
+                    'userid' => $userId
+                ));
 
-        // Create a new file record
-        $SQL = sprintf("INSERT INTO file (CreatedDT, UserID) VALUES (%d, %d)", time(), $userId);
+            $fileId = $dbh->lastInsertId();
 
-        if (!$fileId = $db->insert_query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(3);
-
+            return $fileId;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(3, __('Unknown Error'));
+        
             return false;
         }
-
-        return $fileId;
     }
 
     public function EnsureLibraryExists()
     {
-        $db =& $this->db;
-        
         $libraryFolder 	= Config::GetSetting('LIBRARY_LOCATION');
 
         // Check that this location exists - and if not create it..
@@ -174,8 +201,6 @@ class File extends Data
 
     public function GetLibraryCacheUri() {
 
-        $db =& $this->db;
-        
         $libraryFolder  = Config::GetSetting('LIBRARY_LOCATION');
 
         return $libraryFolder . '/cache';

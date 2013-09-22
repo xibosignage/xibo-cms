@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2012 Daniel Garner
+ * Copyright (C) 2012-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,13 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class Help extends Data
-{
-    public function __construct(database $db)
-    {
-        parent::__construct($db);
-    }
-
+class Help extends Data {
     /**
      * Add a new Help Link
      * @param <string> $topic
@@ -35,26 +29,37 @@ class Help extends Data
      */
     public function Add($topic, $category, $link)
     {
-        // Validation
-        if ($topic == '')
-            return $this->SetError(__('Topic is a required field. It must be between 1 and 254 characters.'));
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Validation
+            if ($topic == '')
+                $this->ThrowError(__('Topic is a required field. It must be between 1 and 254 characters.'));
+    
+            if ($category == '')
+                $this->ThrowError(__('Category is a required field. It must be between 1 and 254 characters.'));
+    
+            if ($link == '')
+                $this->ThrowError(__('Link is a required field. It must be between 1 and 254 characters.'));
 
-        if ($category == '')
-            return $this->SetError(__('Category is a required field. It must be between 1 and 254 characters.'));
-
-        if ($link == '')
-            return $this->SetError(__('Link is a required field. It must be between 1 and 254 characters.'));
-
-        $SQL = "INSERT INTO `help` (Topic, Category, Link) VALUES ('%s', '%s', '%s') ";
-        $SQL = sprintf($SQL, $this->db->escape_string($topic), $this->db->escape_string($category), $this->db->escape_string($link));
-
-        if (!$this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
-            return $this->SetError(25000, __('Unable to Add Help record'));
+            $sth = $dbh->prepare('INSERT INTO `help` (Topic, Category, Link) VALUES (:topic, :category, :link)');
+            $sth->execute(array(
+                    'topic' => $topic,
+                    'category' => $category,
+                    'link' => $link
+                ));
+    
+            return true;  
         }
-
-        return true;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                return $this->SetError(25000, __('Unable to Add Help record'));
+        
+            return false;
+        }
     }
 
     /**
@@ -66,29 +71,42 @@ class Help extends Data
      */
     public function Edit($helpId, $topic, $category, $link)
     {
-        // Validation
-        if ($helpId == 0)
-            return $this->SetError(__('Help Link not selected'));
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Validation
+            if ($helpId == 0)
+                $this->ThrowError(__('Help Link not selected'));
 
-        if ($topic == '')
-            return $this->SetError(__('Topic is a required field. It must be between 1 and 254 characters.'));
+            if ($topic == '')
+                $this->ThrowError(__('Topic is a required field. It must be between 1 and 254 characters.'));
 
-        if ($category == '')
-            return $this->SetError(__('Category is a required field. It must be between 1 and 254 characters.'));
+            if ($category == '')
+                $this->ThrowError(__('Category is a required field. It must be between 1 and 254 characters.'));
 
-        if ($link == '')
-            return $this->SetError(__('Link is a required field. It must be between 1 and 254 characters.'));
+            if ($link == '')
+                $this->ThrowError(__('Link is a required field. It must be between 1 and 254 characters.'));
 
-        $SQL = "UPDATE `help` SET Topic = '%s', Category = '%s', Link = '%s' WHERE HelpID = %d ";
-        $SQL = sprintf($SQL, $this->db->escape_string($topic), $this->db->escape_string($category), $this->db->escape_string($link), $helpId);
+            // Update the Help Record
+            $sth = $dbh->prepare('UPDATE `help` SET Topic = :topic, Category = :category, Link = :link WHERE HelpID = :helpid');
+            $sth->execute(array(
+                    'topic' => $topic,
+                    'category' => $category,
+                    'link' => $link,
+                    'helpid' => $helpId
+                ));
 
-        if (!$this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
-            return $this->SetError(25000, __('Unable to Edit Help record'));
+            return true;  
         }
-
-        return true;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                return $this->SetError(25000, __('Unable to Edit Help record'));
+        
+            return false;
+        }
     }
 
     /**
@@ -97,20 +115,29 @@ class Help extends Data
      */
     public function Delete($helpId)
     {
-        // Validation
-        if ($helpId == 0)
-            return $this->SetError(__('Help Link not selected'));
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Validation
+            if ($helpId == 0)
+                $this->ThrowError(__('Help Link not selected'));
 
-        $SQL = "DELETE FROM `help` WHERE HelpID = %d ";
-        $SQL = sprintf($SQL, $helpId);
-
-        if (!$this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
-            return $this->SetError(25000, __('Unable to Delete Help record'));
+            $sth = $dbh->prepare('DELETE FROM `help` WHERE HelpID = :helpid');
+            $sth->execute(array(
+                    'helpid' => $helpId
+                ));
+            
+            return true;  
         }
-
-        return true;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25000, __('Unable to Delete Help record'));
+        
+            return false;
+        }
     }
 }
 ?>
