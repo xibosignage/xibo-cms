@@ -77,6 +77,16 @@ if (defined('XMDS') || $method != '')
 
         case 'rest':
 
+            // Start a DB transaction for all returns from the Service Portal
+            try {
+                $dbh = PDOConnect::init();
+                $dbh->beginTransaction();
+            }
+            catch (Exception $e) {
+                Debug::LogEntry('error', $e->getMessage());
+                trigger_error(__('Unable to open connection and start transaction'), E_USER_ERROR);
+            }
+
             // OAuth authorization.
             if (OAuthRequestVerifier::requestIsSigned())
             {

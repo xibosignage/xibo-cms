@@ -41,7 +41,7 @@ class Display extends Data
 	 */
 	public function Add($display, $isAuditing, $defaultLayoutID, $license, $licensed, $incSchedule)
 	{
-        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Add');
+        Debug::LogEntry('audit', 'IN', 'Display', 'Add');
         
         try {
             $dbh = PDOConnect::init();
@@ -49,7 +49,7 @@ class Display extends Data
             // Create the SQL
             $SQL  = "";
             $SQL .= "INSERT INTO display (display, isAuditing, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout) ";
-            $SQL .= " VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, alert_timeout) ";
+            $SQL .= " VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout) ";
             
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
@@ -67,7 +67,7 @@ class Display extends Data
             $displayId = $dbh->lastInsertId();
 
             // Also want to add the DisplayGroup associated with this Display.
-            $displayGroupObject = new DisplayGroup($db);
+            $displayGroupObject = new DisplayGroup($this->db);
 
             if (!$displayGroupId = $displayGroupObject->Add($display, 1, ''))
                 $this->ThrowError(25001, __('Could not add a display group for the new display.'));
@@ -76,7 +76,7 @@ class Display extends Data
             if (!$displayGroupObject->Link($displayGroupId, $displayId))
                 $this->ThrowError(25001, __('Could not link the new display with its group.'));
             
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Add');
+            Debug::LogEntry('audit', 'OUT', 'Display', 'Add');
 
             return $displayId;
         }
