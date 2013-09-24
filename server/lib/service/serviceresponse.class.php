@@ -28,6 +28,18 @@ class XiboServiceResponse
         $this->serviceLocation = Kit::GetXiboRoot();
     }
 
+    public function StartTransaction() {
+        // Start a DB transaction for all returns from the Service Portal
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->beginTransaction();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            trigger_error(__('Unable to open connection and start transaction'), E_USER_ERROR);
+        }
+    }
+
     /**
      * Outputs the WSDL
      */

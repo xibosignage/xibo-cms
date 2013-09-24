@@ -230,7 +230,10 @@ class XMDSSoap
             {
                 // For layouts the MD5 column is the layout xml
                 $fileSize 	= strlen($md5);
-                $md5 		= md5($md5);
+                $md5 		= md5(iconv(mb_detect_encoding($md5, mb_detect_order(), true), "UTF-8", $md5));
+
+                if ($this->isAuditing == 1) 
+                    Debug::LogEntry("audit", 'MD5 for layoutid ' . $id . ' is: [' . $md5 . ']', "xmds", "RequiredFiles");
             }
             else if ($recordType == 'media')
             {

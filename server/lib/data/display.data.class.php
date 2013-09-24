@@ -59,7 +59,7 @@ class Display extends Data
                     'license' => $license,
                     'licensed' => 0,
                     'inc_schedule' => 0,
-                    'email_alert' => 1,
+                    'email_alert' => 0,
                     'alert_timeout' => 0
                 ));
 		
@@ -340,6 +340,7 @@ class Display extends Data
             $params = array();
             $params['lastaccessed'] = time();
             $params['loggedin'] = 1;
+            $params['license'] = $license;
 
             // We will want to update the client Address if it is given
             if ($clientAddress != '') {
@@ -354,7 +355,7 @@ class Display extends Data
             }
 
             if ($mediaInventoryXml != '') {
-                $SQL .= " , MediaInventoryXml = '%s' ";
+                $SQL .= " , MediaInventoryXml = :mediainventoryxml ";
                 $params['mediainventoryxml'] = $mediaInventoryXml;
             }
 
