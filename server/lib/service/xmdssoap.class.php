@@ -196,11 +196,11 @@ class XMDSSoap
             $layoutIdList .= ',' . Kit::ValidateParam($row['layoutID'], _INT);
 
         // Add file nodes to the $fileElements
-        $SQL  = " SELECT 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, layout.xml AS `MD5`, NULL AS FileSize, layout.background ";
+        $SQL  = " SELECT 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, MD5(layout.xml) AS `MD5`, NULL AS FileSize, layout.background, layout.xml AS xml ";
         $SQL .= "   FROM layout ";
         $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
         $SQL .= " UNION ";
-        $SQL .= " SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS background ";
+        $SQL .= " SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS background, NULL AS xml ";
         $SQL .= "   FROM media ";
         $SQL .= " 	INNER JOIN lklayoutmedia ";
         $SQL .= " 	ON lklayoutmedia.MediaID = media.MediaID ";
@@ -225,13 +225,15 @@ class XMDSSoap
             $md5	= Kit::ValidateParam($row['MD5'], _HTMLSTRING);
             $fileSize	= Kit::ValidateParam($row['FileSize'], _INT);
             $background	= Kit::ValidateParam($row['background'], _STRING);
+            $xml = Kit::ValidateParam($row['xml'], _HTMLSTRING);
 
             if ($recordType == 'layout')
             {
                 // For layouts the MD5 column is the layout xml
-                $fileSize 	= strlen($md5);
-                $crc = hash('crc32b', $md5);
-                $md5        = md5($md5);
+                $fileSize 	= strlen($xml);
+                //$md5        = md5(iconv(mb_detect_encoding($md5, mb_detect_order(), true), "UTF-8", $md5));
+                //$md5 = md5(utf8_encode($md5));
+                //$md5 = md5(mb_convert_encoding($md5, "UTF-8"));
 
                 if ($this->isAuditing == 1) 
                     Debug::LogEntry("audit", 'MD5 for layoutid ' . $id . ' is: [' . $md5 . ']', "xmds", "RequiredFiles");
@@ -243,8 +245,7 @@ class XMDSSoap
                 {
                     $md5 	= md5_file($libraryLocation.$path);
                     $fileSize	= filesize($libraryLocation.$path);
-                    $crc = hash_file('crc32b', $libraryLocation.$path);
-
+                    
                     // Update the media record with this information
                     $SQL = sprintf("UPDATE media SET `MD5` = '%s', FileSize = %d WHERE MediaID = %d", $md5, $fileSize, $id);
 
@@ -265,8 +266,7 @@ class XMDSSoap
             $file->setAttribute("id", $id);
             $file->setAttribute("size", $fileSize);
             $file->setAttribute("md5", $md5);
-            $file->setAttribute("crc", $crc);
-
+            
             $fileElements->appendChild($file);
 
             // If this is a layout type and there is a background then add the background node
@@ -793,6 +793,10 @@ class XMDSSoap
                         $thread = '[' . $nodeElements->textContent . '] ';
                 }
             }
+
+            // If the message is still empty, take the entire node content
+            if ($message == '')
+                $message = $node->textContent;
 
             // We should have enough information to log this now.
             $logType = ($cat == 'error') ? 'error' : 'audit';

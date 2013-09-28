@@ -51,7 +51,7 @@ class Stat extends data
 			switch ($type)
 			{
 				case 'media':
-					$params['mediaid'] = $mediaid;
+					$params['mediaid'] = $mediaID;
 			
 					break;
 
