@@ -230,7 +230,8 @@ class XMDSSoap
             {
                 // For layouts the MD5 column is the layout xml
                 $fileSize 	= strlen($md5);
-                $md5 		= md5(iconv(mb_detect_encoding($md5, mb_detect_order(), true), "UTF-8", $md5));
+                $crc = hash('crc32b', $md5);
+                $md5        = md5($md5);
 
                 if ($this->isAuditing == 1) 
                     Debug::LogEntry("audit", 'MD5 for layoutid ' . $id . ' is: [' . $md5 . ']', "xmds", "RequiredFiles");
@@ -242,6 +243,7 @@ class XMDSSoap
                 {
                     $md5 	= md5_file($libraryLocation.$path);
                     $fileSize	= filesize($libraryLocation.$path);
+                    $crc = hash_file('crc32b', $libraryLocation.$path);
 
                     // Update the media record with this information
                     $SQL = sprintf("UPDATE media SET `MD5` = '%s', FileSize = %d WHERE MediaID = %d", $md5, $fileSize, $id);
@@ -263,6 +265,7 @@ class XMDSSoap
             $file->setAttribute("id", $id);
             $file->setAttribute("size", $fileSize);
             $file->setAttribute("md5", $md5);
+            $file->setAttribute("crc", $crc);
 
             $fileElements->appendChild($file);
 
@@ -739,16 +742,17 @@ class XMDSSoap
             $mediaID 	= "";
             $cat		= '';
             $method		= '';
+            $thread = '';
 
             // This will be a bunch of trace nodes
             $message = $node->textContent;
 
-            if ($this->isAuditing == 1) Debug::LogEntry( "audit", 'Trace Message: [' . $message . ']', "xmds", "SubmitLog", "", $this->displayId);
+            if ($this->isAuditing == 1) 
+                Debug::LogEntry( "audit", 'Trace Message: [' . $message . ']', "xmds", "SubmitLog", "", $this->displayId);
 
             // Each element should have a category and a date
-
             $date	= $node->getAttribute('date');
-            $cat	= $node->getAttribute('category');
+            $cat	= strtolower($node->getAttribute('category'));
 
             if ($date == '' || $cat == '')
             {
@@ -779,17 +783,21 @@ class XMDSSoap
                 {
                     $method	= $nodeElements->textContent;
                 }
+                else if ($nodeElements->nodeName == "message")
+                {
+                    $message = $nodeElements->textContent;
+                }
+                else if ($nodeElements->nodeName == "thread")
+                {
+                    if ($nodeElements->textContent != '')
+                        $thread = '[' . $nodeElements->textContent . '] ';
+                }
             }
 
             // We should have enough information to log this now.
-            if ($cat == 'error' || $cat == 'Error')
-            {
-                Debug::LogEntry($cat, $message, 'Client', $method, $date, $this->displayId, $scheduleID, $layoutID, $mediaID);
-            }
-            else
-            {
-                Debug::LogEntry('audit', $message, 'Client', $method, $date, $this->displayId, $scheduleID, $layoutID, $mediaID);
-            }
+            $logType = ($cat == 'error') ? 'error' : 'audit';
+            
+            Debug::LogEntry($logType, $message, 'Client', $thread . $method, $date, $this->displayId, $scheduleID, $layoutID, $mediaID);
         }
 
         if ($this->isAuditing == 1) Debug::LogEntry( "audit", "OUT", "xmds", "SubmitLog", "", $this->displayId);
