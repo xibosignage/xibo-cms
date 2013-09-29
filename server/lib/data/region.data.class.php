@@ -549,6 +549,8 @@ class Region extends Data
 	 */
 	public function EditRegion($layoutid, $regionid, $width, $height, $top, $left, $name = '', $options = '')
 	{
+		Debug::LogEntry('audit', sprintf('IN - RegionID = %s. Width = %s. Height = %s, Top = %s, Left = %s, Name = %s', $regionid, $width, $height, $top, $left, $name), 'Region', 'EditRegion');
+
 		try {
 		    $dbh = PDOConnect::init();
 
@@ -602,6 +604,8 @@ class Region extends Data
                 foreach($options as $option)
                     $this->SetOption($xml, $regionid, $option['name'], $option['value']);
             }
+
+            Debug::LogEntry('audit', sprintf('Layout XML = %s', $xml->saveXML()), 'Region', 'EditRegion');
 			
 			//Convert back to XML		
 			if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 

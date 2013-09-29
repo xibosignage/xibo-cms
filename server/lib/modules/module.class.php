@@ -964,9 +964,29 @@ END;
         $this->mediaid	= $mediaid;
         $this->duration = $duration;
 
-        // Find out what we stored this item as
-        $storedAs = $db->GetSingleValue(sprintf("SELECT StoredAs FROM `media` WHERE mediaid = %d", $mediaid), 'StoredAs', _STRING);
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT StoredAs FROM `media` WHERE mediaid = :mediaid');
+            $sth->execute(array(
+                    'mediaid' => $mediaid
+                ));
 
+            if (!$row = $sth->fetch())
+                return $this->SetError(__('Unable to get the storage name'));
+            
+            // Find out what we stored this item as
+            $storedAs = Kit::ValidateParam($row['StoredAs'], _STRING);          
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
         // Any Options
         $this->SetOption('uri', $storedAs);
 

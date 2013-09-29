@@ -231,10 +231,7 @@ class XMDSSoap
             {
                 // For layouts the MD5 column is the layout xml
                 $fileSize 	= strlen($xml);
-                //$md5        = md5(iconv(mb_detect_encoding($md5, mb_detect_order(), true), "UTF-8", $md5));
-                //$md5 = md5(utf8_encode($md5));
-                //$md5 = md5(mb_convert_encoding($md5, "UTF-8"));
-
+                
                 if ($this->isAuditing == 1) 
                     Debug::LogEntry("audit", 'MD5 for layoutid ' . $id . ' is: [' . $md5 . ']', "xmds", "RequiredFiles");
             }
@@ -522,7 +519,8 @@ class XMDSSoap
 
         // Add file nodes to the $fileElements
         // Firstly get all the scheduled layouts
-        $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID, schedule_detail.is_priority ";
+        $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID, schedule_detail.is_priority, ";
+        $SQL .= "  (SELECT GROUP_CONCAT(StoredAs) FROM media INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID WHERE lklayoutmedia.LayoutID = layout.LayoutID GROUP BY lklayoutmedia.LayoutID) AS Dependents";
         $SQL .= " FROM `campaign` ";
         $SQL .= " INNER JOIN schedule_detail ON schedule_detail.CampaignID = campaign.CampaignID ";
         $SQL .= " INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
@@ -552,6 +550,7 @@ class XMDSSoap
             $todt           = date('Y-m-d H:i:s', $row[2]);
             $scheduleid     = $row[3];
             $is_priority    = Kit::ValidateParam($row[4], _INT);
+            $dependents = Kit::ValidateParam($row[5], _STRING);
 
             // Add a layout node to the schedule
             $layout = $scheduleXml->createElement("layout");
@@ -561,6 +560,7 @@ class XMDSSoap
             $layout->setAttribute("todt", $todt);
             $layout->setAttribute("scheduleid", $scheduleid);
             $layout->setAttribute("priority", $is_priority);
+            $layout->setAttribute("dependents", $dependents);
 
             $layoutElements->appendChild($layout);
         }
