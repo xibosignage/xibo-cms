@@ -801,7 +801,8 @@ class Layout extends Data
      * @param int $backgroundImageId [description]
      */
     public function SetBackground($layoutId, $resolutionId, $color, $backgroundImageId) {
-
+        Debug::LogEntry('audit', 'IN', 'Layout', 'SetBackground');
+        
         try {
             $dbh = PDOConnect::init();
                 
@@ -819,7 +820,7 @@ class Layout extends Data
             else
             {
                 // Get the file URI
-                $sth = $dbh->prepare('SELECT StoredAs FROM media WHERE MediaID = %d');
+                $sth = $dbh->prepare('SELECT StoredAs FROM media WHERE MediaID = :mediaid');
                 $sth->execute(array(
                     'mediaid' => $backgroundImageId
                 ));
