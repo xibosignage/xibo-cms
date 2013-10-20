@@ -387,10 +387,6 @@ END;
 				$i++;
 			}
 			
-			// Add UTC to the list of options as a last resort option.
-			$zonen[$i]['continent'] = "General";
-			$zonen[$i]['city'] = "UTC";
-
 			// Sort them
 			asort($zonen);
 			
