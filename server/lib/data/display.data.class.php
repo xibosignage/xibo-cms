@@ -147,8 +147,8 @@ class Display extends Data
             {
                 // Resolve broadcast address
                 // same as (but easier than):  preg_match("/\b(([01]?\d?\d|2[0-4]\d|25[0-5])\.){3}([01]?\d?\d|2[0-4]\d|25[0-5])\b/",$addr)
-                if (!filter_var ($broadCastAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4))
-                    $this->ThrowError(25015, __('BroadCast Address is not a valid IPv4 Address'));
+                if (!filter_var($broadCastAddress, FILTER_VALIDATE_IP))
+                    $this->ThrowError(25015, __('BroadCast Address is not a valid IP Address'));
             }
 
             // Check whether $cidr is valid
