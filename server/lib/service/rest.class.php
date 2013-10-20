@@ -1012,6 +1012,7 @@ class Rest
         $layoutId = $this->GetParam('layoutId', _INT);
         $regionId = $this->GetParam('regionId', _STRING);
         $mediaId = $this->GetParam('mediaId', _STRING);
+        $lkId = $this->GetParam('lkId', _INT);
 
         // Does the user have permissions to view this region?
         if (!$this->user->LayoutAuth($layoutId))
@@ -1039,7 +1040,7 @@ class Rest
         require_once("modules/$mod.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $mod($this->db, $this->user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $mod($this->db, $this->user, $mediaId, $layoutId, $regionId, $lkId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->del)
