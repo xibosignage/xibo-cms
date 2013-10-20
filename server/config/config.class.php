@@ -566,21 +566,16 @@ END;
 		
 		$minSize = $this->return_bytes('128M');
 		
-		if ($this->return_bytes(ini_get('post_max_size') < $minSize))
-		{
+		if ($this->return_bytes(ini_get('post_max_size')) < $minSize)
 			return false;
-	        }
 	        
-	        if ($this->return_bytes(ini_get('upload_max_filesize') < $minSize))
-	        {
-	        	return false;
-		}
+        if ($this->return_bytes(ini_get('upload_max_filesize')) < $minSize)
+        	return false;
 		
 		if (ini_get('max_execution_time') < 120)
-		{
 			return false;
-		}
 		
+		// All passed
 		return true;
 	}
 

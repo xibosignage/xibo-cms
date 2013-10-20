@@ -1110,7 +1110,7 @@ HTML;
             }
             
             $output .= '<li>';
-            $output .= '<label>' . $displayGroup . '</label><input type="checkbox" name="DisplayGroupIDs[]" value="' . $displayGroupID . '" ' . $checked . '/>';
+            $output .= '<label class="checkbox">' . $displayGroup . '<input type="checkbox" name="DisplayGroupIDs[]" value="' . $displayGroupID . '" ' . $checked . '/></label>';
             $output .= '</li>';
         }
         
@@ -1908,14 +1908,9 @@ END;
                 <table style="width:100%;">
                     <tr>
                         <td><label for="duration" title="How long should this event be scheduled for">Duration<span class="required">*</span></label></td>
-                        <td>H: <input type="text" name="hours" id="hours" size="2" class="number">
-                        M: <input type="text" name="minutes" id="minutes" size="2" class="number">
-                        S: <input type="text" name="seconds" id="seconds" size="2" class="number"></td>
-                        <td rowspan="4">
-                            <div class="FormDisplayList">
-                            $displayList
-                            </div>
-                        </td>
+                        <td>H: <input type="text" name="hours" id="hours" size="2" class="number span1">
+                        M: <input type="text" name="minutes" id="minutes" size="2" class="number span1">
+                        S: <input type="text" name="seconds" id="seconds" size="2" class="number span1"></td>
                     </tr>
                     <tr>
                         <td><label for="CampaignID" title="Select which layout this event will show.">Campaign/Layout<span class="required">*</span></label></td>
@@ -1928,6 +1923,13 @@ END;
                     <tr>
                         <td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
                         <td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="FormDisplayList">
+                            $displayList
+                            </div>
+                        </td>
                     </tr>
                 </table>
             </form>

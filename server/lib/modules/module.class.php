@@ -762,7 +762,29 @@ END;
 
         //Get the default value for the shared list
         $default = Config::GetSetting('defaultMedia');
-        $defaultDuration = Config::GetSetting('jpg_length');
+
+        switch ($this->type) {
+            case 'video':
+            case 'localvideo':
+                $defaultDuration = 0;
+                break;
+
+            case 'image':
+                $defaultDuration = Config::GetSetting('jpg_length');
+                break;
+
+            case 'flash':
+                $defaultDuration = Config::GetSetting('swf_length');
+                break;
+
+            case 'powerpoint':
+                $defaultDuration = Config::GetSetting('ppt_length');
+                break;
+
+            default:
+                $defaultDuration = '';
+        }
+        
 
         // Save button is different depending on if we are on a region or not
         if ($regionid != '' && $this->showRegionOptions)
