@@ -1050,13 +1050,6 @@ class Rest
             return $this->Error($module->errorMessage);
         }
 
-        // Delete the actual media record
-        Kit::ClassLoader('Media');
-        $media = new Media($this->db);
-
-        if (!$media->Delete($mediaId))
-            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
-
         return $this->Respond($this->ReturnId('success', true));
     }
 
