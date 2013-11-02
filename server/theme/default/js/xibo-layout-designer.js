@@ -113,34 +113,37 @@ function savePositions() {
 	// Update all layouts
 	$("#layout").each(function(){
 
+        // Store the Layout ID
+        var layoutid = $(this).attr("layoutid");
+
+        // Build an array of
+        var regions = new Array();
+
 		$(this).find(".region").each(function(){
 
-			var width 	= $(this).css("width");
-			var height 	= $(this).css("height");
-			var top 	= $(this).css("top");
-			var left 	= $(this).css("left");
-			var regionid = $(this).attr("regionid");
-			var layoutid = $(this).attr("layoutid");
+            var region = {
+                width: $(this).css("width"),
+                height: $(this).css("height"),
+                top: $(this).css("top"),
+                left: $(this).css("left"),
+                regionid: $(this).attr("regionid")
+            }
 
-		    // Update the region width / height attributes
-		    $(this).attr("width", width).attr("height", height);
+            // Update the region width / height attributes
+            $(this).attr("width", region.width).attr("height", region.height);
 
-			$.ajax({
-				type: "post", 
-				url: "index.php?p=timeline&q=RegionChange&layoutid="+layoutid+"&ajax=true", 
-				cache: false, 
-				dataType: "json", 
-				data: {
-					"width":width,
-					"height":height,
-					"top":top,
-					"left":left,
-					"regionid":regionid
-				},
-				success: XiboSubmitResponse
-			});
-
+            // Add to the array
+            regions.push(region);
 		});
+
+        $.ajax({
+                type: "post", 
+                url: "index.php?p=timeline&q=RegionChange&layoutid="+layoutid+"&ajax=true", 
+                cache: false, 
+                dataType: "json", 
+                data: {regions : JSON.stringify(regions) },
+                success: XiboSubmitResponse
+            });
 	});
 }
 

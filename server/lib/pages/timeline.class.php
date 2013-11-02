@@ -266,33 +266,42 @@ class timelineDAO {
 		// ajax request handler
 		$response = new ResponseManager();
 		
-		//Vars
+		// Vars
 		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
-		$top            = Kit::GetParam('top', _POST, _INT);
-                $left           = Kit::GetParam('left', _POST, _INT);
-                $width          = Kit::GetParam('width', _POST, _INT);
-                $height 	= Kit::GetParam('height', _POST, _INT);
+        $regions = Kit::GetParam('regions', _POST, _HTMLSTRING);
 
-		// Remove the "px" from them
-		$width 	= str_replace("px", '', $width);
-		$height = str_replace("px", '', $height);
-		$top 	= str_replace("px", '', $top);
-		$left 	= str_replace("px", '', $left);
-		
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+        if ($regions == '')
+            trigger_error(__('No regions present'));
 
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
-        if (!$regionAuth->del)
-            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
-		
-		if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
-		{
-			//there was an ERROR
-			trigger_error($region->GetErrorMessage(), E_USER_ERROR);
-		}
+        $regions = json_decode($regions);
+
+        foreach ($regions as $region) {
+
+            $regionid = Kit::ValidateParam($region->regionid, _STRING);
+            $top = Kit::ValidateParam($region->top, _INT);
+            $left = Kit::ValidateParam($region->left, _INT);
+            $width = Kit::ValidateParam($region->width, _INT);
+            $height = Kit::ValidateParam($region->height, _INT);
+
+            Debug::LogEntry('audit', 'Editing Region ' . $regionid);
+
+            // Remove the "px" from them
+            $width  = str_replace("px", '', $width);
+            $height = str_replace("px", '', $height);
+            $top    = str_replace("px", '', $top);
+            $left   = str_replace("px", '', $left);
+            
+            Kit::ClassLoader('region');
+            $regionObject = new region($db);
+            $ownerId = $regionObject->GetOwnerId($layoutid, $regionid);
+
+            $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
+            if (!$regionAuth->del)
+                trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+    		
+    		if (!$regionObject->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
+    			trigger_error($regionObject->GetErrorMessage(), E_USER_ERROR);
+        }
 		
 		$response->SetFormSubmitResponse('');
 		$response->hideMessage = true;

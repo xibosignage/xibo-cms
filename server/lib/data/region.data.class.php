@@ -605,7 +605,7 @@ class Region extends Data
                     $this->SetOption($xml, $regionid, $option['name'], $option['value']);
             }
 
-            Debug::LogEntry('audit', sprintf('Layout XML = %s', $xml->saveXML()), 'Region', 'EditRegion');
+            //Debug::LogEntry('audit', sprintf('Layout XML = %s', $xml->saveXML()), 'Region', 'EditRegion');
 			
 			//Convert back to XML		
 			if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
