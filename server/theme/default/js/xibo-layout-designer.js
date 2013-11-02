@@ -147,6 +147,27 @@ function savePositions() {
 	});
 }
 
+function XiboAssignToLayout(layoutId, regionId) {
+
+    var mediaitems = Array();
+
+    $("#fileupload .files .name").each(function() {
+
+        // Is this item in error?
+        if ($(this).attr("status") != "error")
+            mediaitems.push($(this).attr("id"));
+    });
+
+    $.ajax({
+        type: "post",
+        url: "index.php?p=timeline&q=AddFromLibrary&layoutid="+layoutId+"&regionid="+regionId+"&ajax=true",
+        cache: false,
+        dataType: "json",
+        data: { MediaID: mediaitems },
+        success: XiboSubmitResponse
+    });
+}
+
 /**
  * Sets the layout to full screen
  */

@@ -522,12 +522,13 @@ class UploadHandler
         Debug::LogEntry('audit', 'Upload complete for Type: ' . $type . ' and file name: ' . $file->name . '. Name: ' . $name . '. Duration:' . $duration);
 
         // We want to create a module for each of the uploaded files.
+        // Do not pass in the region ID so that we only assign to the library and not to the layout
         require_once("modules/$type.module.php");
-        if (!$module = new $type($this->db, $this->user, '', $layoutid, $regionid, '')) {
+        if (!$module = new $type($this->db, $this->user, '', $layoutid, '', '')) {
             $file->error = $module->GetErrorMessage();
         }
 
-        // We want to add this item to our library (and potentially to the region we are working in)
+        // We want to add this item to our library
         if (!$storedAs = $module->AddLibraryMedia($file->name, $name, $duration, $file->name)) {
             $file->error = $module->GetErrorMessage();
         }

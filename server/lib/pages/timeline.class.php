@@ -372,7 +372,7 @@ END;
         $response 	= new ResponseManager();
 
         $layoutId = Kit::GetParam('layoutid', _GET, _INT);
-        $regionId = Kit::GetParam('regionid', _POST, _STRING);
+        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
         $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY, array());
 
         // Make sure we have permission to edit this region

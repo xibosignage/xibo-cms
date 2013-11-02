@@ -791,7 +791,8 @@ END;
         {
             setSession('content','mediatype', $this->type);
 
-            $this->response->AddButton(__('Library'), 'XiboSwapDialog("index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutid . '&regionid=' . $regionid . '")');
+            $this->response->AddButton(__('Assign to Layout'), 'XiboAssignToLayout(' . $layoutid . ',"' . $regionid . '")');
+            $this->response->AddButton(__('View Library'), 'XiboSwapDialog("index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutid . '&regionid=' . $regionid . '")');
             $this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
 		}
         elseif ($regionid != '' && !$this->showRegionOptions)
