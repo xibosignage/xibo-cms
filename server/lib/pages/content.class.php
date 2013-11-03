@@ -45,9 +45,12 @@ class contentDAO
             Theme::Set('filter_type', Session::Get('content', 'filter_type'));
             Theme::Set('filter_retired', Session::Get('content', 'filter_retired'));
             Theme::Set('filter_owner', Session::Get('content', 'filter_owner'));
+            Theme::Set('filter_duration_in_seconds', Session::Get('content', 'filter_duration_in_seconds'));
+            Theme::Set('filter_duration_in_seconds_checked', ((Theme::Get('filter_duration_in_seconds') == 1) ? 'checked' : ''));
         }
         else {
-			Theme::Set('filter_retired', 0);
+            Theme::Set('filter_retired', 0);
+			Theme::Set('filter_duration_in_seconds', 0);
         }
 		
     	Theme::Set('library_form_add_url', 'index.php?p=content&q=displayForms');
@@ -86,12 +89,14 @@ class contentDAO
 		$filter_type = Kit::GetParam('filter_type', _REQUEST, _WORD);
 		$filter_name = Kit::GetParam('filter_name', _REQUEST, _STRING);
 		$filter_userid = Kit::GetParam('filter_owner', _REQUEST, _INT);
-		$filter_retired = Kit::GetParam('filter_retired', _REQUEST, _INT);
+        $filter_retired = Kit::GetParam('filter_retired', _REQUEST, _INT);
+		$filter_duration_in_seconds = Kit::GetParam('filter_duration_in_seconds', _REQUEST, _CHECKBOX);
                 
 		setSession('content', 'filter_type', $filter_type);
 		setSession('content', 'filter_name', $filter_name);
 		setSession('content', 'filter_owner', $filter_userid);
-		setSession('content', 'filter_retired', $filter_retired);
+        setSession('content', 'filter_retired', $filter_retired);
+		setSession('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
         setSession('content', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		// Construct the SQL
@@ -102,7 +107,7 @@ class contentDAO
 		// Add some additional row content
 		foreach ($mediaList as $row) {
 
-			$row['duration_text'] = sec2hms($row['duration']);
+			$row['duration_text'] = ($filter_duration_in_seconds == 1) ? $row['duration'] : sec2hms($row['duration']);
 			$row['owner'] = $user->getNameFromID($row['ownerid']);
 			$row['permissions'] = $group = $this->GroupsForMedia($row['mediaid']);
 			$row['revised'] = ($row['parentid'] != 0) ? Theme::Image('act.gif') : '';
