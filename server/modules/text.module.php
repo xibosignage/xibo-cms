@@ -195,6 +195,7 @@ class text extends Module
         $this->duration = $duration;
 
         // Any Options
+        $this->SetOption('xmds', true);
         $this->SetOption('direction', $direction);
         $this->SetOption('scrollSpeed', $scrollSpeed);
         $this->SetOption('fitText', $fitText);
@@ -267,6 +268,7 @@ class text extends Module
             }
 
             // Any Options
+            $this->SetOption('xmds', true);
             $this->SetOption('direction', $direction);
             $this->SetOption('scrollSpeed', $scrollSpeed);
             $this->SetOption('fitText', $fitText);
@@ -311,13 +313,13 @@ class text extends Module
         $widthPx	= $width.'px';
         $heightPx	= $height.'px';
 
-        return '<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=RawPreview&raw=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return '<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
 
     /**
      * Raw Preview
      */
-    public function RawPreview()
+    public function GetResource($displayId = 0)
     {
         // Behave exactly like the client.
 
@@ -340,38 +342,42 @@ class text extends Module
         $textNode = $textNodes->item(0);
         $text = $textNode->nodeValue;
 
+        // Set some options
+        $options = array('type' => 'text',
+            'sourceid' => 1,
+            'direction' => $direction,
+            'duration' => $duration,
+            'durationIsPerItem' => false,
+            'numItems' => 1,
+            'takeItemsFrom' => 'start',
+            'itemsPerPage' => 0,
+            'scrollSpeed' => $scrollSpeed,
+            'scaleMode' => (($fitText == 0) ? 'scale' : 'fit'),
+            'originalWidth' => $this->width,
+            'originalHeight' => $this->height
+        );
+
+        // Generate a JSON string of substituted items.
+        $items[] = $text;
+        
         // Replace the head content
         $headContent  = '<script type="text/javascript">';
         $headContent .= '   function init() { ';
-        $headContent .= '       $("#text").xiboRender({ ';
-        $headContent .= '           type: "text",';
-        $headContent .= '           direction: "' . $direction . '",';
-        $headContent .= '           duration: ' . $duration . ',';
-        $headContent .= '           durationIsPerItem: false,';
-        $headContent .= '           numItems: 0,';
-        $headContent .= '           width: ' . $width . ',';
-        $headContent .= '           height: ' . $height . ',';
-        $headContent .= '           scrollSpeed: ' . $scrollSpeed . ',';
-        $headContent .= '           fitText: ' . (($fitText == 0) ? 'false' : 'true') . ',';
-        $headContent .= '           scaleText: ' . (($fitText == 1) ? 'false' : 'true') . ',';
-        $headContent .= '           scaleFactor: 1';
-        $headContent .= '       });';
+        $headContent .= '       $("body").xiboRender(options, items);';
         $headContent .= '   } ';
+        $headContent .= '   var options = ' . json_encode($options) . ';';
+        $headContent .= '   var items = ' . json_encode($items) . ';';
         $headContent .= '</script>';
+
+        // Replace the View Port Width?
+        if (isset($_GET['preview']))
+            $template = str_replace('[[ViewPortWidth]]', $this->width . 'px', $template);
 
         // Replace the Head Content with our generated javascript
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
-        // Generate the body content
-        $bodyContent  = '';
-        $bodyContent .= '<div id="contentPane" style="overflow: none; width:' . $width . 'px; height:' . $height . 'px;">';
-        $bodyContent .= '   <div id="text">';
-        $bodyContent .= '       ' . $text;
-        $bodyContent .= '   </div>';
-        $bodyContent .= '</div>';
-
         // Replace the Body Content with our generated text
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $bodyContent, $template);
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', '', $template);
 
         return $template;
     }
