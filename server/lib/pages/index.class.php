@@ -37,54 +37,24 @@ class indexDAO
 		$user 		=& $this->user;
 		global $session;
 
-		//this page must be called from a form therefore we expect POST variables		
+		// this page must be called from a form therefore we expect POST variables		
 		$username = Kit::GetParam('username', _POST, _USERNAME);
 		$password = Kit::GetParam('password', _POST, _PASSWORD);
-		
-		$referingpage = Kit::GetParam('referingPage', _GET, _WORD);
-
-		// AJAX login or not?
-		if (isset($_REQUEST['ajax'])) 
-		{
-			//ajax request handler
-			$response = new ResponseManager();
-
-			// Check the token
-	        if (!Kit::CheckToken()) {
-	            
-	            // Reshow the login box
-	            $response->Login();
-	            $response->Respond();
-	            exit;
-	        }
-			
-			//use the ajax login method
-			if($user->login($username,$password)) 
-			{
-				$userid 	= Kit::GetParam('userid', _SESSION, _INT);
-				$username 	= Kit::GetParam('username', _SESSION, _USERNAME);
-				
-				$session->set_user(session_id(), $userid, 'user');
-				
-				$response->SetFormSubmitResponse($username . ' logged in');
-				$response->Respond();
-			}
-			else 
-			{
-				//re-display the login form
-				$_SESSION['message'] = "";
-				
-				//send the failed info
-				$response->SetError(__('Incorrect Login Information.'));
-				$response->Respond();
-			}
-			
-			exit;
-		}
+		$referingpage = rawurldecode(Kit::GetParam('referingPage', _GET, _STRING));
 
 		// Check the token
-        if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+        if (!Kit::CheckToken()) {
+        	// We would usually issue a HALT error here - but in the case of login we should redirect instead
+            trigger_error('Token does not match');
+
+            // Split on &amp; and rejoin with &
+            $params = explode('&amp;', $referingpage, 3);
+            unset($params['message']);
+			$referingpage = implode('&', $params) . '&message=Token Error';
+
+            header('Location:index.php?' . $referingpage);
+            exit;
+        }
 
 		if ($user->login($username,$password)) 
 		{
@@ -103,6 +73,11 @@ class indexDAO
 		}
 		else 
 		{
+			// Split on &amp; and rejoin with &
+			$params = explode('&amp;', $referingpage, 3);
+            unset($params['message']);
+			$referingpage = implode('&', $params);
+
             header('Location:index.php?' . $referingpage);
 		}
 
@@ -116,15 +91,11 @@ class indexDAO
 
         $username = Kit::GetParam('username', _SESSION, _USERNAME);
 
-        setMessage(__('Please Login to access this page.'));
-
         //logs the user out -- true if ok
         $user->logout();
 
-        if($referingpage == '')
-        {
-            $referingpage = 'index';
-        }
+        if ($referingpage == '')
+        	$referingpage = 'index';
 
         //then go back to the index page
         header('Location:index.php?p=' . $referingpage);

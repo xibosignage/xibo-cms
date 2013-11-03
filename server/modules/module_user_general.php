@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner and James Packer
+ * Copyright (C) 2006-2013 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -57,7 +57,7 @@
 			if ($userid != 0)
 				$db->query(sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d ", $userid));
 
-			// Print out the login form
+			// AJAX calls that fail the login test cause a page redirect
 			if ($ajax) 
 			{
                 //create the AJAX request object
@@ -72,8 +72,14 @@
 				Theme::Set('form_action', 'index.php?q=login&referingPage=' . $requestUri);
 				Theme::Set('about_url', 'index.php?p=index&q=About');
 				Theme::Set('source_url', 'https://launchpad.net/xibo/1.5');
-				Theme::Set('login_message', getMessage());
+
+				// Message (either from the URL or the session)
+				$message = Kit::GetParam('message', _GET, _STRING, Kit::GetParam('message', _SESSION, _STRING, ''));
+				Theme::Set('login_message', $message);
                 Theme::Render('login_page');
+                
+		        // Clear the session message
+		        $_SESSION['message'] = '';
                 exit;
 			}
 			

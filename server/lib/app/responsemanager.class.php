@@ -101,10 +101,6 @@ class ResponseManager
 	 */	
 	function Login() 
 	{
-		Theme::Set('form_id', 'XiboLoginForm');
-		Theme::Set('form_action', 'index.php?q=login');
-
-		$this->message	= Theme::RenderReturn('login_form');
 		$this->login	= true;
 		$this->success	= false;
 	}

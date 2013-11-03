@@ -746,29 +746,9 @@ function XiboRefreshAllGrids() {
  */
 function LoginBox(message) {
 
-    bootbox.hideAll();
-    
-    // Create the dialog with our parameters
-    var dialog = bootbox.dialog(
-    		message, [{
-    			label: "Login",
-    			callback: function() {
-    				dialog.modal('hide');
-	                $('#XiboLoginForm').submit();
-	                return false;
-	            }
-    		}], {
-				
-    		}
-    	);
-
-    //capture the form submit
-    $('.XiboForm', dialog).submit(function() {
-        XiboFormSubmit(this);
-        return false;
-    });
-
-    return;
+    // Reload the page (appending the message)
+    window.location.href = window.location.href;
+    location.reload(false);
 }
 
 /**
