@@ -1,4 +1,6 @@
 
+INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) 
+VALUES (NULL, 'SCHEDULE_WITH_VIEW_PERMISSION', 'No', 'dropdown', 'Should users with View permissions on displays be allowed to schedule to them?', 'Yes|No', 'permissions', '1');
 
 ALTER TABLE  `layout` ADD  `status` TINYINT NOT NULL DEFAULT  '0';
 

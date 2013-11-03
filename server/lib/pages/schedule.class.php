@@ -1320,7 +1320,7 @@ HTML;
 
         foreach($displays as $display)
         {
-            if (!$display['edit'] == 1)
+            if ($display['edit'] != 1 && Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'No')
                 continue;
 
             // We have permission to edit this layout
