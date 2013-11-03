@@ -574,6 +574,7 @@ END;
                     }
                     else
                     {
+                        $options .= ',unassign|' . __('Unassign from all Layouts');
                         $options .= ',retire|' . __('Retire this media');
                     }
                 }
@@ -663,8 +664,16 @@ END;
         {
             $options = Kit::GetParam('options', _POST, _WORD);
 
+            // Unassigning Media needs to remove it from all Layouts the user has permission for.
+            if ($options == 'unassign') {
+                if (!$this->UnassignFromAll($mediaid)) {
+                    $this->response->SetError($mediaObject->GetErrorMessage());
+                    $this->response->keepOpen = true;
+                    return $this->response;
+                }
+            }
             // If we are set to retire we retire
-			if ($options == 'retire')
+			else if ($options == 'retire')
 			{
 	            if (!$mediaObject->Retire($mediaid)) {
 	            	$this->response->SetError($mediaObject->GetErrorMessage());
@@ -672,9 +681,8 @@ END;
 					return $this->response;
 	            }
 			}
-
 			// If we are set to delete, we delete
-			if ($options == 'delete')
+			else if ($options == 'delete')
 			{
                 if (!$mediaObject->Delete($mediaid)) {
             		$this->response->SetError($mediaObject->GetErrorMessage());
@@ -683,7 +691,7 @@ END;
                 }
 			}
 
-            $this->response->message = __('Media Deleted');
+            $this->response->message = __('Completed Successfully');
         }
 
         // We want to load the region timeline form back again
@@ -714,6 +722,34 @@ END;
 
         return true;
 	}
+
+    /**
+     * Unassign from all Layouts
+     * @param [int] $mediaId [The MediaID to Unassign]
+     */
+    public function UnassignFromAll($mediaId) {
+
+        // Get a list of layouts with this media id on them that this user has permission for.
+        $layouts = $this->user->LayoutList('', 0, 0, '', $mediaId);
+
+        // Create a media object for each, and call delete
+        foreach ($layouts as $layout) {
+
+            Debug::LogEntry('audit', 'Unassigning MediaID ' . $mediaId . ' from Layout: ' . $layout['layout'], 'module', 'UnassignFromAll');
+
+            $mod = new $this->type($this->db, $this->user, $mediaId, $layout['layoutid'], $layout['regionid'], $layout['lklayoutmediaid']);
+
+            // Call to delete region media
+            if (!$mod->ApiDeleteRegionMedia($layout['layoutid'], $layout['regionid'], $mediaId)) {
+                $this->response->keepOpen = true;
+                $this->response->SetError($this->errorMessage);
+                return $this->response;
+            }
+        }
+
+        $this->response->message = __('Media unassigned from all Layouts');
+        return $this->response;
+    }
 
 	/**
 	 * Default AddForm

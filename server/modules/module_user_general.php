@@ -986,7 +986,7 @@ END;
     /**
      * Returns an array of layouts that this user has access to
      */
-    public function LayoutList($filterLayout = '', $filterUserId = 0, $filterRetired = 0, $filterTags = '')
+    public function LayoutList($filterLayout = '', $filterUserId = 0, $filterRetired = 0, $filterTags = '', $filterMediaId = 0)
     {
         $SQL  = "";
         $SQL .= "SELECT layout.layoutID, ";
@@ -996,13 +996,33 @@ END;
         $SQL .= "        layout.userID, ";
         $SQL .= "        layout.xml, ";
         $SQL .= "        campaign.CampaignID, ";
-        $SQL .= "        layout.status ";
+        $SQL .= "        layout.status, ";
+        
+        // MediaID
+		if ($filterMediaId != 0) {
+			$SQL .= "	lklayoutmedia.regionid, ";
+			$SQL .= "	lklayoutmedia.lklayoutmediaid, ";
+			$SQL .= "	media.userID AS mediaownerid ";
+		}
+		else {
+			$SQL .= "	NULL AS regionid, ";
+			$SQL .= "	NULL AS lklayoutmediaid, ";
+			$SQL .= "	NULL AS mediaownerid ";
+		}
+
         $SQL .= "   FROM layout ";
         $SQL .= "  INNER JOIN `lkcampaignlayout` ";
         $SQL .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
         $SQL .= "   INNER JOIN `campaign` ";
         $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
         $SQL .= "       AND campaign.IsLayoutSpecific = 1";
+
+		// MediaID
+		if ($filterMediaId != 0) {
+			$SQL .= sprintf(" INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = %d", $filterMediaId);
+			$SQL .= " INNER JOIN `media` ON lklayoutmedia.mediaid = media.mediaid ";
+		}
+
         $SQL .= " WHERE 1 = 1 ";
 
         if ($filterLayout != '')
@@ -1031,7 +1051,6 @@ END;
 		// Tags
 		if ($filterTags != '')
 			$SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $this->db->escape_string($filterTags)) . "%' ";
-		
         
         $SQL .= " ORDER BY Layout ";
 
@@ -1058,6 +1077,20 @@ END;
             $layoutItem['xml']  = Kit::ValidateParam($row['xml'], _HTMLSTRING);
             $layoutItem['campaignid'] = Kit::ValidateParam($row['CampaignID'], _INT);
             $layoutItem['status'] = Kit::ValidateParam($row['status'], _INT);
+            $layoutItem['mediaownerid'] = Kit::ValidateParam($row['mediaownerid'], _INT);
+            
+            // Details for media assignment
+            $layoutItem['regionid'] = Kit::ValidateParam($row['regionid'], _STRING);
+            $layoutItem['lklayoutmediaid'] = Kit::ValidateParam($row['lklayoutmediaid'], _INT);
+
+            // Authenticate the assignment (if not null already)
+            if ($layoutItem['lklayoutmediaid'] != 0) {
+            	$assignmentAuth = $this->MediaAssignmentAuth($layoutItem['mediaownerid'], $layoutItem['layoutid'], $layoutItem['regionid'], $filterMediaId, true);
+
+            	// If we get here and the user does not have assess to this region assignment, don't add this row
+            	if (!$assignmentAuth->del)
+            		continue;
+            }
 
             $auth = $this->CampaignAuth($layoutItem['campaignid'], true);
 
