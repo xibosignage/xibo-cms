@@ -451,7 +451,7 @@ class Layout extends Data
         try {
             $dbh = PDOConnect::init();
         
-            $sth = $dbh->prepare('UPDATE layout SET xml = :xml WHERE layoutID = :layoutid');
+            $sth = $dbh->prepare('UPDATE layout SET xml = :xml, modifieddt = NOW() WHERE layoutID = :layoutid');
             $sth->execute(array(
                     'layoutid' => $layoutid,
                     'xml' => $xml
