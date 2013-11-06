@@ -90,26 +90,34 @@ label.error {
 
 /* Layout Jump List */
 #LayoutJumpList {
-    position: absolute;
-    width: 450px;
-    right: 25px;
-    bottom: 55px;
+    z-index: 1;
+	position: absolute;
+	min-width: 150px;
+	right: 5px;
+	bottom: 5px;
+	border:1px solid #e0e0e0;
+	background-color:#f9f9f9;
 }
 
-#LayoutJumpList .XiboGrid {   
-    height: 530px;
+#LayoutJumpList:hover{
+	border-color:#a0a0a0;
+}
+
+#LayoutJumpList .XiboGrid {
     overflow-y: auto;
     overflow-x: hidden;
     margin: 0;
-    padding: 0;
+    padding: 8px;
 }
 
 #JumpListHeader {
-    text-align: right;
+    text-align: left;
+	border-bottom:1px solid #a0a0a0;
+	padding:3px 8px;
 }
 
 #JumpListOpenClose {
-    margin-left: 50px;
+	float:right;
     font-weight: bold;
 }
 
