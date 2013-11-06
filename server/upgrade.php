@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2012 Alex Harrington
+ * Copyright (C) 2009-2013 Alex Harrington
  *
  * This file is part of Xibo.
  *
@@ -21,7 +21,7 @@
 DEFINE('XIBO', true);
 
 if (! checkPHP()) {
-  die("Xibo requires PHP 5.2.4 or later");
+  die("Xibo requires PHP 5.3 or later");
 }
 
 error_reporting(0);
@@ -114,7 +114,7 @@ elseif ($_SESSION['step'] == 1) {
 		$password = Kit::GetParam('password', _POST, _PASSWORD);
 
 		// Decide what user authentication mode to use depending on the current version.
-		if (Config::Version($db, 'DBVersion') < 62) {
+		if (Config::Version('DBVersion') < 62) {
 
 			// Old auth
 			$password_hash = md5($password);
@@ -178,7 +178,7 @@ elseif ($_SESSION['step'] == 1) {
   <div class="checks">
   <?php
     $db = new Database();
-    $cObj = new Config($db);
+    $cObj = new Config();
     echo $cObj->CheckEnvironment();
     if ($cObj->EnvironmentFault()) {
 	$_SESSION['step'] = 1;
@@ -211,7 +211,7 @@ elseif ($_SESSION['step'] == 2) {
 	# Calculate the upgrade
 	checkAuth();
       
-	$_SESSION['upgradeFrom'] = Config::Version($db, 'DBVersion');
+	$_SESSION['upgradeFrom'] = Config::Version('DBVersion');
 
 	if ($_SESSION['upgradeFrom'] < 1) {
 		$_SESSION['upgradeFrom'] = 1;
@@ -546,7 +546,7 @@ function backup_tables($db,$tables = '*')
 	}
 
 	// Open file for writing at length 0.
-	$handle = fopen(Config::GetSetting($db,'LIBRARY_LOCATION') . 'db-backup-'.time().'-'.(md5(implode(',',$tables))).'.sql','w+');
+	$handle = fopen(Config::GetSetting('LIBRARY_LOCATION') . 'db-backup-'.time().'-'.(md5(implode(',',$tables))).'.sql','w+');
 	
 	fwrite($handle,"SET FOREIGN_KEY_CHECKS=0;\n");
 	fwrite($handle,"SET UNIQUE_CHECKS=0;\n");
