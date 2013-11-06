@@ -74,7 +74,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <?php echo Theme::Get('form_meta'); ?>
         <p><a href="<?php echo Theme::GetConfig('theme_url'); ?>"><img src='<?php echo Theme::ImageUrl('xibologo.png'); ?>'></a></p>
 
-        <p><?php echo Theme::Translate('Please enter a username and password'); ?></p>
+        <p><?php echo Theme::Translate('Please provide your credentials'); ?></p>
 
         <input name="username" type="text" class="input-block-level" placeholder="<?php echo Theme::Translate('User'); ?>">
         <input name="password" type="password" class="input-block-level" placeholder="<?php echo Theme::Translate('Password'); ?>">

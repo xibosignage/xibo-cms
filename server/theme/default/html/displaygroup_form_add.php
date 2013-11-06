@@ -25,6 +25,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+    <?php echo Theme::Get('form_meta'); ?>
 	<table>
         <tr>
             <td><label for="group" title="<?php echo Theme::Translate('The Name for this Group'); ?>"><?php echo Theme::Translate('Name'); ?></label></td>

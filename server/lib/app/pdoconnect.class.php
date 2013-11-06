@@ -17,16 +17,30 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Theme variables:
- *  form_id = The ID of the Form
- * 	form_action = The URL for calling the Layout Add Transaction
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-?>
-<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-signin text-center" action="<?php echo Theme::Get('form_action'); ?>" method="post">
-    <?php echo Theme::Get('form_meta'); ?>
-	<p><?php echo Theme::Translate('Please provide your credentials to continue using the CMS'); ?></p>
-    <input name="username" type="text" class="input-block-level" placeholder="<?php echo Theme::Translate('User'); ?>">
-    <input name="password" type="password" class="input-block-level" placeholder="<?php echo Theme::Translate('Password'); ?>">
-</form>
+
+Class PDOConnect {
+
+	private static $conn = NULL;
+
+	private function __construct() {}
+
+	public static function init() {
+		if (!self::$conn) {
+			
+			global $dbhost;
+			global $dbuser;
+			global $dbpass;
+			global $dbname;
+
+			// Open the connection and set the error mode
+			self::$conn = new PDO('mysql:host=' . $dbhost . ';dbname=' . $dbname . ';', $dbuser, $dbpass);
+			self::$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+			self::$conn->query("SET NAMES 'utf8'");
+		}
+
+		return self::$conn;
+	}
+}

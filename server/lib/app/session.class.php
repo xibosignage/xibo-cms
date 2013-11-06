@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,42 +20,37 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class Session 
-{
-	
-	private $db;
+class Session {
 	private $max_lifetime;
 	private $key;
 	
 	public $isExpired = 1;
 
-	function __construct(database $db) 
+	function __construct() 
 	{
-		$this->db =& $db;
-		
-		session_set_save_handler(array(&$this, 'open'),
-                             array(&$this, 'close'),
-                             array(&$this, 'read'),
-                             array(&$this, 'write'),
-                             array(&$this, 'destroy'),
-                             array(&$this, 'gc'));
+		session_set_save_handler(
+				array(&$this, 'open'),
+				array(&$this, 'close'),
+				array(&$this, 'read'),
+				array(&$this, 'write'),
+				array(&$this, 'destroy'),
+				array(&$this, 'gc')
+			);
+
     	register_shutdown_function('session_write_close');
     	
-    	
+    	// Start the session
 		session_start();
 	}
 	
 	function open($save_path, $session_name) 
 	{
-		$db =& $this->db;
-		
 		$this->max_lifetime = ini_get('session.gc_maxlifetime');
 		return true;
 	}
 
 	function close() 
 	{
-		$db =& $this->db;
 		
 		$this->gc($this->max_lifetime);
 		return true;
@@ -63,71 +58,64 @@ class Session
 
 	function read($key) 
 	{
-		$db =& $this->db;
-		
-		$userAgent	= Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent');
-                $userAgent      = substr($userAgent, 0, 253);
+		$userAgent	= substr(Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent'), 0, 253);
 		$remoteAddr	= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
 		$securityToken	= Kit::GetParam('SecurityToken', _POST, _STRING, null);
 		
-		$this->key 		= $key;
-		$newExp 		= time() + $this->max_lifetime;
+		$this->key = $key;
+		$newExp = time() + $this->max_lifetime;
 		
 		$this->gc($this->max_lifetime);
+
+		try {
+			$dbh = PDOConnect::init();
 		
-		// Get this session		
-		$SQL  = " SELECT session_data, IsExpired, SecurityToken, UserAgent FROM session ";
-		$SQL .= " WHERE session_id = '%s' ";
-		
-		$SQL 	= sprintf($SQL, $db->escape_string($key));
-		
-		$result = $db->query($SQL);
-		
-		if ($db->num_rows($result) != 0) 
-		{
-			// Get the row
-			$row = $db->get_row($result);
+			// Get this session		
+			$sth = $dbh->prepare('SELECT session_data, isexpired, securitytoken, useragent FROM session WHERE session_id = :session_id');
+			$sth->execute(array('session_id' => $key));
+
+			if (!$row = $sth->fetch())
+				throw new Exception('No session returned');
 
 			// What happens if the UserAgent has changed?
-			if ($row[3] != $userAgent) {
+			if ($row['useragent'] != $userAgent) {
 				// Make sure we are logged out (delete all data)
-				$db->query(sprintf("DELETE FROM session WHERE session_id = '%s' ", $db->escape_string($key)));
+				$usth = $dbh->prepare('DELETE FROM session WHERE session_id = :session_id');
+				$usth->execute(array('session_id' => $key));
 
-				$empty = '';
-				return settype($empty, "string");
+				throw new Exception('Different UserAgent');
 			}
 			
 			// We have the Key and the Remote Address.
 			if ($securityToken == null)
 			{			
 				// If there is no security token then obey the IsExpired
-				$this->isExpired = $row[1];	
+				$this->isExpired = $row['isexpired'];	
 			}
-			elseif ($securityToken == $row[2])
+			elseif ($securityToken == $row['securitytoken'])
 			{
 				// We have a security token, so dont require a login
 				$this->isExpired = 0;
-				
-				if (!$db->query(sprintf("UPDATE session SET session_expiration = $newExp, isExpired = 0 WHERE session_id = '%s' ", $db->escape_string($key))))
-				{
-					Debug::LogEntry($db, "error", $db->error());
-				}
+
+				$usth = $dbh->prepare('UPDATE session SET session_expiration = :expiry, isExpired = 0 WHERE session_id = :session_id');
+				$usth->execute(array('session_id' => $key, 'expiry' => $newExp));
 			}
 			else
 			{
 				// Its set - but its wrong - not good
-				Debug::LogEntry($db, "error", "Incorrect SecurityToken from " . $remoteAddr);
+				Debug::LogEntry('error', 'Incorrect SecurityToken from ' . $remoteAddr);
 				
 				$this->isExpired = 1;
 			}
 			
 			// Either way - update this SESSION so that the security token is NULL
-			$db->query(sprintf("UPDATE session SET SecurityToken = NULL WHERE session_id = '%s' ", $db->escape_string($key)));
-			
-			return($row[0]);
+			$usth = $dbh->prepare('UPDATE session SET SecurityToken = NULL WHERE session_id = :session_id');
+			$usth->execute(array('session_id' => $key));
+
+			return($row['session_data']);
 		}
-		else 
-		{
+		catch (Exception $e) {
+			Debug::LogEntry('error', $e->getMessage());
 			$empty = '';
 			return settype($empty, "string");
 		}
@@ -135,50 +123,81 @@ class Session
 	
 	function write($key, $val) 
 	{
-		$db 		=& $this->db;
-
-		$newExp 	= time() + $this->max_lifetime;
-		$lastaccessed 	= date("Y-m-d H:i:s");
-		$userAgent	= Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent');
-                $userAgent      = substr($userAgent, 0, 253);
+		$newExp = time() + $this->max_lifetime;
+		$lastaccessed = date("Y-m-d H:i:s");
+		$userAgent	= substr(Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent'), 0, 253);
 		$remoteAddr	= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
 		
-		$result = $db->query(sprintf("SELECT session_id FROM session WHERE session_id = '%s'", $db->escape_string($key)));
-		
-		if ($db->num_rows($result) == 0) 
-		{
-			//INSERT
-			$SQL = "INSERT INTO session (session_id, session_data, session_expiration, LastAccessed, LastPage, userID, IsExpired, UserAgent, RemoteAddr) 
-					VALUES ('%s', '%s', %d, '%s', 'login', NULL, 0, '%s', '%s')";
-					
-			$SQL = sprintf($SQL, $db->escape_string($key), $db->escape_string($val), $newExp, $db->escape_string($lastaccessed), $db->escape_string($userAgent), $db->escape_string($remoteAddr));
-		}
-		else 
-		{
-			// UPDATE
-                        //
-                        // Punch a very small hole in the authentication system
-			// we do not want to update the expiry time of a session if it is the Clock Timer going off
-			$page	= Kit::GetParam('p', _REQUEST, _WORD);
-			$query	= Kit::GetParam('q', _REQUEST, _WORD);
-
-			if ($page == 'clock' && $query == 'GetClock') return true;
-			if ($page == 'index' && $query == 'PingPong') return true;
-
-			$SQL = "UPDATE session SET ";
-			$SQL .= " session_data = '%s', ";
-			$SQL .= " session_expiration = %d, ";
-			$SQL .= " lastaccessed 	= '%s', ";
-			$SQL .= " RemoteAddr 	= '%s' ";
-			$SQL .= " WHERE session_id = '%s'";
+		try {
+			$dbh = PDOConnect::init();
 			
-			$SQL = sprintf($SQL, $db->escape_string($val), $newExp, $db->escape_string($lastaccessed), $db->escape_string($remoteAddr), $db->escape_string($key));
+			$sth = $dbh->prepare('SELECT session_id FROM session WHERE session_id = :session_id');
+			$sth->execute(array('session_id' => $key));
+
+			if (!$row = $sth->fetch()) {
+				// Insert a new session
+				$SQL  = 'INSERT INTO session (session_id, session_data, session_expiration, lastaccessed, lastpage, userid, isexpired, useragent, remoteaddr) ';
+				$SQL .= ' VALUES (:session_id, :session_data, :session_expiration, :lastaccessed, :lastpage, :userid, :isexpired, :useragent, :remoteaddr) ';
+
+				$isth = $dbh->prepare($SQL);
+
+				$isth->execute(
+						array(
+							'session_id' => $key,
+							'session_data' => $val,
+							'session_expiration' => $newExp,
+							'lastaccessed' => $lastaccessed,
+							'lastpage' => 'login',
+							'userid' => NULL,
+							'isexpired' => 0,
+							'useragent' => $userAgent,
+							'remoteaddr' => $remoteAddr
+						)
+					);
+			}
+			else {
+				// Punch a very small hole in the authentication system
+				// we do not want to update the expiry time of a session if it is the Clock Timer going off
+				$page = Kit::GetParam('p', _REQUEST, _WORD);
+				$query = Kit::GetParam('q', _REQUEST, _WORD);
+
+				if (($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong') || ($page == 'layout' && $query == 'LayoutStatus')) {
+
+					// Update the existing session without the expiry
+					$SQL  = "UPDATE session SET session_data = :session_data WHERE session_id = :session_id ";
+
+					$isth = $dbh->prepare($SQL);
+
+					$isth->execute(
+							array('session_id' => $key, 'session_data' => $val)
+						);
+				}
+				else {
+					// Update the existing session
+					$SQL  = "UPDATE session SET ";
+					$SQL .= " 	session_data = :session_data, ";
+					$SQL .= " 	session_expiration = :session_expiration, ";
+					$SQL .= " 	lastaccessed 	= :lastaccessed, ";
+					$SQL .= " 	remoteaddr 	= :remoteaddr ";
+					$SQL .= " WHERE session_id = :session_id ";
+
+					$isth = $dbh->prepare($SQL);
+
+					$isth->execute(
+							array(
+								'session_id' => $key,
+								'session_data' => $val,
+								'session_expiration' => $newExp,
+								'lastaccessed' => $lastaccessed,
+								'remoteaddr' => $remoteAddr
+							)
+						);
+				}
+			}
 		}
-		
-		if(!$db->query($SQL)) 
-		{
-			Debug::LogEntry($db, "error", $db->error());
-			return(false);
+		catch (Exception $e) {
+			Debug::LogEntry('error', $e->getMessage());
+			return false;
 		}
 		
 		return true;
@@ -186,99 +205,123 @@ class Session
 
 	function destroy($key) 
 	{
-		$db =& $this->db;
-		
-		$SQL = sprintf("UPDATE session SET IsExpired = 1 WHERE session_id = '%s'", $db->escape_string($key));
-		
-		$result = $db->query("$SQL"); 
-		
-		if (!$result) Debug::LogEntry($db,'audit',$db->error());
-		
-		return $result;
+		try {
+			$dbh = PDOConnect::init();
+
+			$sth->prepare('UPDATE session SET IsExpired = 1 WHERE session_id = :session_id');
+			$sth->execute(array('session_id', $key));
+		}
+		catch (Exception $e) {
+			Debug::LogEntry('error', $e->getMessage());
+		}
+
+		return true;
 	}
 
 	function gc($max_lifetime)
 	{
-            $db =& $this->db;
+		try {
+			$dbh = PDOConnect::init();
 
-            // Delete sessions older than 10 times the max lifetime
-            $SQL = sprintf("DELETE FROM session WHERE IsExpired = 1 AND session_expiration < %d", time() - ($max_lifetime * 10));
-            $db->query($SQL);
+			// Delete sessions older than 10 times the max lifetime
+			$sth = $dbh->prepare('DELETE FROM session WHERE IsExpired = 1 AND session_expiration < :expiration');
+			$sth->execute(array('expiration' => (time() - ($max_lifetime * 10))));
 
-            return $db->query(sprintf("UPDATE session SET IsExpired = 1 WHERE session_expiration < %d", time()));
+			// Update expired sessions as expired
+			$sth = $dbh->prepare('UPDATE session SET IsExpired = 1 WHERE session_expiration < :expiration');
+			$sth->execute(array('expiration' => time()));
+		}
+		catch (Exception $e) {
+			Debug::LogEntry('error', $e->getMessage());
+		}
 	}
 	
 	function set_user($key, $userid) 
 	{
-		$db =& $this->db;
-		
-		$SQL = sprintf("UPDATE session SET userID = %d WHERE session_id = '%s' ",$userid, $db->escape_string($key));
-		
-		if(!$db->query($SQL)) 
-		{
-			trigger_error($db->error(), E_USER_NOTICE);
-			return(false);
+		try {
+			$dbh = PDOConnect::init();
+
+			// Delete sessions older than 10 times the max lifetime
+			$sth = $dbh->prepare('UPDATE session SET userid = :userid WHERE session_id = :session_id');
+			$sth->execute(array('session_id' => $key, 'userid' => $userid));
 		}
-		return true;
+		catch (Exception $e) {
+			Debug::LogEntry('error', $e->getMessage());
+			return false;
+		}
 	}
 	
 	/**
 	 * Updates the session ID with a new one
 	 * @return 
 	 */
-	public function RegenerateSessionID($oldSessionID)
-        {
-            $db =& $this->db;
+	public function RegenerateSessionID($oldSessionID) {
 
-            session_regenerate_id(false);
+        session_regenerate_id(false);
 
-            $new_sess_id = session_id();
+        $new_sess_id = session_id();
 
-            $this->key = $new_sess_id;
+        $this->key = $new_sess_id;
 
-            $query = sprintf("UPDATE session SET session_id = '%s' WHERE session_id = '%s'", $db->escape_string($new_sess_id), $db->escape_string($oldSessionID));
-            $db->query($query);
-        }
+        try {
+			$dbh = PDOConnect::init();
+
+			// Delete sessions older than 10 times the max lifetime
+			$sth = $dbh->prepare('UPDATE session SET session_id = :new_session_id WHERE session_id = :session_id');
+			$sth->execute(array('session_id' => $oldSessionID, 'new_session_id' => $new_sess_id));
+		}
+		catch (Exception $e) {
+			Debug::LogEntry('error', $e->getMessage());
+			return false;
+		}
+    }
 	
-	function set_page($key, $lastpage) 
-	{
-		$db =& $this->db;
-		
+	function set_page($key, $lastpage) {
 		$_SESSION['pagename'] = $lastpage;
 		
-		$SQL = sprintf("UPDATE session SET LastPage = '%s' WHERE session_id = '%s' ", $db->escape_string($lastpage), $db->escape_string($key));
-		
-		if(!$db->query($SQL)) 
-		{
-			trigger_error($db->error(), E_USER_NOTICE);
-			return(false);
+		try {
+			$dbh = PDOConnect::init();
+
+			// Delete sessions older than 10 times the max lifetime
+			$sth = $dbh->prepare('UPDATE session SET lastpage = :lastpage WHERE session_id = :session_id');
+			$sth->execute(array('session_id' => $key, 'lastpage' => $lastpage));
 		}
-		return true;
+		catch (Exception $e) {
+			Debug::LogEntry('error', $e->getMessage());
+			return false;
+		}
 	}
 	
-	function setIsExpired($isExpired)
-	{
-		$db =& $this->db;
-
+	function setIsExpired($isExpired) {
 		$this->isExpired = $isExpired;
-		
-		$SQL = sprintf("UPDATE session SET IsExpired = $this->isExpired WHERE session_id = '%s'", $db->escape_string($this->key));
-		
-		if (!$db->query($SQL))
-		{
-			Debug::LogEntry($db, "error", $db->error());
+
+		try {
+			$dbh = PDOConnect::init();
+
+			// Delete sessions older than 10 times the max lifetime
+			$sth = $dbh->prepare('UPDATE session SET isexpired = :isexpired WHERE session_id = :session_id');
+			$sth->execute(array('session_id' => $this->key, 'isexpired' => $isExpired));
+		}
+		catch (Exception $e) {
+			Debug::LogEntry('error', $e->getMessage());
+			return false;
 		}
 	}
 	
 	public function setSecurityToken($token)
 	{
-		$db =& $this->db;
-		
-		$SQL = sprintf("UPDATE session SET securityToken = '%s' WHERE session_id = '%s'", $db->escape_string($token), $db->escape_string($this->key));
-		
-		if (!$db->query($SQL))
-		{
-			Debug::LogEntry($db, "error", $db->error());
+		try {
+			$dbh = PDOConnect::init();
+
+			// Delete sessions older than 10 times the max lifetime
+			$sth = $dbh->prepare('UPDATE session SET securitytoken = :securitytoken WHERE session_id = :session_id');
+			$sth->execute(array('session_id' => $this->key, 'securitytoken' => $token));
+
+			return true;
+		}
+		catch (Exception $e) {
+			Debug::LogEntry('error', $e->getMessage());
+			return false;
 		}
 	}
 	

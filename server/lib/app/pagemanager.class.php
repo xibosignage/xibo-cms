@@ -135,6 +135,9 @@ class PageManager
 			
 			Theme::Render('footer');
         }
+
+        // Clear the session message
+        $_SESSION['message'] = '';
     }
 }
 ?>

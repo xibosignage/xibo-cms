@@ -58,8 +58,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         </div>
         <div class="control-group">
             <div class="controls">
-                <input class="" name="transparency" type="checkbox" id="transparency" tabindex="6" <?php echo Theme::Get('transparency_checked'); ?> />
-        		<label class="checkbox" for="transparency" accesskey="n" title="<?php echo Theme::Translate('Background transparent? (python only)'); ?>"><?php echo Theme::Translate('Background transparent? (python only)'); ?></label>
+                <label class="checkbox" for="transparency" accesskey="n" title="<?php echo Theme::Translate('Background transparent?'); ?>"><?php echo Theme::Translate('Background transparent?'); ?>
+                    <input class="" name="transparency" type="checkbox" id="transparency" tabindex="6" <?php echo Theme::Get('transparency_checked'); ?> />
+        		</label>
             </div>
         </div>
     </div>

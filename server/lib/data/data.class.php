@@ -86,10 +86,15 @@ class Data
 		$this->errorNo 		= $errNo;
 		$this->errorMessage	= $errMessage;
 		
-		Debug::LogEntry($this->db, 'audit', sprintf('Data Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Data Module', 'SetError');
+		Debug::LogEntry('audit', sprintf('Data Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Data Module', 'SetError');
 
         // Return false so that we can use this method as the return call for parent methods
 		return false;
+	}
+
+	protected function ThrowError($errNo, $errMessage = '') {
+		$this->SetError($errNo, $errMessage);
+		throw new Exception(sprintf('Data Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage));
 	}
 } 
 ?>

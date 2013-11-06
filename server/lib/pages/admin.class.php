@@ -49,6 +49,10 @@ class adminDAO
 	{
 		$db =& $this->db;
 
+		// Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+
 		$refer 		= Kit::GetParam('refer', _POST, _STRING);
 		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT);
 		
@@ -129,7 +133,7 @@ class adminDAO
 		$helpButton 	= $helpObject->HelpButton("content/config/settings", true);
 		
 		//one giant form, split into tabs
-		$form = '<form id="SettingsForm" method="post" class="XiboForm" action="index.php?p=admin&q=modify">';
+		$form = '<form id="SettingsForm" method="post" class="XiboForm" action="index.php?p=admin&q=modify">' . Kit::Token();
 		$tabs = '';
 		$pages = '';
 		
@@ -247,7 +251,7 @@ END;
 
                 if ($cat == 'content')
                 {
-                    $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+                    $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
 
                     // Library Size in Bytes
                     $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
@@ -256,13 +260,13 @@ END;
                     $output .= '<p>' . sprintf(__('You have %s of media in the library.'), $this->FormatByteSize($fileSize)) . (($libraryLimit > 0) ? sprintf(__(' This is %d %% of your %s limit.'), $limitPcnt, $this->FormatByteSize($libraryLimit * 1024)) : '') . '</p>';
                 
                     // Monthly bandwitdh - optionally tested against limits
-                    $xmdsLimit = Config::GetSetting($db, 'MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+                    $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
                     $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
 
                     $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = %d', $startOfMonth);
                     $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
 
-                    Debug::LogEntry($db, 'audit', $sql);
+                    Debug::LogEntry('audit', $sql);
                     
                     $usagePcnt = ($xmdsLimit > 0) ? (($bandwidthUsage / ($xmdsLimit * 1024)) * 100) : '';
                     
@@ -312,7 +316,7 @@ END;
 			
 		// Drop downs
 		$SQL = "";
-		$SQL.= sprintf("SELECT settingid, setting, value, helptext, options FROM setting WHERE type = 'dropdown' AND cat='%s' AND userChange = 1", $cat);
+		$SQL.= sprintf("SELECT settingid, setting, value, helptext, options FROM setting WHERE type = 'dropdown' AND cat='%s' AND userChange = 1", $db->escape_string($cat));
 
 		if (!$results = $db->query($SQL))
 		{
@@ -383,10 +387,6 @@ END;
 				$i++;
 			}
 			
-			// Add UTC to the list of options as a last resort option.
-			$zonen[$i]['continent'] = "General";
-			$zonen[$i]['city'] = "UTC";
-
 			// Sort them
 			asort($zonen);
 			
@@ -562,8 +562,8 @@ END;
     {
         $db				=& $this->db;
         $response		= new ResponseManager();
-        $mail_to        = Kit::ValidateParam(Config::GetSetting($db, "mail_to"),_PASSWORD);
-        $mail_from      = Kit::ValidateParam(Config::GetSetting($db, "mail_from"),_PASSWORD);
+        $mail_to        = Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
+        $mail_from      = Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);
         $subject        = __('Email Test');
         $body           = __('Test email sent');
         $headers        = sprintf("From: %s",$mail_from);
@@ -681,7 +681,7 @@ FORM;
         if (isset($_FILES['dumpFile']) && is_uploaded_file($_FILES['dumpFile']['tmp_name']) && $_FILES['dumpFile']['error'] == 0)
         {
             echo 'Restoring Database</br>';
-            Debug::LogEntry($db, 'audit', 'Valid Upload', 'Backup', 'RestoreDatabase');
+            Debug::LogEntry('audit', 'Valid Upload', 'Backup', 'RestoreDatabase');
 
             // Directory location
             $fileName = Kit::ValidateParam($_FILES['dumpFile']['tmp_name'], _STRING);
@@ -689,7 +689,7 @@ FORM;
             if (is_uploaded_file($fileName))
             {
                 // Move the uploaded file to a temporary location in the library
-                $destination = tempnam(Config::GetSetting($this->db, 'LIBRARY_LOCATION'), 'dmp');
+                $destination = tempnam(Config::GetSetting('LIBRARY_LOCATION'), 'dmp');
                 move_uploaded_file($fileName, $destination);
                 
                 Kit::ClassLoader('maintenance');
@@ -744,10 +744,10 @@ FORM;
         $response = new ResponseManager();
 
         // Also run a script to tidy up orphaned media in the library
-        $library = Config::GetSetting($db, 'LIBRARY_LOCATION');
+        $library = Config::GetSetting('LIBRARY_LOCATION');
 	    $library = rtrim($library, '/') . '/';
 
-        Debug::LogEntry($db, 'audit', 'Library Location: ' . $library);
+        Debug::LogEntry('audit', 'Library Location: ' . $library);
 
         // Dump the files in the temp folder
         foreach (scandir($library . 'temp') as $item)
@@ -755,7 +755,7 @@ FORM;
             if ($item == '.' || $item == '..')
                 continue;
 
-            Debug::LogEntry($db, 'audit', 'Deleting temp file: ' . $item);
+            Debug::LogEntry('audit', 'Deleting temp file: ' . $item);
 
             unlink($library . 'temp' . DIRECTORY_SEPARATOR . $item);
         }
@@ -763,7 +763,7 @@ FORM;
         // Get a list of all media files
         foreach(scandir($library) as $file)
         {
-            Debug::LogEntry($db, 'audit', 'Checking file: ' . $file);
+            Debug::LogEntry('audit', 'Checking file: ' . $file);
 
             if ($file == '.' || $file == '..')
                 continue;
@@ -773,12 +773,12 @@ FORM;
 
             $rowCount = $db->GetCountOfRows("SELECT * FROM media WHERE storedAs = '" . $file . "'");
 
-            Debug::LogEntry($db, 'audit', 'Media count for file: ' . $file . ' is ' . $rowCount);
+            Debug::LogEntry('audit', 'Media count for file: ' . $file . ' is ' . $rowCount);
             
             // For each media file, check to see if the file still exists in the library
             if ($rowCount == 0)
             {
-                Debug::LogEntry($db, 'audit', 'Deleting file: ' . $file);
+                Debug::LogEntry('audit', 'Deleting file: ' . $file);
 
                 // If not, delete it
                 unlink($library . $file);

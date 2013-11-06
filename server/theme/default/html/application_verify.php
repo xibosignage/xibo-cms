@@ -33,5 +33,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     <strong>Application Site</strong>: <?php echo Theme::Get('application_uri'); ?>
 </p>
 <form method="post">
+	<?php echo Theme::Get('form_meta'); ?>
     <input type="submit" name="Allow" value="Allow">
 </form>

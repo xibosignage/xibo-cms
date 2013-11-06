@@ -57,7 +57,7 @@ class layoutDAO
             if ($this->layoutid != '')
             {
                 // get the permissions
-                Debug::LogEntry($db, 'audit', 'Loading permissions for layoutid ' . $this->layoutid);
+                Debug::LogEntry('audit', 'Loading permissions for layoutid ' . $this->layoutid);
 
                 $this->auth = $user->LayoutAuth($this->layoutid, true);
 
@@ -165,6 +165,10 @@ class layoutDAO
 	 */
 	function add() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db             =& $this->db;
         $response       = new ResponseManager();
 
@@ -192,6 +196,10 @@ class layoutDAO
 	 */
 	function modify ()
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db 			=& $this->db;
 		$response		= new ResponseManager();
 
@@ -266,6 +274,10 @@ class layoutDAO
 	 */
 	function delete() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
         $layoutId = Kit::GetParam('layoutid', _POST, _INT, 0);
@@ -288,6 +300,10 @@ class layoutDAO
 	 */
 	function retire() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db =& $this->db;
         $response = new ResponseManager();
         $layoutId = Kit::GetParam('layoutid', _POST, _INT, 0);
@@ -351,6 +367,26 @@ class layoutDAO
     		$row['description'] = $layout['description'];
     		$row['owner'] = $user->getNameFromID($layout['ownerid']);
     		$row['permissions'] = $this->GroupsForLayout($layout['layoutid']);
+
+    		switch ($layout['status']) {
+
+				case 1:
+					$row['status'] = '<span title="' . __('This Layout is ready to play') . '" class="icon-ok-circle"></span>';
+					break;
+
+				case 2:
+					$row['status'] = '<span title="' . __('There are items on this Layout that can only be assessed by the client') . '" class="icon-question-sign"></span>';
+					break;
+
+				case 3:
+					$row['status'] = '<span title="' . __('This Layout is invalid and should not be scheduled') . '" class="icon-remove-sign"></span>';
+					break;
+
+				default:
+					$row['status'] = '<span title="' . __('The Status of this Layout is not known') . '" class="icon-warning-sign"></span>';
+    		}
+
+    		
     		$row['layout_form_edit_url'] = 'index.php?p=layout&q=displayForm&layoutid=' . $layout['layoutid'];
 
     		// Add some buttons for this row
@@ -562,6 +598,10 @@ class layoutDAO
 	 */
 	function EditBackground()
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db 			=& $this->db;
 		$user 			=& $this->user;
 		$response		= new ResponseManager();
@@ -630,7 +670,7 @@ class layoutDAO
 		$bgColor = $xml->documentElement->getAttribute('bgcolor');
 
 		// Library location
-		$libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
+		$libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
 		
 		// Fix up the background css
 		if ($bgImage == '')
@@ -737,7 +777,7 @@ HTML;
         $layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
         $oldLayout = Kit::GetParam('oldlayout', _REQUEST, _STRING);
 
-        $copyMediaChecked = (Config::GetSetting($db, 'LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 'checked' : '';
+        $copyMediaChecked = (Config::GetSetting('LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 'checked' : '';
 
         Theme::Set('form_id', 'LayoutCopyForm');
         Theme::Set('form_action', 'index.php?p=layout&q=Copy');
@@ -759,6 +799,10 @@ HTML;
      */
     public function Copy()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
@@ -890,6 +934,40 @@ HTML;
 
         $response->SetGridResponse($output);
         $response->Respond();
+    }
+
+    public function LayoutStatus() {
+
+    	$db =& $this->db;
+    	$response = new ResponseManager();
+    	$layoutId = Kit::GetParam('layoutId', _GET, _INT);
+
+    	Kit::ClassLoader('Layout');
+    	$layout = new Layout($db);
+
+    	$status = "";
+
+    	switch ($layout->IsValid($layoutId)) {
+
+			case 1:
+				$status = '<span title="' . __('This Layout is ready to play') . '" class="icon-ok-circle"></span>';
+				break;
+
+			case 2:
+				$status = '<span title="' . __('There are items on this Layout that can only be assessed by the client') . '" class="icon-question-sign"></span>';
+				break;
+
+			case 3:
+				$status = '<span title="' . __('This Layout is invalid and should not be scheduled') . '" class="icon-remove-sign"></span>';
+				break;
+
+			default:
+				$status = '<span title="' . __('The Status of this Layout is not known') . '" class="icon-warning-sign"></span>';
+		}
+
+		$response->html = $status;
+		$response->success = true;
+		$response->Respond();
     }
 }
 ?>

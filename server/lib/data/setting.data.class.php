@@ -24,19 +24,26 @@ class Setting extends Data
 {
 	public function Edit($setting, $value)
 	{
-		$db =& $this->db;
+		try {
+		    $dbh = PDOConnect::init();
 		
-		$SQL = sprintf("UPDATE setting SET value = '%s' WHERE setting = '%s' ", $db->escape_string($value), $db->escape_string($setting));
-
-		if(!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25000, __('Update of settings failed'));
+		    $sth = $dbh->prepare('UPDATE setting SET value = :value WHERE setting = :setting');
+		    $sth->execute(array(
+		            'setting' => $setting,
+		            'value' => $value
+		        ));
 			
-			return false;
+			return true;  
 		}
+		catch (Exception $e) {
+		    
+		    Debug::LogEntry('error', $e->getMessage());
 		
-		return true;
+		    if (!$this->IsError())
+		        $this->SetError(25000, __('Update of settings failed'));
+		
+		    return false;
+		}
 	}
 }
 ?>

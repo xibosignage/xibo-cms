@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2013 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -22,16 +22,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
  
 class Config 
 {
-	private $db;
 	private $extensions;
 	private $envTested;
 	private $envFault;
 	private $envWarning;
 	
-	public function __construct(database $db)
+	public function __construct()
 	{
-		$this->db			=& $db;
-		
 		// Populate an array of loaded extensions just in case we need it for something.
 		$this->extensions 	= get_loaded_extensions();
 		
@@ -55,63 +52,65 @@ class Config
 	/**
 	 * Gets the requested setting from the DB object given
 	 * @return 
-	 * @param $db Object
 	 * @param $setting Object[optional]
 	 */
-	static function GetSetting(database $db, $setting = "") 
-	{		
-		$SQL = "";
-		$SQL.= sprintf("SELECT value FROM setting WHERE setting='%s'", $setting);
-		
-		if(!$results = $db->query($SQL, true))
-		{
-			trigger_error($db->error());
-			trigger_error('Unable to get setting: ' . $setting, E_USER_WARNING);			
-		} 
-		
-		if($db->num_rows($results)==0) 
-		{
-			return false;
+	static function GetSetting($setting) 
+	{	
+		try {
+			$dbh = PDOConnect::init();
+			
+			$sth = $dbh->prepare('SELECT value FROM setting WHERE setting = :setting');
+			$sth->execute(array('setting' => $setting));
+
+			if (!$result = $sth->fetch())
+				return false;
+
+			//Debug::LogEntry('audit', 'Retrieved setting ' . $result['value'] . ' for ' . $setting, 'Config', 'GetSetting');
+
+			// Validate as a string and return
+			return Kit::ValidateParam($result['value'], _STRING);
 		}
-		else 
-		{
-			$row = $db->get_row($results);
-			return $row[0];
+		catch (Exception $e) {
+			trigger_error($e->getMessage());
+			return false;
 		}
 	}
 	
 	/**
 	 * Defines the Version and returns it
 	 * @return 
-	 * @param $db Object
 	 * @param $object String [optional]
 	 */
-	static function Version(database $db, $object = '') 
+	static function Version($object = '')
 	{
-		if (!$results = $db->query("SELECT app_ver, XlfVersion, XmdsVersion, DBVersion FROM version")) 
-		{
-			trigger_error("No Version information - please contact technical support", E_USER_WARNING);
-		}
-		
-		$row 		= $db->get_assoc_row($results);
-		
-		$appVer     = Kit::ValidateParam($row['app_ver'], _STRING);
-		$xlfVer     = Kit::ValidateParam($row['XlfVersion'], _INT);
-		$xmdsVer    = Kit::ValidateParam($row['XmdsVersion'], _INT);
-		$dbVer      = Kit::ValidateParam($row['DBVersion'], _INT);
-	
-		if (!defined('VERSION')) 
-                    define('VERSION', $appVer);
+		try {
+			$dbh = PDOConnect::init();
+			$sth = $dbh->prepare('SELECT app_ver, XlfVersion, XmdsVersion, DBVersion FROM version');
+			$sth->execute();
 
-		if (!defined('DBVERSION')) 
-                    define('DBVERSION', $dbVer);
+			if (!$row = $sth->fetch())
+				throw new Exception('No results returned');
+
+			$appVer = Kit::ValidateParam($row['app_ver'], _STRING);
+			$xlfVer = Kit::ValidateParam($row['XlfVersion'], _INT);
+			$xmdsVer = Kit::ValidateParam($row['XmdsVersion'], _INT);
+			$dbVer = Kit::ValidateParam($row['DBVersion'], _INT);
+	
+			if (!defined('VERSION')) 
+				define('VERSION', $appVer);
+
+			if (!defined('DBVERSION')) 
+		        define('DBVERSION', $dbVer);
 		
-		if ($object != '')
-		{
-			return Kit::GetParam($object, $row, _STRING, '');
+			if ($object != '')
+				return Kit::GetParam($object, $row, _STRING);
+		
+			return $row;
 		}
-		
-		return $row;
+		catch (Exception $e) {
+			trigger_error($e->getMessage());
+			trigger_error(__('No Version information - please contact technical support'), E_USER_WARNING);
+		}
 	}
 	
 	/**
@@ -120,8 +119,6 @@ class Config
 	 */
 	public function CheckEnvironment()
 	{
-		$db 	 =& $this->db;
-		
 		$output  = '';
 		$imgGood = '<img src="install/dot_green.gif"> ';
 		$imgBad  = '<img src="install/dot_red.gif"> ';
@@ -179,7 +176,7 @@ END;
 		}
 		
 		// Check for MySQL
-		$message = __('MySQL database required. Ensure PHP MySQL client extension is installed');
+		$message = __('MySQL database (PHP MySql and PDO MySql)');
 
 		if ($this->CheckMySQL()) 
 		{
@@ -462,7 +459,7 @@ END;
 	 */
 	function CheckMySQL() 
 	{
-		return extension_loaded("mysql");
+		return extension_loaded("pdo_mysql") && extension_loaded("mysql");
 	}
 	
 	/**
@@ -569,21 +566,16 @@ END;
 		
 		$minSize = $this->return_bytes('128M');
 		
-		if ($this->return_bytes(ini_get('post_max_size') < $minSize))
-		{
+		if ($this->return_bytes(ini_get('post_max_size')) < $minSize)
 			return false;
-	        }
 	        
-	        if ($this->return_bytes(ini_get('upload_max_filesize') < $minSize))
-	        {
-	        	return false;
-		}
+        if ($this->return_bytes(ini_get('upload_max_filesize')) < $minSize)
+        	return false;
 		
 		if (ini_get('max_execution_time') < 120)
-		{
 			return false;
-		}
 		
+		// All passed
 		return true;
 	}
 

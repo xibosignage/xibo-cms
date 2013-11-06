@@ -80,6 +80,18 @@ class ResponseManager
         $this->modal = false;
         $this->extra = array();
         $this->dialogClass = '';
+
+        // Start a DB transaction for all returns from the Web Portal
+        try {
+            $dbh = PDOConnect::init();
+
+            if (!$dbh->inTransaction())
+            	$dbh->beginTransaction();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            trigger_error(__('Unable to open connection and start transaction'), E_USER_ERROR);
+        }
 		
 		return true;
 	}
@@ -89,10 +101,6 @@ class ResponseManager
 	 */	
 	function Login() 
 	{
-		Theme::Set('form_id', 'XiboLoginForm');
-		Theme::Set('form_action', 'index.php?q=login');
-
-		$this->message	= Theme::RenderReturn('login_form');
 		$this->login	= true;
 		$this->success	= false;
 	}
@@ -223,7 +231,22 @@ class ResponseManager
 	 * @return 
 	 */
 	public function Respond()
-	{	
+	{
+		// Roll back any open transactions if we are in an error state
+		try {
+			$dbh = PDOConnect::init();
+			
+			if (!$this->success) {
+				$dbh->rollBack();
+			}
+			else {
+				$dbh->commit();
+			}
+		}
+		catch (Exception $e) {
+			Debug::LogEntry('audit', 'Unable to commit/rollBack');
+        }
+
 		if ($this->ajax)
 		{
 			// Construct the Response
@@ -277,7 +300,7 @@ class ResponseManager
 
             // Log the response if we are auditing
             //global $db;
-            //Debug::LogEntry($db, 'audit', json_encode($response), 'Response Manager', 'Respond');
+            //Debug::LogEntry('audit', json_encode($response), 'Response Manager', 'Respond');
 			
 			echo json_encode($response);
 			

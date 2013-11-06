@@ -53,7 +53,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<div class="span5">
 		<h4><?php echo Theme::Translate('Layout Design'); ?> - <?php echo Theme::Get('layout'); ?></h4>
 	</div>
-	<div class="span6 layout-meta">
+	<div class="span1 layout-status">
+	</div>
+	<div class="span5 layout-meta">
 	</div>
 </div>
 <div class="row">

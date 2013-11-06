@@ -97,7 +97,7 @@ SQL;
 
             $SQL = sprintf($SQL, $displayid);
 
-            Debug::LogEntry($db, 'audit', $SQL);
+            Debug::LogEntry('audit', $SQL);
 
             if(!$results = $db->query($SQL))
             {
@@ -160,6 +160,10 @@ SQL;
      */
     function modify()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db             =& $this->db;
         $response       = new ResponseManager();
 
@@ -285,8 +289,8 @@ SQL;
         }
 
         // Do we want to make a VNC link out of the display name?
-        $vncTemplate = Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNCLINK');
-        $linkTarget = Kit::ValidateParam(Config::GetSetting($db, 'SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
+        $vncTemplate = Config::GetSetting('SHOW_DISPLAY_AS_VNCLINK');
+        $linkTarget = Kit::ValidateParam(Config::GetSetting('SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
         
         $rows = array();
 
@@ -397,7 +401,7 @@ SQL;
         $db =& $this->db;
 
         // Get the global timeout (overrides the alert timeout on the display if 0
-        $globalTimeout = Config::GetSetting($db, 'MAINTENANCE_ALERT_TOUT');
+        $globalTimeout = Config::GetSetting('MAINTENANCE_ALERT_TOUT');
 
         // Get a list of all displays and there last accessed / alert timeout value
         $SQL  = "";
@@ -428,7 +432,7 @@ SQL;
                 if ((!$db->query($SQL)))
                     trigger_error($db->error());
 
-                Debug::LogEntry($db, 'audit', sprintf('LastAccessed = %d, Timeout = %d for displayId %d', $lastAccessed, $timeoutToTestAgainst, $displayid));
+                Debug::LogEntry('audit', sprintf('LastAccessed = %d, Timeout = %d for displayId %d', $lastAccessed, $timeoutToTestAgainst, $displayid));
             }
         }
     }
@@ -466,6 +470,10 @@ SQL;
      */
     function Delete()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
         $displayid = Kit::GetParam('displayid', _POST, _INT, 0);
@@ -526,6 +534,10 @@ SQL;
      */
     public function DefaultLayout()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
         $displayObject  = new Display($db);
@@ -684,7 +696,7 @@ SQL;
         $SQL .= "       )";
         $SQL .= " ORDER BY displaygroup.DisplayGroup ";
 
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
 
         $displaygroups_available = $db->GetArray($SQL);
 
@@ -806,6 +818,10 @@ SQL;
      */
     public function WakeOnLan()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
         $displayObject  = new Display($db);

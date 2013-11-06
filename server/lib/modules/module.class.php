@@ -104,7 +104,7 @@ class Module implements ModuleInterface
         if (!$this->SetModuleInformation())
         	return false;
 
-        Debug::LogEntry($db, 'audit', 'Module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
+        Debug::LogEntry('audit', 'Module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 
         // Either the information from the region - or some blanks
         if (!$this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid))
@@ -167,7 +167,7 @@ class Module implements ModuleInterface
             // Set the layout Xml
             $layoutXml = $region->GetLayoutXml($layoutid);
 
-            //Debug::LogEntry($db, 'audit', 'Layout XML retrieved: ' . $layoutXml);
+            //Debug::LogEntry('audit', 'Layout XML retrieved: ' . $layoutXml);
 
             $layoutDoc = new DOMDocument();
             $layoutDoc->loadXML($layoutXml);
@@ -210,7 +210,7 @@ class Module implements ModuleInterface
             $mediaNode = $xmlDoc->importNode($mediaNode, true);
             $xmlDoc->documentElement->appendChild($mediaNode);
 
-            Debug::LogEntry($db, 'audit', 'Existing Assigned Media XML is: \n ' . $xmlDoc->saveXML(), 'module', 'SetMediaInformation');
+            Debug::LogEntry('audit', 'Existing Assigned Media XML is: \n ' . $xmlDoc->saveXML(), 'module', 'SetMediaInformation');
         }
         else
         {
@@ -225,7 +225,7 @@ class Module implements ModuleInterface
                 // Load what we know about this media into the object
                 $SQL = "SELECT duration, name, UserId FROM media WHERE mediaID = '$mediaid'";
 
-                Debug::LogEntry($db, 'audit', $SQL, 'Module', 'SetMediaInformation');
+                Debug::LogEntry('audit', $SQL, 'Module', 'SetMediaInformation');
 
                 if (!$result = $db->query($SQL))
                 {
@@ -318,7 +318,7 @@ XML;
 		if ($name == '') 
 			return;
 
-		Debug::LogEntry($db, 'audit', sprintf('IN with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
+		Debug::LogEntry('audit', sprintf('IN with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
 
 		// Get the options node from this document
 		$optionNodes = $this->xml->getElementsByTagName('options');
@@ -328,7 +328,7 @@ XML;
 		// Create a new option node
 		$newNode = $this->xml->createElement($name, $value);
 
-		Debug::LogEntry($db, 'audit', sprintf('Created a new Option Node with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
+		Debug::LogEntry('audit', sprintf('Created a new Option Node with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
 
 		// Check to see if we already have this option or not
 		$xpath = new DOMXPath($this->xml);
@@ -370,13 +370,13 @@ XML;
 		if ($userOptions->length == 0)
 		{
 			// We do not have an option - return the default
-			Debug::LogEntry($db, 'audit', 'GetOption ' . $name . ': Not Set - returning default ' . $default);
+			Debug::LogEntry('audit', 'GetOption ' . $name . ': Not Set - returning default ' . $default);
 			return $default;
 		}
 		else
 		{
 			// Replace the old node we found with XPath with the new node we just created
-			Debug::LogEntry($db, 'audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue);
+			Debug::LogEntry('audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue);
 			return ($userOptions->item(0)->nodeValue != '') ? $userOptions->item(0)->nodeValue : $default;
 		}
 	}
@@ -432,7 +432,7 @@ XML;
 	 */
 	final public function UpdateRegion()
 	{
-            Debug::LogEntry($this->db, 'audit', 'Updating Region');
+            Debug::LogEntry('audit', 'Updating Region');
 
             // By this point we expect to have a MediaID, duration
             $layoutid = $this->layoutid;
@@ -465,7 +465,7 @@ XML;
                             }
                     }
             }
-            Debug::LogEntry($this->db, 'audit', 'Finished Updating Region');
+            Debug::LogEntry('audit', 'Finished Updating Region');
 
             return true;
 	}
@@ -574,6 +574,7 @@ END;
                     }
                     else
                     {
+                        $options .= ',unassign|' . __('Unassign from all Layouts');
                         $options .= ',retire|' . __('Retire this media');
                     }
                 }
@@ -663,8 +664,16 @@ END;
         {
             $options = Kit::GetParam('options', _POST, _WORD);
 
+            // Unassigning Media needs to remove it from all Layouts the user has permission for.
+            if ($options == 'unassign') {
+                if (!$this->UnassignFromAll($mediaid)) {
+                    $this->response->SetError($mediaObject->GetErrorMessage());
+                    $this->response->keepOpen = true;
+                    return $this->response;
+                }
+            }
             // If we are set to retire we retire
-			if ($options == 'retire')
+			else if ($options == 'retire')
 			{
 	            if (!$mediaObject->Retire($mediaid)) {
 	            	$this->response->SetError($mediaObject->GetErrorMessage());
@@ -672,9 +681,8 @@ END;
 					return $this->response;
 	            }
 			}
-
 			// If we are set to delete, we delete
-			if ($options == 'delete')
+			else if ($options == 'delete')
 			{
                 if (!$mediaObject->Delete($mediaid)) {
             		$this->response->SetError($mediaObject->GetErrorMessage());
@@ -683,7 +691,7 @@ END;
                 }
 			}
 
-            $this->response->message = __('Media Deleted');
+            $this->response->message = __('Completed Successfully');
         }
 
         // We want to load the region timeline form back again
@@ -715,6 +723,34 @@ END;
         return true;
 	}
 
+    /**
+     * Unassign from all Layouts
+     * @param [int] $mediaId [The MediaID to Unassign]
+     */
+    public function UnassignFromAll($mediaId) {
+
+        // Get a list of layouts with this media id on them that this user has permission for.
+        $layouts = $this->user->LayoutList('', 0, 0, '', $mediaId);
+
+        // Create a media object for each, and call delete
+        foreach ($layouts as $layout) {
+
+            Debug::LogEntry('audit', 'Unassigning MediaID ' . $mediaId . ' from Layout: ' . $layout['layout'], 'module', 'UnassignFromAll');
+
+            $mod = new $this->type($this->db, $this->user, $mediaId, $layout['layoutid'], $layout['regionid'], $layout['lklayoutmediaid']);
+
+            // Call to delete region media
+            if (!$mod->ApiDeleteRegionMedia($layout['layoutid'], $layout['regionid'], $mediaId)) {
+                $this->response->keepOpen = true;
+                $this->response->SetError($this->errorMessage);
+                return $this->response;
+            }
+        }
+
+        $this->response->message = __('Media unassigned from all Layouts');
+        return $this->response;
+    }
+
 	/**
 	 * Default AddForm
 	 * @return
@@ -739,7 +775,7 @@ END;
         $user =& $this->user;
 
         // Check we have room in the library
-        $libraryLimit = Config::GetSetting($db, 'LIBRARY_SIZE_LIMIT_KB');
+        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
 
         if ($libraryLimit > 0)
         {
@@ -761,15 +797,38 @@ END;
         $session->setSecurityToken($securityToken);
 
         //Get the default value for the shared list
-        $default = Config::GetSetting($db, 'defaultMedia');
-        $defaultDuration = Config::GetSetting($db, 'jpg_length');
+        $default = Config::GetSetting('defaultMedia');
+
+        switch ($this->type) {
+            case 'video':
+            case 'localvideo':
+                $defaultDuration = 0;
+                break;
+
+            case 'image':
+                $defaultDuration = Config::GetSetting('jpg_length');
+                break;
+
+            case 'flash':
+                $defaultDuration = Config::GetSetting('swf_length');
+                break;
+
+            case 'powerpoint':
+                $defaultDuration = Config::GetSetting('ppt_length');
+                break;
+
+            default:
+                $defaultDuration = '';
+        }
+        
 
         // Save button is different depending on if we are on a region or not
         if ($regionid != '' && $this->showRegionOptions)
         {
             setSession('content','mediatype', $this->type);
 
-            $this->response->AddButton(__('Library'), 'XiboSwapDialog("index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutid . '&regionid=' . $regionid . '")');
+            $this->response->AddButton(__('Assign to Layout'), 'XiboAssignToLayout(' . $layoutid . ',"' . $regionid . '")');
+            $this->response->AddButton(__('View Library'), 'XiboSwapDialog("index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutid . '&regionid=' . $regionid . '")');
             $this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
 		}
         elseif ($regionid != '' && !$this->showRegionOptions)
@@ -790,7 +849,7 @@ END;
 
         // Setup the theme
 		Theme::Set('form_upload_id', 'fileupload');
-        Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload');
+        Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload&type=' . $this->type);
 		Theme::Set('form_meta', '<input type="hidden" name="type" value="' . $this->type . '"><input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '">');
 		Theme::Set('form_valid_ext', '/(\.|\/)' . implode('|', $this->validExtensions) . '$/i');
 		Theme::Set('form_max_size', Kit::ReturnBytes($this->maxFileSize));
@@ -906,7 +965,7 @@ END;
 		Theme::Set('duration', $this->duration);
 		Theme::Set('is_duration_field_enabled', $durationFieldEnabled);
 		Theme::Set('valid_extensions', 'This form accepts: ' . $this->validExtensionsText . ' files up to a maximum size of ' . $this->maxFileSize);
-		Theme::Set('is_replace_field_checked', ((Config::GetSetting($db, 'LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 'checked' : ''));
+		Theme::Set('is_replace_field_checked', ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 'checked' : ''));
 
 		$form = Theme::RenderReturn('library_form_media_edit');
 
@@ -958,15 +1017,35 @@ END;
         	return $this->SetError($mediaObject->GetErrorMessage());
         }
 
-        Debug::LogEntry($db, 'audit', 'Returned MediaId: ' . $mediaid, 'module', 'AddLibraryMedia');
+        Debug::LogEntry('audit', 'Returned MediaId: ' . $mediaid, 'module', 'AddLibraryMedia');
 
         // Required Attributes
         $this->mediaid	= $mediaid;
         $this->duration = $duration;
 
-        // Find out what we stored this item as
-        $storedAs = $db->GetSingleValue(sprintf("SELECT StoredAs FROM `media` WHERE mediaid = %d", $mediaid), 'StoredAs', _STRING);
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT StoredAs FROM `media` WHERE mediaid = :mediaid');
+            $sth->execute(array(
+                    'mediaid' => $mediaid
+                ));
 
+            if (!$row = $sth->fetch())
+                return $this->SetError(__('Unable to get the storage name'));
+            
+            // Find out what we stored this item as
+            $storedAs = Kit::ValidateParam($row['StoredAs'], _STRING);          
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
         // Any Options
         $this->SetOption('uri', $storedAs);
 
@@ -1027,7 +1106,7 @@ END;
         // Revise this file?
         if ($tmpName != '') {
 
-        	Debug::LogEntry($db, 'audit', 'Uploading a new revision', 'module', 'EditLibraryMedia');
+        	Debug::LogEntry('audit', 'Uploading a new revision', 'module', 'EditLibraryMedia');
         	
             // File name and extension (orignial name)
             $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
@@ -1057,7 +1136,7 @@ END;
         	$storedAs = $db->GetSingleValue(sprintf("SELECT StoredAs FROM `media` WHERE mediaid = %d", $new_mediaid), 'StoredAs', _STRING);
         	$this->SetOption('uri', $storedAs);
 
-        	Debug::LogEntry($db, 'audit', 'New revision uploaded: ' . $storedAs, 'module', 'EditLibraryMedia');
+        	Debug::LogEntry('audit', 'New revision uploaded: ' . $storedAs, 'module', 'EditLibraryMedia');
         }
 
         // Edit the media record
@@ -1083,11 +1162,6 @@ END;
         }
         else
         {
-            // We are in the library so we therefore have to update the duration with the new value.
-            // We could do this in the above code, but it is much simpler here until we rewrite
-            // these classes to use a data base class.
-            $db->query(sprintf("UPDATE media SET duration = %d WHERE mediaID = %d", $this->duration, $this->mediaid));
-
             $this->response->message = 'Edited the ' . $this->displayType;
         }
 
@@ -1109,7 +1183,7 @@ END;
         $db =& $this->db;
         $count = 0;
         
-        Debug::LogEntry($db, 'audit', sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
+        Debug::LogEntry('audit', sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
 
         // Create a region object for later use
         $region = new region($db);
@@ -1137,7 +1211,7 @@ END;
                     continue;
 
                 // Create a new media node use it to swap the nodes over
-                Debug::LogEntry($db, 'audit', 'Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
+                Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
                 require_once('modules/' . $type . '.module.php');
 
                 // Create a new module as if we were assigning it for the first time
@@ -1162,7 +1236,7 @@ END;
             }
         }
 
-        Debug::LogEntry($db, 'audit', sprintf('Replaced media in %d layouts', $count), 'module', 'ReplaceMediaInAllLayouts');
+        Debug::LogEntry('audit', sprintf('Replaced media in %d layouts', $count), 'module', 'ReplaceMediaInAllLayouts');
     }
 
     /**
@@ -1181,7 +1255,7 @@ END;
             $this->name = $db->GetSingleValue(sprintf($SQL, $this->mediaid), 'name', _STRING);
         }
 
-        Debug::LogEntry($db, 'audit', sprintf('Module name returned for MediaID: %s is %s', $this->mediaid, $this->name), 'Module', 'GetName');
+        Debug::LogEntry('audit', sprintf('Module name returned for MediaID: %s is %s', $this->mediaid, $this->name), 'Module', 'GetName');
 
         return $this->name;
     }
@@ -1286,7 +1360,7 @@ END;
 
         $SQL = sprintf($SQL, $user->getGroupFromId($user->userid, true));
 
-        Debug::LogEntry($db, 'audit', $SQL, 'module', 'PermissionsForm');
+        Debug::LogEntry('audit', $SQL, 'module', 'PermissionsForm');
 
         if (!$results = $db->query($SQL))
         {
@@ -1446,7 +1520,7 @@ END;
         $db =& $this->db;
 
         //Library location
-        $databaseDir = Config::GetSetting($db, 'LIBRARY_LOCATION');
+        $databaseDir = Config::GetSetting('LIBRARY_LOCATION');
 
         //3 things to check for..
         //the actual file, the thumbnail, the background
@@ -1672,7 +1746,7 @@ END;
         if ($xml == '')
             return $this->SetError(__('No XLF provided'));
 
-        Debug::LogEntry($db, 'audit', 'Setting the media XML for this item directly', 'module', 'SetMediaXml');
+        Debug::LogEntry('audit', 'Setting the media XML for this item directly', 'module', 'SetMediaXml');
 
     	// Load the XML into a document
     	$xmlDoc = new DOMDocument();
@@ -1680,7 +1754,7 @@ END;
     	if (!$xmlDoc->loadXML($xml))
             return $this->SetError(__('Invalid XLF'));
 
-        Debug::LogEntry($db, 'audit', 'Provided XML Loaded', 'module', 'SetMediaXml');
+        Debug::LogEntry('audit', 'Provided XML Loaded', 'module', 'SetMediaXml');
 
     	// Validate the XML Document
     	if (!$this->ValidateMediaXml($xmlDoc))
@@ -1700,7 +1774,7 @@ END;
     protected function ValidateMediaXml($xmlDoc) {
         $db =& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'Validating provided XLF', 'module', 'ValidateMediaXml');
+        Debug::LogEntry('audit', 'Validating provided XLF', 'module', 'ValidateMediaXml');
 
     	// Compare the XML we have been given, with the XML of the existing media item OR compare as a new item
     	$mediaNodes = $xmlDoc->getElementsByTagName('media');
@@ -1722,7 +1796,7 @@ END;
 		// Do we have a new item or an existing item
     	if ($this->assignedMedia) {
     		// An existing item
-    		Debug::LogEntry($db, 'audit', 'An existing media entry', 'module', 'ValidateMediaXml');
+    		Debug::LogEntry('audit', 'An existing media entry', 'module', 'ValidateMediaXml');
 
     		// Check the ID
     		if ($mediaNode->getAttribute('id') != $this->mediaid)
@@ -1734,7 +1808,7 @@ END;
     	}
     	else {
     		// A new item
-    		Debug::LogEntry($db, 'audit', 'A new media entry', 'module', 'ValidateMediaXml');
+    		Debug::LogEntry('audit', 'A new media entry', 'module', 'ValidateMediaXml');
     		
     		// New media items may not have a media id on them (region media is born without an ID)
     		if ($this->regionSpecific == 1) {
@@ -1812,10 +1886,15 @@ END;
 		$this->errorNo 		= $errNo;
 		$this->errorMessage	= $errMessage;
 		
-		Debug::LogEntry($this->db, 'audit', sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Media Module', 'SetError');
+		Debug::LogEntry('audit', sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Media Module', 'SetError');
 
         // Return false so that we can use this method as the return call for parent methods
 		return false;
 	}
+
+    public function IsValid() {
+        // Defaults: Stored media is valid, region specific is unknown
+        return ($this->regionSpecific) ? 0 : 1;
+    }
 }
 ?>

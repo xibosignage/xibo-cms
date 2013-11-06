@@ -415,7 +415,7 @@ function XiboFormRender(formUrl) {
  * Xibo Ping
  * @param {String} url
  */
-function XiboPing(url) {
+function XiboPing(url, updateDiv) {
 
     // Call with AJAX
     $.ajax({
@@ -426,7 +426,13 @@ function XiboPing(url) {
         success: function(response){
 
             // Was the Call successful
-            if (!response.success) {
+            if (response.success) {
+
+                if (updateDiv != undefined) {
+                    $(updateDiv).html(response.html);
+                }
+            }
+            else {
                 // Login Form needed?
                 if (response.login) {
                     
@@ -470,8 +476,8 @@ function XiboFormSubmit(form) {
     // Pull any text editor instances we have
     for (var editor in CKEDITOR.instances) {
 
-        console.log("Name: " + editor);
-        console.log("Content: " + CKEDITOR.instances[editor].getData());
+        //console.log("Name: " + editor);
+        //console.log("Content: " + CKEDITOR.instances[editor].getData());
 
         // Set the appropriate text editor field with this data.
         $("#" + editor).val(CKEDITOR.instances[editor].getData());
@@ -740,29 +746,9 @@ function XiboRefreshAllGrids() {
  */
 function LoginBox(message) {
 
-    bootbox.hideAll();
-    
-    // Create the dialog with our parameters
-    var dialog = bootbox.dialog(
-    		message, [{
-    			label: "Login",
-    			callback: function() {
-    				dialog.modal('hide');
-	                $('#XiboLoginForm').submit();
-	                return false;
-	            }
-    		}], {
-				
-    		}
-    	);
-
-    //capture the form submit
-    $('.XiboForm', dialog).submit(function() {
-        XiboFormSubmit(this);
-        return false;
-    });
-
-    return;
+    // Reload the page (appending the message)
+    window.location.href = window.location.href;
+    location.reload(false);
 }
 
 /**

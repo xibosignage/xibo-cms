@@ -99,7 +99,7 @@ class counter extends Module
         $rawXml = new DOMDocument();
         $rawXml->loadXML($this->GetRaw());
 
-        Debug::LogEntry($db, 'audit', 'Raw XML returned: ' . $this->GetRaw());
+        Debug::LogEntry('audit', 'Raw XML returned: ' . $this->GetRaw());
 
         // Get the Text Node out of this
         $textNodes = $rawXml->getElementsByTagName('template');
@@ -221,13 +221,13 @@ class counter extends Module
         $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
         $popupNotification = Kit::GetParam('popupNotification', _POST, _CHECKBOX);
 
-        Debug::LogEntry($db, 'audit', 'Popup notification:' . $popupNotification);
+        Debug::LogEntry('audit', 'Popup notification:' . $popupNotification);
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
 
-        Debug::LogEntry($db, 'audit', 'Text received: ' . $text);
+        Debug::LogEntry('audit', 'Text received: ' . $text);
 
         $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
@@ -300,6 +300,11 @@ class counter extends Module
         </div>
 END;
         return $return;
+    }
+    
+    public function IsValid() {
+        // Client dependant
+        return 2;
     }
 }
 ?>

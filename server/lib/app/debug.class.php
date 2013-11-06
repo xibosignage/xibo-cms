@@ -24,12 +24,10 @@ class Debug
 {
 	public function __construct()
 	{
-		global $db;
-		
 		if (!defined('AUDIT'))
 		{
 			// Get the setting from the DB and define it
-			if (Config::GetSetting($db, 'audit') != 'On')
+			if (Config::GetSetting('audit') != 'On')
 			{
 				define('AUDIT', false);
 			}
@@ -41,8 +39,6 @@ class Debug
 	}
 	
 	public function ErrorHandler($errno, $errmsg, $filename, $linenum, $vars) {
-
-		global $db;
 
 		// timestamp for the error entry
 		$dt = date("Y-m-d H:i:s (T)");
@@ -69,13 +65,13 @@ class Debug
 		$err .= "<scriptlinenum>" . $linenum . "</scriptlinenum>\n";
 
 		// Log everything
-		Debug::LogEntry($db, "error", $err);
+		Debug::LogEntry("error", $err);
 		
 		// Test to see if this is a HALT error or not (we do the same if we are in production or not!)
 		if (in_array($errno, $user_errors_halt)) 
 		{
 			// We have a halt error
-			Debug::LogEntry($db, 'audit', 'Creating a Response Manager to deal with the HALT Error.');
+			Debug::LogEntry('audit', 'Creating a Response Manager to deal with the HALT Error.');
 
 			$response = new ResponseManager();
 			
@@ -109,13 +105,11 @@ class Debug
 	 */
 	function MailError($errmsg, $err) 
 	{
-		global $db;
-		
 		return true;
 
 		$to = 'info@xibo.org.uk';
 		
-		$from = Config::GetSetting($db, "mail_from");
+		$from = Config::GetSetting("mail_from");
 		if ($from == "") return true;
 		
 		$subject = "Error message from Digital Signage System";
@@ -142,47 +136,57 @@ class Debug
 	 * @param $layoutid Object[optional]
 	 * @param $mediaid Object[optional]
 	 */	
-	static function LogEntry(database $db, $type, $message, $page = "", $function = "", $logdate = "", $displayid = 0, $scheduleID = 0, $layoutid = 0, $mediaid = 0) 
+	static function LogEntry($type, $message, $page = "", $function = "", $logdate = "", $displayid = 0, $scheduleID = 0, $layoutid = 0, $mediaid = 0) 
 	{
 		if ($type == 'audit' && !AUDIT)
-		{
 			return;
-		}
 
 		$currentdate 		= date("Y-m-d H:i:s");
 		$requestUri			= Kit::GetParam('REQUEST_URI', $_SERVER, _STRING, 'Not Supplied');
 		$requestIp			= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING, 'Not Supplied');
 		$requestUserAgent   = Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'Not Supplied');
-                $requestUserAgent   = substr($requestUserAgent, 0, 253);
+        $requestUserAgent   = substr($requestUserAgent, 0, 253);
 		$userid 			= Kit::GetParam('userid', _SESSION, _INT, 0);
 		$message			= Kit::ValidateParam($message, _HTMLSTRING);
 		
-		if ($logdate == "") $logdate = $currentdate;
+		if ($logdate == "") 
+			$logdate = $currentdate;
 
 		//Prepare the variables
 		if ($page == "")
-		{
 			$page = Kit::GetParam('p', _GET, _WORD);
+
+		// Insert into the DB
+		try {
+			$dbh = PDOConnect::init();
+
+			$SQL  = 'INSERT INTO log (logdate, type, page, function, message, requesturi, remoteaddr, useragent, userid, displayid, scheduleid, layoutid, mediaid) ';
+			$SQL .= ' VALUES (:logdate, :type, :page, :function, :message, :requesturi, :remoteaddr, :useragent, :userid, :displayid, :scheduleid, :layoutid, :mediaid) ';
+
+			$sth = $dbh->prepare($SQL);
+
+			$params = array(
+					'logdate' => $currentdate,
+					'type' => $type,
+					'page' => $page,
+					'function' => $function,
+					'message' => $message,
+					'requesturi' => $requestUri,
+					'remoteaddr' => $requestIp,
+					'useragent' => $requestUserAgent,
+					'userid' => $userid,
+					'displayid' => $displayid,
+					'scheduleid' => $scheduleID,
+					'layoutid' => $layoutid,
+					'mediaid' => $mediaid
+				);
+
+			$sth->execute($params);
 		}
-
-		$SQL = "INSERT INTO log (logdate, type, page, function, message, RequestUri, RemoteAddr, UserAgent, UserID, displayID, scheduleID, layoutID, mediaID) ";
-		$SQL .= sprintf("VALUES ('$logdate','$type', '%s', '%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d)", 
-					$db->escape_string($page),
-					$db->escape_string($function), 
-					$db->escape_string($message),
-					$db->escape_string($requestUri), 
-					$db->escape_string($requestIp), 
-					$db->escape_string($requestUserAgent), 
-					$userid, $displayid, $scheduleID, $layoutid, $mediaid);
-
-		if (!$db->query($SQL)) 
-		{
-			// Log the original message
-			error_log($message . "\n\n", 3, "./err_log.xml");
-
-			// Log the log failure
-			$message = $db->error();
-			error_log($message . "\n\n", 3, "./err_log.xml");
+		catch (PDOException $e) {
+			// In this case just silently log the error
+			error_log($message . '\n\n', 3, './err_log.xml');
+			error_log($e->getMessage() . '\n\n', 3, './err_log.xml');
 		}
 
 		return true;

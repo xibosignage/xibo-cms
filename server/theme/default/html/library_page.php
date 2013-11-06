@@ -63,6 +63,11 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 					</label>
 
 					<label class="checkbox">
+						<?php echo Theme::Translate('Duration in Seconds') ?>
+						<input type="checkbox" name="filter_duration_in_seconds" <?php echo Theme::Get('filter_duration_in_seconds_checked'); ?> />
+					</label>
+
+					<label class="checkbox">
 						<?php echo Theme::Translate('Keep Open') ?>
 						<input type="checkbox" id="<?php echo Theme::Get('filter_id'); ?>" name="XiboFilterPinned" class="XiboFilterPinned" <?php echo Theme::Get('filter_pinned'); ?> />
 					</label>

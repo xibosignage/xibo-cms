@@ -152,6 +152,10 @@ class campaignDAO
      */
     public function Add()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
 
@@ -218,6 +222,10 @@ class campaignDAO
      */
     public function Edit()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
 
@@ -283,6 +291,10 @@ class campaignDAO
      */
     public function Delete()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
 
@@ -381,6 +393,10 @@ class campaignDAO
 
     public function Permissions()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
@@ -466,6 +482,10 @@ class campaignDAO
      */
     public function SetMembers()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
         Kit::ClassLoader('campaign');
@@ -537,7 +557,7 @@ class campaignDAO
             trigger_error(__('Error getting Layouts'), E_USER_ERROR);
         }
 
-        Debug::LogEntry($db, 'audit', count($layoutsAssigned) . ' layouts assigned already');
+        Debug::LogEntry('audit', count($layoutsAssigned) . ' layouts assigned already');
 
         // Set the layouts assigned
         Theme::Set('layouts_assigned', $layoutsAssigned);

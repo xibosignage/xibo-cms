@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -24,51 +24,66 @@ class Stat extends data
 {
 	public function Add($type, $fromDT, $toDT, $scheduleID, $displayID, $layoutID, $mediaID, $tag)
 	{
-		$db 		=& $this->db;
-		$statDate 	= date("Y-m-d H:i:s");
-		$SQL		= '';
-		
-		$type		= $db->escape_string($type);
-		
-		// We should run different SQL depending on what Type we are
-		switch ($type)
-		{
-			case 'Media':
-			case 'media':
-				$SQL .= " INSERT INTO stat (Type, statDate, scheduleID, displayID, layoutID, mediaID, start, end)";
-				$SQL .= sprintf("  VALUES ('%s', '%s', %d, %d, %d, '%s', '%s', '%s')", $type, $statDate, $scheduleID, $displayID, $layoutID, $db->escape_string($mediaID), $fromDT, $toDT);
-		
-				break;
-				
-			case 'Layout':
-			case 'layout':
-				$SQL .= " INSERT INTO stat (Type, statDate, scheduleID, displayID, layoutID, start, end)";
-				$SQL .= sprintf("  VALUES ('%s', '%s', %d, %d, %d, '%s', '%s')", $type, $statDate, $scheduleID, $displayID, $layoutID, $fromDT, $toDT);
+		try {
+		    $dbh = PDOConnect::init();
 
-				break;
-				
-			case 'Event':
-			case 'event':
-			
-				$SQL .= " INSERT INTO stat (Type, statDate, scheduleID, displayID, layoutID, start, end, Tag)";
-				$SQL .= sprintf("  VALUES ('%s', '%s', %d, %d, %d, '%s', '%s', '%s')", $type, $statDate, $scheduleID, $displayID, 0, $fromDT, $toDT, $db->escape_string($tag));
-			
-				break;
-				
-			default:
-				// Nothing to do, just exit
-				return true;
-		}
+		    // Lower case the type for consistancy
+		    $type = strtolower($type);
+
+		    // Prepare a statement
+		    $sth = $dbh->prepare('INSERT INTO stat (Type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag) VALUES (:type, :statdate, :start, :end, :scheduleid, :displayid, :layoutid, :mediaid, :tag)');
 		
-		// We only get here if we have some SQL to run
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25000, 'Stat Insert Failed.');
-			return false;
+			// Construct a parameters array to execute
+		    $params = array();
+			$params['statdate'] = date("Y-m-d H:i:s");
+			$params['type'] = $type;
+			$params['start'] = $fromDT;
+			$params['end'] = $toDT;
+			$params['scheduleid'] = $scheduleID;
+			$params['displayid'] = $displayID;
+			$params['layoutid'] = $layoutID;
+
+			// Optional parameters
+			$params['mediaid'] = null;
+			$params['tag'] = null;
+				
+			// We should run different SQL depending on what Type we are
+			switch ($type)
+			{
+				case 'media':
+					$params['mediaid'] = $mediaID;
+			
+					break;
+
+				case 'layout':
+					// Nothing additional to do
+					break;
+					
+				case 'event':
+				
+					$params['layoutid'] = 0;
+					$params['tag'] = $tag;
+				
+					break;
+					
+				default:
+					// Nothing to do, just exit
+					return true;
+			}
+
+			$sth->execute($params);
+			
+			return true;  
 		}
+		catch (Exception $e) {
+		    
+		    Debug::LogEntry('error', $e->getMessage());
 		
-		return true;
+		    if (!$this->IsError())
+		        $this->SetError(25000, 'Stat Insert Failed.');
+		
+		    return false;
+		}
 	}
 }
 ?>

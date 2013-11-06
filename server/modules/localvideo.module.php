@@ -268,5 +268,10 @@ FORM;
 
         return $this->response;
     }
+    
+    public function IsValid() {
+        // Client dependant
+        return 2;
+    }
 }
 ?>

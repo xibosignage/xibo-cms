@@ -48,7 +48,7 @@ class XMDSSoap
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
     {
 	$db =& $this->db;
-	define('SERVER_KEY', Config::GetSetting($db, 'SERVER_KEY'));
+	define('SERVER_KEY', Config::GetSetting('SERVER_KEY'));
 
 	// Sanitize
 	$serverKey 	= Kit::ValidateParam($serverKey, _STRING);
@@ -61,8 +61,8 @@ class XMDSSoap
 	if (!$this->CheckVersion($version))
             throw new SoapFault('Sender', 'Your client is not of the correct version for communication with this server.');
 
-	Debug::LogEntry($db, "audit", "[IN]", "xmds", "RegisterDisplay");
-	Debug::LogEntry($db, "audit", "serverKey [$serverKey], hardwareKey [$hardwareKey], displayName [$displayName]", "xmds", "RegisterDisplay");
+	Debug::LogEntry("audit", "[IN]", "xmds", "RegisterDisplay");
+	Debug::LogEntry("audit", "serverKey [$serverKey], hardwareKey [$hardwareKey], displayName [$displayName]", "xmds", "RegisterDisplay");
 
 	// Check the serverKey matches the one we have stored in this servers lic.txt file
 	if ($serverKey != SERVER_KEY)
@@ -122,7 +122,7 @@ class XMDSSoap
         // Log Bandwidth
         $this->LogBandwidth($displayid, 1, strlen($active));
 
-	Debug::LogEntry($db, "audit", "$active", "xmds", "RegisterDisplay");
+	Debug::LogEntry("audit", "$active", "xmds", "RegisterDisplay");
 
 	return $active;
     }
@@ -140,7 +140,7 @@ class XMDSSoap
         $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
         $version 	= Kit::ValidateParam($version, _STRING);
-        $rfLookahead    = Kit::ValidateParam(Config::GetSetting($db,'REQUIRED_FILES_LOOKAHEAD'), _INT);
+        $rfLookahead    = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -150,14 +150,14 @@ class XMDSSoap
         if (!$this->CheckBandwidth())
             throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
 
-        $libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
+        $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
 
         // auth this request...
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Sender', 'This display is not licensed.');
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry($db, "audit", '[IN] with hardware key: ' . $hardwareKey, "xmds", "RequiredFiles");
+            Debug::LogEntry("audit", '[IN] with hardware key: ' . $hardwareKey, "xmds", "RequiredFiles");
 
         $requiredFilesXml = new DOMDocument("1.0");
         $fileElements 	= $requiredFilesXml->createElement("files");
@@ -180,7 +180,7 @@ class XMDSSoap
         $SQL .= "   AND layout.retired = 0  ";
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry($db, "audit", $SQL, "xmds", "RequiredFiles");
+            Debug::LogEntry("audit", $SQL, "xmds", "RequiredFiles");
 
         if (!$results = $db->query($SQL))
         {
@@ -196,11 +196,11 @@ class XMDSSoap
             $layoutIdList .= ',' . Kit::ValidateParam($row['layoutID'], _INT);
 
         // Add file nodes to the $fileElements
-        $SQL  = " SELECT 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, layout.xml AS `MD5`, NULL AS FileSize, layout.background ";
+        $SQL  = " SELECT 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, MD5(layout.xml) AS `MD5`, NULL AS FileSize, layout.background, layout.xml AS xml ";
         $SQL .= "   FROM layout ";
         $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
         $SQL .= " UNION ";
-        $SQL .= " SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS background ";
+        $SQL .= " SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS background, NULL AS xml ";
         $SQL .= "   FROM media ";
         $SQL .= " 	INNER JOIN lklayoutmedia ";
         $SQL .= " 	ON lklayoutmedia.MediaID = media.MediaID ";
@@ -209,7 +209,7 @@ class XMDSSoap
         $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
         $SQL .= " ORDER BY RecordType DESC";
 
-        if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", $SQL, "xmds", "RequiredFiles");
+        if ($this->isAuditing == 1) Debug::LogEntry("audit", $SQL, "xmds", "RequiredFiles");
 
         if (!$results = $db->query($SQL))
         {
@@ -225,12 +225,15 @@ class XMDSSoap
             $md5	= Kit::ValidateParam($row['MD5'], _HTMLSTRING);
             $fileSize	= Kit::ValidateParam($row['FileSize'], _INT);
             $background	= Kit::ValidateParam($row['background'], _STRING);
+            $xml = Kit::ValidateParam($row['xml'], _HTMLSTRING);
 
             if ($recordType == 'layout')
             {
                 // For layouts the MD5 column is the layout xml
-                $fileSize 	= strlen($md5);
-                $md5 		= md5($md5);
+                $fileSize 	= strlen($xml);
+                
+                if ($this->isAuditing == 1) 
+                    Debug::LogEntry("audit", 'MD5 for layoutid ' . $id . ' is: [' . $md5 . ']', "xmds", "RequiredFiles");
             }
             else if ($recordType == 'media')
             {
@@ -239,7 +242,7 @@ class XMDSSoap
                 {
                     $md5 	= md5_file($libraryLocation.$path);
                     $fileSize	= filesize($libraryLocation.$path);
-
+                    
                     // Update the media record with this information
                     $SQL = sprintf("UPDATE media SET `MD5` = '%s', FileSize = %d WHERE MediaID = %d", $md5, $fileSize, $id);
 
@@ -260,7 +263,7 @@ class XMDSSoap
             $file->setAttribute("id", $id);
             $file->setAttribute("size", $fileSize);
             $file->setAttribute("md5", $md5);
-
+            
             $fileElements->appendChild($file);
 
             // If this is a layout type and there is a background then add the background node
@@ -307,15 +310,15 @@ class XMDSSoap
         }
 
         // PHONE_HOME if required.
-        if (Config::GetSetting($db,'PHONE_HOME') == 'On')
+        if (Config::GetSetting('PHONE_HOME') == 'On')
         {
             // Find out when we last PHONED_HOME :D
             // If it's been > 28 days since last PHONE_HOME then
-            if (Config::GetSetting($db,'PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28)))
+            if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28)))
             {
                 if ($this->isAuditing == 1)
                 {
-                    Debug::LogEntry($db, "audit", "PHONE_HOME [IN]", "xmds", "RequiredFiles");
+                    Debug::LogEntry("audit", "PHONE_HOME [IN]", "xmds", "RequiredFiles");
                 }
 
                 // Retrieve number of displays
@@ -333,13 +336,13 @@ class XMDSSoap
                 }
 
                 // Retrieve version number
-                $PHONE_HOME_VERSION = Config::Version($db, 'app_ver');
+                $PHONE_HOME_VERSION = Config::Version('app_ver');
 
-                $PHONE_HOME_URL = Config::GetSetting($db,'PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting($db,'PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
+                $PHONE_HOME_URL = Config::GetSetting('PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 
                 if ($this->isAuditing == 1)
                 {
-                    Debug::LogEntry($db, "audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");
+                    Debug::LogEntry("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");
                 }
 
                 // Set PHONE_HOME_TIME to NOW.
@@ -356,7 +359,7 @@ class XMDSSoap
 
                 if ($this->isAuditing == 1)
                 {
-                    Debug::LogEntry($db, "audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
+                    Debug::LogEntry("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
                 }
             //endif
             }
@@ -365,8 +368,8 @@ class XMDSSoap
 
         if ($this->isAuditing == 1)
         {
-            Debug::LogEntry($db, "audit", $requiredFilesXml->saveXML(), "xmds", "RequiredFiles");
-            Debug::LogEntry($db, "audit", "[OUT]", "xmds", "RequiredFiles");
+            Debug::LogEntry("audit", $requiredFilesXml->saveXML(), "xmds", "RequiredFiles");
+            Debug::LogEntry("audit", "[OUT]", "xmds", "RequiredFiles");
         }
 
         // Return the results of requiredFiles()
@@ -398,7 +401,7 @@ class XMDSSoap
         $chunkSize 	= Kit::ValidateParam($chunkSize, _INT);
         $version 	= Kit::ValidateParam($version, _STRING);
 
-        $libraryLocation = Config::GetSetting($db, "LIBRARY_LOCATION");
+        $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -418,8 +421,8 @@ class XMDSSoap
 
         if ($this->isAuditing == 1)
         {
-            Debug::LogEntry($db, "audit", "[IN]", "xmds", "GetFile");
-            Debug::LogEntry($db, "audit", "Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]", "xmds", "GetFile");
+            Debug::LogEntry("audit", "[IN]", "xmds", "GetFile");
+            Debug::LogEntry("audit", "Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]", "xmds", "GetFile");
         }
 
         if ($fileType == "layout")
@@ -460,7 +463,7 @@ class XMDSSoap
             throw new SoapFault('Receiver', 'Unknown FileType Requested.');
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry($db, "audit", "[OUT]", "xmds", "GetFile");
+        if ($this->isAuditing == 1) Debug::LogEntry("audit", "[OUT]", "xmds", "GetFile");
 
         // Log Bandwidth
         $this->LogBandwidth($this->displayId, 4, $chunkSize);
@@ -481,7 +484,7 @@ class XMDSSoap
         $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
         $version 	= Kit::ValidateParam($version, _STRING);
-        $sLookahead     = Kit::ValidateParam(Config::GetSetting($db,'REQUIRED_FILES_LOOKAHEAD'), _INT);
+        $sLookahead     = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -496,7 +499,7 @@ class XMDSSoap
             throw new SoapFault('Sender', "This display client is not licensed");
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry($db, "audit", "[IN] $hardwareKey", "xmds", "Schedule");
+            Debug::LogEntry("audit", "[IN] $hardwareKey", "xmds", "Schedule");
 
         $scheduleXml = new DOMDocument("1.0");
         $layoutElements = $scheduleXml->createElement("schedule");
@@ -505,7 +508,7 @@ class XMDSSoap
 
         $currentdate 	= time();
 
-        if (Config::GetSetting($db,'SCHEDULE_LOOKAHEAD') == 'On')
+        if (Config::GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
         {
             $sLookahead = $currentdate + $sLookahead;
         }
@@ -516,7 +519,8 @@ class XMDSSoap
 
         // Add file nodes to the $fileElements
         // Firstly get all the scheduled layouts
-        $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID, schedule_detail.is_priority ";
+        $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID, schedule_detail.is_priority, ";
+        $SQL .= "  (SELECT GROUP_CONCAT(StoredAs) FROM media INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID WHERE lklayoutmedia.LayoutID = layout.LayoutID GROUP BY lklayoutmedia.LayoutID) AS Dependents";
         $SQL .= " FROM `campaign` ";
         $SQL .= " INNER JOIN schedule_detail ON schedule_detail.CampaignID = campaign.CampaignID ";
         $SQL .= " INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
@@ -529,7 +533,7 @@ class XMDSSoap
         $SQL .= " ORDER BY schedule_detail.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID ";
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry($db, "audit", $SQL, "xmds", "Schedule");
+            Debug::LogEntry("audit", $SQL, "xmds", "Schedule");
 
         // Run the query
         if (!$results = $db->query($SQL))
@@ -546,6 +550,7 @@ class XMDSSoap
             $todt           = date('Y-m-d H:i:s', $row[2]);
             $scheduleid     = $row[3];
             $is_priority    = Kit::ValidateParam($row[4], _INT);
+            $dependents = Kit::ValidateParam($row[5], _STRING);
 
             // Add a layout node to the schedule
             $layout = $scheduleXml->createElement("layout");
@@ -555,6 +560,7 @@ class XMDSSoap
             $layout->setAttribute("todt", $todt);
             $layout->setAttribute("scheduleid", $scheduleid);
             $layout->setAttribute("priority", $is_priority);
+            $layout->setAttribute("dependents", $dependents);
 
             $layoutElements->appendChild($layout);
         }
@@ -583,7 +589,7 @@ class XMDSSoap
         $scheduleXml->formatOutput = true;
         
         if ($this->isAuditing == 1)
-            Debug::LogEntry($db, "audit", $scheduleXml->saveXML(), "xmds", "Schedule");
+            Debug::LogEntry("audit", $scheduleXml->saveXML(), "xmds", "Schedule");
 
         $output = $scheduleXml->saveXML();
 
@@ -628,8 +634,8 @@ class XMDSSoap
                 throw new SoapFault('Receiver', "This display client is not licensed", $hardwareKey);
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "[IN]", "xmds", "BlackList", "", $this->displayId);
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "$xml", "xmds", "BlackList", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "[IN]", "xmds", "BlackList", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "$xml", "xmds", "BlackList", "", $this->displayId);
 
         // Check to see if this media/display is already blacklisted (and not ignored)
         $SQL = "SELECT BlackListID FROM blacklist WHERE MediaID = $mediaId AND isIgnored = 0 AND DisplayID = " . $this->displayId;
@@ -670,10 +676,10 @@ class XMDSSoap
         }
         else
         {
-            if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "Media Already BlackListed [$mediaId]", "xmds", "BlackList", "", $this->displayId);
+            if ($this->isAuditing == 1) Debug::LogEntry( "audit", "Media Already BlackListed [$mediaId]", "xmds", "BlackList", "", $this->displayId);
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "[OUT]", "xmds", "BlackList", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "[OUT]", "xmds", "BlackList", "", $this->displayId);
 
         return true;
     }
@@ -712,8 +718,8 @@ class XMDSSoap
             throw new SoapFault('Sender', 'This display client is not licensed.');
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "IN", "xmds", "SubmitLog", "", $this->displayId);
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", 'XML [' . $logXml . ']', "xmds", "SubmitLog", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "IN", "xmds", "SubmitLog", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", 'XML [' . $logXml . ']', "xmds", "SubmitLog", "", $this->displayId);
 
         // Load the XML into a DOMDocument
         $document = new DOMDocument("1.0");
@@ -736,16 +742,17 @@ class XMDSSoap
             $mediaID 	= "";
             $cat		= '';
             $method		= '';
+            $thread = '';
 
             // This will be a bunch of trace nodes
             $message = $node->textContent;
 
-            if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", 'Trace Message: [' . $message . ']', "xmds", "SubmitLog", "", $this->displayId);
+            if ($this->isAuditing == 1) 
+                Debug::LogEntry( "audit", 'Trace Message: [' . $message . ']', "xmds", "SubmitLog", "", $this->displayId);
 
             // Each element should have a category and a date
-
             $date	= $node->getAttribute('date');
-            $cat	= $node->getAttribute('category');
+            $cat	= strtolower($node->getAttribute('category'));
 
             if ($date == '' || $cat == '')
             {
@@ -776,20 +783,28 @@ class XMDSSoap
                 {
                     $method	= $nodeElements->textContent;
                 }
+                else if ($nodeElements->nodeName == "message")
+                {
+                    $message = $nodeElements->textContent;
+                }
+                else if ($nodeElements->nodeName == "thread")
+                {
+                    if ($nodeElements->textContent != '')
+                        $thread = '[' . $nodeElements->textContent . '] ';
+                }
             }
+
+            // If the message is still empty, take the entire node content
+            if ($message == '')
+                $message = $node->textContent;
 
             // We should have enough information to log this now.
-            if ($cat == 'error' || $cat == 'Error')
-            {
-                Debug::LogEntry($db, $cat, $message, 'Client', $method, $date, $this->displayId, $scheduleID, $layoutID, $mediaID);
-            }
-            else
-            {
-                Debug::LogEntry($db, 'audit', $message, 'Client', $method, $date, $this->displayId, $scheduleID, $layoutID, $mediaID);
-            }
+            $logType = ($cat == 'error') ? 'error' : 'audit';
+            
+            Debug::LogEntry($logType, $message, 'Client', $thread . $method, $date, $this->displayId, $scheduleID, $layoutID, $mediaID);
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "OUT", "xmds", "SubmitLog", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "OUT", "xmds", "SubmitLog", "", $this->displayId);
 
         return true;
     }
@@ -828,8 +843,8 @@ class XMDSSoap
             throw new SoapFault('Receiver', "This display client is not licensed");
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "IN", "xmds", "SubmitStats", "", $this->displayId);
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "StatXml: [" . $statXml . "]", "xmds", "SubmitStats", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "IN", "xmds", "SubmitStats", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "StatXml: [" . $statXml . "]", "xmds", "SubmitStats", "", $this->displayId);
 
         if ($statXml == "")
         {
@@ -837,12 +852,12 @@ class XMDSSoap
         }
 
         // Log
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "About to create Stat Object.", "xmds", "SubmitStats", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "About to create Stat Object.", "xmds", "SubmitStats", "", $this->displayId);
 
         $statObject = new Stat($db);
 
         // Log
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "About to Create DOMDocument.", "xmds", "SubmitStats", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "About to Create DOMDocument.", "xmds", "SubmitStats", "", $this->displayId);
 
         // Load the XML into a DOMDocument
         $document = new DOMDocument("1.0");
@@ -887,7 +902,7 @@ class XMDSSoap
             }
         }
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, "audit", "OUT", "xmds", "SubmitStats", "", $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( "audit", "OUT", "xmds", "SubmitStats", "", $this->displayId);
 
         return true;
     }
@@ -919,7 +934,7 @@ class XMDSSoap
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
-        if ($this->isAuditing == 1) Debug::LogEntry ($db, 'audit', $inventory, 'xmds', 'MediaInventory', '', $this->displayId);
+        if ($this->isAuditing == 1) Debug::LogEntry( 'audit', $inventory, 'xmds', 'MediaInventory', '', $this->displayId);
 
         // Check that the $inventory contains something
         if ($inventory == '')
@@ -1010,7 +1025,7 @@ class XMDSSoap
         if (!$module = new $type($db, $user, $mediaId, $layoutId, $regionId))
             throw new SoapFault('Receiver', 'Cannot create module. Check CMS Log');
 
-        $resource = $module->GetResource();
+        $resource = $module->GetResource($this->displayId);
 
         if (!$resource || $resource == '')
             throw new SoapFault('Receiver', 'Unable to get the media resource');
@@ -1056,8 +1071,8 @@ class XMDSSoap
         // to say that it has come back online
         if (($row[5] == 0) and ($row[6] == 1))
         {
-            $msgTo    = Kit::ValidateParam(Config::GetSetting($db, "mail_to"),_PASSWORD);
-            $msgFrom  = Kit::ValidateParam(Config::GetSetting($db, "mail_from"),_PASSWORD);
+            $msgTo    = Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
+            $msgFrom  = Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);
 
             $subject  = sprintf(__("Recovery for Display %s"),$row[7]);
             $body     = sprintf(__("Display %s with ID %d is now back online."), $row[7], $row[3]);
@@ -1089,11 +1104,11 @@ class XMDSSoap
         $db =& $this->db;
 
         // Look up the Service XMDS version from the Version table
-        $serverVersion = Config::Version($db, 'XmdsVersion');
+        $serverVersion = Config::Version('XmdsVersion');
 
         if ($version != $serverVersion)
         {
-            Debug::LogEntry($db, 'audit', sprintf('A Client with an incorrect version connected. Client Version: [%s] Server Version [%s]', $version, $serverVersion));
+            Debug::LogEntry('audit', sprintf('A Client with an incorrect version connected. Client Version: [%s] Server Version [%s]', $version, $serverVersion));
             return false;
         }
 
@@ -1105,7 +1120,7 @@ class XMDSSoap
      */
     private function CheckBandwidth()
     {
-        $xmdsLimit = Config::GetSetting($this->db, 'MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+        $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
         if ($xmdsLimit <= 0)
             return true;

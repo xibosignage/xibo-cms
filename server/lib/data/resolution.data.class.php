@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -31,27 +31,38 @@ class Resolution extends Data
      */
     public function Add($resolution, $width, $height)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
 
-        if ($resolution == '' || $width == '' || $height == '')
-            return $this->SetError(__('All fields must be filled in'), E_USER_ERROR);
+            if ($resolution == '' || $width == '' || $height == '')
+                $this->ThrowError(__('All fields must be filled in'));
+    
+            // Alter the width / height to fit with 800 px
+            $factor = min (800 / $width, 800 / $height);
+    
+            $final_width    = round ($width * $factor);
+            $final_height   = round ($height * $factor);
 
-        // Alter the width / height to fit with 800 px
-        $factor = min (800 / $width, 800 / $height);
-
-        $final_width    = round ($width * $factor);
-        $final_height   = round ($height * $factor);
-        
-        $SQL = "INSERT INTO resolution (resolution, width, height, intended_width, intended_height) VALUES ('%s', %d, %d, %d, %d)";
-        $SQL = sprintf($SQL, $db->escape_string($resolution), $final_width, $final_height, $width, $height);
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            return $this->SetError(25000, __('Cannot add this resolution.'));
+            $sth = $dbh->prepare('INSERT INTO resolution (resolution, width, height, intended_width, intended_height) VALUES (:resolution, :width, :height, :intended_width, :intended_height)');
+            $sth->execute(array(
+                    'resolution' => $resolution,
+                    'width' => $final_width,
+                    'height' => $final_height,
+                    'intended_width' => $width,
+                    'intended_height' => $height
+                ));
+            
+            return true;  
         }
-
-        return true;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                return $this->SetError(25000, __('Cannot add this resolution.'));
+        
+            return false;
+        }
     }
 
     /**
@@ -64,27 +75,39 @@ class Resolution extends Data
      */
     public function Edit($resolutionID, $resolution, $width, $height)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
 
-        if ($resolution == '' || $width == '' || $height == '')
-            return $this->SetError(__('All fields must be filled in'), E_USER_ERROR);
-
-        // Alter the width / height to fit with 800 px
-        $factor = min (800 / $width, 800 / $height);
-
-        $final_width    = round ($width * $factor);
-        $final_height   = round ($height * $factor);
-
-        $SQL = "UPDATE resolution SET resolution = '%s', width = %d, height = %d, intended_width = %d, intended_height = %d WHERE resolutionID = %d ";
-        $SQL = sprintf($SQL, $db->escape_string($resolution), $final_width, $final_height, $width, $height, $resolutionID);
-
-        if(!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            return $this->SetError(25000, __('Cannot edit this resolution.'));
+            if ($resolution == '' || $width == '' || $height == '')
+                $this->ThrowError(__('All fields must be filled in'));
+    
+            // Alter the width / height to fit with 800 px
+            $factor = min (800 / $width, 800 / $height);
+    
+            $final_width    = round ($width * $factor);
+            $final_height   = round ($height * $factor);
+    
+            $sth = $dbh->prepare('UPDATE resolution SET resolution = :resolution, width = :width, height = :height, intended_width = :intended_width, intended_height = :intended_height WHERE resolutionID = :resolutionid');
+            $sth->execute(array(
+                    'resolution' => $resolution,
+                    'width' => $final_width,
+                    'height' => $final_height,
+                    'intended_width' => $width,
+                    'intended_height' => $height,
+                    'resolutionid' => $resolutionID
+                ));
+            
+            return true;
         }
-
-        return true;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                return $this->SetError(25000, __('Cannot edit this resolution.'));
+        
+            return false;
+        }
     }
 
     /**
@@ -94,20 +117,25 @@ class Resolution extends Data
      */
     public function Delete($resolutionID)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM resolution WHERE resolutionID = :resolutionid');
+            $sth->execute(array(
+                    'resolutionid' => $resolutionID
+                ));
 
-        $SQL = "DELETE FROM resolution WHERE resolutionID = %d";
-        $SQL = sprintf($SQL, $resolutionID);
-
-        if(!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25000, __('Cannot delete this resolution.'));
-
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25000, __('Cannot delete this resolution.'));
+        
             return false;
         }
-
-        return true;
     }
 }
 ?>

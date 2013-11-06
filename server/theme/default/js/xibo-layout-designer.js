@@ -51,6 +51,11 @@ $(document).ready(function(){
 		$('.regionPreview', this).each(function(){
             new Preview(this);
 		});
+
+        // Set an interval
+        XiboPing('index.php?p=layout&q=LayoutStatus&layoutId=' + $(this).attr("layoutid"), '.layout-status');
+
+        setInterval("XiboPing('index.php?p=layout&q=LayoutStatus&layoutId=" + $(this).attr("layoutid") + "', '.layout-status')", 1000 * 60); // Every minute
 	});
 });
 
@@ -108,35 +113,59 @@ function savePositions() {
 	// Update all layouts
 	$("#layout").each(function(){
 
+        // Store the Layout ID
+        var layoutid = $(this).attr("layoutid");
+
+        // Build an array of
+        var regions = new Array();
+
 		$(this).find(".region").each(function(){
 
-			var width 	= $(this).css("width");
-			var height 	= $(this).css("height");
-			var top 	= $(this).css("top");
-			var left 	= $(this).css("left");
-			var regionid = $(this).attr("regionid");
-			var layoutid = $(this).attr("layoutid");
+            var region = {
+                width: $(this).css("width"),
+                height: $(this).css("height"),
+                top: $(this).css("top"),
+                left: $(this).css("left"),
+                regionid: $(this).attr("regionid")
+            }
 
-		    // Update the region width / height attributes
-		    $(this).attr("width", width).attr("height", height);
+            // Update the region width / height attributes
+            $(this).attr("width", region.width).attr("height", region.height);
 
-			$.ajax({
-				type: "post", 
-				url: "index.php?p=timeline&q=RegionChange&layoutid="+layoutid+"&ajax=true", 
-				cache: false, 
-				dataType: "json", 
-				data: {
-					"width":width,
-					"height":height,
-					"top":top,
-					"left":left,
-					"regionid":regionid
-				},
-				success: XiboSubmitResponse
-			});
-
+            // Add to the array
+            regions.push(region);
 		});
+
+        $.ajax({
+                type: "post", 
+                url: "index.php?p=timeline&q=RegionChange&layoutid="+layoutid+"&ajax=true", 
+                cache: false, 
+                dataType: "json", 
+                data: {regions : JSON.stringify(regions) },
+                success: XiboSubmitResponse
+            });
 	});
+}
+
+function XiboAssignToLayout(layoutId, regionId) {
+
+    var mediaitems = Array();
+
+    $("#fileupload .files .name").each(function() {
+
+        // Is this item in error?
+        if ($(this).attr("status") != "error")
+            mediaitems.push($(this).attr("id"));
+    });
+
+    $.ajax({
+        type: "post",
+        url: "index.php?p=timeline&q=AddFromLibrary&layoutid="+layoutId+"&regionid="+regionId+"&ajax=true",
+        cache: false,
+        dataType: "json",
+        data: { MediaID: mediaitems },
+        success: XiboSubmitResponse
+    });
 }
 
 /**
@@ -203,7 +232,7 @@ var XiboTimelineSaveOrder = function(mediaListId, layoutId, regionId) {
     var mediaList = "";
 
     $('#' + mediaListId + ' li.timelineMediaListItem').each(function(){
-        mediaList = mediaList + $(this).attr("mediaid") + "&" + $(this).attr("lkid") + "|";
+        mediaList = mediaList + $(this).attr("mediaid") + "," + $(this).attr("lkid") + "|";
     });
 
     //console.log("Media List: " + mediaList);

@@ -62,7 +62,7 @@ if (defined('XMDS') || $method != '')
 
         case 'oauth':
 
-            Debug::LogEntry($db, 'audit', 'OAuth Webservice call');
+            Debug::LogEntry('audit', 'OAuth Webservice call');
 
             Kit::ClassLoader('ServiceOAuth');
 
@@ -77,6 +77,8 @@ if (defined('XMDS') || $method != '')
 
         case 'rest':
 
+            $serviceResponse->StartTransaction();
+
             // OAuth authorization.
             if (OAuthRequestVerifier::requestIsSigned())
             {
@@ -88,7 +90,7 @@ if (defined('XMDS') || $method != '')
                     if ($userID)
                     {
                         // Create the login control system.
-                        $userClass = Config::GetSetting($db, 'userModule');
+                        $userClass = Config::GetSetting('userModule');
                         $userClass = explode('.', $userClass);
 
                         Kit::ClassLoader($userClass[0]);
@@ -118,7 +120,7 @@ if (defined('XMDS') || $method != '')
                 $serviceResponse->ErrorServerError('Not signed.');
             }
 
-            Debug::LogEntry($db, 'audit', 'Authenticated API call for [' . $method . '] with a [' . $response . '] response. Issued by UserId: ' . $user->userid, 'Services');
+            Debug::LogEntry('audit', 'Authenticated API call for [' . $method . '] with a [' . $response . '] response. Issued by UserId: ' . $user->userid, 'Services');
                 
             // Authenticated with OAuth.
             Kit::ClassLoader('Rest');

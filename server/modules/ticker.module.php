@@ -166,7 +166,7 @@ class ticker extends Module
 		$rawXml = new DOMDocument();
 		$rawXml->loadXML($this->GetRaw());
 		
-		Debug::LogEntry($db, 'audit', 'Raw XML returned: ' . $this->GetRaw());
+		Debug::LogEntry('audit', 'Raw XML returned: ' . $this->GetRaw());
 		
 		// Get the Text Node out of this
 		$textNodes = $rawXml->getElementsByTagName('template');
@@ -563,7 +563,7 @@ class ticker extends Module
     	$matches = '';
         preg_match_all('/\[.*?\]/', $text, $matches);
 
-        Debug::LogEntry($this->db, 'audit', 'Loading SimplePie to handle RSS parsing');
+        Debug::LogEntry('audit', 'Loading SimplePie to handle RSS parsing');
     	
     	// Use SimplePie to get the feed
     	include_once('3rdparty/simplepie/autoloader.php');
@@ -576,7 +576,7 @@ class ticker extends Module
     	$feed->init();
 
     	if ($feed->error()) {
-        	Debug::LogEntry($this->db, 'audit', 'Feed Error: ' . $feed->error());
+        	Debug::LogEntry('audit', 'Feed Error: ' . $feed->error());
         	return array();
         }
 
@@ -656,7 +656,7 @@ class ticker extends Module
         $filter = $this->GetOption('filter');
         $ordering = $this->GetOption('ordering');
 
-        Debug::LogEntry($db, 'audit', 'Then template for each row is: ' . $text);
+        Debug::LogEntry('audit', 'Then template for each row is: ' . $text);
 
         // Combine the column id's with the dataset data
         $matches = '';
@@ -666,7 +666,7 @@ class ticker extends Module
         
         foreach ($matches[1] as $match) {
         	// Get the column id's we are interested in
-        	Debug::LogEntry($db, 'audit', 'Matched column: ' . $match);
+        	Debug::LogEntry('audit', 'Matched column: ' . $match);
 
         	$col = explode('|', $match);
         	$columnIds[] = $col[1];
@@ -694,6 +694,11 @@ class ticker extends Module
         }
 
         return $items;
+    }
+	
+    public function IsValid() {
+    	// Can't be sure because the client does the rendering
+    	return ($this->GetOption('xmds')) ? 1 : 2;
     }
 }
 ?>

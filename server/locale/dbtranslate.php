@@ -92,6 +92,7 @@ echo __('TRANSITION_CONFIG_LOCKED_CHECKB');
 echo __('GLOBAL_THEME_NAME');
 echo __('DEFAULT_LAT');
 echo __('DEFAULT_LONG');
+echo __('SCHEDULE_WITH_VIEW_PERMISSION');
 
 // Transitions
 echo __('Fade In');

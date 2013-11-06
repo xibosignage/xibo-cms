@@ -20,7 +20,7 @@
 jQuery.fn.extend({
     xiboRender: function(options, items) {
 
-        console.log("[Xibo] Render");
+        //console.log("[Xibo] Render");
 
         // Default options
         var defaults = {
@@ -47,14 +47,14 @@ jQuery.fn.extend({
         // For each matched element
         this.each(function() {
 
-            console.log("[Xibo] Selected: " + this.tagName.toLowerCase());
-            console.log("[Xibo] Options: " + JSON.stringify(options));
+            //console.log("[Xibo] Selected: " + this.tagName.toLowerCase());
+            //console.log("[Xibo] Options: " + JSON.stringify(options));
 
             // Deal with the array of items.
             if (options.type == "ticker") {
                 // This is a ticker - expect an array of items that we need to work on.
-                console.log("[Xibo] Ticker");
-                console.log("[Xibo] There are " + items.length + " items.");
+                //console.log("[Xibo] Ticker");
+                //console.log("[Xibo] There are " + items.length + " items.");
 
                 // What source does this data come from?
                 if (options.sourceid == undefined) {
@@ -62,7 +62,7 @@ jQuery.fn.extend({
                     options.sourceid = 1;                
                 }
 
-                console.log("[Xibo] SourceId: " + options.sourceid);
+                //console.log("[Xibo] SourceId: " + options.sourceid);
 
                 if (options.sourceid == 1) {
                     // 1st Objective - filter the items array we have been given
@@ -71,12 +71,12 @@ jQuery.fn.extend({
                     //  numItems (ticker number of items from the start/end),
                     //  takeItemsFrom (ticker sort or reverse sort the array)
                     if (options.takeItemsFrom == "end") {
-                        console.log("[Xibo] Reversing items");
+                        //console.log("[Xibo] Reversing items");
                         items.reverse();
                     }
 
                     // Make sure the num items is not greater than the actual number of items
-                    console.log("[Xibo] Module requested " + options.numItems + " there are " + items.length + " in the array of items");
+                    //console.log("[Xibo] Module requested " + options.numItems + " there are " + items.length + " in the array of items");
 
                     if (options.numItems > items.length || options.numItems == 0)
                         options.numItems = items.length;
@@ -86,7 +86,7 @@ jQuery.fn.extend({
 
                     // Reverse the items again (so they are in the correct order)
                     if (options.takeItemsFrom == "end") {
-                        console.log("[Xibo] Reversing items");
+                        //console.log("[Xibo] Reversing items");
                         items.reverse();
                     }
                 }
@@ -99,7 +99,7 @@ jQuery.fn.extend({
             // settings involved:
             //  direction (if we are single we might need to configure some pages for this)
             //  itemsPerPage (tells us how many items to put on per page)
-            console.log("[Xibo] Putting " + options.numItems + " Items on the page"); 
+            //console.log("[Xibo] Putting " + options.numItems + " Items on the page"); 
 
             // Store the number of items (we might change this to number of pages)
             var numberOfItems = options.numItems;
@@ -108,7 +108,7 @@ jQuery.fn.extend({
             var numberOfPages = (options.itemsPerPage > 0) ? Math.ceil(options.numItems / options.itemsPerPage) : options.numItems;
             var itemsThisPage = 1;
 
-            console.log("[Xibo] We need to have " + numberOfPages + " pages");
+            //console.log("[Xibo] We need to have " + numberOfPages + " pages");
 
             var appendTo = this;
             
@@ -137,7 +137,7 @@ jQuery.fn.extend({
             //  scaleMode
             if (options.scaleMode == "fit") {
 
-                console.log("[Xibo] Applying jQuery FitText");
+                //console.log("[Xibo] Applying jQuery FitText");
 
                 // Remove the font-size property of all children
                 $("*", this).css("font-size", "");
@@ -151,7 +151,7 @@ jQuery.fn.extend({
                     .fitText(1.75);
             }
             else if (options.scaleMode == "scale") {
-                console.log("[Xibo] Applying CSS ZOOM");
+                //console.log("[Xibo] Applying CSS ZOOM");
 
                 $(this).css({
                     zoom: options.scaleFactor,
@@ -175,7 +175,7 @@ jQuery.fn.extend({
 
                 var duration = (options.durationIsPerItem) ? options.duration : options.duration / numberOfSlides;
 
-                console.log("[Xibo] initialising the cycle2 plugin with " + numberOfSlides + " slides and selector " + slides + ". Duration per slide is " + duration + " seconds.");
+                //console.log("[Xibo] initialising the cycle2 plugin with " + numberOfSlides + " slides and selector " + slides + ". Duration per slide is " + duration + " seconds.");
 
                 // Cycle handles this for us
                 $(this).cycle({

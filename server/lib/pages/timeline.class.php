@@ -195,6 +195,10 @@ class timelineDAO {
 
     function ManualRegionPosition()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db 	=& $this->db;
         $user 	=& $this->user;
         $response   = new ResponseManager();
@@ -227,7 +231,7 @@ class timelineDAO {
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        Debug::LogEntry($db, 'audit', sprintf('Layoutid [%d] Regionid [%s]', $layoutid, $regionid), 'layout', 'ManualRegionPosition');
+        Debug::LogEntry('audit', sprintf('Layoutid [%d] Regionid [%s]', $layoutid, $regionid), 'layout', 'ManualRegionPosition');
 
         // Remove the "px" from them
         $width  = str_replace('px', '', $width);
@@ -262,33 +266,42 @@ class timelineDAO {
 		// ajax request handler
 		$response = new ResponseManager();
 		
-		//Vars
+		// Vars
 		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
-		$top            = Kit::GetParam('top', _POST, _INT);
-                $left           = Kit::GetParam('left', _POST, _INT);
-                $width          = Kit::GetParam('width', _POST, _INT);
-                $height 	= Kit::GetParam('height', _POST, _INT);
+        $regions = Kit::GetParam('regions', _POST, _HTMLSTRING);
 
-		// Remove the "px" from them
-		$width 	= str_replace("px", '', $width);
-		$height = str_replace("px", '', $height);
-		$top 	= str_replace("px", '', $top);
-		$left 	= str_replace("px", '', $left);
-		
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+        if ($regions == '')
+            trigger_error(__('No regions present'));
 
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
-        if (!$regionAuth->del)
-            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
-		
-		if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
-		{
-			//there was an ERROR
-			trigger_error($region->GetErrorMessage(), E_USER_ERROR);
-		}
+        $regions = json_decode($regions);
+
+        foreach ($regions as $region) {
+
+            $regionid = Kit::ValidateParam($region->regionid, _STRING);
+            $top = Kit::ValidateParam($region->top, _INT);
+            $left = Kit::ValidateParam($region->left, _INT);
+            $width = Kit::ValidateParam($region->width, _INT);
+            $height = Kit::ValidateParam($region->height, _INT);
+
+            Debug::LogEntry('audit', 'Editing Region ' . $regionid);
+
+            // Remove the "px" from them
+            $width  = str_replace("px", '', $width);
+            $height = str_replace("px", '', $height);
+            $top    = str_replace("px", '', $top);
+            $left   = str_replace("px", '', $left);
+            
+            Kit::ClassLoader('region');
+            $regionObject = new region($db);
+            $ownerId = $regionObject->GetOwnerId($layoutid, $regionid);
+
+            $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
+            if (!$regionAuth->del)
+                trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+    		
+    		if (!$regionObject->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
+    			trigger_error($regionObject->GetErrorMessage(), E_USER_ERROR);
+        }
 		
 		$response->SetFormSubmitResponse('');
 		$response->hideMessage = true;
@@ -359,7 +372,7 @@ END;
         $response 	= new ResponseManager();
 
         $layoutId = Kit::GetParam('layoutid', _GET, _INT);
-        $regionId = Kit::GetParam('regionid', _POST, _STRING);
+        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
         $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY, array());
 
         // Make sure we have permission to edit this region
@@ -645,7 +658,7 @@ END;
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Library location
-        $libraryLocation = Config::GetSetting($db, 'LIBRARY_LOCATION');
+        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
 
         // Present a canvas with 2 columns, left column for the media icons
         $buttons = array();
@@ -696,7 +709,7 @@ END;
         $response->html .= '        <ul id="' . $timeListMediaListId . '" class="timelineSortableListOfMedia">';
 
         // How are we going to colour the bars, my media type or my permissions
-        $timeBarColouring = Config::GetSetting($db, 'REGION_OPTIONS_COLOURING');
+        $timeBarColouring = Config::GetSetting('REGION_OPTIONS_COLOURING');
 
         // Create a layout object
         $region = new Region($db);
@@ -717,7 +730,7 @@ END;
             if (!$auth->view)
                 continue;
 
-            Debug::LogEntry($db, 'audit', sprintf('Permission Granted to View MediaID: %s', $mediaId), 'layout', 'TimeLine');
+            Debug::LogEntry('audit', sprintf('Permission Granted to View MediaID: %s', $mediaId), 'layout', 'TimeLine');
 
             // Create a media module to handle all the complex stuff
             require_once("modules/$mediaType.module.php");
@@ -857,7 +870,7 @@ END;
         foreach($mediaList as $mediaNode)
         {
             // Explode the second part of the array
-            $mediaNode = explode('&', $mediaNode);
+            $mediaNode = explode(',', $mediaNode);
 
             $resolvedMedia[] = array('mediaid' => $mediaNode[0], 'lkid' => $mediaNode[1]);
         }

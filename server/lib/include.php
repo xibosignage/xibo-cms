@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-define('WEBSITE_VERSION', 64);
+define('WEBSITE_VERSION', 65);
 
 // No errors reported until we read the settings from the DB
 error_reporting(0);
@@ -28,6 +28,7 @@ ini_set('display_errors', 0);
 ini_set('gd.jpeg_ignore_warning', 1);
 
 // Required Library Files
+require_once("lib/app/pdoconnect.class.php");
 require_once("lib/app/translationengine.class.php");
 require_once("lib/app/debug.class.php");
 require_once("lib/app/kit.class.php");
@@ -89,7 +90,15 @@ if (file_exists("upgrade.php"))
 // parse and init the settings.php
 Config::Load();
 
-// create a database class instance
+// Test our DB connection through PDO
+try {
+    PDOConnect::init();
+}
+catch (PDOException $e) {
+    die('Database connection problem. ' . $e->getMessage());
+}
+
+// create a database class instance (legacy)
 $db = new database();
 
 if (!$db->connect_db($dbhost, $dbuser, $dbpass))
@@ -102,34 +111,34 @@ if (!$db->select_db($dbname))
     die('Database connection problem.');
 }
 
-date_default_timezone_set(Config::GetSetting($db, "defaultTimezone"));
+date_default_timezone_set(Config::GetSetting("defaultTimezone"));
 
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));
 
 // Define the VERSION
-Config::Version($db);
+Config::Version();
 
 // Does the version in the DB match the version of the code?
 if (DBVERSION != WEBSITE_VERSION)
     die(sprintf('Incompatible database version detected. Please ensure your database and website versions match. You have database %d and website %d', DBVERSION, WEBSITE_VERSION));
 
 // What is the production mode of the server?
-if(Config::GetSetting($db, 'SERVER_MODE') == 'Test') 
+if(Config::GetSetting('SERVER_MODE') == 'Test') 
     ini_set('display_errors', 1);
 
 // Debugging?
-if(Config::GetSetting($db, "debug")=="On") 
+if(Config::GetSetting("debug") == "On") 
     error_reporting(E_ALL);
 
 // Setup the translations for gettext
-TranslationEngine::InitLocale($db);
+TranslationEngine::InitLocale();
 
 // Create login control system
-require_once('modules/' . Config::GetSetting($db, "userModule"));
+require_once('modules/' . Config::GetSetting("userModule"));
 
 $user 		= new User($db);
-$session 	= new Session($db);
+$session 	= new Session();
 
 // Work out the location of this service
 $serviceLocation = Kit::GetXiboRoot();
@@ -138,7 +147,7 @@ $serviceLocation = Kit::GetXiboRoot();
 require_once('lib/oauth.inc.php');
 
 // Page variable set? Otherwise default to index
-$page 		= Kit::GetParam('p', _REQUEST, _WORD, 'index');
+$page = Kit::GetParam('p', _REQUEST, _WORD, 'index');
 
 // Assign the page name to the session
 $session->set_page(session_id(), $page);

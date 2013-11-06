@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2012 Daniel Garner
+ * Copyright (C) 2012-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,11 +22,6 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
 
 class CampaignSecurity extends Data
 {
-    public function __construct(database $db)
-    {
-        parent::__construct($db);
-    }
-
     /**
      * Links a Campaign to a Group
      * @return
@@ -35,36 +30,40 @@ class CampaignSecurity extends Data
      */
     public function Link($campaignId, $groupId, $view, $edit, $del)
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', 'IN', 'CampaignGroupSecurity', 'Link');
 
-        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'Link');
+        try {
+            $dbh = PDOConnect::init();
 
-        $SQL  = "";
-        $SQL .= "INSERT ";
-        $SQL .= "INTO   lkcampaigngroup ";
-        $SQL .= "       ( ";
-        $SQL .= "              CampaignID, ";
-        $SQL .= "              GroupID, ";
-        $SQL .= "              View, ";
-        $SQL .= "              Edit, ";
-        $SQL .= "              Del ";
-        $SQL .= "       ) ";
-        $SQL .= "       VALUES ";
-        $SQL .= "       ( ";
-        $SQL .= sprintf("  %d, %d, %d, %d, %d ", $campaignId, $groupId, $view, $edit, $del);
-        $SQL .= "       )";
+            $SQL  = "";
+            $SQL .= "INSERT ";
+            $SQL .= "INTO   lkcampaigngroup ";
+            $SQL .= "       ( ";
+            $SQL .= "              CampaignID, ";
+            $SQL .= "              GroupID, ";
+            $SQL .= "              View, ";
+            $SQL .= "              Edit, ";
+            $SQL .= "              Del ";
+            $SQL .= "       ) ";
+            $SQL .= " VALUES (:campaignid, :groupId, :view, :edit, :del)";
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25024, __('Could not Link Campaign to Group'));
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'campaignid' => $campaignId,
+                    'groupId' => $groupId,
+                    'view' => $view,
+                    'edit' => $edit,
+                    'del' => $del
+                ));
 
-            return false;
+            Debug::LogEntry('audit', 'OUT', 'CampaignGroupSecurity', 'Link');
+
+            return true;
         }
-
-        Debug::LogEntry($db, 'audit', 'OUT', 'CampaignGroupSecurity', 'Link');
-
-        return true;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25024, __('Could not Link Campaign to Group'));
+        }
     }
 
     /**
@@ -77,13 +76,25 @@ class CampaignSecurity extends Data
      */
     public function LinkEveryone($campaignId, $view, $edit, $del)
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', 'IN', 'CampaignGroupSecurity', 'LinkEveryone');
+        
+        try {
+            $dbh = PDOConnect::init();
 
-        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'LinkEveryone');
+            // Get the Group ID for Everyone
+            $sth = $dbh->prepare('SELECT GroupID FROM `group` WHERE IsEveryone = 1');
+            $sth->execute();
 
-        $groupId = $db->GetSingleValue("SELECT GroupID FROM `group` WHERE IsEveryone = 1", 'GroupID', _INT);
+            if (!$row = $sth->fetch())
+                throw new Exception('Missing Everyone group');
 
-        return $this->Link($campaignId, $groupId, $view, $edit, $del);
+            // Link
+            return $this->Link($campaignId, Kit::ValidateParam($row['GroupID'], _INT), $view, $edit, $del);
+        }       
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25000, __('Layout has no associated Campaign, corrupted Layout'));
+        }
     }
 
     /**
@@ -94,26 +105,25 @@ class CampaignSecurity extends Data
      */
     public function Unlink($campaignId, $groupId)
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', 'IN', 'CampaignGroupSecurity', 'Unlink');
 
-        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'Unlink');
+        try {
+            $dbh = PDOConnect::init();
 
-        $SQL  = "";
-        $SQL .= "DELETE FROM ";
-        $SQL .= "   lkcampaigngroup ";
-        $SQL .= sprintf("  WHERE CampaignID = %d AND GroupID = %d ", $campaignId, $groupId);
+            $sth = $dbh->prepare('DELETE FROM `lkcampaigngroup` WHERE CampaignID = :campaignid AND GroupID = :groupid');
+            $sth->execute(array(
+                    'campaignid' => $campaignId,
+                    'groupId' => $groupId
+                ));
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25025, __('Could not Unlink Campaign from Group'));
+            Debug::LogEntry('audit', 'OUT', 'CampaignGroupSecurity', 'Unlink');
 
-            return false;
+            return true;
         }
-
-        Debug::LogEntry($db, 'audit', 'OUT', 'CampaignGroupSecurity', 'Unlink');
-
-        return true;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25025, __('Could not Unlink Campaign from Group'));
+        }
     }
 
         /**
@@ -124,26 +134,24 @@ class CampaignSecurity extends Data
      */
     public function UnlinkAll($campaignId)
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', 'IN', 'CampaignGroupSecurity', 'UnlinkAll');
 
-        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'Unlink');
+        try {
+            $dbh = PDOConnect::init();
 
-        $SQL  = "";
-        $SQL .= "DELETE FROM ";
-        $SQL .= "   lkcampaigngroup ";
-        $SQL .= sprintf("  WHERE CampaignID = %d ", $campaignId);
+            $sth = $dbh->prepare('DELETE FROM `lkcampaigngroup` WHERE CampaignID = :campaignid');
+            $sth->execute(array(
+                    'campaignid' => $campaignId
+                ));
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25025, __('Could not Unlink Campaign from Group'));
+            Debug::LogEntry('audit', 'OUT', 'CampaignGroupSecurity', 'UnlinkAll');
 
-            return false;
+            return true;
         }
-
-        Debug::LogEntry($db, 'audit', 'OUT', 'CampaignGroupSecurity', 'Unlink');
-
-        return true;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25025, __('Could not Unlink Campaign from Group'));
+        }
     }
 
     /**
@@ -154,35 +162,39 @@ class CampaignSecurity extends Data
      */
     public function CopyAll($campaignId, $newCampaignId)
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', 'IN', 'CampaignGroupSecurity', 'Copy');
 
-        Debug::LogEntry($db, 'audit', 'IN', 'CampaignGroupSecurity', 'Copy');
+        try {
+            $dbh = PDOConnect::init();
 
-        $SQL  = "";
-        $SQL .= "INSERT ";
-        $SQL .= "INTO   lkcampaigngroup ";
-        $SQL .= "       ( ";
-        $SQL .= "              CampaignID, ";
-        $SQL .= "              GroupID, ";
-        $SQL .= "              View, ";
-        $SQL .= "              Edit, ";
-        $SQL .= "              Del ";
-        $SQL .= "       ) ";
-        $SQL .= " SELECT '%s', GroupID, View, Edit, Del ";
-        $SQL .= "   FROM lkcampaigngroup ";
-        $SQL .= "  WHERE CampaignID = %d ";
+            $SQL  = "";
+            $SQL .= "INSERT ";
+            $SQL .= "INTO   lkcampaigngroup ";
+            $SQL .= "       ( ";
+            $SQL .= "              CampaignID, ";
+            $SQL .= "              GroupID, ";
+            $SQL .= "              View, ";
+            $SQL .= "              Edit, ";
+            $SQL .= "              Del ";
+            $SQL .= "       ) ";
+            $SQL .= " SELECT :newcampaignid, GroupID, View, Edit, Del ";
+            $SQL .= "   FROM lkcampaigngroup ";
+            $SQL .= "  WHERE CampaignID = :campaignid ";
 
-        $SQL = sprintf($SQL, $newCampaignId, $campaignId);
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'newcampaignid' => $newCampaignId,
+                    'campaignid' => $campaignId
+                ));
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25028, __('Could not Copy All Campaign Security'));
+            Debug::LogEntry('audit', 'OUT', 'CampaignGroupSecurity', 'Copy');
 
-            return false;
+            return true;
         }
-
-        return true;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25028, __('Could not Copy All Campaign Security'));
+        }
     }
 }
 ?>

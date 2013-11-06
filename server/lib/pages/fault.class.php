@@ -35,7 +35,7 @@ class faultDAO
 	{
 		$db =& $this->db;
 		$user =& $this->user;
-		$config = new Config($db);
+		$config = new Config();
 
 		// Configure the theme
         Theme::Set('environment_check', $config->CheckEnvironment());
@@ -56,7 +56,7 @@ class faultDAO
 		header('Accept-Ranges: bytes');
 		 
 		 		
-		$config = new Config($db);
+		$config = new Config();
 		echo "--------------------------------------\n";
 		echo 'Environment Checks' . "\n";
 		echo "--------------------------------------\n";

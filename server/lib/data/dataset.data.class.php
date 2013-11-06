@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2011 Daniel Garner
+ * Copyright (C) 2011-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -31,46 +31,49 @@ class DataSet extends Data
      */
     public function Add($dataSet, $description, $userId)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
 
-        // Validation
-        if (strlen($dataSet) > 50 || strlen($dataSet) < 1)
-        {
-            $this->SetError(25001, __("Name must be between 1 and 50 characters"));
-            return false;
+            // Validation
+            if (strlen($dataSet) > 50 || strlen($dataSet) < 1)
+                return $this->SetError(25001, __("Name must be between 1 and 50 characters"));
+
+            if (strlen($description) > 254)
+                return $this->SetError(25002, __("Description can not be longer than 254 characters"));
+
+
+            // Ensure there are no layouts with the same name
+            $sth = $dbh->prepare('SELECT DataSet FROM dataset WHERE DataSet = :dataset');
+            $sth->execute(array(
+                    'dataset' => $dataSet
+                ));
+
+            if ($row = $sth->fetch())
+                return $this->SetError(25004, sprintf(__("There is already dataset called '%s'. Please choose another name."), $dataSet));
+
+            // End Validation
+
+            $SQL = "INSERT INTO dataset (DataSet, Description, UserID) ";
+            $SQL .= " VALUES (:dataset, :description, :userid) ";
+
+            // Insert the data set
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'dataset' => $dataSet,
+                    'description' => $description,
+                    'userid' => $userId
+                ));
+
+            $id = $dbh->lastInsertId();
+
+            Debug::LogEntry('audit', 'Complete', 'DataSet', 'Add');
+
+            return $id;
         }
-
-        if (strlen($description) > 254)
-        {
-            $this->SetError(25002, __("Description can not be longer than 254 characters"));
-            return false;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25005, __('Could not add DataSet'));
         }
-
-        // Ensure there are no layouts with the same name
-        $SQL = sprintf("SELECT DataSet FROM dataset WHERE DataSet = '%s' ", $dataSet);
-
-        if ($db->GetSingleRow($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25004, sprintf(__("There is already dataset called '%s'. Please choose another name."), $dataSet));
-            return false;
-        }
-        // End Validation
-
-        $SQL = "INSERT INTO dataset (DataSet, Description, UserID) ";
-        $SQL .= " VALUES ('%s', '%s', %d) ";
-
-        if (!$id = $db->insert_query(sprintf($SQL, $dataSet, $description, $userId)))
-        {
-            trigger_error($db->error());
-            $this->SetError(25005, __('Could not add DataSet'));
-
-            return false;
-        }
-
-        Debug::LogEntry($db, 'audit', 'Complete', 'DataSet', 'Add');
-
-        return $id;
     }
 
     /**
@@ -81,43 +84,48 @@ class DataSet extends Data
      */
     public function Edit($dataSetId, $dataSet, $description)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
 
-        // Validation
-        if (strlen($dataSet) > 50 || strlen($dataSet) < 1)
-        {
-            $this->SetError(25001, __("Name must be between 1 and 50 characters"));
-            return false;
+            // Validation
+            if (strlen($dataSet) > 50 || strlen($dataSet) < 1)
+            {
+                $this->SetError(25001, __("Name must be between 1 and 50 characters"));
+                return false;
+            }
+
+            if (strlen($description) > 254)
+            {
+                $this->SetError(25002, __("Description can not be longer than 254 characters"));
+                return false;
+            }
+
+            // Ensure there are no layouts with the same name
+            $sth = $dbh->prepare('SELECT DataSet FROM dataset WHERE DataSet = :dataset AND DataSetID <> :datasetid');
+            $sth->execute(array(
+                    'dataset' => $dataSet,
+                    'datasetid' => $dataSetId
+                ));
+
+            if ($row = $sth->fetch())
+                return $this->SetError(25004, sprintf(__("There is already dataset called '%s'. Please choose another name."), $dataSet));
+
+            // End Validation
+             
+            // Update the data set
+            $sth = $dbh->prepare('UPDATE dataset SET DataSet = :dataset, Description = :description WHERE DataSetID = :datasetid');
+            $sth->execute(array(
+                    'dataset' => $dataSet,
+                    'description' => $description,
+                    'datasetid' => $dataSetId
+                ));
+
+            return true;
         }
-
-        if (strlen($description) > 254)
-        {
-            $this->SetError(25002, __("Description can not be longer than 254 characters"));
-            return false;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25005, sprintf(__('Cannot edit dataset %s'), $dataSet));
         }
-
-        // Ensure there are no layouts with the same name
-        $SQL = sprintf("SELECT DataSet FROM dataset WHERE DataSet = '%s' AND DataSetID <> %d ", $dataSet, $dataSetId);
-
-        if ($db->GetSingleRow($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25004, sprintf(__("There is already a dataset called '%s'. Please choose another name."), $dataSet));
-            return false;
-        }
-        // End Validation
-
-        $SQL = "UPDATE dataset SET DataSet = '%s', Description = '%s' WHERE DataSetID = %d ";
-        $SQL = sprintf($SQL, $dataSet, $description, $dataSetId);
-
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25005, sprintf(__('Cannot edit dataset %s'), $dataSet));
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -126,36 +134,45 @@ class DataSet extends Data
      */
     public function Delete($dataSetId)
     {
-        $db =& $this->db;
+        try {
+            $dbh = PDOConnect::init();
 
-        $SQL = "SELECT * FROM `datasetdata` INNER JOIN `datasetcolumn` ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID WHERE datasetcolumn.DataSetID = %d";
+            // First check to see if we have any data
+            $sth = $dbh->prepare('SELECT * FROM `datasetdata` INNER JOIN `datasetcolumn` ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID WHERE datasetcolumn.DataSetID = :datasetid');
+            $sth->execute(array(
+                    'datasetid' => $dataSetId
+                ));
 
-        // First check to see if we have any data
-        if ($db->GetCountOfRows(sprintf($SQL, $dataSetId)) > 0)
-            return $this->SetError(25005, __('There is data assigned to this data set, cannot delete.'));
+            if ($row = $sth->fetch())
+                return $this->SetError(25005, __('There is data assigned to this data set, cannot delete.'));
+            
+            // Delete security
+            Kit::ClassLoader('datasetgroupsecurity');
+            $security = new DataSetGroupSecurity($this->db);
+            $security->UnlinkAll($dataSetId);
 
-        // Delete security
-        Kit::ClassLoader('datasetgroupsecurity');
-        $security = new DataSetGroupSecurity($db);
-        $security->UnlinkAll($dataSetId);
+            // Delete columns
+            $dataSetObject = new DataSetColumn($this->db);
+            if (!$dataSetObject->DeleteAll($dataSetId))
+                return $this->SetError(25005, __('Cannot delete dataset, columns could not be deleted.'));
 
-        // Delete columns
-        $dataSetObject = new DataSetColumn($db);
-        if (!$dataSetObject->DeleteAll($dataSetId))
-            return $this->SetError(25005, __('Cannot delete dataset, columns could not be deleted.'));
+            // Delete data set
+            $sth = $dbh->prepare('DELETE FROM dataset WHERE DataSetID = :datasetid');
+            $sth->execute(array(
+                    'datasetid' => $dataSetId
+                ));
 
-        // Delete data set
-        $SQL = "DELETE FROM dataset WHERE DataSetID = %d";
-        $SQL = sprintf($SQL, $dataSetId);
+            return true;
+        }
+        catch (Exception $e) {
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25005, __('Cannot delete dataset'));
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25005, sprintf(__('Cannot edit dataset %s'), $dataSet));
+
             return false;
         }
-        
-        return true;
     }
 
     /**
@@ -182,8 +199,8 @@ class DataSet extends Data
 
         // Get the Latitude and Longitude ( might be used in a formula )
         if ($displayId == 0) {
-            $defaultLat = Config::GetSetting($db, 'DEFAULT_LAT');
-            $defaultLong = Config::GetSetting($db, 'DEFAULT_LONG');
+            $defaultLat = Config::GetSetting('DEFAULT_LAT');
+            $defaultLong = Config::GetSetting('DEFAULT_LONG');
             $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $defaultLat . " " . $defaultLong . ")')";
         }
         else
@@ -298,7 +315,7 @@ class DataSet extends Data
             $SQL .= sprintf(' LIMIT %d, %d ', $lowerLimit, $upperLimit);
         }
 
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
 
         if (!$rows = $db->GetArray($SQL, $associative))
             trigger_error($db->error());

@@ -98,7 +98,7 @@ class transitionDAO
             $row['buttons'] = array();
 
             // If the module config is not locked, present some buttons
-            if (Config::GetSetting($db, 'TRANSITION_CONFIG_LOCKED_CHECKB') != 'Checked') {
+            if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') != 'Checked') {
                 
                 // Edit button
                 $row['buttons'][] = array(
@@ -127,7 +127,7 @@ class transitionDAO
         $helpManager = new HelpManager($db, $user);
 
         // Can we edit?
-        if (Config::GetSetting($db, 'TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             trigger_error(__('Transition Config Locked'), E_USER_ERROR);
 
         $transitionId = Kit::GetParam('TransitionID', _GET, _INT);
@@ -171,11 +171,15 @@ class transitionDAO
      */
     public function Edit()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $response = new ResponseManager();
 
         // Can we edit?
-        if (Config::GetSetting($db, 'TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             trigger_error(__('Transition Config Locked'), E_USER_ERROR);
 
         $transitionId = Kit::GetParam('TransitionID', _POST, _INT);

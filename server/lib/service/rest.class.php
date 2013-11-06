@@ -290,9 +290,9 @@ class Rest
         // Checksum the payload
         if ($payloadMd5 != $checkSum)
         {
-            // Debug::LogEntry($this->db, 'audit', 'Sent Checksum: ' . $checkSum, 'RestXml', 'LibraryMediaFileUpload');
-            // Debug::LogEntry($this->db, 'audit', 'Calculated Checksum: ' . $payloadMd5, 'RestXml', 'LibraryMediaFileUpload');
-            // Debug::LogEntry($this->db, 'audit', 'Payload: ' . $payload, 'RestXml', 'LibraryMediaFileUpload');
+            // Debug::LogEntry('audit', 'Sent Checksum: ' . $checkSum, 'RestXml', 'LibraryMediaFileUpload');
+            // Debug::LogEntry('audit', 'Calculated Checksum: ' . $payloadMd5, 'RestXml', 'LibraryMediaFileUpload');
+            // Debug::LogEntry('audit', 'Payload: ' . $payload, 'RestXml', 'LibraryMediaFileUpload');
 
             return $this->Error(2);
         }
@@ -500,7 +500,7 @@ class Rest
         if(!$id = $layoutObject->Add($layout, $description, $tags, $this->user->userid, $templateId))
             return $this->Error($layoutObject->GetErrorNumber(), $layoutObject->GetErrorMessage());
 
-        Debug::LogEntry($this->db, 'audit', 'Added new layout with id' . $id);
+        Debug::LogEntry('audit', 'Added new layout with id' . $id);
 
         return $this->Respond($this->ReturnId('layout', $id));
     }
@@ -1012,6 +1012,7 @@ class Rest
         $layoutId = $this->GetParam('layoutId', _INT);
         $regionId = $this->GetParam('regionId', _STRING);
         $mediaId = $this->GetParam('mediaId', _STRING);
+        $lkId = $this->GetParam('lkId', _INT);
 
         // Does the user have permissions to view this region?
         if (!$this->user->LayoutAuth($layoutId))
@@ -1039,7 +1040,7 @@ class Rest
         require_once("modules/$mod.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $mod($this->db, $this->user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $mod($this->db, $this->user, $mediaId, $layoutId, $regionId, $lkId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->del)
@@ -1049,13 +1050,6 @@ class Rest
         if (!$module->ApiDeleteRegionMedia($layoutId, $regionId, $mediaId)) {
             return $this->Error($module->errorMessage);
         }
-
-        // Delete the actual media record
-        Kit::ClassLoader('Media');
-        $media = new Media($this->db);
-
-        if (!$media->Delete($mediaId))
-            return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
         return $this->Respond($this->ReturnId('success', true));
     }
@@ -1190,9 +1184,9 @@ class Rest
      */
     public function Version()
     {
-        $version = Config::Version($this->db);
+        $version = Config::Version();
 
-        Debug::LogEntry($this->db, 'audit', 'Called Version');
+        Debug::LogEntry('audit', 'Called Version');
 
         $xmlDoc = new DOMDocument();
         $xmlElement = $xmlDoc->createElement('version');

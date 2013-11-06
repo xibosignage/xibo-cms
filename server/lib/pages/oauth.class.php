@@ -158,7 +158,7 @@ class oauthDAO
                 else
                     $authorized = false;
 
-                Debug::LogEntry($this->db, 'audit', 'Allow submitted. Application is ' . (($authorized) ? 'authed' : 'denied'));
+                Debug::LogEntry('audit', 'Allow submitted. Application is ' . (($authorized) ? 'authed' : 'denied'));
 
                 // Set the request token to be authorized or not authorized
                 // When there was a oauth_callback then this will redirect to the consumer
@@ -216,6 +216,10 @@ class oauthDAO
      */
     public function Register()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();

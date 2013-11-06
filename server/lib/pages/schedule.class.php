@@ -139,7 +139,7 @@ class scheduleDAO
             $month = date('m', $date);
             $year = date('Y', $date);
 
-            Debug::LogEntry($db, 'audit', 'Month: ' . $month . ' Year: ' . $year . ' [' . $date . ']' . ' [Raw Date:' . Kit::GetParam('date', _POST, _STRING) . ']');
+            Debug::LogEntry('audit', 'Month: ' . $month . ' Year: ' . $year . ' [' . $date . ']' . ' [Raw Date:' . Kit::GetParam('date', _POST, _STRING) . ']');
 
             // Get the first day of the month
             $month_start    = mktime(0, 0, 0, $month, 1, $year);
@@ -266,7 +266,7 @@ class scheduleDAO
             // Load this months events into an array
             $monthEvents    = $this->GetEventsForMonth($month, $year, $displayGroupIDs);
 
-            Debug::LogEntry($db, 'audit', 'Number of weeks to render: ' . count($weeks), '', 'GenerateMonth');
+            Debug::LogEntry('audit', 'Number of weeks to render: ' . count($weeks), '', 'GenerateMonth');
 
             // Use the number of weeks in this month to work out how much space each week should get, and where to position it
             $monthHeightOffsetPerWeek = 100 / count($weeks);
@@ -335,7 +335,7 @@ class scheduleDAO
                     }
                     else if($outset > 0)
                     {
-                        Debug::LogEntry($db, 'audit', 'Outset is ' . $outset . ' and i is ' . $i, '', 'GenerateMonth');
+                        Debug::LogEntry('audit', 'Outset is ' . $outset . ' and i is ' . $i, '', 'GenerateMonth');
 
                         // Days that do not belond in this month
                         if(($i >= ($num_weeks * 7) - $outset))
@@ -602,7 +602,7 @@ HTML;
             //Ordering
             $SQL.= " ORDER BY schedule_detail.ToDT - schedule_detail.FromDT DESC, 2,3";
         
-            Debug::LogEntry($db, 'audit', $SQL);
+            Debug::LogEntry('audit', $SQL);
 
             if (!$result = $db->query($SQL))
             {
@@ -611,7 +611,7 @@ HTML;
             }
 
             // Number of events
-            Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
+            Debug::LogEntry('audit', 'Number of events: ' . $db->num_rows($result));
 
             while($row = $db->get_assoc_row($result))
             {
@@ -635,7 +635,7 @@ HTML;
                 $dayNo      = (int) date('d', $fromDT);
                 $layoutUri      = sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
 
-                Debug::LogEntry($db, 'audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
+                Debug::LogEntry('audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
 
                 // Create a new Event from these details
                 $event          = new Event();
@@ -674,7 +674,7 @@ HTML;
                     // If we are located by this point, that means we can fill in these blocks
                     if ($located)
                     {
-                        Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
+                        Debug::LogEntry('audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
 
                         for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
                         {
@@ -703,7 +703,7 @@ HTML;
                     // If we are located by this point, that means we can fill in these blocks
                     if ($located)
                     {
-                        Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
+                        Debug::LogEntry('audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
 
                         for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
                         {
@@ -732,7 +732,7 @@ HTML;
                     // If we are located by this point, that means we can fill in these blocks
                     if ($located)
                     {
-                        Debug::LogEntry($db, 'audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
+                        Debug::LogEntry('audit', sprintf('Located ScheduleDetailID %d in Position %d', $eventDetailID, $locatedOn));
 
                         for ($i = $dayNo; $i < $dayNo + $spanningDays; $i++)
                         {
@@ -749,12 +749,12 @@ HTML;
                         
                     $events[3][$dayNo] = $events[3][$dayNo] + 1;
 
-                    Debug::LogEntry($db, 'audit', sprintf('No space for event with start day no %d and spanning days %d', $dayNo, $spanningDays));
+                    Debug::LogEntry('audit', sprintf('No space for event with start day no %d and spanning days %d', $dayNo, $spanningDays));
                 }
             }
 
-            Debug::LogEntry($db, 'audit', 'Built Month Array');
-            Debug::LogEntry($db, 'audit', var_export($events, true));
+            Debug::LogEntry('audit', 'Built Month Array');
+            Debug::LogEntry('audit', var_export($events, true));
 
             return $events;
     }
@@ -797,7 +797,7 @@ HTML;
         //Ordering
         $SQL.= " ORDER BY 2,3"; 
         
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
         
         if (!$result = $db->query($SQL))
         {
@@ -806,7 +806,7 @@ HTML;
         }
 
         // Number of events
-        Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
+        Debug::LogEntry('audit', 'Number of events: ' . $db->num_rows($result));
         
         // Define some colors:
         $color[1]   = 'CalEvent1';
@@ -900,7 +900,7 @@ HTML;
             //Ordering
             $SQL .= " ORDER BY schedule_detail.FromDT ASC, campaign.Campaign ASC";
 
-            Debug::LogEntry($db, 'audit', $SQL);
+            Debug::LogEntry('audit', $SQL);
 
             if (!$result = $db->query($SQL))
             {
@@ -909,7 +909,7 @@ HTML;
             }
 
             // Number of events
-            Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
+            Debug::LogEntry('audit', 'Number of events: ' . $db->num_rows($result));
 
             while($row = $db->get_assoc_row($result))
             {
@@ -933,7 +933,7 @@ HTML;
                 $layoutUri  = sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
                 $deleteUri  = sprintf('index.php?p=schedule&q=DeleteForm&EventID=%d&EventDetailID=%d"', $eventID, $eventDetailID);
 
-                Debug::LogEntry($db, 'audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
+                Debug::LogEntry('audit', sprintf('Creating Event Object for ScheduleDetailID %d. The DayNo for this event is %d', $eventDetailID, $dayNo));
 
                 // Create a new Event from these details
                 $event          = new Event();
@@ -952,8 +952,8 @@ HTML;
                 $events[]               = $event;
             }
 
-            Debug::LogEntry($db, 'audit', 'Built Day Array');
-            Debug::LogEntry($db, 'audit', var_export($events, true));
+            Debug::LogEntry('audit', 'Built Day Array');
+            Debug::LogEntry('audit', var_export($events, true));
 
             return $events;
         }
@@ -996,7 +996,7 @@ HTML;
         //Ordering
         $SQL.= " ORDER BY 2,3"; 
         
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
         
         if (!$result = $db->query($SQL))
         {
@@ -1005,7 +1005,7 @@ HTML;
         }
 
         // Number of events
-        Debug::LogEntry($db, 'audit', 'Number of events: ' . $db->num_rows($result));
+        Debug::LogEntry('audit', 'Number of events: ' . $db->num_rows($result));
         
         // Define some colors:
         $color[1] = 'CalEvent1';
@@ -1070,7 +1070,7 @@ HTML;
         }
         $SQL .= " ORDER BY IsDisplaySpecific, displaygroup.DisplayGroup ";
         
-        Debug::LogEntry($db, 'audit', $SQL, 'Schedule', 'UnorderedListofDisplays');
+        Debug::LogEntry('audit', $SQL, 'Schedule', 'UnorderedListofDisplays');
 
 
         if(!($results = $db->query($SQL))) 
@@ -1110,7 +1110,7 @@ HTML;
             }
             
             $output .= '<li>';
-            $output .= '<label>' . $displayGroup . '</label><input type="checkbox" name="DisplayGroupIDs[]" value="' . $displayGroupID . '" ' . $checked . '/>';
+            $output .= '<label class="checkbox">' . $displayGroup . '<input type="checkbox" name="DisplayGroupIDs[]" value="' . $displayGroupID . '" ' . $checked . '/></label>';
             $output .= '</li>';
         }
         
@@ -1320,7 +1320,7 @@ HTML;
 
         foreach($displays as $display)
         {
-            if (!$display['edit'] == 1)
+            if ($display['edit'] != 1 && Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'No')
                 continue;
 
             // We have permission to edit this layout
@@ -1360,6 +1360,8 @@ HTML;
         // Filter forms for selecting layouts and displays
         $layoutFilter = $this->EventFormLayoutFilter();
         $displayFilter = $this->EventFormDisplayFilter($displayGroupIds);
+
+        $token = Kit::Token();
         
         $form = <<<END
 <div class="container-fluid">
@@ -1374,6 +1376,7 @@ HTML;
 <div class="row-fluid">
     <div class="span12">
 <form id="AddEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=AddEvent" method="post">
+    $token
     <table style="width:100%;">
         <tr>
             <td colspan="4"><center><h3>Event Schedule</h3></center></td>
@@ -1486,7 +1489,7 @@ END;
         $SQL.= sprintf("   AND schedule.EventID = %d", $eventID);
         $SQL.= sprintf("   AND schedule_detail.schedule_detailID = %d", $eventDetailID);
         
-        Debug::LogEntry($db, 'audit', $SQL);
+        Debug::LogEntry('audit', $SQL);
 
         if (!$result = $db->query($SQL))
         {
@@ -1523,6 +1526,8 @@ END;
         // Filter forms for selecting layouts and displays
         $layoutFilter = $this->EventFormLayoutFilter($campaignId);
         $displayFilter = $this->EventFormDisplayFilter($displayGroupIds);
+
+        $token = Kit::Token();
         
         $form = <<<END
 <div class="container-fluid">
@@ -1537,6 +1542,7 @@ END;
 <div class="row-fluid">
     <div class="span12">
 <form id="EditEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=EditEvent" method="post">
+    $token
     <input type="hidden" id="EventID" name="EventID" value="$eventID" />
     <input type="hidden" id="EventDetailID" name="EventDetailID" value="$eventDetailID" />
     <table style="width:100%;">
@@ -1619,6 +1625,10 @@ END;
      */
     public function AddEvent() 
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db                 =& $this->db;
         $user               =& $this->user;
         $response           = new ResponseManager();
@@ -1639,8 +1649,8 @@ END;
 
         $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
         
-        Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
-        Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
+        Debug::LogEntry('audit', 'From DT: ' . $fromDT);
+        Debug::LogEntry('audit', 'To DT: ' . $toDT);
         
         $fromDT = $datemanager->GetDateFromString($fromDT);
         $toDT = $datemanager->GetDateFromString($toDT);
@@ -1697,6 +1707,10 @@ END;
      */
     public function EditEvent()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db                 =& $this->db;
         $user               =& $this->user;
         $response           = new ResponseManager();
@@ -1720,8 +1734,8 @@ END;
         if ($eventID == 0) 
             trigger_error('No event selected.', E_USER_ERROR);
         
-        Debug::LogEntry($db, 'audit', 'From DT: ' . $fromDT);
-        Debug::LogEntry($db, 'audit', 'To DT: ' . $toDT);
+        Debug::LogEntry('audit', 'From DT: ' . $fromDT);
+        Debug::LogEntry('audit', 'To DT: ' . $toDT);
         
         $fromDT = $datemanager->GetDateFromString($fromDT);
         $toDT = $datemanager->GetDateFromString($toDT);
@@ -1783,9 +1797,11 @@ END;
         
         $strQuestion = __('Are you sure you want to delete this event from <b>all</b> displays?');
         $strAdvice = __('If you only want to delete this item from certain displays, please deselect the displays in the edit dialogue and click Save.');
+        $token = Kit::Token();
 
         $form = <<<END
         <form id="DeleteEventForm" class="XiboForm" action="index.php?p=schedule&q=DeleteEvent">
+            $token
             <input type="hidden" name="EventID" value="$eventID" />
             <input type="hidden" name="EventDetailID" value="$eventDetailID" />
             <table>
@@ -1813,6 +1829,10 @@ END;
      */
     public function DeleteEvent()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db                 =& $this->db;
         $user               =& $this->user;
         $response           = new ResponseManager();
@@ -1880,20 +1900,17 @@ END;
         
         $outputForm = false;
         $displayList = $this->UnorderedListofDisplays($outputForm, $displayGroupIds);
+        $token = Kit::Token();
 
         $form = <<<END
             <form id="ScheduleNowForm" class="XiboForm" action="index.php?p=schedule&q=ScheduleNow" method="post">
+                $token
                 <table style="width:100%;">
                     <tr>
                         <td><label for="duration" title="How long should this event be scheduled for">Duration<span class="required">*</span></label></td>
-                        <td>H: <input type="text" name="hours" id="hours" size="2" class="number">
-                        M: <input type="text" name="minutes" id="minutes" size="2" class="number">
-                        S: <input type="text" name="seconds" id="seconds" size="2" class="number"></td>
-                        <td rowspan="4">
-                            <div class="FormDisplayList">
-                            $displayList
-                            </div>
-                        </td>
+                        <td>H: <input type="text" name="hours" id="hours" size="2" class="number span1">
+                        M: <input type="text" name="minutes" id="minutes" size="2" class="number span1">
+                        S: <input type="text" name="seconds" id="seconds" size="2" class="number span1"></td>
                     </tr>
                     <tr>
                         <td><label for="CampaignID" title="Select which layout this event will show.">Campaign/Layout<span class="required">*</span></label></td>
@@ -1906,6 +1923,13 @@ END;
                     <tr>
                         <td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
                         <td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="FormDisplayList">
+                            $displayList
+                            </div>
+                        </td>
                     </tr>
                 </table>
             </form>
@@ -1920,6 +1944,10 @@ END;
 
     public function ScheduleNow()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
@@ -1977,9 +2005,11 @@ END;
 
         $strQuestion = __('Are you sure you want to delete all events that intersect this day from <b>all</b> displays?');
         $strAdvice = __('This action cannot be undone.');
+        $token = Kit::Token();
 
         $form = <<<END
 <form id="DeleteDayForm" class="XiboForm" action="index.php?p=schedule&q=DeleteDay">
+    $token
     <input type="hidden" name="date" value="$date">
     <table>
         <tr>
@@ -2005,6 +2035,10 @@ END;
     */
     public function DeleteDay()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();

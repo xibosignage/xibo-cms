@@ -241,7 +241,7 @@ class statsDAO
 
         $SQL .= " ORDER BY stat.start ";
 		
-		Debug::LogEntry($db, 'audit', $SQL, 'Stats', 'OutputCSV');
+		Debug::LogEntry('audit', $SQL, 'Stats', 'OutputCSV');
 		
 		if (!$result = $db->query($SQL))
 		{
@@ -266,7 +266,7 @@ class statsDAO
 			$output		.= "$type, $fromdt, $todt, $layout, $display, $media, $tag\n";
 		}
 		
-		//Debug::LogEntry($db, 'audit', 'Output: ' . $output, 'Stats', 'OutputCSV');
+		//Debug::LogEntry('audit', 'Output: ' . $output, 'Stats', 'OutputCSV');
 		
 		echo $output;
 		exit;

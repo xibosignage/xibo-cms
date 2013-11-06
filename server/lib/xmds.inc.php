@@ -24,6 +24,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0); //we never want to display errors on the screen
 
 // Required Library Files
+require_once("lib/app/pdoconnect.class.php");
 require_once('lib/app/translationengine.class.php');
 require_once('lib/app/app_functions.php');
 require_once('lib/app/debug.class.php');
@@ -85,7 +86,7 @@ if (!$db->select_db($dbname)) trigger_error($db->error(), E_USER_ERROR);
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));
 
-date_default_timezone_set(Config::GetSetting($db, 'defaultTimezone'));
+date_default_timezone_set(Config::GetSetting('defaultTimezone'));
 
 // Work out the location of this service
 $serviceLocation = Kit::GetXiboRoot();
@@ -94,5 +95,5 @@ $serviceLocation = Kit::GetXiboRoot();
 require_once('lib/oauth.inc.php');
 
 // Setup the translations for gettext
-TranslationEngine::InitLocale($db);
+TranslationEngine::InitLocale();
 ?>

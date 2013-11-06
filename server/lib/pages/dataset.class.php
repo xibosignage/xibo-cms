@@ -165,6 +165,10 @@ class datasetDAO
      */
     public function AddDataSet()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
@@ -221,6 +225,10 @@ class datasetDAO
 
     public function EditDataSet()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
@@ -273,6 +281,10 @@ class datasetDAO
 
     public function DeleteDataSet()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
@@ -396,6 +408,10 @@ class datasetDAO
 
     public function AddDataSetColumn()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
@@ -472,6 +488,10 @@ class datasetDAO
 
     public function EditDataSetColumn()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
@@ -533,6 +553,10 @@ class datasetDAO
 
     public function DeleteDataSetColumn()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
@@ -577,7 +601,7 @@ class datasetDAO
         $SQL .= "   ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID ";
         $SQL .= sprintf("WHERE datasetcolumn.DataSetID = %d  AND datasetcolumn.DataSetColumnTypeID = 1 ", $dataSetId);
 
-        Debug::LogEntry($db, 'audit', $SQL, 'dataset', 'DataSetDataForm');
+        Debug::LogEntry('audit', $SQL, 'dataset', 'DataSetDataForm');
 
         if (!$maxResult = $db->GetSingleRow($SQL))
         {
@@ -641,7 +665,7 @@ class datasetDAO
                     $SQL .= "   AND datasetdata.DataSetColumnID = %d ";
                     $SQL = sprintf($SQL, $row, $dataSetColumnId);
 
-                    Debug::LogEntry($db, 'audit', $SQL, 'dataset');
+                    Debug::LogEntry('audit', $SQL, 'dataset');
 
                     if (!$results = $db->query($SQL))
                     {
@@ -721,7 +745,7 @@ END;
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $response->uniqueReference = Kit::GetParam('fieldid', _POST, _WORD);
+        $response->uniqueReference = Kit::GetParam('fieldid', _POST, _STRING);
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
         $dataSetColumnId = Kit::GetParam('datasetcolumnid', _POST, _INT);
         $rowNumber = Kit::GetParam('rownumber', _POST, _INT);
@@ -748,7 +772,7 @@ END;
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $response->uniqueReference = Kit::GetParam('fieldid', _POST, _WORD);
+        $response->uniqueReference = Kit::GetParam('fieldid', _POST, _STRING);
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
         $dataSetColumnId = Kit::GetParam('datasetcolumnid', _POST, _INT);
         $rowNumber = Kit::GetParam('rownumber', _POST, _INT);
@@ -891,6 +915,10 @@ END;
 
     public function Permissions()
     {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
@@ -1069,7 +1097,7 @@ END;
             trigger_error(__('Files with a CSV extention only.'));
 
         // File upload directory.. get this from the settings object
-        $csvFileLocation = Config::GetSetting($db, 'LIBRARY_LOCATION') . 'temp/' . $tmpName;
+        $csvFileLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $tmpName;
 
         // Enumerate over the columns in the DataSet and offer a column mapping for each one (from the file)
         $SQL  = "";

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -33,58 +33,57 @@ class DisplayGroup extends Data
 	/**
 	 * Adds a Display Group to Xibo
 	 * @return 
-	 * @param $displayGroup Object
-	 * @param $isDisplaySpecific Object
-	 * @param $description Object[optional]
+	 * @param $displayGroup string
+	 * @param $isDisplaySpecific int
+	 * @param $description string[optional]
 	 */
 	public function Add($displayGroup, $isDisplaySpecific, $description = '')
 	{
-		$db	=& $this->db;
-		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Add');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Add');
 
-		// Validation
-		if ($displayGroup == '')
-			return $this->SetError(__('Please enter a display group name'));
-		
-		if (strlen($description) > 254) 
-			return $this->SetError(__("Description can not be longer than 254 characters"));
-		
-		$check 	= sprintf("SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = '%s' AND IsDisplaySpecific = 0", $displayGroup);
-		$result = $db->query($check) or trigger_error($db->error());
-		
-		// Check for groups with the same name?
-		if($db->num_rows($result) != 0) 
-		{
-			return $this->SetError(sprintf(__('You already own a display group called "%s". Please choose another name.'), $displayGroup));
+		try {
+            $dbh = PDOConnect::init();
+
+			// Validation
+			if ($displayGroup == '')
+				$this->ThrowError(__('Please enter a display group name'));
+			
+			if (strlen($description) > 254) 
+				$this->ThrowError(__("Description can not be longer than 254 characters"));
+
+			$sth = $dbh->prepare('SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = :displaygroup AND IsDisplaySpecific = 0');
+            $sth->execute(array(
+                    'displaygroup' => $displayGroup
+                ));
+
+            if ($row = $sth->fetch())
+                $this->ThrowError(25004, sprintf(__('You already own a display group called "%s". Please choose another name.'), $displayGroup));
+
+			// End Validation
+			
+			// Insert the display group
+			$sth = $dbh->prepare('INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description) VALUES (:displaygroup, :isdisplayspecific, :description)');
+            $sth->execute(array(
+                    'displaygroup' => $displayGroup,
+                    'isdisplayspecific' => $isDisplaySpecific,
+                    'description' => $description
+                ));
+
+            $displayGroupID = $dbh->lastInsertId();
+			
+			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Add');
+
+			return $displayGroupID;
 		}
-		// End Validation
-		
-		// Create the SQL
-		$SQL  = "";
-		$SQL .= "INSERT ";
-		$SQL .= "INTO   displaygroup ";
-		$SQL .= "       ( ";
-		$SQL .= "              DisplayGroup     , ";
-		$SQL .= "              IsDisplaySpecific, ";
-		$SQL .= "              Description ";
-		$SQL .= "       ) ";
-		$SQL .= "       VALUES ";
-		$SQL .= "       ( ";
-		$SQL .= sprintf("              '%s', ", $db->escape_string($displayGroup));
-		$SQL .= sprintf("              %d  , ", $isDisplaySpecific);
-		$SQL .= sprintf("              '%s'  ", $db->escape_string($description));
-		$SQL .= "       )";
-				
-		if (!$displayGroupID = $db->insert_query($SQL)) 
-		{
-			trigger_error($db->error());
-			return $this->SetError(25000, __('Could not add Display Group'));
-		}
-		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Add');
-		
-		return $displayGroupID;
+        catch (Exception $e) {
+
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25000, __('Could not add Display Group'));
+
+            return false;
+        }
 	}
 	
 	/**
@@ -96,48 +95,53 @@ class DisplayGroup extends Data
 	 */
 	public function Edit($displayGroupID, $displayGroup, $description)
 	{
-		$db	=& $this->db;
-		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Edit');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Edit');
 
-		// Validation
-		if ($displayGroupID == 0) 
-			return $this->SetError(__('No Display Group Selected'));
-		
-		if ($displayGroup == '')
-			return $this->SetError(__('Please enter a display group name'));
-		
-		if (strlen($description) > 254) 
-			return $this->SetError(__("Description can not be longer than 254 characters"));
-		
-		$check 	= sprintf("SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = '%s' AND IsDisplaySpecific = 0", $displayGroup);
-		$result = $db->query($check) or trigger_error($db->error());
-		
-		// Check for groups with the same name?
-		if($db->num_rows($result) != 0) 
-		{
-			return $this->SetError(sprintf(__('You already own a display group called "%s". Please choose another name.'), $displayGroup));
-		}
-		// End Validation
-		
-		// Create the SQL
-		$SQL  = "";
-		$SQL .= "UPDATE displaygroup ";
-		$SQL .= sprintf("SET    DisplayGroup   = '%s', ", $db->escape_string($displayGroup));
-		$SQL .= sprintf("       Description    = '%s' ", $db->escape_string($description));
-		$SQL .= sprintf("WHERE  DisplayGroupID = %d", $displayGroupID);
-		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25005, __('Could not edit Display Group'));
+		try {
+            $dbh = PDOConnect::init();
+
+			// Validation
+			if ($displayGroupID == 0) 
+				$this->ThrowError(__('No Display Group Selected'));
 			
-			return false;
+			if ($displayGroup == '')
+				$this->ThrowError(__('Please enter a display group name'));
+			
+			if (strlen($description) > 254) 
+				$this->ThrowError(__("Description can not be longer than 254 characters"));
+
+			$sth = $dbh->prepare('SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = :displaygroup AND IsDisplaySpecific = 0 AND DisplayGroupID <> :displaygroupid');
+            $sth->execute(array(
+                    'displaygroup' => $displayGroup,
+                    'displaygroupid' => $displayGroupID
+                ));
+
+            if ($row = $sth->fetch())
+                $this->ThrowError(25004, sprintf(__('You already own a display group called "%s". Please choose another name.'), $displayGroup));
+			
+			// End Validation
+			 
+			// Update the DisplayGroup
+			$sth = $dbh->prepare('UPDATE displaygroup SET DisplayGroup = :displaygroup, Description = :description WHERE DisplayGroupID = :displaygroupid');
+            $sth->execute(array(
+                    'displaygroup' => $displayGroup,
+                    'description' => $description,
+                    'displaygroupid' => $displayGroupID
+                ));
+			
+			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');		
+						
+			return true;
 		}
-		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Edit');		
-		
-		return true;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25000, __('Could not add Display Group'));
+
+            return false;
+        }
 	}
 	
 	/**
@@ -147,30 +151,36 @@ class DisplayGroup extends Data
 	 */
 	public function Delete($displayGroupID)
 	{
-		$db	=& $this->db;
-		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Delete');
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Delete');
 
-                // Tidy up the schedule detail records.
-                $schedule = new Schedule($db);
-		
-                if (!$schedule->DeleteScheduleForDisplayGroup($displayGroupID))
-                    return false;
+        try {
+            $dbh = PDOConnect::init();
 
-		$SQL = sprintf("DELETE FROM displaygroup WHERE DisplayGroupID = %d", $displayGroupID);
-		
-		Debug::LogEntry($db, 'audit', $SQL);
+            // Tidy up the schedule detail records.
+            $schedule = new Schedule($this->db);
+	
+            if (!$schedule->DeleteScheduleForDisplayGroup($displayGroupID))
+                throw new Exception('Unable to DeleteScheduleForDisplayGroup');
 
-		if (!$db->query($SQL)) 
-		{
-			$this->SetError(25015,__('Unable to delete Display Group.'));
-			
-			return false;
+            // Delete the Display Group
+           	$sth = $dbh->prepare('DELETE FROM displaygroup WHERE DisplayGroupID = :displaygroupid');
+            $sth->execute(array(
+                    'displaygroupid' => $displayGroupID
+                ));
+
+			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Delete');
+						
+			return true;
 		}
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
 
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Delete');
-		
-		return true;
+            if (!$this->IsError())
+                $this->SetError(25015,__('Unable to delete Display Group.'));
+
+            return false;
+        }
 	}
 	
 	/**
@@ -180,71 +190,67 @@ class DisplayGroup extends Data
 	 */
 	public function DeleteDisplay($displayID)
 	{
-		$db	=& $this->db;
+		try {
+            $dbh = PDOConnect::init();
 		
-		// Get the DisplaySpecific Group for this Display
-		$SQL  = "";
-		$SQL .= "SELECT displaygroup.DisplayGroupID ";
-		$SQL .= "FROM   displaygroup ";
-		$SQL .= "       INNER JOIN lkdisplaydg ";
-		$SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
-		$SQL .= "WHERE  displaygroup.IsDisplaySpecific    = 1 ";
-		$SQL .= sprintf("   AND lkdisplaydg.DisplayID             = %d", $displayID);
-		
-		if (!$result = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			$this->SetError(25005, __('Unable to get the DisplayGroup for this Display'));
+			// Get the DisplaySpecific Group for this Display
+			$SQL  = "";
+			$SQL .= "SELECT displaygroup.DisplayGroupID ";
+			$SQL .= "FROM   displaygroup ";
+			$SQL .= "       INNER JOIN lkdisplaydg ";
+			$SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+			$SQL .= "WHERE  displaygroup.IsDisplaySpecific = 1 ";
+			$SQL .= "	AND lkdisplaydg.DisplayID = :displayid";
+
+			$sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'displayid' => $displayID
+                ));
+
+            if (!$row = $sth->fetch())
+                $this->ThrowError(25005, __('Unable to get the DisplayGroup for this Display'));
 			
-			return false;
-		}
+			// Get the Display Group ID
+			$displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
 		
-		$row 			= $db->get_assoc_row($result);
-		$displayGroupID	= $row['DisplayGroupID'];
-		
-            if ($displayGroupID == '')
-            {
-                // If there is no region specific display record... what do we do?
-                return $this->SetError(25006, __('Unable to get the DisplayGroup for this Display'));
-            }
+			// If there is no region specific display record... what do we do?
+            if ($displayGroupID == 0)
+            	$this->ThrowError(25005, __('Unable to get the DisplayGroup for this Display'));
 		
             // Delete the Schedule for this Display Group
-            $scheduleObject = new Schedule($db);
+            $scheduleObject = new Schedule($this->db);
 
             if (!$scheduleObject->DeleteScheduleForDisplayGroup($displayGroupID))
-            {
-                trigger_error($db->error());
-                return $this->SetError(25006, __('Unable to delete Schedule records for this DisplayGroup.'));
-            }
+            	$this->ThrowError(25006, __('Unable to delete Schedule records for this DisplayGroup.'));
 
             // Unlink all Display Groups from this Display
-            $SQL = sprintf("DELETE FROM lkdisplaydg WHERE DisplayID = %d", $displayID);
-
-            Debug::LogEntry($db, 'audit', $SQL);
-
-            if (!$db->query($SQL)) 
-            {
-                trigger_error($db->error());
-                return $this->SetError(25015,__('Unable to delete Display Group Links.'));
-            }
+            $sth = $dbh->prepare('DELETE FROM lkdisplaydg WHERE DisplayID = :displayid');
+            $sth->execute(array(
+                    'displayid' => $displayID
+                ));
 
             // Delete this display groups link to any groups
-            $SQL = sprintf("DELETE FROM lkdisplaygroupgroup WHERE DisplayGroupId = %d", $displayGroupID);
-		
-            Debug::LogEntry($db, 'audit', $SQL);
-
-            if (!$db->query($SQL))
-            {
-                trigger_error($db->error());
-                return $this->SetError(25016,__('Unable to delete Display Group Links.'));
-            }
+            $sth = $dbh->prepare('DELETE FROM lkdisplaygroupgroup WHERE DisplayGroupId = :displaygroupid');
+            $sth->execute(array(
+                    'displaygroupid' => $displayGroupID
+                ));
             
             // Delete the Display Group Itself
             if (!$this->Delete($displayGroupID))
                 // An error will already be set - so just drop out
-                return false;
+                throw new Exception('Unable to delete');
 
-            return true;
+			return true;
+		}
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25015,__('Unable to delete Display Group.'));
+
+            return false;
+        }
 	}
 	
 	/**
@@ -255,33 +261,25 @@ class DisplayGroup extends Data
 	 */
 	public function Link($displayGroupID, $displayID)
 	{
-		$db	=& $this->db;
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Link');
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Link');
+		try {
+            $dbh = PDOConnect::init();
 		
-		$SQL  = "";
-		$SQL .= "INSERT ";
-		$SQL .= "INTO   lkdisplaydg ";
-		$SQL .= "       ( ";
-		$SQL .= "              DisplayGroupID, ";
-		$SQL .= "              DisplayID ";
-		$SQL .= "       ) ";
-		$SQL .= "       VALUES ";
-		$SQL .= "       ( ";
-		$SQL .= sprintf("              %d, %d ", $displayGroupID, $displayID);
-		$SQL .= "       )";
+			$sth = $dbh->prepare('INSERT INTO lkdisplaydg (DisplayGroupID, DisplayID) VALUES (:displaygroupid, :displayid)');
+            $sth->execute(array(
+                    'displaygroupid' => $displayGroupID,
+                    'displayid' => $displayID
+                ));
+
+			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Link');
 		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25005, __('Could not Link Display Group to Display'));
-			
-			return false;
+			return true;
 		}
-		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Link');
-		
-		return true;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25005, __('Could not Link Display Group to Display'));
+        }
 	}
 	
 	/**
@@ -292,26 +290,25 @@ class DisplayGroup extends Data
 	 */
 	public function Unlink($displayGroupID, $displayID)
 	{
-		$db	=& $this->db;
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Unlink');
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'Unlink');
+		try {
+            $dbh = PDOConnect::init();
+
+            $sth = $dbh->prepare('DELETE FROM lkdisplaydg WHERE DisplayGroupID = :displaygroupid AND DisplayID = :displayid');
+            $sth->execute(array(
+                    'displaygroupid' => $displayGroupID,
+                    'displayid' => $displayID
+                ));
+
+			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Unlink');
 		
-		$SQL  = "";
-		$SQL .= "DELETE FROM ";
-		$SQL .= "   lkdisplaydg ";
-		$SQL .= sprintf("  WHERE DisplayGroupID = %d AND DisplayID = %d ", $displayGroupID, $displayID);
-		
-		if (!$db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			$this->SetError(25007, __('Could not Unlink Display Group from Display'));
-			
-			return false;
+			return true;
 		}
-		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'Unlink');
-		
-		return true;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25007, __('Could not Unlink Display Group from Display'));
+        }
 	}
 	
 	/**
@@ -322,70 +319,66 @@ class DisplayGroup extends Data
 	 */
 	public function EditDisplayGroup($displayID, $display)
 	{
-		$db	=& $this->db;
+		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'EditDisplayGroup');
 		
-		Debug::LogEntry($db, 'audit', 'IN', 'DisplayGroup', 'EditDisplayGroup');
-		
-		// Get the DisplayGroupID for this DisplayID
-		$SQL  = "";
-		$SQL .= "SELECT displaygroup.DisplayGroupID ";
-		$SQL .= "FROM   displaygroup ";
-		$SQL .= "       INNER JOIN lkdisplaydg ";
-		$SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
-		$SQL .= "WHERE  displaygroup.IsDisplaySpecific    = 1 ";
-		$SQL .= sprintf("   AND lkdisplaydg.DisplayID             = %d", $displayID);
-		
-		if (!$result = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			$this->SetError(25005, __('Unable to get the DisplayGroup for this Display'));
+		try {
+            $dbh = PDOConnect::init();
+
+			// Get the DisplayGroupID for this DisplayID
+			$SQL  = "";
+			$SQL .= "SELECT displaygroup.DisplayGroupID ";
+			$SQL .= "FROM   displaygroup ";
+			$SQL .= "       INNER JOIN lkdisplaydg ";
+			$SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+			$SQL .= "WHERE  displaygroup.IsDisplaySpecific = 1 ";
+			$SQL .= "   AND lkdisplaydg.DisplayID = :displayid";
 			
-			return false;
-		}
-		
-		$row 			= $db->get_assoc_row($result);
-		$displayGroupID	= $row['DisplayGroupID'];
-		
-		if ($displayGroupID == '')
-		{
-			// We should always have 1 display specific DisplayGroup for a display.
-			// Do we a) Error here and give up?
-			//		 b) Create one and link it up?
-			// $this->SetError(25006, __('Unable to get the DisplayGroup for this Display'));
+			$sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'displayid' => $displayID
+                ));
+
+            if (!$row = $sth->fetch())
+                $this->ThrowError(25005, __('Unable to get the DisplayGroup for this Display'));
 			
-			if (!$displayGroupID = $this->Add($display, 1))
-			{
-				$this->SetError(25001, __('Could not add a display group for the new display.'));
+			// Get the Display Group ID
+			$displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
+		
+			// If there is no region specific display record... what do we do?
+            if ($displayGroupID == 0) {
+				// We should always have 1 display specific DisplayGroup for a display.
+				// Do we a) Error here and give up?
+				//		 b) Create one and link it up?
+				// $this->SetError(25006, __('Unable to get the DisplayGroup for this Display'));
 				
-				return false;
+				if (!$displayGroupID = $this->Add($display, 1))
+					$this->ThrowError(25001, __('Could not add a display group for the new display.'));
+				
+				// Link the Two together
+				if (!$this->Link($displayGroupID, $displayID))
+					$this->ThrowError(25001, __('Could not link the new display with its group.'));
 			}
 			
-			// Link the Two together
-			if (!$this->Link($displayGroupID, $displayID))
-			{
-				$this->SetError(25001, __('Could not link the new display with its group.'));
-				
-				return false;
-			}
-		}
-		
-		// Update SQL
-		$SQL  = "";
-		$SQL .= "UPDATE displaygroup ";
-		$SQL .= sprintf("SET    DisplayGroup   = '%s' ", $db->escape_string($display));
-		$SQL .= sprintf("WHERE  DisplayGroupID = %d", $displayGroupID);
-		
-		if (!$db->query($SQL))
-		{
-			trigger_error($db->error());
-			$this->SetError(25005, __('Unable to update the DisplayGroup for this Display'));
+			// Update the Display group name
+			$sth = $dbh->prepare('UPDATE displaygroup SET DisplayGroup = :displaygroup WHERE  DisplayGroupID = :displaygroupid');
+            $sth->execute(array(
+                    'displaygroupid' => $displayGroupID,
+                    'displaygroup' => $display
+                ));
 			
-			return false;
+			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayGroup');
+			
+			return true;
 		}
-		
-		Debug::LogEntry($db, 'audit', 'OUT', 'DisplayGroup', 'EditDisplayGroup');
-		
-		return true;
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25005, __('Unable to update the DisplayGroup for this Display'));
+
+            return false;
+        }
 	}
 	
     /**
@@ -398,7 +391,7 @@ class DisplayGroup extends Data
     {
         $db	=& $this->db;
 
-        Debug::LogEntry($db, 'audit', 'Depricated method called.', 'DisplayGroup', 'SetDefaultLayout');
+        Debug::LogEntry('audit', 'Depricated method called.', 'DisplayGroup', 'SetDefaultLayout');
         return true;
     }
 }

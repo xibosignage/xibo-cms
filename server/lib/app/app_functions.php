@@ -40,14 +40,6 @@ function setMessage($message) {
 	$_SESSION['message'] = $message;
 }
 
-function getMessage() {
-	$message = Kit::GetParam('message', _SESSION, _STRING, '');
-
-	unset($_SESSION['message']);
-
-	return $message;
-}
-
 // Returns a drop down list based on the provided SQL - the ID should be the first field, and the name the second
 function dropdownlist($SQL, $list_name, $selected = "", $callback = "", $flat_list = false, $checkPermissions = false, $userid = "", $permissionLevel = "see", $useQueryId = false) {
 	global $db;
@@ -481,7 +473,7 @@ function CheckFormToken($token, $tokenName = "token")
 	{
 		unset($_SESSION[$tokenName]);
 
-		Debug::LogEntry($db, 'error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [$token] for session_id [" . session_id() . ']');
+		Debug::LogEntry('error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [$token] for session_id [" . session_id() . ']');
 		return false;
 	}
 }

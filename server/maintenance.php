@@ -72,22 +72,24 @@ if (!$db->select_db($dbname))
     die('Xibo has a database connection problem.');
 }
 
-date_default_timezone_set(Config::GetSetting($db, "defaultTimezone"));
+date_default_timezone_set(Config::GetSetting("defaultTimezone"));
 
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));
 
 // Define the VERSION
-Config::Version($db);
+Config::Version();
 
 // What is the production mode of the server?
-if(Config::GetSetting($db, "SERVER_MODE")=="Test") ini_set('display_errors', 1);
+if(Config::GetSetting("SERVER_MODE") == "Test") 
+    ini_set('display_errors', 1);
 
 // Debugging?
-if(Config::GetSetting($db, "debug")=="On") error_reporting(E_ALL);
+if(Config::GetSetting("debug") == "On") 
+    error_reporting(E_ALL);
 
 // Setup the translations for gettext
-TranslationEngine::InitLocale($db);
+TranslationEngine::InitLocale();
 
 // Output HTML Headers
 print '<html>';
@@ -98,7 +100,7 @@ print '  </head>';
 print '<body>';
 
 // Should the Scheduled Task script be running at all?
-if(Config::GetSetting($db, "MAINTENANCE_ENABLED")=="Off")
+if(Config::GetSetting("MAINTENANCE_ENABLED")=="Off")
 {
     print "<h1>" . __("Maintenance Disabled") . "</h1>";
     print __("Maintenance tasks are disabled at the moment. Please enable them in the &quot;Settings&quot; dialog.");
@@ -110,10 +112,10 @@ else
     $aKey = 2;
     $pKey = 3;
 
-    if(Config::GetSetting($db, "MAINTENANCE_ENABLED")=="Protected")
+    if(Config::GetSetting("MAINTENANCE_ENABLED")=="Protected")
     {
         // Check that the magic parameter is set
-        $key = Config::GetSetting($db, "MAINTENANCE_KEY");
+        $key = Config::GetSetting("MAINTENANCE_KEY");
 
         // Get key from POST or from ARGV
         $pKey = Kit::GetParam('key', _GET, _STRING);
@@ -123,7 +125,7 @@ else
         }
     }
 
-    if(($aKey == $key) || ($pKey == $key) || (Config::GetSetting($db, "MAINTENANCE_ENABLED")=="On"))
+    if(($aKey == $key) || ($pKey == $key) || (Config::GetSetting("MAINTENANCE_ENABLED")=="On"))
     {
         // Email Alerts
         // Note that email alerts for displays coming back online are triggered directly from
@@ -132,8 +134,8 @@ else
         print "<h1>" . __("Email Alerts") . "</h1>";
         flush();
 
-        $emailAlerts = Config::GetSetting($db, "MAINTENANCE_EMAIL_ALERTS");
-        $alwaysAlert   = Config::GetSetting($db, "MAINTENANCE_ALWAYS_ALERT");
+        $emailAlerts = Config::GetSetting("MAINTENANCE_EMAIL_ALERTS");
+        $alwaysAlert   = Config::GetSetting("MAINTENANCE_ALWAYS_ALERT");
 
         if ($emailAlerts == "On")
         {
@@ -154,9 +156,9 @@ else
         }
 
         // The time in the past that the last connection must be later than globally.
-        $globalTimeout = time() - (60 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENANCE_ALERT_TOUT"),_INT));
-        $msgTo         = Kit::ValidateParam(Config::GetSetting($db, "mail_to"),_PASSWORD);
-        $msgFrom       = Kit::ValidateParam(Config::GetSetting($db, "mail_from"),_PASSWORD);
+        $globalTimeout = time() - (60 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_ALERT_TOUT"),_INT));
+        $msgTo         = Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
+        $msgFrom       = Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);
             
         // Get a list of all licensed displays
         $SQL = "SELECT `displayid`, `lastaccessed`, `email_alert`, `alert_timeout`, `display`, `loggedin` FROM `display` WHERE licensed = 1";
@@ -240,9 +242,9 @@ else
 
         // Log Tidy
         print "<h1>" . __("Tidy Logs") . "</h1>";
-        if(Config::GetSetting($db, "MAINTENANCE_LOG_MAXAGE")!=0)
+        if(Config::GetSetting("MAINTENANCE_LOG_MAXAGE")!=0)
         {
-            $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENANCE_LOG_MAXAGE"),_INT)));
+            $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_LOG_MAXAGE"),_INT)));
             
             $SQL = sprintf("DELETE from `log` WHERE logdate < '%s'",$maxage);
             if ((!$db->query($SQL)))
@@ -262,9 +264,9 @@ else
 
         // Stats Tidy
         print "<h1>" . __("Tidy Stats") . "</h1>";
-        if(Config::GetSetting($db, "MAINTENANCE_STAT_MAXAGE")!=0)
+        if(Config::GetSetting("MAINTENANCE_STAT_MAXAGE")!=0)
         {
-            $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting($db, "MAINTENANCE_STAT_MAXAGE"),_INT)));
+            $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_STAT_MAXAGE"),_INT)));
             
             $SQL = sprintf("DELETE from `stat` WHERE statDate < '%s'",$maxage);
             if ((!$db->query($SQL)))

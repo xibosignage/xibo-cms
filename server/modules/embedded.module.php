@@ -50,7 +50,6 @@ class embedded extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
-
 		Theme::Set('default_head_content', '
 <script type="text/javascript">
 function EmbedInit()
@@ -110,7 +109,7 @@ function EmbedInit()
 		$rawXml = new DOMDocument();
 		$rawXml->loadXML($this->GetRaw());
 		
-		Debug::LogEntry($db, 'audit', 'Raw XML returned: ' . $this->GetRaw());
+		Debug::LogEntry('audit', 'Raw XML returned: ' . $this->GetRaw());
 		
 		// Get the HTML Node out of this
 		$textNodes 	= $rawXml->getElementsByTagName('embedHtml');
@@ -123,6 +122,10 @@ function EmbedInit()
 
 		Theme::Set('duration', $this->duration);
         Theme::Set('durationFieldEnabled', (($this->auth->modifyPermissions) ? '' : ' readonly'));
+
+		// Is the transparency option set?
+		if ($this->GetOption('transparency'))
+            Theme::Set('transparency_checked', 'checked');
 		
 		//Output the form
 		$form = Theme::RenderReturn('media_form_embedded_edit');
@@ -162,6 +165,7 @@ function EmbedInit()
 		$embedHtml	  = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
 		$embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
+		$transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
 		
 		$url 		  = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
@@ -183,6 +187,7 @@ function EmbedInit()
 		// Required Attributes
 		$this->mediaid	= md5(uniqid());
 		$this->duration = $duration;
+		$this->SetOption('transparency', $transparency);
 		
 		// Any Options
 		$this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml><embedScript><![CDATA[' . $embedScript . ']]></embedScript>');
@@ -226,6 +231,8 @@ function EmbedInit()
 		//Other properties
 		$embedHtml	  = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
 		$embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
+		$transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
+		$this->SetOption('transparency', $transparency);
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
@@ -267,6 +274,11 @@ function EmbedInit()
 		
 		return $this->response;	
 	}
+	
+    public function IsValid() {
+    	// Can't be sure because the client does the rendering
+    	return 2;
+    }
 }
 
 ?>

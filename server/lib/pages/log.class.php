@@ -91,7 +91,7 @@ class logDAO
 		$function 	= Kit::GetParam('filter_function', _REQUEST, _STRING, '0');
 		$page 		= Kit::GetParam('filter_page', _REQUEST, _STRING, '0');
 		$fromdt 	= Kit::GetParam('filter_fromdt', _REQUEST, _STRING);
-		$displayid	= Kit::GetParam('filter_display', _REQUEST, _STRING, '0');
+		$displayid	= Kit::GetParam('filter_display', _REQUEST, _INT);
 		$seconds 	= Kit::GetParam('filter_seconds', _POST, _INT, 120);
                 
         setSession('log', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
@@ -119,16 +119,18 @@ class logDAO
 		$SQL .= sprintf(" WHERE  logdate > '%s' AND logdate <= '%s' ", $fromdt, $todt);
 
 		if ($type != "0") 
-			$SQL .= sprintf("AND type = '%s' ", $type);
+			$SQL .= sprintf("AND type = '%s' ", $db->escape_string($type));
 		
 		if($page != "0") 
-			$SQL .= sprintf("AND page = '%s' ", $page);
+			$SQL .= sprintf("AND page = '%s' ", $db->escape_string($page));
 		
 		if($function != "0") 
-			$SQL .= sprintf("AND function = '%s' ", $function);
+			$SQL .= sprintf("AND function = '%s' ", $db->escape_string($function));
 		
-		if($displayid != "0") 
-			$SQL .= sprintf("AND displayID = '%s' ", $displayid);
+		if($displayid != 0) 
+			$SQL .= sprintf("AND displayID = %d ", $displayid);
+
+		$SQL .= " ORDER BY logid ";
 
 		// Load results into an array
         $log = $db->GetArray($SQL);
@@ -188,6 +190,10 @@ class logDAO
 	 */
 	public function Truncate() 
 	{
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+        
 		$db =& $this->db;
 
 		if ($this->user->usertypeid != 1)

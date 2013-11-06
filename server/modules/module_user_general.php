@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner and James Packer
+ * Copyright (C) 2006-2013 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -46,13 +46,18 @@
 	function attempt_login($ajax = false) 
 	{
 		$db =& $this->db;
+		$userid = Kit::GetParam('userid', _SESSION, _INT);
 
         // Referring Page is anything after the ?
 		$requestUri = rawurlencode(Kit::GetCurrentPage());
 		
-		if(!$this->checkforUserid()) 
+		if (!$this->checkforUserid()) 
 		{
-			// Print out the login form
+			// Log out the user
+			if ($userid != 0)
+				$db->query(sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d ", $userid));
+
+			// AJAX calls that fail the login test cause a page redirect
 			if ($ajax) 
 			{
                 //create the AJAX request object
@@ -67,8 +72,14 @@
 				Theme::Set('form_action', 'index.php?q=login&referingPage=' . $requestUri);
 				Theme::Set('about_url', 'index.php?p=index&q=About');
 				Theme::Set('source_url', 'https://launchpad.net/xibo/1.5');
-				Theme::Set('login_message', getMessage());
+
+				// Message (either from the URL or the session)
+				$message = Kit::GetParam('message', _GET, _STRING, Kit::GetParam('message', _SESSION, _STRING, ''));
+				Theme::Set('login_message', $message);
                 Theme::Render('login_page');
+                
+		        // Clear the session message
+		        $_SESSION['message'] = '';
                 exit;
 			}
 			
@@ -76,8 +87,6 @@
 		}
 		else 
 		{
-			$userid = Kit::GetParam('userid', _SESSION, _INT);
-			
 			//write out to the db that the logged in user has accessed the page still
 			$SQL = sprintf("UPDATE user SET lastaccessed = '" . date("Y-m-d H:i:s") . "', loggedin = 1 WHERE userid = %d ", $userid);
 			
@@ -465,7 +474,7 @@
 		if ($usertype == 1) 
 		{
 			// if the usertype is 1 (admin) then we have access to all the pages
-			Debug::LogEntry($db, 'audit', 'Granted admin access to page: ' . $page);
+			Debug::LogEntry('audit', 'Granted admin access to page: ' . $page);
 			
 			return true;
 		}
@@ -473,7 +482,7 @@
 		// Allow access to the error page
 		if ($page == 'error')
 		{
-			Debug::LogEntry($db, 'audit', 'Granted access to page: ' . $page);
+			Debug::LogEntry('audit', 'Granted access to page: ' . $page);
 			
 			return true;
 		}
@@ -484,7 +493,7 @@
                 $SQL .= "       ON     lkpagegroup.groupID       = lkusergroup.GroupID ";
 		$SQL .= sprintf(" WHERE lkusergroup.UserID = %d AND pages.name = '%s' ", $userid, $db->escape_string($page));
 	
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 	
 		if (!$results = $db->query($SQL)) 
 		{
@@ -514,7 +523,7 @@
 		$userid		=& $this->userid;
 		$usertypeid     =& $this->usertypeid;
 		
-		Debug::LogEntry($db, 'audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
+		Debug::LogEntry('audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
 		
 		// Get some information about this menu
 		// I.e. get the Menu Items this user has access to
@@ -546,7 +555,7 @@
 		}
 		$SQL .= " ORDER BY menuitem.Sequence";
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 		
 		if (!$result = $db->query($SQL))
 		{
@@ -594,7 +603,7 @@
 		
                 $SQL .= "  ORDER BY Name ";
 		
-		Debug::LogEntry($db, 'audit', $SQL);
+		Debug::LogEntry('audit', $SQL);
 		
 		if (!$result = $db->query($SQL))
 		{
@@ -712,7 +721,7 @@ END;
         $SQL .= 'GROUP BY media.UserID ';
 
         $SQL = sprintf($SQL, $mediaId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -747,11 +756,11 @@ END;
         $SQL .= '  FROM lklayoutmediagroup ';
         $SQL .= '   INNER JOIN `group` ';
         $SQL .= '   ON `group`.GroupID = lklayoutmediagroup.GroupID ';
-        $SQL .= " WHERE lklayoutmediagroup.MediaID = '%s' AND lklayoutmediagroup.RegionID = '%s' AND lklayoutmediagroup.LayoutID = '%s' ";
+        $SQL .= " WHERE lklayoutmediagroup.MediaID = '%s' AND lklayoutmediagroup.RegionID = '%s' AND lklayoutmediagroup.LayoutID = %d ";
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
-        $SQL = sprintf($SQL, $mediaId, $regionId, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        $SQL = sprintf($SQL, $db->escape_string($mediaId), $db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -782,11 +791,11 @@ END;
         $SQL .= '  FROM lklayoutregiongroup ';
         $SQL .= '   INNER JOIN `group` ';
         $SQL .= '   ON `group`.GroupID = lklayoutregiongroup.GroupID ';
-        $SQL .= " WHERE lklayoutregiongroup.RegionID = '%s' AND lklayoutregiongroup.LayoutID = '%s' ";
+        $SQL .= " WHERE lklayoutregiongroup.RegionID = '%s' AND lklayoutregiongroup.LayoutID = %d ";
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
-        $SQL = sprintf($SQL, $regionId, $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        $SQL = sprintf($SQL, $db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -848,7 +857,7 @@ END;
 		
 		$SQL .= " ORDER BY media.name ";
 
-        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of media for %s with SQL: %s', $this->userName, $SQL));
+        Debug::LogEntry('audit', sprintf('Retreiving list of media for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -960,7 +969,7 @@ END;
         $SQL .= 'GROUP BY template.UserID ';
 
         $SQL = sprintf($SQL, $templateId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -977,7 +986,7 @@ END;
     /**
      * Returns an array of layouts that this user has access to
      */
-    public function LayoutList($filterLayout = '', $filterUserId = 0, $filterRetired = 0, $filterTags = '')
+    public function LayoutList($filterLayout = '', $filterUserId = 0, $filterRetired = 0, $filterTags = '', $filterMediaId = 0)
     {
         $SQL  = "";
         $SQL .= "SELECT layout.layoutID, ";
@@ -986,13 +995,34 @@ END;
         $SQL .= "        layout.tags, ";
         $SQL .= "        layout.userID, ";
         $SQL .= "        layout.xml, ";
-        $SQL .= "        campaign.CampaignID ";
+        $SQL .= "        campaign.CampaignID, ";
+        $SQL .= "        layout.status, ";
+        
+        // MediaID
+		if ($filterMediaId != 0) {
+			$SQL .= "	lklayoutmedia.regionid, ";
+			$SQL .= "	lklayoutmedia.lklayoutmediaid, ";
+			$SQL .= "	media.userID AS mediaownerid ";
+		}
+		else {
+			$SQL .= "	NULL AS regionid, ";
+			$SQL .= "	NULL AS lklayoutmediaid, ";
+			$SQL .= "	NULL AS mediaownerid ";
+		}
+
         $SQL .= "   FROM layout ";
         $SQL .= "  INNER JOIN `lkcampaignlayout` ";
         $SQL .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
         $SQL .= "   INNER JOIN `campaign` ";
         $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
         $SQL .= "       AND campaign.IsLayoutSpecific = 1";
+
+		// MediaID
+		if ($filterMediaId != 0) {
+			$SQL .= sprintf(" INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = %d", $filterMediaId);
+			$SQL .= " INNER JOIN `media` ON lklayoutmedia.mediaid = media.mediaid ";
+		}
+
         $SQL .= " WHERE 1 = 1 ";
 
         if ($filterLayout != '')
@@ -1020,12 +1050,11 @@ END;
 		
 		// Tags
 		if ($filterTags != '')
-			$SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $filterTags) . "%' ";
-		
+			$SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $this->db->escape_string($filterTags)) . "%' ";
         
         $SQL .= " ORDER BY Layout ";
 
-        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        Debug::LogEntry('audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1047,6 +1076,21 @@ END;
             $layoutItem['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
             $layoutItem['xml']  = Kit::ValidateParam($row['xml'], _HTMLSTRING);
             $layoutItem['campaignid'] = Kit::ValidateParam($row['CampaignID'], _INT);
+            $layoutItem['status'] = Kit::ValidateParam($row['status'], _INT);
+            $layoutItem['mediaownerid'] = Kit::ValidateParam($row['mediaownerid'], _INT);
+            
+            // Details for media assignment
+            $layoutItem['regionid'] = Kit::ValidateParam($row['regionid'], _STRING);
+            $layoutItem['lklayoutmediaid'] = Kit::ValidateParam($row['lklayoutmediaid'], _INT);
+
+            // Authenticate the assignment (if not null already)
+            if ($layoutItem['lklayoutmediaid'] != 0) {
+            	$assignmentAuth = $this->MediaAssignmentAuth($layoutItem['mediaownerid'], $layoutItem['layoutid'], $layoutItem['regionid'], $filterMediaId, true);
+
+            	// If we get here and the user does not have assess to this region assignment, don't add this row
+            	if (!$assignmentAuth->del)
+            		continue;
+            }
 
             $auth = $this->CampaignAuth($layoutItem['campaignid'], true);
 
@@ -1108,7 +1152,7 @@ END;
 			$SQL .= sprintf(" AND template.issystem = %d ", $isSystem);
 		}
 
-        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of templates for %s with SQL: %s', $this->userName, $SQL));
+        Debug::LogEntry('audit', sprintf('Retreiving list of templates for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1182,7 +1226,7 @@ END;
         $SQL .= 'GROUP BY dataset.UserID ';
 
         $SQL = sprintf($SQL, $dataSetId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -1207,8 +1251,9 @@ END;
         $SQL .= "       Description, ";
         $SQL .= "       UserID ";
         $SQL .= "  FROM dataset ";
+        $SQL .= " ORDER BY DataSet ";
 
-        //Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        //Debug::LogEntry('audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1273,7 +1318,7 @@ END;
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
         $SQL = sprintf($SQL, $displayGroupId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -1329,7 +1374,9 @@ END;
         if ($isDisplaySpecific == 1)
             $SQL .= " AND displaygroup.IsDisplaySpecific = 1 ";
 
-        Debug::LogEntry($this->db, 'audit', sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
+		$SQL .= " ORDER BY displaygroup.DisplayGroup ";
+        
+        Debug::LogEntry('audit', sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1470,7 +1517,7 @@ END;
         $SQL .= 'GROUP BY campaign.UserID ';
 
         $SQL = sprintf($SQL, $campaignId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry($this->db, 'audit', $SQL);
+        //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;

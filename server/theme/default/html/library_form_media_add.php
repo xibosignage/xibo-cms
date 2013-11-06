@@ -105,7 +105,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 {% for (var i=0, file; file=o.files[i]; i++) { %}
     <tr class="template-download fade">
        <td>
-            <p class="name">
+            <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
                 {%=file.name%}
             </p>
             {% if (file.error) { %}

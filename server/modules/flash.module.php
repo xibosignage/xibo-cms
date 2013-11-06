@@ -108,5 +108,10 @@ class flash extends Module
     {
         return $this->EditLibraryMedia();
     }
+    
+    public function IsValid() {
+        // Client dependant
+        return 2;
+    }
 }
 ?>

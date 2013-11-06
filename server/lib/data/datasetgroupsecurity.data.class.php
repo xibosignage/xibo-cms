@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2011 Daniel Garner
+ * Copyright (C) 2011-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,11 +22,6 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
 
 class DataSetGroupSecurity extends Data
 {
-    public function __construct(database $db)
-    {
-        parent::__construct($db);
-    }
-
     /**
      * Links a Display Group to a Group
      * @return
@@ -35,36 +30,32 @@ class DataSetGroupSecurity extends Data
      */
     public function Link($dataSetId, $groupId, $view, $edit, $del)
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'Link');
 
-        Debug::LogEntry($db, 'audit', 'IN', 'DataSetGroupSecurity', 'Link');
+        try {
+            $dbh = PDOConnect::init();
 
-        $SQL  = "";
-        $SQL .= "INSERT ";
-        $SQL .= "INTO   lkdatasetgroup ";
-        $SQL .= "       ( ";
-        $SQL .= "              DataSetID, ";
-        $SQL .= "              GroupID, ";
-        $SQL .= "              View, ";
-        $SQL .= "              Edit, ";
-        $SQL .= "              Del ";
-        $SQL .= "       ) ";
-        $SQL .= "       VALUES ";
-        $SQL .= "       ( ";
-        $SQL .= sprintf("  %d, %d, %d, %d, %d ", $dataSetId, $groupId, $view, $edit, $del);
-        $SQL .= "       )";
+            $SQL  = "";
+            $SQL .= "INSERT INTO lkdatasetgroup (DataSetID, GroupID, View, Edit, Del) ";
+            $SQL .= " VALUES (:datasetid, :groupid, :view, :edit, :del) ";
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25024, __('Could not Link DataSet to Group'));
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                    'datasetid' => $dataSetId,
+                    'groupid' => $groupId,
+                    'view' => $view,
+                    'edit' => $edit,
+                    'del' => $del
+              ));
 
-            return false;
+            Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'Link');
+
+            return true;
         }
-
-        Debug::LogEntry($db, 'audit', 'OUT', 'DataSetGroupSecurity', 'Link');
-
-        return true;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25024, __('Could not Link DataSet to Group'));
+        }
     }
 
     /**
@@ -77,13 +68,25 @@ class DataSetGroupSecurity extends Data
      */
     public function LinkEveryone($dataSetId, $view, $edit, $del)
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'LinkEveryone');
+        
+        try {
+            $dbh = PDOConnect::init();
 
-        Debug::LogEntry($db, 'audit', 'IN', 'DataSetGroupSecurity', 'LinkEveryone');
+            // Get the Group ID for Everyone
+            $sth = $dbh->prepare('SELECT GroupID FROM `group` WHERE IsEveryone = 1');
+            $sth->execute();
 
-        $groupId = $db->GetSingleValue("SELECT GroupID FROM `group` WHERE IsEveryone = 1", 'GroupID', _INT);
+            if (!$row = $sth->fetch())
+                throw new Exception('Missing Everyone group');
 
-        return $this->Link($dataSetId, $groupId, $view, $edit, $del);
+            // Link
+            return $this->Link($dataSetId, Kit::ValidateParam($row['GroupID'], _INT), $view, $edit, $del);
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25024, __('Could not Link DataSet to Group'));
+        }
     }
 
     /**
@@ -94,29 +97,28 @@ class DataSetGroupSecurity extends Data
      */
     public function Unlink($dataSetId, $groupId)
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
+        
+        try {
+            $dbh = PDOConnect::init();
 
-        Debug::LogEntry($db, 'audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
+            $sth = $dbh->prepare('DELETE FROM lkdatasetgroup WHERE DataSetID = :datasetid AND GroupID = :groupid');
+            $sth->execute(array(
+                    'datasetid' => $dataSetId,
+                    'groupid' => $groupId
+                ));
 
-        $SQL  = "";
-        $SQL .= "DELETE FROM ";
-        $SQL .= "   lkdatasetgroup ";
-        $SQL .= sprintf("  WHERE DataSetID = %d AND GroupID = %d ", $dataSetId, $groupId);
+            Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25025, __('Could not Unlink DataSet from Group'));
-
-            return false;
+            return true;
         }
-
-        Debug::LogEntry($db, 'audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
-
-        return true;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25025, __('Could not Unlink DataSet from Group'));
+        }
     }
 
-        /**
+    /**
      * Unlinks a display group from a group
      * @return
      * @param $displayGroupID Object
@@ -124,26 +126,24 @@ class DataSetGroupSecurity extends Data
      */
     public function UnlinkAll($dataSetId)
     {
-        $db =& $this->db;
+        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'UnlinkAll');
 
-        Debug::LogEntry($db, 'audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
+        try {
+            $dbh = PDOConnect::init();
 
-        $SQL  = "";
-        $SQL .= "DELETE FROM ";
-        $SQL .= "   lkdatasetgroup ";
-        $SQL .= sprintf("  WHERE DataSetID = %d ", $dataSetId);
+            $sth = $dbh->prepare('DELETE FROM lkdatasetgroup WHERE DataSetID = :datasetid');
+            $sth->execute(array(
+                    'datasetid' => $dataSetId
+                ));
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
-            $this->SetError(25025, __('Could not Unlink DataSet from Group'));
+            Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'UnlinkAll');
 
-            return false;
+            return true;
         }
-
-        Debug::LogEntry($db, 'audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
-
-        return true;
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25025, __('Could not Unlink DataSet from Group'));
+        }
     }
 }
 ?>

@@ -124,6 +124,8 @@ class datasetview extends Module
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '"><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
 
         Theme::Set('dataSetId', $dataSetId);
+        $dataSetName = $db->GetSingleValue(sprintf('SELECT dataset FROM `dataset` WHERE DataSetID = %d', $dataSetId), 'dataset', _STRING);
+        Theme::Set('dataSetName', $dataSetName);
         Theme::Set('updateInterval', $this->GetOption('updateInterval', 0));
         Theme::Set('upperLimit', $this->GetOption('upperLimit'));
         Theme::Set('lowerLimit', $this->GetOption('lowerLimit'));
@@ -196,7 +198,7 @@ class datasetview extends Module
         // Render the Theme
         $form = Theme::RenderReturn('media_form_datasetview_edit');
 
-        $this->response->SetFormRequestResponse($form, __('Edit DataSet View'), '650px', '575px');
+        $this->response->SetFormRequestResponse($form, sprintf(__('Edit DataSet View for DataSet %s'), $dataSetName), '650px', '575px');
 
         // Cancel button
         if ($this->showRegionOptions)
@@ -456,6 +458,14 @@ tr.DataSetRow {
 
 }
 
+tr.DataSetRowOdd {
+
+}
+
+tr.DataSetRowEven {
+
+}
+
 th.DataSetColumnHeaderCell {
 
 }
@@ -534,7 +544,7 @@ END;
                 $table .= '<tbody>';
             }
 
-            $table .= '<tr class="DataSetRow" id="row_' . $rowCount . '">';
+            $table .= '<tr class="DataSetRow DataSetRow' . (($rowCount % 2) ? 'Odd' : 'Even') . '" id="row_' . $rowCount . '">';
 
             for($i = 0; $i < count($dataSetResults['Columns']); $i++)
                 $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $row[$i] . '</span></td>';
@@ -550,6 +560,11 @@ END;
         $table .= '</div>';
 
         return $table;
+    }
+    
+    public function IsValid() {
+        // DataSet rendering will be valid
+        return 1;
     }
 }
 ?>
