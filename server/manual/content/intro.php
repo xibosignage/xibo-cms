@@ -22,8 +22,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <h1><?php echo PRODUCT_NAME; ?> Documentation</h1>
 
-<p>Thank you for using <?php echo PRODUCT_NAME; ?>.</p>
-<p>This documentation applies to <?php echo PRODUCT_NAME; ?> Version <?php echo PRODUCT_VERSION; ?></p>
+<p>Welcome to the user manual for <?php echo PRODUCT_NAME; ?>. This documentation applies to <?php echo PRODUCT_NAME; ?> Version <?php echo PRODUCT_VERSION; ?></p>
+<p>We would like to take this opportunity to thank you for using <?php echo PRODUCT_NAME; ?>.</p>
+
+<p></p>
 
 <h2>Getting Help</h2>
 <p>The official <?php echo PRODUCT_NAME; ?> FAQ is here: <a href="<?php echo PRODUCT_FAQ_URL; ?>" target="_blank"><?php echo PRODUCT_FAQ_URL; ?></a></p>

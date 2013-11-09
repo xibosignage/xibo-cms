@@ -8,4 +8,28 @@
 	width: 230px;
 }
 
-body { padding-top: 70px; }
+.ss_footer {
+	padding-top: 40px;
+	padding-bottom: 30px;
+	margin-top: 100px;
+	color: #777;
+	text-align: center;
+	border-top: 1px solid #e5e5e5;
+	text-align: left;
+}
+
+.ss_body {
+	min-height: 650px;
+}
+
+.ss_footer p {
+	margin-bottom: 0;
+}
+
+.ss_footer_links {
+	margin-top: 10px;
+}
+
+body { 
+	padding-top: 70px;
+}
