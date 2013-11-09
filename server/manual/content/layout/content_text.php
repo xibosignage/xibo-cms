@@ -1,20 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-<head>
-  	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-  	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-  	<link href="img/favicon.ico" rel="shortcut icon">
-  	<!-- Javascript Libraries -->
-  	<script type="text/javascript" src="lib/jquery.pack.js"></script>
-  	<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-  	<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-</head>
 
-<body>
 	<a name="Text" id="Text"></a><h2>Text</h2>
 	<p>Adding a piece of text to a layout provides a form within which you can write your message, style your message, choose a 
 	direction animation which will place a scrolling feature on your message.</p>
@@ -33,7 +17,7 @@
 		<li>Click the "Add Text" icon</li>
 		<li>A new dialogue will appear:<br />
 
-		<p><img alt="Ss_layout_designer_add_text" src="Ss_layout_designer_add_text.png"
+		<p><img alt="Ss_layout_designer_add_text" src="content/layout/Ss_layout_designer_add_text.png"
 		style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 		width="631" height="442"></p></li>
 	
@@ -47,10 +31,10 @@
 		<li>To change the size, highlight your text and choose a new size from the "Size" dropdown menu.</li>
 		<li>To change the colour, highlight your text and choose a new colour from the font colour pallet icon 
 	
-		<a href="Textcolor.gif" class="image" title="Textcolor.gif"><img alt="Textcolor.gif" src="Textcolor.gif" width="28" height="20" border="0" /></a></li>
+		<a href="Textcolor.gif" class="image" title="Textcolor.gif"><img alt="Textcolor.gif" src="content/layout/Textcolor.gif" width="28" height="20" border="0" /></a></li>
 
 		<li>Bold, italic and underline are available using the respective icon:		
-		<a href="TextProp.gif" class="image" title="TextProp.gif"><img alt="TextProp.gif" src="TextProp.gif" width="66" height="20" border="0" /></a>
+		<a href="TextProp.gif" class="image" title="TextProp.gif"><img alt="TextProp.gif" src="content/layout/TextProp.gif" width="66" height="20" border="0" /></a>
 
 		<li>Enter a duration in seconds for the text to be on the layout.<br />
 			<i>Note that if this is the only media item in a region, then this is the minimum amount of time the text will be shown 
@@ -62,6 +46,3 @@
 	</ul>
 </blockquote>
 
-	<?php include('../../template/footer.php'); ?>
-</body>
-</html>

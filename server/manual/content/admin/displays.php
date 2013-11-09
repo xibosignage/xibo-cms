@@ -1,21 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-		<link rel=stylesheet type="text/css" href="../../css/doc.css">
-		<meta http-equiv="Content-Type" content="text/html" />
-		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
 
-		<link href="img/favicon.ico" rel="shortcut icon"/>
-		<!-- Javascript Libraries -->
-		<script type="text/javascript" src="lib/jquery.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-	</head>
-	<body>
 	<a name="Displays" id="Displays"></a><h1>Displays</h1>
     
     <p>Displays are how you output your layouts with <?php echo PRODUCT_NAME; ?>.</p>
@@ -25,7 +8,7 @@
      
     <p>The Display Manamagement page is accessed from the Nagivation Bar by clicking on "Displays > Displays"</p>
 
-    <p><img alt="SA Displays" src="sa_displays.png"
+    <p><img alt="SA Displays" src="content/admin/sa_displays.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="820" height="262"></p>
     <blockquote>	   
@@ -35,7 +18,7 @@
     	<p> Click on the 'Edit" button of the Display loads its editing window. You can then proceed to change the settings for
     	the chosen Display. </p>                                                                                         
 
-	   <p><img alt="Display Edit" src="sa_display_edit.png"
+	   <p><img alt="Display Edit" src="content/admin/sa_display_edit.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="493" height="231"></p> 
 
@@ -44,7 +27,7 @@
 			to the server.</p>
     	<p> Click on the 'Delete" button of the Display you want to unlicense; and the below form is loaded. </p>                                                                                         
 
-	   <p><img alt="Display Delete" src="sa_display_delete.png"
+	   <p><img alt="Display Delete" src="content/admin/sa_display_delete.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="357" height="217"></p>
 	   
@@ -72,14 +55,14 @@
    	 	but the content of the media inventory will not show the new files that are required. Once the client connects, those new files 
     	will be included in the inventory automatically.)</p>	   
 
-     	<p><img alt="Display Media Inventory" src="sa_display_media_inventory.png"
+     	<p><img alt="Display Media Inventory" src="content/admin/sa_display_media_inventory.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="418" height="268"></p>
 
    		<a name="Display_Group_Member" id="Display_Group_Member"></a><h3>Group Members</h3>
     	<p>To find the Group that the Display is belonged to, click on the "Group Members" on the corresponding row.</p>
 		 
-    	<p><img alt="SA Display Group Edit" src="sa_display_groups_edit.png"
+    	<p><img alt="SA Display Group Edit" src="content/admin/sa_display_groups_edit.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="408" height="218"></p>
     </blockquote>
@@ -108,7 +91,7 @@
     	<p>Once the display has these settings it can be woken up in 2 ways:</p>
     	<h3>Wake On LAN Now</h3>
     
-   		<p><img alt="SA Display WOL" src="sa_display_wol.png"
+   		<p><img alt="SA Display WOL" src="content/admin/sa_display_wol.png"
 	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   	width="308" height="158"></p>
      
@@ -145,7 +128,7 @@
     	<a name="Edit_Group" id="Edit_Group"></a><h3>Edit a Group</h3>
     	<p>To edit a group click on the edit button on the row belonging to the group you wish to edit.</p>
 		 
-    	<p><img alt="SA Display Group" src="sa_display_groups.png"
+    	<p><img alt="SA Display Group" src="content/admin/sa_display_groups.png"
 	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   	width="621" height="226"></p>
  
@@ -164,7 +147,7 @@
     	<p>Click on "Group Members" load the "Manage Membership" form for editing. All the Displays on the system will be shown. 
     	You can assign or remove group members.</p>
 
-    	<p><img alt="SA Display Group Members" src="sa_display_group_members.png"
+    	<p><img alt="SA Display Group Members" src="content/admin/sa_display_group_members.png"
 	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   	width="408" height="270"></p>
 
@@ -180,10 +163,8 @@
      	<li><h3>Media on Layouts ran</h3>Statistical data on Media played on all layouts run for each Display.</li>
      </ul>
 
-    <p><img alt="SA Display Statistic" src="sa_display_statistic.png"
+    <p><img alt="SA Display Statistic" src="content/admin/sa_display_statistic.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="648" height="650"></p>
 
-	<?php include('../../template/footer.php'); ?>
-	</body>
-</html>
+

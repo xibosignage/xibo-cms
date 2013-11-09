@@ -1,20 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-<head>
-  	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-  	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-  	<link href="img/favicon.ico" rel="shortcut icon">
-  	<!-- Javascript Libraries -->
-  	<script type="text/javascript" src="lib/jquery.pack.js"></script>
-  	<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-  	<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-</head>
 
-<body>
 	<a name="DataSets" id="DataSets"></a><h2>DataSets</h2>
 <blockquote>
   	<h3>Overview</h3>
@@ -40,7 +24,7 @@
     to a very familiar <?php echo PRODUCT_NAME; ?> &#8220;table&#8221; view of all the data sets you have permission to access. You can add a new dataset 
     by giving it a name and an optional description, you can also edit existing ones and add data.</p>
     
-	<p><img alt="Add Dataset" src="ss_layout_add_dataset.png"
+	<p><img alt="Add Dataset" src="content/layout/ss_layout_add_dataset.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="455" height="408"></p>
  
@@ -60,7 +44,7 @@
       <li><strong>Column Order</strong>: the order to place the column</li>
     </ul>
 
-	<p><img alt="Dataset Column" src="ss_layout_dataset_column.png"
+	<p><img alt="Dataset Column" src="content/layout/ss_layout_dataset_column.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="558" height="256"></p>
 
@@ -76,7 +60,7 @@
     the &#8220;View Data&#8221; task on the DataSet table view. This view will contain all of the columns that were added in the 
     previous step and allow you to go through each one and enter data.</p>
     
-	<p><img alt="Dataset Row" src="ss_layout_dataset_row.png"
+	<p><img alt="Dataset Row" src="content/layout/ss_layout_dataset_row.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="758" height="557"></p>
 
@@ -89,13 +73,13 @@
     by selecting the &#8220;DataSet&#8221; button from a region Timeline, which presents a drop down list of all DataSets available 
     to the user as well as the usual duration field for entering the duration in seconds that the DataSet should be shown.</p>
 
-	<p><img alt="Dataset Add View" src="ss_layout_dataset_addview.png"
+	<p><img alt="Dataset Add View" src="content/layout/ss_layout_dataset_addview.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="358" height="178"></p>
 
     <p>Once added, the edit dialog will automatically appear allowing the user to pick their options for the DataSet View.</p>
 
-	<p><img alt="Dataset View Edit" src="ss_layout_dataset_view_edit.png"
+	<p><img alt="Dataset View Edit" src="content/layout/ss_layout_dataset_view_edit.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="658" height="583"></p>
 
@@ -172,14 +156,10 @@ span.DataSetColumnSpan {
 </pre>    
     <p>The resulting view will be showing the region preview window and displayed on the client.</p>
 
-	<p><img alt="Dataset Table" src="ss_layout_dataset_table.png"
+	<p><img alt="Dataset Table" src="content/layout/ss_layout_dataset_table.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="474" height="182"></p>
 
     <p>Note: Once the DataSet view is configured it will automatically respond to edits made on the data &#8211; and it
     multiple views on the same DataSet can be created.</p>
 </blockquote>	
-
-	<?php include('../../template/footer.php'); ?>
-</body>
-</html>

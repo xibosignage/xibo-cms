@@ -1,20 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-<head>
-  	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-  	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-  	<link href="img/favicon.ico" rel="shortcut icon">
-  	<!-- Javascript Libraries -->
-  	<script type="text/javascript" src="lib/jquery.pack.js"></script>
-  	<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-  	<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-</head>
 
-<body>
 	<a name="Assigning_Content" id="Assigning_Content"></a><h1>Assigning Content to Regions</h1>
 	<p>Now you have one or more regions, we need to put some content in the regions so there is something to show.</p>
 
@@ -24,7 +8,7 @@
 	<p>To edit a region's timeline (the sequence of media items that the region plays),	double click within the region 
 	on the canvas or click "Edit Timeline" box. You will see the timeline appear:</p>
 
-	<p><img alt="Region Timeline" src="Ss_layout_designer_region_timeline.png"
+	<p><img alt="Region Timeline" src="content/layout/Ss_layout_designer_region_timeline.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="408" height="279"></p>	
 
@@ -85,7 +69,7 @@
       	Then click the "Library" instead of "Browse..." button</li>
 	    <li>An "Assign an item from the Library" dialogue appears:
 
-      	<p><img alt="Ss_layout_designer_add_library" src="ss_layout_designer_add_library.png"
+      	<p><img alt="Ss_layout_designer_add_library" src="content/layout/ss_layout_designer_add_library.png"
       	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
       	width="591" height="345"></p></li>
 
@@ -100,7 +84,3 @@
       	<li>The selected items will move to "Media to Assign" column</li>
     </ul>
 </blockquote>
-
-	<?php include('../../template/footer.php'); ?>
-</body>
-</html>

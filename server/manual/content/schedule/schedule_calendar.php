@@ -1,24 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-    <head>
-        <meta http-equiv="Content-Type" content=
-        "text/html; charset=iso-8859-1">
 
-        <title><?php echo PRODUCT_NAME; ?> Documentation</title>
-        <link rel="stylesheet" type="text/css" href=
-        "../../css/doc.css">
-        <meta http-equiv="Content-Type" content="text/html">
-		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-        <link href="img/favicon.ico" rel="shortcut icon">
-        <!-- Javascript Libraries -->
-		<script type="text/javascript" src="lib/jquery.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-    </head>
-
-    <body>
     <a name="Calendar_Chart_View" id="Calendar_Chart_View"></a><h2>Calendar Chart View</h2>
 
     <p>When you first navigate to the schedule page, either via the dashboard button or top
@@ -32,7 +12,7 @@
 	</ul>
 	<p>An example of a month calendar schedule chart view is shown below:</p>
 
-	<p><img alt="Calendar" src="calendar_month_view.png"
+	<p><img alt="Calendar" src="content/schedule/calendar_month_view.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="922" height="335"></p>
 
@@ -66,7 +46,4 @@
 	both forms presents the same information for edit.</p>
   </blockquote>
 
-	<?php include('../../template/footer.php'); ?>
-    </body>
-</html>
 

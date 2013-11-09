@@ -1,21 +1,9 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-<head>
-  	<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
-  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-  	<link href="../../css/doc.css" rel="stylesheet" type="text/css">
-  	<link href="../../css/doc.css" rel="stylesheet" type="text/css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-</head>
 
-<body>
 	<h1>Layout Designer</h1>
 
 	<p>Once you have created a new layout and click the "Design" button, you should see a screen like this:</p>
 
-	<p><img alt="Layout Designer Screenshot" src="Ss_layout_designer.png"
+	<p><img alt="Layout Designer Screenshot" src="content/layout/Ss_layout_designer.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="548" height="416"></p>
 
@@ -28,7 +16,7 @@
 	<a name="Background" id="Background"></a><h2>Changing the Background</h2>
 	<p>You can change the background colour or choose a background image if you wish. Click the Background button.</p>
 
-	<p><img alt="Layout Designer Screenshot - Background" src="Ss_layout_designer_background.png"
+	<p><img alt="Layout Designer Screenshot - Background" src="content/layout/Ss_layout_designer_background.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="557" height="245"></p>
 
@@ -52,7 +40,7 @@
 	<p>You can also right click within the region and select "Options". A form with detail information of the region is loaded.
 	You can then define the position and size of the region more precisely</p>
  
-	<p><img alt="Layout Region Options" src="Ss_layout_region_options.png"
+	<p><img alt="Layout Region Options" src="content/layout/Ss_layout_region_options.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="358" height="283"></p>
 
@@ -65,10 +53,7 @@
 	<p>Once clicked, it presents a list of accessible layouts with a "Design" button - selecting the button will load corresponding
 	layout into the designer window.</p>
  
-	<p><img alt="Layout Designer Jump" src="ss_layout_designer_jumpto.png"
+	<p><img alt="Layout Designer Jump" src="content/layout/ss_layout_designer_jumpto.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="358" height="341"></p>
 
-	<?php include('../../template/footer.php'); ?>
-</body>
-</html>

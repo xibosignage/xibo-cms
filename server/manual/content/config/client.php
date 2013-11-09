@@ -1,25 +1,10 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-<head>
-  	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-  	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />  <link href="img/favicon.ico" rel="shortcut icon">
-  	<!-- Javascript Libraries -->
-  	<script type="text/javascript" src="lib/jquery.pack.js"></script>
-  	<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-  	<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-</head>
 
-<body>
 	<h1>Client Options</h1>
 	
 	<p>All newly installed client must be configured and registered with the <?php echo PRODUCT_NAME; ?> Server before it can be used. The <?php echo PRODUCT_NAME; ?> Configuration
 	Options are accessible on each client installation from the Start Menu -&gt; All programs</p>
 	
-	<p><img alt="Program Menu" src="pm.png"
+	<p><img alt="Program Menu" src="content/config/pm.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="230" height="62" border="1px"></p>
 	
@@ -33,7 +18,7 @@
 	<blockquote>
 	<h3>Options - General</h3>
 	
-	<p><img alt="<?php echo PRODUCT_NAME; ?> General Settings" src="settings_gen.png"
+	<p><img alt="<?php echo PRODUCT_NAME; ?> General Settings" src="content/config/settings_gen.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="485" height="393"></p>
 	
@@ -78,7 +63,7 @@
 	<p>If you use a proxy server to access your <?php echo PRODUCT_NAME; ?> server, go to the "Proxy" server tab and fill in the details for your network, 
 	then click "Save". Make sure to set your proxy information in Internet Explorer too.</p>
 	
-	<p><img alt="<?php echo PRODUCT_NAME; ?> General Settings" src="settings_proxy.png"
+	<p><img alt="<?php echo PRODUCT_NAME; ?> General Settings" src="content/config/settings_proxy.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="485" height="393"></p>	
 	
@@ -89,7 +74,7 @@
 		of the content will be cropped. e.g. embbedded html, linked html, dataset table etc.</p>
 	<p>You may use the "Offset X' i.e. set equal to the primary display width, to place the client diplay window on an extended display monitor.</p>
 	
-	<p><img alt="<?php echo PRODUCT_NAME; ?> General Settings" src="settings_app.png"
+	<p><img alt="<?php echo PRODUCT_NAME; ?> General Settings" src="content/config/settings_app.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="485" height="393"></p>
 	
@@ -98,7 +83,7 @@
 	
 	<h3>Options - Advanced</h3>
 	
-	<p><img alt="<?php echo PRODUCT_NAME; ?> General Settings" src="settings_adv.png"
+	<p><img alt="<?php echo PRODUCT_NAME; ?> General Settings" src="content/config/settings_adv.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="485" height="393"></p>
 	
@@ -106,7 +91,7 @@
 	
 	<p>Finally go to the "Register" display tab.</p>
 	
-	<p><img alt="<?php echo PRODUCT_NAME; ?> General Settings" src="settings_reg.png"
+	<p><img alt="<?php echo PRODUCT_NAME; ?> General Settings" src="content/config/settings_reg.png"
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="485" height="393"></p>
 	
@@ -132,6 +117,3 @@
 	<p>You can now start the <?php echo PRODUCT_NAME; ?> Client Player. It should show you the <?php echo PRODUCT_NAME; ?> splash screen while the default layout and its media contents
 	   (and anything else you have scheduled) are downloaded and then begin playing layouts'contents.
 
-	<?php include('../../template/footer.php'); ?>
-</body>
-</html>

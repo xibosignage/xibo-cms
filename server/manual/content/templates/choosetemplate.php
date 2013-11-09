@@ -1,20 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-<head>
-  	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-  	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-  	<link href="img/favicon.ico" rel="shortcut icon">
-  	<!-- Javascript Libraries -->
-  	<script type="text/javascript" src="lib/jquery.pack.js"></script>
-  	<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-  	<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-</head>
 
-<body>
 	<h2>Choosing the right template</h2> 
 	<p><?php echo PRODUCT_NAME; ?> comes with a selection of default templates that caters for most digital signage applications (e.g. LCD TVs, projectors, 
 	portrait screens).</p>
@@ -47,6 +31,3 @@
  	they are taller than they are wide. <?php echo PRODUCT_NAME; ?> supports all the above aspect ratios for portrait screens - 2:3, 3:4, 9:16, 10:16. 
  	Consult your display manufacturer to find out which aspect ratio to choose.</p>
 
-	<?php include('../../template/footer.php'); ?>
-</body>
-</html>

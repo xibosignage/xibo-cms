@@ -1,23 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-    <head>
-        <meta name="generator" content="HTML Tidy, see www.w3.org">
-        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 
-        <title><?php echo PRODUCT_NAME; ?> Documentation</title>
-        <link rel="stylesheet" type="text/css" href="../../css/doc.css">
-        <meta http-equiv="Content-Type" content="text/html">
-		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-        <link href="img/favicon.ico" rel="shortcut icon">
-        <!-- Javascript Libraries -->
-		<script type="text/javascript" src="lib/jquery.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-    </head>
-
-    <body>
     	<h2>Types of Content</h2>
     
   		<p>A content item is piece of media that you wish to display. This can be different types of media, such as 
@@ -36,7 +17,7 @@
 			<p><strong>Original Filename: </strong>Display extra colume that shows the original file name for each media item.</p>
         </ul>
 
-      	<p><img alt="Library Media" src="library_media.png"
+      	<p><img alt="Library Media" src="content/content/library_media.png"
 	       style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	       width="650" height="463"></p>
 
@@ -85,8 +66,3 @@
         <h3>Datasets</h3>
         <p>DataSets are a new <?php echo PRODUCT_NAME; ?> feature to design and display tabular data, formatted nicely, in a region on a layout.</p>
       </blockquote>
-
-		<?php include('../../template/footer.php'); ?>
-    </body>
-</html>
-

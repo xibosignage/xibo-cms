@@ -1,20 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-<head>
-  	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-  	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-  	<link href="img/favicon.ico" rel="shortcut icon">
-  	<!-- Javascript Libraries -->
-  	<script type="text/javascript" src="lib/jquery.pack.js"> </script>
-  	<script type="text/javascript" src="lib/jquery.dimensions.pack.js"> </script>
-  	<script type="text/javascript" src="lib/jquery.ifixpng.js"> </script>
-</head>
 
-<body>
 	<a name="Video" id="Video"></a><h2>Video</h2>
 	<p>You can upload your videos to show on a <?php echo PRODUCT_NAME; ?> layout. Currently WMV, AVI, and MPEG video files are supported.</p>
 	<p>If your client player also supports other video types e.g. mp4, you may include them in the "Valid Extensions" in 
@@ -31,7 +15,7 @@
  		<li>Click the "Add Video" icon</li>
  		<li>A new dialogue will appear:
 
-		<p><img alt="Ss_layout_designer_add_video" src="Ss_layout_designer_add_video.png"
+		<p><img alt="Ss_layout_designer_add_video" src="content/layout/Ss_layout_designer_add_video.png"
 		style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 		width="458" height="288" border="1px"></p></li>
 
@@ -46,7 +30,3 @@
 			<i>Note:The save button will NOT be enabled until transfer of the file to the server is completed.</i></li>
 	</ul>
 	</blockquote>
-
-	<?php include('../../template/footer.php'); ?>
-</body>
-</html>

@@ -1,30 +1,11 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-    <head>
-        <meta name="generator" content="HTML Tidy, see www.w3.org">
-        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 
-        <title><?php echo PRODUCT_NAME; ?> Documentation</title>
-        <link rel="stylesheet" type="text/css" href="../../css/doc.css">
-        <meta http-equiv="Content-Type" content="text/html">
-		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-        <link href="img/favicon.ico" rel="shortcut icon">
-        <!-- Javascript Libraries -->
-		<script type="text/javascript" src="lib/jquery.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-    </head>
-
-    <body>
         <h1>Adding Content</h1>
         
         <p>In order to display content on <?php echo PRODUCT_NAME; ?> it first needs to be added to the system. The
         following instructions deal with adding content. This section deals only with media
         content that are stored in the Media Library.</p>
                 
-        <p><img alt="Library Add Media" src="library_media_add.png"
+        <p><img alt="Library Add Media" src="content/content/library_media_add.png"
 	       style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	       width="425" height="225"></p>        
           
@@ -40,14 +21,14 @@
         <h3>Add Image</h3>
         <p>Following form show the required information when adding new image</p>
  
-        <p><img alt="Library Add Image" src="library_add_image.png"
+        <p><img alt="Library Add Image" src="content/content/library_add_image.png"
 	       style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	       width="458" height="226"></p>        
  
         <h3>Add DataSet</h3>
         <p>Following form show the required information when adding DataSet</p>
  
-        <p><img alt="Library Add Image" src="library_add_dataset.png"
+        <p><img alt="Library Add Image" src="content/content/library_add_dataset.png"
 	       style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	       width="358" height="179"></p>        
 
@@ -73,8 +54,3 @@
     	   	<li>MicroBlog</li>
  	       	<li>Counter</li>
         </ul>
-
-		<?php include('../../template/footer.php'); ?>
-    </body>
-</html>
-

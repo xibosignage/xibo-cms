@@ -1,26 +1,9 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-		<link rel=stylesheet type="text/css" href="../../css/doc.css">
-		<meta http-equiv="Content-Type" content="text/html" />
-		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
 
-		<link href="img/favicon.ico" rel="shortcut icon"/>
-		<!-- Javascript Libraries -->
-		<script type="text/javascript" src="lib/jquery.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-	</head>
-	<body>
 		
 		<h1>User Types</h1>
     	<p>Each <?php echo PRODUCT_NAME; ?> user can be associated to a specific user type hence inherited the corresponding access right to the system.</p>
  
-    	<p><img alt="User Types" src="user_types.png"
+    	<p><img alt="User Types" src="content/users/user_types.png"
 	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	  	width="558" height="328"></p>
 
@@ -49,6 +32,4 @@
 		<p>The user only has access to the parts of <?php echo PRODUCT_NAME; ?> assigned to the group they belong to. They also only have access to their own content, playlists
 		and schedules. They are able to view shared items that have the public or group sharing setting.</p>
 
-		<?php include('../../template/footer.php'); ?>
-	</body>
-</html>
+	

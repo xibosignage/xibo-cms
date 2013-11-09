@@ -1,20 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title>Xibo Documentation</title>
-		<link rel=stylesheet type="text/css" href="../../css/doc.css">
-		<meta http-equiv="Content-Type" content="text/html" />
-		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
-		<meta name="description" content="Xibo is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
 
-		<link href="img/favicon.ico" rel="shortcut icon"/>
-		<!-- Javascript Libraries -->
-		<script type="text/javascript" src="lib/jquery.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-	</head>
-<body>
 	<a name="Settings" id="Settings"></a><h1>Settings</h1>
     <p>This page provides you with all the settings options to configure Xibo to your environment. Each tab provides a set of forms
       where you can alter default settings and paths.</p>
@@ -27,7 +11,7 @@
     <p>This tab allows you to set default content item settings - default length. This helps Xibo if the 
     file does not contain duration information.</p>
     
-    <p><img alt="Setting_Content" src="sa_setting_content.png"
+    <p><img alt="Setting_Content" src="content/admin/sa_setting_content.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="536" height="298"></p>
 	  
@@ -46,7 +30,7 @@
      <p>Default Settings set the default options on some forms to always appear and be applied unless altered. You can also change
     	your time zone in this section.</p>
 
-    	<p><img alt="Setting_Default" src="sa_setting_default.png"
+    	<p><img alt="Setting_Default" src="content/admin/sa_setting_default.png"
 	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   	width="536" height="298"></p>
   </blockquote> 
@@ -56,7 +40,7 @@
     <p>Tab allows you to alter how Xibo handles errors. You can turn the error and audit logs on and off. As logs records 
     size growth rapidly, you should take care to enable it only when necessary e.g. during system debug.</p>
 
-    <p><img alt="Setting_Error" src="sa_setting_error.png"
+    <p><img alt="Setting_Error" src="content/admin/sa_setting_error.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="538" height="274"></p>
   </blockquote> 
@@ -66,7 +50,7 @@
     <p>General setting provide details of your current settings in your PHP.ini file on your server. It also allows you to setup
     whether you are collecting statics off your Xibo displays.</p>
 
-    <p><img alt="Setting_General" src="sa_setting_general.png"
+    <p><img alt="Setting_General" src="content/admin/sa_setting_general.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="539" height="451"></p>
 
@@ -122,7 +106,7 @@
     <a name="Configuration" id="Configuration"></a><h3>Configuration</h3>
     <p>Configuration for the maintenance script can be found in Xibo server at "Administration -&gt; Settings -&gt; Maintenance" tab.</p>
      
-    <p><img alt="Setting_Maintenance" src="sa_setting_maintenance.png"
+    <p><img alt="Setting_Maintenance" src="content/admin/sa_setting_maintenance.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="529" height="577"></p> 
 
@@ -254,7 +238,7 @@
   <blockquote>    
     <p>Settings allows you to specify particular directory locations for where Xibo will store and look for items.</p>
 
-    <p><img alt="Setting_Path" src="sa_setting_path.png"
+    <p><img alt="Setting_Path" src="content/admin/sa_setting_path.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="538" height="140"></p>
   </blockquote>    
@@ -272,7 +256,7 @@
     	<li>Administrators can override users passwords in a more�intuitive�way</li>
   	</ul>
 
-    <p><img alt="Setting_Permissions" src="sa_setting_permissions.png"
+    <p><img alt="Setting_Permissions" src="content/admin/sa_setting_permissions.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="806" height="365"></p>
    
@@ -288,7 +272,7 @@
 
   	<h3>Changing Password</h3>
   
-  	<p><img alt="Setting User Password" src="sa_setting_pwd.png"
+  	<p><img alt="Setting User Password" src="content/admin/sa_setting_pwd.png"
   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
   	width="458" height="234"></p>
 	   
@@ -298,14 +282,10 @@
   
   	<h3>Override User Password</h3>
 
-  	<p><img alt="User Password Override" src="user_pwd_override.png"
+  	<p><img alt="User Password Override" src="content/admin/user_pwd_override.png"
   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
   	width="559" height="328"></p>
 
   	<p>An administrator can now easily override / reset a users existing password by editing the the from the user admin screen and 
   	ticking the box to &#8220;override&#8221;.</p>
   </blockquote> 
-
-	<iframe src="../../template/footer.html" width="100%" frameborder="0">Your browser cannot support iframe</iframe>
-	</body>
-</html>
