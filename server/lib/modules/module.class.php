@@ -574,7 +574,7 @@ END;
                     }
                     else
                     {
-                        $options .= ',unassign|' . __('Unassign from all Layouts');
+                        $options .= ',unassignall|' . __('Unassign from all Layouts');
                         $options .= ',retire|' . __('Retire this media');
                     }
                 }
@@ -665,7 +665,7 @@ END;
             $options = Kit::GetParam('options', _POST, _WORD);
 
             // Unassigning Media needs to remove it from all Layouts the user has permission for.
-            if ($options == 'unassign') {
+            if ($options == 'unassignall') {
                 if (!$this->UnassignFromAll($mediaid)) {
                     $this->response->SetError($mediaObject->GetErrorMessage());
                     $this->response->keepOpen = true;
