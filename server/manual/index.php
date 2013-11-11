@@ -82,7 +82,7 @@ if (!is_file($toc))
 						<li class="<?php echo ($raw_toc == 'layouts') ? 'active' : ''; ?>"><a href="index.php?toc=layouts&p=layout/overview">Layouts</a></li>
 						<li class="<?php echo ($raw_toc == 'scheduling') ? 'active' : ''; ?>"><a href="index.php?toc=scheduling&p=schedule/overview">Scheduling</a></li>
 						<li class="<?php echo ($raw_toc == 'user_and_display') ? 'active' : ''; ?>"><a href="index.php?toc=user_and_display&p=users/overview">Users &amp; Displays</a></li>
-						<li class="<?php echo ($raw_toc == 'api') ? 'active' : ''; ?>"><a href="index.php?toc=api&p=admin/api">API</a></li>
+						<li class="<?php echo ($raw_toc == 'developer') ? 'active' : ''; ?>"><a href="index.php?toc=developer&p=admin/api">Developer</a></li>
 						<li class="<?php echo ($raw_toc == 'troubleshooting') ? 'active' : ''; ?>"><a href="index.php?toc=troubleshooting&p=admin/overview">Troubleshooting</a></li>
 		    		</ul>
 		    	</div>
@@ -92,17 +92,7 @@ if (!is_file($toc))
 		<div class="ss_body container">
 			<div class="row">
 				<div class="col-md-3">
-					<?php
-					if (is_file('img/logo_custom.png')) {
-					    $logo = 'img/logo_custom.png';
-					}
-					else {
-					    $logo = 'img/logo.png';
-					}
-					?>
-					<img class="img-responsive logo" src="<?php echo $logo; ?>" alt="<?php echo PRODUCT_NAME; ?> Logo" />
-
-					<div class="ss_sidebar sidebar affix" role="complementary">
+					<div class="ss_sidebar sidebar" role="complementary" data-spy="affix" data-offset-top="200">
 						<?php include($toc); ?>
 					</div>
 				</div>
@@ -115,6 +105,18 @@ if (!is_file($toc))
 		<footer class="ss_footer" role="contentinfo">
 			<div class="container">
 				<?php if (! @include('footer_custom.php')) { ?>
+
+				<?php
+				if (is_file('img/logo_custom.png')) {
+				    $logo = 'img/logo_custom.png';
+				}
+				else {
+				    $logo = 'img/logo.png';
+				}
+				?>
+				<div class="pull-right">
+					<img class="img-responsive logo" src="<?php echo $logo; ?>" alt="<?php echo PRODUCT_NAME; ?> Logo" />
+				</div>
 
 				<p>Designed and built by the <a href="http://www.xibo.org.uk" target="_blank">Xibo Project</a>.</p>
 				<p>Code licensed under <a href="" target="_blank">GNU Affero General Public License v3 or later</a>, documentation under <a rel="license" href="http://creativecommons.org/licenses/by-sa/2.0/uk/" target="_blank">Creative Commons Licence</a>.</p>
