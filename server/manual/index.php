@@ -84,6 +84,7 @@ if (!is_file($toc))
 						<li class="<?php echo ($raw_toc == 'user_and_display') ? 'active' : ''; ?>"><a href="index.php?toc=user_and_display&p=users/overview">Users &amp; Displays</a></li>
 						<li class="<?php echo ($raw_toc == 'developer') ? 'active' : ''; ?>"><a href="index.php?toc=developer&p=admin/api">Developer</a></li>
 						<li class="<?php echo ($raw_toc == 'troubleshooting') ? 'active' : ''; ?>"><a href="index.php?toc=troubleshooting&p=admin/overview">Troubleshooting</a></li>
+						<?php @include('content/nav_extra_custom.php'); ?>
 		    		</ul>
 		    	</div>
 	    	</div>

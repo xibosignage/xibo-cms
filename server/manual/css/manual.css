@@ -33,3 +33,7 @@
 body { 
 	padding-top: 70px;
 }
+
+.img-thumbnail {
+	margin-bottom: 10px;
+}

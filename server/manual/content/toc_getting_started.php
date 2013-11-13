@@ -10,5 +10,5 @@
 	?>
 	<a class="list-group-item" href="index.php?toc=getting_started&p=install/install_client">Windows Client Installation</a>
 	<a class="list-group-item" href="index.php?toc=getting_started&p=install/troubleshooting">Troubleshooting</a>
-	<a class="list-group-item" href="index.php?toc=getting_started&p=install/settings">CMS Settings</a>
+	<a class="list-group-item" href="index.php?toc=getting_started&p=admin/settings">CMS Settings</a>
 </div>
