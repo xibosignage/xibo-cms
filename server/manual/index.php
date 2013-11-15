@@ -20,20 +20,25 @@
  */ 
 define('XIBO', true);
 include_once('template.php');
+include_once('content/routes.php');
+@include_once('content/routes_custom.php');
 
 // Decide what we need to show
 // p=<<page name>>
-$raw_page = isset($_GET['p']) ? $_GET['p'] : 'intro';
+$raw_page = isset($_GET['p']) ? $_GET['p'] : DEFAULT_PAGE;
+
+if (!in_array($raw_page, $allowed_routes) || !is_file('content/' . $raw_page . '.php'))
+	$raw_page = 'error';
+
 $page = 'content/' . $raw_page . '.php';
 
-$raw_toc = isset($_GET['toc']) ? $_GET['toc'] : 'getting_started';
+// toc=<<table of contents>>
+$raw_toc = isset($_GET['toc']) ? $_GET['toc'] : DEFAULT_TOC;
+
+if (!in_array($raw_toc, $allowed_toc) || !is_file('content/toc_' . $raw_toc . '.php'))
+	$raw_toc = 'error';
+
 $toc = 'content/toc_' . $raw_toc . '.php';
-
-if (!is_file($page))
-	$page = 'content/error.php';
-
-if (!is_file($toc))
-	$toc = 'content/toc_getting_started.php';
 
 ?><!DOCTYPE html>
 <html lang="en">
@@ -65,7 +70,7 @@ if (!is_file($toc))
 		<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
 			<div class="container">
 				<div class="navbar-header">
-					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#ss-navbar">
 						<span class="sr-only">Toggle navigation</span>
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
@@ -74,7 +79,7 @@ if (!is_file($toc))
 					<a href="#" class="navbar-brand"><?php echo PRODUCT_NAME; ?> Documentation</a>
 				</div>
 			
-				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+				<div class="collapse navbar-collapse" id="ss-navbar">
 		    		<ul class="nav navbar-nav">
 						<li class="<?php echo ($raw_toc == 'getting_started') ? 'active' : ''; ?>"><a href="index.php?toc=getting_started&p=intro">Getting Started</a></li>
 						<li class="<?php echo ($raw_toc == 'app_overview') ? 'active' : ''; ?>"><a href="index.php?toc=app_overview&p=dashboard/overview">Overview</a></li>
@@ -93,7 +98,7 @@ if (!is_file($toc))
 		<div class="ss_body container">
 			<div class="row">
 				<div class="col-md-3">
-					<div class="ss_sidebar sidebar" role="complementary" data-spy="affix" data-offset-top="200">
+					<div class="ss-sidebar sidebar" role="complementary" data-spy="affix" data-offset-top="200">
 						<?php include($toc); ?>
 					</div>
 				</div>

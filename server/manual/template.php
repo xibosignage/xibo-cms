@@ -18,5 +18,9 @@
 
     # Should the help include information on installing the server?
     define('HOSTED', FALSE);
+
+    # Default Page and TOC
+    define('DEFAULT_TOC', 'getting_started');
+    define('DEFAULT_PAGE', 'intro');
   }
 ?>

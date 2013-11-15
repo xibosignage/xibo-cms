@@ -20,6 +20,9 @@
  */ 
 define('XIBO', true);
 include_once('template.php');
+include_once('content/routes.php');
+@include_once('content/routes_custom.php');
+
 ?><!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -54,14 +57,13 @@ include_once('template.php');
 					<?php 
 					// Decide what we need to show
 					// p=<<page name>>
-					$page = isset($_GET['p']) ? $_GET['p'] : 'intro';
+					$raw_page = isset($_GET['p']) ? $_GET['p'] : 'intro';
 
-					if (is_file('content/' . $page . '.php')) {
-						include('content/' . $page . '.php');
-					}
-					else {
-						include('content/error.php');
-					}
+					if (!in_array($raw_page, $allowed_routes) || !is_file('content/' . $raw_page . '.php'))
+						$raw_page = 'error';
+
+					$page = 'content/' . $raw_page . '.php';
+					include($page);
 					?>
 					
 				</div>
