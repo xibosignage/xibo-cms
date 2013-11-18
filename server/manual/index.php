@@ -124,8 +124,8 @@ $toc = 'content/toc_' . $raw_toc . '.php';
 					<img class="img-responsive logo" src="<?php echo $logo; ?>" alt="<?php echo PRODUCT_NAME; ?> Logo" />
 				</div>
 
-				<p>Designed and built by the <a href="http://www.xibo.org.uk" target="_blank">Xibo Project</a>.</p>
-				<p>Code licensed under <a href="" target="_blank">GNU Affero General Public License v3 or later</a>, documentation under <a rel="license" href="http://creativecommons.org/licenses/by-sa/2.0/uk/" target="_blank">Creative Commons Licence</a>.</p>
+				<p>Designed and built by <a href="http://springsignage.com/">Spring Signage</a> for the <a href="http://www.xibo.org.uk" target="_blank">Xibo Project</a>.</p>
+				<p>Open Source Code licensed under <a href="" target="_blank">GNU Affero General Public License v3 or later</a>, documentation under <a rel="license" href="http://creativecommons.org/licenses/by-sa/2.0/uk/" target="_blank">Creative Commons Licence</a>.</p>
 
 				<p class="ss_footer_links">Currently v<?php echo PRODUCT_VERSION; ?></p>
 				<?php } ?>
