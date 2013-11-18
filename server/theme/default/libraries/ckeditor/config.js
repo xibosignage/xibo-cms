@@ -36,6 +36,6 @@ CKEDITOR.editorConfig = function( config ) {
 	// Make dialogs simpler.
 	config.removeDialogTabs = 'image:advanced;link:advanced';
 
-	config.extraPlugins = 'iframe';
+	config.extraPlugins = 'iframe,justify';
 	config.extraAllowedContent = 'table[*]';
 };

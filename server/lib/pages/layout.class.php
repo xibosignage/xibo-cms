@@ -547,7 +547,7 @@ class layoutDAO
 		}
 		else
 		{
-            $thumbBgImage = "theme/default/img/forms/filenotfound.png";
+            $thumbBgImage = "theme/default/img/forms/filenotfound.gif";
 		}
 
 		// Configure some template variables.

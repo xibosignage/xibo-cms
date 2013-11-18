@@ -51,7 +51,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                 <div class="control-group">
                     <div class="controls">
                         <label class="checkbox" for="fitText" accesskey="n" title="<?php echo Theme::Translate('Fit text to region'); ?>"><?php echo Theme::Translate('Fit text to region'); ?>
-                            <input class="checkbox" name="fitText" type="checkbox" id="fitText" tabindex="2" <?php echo Theme::Get('fit_text_checked'); ?> />
+                            <input class="checkbox" name="fitText" type="checkbox" id="fitText" tabindex="2" <?php echo Theme::Get('fitTextChecked'); ?> />
                 		</label>
                     </div>
                 </div>

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digitial Signage - http://www.xibo.org.uk
- * Copyright (C) 2010 Alex Harrington
+ * Copyright (C) 2010-13 Alex Harrington
  *
  * This file is part of Xibo.
  *
@@ -29,6 +29,7 @@ ini_set('gd.jpeg_ignore_warning', 1);
 
 // Required Library Files
 require_once("lib/app/translationengine.class.php");
+require_once("lib/app/pdoconnect.class.php");
 require_once("lib/app/debug.class.php");
 require_once("lib/app/kit.class.php");
 require_once("lib/data/data.class.php");
