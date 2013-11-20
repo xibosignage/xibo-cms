@@ -54,7 +54,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<div class="control-group">
 			<label class="control-label" for='retired' accesskey="r" title="<?php echo Theme::Translate('Retire this layout or not? It will no longer be visible in lists'); ?>"><?php echo Theme::Translate('Retired'); ?></label>
 			<div class="controls">
-				<?php echo Theme::SelectList('retiredid', Theme::Get('retired_field_list'), 'retiredid', 'retired', Theme::Get('retired')); ?>
+				<?php echo Theme::SelectList('retired', Theme::Get('retired_field_list'), 'retiredid', 'retired', Theme::Get('retired')); ?>
 			</div>
 		</div>
 	</fieldset>

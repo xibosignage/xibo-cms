@@ -95,15 +95,15 @@ INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
 
 INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`) VALUES
 (1, 'Image', 'Image', 1, 0, 'Images. PNG, JPG, BMP, GIF', 'forms/image.gif', 1, 'jpg,jpeg,png,bmp,gif', 1),
-(2, 'Video', 'Video', 1, 0, 'Videos. WMV.', 'forms/video.gif', 1, 'wmv,avi,mpg,mpeg', 1),
+(2, 'Video', 'Video', 1, 0, 'Videos - support varies depending on the client hardware you are using.', 'forms/video.gif', 1, 'wmv,avi,mpg,mpeg,webm,mp4', 1),
 (3, 'Flash', 'Flash', 1, 0, 'Flash', 'forms/flash.gif', 1, 'swf', 1),
 (4, 'PowerPoint', 'PowerPoint', 1, 0, 'Powerpoint. PPT, PPS', 'forms/powerpoint.gif', 1, 'ppt,pps,pptx', 1),
 (5, 'Webpage', 'Webpage', 1, 1, 'Webpages.', 'forms/webpage.gif', 1, NULL, 1),
 (6, 'Ticker', 'Ticker', 1, 1, 'RSS Ticker.', 'forms/ticker.gif', 1, NULL, 1),
 (7, 'Text', 'Text', 1, 1, 'Text. With Directional Controls.', 'forms/text.gif', 1, NULL, 1),
 (8, 'Embedded', 'Embedded', 1, 1, 'Embedded HTML', 'forms/webpage.gif', 1, NULL, 1),
-(9, 'MicroBlog', 'MicroBlog', 1, 1, NULL, 'forms/microblog.gif', 1, NULL, 1),
-(10, 'Counter', 'Counter', 1, 1, 'Customer Counter connected to a Remote Control', 'forms/counter.gif', 1, NULL, 1),
+(9, 'MicroBlog', 'MicroBlog', 0, 1, NULL, 'forms/microblog.gif', 1, NULL, 1),
+(10, 'Counter', 'Counter', 0, 1, 'Customer Counter connected to a Remote Control', 'forms/counter.gif', 1, NULL, 1),
 (11, 'datasetview', 'Data Set', 1, 1, 'A view on a DataSet', 'forms/datasetview.gif', 1, NULL, 1),
 (12, 'shellcommand', 'Shell Command', 1, 1, 'Execute a shell command on the client', 'forms/shellcommand.gif', 1, NULL, 1),
 (13, 'localvideo', 'Local Video', 0, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 1);

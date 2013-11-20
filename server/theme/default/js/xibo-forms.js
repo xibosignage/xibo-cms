@@ -2,6 +2,7 @@ var text_callback = function(dialog)
 {
     // Conjure up a text editor
     CKEDITOR.replace("ta_text");
+    CKEDITOR.config.contentsCss = 'body {background-color:' + $('#layout').css('background-color') + ';} html.cke_panel_container body { background-color: #FFF;}';
 
     // Make sure when we close the dialog we also destroy the editor
     dialog.on("hide", function() {
@@ -35,6 +36,7 @@ var microblog_callback = function(dialog)
     // Conjure up a text editor
     CKEDITOR.replace("ta_template");
     CKEDITOR.replace("ta_nocontent");
+    CKEDITOR.config.contentsCss = 'body {background-color:' + $('#layout').css('background-color'); + ';}';
 
     // Make sure when we close the dialog we also destroy the editor
     dialog.on("hide", function() {
