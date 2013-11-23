@@ -82,7 +82,7 @@ $toc = 'content/toc_' . $raw_toc . '.php';
 				<div class="collapse navbar-collapse" id="ss-navbar">
 		    		<ul class="nav navbar-nav">
 						<li class="<?php echo ($raw_toc == 'getting_started') ? 'active' : ''; ?>"><a href="index.php?toc=getting_started&p=intro">Getting Started</a></li>
-						<li class="<?php echo ($raw_toc == 'app_overview') ? 'active' : ''; ?>"><a href="index.php?toc=app_overview&p=dashboard/overview">Overview</a></li>
+						<li class="<?php echo ($raw_toc == 'app_overview') ? 'active' : ''; ?>"><a href="index.php?toc=app_overview&p=coreconcepts/overview">Overview</a></li>
 						<li class="<?php echo ($raw_toc == 'library') ? 'active' : ''; ?>"><a href="index.php?toc=library&p=content/overview">Library</a></li>
 						<li class="<?php echo ($raw_toc == 'layouts') ? 'active' : ''; ?>"><a href="index.php?toc=layouts&p=layout/overview">Layouts</a></li>
 						<li class="<?php echo ($raw_toc == 'scheduling') ? 'active' : ''; ?>"><a href="index.php?toc=scheduling&p=schedule/overview">Scheduling</a></li>

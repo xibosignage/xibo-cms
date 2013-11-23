@@ -41,6 +41,16 @@ $(document).ready(function() {
 	
 	setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes	
 
+    $.ajaxSetup({
+    beforeSend:function(){
+        $("#xibo-loading-gif").css({top:'50%',left:'50%',margin:'-'+($('#myDiv').height() / 2)+'px 0 0 -'+($('#myDiv').width() / 2)+'px'}).show();
+    },
+    complete:function(){
+        // hide gif here, eg:
+        $("#xibo-loading-gif").hide();
+    }
+});
+
 	XiboInitialise("");
 });
 

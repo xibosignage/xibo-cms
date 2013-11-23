@@ -33,7 +33,13 @@ $allowed_toc = array(
 
 $allowed_routes = array(
 		'intro',
-		'license/licenses'
+		'license/licenses',
+		'install/install_server',
+		'install/install_environment',
+		'install/install_client',
+		'install/troubleshooting',
+		'admin/settings',
+		'coreconcepts/overview'
 	);
 
 ?>

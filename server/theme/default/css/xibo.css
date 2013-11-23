@@ -228,3 +228,8 @@ ul#LayoutAssignSortable {
     float: left;
     list-style: none;
 }
+
+#xibo-loading-gif {
+  display: none;
+  position: absolute;
+}

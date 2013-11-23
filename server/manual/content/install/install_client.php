@@ -20,7 +20,7 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<h1><?php echo PRODUCT_NAME; ?> Client Installation</h1>
+<h1><?php echo PRODUCT_NAME; ?> Windows Client Installation</h1>
 <p>Installing a Windows client is easy:
 	<ol>
 		<li>Ensure your PC meets the minimum requirements</li>
