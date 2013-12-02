@@ -126,5 +126,15 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     			</div>
     		</div>
         </div>
+        <div class="row-fluid">
+            <div class="text-center text-info"><?php echo Theme::Translate('Optional Stylesheet'); ?></div>
+        </div>
+        <div class="row-fluid">
+            <div class="control-group">
+                <div class="span12">
+                    <textarea class="span12" id="ta_css" name="ta_css"><?php echo Theme::Get('css'); ?></textarea>
+                </div>
+            </div>
+        </div>
     </form>
 </div>

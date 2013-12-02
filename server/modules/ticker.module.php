@@ -114,7 +114,7 @@ class ticker extends Module
 	        Theme::Set('ordering', $this->GetOption('ordering'));
         }
         else {
-        	// Extra Fields for the DataSet
+        	// Extra Fields for the Ticker
         	$subs = array(
         			array('Substitute' => 'Title'),
         			array('Substitute' => 'Description'),
@@ -172,6 +172,16 @@ class ticker extends Module
 		$textNodes = $rawXml->getElementsByTagName('template');
 		$textNode = $textNodes->item(0);
 		Theme::Set('text', $textNode->nodeValue);
+
+		// Get the CSS node
+		$cssNodes = $rawXml->getElementsByTagName('css');
+		if ($cssNodes->length > 0) {
+			$cssNode = $cssNodes->item(0);
+			Theme::Set('css', $cssNode->nodeValue);
+		}
+		else {
+			Theme::Set('css', '');
+		}
                 
         // Duration
         Theme::Set('duration', $this->duration);
@@ -264,7 +274,7 @@ class ticker extends Module
 		$this->SetOption('updateInterval', 120);
 		$this->SetOption('scrollSpeed', 2);
 
-		$this->SetRaw('<template><![CDATA[' . $template . ']]></template>');
+		$this->SetRaw('<template><![CDATA[' . $template . ']]></template><css><![CDATA[]]></css>');
 		
 		// Should have built the media object entirely by this time
 		// This saves the Media Object to the Region
@@ -308,6 +318,7 @@ class ticker extends Module
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+		$css = Kit::GetParam('ta_css', _POST, _HTMLSTRING);
 		$scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 2);
 		$updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 360);
 		$copyright	  = Kit::GetParam('copyright', _POST, _STRING);
@@ -399,7 +410,7 @@ class ticker extends Module
         $this->SetOption('itemsPerPage', $itemsPerPage);
         
         // Text Template
-		$this->SetRaw('<template><![CDATA[' . $text . ']]></template>');
+		$this->SetRaw('<template><![CDATA[' . $text . ']]></template><css><![CDATA[' . $css . ']]></css>');
 		
 		// Should have built the media object entirely by this time
 		// This saves the Media Object to the Region
@@ -502,6 +513,17 @@ class ticker extends Module
         $textNode = $textNodes->item(0);
         $text = $textNode->nodeValue;
 
+        // Get the CSS Node
+        $cssNodes = $rawXml->getElementsByTagName('css');
+
+        if ($cssNodes->length > 0) {
+        	$cssNode = $cssNodes->item(0);
+        	$css = $cssNode->nodeValue;
+        }
+        else {
+        	$css = '';
+        }
+
         $options = array('type' => 'ticker',
         	'sourceid' => $sourceId,
         	'direction' => $direction,
@@ -537,6 +559,11 @@ class ticker extends Module
 	        $headContent .= '<style type="text/css">';
 	        $headContent .= ' .item, .page { float: left; }';
 	        $headContent .= '</style>';
+        }
+
+        // Add the CSS if it isn't empty
+        if ($css != '') {
+        	$headContent .= '<style type="text/css">' . $css . '</style>';
         }
 
         // Replace the View Port Width?
