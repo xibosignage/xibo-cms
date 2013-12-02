@@ -317,7 +317,7 @@ class datasetview extends Module
         $filter = Kit::GetParam('filter', _POST, _STRING);
         $ordering = Kit::GetParam('ordering', _POST, _STRING);
         $showHeadings = Kit::GetParam('showHeadings', _POST, _CHECKBOX);
-        $styleSheet = Kit::GetParam('styleSheet', _POST, _STRING);
+        $styleSheet = Kit::GetParam('styleSheet', _POST, _HTMLSTRING);
         $updateInterval = Kit::GetParam('updateInterval', _POST, _INT);
         $rowsPerPage = Kit::GetParam('rowsPerPage', _POST, _INT);
 
