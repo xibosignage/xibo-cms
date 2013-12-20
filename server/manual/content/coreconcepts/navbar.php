@@ -1,163 +1,71 @@
-	<h1>Navigation</h1>
-	
-	<p>The navigation bar appears on every page in the <?php echo PRODUCT_NAME; ?> server interface. It provides user direct access
-		to all parts of the <?php echo PRODUCT_NAME; ?> interface from within any part of the <?php echo PRODUCT_NAME; ?> interface.</p>
-	 
-	<p><img alt="The navigation bar" src="content/dashboard/navbar.png"
-	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	width="550" height="149"></p>
-	
-	<p>Most of the options directly mirror those available on the Dashboard. The main exception to this is the Management Menu - 
-		which is only displayed to Admins. It has the following links:</p>
-	
-	<h2>Dashboard</h2>
-	
-	<p>The dashboard link returns you to your <?php echo PRODUCT_NAME; ?> dashboard, this will either be
-	the default dashboard, or your media manager dashboard.</p>
-	
-	<h2>Schedule</h2>
-	
-	<p>The schedule link takes you to the Schedule calendar view, from here you
-	can schedule layout onto each client display.</p>
-	
-	<h2>Design</h2>
-	
-	<p>The link takes you to the layout design page, from here you can view all
-	the current layouts in the system and create new, or maintain your current layouts.</p>
-	
-	<blockquote>
-	<h3>Campaigns</h3>
-	<p>Grouping of mulitple Layouts for scheduling.</p>
-	
-	<h3>Layouts</h3>
-	<p>List of user defined layouts. You can </p>
-	<ul>
-	  <li>Assign schedule for each user layout.</li>
-	  <li>Degin/Edit/Delete the layout</li>
-	  <li>Assign user access permission for each layout</li>
-	</ul>
-	
-	<h3>Templates</h3>
-	<p>A list of the available standard templates for user selection. Currently there are 8 being specified.</p>
-	
-	<h3>Resolutions</h3>
-	<p>Here defines the resoluton settings for each template made available to the users; mainly use for new layout generation. 
-	   The final client display resolutions are scaled from these layout resolution.</p>
-	</blockquote>
-	   
-	<h2>Library</h2>
-	
-	<p>The link takes you to the library page where you can view all the current uploaded media items (images, videos 
-		files) on the server. You can create new, update, delete media items or modify media access permissions.</p>
-	
-	<blockquote>
-	<h3>Media</h3>
-	<p>List of all the images and media playback files.</p>
-	
-	<h3>DataSets</h3>
-	<p>List of all the datasets items.</p>
-	</blockquote>
-	
-	<h2>Displays</h2>
-	<p>List of all the current defined client displays and their status. You can</p>
-	<ul>
-	  <li>Maintain your licensed displays</li>
-	  <li>Revoke the license of a display</li>
-	  <li>Rename/Delete a display</li>
-	  <li>Change member grouping</li>
-	  <li>Change the default layout for the display</li>
-	  <li>Toggle Auditing of the display</li>
-	  <li>Send a 'Wake On LAN' signal to a client display</li>
-	</ul>
-	
-	<blockquote>
-	<h3>Display Groups</h3>
-	<p>List of all display groups that have been created. You can</p>
-	<ul>
-	  <li>Add a new display group</li>
-	  <li>Rename a display group</li>
-	  <li>Change group members</li>
-	  <li>Modify group permissions</li>
-	</ul>
-	
-	<h3>Statistics</h3>
-	<p>Provide a statistical data of the client displays' activities.</p>
-	</blockquote>
-	
-	<h2>Administration</h2>
-	
-	<p>The administration link takes to administration page and user options</p>
-	
-	<blockquote>
-	<h3>Users</h3>
-	<p>The user page allows you to maintain all the Users on the system, from here you are able to</p>
-	<ul>
-	  <li>Add a new user</li>
-	  <li>Delete a user</li>
-	  <li>Edit a user's permissions setting</li>
-	  <li>Set a user's homepage</li>
-	  <li>Override a user's password</li>
-	</ul>
-	
-	<h3>User Groups</h3>
-	<p>Manage Groups' settings similar to users.</p>
-	<ul>
-	  <li>Add a new group</li>
-	  <li>Delete a group</li>
-	  <li>Alter a groups permissions</li>
-	  <li>Set a group's homepage</li>
-	</ul>
-	
-	<h3>Settings</h3>
-	<p>Settings is used to provide a set of defaults for content and <?php echo PRODUCT_NAME; ?> server configurations including:</p>
-	<ul>
-	  <li>Error log &amp; actions</li>
-	  <li>Server key setting</li>
-	  <li>Server library location</li>
-	</ul>
-	
-	<h3>Applications</h3>
-	<p>It is a REST API using oauth; the applications menu will contain authourised applications for that server.</p>
-	<p>More information is available on <a href="../admin/api.php"><?php echo PRODUCT_NAME; ?> API</a> page.</p>
-	
-	<h3>Modules</h3>
-	<p>Here you can define the parameter settings for each of the <?php echo PRODUCT_NAME; ?> modules e.g. media supported extensions etc.</p>
-	</blockquote>
-	
-	<h2>Advanced</h2>
-	<p>The advanced link takes you to the <?php echo PRODUCT_NAME; ?> maintenace page options</p>
-	
-	<blockquote>
-	<h3>Log</h3>
-	<p>The log page provides detailed messages about the system. These are
-	normally required when reporting bugs or requesting for help.</p>
-	
-	<h3>Sessions</h3>
-	<p>Sessions provide details of all the current users' activities on the network connection with the <?php echo PRODUCT_NAME; ?> Server.</p>
-	
-	<h3>Report Fault</h3>
-	<p>Provide some simple steps to generate debug messages; and to report bugs.</p>
-	
-	<h3>License</h3>
-	<p>The license page provides details of all the relevent licenses for the system.</p>
-	</blockquote>
-	
-	<a name="Navigation_Top" id="Navigation_Top"></a><h2>Navigation-Top</h2>
-	<p>Cicking on a menu item brings you to the page relating to that section of the interface.</p>
-	
-	<blockquote>
-	<h3>Login-Account</h3>
-	<p>Click on login account to change user password.</p>
-	
-	<h3>Time Display</h3>
-	<p>Click on Time for more details time information.</p>
-	
-	<h3>About</h3>
-	<p>Display <?php echo PRODUCT_NAME; ?> License Information.</p>
-	
-	<h3>Help</h3>
-	<p>Provide links to online help.</p>
-	
-	<h3>Log Out</h3>
-	<p>This link closes and exits the current user session.</p>
-	</blockquote>
+<?php
+/*
+ * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
+<h1>Navigation <small>Getting around</small></h1>
+
+<p>The CMS has a simple 2 level navigation bar to help move around in a logical way. The top level navigation bar is always visible in the header of the user interface. This navigation menu provides access to all the core areas of the CMS.</p>
+
+<p><img class="img-thumbnail" alt="The navigation bar" src="content/coreconcepts/navbar.png"></p>
+
+<p>Most of the menu items at the top level will expose further options once selected, each will be discussed below.</p>
+
+<dl class="dl-horizontal">
+	<dt>Dashboard</dt>
+	<dd>The dashboard link returns you to your <?php echo PRODUCT_NAME; ?> dashboard. The dashboard is personalised depending on who is currently logged in.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Schedule</dt>
+	<dd>Calendar view to assign Layouts/Campaigns onto Displays. Discussed in the <a href="index.php?toc=scheduling&p=schedule/overview">Scheduling</a> section.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Design</dt>
+	<dd>Layout administration for adding/editing and designing Layouts and Campaigns. Discussed in the <a href="index.php?toc=layouts&p=layout/overview">Layouts</a> section.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Library</dt>
+	<dd>Media Administration in the library for all file based media, such as images and video. Discussed in the <a href="index.php?toc=library&p=content/overview">Library</a> section.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Displays</dt>
+	<dd>Display Administration for managing any connected displays (Windows, Ubunut or Android). Discussed in the <a href="index.php?toc=user_and_display&p=users/overview">Users and Displays</a> section.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Administration</dt>
+	<dd>Area for managing users and groups, adjusting settings and enabling additional functionality. Discussed in the <a href="index.php?toc=user_and_display&p=users/overview">Users and Displays</a> section.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Advanced</dt>
+	<dd>Area for advanced trouble shooting and debugging. Discussed in the <a href="index.php?toc=troubleshooting&p=admin/overview">Troubleshooting</a> section.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Preferences</dt>
+	<dd>User preferences for changing password, logging out and viewing the help.</dd>
+</dl>
+
+<p class="alert alert-info">You may not see all of these options when you log in - that is because these are shown based on the permissions you have been assigned. If you would like access to all areas please speak to your CMS administrator.</p>

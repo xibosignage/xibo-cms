@@ -1,10 +1,30 @@
-
+<?php
+/*
+ * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
 	<a name="Image" id="Image"></a><h2>Image</h2>
 
 	<p>This form allows you to add an image to the timeline. Currently JPEG, PNG, BMP and GIF files are supported. 
 	Transparency is supported in PNG and GIF files, (but NOT if used as background images).</p>
 
-<blockquote>
 	<p>Add an image</p>
 	<ul>
 		<li>Click the "Add Image" icon</li>
@@ -23,4 +43,3 @@
 			for as the total time shown will be dictated by the total run time of the longest-running region on the layout.</i></li>
 		<li>Click "Save"</li>
 	</ul>
-</blockquote>	

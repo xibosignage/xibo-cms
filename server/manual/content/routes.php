@@ -39,7 +39,17 @@ $allowed_routes = array(
 		'install/install_client',
 		'install/troubleshooting',
 		'admin/settings',
-		'coreconcepts/overview'
+		'coreconcepts/overview',
+		'coreconcepts/login',
+		'coreconcepts/navbar',
+		'coreconcepts/dashboard',
+		'content/overview',
+		'content/adding',
+		'content/content_video',
+		'content/content_image',
+		'content/content_powerpoint',
+		'content/content_flash',
+		'content/content_dataset'
 	);
 
 ?>

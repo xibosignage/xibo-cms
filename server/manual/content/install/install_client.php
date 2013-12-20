@@ -47,7 +47,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 <h3>Step 1</h3>
 <p>You may see the following security warning when installing <?php echo PRODUCT_NAME; ?>. Please click on "Run" to begin the installation.</p>
-<img class="img-thumbnail" class="img class="img-thumbnail" thumbnail" alt="Security Warning" src="content/install/securitywarning.png" />
+<img class="img-thumbnail" alt="Security Warning" src="content/install/securitywarning.png" />
 
 <h3>Step 2</h3>
 <p>The installer presents a welcome screen. Please press "Next".</p>
