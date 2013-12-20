@@ -6,5 +6,5 @@
 	<a class="list-group-item" href="index.php?toc=library&p=content/content_image">Image</a>
 	<a class="list-group-item" href="index.php?toc=library&p=content/content_powerpoint">PowerPoint</a>
 	<a class="list-group-item" href="index.php?toc=library&p=content/content_dataset">Datasets </a>
-	<a class="list-group-item" href="index.php?toc=library&p=admin/modules"><?php echo PRODUCT_NAME; ?> Modules</a>
+	<a class="list-group-item" href="index.php?toc=library&p=admin/modules">Media Modules</a>
 </div>

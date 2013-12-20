@@ -20,7 +20,7 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<h1>DataSets <small>Tabluar data</small></h1>
+<h1>DataSets <small>Tabular data</small></h1>
 
 <p>DataSets are a feature to design and display tabular data, formatted nicely, in a region on a layout. This data can be imported from a CSV file and provides a conveniant way to display data from other systems in <?php echo PRODUCT_NAME; ?>.</p>
 

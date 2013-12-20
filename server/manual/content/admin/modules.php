@@ -1,47 +1,80 @@
-
+<?php
+/*
+ * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
 		
-		<h1>Modules</h1>
-    	<p><?php echo PRODUCT_NAME; ?> server content handling is done by Modules.</p>
-    	<p>Click "Administration -> Modules" load the modules parameters for edit.</p>
-      
-    	<p><img alt="SA_Modules" src="content/admin/sa_modules.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="644" height="418"></p>
+<h1>Modules</h1>
+<p>All content displayed in <?php echo PRODUCT_NAME; ?> is added/edited and served by a media module. There are 13 media modules to choose from and more are being added as new releases are made.</p>
 
-		<p><?php echo PRODUCT_NAME; ?> server modules table contains parameters for user edit.</p>
-		<ul>
-			<li><strong>Name:</strong>
-      		<p>System given Name for the specific module.</p</li>
-			<li><strong>Description:</strong>
-      		<p>A breif description of the modules.</p</li>
-			<li><strong>Library Media:</strong>
-      		<p>Indicated if the content is saved in the <?php echo PRODUCT_NAME; ?> Library. Unchecked indicate the specific content is only save
-      		with the Layout-Regions.</p</li>
-			<li><strong>Valid Extensions:</strong>
-      		<p>Valid file extensions that are supported by the specific module.</p</li>
-			<li><strong>Image Uri:</strong>
-      		<p>Link to the module icon for UI display, usually leave as it.</p></li>
-			<li><strong>Enabled:</strong>
-      		<p>System administrator may enable/disable the specific content for <?php echo PRODUCT_NAME; ?> user access.</p</li>
-		</ul>
+<p>Modules can be enabled and disabled using the CMS administrator menu, Modules sub menu. Each module also has a range of settings available.</p>
 
-		<h2>Edit</h2>
-		<p>Click Edit button for the specific content type load the following form for user changes.</p>
+<p><img  class="img-thumbnail" alt="Module List" src="content/admin/sa_modules.png"></p>
 
-		<ul>
-		<li><h3>Content Without Extension:</h3>
-    	<p>Admininstrator may enable or disable the content for user access.</p>
-    
-    	<p><img alt="SA_Modules" src="content/admin/sa_modules_text.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="358" height="179"></p></li>
+<p>Each module has the following properties.</p>
 
-		<li><h3>Content With Extension:</h3>
-    	<p>Administrator may add other valid files extensions that are supported by the <?php echo PRODUCT_NAME; ?> Client Display e.g. mp4.</p>
-    
-    	<p><img alt="SA_Modules" src="content/admin/sa_modules_video.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="358" height="211"></p></li>
-    </ul>    
+<dl class="dl-horizontal">
+    <dt>Name</dt>
+    <dd>System given Name for the specific module.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>Description</dt>
+    <dd>A breif description of the module.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>Library Media</dt>
+    <dd>Indicated if the content is saved in the <?php echo PRODUCT_NAME; ?> Library. Unchecked indicate the specific content is only saved with the Layout-Regions.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>Valid Extensions</dt>
+    <dd>File extensions that are supported by the specific module.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>Image Uri</dt>
+    <dd>Link to the module icon for UI display - this can also be provided by your Theme.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>Preview Enabled</dt>
+    <dd>Should this module output a preview in the Layout Designer.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>Enabled</dt>
+    <dd>Can this module be used?</dd>
+</dl>
 
 
+<h2>Modules Settings</h2>
+<p>Click Edit button for the specific content type load the following form for user changes.</p>
+
+<h3>Content Without Extension</h3>
+<p>Admininstrator may enable or disable the content for user access.</p>
+
+<p><img class="img-thumbnail" alt="Modules" src="content/admin/sa_modules_text.png"></p>
+
+<h3>Content With Extension</h3>
+<p>Administrator may add other valid files extensions that are supported by the <?php echo PRODUCT_NAME; ?> Client Display e.g. mp4.</p>
+
+<p><img class="img-thumbnail" alt="Modules" src="content/admin/sa_modules_video.png"></p>
