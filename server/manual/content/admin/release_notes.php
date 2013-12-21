@@ -20,5 +20,6 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<h1>Developer <small>Release Notes, API documentation and more!</small></h1>
-<p>Welcome to the Developer documentation section.</p>
+<h1>Release Notes <small><?php echo PRODUCT_VERSION; ?></small></h1>
+<p>Previous versions are available in the <a href="index.php?toc=developer&p=admin/release_notes_archive">archive</a>.</p>
+<?php include('content/admin/release_notes_1.6.0rc1.php'); ?>

@@ -20,5 +20,7 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<h1>Developer <small>Release Notes, API documentation and more!</small></h1>
-<p>Welcome to the Developer documentation section.</p>
+<h1>Database Model</h1>
+
+<h2>EER</h2>
+<p><a href="content/admin/eer_1.4.png"><img class="img-thumbnail" alt="EER" src="content/admin/eer_1.4.png"></a></p>
