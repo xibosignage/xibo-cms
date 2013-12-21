@@ -1,7 +1,7 @@
 
 	<a name="embedded" id="embedded"></a><h2>Embedded HTML</h2>
 
-<blockquote>
+
 
 	<p>In <?php echo PRODUCT_NAME; ?> it is possible to embed html code as content in a region e.g. a clock or weather forcast</p>
 	<p>To get <?php echo PRODUCT_NAME; ?> to show embedded HTML with Active-X content, you would need to adjust the security settings of IE 
@@ -48,4 +48,4 @@ showClock(obj);
 
 	<p>You can view the script source by right click on the page and select "View source"</p>
 	</li></ul>
-</blockquote>
+

@@ -16,7 +16,7 @@
 	<p>Your administrator may have turned some of these content types off, or added new ones. We will look at each of 
 	the standard <?php echo PRODUCT_NAME; ?> media types in detail here.</p>
 
-<blockquote>
+
 	<h3>Library</h3>
 	<p>The first button is the Library. This takes you to a list of media items that have already been 
 	uploaded either in the Library section or in a previous layout.</p>
@@ -56,12 +56,12 @@
 
 	<h3>Webpage</h3>
 	<p>Embed an external webpage: The add web page button is used to insert the contents of a web page directly into the region on the layout.</p>
-</blockquote>
+
 
     <a name="Add_From_Library" id="Add_From_Library"></a><h2>Add Item from Library</h2>
     <p>The media content i.e. image, video, flash, and powerpoint; beside upload new content from local system,
     the content may also be assigned from the media library if they exist.
-<blockquote>
+
     <p>Add from Library</p>
 	<ul>
     	<li>Click Add Library icon; or alternatively<br />
@@ -83,4 +83,4 @@
         <li>Double click on each item you want under "Library" coloum</li>
       	<li>The selected items will move to "Media to Assign" column</li>
     </ul>
-</blockquote>
+

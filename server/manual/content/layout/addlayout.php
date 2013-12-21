@@ -19,7 +19,7 @@
 		<li>Click "Save"</li>
 	</ul>
 
-	<blockquote>
+	
   	<p>The fields on the Add/Edit Layout form are described as follows:</p>
 
   	<h3>Name</h3>
@@ -39,7 +39,7 @@
   	<p>Optionally you can choose a template to base your new layout on (defaults or templates that you have already saved).
 	This can help reduce the time it takes to setup a new layout. Please go to the <a href="../templates/overview.php">Template</a> 
   	section for more details on how to create or choose a template.</p>
-	</blockquote>
+	
 
 	<a name="Edit_Layout" id="Edit_Layout"></a><h2>Retire Layout</h2>
 	<p>When you are finished with an old layout, you can optionally hide it in the <?php echo PRODUCT_NAME; ?> Server (incase you want to reuse it at a later date).

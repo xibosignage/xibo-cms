@@ -10,7 +10,7 @@
     	Note: It is a toggle operation, therefore if the assignment is "unassigned" it will become "assigned" and visa versa.
 		Currently assigned rows are indicated with a green mark and unassigned with a red mark.</p>	  
 
-    <blockquote>
+    
     	<a name="Page_Security" id="Page_Security"></a><h3>Page Security</h3>
 		<p>Click "Page Security" button for the user you want to edit. A "Page Security" form is loaded for editing.</p>
 
@@ -54,6 +54,6 @@
 			<li>Library Menu</li>
 			<li>Top Nav</li>
 		</ul>
-    </blockquote>
+    
 
 

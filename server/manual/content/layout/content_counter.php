@@ -9,7 +9,7 @@
 	simply press Page Up or Page Down keys on the client machine (or via a wireless presenter style remote) and a popup 
 	overlay will appear displaying the current counter number.</p>
 
-<blockquote>
+
 	<p>This popup overlay can be styled and configured using the configuration variables in the client site.cfg file as follows:</p>
 	<ul>
 		<li>nextScanCode=112 - Keyboard scan code used to increment the counter</li>
@@ -44,5 +44,5 @@
 			the counter value to be shown on the screen. You can also add additional text before and/or after the tag which 
 			will also be displayed.</li>
 	</ul>
-</blockquote>
+
 

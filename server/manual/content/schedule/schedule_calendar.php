@@ -22,7 +22,7 @@
  	<p><?php echo PRODUCT_NAME; ?> supports scheduling more than one layout at once using Campaign. The client will automatically alternate 
    	between the two layouts. Refer to <a href ="../layout/campaign_layout.php">Campaign Layouts</a> for detail.</p>
 
-  <blockquote>
+  
   	<a name="Navigating" id="Navigating"></a><h3>Navigating</h3>
   	<p>The calendar months chart view can be navigated using the Prev and Next links. They are on either side of
   	the current calendar month window.</p>
@@ -44,6 +44,6 @@
 
 	<p>To edit an event, click on that event and the "Edit Scheduled Event" form will be loaded. Except for the form title, 
 	both forms presents the same information for edit.</p>
-  </blockquote>
+  
 
 

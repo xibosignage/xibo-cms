@@ -1,7 +1,7 @@
 
 	<a name="Webpage" id="Webpage"></a><h2>Web Page</h2>
 
-	<blockquote>
+	
 
 	<h3> Webpage scale functionality in Windows Client</h3>
 	<p>In <?php echo PRODUCT_NAME; ?> it is possible to show a webpage in a region. Because websites are not build for showing on a big screen, 
@@ -30,4 +30,4 @@
     	</ul>
 		<li>Click "Save"</li>
 	</ul>
-	</blockquote>
+	

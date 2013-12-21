@@ -45,12 +45,12 @@
 	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   	width="410" height="190"></p>
 
-	<blockquote>	
+		
 		<h3>When should a group be added?</h3>
 		<p>A group should be added when there is a new set of components required for a particular group of users.
 		It could be that you want certain users to only have access to certain components or that certain users 
 		shouldnt be able to share their content, playlists and schedules with each other.</p>
-	</blockquote>	
+		
 
     	<a name="Edit_Group" id="Edit_Group"></a><h2>Edit a Group</h2>
 		<p>To edit a group click on the edit button on the row belonging to the group you wish to edit.</p>

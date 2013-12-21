@@ -29,7 +29,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     <a name="Authorization" id="Authorization"></a><h2>Authorization</h2>
     <p>OAuth will be used to provide authorization for access to the <?php echo PRODUCT_NAME; ?> API.</p>
  
-<blockquote>    
+    
     <a name="OAuth_Information" id="OAuth_Information"></a><h3>OAuth Information</h3>
     <p>Service location: services.php</p>
     <p>OAuth methods:</p>
@@ -95,25 +95,25 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
    	<p>The Callback URL will be automatically called by <?php echo PRODUCT_NAME; ?> on a completely Authorize request. It will be called regardless 
    	of whether the authorization was successful and will contain an OAuth message indicating the authorize success.</p>
    	<p>If you do not specify a Callback URL <?php echo PRODUCT_NAME; ?> will show a message requesting the user return to the application once authorized.</p>
-</blockquote>    
+    
 
     <a name="Request_Formats" id="Request_Formats"></a><h2>Request Formats</h2>
     <p><?php echo PRODUCT_NAME; ?> supports the following request formats</p>
 
     <ul><li>REST</li></ul>
 
-<blockquote>    
+    
     <a name="REST" id="REST"></a><h3>REST</h3>
     <p>A simple POST or GET.</p>
     <p>To request the <?php echo PRODUCT_NAME; ?> Version method:</p>
     <pre>services.php?service=rest&amp;method=version</pre>
     <p>By default the response type is xml. To get a different response type send "&amp;response="</p>
-</blockquote>    
+    
 
     <a name="Response_Types" id="Response_Types"></a><h2>Response Types</h2>
     <p><?php echo PRODUCT_NAME; ?> supports the following response types</p>
 
-    <blockquote>    
+        
     <ul><li>JSON</li>
     	<li> XML</li></ul>
   
@@ -149,7 +149,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
       &lt;error code="[error-code]" message="[error-message]"
       &lt;/rsp&gt;
       </pre>
-</blockquote>    
+    
 
       <a name="Error_Codes" id="Error_Codes"></a><h2>Error Codes</h2>
       <p>A complete list of error codes can be found here: <a href="http://wiki.<?php echo PRODUCT_NAME; ?>.org.uk/wiki/Error_codes" 
@@ -159,7 +159,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
       <a name="Methods" id="Methods"></a><h2>Methods</h2>
       <p>Transactions supported by <?php echo PRODUCT_NAME; ?></p>
 
-  <blockquote>    
+      
       <a name="Displays" id="Displays"></a><h3>Displays</h3>
       <ul><li>DisplayList</li>
 	      <li>DisplayEdit</li>
@@ -227,11 +227,11 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
       <a name="Other" id="Other"></a><h3>Other</h3>
       <ul><li> Version</li>
       	<li> ServerStatus</li></ul>
-	</blockquote>    
+	    
 
     <a name="Method_Calls" id="Method_Calls"></a><h2>Method Calls</h2>
 
-    <blockquote>    
+        
     <a name="LayoutAdd" id="LayoutAdd"></a><h3>LayoutAdd</h3>
     <p>Parameters</p>
 	<ul><li> layout - The Name of the Layout</li>
@@ -393,6 +393,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	    &lt;version app_ver="1.1.1" XlfVersion="1" XmdsVersion="2" DBVersion="22"/&gt;
 		&lt;/rsp&gt;
 	</pre>
-	</blockquote>    
+	    
 
 

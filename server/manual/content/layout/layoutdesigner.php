@@ -20,7 +20,7 @@
 	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	width="557" height="245"></p>
 
-	<blockquote>
+	
 	<h3>Background Colour</h3>
 	<p>Select a colour from the list of available background colours.</p>
 
@@ -31,7 +31,7 @@
 	<p>Choose the aspect ratio of the layout. Since you used one of the Full Screen templates that came with <?php echo PRODUCT_NAME; ?>, there is usually no need to change this.</p>
 
 	<p>Try choosing a new background colour and click Save.</p>
-	</blockquote>
+	
 
 	<h2>Resize Region</h2>
 	<p>To resize the region, click and drag the handle on the bottom-right corner of the region to change its size;

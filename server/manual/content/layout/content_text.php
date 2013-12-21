@@ -11,7 +11,7 @@
 	about how the text will finally fit on the layout. If possible, preview a new layout on a display to see how the text fits, and 
 	make any adjustments required to get the layout as you want it.</i></p>
 
-<blockquote>
+
 	<p>Add Text</p>
 	<ul>
 		<li>Click the "Add Text" icon</li>
@@ -44,5 +44,5 @@
 			Lower numbers cause the text to scroll faster.</li>
 		<li>When you are happy with your text, click the "Save" button.</li>
 	</ul>
-</blockquote>
+
 

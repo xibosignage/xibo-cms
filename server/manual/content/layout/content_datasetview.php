@@ -1,6 +1,6 @@
 
 	<a name="DataSets" id="DataSets"></a><h2>DataSets</h2>
-<blockquote>
+
   	<h3>Overview</h3>
   	<p>DataSets are a new <?php echo PRODUCT_NAME; ?> feature to design and display tabular data, formatted nicely, in a region on a layout.</p>
   	<p>Examples of where this could be used are:</p>
@@ -162,4 +162,4 @@ span.DataSetColumnSpan {
 
     <p>Note: Once the DataSet view is configured it will automatically respond to edits made on the data &#8211; and it
     multiple views on the same DataSet can be created.</p>
-</blockquote>	
+	

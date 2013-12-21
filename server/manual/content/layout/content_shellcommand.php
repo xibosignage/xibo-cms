@@ -1,7 +1,7 @@
 
 	<a name="shellcommand" id="shellcommand"></a><h2>Shell Command</h2>
 
-<blockquote>
+
 
 	<p><?php echo PRODUCT_NAME; ?> Shell Command allows a command with arguments to be specified - this command is then executed on the client 
   	when it appears in a layout in the schedule. This can be used to achieve almost anything by using batch files, 
@@ -56,4 +56,4 @@
   	<p><?php echo PRODUCT_NAME; ?> client would need to check for transitions between the "turn off display" template and non-"turn off display" templates, 
     and then act appropriately (eg, there is a procedure to run for the transition to "off" and another to run for "on"). At this time, 
     calls to SetThreadExecutionState and any custom commands (if entered) would be run.
-</blockquote>
+

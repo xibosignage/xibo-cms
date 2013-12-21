@@ -11,7 +11,7 @@
     <p><img alt="SA Displays" src="content/admin/sa_displays.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="820" height="262"></p>
-    <blockquote>	   
+    	   
 		<a name="Display_Edit" id="Display_Edit"></a><h3>Display Edit</h3>
 		<p>After a new display client is registered with <?php echo PRODUCT_NAME; ?> server, you need to perform Edit granting license to the client 
     	to work.</p>
@@ -65,10 +65,10 @@
     	<p><img alt="SA Display Group Edit" src="content/admin/sa_display_groups_edit.png"
 	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   width="408" height="218"></p>
-    </blockquote>
+    
 
 	<h2>Wake On LAN (WOL)</h2>
-    <blockquote>
+    
     	<h3>Introducing Wake On Lan for Display Clients</h3>
  		<p>This section will look at the Wake On Lan (WOL) feature of <?php echo PRODUCT_NAME; ?>.</p>
 
@@ -111,7 +111,7 @@
 
     	<p>Note: WOL is not routable. The <?php echo PRODUCT_NAME; ?> server is unable to see clients over the internet that are behind NAT,  
     	or on a different subnet.</p>
-    </blockquote>
+    
 
 	<a name="Display_Group" id="Display_Group"></a><h1>Display Groups</h1>
     <p>A group should be added when there is a new set of components required for a particular group of users.
@@ -120,7 +120,7 @@
     
     <p><strong>Components</strong> refer to parts of <?php echo PRODUCT_NAME; ?>, e.g. Content, or Playlists.</p>
         
-    <blockquote>
+    
     	<a name="Adding_a_Group" id="Adding_a_Group"></a><h3>Adding a Group</h3>
     	<p>Click the navigation menu "Displays > Display Groups" to go to Display Groups page. To add a group click on 
     	the "Add Group" button found at the top of the Displays list.</p>
@@ -151,7 +151,7 @@
 	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   	width="408" height="270"></p>
 
-    </blockquote>
+    
 
 	<a name="Display_Statistic" id="Display_Statistic"></a><h1>Display Statistic</h1>
     <p>Click on "Statistic" shows a page giving statistic detail of all the system Displys on the followings. You can define
