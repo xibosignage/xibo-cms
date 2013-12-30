@@ -1,4 +1,25 @@
-
+<?php
+/*
+ * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
 		
 		<h1>User Groups and Group Permissions</h1>
 		
@@ -66,12 +87,11 @@
 	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   	width="407" height="187"></p>
 
-		<a name="Group_Member" id="Group_Member"></a><h2>Group Members</h2>
-		<p>Click the Group Members button to manage the members of the group. You can drag of double click on the memeber to 
-    	include or exclude from the current group.</p>
+<h2 id="Group_Member">Group Members <small>Users assigned to groups</small></h2>
+<p>Each user account in the CMS can be assigned to one or more user groups. To manage the members of a particular user group, select the user groups action menu in the table and click the "Group Members" menu item. Once selected a form will open showing the membership information of that group.</p>
 
-	  	<p><img alt="Group Member" src="group_member.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="408" height="383"></p>
+<p>Users that appear in the left hand column are already assigned to the selected group and users in the right hand column can be assigned.</p>
 
-	
+<p><img class="img-thumbnail" alt="Group Member" src="content/users/group_member.png"></p>
+
+<p class="alert alert-info">You can drag of double click on the memeber to include or exclude from the current group.</p>

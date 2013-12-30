@@ -695,7 +695,7 @@ END;
         $form = Theme::RenderReturn('usergroup_form_user_assign');
 
         $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
-        $response->AddButton(__('Help'), "XiboHelpRender(". HelpManager::Link('UserGroup', 'Members') .")");
+        $response->AddButton(__('Help'), "XiboHelpRender('" . HelpManager::Link('UserGroup', 'Members') . "')");
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), 'MembersSubmit()');
         $response->Respond();
