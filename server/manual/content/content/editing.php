@@ -20,18 +20,13 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<h1>Uploading Content <small>The file upload tool</small></h1>
-<p>The CMS provides an easy to use file upload tool for adding all file based media. This tool is used when adding to the library and when adding directly onto a layout.</p>
+<h1>Editing Content</h1>
+<p>It may be necessary to upload a new revision of some existing content. To do so the CMS provides an Edit dialog, accessible from the Action menu.</p>
 
-<p>Uploading is done in two steps.
-    <ol>
-        <li>Click "Add Files" and select the file(s) you want to upload.</li>
-        <li>Click "Start Upload" to being the transfer.</li>
-    </ol>
-</p>
+<p><img class="img-thumbnail" alt="Upload new Revision" src="content/content/library_media_edit.png"></p>
 
-<p><img class="img-thumbnail" alt="File Upload Tool" src="content/content/library_file_upload.png"></p>
+<p class="alert alert-warning">If there is no edit button then you do not have permission to edit that content.</p>
 
-<p class="alert alert-info">Tip! Files can also be added via drag and drop.</p>
-
-<p class="alert alert-warning">The media can also be added when creating layouts using the layout designer.</p>
+<p>Once you have entered the information <?php echo PRODUCT_NAME; ?> requires, click on the "Save" button and your 
+content will be added to <?php echo PRODUCT_NAME; ?>.</p>
+   

@@ -48,6 +48,8 @@ $allowed_routes = array(
 		'coreconcepts/dashboard',
 		'content/overview',
 		'content/adding',
+		'content/editing',
+		'content/deleting',
 		'content/content_video',
 		'content/content_image',
 		'content/content_powerpoint',
