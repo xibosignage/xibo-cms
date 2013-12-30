@@ -23,7 +23,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <h1>Release Notes <small>Archive</small></h1>
 <p>This arhive contains the release notes for every <?php echo PRODUCT_NAME; ?> release to date.</p>
 
-<h2>Version 1.6</h2>
+<h2>Version 1.6 "Pons-Winnecke"</h2>
 <ul>
 	<li><a href="index.php?toc=developer&p=admin/release_notes_1.6.0rc1">1.6.0 rc1</a></li>
 </ul>

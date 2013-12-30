@@ -283,7 +283,7 @@ class oauthDAO
         $output = Theme::RenderReturn('application_form_user_applications');
 
         $response->SetFormRequestResponse($output, __('Authorized applications for user'), '650', '450');
-        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=General')");
+        $response->AddButton(__('Help'), "XiboHelpRender('" . HelpManager::Link('User', 'Applications') . "')");
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }

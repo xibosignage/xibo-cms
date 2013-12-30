@@ -20,14 +20,14 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-		<h1>User Administration</h1>
-		<p>This section refers to Users Adminstration from the built in "General" user module. For information on any of the User module plugins refer
-		to the appropriate page within this section (an overview of the available user modules can be found 
-		<a href="overview.php" title="Overview Page">here</a>).</p>
-		
-		<h2>User Administration Page</h2>
-		<p>The user admin page can be accessed from either the "Users" dashboard button - or the "Administration > Users" nagivation menu button. 
-	    An example of the user page is show below.</p>
+<h1>User Administration</h1>
+
+<p>This section refers to Users Adminstration from the built in "General" user module. For information on any of the User module plugins refer
+to the appropriate page within this section.</p>
+
+<h2>User Administration Page</h2>
+<p>The user admin page can be accessed from either the "Users" dashboard button - or the "Administration > Users" nagivation menu button. 
+An example of the user page is show below.</p>
 		
 <p><img class="img-thumbnail" alt="User Administration Page" src="content/users/user_admin_page.png"></p>
 	   
@@ -89,3 +89,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		been active in the system. For this reason any "orphaned" items will be associated with the "<?php echo PRODUCT_NAME; ?>_admin" user created during the install process.</p>
 	
 	
+<h2 id="Users_MyApplications">My Applications <small>Authourised 3rd party applications</small></h2>
+<p><?php echo PRODUCT_NAME; ?> contains an API that allows 3rd party applications to connect and consume its data. An example of this is the standalone file upload tool provided with the package. Before using an application each user must authourise the application to act on their behalf within the CMS.</p>
+
+<p>Once an application is authourised it will be listed in the users "My Applications" form.</p>
+
+<p><img class="img-thumbnail" alt="My Applications" src="content/users/users_myapplications.png"></p>
+
+<p class="alert alert-danger">At the current time the CMS does not provide a method of revoking access to an application.</p>
+
+<p class="alert alert-info">An authourised user can view the applications for each user using the action menu "Applications"</p>
