@@ -22,10 +22,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 		
 <h1>Permissions Model</h1>
-<h2>Introducing an Improved Permissions Model</h2>
 
-<p>This section will take a look at the improvements made to the permissions model in <?php echo PRODUCT_NAME; ?>. <?php echo PRODUCT_NAME; ?> has improved the permissions model 
-in one key way - allowed users and administrators to set view, edit and delete permissions on:</p>
+<p>This section will take a look at the permissions model in <?php echo PRODUCT_NAME; ?>, which allows users and administrators to set view, edit and delete permissions on:</p>
 
 <ul>
     <li>Library Media</li>
@@ -37,13 +35,11 @@ in one key way - allowed users and administrators to set view, edit and delete p
     <li>Displays</li>
 </ul>
 
+<p>All of these items have the permissions set in the same way, via a simple to use dialog showing groups and users. In addition to this all permissions are validated with each form load, or save button clicked so you can guarentee "real time" modifications to the permissions on items.</p>
+
 <p><img class="img-thumbnail" alt="User Permissions" src="content/users/user_permissions.png"></p>
 
-<p>All of these items have the permissions set in the same way, via a simple to use dialog showing groups and users. 
-In addition to this all permissions are validated with each form load, or save button clicked so you can guarentee 
-"real time" modifications to the permissions on items.</p>
-
-<p>Here are some key facts about the new system:</p>
+<p>Key facts:</p>
 <ul>
 <li>The Highest permission is used (if a user belongs to 2 groups, one has edit permissions and the other doesn't, 
 the user will have edit permissions)</li>
@@ -52,7 +48,6 @@ the user will have edit permissions)</li>
 no owner, this is super admin only)</li>
 </ul>
 
-<p>These permissions are then reflected in all tables, forms, lists and on the layout designer. The improved permissions hopefully 
-will make it easier to manage <?php echo PRODUCT_NAME; ?>, particularly in environments where there are many users accessing the system.</p> 
+<p>These permissions are then reflected in all tables, forms, lists and on the layout designer.</p> 
 
 

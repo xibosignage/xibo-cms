@@ -88,6 +88,7 @@ $allowed_routes = array(
 		'admin/display_wakeonlan',
 		'admin/overview',
 		'admin/api',
+		'admin/theme',
 		'admin/blueprints',
 		'admin/advanced',
 		'admin/contributing',
