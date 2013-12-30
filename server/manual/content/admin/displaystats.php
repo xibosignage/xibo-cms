@@ -20,19 +20,25 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
+<h1 id="Display_Statistic">Display Statistics <small>Proof of Play</small></h1>
 
-<a name="Display_Statistic" id="Display_Statistic"></a><h1>Display Statistic</h1>
-<p>Click on "Statistic" shows a page giving statistic detail of all the system Displys on the followings. You can define
-the filters i.e. Date, Display &amp; Media, for the required statistical data display.</p>
+<p>Display clients collect statistics for layouts and media shown and their play durations. These statistics can be viewed in the Displays section using the Statistics sub menu.</p>
 
-<ul>
-<li><h3>Layout ran</h3>Statistical data on layouts run for each Display.</li>
-<li><h3>Library Media ran</h3>Statistical data on Media played for each Display.</li>
-<li><h3>Media on Layouts ran</h3>Statistical data on Media played on all layouts run for each Display.</li>
-</ul>
+<p>A specific display can be viewed across a date range.</p>
 
-<p><img alt="SA Display Statistic" src="content/admin/sa_display_statistic.png"
-style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-width="648" height="650"></p>
+<p><img class="img-thumbnail" alt="Display Statistics" src="content/admin/sa_display_statistic.png"></p>
 
+<dl class="dl-horizontal">
+	<dt>Layouts Shown</dt>
+	<dd>All layouts shown in the range selected.</dd>
+</dl>
+<dl class="dl-horizontal">
+	<dt>Library Media Shown</dt>
+	<dd>All media shown in the range selected.</dd>
+</dl>
+<dl class="dl-horizontal">
+	<dt>Media on Layouts Shown</dt>
+	<dd>All Layouts shown with a breakdown of the associated media on those Layouts.</dd>
+</dl>
 
+<p class="alert alert-warning">Statistics reporting may need to be enabled on the display client application.</p>
