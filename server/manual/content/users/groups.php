@@ -20,51 +20,44 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
+<h1>User Groups <small>Groups, Permissions and Memberships</small></h1>
 		
-		<h1>User Groups and Group Permissions</h1>
+<p>The User Group Admininistration page is accessed using the Administration menu item and selecting the User Group sub menu, pictured below.</p>
 		
-		<h2>Group Admin</h2>
-		<p>The Group Admin page can only be accessed from the "Administration > Groups" navigation menu. Below figure shows the Group Admin page.</p>
-		
-	  	<p><img alt="Group Administration Page" src="content/users/group_admin_page.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="795" height="246"></p>
+<p><img class="img-thumbnail" alt="Group Administration Page" src="content/users/group_admin_page.png"></p>
+
+<p>The table view shows all User Groups in the system (that the current user has access to) and the option to modify those user groups. Each action option is described below.</p>
 	   
-		<ul>
-			<li>
-				<h3>Group Name</h3>
-				<p>The group name uniquely identifys the group. It can be seen against each user in the "User Admin" page.</p>
-			</li>
-			<li>
-				<h3>Add Group Button</h3>
-				<p>Opens up the Add User Group Form allowing a new group to be added.</p>
-			</li>
-			<li>
-				<h3>Edit / Delete Buttons</h3>
-				<p>The Edit button allows groups to be edited.</p>
-			</li>
-			<li>
-				<h3>Group Members Button</h3>
-				<p>Modify member list of the group.</p>
-			</li>
-			<li>
-				<h3>Page Security Button</h3>
-		 		<p>The components security that are assigned/unassigned to the group determine the permissions of the users belonging to that group.</p>
-				<p>Refer to <a href="menu_page_security.php">Page &amp; Menu Security</a> for more information.</p>
-			</li>
-			<li>
-				<h3>Menu Security Button</h3>
-		 		<p>The components security that are assigned/unassigned to the group determine the permissions of the users belonging to that group.</p>
-				<p>Refer to <a href="menu_page_security.php">Page &amp; Menu Security</a> for more information.</p>
-			</li>
-		</ul>
+<dl class="dl-horizontal">
+	<dt>Group Name</dt>
+	<dd>The group name uniquely identifys the group. It can be seen against each user in the "User Admin" page.</dd>
+</dl>
+<dl class="dl-horizontal">
+	<dt>Add Group Button</dt>
+	<dd>Opens up the Add User Group Form allowing a new group to be added.</dd>
+</dl>
+<dl class="dl-horizontal">
+	<dt>Edit / Delete Buttons</dt>
+	<dd>The Edit button allows groups to be edited.</dd>
+</dl>
+<dl class="dl-horizontal">
+	<dt>Group Members Button</dt>
+	<dd>Modify member list of the group.</dd>
+</dl>
+<dl class="dl-horizontal">
+	<dt>Page Security Button</dt>
+	<dd>The components security that are assigned/unassigned to the group determine the permissions of the users belonging to that group.</dd>
+</dl>
+<dl class="dl-horizontal">
+	<dt>Menu Security Button</dt>
+	<dd>The components security that are assigned/unassigned to the group determine the permissions of the users belonging to that group.</dd>
+</dl>
+		
 
 		<a name="Adding_Group" id="Adding_Group"></a><h2>Adding a Group</h2>
 		<p>To add a group click on the "Add Group" button found at the top left of this page.</p>
 
-	  	<p><img alt="Group Add" src="group_admin_add.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="410" height="190"></p>
+	  	<p><img class="img-thumbnail" alt="Group Add" src="content/users/group_admin_add.png"></p>
 
 		
 		<h3>When should a group be added?</h3>
@@ -76,16 +69,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     	<a name="Edit_Group" id="Edit_Group"></a><h2>Edit a Group</h2>
 		<p>To edit a group click on the edit button on the row belonging to the group you wish to edit.</p>
 	
-  	  	<p><img alt="Group Edit" src="group_admin_edit.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="410" height="190"></p>
+  	  	<p><img class="img-thumbnail" alt="Group Edit" src="content/users/group_admin_edit.png"></p>
 
     	<a name="Delete_Group" id="Delete_Group"></a><h2>Delete a Group</h2>
 		<p>To delete a group click on the delete button on the row belonging to the group you wish to be deleted.</p>
 	
-  	  	<p><img alt="Group Delete" src="group_admin_delete.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="407" height="187"></p>
+  	  	<p><img class="img-thumbnail" alt="Group Delete" src="content/users/group_admin_delete.png"></p>
 
 <h2 id="Group_Member">Group Members <small>Users assigned to groups</small></h2>
 <p>Each user account in the CMS can be assigned to one or more user groups. To manage the members of a particular user group, select the user groups action menu in the table and click the "Group Members" menu item. Once selected a form will open showing the membership information of that group.</p>

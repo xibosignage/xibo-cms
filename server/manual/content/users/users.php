@@ -1,4 +1,25 @@
-
+<?php
+/*
+ * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
 		<h1>User Administration</h1>
 		<p>This section refers to Users Adminstration from the built in "General" user module. For information on any of the User module plugins refer
 		to the appropriate page within this section (an overview of the available user modules can be found 
@@ -8,9 +29,7 @@
 		<p>The user admin page can be accessed from either the "Users" dashboard button - or the "Administration > Users" nagivation menu button. 
 	    An example of the user page is show below.</p>
 		
-	   	<p><img alt="User Administration Page" src="content/users/user_admin_page.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="847" height="244"></p>
+<p><img class="img-thumbnail" alt="User Administration Page" src="content/users/user_admin_page.png"></p>
 	   
 	    <ul>
 			<li>

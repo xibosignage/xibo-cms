@@ -20,9 +20,19 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<h1>Users and Displays</h1>
-<p>The CMS access is split into two roles - "things that create and manage content" and "things that consume content" - in other words, "Users" and "Displays".</p>
 
-<p>A user is a person that logs into the CMS through the web portal, or via an application connected to the API and creates, updates and schedules content. A display is a physical device running one of the Display Client applications, which consumes the content.</p>
+<a name="Display_Statistic" id="Display_Statistic"></a><h1>Display Statistic</h1>
+<p>Click on "Statistic" shows a page giving statistic detail of all the system Displys on the followings. You can define
+the filters i.e. Date, Display &amp; Media, for the required statistical data display.</p>
 
-<p>The CMS has an extensive range of options for both of these roles, including groups, permissions and usage stats. These are discussed in this section.</p>
+<ul>
+<li><h3>Layout ran</h3>Statistical data on layouts run for each Display.</li>
+<li><h3>Library Media ran</h3>Statistical data on Media played for each Display.</li>
+<li><h3>Media on Layouts ran</h3>Statistical data on Media played on all layouts run for each Display.</li>
+</ul>
+
+<p><img alt="SA Display Statistic" src="content/admin/sa_display_statistic.png"
+style="display: block; text-align: center; margin-left: auto; margin-right: auto"
+width="648" height="650"></p>
+
+
