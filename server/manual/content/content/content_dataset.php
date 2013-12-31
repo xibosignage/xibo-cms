@@ -74,6 +74,11 @@ a view permission will be able to use the DataSet in their layouts.</p>
 
 <p><img class="img-thumbnail" alt="Add Dataset" src="content/content/dataset_edit_form.png"></p>
 
+<h2 id="Delete_Dataset">Deleting DataSets</h2>
+<p>DataSets can be deleted using the action menu. Select the Delete menu item to show the DataSet Delete form.</p>
+<p><img class="img-thumbnail" alt="Add Dataset" src="content/content/dataset_delete_form.png"></p>
+<p class="alert alert-warning">DataSets can only be deleted if they are not currently being used.</p>
+
 <h2 id="Dataset_Column">DataSet Columns <small>Defining Dataset Structure</small></h2>
 
 <p>Data Columns are used to define the structure of the data, each column can have a number of settings to achieve this, these are:</p>
@@ -116,3 +121,7 @@ previous step and allow you to go through each one and enter data.</p>
 <p>There is no "save" button on this interface, <?php echo PRODUCT_NAME; ?> will automatically save your changes after each data entry.</p>
 
 <p class="alert alert-info">Note: If all the rows are taken, more rows can be added to the data set by clicking the "Add Rows" button.</p>
+
+<h2 id="Import_CSV">Importing from CSV file</h2>
+<p>The CMS has a DataSet CSV importer that can be used to extract data from a CSV file and put it into a DataSet.</p>
+<p><img class="img-thumbnail" alt="Dataset Import CSV" src="content/content/dataset_importcsv_form.png"></p>
