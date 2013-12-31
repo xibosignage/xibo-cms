@@ -10,6 +10,7 @@
 	<a class="list-group-item" href="index.php?toc=layouts&p=layout/content_counter">Content - Counter</a>
 	<a class="list-group-item" href="index.php?toc=layouts&p=layout/content_webpage">Content - Webpage</a>
 	<a class="list-group-item" href="index.php?toc=layouts&p=layout/content_embedded">Content - Embedded</a>
+	<a class="list-group-item" href="index.php?toc=layouts&p=layout/content_datasetview">Content - DataSet View</a>
 	<a class="list-group-item" href="index.php?toc=layouts&p=layout/content_shellcommand">Content - Shell Command</a>
 	<a class="list-group-item" href="index.php?toc=layouts&p=layout/campaign_layout">Campaigns</a>
 	<a class="list-group-item" href="index.php?toc=layouts&p=templates/overview">Templates</a>
