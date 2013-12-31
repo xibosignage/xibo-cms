@@ -32,20 +32,33 @@ has to be a clear addressable network route between the server and the client th
 WOL is turned on in any necessary settings on the client PC.</p>
 
 <p>The WOL configuration happens on a display by display basis from the Edit Display form. Each display has new settings for:</p>
-<ul>
-<li><strong>Enable Wake On LAN</strong> - (Turn WOL on/off for the display)</li>
-<li><strong>Wake On LAN Time</strong> - (Specify a time for this display to wake, using the 24 hr clock)</li>
-<li><strong>BroadCast Address</strong> - (The BroadCast address of the client, if unknown use the IP address and fill in the CIDR field)</li>
-<li><strong>Wake On LAN Secure On</strong> - (The SecureOn password for the client, if supported)</li>
-<li><strong>Wake On LAN CIDR</strong> - (The CIDR subnet mask, if the BroadCast Address is unknown)</li>
-</ul>
+<dl>
+	<dt>Enable Wake On LAN</dt>
+	<dd>Turn WOL on/off for the display</dd>
+</dl>
+<dl>
+	<dt>Wake On LAN Time</dt>
+	<dd>Specify a time for this display to wake, using the 24 hr clock</dd>
+</dl>
+<dl>
+	<dt>BroadCast Address</dt>
+	<dd>The BroadCast address of the client, if unknown use the IP address and fill in the CIDR field</dd>
+</dl>
+<dl>
+	<dt>Wake On LAN Secure On</dt>
+	<dd>The SecureOn password for the client, if supported</dd>
+</dl>
+<dl>
+	<dt>Wake On LAN CIDR</dt>
+	<dd>The CIDR subnet mask, if the BroadCast Address is unknown</dd>
+</dl>
 
 <p>Once the display has these settings it can be woken up in 2 ways:</p>
+
+
 <h3>Wake On LAN Now</h3>
 
-<p><img alt="SA Display WOL" src="content/admin/sa_display_wol.png"
-style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-width="308" height="158"></p>
+<p><img class="img-thumbnail" alt="Send WOL Form" src="content/admin/sa_display_wol.png"></p>
 
 <p>Each display has the "Wake On LAN" button which can be used to send a wake on LAN command on demand. Clicking the button displays 
 a form for confirmation, once this is pressed the command is send immediately to the client.</p>
@@ -55,11 +68,11 @@ a form for confirmation, once this is pressed the command is send immediately to
 a "Wake On LAN Time" specified. It will only send the command once, as the time window is passed.</p>
 
 <p>The maintenance script has to be running for this to work correctly. Maintenance instructions can be found on the 
-<a title="Maintenance Instructions" href="settings.php">Settings -> Maintenance</a>.</p>
+<a title="Maintenance Instructions" href="index.php?toc=getting_started&p=admin/settings#Maintenance">Settings -> Maintenance</a>.</p>
 
 <h3>Putting the client to sleep</h3>
 <p>There are a few different options for putting the client to sleep - such as a scheduled task. However, the next article in this series 
 will look at an option built into <?php echo PRODUCT_NAME; ?>. The "Shell Command" module.</p>
 
-<p>Note: WOL is not routable. The <?php echo PRODUCT_NAME; ?> server is unable to see clients over the internet that are behind NAT,  
+<p class="alert alert-info">WOL is not routable. The <?php echo PRODUCT_NAME; ?> server is unable to see clients over the internet that are behind NAT,  
 or on a different subnet.</p>

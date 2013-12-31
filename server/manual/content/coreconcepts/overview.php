@@ -53,6 +53,22 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<dd>Once displays are registered, media content is uploaded and Layouts are designed it is time to put them all together and Schedule Layouts onto the Displays. Each Display will check for new Scheduled content periodically, and download Scheduled Items in advance of playback. Scheduling is highly flexible and supports scheduling to single Displays and Groups, single Layouts and Campaigns and Recurring Schedules. Each Display has a Default Layout that will be shown when nothing else is Scheduled.</dd>
 </dl>
 
+<h2>Content <small>What can <?php echo PRODUCT_NAME; ?> play?</h2>
+<p><?php echo PRODUCT_NAME; ?> can play a wide range of file based content, as well as consuming content from the Internet.</p>
+<ul>
+	<li>Text</li>
+	<li>Images</li>
+	<li>Video</li>
+	<li>PowerPoint (Windows Display Client only)</li>
+	<li>Flash (Windows Display Client only)</li>
+	<li>RSS / Atom</li>
+	<li>CSV file (formatted)</li>
+	<li>Web Pages</li>
+	<li>Custom Embedded Content</li>
+</ul>
+
+<p>A full list of features are available on the <?php echo PRODUCT_NAME; ?> website.</p>
+
 <h2>CMS <small>How can all this be managed?</small></h2>
 <p>Management of a solution as flexible as <?php echo PRODUCT_NAME; ?> required a powerful CMS (Content Management System) to present the core concepts in a sensible, controlled fashion. The <?php echo PRODUCT_NAME; ?> CMS is packed with features, such as:</p>
 <ul>

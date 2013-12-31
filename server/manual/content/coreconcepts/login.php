@@ -28,6 +28,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 <p><img class="img-thumbnail" alt="Login Form" src="content/coreconcepts/login_box.png"></p>
 
-<p>Once logged in you will be directed to the <a href="index.php?toc=app_overview&p=coreconcepts/dashboard">Dashboard</a> or to your last known location in the CMS.</p>
+<p>As a user of the CMS you will have been given a username and password to enter on this form. Once logged in you will be directed to the <a href="index.php?toc=app_overview&p=coreconcepts/dashboard">Dashboard</a> or to your last known location in the CMS.</p>
 
 <p class="alert alert-info">The CMS uses your browser cookies to check whether or not you are logged in. If you are having trouble logging in please try and clear you browser cache.</p>
