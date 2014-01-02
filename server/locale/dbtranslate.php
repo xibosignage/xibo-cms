@@ -53,6 +53,7 @@ echo __('DataSets');
 echo __('Modules');
 echo __('Campaigns');
 echo __('Transitions');
+echo __('Resolutions');
 
 // Settings translations
 echo __('jpg_length');

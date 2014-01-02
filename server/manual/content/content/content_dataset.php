@@ -120,7 +120,7 @@ previous step and allow you to go through each one and enter data.</p>
 
 <p>There is no "save" button on this interface, <?php echo PRODUCT_NAME; ?> will automatically save your changes after each data entry.</p>
 
-<p class="alert alert-info">Note: If all the rows are taken, more rows can be added to the data set by clicking the "Add Rows" button.</p>
+<p class="alert alert-info">Note: If all the rows are taken, more rows can be added to the data set by clicking the "More Rows" button.</p>
 
 <h2 id="Import_CSV">Importing from CSV file</h2>
 <p>The CMS has a DataSet CSV importer that can be used to extract data from a CSV file and put it into a DataSet.</p>
