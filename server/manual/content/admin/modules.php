@@ -67,14 +67,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 
 <h2>Modules Settings</h2>
-<p>Click Edit button for the specific content type load the following form for user changes.</p>
+<p>A Module can have a selection of its settings adjusted, exactly which ones depends on the module.</p>
 
-<h3>Content Without Extension</h3>
-<p>Admininstrator may enable or disable the content for user access.</p>
-
-<p><img class="img-thumbnail" alt="Modules" src="content/admin/sa_modules_text.png"></p>
-
-<h3>Content With Extension</h3>
-<p>Administrator may add other valid files extensions that are supported by the <?php echo PRODUCT_NAME; ?> Client Display e.g. mp4.</p>
+<h3>File based Modules</h3>
+<p>At times it may be necessary to add or removed the allowed extensions on a particular file based module. A typical use case would be if a client is being used which does not support that particular type of file.</p>
 
 <p><img class="img-thumbnail" alt="Modules" src="content/admin/sa_modules_video.png"></p>

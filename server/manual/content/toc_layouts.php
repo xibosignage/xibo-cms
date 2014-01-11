@@ -1,6 +1,5 @@
 <div class="list-group">
 	<a class="list-group-item" href="index.php?toc=layouts&p=layout/overview">Overview</a>
-	<a class="list-group-item" href="index.php?toc=layouts&p=layout/addlayout">Adding Layouts</a>
 	<a class="list-group-item" href="index.php?toc=layouts&p=layout/layoutdesigner">Layout Designer</a>
 	<a class="list-group-item" href="index.php?toc=layouts&p=layout/addregion">Adding Regions</a>
 	<a class="list-group-item" href="index.php?toc=layouts&p=layout/assigncontent">Assigning Region Content</a>

@@ -57,7 +57,6 @@ $allowed_routes = array(
 		'content/content_dataset',
 		'admin/modules',
 		'layout/overview',
-		'layout/addlayout',
 		'layout/layoutdesigner',
 		'layout/addregion',
 		'layout/assigncontent',

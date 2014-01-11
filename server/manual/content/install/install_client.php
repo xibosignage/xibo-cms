@@ -165,7 +165,7 @@ if nothing is scheduled).</p>
 (and anything else you have scheduled) are downloaded and then begin playing layouts'contents.
 
 
-<h2>Windows Modifications</h1>
+<h2 id="windows_modifications">Windows Modifications</h1>
 <p>Here are some suggested settings for Windows / PowerPoint for a Display Client:</p>
 <ul>
 	<li>Turn off all <a href="http://www.microsoft.com/windowsxp/using/setup/personalize/screensaver.mspx" 
