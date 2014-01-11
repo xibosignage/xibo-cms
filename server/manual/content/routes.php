@@ -68,6 +68,7 @@ $allowed_routes = array(
 		'layout/content_embedded',
 		'layout/content_datasetview',
 		'layout/content_shellcommand',
+		'layout/transitions',
 		'layout/campaign_layout',
 		'templates/overview',
 		'templates/template_resolution',
