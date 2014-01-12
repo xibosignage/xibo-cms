@@ -20,5 +20,4 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<h1>Release Notes <small><?php echo PRODUCT_VERSION; ?></small></h1>
-<?php include('content/admin/release_notes_' . PRODUCT_VERSION . '.php'); ?>
+<h1>Blueprints</h1>

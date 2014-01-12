@@ -28,6 +28,8 @@ $allowed_toc = array(
 		'scheduling',
 		'user_and_display',
 		'developer',
+		'developer_api',
+		'developer_releasenotes',
 		'troubleshooting'
 	);
 
@@ -91,6 +93,15 @@ $allowed_routes = array(
 		'admin/api_overview',
 		'admin/api_oauth',
 		'admin/api_methods',
+		'admin/api_displays',
+		'admin/api_displaygroups',
+		'admin/api_layouts',
+		'admin/api_library',
+		'admin/api_schedule',
+		'admin/api_template',
+		'admin/api_resolution',
+		'admin/api_modules',
+		'admin/api_misc',
 		'admin/theme',
 		'admin/blueprints',
 		'admin/advanced',
@@ -127,7 +138,7 @@ $allowed_routes = array(
 		'admin/release_notes_1.5.0',
 		'admin/release_notes_1.5.1',
 		'admin/release_notes_1.5.2',
-		'admin/release_notes_1.6.0rc1'
+		'admin/release_notes_1.6.0-rc1'
 	);
 
 ?>
