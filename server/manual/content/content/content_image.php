@@ -23,9 +23,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <h1>Image</h1>
 <p>GIF/JPG and PNG images are supported. There are some display client specific caveats listed below.</p>
 
+<p class="alert alert-warning">Images are sampled/resized before they are loaded on screen. It is preferable to upload an image as small as possible to reduce the time it takes to load an image (if a noticable gap is present) and to reduce the resources that are consumed while that image is in screen.</p>
+
 <h3>Windows Display Client</h3>
 <p>Images used as background images must be JPG</p>
 
 <h3>Android Display Client</h3>
 <p>Animated GIFs are not supported</p>
-<p>Images are sampled before they are loaded on screen. It is preferable to upload an image as small as possible to reduce the time it takes to load an image (if a noticable gap is present).</p>

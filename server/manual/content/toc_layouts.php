@@ -15,5 +15,4 @@
 	<a class="list-group-item" href="index.php?toc=layouts&p=layout/region_preview_timeline">Previewing</a>
 	<a class="list-group-item" href="index.php?toc=layouts&p=templates/overview">Templates</a>
 	<a class="list-group-item" href="index.php?toc=layouts&p=templates/template_resolution">Template Resolutions</a>
-	<a class="list-group-item" href="index.php?toc=layouts&p=templates/choosetemplate">Using Templates</a>
 </div>
