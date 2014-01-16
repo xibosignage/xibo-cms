@@ -1,48 +1,56 @@
+<?php
+/*
+ * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
+<h1 id="Text">Text</h1>
+<p>The Text Media Module allows rich text to be added to a Region Timeline on a Layout.</p>
 
-	<a name="Text" id="Text"></a><h2>Text</h2>
-	<p>Adding a piece of text to a layout provides a form within which you can write your message, style your message, choose a 
-	direction animation which will place a scrolling feature on your message.</p>
+<p>Text is specific to a layout rather than saved in the library - this means that text items are not reusable and will need to be copied/pasted between Layouts if the same text is required on more than one.</p>
 
-	<p>Text is specific to the layout it is added to; and it is not saved in the library. So you will need to copy/paste between 
-	layouts if you want to use text on more than one layout. The reason for this is that it very quickly 
-	becomes unmanageable to have named text strings in the library - especially when you have minor variations.</p>
+<p>When adding a Text Media Item the CMS provides a text editor embedded directly in a form. This editor has the same background color as the Layout so that it is easier to get the foreground text colouring correct.</p>
+<p><img class="img-thumbnail" alt="Add Text Form" src="content/layout/Ss_layout_designer_add_text.png"></p>
 
-	<p>Note: <i>A certain amount of experimentation is required when sizing text. The text preview in the web interface can be misleading 
-	about how the text will finally fit on the layout. If possible, preview a new layout on a display to see how the text fits, and 
-	make any adjustments required to get the layout as you want it.</i></p>
+<h2>Options</h2>
 
+<dl class="dl-horizontal">
+	<dt>Direction</dt>
+	<dd>Text can be scrolling left/right/top and bottom. Text can also be static using the "None" direction.</dd>
+</dl>
 
-	<p>Add Text</p>
-	<ul>
-		<li>Click the "Add Text" icon</li>
-		<li>A new dialogue will appear:<br />
+<dl class="dl-horizontal">
+	<dt>Duration</dt>
+	<dd>The duration in seconds that this text item should remain in the Region.</dd>
+</dl>
 
-		<p><img alt="Ss_layout_designer_add_text" src="content/layout/Ss_layout_designer_add_text.png"
-		style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-		width="631" height="442"></p></li>
-	
-		<li>You'll see the text editor. <?php echo PRODUCT_NAME; ?> uses CKeditor for text input. The format is very similar to many word processing applications 
-			you may have used in the past. Complete documentation for all the buttons is available over at CKEditor's website here: 
-	
-			<a href="http://docs.cksource.com/CKEditor_3.x/Users_Guide" target="_blank">http://docs.cksource.com/CKEditor_3.x/Users_Guide</a></li>
+<dl class="dl-horizontal">
+	<dt>Scroll Speed</dt>
+	<dd>Speed up or slow down the scroll rate - assuming you have a Direction selected.</dd>
+</dl>
 
-		<li>Type in the text you want to add.</li>
-		<li>To change the font, highlight your text and choose a new font from the "Font" dropdown menu.</li>
-		<li>To change the size, highlight your text and choose a new size from the "Size" dropdown menu.</li>
-		<li>To change the colour, highlight your text and choose a new colour from the font colour pallet icon 
-	
-		<a href="Textcolor.gif" class="image" title="Textcolor.gif"><img alt="Textcolor.gif" src="content/layout/Textcolor.gif" width="28" height="20" border="0" /></a></li>
-
-		<li>Bold, italic and underline are available using the respective icon:		
-		<a href="TextProp.gif" class="image" title="TextProp.gif"><img alt="TextProp.gif" src="content/layout/TextProp.gif" width="66" height="20" border="0" /></a>
-
-		<li>Enter a duration in seconds for the text to be on the layout.<br />
-			<i>Note that if this is the only media item in a region, then this is the minimum amount of time the text will be shown 
-			for as the total time shown will be dictated by the total run time of the longest-running region on the layout.</i></li>
-		<li>Optionally select a direction for the text to scroll in. Available options are Up, Down, Left and Right.</li>
-		<li>If you have selected to scroll the text, you can control the speed of the scrolling by editing the "Scroll Speed" value. 
-			Lower numbers cause the text to scroll faster.</li>
-		<li>When you are happy with your text, click the "Save" button.</li>
-	</ul>
+<dl class="dl-horizontal">
+	<dt>Fix text to region?</dt>
+	<dd>Should the text resize to fill the entire available space in the Region? This option should only be used for a single line text item. The default behaviour is to scale the text to fill th Display Client resolution.</dd>
+</dl>
 
 
+<p class="alert alert-info"><?php echo PRODUCT_NAME; ?> uses CKEditor for text input. Complete documentation for all the buttons is available over at <a href="http://docs.cksource.com/CKEditor_3.x/Users_Guide" target="_blank">CKEditor's website</a>.</p>
+
+<p class="alert alert-info">Text formatting is actually HTML and you can "view source" on the text editor to adjust the HTML manually if you choose.</p>
