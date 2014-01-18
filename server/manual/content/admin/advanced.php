@@ -22,30 +22,23 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 
 <h1>Troubleshooting <small>The Advanced Menu</small></h1>
-<p>The CMS contains a number of useful tools for 1st line debubbing and reporting faults to technical support.</p>
+<p>The CMS contains a number of useful tools for first line debugging and reporting faults to technical support.</p>
+
+<h2>Report Fault</h2>
+<p>The Report Fault Wizard is designed to be enabled by the CMS administrator to recreate the problem and collect logging information that can be analysed or submitted to the Technical Support team for further analysis. The Wizard lists 6 steps which should be followed in order.</p>
+
+<p><img class="img-thumbnail" alt="Report Fault Wizard" src="content/admin/report_fault_wizard.png"></p>
 
 
-<h3>System Log</h3>
+<h2>System Log</h2>
+<p>The CMS keeps a detailed log of all errors that have been recorded as well as detailed debugging information. This is intended for a more technical user to analyse and fix issues.</p>
 
-<p><img class="img-thumbnail" alt="SA Advanced" src="content/admin/sa_advanced.png"></p>
+<p>The System Log is available from the Advanced Menu.</p>
 
-<p>The system log is used to help troubleshoot problems with <?php echo PRODUCT_NAME; ?>. When you encounter an error it will be logged
-and listed in the system here. These error messages can help the xstreamedia team solve your problem.</p>
-<p>Truncating the log helps you to troubleshoot a problem by clearing the current error messages</p>
-<p>The page and sub page items helps locate where the error has been generated from.</p>
-<ul>
-<li><strong>Log Date</strong><p> states the date and time the error message was logged.</p></li>
-<li><strong>Page</strong><p> states the page that the error has been generated from.</p></li>
-<li><strong>Function</strong><p>state function that the error message has been generated from.</p></li>
-<li><strong>Message</strong><p> gives details of what error has occurred in the system.</p></li>
-</ul>
+<p><img class="img-thumbnail" alt="System Log" src="content/admin/sa_advanced.png"></p>
 
-<h3>Sessions</h3>
+<p class="alert alert-warning">The system log can get quite large over time and should be manually truncated after any debugging session. This is done from the System Log page using the "Truncate" menu item in the top right corner of the Log Table.</p>
+
+<h2>Sessions</h2>
 <p>Sessions provide details of the current user activity on the network</p>
-<p><img class="img-thumbnail" alt="SA Advanced Session" src="content/admin/sa_advanced_sessions.png"></p>
-
-<a name="Report_Fault" id="Report_Fault"></a><h3>Report Fault</h3>
-<p>Simple instruaction on the collection of system error and report fault to <?php echo PRODUCT_NAME; ?> xsteamedia team.</p>
-
-<a name="License" id="License"></a><h3>License Information</h3>
-<p>The license page provides details of all the relevant licenses for the system.</p>
+<p><img class="img-thumbnail" alt="Sessions" src="content/admin/sa_advanced_sessions.png"></p>

@@ -87,7 +87,11 @@ $toc = 'content/toc_' . $raw_toc . '.php';
 						<li class="<?php echo ($raw_toc == 'layouts') ? 'active' : ''; ?>"><a href="index.php?toc=layouts&p=layout/overview">Layouts</a></li>
 						<li class="<?php echo ($raw_toc == 'scheduling') ? 'active' : ''; ?>"><a href="index.php?toc=scheduling&p=schedule/overview">Scheduling</a></li>
 						<li class="<?php echo ($raw_toc == 'user_and_display') ? 'active' : ''; ?>"><a href="index.php?toc=user_and_display&p=users/overview">Users &amp; Displays</a></li>
+						
+						<?php if (INCLUDE_DEVELOPER) { ?>
 						<li class="<?php echo ($raw_toc == 'developer') ? 'active' : ''; ?>"><a href="index.php?toc=developer&p=admin/overview">Developer</a></li>
+						<?php } ?>
+
 						<?php @include('content/nav_extra_custom.php'); ?>
 		    		</ul>
 		    	</div>

@@ -21,3 +21,4 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <h1>Blueprints</h1>
+<p>For the time being blueprints will be managed on the <a href="https://blueprints.launchpad.net/xibo">Launchpad Project Page</a>.</p>

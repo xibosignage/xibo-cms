@@ -27,11 +27,15 @@ $allowed_toc = array(
 		'layouts',
 		'scheduling',
 		'user_and_display',
-		'developer',
-		'developer_api',
-		'developer_releasenotes',
 		'troubleshooting'
 	);
+
+if (INCLUDE_DEVELOPER) {
+
+	$allowed_toc[] = 'developer';
+	$allowed_toc[] = 'developer_api';
+	$allowed_toc[] = 'developer_releasenotes';
+}
 
 $allowed_routes = array(
 		'intro',

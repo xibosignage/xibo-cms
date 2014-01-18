@@ -19,6 +19,9 @@
     # Should the help include information on installing the server?
     define('HOSTED', FALSE);
 
+    # Include or exclude certain TOC
+    define('INCLUDE_DEVELOPER', TRUE);
+
     # Default Page and TOC
     define('DEFAULT_TOC', 'getting_started');
     define('DEFAULT_PAGE', 'intro');
