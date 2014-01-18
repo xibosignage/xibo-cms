@@ -24,7 +24,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="well">
+<div class="well" id="display-list-well">
 	<form id="<?php echo Theme::Get('id'); ?>" class="DisplayListForm">
 		<ul class="nav nav-list DisplayList">
 			<li class="nav-header"><?php echo Theme::Translate('Misc'); ?></li>

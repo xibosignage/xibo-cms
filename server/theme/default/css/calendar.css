@@ -20,7 +20,7 @@
 
 .gridContainer {
 	overflow-y: visible;
-	height: 483px;
+	height: 100%;
 }
 
 .gridContainer6Weeks {
@@ -156,4 +156,9 @@
 	padding: 2px;
 	margin-bottom: 1px;
         overflow-x: hidden;
+}
+
+#display-list-well {
+	overflow-y: auto;
+	max-height: 600px;
 }
