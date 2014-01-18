@@ -72,7 +72,7 @@ class Schedule extends Data
     		
     		// Columns for Recurrence
     		if ($recType != '' && $recType != 'null') {
-    			$SQL .= ", recurrence_type, recurrence_detail, recurrence_range , ";
+    			$SQL .= ", recurrence_type, recurrence_detail, recurrence_range ";
     		}
     		
     		$SQL .= ") ";

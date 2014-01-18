@@ -1,39 +1,50 @@
+<?php
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and / or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
+<h1 id="Scheduling">Overview</h1>
+<p><?php echo PRODUCT_NAME; ?> has a sophisticated scheduling system allowing for scheduling Layouts and Campaigns across Displays and Display Groups. This is achieved through Schedule Events and visualised on the Calendar.</p>
 
-		<a name="Scheduling" id="Scheduling"></a><h1>Scheduling</h1>
-
-		<a name="Overview" id="Overview"></a><h2>Overview</h2>
-
-    	<p><?php echo PRODUCT_NAME; ?> is not designed to show a blank screen at any time. In display Management when you set each client up, you are asked 
-    	to choose a default layout for that display.</p> 
-    	<p>The <?php echo PRODUCT_NAME; ?> Schedule is used to set what will be shown on what display and at what time. The schedule
-    	consists of a Month Calendar for each display. When a layout or campaign is scheduled it becomes an event on the calendar.</p>
-		
-		<p>The features of the schedule	are as follows:</p>
-		<ul>
-			<li>Events spanning two dates - no maximum or minimum time</li>
-			<li>Recurring events</li>
-			<li>Priority events</li>
-			<li>Schedule an event for more that one display at once</li>
-		</ul>
+<p>Events have the following properties</p>
+<ul>
+	<li>Events spanning two dates - no maximum or minimum time</li>
+	<li>Recurring events</li>
+	<li>Priority events</li>
+	<li>Schedule an event for more that one Display / Display Group at once</li>
+</ul>
 	
-		<p>If at any time there are no layouts scheduled to run, the default layout for the display will be run automatically.</p>
+<p class="alert alert-info">If at any time there are no layouts scheduled to run, the default layout for the Display will be run automatically.</p>
 
-		<h2>What is in this section?</h2>
-		<p>This section will:</p>
-		<ul>
-			<li>Introduce the Calendar</li>
-			<li>Explain what the events on the calendar actually mean</li>
-			<li>Cover the functionailty available from the calendar</li>
-			<li>Quick layout Schedule Now</li>
-		</ul>
 
-		<h2>Before you start...</h2>
-        <p>Before you can schedule a layout or campaign you must have completed the following tasks:</p>
+<h2 id="Calendar_View">Calendar View</h2>
+<p>The Calendar view is accessed using the Schedule menu item.</p>
 
-        <ul>
-            <li>Created at least one layout</li>
-            <li>Added media items to that layout - ensuring no regions are left empty</li>
-            <li>Optionally grouped multiple layouts into a single campaign</li>
-        </ul>
+<p><img class="img-thumbnail" alt="Calendar" src="content/schedule/calendar_month_view.png"></p>
 
-        <p>Once these tasks have been completed the layout or campaign is ready to be scheduled.</p>	
+<p>From the calendar schedule chart you can:</p>
+<ul>
+	<li>View all the events scheduled for the selected displays managed by <?php echo PRODUCT_NAME; ?>.</li>
+	<li>Schedule new events</li>
+	<li>Edit existing events</li>
+</ul>
+
+<p class="alert alert-info">When a Display Client has more than one Layout scheduled to it at one time it will automatically alternate between the Layouts in the schedule.</p>
+	

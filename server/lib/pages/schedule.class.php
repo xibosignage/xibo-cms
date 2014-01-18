@@ -753,8 +753,8 @@ HTML;
                 }
             }
 
-            Debug::LogEntry('audit', 'Built Month Array');
-            Debug::LogEntry('audit', var_export($events, true));
+            //Debug::LogEntry('audit', 'Built Month Array');
+            //Debug::LogEntry('audit', var_export($events, true));
 
             return $events;
     }
