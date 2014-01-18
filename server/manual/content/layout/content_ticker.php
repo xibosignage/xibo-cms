@@ -33,30 +33,125 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 <p><img class="img-thumbnail" alt="Add Ticker Form" src="content/layout/Ss_layout_designer_add_ticker.png"></p>
 
-<p>After choosing the type of Ticker the Edit form will automatically open, providing access to the other options.</p>
+<dl class="dl-horizontal">
+	<dt>Source Type</dt>
+	<dd>Whether the Ticker uses a Feed (RSS / Atom / XML) or a CMS DataSet as its Data Source.</dd>
+</dl>
 
-<h3>
+<dl class="dl-horizontal">
+	<dt>Feed URL</dt>
+	<dd>If using a Feed, the URL of the Feed.</dd>
+</dl>
 
-	<p>The add ticker form is similar to the text form. It is used to add an RSS feed into your layout. An RSS feed can 
-	be used to get up-to-date information from a variety of sources on the internet 
-	e.g. http://newsrss.bbc.co.uk/rss/newsonline_world_edition/asia-pacific/rss.xml. There are a couple of additional
-	options which are required.</P>
+<dl class="dl-horizontal">
+	<dt>DataSet</dt>
+	<dd>If using a DataSet, the DataSet to use.</dd>
+</dl>
 
-	
+<dl class="dl-horizontal">
+	<dt>Duration</dt>
+	<dd>The Duration this media item should be shown in the Timeline. In seconds.</dd>
+</dl>
 
-	<p> An RSS feed has a couple of default tags. Each section takes on the properties that you set for each keyword. 
-	So if you make [Date] red, then your RSS feeds date will appear red.</p>
+<p>After choosing the Source of the Ticker the Edit form will automatically open, providing access to the other options.</p>
 
-	<ul>
-		<li>[Date]<br />
-		This item is used to style the time and date of the story in a RSS feed.</li>
+<h2>Editing</h2>
+<p>All Tickers have some common settings in the CMS, regardless of the Data Source.</p>
 
-  		<li>[Title]<br />
-		This item is used to extract the title from an RSS story.</li>
+<dl class="dl-horizontal">
+	<dt>Direction</dt>
+	<dd>Tickers can be scrolling left / right / top and bottom. Tickers can also be static using the "None" direction and can be split into pages that are automatically cycled using the "Single" mode.</dd>
+</dl>
 
-		<li>[Description]<br />
-		This item can be used to style the description of the RSS story. This text provides a more detailed overview of an RSS title.</li>
-	</ul>
+<dl class="dl-horizontal">
+	<dt>Duration</dt>
+	<dd>The duration in seconds that this text item should remain in the Region.</dd>
+</dl>
 
-	<p>Any of these options can be removed and the contents will not be shown. Therefore if you just want the titles of the RSS feed, 
-	you just need to include the [Title] tag in the text window.</p>
+<dl class="dl-horizontal">
+	<dt>Duration is per Item</dt>
+	<dd>If the Duration is per Item the configured Duration will be extended by the Number of Items that is returned by the Data Source. This should be used carefully as it can create long running media items. Typically it is preferable to use this setting in conjunction with a setting to limit the number of items shown.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Scroll Speed</dt>
+	<dd>Speed up or slow down the scroll rate - assuming you have a Direction selected.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Fix text to region?</dt>
+	<dd>Should the text resize to fill the entire available space in the Region? This option should only be used for a single line text item. The default behaviour is to scale the text to fill the Display Client resolution.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Update Interval</dt>
+	<dd><?php echo PRODUCT_NAME; ?> Display Clients can cached the content of a Feed or DataSet to prevent repeated </dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Items per Page</dt>
+	<dd>When using "Single" mode, how many items should appear on each page.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Show side by Side</dt>
+	<dd>When there is more than 1 item per page, should the items be shown side-by-side.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Style Sheet</dt>
+	<dd>An optional style sheet to apply to the entire Ticker.</dd>
+</dl>
+
+<p class="alert alert-info">The Ticker Edit form has minor differences depending on the Data Source of the Ticker that is being edited.</p>
+
+<h3>Feed</h3>
+<p><img class="img-thumbnail" alt="Edit Feed Ticker Form" src="content/layout/timeline_ticker_feed_edit.png"></p>
+
+<dl class="dl-horizontal">
+	<dt>from the</dt>
+	<dd>Where should items be taken from? Used in conjunction with the "Number of Items" setting.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Copyright</dt>
+	<dd>Should the Display Client insert a Copyright notice at the end of the feed.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Substitutions</dt>
+	<dd>The available keywords to use in the template that will be substituted with content from the feed. The CMS supports a set of default keywords that will be present of the majority of feeds. A special notation is also available where the user can specify the Tag|Namespace within the feed for <?php echo PRODUCT_NAME; ?> to extract content.</dd>
+</dl>
+
+<p class="alert alert-info">The Available Substitutions can be double clicked to automatically insert them into the Template editing area.</p>
+
+<h3>Data Set</h3>
+<p><img class="img-thumbnail" alt="Edit Feed Ticker Form" src="content/layout/timeline_ticker_dataset_edit.png"></p>
+
+<dl class="dl-horizontal">
+	<dt>Order</dt>
+	<dd>An Order by clause using SQL syntax that should be applied to the Data Source. e.g. Name DESC</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Filter</dt>
+	<dd>A filtering clause using SQL syntax that should be applied to the Data Source. e.g. Region = 'Europe'</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Upper Row Limit</dt>
+	<dd>The upper row count (0 = unlimited)</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Lower Row Limit</dt>
+	<dd>The lower row count (0 = unlimited)</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Substitutions</dt>
+	<dd>The available columns to use in the template that will be substituted with content from the DataSet Columns. The CMS will look up the columns for the DataSet and present a set to substitutions. These should be double clicked to add into the template.</dd>
+</dl>
+
+<h2>Optional Style sheet</h2>
+<p>The Optional Style sheet is applied to the entire Ticker media item when shown on the Display Clients. This is intended for advanced use to "tweak" the CMS generated output.</p>
