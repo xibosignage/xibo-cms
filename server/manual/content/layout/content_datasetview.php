@@ -21,37 +21,84 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <h1>DataSet Views</h1>
+<p>The DataSet View module allows content from a DataSet to be added into a Region, organised and displayed in a tabular fashion.</p>
 
-    <p>Once a DataSet has been defined, anyone with &#8220;View&#8221; permissions can use the DataSet on layouts. They are added 
-    by selecting the &#8220;DataSet&#8221; button from a region Timeline, which presents a drop down list of all DataSets available 
-    to the user as well as the usual duration field for entering the duration in seconds that the DataSet should be shown.</p>
+<p>When the underlying DataSet Data is changed, the view automatically updates with new Data.</p>
 
-	<p><img alt="Dataset Add View" src="content/layout/ss_layout_dataset_addview.png"
-	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	width="358" height="178"></p>
+<p class="alert alert-warning">Once a DataSet has views care should be taken when editing the Column structure of the DataSet.</p>
 
-    <p>Once added, the edit dialog will automatically appear allowing the user to pick their options for the DataSet View.</p>
+<h2>Adding a DataSet View</h2>
+<p>When adding a new DataSet View the CMS provides a simple form asking for the Data Source and duration. These items cannot be changed without re-creating the View.</p>
 
-	<p><img alt="Dataset View Edit" src="content/layout/ss_layout_dataset_view_edit.png"
-	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	width="658" height="583"></p>
+<p><img class="img-thumbnail" alt="Dataset Add View" src="content/layout/ss_layout_dataset_addview.png"></p>
 
-    <p>On this form the user can specify:</p>
-    <ul>
-      <li><strong>Duration</strong>: The display duration in seconds</li>
-      <li><strong>Update Interval</strong>: The duration in minutes the data should be cached on the client</li>
-      <li><strong>Lower Row Limit</strong>: The row number to start displaying the data</li>
-      <li><strong>Upper Row Limit</strong>: The row number to end displaying the data</li>
-      <li><strong>Order</strong>: The Ordering of the data (column name ASC|DESC)</li>
-      <li><strong>Filter</strong>: A filter option to filter the data with (Column Name=Value, Column Name=Value)</li>
-      <li><strong>Show Table Headings</strong>: Whether to show the column headings in the table</li>
-      <li><strong>Columns Selected</strong>: The columns to display (drag or double click to move between lists)</li>
-      <li><strong>Columns Available</strong>: The columns available to select (drag or double click to move between lists)</li>
-      <li><strong>Stylesheet</strong>: A CSS Stylesheet to render with the table</li>
-    </ul>
+<dl class="dl-horizontal">
+	<dt>DataSet</dt>
+	<dd>The DataSet to use as the Source of Data.</dd>
+</dl>
 
-    <p>Following is an example of the "Styleshee for the Table" which will produce the table on the Clent Display as shown below:</p>
-    
+<dl class="dl-horizontal">
+	<dt>Duration</dt>
+	<dd>The duration in seconds that this item should remain in the Region.</dd>
+</dl>
+
+<p>After choosing the Source of the View the Edit form will automatically open, providing access to the other options.</p>
+
+<h2>Editing</h2>
+	
+<p><img class="img-thumbnail" alt="Dataset Add View" src="content/layout/ss_layout_dataset_view_edit.png"></p>
+
+<dl class="dl-horizontal">
+	<dt>Update Interval</dt>
+	<dd><?php echo PRODUCT_NAME; ?> Display Clients can cache the content of this media type to prevent repeated download of identical resources. They are also cached for off-line playback. </dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Order</dt>
+	<dd>An Order by clause using SQL syntax that should be applied to the Data Source. e.g. Name DESC</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Filter</dt>
+	<dd>A filtering clause using SQL syntax that should be applied to the Data Source. e.g. Region = 'Europe'</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Upper Row Limit</dt>
+	<dd>The upper row count (0 = unlimited)</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Lower Row Limit</dt>
+	<dd>The lower row count (0 = unlimited)</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Table Headings</dt>
+	<dd>Show the column headings on the table, or have the table without headings.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Rows per Page</dt>
+	<dd>Spilt the data into multiple pages that will be cycled.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Columns Selected</dt>
+	<dd>An ordered list of Columns Selected for this View. Items can be dragged / dropped between lists and ordered within the same list.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Columns Available</dt>
+	<dd>A list of Columns that are available for display.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Style Sheet</dt>
+	<dd>A CSS Style Sheet to control the visual styling of the Table.</dd>
+</dl>
+
+<h2>Example Style Sheet</h2>    
 <pre>
 table.DataSetTable {
 font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;  
@@ -107,12 +154,7 @@ span.DataSetColumnSpan {
 
 }
 </pre>    
-    <p>The resulting view will be showing the region preview window and displayed on the client.</p>
+    
+<p>The resulting view will be showing the region preview window and displayed on the client. (example data)</p>
 
-	<p><img alt="Dataset Table" src="content/layout/ss_layout_dataset_table.png"
-	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	width="474" height="182"></p>
-
-    <p>Note: Once the DataSet view is configured it will automatically respond to edits made on the data &#8211; and it
-    multiple views on the same DataSet can be created.</p>
-	
+<p><img class="img-thumbnail" alt="Dataset Table" src="content/layout/ss_layout_dataset_table.png"></p>

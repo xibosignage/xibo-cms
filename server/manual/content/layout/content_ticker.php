@@ -85,7 +85,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 <dl class="dl-horizontal">
 	<dt>Update Interval</dt>
-	<dd><?php echo PRODUCT_NAME; ?> Display Clients can cached the content of a Feed or DataSet to prevent repeated </dd>
+	<dd><?php echo PRODUCT_NAME; ?> Display Clients can cache the content of this media type to prevent repeated download of identical resources. They are also cached for off-line playback. </dd>
 </dl>
 
 <dl class="dl-horizontal">

@@ -1,30 +1,36 @@
+<?php
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
+<h1>Resolutions</h1>
+<p>Layout design is always done according to the Target Resolution and Aspect Ratio. <?php echo PRODUCT_NAME; ?> has defined a set of the most common aspect ratios and their associated Resolutions (for the designer and for the target display).</p>
 
-		<h2>Template Resolution</h2>
+<p>Resolutions can be viewed from the Resolution Administration page under the Design menu, Resolutions sub menu.</p>
 
-  		<p>User can add new template resolution to the <?php echo PRODUCT_NAME; ?> default templates.
-  		From the navigation, select Displays > Resolutions. System available resolution list is shown.</p>
+<p><img class="img-thumbnail" alt="Resolution Administration" src="content/templates/template_resolution.png"></p>
 
-   		<p><img alt="Template_Resolution" src="content/templates/template_resolution.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="807" height="387"></p>
+<p class="alert alert-info"><?php echo PRODUCT_NAME; ?> will natively scale all content based on the Aspect Ratio - it is not necessary to add a new Resolution for all hardware resolutions in your signage network.</p>
 
-  		<h2>Edit Resolution</h2>
-	<blockquote>
-  		<p>To add new resolution</p>
-  
-  		<ul>
-  			<li>click "Add Resolution" button</li>
- 			<li>"Edit Resolution" form is loaded</li>
-  			<li>Enter the required information</li>
-  			<li>Click "Save"</li>
-  		</ul>
+<h2>Add / Edit Resolution</h2>
+<p>It is possible to add a new Resolution or edit an existing one.</p>
+<p><img class="img-thumbnail" alt="Resolution Form" src="content/templates/template_edit_resolution.png"></p>
 
-   		<p><img alt="Template_Edit_Resolution" src="content/templates/template_edit_resolution.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="358" height="258"></p>
-	   
-		<p>Note: The maximum Width/Height value allowed is 800; mainly to limit displayed size during layout design.
-  		The final actual Display size is scale from these values.</p>
- 	</blockquote>
-
-
+<p class="alert alert-warning">The Designer Width / Height will always be automatically calculated to fit within the Layout Designer.</p>
