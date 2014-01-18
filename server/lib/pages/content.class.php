@@ -112,11 +112,8 @@ class contentDAO
 			$row['permissions'] = $group = $this->GroupsForMedia($row['mediaid']);
 			$row['revised'] = ($row['parentid'] != 0) ? Theme::Image('act.gif') : '';
 
-			// Display a friendly filesize
-			$sz = 'BKMGTP';
-            $factor = floor((strlen($row['filesize']) - 1) / 3);
-            $fileSize = sprintf('%.2f', $row['filesize'] / pow(1024, $factor)) . @$sz[$factor];
-			$row['size_text'] = $fileSize;
+			// Display a friendly file size
+			$row['size_text'] = Kit::FormatBytes($row['filesize']);
 
 			$row['buttons'] = array();
 
