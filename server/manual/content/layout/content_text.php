@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
@@ -23,16 +23,16 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <h1 id="Text">Text</h1>
 <p>The Text Media Module allows rich text to be added to a Region Timeline on a Layout.</p>
 
-<p>Text is specific to a layout rather than saved in the library - this means that text items are not reusable and will need to be copied/pasted between Layouts if the same text is required on more than one.</p>
+<p>Text is specific to a layout rather than saved in the library - this means that text items are not reusable and will need to be copied / pasted between Layouts if the same text is required on more than one.</p>
 
-<p>When adding a Text Media Item the CMS provides a text editor embedded directly in a form. This editor has the same background color as the Layout so that it is easier to get the foreground text colouring correct.</p>
+<p>When adding a Text Media Item the CMS provides a text editor embedded directly in a form. This editor has the same background colour as the Layout so that it is easier to get the foreground text colouring correct.</p>
 <p><img class="img-thumbnail" alt="Add Text Form" src="content/layout/Ss_layout_designer_add_text.png"></p>
 
 <h2>Options</h2>
 
 <dl class="dl-horizontal">
 	<dt>Direction</dt>
-	<dd>Text can be scrolling left/right/top and bottom. Text can also be static using the "None" direction.</dd>
+	<dd>Text can be scrolling left / right / top and bottom. Text can also be static using the "None" direction.</dd>
 </dl>
 
 <dl class="dl-horizontal">
@@ -47,7 +47,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 <dl class="dl-horizontal">
 	<dt>Fix text to region?</dt>
-	<dd>Should the text resize to fill the entire available space in the Region? This option should only be used for a single line text item. The default behaviour is to scale the text to fill th Display Client resolution.</dd>
+	<dd>Should the text resize to fill the entire available space in the Region? This option should only be used for a single line text item. The default behaviour is to scale the text to fill the Display Client resolution.</dd>
 </dl>
 
 

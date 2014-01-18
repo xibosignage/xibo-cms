@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
@@ -21,7 +21,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <h1>License Information</h1>
-<p>Xibo - Digitial Signage - <a href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>. Version <?php echo PRODUCT_VERSION; ?><br />
+<p>Xibo - Digital Signage - <a href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>. Version <?php echo PRODUCT_VERSION; ?><br />
 Copyright &copy 2006-2013 Daniel Garner and the <a href="https://launchpad.net/~xibo-developers/+members" title="Xibo Developers">Xibo Developers</a>.</p>
  
 <p>Xibo is free software: you can redistribute it and/or modify

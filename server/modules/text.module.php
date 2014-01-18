@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
