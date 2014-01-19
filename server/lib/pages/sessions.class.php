@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
@@ -70,10 +70,7 @@ class sessionsDAO
 		$fromdt = Kit::GetParam('filter_fromdt', _POST, _STRING);
 		
 		///get the dates and times
-		if ($fromdt == '') {
-			$starttime_timestamp = time();
-		}
-		else {
+		if ($fromdt != '') {
 			$start_date = explode("/",$fromdt); //		dd/mm/yyyy
 			$starttime_timestamp = strtotime($start_date[1] . "/" . $start_date[0] . "/" . $start_date[2] . ' ' . date("H", time()) . ":" . date("i", time()) . ':59');
 		}
@@ -84,7 +81,10 @@ class sessionsDAO
 		
 		$SQL  = "SELECT session.userID, user.UserName,  IsExpired, LastPage,  session.LastAccessed,  RemoteAddr,  UserAgent ";
 		$SQL .= "FROM `session` LEFT OUTER JOIN user ON user.userID = session.userID ";
-		$SQL .= sprintf(" WHERE session_expiration < '%s' ", $starttime_timestamp);
+		$SQL .= "WHERE 1 = 1 ";
+
+		if ($fromdt != '')
+			$SQL .= sprintf(" AND session_expiration < '%s' ", $starttime_timestamp);
 		
 		if ($type == "active")
 			$SQL .= " AND IsExpired = 0 ";
@@ -110,7 +110,7 @@ class sessionsDAO
 
             $row['userid'] = Kit::ValidateParam($row['userID'], _INT);
 			$row['username'] = Kit::ValidateParam($row['UserName'], _STRING);
-			$row['isexpired'] = (Kit::ValidateParam($row['IsExpired'], _INT) == 1) ? 'icon-ok' : 'icon-remove';
+			$row['isexpired'] = (Kit::ValidateParam($row['IsExpired'], _INT) == 0) ? 'icon-ok' : 'icon-remove';
 			$row['lastpage'] = Kit::ValidateParam($row['LastPage'], _STRING);
 			$row['lastaccessed'] = Kit::ValidateParam($row['LastAccessed'], _STRING);
 			$row['ip'] = Kit::ValidateParam($row['RemoteAddr'], _STRING);

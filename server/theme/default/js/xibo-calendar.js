@@ -1,5 +1,5 @@
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2009-2013 Daniel Garner
  *
  * This file is part of Xibo.
@@ -93,7 +93,9 @@ function CallGenerateCalendar() {
 			XiboInitialise('#Calendar');
 
             // Make sure the calendar will fit in the window
-            $("#Calendar .gridContainer").height($("body").height());
+            var height = $("#Calendar").parent().height();
+            $("#Calendar").height(height);
+            $("#display-list-well").css("max-height", (height - 100) + "px");
             
             return false;
         }

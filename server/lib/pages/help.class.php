@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2009-2013 Daniel Garner
  *
  * This file is part of Xibo.
@@ -158,6 +158,13 @@ SQL;
                         'id' => 'help_button_delete',
                         'url' => 'index.php?p=help&q=DeleteForm&HelpID=' . $row['helpid'],
                         'text' => __('Delete')
+                    );
+
+                // Test
+                $row['buttons'][] = array(
+                        'id' => 'help_button_test',
+                        'url' => HelpManager::Link($row['topic'], $row['category']),
+                        'text' => __('Test')
                     );
             }
 

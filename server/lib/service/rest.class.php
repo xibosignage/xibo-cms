@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2010-2013 Daniel Garner
  *
  * This file is part of Xibo.
@@ -850,7 +850,7 @@ class Rest
         $layoutId = $this->GetParam('layoutId', _INT);
         $regionId = $this->GetParam('regionId', _STRING);
         $type = $this->GetParam('type', _WORD);
-        $xlf = $this->GetParam('xlf', _STRING);
+        $xlf = $this->GetParam('xlf', _HTMLSTRING);
 
         // Does the user have permissions to view this layout?
         if (!$this->user->LayoutAuth($layoutId))
@@ -892,7 +892,7 @@ class Rest
         $regionId = $this->GetParam('regionId', _STRING);
         $mediaId = $this->GetParam('mediaId', _STRING);
         $type = $this->GetParam('type', _WORD);
-        $xlf = $this->GetParam('xlf', _STRING);
+        $xlf = $this->GetParam('xlf', _HTMLSTRING);
 
         // Does the user have permissions to view this layout?
         if (!$this->user->LayoutAuth($layoutId))

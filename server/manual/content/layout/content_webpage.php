@@ -1,53 +1,60 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
-<?php include('../../template.php'); ?>
-<html>
-<head>
-  	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-  	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-  	<link href="img/favicon.ico" rel="shortcut icon">
-  	<!-- Javascript Libraries -->
-  	<script type="text/javascript" src="lib/jquery.pack.js"> </script>
-  	<script type="text/javascript" src="lib/jquery.dimensions.pack.js"> </script>
-  	<script type="text/javascript" src="lib/jquery.ifixpng.js"> </script>
-</head>
+<?php
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
+<h1 id="Webpage">Web Page</h1>
+<p>The Web Page module allows an entire Web Page to be embedded inside a Region on a Layout.</p>
 
-<body>
-	<a name="Webpage" id="Webpage"></a><h2>Web Page</h2>
+<p>There is support for scaling and offsetting the target web page inside the Region so the particular section of the web page can be displayed.</p>
 
-	<blockquote>
+<p><img class="img-thumbnail" alt="Webpage Form" src="content/layout/Ss_layout_designer_add_webpage.png"></p>
 
-	<h3> Webpage scale functionality in Windows Client</h3>
-	<p>In <?php echo PRODUCT_NAME; ?> it is possible to show a webpage in a region. Because websites are not build for showing on a big screen, 
-	it has a scale functionality in which you can show the webpage in a larger or smaller scale. This is great for 
-	showing websites that are too big or too small for the region.</p>
+<dl class="dl-horizontal">
+	<dt>Link</dt>
+	<dd>The URL of the Web Page - including http://</dd>
+</dl>
 
-	<p>Add a webpage</p>
+<dl class="dl-horizontal">
+	<dt>Duration</dt>
+	<dd>The duration in seconds that this item should remain in the Region.</dd>
+</dl>
 
-	<ul>
-		<li>Click the "Add Webpage" icon</li>
-		<li>A new dialogue will appear:
+<dl class="dl-horizontal">
+	<dt>Offset Top</dt>
+	<dd>The top position for the page to start.</dd>
+</dl>
 
-		<p><img alt="Ss_layout_designer_add_webpage" src="Ss_layout_designer_add_webpage.png"
-		style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-		width="477" height="232"></p></li>
+<dl class="dl-horizontal">
+	<dt>Offset Left</dt>
+	<dd>The left position for the page to start.</dd>
+</dl>
 
-		<li>Enter all the required information</li>
-		<ul>
-      		<li><strong>Link:</strong><br />The linked content can be either the full webpage, or an ID defined frame within the webpage
-      		e.g. http://www.intl.onkyo.com/#rotateim</li>
-      		<li><strong>Duration:</strong><br />Display duration in seconds</li>
-      		<li><strong>Offset Top:</strong><br />Webpage top cropping region for display</li>
-      		<li><strong>Offset Left:</strong><br />Webpage left cropping region for display</li>
-      		<li><strong>Scale Percentage:</strong><br />Scale the original webpage for display (larger or smaller)</li>
-     		 <li><strong>Backgroup Transparency:</strong><br />Set background to transparency (python only)</li>
-    	</ul>
-		<li>Click "Save"</li>
-	</ul>
-	</blockquote>
+<dl class="dl-horizontal">
+	<dt>Scale Percentage</dt>
+	<dd>The percentage zoom to apply to the web page.</dd>
+</dl>
 
-	<?php include('../../template/footer.php'); ?>
-</body>
-</html>
+<dl class="dl-horizontal">
+	<dt>Transparent?</dt>
+	<dd>Should the web page be rendered with a transparent background? <?php echo PRODUCT_NAME; ?> will try its best to do this when checked, however it cannot be supported on some web pages.</dd>
+</dl>
+
+<p class="alert alert-warning">Web Pages are not cached by the Display Client and will not operate when disconnected from the network.</p>

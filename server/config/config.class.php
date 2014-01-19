@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2013 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
@@ -176,7 +176,7 @@ END;
 		}
 		
 		// Check for MySQL
-		$message = __('MySQL database (PHP MySql and PDO MySql)');
+		$message = __('MySQL database (PHP MySql)');
 
 		if ($this->CheckMySQL()) 
 		{
@@ -190,6 +190,25 @@ END;
 			$output .= <<<END
 			<div class="check_explain">
       			<p>Xibo requires the PHP MySQL Extension to function.</p>
+      		</div>
+END;
+		}
+
+		// Check for PDO
+		$message = __('MySQL database (PDO MySql)');
+
+		if ($this->CheckPDO()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= <<<END
+			<div class="check_explain">
+      			<p>Xibo requires the PHP PDO Extension to function.</p>
       		</div>
 END;
 		}
@@ -459,9 +478,16 @@ END;
 	 */
 	function CheckMySQL() 
 	{
-		return extension_loaded("pdo_mysql") && extension_loaded("mysql");
+		return extension_loaded("mysql");
 	}
 	
+	/**
+	 * Check PHP has the PDO module installed (with MySQL driver)
+	 */
+	function CheckPDO() {
+		return extension_loaded("pdo_mysql");
+	}
+
 	/**
 	 * Check PHP has the GetText module installed
 	 * @return 

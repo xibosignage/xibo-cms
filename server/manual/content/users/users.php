@@ -1,33 +1,35 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-		<link rel=stylesheet type="text/css" href="../../css/doc.css">
-		<meta http-equiv="Content-Type" content="text/html" />
-		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
+<?php
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
+<h1>User Administration</h1>
 
-		<link href="img/favicon.ico" rel="shortcut icon"/>
-		<!-- Javascript Libraries -->
-		<script type="text/javascript" src="lib/jquery.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-	</head>
-	<body>
-		<h1>User Administration</h1>
-		<p>This section refers to Users Adminstration from the built in "General" user module. For information on any of the User module plugins refer
-		to the appropriate page within this section (an overview of the available user modules can be found 
-		<a href="overview.php" title="Overview Page">here</a>).</p>
+<p>This section refers to Users Adminstration from the built in "General" user module. For information on any of the User module plugins refer
+to the appropriate page within this section.</p>
+
+<h2>User Administration Page</h2>
+<p>The user admin page can be accessed from either the "Users" dashboard button - or the "Administration > Users" nagivation menu button. 
+An example of the user page is show below.</p>
 		
-		<h2>User Administration Page</h2>
-		<p>The user admin page can be accessed from either the "Users" dashboard button - or the "Administration > Users" nagivation menu button. 
-	    An example of the user page is show below.</p>
-		
-	   	<p><img alt="User Administration Page" src="user_admin_page.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="847" height="244"></p>
+<p><img class="img-thumbnail" alt="User Administration Page" src="content/users/user_admin_page.png"></p>
 	   
 	    <ul>
 			<li>
@@ -69,7 +71,7 @@
 		<p>To add a user click on the "Add User" button found at the top left of the User Administration page. Fill in <strong>all</strong> the 
 		fields and click "Save" to add the user.</p>
 
-		<p><img alt="Add User Form" src="user_admin_add.png"
+		<p><img alt="Add User Form" src="content/users/user_admin_add.png"
 		style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	    width="558" height="328"></p>
      
@@ -77,7 +79,7 @@
 		<p>To edit a user click on the "Edit" button on the row belonging to the user for editing. Correct the details on the form as necessary
 		and click save to commit those changes.</p>
 
-	  	<p><img alt="Edit User Form" src="user_admin_edit.png"
+	  	<p><img alt="Edit User Form" src="content/users/user_admin_edit.png"
 	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
 	   	width="559" height="328"></p>
      	
@@ -86,6 +88,14 @@
 		<p><strong>Note:</strong> Deleting a user that has media would create "orphaned" content, playlist and schedule records if that user has
 		been active in the system. For this reason any "orphaned" items will be associated with the "<?php echo PRODUCT_NAME; ?>_admin" user created during the install process.</p>
 	
-		<?php include('../../template/footer.php'); ?>
-	</body>
-</html>
+	
+<h2 id="Users_MyApplications">My Applications <small>Authourised 3rd party applications</small></h2>
+<p><?php echo PRODUCT_NAME; ?> contains an API that allows 3rd party applications to connect and consume its data. An example of this is the standalone file upload tool provided with the package. Before using an application each user must authourise the application to act on their behalf within the CMS.</p>
+
+<p>Once an application is authourised it will be listed in the users "My Applications" form.</p>
+
+<p><img class="img-thumbnail" alt="My Applications" src="content/users/users_myapplications.png"></p>
+
+<p class="alert alert-danger">At the current time the CMS does not provide a method of revoking access to an application.</p>
+
+<p class="alert alert-info">An authourised user can view the applications for each user using the action menu "Applications"</p>

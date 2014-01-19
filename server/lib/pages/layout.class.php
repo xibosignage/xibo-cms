@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
@@ -547,7 +547,7 @@ class layoutDAO
 		}
 		else
 		{
-            $thumbBgImage = "theme/default/img/forms/filenotfound.png";
+            $thumbBgImage = "theme/default/img/forms/filenotfound.gif";
 		}
 
 		// Configure some template variables.

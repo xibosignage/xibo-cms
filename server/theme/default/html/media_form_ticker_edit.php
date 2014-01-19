@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
@@ -125,6 +125,16 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     				<textarea id="ta_text" name="ta_text"><?php echo Theme::Get('text'); ?></textarea>
     			</div>
     		</div>
+        </div>
+        <div class="row-fluid">
+            <div class="text-center text-info"><?php echo Theme::Translate('Optional Stylesheet'); ?></div>
+        </div>
+        <div class="row-fluid">
+            <div class="control-group">
+                <div class="span12">
+                    <textarea class="span12" id="ta_css" name="ta_css"><?php echo Theme::Get('css'); ?></textarea>
+                </div>
+            </div>
         </div>
     </form>
 </div>

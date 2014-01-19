@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2013 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
@@ -986,7 +986,7 @@ END;
     /**
      * Returns an array of layouts that this user has access to
      */
-    public function LayoutList($filterLayout = '', $filterUserId = 0, $filterRetired = 0, $filterTags = '', $filterMediaId = 0)
+    public function LayoutList($filterLayout = '', $filterUserId = 0, $filterRetired = -1, $filterTags = '', $filterMediaId = 0)
     {
         $SQL  = "";
         $SQL .= "SELECT layout.layoutID, ";
@@ -1045,9 +1045,11 @@ END;
 			$SQL .= sprintf(" AND layout.userid = %d ", $filterUserId);
 		
 		// Retired options
-		if ($filterRetired != 0) 
+		if ($filterRetired != -1) 
 			$SQL .= sprintf(" AND layout.retired = %d ", $filterRetired);
-		
+		else
+			$SQL .= " AND layout.retired = 0 ";
+
 		// Tags
 		if ($filterTags != '')
 			$SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $this->db->escape_string($filterTags)) . "%' ";

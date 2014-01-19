@@ -1,74 +1,98 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-<head>
-  	<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
-  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-  	<link href="../../css/doc.css" rel="stylesheet" type="text/css">
-  	<link href="../../css/doc.css" rel="stylesheet" type="text/css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-</head>
+<?php
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
+<h1>Layout Designer <small>Creating content for your displays</small></h1>
 
-<body>
-	<h1>Layout Designer</h1>
+<p>The Layout Designer is the heart of content creation in <?php echo PRODUCT_NAME; ?>. Each time a new Layout is created, or an existing one needs a design change, the Layout Designer is used.</p>
 
-	<p>Once you have created a new layout and click the "Design" button, you should see a screen like this:</p>
+<p><?php echo PRODUCT_NAME; ?> makes Layout Design simple through the use of drag and drop, interactive previewing and design flexibility. When Designing a Layout from scratch all of the default templates come with one Full Screen Empty region, pictured below.</p>
 
-	<p><img alt="Layout Designer Screenshot" src="Ss_layout_designer.png"
-	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	width="548" height="416"></p>
+<p><img class="img-thumbnail" alt="Layout Designer Screenshot" src="content/layout/Ss_layout_designer.png"></p>
 
-	<p>Here we can see the new layout we have created. Since we based it on one of the Full Screen templates, you can see it is a 
-	wide screen aspect ratio and has one region that fills the entire screen.</p>
+<p class="alert alert-info">This region can be resized and more added to give extra placed content can be queued for display.</p>
 
-	<p>A layout is made up of a background picture or colour. On top of that, one or more grey boxes are drawn - regions - 
-	which can contain one or more media items (pictures, videos etc).</p> 
+<p class="alert alert-warning">All Layouts are designed using the aspect ratio and then resized accordingly on the display client. The Layout Designer has a small design resolution so that the Design can occur without panning around the browser with scroll bars. The small design window does not matter and is seamlessly resized without losses on each Display Client. However, it is important that the Aspect Ratio is chosen correctly.</p>
 
-	<a name="Background" id="Background"></a><h2>Changing the Background</h2>
-	<p>You can change the background colour or choose a background image if you wish. Click the Background button.</p>
+<h2 id="Options_Menu">Options Menu</h2>
+<p>At the top left of the screen below the navigation bar is the options menu. This provides access to the higher level functions in the designer.</p>
 
-	<p><img alt="Layout Designer Screenshot - Background" src="Ss_layout_designer_background.png"
-	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	width="557" height="245"></p>
+<p><img class="img-thumbnail" alt="Layout Designer Screenshot" src="content/layout/layout_designer_options_menu.png"></p>
 
-	<blockquote>
-	<h3>Background Colour</h3>
-	<p>Select a colour from the list of available background colours.</p>
+<dl class="dl-horizontal">
+	<dt>Add Region</dt>
+	<dd>Adds a new Region to the Layout that can then be positioned (drag/drop) and resized. It can then have content assigned to it.</dd>
+</dl>
 
-	<h3>Background Image</h3>
-	<p>Choose a background image that has been uploaded already.</p>
+<dl class="dl-horizontal">
+	<dt>Background</dt>
+	<dd>Change the Background image, colour and aspect ratio.</dd>
+</dl>
 
-	<h3>Resolution</h3>
-	<p>Choose the aspect ratio of the layout. Since you used one of the Full Screen templates that came with <?php echo PRODUCT_NAME; ?>, there is usually no need to change this.</p>
+<dl class="dl-horizontal">
+	<dt>Properties</dt>
+	<dd>Adjust the Layout Properties, such as the name, description and tags.</dd>
+</dl>
 
-	<p>Try choosing a new background colour and click Save.</p>
-	</blockquote>
+<dl class="dl-horizontal">
+	<dt>Schedule Now</dt>
+	<dd>Schedule the Layout onto one or more Displays directly from the Layout Designer.</dd>
+</dl>
 
-	<h2>Resize Region</h2>
-	<p>To resize the region, click and drag the handle on the bottom-right corner of the region to change its size;
-	then click and drag within the region itself to move and reposition it any place on the layout canvas.</p>
+<dl class="dl-horizontal">
+	<dt>Save Template</dt>
+	<dd>Want to use the design again? It can be saved as a Template from here. Templates only save the aspect ratio, background and region positions, not the actual content.</dd>
+</dl>
 
-	<p>You can also right click within the region and select "Options". A form with detail information of the region is loaded.
-	You can then define the position and size of the region more precisely</p>
- 
-	<p><img alt="Layout Region Options" src="Ss_layout_region_options.png"
-	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	width="358" height="283"></p>
+<p class="alert alert-info">For more information about regions, please continue in the <a href="index.php?toc=layouts&p=layout/addregion">regions</a> section.</p>
 
-	<h2>Layout Designer Jump List</h2>
+<h2 id="Background">Layout Background <small>Change the background image, colour and aspect ratio.</small></h2>
 
-	<p><?php echo PRODUCT_NAME; ?> has a small but useful enhancement - Layout Designer Jump List. This feature allows navigation between layouts that 
-	a user has permissions to edit, without having to jump out to the list of layouts each and every time. It is accessible from 
-	a new icon on the layout designer, called "Jump to"</p>
+<p>Changing the Background is done from the Options menu in the Layout Designer. Once the menu item is selected the following form is shown.</p>
 
-	<p>Once clicked, it presents a list of accessible layouts with a "Design" button - selecting the button will load corresponding
-	layout into the designer window.</p>
- 
-	<p><img alt="Layout Designer Jump" src="ss_layout_designer_jumpto.png"
-	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	width="358" height="341"></p>
+<p><img class="img-thumbnail" alt="Change the Background" src="content/layout/Ss_layout_designer_background.png"></p>
 
-	<?php include('../../template/footer.php'); ?>
-</body>
-</html>
+<dl class="dl-horizontal">
+	<dt>Background Colour</dt>
+	<dd>Select a colour from the list of available background colours.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Background Image</dt>
+	<dd>Choose a background image that has been uploaded already. If a new image needs to be added select the "Add Image" button from the button bar at the bottom of the form.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Resolution</dt>
+	<dd>Choose the aspect ratio of the layout. These are pre-defined in the Resolutions section.</dd>
+</dl>
+
+<p class="alert alert-info">It is advisable to choose a background colour as a fall back, even when using a background image.</p>
+
+
+<h2 id="Jump_List">Jump List</h2>
+
+<p>The Layout Designer Jump List provides navigation between all Layouts the current user has permissions to edit, without having to jump out to the Layout Administration page each and every time. It is accessible from an icon at the bottom right corner of the browser window, entitled "Layout Jump List".</p>
+
+
+<p><img alt="Layout Designer Jump" src="content/layout/ss_layout_designer_jumpto.png"></p>
+
+<p>Once clicked, it presents a list of Layout names - clicking the name will load corresponding layout into the designer window.</p>

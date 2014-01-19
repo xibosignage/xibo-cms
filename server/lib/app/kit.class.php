@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2013 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
@@ -61,7 +61,6 @@ class Kit
 		} 
 		else 
 		{
-			header( 'HTTP/1.1 301 Moved Permanently' );
 			header( 'Location: ' . $url );
 		}
 		
@@ -614,6 +613,20 @@ class Kit
 			Debug::LogEntry('error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [" . $_POST[$tokenName] . "] for session_id [" . session_id() . ']');
 			return false;
 		}
+	}
+
+	/**
+	 * Format Bytes
+	 * http://stackoverflow.com/questions/2510434/format-bytes-to-kilobytes-megabytes-gigabytes
+	 * @param  [int]  $size   The file size in bytes
+	 * @param  integer $precision The precision to go to
+	 * @return [string] The Formatted string with suffix
+	 */
+	public static function formatBytes($size, $precision = 2) {
+		$base = log($size) / log(1024);
+		$suffixes = array('', 'k', 'M', 'G', 'T');   
+
+		return round(pow(1024, $base - floor($base)), $precision) . $suffixes[floor($base)];
 	}
 }
 ?>

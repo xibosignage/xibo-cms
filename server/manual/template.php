@@ -7,13 +7,23 @@
     define('PRODUCT_NAME', 'Xibo');
 
     # Product Version
-    define('PRODUCT_VERSION', '1.5.0');
+    define('PRODUCT_VERSION', '1.6.0-rc1');
+
+    # Home page URL
+    define('PRODUCT_HOME', 'http://xibo.org.uk');
 
     # Product Support URL
     define('PRODUCT_SUPPORT_URL', 'https://answers.launchpad.net/xibo');
     define('PRODUCT_FAQ_URL', 'https://answers.launchpad.net/xibo/+faqs');
 
-    # Shoud the help include information on installing the server?
+    # Should the help include information on installing the server?
     define('HOSTED', FALSE);
+
+    # Include or exclude certain TOC
+    define('INCLUDE_DEVELOPER', TRUE);
+
+    # Default Page and TOC
+    define('DEFAULT_TOC', 'getting_started');
+    define('DEFAULT_PAGE', 'intro');
   }
 ?>

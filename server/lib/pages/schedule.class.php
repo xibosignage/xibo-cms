@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
@@ -753,8 +753,8 @@ HTML;
                 }
             }
 
-            Debug::LogEntry('audit', 'Built Month Array');
-            Debug::LogEntry('audit', var_export($events, true));
+            //Debug::LogEntry('audit', 'Built Month Array');
+            //Debug::LogEntry('audit', var_export($events, true));
 
             return $events;
     }
@@ -1404,7 +1404,7 @@ HTML;
         <tr>
             <td><label for="DisplayOrder" title="Select the Order for this Event">Display Order</label></td>
             <td><input type=text" name="DisplayOrder" value="0" />
-            <td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
+            <td><label title="Sets whether or not this event has priority. If set the event will be show in preference to other events." for="cb_is_priority">Priority</label></td>
             <td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
         </tr>
 END;
@@ -1572,7 +1572,7 @@ END;
         <tr>
             <td><label for="DisplayOrder" title="Select the Order for this Event">Display Order</label></td>
             <td><input type=text" name="DisplayOrder" value="$displayOrder" />
-            <td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
+            <td><label title="Sets whether or not this event has priority. If set the event will be show in preference to other events." for="cb_is_priority">Priority</label></td>
             <td><input type="checkbox" id="cb_is_priority" name="is_priority" $isPriority title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
         </tr>
 END;
@@ -1921,7 +1921,7 @@ END;
                         <td><input type=text" name="DisplayOrder" value="0" />
                     </tr>
                     <tr>
-                        <td><label title="Sets whether or not this event has priority. If set the event will be show in preferance to other events." for="cb_is_priority">Priority</label></td>
+                        <td><label title="Sets whether or not this event has priority. If set the event will be show in preference to other events." for="cb_is_priority">Priority</label></td>
                         <td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
                     </tr>
                     <tr>

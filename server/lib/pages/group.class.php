@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006,2007,2008,2009 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
@@ -695,7 +695,7 @@ END;
         $form = Theme::RenderReturn('usergroup_form_user_assign');
 
         $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
-        $response->AddButton(__('Help'), "XiboHelpRender(". HelpManager::Link('UserGroup', 'Members') .")");
+        $response->AddButton(__('Help'), "XiboHelpRender('" . HelpManager::Link('UserGroup', 'Members') . "')");
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), 'MembersSubmit()');
         $response->Respond();

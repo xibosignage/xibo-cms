@@ -22,6 +22,3 @@
 	<p>The Displays which are being selected, will have their scheduled events shown on the canlendar. This allows
 	you to change which display schedule that is viewable to you.</p>
 
-	<?php include('../../template/footer.php'); ?>
-</body>
-</html>

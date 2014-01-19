@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2012 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
@@ -106,9 +106,7 @@ class text extends Module
         // Other properties
         Theme::Set('direction', $this->GetOption('direction'));
         Theme::Set('scrollSpeed', $this->GetOption('scrollSpeed'));
-        
-        $fitText = $this->GetOption('fitText', 0);
-        Theme::Set('fitTextChecked', ($fitText == 0) ? '' : ' checked');
+        Theme::Set('fitTextChecked', ($this->GetOption('fitText', 0) == 0) ? '' : ' checked');
 
         // Get the text out of RAW
         $rawXml = new DOMDocument();

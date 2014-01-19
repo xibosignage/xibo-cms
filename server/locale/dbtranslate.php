@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2009-12 Daniel Garner
  *
  * This file is part of Xibo.
@@ -53,6 +53,7 @@ echo __('DataSets');
 echo __('Modules');
 echo __('Campaigns');
 echo __('Transitions');
+echo __('Resolutions');
 
 // Settings translations
 echo __('jpg_length');

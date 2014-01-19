@@ -1,41 +1,53 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-<head>
-  	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  	<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-  	<link rel="stylesheet" type="text/css" href="../../css/doc.css">
-	<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-	<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-  	<link href="img/favicon.ico" rel="shortcut icon">
-  	<!-- Javascript Libraries -->
-  	<script type="text/javascript" src="lib/jquery.pack.js"></script>
-  	<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-  	<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-</head>
+<?php
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and / or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
+<h1 id="Schedule_Now">Schedule Now</h1>
+<p>Schedule Now functionality is available throughout the CMS and provides a quick way to Schedule a Campaign or Layout for a specific amount of time.</p>
 
-<body>
-    <a name="Schedule_Now" id="Schedule_Now"></a><h2>Schedule Now</h2>
-    <p>Schedule Now is a quick way to schedule a given layout on displays or display group. The is a one time
-    sechedule lasted for the duration specified. Normally use for displaying temporary important notices 
-    e.g. happy hour offer.</p>
+<p>This is typically used for displaying temporary notices on the signage system.</p>
     
-   	<p><img alt="Schedule Now" src="schedule_now.png"
-	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   width="708" height="362"></p>
+<p><img class="img-thumbnail" alt="Schedule Now" src="content/schedule/schedule_now.png"></p>
     
-    <ul>
-      <li>From the Layouts screen, choose the "Schedule Now" button next to the layout you want to edit.<br/>
-      Note: You may still change the Layout from within the "Schedule Now" form.</li>
-      <li>Enter how long you want the layout to be shown for in Hours, Minutes and Seconds. It starts from the time 
-      you complete the form.</li>
-      <li> Ensure the correct layout is chosen in the Campaign/Layout dropdown box.</li>
-      <li> Ticking Priority will give this layout priority over other scheduled layouts that do not have the priority
-       tick box checked.</li>
-      <li> Select the appropriate Displays or Display Groups you want the layout to be shown on.</li>
-      <li> Click Save</li>
-    </ul>
+<dl class="dl-horizontal">
+  <dt>Duration</dt>
+  <dd>How long should this Layout / Campaign be in the Schedule?</dd>
+</dl>
 
-	<?php include('../../template/footer.php'); ?>
-</body>
-</html>
+<dl class="dl-horizontal">
+  <dt>Campaign / Layout</dt>
+  <dd>The Campaign or Layout for this event.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+  <dt>Display Order</dt>
+  <dd>If there are other Events scheduled at the same time, which order should this event play in.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+  <dt>Priority</dt>
+  <dd>Should this event have precedence over other non-priority events.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+  <dt>Groups / Displays</dt>
+  <dd>The Displays to schedule this event on.</dd>
+</dl>

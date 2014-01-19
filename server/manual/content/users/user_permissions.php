@@ -1,29 +1,31 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-		<link rel=stylesheet type="text/css" href="../../css/doc.css">
-		<meta http-equiv="Content-Type" content="text/html" />
-		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-
-		<link href="img/favicon.ico" rel="shortcut icon"/>
-		<!-- Javascript Libraries -->
-		<script type="text/javascript" src="lib/jquery.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-	</head>
-	<body>
+<?php
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
 		
-		<h1>Permissions Model</h1>
-		<h2>Introducing an Improved Permissions Model</h2>
+<h1>Permissions Model</h1>
 
-    <p>This section will take a look at the improvements made to the permissions model in <?php echo PRODUCT_NAME; ?>. <?php echo PRODUCT_NAME; ?> has improved the permissions model 
-    in one key way - allowed users and administrators to set view, edit and delete permissions on:</p>
+<p>This section will take a look at the permissions model in <?php echo PRODUCT_NAME; ?>, which allows users and administrators to set view, edit and delete permissions on:</p>
 
-    <ul>
+<ul>
     <li>Library Media</li>
     <li>Layouts</li>
     <li>Regions in Layouts</li>
@@ -31,28 +33,21 @@
     <li>DataSets</li>
     <li>Display Groups</li>
     <li>Displays</li>
-    </ul>
- 
-    <p><img alt="User Permissions" src="user_permissions.png"
-	   style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   width="357" height="306"></p>
-	   
-    <p>All of these items have the permissions set in the same way, via a simple to use dialog showing groups and users. 
-    In addition to this all permissions are validated with each form load, or save button clicked so you can guarentee 
-    "real time" modifications to the permissions on items.</p>
+</ul>
 
-    <p>Here are some key facts about the new system:</p>
-    <ul>
-    <li>The Highest permission is used (if a user belongs to 2 groups, one has edit permissions and the other doesn't, 
-    the user will have edit permissions)</li>
-    <li>Permissions are tested with each transaction</li>
-    <li>Permissions on an item can only be changed by the owner or a super administrator (for displays and display groups that have 
-    no owner, this is super admin only)</li>
-    </ul>
+<p>All of these items have the permissions set in the same way, via a simple to use dialog showing groups and users. In addition to this all permissions are validated with each form load, or save button clicked so you can guarentee "real time" modifications to the permissions on items.</p>
 
-    <p>These permissions are then reflected in all tables, forms, lists and on the layout designer. The improved permissions hopefully 
-    will make it easier to manage <?php echo PRODUCT_NAME; ?>, particularly in environments where there are many users accessing the system.</p>	   
+<p><img class="img-thumbnail" alt="User Permissions" src="content/users/user_permissions.png"></p>
 
-	<?php include('../../template/footer.php'); ?>
-	</body>
-</html>
+<p>Key facts:</p>
+<ul>
+<li>The Highest permission is used (if a user belongs to 2 groups, one has edit permissions and the other doesn't, 
+the user will have edit permissions)</li>
+<li>Permissions are tested with each transaction</li>
+<li>Permissions on an item can only be changed by the owner or a super administrator (for displays and display groups that have 
+no owner, this is super admin only)</li>
+</ul>
+
+<p>These permissions are then reflected in all tables, forms, lists and on the layout designer.</p> 
+
+

@@ -1,6 +1,6 @@
 <?php
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2009-2013 Daniel Garner
  *
  * This file is part of Xibo.
@@ -1069,7 +1069,7 @@ class XMDSSoap
 
         // See if the client was offline and if appropriate send an alert
         // to say that it has come back online
-        if (($row[5] == 0) and ($row[6] == 1))
+        if (($row[5] == 0) && ($row[6] == 1) && Config::GetSetting('MAINTENANCE_ENABLED') == 'On') && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On'))
         {
             $msgTo    = Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
             $msgFrom  = Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);

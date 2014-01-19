@@ -1,5 +1,5 @@
 /**
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
@@ -40,6 +40,16 @@ $(document).ready(function() {
 	setInterval("XiboPing('index.php?p=clock&q=GetClock')", 1000 * 60); // Every minute
 	
 	setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes	
+
+    $.ajaxSetup({
+    beforeSend:function(){
+        $("#xibo-loading-gif").css({top:'50%',left:'50%',margin:'-'+($('#myDiv').height() / 2)+'px 0 0 -'+($('#myDiv').width() / 2)+'px'}).show();
+    },
+    complete:function(){
+        // hide gif here, eg:
+        $("#xibo-loading-gif").hide();
+    }
+});
 
 	XiboInitialise("");
 });
@@ -606,7 +616,14 @@ function XiboHelpRender(formUrl) {
                 		}
                 	).addClass(
                 		'modal-big'
-                	);
+                	).addClass(
+                        'help-modal-big'
+                    );
+
+                // Adjust the height of the iframe
+                var height = $(".full-iframe").parent().parent().height(); 
+                $(".full-iframe").height(height - 80);
+                $(".full-iframe").parent().css("max-height", (height - 70) + "px");
             }
             else {
                 // Login Form needed?

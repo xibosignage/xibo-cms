@@ -1,4 +1,4 @@
-Xibo - Digitial Signage - http://www.xibo.org.uk
+Xibo - Digital Signage - http://www.xibo.org.uk
 Copyright (C) 2006 - 2013 Daniel Garner, James Packer and Alex Harrington
 
 This file is part of Xibo.

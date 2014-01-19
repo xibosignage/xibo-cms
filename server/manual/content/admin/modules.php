@@ -1,66 +1,75 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php include('../../template.php'); ?>
-<html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title><?php echo PRODUCT_NAME; ?> Documentation</title>
-		<link rel=stylesheet type="text/css" href="../../css/doc.css">
-		<meta http-equiv="Content-Type" content="text/html" />
-		<meta name="keywords" content="digital signage, signage, narrow-casting, <?php echo PRODUCT_NAME; ?>, open source, agpl" />
-		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />
-
-		<link href="img/favicon.ico" rel="shortcut icon"/>
-		<!-- Javascript Libraries -->
-		<script type="text/javascript" src="lib/jquery.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.dimensions.pack.js"></script>
-		<script type="text/javascript" src="lib/jquery.ifixpng.js"></script>
-	</head>
-	<body>
+<?php
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */ 
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+?>
 		
-		<h1>Modules</h1>
-    	<p><?php echo PRODUCT_NAME; ?> server content handling is done by Modules.</p>
-    	<p>Click "Administration -> Modules" load the modules parameters for edit.</p>
-      
-    	<p><img alt="SA_Modules" src="sa_modules.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="644" height="418"></p>
+<h1>Modules</h1>
+<p>All content displayed in <?php echo PRODUCT_NAME; ?> is added/edited and served by a media module. There are 13 media modules to choose from and more are being added as new releases are made.</p>
 
-		<p><?php echo PRODUCT_NAME; ?> server modules table contains parameters for user edit.</p>
-		<ul>
-			<li><strong>Name:</strong>
-      		<p>System given Name for the specific module.</p</li>
-			<li><strong>Description:</strong>
-      		<p>A breif description of the modules.</p</li>
-			<li><strong>Library Media:</strong>
-      		<p>Indicated if the content is saved in the <?php echo PRODUCT_NAME; ?> Library. Unchecked indicate the specific content is only save
-      		with the Layout-Regions.</p</li>
-			<li><strong>Valid Extensions:</strong>
-      		<p>Valid file extensions that are supported by the specific module.</p</li>
-			<li><strong>Image Uri:</strong>
-      		<p>Link to the module icon for UI display, usually leave as it.</p></li>
-			<li><strong>Enabled:</strong>
-      		<p>System administrator may enable/disable the specific content for <?php echo PRODUCT_NAME; ?> user access.</p</li>
-		</ul>
+<p>Modules can be enabled and disabled using the CMS administrator menu, Modules sub menu. Each module also has a range of settings available.</p>
 
-		<h2>Edit</h2>
-		<p>Click Edit button for the specific content type load the following form for user changes.</p>
+<p><img  class="img-thumbnail" alt="Module List" src="content/admin/sa_modules.png"></p>
 
-		<ul>
-		<li><h3>Content Without Extension:</h3>
-    	<p>Admininstrator may enable or disable the content for user access.</p>
-    
-    	<p><img alt="SA_Modules" src="sa_modules_text.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="358" height="179"></p></li>
+<p>Each module has the following properties.</p>
 
-		<li><h3>Content With Extension:</h3>
-    	<p>Administrator may add other valid files extensions that are supported by the <?php echo PRODUCT_NAME; ?> Client Display e.g. mp4.</p>
-    
-    	<p><img alt="SA_Modules" src="sa_modules_video.png"
-	   	style="display: block; text-align: center; margin-left: auto; margin-right: auto"
-	   	width="358" height="211"></p></li>
-    </ul>    
+<dl class="dl-horizontal">
+    <dt>Name</dt>
+    <dd>System given Name for the specific module.</dd>
+</dl>
 
-	<?php include('../../template/footer.php'); ?>
-	</body>
-</html>
+<dl class="dl-horizontal">
+    <dt>Description</dt>
+    <dd>A breif description of the module.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>Library Media</dt>
+    <dd>Indicated if the content is saved in the <?php echo PRODUCT_NAME; ?> Library. Unchecked indicate the specific content is only saved with the Layout-Regions.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>Valid Extensions</dt>
+    <dd>File extensions that are supported by the specific module.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>Image Uri</dt>
+    <dd>Link to the module icon for UI display - this can also be provided by your Theme.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>Preview Enabled</dt>
+    <dd>Should this module output a preview in the Layout Designer.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+    <dt>Enabled</dt>
+    <dd>Can this module be used?</dd>
+</dl>
+
+
+<h2>Modules Settings</h2>
+<p>A Module can have a selection of its settings adjusted, exactly which ones depends on the module.</p>
+
+<h3>File based Modules</h3>
+<p>At times it may be necessary to add or removed the allowed extensions on a particular file based module. A typical use case would be if a client is being used which does not support that particular type of file.</p>
+
+<p><img class="img-thumbnail" alt="Modules" src="content/admin/sa_modules_video.png"></p>

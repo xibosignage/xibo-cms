@@ -1,5 +1,5 @@
 /*
- * Xibo - Digitial Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
@@ -55,6 +55,11 @@ body .modal-big {
     margin-left:-40%;
 }
 
+/* Define some modal widths and heights */
+body .help-modal-big {
+    height: 70%;
+}
+
 /*body .modal-big .modal-body {
 	max-height: 500px;
 }*/
@@ -69,7 +74,6 @@ body .modal-big {
 /* Full width iframe (for inside the help windows) */
 .full-iframe {
 	width: 100%;
-	height: 600px;
 	border: none;
 }
 
@@ -227,4 +231,9 @@ ul#LayoutAssignSortable {
     cursor: pointer;
     float: left;
     list-style: none;
+}
+
+#xibo-loading-gif {
+  display: none;
+  position: absolute;
 }
