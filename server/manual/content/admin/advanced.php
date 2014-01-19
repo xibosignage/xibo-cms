@@ -24,7 +24,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <h1>Troubleshooting <small>The Advanced Menu</small></h1>
 <p>The CMS contains a number of useful tools for first line debugging and reporting faults to technical support.</p>
 
-<h2>Report Fault</h2>
+<h2 id="Report_Fault">Report Fault</h2>
 <p>The Report Fault Wizard is designed to be enabled by the CMS administrator to recreate the problem and collect logging information that can be analysed or submitted to the Technical Support team for further analysis. The Wizard lists 6 steps which should be followed in order.</p>
 
 <p><img class="img-thumbnail" alt="Report Fault Wizard" src="content/admin/report_fault_wizard.png"></p>

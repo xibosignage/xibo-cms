@@ -44,6 +44,10 @@ include_once('content/routes.php');
 		<link href="css/manual.css" rel="stylesheet" media="screen">
 		<link href="css/override.css" rel="stylesheet" media="screen">
 
+		<style type="text/css">
+			body { padding-top: 0px; }
+		</style>
+
 		<!-- META -->
 		<meta name="keywords" content="digital signage, signage, narrow-casting, xibo, open source, agpl" />
 		<meta name="description" content="<?php echo PRODUCT_NAME; ?> is an open source digital signage solution. It supports all main media types and can be interfaced to other sources of data using CSV, Databases or RSS." />

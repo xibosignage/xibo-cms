@@ -25,7 +25,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 <p>This is typically used for displaying temporary notices on the signage system.</p>
     
-<p><img alt="Schedule Now" src="content/schedule/schedule_now.png"></p>
+<p><img class="img-thumbnail" alt="Schedule Now" src="content/schedule/schedule_now.png"></p>
     
 <dl class="dl-horizontal">
   <dt>Duration</dt>

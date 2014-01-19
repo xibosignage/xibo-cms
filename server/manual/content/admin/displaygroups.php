@@ -27,7 +27,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <p><img class="img-thumbnail" alt="Display Group Administration" src="content/admin/sa_display_groups.png"></p>
 
 
-<h3 id="Adding_a_Group">Adding a Group</h3>
+<h3 id="Add_Group">Adding a Group</h3>
 <p>Click the navigation menu "Displays > Display Groups" to go to Display Groups page. To add a group click on 
 the "Add Group" button found at the top of the Displays list.</p>
 
@@ -50,4 +50,4 @@ determine the permissions of the users belonging to that group.</p>
 <p>Click on "Group Members" load the "Manage Membership" form for editing. All the Displays on the system will be shown. 
 You can assign or remove group members.</p>
 
-<p><img class="img-thumbnail" alt="SA Display Group Members" src="content/admin/sa_display_group_members.png"></p>
+<p><img class="img-thumbnail" alt="Display Group Members" src="content/admin/sa_display_group_members.png"></p>

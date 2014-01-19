@@ -55,6 +55,11 @@ body .modal-big {
     margin-left:-40%;
 }
 
+/* Define some modal widths and heights */
+body .help-modal-big {
+    height: 70%;
+}
+
 /*body .modal-big .modal-body {
 	max-height: 500px;
 }*/
@@ -69,7 +74,6 @@ body .modal-big {
 /* Full width iframe (for inside the help windows) */
 .full-iframe {
 	width: 100%;
-	height: 600px;
 	border: none;
 }
 

@@ -69,3 +69,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 </dl>
 
 <p class="alert alert-info">You may not see all of these options when you log in - that is because these are shown based on the permissions you have been assigned. If you would like access to all areas please speak to your CMS administrator.</p>
+
+<h2 id="Change_Password">Change Password</h2>
+
+<p>A logged in user can change their Password using the Change Password Menu Item from the Preferences menu. The form will ask the user to confirm their existing password and enter a new one.</p>
+
+<p><img class="img-thumbnail" alt="Change Password Form" src="content/coreconcepts/change_password_form.png"></p>

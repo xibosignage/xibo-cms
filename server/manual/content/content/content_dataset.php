@@ -50,7 +50,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <p><img class="img-thumbnail" alt="Add Dataset" src="content/content/dataset_action_menu.png"></p>
 
 
-<h2>Adding DataSets <small>create a new empty DataSet</small></h2>
+<h2 id="Create_Dataset">Adding DataSets <small>create a new empty DataSet</small></h2>
 
 <p>Use the Add DataSet button to show the Add DataSet form.</p>
 
@@ -110,7 +110,7 @@ a view permission will be able to use the DataSet in their layouts.</p>
 
 <p class="alert alert-warning">Columns can be added and removed after data has been entered. The ordering and list content of columns can also be changed after data has been collected.</p>
 
-<h3>Adding Data</h3>
+<h3 id="Dataset_Row">Adding Data</h3>
 
 <p>Once all the required columns have been added, the DataSet is ready to have data recorded against it. This is done using 
 the "View Data" task on the DataSet table view. This view will contain all of the columns that were added in the 

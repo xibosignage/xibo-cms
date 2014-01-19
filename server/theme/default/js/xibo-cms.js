@@ -616,7 +616,14 @@ function XiboHelpRender(formUrl) {
                 		}
                 	).addClass(
                 		'modal-big'
-                	);
+                	).addClass(
+                        'help-modal-big'
+                    );
+
+                // Adjust the height of the iframe
+                var height = $(".full-iframe").parent().parent().height(); 
+                $(".full-iframe").height(height - 80);
+                $(".full-iframe").parent().css("max-height", (height - 70) + "px");
             }
             else {
                 // Login Form needed?

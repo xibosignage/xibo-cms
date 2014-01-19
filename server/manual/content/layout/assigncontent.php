@@ -20,7 +20,7 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<h1 id="Assigning_Content">Region Timelines</h1>
+<h1>Region Timelines</h1>
 <p>Each Region on a <?php echo PRODUCT_NAME; ?> Layout has its own Timeline of content, which will be shown in order by the Display Client. If required a timeline can consist of a single item (such as a company logo), or multiple items (such as an image slideshow).</p>
 
 <p>A Regions Timeline is viewed/edited by using the Region Action button and selecting Edit Timeline. The following form is shown.</p>

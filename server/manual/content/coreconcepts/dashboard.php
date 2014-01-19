@@ -45,7 +45,7 @@ page presents all the options available to maintain your <?php echo PRODUCT_NAME
 </ul>
 
 
-<h2>Media Manager <small>Ideal for users that only edit specific items</small></h2>
+<h2 id="Media_Dashboard">Media Manager <small>Ideal for users that only edit specific items</small></h2>
 
 <p>The media manager dashboard is used to delegate specific tasks to users. When a user has had their homepage configured they will no longer be able to access admin parts of <?php echo PRODUCT_NAME; ?>. The media manager will replace the default dashboard with a simple dashboard, pictured below.</p>
 

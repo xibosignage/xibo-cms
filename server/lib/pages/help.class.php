@@ -159,6 +159,13 @@ SQL;
                         'url' => 'index.php?p=help&q=DeleteForm&HelpID=' . $row['helpid'],
                         'text' => __('Delete')
                     );
+
+                // Test
+                $row['buttons'][] = array(
+                        'id' => 'help_button_test',
+                        'url' => HelpManager::Link($row['topic'], $row['category']),
+                        'text' => __('Test')
+                    );
             }
 
             $rows[] = $row;
