@@ -546,6 +546,10 @@ class ticker extends Module
         	$items = $this->GetRssItems($text);
         }
 
+        // Return empty string if there are no items to show.
+        if (count($items) == 0)
+        	return '';
+
         // Replace the head content
         $headContent  = '<script type="text/javascript">';
         $headContent .= '   function init() { ';
