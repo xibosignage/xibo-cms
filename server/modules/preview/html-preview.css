@@ -1,0 +1,53 @@
+/* Make the player fill the screen */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    cursor: none;
+}
+
+div {
+    margin: 0;
+    padding: 0;
+}
+
+/* Make the screen div fill the player */
+div#player {
+    height: 100%;
+    z-index: 1;
+    background-color: #000000;
+}
+
+div#screen {
+    height: 100%;
+    z-index: 1;
+}
+
+/* Style the Splash Screen */
+div#splash {
+    height: 100%;
+    background:#000000 url('../../theme/default/img/xibologo.png') no-repeat center center;
+    background-size: 50%;
+}
+
+div#log {
+    height: 20px;
+    background:#ffffff;
+    position:absolute;
+    bottom:0;
+    width:100%;
+    font-family: sans-serif;
+    opacity:0.4;
+    z-index: 100;
+}
+
+div#info {
+    position: absolute;
+    height: 400px;
+    width: 500px;
+    background:#ffffff;
+    font-family: sans-serif;
+    opacity:0.6;
+    margin:0 auto;
+    z-index: 100;
+}

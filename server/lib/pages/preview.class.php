@@ -76,7 +76,6 @@ class previewDAO
                 $this->xml = $aRow[5];
             }
         }
-
     }
 	
     function displayPage() 
@@ -88,7 +87,35 @@ class previewDAO
     {
         // Render a specific layout in the previewer
         // layoutid must be provided
-        
+        $output = <<<EOT
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+                    <title>Preview for Layout $this->layoutid</title> 
+                    <link rel="stylesheet" type="text/css" href="modules/preview/html-preview.css" />
+                    <script type="text/JavaScript" src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
+                    <script type="text/JavaScript" src="modules/preview/html-preview.js"></script>
+                </head>
+                <body onload="dsInit($this->layoutid)">
+                    <div id="player">
+                        <div id="info"></div>
+                        <div id="log"></div>
+                        <div id="screen">
+                            <div id="splash"></div>
+                        </div>
+                        <div id="end">Playback Complete</div>
+                    </div>
+                </body>
+            </html>
+EOT;
+        print $output;
     }
+
+    function getXlf()
+    {
+        print $this->xml;
+    }
+
 }
 ?>

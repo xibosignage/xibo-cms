@@ -136,6 +136,7 @@ class layoutDAO
    				Theme::Set('layout_form_edit_background_url', 'index.php?p=layout&q=BackgroundForm&modify=true&layoutid=' . $this->layoutid);
    				Theme::Set('layout_form_savetemplate_url', 'index.php?p=template&q=TemplateForm&layoutid=' . $this->layoutid);
    				Theme::Set('layout_form_addregion_url', 'index.php?p=timeline&q=AddRegion&layoutid=' . $this->layoutid);
+                Theme::Set('layout_form_preview_url', 'index.php?p=preview&q=render&layoutid=' . $this->layoutid);
 				Theme::Set('layout', $this->layout);
 
 				Kit::ClassLoader('campaign');
@@ -395,6 +396,12 @@ class layoutDAO
     				'id' => 'layout_button_schedulenow',
     				'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $layout['campaignid'],
     				'text' => __('Schedule Now')
+    			);
+
+            $row['buttons'][] = array(
+    				'id' => 'layout_button_preview',
+    				'url' => 'index.php?p=preview&q=render&layoutid=' . $layout['layoutid'],
+    				'text' => __('Preview Layout')
     			);
 
     		// Only proceed if we have edit permissions
