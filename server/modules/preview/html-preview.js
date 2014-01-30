@@ -27,6 +27,8 @@ var VERSION = "1.6.0";
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
 
+var PRELOAD;
+
 function dsInit(layoutid) {
     LOG_LEVEL = 10;
 
@@ -40,6 +42,7 @@ function dsInit(layoutid) {
 
     playLog(0, "info", "XiboClient v" + VERSION + " Starting Up", true);
     
+    PRELOAD = html5Preloader();
     runningLayout = new layout(layoutid);
 }
 
@@ -190,7 +193,7 @@ function layout(id) {
                                                });
         playLog(4, "debug", "Layout " + self.id + " has " + self.regionObjects.length + " regions");
         self.ready = true;
-        self.run();
+        PRELOAD.on('finish', self.run);
     }
 
     self.run = function() {
@@ -425,7 +428,8 @@ function media(parent, id, xml) {
     $("#" + self.containerName).css("top", self.offsetY + "px"); */
     
     if ($(self.xml).attr('type') == "image") {
-        $("#" + self.containerName).css("background-image", "url('index.php?p=module&q=GetImage&id=" + self.id + "&width=" + self.divWidth + "&height=" + self.divHeight + "&dynamic')");
+        PRELOAD.addFiles("index.php?p=preview&q=GetImage&id=" + self.id + "&width=" + self.divWidth + "&height=" + self.divHeight + "&dynamic");
+        $("#" + self.containerName).css("background-image", "url('index.php?p=preview&q=GetImage&id=" + self.id + "&width=" + self.divWidth + "&height=" + self.divHeight + "&dynamic')");
     }
     else {
         $("#" + self.containerName).css("outline", "red solid thin");
