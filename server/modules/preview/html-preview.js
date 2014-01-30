@@ -335,6 +335,10 @@ function region(parent, id, xml) {
         /* The current media has finished running */
         /* Show the next item */
         
+        if (self.ended) {
+            return;
+        }
+        
         if (self.curMedia) {
             playLog(8, "debug", "nextMedia -> Old: " + self.curMedia.id);
             self.oldMedia = self.curMedia;

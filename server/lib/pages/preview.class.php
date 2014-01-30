@@ -104,8 +104,9 @@ class previewDAO
                         <div id="log"></div>
                         <div id="screen">
                             <div id="splash"></div>
+                            <div id="end">Playback Complete</div>
                         </div>
-                        <div id="end">Playback Complete</div>
+                        
                     </div>
                 </body>
             </html>
