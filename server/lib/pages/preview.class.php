@@ -104,7 +104,7 @@ class previewDAO
                         <div id="log"></div>
                         <div id="screen">
                             <div id="splash"></div>
-                            <div id="end">Playback Complete</div>
+                            <div id="end"><a href="javascript:history.go(0)" style="text-decoration: none; color: #ffffff">Play again?</a></div>
                         </div>
                         
                     </div>

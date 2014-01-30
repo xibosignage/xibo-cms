@@ -144,6 +144,7 @@ function layout(id) {
         /* Create a hidden div to show the layout in */
         $("#screen").append('<div id="' + self.containerName + '"></div>');
         $("#" + self.containerName).css("display", "none");
+        $("#" + self.containerName).css("outline", "red solid thin");
         
         /* Calculate the screen size */
         self.sw = $("#screen").width();
@@ -182,7 +183,11 @@ function layout(id) {
         $("#" + self.containerName).css("background-color", self.bgColour);
         
         if (!(self.bgImage == "" || self.bgImage == undefined)) {
-            $("#" + self.containerName).css("background", "url(" + LIBRARY + "/" + self.bgImage + ")");
+            /* Extract the image ID from the filename */
+            self.bgId = self.bgImage.substring(0, self.bgImage.indexOf('.'));
+            
+            PRELOAD.addFiles("index.php?p=preview&q=GetImage&id=" + self.bgId + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic");
+            $("#" + self.containerName).css("background", "url('index.php?p=preview&q=GetImage&id=" + self.bgId + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic')");
             $("#" + self.containerName).css("background-repeat", "no-repeat");
             $("#" + self.containerName).css("background-size", self.sWidth + "px " + self.sHeight + "px");
             $("#" + self.containerName).css("background-position", "0px 0px");
