@@ -428,7 +428,7 @@ function media(parent, id, xml) {
     
     $("#" + self.region.containerName).append('<div id="' + self.containerName + '"></div>');
 
-    /* Scale the Layout Container */
+    /* Scale the Content Container */
     $("#" + self.containerName).css("display", "none");
     $("#" + self.containerName).css("width", self.divWidth + "px");
     $("#" + self.containerName).css("height", self.divHeight + "px");
