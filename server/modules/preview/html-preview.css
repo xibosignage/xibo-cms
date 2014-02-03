@@ -30,6 +30,25 @@ div#splash {
     background-size: 50%;
 }
 
+div#loader {
+    height: 19px;
+    width: 220px;
+    position: relative;
+    margin:0 auto;
+    top: 80%;
+    background:#000000 url('loader.gif') no-repeat center center;
+    background-size: 100%;
+}
+
+div#loaderCaption p {
+    position: absolute;
+    font-family: sans-serif;
+    color: #ffffff;
+    text-align:center;
+    top: 85%;
+    width: 100%;
+}
+
 div#log {
     height: 20px;
     background:#ffffff;
@@ -65,4 +84,9 @@ div#end {
     text-align: center;
     vertical-align: middle;
     line-height: 400px;
+}
+
+video {
+    width: 100%;
+    height: 100%;
 }

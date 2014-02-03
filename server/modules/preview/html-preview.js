@@ -406,13 +406,24 @@ function media(parent, id, xml) {
     self.containerName = "M-" + self.id + "-" + nextId();
     
     self.run = function() {
-        if (self.duration == 0) {
-            self.duration = 10;
-        }
-        
         playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds")
         
-        setTimeout(self.region.nextMedia, self.duration * 1000);
+        if (($(self.xml).attr('type') == "video")) {
+            $("#" + self.containerName + "-vid").get(0).play();
+        }
+        
+        if (self.duration == 0) {
+            if (($(self.xml).attr('type') == "video")) {
+                $("#" + self.containerName + "-vid").bind("ended", self.region.nextMedia);
+            }
+            else {
+                self.duration = 10;
+                setTimeout(self.region.nextMedia, self.duration * 1000);
+            }
+        }
+        else {
+            setTimeout(self.region.nextMedia, self.duration * 1000);
+        }
     }
     
     self.divWidth = self.region.sWidth;
@@ -445,6 +456,10 @@ function media(parent, id, xml) {
     }
     else if (($(self.xml).attr('type') == "ticker")) {
         $("#" + self.containerName).append('<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=ticker&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+    }
+    else if (($(self.xml).attr('type') == "video")) {
+        PRELOAD.addFiles("index.php?p=preview&q=GetVideo&id=" + self.id );
+        $("#" + self.containerName).append('<video id="' + self.containerName + '-vid" preload="auto"><source src="index.php?p=preview&q=GetVideo&id=' + self.id + '"></video>');
     }
     else {
         $("#" + self.containerName).css("outline", "red solid thin");
