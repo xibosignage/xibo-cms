@@ -105,7 +105,7 @@ make changes to this display configuration.</p>
 		leave this set to 1px for smooth viewing.</li>
 
 		<li><p>Enable Powerpoint: Tick the box if you have the full version of PowerPoint 2003 or later installed and want to use PowerPoint media items.</p>
-		<div class="alert alert-info">Be sure to read the notes on Powerpoint setup here: <a href="windows.php"> Windows Modifications.</a></div></li>
+		<div class="alert alert-info">Be sure to read the notes on Powerpoint setup here: <a href="#windows_modifications"> Windows Modifications.</a></div></li>
 
 		<li>Enable Statistics: Tick the box if you want the client to send statistics back to the <?php echo PRODUCT_NAME; ?> server. This will generate alot of data that will be 
 		stored in the <?php echo PRODUCT_NAME; ?> database. If you don't have any specific use for statistics, we recommend you turn this option off.
