@@ -37,10 +37,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <li class="toclevel-1 tocsection-7"><a href="#Automated_Installation"><span class="tocnumber">4</span> <span class="toctext">Automated Installation</span></a></li>
 <li class="toclevel-1 tocsection-8"><a href="#Manual_Install_Guide"><span class="tocnumber">5</span> <span class="toctext">Manual Install Guide</span></a>
 <ul>
-<li class="toclevel-2 tocsection-9"><a href="#Ubuntu_9.04_and_derivatives"><span class="tocnumber">5.1</span> <span class="toctext">Ubuntu 9.04 and derivatives</span></a></li>
-<li class="toclevel-2 tocsection-10"><a href="#Ubuntu_9.10_and_derivatives"><span class="tocnumber">5.2</span> <span class="toctext">Ubuntu 9.10 and derivatives</span></a></li>
-<li class="toclevel-2 tocsection-11"><a href="#Ubuntu_10.04_and_derivatives"><span class="tocnumber">5.3</span> <span class="toctext">Ubuntu 10.04 and derivatives</span></a></li>
-<li class="toclevel-2 tocsection-12"><a href="#Ubuntu_10.10_and_later_and_derivatives"><span class="tocnumber">5.4</span> <span class="toctext">Ubuntu 10.10 and later and derivatives</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#Ubuntu_12.04_and_derivatives"><span class="tocnumber">5.1</span> <span class="toctext">Ubuntu 12.04 and derivatives</span></a></li>
 </ul>
 </li>
 <li class="toclevel-1 tocsection-13"><a href="#Configuration"><span class="tocnumber">6</span> <span class="toctext">Configuration</span></a>
@@ -60,32 +57,29 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 </td></tr></table>
 <h2> <span class="mw-headline" id="Introduction"> Introduction </span></h2>
 <p>There follows some basic instructions for installing the Xibo Python client on Linux.
-</p><p><i><b>This guide is for the 1.4.0 Development Preview release.</b></i>
+</p><p><i><b>This guide is for the 1.6.0 Development Preview release.</b></i>
 </p><p><i><b>Note that this is beta software. It should not be used in production.</b></i>
 </p>
 <h3> <span class="mw-headline" id="Who_should_test_this_software"> Who should test this software </span></h3>
 <p>Lots of people have asked about testing the Python codebase early. While it would be great to have lots of feedback early on, we're a very very small development team and can't support even tens of people though the installation and configuration. I respectfully request therefore that you have a few months of experience with the Xibo system and enough Linux knowhow that you'd be comfortable compiling some software from source yourself if you want to be involved at this early stage.
 </p>
 <h3> <span class="mw-headline" id="What_you_should_expect"> What you should expect </span></h3>
-<p>The goal initially is to replicate the functionality of the Windows .net client, with the exception of PowerPoint support. It should give you broadly the same output for any given layout, except that the Python client is multi-threaded so there are some low level differences between the two. The Python client will not play any layout that contains PowerPoint items. The Python client supports overlapping regions. The Python client does not currently return statistics.
+<p>The goal initially is to replicate the functionality of the Windows .net client, with the exception of PowerPoint support. It should give you broadly the same output for any given layout, except that the Python client is multi-threaded so there are some low level differences between the two. The Python client will not play any layout that contains PowerPoint items. The Python client supports overlapping regions. The Python client does not currently return layout statistics, but can return media statistics.
 </p>
 <h2> <span class="mw-headline" id="Hardware_Requirements"> Hardware Requirements </span></h2>
 <p>Most reasonably modern PCs should be fine. If you need HD video playback then the faster the CPU the better, otherwise the most basic nettops are normally OK providing they have nVidia graphics. You <i>must</i> have a supported graphics card - most nVidia cards work fine using the binary nVidia drivers.
 </p><p>There is a list of hardware and it's compatibility here: <a href="index.php?toc=getting_started&p=install/python_client_hardware" title="Python Client Hardware Compatibility List">Python Client Hardware Compatibility List</a>
 </p>
-<h3> <span class="mw-headline" id="Suggested_Hardware"> Suggested Hardware </span></h3>
-<p>I'm developing with the Acer Aspire Revo R3600 in mind. They cost about £130 in the UK with no Operating System and 1GB RAM. Once we have VDPAU support they should then be capable of full HD video playback.
-</p>
 <h2> <span class="mw-headline" id="Software_Requirements"> Software Requirements </span></h2>
-<p>Most modern linux distros should work. I'm developing on Ubuntu so <b>Ubuntu 10.04</b> - <b>32 bit Desktop edition</b>. I've not built, tested or provided binaries for 64 bit versions.
-</p><p>Xibo server 1.2.2 or later.
+<p>Most modern linux distros should work. I'm developing on Ubuntu so <b>Ubuntu 12.04</b> - <b>32 bit Desktop edition</b>. I've not built, tested or provided binaries for 64 bit versions.
+</p><p>Xibo server 1.6.0 or later.
 </p>
 <h2> <span class="mw-headline" id="Automated_Installation"> Automated Installation </span></h2>
 <p>The easiest way to install the client is by using the official installer.
-</p><p>It can be downloaded from the release page - currently <a rel="nofollow" class="external free" href="https://launchpad.net/xibo/1.4/1.4.1">https://launchpad.net/xibo/1.4/1.4.1</a>.
+</p><p>It can be downloaded from the release page - currently <a rel="nofollow" class="external free" href="https://launchpad.net/xibo/1.6/1.6.0">https://launchpad.net/xibo/1.6/1.6.0</a>.
 </p><p>Once downloaded on to your Ubuntu system, open a Terminal and type
 </p>
-<pre> sudo bash /path/to/the/xibo-1.4.1-ubuntu.all-pyclient.sh 
+<pre> sudo bash /path/to/the/xibo-1.6.0-ubuntu.all-pyclient.sh 
 </pre>
 <p>The installer will then take you through the steps required to install.
 </p><p>Skip straight to the configuration section below.
@@ -93,16 +87,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <h2> <span class="mw-headline" id="Manual_Install_Guide"> Manual Install Guide </span></h2>
 <p>The official manual install guide is below. You're recommended to use the official installer where possible as it's a great deal simpler!
 </p>
-<h3> <span class="mw-headline" id="Ubuntu_9.04_and_derivatives"> Ubuntu 9.04 and derivatives </span></h3>
-<p>No longer supported.
+<h3> <span class="mw-headline" id="Ubuntu_12.04_and_derivatives"> Ubuntu 12.04 and derivatives </span></h3>
+<p>This guide is aimed at people who know what they're doing with Linux, so I'm not going to hold your hand through the install. Here's the basic information you need based on an Ubuntu 12.04 Precise Pangolin installation.
 </p>
-<h3> <span class="mw-headline" id="Ubuntu_9.10_and_derivatives"> Ubuntu 9.10 and derivatives </span></h3>
-<p>No longer supported.
-</p>
-<h3> <span class="mw-headline" id="Ubuntu_10.04_and_derivatives"> Ubuntu 10.04 and derivatives </span></h3>
-<p>This guide is aimed at people who know what they're doing with Linux, so I'm not going to hold your hand through the install. Here's the basic information you need based on an Ubuntu 10.04 Lucid Lynx installation.
-</p>
-<ul><li> Download <a rel="nofollow" class="external text" href="http://www.ubuntu.com/getubuntu/download">Ubuntu 10.04</a> 32 bit Desktop Edition and install on the target machine. I suggest a 20GB / partition, some swap and the remainder of the disk formatted and mounted as /opt/xibo. This ensures that the client writing logs etc won't lock you out of the box if the drive fills up.
+<ul><li> Download <a rel="nofollow" class="external text" href="http://www.ubuntu.com/getubuntu/download">Ubuntu 12.04</a> 32 bit Desktop Edition and install on the target machine. I suggest a 20GB / partition, some swap and the remainder of the disk formatted and mounted as /opt/xibo. This ensures that the client writing logs etc won't lock you out of the box if the drive fills up.
 </li><li> Once Ubuntu is installed, update the machine to get any patches etc:
 </li></ul>
 <pre>  sudo apt-get update
@@ -112,11 +100,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 </li><li> If you're using a nVidia card, ensure you're using the binary drivers by referring to the Restricted Driver Manager and enabling them if they're disabled. (Note: I've not tried the new OS nVidia drivers - they may work now).
 </li><li> Install the following packages:
 </li></ul>
-<pre>sudo apt-get install libboost-python1.40.0 libboost-thread1.40.0 libdc1394-22 libgraphicsmagick++3 \
-libgraphicsmagick3 libavutil49 bzr python-soappy python-feedparser python-serial flashplugin-nonfree \
-libavcodec52 libavformat52 libswscale0 libsdl1.2debian-pulseaudio libvdpau1
+<pre>sudo apt-get install bzr libvdpau1 libboost-python1.46.1 libboost-thread1.46.1 libdc1394-22 libswscale2 libavformat53 python-soapy libxss1 python-feedparser python-serial flashplugin-nonfree libavcodec53 libavformat53 libswscale0
 </pre>
-<ul><li> Unpack the binary distribution of libavg/Berkelium/libbrowsernode in to /. Binaries are available here: <a rel="nofollow" class="external autonumber" href="https://launchpad.net/xibo/1.4/1.4.0/+download/libavg-1.7.1-vdpau-berkelium11.tar.gz">[1]</a> If for some reason you need to compile all that yourself then full source and build instructions are available here: <a href="/wiki/Libbrowsernode_Build_Instructions" title="Libbrowsernode Build Instructions">libbrowsernode Build Instructions</a>. <i>(Trust me you don't want to. It takes hours and requires about 4GB of disc space)</i>
+<ul><li> Unpack the binary distribution of libavg/Berkelium/libbrowsernode in to /. Binaries are available here: <a rel="nofollow" class="external autonumber" href="https://launchpad.net/xibo/1.6/1.6.0/+download/libavg-1.7.1-vdpau-berkelium11-12.04.tar.gz">[1]</a> If for some reason you need to compile all that yourself then full source and build instructions are available here: <a href="/wiki/Libbrowsernode_Build_Instructions" title="Libbrowsernode Build Instructions">libbrowsernode Build Instructions</a>. <i>(Trust me you don't want to. It takes hours and requires about 4GB of disc space)</i>
 </li><li> Run the following:
 </li></ul>
 <pre>  sudo ldconfig
@@ -125,15 +111,8 @@ libavcodec52 libavformat52 libswscale0 libsdl1.2debian-pulseaudio libvdpau1
 </li><li> Download the python client:
 </li></ul>
 <pre>  cd /opt/xibo
-  bzr branch lp:xibo/1.4 pyclient
+  bzr branch lp:xibo/1.6 pyclient
 </pre>
-<ul><li> If you're using an Intel graphics card, edit /opt/xibo/pyclient/client/python/run.sh and add the following before the line beginning "python XiboClient.py"
-</li></ul>
-<pre>  export LD_PRELOAD=/usr/lib/libstdc++.so.6
-</pre>
-<h3> <span class="mw-headline" id="Ubuntu_10.10_and_later_and_derivatives"> Ubuntu 10.10 and later and derivatives </span></h3>
-<p>Not currently supported. Please use Ubuntu 10.04 LTS.
-</p>
 <h2> <span class="mw-headline" id="Configuration"> Configuration </span></h2>
 <h3> <span class="mw-headline" id="Online_Mode"> Online Mode </span></h3>
 <ul><li> Create / edit the configuration in /opt/xibo/pyclient/client/python/site.cfg. A site.cfg.default is provided for you to copy as a starting point. defaults.cfg contains all the possible configuration directives. You'll need to edit at least the following:
