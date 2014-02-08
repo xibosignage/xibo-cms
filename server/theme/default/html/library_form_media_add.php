@@ -44,7 +44,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	            <i class="icon-ban-circle icon-white"></i>
 	            <span>Cancel upload</span>
 	        </button>
-	        <input type="checkbox" class="toggle">
 	        <!-- The loading indicator is shown during file processing -->
 	        <span class="fileupload-loading"></span>
 	    </div>
