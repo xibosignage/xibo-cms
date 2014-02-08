@@ -78,6 +78,22 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (78, 'User', 'SetPassword', 'manual/single.php?p=users/users#Set_Password'),
 (79, 'DataSet', 'ImportCSV', 'manual/single.php?p=content/content_dataset#Import_CSV');
 
+INSERT INTO  `setting` (
+`settingid` ,
+`setting` ,
+`value` ,
+`type` ,
+`helptext` ,
+`options` ,
+`cat` ,
+`userChange`
+)
+VALUES (
+NULL ,  'SETTING_IMPORT_ENABLED',  'Off',  'dropdown', NULL ,  'On|Off',  'general',  '0'
+), (
+NULL ,  'SETTING_LIBRARY_TIDY_ENABLED',  'Off',  'dropdown', NULL ,  'On|Off',  'general',  '0'
+);
+
 UPDATE `version` SET `app_ver` = '1.6.0-rc1', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '66';

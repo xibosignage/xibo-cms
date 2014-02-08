@@ -276,9 +276,14 @@ END;
                 if ($cat == 'general')
                 {
                     $output .= '<p>' . __('Import / Export Database') . '</p>';
-                    $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=RestoreForm">' . __('Import') . '</button>';
+
+                    if (Config::GetSetting('SETTING_IMPORT_ENABLED') == 'On')
+                    	$output .= '<button class="XiboFormButton" href="index.php?p=admin&q=RestoreForm">' . __('Import') . '</button>';
+                    
                     $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=BackupForm">' . __('Export') . '</button>';
-                    $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=TidyLibrary">' . __('Tidy Library') . '</button>';
+                    
+                    if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') == 'On')
+                    	$output .= '<button class="XiboFormButton" href="index.php?p=admin&q=TidyLibrary">' . __('Tidy Library') . '</button>';
                 }
 		
 		// Need to now get all the Misc settings 
@@ -636,6 +641,9 @@ END;
     {
         $response = new ResponseManager();
 
+        if (Config::GetSetting('SETTING_IMPORT_ENABLED') != 'On')
+        	trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
+
         // Check we have permission to do this
         if ($this->user->usertypeid != 1)
             trigger_error(__('Only an adminitrator can import a database'));
@@ -672,6 +680,9 @@ FORM;
     public function RestoreDatabase()
     {
         $db =& $this->db;
+
+        if (Config::GetSetting('SETTING_IMPORT_ENABLED') != 'On')
+        	trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
 
         include('install/header.inc');
         echo '<div class="info">';
@@ -710,7 +721,7 @@ FORM;
         }
 
         echo '</div>';
-        echo '<a href="index.php?p=admin">Database Restored. Click here to continue.</a>';
+        echo '<a href="index.php?p=admin">' . __('Database Restored. Click here to continue.') . '</a>';
 
         include('install/footer.inc');
 
@@ -742,6 +753,9 @@ FORM;
     {
         $db =& $this->db;
         $response = new ResponseManager();
+
+        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 'On')
+        	trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
 
         // Also run a script to tidy up orphaned media in the library
         $library = Config::GetSetting('LIBRARY_LOCATION');

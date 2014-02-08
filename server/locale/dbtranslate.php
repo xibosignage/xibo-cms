@@ -94,6 +94,8 @@ echo __('GLOBAL_THEME_NAME');
 echo __('DEFAULT_LAT');
 echo __('DEFAULT_LONG');
 echo __('SCHEDULE_WITH_VIEW_PERMISSION');
+echo __('SETTING_IMPORT_ENABLED');
+echo __('SETTING_LIBRARY_TIDY_ENABLED');
 
 // Transitions
 echo __('Fade In');
