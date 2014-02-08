@@ -38,6 +38,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <table class="table">
 	<thead>
 		<tr>
+			<th><?php echo Theme::Translate('ID'); ?></th>
 			<th><?php echo Theme::Translate('Name'); ?></th>
 			<th><?php echo Theme::Translate('Type'); ?></th>
 			<th><?php echo Theme::Translate('Duration'); ?></th>	
@@ -51,6 +52,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<tbody>
 		<?php foreach(Theme::Get('table_rows') as $row) { ?>
 		<tr>
+			<td><?php echo $row['mediaid']; ?></td>
 			<td><?php echo $row['media']; ?></td>
 			<td><?php echo $row['mediatype']; ?></td>
 			<td><?php echo $row['duration_text']; ?></td>

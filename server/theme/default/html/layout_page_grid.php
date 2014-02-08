@@ -34,6 +34,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <table class="table">
 	<thead>
 		<tr>
+			<th><?php echo Theme::Translate('ID'); ?></th>
 			<th><?php echo Theme::Translate('Name'); ?></th>
 			<th><?php echo Theme::Translate('Description'); ?></th>
 			<th><?php echo Theme::Translate('Owner'); ?></th>
@@ -44,6 +45,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<tbody>
 		<?php foreach(Theme::Get('table_rows') as $row) { ?>
 		<tr ondblclick="return XiboFormRender('<?php echo $row['layout_form_edit_url']; ?>')">
+			<td><?php echo $row['layoutid']; ?></td>
 			<td><?php echo $row['layout']; ?></td>
 			<td><?php echo $row['description']; ?></td>
 			<td><?php echo $row['owner']; ?></td>
