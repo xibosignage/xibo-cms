@@ -363,6 +363,7 @@ class layoutDAO
     		// Construct an object containing all the layouts, and pass to the theme
     		$row = array();
 
+    		$row['layoutid'] = $layout['layoutid'];
     		$row['layout'] = $layout['layout'];
     		$row['description'] = $layout['description'];
     		$row['owner'] = $user->getNameFromID($layout['ownerid']);
@@ -453,6 +454,7 @@ class layoutDAO
     	$output = Theme::RenderReturn('layout_page_grid');
 		
 		$response->SetGridResponse($output);
+		$response->initialSortColumn = 2;
 		$response->Respond();
 	}
 

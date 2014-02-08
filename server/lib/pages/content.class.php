@@ -157,6 +157,7 @@ class contentDAO
         $output = Theme::RenderReturn('library_page_grid');
 
     	$response->SetGridResponse($output);
+        $response->initialSortColumn = 2;
         $response->Respond();
     }
 	
