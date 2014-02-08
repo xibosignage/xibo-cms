@@ -7,4 +7,5 @@
 	<a class="list-group-item" href="index.php?toc=developer&p=admin/contributing">Contributing</a>
 	<a class="list-group-item" href="index.php?toc=developer&p=admin/blueprints"><?php echo PRODUCT_NAME; ?> Blueprints</a>
 	<a class="list-group-item" href="index.php?toc=developer&p=admin/database_model"><?php echo PRODUCT_NAME; ?> CMS Database Model</a>
+	<a class="list-group-item" href="index.php?toc=developer&p=admin/pyclient_libbrowsernode_build">Ubuntu Client Binary Dependancy Build Instructions</a>
 </div>
