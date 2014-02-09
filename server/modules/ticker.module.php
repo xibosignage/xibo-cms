@@ -122,7 +122,6 @@ class ticker extends Module
         			array('Substitute' => 'Copyright'),
         			array('Substitute' => 'Link'),
         			array('Substitute' => 'PermaLink'),
-        			array('Substitute' => 'Link'),
         			array('Substitute' => 'Tag|Namespace')
         		);
         	Theme::Set('substitutions', $subs);
@@ -550,6 +549,23 @@ class ticker extends Module
         if (count($items) == 0)
         	return '';
 
+        // Work out how many pages we will be showing.
+        $pages = $numItems;
+
+        if ($numItems > count($items) || $numItems == 0)
+        	$pages = count($items);
+
+        $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
+        $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
+
+        $controlMeta = array('numItems' => $pages, 'totalDuration' => $totalDuration);
+
+        // Replace and Control Meta options
+        $template = str_replace('<!--[[[CONTROLMETA]]]-->', '<!-- NUMITEMS=' . $pages . ' --><!-- DURATION=' . $totalDuration . ' -->', $template);
+
+        // Replace the BODY attribute for number of items
+        $template = str_replace('numitems="0"', 'numitems="' . $pages . '"', $template);
+
         // Replace the head content
         $headContent  = '<script type="text/javascript">';
         $headContent .= '   function init() { ';
@@ -557,6 +573,7 @@ class ticker extends Module
         $headContent .= '   } ';
         $headContent .= '	var options = ' . json_encode($options) . ';';
         $headContent .= '	var items = ' . json_encode($items) . ';';
+        $headContent .= '	var meta = ' . json_encode($controlMeta) . ';';
         $headContent .= '</script>';
 
         if ($itemsSideBySide == 1) {
