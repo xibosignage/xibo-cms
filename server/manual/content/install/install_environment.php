@@ -100,7 +100,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <h3> <span class="mw-headline" id="Install_the_Webserver_.28XAMPP.29"> Install the Webserver (XAMPP) </span></h3>
 <p>We'll be using XAMPP to install Apache, MySQL, PHP (amongst other things) to support Xibo. This is convenient as it provides the whole system in a single installer, and can be uninstalled via Add/Remove Programs at a later date if required. If you already have XAMPP installed, you can skip to the next section.
 </p><p>You can download XAMPP from <a rel="nofollow" class="external text" href="http://www.apachefriends.org/en/xampp.html">Apache Friends</a>. You need to download the full XAMPP Installer package for Windows systems. Save it to the Desktop.
-</p><p><b>Note:</b> New versions of XAMPP come with PHP 5.3.1 or later. We have some reports of the webservice in Xibo that uses the nuSOAP library not working properly with PHP &gt; 5.2. You can download XAMPP 1.7.1 <a rel="nofollow" class="external text" href="http://sourceforge.net/projects/xampp/files/XAMPP%20Windows/1.7.1/xampp-win32-1.7.1-installer.exe/download">here</a> which comes with PHP 5.2.9 and should work for everyone.
 </p><p>Once XAMPP Installer has downloaded, double click on it to run it. You may be prompted to allow the installer to run as the publisher could not be verified. Click "Run".
 </p><p>You should get to the start of the install wizard.
 </p>
