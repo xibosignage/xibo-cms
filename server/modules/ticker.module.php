@@ -561,10 +561,7 @@ class ticker extends Module
         $controlMeta = array('numItems' => $pages, 'totalDuration' => $totalDuration);
 
         // Replace and Control Meta options
-        $template = str_replace('<!--[[[CONTROLMETA]]]-->', '<!-- NUMITEMS=' . $pages . ' --><!-- DURATION=' . $totalDuration . ' -->', $template);
-
-        // Replace the BODY attribute for number of items
-        $template = str_replace('numitems="0"', 'numitems="' . $pages . '"', $template);
+        $template = str_replace('<!--[[[CONTROLMETA]]]-->', '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->', $template);
 
         // Replace the head content
         $headContent  = '<script type="text/javascript">';

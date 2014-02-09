@@ -1,6 +1,6 @@
 /**
 * Xibo - Digital Signage - http://www.xibo.org.uk
-* Copyright (C) 2009-2013 Daniel Garner
+* Copyright (C) 2009-2014 Daniel Garner
 *
 * This file is part of Xibo.
 *
@@ -220,6 +220,11 @@ jQuery.fn.extend({
 
                 // Set some options on the extra DIV and make it a marquee
                 $(this).find('.scroll').marquee();
+            }
+
+            // Correct the Up and Down scrolling so that half the article is not cut
+            if (options.direction == "up" || options.direction == "down") {
+                $(this).children().children().css("white-space", "normal");
             }
         });
     },
