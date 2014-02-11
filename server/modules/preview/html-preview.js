@@ -456,6 +456,20 @@ function media(parent, id, xml) {
     }
     else if (($(self.xml).attr('type') == "ticker")) {
         $("#" + self.containerName).append('<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=ticker&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+        if (self.options['durationisperitem'] == '1') {
+            var regex =  new RegExp("<!-- NUMITEMS=(.*?) -->"); 
+            jQuery.ajax({
+                url: 'index.php?p=module&mod=ticker&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight,
+                success: function(html) {
+                  res = regex.exec(html);
+                  if (res != null) {
+                    self.duration = parseInt(self.duration) * parseInt(res[1]);
+                    alert("NEW DURATION: " + self.duration);
+                  }
+                },
+                async:false
+            });
+        }
     }
     else if (($(self.xml).attr('type') == "video")) {
         PRELOAD.addFiles("index.php?p=preview&q=GetVideo&id=" + self.id );
