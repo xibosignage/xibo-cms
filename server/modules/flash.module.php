@@ -113,5 +113,38 @@ class flash extends Module
         // Client dependant
         return 2;
     }
+    
+    /**
+     * Get Resource
+     */
+    public function GetResource($displayId = 0)
+    {
+    	// Return the raw flash file with appropriate headers
+    	$library = Config::GetSetting("LIBRARY_LOCATION");
+        $fileName = $library . $this->GetOption('uri', '');
+
+        if (!$flash = file_get_contents($fileName))
+        {
+            //not sure
+            Debug::LogEntry('audit', "File not found: " . $this->GetOption('uri',''), 'flash', 'GetResource');
+
+            die ('File not found');
+        }
+
+        $size = strlen($flash);
+        $fi = new finfo( FILEINFO_MIME_TYPE );
+        $mime = $fi->file( $fileName );
+
+        //Output a header
+        header("Content-Type: {$mime}");
+        header('Pragma: public');
+        header('Cache-Control: max-age=86400');
+        header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+        header('Content-Length: ' . $size);
+        
+        return $flash;
+    	
+    }
+
 }
 ?>

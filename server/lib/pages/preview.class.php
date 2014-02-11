@@ -202,53 +202,5 @@ EOT;
         echo $image;
         exit;
     }
-
-/**
-     * Returns an image stream to the browser - for the mediafile specified.
-     * @return 
-     */
-    function GetVideo()
-    {
-        $db =& $this->db;
-
-        $mediaID = Kit::GetParam('id', _GET, _INT, 0);
-
-        if ($mediaID == 0)
-            die ('No media ID provided');
-
-        // Get the file URI
-        $SQL = sprintf("SELECT StoredAs FROM media WHERE MediaID = %d", $mediaID);
-
-        if (!$file = $db->GetSingleValue($SQL, 'StoredAs', _STRING))
-            die ('No media found for that media ID');
-
-        //File upload directory.. get this from the settings object
-        $library = Config::GetSetting("LIBRARY_LOCATION");
-        $fileName = $library . $file;
-
-        if (!$video = file_get_contents($fileName))
-        {
-            //not sure
-            Debug::LogEntry('audit', "Cant find: $uid", 'module', 'GetVideo');
-
-            die ('File not found');
-        }
-
-        $size = strlen($video);
-        $fi = new finfo( FILEINFO_MIME_TYPE );
-        $mime = $fi->file( $fileName );
-
-        //Output the image header
-        header("Content-Type: {$mime}");
-        header('Pragma: public');
-        header('Cache-Control: max-age=86400');
-        header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
-        header('Content-Length: ' . $size);
-
-        echo $video;
-        exit;
-    }
-
-
 }
 ?>

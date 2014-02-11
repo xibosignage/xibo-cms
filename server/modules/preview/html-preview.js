@@ -40,7 +40,7 @@ function dsInit(layoutid) {
     /* Setup a keypress handler for local commands */
     document.onkeypress = keyHandler;
 
-    playLog(0, "info", "XiboClient v" + VERSION + " Starting Up", true);
+    playLog(0, "info", "Xibo HTML Preview v" + VERSION + " Starting Up", true);
     
     PRELOAD = html5Preloader();
     runningLayout = new layout(layoutid);
@@ -431,6 +431,7 @@ function media(parent, id, xml) {
     
     /* Build Media Options */
     self.duration = $(self.xml).attr('duration');
+    self.lkid = $(self.xml).attr('lkid');
     self.options = new Array();
     
     $(self.xml).find('options').children().each(function() { playLog(9, "debug", "Option " + this.nodeName.toLowerCase() + " -> " + $(this).text(), false);
@@ -456,6 +457,7 @@ function media(parent, id, xml) {
     }
     else if (($(self.xml).attr('type') == "ticker")) {
         $("#" + self.containerName).append('<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=ticker&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+        /* Check if the ticker duration is based on the number of items in the feed */
         if (self.options['durationisperitem'] == '1') {
             var regex =  new RegExp("<!-- NUMITEMS=(.*?) -->"); 
             jQuery.ajax({
@@ -463,8 +465,9 @@ function media(parent, id, xml) {
                 success: function(html) {
                   res = regex.exec(html);
                   if (res != null) {
+                    /* The ticker is duration per item, so multiply the duration
+                       by the number of items from the feed */
                     self.duration = parseInt(self.duration) * parseInt(res[1]);
-                    alert("NEW DURATION: " + self.duration);
                   }
                 },
                 async:false
@@ -472,8 +475,16 @@ function media(parent, id, xml) {
         }
     }
     else if (($(self.xml).attr('type') == "video")) {
-        PRELOAD.addFiles("index.php?p=preview&q=GetVideo&id=" + self.id );
-        $("#" + self.containerName).append('<video id="' + self.containerName + '-vid" preload="auto"><source src="index.php?p=preview&q=GetVideo&id=' + self.id + '"></video>');
+        var tmpUrl = "index.php?p=module&mod=video&q=Exec&method=GetResource&layoutid=" + self.region.layout.id + "&regionid=" + self.region.id + "&mediaid=" + self.id + "&lkid=" + self.lkid + "&raw=true";
+        PRELOAD.addFiles(tmpUrl);
+        $("#" + self.containerName).append('<video id="' + self.containerName + '-vid" preload="auto"><source src="' + tmpUrl + '"></video>');
+    }
+    else if (($(self.xml).attr('type') == "flash")) {
+        var tmpUrl = "index.php?p=module&mod=flash&q=Exec&method=GetResource&layoutid=" + self.region.layout.id + "&regionid=" + self.region.id + "&mediaid=" + self.id + "&lkid=" + self.lkid + "&raw=true";
+        var embedCode = '<OBJECT classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0" WIDTH="100%" HEIGHT="100%" id="Yourfilename" ALIGN="">';
+        embedCode = embedCode + '<PARAM NAME=movie VALUE="' + tmpUrl + '"> <PARAM NAME=quality VALUE=high> <param name="wmode" value="transparent"> <EMBED src="' + tmpUrl + '" quality="high" wmode="transparent" WIDTH="100%" HEIGHT="100%" NAME="Yourfilename" ALIGN="" TYPE="application/x-shockwave-flash" PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer"></EMBED> </OBJECT>';
+        PRELOAD.addFiles(tmpUrl);
+        $("#" + self.containerName).append(embedCode);
     }
     else {
         $("#" + self.containerName).css("outline", "red solid thin");
