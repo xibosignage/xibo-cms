@@ -152,7 +152,8 @@ INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES
 (37, 'campaign', 3),
 (38, 'transition', 4),
 (39, 'timeline', 3),
-(40, 'sessions', 9);
+(40, 'sessions', 9),
+(40, 'statusdashboard', 2);
 
 INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`, `External`) VALUES
 (1, 1, 2, NULL, 'Schedule', NULL, NULL, 1, 0),
@@ -253,7 +254,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 (65, 'DEFAULT_LONG', '-0.104', 'text', 'The Longitude to apply for any Geo aware Previews', NULL, 'general', 1),
 (66, 'SCHEDULE_WITH_VIEW_PERMISSION', 'No', 'dropdown', 'Should users with View permissions on displays be allowed to schedule to them?', 'Yes|No', 'permissions', '1'),
 (67, 'SETTING_IMPORT_ENABLED', 'Off', 'dropdown', NULL , 'On|Off', 'general', '0'), 
-(68, 'SETTING_LIBRARY_TIDY_ENABLED', 'Off', 'dropdown', NULL , 'On|Off', 'general', '0');
+(68, 'SETTING_LIBRARY_TIDY_ENABLED', 'Off', 'dropdown', NULL , 'On|Off', 'general', '0'),
+(69, 'EMBEDDED_STATUS_WIDGET', '', 'text', 'HTML to embed in an iframe on the Status Dashboard' , NULL, 'general', '0');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),

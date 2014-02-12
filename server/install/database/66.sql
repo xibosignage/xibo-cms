@@ -94,6 +94,12 @@ NULL ,  'SETTING_IMPORT_ENABLED',  'Off',  'dropdown', NULL ,  'On|Off',  'gener
 NULL ,  'SETTING_LIBRARY_TIDY_ENABLED',  'Off',  'dropdown', NULL ,  'On|Off',  'general',  '0'
 );
 
+INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES (NULL, 'EMBEDDED_STATUS_WIDGET', '', 'text', 'HTML to embed in an iframe on the Status Dashboard', NULL, 'general', '0');
+
+INSERT INTO pages (name, pagegroupid)
+SELECT 'statusdashboard', (SELECT pagegroupid FROM pagegroup WHERE pagegroup = 'Homepage and Login')
+LIMIT 1;
+
 UPDATE `version` SET `app_ver` = '1.6.0-rc1', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '66';

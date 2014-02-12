@@ -528,7 +528,9 @@ class userDAO
         }
 
         // List of homepages for both forms
-        Theme::Set('homepage_field_list', array(array("homepageid" => "dashboard", 'homepage' => 'dashboard'), array("homepageid" => "mediamanager", 'homepage' => 'mediamanager')));
+        Theme::Set('homepage_field_list', array(array("homepageid" => "dashboard", 'homepage' => 'Icon Dashboard'), 
+            array("homepageid" => "mediamanager", 'homepage' => 'Media Dashboard'), 
+            array("homepageid" => "statusdashboard", 'homepage' => 'Status Dashboard')));
 
         // Only allow the selection of a usertype if we are a super admin
         $SQL = 'SELECT usertypeid, usertype FROM usertype';
