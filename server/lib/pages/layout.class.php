@@ -550,7 +550,7 @@ class layoutDAO
             $bgImageInfo = explode('.', $backgroundImage);
             $bgImageId = $bgImageInfo[0];
 
-            $thumbBgImage = "index.php?p=module&q=GetImage&id=$bgImageId&width=80&height=80&dynamic";
+            $thumbBgImage = "index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=$bgImageId&width=80&height=80&dynamic";
 		}
 		else
 		{
@@ -690,7 +690,7 @@ class layoutDAO
             $bgImageInfo = explode('.', $bgImage);
             $bgImageId = $bgImageInfo[0];
 
-            $background_css = "url('index.php?p=module&q=GetImage&id=$bgImageId&width=$width&height=$height&dynamic&proportional=0') top center no-repeat; background-color:$bgColor";
+            $background_css = "url('index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=$bgImageId&width=$width&height=$height&dynamic&proportional=0') top center no-repeat; background-color:$bgColor";
 		}
 		
 		$width 	= $width . "px";

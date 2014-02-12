@@ -1904,10 +1904,15 @@ END;
 	 * @return 
 	 * @param $download Boolean
 	 */
-    public function ReturnFile() {
+    public function ReturnFile($fileName = '') {
         // Return the raw flash file with appropriate headers
     	$library = Config::GetSetting("LIBRARY_LOCATION");
-        $fileName = $library . $this->storedAs;
+
+        # If we weren't passed in a filename then use the default
+    	if ($fileName == '') {
+            $fileName = $library . $this->storedAs;
+        }
+        
         $download = Kit::GetParam('download', _REQUEST, _BOOLEAN, False);
 
         $size = filesize($fileName);

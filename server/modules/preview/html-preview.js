@@ -186,8 +186,8 @@ function layout(id) {
             /* Extract the image ID from the filename */
             self.bgId = self.bgImage.substring(0, self.bgImage.indexOf('.'));
             
-            PRELOAD.addFiles("index.php?p=preview&q=GetImage&id=" + self.bgId + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic");
-            $("#" + self.containerName).css("background", "url('index.php?p=preview&q=GetImage&id=" + self.bgId + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic')");
+            PRELOAD.addFiles("index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=" + self.bgId + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic&proportional=0");
+            $("#" + self.containerName).css("background", "url('index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=" + self.bgId + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic&proportional=0')");
             $("#" + self.containerName).css("background-repeat", "no-repeat");
             $("#" + self.containerName).css("background-size", self.sWidth + "px " + self.sHeight + "px");
             $("#" + self.containerName).css("background-position", "0px 0px");

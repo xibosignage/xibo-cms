@@ -310,5 +310,5 @@ var background_button_callback = function() {
 	//Want to attach an onchange event to the drop down for the bg-image
 	var id = $('#bg_image').val();
 
-	$('#bg_image_image').attr("src", "index.php?p=module&q=GetImage&id=" + id + "&width=80&height=80&dynamic");
+	$('#bg_image_image').attr("src", "index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=" + id + "&width=80&height=80&dynamic");
 }

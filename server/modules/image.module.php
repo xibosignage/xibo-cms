@@ -115,7 +115,7 @@ class image extends Module
             return parent::Preview ($width, $height);
         
         // Show the image - scaled to the aspect ratio of this region (get from GET)
-        return sprintf('<div style="text-align:center;"><img src="index.php?p=module&q=GetImage&id=%d&width=%d&height=%d&dynamic" /></div>', $this->mediaid, $width, $height);
+        return sprintf('<div style="text-align:center;"><img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=%d&width=%d&height=%d&dynamic=true" /></div>', $this->mediaid, $width, $height);
     }
 
     public function HoverPreview()
@@ -123,7 +123,7 @@ class image extends Module
         // Default Hover window contains a thumbnail, media type and duration
         $output = parent::HoverPreview();
         $output .= '<div class="hoverPreview">';
-        $output .= '    <img src="index.php?p=module&q=GetImage&id=' . $this->mediaid . '&width=200&height=200&dynamic=true" alt="Hover Preview">';
+        $output .= '    <img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $this->mediaid . '&width=200&height=200&dynamic=true" alt="Hover Preview">';
         $output .= '</div>';
 
         return $output;
@@ -134,7 +134,57 @@ class image extends Module
      */
     public function GetResource($displayId = 0)
     {
-    	$this->ReturnFile();
+        $proportional = Kit::GetParam('proportional', _GET, _BOOL, true);
+        $thumb = Kit::GetParam('thumb', _GET, _BOOL, false);
+        $dynamic = isset($_REQUEST['dynamic']);
+        $file = $this->storedAs;
+
+        //File upload directory.. get this from the settings object
+        $library = Config::GetSetting("LIBRARY_LOCATION");
+        $fileName = $library . $file;
+
+        // If we are a thumb request then output the cached thumbnail
+        if ($thumb)
+            $fileName = $library . 'tn_' . $file;
+
+        // If the thumbnail doesnt exist then create one
+        if (!file_exists($fileName))
+        {
+            Debug::LogEntry('audit', 'File doesnt exist, creating a thumbnail for ' . $fileName);
+
+            if (!$info = getimagesize($library . $file))
+                die($library . $file . ' is not an image');
+
+            ResizeImage($library . $file, $fileName, 80, 80, $proportional, 'file');
+        }
+        
+        // Get the info for this new temporary file
+        if (!$info = getimagesize($fileName))
+        {
+            echo $fileName . ' is not an image';
+            exit;
+        }
+
+        if ($dynamic && $info[2])
+        {
+            $width  = Kit::GetParam('width', _GET, _INT);
+            $height = Kit::GetParam('height', _GET, _INT);
+
+            // dynamically create an image of the correct size - used for previews
+            ResizeImage($fileName, '', $width, $height, $proportional, 'browser');
+
+            exit;
+        }
+
+        if (!file_exists($fileName))
+        {
+            //not sure
+            Debug::LogEntry('audit', "Cant find: $uid", 'module', 'GetResource');
+
+            $fileName = 'theme/default/img/forms/filenotfound.png';
+        }
+        
+    	$this->ReturnFile($fileName);
         
         exit();
     	
