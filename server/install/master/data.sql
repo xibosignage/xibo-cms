@@ -152,7 +152,8 @@ INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES
 (37, 'campaign', 3),
 (38, 'transition', 4),
 (39, 'timeline', 3),
-(40, 'sessions', 9);
+(40, 'sessions', 9),
+(41, 'preview', 3);
 
 INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`, `External`) VALUES
 (1, 1, 2, NULL, 'Schedule', NULL, NULL, 1, 0),
@@ -252,7 +253,7 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 (64, 'DEFAULT_LAT', '51.504', 'text', 'The Latitude to apply for any Geo aware Previews', NULL, 'general', 1),
 (65, 'DEFAULT_LONG', '-0.104', 'text', 'The Longitude to apply for any Geo aware Previews', NULL, 'general', 1),
 (66, 'SCHEDULE_WITH_VIEW_PERMISSION', 'No', 'dropdown', 'Should users with View permissions on displays be allowed to schedule to them?', 'Yes|No', 'permissions', '1'),
-(67, 'SENDFILE_MODE', 'Off', 'dropdown', 'When a user downloads a file from the library or previews a layout, should we attempt to use Apache X-Sendfile, Nginx X-Accel, or PHP (Off) to return the file from the library?', 'Off|Apache|Nginx', 'general', '1');
+(69, 'SENDFILE_MODE', 'Off', 'dropdown', 'When a user downloads a file from the library or previews a layout, should we attempt to use Apache X-Sendfile, Nginx X-Accel, or PHP (Off) to return the file from the library?', 'Off|Apache|Nginx', 'general', '1');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -302,7 +303,9 @@ INSERT INTO `lkpagegroup` (`lkpagegroupID`, `pageID`, `groupID`) VALUES
 (38, 19, 1),
 (48, 5, 1),
 (51, 7, 1),
-(54, 24, 1);
+(54, 24, 1),
+(63, 41, 1);
+
 
 INSERT INTO `lktemplategroup` (`LkTemplateGroupID`, `TemplateID`, `GroupID`, `View`, `Edit`, `Del`) VALUES
 (1, 1, 2, 1, 0, 0),
