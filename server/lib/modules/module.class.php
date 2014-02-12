@@ -51,6 +51,7 @@ class Module implements ModuleInterface
 	protected $deleteFromRegion;
     protected $showRegionOptions;
     protected $originalUserId;
+    protected $storedAs;
 
     // Track the error state
 	private $error;
@@ -223,7 +224,7 @@ class Module implements ModuleInterface
                 $this->assignedMedia = false;
 
                 // Load what we know about this media into the object
-                $SQL = "SELECT duration, name, UserId FROM media WHERE mediaID = '$mediaid'";
+                $SQL = "SELECT duration, name, UserId, storedAs FROM media WHERE mediaID = '$mediaid'";
 
                 Debug::LogEntry('audit', $SQL, 'Module', 'SetMediaInformation');
 
@@ -239,6 +240,7 @@ class Module implements ModuleInterface
                     $this->duration = $row[0];
                     $this->name = $row[1];
                     $this->originalUserId = $row[2];
+                    $this->storedAs = $row[3];
                 }
                 else
                 	return $this->SetError(__('Unable to find media record with the provided ID'));
@@ -1905,7 +1907,7 @@ END;
     public function ReturnFile() {
         // Return the raw flash file with appropriate headers
     	$library = Config::GetSetting("LIBRARY_LOCATION");
-        $fileName = $library . $this->GetOption('uri', '');
+        $fileName = $library . $this->storedAs;
         $download = Kit::GetParam('download', _REQUEST, _BOOLEAN, False);
 
         $size = filesize($fileName);
@@ -1935,7 +1937,7 @@ END;
         
         // Send via Nginx X-Accel-Redirect?
         if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
-            header("X-Accel-Redirect: /download/" . $this->GetOption('uri', ''));
+            header("X-Accel-Redirect: /download/" . $this->storedAs);
             exit();
         }
         

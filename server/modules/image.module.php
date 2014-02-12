@@ -128,5 +128,16 @@ class image extends Module
 
         return $output;
     }
+    
+    /**
+     * Get Resource
+     */
+    public function GetResource($displayId = 0)
+    {
+    	$this->ReturnFile();
+        
+        exit();
+    	
+    }
 }
 ?>

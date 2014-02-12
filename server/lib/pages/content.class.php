@@ -147,6 +147,13 @@ class contentDAO
                         'text' => __('Permissions')
                     );
             }
+            
+            // Download
+            $row['buttons'][] = array(
+                    'id' => 'content_button_download',
+                    'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=GetResource&download=1&mediaid=' . $row['mediaid'],
+                    'text' => __('Download')
+                );
 
             // Add to the collection
 			$rows[] = $row;
