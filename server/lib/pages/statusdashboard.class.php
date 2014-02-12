@@ -31,6 +31,10 @@ class statusdashboardDAO
 	}
 
 	function displayPage() {
+
+		// Do we have an embedded widget?
+		Theme::Set('embedded-widget', html_entity_decode(Config::GetSetting('EMBEDDED_STATUS_WIDGET')));
+
 		// Render the Theme and output
         Theme::Render('status_dashboard');
 	}

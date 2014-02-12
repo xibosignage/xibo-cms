@@ -26,3 +26,16 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
+<div class="row">
+	<div class="span6">
+		<h3 class="text-center">Bandwidth Usage</h3>
+	</div>
+	<div class="span6">
+		<h3 class="text-center">Display Activity</h3>
+	</div>
+</div>
+<div class="row">
+	<div class="span6 offset6">
+		<?php echo Theme::Get('embedded-widget'); ?>
+	</div>
+</div>

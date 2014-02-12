@@ -96,6 +96,8 @@ NULL ,  'SETTING_LIBRARY_TIDY_ENABLED',  'Off',  'dropdown', NULL ,  'On|Off',  
 
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES (NULL, 'EMBEDDED_STATUS_WIDGET', '', 'text', 'HTML to embed in an iframe on the Status Dashboard', NULL, 'general', '0');
 
+ALTER TABLE  `setting` CHANGE  `value`  `value` VARCHAR( 1000 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+
 INSERT INTO pages (name, pagegroupid)
 SELECT 'statusdashboard', (SELECT pagegroupid FROM pagegroup WHERE pagegroup = 'Homepage and Login')
 LIMIT 1;
