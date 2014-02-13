@@ -68,8 +68,18 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
       					<span class="icon-tasks"></span>
     				</button>
     				<ul class="dropdown-menu">
-						<?php foreach($row['buttons'] as $button) { ?>
-						<li class="XiboFormButton" href="<?php echo $button['url']; ?>"><a tabindex="-1" href="#"><?php echo $button['text']; ?></a></li>
+						<?php foreach($row['buttons'] as $button) {
+						    if ($button['id'] == 'content_button_download') {
+						    ?>
+						    <li><a tabindex="-1" href="<?php echo $button['url']; ?>"><?php echo $button['text']; ?></a></li>
+						    <?php
+						    }
+						    else {
+						    ?>
+						    <li class="XiboFormButton" href="<?php echo $button['url']; ?>"><a tabindex="-1" href="#"><?php echo $button['text']; ?></a></li>
+						    <?php
+						    } ?>
+						
 						<?php } ?>
     				</ul>
     			</div>

@@ -108,5 +108,16 @@ class video extends Module
     {
         return $this->EditLibraryMedia();
     }
+    
+    /**
+     * Get Resource
+     */
+    public function GetResource($displayId = 0)
+    {
+    	$this->ReturnFile();
+        
+        exit();
+    	
+    }
 }
 ?>

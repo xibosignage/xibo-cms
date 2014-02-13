@@ -113,5 +113,16 @@ class flash extends Module
         // Client dependant
         return 2;
     }
+    
+    /**
+     * Get Resource
+     */
+    public function GetResource($displayId = 0)
+    {
+    	$this->ReturnFile();
+        
+        exit();
+    }
+
 }
 ?>

@@ -92,7 +92,14 @@ VALUES (
 NULL ,  'SETTING_IMPORT_ENABLED',  'Off',  'dropdown', NULL ,  'On|Off',  'general',  '0'
 ), (
 NULL ,  'SETTING_LIBRARY_TIDY_ENABLED',  'Off',  'dropdown', NULL ,  'On|Off',  'general',  '0'
-);
+), (
+NULL, 'SENDFILE_MODE', 'Off', 'dropdown', 'When a user downloads a file from the library or previews a layout, should we attempt to use Apache X-Sendfile, Nginx X-Accel, or PHP (Off) to return the file from the library?', 'Off|Apache|Nginx', 'general', '1');
+
+INSERT INTO `pages` (`name`, `pagegroupID`) VALUES
+('preview', 3);
+
+INSERT INTO `lkpagegroup` (`lkpagegroupID`, `pageID`, `groupID`) VALUES
+(63, 41, 1);
 
 UPDATE `version` SET `app_ver` = '1.6.0-rc1', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

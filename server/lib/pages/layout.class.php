@@ -136,6 +136,7 @@ class layoutDAO
    				Theme::Set('layout_form_edit_background_url', 'index.php?p=layout&q=BackgroundForm&modify=true&layoutid=' . $this->layoutid);
    				Theme::Set('layout_form_savetemplate_url', 'index.php?p=template&q=TemplateForm&layoutid=' . $this->layoutid);
    				Theme::Set('layout_form_addregion_url', 'index.php?p=timeline&q=AddRegion&layoutid=' . $this->layoutid);
+                Theme::Set('layout_form_preview_url', 'index.php?p=preview&q=render&ajax=true&layoutid=' . $this->layoutid);
 				Theme::Set('layout', $this->layout);
 
 				Kit::ClassLoader('campaign');
@@ -398,6 +399,12 @@ class layoutDAO
     				'text' => __('Schedule Now')
     			);
 
+            $row['buttons'][] = array(
+    				'id' => 'layout_button_preview',
+    				'url' => 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layout['layoutid'],
+    				'text' => __('Preview Layout')
+    			);
+
     		// Only proceed if we have edit permissions
     		if ($layout['edit']) {
 
@@ -545,7 +552,7 @@ class layoutDAO
             $bgImageInfo = explode('.', $backgroundImage);
             $bgImageId = $bgImageInfo[0];
 
-            $thumbBgImage = "index.php?p=module&q=GetImage&id=$bgImageId&width=80&height=80&dynamic";
+            $thumbBgImage = "index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=$bgImageId&width=80&height=80&dynamic";
 		}
 		else
 		{
@@ -685,7 +692,7 @@ class layoutDAO
             $bgImageInfo = explode('.', $bgImage);
             $bgImageId = $bgImageInfo[0];
 
-            $background_css = "url('index.php?p=module&q=GetImage&id=$bgImageId&width=$width&height=$height&dynamic&proportional=0') top center no-repeat; background-color:$bgColor";
+            $background_css = "url('index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=$bgImageId&width=$width&height=$height&dynamic&proportional=0') top center no-repeat; background-color:$bgColor";
 		}
 		
 		$width 	= $width . "px";

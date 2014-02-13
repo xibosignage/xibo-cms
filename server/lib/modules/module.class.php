@@ -51,6 +51,7 @@ class Module implements ModuleInterface
 	protected $deleteFromRegion;
     protected $showRegionOptions;
     protected $originalUserId;
+    protected $storedAs;
 
     // Track the error state
 	private $error;
@@ -223,7 +224,7 @@ class Module implements ModuleInterface
                 $this->assignedMedia = false;
 
                 // Load what we know about this media into the object
-                $SQL = "SELECT duration, name, UserId FROM media WHERE mediaID = '$mediaid'";
+                $SQL = "SELECT duration, name, UserId, storedAs FROM media WHERE mediaID = '$mediaid'";
 
                 Debug::LogEntry('audit', $SQL, 'Module', 'SetMediaInformation');
 
@@ -239,6 +240,7 @@ class Module implements ModuleInterface
                     $this->duration = $row[0];
                     $this->name = $row[1];
                     $this->originalUserId = $row[2];
+                    $this->storedAs = $row[3];
                 }
                 else
                 	return $this->SetError(__('Unable to find media record with the provided ID'));
@@ -1895,6 +1897,60 @@ END;
     public function IsValid() {
         // Defaults: Stored media is valid, region specific is unknown
         return ($this->regionSpecific) ? 0 : 1;
+    }
+    
+    /**
+	 * Return filebased media items to the browser for Download/Preview
+	 * @return 
+	 * @param $download Boolean
+	 */
+    public function ReturnFile($fileName = '') {
+        // Return the raw flash file with appropriate headers
+    	$library = Config::GetSetting("LIBRARY_LOCATION");
+
+        # If we weren't passed in a filename then use the default
+    	if ($fileName == '') {
+            $fileName = $library . $this->storedAs;
+        }
+        
+        $download = Kit::GetParam('download', _REQUEST, _BOOLEAN, False);
+
+        $size = filesize($fileName);
+        
+        if ($download) {
+            header('Content-Type: application/octet-stream');
+            header("Content-Transfer-Encoding: Binary"); 
+            header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
+        }
+        else {
+            $fi = new finfo( FILEINFO_MIME_TYPE );
+            $mime = $fi->file( $fileName );
+            header("Content-Type: {$mime}");
+        }
+
+        //Output a header
+        header('Pragma: public');
+        header('Cache-Control: max-age=86400');
+        header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+        header('Content-Length: ' . $size);
+        
+        // Send via Apache X-Sendfile header?
+        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
+            header("X-Sendfile: $fileName");
+            exit();
+        }
+        
+        // Send via Nginx X-Accel-Redirect?
+        if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
+            header("X-Accel-Redirect: /download/" . $this->storedAs);
+            exit();
+        }
+        
+        // Return the file with PHP
+        // Disable any buffering to prevent OOM errors.
+        @ob_end_clean();
+        @ob_end_flush();
+        readfile($fileName);
     }
 }
 ?>

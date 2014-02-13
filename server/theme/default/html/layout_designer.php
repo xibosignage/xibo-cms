@@ -45,6 +45,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_edit_background_url'); ?>" title="<?php echo Theme::Translate('Background'); ?>"><span><?php echo Theme::Translate('Background'); ?></span></a></li>
 				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_edit_url'); ?>" title="<?php echo Theme::Translate('Edit the Layout Properties'); ?>"><span><?php echo Theme::Translate('Properties'); ?></span></a></li>
 				<li class="divider"></li>
+                <li><a href="<?php echo Theme::Get('layout_form_preview_url'); ?>" title="<?php echo Theme::Translate('Preview Layout'); ?>" target="_blank"><span><?php echo Theme::Translate('Preview Layout'); ?></span></a></li>
 				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_schedulenow_url'); ?>" title="<?php echo Theme::Translate('Schedule Now'); ?>"><span><?php echo Theme::Translate('Schedule Now'); ?></span></a></li>
 				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_savetemplate_url'); ?>" title="<?php echo Theme::Translate('Save Template'); ?>"><span><?php echo Theme::Translate('Save Template'); ?></span></a></li>
 			</ul>
