@@ -405,16 +405,24 @@ function media(parent, id, xml) {
     self.xml = xml
     self.id = id
     self.containerName = "M-" + self.id + "-" + nextId();
+    self.iframeName = self.containerName + "-iframe";
+    self.mediaType = $(self.xml).attr('type');
     
     self.run = function() {
         playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds")
         
-        if (($(self.xml).attr('type') == "video")) {
+        if ((self.mediaType == "text") || (self.mediaType == "ticker")) {
+            // Scale the body tag so text/tickers/datasetviews are shown
+            // at the correct size
+            $("#" + self.iframeName).contents().find('body').css("zoom", self.region.layout.scaleFactor);
+        }
+        
+        if (self.mediaType == "video") {
             $("#" + self.containerName + "-vid").get(0).play();
         }
         
         if (self.duration == 0) {
-            if (($(self.xml).attr('type') == "video")) {
+            if (self.mediaType == "video") {
                 $("#" + self.containerName + "-vid").bind("ended", self.region.nextMedia);
             }
             else {
@@ -455,10 +463,10 @@ function media(parent, id, xml) {
         $("#" + self.containerName).css("background-image", "url('" + tmpUrl + "')");
     }
     else if (($(self.xml).attr('type') == "text")) {
-        $("#" + self.containerName).append('<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=text&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=text&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
     else if (($(self.xml).attr('type') == "ticker")) {
-        $("#" + self.containerName).append('<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=ticker&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=ticker&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
         if (self.options['durationisperitem'] == '1') {
             var regex =  new RegExp("<!-- NUMITEMS=(.*?) -->"); 
