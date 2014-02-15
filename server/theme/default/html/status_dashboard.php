@@ -29,13 +29,40 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <div class="row">
 	<div class="span6">
 		<h3 class="text-center">Bandwidth Usage</h3>
+		<div id="flot_bandwidth_chart" style="height: 400px;" class="flot-chart"></div>
 	</div>
 	<div class="span6">
-		<h3 class="text-center">Display Activity</h3>
+		<h3 class="text-center">Library Usage</h3>
+		<div id="flot_library_chart" style="height: 400px;" class="flot-chart"></div>
 	</div>
 </div>
 <div class="row">
-	<div class="span6 offset6">
+	<div class="span6">
+		<h3 class="text-center">Display Activity</h3>
+		<table class="table">
+			<thead>
+				<tr>
+					<th><?php echo Theme::Translate('Display'); ?></th>	
+					<th><?php echo Theme::Translate('Logged In'); ?></th>	
+					<th><?php echo Theme::Translate('Licence'); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach(Theme::Get('display-widget-rows') as $row) { ?>
+				<tr class="<?php echo $row['mediainventorystatus']; ?>">
+					<td><?php echo $row['display']; ?></td>
+					<td><span class="<?php echo $row['licensed']; ?>"></span></td>
+					<td><span class="<?php echo $row['loggedin']; ?>"></span></td>
+				</tr>
+				<?php } ?>
+			</tbody>
+		</table>
+	</div>
+	<div class="span6">
 		<?php echo Theme::Get('embedded-widget'); ?>
 	</div>
 </div>
+<script type="text/javascript">
+	var flot_bandwidth_chart = <?php echo Theme::Get('bandwidth-widget') ?>;
+	var flot_library_chart = <?php echo Theme::Get('library-widget') ?>;
+</script>

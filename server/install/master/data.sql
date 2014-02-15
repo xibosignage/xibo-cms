@@ -263,7 +263,7 @@ INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (3, 'User');
 
 INSERT INTO `user` (`UserID`, `usertypeid`, `UserName`, `UserPassword`, `loggedin`, `lastaccessed`, `email`, `homepage`, `Retired`) VALUES
-(1, 1, 'xibo_admin', '21232f297a57a5a743894a0e4a801fc3', 1, '2013-02-02 15:07:29', 'info@xibo.org.uk', 'dashboard', 0);
+(1, 1, 'xibo_admin', '21232f297a57a5a743894a0e4a801fc3', 1, '2013-02-02 15:07:29', 'info@xibo.org.uk', 'statusdashboard', 0);
 
 INSERT INTO `template` (`templateID`, `template`, `xml`, `userID`, `createdDT`, `modifiedDT`, `description`, `tags`, `thumbnail`, `isSystem`, `retired`) VALUES
 (1, 'Full Screen 16:9', '<?xml version="1.0"?>\n<layout schemaVersion="1" width="800" height="450" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="450" top="0" left="0"/></layout>\n', 1, '2008-01-01 01:00:00', '2008-01-01 01:00:00', '', 'fullscreen', NULL, 1, 0),

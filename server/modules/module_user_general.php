@@ -1418,7 +1418,7 @@ END;
     /**
      * List of Displays this user has access to view
      */
-    public function DisplayList() {
+    public function DisplayList($sort_order = array('displayid')) {
 
 		$SQL  = 'SELECT display.displayid, ';
 		$SQL .= '    display.display, ';
@@ -1437,7 +1437,7 @@ END;
 		$SQL .= '    INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID ';
 		$SQL .= '    LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid ';
 		$SQL .= ' WHERE displaygroup.IsDisplaySpecific = 1 ';
-		$SQL .= 'ORDER BY display.displayid ';
+		$SQL .= 'ORDER BY ' . implode(',', $sort_order);
 
 		if (!$result = $this->db->query($SQL))
         {
