@@ -71,7 +71,7 @@
 				Theme::Set('form_meta', '<input type="hidden" name="token" value="' . CreateFormToken() . '" />');
 				Theme::Set('form_action', 'index.php?q=login&referingPage=' . $requestUri);
 				Theme::Set('about_url', 'index.php?p=index&q=About');
-				Theme::Set('source_url', 'https://launchpad.net/xibo/1.5');
+				Theme::Set('source_url', 'https://launchpad.net/xibo/1.6');
 
 				// Message (either from the URL or the session)
 				$message = Kit::GetParam('message', _GET, _STRING, Kit::GetParam('message', _SESSION, _STRING, ''));

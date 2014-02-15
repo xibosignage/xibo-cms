@@ -243,7 +243,7 @@ class ticker extends Module
 			if ($uri == "" || $uri == "http://")
 				trigger_error(__('Please enter a Link for this Ticker'), E_USER_ERROR);
 
-			$template = '[Title] [Description] [Date]';
+			$template = '<p><span style="font-size:22px;"><span style="color:#FFFFFF;">[Title]</span></span></p>';
 		}
 		else if ($sourceId == 2) {
 			// DataSet

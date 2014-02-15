@@ -202,6 +202,10 @@ class indexDAO
             include('lib/pages/mediamanager.class.php');
             $userHomepage = new mediamanagerDAO($db, $user);
         }
+        else if ($homepage == 'statusdashboard') {
+        	include('lib/pages/statusdashboard.class.php');
+            $userHomepage = new statusdashboardDAO($db, $user);	
+        }
         else
         {
             include("lib/pages/dashboard.class.php");

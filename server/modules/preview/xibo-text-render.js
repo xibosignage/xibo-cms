@@ -82,7 +82,7 @@ jQuery.fn.extend({
                         options.numItems = items.length;
 
                     // Get a new array with only the first N elements
-                    options.items = items.slice(0, options.numItems);
+                    items = items.slice(0, options.numItems);
 
                     // Reverse the items again (so they are in the correct order)
                     if (options.takeItemsFrom == "end") {

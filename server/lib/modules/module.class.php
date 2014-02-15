@@ -212,6 +212,14 @@ class Module implements ModuleInterface
             $xmlDoc->documentElement->appendChild($mediaNode);
 
             Debug::LogEntry('audit', 'Existing Assigned Media XML is: \n ' . $xmlDoc->saveXML(), 'module', 'SetMediaInformation');
+
+            $this->xml = $xmlDoc;
+
+            // If we are some library media, then always set the URI as the StoredAs value, so that the preview and other items that rely
+            // on StoredAs work.
+            if ($this->regionSpecific == 0) {
+                $this->storedAs = $this->GetOption('uri');
+            }
         }
         else
         {
@@ -262,9 +270,9 @@ class Module implements ModuleInterface
             </root>
 XML;
             $xmlDoc->loadXML($xml);
+            $this->xml = $xmlDoc;
         }
 
-        $this->xml = $xmlDoc;
         return true;
     }
 
@@ -1913,7 +1921,7 @@ END;
             $fileName = $library . $this->storedAs;
         }
         
-        $download = Kit::GetParam('download', _REQUEST, _BOOLEAN, False);
+        $download = Kit::GetParam('download', _REQUEST, _BOOLEAN, false);
 
         $size = filesize($fileName);
         

@@ -31,6 +31,7 @@ define('_PASSWORD', "password");
 define('_INT', "int");
 define('_DOUBLE', "double");
 define('_BOOL', "bool");
+define('_BOOLEAN', "bool");
 define('_WORD', "word");
 define('_ARRAY', "array");
 define('_USERNAME', "username");

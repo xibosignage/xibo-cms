@@ -85,6 +85,8 @@ class previewDAO
 
     function render()
     {
+        $favicon = Theme::ImageUrl('favicon.ico');
+        
         // Render a specific layout in the previewer
         // layoutid must be provided
         $output = <<<EOT
@@ -97,6 +99,7 @@ class previewDAO
                     <script type="text/JavaScript" src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
                     <script type="text/JavaScript" src="modules/preview/html5Preloader.js"></script>
                     <script type="text/JavaScript" src="modules/preview/html-preview.js"></script>
+                    <link rel="shortcut icon" href="$favicon" />
                 </head>
                 <body onload="dsInit($this->layoutid)">
                     <div id="player">
