@@ -259,7 +259,7 @@ END;
 
                     $output .= '<p>' . sprintf(__('You have %s of media in the library.'), $this->FormatByteSize($fileSize)) . (($libraryLimit > 0) ? sprintf(__(' This is %d %% of your %s limit.'), $limitPcnt, $this->FormatByteSize($libraryLimit * 1024)) : '') . '</p>';
                 
-                    // Monthly bandwitdh - optionally tested against limits
+                    // Monthly bandwidth - optionally tested against limits
                     $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
                     $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
 

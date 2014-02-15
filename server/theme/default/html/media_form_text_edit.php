@@ -59,6 +59,18 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         </div>
         <div class="row-fluid">
             <div class="span12">
+                <div class="well">
+                    <div class="text-center text-info"><?php echo Theme::Translate('Available Substitutions'); ?></div>
+                        <ul id="TickerDataSetColumns">
+                            <?php foreach(Theme::Get('substitutions') as $column) { ?>
+                            <li class="ckeditor_snippits" linkedto="ta_text"><?php echo $column['Substitute']; ?></li>
+                            <?php } ?>
+                        </ul>
+                </div>
+            </div>
+        </div>
+        <div class="row-fluid">
+            <div class="span12">
                 <textarea id="ta_text" class="wide_textarea" cols="80" rows="10" name="ta_text"><?php echo Theme::Get('text'); ?></textarea>
             </div>
         </div>

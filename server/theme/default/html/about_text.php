@@ -61,5 +61,8 @@ along with Xibo.  If not, see <a href="http://www.gnu.org/licenses/">www.gnu.org
 <h3>PHP-gettext</h3>
 <p>PHP gettext is provided under the GNU General Public License</p>
 
+<h3>Flot Charting</h3>
+<p>Copyright (c) 2007-2013 IOLA and Ole Laursen</p>
+
 <h3>Misc</h3>
 <p>Any other code items are attributed directly in the source code</p>

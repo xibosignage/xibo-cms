@@ -76,7 +76,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
         <p><?php echo Theme::Translate('Please provide your credentials'); ?></p>
 
-        <input name="username" type="text" class="input-block-level" placeholder="<?php echo Theme::Translate('User'); ?>">
+        <input name="username" type="text" class="input-block-level" placeholder="<?php echo Theme::Translate('User'); ?>" autofocus>
         <input name="password" type="password" class="input-block-level" placeholder="<?php echo Theme::Translate('Password'); ?>">
 
         <div class="login_message"><?php echo Theme::Get('login_message'); ?></div>
