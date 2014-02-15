@@ -153,7 +153,8 @@ INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES
 (38, 'transition', 4),
 (39, 'timeline', 3),
 (40, 'sessions', 9),
-(41, 'preview', 3);
+(41, 'preview', 3),
+(42, 'statusdashboard', 2);
 
 INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`, `External`) VALUES
 (1, 1, 2, NULL, 'Schedule', NULL, NULL, 1, 0),
@@ -255,7 +256,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 (66, 'SCHEDULE_WITH_VIEW_PERMISSION', 'No', 'dropdown', 'Should users with View permissions on displays be allowed to schedule to them?', 'Yes|No', 'permissions', '1'),
 (67, 'SETTING_IMPORT_ENABLED', 'Off', 'dropdown', NULL , 'On|Off', 'general', '0'), 
 (68, 'SETTING_LIBRARY_TIDY_ENABLED', 'Off', 'dropdown', NULL , 'On|Off', 'general', '0'),
-(69, 'SENDFILE_MODE', 'Off', 'dropdown', 'When a user downloads a file from the library or previews a layout, should we attempt to use Apache X-Sendfile, Nginx X-Accel, or PHP (Off) to return the file from the library?', 'Off|Apache|Nginx', 'general', '1');
+(69, 'SENDFILE_MODE', 'Off', 'dropdown', 'When a user downloads a file from the library or previews a layout, should we attempt to use Apache X-Sendfile, Nginx X-Accel, or PHP (Off) to return the file from the library?', 'Off|Apache|Nginx', 'general', '1'),
+(70, 'EMBEDDED_STATUS_WIDGET', '', 'text', 'HTML to embed in an iframe on the Status Dashboard' , NULL, 'general', '0');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -263,7 +265,7 @@ INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (3, 'User');
 
 INSERT INTO `user` (`UserID`, `usertypeid`, `UserName`, `UserPassword`, `loggedin`, `lastaccessed`, `email`, `homepage`, `Retired`) VALUES
-(1, 1, 'xibo_admin', '21232f297a57a5a743894a0e4a801fc3', 1, '2013-02-02 15:07:29', 'info@xibo.org.uk', 'dashboard', 0);
+(1, 1, 'xibo_admin', '21232f297a57a5a743894a0e4a801fc3', 1, '2013-02-02 15:07:29', 'info@xibo.org.uk', 'statusdashboard', 0);
 
 INSERT INTO `template` (`templateID`, `template`, `xml`, `userID`, `createdDT`, `modifiedDT`, `description`, `tags`, `thumbnail`, `isSystem`, `retired`) VALUES
 (1, 'Full Screen 16:9', '<?xml version="1.0"?>\n<layout schemaVersion="1" width="800" height="450" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="450" top="0" left="0"/></layout>\n', 1, '2008-01-01 01:00:00', '2008-01-01 01:00:00', '', 'fullscreen', NULL, 1, 0),

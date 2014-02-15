@@ -570,7 +570,6 @@ class ticker extends Module
         $headContent .= '   } ';
         $headContent .= '	var options = ' . json_encode($options) . ';';
         $headContent .= '	var items = ' . json_encode($items) . ';';
-        $headContent .= '	var meta = ' . json_encode($controlMeta) . ';';
         $headContent .= '</script>';
 
         if ($itemsSideBySide == 1) {

@@ -499,11 +499,11 @@ CREATE TABLE IF NOT EXISTS `session` (
 CREATE TABLE IF NOT EXISTS `setting` (
   `settingid` int(11) NOT NULL AUTO_INCREMENT,
   `setting` varchar(50) NOT NULL,
-  `value` varchar(256) CHARACTER SET latin1 NOT NULL,
-  `type` varchar(24) CHARACTER SET latin1 NOT NULL,
-  `helptext` text CHARACTER SET latin1,
-  `options` varchar(254) CHARACTER SET latin1 DEFAULT NULL,
-  `cat` varchar(24) CHARACTER SET latin1 NOT NULL DEFAULT 'general',
+  `value` varchar(1000) NOT NULL,
+  `type` varchar(24) NOT NULL,
+  `helptext` text ,
+  `options` varchar(254) DEFAULT NULL,
+  `cat` varchar(24) NOT NULL DEFAULT 'general',
   `userChange` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Can the user change this setting',
   PRIMARY KEY (`settingid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=62 ;

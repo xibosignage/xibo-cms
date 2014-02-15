@@ -101,6 +101,14 @@ INSERT INTO `pages` (`name`, `pagegroupID`) VALUES
 INSERT INTO `lkpagegroup` (`lkpagegroupID`, `pageID`, `groupID`) VALUES
 (63, 41, 1);
 
+INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES (NULL, 'EMBEDDED_STATUS_WIDGET', '', 'text', 'HTML to embed in an iframe on the Status Dashboard', NULL, 'general', '0');
+
+ALTER TABLE  `setting` CHANGE  `value`  `value` VARCHAR( 1000 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+
+INSERT INTO pages (name, pagegroupid)
+SELECT 'statusdashboard', (SELECT pagegroupid FROM pagegroup WHERE pagegroup = 'Homepage and Login')
+LIMIT 1;
+
 UPDATE `version` SET `app_ver` = '1.6.0-rc1', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '66';

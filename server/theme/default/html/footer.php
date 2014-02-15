@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -42,7 +42,11 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <script src="theme/default/libraries/jquery-file-upload/js/jquery.fileupload-resize.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/jquery.fileupload-validate.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/jquery.fileupload-ui.js"></script>
-        <script src="theme/default/libraries/date-time-format.js"></script>    	
+        <script src="theme/default/libraries/date-time-format.js"></script>
+        <script src="theme/default/libraries/flot/jquery.flot.min.js"></script>
+        <script src="theme/default/libraries/flot/jquery.flot.categories.min.js"></script>
+        <script src="theme/default/libraries/flot/jquery.flot.pie.min.js"></script>
+        <script src="theme/default/libraries/flot/jquery.flot.time.min.js"></script>
         <script src="theme/default/js/xibo-cms.js"></script>
     	<script src="theme/default/js/xibo-forms.js"></script>
     	<script src="theme/default/js/xibo-layout-designer.js"></script>

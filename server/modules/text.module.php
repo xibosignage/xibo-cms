@@ -57,6 +57,12 @@ class text extends Module
         );
         Theme::Set('direction_field_list', $directionOptions);
 
+        $subs = array(
+                array('Substitute' => 'Clock'),
+                array('Substitute' => 'Date')
+            );
+        Theme::Set('substitutions', $subs);
+
         Theme::Set('form_id', 'ModuleForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
@@ -128,6 +134,12 @@ class text extends Module
             array('directionid' => 'down', 'direction' => __('Down'))
         );
         Theme::Set('direction_field_list', $directionOptions);
+
+        $subs = array(
+                array('Substitute' => 'Clock'),
+                array('Substitute' => 'Date')
+            );
+        Theme::Set('substitutions', $subs);
 
         Theme::Set('duration', $this->duration);
         Theme::Set('is_duration_enabled', ($this->auth->modifyPermissions) ? '' : ' readonly');
@@ -354,6 +366,10 @@ class text extends Module
             'originalWidth' => $this->width,
             'originalHeight' => $this->height
         );
+
+        // See if we need to replace out any [clock] or [date] tags
+        $text = str_replace('[Clock]', '<span id="clock"></span>', $text);
+        $text = str_replace('[Date]', '<span id="date"></span>', $text);
 
         // Generate a JSON string of substituted items.
         $items[] = $text;
