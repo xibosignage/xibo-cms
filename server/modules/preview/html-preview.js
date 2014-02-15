@@ -411,7 +411,7 @@ function media(parent, id, xml) {
     self.run = function() {
         playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds")
         
-        if ((self.mediaType == "text") || (self.mediaType == "ticker")) {
+        if ((self.mediaType == "text") || (self.mediaType == "ticker") || (self.mediaType == "datasetview")) {
             // Scale the body tag so text/tickers/datasetviews are shown
             // at the correct size
             $("#" + self.iframeName).contents().find('body').css("zoom", self.region.layout.scaleFactor);
@@ -457,15 +457,18 @@ function media(parent, id, xml) {
     /* $("#" + self.containerName).css("left", self.offsetX + "px");
     $("#" + self.containerName).css("top", self.offsetY + "px"); */
     
-    if ($(self.xml).attr('type') == "image") {
+    if (self.mediaType == "image") {
         var tmpUrl = "index.php?p=module&mod=image&q=Exec&method=GetResource&layoutid=" + self.region.layout.id + "&regionid=" + self.region.id + "&mediaid=" + self.id + "&lkid=" + self.lkid;
         PRELOAD.addFiles(tmpUrl);
         $("#" + self.containerName).css("background-image", "url('" + tmpUrl + "')");
     }
-    else if (($(self.xml).attr('type') == "text")) {
+    else if (self.mediaType == "text") {
         $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=text&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
-    else if (($(self.xml).attr('type') == "ticker")) {
+    else if (self.mediaType == "datasetview") {
+        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=datasetview&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+    }
+    else if (self.mediaType == "ticker") {
         $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=ticker&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
         if (self.options['durationisperitem'] == '1') {
@@ -484,12 +487,12 @@ function media(parent, id, xml) {
             });
         }
     }
-    else if (($(self.xml).attr('type') == "video")) {
+    else if (self.mediaType == "video") {
         var tmpUrl = "index.php?p=module&mod=video&q=Exec&method=GetResource&layoutid=" + self.region.layout.id + "&regionid=" + self.region.id + "&mediaid=" + self.id + "&lkid=" + self.lkid;
         PRELOAD.addFiles(tmpUrl);
         $("#" + self.containerName).append('<video id="' + self.containerName + '-vid" preload="auto"><source src="' + tmpUrl + '"></video>');
     }
-    else if (($(self.xml).attr('type') == "flash")) {
+    else if (self.mediaType == "flash") {
         var tmpUrl = "index.php?p=module&mod=flash&q=Exec&method=GetResource&layoutid=" + self.region.layout.id + "&regionid=" + self.region.id + "&mediaid=" + self.id + "&lkid=" + self.lkid;
         var embedCode = '<OBJECT classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0" WIDTH="100%" HEIGHT="100%" id="Yourfilename" ALIGN="">';
         embedCode = embedCode + '<PARAM NAME=movie VALUE="' + tmpUrl + '"> <PARAM NAME=quality VALUE=high> <param name="wmode" value="transparent"> <EMBED src="' + tmpUrl + '" quality="high" wmode="transparent" WIDTH="100%" HEIGHT="100%" NAME="Yourfilename" ALIGN="" TYPE="application/x-shockwave-flash" PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer"></EMBED> </OBJECT>';
