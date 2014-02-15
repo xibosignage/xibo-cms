@@ -198,6 +198,7 @@ function layout(id) {
                                                });
         playLog(4, "debug", "Layout " + self.id + " has " + self.regionObjects.length + " regions");
         self.ready = true;
+        PRELOAD.addFiles('modules/preview/loader.gif');
         PRELOAD.on('finish', self.run);
     }
 
