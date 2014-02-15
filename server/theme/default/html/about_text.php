@@ -25,7 +25,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <h1>License Information</h1>
 <p>Xibo - Digital Signage - <a href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>. Version <?php echo Theme::Get('version'); ?><br />
-Copyright &copy 2006-2013 Daniel Garner and the <a href="https://launchpad.net/~xibo-developers/+members" title="Xibo Developers">Xibo Developers</a>.</p>
+Copyright &copy 2006-2014 Daniel Garner and the <a href="https://launchpad.net/~xibo-developers/+members" title="Xibo Developers">Xibo Developers</a>.</p>
  
 <p>Xibo is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by

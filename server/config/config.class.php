@@ -272,6 +272,21 @@ END;
 			$output .= $imgBad.$message.'<br />';
 			$output .= '<div class="check_explain"><p>' . __('PHP session support to function.') . '</p></div>';
 		}
+
+		// Check for PHP FileInfo
+		$message = __('FileInfo');
+
+		if ($this->CheckFileInfo()) 
+		{
+			$output .= $imgGood.$message.'<br />';
+		}
+		else
+		{
+			$this->envFault = true;
+			
+			$output .= $imgBad.$message.'<br />';
+			$output .= '<div class="check_explain"><p>' . __('Requires PHP FileInfo support to function. If you are on Windows you need to enable the php_fileinfo.dll in your php.ini file.') . '</p></div>';
+		}
 		
 		// Check for PHP PCRE
 		$message = __('PCRE');
@@ -576,6 +591,15 @@ END;
 	function CheckPCRE()
 	{
 		return extension_loaded("pcre");
+	}
+
+	/**
+	 * Check PHP has FileInfo functionality installed
+	 * @return 
+	 */
+	function CheckFileInfo()
+	{
+		return extension_loaded("fileinfo");
 	}
 	
 	/**
