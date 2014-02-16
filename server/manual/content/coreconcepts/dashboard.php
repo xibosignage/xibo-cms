@@ -52,3 +52,7 @@ page presents all the options available to maintain your <?php echo PRODUCT_NAME
 <p><img class="img-thumbnail" alt="Media Manager Dashboard" src="content/coreconcepts/dashboard_user.png"></p>
 
 <p>This icon provides the user with a direct link to the region of the template that they have been delegated.</p>
+
+<h2 id="Status_Dashboard">Status Dashboard <small>Ideal for system administrators</small></h2>
+<p>The status dashboard provides an overview of system health, including a Bandwidth usage chart, a library usage chart and a display activity grid.</p>
+<p><img class="img-thumbnail" alt="Media Manager Dashboard" src="content/coreconcepts/dashboard_status.png"></p>

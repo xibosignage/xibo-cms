@@ -76,7 +76,8 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (76, 'Campaign', 'Permissions', 'manual/single.php?p=users/user_permissions'),
 (77, 'Transition', 'Edit', 'manual/single.php?p=layout/transitions'),
 (78, 'User', 'SetPassword', 'manual/single.php?p=users/users#Set_Password'),
-(79, 'DataSet', 'ImportCSV', 'manual/single.php?p=content/content_dataset#Import_CSV');
+(79, 'DataSet', 'ImportCSV', 'manual/single.php?p=content/content_dataset#Import_CSV'),
+(80, 'Statusdashboard', 'General', 'manual/single.php?p=coreconcepts/dashboard#Status_Dashboard');
 
 INSERT INTO  `setting` (
 `settingid` ,
@@ -95,19 +96,17 @@ NULL ,  'SETTING_LIBRARY_TIDY_ENABLED',  'Off',  'dropdown', NULL ,  'On|Off',  
 ), (
 NULL, 'SENDFILE_MODE', 'Off', 'dropdown', 'When a user downloads a file from the library or previews a layout, should we attempt to use Apache X-Sendfile, Nginx X-Accel, or PHP (Off) to return the file from the library?', 'Off|Apache|Nginx', 'general', '1');
 
-INSERT INTO `pages` (`name`, `pagegroupID`) VALUES
-('preview', 3);
-
-INSERT INTO `lkpagegroup` (`lkpagegroupID`, `pageID`, `groupID`) VALUES
-(63, 41, 1);
-
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES (NULL, 'EMBEDDED_STATUS_WIDGET', '', 'text', 'HTML to embed in an iframe on the Status Dashboard', NULL, 'general', '0');
 
 ALTER TABLE  `setting` CHANGE  `value`  `value` VARCHAR( 1000 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 
 INSERT INTO pages (name, pagegroupid)
 SELECT 'statusdashboard', (SELECT pagegroupid FROM pagegroup WHERE pagegroup = 'Homepage and Login')
-LIMIT 1;
+UNION ALL
+SELECT 'preview', (SELECT pagegroupid FROM pagegroup WHERE pagegroup = 'Layouts');
+
+INSERT INTO `lkpagegroup` (`pageID`, `groupID`)
+SELECT pageID, 1 FROM pages WHERE name = 'preview' OR name = 'statusdashboard' OR name = 'timeline';
 
 UPDATE `version` SET `app_ver` = '1.6.0-rc1', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

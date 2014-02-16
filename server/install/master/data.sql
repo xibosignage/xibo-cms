@@ -82,7 +82,8 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (76, 'Campaign', 'Permissions', 'manual/single.php?p=users/user_permissions'),
 (77, 'Transition', 'Edit', 'manual/single.php?p=layout/transitions'),
 (78, 'User', 'SetPassword', 'manual/single.php?p=users/users#Set_Password'),
-(79, 'DataSet', 'ImportCSV', 'manual/single.php?p=content/content_dataset#Import_CSV');
+(79, 'DataSet', 'ImportCSV', 'manual/single.php?p=content/content_dataset#Import_CSV'),
+(80, 'Statusdashboard', 'General', 'manual/single.php?p=coreconcepts/dashboard#Status_Dashboard');
 
 INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
 (8, 'Administration Menu'),
@@ -301,15 +302,16 @@ INSERT INTO `lkmenuitemgroup` (`LkMenuItemGroupID`, `GroupID`, `MenuItemID`) VAL
 (12, 1, 26);
 
 INSERT INTO `lkpagegroup` (`lkpagegroupID`, `pageID`, `groupID`) VALUES
-(12, 2, 1),
-(36, 1, 1),
-(37, 3, 1),
-(38, 19, 1),
-(48, 5, 1),
-(51, 7, 1),
-(54, 24, 1),
-(63, 41, 1);
-
+(1, 2, 1),
+(2, 1, 1),
+(3, 3, 1),
+(4, 19, 1),
+(5, 5, 1),
+(6, 7, 1),
+(7, 24, 1),
+(8, 39, 1),
+(9, 41, 1),
+(10, 42, 1);
 
 INSERT INTO `lktemplategroup` (`LkTemplateGroupID`, `TemplateID`, `GroupID`, `View`, `Edit`, `Del`) VALUES
 (1, 1, 2, 1, 0, 0),
