@@ -76,7 +76,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 </p>
 <h2> <span class="mw-headline" id="Automated_Installation"> Automated Installation </span></h2>
 <p>The easiest way to install the client is by using the official installer.
-</p><p>It can be downloaded from the release page - currently <a rel="nofollow" class="external free" href="https://launchpad.net/xibo/1.6/1.6.0">https://launchpad.net/xibo/1.6/1.6.0</a>.
+</p><p>It can be downloaded from the release page - currently <a rel="nofollow" class="external free" href="https://launchpad.net/xibo/1.6/1.6.0-rc1">https://launchpad.net/xibo/1.6/1.6.0-rc1</a>.
 </p><p>Once downloaded on to your Ubuntu system, open a Terminal and type
 </p>
 <pre> sudo bash /path/to/the/xibo-1.6.0-ubuntu.all-pyclient.sh 
@@ -102,7 +102,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 </li></ul>
 <pre>sudo apt-get install bzr libvdpau1 libboost-python1.46.1 libboost-thread1.46.1 libdc1394-22 libswscale2 libavformat53 python-soapy libxss1 python-feedparser python-serial flashplugin-nonfree libavcodec53 libavformat53 libswscale0
 </pre>
-<ul><li> Unpack the binary distribution of libavg/Berkelium/libbrowsernode in to /. Binaries are available here: <a rel="nofollow" class="external autonumber" href="https://launchpad.net/xibo/1.6/1.6.0/+download/libavg-1.8.0-vdpau-berkelium11-12.04.tar.gz">[1]</a> If for some reason you need to compile all that yourself then full source and build instructions are available here: <a href="index.php?toc=developer&p=admin/pyclient_libbrowsernode_build" title="Libbrowsernode Build Instructions">libbrowsernode Build Instructions</a>. <i>(Trust me you don't want to. It takes hours and requires about 4GB of disc space)</i>
+<ul><li> Unpack the binary distribution of libavg/Berkelium/libbrowsernode in to /. Binaries are available here: <a rel="nofollow" class="external autonumber" href="https://launchpad.net/xibo/1.6/1.6.0-rc1/+download/libavg-1.8.0-vdpau-berkelium11-12.04.tar.gz">[1]</a> If for some reason you need to compile all that yourself then full source and build instructions are available here: <a href="index.php?toc=developer&p=admin/pyclient_libbrowsernode_build" title="Libbrowsernode Build Instructions">libbrowsernode Build Instructions</a>. <i>(Trust me you don't want to. It takes hours and requires about 4GB of disc space)</i>
 </li><li> Run the following:
 </li></ul>
 <pre>  sudo ldconfig
