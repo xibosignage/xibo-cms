@@ -189,11 +189,15 @@ class XMDSSoap
         }
 
         // Our layout list will always include the default layout
-        $layoutIdList = $this->defaultLayoutId;
+        $layouts = array();
+        $layouts[] = $this->defaultLayoutId;
 
-        // Build up the other layouts into a comma seperated list.
+        // Build up the other layouts into an array
         while ($row = $db->get_assoc_row($results))
-            $layoutIdList .= ',' . Kit::ValidateParam($row['layoutID'], _INT);
+            $layouts[] = Kit::ValidateParam($row['layoutID'], _INT);
+
+        // Create a comma separated list to pass into the query which gets file nodes
+        $layoutIdList = implode(',', $layouts);
 
         // Add file nodes to the $fileElements
         $SQL  = " SELECT 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, MD5(layout.xml) AS `MD5`, NULL AS FileSize, layout.background, layout.xml AS xml ";
@@ -282,6 +286,31 @@ class XMDSSoap
             }
         }
 
+        Kit::ClassLoader('layout');
+
+        // Go through each layout and see if we need to supply any resource nodes.
+        foreach ($layouts as $layoutId) {
+            // Load the layout XML and work out if we have any ticker / text / dataset media items
+            $layout = new Layout($db);
+
+            $layoutInformation = $layout->LayoutInformation($layoutId);
+
+            foreach($layoutInformation['regions'] as $region) {
+                foreach($region['media'] as $media) {
+                    if ($media['mediatype'] == 'ticker' || $media['mediatype'] == 'text' || $media['mediatype'] == 'dataset') {
+                        // Append this item to required files
+                        $file = $requiredFilesXml->createElement("file");
+                        $file->setAttribute('type', 'resource');
+                        $file->setAttribute('layoutid', $layoutId);
+                        $file->setAttribute('regionid', $region['regionid']);
+                        $file->setAttribute('mediaid', $media['mediaid']);
+                        
+                        $fileElements->appendChild($file);
+                    }
+                }
+            }
+        }
+
         // Add a blacklist node
         $blackList = $requiredFilesXml->createElement("file");
         $blackList->setAttribute("type", "blacklist");
@@ -309,62 +338,8 @@ class XMDSSoap
             $blackList->appendChild($file);
         }
 
-        // PHONE_HOME if required.
-        if (Config::GetSetting('PHONE_HOME') == 'On')
-        {
-            // Find out when we last PHONED_HOME :D
-            // If it's been > 28 days since last PHONE_HOME then
-            if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28)))
-            {
-                if ($this->isAuditing == 1)
-                {
-                    Debug::LogEntry("audit", "PHONE_HOME [IN]", "xmds", "RequiredFiles");
-                }
-
-                // Retrieve number of displays
-                $SQL = "SELECT COUNT(*)
-                        FROM `display`
-                        WHERE `licensed` = '1'";
-
-                if (!$results = $db->query($SQL))
-                {
-                    trigger_error($db->error());
-                }
-                while ($row = $db->get_row($results))
-                {
-                    $PHONE_HOME_CLIENTS = Kit::ValidateParam($row[0],_INT);
-                }
-
-                // Retrieve version number
-                $PHONE_HOME_VERSION = Config::Version('app_ver');
-
-                $PHONE_HOME_URL = Config::GetSetting('PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
-
-                if ($this->isAuditing == 1)
-                {
-                    Debug::LogEntry("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");
-                }
-
-                // Set PHONE_HOME_TIME to NOW.
-                $SQL = "UPDATE `setting`
-                        SET `value` = '" . time() . "'
-                        WHERE `setting`.`setting` = 'PHONE_HOME_DATE' LIMIT 1";
-
-                if (!$results = $db->query($SQL))
-                {
-                    trigger_error($db->error());
-                }
-
-                @file_get_contents($PHONE_HOME_URL);
-
-                if ($this->isAuditing == 1)
-                {
-                    Debug::LogEntry("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
-                }
-            //endif
-            }
-        }
-        // END OF PHONE_HOME CODE
+        // Phone Home?
+        $this->PhoneHome();
 
         if ($this->isAuditing == 1)
         {
@@ -1034,6 +1009,65 @@ class XMDSSoap
         $this->LogBandwidth($this->displayId, 5, strlen($resource));
 
         return $resource;
+    }
+
+    private function PhoneHome() {
+        // PHONE_HOME if required.
+        if (Config::GetSetting('PHONE_HOME') == 'On')
+        {
+            // Find out when we last PHONED_HOME :D
+            // If it's been > 28 days since last PHONE_HOME then
+            if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28)))
+            {
+                if ($this->isAuditing == 1)
+                {
+                    Debug::LogEntry("audit", "PHONE_HOME [IN]", "xmds", "RequiredFiles");
+                }
+
+                // Retrieve number of displays
+                $SQL = "SELECT COUNT(*)
+                        FROM `display`
+                        WHERE `licensed` = '1'";
+
+                if (!$results = $db->query($SQL))
+                {
+                    trigger_error($db->error());
+                }
+                while ($row = $db->get_row($results))
+                {
+                    $PHONE_HOME_CLIENTS = Kit::ValidateParam($row[0],_INT);
+                }
+
+                // Retrieve version number
+                $PHONE_HOME_VERSION = Config::Version('app_ver');
+
+                $PHONE_HOME_URL = Config::GetSetting('PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
+
+                if ($this->isAuditing == 1)
+                {
+                    Debug::LogEntry("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");
+                }
+
+                // Set PHONE_HOME_TIME to NOW.
+                $SQL = "UPDATE `setting`
+                        SET `value` = '" . time() . "'
+                        WHERE `setting`.`setting` = 'PHONE_HOME_DATE' LIMIT 1";
+
+                if (!$results = $db->query($SQL))
+                {
+                    trigger_error($db->error());
+                }
+
+                @file_get_contents($PHONE_HOME_URL);
+
+                if ($this->isAuditing == 1)
+                {
+                    Debug::LogEntry("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
+                }
+            //endif
+            }
+        }
+        // END OF PHONE_HOME CODE
     }
 
     /**

@@ -1028,5 +1028,56 @@ class Layout extends Data
             return false;
         }
     }
+
+    /**
+     * Returns an array containing all the layouts particulars
+     * @param int $layoutId The layout ID
+     */
+    public function LayoutInformation($layoutId) {
+        Debug::LogEntry('audit', '[IN]', 'layout', 'LayoutInformation');
+
+        // The array to ultimately return
+        $info = array();
+        $info['regions'] = array();
+
+        // Use the Region class to help
+        Kit::ClassLoader('region');
+
+        // Dummy User Object
+        $user = new User($this->db);
+        $user->userid = 0;
+        $user->usertypeid = 1;
+
+        // Take the layout, loop through its regions, check them and call LayoutInformation on all media in them.
+        $info['regions'] = $this->GetRegionList($layoutId);
+
+        if (count($info['regions']) <= 0)
+            return $info;
+
+        // Loop through each and build an array
+        foreach ($info['regions'] as &$region) {
+
+            $region['media'] = array();
+
+            Debug::LogEntry('audit', 'Assessing Region: ' . $region['regionid'], 'layout', 'LayoutInformation');
+
+            // Create a layout object
+            $regionObject = new Region($this->db);
+            $mediaNodes = $regionObject->GetMediaNodeList($layoutId, $region['regionid']);
+
+            foreach($mediaNodes as $mediaNode) {
+                // Put this node vertically in the region timeline
+                $region['media'][] = array(
+                        'mediaid' => $mediaNode->getAttribute('id'),
+                        'lkid' => $mediaNode->getAttribute('lkid'),
+                        'mediatype' => $mediaNode->getAttribute('type')
+                    );
+            }
+
+            Debug::LogEntry('audit', 'Finished with Region', 'layout', 'LayoutInformation');
+        }
+
+        return $info;
+    }
 }
 ?>
