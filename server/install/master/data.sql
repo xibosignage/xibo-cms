@@ -302,15 +302,16 @@ INSERT INTO `lkmenuitemgroup` (`LkMenuItemGroupID`, `GroupID`, `MenuItemID`) VAL
 (12, 1, 26);
 
 INSERT INTO `lkpagegroup` (`lkpagegroupID`, `pageID`, `groupID`) VALUES
-(12, 2, 1),
-(36, 1, 1),
-(37, 3, 1),
-(38, 19, 1),
-(48, 5, 1),
-(51, 7, 1),
-(54, 24, 1),
-(63, 41, 1);
-
+(1, 2, 1),
+(2, 1, 1),
+(3, 3, 1),
+(4, 19, 1),
+(5, 5, 1),
+(6, 7, 1),
+(7, 24, 1),
+(8, 39, 1),
+(9, 41, 1),
+(10, 42, 1);
 
 INSERT INTO `lktemplategroup` (`LkTemplateGroupID`, `TemplateID`, `GroupID`, `View`, `Edit`, `Del`) VALUES
 (1, 1, 2, 1, 0, 0),
