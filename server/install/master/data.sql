@@ -82,7 +82,8 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (76, 'Campaign', 'Permissions', 'manual/single.php?p=users/user_permissions'),
 (77, 'Transition', 'Edit', 'manual/single.php?p=layout/transitions'),
 (78, 'User', 'SetPassword', 'manual/single.php?p=users/users#Set_Password'),
-(79, 'DataSet', 'ImportCSV', 'manual/single.php?p=content/content_dataset#Import_CSV');
+(79, 'DataSet', 'ImportCSV', 'manual/single.php?p=content/content_dataset#Import_CSV'),
+(80, 'Statusdashboard', 'General', 'manual/single.php?p=coreconcepts/dashboard#Status_Dashboard');
 
 INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
 (8, 'Administration Menu'),

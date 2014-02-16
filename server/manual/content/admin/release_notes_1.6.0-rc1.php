@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -26,6 +26,8 @@ $LP_RELEASE_PAGE = 'https://launchpad.net/xibo/1.6/1.6.0-rc1';
 <p><strong>This is a release candidate for the first stable 1.6 release, 1.6.0. This should NOT BE USED IN PRODUCTION.</strong></p>
 <p>You can download this release from <a rel="nofollow" class="external free" href="<?php echo $LP_RELEASE_PAGE; ?>"><?php echo $LP_RELEASE_PAGE; ?></a></p>
 
+<p class="alert alert-info">As of RC1 all text/rss/dataset media modules will need to be connected at least once at play back. This means that clients that are entirely offline and have those media types scheduled to them, will not function. This will be enhanced before the final 1.6.0 release.</p>
+
 <div id="toctitle"><h2>Contents</h2></div>
 
 <ol>
@@ -44,7 +46,7 @@ $LP_RELEASE_PAGE = 'https://launchpad.net/xibo/1.6/1.6.0-rc1';
 
 <p>Xibo requires PHP 5.3 or higher. A full list of module requirements is presented at the point of installation - we'll even tell you which modules you're missing!</p>
 
-<p class="alert alert-warning">Please note: The PHP-PDO module is required from this release onwards.</p>
+<p class="alert alert-warning">The PHP-PDO module is required from this release onwards.</p>
 
 <h2 id="Upgrading">Upgrading</h2>
 <p>There are significant database schema changes between the 1.4 series of Xibo and prior released. The upgrade wizard will take a prior database and convert it to a schema suitable for the 1.4 series to date. Note that this is a one-way conversion. Please do not upgrade your production database to test Xibo 1.6-rc1 functionality, and then expect to run a prior series code base against that database.</p>
