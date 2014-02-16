@@ -86,6 +86,7 @@ cd libavg
 <ul><li> Download libbrowsernode patches <a rel="nofollow" class="external autonumber" href="https://code.launchpad.net/browsernode">[3]</a>
 </li><li> Copy the browsernode release files in to src/test/plugin folder.
 </li><li> Copy the Berkelium header files in to src/test/plugin (ie src/test/plugin/berkelium)
+</li><li> Copy /usr/local/lib/liblibberkelium.so in to src/test/plugin
 </li><li> Build libavg as normal:
 </li></ul>
 <pre>
