@@ -860,7 +860,7 @@ END;
         // Setup the theme
 		Theme::Set('form_upload_id', 'fileupload');
         Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload&type=' . $this->type);
-		Theme::Set('form_meta', '<input type="hidden" name="type" value="' . $this->type . '"><input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '">');
+		Theme::Set('form_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="type" value="' . $this->type . '"><input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '">');
 		Theme::Set('form_valid_ext', '/(\.|\/)' . implode('|', $this->validExtensions) . '$/i');
 		Theme::Set('form_max_size', Kit::ReturnBytes($this->maxFileSize));
 		Theme::Set('valid_extensions', 'This form accepts: ' . $this->validExtensionsText . ' files up to a maximum size of ' . $this->maxFileSize);
