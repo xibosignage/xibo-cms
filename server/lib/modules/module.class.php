@@ -1617,7 +1617,7 @@ END;
         // Some messages for the form
         $msgTransition = __('What transition should be applied to this media item?');
         $msgDuration = __('The duration for this transition, in milliseconds.');
-        $msgDirection = __('The direction for this transtion.');
+        $msgDirection = __('The direction for this transition.');
         
         // Construct the form
         $form = <<<END
@@ -1625,6 +1625,7 @@ END;
             <input type="hidden" name="type" value="$type">
             <input type="hidden" name="layoutid" value="$this->layoutid">
             <input type="hidden" name="mediaid" value="$this->mediaid">
+            <input type="hidden" name="lkid" value="$this->lkid">
             <input type="hidden" id="iRegionId" name="regionid" value="$this->regionid">
             <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" /> 
             
