@@ -27,7 +27,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     <form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
         <?php echo Theme::Get('form_meta'); ?>
         <div class="well">
-        	<?php echo Theme::Translate('Please choose between a RSS feed or a DataSet as the source of this Ticker'); ?>
+        	<?php echo Theme::Translate('Please choose between a RSS/Atom feed or a DataSet as the source of this Ticker'); ?>
         </div>
         <div class="control-group">
             <label class="control-label" for="source" accesskey="n" title="<?php echo Theme::Translate('The source for this Ticker'); ?>"><?php echo Theme::Translate('Source Type'); ?></label>
