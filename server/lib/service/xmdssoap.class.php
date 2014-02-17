@@ -301,6 +301,7 @@ class XMDSSoap
                         // Append this item to required files
                         $file = $requiredFilesXml->createElement("file");
                         $file->setAttribute('type', 'resource');
+                        $file->setAttribute('id', rand());
                         $file->setAttribute('layoutid', $layoutId);
                         $file->setAttribute('regionid', $region['regionid']);
                         $file->setAttribute('mediaid', $media['mediaid']);
@@ -925,7 +926,7 @@ class XMDSSoap
         $mediaInventoryComplete = 1;
 
         $xpath = new DOMXPath($document);
-	$fileNodes = $xpath->query("//file");
+        $fileNodes = $xpath->query("//file");
 
         foreach ($fileNodes as $node)
         {
