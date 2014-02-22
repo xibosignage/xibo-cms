@@ -82,7 +82,7 @@ class statsDAO
         $SQL .= '  FROM stat ';
         $SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
         $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
-        $SQL .= ' WHERE 1 = 1 ';
+        $SQL .= " WHERE type = 'layout' ";
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
         $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
 
@@ -120,7 +120,7 @@ class statsDAO
         $SQL .= '  FROM stat ';
         $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
         $SQL .= '  INNER JOIN  media ON media.MediaID = stat.MediaID ';
-        $SQL .= ' WHERE 1 = 1 ';
+        $SQL .= " WHERE type = 'media' ";
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
         $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
 
@@ -162,7 +162,7 @@ class statsDAO
         $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
         $SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
         $SQL .= '  LEFT OUTER JOIN media ON media.MediaID = stat.MediaID ';
-        $SQL .= ' WHERE 1 = 1 ';
+        $SQL .= " WHERE type = 'media' ";
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
         $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
 
