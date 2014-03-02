@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner and James Packer
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -26,17 +26,17 @@
         
 	public $userid;
 	public $usertypeid;
-        public $userName;
-        public $homePage;
+    public $userName;
+    public $homePage;
 	
  	public function __construct(database $db)
 	{
-            $this->db           =& $db;
-            $this->userid 	= Kit::GetParam('userid', _SESSION, _INT);
-            $this->usertypeid   = Kit::GetParam('usertype', _SESSION, _INT);
+        $this->db           =& $db;
+        $this->userid 	= Kit::GetParam('userid', _SESSION, _INT);
+        $this->usertypeid   = Kit::GetParam('usertype', _SESSION, _INT);
 
-            // We havent authed yet
-            $this->authedDisplayGroupIDs = false;
+        // We havent authed yet
+        $this->authedDisplayGroupIDs = false;
 	}
 	
 	/**
@@ -589,43 +589,46 @@
 	 */
 	public function ModuleAuth($regionSpecific, $module = '')
 	{
-		$db 		=& $this->db;
-		$userid		=& $this->userid;
-		
-		// Check that the module is enabled
-		$SQL  = "SELECT * FROM module WHERE Enabled = 1 ";
-                
-		if ($regionSpecific != -1)
-                    $SQL .= sprintf(" AND RegionSpecific = %d ", $regionSpecific);
-		
-		if ($module != '')
-                    $SQL .= sprintf(" AND Module = '%s' ", $db->escape_string($module));
-		
-                $SQL .= "  ORDER BY Name ";
-		
-		Debug::LogEntry('audit', $SQL);
-		
-		if (!$result = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			return false;
-		}
-		
-		if ($db->num_rows($result) == 0)
-		{
-			return false;
-		}
-		
-		// Put all these into a normal array
-		$modules = array();
+		$userid =& $this->userid;
 
-		while ($row = $db->get_assoc_row($result))
-		{
-			$modules[] = $row;
-		}
+		try {
+		    $dbh = PDOConnect::init();
+
+		    // Check that the module is enabled
+		    $params = array();
+			$SQL  = "SELECT * FROM module WHERE Enabled = 1 ";
+
+			if ($regionSpecific != -1) {
+	            $SQL .= " AND RegionSpecific = :regionspecific ";
+
+	            $params['regionspecific'] = $regionSpecific;
+	        }
+
+			if ($module != '') {
+	            $SQL .= " AND Module = :module ";
+	            $params['module'] = $module;
+	        }
+			
+	        $SQL .= "  ORDER BY Name ";
 		
-		// Return this array		
-		return $modules;
+		    $sth = $dbh->prepare($SQL);
+		    $sth->execute($params);
+
+		    $modules = $sth->fetchAll();
+			
+			if (count($modules) == 0) {
+				return false;
+			}
+			
+			// Return this array
+			return $modules;  
+		}
+		catch (Exception $e) {
+		    
+		    Debug::LogEntry('error', $e->getMessage());
+
+		    return false;
+		}
 	}
 	
 	/**

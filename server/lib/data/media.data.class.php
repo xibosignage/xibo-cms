@@ -186,7 +186,7 @@ class Media extends Data
             if (strlen($name) > 100)
                 $this->ThrowError(10, __('The name cannot be longer than 100 characters'));
     
-            if ($duration == 0 && $type != 'video' && $type != 'localvideo')
+            if ($duration == 0 && $type != 'video' && $type != 'localvideo' && $type != 'genericfile')
                 $this->ThrowError(11, __('You must enter a duration.'));
     
             // Any media (not this one) already has this name?

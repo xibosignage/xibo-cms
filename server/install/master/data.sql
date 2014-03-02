@@ -107,7 +107,8 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
 (10, 'Counter', 'Counter', 0, 1, 'Customer Counter connected to a Remote Control', 'forms/counter.gif', 1, NULL, 1),
 (11, 'datasetview', 'Data Set', 1, 1, 'A view on a DataSet', 'forms/datasetview.gif', 1, NULL, 1),
 (12, 'shellcommand', 'Shell Command', 1, 1, 'Execute a shell command on the client', 'forms/shellcommand.gif', 1, NULL, 1),
-(13, 'localvideo', 'Local Video', 0, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 1);
+(13, 'localvideo', 'Local Video', 0, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 1),
+(14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,js,html,htm', 0, 0);
 
 INSERT INTO `pagegroup` (`pagegroupID`, `pagegroup`) VALUES
 (1, 'Schedule'),

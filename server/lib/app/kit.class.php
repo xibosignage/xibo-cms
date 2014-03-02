@@ -229,7 +229,7 @@ class Kit
 					return 0;
 				
 				if (preg_match('/-?[0-9]+/', $return, $matches) == 0)
-                                    trigger_error(sprintf(__('No integer match found for %s, and return value is not an int'), $param), E_USER_ERROR);
+                    trigger_error(sprintf(__('No integer match found for %s, and return value is not an int'), $param), E_USER_ERROR);
 
 				$return = @ (int) $matches[0];
 				break;
@@ -264,19 +264,6 @@ class Kit
 				break;
 
 			case _STRING :
-				if ($return == '')
-				{
-					$return = '';
-					break;	
-				}
-				
-				$return = preg_replace('/&#(\d+);/me', "chr(\\1)", $return); // decimal notation
-				// convert hex
-				$return = preg_replace('/&#x([a-f0-9]+);/mei', "chr(0x\\1)", $return); // hex notation
-				$return = htmlspecialchars($return);
-				$return = (string) $return;
-				break;
-
 			case _PASSWORD :
 				if ($return == '')
 				{
@@ -284,9 +271,17 @@ class Kit
 					break;	
 				}
 				
-				$return = preg_replace('/&#(\d+);/me', "chr(\\1)", $return); // decimal notation
+				// decimal notation
+				$return = preg_replace_callback('/&#(\d+);/m', function($m){
+				    return chr($m[1]);
+				}, $return);
+
 				// convert hex
-				$return = preg_replace('/&#x([a-f0-9]+);/mei', "chr(0x\\1)", $return); // hex notation
+				$return = preg_replace_callback('/&#x([a-f0-9]+);/mi', function($m){
+				    return chr("0x".$m[1]);
+				}, $return);
+				
+				$return = htmlspecialchars($return);
 				$return = (string) $return;
 				break;
 				
@@ -297,9 +292,16 @@ class Kit
 					break;	
 				}
 				
-				$return = preg_replace('/&#(\d+);/me', "chr(\\1)", $return); // decimal notation
+				// decimal notation
+				$return = preg_replace_callback('/&#(\d+);/m', function($m){
+				    return chr($m[1]);
+				}, $return);
+
 				// convert hex
-				$return = preg_replace('/&#x([a-f0-9]+);/mei', "chr(0x\\1)", $return); // hex notation
+				$return = preg_replace_callback('/&#x([a-f0-9]+);/mi', function($m){
+				    return chr("0x".$m[1]);
+				}, $return);
+				
 				$return = (string) $return;
 				break;
 

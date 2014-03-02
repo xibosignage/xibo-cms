@@ -96,6 +96,7 @@ class Module implements ModuleInterface
         $this->existingMedia 	= false;
         $this->assignedMedia = false;
         $this->deleteFromRegion = false;
+        $this->assignable = true;
         $this->duration = '';
 
         // Members used by forms (routed through the CMS)
@@ -142,6 +143,7 @@ class Module implements ModuleInterface
 		$this->validExtensions 		= explode(',', $this->validExtensionsText);
 		$this->validExtensionsText	= str_replace(',', ', ', $this->validExtensionsText);
         $this->previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
+        $this->assignable = Kit::ValidateParam($row['assignable'], _INT);
 
 		return true;
 	}
@@ -812,6 +814,7 @@ END;
         switch ($this->type) {
             case 'video':
             case 'localvideo':
+            case 'genericfile':
                 $defaultDuration = 0;
                 break;
 
@@ -976,6 +979,7 @@ END;
 		Theme::Set('is_duration_field_enabled', $durationFieldEnabled);
 		Theme::Set('valid_extensions', 'This form accepts: ' . $this->validExtensionsText . ' files up to a maximum size of ' . $this->maxFileSize);
 		Theme::Set('is_replace_field_checked', ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 'checked' : ''));
+        Theme::Set('is_assignable', $this->assignable);
 
 		$form = Theme::RenderReturn('library_form_media_edit');
 

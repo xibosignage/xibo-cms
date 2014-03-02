@@ -303,7 +303,7 @@ CREATE TABLE IF NOT EXISTS `log` (
 CREATE TABLE IF NOT EXISTS `media` (
   `mediaID` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
-  `type` varchar(10) NOT NULL,
+  `type` varchar(15) NOT NULL,
   `duration` int(11) NOT NULL,
   `originalFilename` varchar(254) DEFAULT NULL,
   `storedAs` varchar(254) DEFAULT NULL COMMENT 'What has this media been stored as',
@@ -349,6 +349,7 @@ CREATE TABLE IF NOT EXISTS `module` (
   `SchemaVersion` int(11) NOT NULL DEFAULT '1',
   `ValidExtensions` varchar(254) DEFAULT NULL,
   `PreviewEnabled` tinyint(4) NOT NULL DEFAULT '1',
+  `assignable` tinyint(4) NOT NULL DEFAULT '1',
   PRIMARY KEY (`ModuleID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Functional Modules' AUTO_INCREMENT=14 ;
 
