@@ -154,7 +154,16 @@ jQuery.fn.extend({
                 //console.log("[Xibo] Applying CSS ZOOM");
 
                 $(this).css({
-                    zoom: options.scaleFactor,
+                    "transform": "scale(" + options.scaleFactor + ")",
+                    "transform-origin": "0 0",
+                    "-webkit-transform": "scale(" + options.scaleFactor + ")",
+                    "-webkit-transform-origin": "0 0",
+                    "-o-transform": "scale(" + options.scaleFactor + ")",
+                    "-o-transform-origin": "0 0",
+                    "-ms-transform": "scale(" + options.scaleFactor + ")",
+                    "-ms-transform-origin": "0 0",
+                    "-moz-transform": "scale(" + options.scaleFactor + ")",
+                    "-moz-transform-origin": "0 0",
                     width: options.originalWidth,
                     height: options.originalHeight
                 });
@@ -234,20 +243,45 @@ jQuery.fn.extend({
         if (options === undefined || options === null) {
             options = {
                 duration : 5,
-                transition: "fade"
+                transition: "fade",
+                rowsPerPage: 0
             };
         }
 
         $(this).each(function() {
 
+            // Set the width and height
+            options.width = $(window).width();
+            options.height = $(window).height();
+
+            // Calculate the scale factor?
+            options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
+
+            $("body").css({
+                "transform": "scale(" + options.scaleFactor + ")",
+                "transform-origin": "0 0",
+                "-webkit-transform": "scale(" + options.scaleFactor + ")",
+                "-webkit-transform-origin": "0 0",
+                "-o-transform": "scale(" + options.scaleFactor + ")",
+                "-o-transform-origin": "0 0",
+                "-ms-transform": "scale(" + options.scaleFactor + ")",
+                "-ms-transform-origin": "0 0",
+                "-moz-transform": "scale(" + options.scaleFactor + ")",
+                "-moz-transform-origin": "0 0",
+                width: options.originalWidth,
+                height: options.originalHeight
+            });
+
             var numberItems = $(this).attr("totalPages");
 
-            // Cycle handles this for us
-            $(this).cycle({
-                fx: options.transition,
-                timeout: (options.duration * 1000) / numberItems,
-                slides: '> table'
-            });
+            if (options.rowsPerPage > 0) {
+                // Cycle handles this for us
+                $(this).cycle({
+                    fx: options.transition,
+                    timeout: (options.duration * 1000) / numberItems,
+                    slides: '> table'
+                });
+            }
         });
     }
 });
