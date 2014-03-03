@@ -534,7 +534,9 @@ class ticker extends Module
         	'scrollSpeed' => $scrollSpeed,
         	'scaleMode' => (($fitText == 0) ? 'scale' : 'fit'),
         	'originalWidth' => $this->width,
-        	'originalHeight' => $this->height
+        	'originalHeight' => $this->height,
+        	'previewWidth' => Kit::GetParam('width', _GET, _INT, 0),
+        	'previewHeight' => Kit::GetParam('height', _GET, _INT, 0)
     	);
 
         // Generate a JSON string of substituted items.

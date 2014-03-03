@@ -32,14 +32,16 @@ jQuery.fn.extend({
             "takeItemsFrom": "start",
             "itemsPerPage": 0,
             "scrollSpeed": "2",
-            "scaleMode": "scale"
+            "scaleMode": "scale",
+            "previewWidth": 0,
+            "previewHeight": 0
         };
 
         var options = $.extend({}, defaults, options);
 
         // Set the width and height
-        options.width = $(window).width();
-        options.height = $(window).height();
+        options.width = (options.previewWidth == 0) ? $(window).width() : options.previewWidth;
+        options.height = (options.previewHeight == 0) ? $(window).height() : options.previewHeight;
 
         // Calculate the scale factor?
         options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
@@ -151,21 +153,13 @@ jQuery.fn.extend({
                     .fitText(1.75);
             }
             else if (options.scaleMode == "scale") {
-                //console.log("[Xibo] Applying CSS ZOOM");
+                //console.log("[Xibo] Applying CSS ZOOM. " + options.scaleFactor);
 
                 $(this).css({
-                    "transform": "scale(" + options.scaleFactor + ")",
-                    "transform-origin": "0 0",
-                    "-webkit-transform": "scale(" + options.scaleFactor + ")",
-                    "-webkit-transform-origin": "0 0",
-                    "-o-transform": "scale(" + options.scaleFactor + ")",
-                    "-o-transform-origin": "0 0",
-                    "-ms-transform": "scale(" + options.scaleFactor + ")",
-                    "-ms-transform-origin": "0 0",
-                    "-moz-transform": "scale(" + options.scaleFactor + ")",
-                    "-moz-transform-origin": "0 0",
                     width: options.originalWidth,
-                    height: options.originalHeight
+                    height: options.originalHeight,
+                    "transform": "scale(" + options.scaleFactor + ")",
+                    "transform-origin": "0 0"
                 });
             }
             
@@ -244,32 +238,26 @@ jQuery.fn.extend({
             options = {
                 duration : 5,
                 transition: "fade",
-                rowsPerPage: 0
+                rowsPerPage: 0,
+                "previewWidth": 0,
+                "previewHeight": 0
             };
         }
 
         $(this).each(function() {
 
             // Set the width and height
-            options.width = $(window).width();
-            options.height = $(window).height();
+            options.width = (options.previewWidth == 0) ? $(window).width() : options.previewWidth;
+            options.height = (options.previewHeight == 0) ? $(window).height() : options.previewHeight;
 
             // Calculate the scale factor?
             options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
 
             $("body").css({
-                "transform": "scale(" + options.scaleFactor + ")",
-                "transform-origin": "0 0",
-                "-webkit-transform": "scale(" + options.scaleFactor + ")",
-                "-webkit-transform-origin": "0 0",
-                "-o-transform": "scale(" + options.scaleFactor + ")",
-                "-o-transform-origin": "0 0",
-                "-ms-transform": "scale(" + options.scaleFactor + ")",
-                "-ms-transform-origin": "0 0",
-                "-moz-transform": "scale(" + options.scaleFactor + ")",
-                "-moz-transform-origin": "0 0",
                 width: options.originalWidth,
-                height: options.originalHeight
+                height: options.originalHeight,
+                "transform": "scale(" + options.scaleFactor + ")",
+                "transform-origin": "0 0"
             });
 
             var numberItems = $(this).attr("totalPages");

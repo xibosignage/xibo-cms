@@ -414,7 +414,9 @@ class datasetview extends Module
             'duration' => $this->duration,
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
-            'rowsPerPage' => $this->GetOption('rowsPerPage')
+            'rowsPerPage' => $this->GetOption('rowsPerPage'),
+            'previewWidth' => Kit::GetParam('width', _GET, _INT, 0),
+            'previewHeight' => Kit::GetParam('height', _GET, _INT, 0)
         );
 
         $headContent  = '<style type="text/css">' . $styleSheet . '</style>';
