@@ -281,7 +281,7 @@ class Kit
 				    return chr("0x".$m[1]);
 				}, $return);
 				
-				$return = htmlspecialchars($return);
+				$return = strip_tags($return);
 				$return = (string) $return;
 				break;
 				
