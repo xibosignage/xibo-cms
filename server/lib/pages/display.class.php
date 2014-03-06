@@ -302,7 +302,7 @@ SQL;
                 if ($linkTarget == '')
                     $linkTarget = '_top';
 
-                $row['display'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . $row['display'] . '</a>', $row['clientaddress']);
+                $row['display'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . Theme::Prepare($row['display']) . '</a>', $row['clientaddress']);
             }
 
             // Format last accessed

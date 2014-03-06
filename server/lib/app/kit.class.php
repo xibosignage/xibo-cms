@@ -77,7 +77,7 @@ class Kit
 	 * @param $type Object[optional]
 	 * @param $default Object[optional]
 	 */
-	static public function GetParam($param, $source = _POST, $type = _STRING, $default = '')
+	static public function GetParam($param, $source = _POST, $type = _STRING, $default = '', $sanitize = true)
 	{
 		// lower case param (we dont care)
 		$param = strtolower($param);
@@ -204,7 +204,7 @@ class Kit
 		}
 		
 		// Validate this param	
-		return Kit::ValidateParam($return, $type);
+		return Kit::ValidateParam($return, $type, $sanitize);
 	}
 	
 	/**
@@ -214,9 +214,13 @@ class Kit
 	 * @param $param Object
 	 * @param $type Object
 	 */
-	static function ValidateParam($param, $type)
+	static function ValidateParam($param, $type, $sanitize = true)
 	{
-		// If we are a NULL always return a null
+		// If we are a NULL always return a null??
+		//if ($param == NULL || $param == '')
+		//	return NULL;
+
+		// Store in return var
 		$return = $param;
 		
 		// Validate
@@ -224,30 +228,33 @@ class Kit
 		switch ($type)
 		{
 			case _INT :
-				// Only use the first integer value
-				if ($return == '')
-					return 0;
-				
-				if (preg_match('/-?[0-9]+/', $return, $matches) == 0)
-                    trigger_error(sprintf(__('No integer match found for %s, and return value is not an int'), $param), E_USER_ERROR);
 
-				$return = @ (int) $matches[0];
+				if ($sanitize) {
+					// Only use the first integer value
+					if (!$result = filter_var($return, FILTER_SANITIZE_NUMBER_INT))
+						$result = 0;
+				}
+				else {
+					if (!$result = filter_var($return, FILTER_VALIDATE_INT))
+						trigger_error(sprintf(__('No integer match found for %s, and return value is not an integer'), $param), E_USER_ERROR);
+				}
+
 				break;
 
 			case _DOUBLE :
-				if ($return == '')
-				{
-					$return = 0;
-					break;	
-				}
 				
-				// Only use the first floating point value
-				@ preg_match('/-?[0-9]+(\.[0-9]+)?/', $return, $matches);
-				$return = @ (float) $matches[0];
-				break;
+				if ($sanitize) {
+					// Only use the first integer value
+					if (!$result = filter_var($return, FILTER_SANITIZE_NUMBER_FLOAT))
+						$result = 0;
+				}
+				else {
+					if (!$result = filter_var($return, FILTER_VALIDATE_FLOAT))
+						trigger_error(sprintf(__('No integer match found for %s, and return value is not an integer'), $param), E_USER_ERROR);
+				}
 
 			case _BOOL :
-				$return = (bool) $return;
+				$return = filter_var($return, FILTER_VALIDATE_BOOLEAN);
 				break;
 
 			case _ARRAY :
@@ -259,38 +266,16 @@ class Kit
 				
 				if (!is_array($return)) 
 				{
-					$return = array ($return);
+					$return = array($return);
 				}
 				break;
 
 			case _STRING :
 			case _PASSWORD :
-				if ($return == '')
-				{
-					$return = '';
-					break;	
-				}
-				
-				// decimal notation
-				$return = preg_replace_callback('/&#(\d+);/m', function($m){
-				    return chr($m[1]);
-				}, $return);
-
-				// convert hex
-				$return = preg_replace_callback('/&#x([a-f0-9]+);/mi', function($m){
-				    return chr("0x".$m[1]);
-				}, $return);
-				
-				$return = strip_tags($return);
-				$return = (string) $return;
+				$return = filter_var($return, FILTER_SANITIZE_STRING);
 				break;
 				
 			case _HTMLSTRING :
-				if ($return == '')
-				{
-					$return = '';
-					break;	
-				}
 				
 				// decimal notation
 				$return = preg_replace_callback('/&#(\d+);/m', function($m){
@@ -306,22 +291,12 @@ class Kit
 				break;
 
 			case _WORD :
-				if ($return == '')
-				{
-					$return = '';
-					break;	
-				}
-				
+				$return = filter_var($return, FILTER_SANITIZE_STRING);
 				$return = (string) preg_replace( '/[^A-Z_\-]/i', '', $return );
 				break;
 				
 			case _USERNAME :
-				if ($return == '')
-				{
-					$return = '';
-					break;	
-				}
-				
+				$return = filter_var($return, FILTER_SANITIZE_STRING);
 				$return = (string) preg_replace( '/[\x00-\x1F\x7F<>"\'%&]/', '', $return );
 				$return	= strtolower($return);
 				break;
@@ -355,6 +330,9 @@ class Kit
 
 			default :
 				// No casting necessary
+				if (!$sanitize)
+					trigger_error(sprintf(__('Unknown Type %s'), $type), E_USER_ERROR);
+
 				break;
 		}
 		
