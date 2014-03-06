@@ -1012,8 +1012,11 @@ class XMDSSoap
         return $resource;
     }
 
+    /**
+     * PHONE_HOME if required
+     */
     private function PhoneHome() {
-        // PHONE_HOME if required.
+        
         if (Config::GetSetting('PHONE_HOME') == 'On')
         {
             // Find out when we last PHONED_HOME :D
@@ -1025,50 +1028,43 @@ class XMDSSoap
                     Debug::LogEntry("audit", "PHONE_HOME [IN]", "xmds", "RequiredFiles");
                 }
 
-                // Retrieve number of displays
-                $SQL = "SELECT COUNT(*)
-                        FROM `display`
-                        WHERE `licensed` = '1'";
+                try {
+                    $dbh = PDOConnect::init();
+                
+                    // Retrieve number of displays
+                    $sth = $dbh->prepare('SELECT COUNT(*) AS Cnt FROM `display` WHERE `licensed` = 1');
+                    $sth->execute();
 
-                if (!$results = $db->query($SQL))
-                {
-                    trigger_error($db->error());
+                    $PHONE_HOME_CLIENTS = $sth->fetchColumn();
+                
+                    // Retrieve version number
+                    $PHONE_HOME_VERSION = Config::Version('app_ver');
+                
+                    $PHONE_HOME_URL = Config::GetSetting('PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
+                
+                    if ($this->isAuditing == 1)
+                        Debug::LogEntry("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");
+                    
+                    // Set PHONE_HOME_TIME to NOW.
+                    $sth = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
+                    $sth->execute(array(
+                            'time' => time(),
+                            'setting' => 'PHONE_HOME_DATE'
+                        ));
+                                
+                    @file_get_contents($PHONE_HOME_URL);
+                
+                    if ($this->isAuditing == 1)
+                        Debug::LogEntry("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
                 }
-                while ($row = $db->get_row($results))
-                {
-                    $PHONE_HOME_CLIENTS = Kit::ValidateParam($row[0],_INT);
+                catch (Exception $e) {
+                    
+                    Debug::LogEntry('error', $e->getMessage());
+
+                    return false;
                 }
-
-                // Retrieve version number
-                $PHONE_HOME_VERSION = Config::Version('app_ver');
-
-                $PHONE_HOME_URL = Config::GetSetting('PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
-
-                if ($this->isAuditing == 1)
-                {
-                    Debug::LogEntry("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");
-                }
-
-                // Set PHONE_HOME_TIME to NOW.
-                $SQL = "UPDATE `setting`
-                        SET `value` = '" . time() . "'
-                        WHERE `setting`.`setting` = 'PHONE_HOME_DATE' LIMIT 1";
-
-                if (!$results = $db->query($SQL))
-                {
-                    trigger_error($db->error());
-                }
-
-                @file_get_contents($PHONE_HOME_URL);
-
-                if ($this->isAuditing == 1)
-                {
-                    Debug::LogEntry("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
-                }
-            //endif
             }
         }
-        // END OF PHONE_HOME CODE
     }
 
     /**
