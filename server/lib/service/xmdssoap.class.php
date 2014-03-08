@@ -211,6 +211,18 @@ class XMDSSoap
         $SQL .= " 	INNER JOIN layout ";
         $SQL .= " 	ON layout.LayoutID = lklayoutmedia.LayoutID";
         $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
+        $SQL .= "
+                UNION
+                SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS background, NULL AS xml 
+                   FROM `media`
+                    INNER JOIN `lkmediadisplaygroup`
+                    ON lkmediadisplaygroup.mediaid = media.MediaID
+                    INNER JOIN lkdisplaydg 
+                    ON lkdisplaydg.DisplayGroupID = lkmediadisplaygroup.DisplayGroupID
+                    INNER JOIN display 
+                    ON lkdisplaydg.DisplayID = display.displayID
+                ";
+        $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
         $SQL .= " ORDER BY RecordType DESC";
 
         if ($this->isAuditing == 1) Debug::LogEntry("audit", $SQL, "xmds", "RequiredFiles");
