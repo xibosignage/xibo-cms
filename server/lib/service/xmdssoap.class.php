@@ -1091,7 +1091,7 @@ class XMDSSoap
 	$db =& $this->db;
 
 	// check in the database for this hardwareKey
-	$SQL = "SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin, email_alert, display FROM display WHERE license = '$hardwareKey'";
+	$SQL = "SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin, email_alert, display, version_instructions FROM display WHERE license = '$hardwareKey'";
 
         if (!$result = $db->query($SQL))
 	{
@@ -1135,6 +1135,7 @@ class XMDSSoap
         $this->isAuditing = $row[2];
         $this->displayId = $row[3];
         $this->defaultLayoutId = $row[4];
+        $this->version_instructions = $row[8];
         
         return true;
     }

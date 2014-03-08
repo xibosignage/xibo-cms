@@ -117,6 +117,13 @@ class displaygroupDAO
                         'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $row['displaygroupid'],
                         'text' => __('Permissions')
                     );
+
+                // Version Information
+                $row['buttons'][] = array(
+                        'id' => 'display_button_version_instructions',
+                        'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'],
+                        'text' => __('Version Information')
+                    );
             }
 
             // Assign this to the table row
@@ -777,6 +784,74 @@ class displaygroupDAO
 
         // Success
         $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));
+        $response->Respond();
+    }
+
+    public function VersionInstructionsForm() {
+        $response = new ResponseManager();
+
+        $displayGroupId = Kit::GetParam('displaygroupid', _GET, _INT);
+        Theme::Set('installer_file_id', 0);
+
+        // Present a list of possible files to choose from (generic file module)
+        $mediaList = $this->user->MediaList('genericfile');
+        array_unshift($mediaList, array('mediaid' => 0, 'media' => ''));
+        Theme::Set('media_field_list', $mediaList);
+
+        // Set some information about the form
+        Theme::Set('form_id', 'VersionInstructions');
+        Theme::Set('form_action', 'index.php?p=displaygroup&q=VersionInstructions');
+        Theme::Set('form_meta', '<input type="hidden" name="displaygroupid" value="' . $displayGroupId . '">');
+
+        $form = Theme::RenderReturn('display_form_version_instructions');
+
+        $response->SetFormRequestResponse($form, __('Set Instructions for Upgrading this client'), '300px', '250px');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#VersionInstructions").submit()');
+        $response->Respond();
+    }
+
+    public function VersionInstructions() {
+        $response = new ResponseManager();
+
+        Kit::ClassLoader('media');
+        Kit::ClassLoader('display');
+        Kit::ClassLoader('lkmediadisplaygroup');
+
+        $displayGroupId = Kit::GetParam('displaygroupid', _POST, _INT);
+        $mediaId = Kit::GetParam('mediaid', _POST, _INT);
+
+        // Make sure we have permission to do this to this display
+        $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
+        if (!$auth->edit)
+            trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
+
+        // Make sure we have permission to use this file
+        $mediaAuth = $this->user->MediaAuth($mediaId, true);
+    
+        if (!$mediaAuth->view)
+            trigger_error(__('You have selected media that you no longer have permission to use. Please reload the form.'), E_USER_ERROR);
+
+        // Make sure this file is assigned to this display group
+        $link = new LkMediaDisplayGroup($this->db);
+        if (!$link->Link($displayGroupId, $mediaId))
+            trigger_error($display->GetErrorMessage(), E_USER_ERROR);
+
+        // Get the "StoredAs" for this media item
+        $media = new Media($this->db);
+        $storedAs = $media->GetStoredAs($mediaId);
+
+        // Get a list of displays for this group
+        $displays = $this->user->DisplayList(array('displayid'), array('displaygroupid' => $displayGroupId));
+
+        foreach ($displays as $display) {
+            // Update the Display with the new instructions
+            $displayObject = new Display($this->db);
+            if (!$displayObject->SetVersionInstructions($display['displayid'], $mediaId, $storedAs))
+                trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
+        }
+
+        $response->SetFormSubmitResponse(__('Version Instructions Set'));
         $response->Respond();
     }
 }

@@ -1429,7 +1429,7 @@ END;
     /**
      * List of Displays this user has access to view
      */
-    public function DisplayList($sort_order = array('displayid')) {
+    public function DisplayList($sort_order = array('displayid'), $filter_by = array()) {
 
         $SQL  = 'SELECT display.displayid, ';
         $SQL .= '    display.display, ';
@@ -1447,7 +1447,16 @@ END;
         $SQL .= '    INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID ';
         $SQL .= '    INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID ';
         $SQL .= '    LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid ';
-        $SQL .= ' WHERE displaygroup.IsDisplaySpecific = 1 ';
+
+        if (Kit::GetParam('displaygroupid', $filter_by, _INT) != 0) {
+            // Restrict to a specific display group
+            $SQL .= sprintf(' WHERE displaygroup.displaygroupid = %d ', Kit::GetParam('displaygroupid', $filter_by, _INT));
+        }
+        else {
+            // Restrict to display specific groups
+            $SQL .= ' WHERE displaygroup.IsDisplaySpecific = 1 ';
+        }
+
         $SQL .= 'ORDER BY ' . implode(',', $sort_order);
 
         if (!$result = $this->db->query($SQL))

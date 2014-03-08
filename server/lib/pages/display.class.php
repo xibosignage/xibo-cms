@@ -385,6 +385,13 @@ SQL;
                         'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $row['displaygroupid'],
                         'text' => __('Permissions')
                     );
+
+                // Version Information
+                $row['buttons'][] = array(
+                        'id' => 'display_button_version_instructions',
+                        'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'],
+                        'text' => __('Version Information')
+                    );
             }
 
             // Assign this to the table row
@@ -840,6 +847,6 @@ SQL;
 
         $response->SetFormSubmitResponse(__('Wake on Lan command sent.'));
         $response->Respond();
-    }
+    }    
 }
 ?>

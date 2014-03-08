@@ -57,7 +57,7 @@ class LkMediaDisplayGroup extends Data {
 
     /**
      * Unlink all media from the provided display group
-     * @param [type] $displaygroupid The display group to unlink from
+     * @param int $displaygroupid The display group to unlink from
      */
     public function UnlinkAllFromDisplayGroup($displaygroupid) {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
@@ -85,7 +85,7 @@ class LkMediaDisplayGroup extends Data {
 
     /**
      * Unlink all media from the provided media item
-     * @param [type] $mediaid The media item to unlink from
+     * @param int $mediaid The media item to unlink from
      */
     public function UnlinkAllFromMedia($mediaid) {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);

@@ -508,6 +508,37 @@ class Display extends Data
         }
     }
 
+    public function SetVersionInstructions($displayId, $mediaId, $storedAs) {
+        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+
+        try {
+            $dbh = PDOConnect::init();
+
+            // Set the instructions
+            $version_instructions = array();
+            $version_instructions['id'] = $mediaId;
+            $version_instructions['file'] = $storedAs;
+        
+            $sth = $dbh->prepare('UPDATE `display` SET version_instructions = :version_instructions WHERE displayid = :displayid');
+            $sth->execute(array(
+                    'displayid' => $displayId,
+                    'version_instructions' => json_encode($version_instructions)
+                ));
+
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+
+    }
+
     /**
      * Wake this display using a WOL command
      * @param <int> $displayId
@@ -560,11 +591,11 @@ class Display extends Data
     /**
      * Wake On Lan Script
      *  // Version: 2
-        // Author of this application:
-        //	DS508_customer (http://www.synology.com/enu/forum/memberlist.php?mode=viewprofile&u=12636)
-        //	Please inform the author of any suggestions on (the functionality, graphical design, ... of) this application.
-        //	More info: http://wolviaphp.sourceforge.net
-        // License: GPLv2.0
+     *  // Author of this application:
+     *  //	DS508_customer (http://www.synology.com/enu/forum/memberlist.php?mode=viewprofile&u=12636)
+     *  //	Please inform the author of any suggestions on (the functionality, graphical design, ... of) this application.
+     *  //	More info: http://wolviaphp.sourceforge.net
+     *  // License: GPLv2.0
      *
      * Modified for use with the Xibo project by Dan Garner.
      */

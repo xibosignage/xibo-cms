@@ -400,6 +400,28 @@ class Media extends Data
         }
     }
 
+    public function GetStoredAs($mediaId) {
+        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT storedas FROM `media` WHERE mediaid = :id');
+            $sth->execute(array('id' => $mediaId));
+
+            return $sth->fetchColumn();          
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
     public function DeleteMediaFile($fileName)
     {
         Debug::LogEntry('audit', 'IN', 'Media', 'DeleteMediaFile');
