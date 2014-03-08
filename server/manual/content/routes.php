@@ -61,6 +61,7 @@ $allowed_routes = array(
 		'content/content_powerpoint',
 		'content/content_flash',
 		'content/content_dataset',
+		'content/content_genericfile',
 		'admin/modules',
 		'layout/overview',
 		'layout/layoutdesigner',
