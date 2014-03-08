@@ -30,6 +30,7 @@ class XMDSSoap
     private $isAuditing;
     private $displayId;
     private $defaultLayoutId;
+    private $version_instructions;
 
     public function __construct()
     {
@@ -161,6 +162,7 @@ class XMDSSoap
 
         $requiredFilesXml = new DOMDocument("1.0");
         $fileElements 	= $requiredFilesXml->createElement("files");
+        $fileElements->setAttribute('version_instructions', $this->version_instructions);
 
         $requiredFilesXml->appendChild($fileElements);
 

@@ -110,6 +110,7 @@ $allowed_routes = array(
 		'admin/blueprints',
 		'admin/advanced',
 		'admin/contributing',
+		'admin/fileassociations',
 		'admin/database_model',
 		'admin/release_notes',
 		'admin/release_notes_archive',
