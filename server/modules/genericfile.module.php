@@ -54,21 +54,27 @@ class genericfile extends Module
         $mediaid = $this->mediaid;
         $this->existingMedia = false;
 
-        if ($this->regionSpecific == 1) return;
+        if ($this->regionSpecific == 1) 
+            return;
 
-        // Load what we know about this media into the object
-        $SQL = "SELECT storedAs FROM media WHERE mediaID = $mediaid ";
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Load what we know about this media into the object
+            $sth = $dbh->prepare('SELECT storedAs FROM media WHERE mediaID = :mediaid');
+            $sth->execute(array('mediaid' => $mediaid));
 
-        if (!$row= $db->GetSingleRow($SQL))
-        {
-            trigger_error($db->error());
+            if (!$storedAs = $sth->fetchColumn())
+                return false;
+            
+            $this->SetOption('uri', $storedAs);  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
             return false;
         }
-
-        $storedAs   = $row['storedAs'];
-
-        // Any Options
-        $this->SetOption('uri', $storedAs);
 
         return true;
     }

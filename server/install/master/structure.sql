@@ -590,6 +590,14 @@ CREATE TABLE IF NOT EXISTS `datasetcolumntype` (
   `DataSetColumnType` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
+CREATE TABLE IF NOT EXISTS `lkmediadisplaygroup` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `mediaid` int(11) NOT NULL,
+  `displaygroupid` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='File associations directly to Display Groups' AUTO_INCREMENT=1 ;
+
 --
 -- Constraints for dumped tables
 --

@@ -34,6 +34,7 @@ define('_BOOL', "bool");
 define('_BOOLEAN', "bool");
 define('_WORD', "word");
 define('_ARRAY', "array");
+define('_ARRAY_INT', "array_int");
 define('_USERNAME', "username");
 define('_CHECKBOX', "checkbox");
 define('_FILENAME', "filename");
@@ -236,7 +237,7 @@ class Kit
 				}
 				else {
 					if (!$result = filter_var($return, FILTER_VALIDATE_INT))
-						trigger_error(sprintf(__('No integer match found for %s, and return value is not an integer'), $param), E_USER_ERROR);
+						trigger_error(sprintf(__('No integer match found for [%s] and return value is not an integer'), $param), E_USER_ERROR);
 				}
 
 				break;
@@ -267,6 +268,24 @@ class Kit
 				if (!is_array($return)) 
 				{
 					$return = array($return);
+				}
+				break;
+
+			case _ARRAY_INT:
+
+				if ($return == '') {
+					$return = array();
+				}
+				else {
+					if ($sanitize) {
+						// Only use the first integer value
+						if (!$result = filter_var_array($return, FILTER_SANITIZE_NUMBER_INT))
+							$result = array();
+					}
+					else {
+						if (!$result = filter_var_array($return, FILTER_VALIDATE_INT))
+							trigger_error(sprintf(__('No integer found for %s, and return value is not an integer'), $param), E_USER_ERROR);
+					}
 				}
 				break;
 

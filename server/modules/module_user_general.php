@@ -591,7 +591,7 @@
      * @return Array
      * @param [Optional] $module String
      */
-    public function ModuleAuth($regionSpecific, $module = '')
+    public function ModuleAuth($regionSpecific, $module = '', $assignable = -1)
     {
         $userid =& $this->userid;
 
@@ -604,8 +604,12 @@
 
             if ($regionSpecific != -1) {
                 $SQL .= " AND RegionSpecific = :regionspecific ";
-
                 $params['regionspecific'] = $regionSpecific;
+            }
+
+            if ($assignable != -1) {
+                $SQL .= " AND assignable = :assignable ";
+                $params['assignable'] = $assignable;
             }
 
             if ($module != '') {

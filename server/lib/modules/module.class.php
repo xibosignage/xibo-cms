@@ -808,9 +808,8 @@ END;
 
         $session->setSecurityToken($securityToken);
 
-        //Get the default value for the shared list
-        $default = Config::GetSetting('defaultMedia');
-
+        // Set some defaults based on the type of media we are
+        // TODO: this should be passed in
         switch ($this->type) {
             case 'video':
             case 'localvideo':

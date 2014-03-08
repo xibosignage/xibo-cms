@@ -351,6 +351,13 @@ SQL;
                         'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $row['displayid'],
                         'text' => __('Wake on LAN')
                     );
+
+                // File Associations
+                $row['buttons'][] = array(
+                        'id' => 'displaygroup_button_fileassociations',
+                        'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $row['displaygroupid'],
+                        'text' => __('Assign Files')
+                    );
             }
 
             if ($row['del'] == 1) {

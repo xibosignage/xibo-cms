@@ -180,7 +180,7 @@ class contentDAO
 		$response = new ResponseManager();
 		
 		// Get a list of the enabled modules and then create buttons for them
-		if (!$enabledModules = new ModuleManager($db, $user, 0)) 
+		if (!$enabledModules = new ModuleManager($db, $user, 0, '', -1)) 
             trigger_error($enabledModules->message, E_USER_ERROR);
 		
 		$buttons = array();
@@ -226,7 +226,16 @@ class contentDAO
         Theme::Set('pager', ResponseManager::Pager($id));
         
         // Module types filter
-        $types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
+        $modules = $this->user->ModuleAuth(0, '', 1);
+        $types = array();
+
+        foreach ($modules as $module) {
+            $type['moduleid'] = $module['Module'];
+            $type['module'] = $module['Name'];
+
+            $types[] = $type;
+        }
+
         array_unshift($types, array('moduleid' => '', 'module' => 'All'));
         Theme::Set('module_field_list', $types);
 

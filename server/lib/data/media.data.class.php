@@ -77,7 +77,7 @@ class Media extends Data
                 $this->ThrowError(10, __('The name cannot be longer than 100 characters'));
     
             // Test the duration (except for video and localvideo which can have a 0)
-            if ($duration == 0 && $type != 'video' && $type != 'localvideo')
+            if ($duration == 0 && $type != 'video' && $type != 'localvideo' && $type != 'genericfile')
                 $this->ThrowError(11, __('You must enter a duration.'));
     
             // Check the naming of this item to ensure it doesnt conflict
@@ -322,6 +322,8 @@ class Media extends Data
     public function Delete($mediaId)
     {
         Debug::LogEntry('audit', 'IN', 'Media', 'Delete');
+        
+        Kit::ClassLoader('lkmediadisplaygroup');
 
         try {
             $dbh = PDOConnect::init();
@@ -353,6 +355,11 @@ class Media extends Data
     
             if (!$security->UnlinkAll($mediaId))
                 throw new Exception("Error Processing Request", 1);
+
+            // Delete any assignments
+            $link = new LkMediaDisplayGroup($this->db);
+            if (!$link->UnlinkAllFromDisplayGroup($mediaId))
+                $this->ThrowError(__('Unable to drop file assignments during display delete.'));
                 
             // Delete the media
             $sth = $dbh->prepare('DELETE FROM media WHERE MediaID = :mediaid');

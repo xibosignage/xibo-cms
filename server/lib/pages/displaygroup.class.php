@@ -22,24 +22,24 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class displaygroupDAO
 {
-	private $db;
-	private $user;
-	
-	function __construct(database $db, user $user) 
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-	
-		include_once('lib/data/displaygroup.data.class.php');
-		include_once('lib/data/displaygroupsecurity.data.class.php');		
-	}
-	
-	/**
-	 * Display Group Page Render
-	 */
-	public function displayPage()
-	{
-		// Configure the theme
+    private $db;
+    private $user;
+    
+    function __construct(database $db, user $user) 
+    {
+        $this->db   =& $db;
+        $this->user =& $user;
+    
+        include_once('lib/data/displaygroup.data.class.php');
+        include_once('lib/data/displaygroupsecurity.data.class.php');       
+    }
+    
+    /**
+     * Display Group Page Render
+     */
+    public function displayPage()
+    {
+        // Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('displaygroup_form_add_url', 'index.php?p=displaygroup&q=AddForm');
@@ -49,67 +49,74 @@ class displaygroupDAO
 
         // Render the Theme and output
         Theme::Render('displaygroup_page');
-	}
-	
-	/**
-	 * Shows the Display groups
-	 * @return 
-	 */
-	public function Grid()
-	{
+    }
+    
+    /**
+     * Shows the Display groups
+     * @return 
+     */
+    public function Grid()
+    {
         $db =& $this->db;
         $user =& $this->user;
-        $response	= new ResponseManager();
+        $response   = new ResponseManager();
 
         $displayGroups = $this->user->DisplayGroupList();
 
         if (!is_array($displayGroups))
             trigger_error(__('Cannot get list of display groups.'), E_USER_ERROR);
 
-		$rows = array();
+        $rows = array();
 
-		foreach ($displayGroups as $row)
+        foreach ($displayGroups as $row)
         {
-        	if ($row['isdisplayspecific'] != 0)
+            if ($row['isdisplayspecific'] != 0)
                 continue;
 
-			if ($row['edit'] == 1)
+            if ($row['edit'] == 1)
             {
                 // Show the edit button, members button
                 
                 // Group Members
-	            $row['buttons'][] = array(
-	                    'id' => 'displaygroup_button_group_members',
-	                    'url' => 'index.php?p=displaygroup&q=MembersForm&DisplayGroupID=' . $row['displaygroupid'] . '&DisplayGroup=' . $row['displaygroup'],
-	                    'text' => __('Group Members')
-	                );
+                $row['buttons'][] = array(
+                        'id' => 'displaygroup_button_group_members',
+                        'url' => 'index.php?p=displaygroup&q=MembersForm&DisplayGroupID=' . $row['displaygroupid'] . '&DisplayGroup=' . $row['displaygroup'],
+                        'text' => __('Group Members')
+                    );
 
-	            // Edit
-	            $row['buttons'][] = array(
-	                    'id' => 'displaygroup_button_edit',
-	                    'url' => 'index.php?p=displaygroup&q=EditForm&DisplayGroupID=' . $row['displaygroupid'],
-	                    'text' => __('Edit')
-	                );
+                // Edit
+                $row['buttons'][] = array(
+                        'id' => 'displaygroup_button_edit',
+                        'url' => 'index.php?p=displaygroup&q=EditForm&DisplayGroupID=' . $row['displaygroupid'],
+                        'text' => __('Edit')
+                    );
+
+                // File Associations
+                $row['buttons'][] = array(
+                        'id' => 'displaygroup_button_fileassociations',
+                        'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $row['displaygroupid'],
+                        'text' => __('Assign Files')
+                    );
             }
 
             if ($row['del'] == 1)
             {
                 // Show the delete button
-	            $row['buttons'][] = array(
-	                    'id' => 'displaygroup_button_delete',
-	                    'url' => 'index.php?p=displaygroup&q=DeleteForm&DisplayGroupID=' . $row['displaygroupid'],
-	                    'text' => __('Delete')
-	                );
+                $row['buttons'][] = array(
+                        'id' => 'displaygroup_button_delete',
+                        'url' => 'index.php?p=displaygroup&q=DeleteForm&DisplayGroupID=' . $row['displaygroupid'],
+                        'text' => __('Delete')
+                    );
             }
 
             if ($row['modifypermissions'] == 1)
             {
                 // Show the modify permissions button
-	            $row['buttons'][] = array(
-	                    'id' => 'displaygroup_button_permissions',
-	                    'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $row['displaygroupid'],
-	                    'text' => __('Permissions')
-	                );
+                $row['buttons'][] = array(
+                        'id' => 'displaygroup_button_permissions',
+                        'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $row['displaygroupid'],
+                        'text' => __('Permissions')
+                    );
             }
 
             // Assign this to the table row
@@ -122,135 +129,135 @@ class displaygroupDAO
 
         $response->SetGridResponse($output);
         $response->Respond();
-	}
-	
-	/**
-	 * Shows an add form for a display group
-	 */
-	public function AddForm()
-	{
-		$db =& $this->db;
-		$user =& $this->user;
-		$response = new ResponseManager();
-		
-		Theme::Set('form_id', 'DisplayGroupAddForm');
+    }
+    
+    /**
+     * Shows an add form for a display group
+     */
+    public function AddForm()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        
+        Theme::Set('form_id', 'DisplayGroupAddForm');
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Add');
 
         $form = Theme::RenderReturn('displaygroup_form_add');
 
-		$response->SetFormRequestResponse($form, __('Add Display Group'), '350px', '275px');
-		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Add') . '")');
-		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
-		$response->AddButton(__('Save'), '$("#DisplayGroupAddForm").submit()');
-		$response->Respond();
-	}
-	
-	/**
-	 * Shows an edit form for a display group
-	 */
-	public function EditForm()
-	{
-		$db				=& $this->db;
-		$user			=& $this->user;
-		$response		= new ResponseManager();
-		$helpManager	= new HelpManager($db, $user);
-		
-		$displayGroupID	= Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+        $response->SetFormRequestResponse($form, __('Add Display Group'), '350px', '275px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Add') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#DisplayGroupAddForm").submit()');
+        $response->Respond();
+    }
+    
+    /**
+     * Shows an edit form for a display group
+     */
+    public function EditForm()
+    {
+        $db             =& $this->db;
+        $user           =& $this->user;
+        $response       = new ResponseManager();
+        $helpManager    = new HelpManager($db, $user);
+        
+        $displayGroupID = Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
-		
-		// Pull the currently known info from the DB
-		$SQL = "SELECT DisplayGroupID, DisplayGroup, Description FROM displaygroup WHERE DisplayGroupID = %d AND IsDisplaySpecific = 0";
-		$SQL = sprintf($SQL, $displayGroupID);
-		
-		if (!$row = $db->GetSingleRow($SQL))
-		{
-			trigger_error($db->error());
-			trigger_error(__('Error getting Display Group'), E_USER_ERROR);
-		}
-		
-		// Pull out these columns
-		if (count($row) <= 0)
-			trigger_error(__('No display group found.'), E_USER_ERROR);
-		
-		Theme::Set('displaygroup', Kit::ValidateParam($row['DisplayGroup'], _STRING));
-		Theme::Set('description', Kit::ValidateParam($row['Description'], _STRING));
-		
-		// Set some information about the form
+        
+        // Pull the currently known info from the DB
+        $SQL = "SELECT DisplayGroupID, DisplayGroup, Description FROM displaygroup WHERE DisplayGroupID = %d AND IsDisplaySpecific = 0";
+        $SQL = sprintf($SQL, $displayGroupID);
+        
+        if (!$row = $db->GetSingleRow($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Error getting Display Group'), E_USER_ERROR);
+        }
+        
+        // Pull out these columns
+        if (count($row) <= 0)
+            trigger_error(__('No display group found.'), E_USER_ERROR);
+        
+        Theme::Set('displaygroup', Kit::ValidateParam($row['DisplayGroup'], _STRING));
+        Theme::Set('description', Kit::ValidateParam($row['Description'], _STRING));
+        
+        // Set some information about the form
         Theme::Set('form_id', 'DisplayGroupEditForm');
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayGroupID" value="' . $displayGroupID . '" />');
         
         $form = Theme::RenderReturn('displaygroup_form_edit');
 
-		$response->SetFormRequestResponse($form, __('Edit Display Group'), '350px', '275px');
-		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Edit') . '")');
-		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
-		$response->AddButton(__('Save'), '$("#DisplayGroupEditForm").submit()');
-		$response->Respond();
-	}
-	
-	/**
-	 * Shows the Delete Group Form
-	 */
-	function DeleteForm() 
-	{
-		$db 			=& $this->db;
-		$response		= new ResponseManager();
-		$displayGroupID	= Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+        $response->SetFormRequestResponse($form, __('Edit Display Group'), '350px', '275px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Edit') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#DisplayGroupEditForm").submit()');
+        $response->Respond();
+    }
+    
+    /**
+     * Shows the Delete Group Form
+     */
+    function DeleteForm() 
+    {
+        $db             =& $this->db;
+        $response       = new ResponseManager();
+        $displayGroupID = Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->del)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
-		
-		// Set some information about the form
+        
+        // Set some information about the form
         Theme::Set('form_id', 'DisplayGroupDeleteForm');
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayGroupID" value="' . $displayGroupID . '" />');
 
         $form = Theme::RenderReturn('displaygroup_form_delete');
-		
-		$response->SetFormRequestResponse($form, __('Delete Display Group'), '350px', '175px');
-		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Delete') . '")');
-		$response->AddButton(__('No'), 'XiboDialogClose()');
-		$response->AddButton(__('Yes'), '$("#DisplayGroupDeleteForm").submit()');
-		$response->Respond();
-	}
-	
-	/**
-	 * Display Group Members form
-	 */
-	public function MembersForm()
-	{
-		$db 			=& $this->db;
-		$response		= new ResponseManager();
-		$displayGroupID	= Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
-		
-		// There needs to be two lists here.
-		// One of which is the Displays currently assigned to this group
-		// The other is a list of displays that are available to be assigned (i.e. the opposite of the first list)
+        
+        $response->SetFormRequestResponse($form, __('Delete Display Group'), '350px', '175px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Delete') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#DisplayGroupDeleteForm").submit()');
+        $response->Respond();
+    }
+    
+    /**
+     * Display Group Members form
+     */
+    public function MembersForm()
+    {
+        $db             =& $this->db;
+        $response       = new ResponseManager();
+        $displayGroupID = Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+        
+        // There needs to be two lists here.
+        // One of which is the Displays currently assigned to this group
+        // The other is a list of displays that are available to be assigned (i.e. the opposite of the first list)
 
-		// Set some information about the form
+        // Set some information about the form
         Theme::Set('displays_assigned_id', 'displaysIn');
         Theme::Set('displays_available_id', 'displaysOut');
         Theme::Set('displays_assigned_url', 'index.php?p=displaygroup&q=SetMembers&DisplayGroupID=' . $displayGroupID);
 
-		// Displays in group
-		$SQL  = "";
-		$SQL .= "SELECT display.DisplayID, ";
-		$SQL .= "       display.Display, ";
-		$SQL .= "       CONCAT('DisplayID_', display.DisplayID) AS list_id ";
-		$SQL .= "FROM   display ";
-		$SQL .= "       INNER JOIN lkdisplaydg ";
-		$SQL .= "       ON     lkdisplaydg.DisplayID = display.DisplayID ";
-		$SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
-		$SQL .= " ORDER BY display.Display ";
-		
-		$displaysAssigned = $db->GetArray($SQL);
+        // Displays in group
+        $SQL  = "";
+        $SQL .= "SELECT display.DisplayID, ";
+        $SQL .= "       display.Display, ";
+        $SQL .= "       CONCAT('DisplayID_', display.DisplayID) AS list_id ";
+        $SQL .= "FROM   display ";
+        $SQL .= "       INNER JOIN lkdisplaydg ";
+        $SQL .= "       ON     lkdisplaydg.DisplayID = display.DisplayID ";
+        $SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
+        $SQL .= " ORDER BY display.Display ";
+        
+        $displaysAssigned = $db->GetArray($SQL);
 
         if (!is_array($displaysAssigned))
         {
@@ -259,198 +266,203 @@ class displaygroupDAO
         }
 
         Theme::Set('displays_assigned', $displaysAssigned);
-		
-		// Displays not in group
-		$SQL  = "";
-		$SQL .= "SELECT display.DisplayID, ";
-		$SQL .= "       display.Display, ";
-		$SQL .= "       CONCAT('DisplayID_', display.DisplayID) AS list_id ";
-		$SQL .= "FROM   display ";
-		$SQL .= " WHERE display.DisplayID NOT       IN ";
-		$SQL .= "       (SELECT display.DisplayID ";
-		$SQL .= "       FROM    display ";
-		$SQL .= "               INNER JOIN lkdisplaydg ";
-		$SQL .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
-		$SQL .= sprintf("	WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
-		$SQL .= "       )";
-		$SQL .= " ORDER BY display.Display ";
+        
+        // Displays not in group
+        $SQL  = "";
+        $SQL .= "SELECT display.DisplayID, ";
+        $SQL .= "       display.Display, ";
+        $SQL .= "       CONCAT('DisplayID_', display.DisplayID) AS list_id ";
+        $SQL .= "FROM   display ";
+        $SQL .= " WHERE display.DisplayID NOT       IN ";
+        $SQL .= "       (SELECT display.DisplayID ";
+        $SQL .= "       FROM    display ";
+        $SQL .= "               INNER JOIN lkdisplaydg ";
+        $SQL .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
+        $SQL .= sprintf("   WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
+        $SQL .= "       )";
+        $SQL .= " ORDER BY display.Display ";
 
-		$displaysAvailable = $db->GetArray($SQL);
-		
-		if (!is_array($displaysAvailable))
+        $displaysAvailable = $db->GetArray($SQL);
+        
+        if (!is_array($displaysAvailable))
         {
             trigger_error($db->error());
             trigger_error(__('Error getting Displays'), E_USER_ERROR);
         }
 
         Theme::Set('displays_available', $displaysAvailable);
-		
-		
+        
+        
         $form = Theme::RenderReturn('displaygroup_form_display_assign');
 
-		$response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'DisplayGroupManageMembersCallBack');
-		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Members') . '")');
-		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
-		$response->AddButton(__('Save'), 'DisplayGroupMembersSubmit()');
-		$response->Respond();
-	}
-	
-	/**
-	 * Adds a Display Group
-	 * @return 
-	 */
-	public function Add()
-	{
+        $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'DisplayGroupManageMembersCallBack');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Members') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), 'DisplayGroupMembersSubmit()');
+        $response->Respond();
+    }
+    
+    /**
+     * Adds a Display Group
+     * @return 
+     */
+    public function Add()
+    {
         // Check the token
         if (!Kit::CheckToken())
             trigger_error('Token does not match', E_USER_ERROR);
         
-		$db =& $this->db;
-		$response = new ResponseManager();
+        $db =& $this->db;
+        $response = new ResponseManager();
 
-		$displayGroup = Kit::GetParam('group', _POST, _STRING);
-		$description = Kit::GetParam('desc', _POST, _STRING);
-		
-		$displayGroupObject = new DisplayGroup($db);
-		
-		if (!$displayGroupObject->Add($displayGroup, 0, $description))
-		{
-			trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
-		}
-		
-		$response->SetFormSubmitResponse(__('Display Group Added'), false);
-		$response->Respond();
-	}
-	
-	/**
-	 * Edits a Display Group
-	 * @return 
-	 */
-	public function Edit()
-	{
+        $displayGroup = Kit::GetParam('group', _POST, _STRING);
+        $description = Kit::GetParam('desc', _POST, _STRING);
+        
+        $displayGroupObject = new DisplayGroup($db);
+        
+        if (!$displayGroupObject->Add($displayGroup, 0, $description))
+        {
+            trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
+        }
+        
+        $response->SetFormSubmitResponse(__('Display Group Added'), false);
+        $response->Respond();
+    }
+    
+    /**
+     * Edits a Display Group
+     * @return 
+     */
+    public function Edit()
+    {
         // Check the token
         if (!Kit::CheckToken())
             trigger_error('Token does not match', E_USER_ERROR);
         
-		$db 			=& $this->db;
-		$response		= new ResponseManager();
+        $db             =& $this->db;
+        $response       = new ResponseManager();
 
-		$displayGroupID	= Kit::GetParam('DisplayGroupID', _POST, _INT);
-		$displayGroup	= Kit::GetParam('group', _POST, _STRING);
-		$description 	= Kit::GetParam('desc', _POST, _STRING);
+        $displayGroupID = Kit::GetParam('DisplayGroupID', _POST, _INT);
+        $displayGroup   = Kit::GetParam('group', _POST, _STRING);
+        $description    = Kit::GetParam('desc', _POST, _STRING);
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
-		
-		// Deal with the Edit
-		$displayGroupObject = new DisplayGroup($db);
-		
-		if (!$displayGroupObject->Edit($displayGroupID, $displayGroup, $description))
-		{
-			trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
-		}
-		
-		$response->SetFormSubmitResponse(__('Display Group Edited'), false);
-		$response->Respond();
-	}
-	
-	/**
-	 * Deletes a Group
-	 * @return 
-	 */
-	function Delete() 
-	{
+        
+        // Deal with the Edit
+        $displayGroupObject = new DisplayGroup($db);
+        
+        if (!$displayGroupObject->Edit($displayGroupID, $displayGroup, $description))
+        {
+            trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
+        }
+        
+        $response->SetFormSubmitResponse(__('Display Group Edited'), false);
+        $response->Respond();
+    }
+    
+    /**
+     * Deletes a Group
+     * @return 
+     */
+    function Delete() 
+    {
         // Check the token
         if (!Kit::CheckToken())
             trigger_error('Token does not match', E_USER_ERROR);
         
-		$db 			=& $this->db;	
-		$response		= new ResponseManager();
-	
-		$displayGroupID	= Kit::GetParam('DisplayGroupID', _POST, _INT);
+        $db             =& $this->db;   
+        $response       = new ResponseManager();
+    
+        $displayGroupID = Kit::GetParam('DisplayGroupID', _POST, _INT);
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->del)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
 
-		// Deal with the Delete
-		$displayGroupObject = new DisplayGroup($db);
-		
-		if (!$displayGroupObject->Delete($displayGroupID))
-		{
-			trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
-		}
-		
-		$response->SetFormSubmitResponse(__('Display Group Deleted'), false);
-		$response->Respond();
-	}
-	
-	/**
-	 * Sets the Members of a group
-	 * @return 
-	 */
-	public function SetMembers()
-	{
-		$db 			=& $this->db;	
-		$response		= new ResponseManager();
-		$displayGroupObject = new DisplayGroup($db);
-	
-		$displayGroupID	= Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
-		$displays		= Kit::GetParam('DisplayID', _POST, _ARRAY, array());
-		$members		= array();
-		
-		// Get a list of current members
-		$SQL  = "";
-		$SQL .= "SELECT display.DisplayID ";
-		$SQL .= "FROM   display ";
-		$SQL .= "       INNER JOIN lkdisplaydg ";
-		$SQL .= "       ON     lkdisplaydg.DisplayID = display.DisplayID ";
-		$SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
-		
-		if(!$resultIn = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			trigger_error(__('Error getting Displays'), E_USER_ERROR);
-		}
-		
-		while($row = $db->get_assoc_row($resultIn))
-		{
-			// Test whether this ID is in the array or not
-			$displayID	= Kit::ValidateParam($row['DisplayID'], _INT);
-			
-			if(!in_array($displayID, $displays))
-			{
-				// Its currently assigned but not in the $displays array
-				//  so we unassign
-				if (!$displayGroupObject->Unlink($displayGroupID, $displayID))
-				{
-					trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
-				}
-			}
-			else
-			{
-				$members[] = $displayID;
-			}
-		}
-		
-		foreach($displays as $displayID)
-		{
-			// Add any that are missing
-			if(!in_array($displayID, $members))
-			{
-				if (!$displayGroupObject->Link($displayGroupID, $displayID))
-				{
-					trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
-				}
-			}
-		}
-		
-		$response->SetFormSubmitResponse(__('Group membership set'), false);
-		$response->Respond();
-	}
+        // Deal with the Delete
+        $displayGroupObject = new DisplayGroup($db);
+        
+        if (!$displayGroupObject->Delete($displayGroupID))
+        {
+            trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
+        }
+        
+        $response->SetFormSubmitResponse(__('Display Group Deleted'), false);
+        $response->Respond();
+    }
+    
+    /**
+     * Sets the Members of a group
+     * @return 
+     */
+    public function SetMembers()
+    {
+        $db             =& $this->db;   
+        $response       = new ResponseManager();
+        $displayGroupObject = new DisplayGroup($db);
+    
+        $displayGroupID = Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+        $displays       = Kit::GetParam('DisplayID', _POST, _ARRAY, array());
+        $members        = array();
+
+        // Auth
+        $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
+        if (!$auth->del)
+            trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
+        
+        // Get a list of current members
+        $SQL  = "";
+        $SQL .= "SELECT display.DisplayID ";
+        $SQL .= "FROM   display ";
+        $SQL .= "       INNER JOIN lkdisplaydg ";
+        $SQL .= "       ON     lkdisplaydg.DisplayID = display.DisplayID ";
+        $SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
+        
+        if(!$resultIn = $db->query($SQL))
+        {
+            trigger_error($db->error());
+            trigger_error(__('Error getting Displays'), E_USER_ERROR);
+        }
+        
+        while($row = $db->get_assoc_row($resultIn))
+        {
+            // Test whether this ID is in the array or not
+            $displayID  = Kit::ValidateParam($row['DisplayID'], _INT);
+            
+            if(!in_array($displayID, $displays))
+            {
+                // Its currently assigned but not in the $displays array
+                //  so we unassign
+                if (!$displayGroupObject->Unlink($displayGroupID, $displayID))
+                {
+                    trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
+                }
+            }
+            else
+            {
+                $members[] = $displayID;
+            }
+        }
+        
+        foreach($displays as $displayID)
+        {
+            // Add any that are missing
+            if(!in_array($displayID, $members))
+            {
+                if (!$displayGroupObject->Link($displayGroupID, $displayID))
+                {
+                    trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
+                }
+            }
+        }
+        
+        $response->SetFormSubmitResponse(__('Group membership set'), false);
+        $response->Respond();
+    }
 
     /**
      * Show the Permissions for this Display Group
@@ -471,7 +483,7 @@ class displaygroupDAO
 
         // Set some information about the form
         Theme::Set('form_id', 'DisplayGroupPermissionsForm');
-    	Theme::Set('form_action', 'index.php?p=displaygroup&q=Permissions');
+        Theme::Set('form_action', 'index.php?p=displaygroup&q=Permissions');
         Theme::Set('form_meta', '<input type="hidden" name="displayGroupId" value="' . $displayGroupId . '" />');
 
         // List of all Groups with a view/edit/delete checkbox
@@ -543,7 +555,7 @@ class displaygroupDAO
         $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
 
         if (!$auth->modifyPermissions)
-            trigger_error(__('You do not have permissions to edit this dataset'), E_USER_ERROR);
+            trigger_error(__('You do not have permissions to edit this display group'), E_USER_ERROR);
 
         // Unlink all
         $security = new DisplayGroupSecurity($db);
@@ -608,6 +620,163 @@ class displaygroupDAO
         }
 
         $response->SetFormSubmitResponse(__('Permissions Changed'));
+        $response->Respond();
+    }
+
+    public function FileAssociations() {
+
+        $displayGroupId = Kit::GetParam('DisplayGroupID', _GET, _INT);
+
+        // Auth
+        $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
+        if (!$auth->edit)
+            trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
+
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="displaygroup"><input type="hidden" name="q" value="FileAssociationsView"><input type="hidden" name="displaygroupid" value="' . $displayGroupId . '">');
+        Theme::Set('pager', ResponseManager::Pager($id));
+        
+        // Module types filter
+        $modules = $this->user->ModuleAuth(0, '', -1);
+        $types = array();
+
+        foreach ($modules as $module) {
+            $type['moduleid'] = $module['Module'];
+            $type['module'] = $module['Name'];
+
+            $types[] = $type;
+        }
+
+        array_unshift($types, array('moduleid' => '', 'module' => 'All'));
+        Theme::Set('module_field_list', $types);
+
+        // Get the currently associated media items and put them in the top bar
+        $existing = array();
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('
+                SELECT media.MediaID, media.Name 
+                  FROM `media` 
+                    INNER JOIN `lkmediadisplaygroup` 
+                    ON lkmediadisplaygroup.mediaid = media.mediaid 
+                 WHERE lkmediadisplaygroup.displaygroupid = :displaygroupid
+            ');
+
+            $sth->execute(array('displaygroupid' => $displayGroupId));
+
+            $existing = $sth->fetchAll();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            trigger_error(__('Unable to get existing assignments.'), E_USER_ERROR);
+        }
+
+        Theme::Set('existing_associations', $existing);
+
+        // Call to render the template
+        $output = Theme::RenderReturn('displaygroup_fileassociations_form_assign');
+
+        // Construct the Response
+        $response = new ResponseManager();
+        $response->html = $output;
+        $response->success = true;
+        $response->dialogSize = true;
+        $response->dialogClass = 'modal-big';
+        $response->dialogWidth = '780px';
+        $response->dialogHeight = '580px';
+        $response->dialogTitle = __('Associate an item from the Library');
+
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'FileAssociations') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Assign'), 'FileAssociationsSubmit(' . $displayGroupId  . ')');
+        $response->Respond();
+    }
+
+    public function FileAssociationsView() {
+        $user =& $this->user;
+
+        //Input vars
+        $mediatype = Kit::GetParam('filter_type', _POST, _STRING);
+        $name = Kit::GetParam('filter_name', _POST, _STRING);
+        $displaygroupid = Kit::GetParam('displaygroupid', _POST, _INT);
+
+        // Get the currently associated media items and put them in the top bar
+        $existing = array();
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('
+                SELECT mediaid
+                  FROM `lkmediadisplaygroup` 
+                 WHERE displaygroupid = :displaygroupid
+            ');
+
+            $sth->execute(array('displaygroupid' => $displaygroupid));
+
+            while ($existing[] = $sth->fetchColumn());
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            trigger_error(__('Unable to get existing assignments.'), E_USER_ERROR);
+        }
+
+        // Get a list of media
+        $mediaList = $user->MediaList($mediatype, $name);
+
+        $rows = array();
+
+        // Add some extra information
+        foreach ($mediaList as $row) {
+
+            if (in_array($row['mediaid'], $existing))
+                continue;
+
+            $row['list_id'] = 'MediaID_' . $row['mediaid'];
+
+            $rows[] = $row;
+        }
+
+        Theme::Set('table_rows', $rows);
+
+        // Render the Theme
+        $response = new ResponseManager();
+        $response->SetGridResponse(Theme::RenderReturn('displaygroup_fileassociations_form_assign_list'));
+        $response->callBack = 'FileAssociationsCallback';
+        $response->pageSize = 5;
+        $response->Respond();
+    }
+
+    public function SetFileAssociations() {
+        $user       =& $this->user;
+        $response   = new ResponseManager();
+
+        $displayGroupId = Kit::GetParam('displaygroupid', _GET, _INT);
+        $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY_INT, array(), false);
+
+        if ($displayGroupId == 0)
+            trigger_error(__('Display Group not selected'), E_USER_ERROR);
+
+        // Auth
+        $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
+        if (!$auth->del)
+            trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
+
+        Kit::ClassLoader('displaygroup');
+        $displayGroup = new DisplayGroup($this->db);
+
+        if (!$displayGroup->AssociateFiles($this->user, $displayGroupId, $mediaList))
+            trigger_error($displayGroup->GetErrorMessage(), E_USER_ERROR);
+
+        // Success
+        $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));
         $response->Respond();
     }
 }

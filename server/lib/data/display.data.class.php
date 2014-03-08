@@ -402,7 +402,7 @@ class Display extends Data
      * Flags a display as being incomplete
      * @param <type> $displayId
      */
-    private function FlagIncomplete($displayId)
+    public function FlagIncomplete($displayId)
     {
         Debug::LogEntry('audit', sprintf('Flag DisplayID %d incomplete.', $displayId), 'display', 'NotifyDisplays');
 
