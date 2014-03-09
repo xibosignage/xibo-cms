@@ -791,7 +791,34 @@ class displaygroupDAO
         $response = new ResponseManager();
 
         $displayGroupId = Kit::GetParam('displaygroupid', _GET, _INT);
+        $displayId = Kit::GetParam('displayid', _GET, _INT);
         Theme::Set('installer_file_id', 0);
+
+        // List of effected displays
+        $rows = array();
+
+        if ($displayId != 0) {
+            // Get some version information about this display.
+            if (!$displays = $this->user->DisplayList(array('display'), array('displayid' => $displayId)))
+                trigger_error(__('Unknown Display'), E_USER_ERROR);
+        }
+        else {
+            // Get a list of displays with their version information?
+            if (!$displays = $this->user->DisplayList(array('display'), array('displaygroupid' => $displayGroupId)))
+                trigger_error(__('Unknown Display'), E_USER_ERROR);
+        }
+
+        foreach ($displays as $display) {
+            $rows[] = array(
+                    'display' => Theme::Prepare($display['display']),
+                    'client_type' => Theme::Prepare($display['client_type']),
+                    'client_version' => Theme::Prepare($display['client_version']),
+                    'client_code' => Theme::Prepare($display['client_code'])
+                );
+        }
+
+        // Store this for use in the theme
+        Theme::Set('displays', $displays);
 
         // Present a list of possible files to choose from (generic file module)
         $mediaList = $this->user->MediaList('genericfile');

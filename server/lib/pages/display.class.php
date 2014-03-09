@@ -389,7 +389,7 @@ SQL;
                 // Version Information
                 $row['buttons'][] = array(
                         'id' => 'display_button_version_instructions',
-                        'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'],
+                        'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'] . '&displayid=' . $row['displayid'],
                         'text' => __('Version Information')
                     );
             }

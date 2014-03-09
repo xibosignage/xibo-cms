@@ -1442,7 +1442,10 @@ END;
         $SQL .= '    displaygroup.DisplayGroupID, ';
         $SQL .= '    display.ClientAddress, ';
         $SQL .= '    display.MediaInventoryStatus, ';
-        $SQL .= '    display.MacAddress ';
+        $SQL .= '    display.MacAddress, ';
+        $SQL .= '    display.client_type, ';
+        $SQL .= '    display.client_version, ';
+        $SQL .= '    display.client_code ';
         $SQL .= '  FROM display ';
         $SQL .= '    INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID ';
         $SQL .= '    INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID ';
@@ -1457,7 +1460,14 @@ END;
             $SQL .= ' WHERE displaygroup.IsDisplaySpecific = 1 ';
         }
 
-        $SQL .= 'ORDER BY ' . implode(',', $sort_order);
+        // Filter by Display ID?
+        if (Kit::GetParam('displayid', $filter_by, _INT) != 0) {
+            $SQL .= sprintf(' AND display.displayid = %d ', Kit::GetParam('displayid', $filter_by, _INT));
+        }
+
+        // Sorting?
+        if (is_array($sort_order))
+            $SQL .= 'ORDER BY ' . implode(',', $sort_order);
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1484,6 +1494,9 @@ END;
             $displayItem['clientaddress'] = Kit::ValidateParam($row['ClientAddress'], _STRING);
             $displayItem['mediainventorystatus'] = Kit::ValidateParam($row['MediaInventoryStatus'], _INT);
             $displayItem['macaddress'] = Kit::ValidateParam($row['MacAddress'], _STRING);
+            $displayItem['client_type'] = Kit::ValidateParam($row['client_type'], _STRING);
+            $displayItem['client_version'] = Kit::ValidateParam($row['client_version'], _STRING);
+            $displayItem['client_code'] = Kit::ValidateParam($row['client_code'], _STRING);
 
             $auth = $this->DisplayGroupAuth($displayItem['displaygroupid'], true);
 

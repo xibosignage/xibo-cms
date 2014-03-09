@@ -86,6 +86,9 @@ CREATE TABLE IF NOT EXISTS `display` (
   `Cidr` smallint(6) DEFAULT NULL,
   `GeoLocation` POINT NULL,
   `version_instructions` varchar(255) NULL,
+  `client_type` VARCHAR( 20 ) NULL ,
+  `client_version` VARCHAR( 5 ) NULL ,
+  `client_code` SMALLINT NULL,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;

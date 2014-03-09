@@ -934,7 +934,11 @@ class XMDSSoap
         $document = new DOMDocument("1.0");
         $document->loadXML($inventory);
 
-        $macAddress = $document->documentElement->getAttribute('macAddress');
+        // Get some information from the media inventory XML and update the display record with it.
+        $macAddress = Kit::ValidateParam($document->documentElement->getAttribute('macAddress'), _STRING);
+        $clientType = Kit::ValidateParam($document->documentElement->getAttribute('clientType'), _STRING);
+        $clientVersion = Kit::ValidateParam($document->documentElement->getAttribute('clientVersion'), _STRING);
+        $clientCode = Kit::ValidateParam($document->documentElement->getAttribute('clientCode'), _INT);
 
         // Assume we are complete (but we are getting some)
         $mediaInventoryComplete = 1;
@@ -958,7 +962,7 @@ class XMDSSoap
 
         // Touch the display record
         $displayObject = new Display($db);
-        $displayObject->Touch($hardwareKey, '', $mediaInventoryComplete, $inventory, $macAddress);
+        $displayObject->Touch($hardwareKey, '', $mediaInventoryComplete, $inventory, $macAddress, $clientType, $clientVersion, $clientCode);
 
         return true;
     }

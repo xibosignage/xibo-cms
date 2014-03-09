@@ -321,12 +321,17 @@ class Display extends Data
 	}
 	
 	/**
-	 * Sets the information required on the display to indicate
-	 * that it is still logged in
-	 * @return 
-	 * @param $license Object
-	 */
-	public function Touch($license, $clientAddress = '', $mediaInventoryComplete = 0, $mediaInventoryXml = '', $macAddress = '')
+     * Sets the information required on the display to indicate that it is still logged in
+     * @param string  $license                The display licence key
+     * @param string  $clientAddress          The client IP address
+     * @param integer $mediaInventoryComplete The Media Inventory Status
+     * @param string  $mediaInventoryXml      The Media Inventory XML
+     * @param string  $macAddress             The Client Mac Address
+     * @param string  $clientType             The Client Type
+     * @param string  $clientVersion          The Client Version
+     * @param integer $clientCode             The Client Version Code
+     */
+	public function Touch($license, $clientAddress = '', $mediaInventoryComplete = 0, $mediaInventoryXml = '', $macAddress = '', $clientType = '', $clientVersion = '', $clientCode = 0)
 	{
 		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Touch');
         
@@ -357,6 +362,22 @@ class Display extends Data
             if ($mediaInventoryXml != '') {
                 $SQL .= " , MediaInventoryXml = :mediainventoryxml ";
                 $params['mediainventoryxml'] = $mediaInventoryXml;
+            }
+
+            // Client information if present
+            if ($clientType != '') {
+                $SQL .= " , client_type = :client_type ";
+                $params['client_type'] = $clientType;
+            }
+
+            if ($clientVersion != '') {
+                $SQL .= " , client_version = :client_version ";
+                $params['client_version'] = $clientVersion;
+            }
+
+            if ($clientCode != '') {
+                $SQL .= " , client_code = :client_code ";
+                $params['client_code'] = $clientCode;
             }
 
             // Mac address storage

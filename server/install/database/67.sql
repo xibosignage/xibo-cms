@@ -11,7 +11,10 @@ CREATE TABLE IF NOT EXISTS `lkmediadisplaygroup` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='File associations directly to Display Groups' AUTO_INCREMENT=1 ;
 
-ALTER TABLE `display` ADD `version_instructions` VARCHAR( 255 ) NULL;
+ALTER TABLE `display` ADD `version_instructions` VARCHAR( 255 ) NULL,
+	ADD  `client_type` VARCHAR( 20 ) NULL ,
+	ADD  `client_version` VARCHAR( 5 ) NULL ,
+	ADD  `client_code` SMALLINT NULL;
 
 INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (1, 'DisplayGroup', 'FileAssociations', 'manual/single.php?p=admin/fileassociations');
