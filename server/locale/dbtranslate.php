@@ -54,6 +54,7 @@ echo __('Modules');
 echo __('Campaigns');
 echo __('Transitions');
 echo __('Resolutions');
+echo __('User Groups');
 
 // Settings translations
 echo __('jpg_length');
