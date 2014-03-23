@@ -39,12 +39,17 @@ jQuery.fn.extend({
 
         var options = $.extend({}, defaults, options);
 
-        // Set the width and height
-        options.width = (options.previewWidth == 0) ? $(window).width() : options.previewWidth;
-        options.height = (options.previewHeight == 0) ? $(window).height() : options.previewHeight;
-
-        // Calculate the scale factor?
-        options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
+        // Set the width, height and scale factor
+        if (options.previewWidth == 0 && options.previewHeight == 0) {
+            options.width = $(window).width();
+            options.height = $(window).height();
+            options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
+        }
+        else {
+            options.width = options.previewWidth;
+            options.height = options.previewHeight;
+            options.scaleFactor = 1;
+        }
 
         // For each matched element
         this.each(function() {
@@ -246,12 +251,17 @@ jQuery.fn.extend({
 
         $(this).each(function() {
 
-            // Set the width and height
-            options.width = (options.previewWidth == 0) ? $(window).width() : options.previewWidth;
-            options.height = (options.previewHeight == 0) ? $(window).height() : options.previewHeight;
-
-            // Calculate the scale factor?
-            options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
+            // Set the width, height and scale factor
+            if (options.previewWidth == 0 && options.previewHeight == 0) {
+                options.width = $(window).width();
+                options.height = $(window).height();
+                options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
+            }
+            else {
+                options.width = options.previewWidth;
+                options.height = options.previewHeight;
+                options.scaleFactor = 1;
+            }
 
             $("body").css({
                 width: options.originalWidth,
