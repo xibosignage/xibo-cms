@@ -38,7 +38,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     	<div class="control-group">
     		<label class="control-label" for="uri" title="The Link for the RSS feed"><?php echo Theme::Translate('Feed URL'); ?></label>
     		<div class="controls">
-    			<input class="url" id="uri" name="uri" value="" type="text">
+    			<input id="uri" name="uri" value="" type="text">
     		</div>
     	</div>
     	<div class="control-group">
