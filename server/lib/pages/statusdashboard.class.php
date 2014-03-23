@@ -36,7 +36,7 @@ class statusdashboardDAO
 		try {
 		    $dbh = PDOConnect::init();
 		
-		    $sth = $dbh->prepare('SELECT MONTHNAME(FROM_UNIXTIME(month)) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY MONTHNAME(FROM_UNIXTIME(month));');
+		    $sth = $dbh->prepare('SELECT MONTHNAME(FROM_UNIXTIME(month)) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY MONTHNAME(FROM_UNIXTIME(month)) ORDER BY MIN(month);');
 		    $sth->execute(array('month' => time() - (86400 * 365)));
 
 		    $results = $sth->fetchAll();
