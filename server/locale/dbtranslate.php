@@ -98,6 +98,9 @@ echo __('SCHEDULE_WITH_VIEW_PERMISSION');
 echo __('SETTING_IMPORT_ENABLED');
 echo __('SETTING_LIBRARY_TIDY_ENABLED');
 echo __('EMBEDDED_STATUS_WIDGET');
+echo __('PROXY_HOST');
+echo __('PROXY_PORT');
+echo __('PROXY_AUTH');
 
 // Transitions
 echo __('Fade In');

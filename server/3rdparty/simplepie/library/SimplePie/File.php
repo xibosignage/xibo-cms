@@ -113,6 +113,15 @@ class SimplePie_File
 					curl_setopt($fp, CURLOPT_MAXREDIRS, $redirects);
 				}
 
+				// Dan Garner PATCH
+				if (Config::GetSetting('PROXY_HOST') != '') {
+					curl_setopt($fp, CURLOPT_PROXY, Config::GetSetting('PROXY_HOST')); 
+ 					curl_setopt($fp, CURLOPT_PROXYPORT, Config::GetSetting('PROXY_PORT'));
+
+ 					if (Config::GetSetting('PROXY_AUTH') != '')
+ 						curl_setopt($fp, CURLOPT_PROXYUSERPWD, Config::GetSetting('PROXY_AUTH'));
+				}
+
 				$this->headers = curl_exec($fp);
 				if (curl_errno($fp) === 23 || curl_errno($fp) === 61)
 				{

@@ -260,7 +260,10 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 (67, 'SETTING_IMPORT_ENABLED', 'Off', 'dropdown', NULL , 'On|Off', 'general', '0'), 
 (68, 'SETTING_LIBRARY_TIDY_ENABLED', 'Off', 'dropdown', NULL , 'On|Off', 'general', '0'),
 (69, 'SENDFILE_MODE', 'Off', 'dropdown', 'When a user downloads a file from the library or previews a layout, should we attempt to use Apache X-Sendfile, Nginx X-Accel, or PHP (Off) to return the file from the library?', 'Off|Apache|Nginx', 'general', '1'),
-(70, 'EMBEDDED_STATUS_WIDGET', '', 'text', 'HTML to embed in an iframe on the Status Dashboard' , NULL, 'general', '0');
+(70, 'EMBEDDED_STATUS_WIDGET', '', 'text', 'HTML to embed in an iframe on the Status Dashboard' , NULL, 'general', '0'),
+(71, 'PROXY_HOST', '', 'text', 'The Proxy URL' , NULL, 'general', '1'),
+(72, 'PROXY_PORT', '', 'text', 'The Proxy Port' , NULL, 'general', '1'),
+(73, 'PROXY_AUTH', '', 'text', 'The Authentication information for this proxy. username:password' , NULL, 'general', '1');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
