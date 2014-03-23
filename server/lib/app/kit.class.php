@@ -232,11 +232,11 @@ class Kit
 
 				if ($sanitize) {
 					// Only use the first integer value
-					if (!$result = filter_var($return, FILTER_SANITIZE_NUMBER_INT))
-						$result = 0;
+					if (!$return = filter_var($return, FILTER_SANITIZE_NUMBER_INT))
+						$return = 0;
 				}
 				else {
-					if (!$result = filter_var($return, FILTER_VALIDATE_INT))
+					if (!$return = filter_var($return, FILTER_VALIDATE_INT))
 						trigger_error(sprintf(__('No integer match found for [%s] and return value is not an integer'), $param), E_USER_ERROR);
 				}
 
@@ -246,13 +246,15 @@ class Kit
 				
 				if ($sanitize) {
 					// Only use the first integer value
-					if (!$result = filter_var($return, FILTER_SANITIZE_NUMBER_FLOAT))
-						$result = 0;
+					if (!$return = filter_var($return, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION))
+						$return = 0;
 				}
 				else {
-					if (!$result = filter_var($return, FILTER_VALIDATE_FLOAT))
+					if (!$return = filter_var($return, FILTER_VALIDATE_FLOAT, FILTER_FLAG_ALLOW_FRACTION))
 						trigger_error(sprintf(__('No integer match found for %s, and return value is not an integer'), $param), E_USER_ERROR);
 				}
+
+				break;
 
 			case _BOOL :
 				$return = filter_var($return, FILTER_VALIDATE_BOOLEAN);
@@ -279,11 +281,11 @@ class Kit
 				else {
 					if ($sanitize) {
 						// Only use the first integer value
-						if (!$result = filter_var_array($return, FILTER_SANITIZE_NUMBER_INT))
-							$result = array();
+						if (!$return = filter_var_array($return, FILTER_SANITIZE_NUMBER_INT))
+							$return = array();
 					}
 					else {
-						if (!$result = filter_var_array($return, FILTER_VALIDATE_INT))
+						if (!$return = filter_var_array($return, FILTER_VALIDATE_INT))
 							trigger_error(sprintf(__('No integer found for %s, and return value is not an integer'), $param), E_USER_ERROR);
 					}
 				}
