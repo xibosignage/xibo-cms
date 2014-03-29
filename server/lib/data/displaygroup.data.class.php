@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-13 Daniel Garner
+ * Copyright (C) 2009-14 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,36 +22,36 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class DisplayGroup extends Data
 {
-	public function __construct(database $db)
-	{
-		include_once('lib/data/schedule.data.class.php');
-		include_once('lib/data/displaygroupsecurity.data.class.php');
-		
-		parent::__construct($db);
-	}
-	
-	/**
-	 * Adds a Display Group to Xibo
-	 * @return 
-	 * @param $displayGroup string
-	 * @param $isDisplaySpecific int
-	 * @param $description string[optional]
-	 */
-	public function Add($displayGroup, $isDisplaySpecific, $description = '')
-	{
-		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Add');
+    public function __construct(database $db)
+    {
+        include_once('lib/data/schedule.data.class.php');
+        include_once('lib/data/displaygroupsecurity.data.class.php');
+        
+        parent::__construct($db);
+    }
+    
+    /**
+     * Adds a Display Group to Xibo
+     * @return 
+     * @param $displayGroup string
+     * @param $isDisplaySpecific int
+     * @param $description string[optional]
+     */
+    public function Add($displayGroup, $isDisplaySpecific, $description = '')
+    {
+        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Add');
 
-		try {
+        try {
             $dbh = PDOConnect::init();
 
-			// Validation
-			if ($displayGroup == '')
-				$this->ThrowError(__('Please enter a display group name'));
-			
-			if (strlen($description) > 254) 
-				$this->ThrowError(__("Description can not be longer than 254 characters"));
+            // Validation
+            if ($displayGroup == '')
+                $this->ThrowError(__('Please enter a display group name'));
+            
+            if (strlen($description) > 254) 
+                $this->ThrowError(__("Description can not be longer than 254 characters"));
 
-			$sth = $dbh->prepare('SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = :displaygroup AND IsDisplaySpecific = 0');
+            $sth = $dbh->prepare('SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = :displaygroup AND IsDisplaySpecific = 0');
             $sth->execute(array(
                     'displaygroup' => $displayGroup
                 ));
@@ -59,10 +59,10 @@ class DisplayGroup extends Data
             if ($row = $sth->fetch())
                 $this->ThrowError(25004, sprintf(__('You already own a display group called "%s". Please choose another name.'), $displayGroup));
 
-			// End Validation
-			
-			// Insert the display group
-			$sth = $dbh->prepare('INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description) VALUES (:displaygroup, :isdisplayspecific, :description)');
+            // End Validation
+            
+            // Insert the display group
+            $sth = $dbh->prepare('INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description) VALUES (:displaygroup, :isdisplayspecific, :description)');
             $sth->execute(array(
                     'displaygroup' => $displayGroup,
                     'isdisplayspecific' => $isDisplaySpecific,
@@ -70,11 +70,11 @@ class DisplayGroup extends Data
                 ));
 
             $displayGroupID = $dbh->lastInsertId();
-			
-			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Add');
+            
+            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Add');
 
-			return $displayGroupID;
-		}
+            return $displayGroupID;
+        }
         catch (Exception $e) {
 
             Debug::LogEntry('error', $e->getMessage());
@@ -84,33 +84,33 @@ class DisplayGroup extends Data
 
             return false;
         }
-	}
-	
-	/**
-	 * Edits an existing Xibo Display Group
-	 * @return 
-	 * @param $displayGroupID Object
-	 * @param $displayGroup Object
-	 * @param $description Object
-	 */
-	public function Edit($displayGroupID, $displayGroup, $description)
-	{
-		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Edit');
+    }
+    
+    /**
+     * Edits an existing Xibo Display Group
+     * @return 
+     * @param $displayGroupID Object
+     * @param $displayGroup Object
+     * @param $description Object
+     */
+    public function Edit($displayGroupID, $displayGroup, $description)
+    {
+        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Edit');
 
-		try {
+        try {
             $dbh = PDOConnect::init();
 
-			// Validation
-			if ($displayGroupID == 0) 
-				$this->ThrowError(__('No Display Group Selected'));
-			
-			if ($displayGroup == '')
-				$this->ThrowError(__('Please enter a display group name'));
-			
-			if (strlen($description) > 254) 
-				$this->ThrowError(__("Description can not be longer than 254 characters"));
+            // Validation
+            if ($displayGroupID == 0) 
+                $this->ThrowError(__('No Display Group Selected'));
+            
+            if ($displayGroup == '')
+                $this->ThrowError(__('Please enter a display group name'));
+            
+            if (strlen($description) > 254) 
+                $this->ThrowError(__("Description can not be longer than 254 characters"));
 
-			$sth = $dbh->prepare('SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = :displaygroup AND IsDisplaySpecific = 0 AND DisplayGroupID <> :displaygroupid');
+            $sth = $dbh->prepare('SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = :displaygroup AND IsDisplaySpecific = 0 AND DisplayGroupID <> :displaygroupid');
             $sth->execute(array(
                     'displaygroup' => $displayGroup,
                     'displaygroupid' => $displayGroupID
@@ -118,21 +118,21 @@ class DisplayGroup extends Data
 
             if ($row = $sth->fetch())
                 $this->ThrowError(25004, sprintf(__('You already own a display group called "%s". Please choose another name.'), $displayGroup));
-			
-			// End Validation
-			 
-			// Update the DisplayGroup
-			$sth = $dbh->prepare('UPDATE displaygroup SET DisplayGroup = :displaygroup, Description = :description WHERE DisplayGroupID = :displaygroupid');
+            
+            // End Validation
+             
+            // Update the DisplayGroup
+            $sth = $dbh->prepare('UPDATE displaygroup SET DisplayGroup = :displaygroup, Description = :description WHERE DisplayGroupID = :displaygroupid');
             $sth->execute(array(
                     'displaygroup' => $displayGroup,
                     'description' => $description,
                     'displaygroupid' => $displayGroupID
                 ));
-			
-			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');		
-						
-			return true;
-		}
+            
+            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');        
+                        
+            return true;
+        }
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage());
@@ -142,36 +142,36 @@ class DisplayGroup extends Data
 
             return false;
         }
-	}
-	
-	/**
-	 * Deletes an Xibo Display Group
-	 * @return 
-	 * @param $displayGroupID Object
-	 */
-	public function Delete($displayGroupID)
-	{
-		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Delete');
+    }
+    
+    /**
+     * Deletes an Xibo Display Group
+     * @return 
+     * @param $displayGroupID Object
+     */
+    public function Delete($displayGroupID)
+    {
+        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Delete');
 
         try {
             $dbh = PDOConnect::init();
 
             // Tidy up the schedule detail records.
             $schedule = new Schedule($this->db);
-	
+    
             if (!$schedule->DeleteScheduleForDisplayGroup($displayGroupID))
                 throw new Exception('Unable to DeleteScheduleForDisplayGroup');
 
             // Delete the Display Group
-           	$sth = $dbh->prepare('DELETE FROM displaygroup WHERE DisplayGroupID = :displaygroupid');
+            $sth = $dbh->prepare('DELETE FROM displaygroup WHERE DisplayGroupID = :displaygroupid');
             $sth->execute(array(
                     'displaygroupid' => $displayGroupID
                 ));
 
-			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Delete');
-						
-			return true;
-		}
+            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Delete');
+                        
+            return true;
+        }
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage());
@@ -181,47 +181,54 @@ class DisplayGroup extends Data
 
             return false;
         }
-	}
-	
-	/**
-	 * Deletes all Display Group records associated with a display.
-	 * @return 
-	 * @param $displayID Object
-	 */
-	public function DeleteDisplay($displayID)
-	{
-		try {
+    }
+    
+    /**
+     * Deletes all Display Group records associated with a display.
+     * @return 
+     * @param $displayID Object
+     */
+    public function DeleteDisplay($displayID)
+    {
+        Kit::ClassLoader('lkmediadisplaygroup');
+        
+        try {
             $dbh = PDOConnect::init();
-		
-			// Get the DisplaySpecific Group for this Display
-			$SQL  = "";
-			$SQL .= "SELECT displaygroup.DisplayGroupID ";
-			$SQL .= "FROM   displaygroup ";
-			$SQL .= "       INNER JOIN lkdisplaydg ";
-			$SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
-			$SQL .= "WHERE  displaygroup.IsDisplaySpecific = 1 ";
-			$SQL .= "	AND lkdisplaydg.DisplayID = :displayid";
+        
+            // Get the DisplaySpecific Group for this Display
+            $SQL  = "";
+            $SQL .= "SELECT displaygroup.DisplayGroupID ";
+            $SQL .= "FROM   displaygroup ";
+            $SQL .= "       INNER JOIN lkdisplaydg ";
+            $SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+            $SQL .= "WHERE  displaygroup.IsDisplaySpecific = 1 ";
+            $SQL .= "   AND lkdisplaydg.DisplayID = :displayid";
 
-			$sth = $dbh->prepare($SQL);
+            $sth = $dbh->prepare($SQL);
             $sth->execute(array(
                     'displayid' => $displayID
                 ));
 
             if (!$row = $sth->fetch())
                 $this->ThrowError(25005, __('Unable to get the DisplayGroup for this Display'));
-			
-			// Get the Display Group ID
-			$displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
-		
-			// If there is no region specific display record... what do we do?
+            
+            // Get the Display Group ID
+            $displayGroupID = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+        
+            // If there is no region specific display record... what do we do?
             if ($displayGroupID == 0)
-            	$this->ThrowError(25005, __('Unable to get the DisplayGroup for this Display'));
-		
+                $this->ThrowError(25005, __('Unable to get the DisplayGroup for this Display'));
+        
             // Delete the Schedule for this Display Group
             $scheduleObject = new Schedule($this->db);
 
             if (!$scheduleObject->DeleteScheduleForDisplayGroup($displayGroupID))
-            	$this->ThrowError(25006, __('Unable to delete Schedule records for this DisplayGroup.'));
+                $this->ThrowError(25006, __('Unable to delete Schedule records for this DisplayGroup.'));
+
+            // Drop all current assignments
+            $link = new LkMediaDisplayGroup($this->db);
+            if (!$link->UnlinkAllFromDisplayGroup($displayGroupId))
+                $this->ThrowError(__('Unable to drop file assignments during display delete.'));
 
             // Unlink all Display Groups from this Display
             $sth = $dbh->prepare('DELETE FROM lkdisplaydg WHERE DisplayID = :displayid');
@@ -240,8 +247,8 @@ class DisplayGroup extends Data
                 // An error will already be set - so just drop out
                 throw new Exception('Unable to delete');
 
-			return true;
-		}
+            return true;
+        }
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage());
@@ -251,48 +258,48 @@ class DisplayGroup extends Data
 
             return false;
         }
-	}
-	
-	/**
-	 * Links a Display to a Display Group
-	 * @return 
-	 * @param $displayGroupID Object
-	 * @param $displayID Object
-	 */
-	public function Link($displayGroupID, $displayID)
-	{
-		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Link');
-		
-		try {
+    }
+    
+    /**
+     * Links a Display to a Display Group
+     * @return 
+     * @param $displayGroupID Object
+     * @param $displayID Object
+     */
+    public function Link($displayGroupID, $displayID)
+    {
+        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Link');
+        
+        try {
             $dbh = PDOConnect::init();
-		
-			$sth = $dbh->prepare('INSERT INTO lkdisplaydg (DisplayGroupID, DisplayID) VALUES (:displaygroupid, :displayid)');
+        
+            $sth = $dbh->prepare('INSERT INTO lkdisplaydg (DisplayGroupID, DisplayID) VALUES (:displaygroupid, :displayid)');
             $sth->execute(array(
                     'displaygroupid' => $displayGroupID,
                     'displayid' => $displayID
                 ));
 
-			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Link');
-		
-			return true;
-		}
+            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Link');
+        
+            return true;
+        }
         catch (Exception $e) {
             Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25005, __('Could not Link Display Group to Display'));
         }
-	}
-	
-	/**
-	 * Unlinks a Display from a Display Group
-	 * @return 
-	 * @param $displayGroupID Object
-	 * @param $displayID Object
-	 */
-	public function Unlink($displayGroupID, $displayID)
-	{
-		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Unlink');
-		
-		try {
+    }
+    
+    /**
+     * Unlinks a Display from a Display Group
+     * @return 
+     * @param $displayGroupID Object
+     * @param $displayID Object
+     */
+    public function Unlink($displayGroupID, $displayID)
+    {
+        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Unlink');
+        
+        try {
             $dbh = PDOConnect::init();
 
             $sth = $dbh->prepare('DELETE FROM lkdisplaydg WHERE DisplayGroupID = :displaygroupid AND DisplayID = :displayid');
@@ -301,75 +308,75 @@ class DisplayGroup extends Data
                     'displayid' => $displayID
                 ));
 
-			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Unlink');
-		
-			return true;
-		}
+            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Unlink');
+        
+            return true;
+        }
         catch (Exception $e) {
             Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25007, __('Could not Unlink Display Group from Display'));
         }
-	}
-	
-	/**
-	 * Edits the Display Group associated with a Display
-	 * @return 
-	 * @param $displayID Object
-	 * @param $display Object
-	 */
-	public function EditDisplayGroup($displayID, $display)
-	{
-		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'EditDisplayGroup');
-		
-		try {
+    }
+    
+    /**
+     * Edits the Display Group associated with a Display
+     * @return 
+     * @param $displayID Object
+     * @param $display Object
+     */
+    public function EditDisplayGroup($displayID, $display)
+    {
+        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'EditDisplayGroup');
+        
+        try {
             $dbh = PDOConnect::init();
 
-			// Get the DisplayGroupID for this DisplayID
-			$SQL  = "";
-			$SQL .= "SELECT displaygroup.DisplayGroupID ";
-			$SQL .= "FROM   displaygroup ";
-			$SQL .= "       INNER JOIN lkdisplaydg ";
-			$SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
-			$SQL .= "WHERE  displaygroup.IsDisplaySpecific = 1 ";
-			$SQL .= "   AND lkdisplaydg.DisplayID = :displayid";
-			
-			$sth = $dbh->prepare($SQL);
+            // Get the DisplayGroupID for this DisplayID
+            $SQL  = "";
+            $SQL .= "SELECT displaygroup.DisplayGroupID ";
+            $SQL .= "FROM   displaygroup ";
+            $SQL .= "       INNER JOIN lkdisplaydg ";
+            $SQL .= "       ON     lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+            $SQL .= "WHERE  displaygroup.IsDisplaySpecific = 1 ";
+            $SQL .= "   AND lkdisplaydg.DisplayID = :displayid";
+            
+            $sth = $dbh->prepare($SQL);
             $sth->execute(array(
                     'displayid' => $displayID
                 ));
 
             if (!$row = $sth->fetch())
                 $this->ThrowError(25005, __('Unable to get the DisplayGroup for this Display'));
-			
-			// Get the Display Group ID
-			$displayGroupID	= Kit::ValidateParam($row['DisplayGroupID'], _INT);
-		
-			// If there is no region specific display record... what do we do?
+            
+            // Get the Display Group ID
+            $displayGroupID = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+        
+            // If there is no region specific display record... what do we do?
             if ($displayGroupID == 0) {
-				// We should always have 1 display specific DisplayGroup for a display.
-				// Do we a) Error here and give up?
-				//		 b) Create one and link it up?
-				// $this->SetError(25006, __('Unable to get the DisplayGroup for this Display'));
-				
-				if (!$displayGroupID = $this->Add($display, 1))
-					$this->ThrowError(25001, __('Could not add a display group for the new display.'));
-				
-				// Link the Two together
-				if (!$this->Link($displayGroupID, $displayID))
-					$this->ThrowError(25001, __('Could not link the new display with its group.'));
-			}
-			
-			// Update the Display group name
-			$sth = $dbh->prepare('UPDATE displaygroup SET DisplayGroup = :displaygroup WHERE  DisplayGroupID = :displaygroupid');
+                // We should always have 1 display specific DisplayGroup for a display.
+                // Do we a) Error here and give up?
+                //       b) Create one and link it up?
+                // $this->SetError(25006, __('Unable to get the DisplayGroup for this Display'));
+                
+                if (!$displayGroupID = $this->Add($display, 1))
+                    $this->ThrowError(25001, __('Could not add a display group for the new display.'));
+                
+                // Link the Two together
+                if (!$this->Link($displayGroupID, $displayID))
+                    $this->ThrowError(25001, __('Could not link the new display with its group.'));
+            }
+            
+            // Update the Display group name
+            $sth = $dbh->prepare('UPDATE displaygroup SET DisplayGroup = :displaygroup WHERE  DisplayGroupID = :displaygroupid');
             $sth->execute(array(
                     'displaygroupid' => $displayGroupID,
                     'displaygroup' => $display
                 ));
-			
-			Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayGroup');
-			
-			return true;
-		}
+            
+            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayGroup');
+            
+            return true;
+        }
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage());
@@ -379,8 +386,8 @@ class DisplayGroup extends Data
 
             return false;
         }
-	}
-	
+    }
+    
     /**
      * DEPRICATED: Removed in 1.2.0. Sets the Default Layout on display linked groups
      * @return
@@ -389,10 +396,104 @@ class DisplayGroup extends Data
      */
     public function SetDefaultLayout($displayID, $layoutID)
     {
-        $db	=& $this->db;
-
         Debug::LogEntry('audit', 'Depricated method called.', 'DisplayGroup', 'SetDefaultLayout');
         return true;
+    }
+
+    /**
+     * Associate the list of provided media with this display group
+     * @param user $user           The logged in user
+     * @param int $displayGroupId The Display Group to Assign to
+     * @param array $mediaList      The Media to Assign
+     */
+    public function AssociateFiles($user, $displayGroupId, $mediaList) {
+        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+
+        Kit::ClassLoader('lkmediadisplaygroup');
+        $link = new LkMediaDisplayGroup($this->db);
+
+        try {
+            $dbh = PDOConnect::init();
+
+            // Check that some media assignments have been made
+            if (count($mediaList) == 0)
+                $this->ThrowError(25006, __('No media to assign'));
+        
+            // Drop all current assignments
+            if (!$link->UnlinkAllFromDisplayGroup($displayGroupId))
+                $this->ThrowError(__('Unable to make this assignment during preparation.'));
+
+            // Loop through all the media
+            foreach ($mediaList as $mediaId)
+            {
+                $mediaId = Kit::ValidateParam($mediaId, _INT);
+    
+                // Check we have permissions to use this media (we will use this to copy the media later)
+                $mediaAuth = $user->MediaAuth($mediaId, true);
+    
+                if (!$mediaAuth->view)
+                    $this->ThrowError(__('You have selected media that you no longer have permission to use. Please reload the form.'));
+
+                // Create the link
+                if (!$link->Link($displayGroupId, $mediaId))
+                    $this->ThrowError(__('Unable to make this assignment'));
+            }
+
+            // Flag this display group as incomplete
+            $this->FlagIncomplete($displayGroupId);
+
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Flag this display group as incomplete. Also flags all child displays.
+     * @param int $displayGroupId The Display Group ID
+     */
+    public function FlagIncomplete($displayGroupId) {
+        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+
+        Kit::ClassLoader('display');
+        $display = new Display($this->db);
+
+        try {
+            $dbh = PDOConnect::init();
+
+            // Which displays does a change to this layout effect?
+            $sth = $dbh->prepare('
+                    SELECT DISTINCT display.DisplayID
+                       FROM lkdisplaydg
+                       INNER JOIN display
+                       ON lkdisplaydg.DisplayID = display.displayID
+                     WHERE lkdisplaydg.displaygroupid = :displaygroupid
+                ');
+
+            $sth->execute(array('displaygroupid' => $displayGroupId));
+
+            while ($id = $sth->fetchColumn()) {
+                $display->FlagIncomplete($id);
+            }
+          
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
     }
 }
 ?>

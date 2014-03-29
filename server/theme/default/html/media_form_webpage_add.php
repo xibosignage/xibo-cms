@@ -29,7 +29,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     	<div class="control-group">
     		<label class="control-label" for="uri" accesskey="n" title="<?php echo Theme::Translate('The Location (URL) of the webpage'); ?>"><?php echo Theme::Translate('Link'); ?></label>
     	    <div class="controls">
-    	        <input class="required url" name="uri" type="text" id="uri" tabindex="1" />
+    	        <input class="required" name="uri" type="text" id="uri" tabindex="1" />
     	    </div>
     	</div>
 		<div class="control-group">

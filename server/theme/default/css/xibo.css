@@ -19,9 +19,9 @@
  */ 
 
 .xibo-logo {
-	width: 100px;
-	margin-bottom: 20px;
-	margin-top: 10px;
+    width: 100px;
+    margin-bottom: 20px;
+    margin-top: 10px;
 }
 
 .form-signin {
@@ -61,7 +61,7 @@ body .help-modal-big {
 }
 
 /*body .modal-big .modal-body {
-	max-height: 500px;
+    max-height: 500px;
 }*/
 
 @media (max-width: 767px) {
@@ -73,8 +73,8 @@ body .help-modal-big {
 
 /* Full width iframe (for inside the help windows) */
 .full-iframe {
-	width: 100%;
-	border: none;
+    width: 100%;
+    border: none;
 }
 
 /* Some small tweaks for the validation plugin to work nicely with bootstrap */
@@ -95,16 +95,16 @@ label.error {
 /* Layout Jump List */
 #LayoutJumpList {
     z-index: 1;
-	position: absolute;
-	min-width: 150px;
-	right: 5px;
-	bottom: 5px;
-	border:1px solid #e0e0e0;
-	background-color:#f9f9f9;
+    position: absolute;
+    min-width: 150px;
+    right: 5px;
+    bottom: 5px;
+    border:1px solid #e0e0e0;
+    background-color:#f9f9f9;
 }
 
 #LayoutJumpList:hover{
-	border-color:#a0a0a0;
+    border-color:#a0a0a0;
 }
 
 #LayoutJumpList .XiboGrid {
@@ -116,20 +116,20 @@ label.error {
 
 #JumpListHeader {
     text-align: left;
-	border-bottom:1px solid #a0a0a0;
-	padding:3px 8px;
+    border-bottom:1px solid #a0a0a0;
+    padding:3px 8px;
 }
 
 #JumpListOpenClose {
-	float:right;
+    float:right;
     font-weight: bold;
 }
 
 .regionTransparency {
-	position: absolute;
-	background-color: #FFF; 
-	opacity: .80;
-	filter: alpha(opacity=80);
+    position: absolute;
+    background-color: #FFF; 
+    opacity: .80;
+    filter: alpha(opacity=80);
 }
 
 .regionDisabled {
@@ -150,14 +150,14 @@ label.error {
 }
 
 .previewNav {
-	position: absolute;
-	left: 2px;
-	bottom: -20px;
+    position: absolute;
+    left: 2px;
+    bottom: -20px;
 }
 
 .preview-media-information {
-	display: block;
-	margin-top: 2px;
+    display: block;
+    margin-top: 2px;
 }
 
 .wide_textarea {
@@ -234,6 +234,25 @@ ul#LayoutAssignSortable {
 }
 
 #xibo-loading-gif {
-  display: none;
-  position: absolute;
+    display: none;
+    position: absolute;
+}
+
+.regionicons {
+    float: left;
+    padding: 10px;
+}
+
+ul#FileAssociationsSortable {
+    display: inline-block;
+}
+
+#FileAssociationsSortable .li-sortable {
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid #8080ff;
+    background-color: #E5F0FF;
+    cursor: pointer;
+    float: left;
+    list-style: none;
 }

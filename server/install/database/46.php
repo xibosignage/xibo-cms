@@ -1,7 +1,7 @@
 <?php
-include('lib/data/data.class.php');
-include('lib/data/campaign.data.class.php');
-include('lib/data/campaignsecurity.data.class.php');
+include_once('lib/data/data.class.php');
+include_once('lib/data/campaign.data.class.php');
+include_once('lib/data/campaignsecurity.data.class.php');
 
 class Step46 extends UpgradeStep
 {

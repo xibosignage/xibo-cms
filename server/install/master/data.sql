@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.6.0-rc1', 3, 1, 66);
+('1.6.0', 3, 1, 67);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
 (1, 'Users', 0, 0),
@@ -83,7 +83,8 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (77, 'Transition', 'Edit', 'manual/single.php?p=layout/transitions'),
 (78, 'User', 'SetPassword', 'manual/single.php?p=users/users#Set_Password'),
 (79, 'DataSet', 'ImportCSV', 'manual/single.php?p=content/content_dataset#Import_CSV'),
-(80, 'Statusdashboard', 'General', 'manual/single.php?p=coreconcepts/dashboard#Status_Dashboard');
+(80, 'DisplayGroup', 'FileAssociations', 'manual/single.php?p=admin/fileassociations'),
+(81, 'Statusdashboard', 'General', 'manual/single.php?p=coreconcepts/dashboard#Status_Dashboard');
 
 INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
 (8, 'Administration Menu'),
@@ -107,7 +108,8 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
 (10, 'Counter', 'Counter', 0, 1, 'Customer Counter connected to a Remote Control', 'forms/counter.gif', 1, NULL, 1),
 (11, 'datasetview', 'Data Set', 1, 1, 'A view on a DataSet', 'forms/datasetview.gif', 1, NULL, 1),
 (12, 'shellcommand', 'Shell Command', 1, 1, 'Execute a shell command on the client', 'forms/shellcommand.gif', 1, NULL, 1),
-(13, 'localvideo', 'Local Video', 0, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 1);
+(13, 'localvideo', 'Local Video', 0, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 1),
+(14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,js,html,htm', 0, 0);
 
 INSERT INTO `pagegroup` (`pagegroupID`, `pagegroup`) VALUES
 (1, 'Schedule'),
@@ -258,7 +260,10 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 (67, 'SETTING_IMPORT_ENABLED', 'Off', 'dropdown', NULL , 'On|Off', 'general', '0'), 
 (68, 'SETTING_LIBRARY_TIDY_ENABLED', 'Off', 'dropdown', NULL , 'On|Off', 'general', '0'),
 (69, 'SENDFILE_MODE', 'Off', 'dropdown', 'When a user downloads a file from the library or previews a layout, should we attempt to use Apache X-Sendfile, Nginx X-Accel, or PHP (Off) to return the file from the library?', 'Off|Apache|Nginx', 'general', '1'),
-(70, 'EMBEDDED_STATUS_WIDGET', '', 'text', 'HTML to embed in an iframe on the Status Dashboard' , NULL, 'general', '0');
+(70, 'EMBEDDED_STATUS_WIDGET', '', 'text', 'HTML to embed in an iframe on the Status Dashboard' , NULL, 'general', '0'),
+(71, 'PROXY_HOST', '', 'text', 'The Proxy URL' , NULL, 'general', '1'),
+(72, 'PROXY_PORT', '', 'text', 'The Proxy Port' , NULL, 'general', '1'),
+(73, 'PROXY_AUTH', '', 'text', 'The Authentication information for this proxy. username:password' , NULL, 'general', '1');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),

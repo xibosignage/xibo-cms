@@ -90,9 +90,9 @@ INSERT INTO  `setting` (
 `userChange`
 )
 VALUES (
-NULL ,  'SETTING_IMPORT_ENABLED',  'Off',  'dropdown', NULL ,  'On|Off',  'general',  '0'
+NULL ,  'SETTING_IMPORT_ENABLED',  'On',  'dropdown', NULL ,  'On|Off',  'general',  '1'
 ), (
-NULL ,  'SETTING_LIBRARY_TIDY_ENABLED',  'Off',  'dropdown', NULL ,  'On|Off',  'general',  '0'
+NULL ,  'SETTING_LIBRARY_TIDY_ENABLED',  'On',  'dropdown', NULL ,  'On|Off',  'general',  '1'
 ), (
 NULL, 'SENDFILE_MODE', 'Off', 'dropdown', 'When a user downloads a file from the library or previews a layout, should we attempt to use Apache X-Sendfile, Nginx X-Accel, or PHP (Off) to return the file from the library?', 'Off|Apache|Nginx', 'general', '1');
 

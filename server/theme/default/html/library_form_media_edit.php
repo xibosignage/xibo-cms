@@ -51,6 +51,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<input name="duration" type="text" id="duration" tabindex="3" value="<?php echo Theme::Get('duration'); ?>" <?php echo Theme::Get('is_duration_field_enabled'); ?> />
 		</div>
 	</div>
+	<?php if (Theme::Get('is_assignable')) { ?>
 	<div class="control-group">
 		<div class="controls">
 			<label class="checkbox" for="replaceInLayouts" accesskey="n"><?php echo Theme::Translate('Update this media in all layouts it is assigned to. Note: It will only be replaced in layouts you have permission to edit.'); ?>
@@ -58,9 +59,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			</label>
 		</div>
 	</div>
+	<?php } ?>
 	<div class="well">
 		<?php echo Theme::Get('valid_extensions'); ?>
-		
 	</div>
 </form>
 <div style="display:none">

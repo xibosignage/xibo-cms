@@ -85,6 +85,10 @@ CREATE TABLE IF NOT EXISTS `display` (
   `SecureOn` varchar(17) DEFAULT NULL,
   `Cidr` smallint(6) DEFAULT NULL,
   `GeoLocation` POINT NULL,
+  `version_instructions` varchar(255) NULL,
+  `client_type` VARCHAR( 20 ) NULL ,
+  `client_version` VARCHAR( 5 ) NULL ,
+  `client_code` SMALLINT NULL,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
@@ -303,7 +307,7 @@ CREATE TABLE IF NOT EXISTS `log` (
 CREATE TABLE IF NOT EXISTS `media` (
   `mediaID` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
-  `type` varchar(10) NOT NULL,
+  `type` varchar(15) NOT NULL,
   `duration` int(11) NOT NULL,
   `originalFilename` varchar(254) DEFAULT NULL,
   `storedAs` varchar(254) DEFAULT NULL COMMENT 'What has this media been stored as',
@@ -349,6 +353,7 @@ CREATE TABLE IF NOT EXISTS `module` (
   `SchemaVersion` int(11) NOT NULL DEFAULT '1',
   `ValidExtensions` varchar(254) DEFAULT NULL,
   `PreviewEnabled` tinyint(4) NOT NULL DEFAULT '1',
+  `assignable` tinyint(4) NOT NULL DEFAULT '1',
   PRIMARY KEY (`ModuleID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Functional Modules' AUTO_INCREMENT=14 ;
 
@@ -588,6 +593,14 @@ CREATE TABLE IF NOT EXISTS `datasetcolumntype` (
   `DataSetColumnTypeID` smallint(6) NOT NULL,
   `DataSetColumnType` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `lkmediadisplaygroup` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `mediaid` int(11) NOT NULL,
+  `displaygroupid` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='File associations directly to Display Groups' AUTO_INCREMENT=1 ;
 
 --
 -- Constraints for dumped tables

@@ -410,13 +410,22 @@ class datasetview extends Module
             $styleSheet = $rawNode->nodeValue;
         }
 
-        $headContent = '<style type="text/css">' . $styleSheet . '</style>';
+        $options = array(
+            'duration' => $this->duration,
+            'originalWidth' => $this->width,
+            'originalHeight' => $this->height,
+            'rowsPerPage' => $this->GetOption('rowsPerPage'),
+            'previewWidth' => Kit::GetParam('width', _GET, _INT, 0),
+            'previewHeight' => Kit::GetParam('height', _GET, _INT, 0)
+        );
 
-        if ($this->GetOption('rowsPerPage') != 0) {
-
-            // Include some JavaScript to kick off the cycle plugin
-            $headContent .= '<script type="text/javascript">function init() { $("#DataSetTableContainer").dataSetRender({duration: ' . $this->GetOption('duration') . '}); }</script>';
-        }
+        $headContent  = '<style type="text/css">' . $styleSheet . '</style>';
+        $headContent .= '<script type="text/javascript">';
+        $headContent .= '   function init() { ';
+        $headContent .= '       $("#DataSetTableContainer").dataSetRender(options);';
+        $headContent .= '   } ';
+        $headContent .= '   var options = ' . json_encode($options) . ';';
+        $headContent .= '</script>';
 
         // Load the HtmlTemplate
         $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');

@@ -30,6 +30,7 @@ class XMDSSoap
     private $isAuditing;
     private $displayId;
     private $defaultLayoutId;
+    private $version_instructions;
 
     public function __construct()
     {
@@ -161,6 +162,7 @@ class XMDSSoap
 
         $requiredFilesXml = new DOMDocument("1.0");
         $fileElements 	= $requiredFilesXml->createElement("files");
+        $fileElements->setAttribute('version_instructions', $this->version_instructions);
 
         $requiredFilesXml->appendChild($fileElements);
 
@@ -189,11 +191,15 @@ class XMDSSoap
         }
 
         // Our layout list will always include the default layout
-        $layoutIdList = $this->defaultLayoutId;
+        $layouts = array();
+        $layouts[] = $this->defaultLayoutId;
 
-        // Build up the other layouts into a comma seperated list.
+        // Build up the other layouts into an array
         while ($row = $db->get_assoc_row($results))
-            $layoutIdList .= ',' . Kit::ValidateParam($row['layoutID'], _INT);
+            $layouts[] = Kit::ValidateParam($row['layoutID'], _INT);
+
+        // Create a comma separated list to pass into the query which gets file nodes
+        $layoutIdList = implode(',', $layouts);
 
         // Add file nodes to the $fileElements
         $SQL  = " SELECT 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, MD5(layout.xml) AS `MD5`, NULL AS FileSize, layout.background, layout.xml AS xml ";
@@ -207,6 +213,18 @@ class XMDSSoap
         $SQL .= " 	INNER JOIN layout ";
         $SQL .= " 	ON layout.LayoutID = lklayoutmedia.LayoutID";
         $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
+        $SQL .= "
+                UNION
+                SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS background, NULL AS xml 
+                   FROM `media`
+                    INNER JOIN `lkmediadisplaygroup`
+                    ON lkmediadisplaygroup.mediaid = media.MediaID
+                    INNER JOIN lkdisplaydg 
+                    ON lkdisplaydg.DisplayGroupID = lkmediadisplaygroup.DisplayGroupID
+                    INNER JOIN display 
+                    ON lkdisplaydg.DisplayID = display.displayID
+                ";
+        $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
         $SQL .= " ORDER BY RecordType DESC";
 
         if ($this->isAuditing == 1) Debug::LogEntry("audit", $SQL, "xmds", "RequiredFiles");
@@ -282,6 +300,32 @@ class XMDSSoap
             }
         }
 
+        Kit::ClassLoader('layout');
+
+        // Go through each layout and see if we need to supply any resource nodes.
+        foreach ($layouts as $layoutId) {
+            // Load the layout XML and work out if we have any ticker / text / dataset media items
+            $layout = new Layout($db);
+
+            $layoutInformation = $layout->LayoutInformation($layoutId);
+
+            foreach($layoutInformation['regions'] as $region) {
+                foreach($region['media'] as $media) {
+                    if ($media['mediatype'] == 'ticker' || $media['mediatype'] == 'text' || $media['mediatype'] == 'dataset') {
+                        // Append this item to required files
+                        $file = $requiredFilesXml->createElement("file");
+                        $file->setAttribute('type', 'resource');
+                        $file->setAttribute('id', rand());
+                        $file->setAttribute('layoutid', $layoutId);
+                        $file->setAttribute('regionid', $region['regionid']);
+                        $file->setAttribute('mediaid', $media['mediaid']);
+                        
+                        $fileElements->appendChild($file);
+                    }
+                }
+            }
+        }
+
         // Add a blacklist node
         $blackList = $requiredFilesXml->createElement("file");
         $blackList->setAttribute("type", "blacklist");
@@ -309,62 +353,8 @@ class XMDSSoap
             $blackList->appendChild($file);
         }
 
-        // PHONE_HOME if required.
-        if (Config::GetSetting('PHONE_HOME') == 'On')
-        {
-            // Find out when we last PHONED_HOME :D
-            // If it's been > 28 days since last PHONE_HOME then
-            if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28)))
-            {
-                if ($this->isAuditing == 1)
-                {
-                    Debug::LogEntry("audit", "PHONE_HOME [IN]", "xmds", "RequiredFiles");
-                }
-
-                // Retrieve number of displays
-                $SQL = "SELECT COUNT(*)
-                        FROM `display`
-                        WHERE `licensed` = '1'";
-
-                if (!$results = $db->query($SQL))
-                {
-                    trigger_error($db->error());
-                }
-                while ($row = $db->get_row($results))
-                {
-                    $PHONE_HOME_CLIENTS = Kit::ValidateParam($row[0],_INT);
-                }
-
-                // Retrieve version number
-                $PHONE_HOME_VERSION = Config::Version('app_ver');
-
-                $PHONE_HOME_URL = Config::GetSetting('PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
-
-                if ($this->isAuditing == 1)
-                {
-                    Debug::LogEntry("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");
-                }
-
-                // Set PHONE_HOME_TIME to NOW.
-                $SQL = "UPDATE `setting`
-                        SET `value` = '" . time() . "'
-                        WHERE `setting`.`setting` = 'PHONE_HOME_DATE' LIMIT 1";
-
-                if (!$results = $db->query($SQL))
-                {
-                    trigger_error($db->error());
-                }
-
-                @file_get_contents($PHONE_HOME_URL);
-
-                if ($this->isAuditing == 1)
-                {
-                    Debug::LogEntry("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
-                }
-            //endif
-            }
-        }
-        // END OF PHONE_HOME CODE
+        // Phone Home?
+        $this->PhoneHome();
 
         if ($this->isAuditing == 1)
         {
@@ -944,13 +934,17 @@ class XMDSSoap
         $document = new DOMDocument("1.0");
         $document->loadXML($inventory);
 
-        $macAddress = $document->documentElement->getAttribute('macAddress');
+        // Get some information from the media inventory XML and update the display record with it.
+        $macAddress = Kit::ValidateParam($document->documentElement->getAttribute('macAddress'), _STRING);
+        $clientType = Kit::ValidateParam($document->documentElement->getAttribute('clientType'), _STRING);
+        $clientVersion = Kit::ValidateParam($document->documentElement->getAttribute('clientVersion'), _STRING);
+        $clientCode = Kit::ValidateParam($document->documentElement->getAttribute('clientCode'), _INT);
 
         // Assume we are complete (but we are getting some)
         $mediaInventoryComplete = 1;
 
         $xpath = new DOMXPath($document);
-	$fileNodes = $xpath->query("//file");
+        $fileNodes = $xpath->query("//file");
 
         foreach ($fileNodes as $node)
         {
@@ -968,7 +962,7 @@ class XMDSSoap
 
         // Touch the display record
         $displayObject = new Display($db);
-        $displayObject->Touch($hardwareKey, '', $mediaInventoryComplete, $inventory, $macAddress);
+        $displayObject->Touch($hardwareKey, '', $mediaInventoryComplete, $inventory, $macAddress, $clientType, $clientVersion, $clientCode);
 
         return true;
     }
@@ -1037,6 +1031,61 @@ class XMDSSoap
     }
 
     /**
+     * PHONE_HOME if required
+     */
+    private function PhoneHome() {
+        
+        if (Config::GetSetting('PHONE_HOME') == 'On')
+        {
+            // Find out when we last PHONED_HOME :D
+            // If it's been > 28 days since last PHONE_HOME then
+            if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28)))
+            {
+                if ($this->isAuditing == 1)
+                {
+                    Debug::LogEntry("audit", "PHONE_HOME [IN]", "xmds", "RequiredFiles");
+                }
+
+                try {
+                    $dbh = PDOConnect::init();
+                
+                    // Retrieve number of displays
+                    $sth = $dbh->prepare('SELECT COUNT(*) AS Cnt FROM `display` WHERE `licensed` = 1');
+                    $sth->execute();
+
+                    $PHONE_HOME_CLIENTS = $sth->fetchColumn();
+                
+                    // Retrieve version number
+                    $PHONE_HOME_VERSION = Config::Version('app_ver');
+                
+                    $PHONE_HOME_URL = Config::GetSetting('PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
+                
+                    if ($this->isAuditing == 1)
+                        Debug::LogEntry("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");
+                    
+                    // Set PHONE_HOME_TIME to NOW.
+                    $sth = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
+                    $sth->execute(array(
+                            'time' => time(),
+                            'setting' => 'PHONE_HOME_DATE'
+                        ));
+                                
+                    @file_get_contents($PHONE_HOME_URL);
+                
+                    if ($this->isAuditing == 1)
+                        Debug::LogEntry("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
+                }
+                catch (Exception $e) {
+                    
+                    Debug::LogEntry('error', $e->getMessage());
+
+                    return false;
+                }
+            }
+        }
+    }
+
+    /**
      * Authenticates the display
      * @param <type> $hardwareKey
      * @return <type>
@@ -1046,7 +1095,7 @@ class XMDSSoap
 	$db =& $this->db;
 
 	// check in the database for this hardwareKey
-	$SQL = "SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin, email_alert, display FROM display WHERE license = '$hardwareKey'";
+	$SQL = "SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin, email_alert, display, version_instructions FROM display WHERE license = '$hardwareKey'";
 
         if (!$result = $db->query($SQL))
 	{
@@ -1090,6 +1139,7 @@ class XMDSSoap
         $this->isAuditing = $row[2];
         $this->displayId = $row[3];
         $this->defaultLayoutId = $row[4];
+        $this->version_instructions = $row[8];
         
         return true;
     }

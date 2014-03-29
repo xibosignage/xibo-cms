@@ -57,6 +57,24 @@ $(document).ready(function(){
 
         setInterval("XiboPing('index.php?p=layout&q=LayoutStatus&layoutId=" + $(this).attr("layoutid") + "', '.layout-status')", 1000 * 60); // Every minute
 	});
+
+    $('.RegionOptionsMenuItem').click(function() {
+
+        var width   = $(this).closest('.region').css("width");
+        var height  = $(this).closest('.region').css("height");
+        var top     = $(this).closest('.region').css("top");
+        var left    = $(this).closest('.region').css("left");
+        var regionid = $(this).closest('.region').attr("regionid");
+        var layoutid = $(this).closest('.region').attr("layoutid");
+        var scale = $(this).closest('.region').attr("scale");
+        var layoutWidth = $(this).closest('.layout').css("width");
+        var layoutHeight = $(this).closest('.layout').css("height");
+
+        var url = "index.php?p=timeline&q=ManualRegionPositionForm&layoutid=" + layoutid + "&regionid=" + regionid + "&top=" + top + "&left=" + left + "&width=" + width + "&height=" + height + "&scale=" + scale + "&layoutWidth=" + layoutWidth + "&layoutHeight=" + layoutHeight;
+
+        XiboFormRender(url);
+    });
+
 });
 
 /**

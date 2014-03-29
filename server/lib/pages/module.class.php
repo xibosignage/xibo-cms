@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -92,7 +92,8 @@ class moduleDAO
         $SQL .= '   RegionSpecific, ';
         $SQL .= '   ValidExtensions, ';
         $SQL .= '   ImageUri, ';
-        $SQL .= '   PreviewEnabled ';
+        $SQL .= '   PreviewEnabled, ';
+        $SQL .= '   assignable ';
         $SQL .= '  FROM `module` ';
         $SQL .= ' ORDER BY Name ';
 
@@ -115,9 +116,11 @@ class moduleDAO
             $row['imageuri'] = Kit::ValidateParam($module['ImageUri'], _STRING);
             $row['enabled'] = Kit::ValidateParam($module['Enabled'], _INT);
             $row['preview_enabled'] = Kit::ValidateParam($module['PreviewEnabled'], _INT);
+            $row['assignable'] = Kit::ValidateParam($module['assignable'], _INT);
             $row['isregionspecific_image'] = ($row['isregionspecific'] == 0) ? 'icon-ok' : 'icon-remove';
             $row['enabled_image'] = ($row['enabled'] == 1) ? 'icon-ok' : 'icon-remove';
             $row['preview_enabled_image'] = ($row['preview_enabled'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['assignable_image'] = ($row['assignable'] == 1) ? 'icon-ok' : 'icon-remove';
 
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();

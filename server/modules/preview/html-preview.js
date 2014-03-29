@@ -411,11 +411,11 @@ function media(parent, id, xml) {
     self.run = function() {
         playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds")
         
-        if ((self.mediaType == "text") || (self.mediaType == "ticker") || (self.mediaType == "datasetview")) {
+        //if ((self.mediaType == "text") || (self.mediaType == "ticker") || (self.mediaType == "datasetview")) {
             // Scale the body tag so text/tickers/datasetviews are shown
             // at the correct size
-            $("#" + self.iframeName).contents().find('body').css("zoom", self.region.layout.scaleFactor);
-        }
+            //$("#" + self.iframeName).contents().find('body').css("zoom", self.region.layout.scaleFactor);
+        //}
         
         if (self.mediaType == "video") {
             $("#" + self.containerName + "-vid").get(0).play();

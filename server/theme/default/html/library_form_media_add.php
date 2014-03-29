@@ -38,11 +38,11 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	        </span>
 	        <button type="submit" class="btn btn-primary start">
 	            <i class="icon-upload icon-white"></i>
-	            <span>Start upload</span>
+	            <span><?php echo Theme::Translate('Start upload'); ?></span>
 	        </button>
 	        <button type="reset" class="btn btn-warning cancel">
 	            <i class="icon-ban-circle icon-white"></i>
-	            <span>Cancel upload</span>
+	            <span><?php echo Theme::Translate('Cancel upload'); ?></span>
 	        </button>
 	        <!-- The loading indicator is shown during file processing -->
 	        <span class="fileupload-loading"></span>
@@ -86,13 +86,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             {% if (!o.files.error && !i && !o.options.autoUpload) { %}
                 <button class="btn btn-primary start">
                     <i class="icon-upload icon-white"></i>
-                    <span>Start</span>
+                    <span><?php echo Theme::Translate('Start'); ?></span>
                 </button>
             {% } %}
             {% if (!i) { %}
                 <button class="btn btn-warning cancel">
                     <i class="icon-ban-circle icon-white"></i>
-                    <span>Cancel</span>
+                    <span><?php echo Theme::Translate('Cancel'); ?></span>
                 </button>
             {% } %}
         </td>
@@ -108,7 +108,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                 {%=file.name%}
             </p>
             {% if (file.error) { %}
-                <div><span class="label label-important">Error</span> {%=file.error%}</div>
+                <div><span class="label label-important"><?php echo Theme::Translate('Error'); ?></span> {%=file.error%}</div>
             {% } %}
         </td>
         <td>
@@ -118,7 +118,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<?php if (Theme::Get('background_override_url') != '') { ?>
             	<button class="btn XiboFormButton" href="#" onclick="XiboSwapDialog('<?php echo Theme::Get('background_override_url'); ?>{%=file.storedas%}')">
                     <i class="icon-ban-circle icon-white"></i>
-                    <span>Set Background</span>
+                    <span><?php echo Theme::Translate('Set Background'); ?></span>
                 </button>
         	<?php } ?>
         </td>

@@ -96,6 +96,7 @@ class Module implements ModuleInterface
         $this->existingMedia 	= false;
         $this->assignedMedia = false;
         $this->deleteFromRegion = false;
+        $this->assignable = true;
         $this->duration = '';
 
         // Members used by forms (routed through the CMS)
@@ -142,6 +143,7 @@ class Module implements ModuleInterface
 		$this->validExtensions 		= explode(',', $this->validExtensionsText);
 		$this->validExtensionsText	= str_replace(',', ', ', $this->validExtensionsText);
         $this->previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
+        $this->assignable = Kit::ValidateParam($row['assignable'], _INT);
 
 		return true;
 	}
@@ -806,12 +808,12 @@ END;
 
         $session->setSecurityToken($securityToken);
 
-        //Get the default value for the shared list
-        $default = Config::GetSetting('defaultMedia');
-
+        // Set some defaults based on the type of media we are
+        // TODO: this should be passed in
         switch ($this->type) {
             case 'video':
             case 'localvideo':
+            case 'genericfile':
                 $defaultDuration = 0;
                 break;
 
@@ -860,7 +862,7 @@ END;
         // Setup the theme
 		Theme::Set('form_upload_id', 'fileupload');
         Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload&type=' . $this->type);
-		Theme::Set('form_meta', '<input type="hidden" name="type" value="' . $this->type . '"><input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '">');
+		Theme::Set('form_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="type" value="' . $this->type . '"><input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '">');
 		Theme::Set('form_valid_ext', '/(\.|\/)' . implode('|', $this->validExtensions) . '$/i');
 		Theme::Set('form_max_size', Kit::ReturnBytes($this->maxFileSize));
 		Theme::Set('valid_extensions', 'This form accepts: ' . $this->validExtensionsText . ' files up to a maximum size of ' . $this->maxFileSize);
@@ -976,6 +978,7 @@ END;
 		Theme::Set('is_duration_field_enabled', $durationFieldEnabled);
 		Theme::Set('valid_extensions', 'This form accepts: ' . $this->validExtensionsText . ' files up to a maximum size of ' . $this->maxFileSize);
 		Theme::Set('is_replace_field_checked', ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 'checked' : ''));
+        Theme::Set('is_assignable', $this->assignable);
 
 		$form = Theme::RenderReturn('library_form_media_edit');
 
@@ -1617,7 +1620,7 @@ END;
         // Some messages for the form
         $msgTransition = __('What transition should be applied to this media item?');
         $msgDuration = __('The duration for this transition, in milliseconds.');
-        $msgDirection = __('The direction for this transtion.');
+        $msgDirection = __('The direction for this transition.');
         
         // Construct the form
         $form = <<<END
@@ -1625,6 +1628,7 @@ END;
             <input type="hidden" name="type" value="$type">
             <input type="hidden" name="layoutid" value="$this->layoutid">
             <input type="hidden" name="mediaid" value="$this->mediaid">
+            <input type="hidden" name="lkid" value="$this->lkid">
             <input type="hidden" id="iRegionId" name="regionid" value="$this->regionid">
             <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" /> 
             

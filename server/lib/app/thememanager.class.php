@@ -173,13 +173,16 @@ class Theme {
 			$return = null;
 		else
 			$return = $theme->vars[$key];
-
+		
 		if ($key == 'form_meta') {
 			// Append a token to the end
 			$return = $return . Kit::Token();
 		}
-
 		return $return;
+	}
+
+	public static function Prepare($string) {
+		return htmlspecialchars($string);
 	}
 
 	public static function SetPagename($pageName) {

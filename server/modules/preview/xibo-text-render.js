@@ -32,17 +32,24 @@ jQuery.fn.extend({
             "takeItemsFrom": "start",
             "itemsPerPage": 0,
             "scrollSpeed": "2",
-            "scaleMode": "scale"
+            "scaleMode": "scale",
+            "previewWidth": 0,
+            "previewHeight": 0
         };
 
         var options = $.extend({}, defaults, options);
 
-        // Set the width and height
-        options.width = $(window).width();
-        options.height = $(window).height();
-
-        // Calculate the scale factor?
-        options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
+        // Set the width, height and scale factor
+        if (options.previewWidth == 0 && options.previewHeight == 0) {
+            options.width = $(window).width();
+            options.height = $(window).height();
+            options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
+        }
+        else {
+            options.width = options.previewWidth;
+            options.height = options.previewHeight;
+            options.scaleFactor = 1;
+        }
 
         // For each matched element
         this.each(function() {
@@ -151,12 +158,13 @@ jQuery.fn.extend({
                     .fitText(1.75);
             }
             else if (options.scaleMode == "scale") {
-                //console.log("[Xibo] Applying CSS ZOOM");
+                //console.log("[Xibo] Applying CSS ZOOM. " + options.scaleFactor);
 
                 $(this).css({
-                    zoom: options.scaleFactor,
                     width: options.originalWidth,
-                    height: options.originalHeight
+                    height: options.originalHeight,
+                    "transform": "scale(" + options.scaleFactor + ")",
+                    "transform-origin": "0 0"
                 });
             }
             
@@ -234,20 +242,44 @@ jQuery.fn.extend({
         if (options === undefined || options === null) {
             options = {
                 duration : 5,
-                transition: "fade"
+                transition: "fade",
+                rowsPerPage: 0,
+                "previewWidth": 0,
+                "previewHeight": 0
             };
         }
 
         $(this).each(function() {
 
+            // Set the width, height and scale factor
+            if (options.previewWidth == 0 && options.previewHeight == 0) {
+                options.width = $(window).width();
+                options.height = $(window).height();
+                options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
+            }
+            else {
+                options.width = options.previewWidth;
+                options.height = options.previewHeight;
+                options.scaleFactor = 1;
+            }
+
+            $("body").css({
+                width: options.originalWidth,
+                height: options.originalHeight,
+                "transform": "scale(" + options.scaleFactor + ")",
+                "transform-origin": "0 0"
+            });
+
             var numberItems = $(this).attr("totalPages");
 
-            // Cycle handles this for us
-            $(this).cycle({
-                fx: options.transition,
-                timeout: (options.duration * 1000) / numberItems,
-                slides: '> table'
-            });
+            if (options.rowsPerPage > 0) {
+                // Cycle handles this for us
+                $(this).cycle({
+                    fx: options.transition,
+                    timeout: (options.duration * 1000) / numberItems,
+                    slides: '> table'
+                });
+            }
         });
     }
 });

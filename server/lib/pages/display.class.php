@@ -302,7 +302,7 @@ SQL;
                 if ($linkTarget == '')
                     $linkTarget = '_top';
 
-                $row['display'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . $row['display'] . '</a>', $row['clientaddress']);
+                $row['display'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . Theme::Prepare($row['display']) . '</a>', $row['clientaddress']);
             }
 
             // Format last accessed
@@ -351,6 +351,13 @@ SQL;
                         'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $row['displayid'],
                         'text' => __('Wake on LAN')
                     );
+
+                // File Associations
+                $row['buttons'][] = array(
+                        'id' => 'displaygroup_button_fileassociations',
+                        'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $row['displaygroupid'],
+                        'text' => __('Assign Files')
+                    );
             }
 
             if ($row['del'] == 1) {
@@ -377,6 +384,13 @@ SQL;
                         'id' => 'display_button_group_membership',
                         'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $row['displaygroupid'],
                         'text' => __('Permissions')
+                    );
+
+                // Version Information
+                $row['buttons'][] = array(
+                        'id' => 'display_button_version_instructions',
+                        'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'] . '&displayid=' . $row['displayid'],
+                        'text' => __('Version Information')
                     );
             }
 
@@ -833,6 +847,6 @@ SQL;
 
         $response->SetFormSubmitResponse(__('Wake on Lan command sent.'));
         $response->Respond();
-    }
+    }    
 }
 ?>

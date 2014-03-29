@@ -43,6 +43,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<th><?php echo Theme::Translate('Valid Extensions'); ?></th>	
 			<th><?php echo Theme::Translate('Image Uri'); ?></th>	
 			<th><?php echo Theme::Translate('Preview Enabled'); ?></th>	
+			<th title="<?php echo Theme::Translate('Can this module be assigned to a Layout?'); ?>"><?php echo Theme::Translate('Assignable'); ?></th>	
 			<th><?php echo Theme::Translate('Enabled'); ?></th>	
 		</tr>
 	</thead>
@@ -55,6 +56,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<td><?php echo $row['validextensions']; ?></td>
 			<td><?php echo $row['imageuri']; ?></td>
 			<td><span class="<?php echo $row['preview_enabled_image']; ?>"></span></td>
+			<td><span class="<?php echo $row['assignable_image']; ?>"></span></td>
 			<td><span class="<?php echo $row['enabled_image']; ?>"></span></td>
 			<td>
 				<div class="btn-group pull-right">

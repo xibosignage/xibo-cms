@@ -33,7 +33,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     	<script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootstrap-datetimepicker.min.js"></script>
-    	<script src="theme/default/libraries/ckeditor/ckeditor.js"></script>
+        <script src="theme/default/libraries/ckeditor/ckeditor.js"></script>
+    	<script src="theme/default/libraries/bootstrap/js/bootstrap-ckeditor-fix.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/tmpl.min.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/load-image.min.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/jquery.iframe-transport.js"></script>

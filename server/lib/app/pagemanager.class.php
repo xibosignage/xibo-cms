@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -52,7 +52,7 @@ class PageManager
         $this->q = Kit::GetParam('q', _REQUEST, _WORD);
         $this->userid = $this->user->userid;
         
-        // Default not authourised
+        // Default not authorised
         $this->authed = false;
 
         // Create a theme
@@ -94,11 +94,13 @@ class PageManager
         $user 	=& $this->user;
 
         if (!$this->authed)
-        {
-            // Output some message to say that we are not authed
-            trigger_error(__('You do not have permission to access this page.'), E_USER_ERROR);
-            exit;
-        }
+            throw new Exception(__('You do not have permission to access this page.'));
+        
+        // Check the requested pages exits before trying to load it
+        //   this check should be redundant, because the page should have been validated against the pages in the DB first.
+        //   do it just in case...
+        if (!file_exists($this->path))
+            throw new Exception(__('The requested page does not exist'));
         
         // Load the file in question
         if (!class_exists($this->page)) 

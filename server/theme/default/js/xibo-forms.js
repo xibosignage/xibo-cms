@@ -330,3 +330,71 @@ function MediaFormInitUpload(dialog) {
         data.formData = inputs.serializeArray().concat($("#fileupload").serializeArray());
     });
 }
+
+/**
+ * Library Assignment Form Callback
+ */
+var FileAssociationsCallback = function()
+{
+    // Attach a click handler to all of the little pointers in the grid.
+    $("#FileAssociationsTable .library_assign_list_select").click(function(){
+        // Get the row that this is in.
+        var row = $(this).parent().parent();
+
+        // Construct a new list item for the lower list and append it.
+        var newItem = $("<li/>", {
+            text: row.attr("litext"),
+            id: row.attr("rowid"),
+            "class": "li-sortable",
+            dblclick: function(){
+                $(this).remove();
+            }
+        });
+
+        newItem.appendTo("#FileAssociationsSortable");
+
+        // Add a span to that new item
+        $("<span/>", {
+            "class": "icon-minus-sign",
+            click: function(){
+                $(this).parent().remove();
+                $(".modal-body .XiboGrid").each(function(){
+
+                    var gridId = $(this).attr("id");
+
+                    // Render
+                    XiboGridRender(gridId);
+                });
+            }
+        })
+        .appendTo(newItem);
+
+        // Remove the row
+        row.remove();
+    });
+
+    // Attach a click handler to all of the little points in the trough
+    $("#FileAssociationsSortable li .icon-minus-sign").click(function() {
+
+        // Remove this and refresh the table
+        $(this).parent().remove();
+
+    });
+
+    $("#FileAssociationsSortable").sortable().disableSelection();
+}
+
+var FileAssociationsSubmit = function(displayGroupId)
+{
+    // Serialize the data from the form and call submit
+    var mediaList = $("#FileAssociationsSortable").sortable('serialize');
+
+    $.ajax({
+        type: "post",
+        url: "index.php?p=displaygroup&q=SetFileAssociations&displaygroupid="+displayGroupId+"&ajax=true",
+        cache: false,
+        dataType: "json",
+        data: mediaList,
+        success: XiboSubmitResponse
+    });
+}

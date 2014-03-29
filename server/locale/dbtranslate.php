@@ -54,6 +54,7 @@ echo __('Modules');
 echo __('Campaigns');
 echo __('Transitions');
 echo __('Resolutions');
+echo __('User Groups');
 
 // Settings translations
 echo __('jpg_length');
@@ -97,6 +98,9 @@ echo __('SCHEDULE_WITH_VIEW_PERMISSION');
 echo __('SETTING_IMPORT_ENABLED');
 echo __('SETTING_LIBRARY_TIDY_ENABLED');
 echo __('EMBEDDED_STATUS_WIDGET');
+echo __('PROXY_HOST');
+echo __('PROXY_PORT');
+echo __('PROXY_AUTH');
 
 // Transitions
 echo __('Fade In');
