@@ -89,12 +89,14 @@ class previewDAO
         
         // Render a specific layout in the previewer
         // layoutid must be provided
+        $pfl = __('Preview for Layout');
+        
         $output = <<<EOT
             <!DOCTYPE html>
             <html>
                 <head>
                     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-                    <title>Preview for Layout $this->layoutid</title> 
+                    <title>$pfl $this->layoutid</title> 
                     <link rel="stylesheet" type="text/css" href="modules/preview/html-preview.css" />
                     <script type="text/JavaScript" src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
                     <script type="text/JavaScript" src="modules/preview/html5Preloader.js"></script>
@@ -108,15 +110,16 @@ class previewDAO
                         <div id="screen">
                             <div id="splash">
                                 <div id="loader"></div>
-                                <div id="loaderCaption"><p>Loading layout...</p></div>
-                            </div>
-                            <div id="end"><a href="javascript:history.go(0)" style="text-decoration: none; color: #ffffff">Play again?</a></div>
-                        </div>
-                        
-                    </div>
-                </body>
-            </html>
+                                <div id="loaderCaption"><p>
 EOT;
+
+        $output .= __("Loading layout...");
+        $output .= "</p></div>";
+        $output .= "</div>";
+        $output .= '<div id="end"><a href="javascript:history.go(0)" style="text-decoration: none; color: #ffffff">';
+        $output .= __("Play again?");
+        $output .= "</a></div></div></div></body></html>";
+
         print $output;
     }
 

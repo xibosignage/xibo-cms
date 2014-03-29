@@ -279,6 +279,35 @@ function EmbedInit()
     	// Can't be sure because the client does the rendering
     	return 2;
     }
+   
+   public function GetResource($display = 0) {
+        // Behave exactly like the client.
+
+        // Load in the template
+        $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
+
+        // Get the text out of RAW
+        $rawXml = new DOMDocument();
+        $rawXml->loadXML($this->GetRaw());
+
+        // Get the Text Node
+        $html = $rawXml->getElementsByTagName('embedHtml');
+        $html = $html->item(0);
+        $html = $html->nodeValue;
+
+        // Get the Script
+        $script = $rawXml->getElementsByTagName('embedScript');
+        $script = $script->item(0);
+        $script = $script->nodeValue;
+        
+        // Replace the Head Content with our generated javascript
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $script, $template);
+
+        // Replace the Body Content with our generated text
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $html, $template);
+
+        return $template;
+    }
 }
 
 ?>
