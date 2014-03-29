@@ -30,7 +30,7 @@ var ID_COUNTER = 0;
 var PRELOAD;
 
 function dsInit(layoutid) {
-    LOG_LEVEL = 10;
+    LOG_LEVEL = 0;
 
     /* Hide the info and log divs */
     $("#log").css("display", "none");
@@ -61,7 +61,10 @@ function playLog(logLevel, logClass, logMessage, logToScreen) {
     if (logLevel <= LOG_LEVEL)
     {
         var msg = timestamp() + " " + logClass.toUpperCase() + ": " + logMessage;
-        console.log(msg);
+        if (logLevel > 0)
+        {
+            console.log(msg);
+        }
         
         if (logToScreen) {
             document.getElementById("log").innerHTML = msg;
@@ -105,9 +108,8 @@ function keyHandler(event) {
             $("#log").css("display", "none");
         }
     }
-    else if (letter == 'i') {
+    /*else if (letter == 'i') {
         if ($("#info").css("display") == 'none') {
-            /* Position the info div */
             sw = $("#screen").width();
             sh = $("#screen").height();
             
@@ -122,13 +124,12 @@ function keyHandler(event) {
                 $("#info").css("top", y);
             }
             
-            /* Make info div visible */
             $("#info").css("display", "block");
         }
         else {
             $("#info").css("display", "none");
         }
-    }
+    }*/
 }
 
 function layout(id) {
@@ -410,23 +411,19 @@ function media(parent, id, xml) {
     
     self.run = function() {
         playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds")
-        
-        //if ((self.mediaType == "text") || (self.mediaType == "ticker") || (self.mediaType == "datasetview")) {
-            // Scale the body tag so text/tickers/datasetviews are shown
-            // at the correct size
-            //$("#" + self.iframeName).contents().find('body').css("zoom", self.region.layout.scaleFactor);
-        //}
-        
+               
         if (self.mediaType == "video") {
             $("#" + self.containerName + "-vid").get(0).play();
         }
         
         if (self.duration == 0) {
             if (self.mediaType == "video") {
-                $("#" + self.containerName + "-vid").bind("ended", self.region.nextMedia);
+                $("#" + self.containerName + "-vid").bind('ended', self.region.nextMedia);
+                $("#" + self.containerName + "-vid").bind('error', self.region.nextMedia);
+                $("#" + self.containerName + "-vid").bind('click', self.region.nextMedia);
             }
             else {
-                self.duration = 10;
+                self.duration = 3;
                 setTimeout(self.region.nextMedia, self.duration * 1000);
             }
         }
@@ -468,6 +465,12 @@ function media(parent, id, xml) {
     else if (self.mediaType == "datasetview") {
         $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=datasetview&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
+    else if (self.mediaType == "webpage") {
+        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + decodeURIComponent(self.options['uri']) + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+    }
+    else if (self.mediaType == "embedded") {
+        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=embedded&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+    }
     else if (self.mediaType == "ticker") {
         $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=ticker&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
@@ -490,7 +493,7 @@ function media(parent, id, xml) {
     else if (self.mediaType == "video") {
         var tmpUrl = "index.php?p=module&mod=video&q=Exec&method=GetResource&layoutid=" + self.region.layout.id + "&regionid=" + self.region.id + "&mediaid=" + self.id + "&lkid=" + self.lkid;
         PRELOAD.addFiles(tmpUrl);
-        $("#" + self.containerName).append('<video id="' + self.containerName + '-vid" preload="auto"><source src="' + tmpUrl + '"></video>');
+        $("#" + self.containerName).append('<video id="' + self.containerName + '-vid" preload="auto"><source src="' + tmpUrl + '">Unsupported Video</video>');
     }
     else if (self.mediaType == "flash") {
         var tmpUrl = "index.php?p=module&mod=flash&q=Exec&method=GetResource&layoutid=" + self.region.layout.id + "&regionid=" + self.region.id + "&mediaid=" + self.id + "&lkid=" + self.lkid;
