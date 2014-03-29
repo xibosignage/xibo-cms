@@ -805,7 +805,7 @@ class displaygroupDAO
         else {
             // Get a list of displays with their version information?
             if (!$displays = $this->user->DisplayList(array('display'), array('displaygroupid' => $displayGroupId)))
-                trigger_error(__('Unknown Display'), E_USER_ERROR);
+                trigger_error(__('No displays in this group'), E_USER_ERROR);
         }
 
         foreach ($displays as $display) {

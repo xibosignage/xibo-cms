@@ -16,8 +16,8 @@ ALTER TABLE `display` ADD `version_instructions` VARCHAR( 255 ) NULL,
 	ADD  `client_version` VARCHAR( 5 ) NULL ,
 	ADD  `client_code` SMALLINT NULL;
 
-INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
-(1, 'DisplayGroup', 'FileAssociations', 'manual/single.php?p=admin/fileassociations');
+INSERT INTO `help` (`Topic`, `Category`, `Link`) VALUES
+('DisplayGroup', 'FileAssociations', 'manual/single.php?p=admin/fileassociations');
 
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) 
 	VALUES 
@@ -25,6 +25,6 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 		(NULL, 'PROXY_PORT', '', 'text', 'The Proxy Port', NULL, 'general', '1'),
 		(NULL, 'PROXY_AUTH', '', 'text', 'The Authentication information for this proxy. username:password', NULL, 'general', '1');
 
-UPDATE `version` SET `app_ver` = '1.6.0', `XmdsVersion` = 3;
+UPDATE `version` SET `app_ver` = '1.6.0-rc2', `XmdsVersion` = 3;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '67';
