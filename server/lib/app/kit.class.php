@@ -630,5 +630,9 @@ class Kit
 
 		return round(pow(1024, $base - floor($base)), $precision) . $suffixes[floor($base)];
 	}
+
+	public static function uniqueId() {
+		return uniqid(rand());
+	}
 }
 ?>
