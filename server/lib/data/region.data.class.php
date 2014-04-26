@@ -923,6 +923,8 @@ class Region extends Data
 	        // Loop through all the media
 	        foreach ($mediaList as $mediaId)
 	        {
+	        	Debug::LogEntry('audit', 'Assigning MediaID: ' . $mediaId);
+
 	            $mediaId = Kit::ValidateParam($mediaId, _INT);
 	
 	            // Check we have permissions to use this media (we will use this to copy the media later)

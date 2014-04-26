@@ -1010,7 +1010,7 @@ END;
 	 * @param [type] $mediaName [description]
 	 * @param [type] $duration  [description]
 	 * @param [type] $fileName  [description]
-	 * @return [string] [The filename of the media in the library]
+	 * @return [int] [The ID of the Media Added]
 	 */
     public function AddLibraryMedia($fileId, $mediaName, $duration, $fileName)
     {
@@ -1070,8 +1070,8 @@ END;
             	return false;
         }
 
-        // Return the "stored as" value
-        return $storedAs;
+        // Return the ID of this media
+        return $mediaid;
     }
 
 	/**
