@@ -556,7 +556,7 @@ class Region extends Data
 
 			// Validation
 			if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))
-				return $this->SetError(__('Size and coordinates must be generic'));
+				return $this->SetError(__('Size and coordinates must be numeric'));
 	
 	        if ($width <= 0)
 	        	return $this->SetError(__('Width must be greater than 0'));
@@ -923,6 +923,8 @@ class Region extends Data
 	        // Loop through all the media
 	        foreach ($mediaList as $mediaId)
 	        {
+	        	Debug::LogEntry('audit', 'Assigning MediaID: ' . $mediaId);
+
 	            $mediaId = Kit::ValidateParam($mediaId, _INT);
 	
 	            // Check we have permissions to use this media (we will use this to copy the media later)

@@ -227,7 +227,7 @@ class DisplayGroup extends Data
 
             // Drop all current assignments
             $link = new LkMediaDisplayGroup($this->db);
-            if (!$link->UnlinkAllFromDisplayGroup($displayGroupId))
+            if (!$link->UnlinkAllFromDisplayGroup($displayGroupID))
                 $this->ThrowError(__('Unable to drop file assignments during display delete.'));
 
             // Unlink all Display Groups from this Display
