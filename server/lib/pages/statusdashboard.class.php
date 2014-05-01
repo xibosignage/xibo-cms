@@ -90,9 +90,11 @@ class statusdashboardDAO
 		    $output = array();
 		    $output['points'][] = array('label' => 'Used', 'data' => (double)$librarySize);
 
-		    if ($libraryLimit > 0)
+		    if ($libraryLimit > 0) {
+		    	$libraryLimit = $libraryLimit * 1024;
 		    	$output['points'][] = array('label' => 'Available', 'data' => ((double)$libraryLimit - $librarySize));
-
+		    }
+		    
 		    $output['config']['series']['pie']['show'] = true;
 		    $output['config']['legend']['show'] = false;
 
