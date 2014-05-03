@@ -336,8 +336,8 @@ class text extends Module
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
 
-        $width = Kit::GetParam('width', _REQUEST, _INT);
-        $height = Kit::GetParam('height', _REQUEST, _INT);
+        $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
+        $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
         $direction = $this->GetOption('direction');
         $scrollSpeed = $this->GetOption('scrollSpeed');
         $fitText = $this->GetOption('fitText', 0);
@@ -365,8 +365,8 @@ class text extends Module
             'scaleMode' => (($fitText == 0) ? 'scale' : 'fit'),
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
-            'previewWidth' => Kit::GetParam('width', _GET, _INT, 0),
-            'previewHeight' => Kit::GetParam('height', _GET, _INT, 0)
+            'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
+            'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0)
         );
 
         // See if we need to replace out any [clock] or [date] tags

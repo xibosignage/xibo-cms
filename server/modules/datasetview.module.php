@@ -415,8 +415,8 @@ class datasetview extends Module
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
             'rowsPerPage' => $this->GetOption('rowsPerPage'),
-            'previewWidth' => Kit::GetParam('width', _GET, _INT, 0),
-            'previewHeight' => Kit::GetParam('height', _GET, _INT, 0)
+            'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
+            'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0)
         );
 
         $headContent  = '<style type="text/css">' . $styleSheet . '</style>';
