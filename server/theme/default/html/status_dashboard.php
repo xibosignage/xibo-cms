@@ -51,8 +51,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<?php foreach(Theme::Get('display-widget-rows') as $row) { ?>
 				<tr class="<?php echo $row['mediainventorystatus']; ?>">
 					<td><?php echo $row['display']; ?></td>
-					<td><span class="<?php echo $row['licensed']; ?>"></span></td>
 					<td><span class="<?php echo $row['loggedin']; ?>"></span></td>
+					<td><span class="<?php echo $row['licensed']; ?>"></span></td>
 				</tr>
 				<?php } ?>
 			</tbody>
