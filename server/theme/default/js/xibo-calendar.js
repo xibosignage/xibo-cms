@@ -94,8 +94,8 @@ function CallGenerateCalendar() {
 
             // Make sure the calendar will fit in the window
             var height = $("#Calendar").parent().height();
-            $("#Calendar").height(height);
-            $("#display-list-well").css("max-height", (height - 100) + "px");
+            $("#Calendar").height($(window).height() * 0.8);
+            $("#display-list-well").css("max-height", (($(window).height() * 0.8) - 110) + "px");
             
             return false;
         }

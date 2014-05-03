@@ -39,17 +39,20 @@ jQuery.fn.extend({
 
         var options = $.extend({}, defaults, options);
 
-        // Set the width, height and scale factor
+        // Set the width, height
         if (options.previewWidth == 0 && options.previewHeight == 0) {
             options.width = $(window).width();
             options.height = $(window).height();
-            options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
         }
         else {
             options.width = options.previewWidth;
             options.height = options.previewHeight;
-            options.scaleFactor = 1;
         }
+
+        // Scale Factor
+        options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
+
+        //console.log("Scale Factor: " + options.scaleFactor);
 
         // For each matched element
         this.each(function() {
