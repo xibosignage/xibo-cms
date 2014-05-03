@@ -1,15 +1,20 @@
 UPDATE `setting` SET `type` = 'timezone' WHERE `setting`.`settingid` =11 LIMIT 1 ;
 
 -- Default Layout
-INSERT INTO `layout` (`layoutID`, `layout`, `permissionID`, `xml`, `userID`, `createdDT`, `modifiedDT`, `description`, `tags`, `templateID`, `retired`, `duration`, `background`) VALUES (NULL, 'Default Layout', '3', '<?xml version="1.0"?>
-<layout schemaVersion="1" width="800" height="500" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="500" top="0" left="0"><media id="ba2b90ee2e21f9aaffbc45f253068c60" type="text" duration="20" lkid="" schemaVersion="1">
-					<options><direction>none</direction></options>
-					<raw><text><![CDATA[<h1 style="text-align: center;"><span style="font-size: 2em;"><span style="font-family: Verdana;"><span style="color: rgb(255, 255, 255);">Welcome to </span></span></span></h1><h1 style="text-align: center;"><span style="font-size: 2em;"><span style="font-family: Verdana;"><span style="color: rgb(255, 255, 255);">Xibo! </span></span></span></h1><h1 style="text-align: center;"><span style="font-size: 2em;"><span style="font-family: Verdana;"><span style="color: rgb(255, 255, 255);">Open Source Digital Signage</span></span></span></h1><p style="text-align: center;"><span style="font-family: Verdana;"><span style="color: rgb(255, 255, 255);"><span style="font-size: 1.6em;">This is the default layout - please feel free to change it whenever you like!</span></span></span></p>]]></text></raw>
-				</media><media id="7695b17df85b666d420c232ee768ef68" type="ticker" duration="100" lkid="" schemaVersion="1">
-					<options><direction>up</direction><uri>http://xibo.org.uk/feed/</uri></options>
-					<raw><template><![CDATA[<h2 style="text-align: center;"><span style="color: rgb(255, 255, 255);"><span style="font-size: 1.6em;"><u><span style="font-size: 1.8em;">[Title]</span></u></span></span></h2><p><span style="color: rgb(255, 255, 255);"><span style="font-size: 1.6em;">[Description]</span></span></p><p>&nbsp;</p><p>&nbsp;</p>]]></template></raw>
-				</media></region></layout>
-', '1', NOW(), NOW(), NULL, NULL, NULL, '0', '0', NULL);
+INSERT INTO `layout` (`layoutID`, `layout`, `permissionID`, `xml`, `userID`, `createdDT`, `modifiedDT`, `description`, `tags`, `templateID`, `retired`, `duration`, `background`) VALUES (NULL, 'Default Layout', '3', '<?xml version="1.0"?><layout schemaVersion="1" width="800" height="450" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="401" top="0" left="0" userId="1"><media id="522caef6e13cb6c9fe5fac15dde59ef7" type="text" duration="15" lkid="" userId="1" schemaVersion="1">
+                            <options><xmds>1</xmds><direction>none</direction><scrollSpeed>2</scrollSpeed><fitText>0</fitText></options>
+                            <raw><text><![CDATA[<p style="text-align: center;"><strong><span style="font-family:arial,helvetica,sans-serif;"><span style="font-size:72px;"><span style="color:#FFFFFF;">Welcome to&nbsp;<br />
+Xibo</span></span></span></strong></p>
+
+<p style="text-align: center;"><span style="font-size:48px;"><span style="font-family:arial,helvetica,sans-serif;"><span style="color:#FFFFFF;">Open Source Digital Signage</span></span></span></p>
+
+<p style="text-align: center;"><span style="color:#D3D3D3;"><span style="font-size:26px;"><span style="font-family:arial,helvetica,sans-serif;">This is the default layout - please feel free to change it whenever you like.</span></span></span></p>
+]]></text></raw>
+                    </media></region><region id="53654d56726e0" userId="1" width="194" height="48" top="402" left="609"><media id="11846d5d9f686fb75fc9dad0b19ca9de" type="text" duration="10" lkid="" userId="1" schemaVersion="1">
+                            <options><xmds>1</xmds><direction>none</direction><scrollSpeed>2</scrollSpeed><fitText>0</fitText></options>
+                            <raw><text><![CDATA[<p style="text-align: right;"><span style="font-size:24px;"><span style="font-family:arial,helvetica,sans-serif;"><span style="color:#D3D3D3;">[Clock]</span></span></span></p>
+]]></text></raw>
+                    </media></region></layout>', '1', NOW(), NOW(), NULL, NULL, NULL, '0', '0', NULL);
 
 ALTER TABLE `log` CHANGE `page` `page` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL  ;
 
