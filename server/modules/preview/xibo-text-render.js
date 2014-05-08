@@ -155,8 +155,8 @@ jQuery.fn.extend({
                 // Run the Fit Text plugin
                 $(this)
                     .css({
-                        width: options.originalWidth,
-                        height: options.originalHeight
+                        width: options.width,
+                        height: options.height
                     })
                     .fitText(1.75);
             }
