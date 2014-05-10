@@ -59,6 +59,12 @@ jQuery.fn.extend({
 
             //console.log("[Xibo] Selected: " + this.tagName.toLowerCase());
             //console.log("[Xibo] Options: " + JSON.stringify(options));
+            
+            // Set the dimensions of the window correctly (no matter what, we will zoom this)
+            $(this).css({
+                width: options.originalWidth,
+                height: options.originalHeight
+            });
 
             // Deal with the array of items.
             if (options.type == "ticker") {
@@ -142,7 +148,7 @@ jQuery.fn.extend({
                 itemsThisPage++;
             }
 
-            // 3rd Objective Scale the entire thing accoring to the scaleMode
+            // 3rd Objective Scale the entire thing according to the scaleMode
             // settings involved:
             //  scaleMode
             if (options.scaleMode == "fit") {
@@ -153,23 +159,14 @@ jQuery.fn.extend({
                 $("*", this).css("font-size", "");
 
                 // Run the Fit Text plugin
-                $(this)
-                    .css({
-                        width: options.width,
-                        height: options.height
-                    })
-                    .fitText(1.75);
+                $(this).fitText(1.75);
             }
-            else if (options.scaleMode == "scale") {
-                //console.log("[Xibo] Applying CSS ZOOM. " + options.scaleFactor);
 
-                $(this).css({
-                    width: options.originalWidth,
-                    height: options.originalHeight,
-                    "transform": "scale(" + options.scaleFactor + ")",
-                    "transform-origin": "0 0"
-                });
-            }
+            // Now make it size correctly
+            $(this).css({
+                "transform": "scale(" + options.scaleFactor + ")",
+                "transform-origin": "0 0"
+            });
             
             // 4th objective - move the items around, start the timer
             // settings involved:
