@@ -35,27 +35,6 @@ class datasetview extends Module
     }
 
     /**
-     * Sets the Layout and Region Information
-     *  it will then fill in any blanks it has about this media if it can
-     * @return
-     * @param $layoutid Object
-     * @param $regionid Object
-     * @param $mediaid Object
-     */
-    public function SetRegionInformation($layoutid, $regionid)
-    {
-        $db =& $this->db;
-        $this->layoutid = $layoutid;
-        $this->regionid = $regionid;
-        $mediaid = $this->mediaid;
-        $this->existingMedia = false;
-
-        if ($this->regionSpecific == 1) return;
-
-        return true;
-    }
-
-    /**
      * Return the Add Form as HTML
      * @return
      */
