@@ -28,7 +28,6 @@ class image extends Module
     {
         // Must set the type of the class
         $this->type= 'image';
-        $this->displayType = __('Image');
 
         // Get the max upload size from PHP
         $this->maxFileSize 	= ini_get('upload_max_filesize');

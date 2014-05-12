@@ -24,7 +24,6 @@ class localvideo extends Module
     {
         // Must set the type of the class
         $this->type = 'localvideo';
-        $this->displayType = 'Local Video';
 
         // Must call the parent class
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);

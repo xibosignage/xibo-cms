@@ -25,8 +25,6 @@ class counter extends Module
     {
         // Must set the type of the class
         $this->type = 'counter';
-        $this->displayType = 'Counter';
-        $this->name = 'Counter';
 
         // Must call the parent class
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);

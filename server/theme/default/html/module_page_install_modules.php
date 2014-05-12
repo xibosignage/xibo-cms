@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -27,25 +27,14 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="row">
-	<ul class="nav nav-pills span12">
-		<?php
-			foreach (Theme::GetMenu('Administration Menu') as $item) {
-				echo $item['li'];
-			}
-		?>
-	</ul>
-</div>
-<?php echo Theme::Get('modules_to_install'); ?>
-<div class="row">
-	<div class="XiboGrid span12" id="<?php echo Theme::Get('id'); ?>">
-		<div class="XiboFilter">
-			<div class="FilterDiv" id="Filter">
-				<form>
-					<?php echo Theme::Get('form_meta'); ?>
-				</form>
+	<div class="span12">
+		<h3><?php echo Theme::Translate('Modules available to Install'); ?></h3>
+		<?php foreach(Theme::Get('to_install') as $row) { ?>
+		<div class="row">
+			<div class="span12">
+				<?php echo '<a href="' . Theme::Get('module_install_url') . $row . '">' . $row . '</a>'; ?>
 			</div>
 		</div>
-		<div class="XiboData"></div>
-		<?php echo Theme::Get('pager'); ?>
+		<?php } ?>
 	</div>
 </div>

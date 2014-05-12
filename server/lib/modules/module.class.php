@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,46 +20,53 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class Module implements ModuleInterface
+abstract class Module implements ModuleInterface
 {
-	// Media information
+    // Session Variables
 	protected $db;
 	protected $user;
-	protected $region;
 	protected $response;
     public $auth;
-	protected $type;
-  	public $displayType;
 
-	protected $layoutid;
-	protected $regionid;
-
-	protected $mediaid;
-	protected $name;
-	private   $schemaVersion;
-	protected $regionSpecific;
-	protected $duration;
-	protected $lkid;
-	protected $validExtensions;
-	protected $validExtensionsText;
+    // Module Information
+    private $module_id;
+    protected $render_as;
+    public $displayType;
+    protected $type;
+    protected $regionSpecific;
     protected $previewEnabled;
-        
-	protected $xml;
+    protected $validExtensions;
+    protected $validExtensionsText;
+    protected $settings;
 
-	protected $existingMedia;
-	protected $assignedMedia;
+    // The Schema Version of this code
+	protected $schemaVersion;
+    protected $codeSchemaVersion = -1;
+    
+    // Layout Information
+    protected $region;
+    protected $layoutid;
+    protected $regionid;
+    protected $xml;
 	protected $deleteFromRegion;
+    protected $width;
+    protected $height;
+
+    // Media information
+    protected $mediaid;
+    protected $name;
+    protected $duration;
+    protected $lkid;
+    protected $existingMedia;
+    protected $assignedMedia;
     protected $showRegionOptions;
     protected $originalUserId;
     protected $storedAs;
 
     // Track the error state
-	private $error;
+    private $error;
     private $errorNo;
-	private $errorMessage;
-
-    protected $width;
-    protected $height;
+    private $errorMessage;
 
     /**
      * Constructor - sets up this media object with all the available information
@@ -72,10 +79,10 @@ class Module implements ModuleInterface
      */
     public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
     {
-        require_once("lib/data/region.data.class.php");
+        Kit::ClassLoader('region');
 
-        $this->db 	=& $db;
-        $this->user 	=& $user;
+        $this->db =& $db;
+        $this->user =& $user;
 
         // Initialise the error state
         $this->error = false;
@@ -93,7 +100,7 @@ class Module implements ModuleInterface
         $this->region 	= new region($db);
         $this->response = new ResponseManager();
 
-        $this->existingMedia 	= false;
+        $this->existingMedia = false;
         $this->assignedMedia = false;
         $this->deleteFromRegion = false;
         $this->assignable = true;
@@ -109,10 +116,7 @@ class Module implements ModuleInterface
         Debug::LogEntry('audit', 'Module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 
         // Either the information from the region - or some blanks
-        if (!$this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid))
-        	return false;
-
-        return true;
+        return ($this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid));
     }
 
 	/**
@@ -121,31 +125,56 @@ class Module implements ModuleInterface
 	 */
 	final private function SetModuleInformation()
 	{
-		$db =& $this->db;
-		$type = $this->type;
+        if ($this->type == '')
+            return $this->SetError(__('Unable to create Module [No type given] - please refer to the Module Documentation.'));
 
-		if ($type == '')
-			return $this->SetError(__('Unable to create Module [No type given] - please refer to the Module Documentation.'));
+		try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT * FROM module WHERE Module = :type');
+            $sth->execute(array(
+                    'type' => $this->type
+                ));
 
-		$SQL = sprintf("SELECT * FROM module WHERE Module = '%s'", $db->escape_string($type));
+            $row = $sth->fetch();
+        
+            $this->module_id = Kit::ValidateParam($row['ModuleID'], _INT);
+            $this->schemaVersion = Kit::ValidateParam($row['SchemaVersion'], _INT);
+            $this->regionSpecific = Kit::ValidateParam($row['RegionSpecific'], _INT);
+            $this->validExtensionsText = Kit::ValidateParam($row['ValidExtensions'], _STRING);
+            $this->previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
+            $this->assignable = Kit::ValidateParam($row['assignable'], _INT);
+            $this->render_as = Kit::ValidateParam($row['render_as'], _WORD);
+            $this->settings = Kit::ValidateParam($row['settings'], _HTMLSTRING);
 
-		if (!$result = $db->query($SQL))
-			return $this->SetError(__('Unable to create Module [Cannot find type in the database] - please refer to the Module Documentation.'));
+            // Assume native rendering if none provided
+            $this->render_as = ($this->render_as == '') ? 'native' : $this->render_as;
 
-		if ($db->num_rows($result) != 1)
-			return $this->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
+            // Settings needs to be converted into an array (it will be stored as a JSON string)
+            if ($this->settings == '')
+                $this->settings = array();
+            else
+                $this->settings = json_decode($this->settings);
 
-		$row = $db->get_assoc_row($result);
+            // Translated name of this module
+            $this->displayType = __(Kit::ValidateParam($row['Name'], _STRING));
+            
+            // Parse out the valid extensions
+            $this->validExtensions = explode(',', $this->validExtensionsText);
+            $this->validExtensionsText = str_replace(',', ', ', $this->validExtensionsText);
 
-		$this->schemaVersion 		= Kit::ValidateParam($row['SchemaVersion'], _INT);
-		$this->regionSpecific 		= Kit::ValidateParam($row['RegionSpecific'], _INT);
-		$this->validExtensionsText 	= Kit::ValidateParam($row['ValidExtensions'], _STRING);
-		$this->validExtensions 		= explode(',', $this->validExtensionsText);
-		$this->validExtensionsText	= str_replace(',', ', ', $this->validExtensionsText);
-        $this->previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
-        $this->assignable = Kit::ValidateParam($row['assignable'], _INT);
+            // Do we need to upgrade this module?
+            // We won't get here without it being installed, because it will not be found in the DB.
+            $this->InstallOrUpgrade();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            return $this->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
+        }
 
-		return true;
+        return true;
 	}
 
     /**
@@ -265,7 +294,7 @@ class Module implements ModuleInterface
 
             $xml = <<<XML
             <root>
-                    <media id="" type="$this->type" duration="" lkid="" userId="$this->originalUserId" schemaVersion="$this->schemaVersion">
+                    <media id="" type="$this->type" render="$this->render_as" duration="" lkid="" userId="$this->originalUserId" schemaVersion="$this->schemaVersion">
                             <options />
                             <raw />
                     </media>
@@ -311,7 +340,8 @@ XML;
 
 		$mediaNode->setAttribute('id', $this->mediaid);
 		$mediaNode->setAttribute('duration', $this->duration);
-		$mediaNode->setAttribute('type', $this->type);
+        $mediaNode->setAttribute('type', $this->type);
+		$mediaNode->setAttribute('render', $this->render_as);
         $mediaNode->setAttribute('userId', $this->originalUserId);
 
 		return $this->xml->saveXML($mediaNode);
@@ -444,42 +474,33 @@ XML;
 	 */
 	final public function UpdateRegion()
 	{
-            Debug::LogEntry('audit', 'Updating Region');
+        Debug::LogEntry('audit', 'Updating Region');
 
-            // By this point we expect to have a MediaID, duration
-            $layoutid = $this->layoutid;
-            $regionid = $this->regionid;
+        // By this point we expect to have a MediaID, duration
+        $layoutid = $this->layoutid;
+        $regionid = $this->regionid;
 
-            if ($this->deleteFromRegion)
-            {
-                    // We call region delete
-                    if (!$this->region->RemoveMedia($layoutid, $regionid, $this->lkid, $this->mediaid))
-                    {
-                            return $this->SetError(__("Unable to Remove this media from the Layout"));
-                    }
+        if ($this->deleteFromRegion) {
+            // We call region delete
+            if (!$this->region->RemoveMedia($layoutid, $regionid, $this->lkid, $this->mediaid))
+                return $this->SetError(__("Unable to Remove this media from the Layout"));
+        }
+        else {
+            if ($this->assignedMedia) {
+                // We call region swap with the same media id
+                if (!$this->region->SwapMedia($layoutid, $regionid, $this->lkid, $this->mediaid, $this->mediaid, $this->AsXml()))
+                    return $this->SetError(__("Unable to assign to the Region"));
             }
-            else
-            {
-                    if ($this->assignedMedia)
-                    {
-                            // We call region swap with the same media id
-                            if (!$this->region->SwapMedia($layoutid, $regionid, $this->lkid, $this->mediaid, $this->mediaid, $this->AsXml()))
-                            {
-                                    return $this->SetError(__("Unable to assign to the Region"));
-                            }
-                    }
-                    else
-                    {
-                            // We call region add
-                            if (!$this->region->AddMedia($layoutid, $regionid, $this->regionSpecific, $this->AsXml()))
-                            {
-                                    return $this->SetError(__("Error adding this media to the library"));
-                            }
-                    }
+            else {
+                // We call region add
+                if (!$this->region->AddMedia($layoutid, $regionid, $this->regionSpecific, $this->AsXml()))
+                    return $this->SetError(__("Error adding this media to the library"));
             }
-            Debug::LogEntry('audit', 'Finished Updating Region');
+        }
 
-            return true;
+        Debug::LogEntry('audit', 'Finished Updating Region');
+
+        return true;
 	}
 
 	/**
@@ -763,23 +784,6 @@ END;
         return $this->response;
     }
 
-	/**
-	 * Default AddForm
-	 * @return
-	 */
-	public function AddForm()
-	{
-		$form = '<p>' . __('Not yet implemented by this module.') . '</p>';
-
-		$this->response->html 		 	= $form;
-		$this->response->dialogTitle 	= __('Add Item');
-		$this->response->dialogSize 	= true;
-		$this->response->dialogWidth 	= '450px';
-		$this->response->dialogHeight 	= '150px';
-
-		return $this->response;
-	}
-
     protected function AddFormForLibraryMedia()
     {
         global $session;
@@ -881,23 +885,6 @@ END;
         return $this->response;
     }
 
-	/**
-	 * Default Edit Form
-	 * @return
-	 */
-	public function EditForm()
-	{
-		$form = '<p>' . __('Not yet implemented by this module.') . '</p>';
-
-		$this->response->html 		 	= $form;
-		$this->response->dialogTitle 	= __('Add Item');
-		$this->response->dialogSize 	= true;
-		$this->response->dialogWidth 	= '450px';
-		$this->response->dialogHeight 	= '150px';
-
-		return $this->response;
-	}
-
     protected function EditFormForLibraryMedia()
     {
         global $session;
@@ -992,18 +979,6 @@ END;
     }
 
 	/**
-	 * Default Add Media
-	 * @return
-	 */
-	public function AddMedia()
-	{
-		// We want to load a new form
-		$this->response->message = __('Add Media has not been implemented for this module.');
-		
-		return $this->response;	
-	}
-
-	/**
 	 * Adds Library Media
 	 *  called from inside the FileUpload Handler
 	 * @param [type] $fileId    [description]
@@ -1073,18 +1048,6 @@ END;
         // Return the ID of this media
         return $mediaid;
     }
-
-	/**
-	 * Default EditMedia
-	 * @return
-	 */
-	public function EditMedia()
-	{
-		// We want to load a new form
-		$this->response->message = __('Edit Media has not been implemented for this module.');
-		
-		return $this->response;	
-	}
 
     protected function EditLibraryMedia()
     {
@@ -1273,15 +1236,28 @@ END;
         return $this->name;
     }
 
-        /**
-         * Preview code for a module
-         * @param <type> $width
-         * @param <type> $height
-         */
-        public function Preview($width, $height)
-        {
-            return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
-        }
+    /**
+     * Preview code for a module
+     * @param <type> $width
+     * @param <type> $height
+     */
+    public function Preview($width, $height) {
+        return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
+    }
+
+    /**
+     * Preview as the Client
+     * @param <double> $width
+     * @param <double> $height
+     * @return <string>
+     */
+    public function PreviewAsClient($width, $height)
+    {
+        $widthPx    = $width .'px';
+        $heightPx   = $height .'px';
+
+        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $this->type . '&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&mediaid=' . $this->mediaid . '&lkid=' . $this->lkid . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+    }
 
     /**
      * Is this media node region specific
@@ -1889,7 +1865,7 @@ END;
 	 */
 	protected function SetError($errNo, $errMessage = '')
 	{
-		$this->error		= true;
+		$this->error = true;
 
 		// Is an error No provided?
 		if (!is_numeric($errNo)) {
@@ -1897,7 +1873,7 @@ END;
 			$errNo = -1;
 		}
 
-		$this->errorNo 		= $errNo;
+		$this->errorNo = $errNo;
 		$this->errorMessage	= $errMessage;
 		
 		Debug::LogEntry('audit', sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Media Module', 'SetError');
@@ -1906,13 +1882,183 @@ END;
 		return false;
 	}
 
+    protected function ThrowError($errNo, $errMessage = '') {
+        $this->SetError($errNo, $errMessage);
+        throw new Exception(sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage));
+    }
+
     public function IsValid() {
         // Defaults: Stored media is valid, region specific is unknown
         return ($this->regionSpecific) ? 0 : 1;
     }
+
+    /**
+     * Default behaviour for install / upgrade
+     * this should be overridden for new modules
+     */
+    public function InstallOrUpgrade() {
+
+        if ($this->render_as != 'native')
+            return $this->SetError(1, __('Module must implement InstallOrUpgrade'));
+
+        return true;
+    }
+
+    public function InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings) {
+        
+        try {
+            // Validate some things.
+            if ($this->type == '')
+                $this->ThrowError(__('Module has not set the module type'));
+
+            if ($name == '')
+                $this->ThrowError(__('Module has not set the module name'));
+
+            if ($description == '')
+                $this->ThrowError(__('Module has not set the description'));
+
+            if (!is_numeric($regionSpecific))
+                $this->ThrowError(__('Region Specific variable must be a number'));
+
+            if (!is_numeric($previewEnabled))
+                $this->ThrowError(__('Preview Enabled variable must be a number'));
+
+            if (!is_numeric($assignable))
+                $this->ThrowError(__('Assignable variable must be a number'));
+
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('
+                    INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, 
+                        `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`) 
+                    VALUES (:module, :name, :enabled, :region_specific, :description, 
+                        :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings);
+                ');
+
+            $sth->execute(array(
+                    'module' =>  $this->type,
+                    'name' =>  $name,
+                    'enabled' =>  1,
+                    'region_specific' =>  1,
+                    'description' =>  $description, 
+                    'image_uri' =>  $imageUri,
+                    'schema_version' =>  $this->codeSchemaVersion,
+                    'valid_extensions' =>  '',
+                    'preview_enabled' =>  $previewEnabled,
+                    'assignable' =>  $assignable,
+                    'render_as' =>  $render_as,
+                    'settings' => $settings
+                ));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    public function UpgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings) {
+        
+        try {
+            // Validate some things.
+            if ($this->module_id == '')
+                $this->ThrowError(__('This module does not exist - should you have called Install?'));
+
+            if ($name == '')
+                $this->ThrowError(__('Module has not set the module name'));
+
+            if ($description == '')
+                $this->ThrowError(__('Module has not set the description'));
+
+            if (!is_numeric($regionSpecific))
+                $this->ThrowError(__('Region Specific variable must be a number'));
+
+            if (!is_numeric($previewEnabled))
+                $this->ThrowError(__('Preview Enabled variable must be a number'));
+
+            if (!is_numeric($assignable))
+                $this->ThrowError(__('Assignable variable must be a number'));
+
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('
+                    UPDATE `module` SET `Name` = :name, `Description` = :description, 
+                        `ImageUri` = :image_uri, `SchemaVersion` = :schema_version, `PreviewEnabled` = :preview_enabled, 
+                        `assignable` = :assignable, `settings` = :settings
+                     WHERE ModuleID = :module_id
+                ');
+
+            $sth->execute(array(
+                    'name' =>  $name,
+                    'description' =>  $description, 
+                    'image_uri' =>  $imageUri,
+                    'schema_version' =>  $this->codeSchemaVersion,
+                    'preview_enabled' =>  $previewEnabled,
+                    'assignable' =>  $assignable,
+                    'settings' => $settings,
+                    'module_id' => $this->module_id
+                ));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Form for updating the module settings
+     */
+    public function ModuleSettingsForm() {
+        return '';
+    }
+
+    /**
+     * Process any module settings
+     */
+    public function ModuleSettings() {
+        return array();
+    }
+
+    /**
+     * Updates the settings on the module
+     * @param [array] $settings [The Settings]
+     */
+    public function UpdateModuleSettings($settings) {
+        if (!is_array($settings))
+            return $this->SetError(__('Module settings must be an array'));
+
+        // Update the settings on the module record.
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('UPDATE `module` SET settings = :settings WHERE ModuleID = :module_id');
+            $sth->execute(array(
+                    'settings' => json_encode($settings),
+                    'module_id' => $this->module_id
+                ));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
     
     /**
-	 * Return filebased media items to the browser for Download/Preview
+	 * Return file based media items to the browser for Download/Preview
 	 * @return 
 	 * @param $download Boolean
 	 */

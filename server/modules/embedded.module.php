@@ -25,7 +25,6 @@ class embedded extends Module
 	{
 		// Must set the type of the class
 		$this->type = 'embedded';
-                $this->displayType = 'Embedded HTML';
 	
 		// Must call the parent class	
 		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);

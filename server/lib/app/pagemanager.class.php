@@ -37,7 +37,7 @@ class PageManager
     private $thePage;
     
     // Maintain a list of pages/functions we are allowed to get to without going through the authentication system
-    private $nonAuthedPages = array('index', 'clock');
+    private $nonAuthedPages = array('index', 'clock', 'error');
     private $nonAuthedFunctions = array('login', 'logout', 'GetClock', 'About');
 	
     function __construct(database $db, user $user, $page)
@@ -69,7 +69,7 @@ class PageManager
         $user =& $this->user;
         
         // The user MUST be logged in unless they are trying to assess some of the public facing pages
-        if (in_array($this->p, $this->nonAuthedPages) && in_array($this->q, $this->nonAuthedFunctions))
+        if (in_array($this->p, $this->nonAuthedPages) && (in_array($this->q, $this->nonAuthedFunctions) || $this->q == ''))
         {
             // Automatically authed
             $this->authed = true;

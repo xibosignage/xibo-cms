@@ -316,7 +316,7 @@ class ResponseManager
 				$_SESSION['ErrorMessage'] 	= $this->message;
 				
 				// Redirect to the following
-				$url						= 'index.php?p=error';
+				$url = 'index.php?p=error';
 				
 				// Header or JS redirect
 				if (headers_sent()) 

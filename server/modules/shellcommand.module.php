@@ -25,7 +25,6 @@ class shellcommand extends Module
     {
         // Must set the type of the class
         $this->type = 'shellcommand';
-        $this->displayType = 'Shell Command';
 
         // Must call the parent class
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);

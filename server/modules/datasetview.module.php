@@ -28,7 +28,6 @@ class datasetview extends Module
     {
         // Must set the type of the class
         $this->type= 'datasetview';
-        $this->displayType = __('DataSet View');
 
         // Must call the parent class
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);

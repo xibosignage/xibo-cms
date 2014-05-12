@@ -25,7 +25,6 @@ class webpage extends Module
 	{
 		// Must set the type of the class
 		$this->type = 'webpage';
-        $this->displayType = 'Webpage';
 	
 		// Must call the parent class	
 		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);

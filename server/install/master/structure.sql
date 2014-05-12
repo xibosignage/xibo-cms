@@ -354,6 +354,8 @@ CREATE TABLE IF NOT EXISTS `module` (
   `ValidExtensions` varchar(254) DEFAULT NULL,
   `PreviewEnabled` tinyint(4) NOT NULL DEFAULT '1',
   `assignable` tinyint(4) NOT NULL DEFAULT '1',
+  `render_as` varchar(10) DEFAULT NULL,
+  `settings` TEXT,
   PRIMARY KEY (`ModuleID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Functional Modules' AUTO_INCREMENT=14 ;
 

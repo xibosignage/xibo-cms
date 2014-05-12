@@ -115,4 +115,19 @@ echo __('Date');
 echo __('Value');
 echo __('Formula');
 
+// Module names
+echo __('DataSet View');
+echo __('Ticker');
+echo __('Text');
+echo __('Embedded');
+echo __('Image');
+echo __('Video');
+echo __('Flash');
+echo __('PowerPoint');
+echo __('Web Page');
+echo __('Counter');
+echo __('Shell Command');
+echo __('Local Video');
+echo __('Generic File');
+
 ?>

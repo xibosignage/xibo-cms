@@ -43,5 +43,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<td><label for="Enabled" accesskey="t" title="<?php echo Theme::Translate('When Enabled users will be able to add media using this module'); ?>"><?php echo Theme::Translate('Enabled'); ?></label></td>
 			<td><input name="Enabled" type="checkbox" id="Enabled" tabindex="3" <?php echo Theme::Get('enabled_checked'); ?> /></td>
 		</tr>
+		<?php echo Theme::Get('module_settings_form_items'); ?>
 	</table>
 </form>

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -57,7 +57,19 @@ interface ModuleInterface
 	// Return the name of the media as input by the user
 	public function GetName();
 
-        public function GetResource();
-}
+	/**
+	 * HTML Content to completely render this module.
+	 */
+    public function GetResource();
 
+    /**
+     * Install or Upgrade this module
+     * 	Expects $this->codeSchemaVersion to be set by the module.
+     */
+    public function InstallOrUpgrade();
+    public function InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings);
+    public function UpgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings);
+    public function ModuleSettingsForm();
+    public function ModuleSettings();
+}
 ?>
