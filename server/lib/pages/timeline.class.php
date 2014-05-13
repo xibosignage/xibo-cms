@@ -278,10 +278,10 @@ class timelineDAO {
         foreach ($regions as $region) {
 
             $regionid = Kit::ValidateParam($region->regionid, _STRING);
-            $top = Kit::ValidateParam($region->top, _INT);
-            $left = Kit::ValidateParam($region->left, _INT);
-            $width = Kit::ValidateParam($region->width, _INT);
-            $height = Kit::ValidateParam($region->height, _INT);
+            $top = Kit::ValidateParam($region->top, _DOUBLE);
+            $left = Kit::ValidateParam($region->left, _DOUBLE);
+            $width = Kit::ValidateParam($region->width, _DOUBLE);
+            $height = Kit::ValidateParam($region->height, _DOUBLE);
 
             Debug::LogEntry('audit', 'Editing Region ' . $regionid);
 
