@@ -1316,7 +1316,11 @@ END;
         if ($this->usertypeid == 1)
         {
             $auth->FullAccess();
-            return $auth;
+            
+            if ($fullObject)
+                return $auth;
+
+            return true;
         }
 
         // Permissions for groups the user is assigned to, and Everyone
