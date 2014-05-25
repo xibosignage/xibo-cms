@@ -72,9 +72,20 @@ class statsDAO
         $displayId = Kit::GetParam('displayid', _POST, _INT);
         $mediaId = Kit::GetParam('mediaid', _POST, _INT);
 
-        Theme::Set('form_action', 'index.php?p=stats&q=OutputCSV');
-        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayId . '" /><input type="hidden" name="fromdt" value="' . $fromDt . '" /><input type="hidden" name="todt" value="' . $toDt . '" />');
+        Theme::Set('form_action', '');
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"/><input type="hidden" name="q" value="OutputCSV"/><input type="hidden" name="displayid" value="' . $displayId . '" /><input type="hidden" name="fromdt" value="' . $fromDt . '" /><input type="hidden" name="todt" value="' . $toDt . '" />');
         
+        // Get an array of display id this user has access to.
+        $displays = $this->user->DisplayList();
+        $display_ids = array();
+
+        foreach($displays as $display) {
+            $display_ids[] = $display['displayid'];
+        }
+
+        if (count($display_ids) <= 0)
+            trigger_error(__('No displays with View permissions'), E_USER_ERROR);
+
         // 3 grids showing different stats.
 
         // Layouts Ran
@@ -85,6 +96,8 @@ class statsDAO
         $SQL .= " WHERE stat.type = 'layout' ";
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
         $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
+
+        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
 
         if ($displayId != 0)
             $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
@@ -123,6 +136,7 @@ class statsDAO
         $SQL .= " WHERE stat.type = 'media' ";
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
         $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
+        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
 
         if ($mediaId != 0)
             $SQL .= sprintf("  AND media.MediaID = %d ", $mediaId);
@@ -165,6 +179,7 @@ class statsDAO
         $SQL .= " WHERE stat.type = 'media' ";
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
         $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
+        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
 
         if ($mediaId != 0)
             $SQL .= sprintf("  AND media.MediaID = %d ", $mediaId);
@@ -218,13 +233,26 @@ class statsDAO
 		$fromdt		= Kit::GetParam('fromdt', _POST, _STRING);
 		$todt		= Kit::GetParam('todt', _POST, _STRING);
 		$displayID	= Kit::GetParam('displayid', _POST, _INT);
-		
+
 		// We want to output a load of stuff to the browser as a text file.
 		header('Content-Type: text/csv');
 		header('Content-Disposition: attachment; filename="stats.csv"');
 		header("Content-Transfer-Encoding: binary");
 		header('Accept-Ranges: bytes');
 		
+        // Get an array of display id this user has access to.
+        $displays = $this->user->DisplayList();
+        $display_ids = array();
+
+        foreach($displays as $display) {
+            $display_ids[] = $display['displayid'];
+        }
+
+        if (count($display_ids) <= 0) {
+            echo __('No displays with View permissions');
+            exit;
+        }
+        
 		$SQL =  'SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName ';
 		$SQL .= '  FROM stat ';
 		$SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
@@ -233,6 +261,8 @@ class statsDAO
 		$SQL .= ' WHERE 1=1 ';
 		$SQL .= sprintf("  AND stat.end > '%s' ", $fromdt);
 		$SQL .= sprintf("  AND stat.start <= '%s' ", $todt);
+
+        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
 
 		if ($displayID != 0)
 		{

@@ -805,7 +805,7 @@ END;
         $SQL .= " WHERE lklayoutregiongroup.RegionID = '%s' AND lklayoutregiongroup.LayoutID = %d ";
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
-        $SQL = sprintf($SQL, $db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $this->db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
         //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
