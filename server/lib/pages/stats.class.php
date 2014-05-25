@@ -72,6 +72,12 @@ class statsDAO
         $displayId = Kit::GetParam('displayid', _POST, _INT);
         $mediaId = Kit::GetParam('mediaid', _POST, _INT);
 
+        // What if the fromdt and todt are exactly the same?
+        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+        if ($fromDt == $toDt) {
+            $toDt = date("Y-m-d", strtotime($toDt) + 86399);
+        }
+
         Theme::Set('form_action', '');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"/><input type="hidden" name="q" value="OutputCSV"/><input type="hidden" name="displayid" value="' . $displayId . '" /><input type="hidden" name="fromdt" value="' . $fromDt . '" /><input type="hidden" name="todt" value="' . $toDt . '" />');
         
@@ -233,6 +239,10 @@ class statsDAO
 		$fromdt		= Kit::GetParam('fromdt', _POST, _STRING);
 		$todt		= Kit::GetParam('todt', _POST, _STRING);
 		$displayID	= Kit::GetParam('displayid', _POST, _INT);
+
+        if ($fromdt == $todt) {
+            $todt = date("Y-m-d", strtotime($todt) + 86399);
+        }
 
 		// We want to output a load of stuff to the browser as a text file.
 		header('Content-Type: text/csv');
