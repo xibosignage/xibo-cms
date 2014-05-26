@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2011 Daniel Garner
+ * Copyright (C) 2011-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -293,7 +293,7 @@ class datasetview extends Module
         $columns = Kit::GetParam('DataSetColumnId', _GET, _ARRAY, array());
         $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
         $lowerLimit = Kit::GetParam('lowerLimit', _POST, _INT);
-        $filter = Kit::GetParam('filter', _POST, _STRING);
+        $filter = Kit::GetParam('filter', _POST, _STRINGSPECIAL);
         $ordering = Kit::GetParam('ordering', _POST, _STRING);
         $showHeadings = Kit::GetParam('showHeadings', _POST, _CHECKBOX);
         $styleSheet = Kit::GetParam('styleSheet', _POST, _HTMLSTRING);
