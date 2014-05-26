@@ -26,6 +26,7 @@ define('_GET', "get");
 define('_REQUEST', "request");
 
 define('_STRING', "string");
+define('_STRINGSPECIAL', 'stringspecial');
 define('_HTMLSTRING', 'htmlstring');
 define('_PASSWORD', "password");
 define('_INT', "int");
@@ -295,6 +296,10 @@ class Kit
 			case _PASSWORD :
 				$return = filter_var($return, FILTER_SANITIZE_STRING);
 				break;
+
+			case _STRINGSPECIAL:
+				$return = filter_var($return, FILTER_SANITIZE_SPECIAL_CHARS);
+				break;			
 				
 			case _HTMLSTRING :
 				

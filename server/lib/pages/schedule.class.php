@@ -625,7 +625,10 @@ HTML;
                 $eventDGIDs = Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
                 $eventDGIDs     = explode(',', $eventDGIDs);
 
-                if (!$user->DisplayGroupAuth($displayGroupID)) continue;
+                // Make sure this user can view this display group
+                $auth = $user->DisplayGroupAuth($displayGroupID, true);
+                if (!$auth->view) 
+                    continue;
 
                 // How many days does this event span?
                 $spanningDays   = ($toDT - $fromDT) / (60 * 60 * 24);

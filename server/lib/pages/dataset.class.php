@@ -1087,14 +1087,14 @@ END;
         if ($tmpName == '')
             trigger_error(__('Please ensure you have picked a file and it has finished uploading'), E_USER_ERROR);
 
-        // File name and extension (orignial name)
+        // File name and extension (original name)
         $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
         $fileName = basename($fileName);
         $ext = strtolower(substr(strrchr($fileName, "."), 1));
 
         // Check it is a CSV file
         if ($ext != 'csv')
-            trigger_error(__('Files with a CSV extention only.'));
+            trigger_error(__('Files with a CSV extension only.'), E_USER_ERROR);
 
         // File upload directory.. get this from the settings object
         $csvFileLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $tmpName;

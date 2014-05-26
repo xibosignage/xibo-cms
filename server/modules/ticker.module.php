@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner and James Packer
+ * Copyright (C) 2006-2014 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -331,7 +331,7 @@ class ticker extends Module
 		$itemsPerPage = Kit::GetParam('itemsPerPage', _POST, _INT);
         $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
         $lowerLimit = Kit::GetParam('lowerLimit', _POST, _INT);
-        $filter = Kit::GetParam('filter', _POST, _STRING);
+        $filter = Kit::GetParam('filter', _POST, _STRINGSPECIAL);
         $ordering = Kit::GetParam('ordering', _POST, _STRING);
         
         // If we have permission to change it, then get the value from the form
