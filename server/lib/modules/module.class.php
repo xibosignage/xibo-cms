@@ -1264,7 +1264,7 @@ END;
                     // Update the LKID with the new media id
                     $sth_update->execute(array(
                         'media_id' => $newMediaId,
-                        'layout_id' => $row['lklayoutmediaid']
+                        'lklayoutmediaid' => $row['lklayoutmediaid']
                     ));
     
                     $count++;
