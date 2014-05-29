@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2013 Daniel Garner
+ * Copyright (C) 2009-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -236,9 +236,9 @@ class statsDAO
 		$output		= '';
 		
 		// We are expecting some parameters
-		$fromdt		= Kit::GetParam('fromdt', _POST, _STRING);
-		$todt		= Kit::GetParam('todt', _POST, _STRING);
-		$displayID	= Kit::GetParam('displayid', _POST, _INT);
+		$fromdt		= Kit::GetParam('fromdt', _GET, _STRING);
+		$todt		= Kit::GetParam('todt', _GET, _STRING);
+		$displayID	= Kit::GetParam('displayid', _GET, _INT);
 
         if ($fromdt == $todt) {
             $todt = date("Y-m-d", strtotime($todt) + 86399);
