@@ -235,6 +235,9 @@ class XMDSSoap
             return new SoapFault('Sender', 'Unable to get a list of files');
         }
 
+        // Added paths
+        $paths = array();
+
         while ($row = $db->get_assoc_row($results))
         {
             $recordType	= Kit::ValidateParam($row['RecordType'], _WORD);
@@ -284,11 +287,14 @@ class XMDSSoap
             
             $fileElements->appendChild($file);
 
+            // Add this to the paths array
+            $paths[] = $path;
+
             // If this is a layout type and there is a background then add the background node
             // TODO: We need to alter the layout table to have a background ID rather than a path
             // TODO: We need to alter the background edit method to create a lklayoutmedia link for
             // background images (and maintain it when they change)
-            if ($recordType == 'layout' && $background != '')
+            if ($recordType == 'layout' && $background != '' && !in_array($background, $paths))
             {
                 // Also append another file node for the background image (if there is one)
                 $file = $requiredFilesXml->createElement("file");
@@ -297,6 +303,9 @@ class XMDSSoap
                 $file->setAttribute("md5", md5_file($libraryLocation.$background));
                 $file->setAttribute("size", filesize($libraryLocation.$background));
                 $fileElements->appendChild($file);
+
+                // Add this to the paths array
+                $paths[] = $background;
             }
         }
 
