@@ -148,6 +148,9 @@ class layoutDAO
    				// Set up the theme variables for the Layout Jump List
    				$this->LayoutJumpListFilter();
 
+   				// Set up any JavaScript translations
+   				Theme::Set('translations', json_encode(array('save_position_button' => __('Save Position'))));
+
    				// Call the render the template
    				Theme::Render('layout_designer');
 
