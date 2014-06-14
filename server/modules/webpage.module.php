@@ -307,11 +307,24 @@ class webpage extends Module
 
         $offsetTop = $this->GetOption('offsetTop', 0);
         $offsetLeft = $this->GetOption('offsetLeft', 0);
+        $scale = $this->GetOption('scaling', 100);
 
-        $widthPx = ($width + $offsetLeft) . 'px';
-        $heightPx = ($height + $offsetTop) . 'px';
 
         $iframeStyle = 'margin-top:-' . $offsetTop . 'px; margin-left: -' . $offsetLeft . 'px; border:0;';
+
+        if ($scale != 100) {
+        	$scale = $scale / 100;
+
+        	$iframeStyle .= 'zoom: ' . $scale . ';';
+
+        	// Adjust the width and height
+        	$width = $width * (1 / $scale);
+        	$height = $height * (1 / $scale);
+        }
+
+        // Set the final width / height
+        $widthPx = ($width + $offsetLeft) . 'px';
+        $heightPx = ($height + $offsetTop) . 'px';
 
         return '<iframe scrolling="no" src="' . $url . '" width="' . $widthPx . '" height="' . $heightPx . '" style="' . $iframeStyle . '"></iframe>';
     }
