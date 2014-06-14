@@ -299,6 +299,20 @@ function EmbedInit()
         $script = $rawXml->getElementsByTagName('embedScript');
         $script = $script->item(0);
         $script = $script->nodeValue;
+
+        // Set some options
+        $options = array(
+            'originalWidth' => $this->width,
+            'originalHeight' => $this->height,
+            'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
+            'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
+            'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+        );
+
+        // Add an options variable with some useful information for scaling
+        $script .= '<script type="text/javascript">';
+        $script .= '   var options = ' . json_encode($options) . ';';
+        $script .= '</script>';
         
         // Replace the Head Content with our generated javascript
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $script, $template);
