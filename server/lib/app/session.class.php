@@ -75,7 +75,7 @@ class Session {
 			$sth->execute(array('session_id' => $key));
 
 			if (!$row = $sth->fetch())
-				throw new Exception('No session returned');
+				return settype($empty, "string");
 
 			// What happens if the UserAgent has changed?
 			if ($row['useragent'] != $userAgent) {
