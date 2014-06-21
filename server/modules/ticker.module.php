@@ -146,6 +146,7 @@ class ticker extends Module
         Theme::Set('takeitemsfrom_field_list', $takeItemsFrom);
 
         // Set up the variables we already have
+		Theme::Set('name', $this->GetOption('name'));
 		Theme::Set('direction', $this->GetOption('direction'));
 		Theme::Set('copyright', $this->GetOption('copyright'));
 		Theme::Set('scrollSpeed', $this->GetOption('scrollSpeed'));
@@ -315,6 +316,7 @@ class ticker extends Module
 		
 		// Other properties
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
+		$name = Kit::GetParam('name', _POST, _STRING);
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$css = Kit::GetParam('ta_css', _POST, _HTMLSTRING);
@@ -392,6 +394,7 @@ class ticker extends Module
 		
 		// Any Options
 		$this->SetOption('xmds', true);
+		$this->SetOption('name', $name);
 		$this->SetOption('direction', $direction);
 		$this->SetOption('copyright', $copyright);
 		$this->SetOption('scrollSpeed', $scrollSpeed);
@@ -428,12 +431,18 @@ class ticker extends Module
 		return $this->response;	
 	}
 
+	public function GetName() {
+		return $this->GetOption('name');
+	}
+
     public function HoverPreview()
     {
+        $msgName = __('Name');
         $msgType = __('Type');
         $msgUrl = __('Source');
         $msgDuration = __('Duration');
 
+        $name = $this->GetOption('name');
         $url = urldecode($this->GetOption('uri'));
         $sourceId = $this->GetOption('sourceId', 1);
 
@@ -442,6 +451,7 @@ class ticker extends Module
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';
+        $output .= '    <li>' . $msgName . ': ' . $name . '</li>';
 
         if ($sourceId == 2)
         	$output .= '    <li>' . $msgUrl . ': DataSet</li>';
