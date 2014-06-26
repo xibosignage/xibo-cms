@@ -1364,7 +1364,9 @@ HTML;
         $layoutFilter = $this->EventFormLayoutFilter();
         $displayFilter = $this->EventFormDisplayFilter($displayGroupIds);
 
-        $token = Kit::Token();
+        $token_id = uniqid();
+        $token_field = '<input type="hidden" name="token_id" value="' . $token_id . '" />';
+        $token = Kit::Token($token_id);
         
         $form = <<<END
 <div class="container-fluid">
@@ -1379,6 +1381,7 @@ HTML;
 <div class="row-fluid">
     <div class="span12">
 <form id="AddEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=AddEvent" method="post">
+    $token_field
     $token
     <table style="width:100%;">
         <tr>
@@ -1530,7 +1533,9 @@ END;
         $layoutFilter = $this->EventFormLayoutFilter($campaignId);
         $displayFilter = $this->EventFormDisplayFilter($displayGroupIds);
 
-        $token = Kit::Token();
+        $token_id = uniqid();
+        $token_field = '<input type="hidden" name="token_id" value="' . $token_id . '" />';
+        $token = Kit::Token($token_id);
         
         $form = <<<END
 <div class="container-fluid">
@@ -1545,6 +1550,7 @@ END;
 <div class="row-fluid">
     <div class="span12">
 <form id="EditEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=EditEvent" method="post">
+    $token_field
     $token
     <input type="hidden" id="EventID" name="EventID" value="$eventID" />
     <input type="hidden" id="EventDetailID" name="EventDetailID" value="$eventDetailID" />
@@ -1629,7 +1635,7 @@ END;
     public function AddEvent() 
     {
         // Check the token
-        if (!Kit::CheckToken())
+        if (!Kit::CheckToken(Kit::GetParam('token_id', _POST, _STRING)))
             trigger_error('Token does not match', E_USER_ERROR);
         
         $db                 =& $this->db;
@@ -1711,7 +1717,7 @@ END;
     public function EditEvent()
     {
         // Check the token
-        if (!Kit::CheckToken())
+        if (!Kit::CheckToken(Kit::GetParam('token_id', _POST, _STRING)))
             trigger_error('Token does not match', E_USER_ERROR);
         
         $db                 =& $this->db;
