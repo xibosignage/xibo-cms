@@ -57,10 +57,10 @@ class userDAO
         Theme::Set('user_form_add_url', 'index.php?p=user&q=DisplayForm');
         Theme::Set('myapplications_form_add_url', 'index.php?p=user&q=MyApplications');
 
-        if (Kit::IsFilterPinned('user', 'Filter')) {
+        if (Kit::IsFilterPinned('user_admin', 'Filter')) {
             Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_username', Session::Get('user', 'filter_username'));
-            Theme::Set('filter_usertypeid', Session::Get('user', 'filter_usertypeid'));
+            Theme::Set('filter_username', Session::Get('user_admin', 'filter_username'));
+            Theme::Set('filter_usertypeid', Session::Get('user_admin', 'filter_usertypeid'));
         }
         else {
             Theme::Set('filter_usertypeid', 0);
@@ -88,14 +88,14 @@ class userDAO
         // Capture the filter options
         // User ID
         $filter_username = Kit::GetParam('filter_username', _POST, _STRING);
-        setSession('user', 'filter_username', $filter_username);
+        setSession('user_admin', 'filter_username', $filter_username);
         
         // User Type ID
         $filter_usertypeid = Kit::GetParam('filter_usertypeid', _POST, _INT);
-        setSession('user', 'filter_usertypeid', $filter_usertypeid);
+        setSession('user_admin', 'filter_usertypeid', $filter_usertypeid);
 
         // Pinned option?        
-        setSession('user', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('user_admin', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Generate the results
         $sql  = "SELECT user.UserID, user.UserName, user.usertypeid, user.loggedin, user.lastaccessed, user.email, user.homepage ";
