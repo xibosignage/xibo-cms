@@ -45,7 +45,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<li><p><?php echo Theme::Translate('Turn ON full auditing and debugging.'); ?></p>
 			<form id="1" class="XiboAutoForm" action="index.php?p=admin" method="post">
 				<input type="hidden" name="q" value="SetMaxDebug" />
-				<input type="submit" value="<?php echo Theme::Translate('Turn ON Debugging'); ?>" />
+				<input class="btn btn-default" type="submit" value="<?php echo Theme::Translate('Turn ON Debugging'); ?>" />
 			</form>
 		</li>
 
@@ -53,18 +53,18 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		</li>
 
 		<li><p><?php echo Theme::Translate('Automatically collect and export relevant information into a text file.'); ?> <?php echo Theme::Translate('Please save this file to your PC.'); ?></p>
-		<a href="<?php echo Theme::Get('collect_data_url'); ?>" title="Collect Data"><?php echo Theme::Translate('Collect and Save Data'); ?></a>
+		<a class="btn btn-default" href="<?php echo Theme::Get('collect_data_url'); ?>" title="Collect Data"><?php echo Theme::Translate('Collect and Save Data'); ?></a>
 		</li>
 
 		<li><p><?php echo Theme::Translate('Turn full auditing and debugging OFF.'); ?></p>
 			<form id="2" class="XiboAutoForm" action="index.php?p=admin" method="post">
 				<input type="hidden" name="q" value="SetMinDebug" />
-				<input type="submit" value="<?php echo Theme::Translate('Turn OFF Debugging'); ?>" />
+				<input class="btn btn-default" type="submit" value="<?php echo Theme::Translate('Turn OFF Debugging'); ?>" />
 			</form>
 		</li>
 
 		<li><p><?php echo Theme::Translate('Click on the below link to open the bug report page for this Xibo release.'); ?> <?php echo Theme::Translate('Describe the problem and upload the file you obtained earlier.'); ?></p>
-		<a href="https://answers.launchpad.net/xibo/+addquestion" title="Ask a Question" target="_blank"><?php echo Theme::Translate('Ask a question in Launchpad'); ?></a>
+		<a class="btn btn-default" href="https://answers.launchpad.net/xibo/+addquestion" title="Ask a Question" target="_blank"><?php echo Theme::Translate('Ask a question in Launchpad'); ?></a>
 		</li>
 
 		</ol>
@@ -80,7 +80,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<li><p><?php echo Theme::Translate('Switch to Test Mode.'); ?></p>
 			<form class="XiboAutoForm" action="index.php?p=admin" method="post">
 				<input type="hidden" name="q" value="SetServerTestMode" />
-				<input type="submit" value="<?php echo Theme::Translate('Switch to Test Mode'); ?>" />
+				<input class="btn btn-default" type="submit" value="<?php echo Theme::Translate('Switch to Test Mode'); ?>" />
 			</form>
 		</li>
 
@@ -90,7 +90,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<li><p><?php echo Theme::Translate('Switch to Production Mode.'); ?></p>
 			<form class="XiboAutoForm" action="index.php?p=admin" method="post">
 				<input type="hidden" name="q" value="SetServerProductionMode" />
-				<input type="submit" value="<?php echo Theme::Translate('Switch to Production Mode'); ?>" />
+				<input class="btn btn-default" type="submit" value="<?php echo Theme::Translate('Switch to Production Mode'); ?>" />
 			</form>
 		</li>
 			

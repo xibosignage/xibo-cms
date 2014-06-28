@@ -127,29 +127,18 @@ class Config
 		$output .= '<div class="checks">';
 		
 		// Check for PHP version
-		$message = __('PHP Version 5.2.4 or later');
+		$message = __('PHP Version');
 
 		if ($this->CheckPHP() == 1) 
 		{
 			$output .= $imgGood.$message.'<br />';
-		}
-		else if ($this->CheckPHP() == 2)
-		{
-			$this->envWarning = true;
-			$output .= $imgWarn.$message.'<br />';
-			$output .= <<<END
-			<div class="check_explain">
-			<p>Xibo requires PHP version 5.2.4 or later. It may run on PHP 5.1.0 and we have provided compatibility functions to enable that.</p>
-			<p>However, we recommend upgrading your version of PHP to 5.2.4 or later.</p>
-			</div>
-END;
 		}
 		else
 		{
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"> <p>' . __("PHP version 5.2.4 or later required.") . '</p></div>';
+			$output .= '<div class="check_explain"> <p>' . __("PHP version 5.3.3 or later required.") . '. Detected ' . phpversion() . '</p></div>';
 		}
 		
 		// Check for file system permissions
@@ -474,17 +463,7 @@ END;
 	 */
 	function CheckPHP() 
 	{
-		if (phpversion() >= '5.2.4') 
-		{
-			return 1;
-		}
-	
-		if (phpversion() >= '5.1.0') 
-		{
-			return 2;
-		}
-
-		return 0;
+		return ((version_compare('5.3.3', phpversion(), '>='))) ? 1 : 0;
 	}
 	
 	/**
