@@ -316,52 +316,75 @@ class webpage extends Module
         $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
         $duration = $this->duration;
 
-        // Work out the scale factor
-        $scaleFactor = min(($width / $this->width), ($height / $this->height));
-
         // Work out the url
         $url = urldecode($this->GetOption('uri'));
         $url = (preg_match('/^' . preg_quote('http') . "/", $url)) ? $url : 'http://' . $url;
 
-        // Are we offsetting or zooming
-        $offsetTop = $this->GetOption('offsetTop', 0);
-        $offsetLeft = $this->GetOption('offsetLeft', 0);
-        $scale = $this->GetOption('scaling', 100);
-
-        // We need to scale the scale according to the size difference between the layout designer and the actual request size.
-        if (Kit::GetParam('scale_override', _GET, _DOUBLE, 0) == 0) {
-        	$offsetTop = $offsetTop * $scaleFactor;
-        	$offsetLeft = $offsetLeft * $scaleFactor;
-        	$scale = $scale * $scaleFactor;
-        }
-
-        // Width should take into account the offset
-        $width = $width + $offsetLeft;
-        $height = $height + $offsetTop;
+        $options = array(
+        		'originalWidth' => $this->width,
+        		'originalHeight' => $this->height,
+        		'previewWidth' => $width,
+        		'previewHeight' => $height,
+        		'offsetTop' => $this->GetOption('offsetTop', 0),
+        		'offsetLeft' => $this->GetOption('offsetLeft', 0),
+        		'scale' => ($this->GetOption('scaling', 100) / 100),
+        		'scale_override' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+        	);
 
         // Head Content
-        $headContent = '<style>#iframe { border:0; margin-top:-' . $offsetTop . 'px; margin-left: -' . $offsetLeft . 'px;}</style>';
+        $headContent = '<style>#iframe { border:0; }</style>';
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
         // Body content
-        $output = '<iframe id="iframe" class="zoom" scrolling="no" src="' . $url . '"></iframe>';
+        $output = '<iframe id="iframe" scrolling="no" src="' . $url . '"></iframe>';
         
         // Replace the Body Content with our generated text
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $output, $template);
 
         // After body content
-        if ($scale != 100) {
-        	$scale = $scale / 100;
+    	$after_body  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
+        $after_body .= '<script>' . file_get_contents('modules/preview/vendor/jquery.zoomer.js') . '</script>';
+        $after_body .= '<script>
+        	var options = ' . json_encode($options) . '
+        	$(document).ready(function() { 
 
-			$headContent = '';
+        		if (options.previewWidth == 0 && options.previewHeight == 0) {
+		            options.width = $(window).width();
+		            options.height = $(window).height();
+		        }
+		        else {
+		            // We are a preview
+		            options.width = options.previewWidth;
+		            options.height = options.previewHeight;
+		        }
 
-        	$after_body  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
-	        $after_body .= '<script>' . file_get_contents('modules/preview/vendor/jquery.zoomer.js') . '</script>';
-	        $after_body .= '<script>$(document).ready(function() { $("#iframe").zoomer({ width: ' . $width . ', height: ' . $height . ', zoom: ' . $scale . ' });} );</script>';
+		        // Scale Factor
+		        options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
 
-	        // Replace the After body Content
-	        $template = str_replace('<!--[[[AFTERBODYCONTENT]]]-->', $after_body, $template);
-        }
+				// We need to scale the scale according to the size difference between the layout designer and the actual request size.
+    			if (options.scale_override != 1) {
+    				options.offsetTop = options.offsetTop * options.scaleFactor;
+    				options.offsetLeft = options.offsetLeft * options.scaleFactor;
+    				options.scale = options.scale * options.scaleFactor;
+    			}
+
+    			// Width should take into account the offset
+    			options.width = parseInt(options.width) + parseInt(options.offsetLeft);
+    			options.height = parseInt(options.height) + parseInt(options.offsetTop);
+
+    			// Margins on frame
+    			$("#iframe").css({"margin-top": -1 * options.offsetTop, "margin-left": -1 * options.offsetLeft});
+
+    			// Zoomer
+    			if (options.scale != 1)
+        			$("#iframe").zoomer({ width: options.width, height: options.height, zoom: options.scale });
+
+		        console.log(options);
+        	});
+		</script>';
+
+        // Replace the After body Content
+        $template = str_replace('<!--[[[AFTERBODYCONTENT]]]-->', $after_body, $template);
 
         return $template;
     }
