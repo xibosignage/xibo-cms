@@ -288,8 +288,7 @@ class webpage extends Module
      * @param <type> $height
      * @return <type>
      */
-    public function Preview($width, $height)
-    {
+    public function Preview($width, $height) {
         if ($this->previewEnabled == 0)
             return parent::Preview ($width, $height);
         
@@ -300,33 +299,71 @@ class webpage extends Module
         $lkId = $this->lkid;
         $mediaType = $this->type;
         $mediaDuration = $this->duration;
+        
+        $widthPx	= $width.'px';
+        $heightPx	= $height.'px';
+
+        return '<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=1&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+    }
+
+    public function GetResource($displayId = 0) {
+
+    	// Load in the template
+        $template = file_get_contents('modules/preview/HtmlTemplateSimple.html');
+
+        // Get some parameters
+        $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
+        $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
+        $duration = $this->duration;
+
+        // Work out the scale factor
+        $scaleFactor = min(($width / $this->width), ($height / $this->height));
 
         // Work out the url
         $url = urldecode($this->GetOption('uri'));
         $url = (preg_match('/^' . preg_quote('http') . "/", $url)) ? $url : 'http://' . $url;
 
+        // Are we offsetting or zooming
         $offsetTop = $this->GetOption('offsetTop', 0);
         $offsetLeft = $this->GetOption('offsetLeft', 0);
         $scale = $this->GetOption('scaling', 100);
 
+        // We need to scale the scale according to the size difference between the layout designer and the actual request size.
+        if (Kit::GetParam('scale_override', _GET, _DOUBLE, 0) == 0) {
+        	$offsetTop = $offsetTop * $scaleFactor;
+        	$offsetLeft = $offsetLeft * $scaleFactor;
+        	$scale = $scale * $scaleFactor;
+        }
 
-        $iframeStyle = 'margin-top:-' . $offsetTop . 'px; margin-left: -' . $offsetLeft . 'px; border:0;';
+        // Width should take into account the offset
+        $width = $width + $offsetLeft;
+        $height = $height + $offsetTop;
 
+        // Head Content
+        $headContent = '<style>#iframe { border:0; margin-top:-' . $offsetTop . 'px; margin-left: -' . $offsetLeft . 'px;}</style>';
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+
+        // Body content
+        $output = '<iframe id="iframe" class="zoom" scrolling="no" src="' . $url . '"></iframe>';
+        
+        // Replace the Body Content with our generated text
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $output, $template);
+
+        // After body content
         if ($scale != 100) {
         	$scale = $scale / 100;
 
-        	$iframeStyle .= 'zoom: ' . $scale . ';';
+			$headContent = '';
 
-        	// Adjust the width and height
-        	$width = $width * (1 / $scale);
-        	$height = $height * (1 / $scale);
+        	$after_body  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
+	        $after_body .= '<script>' . file_get_contents('modules/preview/vendor/jquery.zoomer.js') . '</script>';
+	        $after_body .= '<script>$(document).ready(function() { $("#iframe").zoomer({ width: ' . $width . ', height: ' . $height . ', zoom: ' . $scale . ' });} );</script>';
+
+	        // Replace the After body Content
+	        $template = str_replace('<!--[[[AFTERBODYCONTENT]]]-->', $after_body, $template);
         }
 
-        // Set the final width / height
-        $widthPx = ($width + $offsetLeft) . 'px';
-        $heightPx = ($height + $offsetTop) . 'px';
-
-        return '<iframe scrolling="no" src="' . $url . '" width="' . $widthPx . '" height="' . $heightPx . '" style="' . $iframeStyle . '"></iframe>';
+        return $template;
     }
 
     public function IsValid() {
