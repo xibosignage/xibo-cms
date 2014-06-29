@@ -69,7 +69,7 @@ class PageManager
         $user =& $this->user;
         
         // The user MUST be logged in unless they are trying to assess some of the public facing pages
-        if (in_array($this->p, $this->nonAuthedPages) && (in_array($this->q, $this->nonAuthedFunctions) || $this->q == ''))
+        if ((in_array($this->p, $this->nonAuthedPages) && in_array($this->q, $this->nonAuthedFunctions)) || (in_array($this->p, $this->nonAuthedPages) && $this->q == ''))
         {
             // Automatically authed
             $this->authed = true;

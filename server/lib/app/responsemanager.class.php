@@ -307,31 +307,22 @@ class ResponseManager
 			// End the execution
 			die();
 		}
-		else
-		{			
+		else {			
 			// If the response does not equal success then output an error
-			if (!$this->success)
-			{
+			if (!$this->success) {
 				// Store the message
 				$_SESSION['ErrorMessage'] 	= $this->message;
 				
 				// Redirect to the following
 				$url = 'index.php?p=error';
-				
-				// Header or JS redirect
-				if (headers_sent()) 
-				{
-					echo "<script>document.location.href='$url';</script>\n";
-				} 
-				else 
-				{
-					header( 'HTTP/1.1 301 Moved Permanently' );
-					header( 'Location: ' . $url );
-				}
-				
-				// End the execution
-				die();
 			}
+			else {
+				// Have we been asked to refresh?
+				$url = ($this->refresh) ? $this->refreshLocation : 'index.php?p=' . Kit::GetParam('p', _GET, _WORD, 'index');
+			}
+
+			// Redirect and end execution
+			Kit::Redirect($url);
 		}
 		
 		return;

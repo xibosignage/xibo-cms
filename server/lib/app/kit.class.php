@@ -45,7 +45,7 @@ define('_PASSWORDBOX', "password");
 class Kit 
 {
 	// Ends the current execution and issues a redirect - should only be called before headers have been sent (i.e. no output)
-	static function Redirect($page, $message = '', $pageIsUrl = false)
+	static function Redirect($page, $message = '')
 	{
 		$url 	= $page;
 		$ajax 	= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
@@ -63,6 +63,7 @@ class Kit
 		} 
 		else 
 		{
+			header( 'HTTP/1.1 302 Moved Temporarily' );
 			header( 'Location: ' . $url );
 		}
 		

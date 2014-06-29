@@ -162,10 +162,6 @@ abstract class Module implements ModuleInterface
             // Parse out the valid extensions
             $this->validExtensions = explode(',', $this->validExtensionsText);
             $this->validExtensionsText = str_replace(',', ', ', $this->validExtensionsText);
-
-            // Do we need to upgrade this module?
-            // We won't get here without it being installed, because it will not be found in the DB.
-            $this->InstallOrUpgrade();
         }
         catch (Exception $e) {
             
@@ -1896,7 +1892,7 @@ END;
      * Default behaviour for install / upgrade
      * this should be overridden for new modules
      */
-    public function InstallOrUpgrade() {
+    public function InstallOrUpdate() {
 
         if ($this->render_as != 'native')
             return $this->SetError(1, __('Module must implement InstallOrUpgrade'));
@@ -1906,6 +1902,8 @@ END;
 
     public function InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings) {
         
+        Debug::LogEntry('audit', 'Request to install module with name: ' . $name, 'module', 'InstallModule');
+
         try {
             // Validate some things.
             if ($this->type == '')
@@ -1916,9 +1914,6 @@ END;
 
             if ($description == '')
                 $this->ThrowError(__('Module has not set the description'));
-
-            if (!is_numeric($regionSpecific))
-                $this->ThrowError(__('Region Specific variable must be a number'));
 
             if (!is_numeric($previewEnabled))
                 $this->ThrowError(__('Preview Enabled variable must be a number'));
@@ -1935,6 +1930,8 @@ END;
                         :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings);
                 ');
 
+            Debug::LogEntry('audit', 'Executing SQL', 'module', 'InstallModule');
+
             $sth->execute(array(
                     'module' =>  $this->type,
                     'name' =>  $name,
@@ -1946,8 +1943,8 @@ END;
                     'valid_extensions' =>  '',
                     'preview_enabled' =>  $previewEnabled,
                     'assignable' =>  $assignable,
-                    'render_as' =>  $render_as,
-                    'settings' => $settings
+                    'render_as' =>  'html',
+                    'settings' => json_encode($settings)
                 ));
         }
         catch (Exception $e) {
@@ -1957,7 +1954,7 @@ END;
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
         
-            return false;
+            throw new Exception(__('Unable to install module. Please check the Error Log'));
         }
     }
 

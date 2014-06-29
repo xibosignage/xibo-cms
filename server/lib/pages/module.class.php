@@ -319,6 +319,8 @@ class moduleDAO
         if ($file == '')
             trigger_error(__('Unable to install module'), E_USER_ERROR);
 
+        Debug::LogEntry('audit', 'Request to install Module: ' . $file, 'module', 'Install');
+
         // Check that the file exists
         if (!file_exists($file))
             trigger_error(__('File does not exist'), E_USER_ERROR);
@@ -339,14 +341,21 @@ class moduleDAO
         if (!class_exists($type))
             trigger_error(__('Module file does not contain a class of the correct name'), E_USER_ERROR);
 
-        $moduleObject = new $type($this->db, $this->user);
-
-        if (!$moduleObject->InstallOrUpdate())
+        try {
+            Debug::LogEntry('audit', 'Validation passed, installing module.', 'module', 'Install');
+            $moduleObject = new $type($this->db, $this->user);
+            $moduleObject->InstallOrUpdate();
+        }
+        catch (Exception $e) {
             trigger_error(__('Unable to install module'), E_USER_ERROR);
+        }
+
+        Debug::LogEntry('audit', 'Module Installed: ' . $file, 'module', 'Install');
 
         // Excellent... capital... success
         $response = new ResponseManager();
-        $response->SetFormSubmitResponse(__('Module Edited'), false);
+        $response->refresh = true;
+        $response->refreshLocation = 'index.php?p=module';
         $response->Respond();
     }
     

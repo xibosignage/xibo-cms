@@ -29,7 +29,7 @@ class moduletemplate extends Module
     public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '') {
         // The Module Type must be set - this should be a unique text string of no more than 50 characters.
         // It is used to uniquely identify the module globally.
-        $this->type = 'moduletype';
+        $this->type = 'moduletemplate';
 
         // This is the code schema version, it should be 1 for a new module and should be incremented each time the 
         // module data structure changes.
@@ -56,11 +56,11 @@ class moduletemplate extends Module
         
         if ($this->schemaVersion <= 1) {
             // Install
-            // Call "$this->InstallModule($name, $regionSpecific, $description, $imageUri, $validExtensions, $previewEnabled, $assignable, $settings)"
+            // Call "$this->InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)"
         }
         else {
             // Update
-            // Call "$this->UpdateModule($name, $regionSpecific, $description, $imageUri, $validExtensions, $previewEnabled, $assignable, $settings)" with the updated items
+            // Call "$this->UpdateModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)" with the updated items
         }
 
         // After calling either Install or Update your code schema version will match the database schema version and this method will not be called
@@ -237,6 +237,7 @@ class moduletemplate extends Module
         // A template is provided which contains a number of different libraries that might
         // be useful (jQuery, etc).
         // You can provide your own template, or just output the HTML directly in this method. It is up to you.
+        //$template = file_get_contents('modules/preview/HtmlTemplateSimple.html');
         $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
 
         // If we are coming from a CMS preview or the Layout Designer we will have some additional variables passed in
@@ -245,7 +246,7 @@ class moduletemplate extends Module
         $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
 
         // Get any options you require from the XLF
-        $direction = $this->GetOption('myvariable');
+        $myvariable = $this->GetOption('myvariable');
         
         // The duration is always available
         $duration = $this->duration;

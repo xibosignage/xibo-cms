@@ -66,7 +66,7 @@ interface ModuleInterface
      * Install or Upgrade this module
      * 	Expects $this->codeSchemaVersion to be set by the module.
      */
-    public function InstallOrUpgrade();
+    public function InstallOrUpdate();
     public function InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings);
     public function UpgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings);
     public function ModuleSettingsForm();
