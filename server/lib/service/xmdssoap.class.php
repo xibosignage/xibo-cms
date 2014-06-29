@@ -1201,7 +1201,7 @@ class XMDSSoap
      */
     private function LogBandwidth($displayId, $type, $sizeInBytes)
     {
-        $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
+        $startOfMonth = strtotime(date('m').'/02/'.date('Y').' 00:00:00');
     
         $sql  = "INSERT INTO `bandwidth` (Month, Type, DisplayID, Size) VALUES (%d, %d, %d, %d) ";
         $sql .= "ON DUPLICATE KEY UPDATE Size = Size + %d ";
