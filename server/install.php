@@ -22,7 +22,7 @@ DEFINE('XIBO', true);
 
 if (! checkPHP()) 
 {
-	die('Xibo requires PHP 5.2.4 or later');
+	die('Xibo requires PHP 5.3.3 or later');
 }
 
 error_reporting(0);
@@ -693,7 +693,7 @@ function gen_secret() {
 
 function checkPHP() 
 {
-	return (version_compare("5.2.4",phpversion(), "<="));
+	return (version_compare("5.3.3",phpversion(), "<="));
 }
 
 function CheckGettext() 

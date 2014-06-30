@@ -21,7 +21,7 @@
 DEFINE('XIBO', true);
 
 if (! checkPHP()) {
-  die("Xibo requires PHP 5.3 or later");
+  die("Xibo requires PHP 5.3.3 or later");
 }
 
 error_reporting(0);
@@ -388,7 +388,7 @@ include('install/footer.inc');
 # Functions
 function checkPHP() {
   # Check PHP version > 5
-  return (version_compare("5.2.4",phpversion(), "<="));
+  return (version_compare("5.3.3",phpversion(), "<="));
 }
 
 function checkMySQL() {
