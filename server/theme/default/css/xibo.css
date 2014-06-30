@@ -264,3 +264,7 @@ ul#FileAssociationsSortable {
   text-shadow: 1px 1px 5px #000;
   filter: dropshadow(color=#000, offx=1, offy=1);
 }
+
+.FormDisplayList .DisplayList {
+  list-style: none;
+}

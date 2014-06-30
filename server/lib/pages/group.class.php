@@ -355,7 +355,7 @@ END;
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $response = new ResponseManager();
@@ -379,7 +379,7 @@ END;
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
 		$db =& $this->db;
 		
@@ -404,7 +404,7 @@ END;
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
 		$db =& $this->db;		
 		$groupid = Kit::GetParam('groupid', _POST, _INT);
@@ -587,7 +587,7 @@ END;
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
 		$db =& $this->db;
 		$groupid = Kit::GetParam('groupid', _POST, _INT);

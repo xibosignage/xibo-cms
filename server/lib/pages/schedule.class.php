@@ -1086,7 +1086,7 @@ HTML;
             trigger_error(__('No Display Groups'), E_USER_ERROR);
             
         if ($outputForm) $output .= '<form id="DisplayList" class="DisplayListForm">';
-                $output         .= __('Groups');
+        $output         .= __('Groups');
         $output     .= '<ul class="DisplayList">';
         $nested     = false;
         
@@ -1522,7 +1522,7 @@ HTML;
     {
         // Check the token
         if (!Kit::CheckToken(Kit::GetParam('token_id', _POST, _STRING)))
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db                 =& $this->db;
         $user               =& $this->user;
@@ -1604,7 +1604,7 @@ HTML;
     {
         // Check the token
         if (!Kit::CheckToken(Kit::GetParam('token_id', _POST, _STRING)))
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db                 =& $this->db;
         $user               =& $this->user;
@@ -1688,7 +1688,8 @@ HTML;
         $eventID            = Kit::GetParam('EventID', _GET, _INT, 0);
         $eventDetailID      = Kit::GetParam('EventDetailID', _GET, _INT, 0);
         
-        if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
+        if ($eventID == 0) 
+            trigger_error(__('No event selected.'), E_USER_ERROR);
         
         $strQuestion = __('Are you sure you want to delete this event from <b>all</b> displays?');
         $strAdvice = __('If you only want to delete this item from certain displays, please deselect the displays in the edit dialogue and click Save.');
@@ -1726,7 +1727,7 @@ END;
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db                 =& $this->db;
         $user               =& $this->user;
@@ -1735,7 +1736,8 @@ END;
         $eventID            = Kit::GetParam('EventID', _POST, _INT, 0);
         $eventDetailID      = Kit::GetParam('EventDetailID', _POST, _INT, 0);
         
-        if ($eventID == 0) trigger_error('No event selected.', E_USER_ERROR);
+        if ($eventID == 0) 
+            trigger_error(__('No event selected.'), E_USER_ERROR);
         
         // Create an object to use for the delete
         $scheduleObject = new Schedule($db);
@@ -1795,42 +1797,19 @@ END;
         
         $outputForm = false;
         $displayList = $this->UnorderedListofDisplays($outputForm, $displayGroupIds);
+
         $token = Kit::Token();
 
-        $form = <<<END
-            <form id="ScheduleNowForm" class="XiboForm" action="index.php?p=schedule&q=ScheduleNow" method="post">
-                $token
-                <table style="width:100%;">
-                    <tr>
-                        <td><label for="duration" title="How long should this event be scheduled for">Duration<span class="required">*</span></label></td>
-                        <td>H: <input type="text" name="hours" id="hours" size="2" class="number span1">
-                        M: <input type="text" name="minutes" id="minutes" size="2" class="number span1">
-                        S: <input type="text" name="seconds" id="seconds" size="2" class="number span1"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="CampaignID" title="Select which layout this event will show.">Campaign/Layout<span class="required">*</span></label></td>
-                        <td>$layoutList</td>
-                    </tr>
-                    <tr>
-                        <td><label for="DisplayOrder" title="Select the Order for this Event">Display Order</label></td>
-                        <td><input type=text" name="DisplayOrder" value="0" />
-                    </tr>
-                    <tr>
-                        <td><label title="Sets whether or not this event has priority. If set the event will be show in preference to other events." for="cb_is_priority">Priority</label></td>
-                        <td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="FormDisplayList">
-                            $displayList
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </form>
-END;
+        Theme::Set('form_id', 'ScheduleNowForm');
+        Theme::Set('form_action', 'index.php?p=schedule&q=ScheduleNow');
+        Theme::Set('form_meta', $token);
 
-        $response->SetFormRequestResponse($form, __('Schedule Now'), '700px', '400px');
+        // Filter forms
+        Theme::Set('display_list', $displayList);
+        Theme::Set('layout_list', $layoutList);
+
+
+        $response->SetFormRequestResponse(Theme::RenderReturn('schedule_form_schedule_now'), __('Schedule Now'), '700px', '400px');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=ScheduleNow')");
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ScheduleNowForm").submit()');
@@ -1841,7 +1820,7 @@ END;
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $user =& $this->user;
@@ -1932,7 +1911,7 @@ END;
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $user =& $this->user;
