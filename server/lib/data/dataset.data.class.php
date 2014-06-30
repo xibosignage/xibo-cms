@@ -175,6 +175,32 @@ class DataSet extends Data
         }
     }
 
+    public function GetLastDataEditTime($dataSetId) {
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT LastDataEdit FROM `dataset` WHERE DataSetID = :dataset_id');
+            $sth->execute(array(
+                    'dataset_id' => $dataSetId
+                ));
+
+            $updateDate = $sth->fetchColumn(0);
+          
+            Debug::LogEntry('audit', sprintf('Returning update date %s for DataSetId %d', $updateDate, $dataSetId), 'dataset', 'GetLastDataEditTime');
+
+            return $updateDate;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
     /**
      * Data Set Results
      * @param <type> $dataSetId

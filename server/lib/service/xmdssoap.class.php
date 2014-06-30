@@ -328,6 +328,7 @@ class XMDSSoap
                         $file->setAttribute('layoutid', $layoutId);
                         $file->setAttribute('regionid', $region['regionid']);
                         $file->setAttribute('mediaid', $media['mediaid']);
+                        $file->setAttribute('updated', (isset($media['updated']) ? $media['updated'] : 0));
                         
                         $fileElements->appendChild($file);
                     }

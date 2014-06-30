@@ -1067,15 +1067,26 @@ class Layout extends Data
 
             foreach($mediaNodes as $mediaNode) {
 
-                // DataSets are a special case. We want to get the last updated time from the dataset.
-                
-
-                // Put this node vertically in the region time-line
-                $region['media'][] = array(
+                $node = array(
                         'mediaid' => $mediaNode->getAttribute('id'),
                         'lkid' => $mediaNode->getAttribute('lkid'),
                         'mediatype' => $mediaNode->getAttribute('type')
                     );
+
+                // DataSets are a special case. We want to get the last updated time from the dataset.
+                $dataSetId = $regionObject->GetOptionForMediaId($layoutId, $mediaNode->getAttribute('id'), 'datasetid');
+
+                if ($dataSetId !== FALSE) {
+                    // Look up the last data edit date
+                    Kit::ClassLoader('dataset');
+
+                    $dataSet = new DataSet($this->db);
+
+                    $node['updated'] = $dataSet->GetLastDataEditTime($dataSetId);
+                }
+
+                // Put this node vertically in the region time-line
+                $region['media'][] = $node;
             }
 
             Debug::LogEntry('audit', 'Finished with Region', 'layout', 'LayoutInformation');
