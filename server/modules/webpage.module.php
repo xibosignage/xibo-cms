@@ -188,6 +188,7 @@ class webpage extends Module
 		$this->duration = $duration;
 		
 		// Any Options
+		$this->SetOption('xmds', true);
 		$this->SetOption('uri', $uri);
                 $this->SetOption('scaling', $scaling);
                 $this->SetOption('transparency', $transparency);
@@ -259,6 +260,7 @@ class webpage extends Module
 		}
 		
 		// Any Options
+		$this->SetOption('xmds', true);
 		$this->SetOption('uri', $uri);
                 $this->SetOption('scaling', $scaling);
                 $this->SetOption('transparency', $transparency);
@@ -336,52 +338,16 @@ class webpage extends Module
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
         // Body content
-        $output = '<iframe id="iframe" scrolling="no" src="' . $url . '"></iframe>';
+        $output = '<div id="wrap"><iframe id="iframe" scrolling="no" src="' . $url . '"></iframe></div>';
         
         // Replace the Body Content with our generated text
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $output, $template);
 
         // After body content
     	$after_body  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
-        $after_body .= '<script>' . file_get_contents('modules/preview/vendor/jquery.zoomer.js') . '</script>';
         $after_body .= '<script>
         	var options = ' . json_encode($options) . '
-        	$(document).ready(function() { 
-
-        		if (options.previewWidth == 0 && options.previewHeight == 0) {
-		            options.width = $(window).width();
-		            options.height = $(window).height();
-		        }
-		        else {
-		            // We are a preview
-		            options.width = options.previewWidth;
-		            options.height = options.previewHeight;
-		        }
-
-		        // Scale Factor
-		        options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
-
-				// We need to scale the scale according to the size difference between the layout designer and the actual request size.
-    			if (options.scale_override != 1) {
-    				options.offsetTop = options.offsetTop * options.scaleFactor;
-    				options.offsetLeft = options.offsetLeft * options.scaleFactor;
-    				options.scale = options.scale * options.scaleFactor;
-    			}
-
-    			// Width should take into account the offset
-    			options.width = parseInt(options.width) + parseInt(options.offsetLeft);
-    			options.height = parseInt(options.height) + parseInt(options.offsetTop);
-
-    			// Margins on frame
-    			$("#iframe").css({"margin-top": -1 * options.offsetTop, "margin-left": -1 * options.offsetLeft});
-
-    			// Zoomer
-    			if (options.scale != 1)
-        			$("#iframe").zoomer({ width: options.width, height: options.height, zoom: options.scale });
-
-		        console.log(options);
-        	});
-		</script>';
+        	' . file_get_contents('modules/preview/xibo-webpage-render.js') . '</script>';
 
         // Replace the After body Content
         $template = str_replace('<!--[[[AFTERBODYCONTENT]]]-->', $after_body, $template);

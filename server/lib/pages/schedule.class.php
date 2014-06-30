@@ -1140,6 +1140,8 @@ HTML;
             $filterName = '';
         }
 
+        $pinTranslated = __('Pin?');
+
         $form = <<<HTML
         <div class="XiboFilterInner">     
             <form onsubmit="return false">
@@ -1151,7 +1153,7 @@ HTML;
                         <td>$msgName</td>
                         <td><input type="text" name="name" value="$filterName"></td>
                         <td>
-                            <label for="XiboFilterPinned">Pin?</label>
+                            <label for="XiboFilterPinned">$pinTranslated</label>
                             <input id="XiboFilterPinned" name="XiboFilterPinned" type="checkbox" class="XiboFilter" $filterPinned />
                         </td>
                     </tr>
@@ -1253,7 +1255,10 @@ HTML;
             $filterPinned = '';
             $filterName = '';
         }
-        
+
+        $pinTranslated = __('Pin?');
+        $checkAllTranslated = __('Check All');
+
         // Serialize the list of display group ids
         $displayGroupIdsSerialized = "";
         foreach ($displayGroupIds as $displayGroupId)
@@ -1261,7 +1266,7 @@ HTML;
 
         $form = <<<HTML
         <div class="XiboFilterInner">     
-            <div class="scheduleFormCheckAll pull-right"><label for"checkAll"><input type="checkbox" name="checkAll">Check All</label></div>
+            <div class="scheduleFormCheckAll pull-right"><label for"checkAll"><input type="checkbox" name="checkAll">$checkAllTranslated</label></div>
             <form onsubmit="return false">
                 <input type="hidden" name="p" value="schedule">
                 <input type="hidden" name="q" value="EventFormDisplay">
@@ -1271,7 +1276,7 @@ HTML;
                         <td>$msgName</td>
                         <td><input type="text" name="name" value="$filterName"></td>
                         <td>
-                            <label for="XiboFilterPinned">Pin?</label>
+                            <label for="XiboFilterPinned">$pinTranslated</label>
                             <input id="XiboFilterPinned" name="XiboFilterPinned" type="checkbox" class="XiboFilter" $filterPinned />
                         </td>
                     </tr>
@@ -1368,88 +1373,24 @@ HTML;
         $token_field = '<input type="hidden" name="token_id" value="' . $token_id . '" />';
         $token = Kit::Token($token_id);
         
-        $form = <<<END
-<div class="container-fluid">
-    <div class="row-fluid">
-    <div class="span6">
-        $layoutFilter
-    </div>
-    <div class="span6">
-        $displayFilter
-    </div>
-</div>
-<div class="row-fluid">
-    <div class="span12">
-<form id="AddEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=AddEvent" method="post">
-    $token_field
-    $token
-    <table style="width:100%;">
-        <tr>
-            <td colspan="4"><center><h3>Event Schedule</h3></center></td>
-        </tr>
-        <tr>
-            <td><label for="starttime" title="Select the start time for this event">Start Time</label></td>
-            <td>
-                <div class="date-pick input-append date">
-                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="starttime" id="starttime" value="$dateText"></input>
-                    <span class="add-on">
-                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
-                    </span>
-                </div>
-            </td>
-            <td><label for="endtime" title="Select the end time for this event">End Time</label></td>
-            <td>
-                <div class="date-pick input-append date">
-                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="endtime" id="endtime" value="$toDateText"></input>
-                    <span class="add-on">
-                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
-                    </span>
-                </div>
-            </td>
-        </tr>
-        <tr>
-            <td><label for="DisplayOrder" title="Select the Order for this Event">Display Order</label></td>
-            <td><input type=text" name="DisplayOrder" value="0" />
-            <td><label title="Sets whether or not this event has priority. If set the event will be show in preference to other events." for="cb_is_priority">Priority</label></td>
-            <td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
-        </tr>
-END;
+        Theme::Set('form_id', 'AddEventForm');
+        Theme::Set('form_action', 'index.php?p=schedule&q=AddEvent');
+        Theme::Set('form_meta', $token_field . $token);
 
-        //recurrance part of the form
-        $rec_type = listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type");
+        // Filter forms
+        Theme::Set('layout_filter', $layoutFilter);
+        Theme::Set('display_filter', $displayFilter);
 
-        $form .= <<<END
-        <tr>
-            <td colspan="4"><center><h3>Recurring Event</h3></center></td>
-        </tr>
-        <tr>
-            <td><label for="rec_type" title="What type of repeating is required">Repeats</label></td>
-            <td>$rec_type</td>
-            <td><label for="rec_detail" title="How often does this event repeat">Repeat every</label></td>
-            <td><input class="number" type="text" name="rec_detail" value="1" /></td>
-        </tr>
-        <tr>
-            <td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
-            <td>
-                <div class="date-pick input-append date">
-                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="rec_range" id="rec_range"></input>
-                    <span class="add-on">
-                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
-                    </span>
-                </div>
-            </td>
-        </tr>
-END;
+        Theme::Set('recurrence_field_list', array(
+                array('id' => 'null', 'name' => __('None')),
+                array('id' => 'Hour', 'name' => __('Hourly')),
+                array('id' => 'Day', 'name' => __('Daily')),
+                array('id' => 'Week', 'name' => __('Weekly')),
+                array('id' => 'Month', 'name' => __('Monthly')),
+                array('id' => 'Year', 'name' => __('Yearly'))
+            ));
 
-        $form .= <<<END
-        </table>
-    </form>
-    </div>
-</div>
-</div>
-END;
-        
-        $response->SetFormRequestResponse($form, __('Schedule Event'), '800px', '600px');
+        $response->SetFormRequestResponse(Theme::RenderReturn('schedule_form_add_event'), __('Schedule Event'), '800px', '600px');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Add')");
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Next'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=1").submit()');
@@ -1536,89 +1477,34 @@ END;
         $token_id = uniqid();
         $token_field = '<input type="hidden" name="token_id" value="' . $token_id . '" />';
         $token = Kit::Token($token_id);
-        
-        $form = <<<END
-<div class="container-fluid">
-<div class="row-fluid">
-    <div class="span6">
-        $layoutFilter
-    </div>
-    <div class="span6">
-        $displayFilter
-    </div>
-</div>
-<div class="row-fluid">
-    <div class="span12">
-<form id="EditEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=EditEvent" method="post">
-    $token_field
-    $token
-    <input type="hidden" id="EventID" name="EventID" value="$eventID" />
-    <input type="hidden" id="EventDetailID" name="EventDetailID" value="$eventDetailID" />
-    <table style="width:100%;">
-        <tr>
-            <td colspan="4"><center><h3>Event Schedule</h3></center></td>
-        </tr>
-        <tr>
-            <td><label for="starttime" title="Select the start time for this event">Start Time</label></td>
-            <td>
-                <div class="date-pick input-append date">
-                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="starttime" id="starttime" value="$fromDtText"></input>
-                    <span class="add-on">
-                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
-                    </span>
-                </div>
-            </td>
-            <td><label for="endtime" title="Select the end time for this event">End Time</label></td>
-            <td>
-                <div class="date-pick input-append date">
-                    <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="endtime" id="endtime" value="$toDtText"></input>
-                    <span class="add-on">
-                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
-                    </span>
-                </div>
-            </td>
-        </tr>
-        <tr>
-            <td><label for="DisplayOrder" title="Select the Order for this Event">Display Order</label></td>
-            <td><input type=text" name="DisplayOrder" value="$displayOrder" />
-            <td><label title="Sets whether or not this event has priority. If set the event will be show in preference to other events." for="cb_is_priority">Priority</label></td>
-            <td><input type="checkbox" id="cb_is_priority" name="is_priority" $isPriority title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
-        </tr>
-END;
 
-        //recurrance part of the form
-        $rec_type = listcontent("null|None,Hour|Hourly,Day|Daily,Week|Weekly,Month|Monthly,Year|Yearly", "rec_type", $recType);
-        
-        $form .= <<<END
-        <tr>
-            <td colspan="4"><center><h3>Recurring Event</h3></center></td>
-        </tr>
-        <tr>
-            <td><label for="rec_type" title="What type of repeating is required">Repeats</label></td>
-            <td>$rec_type</td>
-            <td><label for="rec_detail" title="How often does this event repeat">Repeat every</label></td>
-            <td><input class="number" type="text" name="rec_detail" value="$recDetail" /></td>
-        </tr>
-        <tr>
-            <td><label for="rec_range" title="When should this event stop repeating?">Until</label></td>
-            <td><div class="date-pick input-append date">
-                <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="rec_range" id="rec_range" value="$recToDtText"></input>
-                <span class="add-on">
-                    <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
-                </span>
-            </div></td>
-        </tr>
-END;
+        Theme::Set('form_id', 'EditEventForm');
+        Theme::Set('form_action', 'index.php?p=schedule&q=EditEvent');
+        Theme::Set('form_meta', $token_field . $token . '<input type="hidden" id="EventID" name="EventID" value="' . $eventID . '" /><input type="hidden" id="EventDetailID" name="EventDetailID" value="' . $eventDetailID . '" />');
 
-        $form .= <<<END
-        </table>
-    </form>
-    </div>
-</div>
-</div>
-END;
+        // Filter forms
+        Theme::Set('layout_filter', $layoutFilter);
+        Theme::Set('display_filter', $displayFilter);
+
+        // Values
+        Theme::Set('starttime', $fromDtText);
+        Theme::Set('endtime', $toDtText);
+        Theme::Set('display_order', $displayOrder);
+        Theme::Set('is_priority', $isPriority);
+
+        Theme::Set('recurrence_field_list', array(
+                array('id' => 'null', 'name' => __('None')),
+                array('id' => 'Hour', 'name' => __('Hourly')),
+                array('id' => 'Day', 'name' => __('Daily')),
+                array('id' => 'Week', 'name' => __('Weekly')),
+                array('id' => 'Month', 'name' => __('Monthly')),
+                array('id' => 'Year', 'name' => __('Yearly'))
+            ));
+        Theme::Set('rec_type', $recType);
+        Theme::Set('rec_detail', $recDetail);
+        Theme::Set('rec_range', $recToDtText);
         
-        $response->SetFormRequestResponse($form, __('Edit Event'), '800px', '600px');
+        $response->SetFormRequestResponse(Theme::RenderReturn('schedule_form_edit_event'), __('Edit Event'), '800px', '600px');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Edit')");
         $response->AddButton(__('Delete'), 'XiboFormRender("index.php?p=schedule&q=DeleteForm&EventID=' . $eventID . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
