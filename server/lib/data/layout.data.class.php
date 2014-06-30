@@ -1066,7 +1066,11 @@ class Layout extends Data
             $mediaNodes = $regionObject->GetMediaNodeList($layoutId, $region['regionid']);
 
             foreach($mediaNodes as $mediaNode) {
-                // Put this node vertically in the region timeline
+
+                // DataSets are a special case. We want to get the last updated time from the dataset.
+                
+
+                // Put this node vertically in the region time-line
                 $region['media'][] = array(
                         'mediaid' => $mediaNode->getAttribute('id'),
                         'lkid' => $mediaNode->getAttribute('lkid'),

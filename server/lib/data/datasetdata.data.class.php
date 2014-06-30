@@ -22,6 +22,15 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class DataSetData extends Data
 {
+    private $updateWatermark;
+
+    public function __construct(database $db) {
+
+        $this->updateWatermark = true;
+
+        parent::__construct($db);
+    }
+
     public function Add($dataSetColumnId, $rowNumber, $value)
     {
         try {
@@ -38,6 +47,9 @@ class DataSetData extends Data
                ));
 
             $id = $dbh->lastInsertId();
+
+            // Update the Water Mark
+            $this->UpdateWatermarkWithColumnId($dataSetColumnId);
 
             Debug::LogEntry('audit', 'Complete', 'DataSetData', 'Add');
             
@@ -64,6 +76,8 @@ class DataSetData extends Data
                     'value' => $value
                ));
 
+            $this->UpdateWatermarkWithColumnId($dataSetColumnId);
+
             Debug::LogEntry('audit', 'Complete', 'DataSetData', 'Edit');
 
             return true;
@@ -87,6 +101,8 @@ class DataSetData extends Data
                     'datasetcolumnid' => $dataSetColumnId,
                     'rownumber' => $rowNumber
                ));
+
+            $this->UpdateWatermarkWithColumnId($dataSetColumnId);
 
             Debug::LogEntry('audit', 'Complete', 'DataSetData', 'Delete');
 
@@ -113,6 +129,8 @@ class DataSetData extends Data
                     'datasetid' => $dataSetId
                ));
 
+            $this->UpdateWatermark($dataSetId);
+
             return true;
         }
         catch (Exception $e) {
@@ -121,7 +139,68 @@ class DataSetData extends Data
         }
     }
 
+    /**
+     * Update the Water Mark to indicate the last data edit
+     * @param int $dataSetColumnId The Data Set Column ID
+     */
+    private function UpdateWatermarkWithColumnId($dataSetColumnId) {
+
+        if (!$this->updateWatermark)
+            return;
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT DataSetID FROM `datasetcolumn` WHERE DataSetColumnID = :dataset_column_id');
+            $sth->execute(array(
+                    'dataset_column_id' => $dataSetColumnId
+                ));
+          
+            $this->UpdateWatermark($sth->fetchColumn(0));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Update the Water Mark to indicate the last data edit
+     * @param int $dataSetId The Data Set ID to Update
+     */
+    private function UpdateWatermark($dataSetId) {
+        
+        if (!$this->updateWatermark)
+            return;
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('UPDATE `dataset` SET LastDataEdit = :last_data_edit WHERE DataSetID = :dataset_id');
+            $sth->execute(array(
+                    'last_data_edit' => time(),
+                    'dataset_id' => $dataSetId
+                ));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
     public function ImportCsv($dataSetId, $csvFile, $spreadSheetMapping, $overwrite = false, $ignoreFirstRow = true) {
+
+        $this->updateWatermark = false;
 
         try {
             $dbh = PDOConnect::init();
@@ -186,6 +265,8 @@ class DataSetData extends Data
             @unlink($csvFile);
 
             // TODO: Update list content definitions
+
+            $this->UpdateWatermark($dataSetId);
 
             return true;
         }
