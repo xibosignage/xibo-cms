@@ -522,7 +522,7 @@ XML;
             if ($this->regionSpecific)
             {
                 $form = <<<END
-                <form id="MediaDeleteForm" class="XiboForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=DeleteMedia">
+                <form id="MediaDeleteForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=DeleteMedia">
                         <input type="hidden" name="mediaid" value="$mediaid">
                         <input type="hidden" name="layoutid" value="$layoutid">
                         <input type="hidden" name="regionid" value="$regionid">

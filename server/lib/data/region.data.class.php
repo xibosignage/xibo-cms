@@ -924,6 +924,13 @@ class Region extends Data
         return $xpath->query("//region[@id='$regionId']/media");
     }
 
+    /**
+     * Get Option for Media Id
+     * @param int $layoutId The Layout ID
+     * @param string $mediaId  The Media ID
+     * @param string $name     The Option Name
+     * @param string $default  The Default Value if none found
+     */
     public function GetOptionForMediaId($layoutId, $mediaId, $name, $default = false) {
 
     	if ($name == '') 

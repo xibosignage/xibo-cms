@@ -244,6 +244,11 @@ class datasetview extends Module
         // This saves the Media Object to the Region
         $this->UpdateRegion();
 
+        // Link
+        Kit::ClassLoader('dataset');
+        $dataSet = new DataSet($db);
+        $dataSet->LinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
+
         //Set this as the session information
         setSession('content', 'type', 'datasetview');
 
@@ -349,6 +354,19 @@ class datasetview extends Module
         }
 
         return $this->response;
+    }
+
+    public function DeleteMedia() {
+
+        $dataSetId = $this->GetOption('datasetid');
+
+        Debug::LogEntry('audit', sprintf('Deleting Media with DataSetId %d', $dataSetId), 'datasetview', 'DeleteMedia');
+
+        Kit::ClassLoader('dataset');
+        $dataSet = new DataSet($this->db);
+        $dataSet->UnlinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
+
+        return parent::DeleteMedia();
     }
 
     public function Preview($width, $height)

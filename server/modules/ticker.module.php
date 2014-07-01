@@ -237,6 +237,11 @@ class ticker extends Module
 		if ($duration == 0)
 			trigger_error(__('Please enter a duration'), E_USER_ERROR);
 
+		// Required Attributes
+		$this->mediaid	= md5(uniqid());
+		$this->duration = $duration;
+
+		// Data Source
 		if ($sourceId == 1) {
 			// Feed
 			
@@ -256,15 +261,16 @@ class ticker extends Module
 			// Check we have permission to use this DataSetId
 	        if (!$this->user->DataSetAuth($dataSetId))
 	            trigger_error(__('You do not have permission to use that dataset'), E_USER_ERROR);
+
+	        // Link
+	        Kit::ClassLoader('dataset');
+	        $dataSet = new DataSet($db);
+        	$dataSet->LinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
 		}
 		else {
 			// Only supported two source types at the moment
 			trigger_error(__('Unknown Source Type'));
 		}
-		
-		// Required Attributes
-		$this->mediaid	= md5(uniqid());
-		$this->duration = $duration;
 		
 		// Any Options
 		$this->SetOption('xmds', true);
@@ -430,6 +436,17 @@ class ticker extends Module
 		
 		return $this->response;	
 	}
+
+	public function DeleteMedia() {
+
+		$dataSetId = $this->GetOption('datasetid');
+
+        Kit::ClassLoader('dataset');
+        $dataSet = new DataSet($this->db);
+        $dataSet->UnlinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
+
+        return parent::DeleteMedia();
+    }
 
 	public function GetName() {
 		return $this->GetOption('name');

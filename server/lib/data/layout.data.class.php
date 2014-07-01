@@ -1065,6 +1065,10 @@ class Layout extends Data
             $regionObject = new Region($this->db);
             $mediaNodes = $regionObject->GetMediaNodeList($layoutId, $region['regionid']);
 
+            // Create a data set to see if there are any requirements to serve an updated date time
+            Kit::ClassLoader('dataset');
+            $dataSetObject = new DataSet($this->db);
+
             foreach($mediaNodes as $mediaNode) {
 
                 $node = array(
@@ -1074,15 +1078,11 @@ class Layout extends Data
                     );
 
                 // DataSets are a special case. We want to get the last updated time from the dataset.
-                $dataSetId = $regionObject->GetOptionForMediaId($layoutId, $mediaNode->getAttribute('id'), 'datasetid');
+                $dataSet = $dataSetObject->GetDataSetFromLayout($layoutId, $region['regionid'], $mediaNode->getAttribute('id'));
 
-                if ($dataSetId !== FALSE) {
-                    // Look up the last data edit date
-                    Kit::ClassLoader('dataset');
-
-                    $dataSet = new DataSet($this->db);
-
-                    $node['updated'] = $dataSet->GetLastDataEditTime($dataSetId);
+                if (count($dataSet) == 1) {
+                    
+                    $node['updated'] = $dataSet[0]['LastDataEdit'];
                 }
 
                 // Put this node vertically in the region time-line

@@ -527,7 +527,7 @@
         $userid     =& $this->userid;
         $usertypeid     =& $this->usertypeid;
         
-        Debug::LogEntry('audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
+        //Debug::LogEntry('audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
         
         // Get some information about this menu
         // I.e. get the Menu Items this user has access to
@@ -559,7 +559,6 @@
         }
         $SQL .= " ORDER BY menuitem.Sequence";
         
-        Debug::LogEntry('audit', $SQL);
         
         if (!$result = $db->query($SQL))
         {

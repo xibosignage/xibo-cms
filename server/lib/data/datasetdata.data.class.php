@@ -178,6 +178,8 @@ class DataSetData extends Data
         if (!$this->updateWatermark)
             return;
 
+        Debug::LogEntry('audit', sprintf('Updating water mark on DataSetId: %d', $dataSetId), 'DataSetData', 'UpdateWatermark');
+
         try {
             $dbh = PDOConnect::init();
         
@@ -186,6 +188,19 @@ class DataSetData extends Data
                     'last_data_edit' => time(),
                     'dataset_id' => $dataSetId
                 ));
+
+            // Get affected Campaigns
+            Kit::ClassLoader('dataset');
+            $dataSet = new DataSet($this->db);
+            $campaigns = $dataSet->GetCampaignsForDataSet($dataSetId);
+
+            Kit::ClassLoader('display');
+            $display = new Display($this->db);
+
+            foreach ($campaigns as $campaignId) {
+                // Assess all displays  
+                $campaigns = $display->NotifyDisplays($campaignId);
+            }
         }
         catch (Exception $e) {
             
