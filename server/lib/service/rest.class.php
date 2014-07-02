@@ -1179,6 +1179,216 @@ class Rest
     }
 
     /**
+     * DataSet List
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetList() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataset = $this->user->DataSetList();
+
+        if (!is_array($dataset))
+            return $this->Error(2, 'No datasets');
+
+        return $this->Respond($this->NodeListFromArray($dataset, 'dataset'));
+    }
+
+    /**
+     * DataSet Add
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetAdd() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSet = $this->GetParam('dataset', _STRING);
+        $description = $this->GetParam('description', _STRING);
+
+        if ($dataSet == '')
+            return $this->Error(2, 'Please provide a Data Set Name (dataSet)');
+
+        Kit::ClassLoader('dataset');
+        $dataSetObject = new DataSet($this->db);
+        if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->user->userid))
+            return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('dataset', $dataSetId));
+    }
+
+    /**
+     * DataSet Edit
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetEdit() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        return $this->Respond($this->ReturnId('success', true));
+    }
+
+    /**
+     * DataSet Delete
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetDelete() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * DataSet Column List
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetColumnList() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * DataSet Column Add
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetColumnAdd() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * DataSet Column Edit
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetColumnEdit() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * DataSet Column Delete
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetColumnDelete() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * DataSet Data List
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetDataList() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * DataSet Data Add
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetDataAdd() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * DataSet Data Edit
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetDataEdit() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * DataSet Data Delete
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetDataDelete() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * DataSet Security List
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetSecurityList() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * DataSet Security Add
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetSecurityAdd() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * DataSet Security Delete
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetSecurityDelete() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
+     * DataSet Import CSV
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetImportCsv() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        return $this->Error(1000, 'Not implemented');
+    }
+
+    /**
      * Returns the Xibo Server version information
      * @return <type>
      */

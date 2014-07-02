@@ -10,6 +10,7 @@
 	<a class="list-group-item" href="index.php?toc=developer_api&p=admin/api_displaygroups">Display Groups</a>
 	<a class="list-group-item" href="index.php?toc=developer_api&p=admin/api_layouts">Layouts</a>
 	<a class="list-group-item" href="index.php?toc=developer_api&p=admin/api_library">Library</a>
+	<a class="list-group-item" href="index.php?toc=developer_api&p=admin/api_datasets">DataSets</a>
 	<a class="list-group-item" href="index.php?toc=developer_api&p=admin/api_schedule">Schedule</a>
 	<a class="list-group-item" href="index.php?toc=developer_api&p=admin/api_template">Template</a>
 	<a class="list-group-item" href="index.php?toc=developer_api&p=admin/api_resolution">Resolution</a>

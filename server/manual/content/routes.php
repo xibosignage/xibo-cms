@@ -102,6 +102,7 @@ $allowed_routes = array(
 		'admin/api_displaygroups',
 		'admin/api_layouts',
 		'admin/api_library',
+		'admin/api_datasets',
 		'admin/api_schedule',
 		'admin/api_template',
 		'admin/api_resolution',

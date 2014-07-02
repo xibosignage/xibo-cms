@@ -33,6 +33,6 @@ header('X-XRDS-Location:' . $serviceLocation . '/service.php?xrds');
 require_once('3rdparty/oauth-php/library/OAuthServer.php');
 require_once('3rdparty/oauth-php/library/OAuthStore.php');
 
-OAuthStore::instance('PDO', array('server' => $dbhost, 'username' => $dbuser, 'password' => $dbpass, 'database' => $dbname));
+OAuthStore::instance('PDO', array('conn' => PDOConnect::init()));
 
 ?>

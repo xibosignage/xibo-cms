@@ -38,20 +38,23 @@ class RestJson extends Rest
             Debug::LogEntry('audit', 'Unable to commit');
         }
 
-        $array['rsp']['status'] = 'success';
+        $array['status'] = 'success';
+
+        // Create a response
+        $response = json_encode($array);
 
         // Log it
-        Debug::LogEntry('audit', $xmlDoc->saveXML(), 'RestXml', 'Respond');
+        Debug::LogEntry('audit', $response, 'RestJson', 'Respond');
 
         // Return it as a string
-        return json_encode($array);
+        return $response;
     }
 
     public function Error($errorNo, $errorMessage = '')
     {
-        Debug::LogEntry('audit', $errorMessage, 'RestXml', 'Error');
-
         header('Content-Type: text/json; charset=utf8');
+        
+        Debug::LogEntry('audit', $errorMessage, 'RestJson', 'Error');
 
         // Roll back any open transactions if we are in an error state
         try {
@@ -59,21 +62,22 @@ class RestJson extends Rest
             $dbh->rollBack();
         }
         catch (Exception $e) {
-            Debug::LogEntry('audit', 'Unable to rollback');
+            Debug::LogEntry('audit', 'Unable to rollback', 'RestJson', 'Error');
         }
 
-        // Output the error doc
-        $xmlDoc = new DOMDocument('1.0');
-        $xmlDoc->formatOutput = true;
+        // Error
+        $array = array(
+                'stat' => 'error', 
+                'error' => array(
+                    'code' => $errorNo, 
+                    'message' => $errorMessage
+                )
+            );
 
-        $response['rsp']['status'] = 'error';
-        $response['rsp']['status']['error']['code'] = $errorNo;
-        $response['rsp']['status']['error']['message'] = $errorMessage;
-
-        $return = json_encode($response);
+        $return = json_encode($array);
 
         // Log it
-        Debug::LogEntry('audit', $return);
+        Debug::LogEntry('audit', $return, 'RestJson', 'Error');
 
         // Return it as a string
         return $return;
