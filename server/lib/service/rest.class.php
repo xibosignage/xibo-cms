@@ -1207,9 +1207,6 @@ class Rest
         $dataSet = $this->GetParam('dataset', _STRING);
         $description = $this->GetParam('description', _STRING);
 
-        if ($dataSet == '')
-            return $this->Error(2, 'Please provide a Data Set Name (dataSet)');
-
         Kit::ClassLoader('dataset');
         $dataSetObject = new DataSet($this->db);
         if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->user->userid))
@@ -1229,6 +1226,18 @@ class Rest
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
 
+        $auth = $user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        $dataSet = $this->GetParam('dataset', _STRING);
+        $description = $this->GetParam('description', _STRING);
+
+        Kit::ClassLoader('dataset');
+        $dataSetObject = new DataSet($this->db);
+        if (!$dataSetObject->Edit($dataSetId, $dataSet, $description))
+            return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
+
         return $this->Respond($this->ReturnId('success', true));
     }
 
@@ -1241,7 +1250,18 @@ class Rest
         if (!$this->user->PageAuth('dataset'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $user->DataSetAuth($dataSetId, true);
+        if (!$auth->delete)
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('dataset');
+        $dataSetObject = new DataSet($this->db);
+        if (!$dataSetObject->Delete($dataSetId))
+            return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
@@ -1265,7 +1285,25 @@ class Rest
         if (!$this->user->PageAuth('dataset'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        $heading = $this->GetParam('heading', _STRING);
+        $listContent = $this->GetParam('listContent', _STRING);
+        $columnOrder = $this->GetParam('columnOrder', _INT);
+        $dataTypeId = $this->GetParam('dataTypeId', _INT);
+        $dataSetColumnTypeId = $this->GetParam('datasetColumnTypeId', _INT);
+        $formula = $this->GetParam('formula', _STRING);
+
+        Kit::ClassLoader('datasetcolumn');
+        $dataSetColumnObject = new DataSetColumn($db);
+        if (!$dataSetColumnId = $dataSetColumnObject->Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
+            return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('datasetcolumn', $dataSetColumnId));
     }
 
     /**

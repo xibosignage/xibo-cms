@@ -152,6 +152,7 @@ class DataSet extends Data
             $security->UnlinkAll($dataSetId);
 
             // Delete columns
+            Kit::ClassLoader('datasetcolumn');
             $dataSetObject = new DataSetColumn($this->db);
             if (!$dataSetObject->DeleteAll($dataSetId))
                 return $this->SetError(25005, __('Cannot delete dataset, columns could not be deleted.'));

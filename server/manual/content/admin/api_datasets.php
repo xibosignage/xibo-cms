@@ -50,7 +50,7 @@ A list of DataSets. E.g.<br>
             "modifyPermissions": 1
         }
     ],
-    "stat": "success"
+    "status": "ok"
 }
 </pre>
 </p>
@@ -78,7 +78,7 @@ General Errors Only.
     "dataset": {
         "id": "3"
     },
-    "status": "success"
+    "status": "ok"
 }
 </pre>
 </p>
@@ -90,8 +90,28 @@ General Errors Only.
 
 <h2>DataSetEdit</h2>
 <p>Parameters:</p>
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
+<dl>
+    <dt>dataSet</dt>
+    <dd>The Name for this DataSet. Required.</dd>
+</dl>
+<dl>
+    <dt>description</dt>
+    <dd>A description for this DataSet.</dd>
+</dl>
 
 <p>Response:</p>
+<pre>
+{
+    "success": {
+        "id": true
+    },
+    "status": "ok"
+}
+</pre>
 
 <p>Errors:<br>
 General Errors Only.
@@ -100,8 +120,20 @@ General Errors Only.
 
 <h2>DataSetDelete</h2>
 <p>Parameters:</p>
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
 
 <p>Response:</p>
+<pre>
+{
+    "success": {
+        "id": true
+    },
+    "status": "ok"
+}
+</pre>
 
 <p>Errors:<br>
 General Errors Only.
@@ -120,6 +152,34 @@ General Errors Only.
 
 <h2>DataSetColumnAdd</h2>
 <p>Parameters:</p>
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
+<dl>
+    <dt>heading</dt>
+    <dd></dd>
+</dl>
+<dl>
+    <dt>listContent</dt>
+    <dd></dd>
+</dl>
+<dl>
+    <dt>columnOrder</dt>
+    <dd></dd>
+</dl>
+<dl>
+    <dt>dataTypeId</dt>
+    <dd></dd>
+</dl>
+<dl>
+    <dt>datasetColumnTypeId</dt>
+    <dd>The Column Type for this Column. Either <code>value</code> or <code>formula</code>.</dd>
+</dl>
+<dl>
+    <dt>formula</dt>
+    <dd>A formula (in MySQL syntax) to apply to this column</dd>
+</dl>
 
 <p>Response:</p>
 

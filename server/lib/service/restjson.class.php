@@ -38,7 +38,7 @@ class RestJson extends Rest
             Debug::LogEntry('audit', 'Unable to commit');
         }
 
-        $array['status'] = 'success';
+        $array['status'] = 'ok';
 
         // Create a response
         $response = json_encode($array);
@@ -67,7 +67,7 @@ class RestJson extends Rest
 
         // Error
         $array = array(
-                'stat' => 'error', 
+                'status' => 'error', 
                 'error' => array(
                     'code' => $errorNo, 
                     'message' => $errorMessage
