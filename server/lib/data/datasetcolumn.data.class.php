@@ -26,6 +26,18 @@ class DataSetColumn extends Data
     {
         Debug::LogEntry('audit', sprintf('IN - DataSetID = %d', $dataSetId), 'DataSetColumn', 'Add');
 
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
+        
+        if ($dataTypeId == 0 || $dataTypeId == '')
+            return $this->SetError(25001, __('Missing dataTypeId'));
+        
+        if ($dataSetColumnTypeId == 0 || $dataSetColumnTypeId == '')
+            return $this->SetError(25001, __('Missing dataSetColumnTypeId'));
+
+        if ($heading == '')
+            return $this->SetError(25001, __('Please provide a column heading.'));
+
         try {
             $dbh = PDOConnect::init();
 

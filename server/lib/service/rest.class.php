@@ -1226,7 +1226,7 @@ class Rest
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
 
-        $auth = $user->DataSetAuth($dataSetId, true);
+        $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             return $this->Error(1, 'Access Denied');
 
@@ -1252,7 +1252,7 @@ class Rest
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
 
-        $auth = $user->DataSetAuth($dataSetId, true);
+        $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->delete)
             return $this->Error(1, 'Access Denied');
 
@@ -1287,7 +1287,7 @@ class Rest
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
 
-        $auth = $user->DataSetAuth($dataSetId, true);
+        $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             return $this->Error(1, 'Access Denied');
 
@@ -1299,7 +1299,7 @@ class Rest
         $formula = $this->GetParam('formula', _STRING);
 
         Kit::ClassLoader('datasetcolumn');
-        $dataSetColumnObject = new DataSetColumn($db);
+        $dataSetColumnObject = new DataSetColumn($this->db);
         if (!$dataSetColumnId = $dataSetColumnObject->Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
             return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
 
@@ -1315,7 +1315,26 @@ class Rest
         if (!$this->user->PageAuth('dataset'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetColumnId = Kit::GetParam('datasetColumnId', _POST, _INT);
+        $heading = $this->GetParam('heading', _STRING);
+        $listContent = $this->GetParam('listContent', _STRING);
+        $columnOrder = $this->GetParam('columnOrder', _INT);
+        $dataTypeId = $this->GetParam('dataTypeId', _INT);
+        $dataSetColumnTypeId = $this->GetParam('datasetColumnTypeId', _INT);
+        $formula = $this->GetParam('formula', _STRING);
+
+        Kit::ClassLoader('datasetcolumn');
+        $dataSetColumnObject = new DataSetColumn($this->db);
+        if (!$dataSetColumnObject->Edit($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
+            return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**

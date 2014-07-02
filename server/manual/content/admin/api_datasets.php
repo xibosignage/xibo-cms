@@ -182,7 +182,14 @@ General Errors Only.
 </dl>
 
 <p>Response:</p>
-
+<pre>
+{
+    "datasetcolumn": {
+        "id": "3"
+    },
+    "status": "ok"
+}
+</pre>
 <p>Errors:<br>
 General Errors Only.
 </p>
@@ -190,7 +197,38 @@ General Errors Only.
 
 <h2>DataSetColumnEdit</h2>
 <p>Parameters:</p>
-
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
+<dl>
+    <dt>dataSetColumnId</dt>
+    <dd>The ID for this DataSet Column. Required.</dd>
+</dl>
+<dl>
+    <dt>heading</dt>
+    <dd></dd>
+</dl>
+<dl>
+    <dt>listContent</dt>
+    <dd></dd>
+</dl>
+<dl>
+    <dt>columnOrder</dt>
+    <dd></dd>
+</dl>
+<dl>
+    <dt>dataTypeId</dt>
+    <dd></dd>
+</dl>
+<dl>
+    <dt>datasetColumnTypeId</dt>
+    <dd>The Column Type for this Column. Either <code>value</code> or <code>formula</code>.</dd>
+</dl>
+<dl>
+    <dt>formula</dt>
+    <dd>A formula (in MySQL syntax) to apply to this column</dd>
+</dl>
 <p>Response:</p>
 
 <p>Errors:<br>
