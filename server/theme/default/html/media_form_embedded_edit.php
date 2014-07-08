@@ -34,6 +34,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                 </div>
             </div>
             <div class="control-group">
+                <label class="control-label" for="name" title="<?php echo Theme::Translate('An optional Name for this Embedded Item'); ?>"><?php echo Theme::Translate('Name'); ?></label>
+                <div class="controls">
+                    <input name="name" type="text" id="name" tabindex="2" value="<?php echo Theme::Get('name'); ?>" />
+                </div>
+            </div>
+            <div class="control-group">
                 <div class="controls">
                     <label class="checkbox" for="transparency" accesskey="n" title="<?php echo Theme::Translate('Background transparent?'); ?>"><?php echo Theme::Translate('Background transparent?'); ?>
                         <input class="" name="transparency" type="checkbox" id="transparency" tabindex="2" <?php echo Theme::Get('transparency_checked'); ?> />

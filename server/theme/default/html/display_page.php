@@ -47,9 +47,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                     <label class="select"><?php echo Theme::Translate('Group') ?>
                         <?php echo Theme::SelectList('filter_displaygroup', Theme::Get('displaygroup_field_list'), 'displaygroupid', 'displaygroup', Theme::Get('filter_displaygroup')); ?>
                     </label>
-                    <label class="checkbox">
-                        <?php echo Theme::Translate('Keep Open') ?>
+                    <label class="checkbox pull-right">
                         <input type="checkbox" id="<?php echo Theme::Get('filter_id'); ?>" name="XiboFilterPinned" class="XiboFilterPinned" <?php echo Theme::Get('filter_pinned'); ?> />
+                        <?php echo Theme::Translate('Keep Open') ?>
                     </label>
 				</form>
 			</div>

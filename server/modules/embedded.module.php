@@ -104,7 +104,8 @@ function EmbedInit()
         Theme::Set('form_id', 'ModuleForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
-		
+		Theme::Set('name', $this->GetOption('name'));
+
 		// Get the embedded HTML out of RAW
 		$rawXml = new DOMDocument();
 		$rawXml->loadXML($this->GetRaw());
@@ -166,8 +167,9 @@ function EmbedInit()
 		$embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
 		$duration	  = Kit::GetParam('duration', _POST, _INT, 0);
 		$transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
+		$name = Kit::GetParam('name', _POST, _STRING);
 		
-		$url 		  = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+		$url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 						
 		//Validate the URL?
 		if ($embedHtml == "")
@@ -185,9 +187,10 @@ function EmbedInit()
 		}
 		
 		// Required Attributes
-		$this->mediaid	= md5(uniqid());
+		$this->mediaid = md5(uniqid());
 		$this->duration = $duration;
 		$this->SetOption('transparency', $transparency);
+		$this->SetOption('name', $name);
 		
 		// Any Options
 		$this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml><embedScript><![CDATA[' . $embedScript . ']]></embedScript>');
@@ -232,7 +235,10 @@ function EmbedInit()
 		$embedHtml	  = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
 		$embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
 		$transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
+		$name = Kit::GetParam('name', _POST, _STRING);
+
 		$this->SetOption('transparency', $transparency);
+		$this->SetOption('name', $name);
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
@@ -273,6 +279,10 @@ function EmbedInit()
         }
 		
 		return $this->response;	
+	}
+	
+	public function GetName() {
+		return $this->GetOption('name');
 	}
 	
     public function IsValid() {
