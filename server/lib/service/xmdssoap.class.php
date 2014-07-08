@@ -1128,7 +1128,8 @@ class XMDSSoap
 
         // See if the client was offline and if appropriate send an alert
         // to say that it has come back online
-        if ($row[5] == 0 && $row[6] == 1 && Config::GetSetting('MAINTENANCE_ENABLED') == 'On' && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On')
+        if ($row[5] == 0 && $row[6] == 1 && Config::GetSetting('MAINTENANCE_ENABLED') == 'On' && 
+            (Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On' || Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'Protected'))
         {
             $msgTo    = Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
             $msgFrom  = Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);
