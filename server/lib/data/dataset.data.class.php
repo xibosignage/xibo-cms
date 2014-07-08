@@ -451,5 +451,45 @@ class DataSet extends Data
 
         return $results;
     }
+
+    public function GetDataTypes() {
+        try {
+            $dbh = PDOConnect::init();
+
+            $sth = $dbh->prepare('SELECT datatypeid, datatype FROM datatype');
+            $sth->execute();
+          
+            return $sth->fetchAll();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+
+            return false;
+        }
+    }
+
+    public function GetDataSetColumnTypes() {
+        try {
+            $dbh = PDOConnect::init();
+
+            $sth = $dbh->prepare('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype');
+            $sth->execute();
+          
+            return $sth->fetchAll();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+
+            return false;
+        }
+    }
 }
 ?>

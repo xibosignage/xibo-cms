@@ -146,8 +146,6 @@ if (defined('XMDS') || $method != '')
                     $serviceResponse->ErrorServerError('Unknown response type');
             }
 
-
-
             // Run the method requested.
             if (method_exists($rest, $method))
                 $serviceResponse->Success($rest->$method());

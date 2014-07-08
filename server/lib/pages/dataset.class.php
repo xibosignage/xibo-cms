@@ -326,29 +326,24 @@ class datasetDAO
         $SQL .= sprintf(" WHERE DataSetID = %d ", $dataSetId);
         $SQL .= "ORDER BY ColumnOrder ";
 
-        // Load results into an array
-        $dataSetColumns = $db->GetArray($SQL);
+        Kit::ClassLoader('datasetcolumn');
+        $dataSetColumnObject = new DataSetColumn($db);
 
-        if (!is_array($dataSetColumns)) 
-        {
-            trigger_error($db->error());
-            trigger_error(__('Error getting list of dataSetColumns'), E_USER_ERROR);
-        }
+        // Load results into an array
+        if (!$dataSetColumns = $dataSetColumnObject->GetColumns($dataSetId))
+            trigger_error($dataSetColumnObject->GetErrorMessage(), E_USER_ERROR);
 
         $rows = array();
 
         foreach ($dataSetColumns as $row) {
 
-            $row['heading'] = Kit::ValidateParam($row['Heading'], _STRING);
-            $row['listcontent'] = Kit::ValidateParam($row['ListContent'], _STRING);
-            $row['columnorder'] = Kit::ValidateParam($row['ColumnOrder'], _INT);
-            $row['datatype'] = __(Kit::ValidateParam($row['DataType'], _STRING));
-            $row['datasetcolumntype'] = __(Kit::ValidateParam($row['DataSetColumnType'], _STRING));
+            $row['datatype'] = __($row['datatype']);
+            $row['datasetcolumntype'] = __($row['datasetcolumntype']);
 
             // Edit        
             $row['buttons'][] = array(
                     'id' => 'dataset_button_edit',
-                    'url' => 'index.php?p=dataset&q=EditDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['DataSetColumnID'] . '&dataset=' . $dataSet,
+                    'url' => 'index.php?p=dataset&q=EditDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['datasetcolumnid'] . '&dataset=' . $dataSet,
                     'text' => __('Edit')
                 );
 
@@ -356,7 +351,7 @@ class datasetDAO
                 // Delete
                 $row['buttons'][] = array(
                         'id' => 'dataset_button_delete',
-                        'url' => 'index.php?p=dataset&q=DeleteDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['DataSetColumnID'] . '&dataset=' . $dataSet,
+                        'url' => 'index.php?p=dataset&q=DeleteDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['datasetcolumnid'] . '&dataset=' . $dataSet,
                         'text' => __('Delete')
                     );
             }

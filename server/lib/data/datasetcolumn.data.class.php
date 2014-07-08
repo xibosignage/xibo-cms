@@ -89,6 +89,18 @@ class DataSetColumn extends Data
 
     public function Edit($dataSetColumnId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula = '')
     {
+        if ($dataSetColumnId == 0 || $dataSetColumnId == '')
+            return $this->SetError(25001, __('Missing dataSetColumnId'));
+
+        if ($dataTypeId == 0 || $dataTypeId == '')
+            return $this->SetError(25001, __('Missing dataTypeId'));
+        
+        if ($dataSetColumnTypeId == 0 || $dataSetColumnTypeId == '')
+            return $this->SetError(25001, __('Missing dataSetColumnTypeId'));
+
+        if ($heading == '')
+            return $this->SetError(25001, __('Please provide a column heading.'));
+
         try {
             $dbh = PDOConnect::init();
 
@@ -134,7 +146,7 @@ class DataSetColumn extends Data
                     'formula' => $formula
                ));
 
-            Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Edit');
+            Debug::LogEntry('audit', 'Complete for ' . $heading, 'DataSetColumn', 'Edit');
 
             return true;
         }
@@ -146,6 +158,9 @@ class DataSetColumn extends Data
 
     public function Delete($dataSetColumnId)
     {
+        if ($dataSetColumnId == 0 || $dataSetColumnId == '')
+            return $this->SetError(25001, __('Missing dataSetColumnId'));
+
         try {
             $dbh = PDOConnect::init();
 
@@ -167,6 +182,9 @@ class DataSetColumn extends Data
     // Delete All Data Set columns
     public function DeleteAll($dataSetId)
     {
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
+
         try {
             $dbh = PDOConnect::init();
 
@@ -182,6 +200,59 @@ class DataSetColumn extends Data
         catch (Exception $e) {
             Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25005, __('Could not delete DataSet Column'));
+        }
+    }
+
+    public function GetColumns($dataSetId) {
+
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
+
+        try {
+            $dbh = PDOConnect::init();
+
+            $sth = $dbh->prepare('SELECT DataSetColumnID, Heading, datatype.DataType, datasetcolumntype.DataSetColumnType, ListContent, ColumnOrder 
+                  FROM datasetcolumn 
+                   INNER JOIN `datatype` 
+                   ON datatype.DataTypeID = datasetcolumn.DataTypeID 
+                   INNER JOIN `datasetcolumntype` 
+                   ON datasetcolumntype.DataSetColumnTypeID = datasetcolumn.DataSetColumnTypeID 
+                 WHERE DataSetID = :datasetid
+                ORDER BY ColumnOrder ');
+
+            $sth->execute(array(
+                    'datasetid' => $dataSetId
+                ));
+
+            $results = $sth->fetchAll();
+
+            if (count($results) <= 0)
+                throw new Exception(__('No columns'));
+
+            $rows = array();
+
+            foreach($sth->fetchAll() as $row) {
+
+                $col['datasetcolumnid'] = Kit::ValidateParam($row['DataSetColumnID'], _INT);
+                $col['heading'] = Kit::ValidateParam($row['Heading'], _STRING);
+                $col['listcontent'] = Kit::ValidateParam($row['ListContent'], _STRING);
+                $col['columnorder'] = Kit::ValidateParam($row['ColumnOrder'], _INT);
+                $col['datatype'] = Kit::ValidateParam($row['DataType'], _STRING);
+                $col['datasetcolumntype'] = Kit::ValidateParam($row['DataSetColumnType'], _STRING);
+
+                $rows[] = $col;
+            }
+          
+            return $rows;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(1, $e->getMessage());
+
+            return false;
         }
     }
 }

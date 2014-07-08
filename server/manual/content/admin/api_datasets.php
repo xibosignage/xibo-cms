@@ -142,8 +142,27 @@
 
 <h2>DataSetColumnList</h2>
 <h3>Parameters</h3>
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
 
 <h3>Response</h3>
+<pre>
+{
+    "datasetcolumn": [
+        {
+            "datasetcolumnid": "3",
+            "heading": "API Column 1",
+            "listcontent": "",
+            "columnorder": "1",
+            "datatype": "String",
+            "datasetcolumntype": "Value"
+        }
+    ],
+    "status": "ok"
+}
+</pre>
 
 <h3>Errors</h3>
 <p>General Errors Only.
@@ -158,23 +177,23 @@
 </dl>
 <dl>
     <dt>heading</dt>
-    <dd></dd>
+    <dd>The Column Heading</dd>
 </dl>
 <dl>
     <dt>listContent</dt>
-    <dd></dd>
+    <dd>A comma separated list to appear as a select list for data entry.</dd>
 </dl>
 <dl>
     <dt>columnOrder</dt>
-    <dd></dd>
+    <dd>The order this column should appear</dd>
 </dl>
 <dl>
     <dt>dataTypeId</dt>
-    <dd></dd>
+    <dd>The data type. See DataTypeList.</dd>
 </dl>
 <dl>
     <dt>datasetColumnTypeId</dt>
-    <dd>The Column Type for this Column. Either <code>value</code> or <code>formula</code>.</dd>
+    <dd>The Column Type for this Column. Either <code>value</code> or <code>formula</code>. See DataSetColumnTypeList.</dd>
 </dl>
 <dl>
     <dt>formula</dt>
@@ -207,30 +226,38 @@
 </dl>
 <dl>
     <dt>heading</dt>
-    <dd></dd>
+    <dd>The Column Heading</dd>
 </dl>
 <dl>
     <dt>listContent</dt>
-    <dd></dd>
+    <dd>A comma separated list to appear as a select list for data entry.</dd>
 </dl>
 <dl>
     <dt>columnOrder</dt>
-    <dd></dd>
+    <dd>The order this column should appear</dd>
 </dl>
 <dl>
     <dt>dataTypeId</dt>
-    <dd></dd>
+    <dd>The data type. See DataTypeList.</dd>
 </dl>
 <dl>
     <dt>datasetColumnTypeId</dt>
-    <dd>The Column Type for this Column. Either <code>value</code> or <code>formula</code>.</dd>
+    <dd>The Column Type for this Column. Either <code>value</code> or <code>formula</code>. See DataSetColumnTypeList.</dd>
 </dl>
 <dl>
     <dt>formula</dt>
     <dd>A formula (in MySQL syntax) to apply to this column</dd>
 </dl>
-<h3>Response</h3>
 
+<h3>Response</h3>
+<pre>
+{
+    "success": {
+        "id": true
+    },
+    "status": "ok"
+}
+</pre>
 <h3>Errors</h3>
 <p>General Errors Only.
 </p>
@@ -238,9 +265,23 @@
 
 <h2>DataSetColumnDelete</h2>
 <h3>Parameters</h3>
-
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
+<dl>
+    <dt>dataSetColumnId</dt>
+    <dd>The ID for this DataSet Column. Required.</dd>
+</dl>
 <h3>Response</h3>
-
+<pre>
+{
+    "success": {
+        "id": true
+    },
+    "status": "ok"
+}
+</pre>
 <h3>Errors</h3>
 <p>General Errors Only.
 </p>
@@ -325,3 +366,22 @@
 <p>General Errors Only.
 </p>
 
+<h2>DataTypeList</h2>
+<h3>Parameters</h3>
+<p>None</p>
+
+<h3>Response</h3>
+
+<h3>Errors</h3>
+<p>General Errors Only.
+</p>
+
+<h2>DataSetColumnTypeList</h2>
+<h3>Parameters</h3>
+<p>None</p>
+
+<h3>Response</h3>
+
+<h3>Errors</h3>
+<p>General Errors Only.
+</p>
