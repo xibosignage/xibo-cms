@@ -1382,6 +1382,12 @@ class Rest
         if (!$this->user->PageAuth('dataset'))
             return $this->Error(1, 'Access Denied');
 
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->view)
+            return $this->Error(1, 'Access Denied');
+
         return $this->Error(1000, 'Not implemented');
     }
 
@@ -1394,7 +1400,25 @@ class Rest
         if (!$this->user->PageAuth('dataset'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // Parameters
+        $dataSetColumnId = $this->GetParam('dataSetColumnId', _INT);
+        $rowNumber = $this->GetParam('rowNumber', _INT);
+        $value = $this->GetParam('value', _STRING);
+
+        // Use the DataSetData class to do the insert
+        Kit::ClassLoader('datasetdata');
+        $data = new DataSetData($this->db);
+
+        if (!$id = $data->Add($dataSetColumnId, $rowNumber, $value))
+            return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('datasetdata', $id));
     }
 
     /**
@@ -1406,7 +1430,25 @@ class Rest
         if (!$this->user->PageAuth('dataset'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // Parameters
+        $dataSetColumnId = $this->GetParam('dataSetColumnId', _INT);
+        $rowNumber = $this->GetParam('rowNumber', _INT);
+        $value = $this->GetParam('value', _STRING);
+
+        // Use the DataSetData class to do the update
+        Kit::ClassLoader('datasetdata');
+        $data = new DataSetData($this->db);
+
+        if (!$data->Edit($dataSetColumnId, $rowNumber, $value))
+            return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
@@ -1418,7 +1460,24 @@ class Rest
         if (!$this->user->PageAuth('dataset'))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->delete)
+            return $this->Error(1, 'Access Denied');
+
+        // Parameters
+        $dataSetColumnId = $this->GetParam('dataSetColumnId', _INT);
+        $rowNumber = $this->GetParam('rowNumber', _INT);
+
+        // Use the DataSetData class to do the delete
+        Kit::ClassLoader('datasetdata');
+        $data = new DataSetData($this->db);
+
+        if (!$id = $data->Delete($dataSetColumnId, $rowNumber))
+            return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('datasetdata', $id));
     }
 
     /**
@@ -1428,6 +1487,12 @@ class Rest
     public function DataSetSecurityList() {
         // Auth
         if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->view)
             return $this->Error(1, 'Access Denied');
 
         return $this->Error(1000, 'Not implemented');
@@ -1442,6 +1507,12 @@ class Rest
         if (!$this->user->PageAuth('dataset'))
             return $this->Error(1, 'Access Denied');
 
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->modifyPermissions)
+            return $this->Error(1, 'Access Denied');
+
         return $this->Error(1000, 'Not implemented');
     }
 
@@ -1454,6 +1525,12 @@ class Rest
         if (!$this->user->PageAuth('dataset'))
             return $this->Error(1, 'Access Denied');
 
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->modifyPermissions)
+            return $this->Error(1, 'Access Denied');
+
         return $this->Error(1000, 'Not implemented');
     }
 
@@ -1464,6 +1541,12 @@ class Rest
     public function DataSetImportCsv() {
         // Auth
         if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
             return $this->Error(1, 'Access Denied');
 
         return $this->Error(1000, 'Not implemented');

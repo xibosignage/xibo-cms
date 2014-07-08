@@ -299,9 +299,31 @@
 
 <h2>DataSetDataAdd</h2>
 <h3>Parameters</h3>
-
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
+<dl>
+    <dt>dataSetColumnId</dt>
+    <dd>The ID for this DataSet Column. Required.</dd>
+</dl>
+<dl>
+    <dt>rowNumber</dt>
+    <dd>The Row Number this data should be added with</dd>
+</dl>
+<dl>
+    <dt>value</dt>
+    <dd>The Value to Save in this Row/Column</dd>
+</dl>
 <h3>Response</h3>
-
+<pre>
+{
+    "datasetdata": {
+        "id": 1
+    },
+    "status": "ok"
+}
+</pre>
 <h3>Errors</h3>
 <p>General Errors Only.
 </p>
@@ -309,19 +331,59 @@
 
 <h2>DataSetDataEdit</h2>
 <h3>Parameters</h3>
-
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
+<dl>
+    <dt>dataSetColumnId</dt>
+    <dd>The ID for this DataSet Column. Required.</dd>
+</dl>
+<dl>
+    <dt>rowNumber</dt>
+    <dd>The Row Number this data should be added with</dd>
+</dl>
+<dl>
+    <dt>value</dt>
+    <dd>The Value to Save in this Row/Column</dd>
+</dl>
 <h3>Response</h3>
-
+<pre>
+{
+    "success": {
+        "id": true
+    },
+    "status": "ok"
+}
+</pre>
 <h3>Errors</h3>
 <p>General Errors Only.
 </p>
 
-
 <h2>DataSetDataDelete</h2>
 <h3>Parameters</h3>
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
+<dl>
+    <dt>dataSetColumnId</dt>
+    <dd>The ID for this DataSet Column. Required.</dd>
+</dl>
+<dl>
+    <dt>rowNumber</dt>
+    <dd>The Row Number this data should be added with</dd>
+</dl>
 
 <h3>Response</h3>
-
+<pre>
+{
+    "success": {
+        "id": true
+    },
+    "status": "ok"
+}
+</pre>
 <h3>Errors</h3>
 <p>General Errors Only.
 </p>

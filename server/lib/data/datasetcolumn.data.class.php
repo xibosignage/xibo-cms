@@ -226,8 +226,9 @@ class DataSetColumn extends Data
 
             $results = $sth->fetchAll();
 
+            // Check there are some columns returned
             if (count($results) <= 0)
-                throw new Exception(__('No columns'));
+                $this->ThrowError(__('No columns'));
 
             $rows = array();
 
@@ -250,7 +251,7 @@ class DataSetColumn extends Data
             Debug::LogEntry('error', $e->getMessage());
 
             if (!$this->IsError())
-                $this->SetError(1, $e->getMessage());
+                $this->SetError(1, __('Unknown Error'));
 
             return false;
         }

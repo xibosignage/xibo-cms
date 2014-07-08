@@ -33,6 +33,12 @@ class DataSetData extends Data
 
     public function Add($dataSetColumnId, $rowNumber, $value)
     {
+        if ($dataSetColumnId == 0 || $dataSetColumnId == '')
+            return $this->SetError(25001, __('Missing dataSetColumnId'));
+
+        if ($rowNumber == 0 || $rowNumber == '')
+            return $this->SetError(25001, __('Missing rowNumber'));
+
         try {
             $dbh = PDOConnect::init();
 
@@ -63,6 +69,12 @@ class DataSetData extends Data
 
     public function Edit($dataSetColumnId, $rowNumber, $value)
     {
+        if ($dataSetColumnId == 0 || $dataSetColumnId == '')
+            return $this->SetError(25001, __('Missing dataSetColumnId'));
+
+        if ($rowNumber == 0 || $rowNumber == '')
+            return $this->SetError(25001, __('Missing rowNumber'));
+        
         try {
             $dbh = PDOConnect::init();
 
@@ -115,6 +127,9 @@ class DataSetData extends Data
     }
 
     public function DeleteAll($dataSetId) {
+
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
 
         try {
             $dbh = PDOConnect::init();
@@ -174,6 +189,9 @@ class DataSetData extends Data
      * @param int $dataSetId The Data Set ID to Update
      */
     private function UpdateWatermark($dataSetId) {
+
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
         
         if (!$this->updateWatermark)
             return;
@@ -214,6 +232,9 @@ class DataSetData extends Data
     }
 
     public function ImportCsv($dataSetId, $csvFile, $spreadSheetMapping, $overwrite = false, $ignoreFirstRow = true) {
+
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
 
         $this->updateWatermark = false;
 
