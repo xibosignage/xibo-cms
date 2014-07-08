@@ -1389,6 +1389,8 @@ END;
         
         if ($isDisplaySpecific == 1)
             $SQL .= " AND displaygroup.IsDisplaySpecific = 1 ";
+        else
+            $SQL .= " AND displaygroup.IsDisplaySpecific = 0 ";
 
         $SQL .= " ORDER BY displaygroup.DisplayGroup ";
         
@@ -1466,6 +1468,11 @@ END;
         // Filter by Display ID?
         if (Kit::GetParam('displayid', $filter_by, _INT) != 0) {
             $SQL .= sprintf(' AND display.displayid = %d ', Kit::GetParam('displayid', $filter_by, _INT));
+        }
+
+        // Filter by Display Name?
+        if (Kit::GetParam('display', $filter_by, _STRING) != 0) {
+            $SQL .= sprintf(' AND display.display LIKE \'%s\' ', '%' . Kit::GetParam('display', $filter_by, _STRING) . '%');
         }
 
         // Exclude a group?

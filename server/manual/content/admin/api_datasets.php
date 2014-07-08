@@ -20,12 +20,12 @@
 </ul>
 
 <h2>DataSetList</h2>
-<p>Parameters:<br/>
-There are no parameters
-</p>
+<p>Get a list of DataSets that the authenticated user has view permission to see. Each DataSet will be returned with its details and a flag to indicate the permissions the user has against it.</p>
 
-<p>Response:<br>
-A list of DataSets. E.g.<br>
+<h3>Parameters</h3>
+<p>There are no parameters</p>
+
+<h3>Response</h3>
 <pre>
 {
     "dataset": [
@@ -55,13 +55,13 @@ A list of DataSets. E.g.<br>
 </pre>
 </p>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetAdd</h2>
-<p>Parameters:<br>
+<h3>Parameters</h3>
 <dl>
     <dt>dataSet</dt>
     <dd>The Name for this DataSet. Required.</dd>
@@ -72,8 +72,8 @@ General Errors Only.
 </dl>
 </p>
 
-<p>Response:
-<pre>
+<h3>Response</h3>
+<p><pre>
 {
     "dataset": {
         "id": "3"
@@ -83,13 +83,13 @@ General Errors Only.
 </pre>
 </p>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetEdit</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
     <dd>The ID for this DataSet. Required.</dd>
@@ -103,7 +103,7 @@ General Errors Only.
     <dd>A description for this DataSet.</dd>
 </dl>
 
-<p>Response:</p>
+<h3>Response</h3>
 <pre>
 {
     "success": {
@@ -113,19 +113,19 @@ General Errors Only.
 }
 </pre>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetDelete</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
     <dd>The ID for this DataSet. Required.</dd>
 </dl>
 
-<p>Response:</p>
+<h3>Response</h3>
 <pre>
 {
     "success": {
@@ -135,23 +135,23 @@ General Errors Only.
 }
 </pre>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetColumnList</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 
-<p>Response:</p>
+<h3>Response</h3>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetColumnAdd</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
     <dd>The ID for this DataSet. Required.</dd>
@@ -181,7 +181,7 @@ General Errors Only.
     <dd>A formula (in MySQL syntax) to apply to this column</dd>
 </dl>
 
-<p>Response:</p>
+<h3>Response</h3>
 <pre>
 {
     "datasetcolumn": {
@@ -190,13 +190,13 @@ General Errors Only.
     "status": "ok"
 }
 </pre>
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetColumnEdit</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
     <dd>The ID for this DataSet. Required.</dd>
@@ -229,99 +229,99 @@ General Errors Only.
     <dt>formula</dt>
     <dd>A formula (in MySQL syntax) to apply to this column</dd>
 </dl>
-<p>Response:</p>
+<h3>Response</h3>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetColumnDelete</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 
-<p>Response:</p>
+<h3>Response</h3>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetDataList</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 
-<p>Response:</p>
+<h3>Response</h3>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetDataAdd</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 
-<p>Response:</p>
+<h3>Response</h3>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetDataEdit</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 
-<p>Response:</p>
+<h3>Response</h3>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetDataDelete</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 
-<p>Response:</p>
+<h3>Response</h3>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetSecurityList</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 
-<p>Response:</p>
+<h3>Response</h3>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetSecurityAdd</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 
-<p>Response:</p>
+<h3>Response</h3>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetSecurityDelete</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 
-<p>Response:</p>
+<h3>Response</h3>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
 
 <h2>DataSetImportCsv</h2>
-<p>Parameters:</p>
+<h3>Parameters</h3>
 
-<p>Response:</p>
+<h3>Response</h3>
 
-<p>Errors:<br>
-General Errors Only.
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
 
