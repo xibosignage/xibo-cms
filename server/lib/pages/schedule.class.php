@@ -72,7 +72,7 @@ class scheduleDAO
         $groups = array();
         $displays = array();
 
-        foreach ($user->DisplayGroupList(0 /*IsDisplaySpecific*/, $filter_name) as $display) {
+        foreach ($user->DisplayGroupList(-1 /*IsDisplaySpecific*/, $filter_name) as $display) {
 
             $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIDs)) ? 'checked' : '';
 
@@ -1313,7 +1313,7 @@ HTML;
         setSession('scheduleEvent', 'DisplayName', $displayName);
         
         // Layout list
-        $displays = $user->DisplayGroupList(0, $displayName);
+        $displays = $user->DisplayGroupList(-1, $displayName);
         
         // Show a list of layouts we have permission to jump to
         $output = '<table class="table table-bordered">';

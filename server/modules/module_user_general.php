@@ -1387,10 +1387,8 @@ END;
             }
         }
         
-        if ($isDisplaySpecific == 1)
-            $SQL .= " AND displaygroup.IsDisplaySpecific = 1 ";
-        else
-            $SQL .= " AND displaygroup.IsDisplaySpecific = 0 ";
+        if ($isDisplaySpecific != -1)
+            $SQL .= sprintf(" AND displaygroup.IsDisplaySpecific = %d ", $isDisplaySpecific);
 
         $SQL .= " ORDER BY displaygroup.DisplayGroup ";
         
@@ -1471,8 +1469,18 @@ END;
         }
 
         // Filter by Display Name?
-        if (Kit::GetParam('display', $filter_by, _STRING) != 0) {
-            $SQL .= sprintf(' AND display.display LIKE \'%s\' ', '%' . Kit::GetParam('display', $filter_by, _STRING) . '%');
+        if (Kit::GetParam('display', $filter_by, _STRING) != '') {
+            // convert into a space delimited array
+            $names = explode(' ', Kit::GetParam('display', $filter_by, _STRING));
+
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (display.display NOT LIKE '%" . sprintf('%s', ltrim($this->db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (display.display LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
+            }
         }
 
         // Exclude a group?
