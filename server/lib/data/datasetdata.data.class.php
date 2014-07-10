@@ -74,7 +74,7 @@ class DataSetData extends Data
 
         if ($rowNumber == 0 || $rowNumber == '')
             return $this->SetError(25001, __('Missing rowNumber'));
-        
+
         try {
             $dbh = PDOConnect::init();
 
@@ -235,6 +235,9 @@ class DataSetData extends Data
 
         if ($dataSetId == 0 || $dataSetId == '')
             return $this->SetError(25001, __('Missing dataSetId'));
+
+        if (!file_exists($csvFile))
+            return $this->SetError(25001, __('CSV File does not exist'));
 
         $this->updateWatermark = false;
 

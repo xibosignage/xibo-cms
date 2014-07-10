@@ -1495,7 +1495,14 @@ class Rest
         if (!$auth->view)
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        Kit::ClassLoader('datasetgroupsecurity');
+        $security = new DataSetGroupSecurity($this->db);
+
+        if (!$results = $security->ListSecurity($dataSetId, $this->user->getGroupFromId($this->user->userid, true))) {
+            return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
+        }
+
+        return $this->Respond($this->NodeListFromArray($results, 'datasetgroupsecurity'));
     }
 
     /**
@@ -1513,7 +1520,19 @@ class Rest
         if (!$auth->modifyPermissions)
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $groupId = $this->GetParam('groupId', _INT);
+        $view = $this->GetParam('view', _INT);
+        $edit = $this->GetParam('edit', _INT);
+        $del = $this->GetParam('delete', _INT);
+
+        Kit::ClassLoader('datasetgroupsecurity');
+        $security = new DataSetGroupSecurity($this->db);
+
+        if (!$results = $security->Link($dataSetId, $groupId, $view, $edit, $del)) {
+            return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
+        }
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
@@ -1531,7 +1550,16 @@ class Rest
         if (!$auth->modifyPermissions)
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        $groupId = $this->GetParam('groupId', _INT);
+
+        Kit::ClassLoader('datasetgroupsecurity');
+        $security = new DataSetGroupSecurity($this->db);
+
+        if (!$results = $security->Unlink($dataSetId, $groupId)) {
+            return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
+        }
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     /**
@@ -1549,7 +1577,32 @@ class Rest
         if (!$auth->edit)
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        // Expect a file id
+        $fileId = $this->GetParam('fileId', _INT);
+
+        if (!$this->user->FileAuth($fileId))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('file');
+        $file = new File($this->db);
+
+        if (!$csvFileLocation = $file->GetPath($fileId))
+            return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
+
+        // Other parameters
+        $spreadSheetMapping = $this->GetParam('spreadSheetMapping', _STRING);
+        $overwrite = $this->GetParam('overwrite', _INT);
+        $ignoreFirstRow = $this->GetParam('ignoreFirstRow', _INT);
+
+        // Encode the 
+
+        Kit::ClassLoader('datasetdata');
+        $dataSetObject = new DataSetData($db);
+
+        if (!$dataSetObject->ImportCsv($dataSetId, $csvFileLocation, $spreadSheetMapping, ($overwrite == 1), ($ignoreFirstRow == 1)))
+            return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
     }
 
     public function DataTypeList() {

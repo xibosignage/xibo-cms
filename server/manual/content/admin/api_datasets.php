@@ -391,9 +391,42 @@
 
 <h2>DataSetSecurityList</h2>
 <h3>Parameters</h3>
-
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
 <h3>Response</h3>
-
+<pre>
+{
+    "datasetgroupsecurity": [
+        {
+            "groupid": "2",
+            "group": "Everyone",
+            "view": 0,
+            "edit": "1",
+            "del": 0,
+            "isuserspecific": 0
+        },
+        {
+            "groupid": "1",
+            "group": "Users",
+            "view": "1",
+            "edit": 0,
+            "del": 0,
+            "isuserspecific": 0
+        },
+        {
+            "groupid": "4",
+            "group": "username",
+            "view": 0,
+            "edit": 0,
+            "del": 0,
+            "isuserspecific": "1"
+        }
+    ],
+    "status": "ok"
+}
+</pre>
 <h3>Errors</h3>
 <p>General Errors Only.
 </p>
@@ -401,9 +434,35 @@
 
 <h2>DataSetSecurityAdd</h2>
 <h3>Parameters</h3>
-
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
+<dl>
+    <dt>groupId</dt>
+    <dd>The ID for this Group. Required.</dd>
+</dl>
+<dl>
+    <dt>view</dt>
+    <dd>View Permissions (0 = no, 1 = yes). Required.</dd>
+</dl>
+<dl>
+    <dt>edit</dt>
+    <dd>Edit Permissions (0 = no, 1 = yes). Required.</dd>
+</dl>
+<dl>
+    <dt>delete</dt>
+    <dd>Delete Permissions (0 = no, 1 = yes). Required.</dd>
+</dl>
 <h3>Response</h3>
-
+<pre>
+{
+    "success": {
+        "id": true
+    },
+    "status": "ok"
+}
+</pre>
 <h3>Errors</h3>
 <p>General Errors Only.
 </p>
@@ -411,9 +470,23 @@
 
 <h2>DataSetSecurityDelete</h2>
 <h3>Parameters</h3>
-
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
+<dl>
+    <dt>groupId</dt>
+    <dd>The ID for this Group. Required.</dd>
+</dl>
 <h3>Response</h3>
-
+<pre>
+{
+    "success": {
+        "id": true
+    },
+    "status": "ok"
+}
+</pre>
 <h3>Errors</h3>
 <p>General Errors Only.
 </p>
