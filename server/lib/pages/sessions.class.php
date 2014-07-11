@@ -45,8 +45,8 @@ class sessionsDAO
 		// Construct Filter Form
         if (Kit::IsFilterPinned('sessions', 'Filter')) {
             Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_type', Session::Get('user', 'filter_type'));
-            Theme::Set('filter_fromdt', Session::Get('user', 'filter_fromdt'));
+            Theme::Set('filter_type', Session::Get('sessions', 'filter_type'));
+            Theme::Set('filter_fromdt', Session::Get('sessions', 'filter_fromdt'));
         }
         else {
             Theme::Set('filter_type', 0);
@@ -84,7 +84,7 @@ class sessionsDAO
 		$SQL .= "WHERE 1 = 1 ";
 
 		if ($fromdt != '')
-			$SQL .= sprintf(" AND session_expiration < '%s' ", $starttime_timestamp);
+			$SQL .= sprintf(" AND session.LastAccessed < '%s' ", date("Y-m-d h:i:s", $starttime_timestamp));
 		
 		if ($type == "active")
 			$SQL .= " AND IsExpired = 0 ";
@@ -97,6 +97,8 @@ class sessionsDAO
 		
 		// Load results into an array
         $log = $db->GetArray($SQL);
+
+        Debug::LogEntry('audit', $SQL);
 
         if (!is_array($log)) 
         {
