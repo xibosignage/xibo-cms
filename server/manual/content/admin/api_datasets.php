@@ -19,7 +19,7 @@
     <li><a href="#DataSetImportCsv">DataSetImportCsv</a></li>
 </ul>
 
-<h2 id="DataSetList">DataSetList</h2>
+<h2 class="api-method-call-doc" id="DataSetList">DataSetList</h2>
 <p>Get a list of DataSets that the authenticated user has view permission to see. Each DataSet will be returned with its details and a flag to indicate the permissions the user has against it.</p>
 
 <h3>Parameters</h3>
@@ -60,7 +60,7 @@
 </p>
 
 
-<h2 id="DataSetAdd">DataSetAdd</h2>
+<h2 class="api-method-call-doc" id="DataSetAdd">DataSetAdd</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSet</dt>
@@ -88,7 +88,7 @@
 </p>
 
 
-<h2 id="DataSetEdit">DataSetEdit</h2>
+<h2 class="api-method-call-doc" id="DataSetEdit">DataSetEdit</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -118,7 +118,7 @@
 </p>
 
 
-<h2 id="DataSetDelete">DataSetDelete</h2>
+<h2 class="api-method-call-doc" id="DataSetDelete">DataSetDelete</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -140,7 +140,7 @@
 </p>
 
 
-<h2 id="DataSetColumnList">DataSetColumnList</h2>
+<h2 class="api-method-call-doc" id="DataSetColumnList">DataSetColumnList</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -169,7 +169,7 @@
 </p>
 
 
-<h2 id="DataSetColumnAdd">DataSetColumnAdd</h2>
+<h2 class="api-method-call-doc" id="DataSetColumnAdd">DataSetColumnAdd</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -214,7 +214,7 @@
 </p>
 
 
-<h2 id="DataSetColumnEdit">DataSetColumnEdit</h2>
+<h2 class="api-method-call-doc" id="DataSetColumnEdit">DataSetColumnEdit</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -263,7 +263,7 @@
 </p>
 
 
-<h2 id="DataSetColumnDelete">DataSetColumnDelete</h2>
+<h2 class="api-method-call-doc" id="DataSetColumnDelete">DataSetColumnDelete</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -287,17 +287,38 @@
 </p>
 
 
-<h2 id="DataSetDataList">DataSetDataList</h2>
+<h2 class="api-method-call-doc" id="DataSetDataList">DataSetDataList</h2>
 <h3>Parameters</h3>
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
 
 <h3>Response</h3>
+<pre>
+{
+    "datasetdata": [
+        {
+            "datasetcolumnid": "1",
+            "rownumber": "1",
+            "value": "Row1-1"
+        },
+        {
+            "datasetcolumnid": "1",
+            "rownumber": "2",
+            "value": "Row2-1"
+        }
+    ],
+    "status": "ok"
+}
+</pre>
 
 <h3>Errors</h3>
 <p>General Errors Only.
 </p>
 
 
-<h2 id="DataSetDataAdd">DataSetDataAdd</h2>
+<h2 class="api-method-call-doc" id="DataSetDataAdd">DataSetDataAdd</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -329,7 +350,7 @@
 </p>
 
 
-<h2 id="DataSetDataEdit">DataSetDataEdit</h2>
+<h2 class="api-method-call-doc" id="DataSetDataEdit">DataSetDataEdit</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -360,7 +381,7 @@
 <p>General Errors Only.
 </p>
 
-<h2 id="DataSetDataDelete">DataSetDataDelete</h2>
+<h2 class="api-method-call-doc" id="DataSetDataDelete">DataSetDataDelete</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -389,7 +410,7 @@
 </p>
 
 
-<h2 id="DataSetSecurityList">DataSetSecurityList</h2>
+<h2 class="api-method-call-doc" id="DataSetSecurityList">DataSetSecurityList</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -432,7 +453,7 @@
 </p>
 
 
-<h2 id="DataSetSecurityAdd">DataSetSecurityAdd</h2>
+<h2 class="api-method-call-doc" id="DataSetSecurityAdd">DataSetSecurityAdd</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -468,7 +489,7 @@
 </p>
 
 
-<h2 id="DataSetSecurityDelete">DataSetSecurityDelete</h2>
+<h2 class="api-method-call-doc" id="DataSetSecurityDelete">DataSetSecurityDelete</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -492,7 +513,7 @@
 </p>
 
 
-<h2 id="DataSetImportCsv">DataSetImportCsv</h2>
+<h2 class="api-method-call-doc" id="DataSetImportCsv">DataSetImportCsv</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -529,21 +550,65 @@
 <p>General Errors Only.
 </p>
 
-<h2 id="DataTypeList">DataTypeList</h2>
+<h2 class="api-method-call-doc" id="DataTypeList">DataTypeList</h2>
 <h3>Parameters</h3>
 <p>None</p>
 
 <h3>Response</h3>
+<pre>
+{
+    "datatype": [
+        {
+            "datatypeid": "1",
+            "0": "1",
+            "datatype": "String",
+            "1": "String"
+        },
+        {
+            "datatypeid": "2",
+            "0": "2",
+            "datatype": "Number",
+            "1": "Number"
+        },
+        {
+            "datatypeid": "3",
+            "0": "3",
+            "datatype": "Date",
+            "1": "Date"
+        }
+    ],
+    "status": "ok"
+}
+</pre>
 
 <h3>Errors</h3>
 <p>General Errors Only.
 </p>
 
-<h2 id="DataSetColumnTypeList">DataSetColumnTypeList</h2>
+<h2 class="api-method-call-doc" id="DataSetColumnTypeList">DataSetColumnTypeList</h2>
 <h3>Parameters</h3>
 <p>None</p>
 
 <h3>Response</h3>
+<pre>
+{
+    "datasetcolumntype": [
+        {
+            "datasetcolumntypeid": "1",
+            "0": "1",
+            "datasetcolumntype": "Value",
+            "1": "Value"
+        },
+        {
+            "datasetcolumntypeid": "2",
+            "0": "2",
+            "datasetcolumntype": "Formula",
+            "1": "Formula"
+        }
+    ],
+    "status": "ok"
+}
+</pre>
 
 <h3>Errors</h3>
 <p>General Errors Only.

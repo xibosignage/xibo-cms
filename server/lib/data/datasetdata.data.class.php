@@ -31,6 +31,58 @@ class DataSetData extends Data
         parent::__construct($db);
     }
 
+    /**
+     * List all data for this dataset
+     * @param int $dataSetId The DataSet ID
+     */
+    public function GetData($dataSetId) {
+
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT datasetdata.DataSetColumnID, datasetdata.RowNumber, datasetdata.Value 
+                  FROM datasetdata
+                    INNER JOIN datasetcolumn
+                    ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID
+                 WHERE datasetcolumn.DataSetID = :dataset_id');
+
+            $sth->execute(array('dataset_id' => $dataSetId));
+
+            $results = $sth->fetchAll();
+
+            // Check there are some columns returned
+            if (count($results) <= 0)
+                $this->ThrowError(__('No data'));
+
+            $rows = array();
+
+            foreach($results as $row) {
+
+                $col['datasetcolumnid'] = Kit::ValidateParam($row['DataSetColumnID'], _INT);
+                $col['rownumber'] = Kit::ValidateParam($row['RowNumber'], _INT);
+                $col['value'] = Kit::ValidateParam($row['Value'], _STRING);
+
+                $rows[] = $col;
+            }
+
+            Debug::LogEntry('audit', sprintf('Returning %d columns.', count($rows)), 'DataSetColumn', 'GetData');
+          
+            return $rows;          
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
     public function Add($dataSetColumnId, $rowNumber, $value)
     {
         if ($dataSetColumnId == 0 || $dataSetColumnId == '')

@@ -1388,7 +1388,12 @@ class Rest
         if (!$auth->view)
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        Kit::ClassLoader('datasetdata');
+        $dataSetObject = new DataSetData($this->db);
+        if (!$columns = $dataSetObject->GetData($dataSetId))
+            return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
+
+        return $this->Respond($this->NodeListFromArray($columns, 'datasetdata'));
     }
 
     /**
