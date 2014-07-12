@@ -22,7 +22,7 @@
 var LOG_LEVEL;
 
 /* String: Client Version */
-var VERSION = "1.6.0";
+var VERSION = "1.6.2";
 
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
@@ -333,6 +333,10 @@ function region(parent, id, xml) {
         
         if (oldMedia) {
             $("#" + oldMedia.containerName).css("display", "none");
+
+            if (oldMedia.mediaType == "video") {
+                $("#" + oldMedia.containerName + "-vid").get(0).pause();
+            }
         }
         
         $("#" + newMedia.containerName).css("display", "block");
