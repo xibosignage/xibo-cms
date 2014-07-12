@@ -1,25 +1,25 @@
 <h1>DataSets</h1>
 <p>The following API calls apply to DataSets.</p>
 <ul>
-    <li>DataSetList</li>
-    <li>DataSetAdd</li>
-    <li>DataSetEdit</li>
-    <li>DataSetDelete</li>
-    <li>DataSetColumnList</li>
-    <li>DataSetColumnAdd</li>
-    <li>DataSetColumnEdit</li>
-    <li>DataSetColumnDelete</li>
-    <li>DataSetDataList</li>
-    <li>DataSetDataAdd</li>
-    <li>DataSetDataEdit</li>
-    <li>DataSetDataDelete</li>
-    <li>DataSetSecurityList</li>
-    <li>DataSetSecurityAdd</li>
-    <li>DataSetSecurityDelete</li>
-    <li>DataSetImportCsv</li>
+    <li><a href="#DataSetList">DataSetList</a></li>
+    <li><a href="#DataSetAdd">DataSetAdd</a></li>
+    <li><a href="#DataSetEdit">DataSetEdit</a></li>
+    <li><a href="#DataSetDelete">DataSetDelete</a></li>
+    <li><a href="#DataSetColumnList">DataSetColumnList</a></li>
+    <li><a href="#DataSetColumnAdd">DataSetColumnAdd</a></li>
+    <li><a href="#DataSetColumnEdit">DataSetColumnEdit</a></li>
+    <li><a href="#DataSetColumnDelete">DataSetColumnDelete</a></li>
+    <li><a href="#DataSetDataList">DataSetDataList</a></li>
+    <li><a href="#DataSetDataAdd">DataSetDataAdd</a></li>
+    <li><a href="#DataSetDataEdit">DataSetDataEdit</a></li>
+    <li><a href="#DataSetDataDelete">DataSetDataDelete</a></li>
+    <li><a href="#DataSetSecurityList">DataSetSecurityList</a></li>
+    <li><a href="#DataSetSecurityAdd">DataSetSecurityAdd</a></li>
+    <li><a href="#DataSetSecurityDelete">DataSetSecurityDelete</a></li>
+    <li><a href="#DataSetImportCsv">DataSetImportCsv</a></li>
 </ul>
 
-<h2>DataSetList</h2>
+<h2 id="DataSetList">DataSetList</h2>
 <p>Get a list of DataSets that the authenticated user has view permission to see. Each DataSet will be returned with its details and a flag to indicate the permissions the user has against it.</p>
 
 <h3>Parameters</h3>
@@ -60,7 +60,7 @@
 </p>
 
 
-<h2>DataSetAdd</h2>
+<h2 id="DataSetAdd">DataSetAdd</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSet</dt>
@@ -88,7 +88,7 @@
 </p>
 
 
-<h2>DataSetEdit</h2>
+<h2 id="DataSetEdit">DataSetEdit</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -118,7 +118,7 @@
 </p>
 
 
-<h2>DataSetDelete</h2>
+<h2 id="DataSetDelete">DataSetDelete</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -140,7 +140,7 @@
 </p>
 
 
-<h2>DataSetColumnList</h2>
+<h2 id="DataSetColumnList">DataSetColumnList</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -169,7 +169,7 @@
 </p>
 
 
-<h2>DataSetColumnAdd</h2>
+<h2 id="DataSetColumnAdd">DataSetColumnAdd</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -214,7 +214,7 @@
 </p>
 
 
-<h2>DataSetColumnEdit</h2>
+<h2 id="DataSetColumnEdit">DataSetColumnEdit</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -263,7 +263,7 @@
 </p>
 
 
-<h2>DataSetColumnDelete</h2>
+<h2 id="DataSetColumnDelete">DataSetColumnDelete</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -287,7 +287,7 @@
 </p>
 
 
-<h2>DataSetDataList</h2>
+<h2 id="DataSetDataList">DataSetDataList</h2>
 <h3>Parameters</h3>
 
 <h3>Response</h3>
@@ -297,7 +297,7 @@
 </p>
 
 
-<h2>DataSetDataAdd</h2>
+<h2 id="DataSetDataAdd">DataSetDataAdd</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -329,7 +329,7 @@
 </p>
 
 
-<h2>DataSetDataEdit</h2>
+<h2 id="DataSetDataEdit">DataSetDataEdit</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -360,7 +360,7 @@
 <p>General Errors Only.
 </p>
 
-<h2>DataSetDataDelete</h2>
+<h2 id="DataSetDataDelete">DataSetDataDelete</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -389,7 +389,7 @@
 </p>
 
 
-<h2>DataSetSecurityList</h2>
+<h2 id="DataSetSecurityList">DataSetSecurityList</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -432,7 +432,7 @@
 </p>
 
 
-<h2>DataSetSecurityAdd</h2>
+<h2 id="DataSetSecurityAdd">DataSetSecurityAdd</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -468,7 +468,7 @@
 </p>
 
 
-<h2>DataSetSecurityDelete</h2>
+<h2 id="DataSetSecurityDelete">DataSetSecurityDelete</h2>
 <h3>Parameters</h3>
 <dl>
     <dt>dataSetId</dt>
@@ -492,16 +492,44 @@
 </p>
 
 
-<h2>DataSetImportCsv</h2>
+<h2 id="DataSetImportCsv">DataSetImportCsv</h2>
 <h3>Parameters</h3>
+<dl>
+    <dt>dataSetId</dt>
+    <dd>The ID for this DataSet. Required.</dd>
+</dl>
+<dl>
+    <dt>fileId</dt>
+    <dd>The ID of the CSV file uploaded by LibraryMediaFileUpload. Required.</dd>
+</dl>
+<dl>
+    <dt>spreadSheetMapping</dt>
+    <dd>A JSON object that represents the column mapping. <code>{"zero based column number":"dataSetColumnId"}</code>. For example: <code>{"0":"1","2":"5"}</code> would be CSV column 1, dataSetColumnId 1 and CSV column 1, dataSetColumnId 5.</dd>
+</dl>
+<dl>
+    <dt>overwrite</dt>
+    <dd>Should the DataSet be cleared first. (0 = No, 1 = Yes) Required.</dd>
+</dl>
+<dl>
+    <dt>ignoreFirstRow</dt>
+    <dd>Should the first row of the CSV file be treated as a Header and ignored. (0 = No, 1 = Yes) Required.</dd>
+</dl>
 
 <h3>Response</h3>
+<pre>
+{
+    "success": {
+        "id": true
+    },
+    "status": "ok"
+}
+</pre>
 
 <h3>Errors</h3>
 <p>General Errors Only.
 </p>
 
-<h2>DataTypeList</h2>
+<h2 id="DataTypeList">DataTypeList</h2>
 <h3>Parameters</h3>
 <p>None</p>
 
@@ -511,7 +539,7 @@
 <p>General Errors Only.
 </p>
 
-<h2>DataSetColumnTypeList</h2>
+<h2 id="DataSetColumnTypeList">DataSetColumnTypeList</h2>
 <h3>Parameters</h3>
 <p>None</p>
 

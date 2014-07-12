@@ -239,6 +239,11 @@ class DataSetData extends Data
         if (!file_exists($csvFile))
             return $this->SetError(25001, __('CSV File does not exist'));
 
+        if (!is_array($spreadSheetMapping) || count($spreadSheetMapping) <= 0)
+            return $this->SetError(25001, __('Missing spreadSheetMapping'));
+
+        Debug::LogEntry('audit', 'spreadSheetMapping: ' . json_encode($spreadSheetMapping), 'DataSetData', 'ImportCsv');
+        
         $this->updateWatermark = false;
 
         try {

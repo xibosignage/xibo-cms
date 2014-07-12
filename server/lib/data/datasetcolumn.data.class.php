@@ -232,7 +232,7 @@ class DataSetColumn extends Data
 
             $rows = array();
 
-            foreach($sth->fetchAll() as $row) {
+            foreach($results as $row) {
 
                 $col['datasetcolumnid'] = Kit::ValidateParam($row['DataSetColumnID'], _INT);
                 $col['heading'] = Kit::ValidateParam($row['Heading'], _STRING);
@@ -243,6 +243,8 @@ class DataSetColumn extends Data
 
                 $rows[] = $col;
             }
+
+            Debug::LogEntry('audit', sprintf('Returning %d columns.', count($rows)), 'DataSetColumn', 'GetColumns');
           
             return $rows;
         }

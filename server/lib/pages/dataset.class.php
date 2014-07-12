@@ -1106,8 +1106,10 @@ END;
 
             $dataSetColumnId = Kit::ValidateParam($row['DataSetColumnID'], _INT);
             $spreadSheetColumn = Kit::GetParam('csvImport_' . $dataSetColumnId, _POST, _INT);
-            
-            $spreadSheetMapping[($spreadSheetColumn - 1)] = $dataSetColumnId;
+
+            // If it has been left blank, then skip
+            if ($spreadSheetColumn != 0)
+                $spreadSheetMapping[($spreadSheetColumn - 1)] = $dataSetColumnId;
         }
 
         $dataSetObject = new DataSetData($db);

@@ -157,7 +157,7 @@ SQL;
         }
 
         $displayGroups = $this->user->DisplayGroupList(0);
-        $displayGroups[] = array('displaygroupid' => '0', 'displaygroup' => 'All');
+        array_unshift($displayGroups, array('displaygroupid' => '0', 'displaygroup' => 'All'));
 
         Theme::Set('displaygroup_field_list', $displayGroups);
 

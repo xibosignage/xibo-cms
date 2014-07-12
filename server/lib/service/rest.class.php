@@ -257,7 +257,7 @@ class Rest
      */
     public function LibraryMediaList()
     {
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         $media = $this->user->MediaList();
@@ -276,7 +276,7 @@ class Rest
     public function LibraryMediaFileUpload()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('file');
@@ -330,7 +330,7 @@ class Rest
     public function LibraryMediaAdd()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('Media');
@@ -360,7 +360,7 @@ class Rest
      */
     public function LibraryMediaEdit()
     {      
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('Media');
@@ -388,7 +388,7 @@ class Rest
      */
     public function LibraryMediaRetire()
     {
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('Media');
@@ -410,7 +410,7 @@ class Rest
      */
     public function LibraryMediaDelete()
     {
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('Media');
@@ -434,7 +434,7 @@ class Rest
     public function LibraryMediaFileRevise()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('Media');
@@ -1164,7 +1164,7 @@ class Rest
     public function ModuleList()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('Media');
@@ -1416,7 +1416,7 @@ class Rest
         $data = new DataSetData($this->db);
 
         if (!$id = $data->Add($dataSetColumnId, $rowNumber, $value))
-            return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
+            return $this->Error($data->GetErrorNumber(), $data->GetErrorMessage());
 
         return $this->Respond($this->ReturnId('datasetdata', $id));
     }
@@ -1446,7 +1446,7 @@ class Rest
         $data = new DataSetData($this->db);
 
         if (!$data->Edit($dataSetColumnId, $rowNumber, $value))
-            return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
+            return $this->Error($data->GetErrorNumber(), $data->GetErrorMessage());
 
         return $this->Respond($this->ReturnId('success', true));
     }
@@ -1475,7 +1475,7 @@ class Rest
         $data = new DataSetData($this->db);
 
         if (!$id = $data->Delete($dataSetColumnId, $rowNumber))
-            return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
+            return $this->Error($data->GetErrorNumber(), $data->GetErrorMessage());
 
         return $this->Respond($this->ReturnId('datasetdata', $id));
     }
@@ -1587,20 +1587,22 @@ class Rest
         $file = new File($this->db);
 
         if (!$csvFileLocation = $file->GetPath($fileId))
-            return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
+            return $this->Error($file->GetErrorNumber(), $file->GetErrorMessage());
 
         // Other parameters
-        $spreadSheetMapping = $this->GetParam('spreadSheetMapping', _STRING);
+        // Filter using HTML string because _STRING strips some of the JSON characters.
+        $spreadSheetMapping = $this->GetParam('spreadSheetMapping', _HTMLSTRING);
         $overwrite = $this->GetParam('overwrite', _INT);
         $ignoreFirstRow = $this->GetParam('ignoreFirstRow', _INT);
 
-        // Encode the 
+        // Convert the spread sheet mapping into an Array
+        $spreadSheetMapping = json_decode($spreadSheetMapping, true);
 
         Kit::ClassLoader('datasetdata');
-        $dataSetObject = new DataSetData($db);
+        $dataSetObject = new DataSetData($this->db);
 
         if (!$dataSetObject->ImportCsv($dataSetId, $csvFileLocation, $spreadSheetMapping, ($overwrite == 1), ($ignoreFirstRow == 1)))
-            return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
+            return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
 
         return $this->Respond($this->ReturnId('success', true));
     }
