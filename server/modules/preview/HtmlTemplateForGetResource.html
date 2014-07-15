@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <title>Xibo Open Source Digital Signage</title>
-        <meta http-equiv="X-UA-Compatible" content="IE=9" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=[[ViewPortWidth]], user-scalable=no, initial-scale=1.0, target-densitydpi=device-dpi" />
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<!-- Copyright 2006-2014 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
@@ -16,6 +16,8 @@
             	margin-top: 0;
             }
         </style>
+    
+
     <script type="text/javascript">
 /*! jQuery v1.9.1 | (c) 2005, 2012 jQuery Foundation, Inc. | jquery.org/license
 //@ sourceMappingURL=jquery.min.map
@@ -84,7 +86,7 @@ return(!i||i!==r&&!b.contains(r,i))&&(e.type=o.origType,n=o.handler.apply(this,a
 * You should have received a copy of the GNU Affero General Public License
 * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 */
-jQuery.fn.extend({xiboRender:function(e,t){var n={type:"ticker",direction:"single",duration:"50",durationIsPerItem:false,numItems:0,takeItemsFrom:"start",itemsPerPage:0,scrollSpeed:"2",scaleMode:"scale",previewWidth:0,previewHeight:0,scaleOverride:0};var e=$.extend({},n,e);if(e.previewWidth==0&&e.previewHeight==0){e.width=$(window).width();e.height=$(window).height()}else{e.width=e.previewWidth;e.height=e.previewHeight}e.scaleFactor=Math.min(e.width/e.originalWidth,e.height/e.originalHeight);if(e.scaleOverride!=0){e.originalWidth=e.previewWidth;e.originalHeight=e.previewHeight;e.scaleFactor=e.scaleOverride}this.each(function(){$(this).css({width:e.originalWidth,height:e.originalHeight});if(e.type=="ticker"){if(e.sourceid==undefined){console.error("Source ID undefined - assuming 1");e.sourceid=1}if(e.sourceid==1){if(e.takeItemsFrom=="end"){t.reverse()}if(e.numItems>t.length||e.numItems==0)e.numItems=t.length;t=t.slice(0,e.numItems);if(e.takeItemsFrom=="end"){t.reverse()}}else{e.numItems=t.length}}var n=e.numItems;var r=e.itemsPerPage>0?Math.ceil(e.numItems/e.itemsPerPage):e.numItems;var i=1;var s=this;for(var o=0;o<t.length;o++){if(e.direction=="single"&&e.itemsPerPage>0&&(i>=e.itemsPerPage||o==0)){s=$("<div/>").addClass("page").appendTo(this);i=0}$("<div/>").addClass("item").html(t[o]).appendTo(s);i++}if(e.scaleMode=="fit"){$("*",this).css("font-size","");$(this).fitText(1.75)}$(this).css({transform:"scale("+e.scaleFactor+")","transform-origin":"0 0"});var u=false;if(e.direction=="single"){var a=e.itemsPerPage>0?"> .page":"> .item";var f=e.itemsPerPage>0?r:n;var l=e.durationIsPerItem?e.duration:e.duration/f;$(this).cycle({fx:e.transition,timeout:l*1e3,slides:a})}else if(e.direction=="left"||e.direction=="right"){u=true;$(" .item",this).css({display:"inline","padding-left":"4px"});$(" .item p",this).css({display:"inline"})}else if(e.direction=="up"||e.direction=="down"){u=true}if(u){var c=$("<div/>").addClass("scroll").attr({scrollamount:e.scrollSpeed,scaleFactor:e.scaleFactor,behaviour:"scroll",direction:e.direction,height:e.originalHeight,width:e.originalWidth});$(this).wrapInner(c);$(this).find(".scroll").marquee()}if(e.direction=="up"||e.direction=="down"){$(this).children().children().css("white-space","normal")}})},dataSetRender:function(e){if(e===undefined||e===null){e={duration:5,transition:"fade",rowsPerPage:0,previewWidth:0,previewHeight:0,scaleOverride:0}}$(this).each(function(){if(e.previewWidth==0&&e.previewHeight==0){e.width=$(window).width();e.height=$(window).height()}else{e.width=e.previewWidth;e.height=e.previewHeight}e.scaleFactor=Math.min(e.width/e.originalWidth,e.height/e.originalHeight);if(e.scaleOverride!=0){e.originalWidth=e.previewWidth;e.originalHeight=e.previewHeight;e.scaleFactor=e.scaleOverride}$("body").css({width:e.originalWidth,height:e.originalHeight,transform:"scale("+e.scaleFactor+")","transform-origin":"0 0"});var t=$(this).attr("totalPages");if(e.rowsPerPage>0){$(this).cycle({fx:e.transition,timeout:e.duration*1e3/t,slides:"> table"})}})}});if(!window.console){(function(){var e=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"],t,n=e.length;window.console={};for(t=0;t<n;t++){window.console[e[t]]=function(){}}})()}
+jQuery.fn.extend({xiboRender:function(e,t){var n={type:"ticker",direction:"single",duration:"50",durationIsPerItem:false,numItems:0,takeItemsFrom:"start",itemsPerPage:0,scrollSpeed:"2",scaleMode:"scale",previewWidth:0,previewHeight:0,scaleOverride:0};var e=$.extend({},n,e);if(e.previewWidth==0&&e.previewHeight==0){e.width=$(window).width();e.height=$(window).height()}else{e.width=e.previewWidth;e.height=e.previewHeight}e.scaleFactor=Math.min(e.width/e.originalWidth,e.height/e.originalHeight);if(e.scaleOverride!=0){e.originalWidth=e.previewWidth;e.originalHeight=e.previewHeight;e.scaleFactor=e.scaleOverride}this.each(function(){$(this).css({width:e.originalWidth,height:e.originalHeight});if(e.type=="ticker"){if(e.sourceid==undefined){console.error("Source ID undefined - assuming 1");e.sourceid=1}if(e.sourceid==1){if(e.takeItemsFrom=="end"){t.reverse()}if(e.numItems>t.length||e.numItems==0)e.numItems=t.length;t=t.slice(0,e.numItems);if(e.takeItemsFrom=="end"){t.reverse()}}else{e.numItems=t.length}}var n=e.numItems;var r=e.itemsPerPage>0?Math.ceil(e.numItems/e.itemsPerPage):e.numItems;var i=1;var s=this;for(var o=0;o<t.length;o++){if(e.direction=="single"&&e.itemsPerPage>0&&(i>=e.itemsPerPage||o==0)){s=$("<div/>").addClass("page").appendTo(this);i=0}$("<div/>").addClass("item").html(t[o]).appendTo(s);i++}if(e.scaleMode=="fit"){$("*",this).css("font-size","");$(this).fitText(1.75)}if($("body").hasClass("ie7")||$("body").hasClass("ie8")){$(this).css({zoom:e.scaleFactor})}else{$(this).css({transform:"scale("+e.scaleFactor+")","transform-origin":"0 0"})}var u=false;if(e.direction=="single"){var a=e.itemsPerPage>0?"> .page":"> .item";var f=e.itemsPerPage>0?r:n;var l=e.durationIsPerItem?e.duration:e.duration/f;$(this).cycle({fx:e.transition,timeout:l*1e3,slides:a})}else if(e.direction=="left"||e.direction=="right"){u=true;$(" .item",this).css({display:"inline","padding-left":"4px"});$(" .item p",this).css({display:"inline"})}else if(e.direction=="up"||e.direction=="down"){u=true}if(u){var c=$("<div/>").addClass("scroll").attr({scrollamount:e.scrollSpeed,scaleFactor:e.scaleFactor,behaviour:"scroll",direction:e.direction,height:e.originalHeight,width:e.originalWidth});$(this).wrapInner(c);$(this).find(".scroll").marquee()}if(e.direction=="up"||e.direction=="down"){$(this).children().children().css("white-space","normal")}})},dataSetRender:function(e){if(e===undefined||e===null){e={duration:5,transition:"fade",rowsPerPage:0,previewWidth:0,previewHeight:0,scaleOverride:0}}$(this).each(function(){if(e.previewWidth==0&&e.previewHeight==0){e.width=$(window).width();e.height=$(window).height()}else{e.width=e.previewWidth;e.height=e.previewHeight}e.scaleFactor=Math.min(e.width/e.originalWidth,e.height/e.originalHeight);if(e.scaleOverride!=0){e.originalWidth=e.previewWidth;e.originalHeight=e.previewHeight;e.scaleFactor=e.scaleOverride}$("body").css({width:e.originalWidth,height:e.originalHeight});if($("body").hasClass("ie7")||$("body").hasClass("ie8")){$("body").css({zoom:e.scaleFactor})}else{$("body").css({transform:"scale("+e.scaleFactor+")","transform-origin":"0 0"})}var t=$(this).attr("totalPages");if(e.rowsPerPage>0){$(this).cycle({fx:e.transition,timeout:e.duration*1e3/t,slides:"> table"})}})}});if(!window.console){(function(){var e=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"],t,n=e.length;window.console={};for(t=0;t<n;t++){window.console[e[t]]=function(){}}})()}
         </script>
         <!--script type="text/javascript" src="modules/preview/xibo-text-render.js"></script-->
 
@@ -142,8 +144,13 @@ jQuery.fn.extend({xiboRender:function(e,t){var n={type:"ticker",direction:"singl
 			}
         </script>
         </head>
-<body>
+    <!--[if lt IE 7 ]><body class="ie6"><![endif]-->
+    <!--[if IE 7 ]><body class="ie7"><![endif]-->
+    <!--[if IE 8 ]><body class="ie8"><![endif]-->
+    <!--[if IE 9 ]><body class="ie9"><![endif]-->
+    <!--[if (gt IE 9)|!(IE)]><!--> <body> <!--<![endif]-->
     <!--[[[BODYCONTENT]]]-->
-</body>
+    </body>
+    
 </html>
 <!--[[[CONTROLMETA]]]-->

@@ -173,10 +173,18 @@ jQuery.fn.extend({
             }
 
             // Now make it size correctly
-            $(this).css({
-                "transform": "scale(" + options.scaleFactor + ")",
-                "transform-origin": "0 0"
-            });
+            // What IE are we?
+            if ($("body").hasClass('ie7') || $("body").hasClass('ie8')) {
+                $(this).css({
+                    "zoom": options.scaleFactor
+                });
+            }
+            else {
+                $(this).css({
+                    "transform": "scale(" + options.scaleFactor + ")",
+                    "transform-origin": "0 0"
+                });
+            }
             
             // 4th objective - move the items around, start the timer
             // settings involved:
@@ -285,10 +293,21 @@ jQuery.fn.extend({
 
             $("body").css({
                 width: options.originalWidth,
-                height: options.originalHeight,
-                "transform": "scale(" + options.scaleFactor + ")",
-                "transform-origin": "0 0"
+                height: options.originalHeight
             });
+
+            // What IE are we?
+            if ($("body").hasClass('ie7') || $("body").hasClass('ie8')) {
+                $("body").css({
+                    "zoom": options.scaleFactor
+                });
+            }
+            else {
+                $("body").css({
+                    "transform": "scale(" + options.scaleFactor + ")",
+                    "transform-origin": "0 0"
+                });
+            }
 
             var numberItems = $(this).attr("totalPages");
 
