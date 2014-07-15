@@ -34,7 +34,8 @@ jQuery.fn.extend({
             "scrollSpeed": "2",
             "scaleMode": "scale",
             "previewWidth": 0,
-            "previewHeight": 0
+            "previewHeight": 0,
+            "scaleOverride": 0
         };
 
         var options = $.extend({}, defaults, options);
@@ -45,12 +46,21 @@ jQuery.fn.extend({
             options.height = $(window).height();
         }
         else {
+            // We are a preview
             options.width = options.previewWidth;
             options.height = options.previewHeight;
         }
 
         // Scale Factor
         options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
+
+        // Are we overriding the scale factor?
+        // We would only do this from the layout designer
+        if (options.scaleOverride != 0) {
+            options.originalWidth = options.previewWidth;
+            options.originalHeight = options.previewHeight;
+            options.scaleFactor = options.scaleOverride;
+        }
 
         //console.log("Scale Factor: " + options.scaleFactor);
 
@@ -163,10 +173,18 @@ jQuery.fn.extend({
             }
 
             // Now make it size correctly
-            $(this).css({
-                "transform": "scale(" + options.scaleFactor + ")",
-                "transform-origin": "0 0"
-            });
+            // What IE are we?
+            if ($("body").hasClass('ie7') || $("body").hasClass('ie8')) {
+                $(this).css({
+                    "zoom": options.scaleFactor
+                });
+            }
+            else {
+                $(this).css({
+                    "transform": "scale(" + options.scaleFactor + ")",
+                    "transform-origin": "0 0"
+                });
+            }
             
             // 4th objective - move the items around, start the timer
             // settings involved:
@@ -245,7 +263,8 @@ jQuery.fn.extend({
                 transition: "fade",
                 rowsPerPage: 0,
                 "previewWidth": 0,
-                "previewHeight": 0
+                "previewHeight": 0,
+                "scaleOverride": 0
             };
         }
 
@@ -255,20 +274,40 @@ jQuery.fn.extend({
             if (options.previewWidth == 0 && options.previewHeight == 0) {
                 options.width = $(window).width();
                 options.height = $(window).height();
-                options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
             }
             else {
                 options.width = options.previewWidth;
                 options.height = options.previewHeight;
-                options.scaleFactor = 1;
+            }
+
+            // Scale Factor
+            options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
+
+            // Are we overriding the scale factor?
+            // We would only do this from the layout designer
+            if (options.scaleOverride != 0) {
+                options.originalWidth = options.previewWidth;
+                options.originalHeight = options.previewHeight;
+                options.scaleFactor = options.scaleOverride;
             }
 
             $("body").css({
                 width: options.originalWidth,
-                height: options.originalHeight,
-                "transform": "scale(" + options.scaleFactor + ")",
-                "transform-origin": "0 0"
+                height: options.originalHeight
             });
+
+            // What IE are we?
+            if ($("body").hasClass('ie7') || $("body").hasClass('ie8')) {
+                $("body").css({
+                    "zoom": options.scaleFactor
+                });
+            }
+            else {
+                $("body").css({
+                    "transform": "scale(" + options.scaleFactor + ")",
+                    "transform-origin": "0 0"
+                });
+            }
 
             var numberItems = $(this).attr("totalPages");
 

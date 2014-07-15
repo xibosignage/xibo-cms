@@ -11,21 +11,37 @@
 
 <p>Transactions related to the Library
 </p>
-<h3> <span class="mw-headline" id="LibraryMediaFileUpload"> LibraryMediaFileUpload </span></h3>
-<p>Parameters
-</p>
-<ul><li> FileID - Null for 1st call
-</li><li> Chunk Offset
-</li><li> Check Sum (MD5)
-</li></ul>
-<p>Response
-</p>
-<ul><li> FileID
-</li><li> Offset (file length)
-</li></ul>
-<p>Errors
-</p>
-<ul><li> 1 - Access Denied
+
+
+<h2 id="LibraryMediaFileUpload">LibraryMediaFileUpload</h2>
+<h3>Parameters</h3>
+<dl>
+    <dt>fileId</dt>
+    <dd>The ID for this File. NULL for the first call, required thereafter.</dd>
+</dl>
+<dl>
+    <dt>checksum</dt>
+    <dd>A MD5 checksum for the payload</dd>
+</dl>
+<dl>
+    <dt>payload</dt>
+    <dd>A base64 encoded string representing the file content.</dd>
+</dl>
+
+<h3>Response</h3>
+<pre>
+{
+	"file": {
+		"id": "3",
+		"offset": 164
+	},
+	"status": "ok"
+}
+</pre>
+
+<h3>Errors</h3>
+<p>
+	<ul><li> 1 - Access Denied
 </li><li> 2 - Payload Checksum doesn't match provided checksum
 </li><li> 3 - Unable to add File record to the Database
 </li><li> 4 - Library location does not exist
@@ -33,6 +49,8 @@
 </li><li> 6 - Unable to write to file in the library location
 </li><li> 7 - File does not exist
 </li></ul>
+</p>
+
 <h3> <span class="mw-headline" id="LibraryMediaAdd"> LibraryMediaAdd </span></h3>
 <p>Parameters
 </p>

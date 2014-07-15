@@ -87,3 +87,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         </div>
 	</div>
 </div>
+<script type="text/javascript">
+var translations = <?php echo Theme::Get('translations'); ?>;
+</script>

@@ -145,10 +145,21 @@ SQL;
         // Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
-        Theme::Set('campaign_form_add_url', 'index.php?p=campaign&q=AddForm');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="display"><input type="hidden" name="q" value="DisplayGrid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
+
+        // Default options
+        if (Kit::IsFilterPinned('display', 'DisplayFilter')) {
+            Theme::Set('filter_pinned', 'checked');
+            Theme::Set('filter_displaygroup', Session::Get('display', 'filter_displaygroup'));
+            Theme::Set('filter_display', Session::Get('display', 'filter_display'));
+        }
+
+        $displayGroups = $this->user->DisplayGroupList(0);
+        array_unshift($displayGroups, array('displaygroupid' => '0', 'displaygroup' => 'All'));
+
+        Theme::Set('displaygroup_field_list', $displayGroups);
 
         // Render the Theme and output
         Theme::Render('display_page');
@@ -162,7 +173,7 @@ SQL;
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db             =& $this->db;
         $response       = new ResponseManager();
@@ -280,7 +291,18 @@ SQL;
         $user       =& $this->user;
         $response   = new ResponseManager();
 
-        $displays = $user->DisplayList();
+        // Filter by Name
+        $filter_display = Kit::GetParam('filter_display', _POST, _STRING);
+        setSession('display', 'filter_display', $filter_display);
+        
+        // Display Group
+        $filter_displaygroupid = Kit::GetParam('filter_displaygroup', _POST, _INT);
+        setSession('display', 'filter_displaygroup', $filter_displaygroupid);
+
+        // Pinned option?        
+        setSession('display', 'DisplayFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+
+        $displays = $user->DisplayList(array('displayid'), array('displaygroupid' => $filter_displaygroupid, 'display' => $filter_display));
 
         if (!is_array($displays))
         {
@@ -357,6 +379,13 @@ SQL;
                         'id' => 'displaygroup_button_fileassociations',
                         'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $row['displaygroupid'],
                         'text' => __('Assign Files')
+                    );
+
+                // Logs
+                $row['buttons'][] = array(
+                        'id' => 'displaygroup_button_logs',
+                        'url' => 'index.php?p=log&q=LastHundredForDisplay&displayid=' . $row['displayid'],
+                        'text' => __('Last 100 Log Messages')
                     );
             }
 
@@ -486,7 +515,7 @@ SQL;
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $response = new ResponseManager();
@@ -550,7 +579,7 @@ SQL;
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $response = new ResponseManager();
@@ -834,7 +863,7 @@ SQL;
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $response = new ResponseManager();

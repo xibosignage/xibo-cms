@@ -22,6 +22,53 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
 
 class DataSetGroupSecurity extends Data
 {
+    public function ListSecurity($dataSetId, $groupId) {
+
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
+
+        try {
+            $dbh = PDOConnect::init();
+
+            $sth = $dbh->prepare('SELECT `group`.groupid, `group`.`group`, view, edit, del, `group`.isuserspecific
+              FROM `group`
+               LEFT OUTER JOIN lkdatasetgroup
+               ON lkdatasetgroup.GroupID = group.GroupID
+                   AND lkdatasetgroup.DataSetID = :datasetid
+             WHERE `group`.GroupID <> :groupid
+            ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group`');
+
+            $sth->execute(array(
+                    'datasetid' => $dataSetId,
+                    'groupid' => $groupId
+                ));
+
+            $security = array();
+
+            foreach($sth->fetchAll() as $row) {
+                $security[] = array(
+                        'groupid' => Kit::ValidateParam($row['groupid'], _INT),
+                        'group' => Kit::ValidateParam($row['group'], _STRING),
+                        'view' => Kit::ValidateParam($row['view'], _INT),
+                        'edit' => Kit::ValidateParam($row['edit'], _INT),
+                        'del' => Kit::ValidateParam($row['del'], _INT),
+                        'isuserspecific' => Kit::ValidateParam($row['isuserspecific'], _INT),
+                    );
+            }
+          
+            return $security;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
     /**
      * Links a Display Group to a Group
      * @return
@@ -30,7 +77,11 @@ class DataSetGroupSecurity extends Data
      */
     public function Link($dataSetId, $groupId, $view, $edit, $del)
     {
-        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'Link');
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
+
+        if ($groupId == 0 || $groupId == '')
+            return $this->SetError(25001, __('Missing groupId'));
 
         try {
             $dbh = PDOConnect::init();
@@ -69,6 +120,9 @@ class DataSetGroupSecurity extends Data
     public function LinkEveryone($dataSetId, $view, $edit, $del)
     {
         Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'LinkEveryone');
+
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
         
         try {
             $dbh = PDOConnect::init();
@@ -97,7 +151,11 @@ class DataSetGroupSecurity extends Data
      */
     public function Unlink($dataSetId, $groupId)
     {
-        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
+
+        if ($groupId == 0 || $groupId == '')
+            return $this->SetError(25001, __('Missing groupId'));
         
         try {
             $dbh = PDOConnect::init();
@@ -127,6 +185,9 @@ class DataSetGroupSecurity extends Data
     public function UnlinkAll($dataSetId)
     {
         Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'UnlinkAll');
+
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
 
         try {
             $dbh = PDOConnect::init();

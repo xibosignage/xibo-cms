@@ -244,6 +244,11 @@ class datasetview extends Module
         // This saves the Media Object to the Region
         $this->UpdateRegion();
 
+        // Link
+        Kit::ClassLoader('dataset');
+        $dataSet = new DataSet($db);
+        $dataSet->LinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
+
         //Set this as the session information
         setSession('content', 'type', 'datasetview');
 
@@ -351,6 +356,19 @@ class datasetview extends Module
         return $this->response;
     }
 
+    public function DeleteMedia() {
+
+        $dataSetId = $this->GetOption('datasetid');
+
+        Debug::LogEntry('audit', sprintf('Deleting Media with DataSetId %d', $dataSetId), 'datasetview', 'DeleteMedia');
+
+        Kit::ClassLoader('dataset');
+        $dataSet = new DataSet($this->db);
+        $dataSet->UnlinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
+
+        return parent::DeleteMedia();
+    }
+
     public function Preview($width, $height)
     {
         if ($this->previewEnabled == 0)
@@ -367,7 +385,7 @@ class datasetview extends Module
         $widthPx    = $width.'px';
         $heightPx   = $height.'px';
 
-        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&preview=true&raw=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&preview=true&raw=true&scale_override=1&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
 
     public function GetResource($displayId = 0)
@@ -395,7 +413,8 @@ class datasetview extends Module
             'originalHeight' => $this->height,
             'rowsPerPage' => $this->GetOption('rowsPerPage'),
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
-            'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0)
+            'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
+            'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
         );
 
         $headContent  = '<style type="text/css">' . $styleSheet . '</style>';

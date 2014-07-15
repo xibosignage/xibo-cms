@@ -146,6 +146,7 @@ class ticker extends Module
         Theme::Set('takeitemsfrom_field_list', $takeItemsFrom);
 
         // Set up the variables we already have
+		Theme::Set('name', $this->GetOption('name'));
 		Theme::Set('direction', $this->GetOption('direction'));
 		Theme::Set('copyright', $this->GetOption('copyright'));
 		Theme::Set('scrollSpeed', $this->GetOption('scrollSpeed'));
@@ -236,6 +237,11 @@ class ticker extends Module
 		if ($duration == 0)
 			trigger_error(__('Please enter a duration'), E_USER_ERROR);
 
+		// Required Attributes
+		$this->mediaid	= md5(uniqid());
+		$this->duration = $duration;
+
+		// Data Source
 		if ($sourceId == 1) {
 			// Feed
 			
@@ -255,15 +261,16 @@ class ticker extends Module
 			// Check we have permission to use this DataSetId
 	        if (!$this->user->DataSetAuth($dataSetId))
 	            trigger_error(__('You do not have permission to use that dataset'), E_USER_ERROR);
+
+	        // Link
+	        Kit::ClassLoader('dataset');
+	        $dataSet = new DataSet($db);
+        	$dataSet->LinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
 		}
 		else {
 			// Only supported two source types at the moment
 			trigger_error(__('Unknown Source Type'));
 		}
-		
-		// Required Attributes
-		$this->mediaid	= md5(uniqid());
-		$this->duration = $duration;
 		
 		// Any Options
 		$this->SetOption('xmds', true);
@@ -315,6 +322,7 @@ class ticker extends Module
 		
 		// Other properties
 		$uri		  = Kit::GetParam('uri', _POST, _URI);
+		$name = Kit::GetParam('name', _POST, _STRING);
 		$direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
 		$text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 		$css = Kit::GetParam('ta_css', _POST, _HTMLSTRING);
@@ -392,6 +400,7 @@ class ticker extends Module
 		
 		// Any Options
 		$this->SetOption('xmds', true);
+		$this->SetOption('name', $name);
 		$this->SetOption('direction', $direction);
 		$this->SetOption('copyright', $copyright);
 		$this->SetOption('scrollSpeed', $scrollSpeed);
@@ -428,12 +437,29 @@ class ticker extends Module
 		return $this->response;	
 	}
 
+	public function DeleteMedia() {
+
+		$dataSetId = $this->GetOption('datasetid');
+
+        Kit::ClassLoader('dataset');
+        $dataSet = new DataSet($this->db);
+        $dataSet->UnlinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
+
+        return parent::DeleteMedia();
+    }
+
+	public function GetName() {
+		return $this->GetOption('name');
+	}
+
     public function HoverPreview()
     {
+        $msgName = __('Name');
         $msgType = __('Type');
         $msgUrl = __('Source');
         $msgDuration = __('Duration');
 
+        $name = $this->GetOption('name');
         $url = urldecode($this->GetOption('uri'));
         $sourceId = $this->GetOption('sourceId', 1);
 
@@ -442,6 +468,7 @@ class ticker extends Module
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';
+        $output .= '    <li>' . $msgName . ': ' . $name . '</li>';
 
         if ($sourceId == 2)
         	$output .= '    <li>' . $msgUrl . ': DataSet</li>';
@@ -478,7 +505,7 @@ class ticker extends Module
         $widthPx	= $width.'px';
         $heightPx	= $height.'px';
 
-        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=1&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
 
     /**
@@ -536,7 +563,8 @@ class ticker extends Module
         	'originalWidth' => $this->width,
         	'originalHeight' => $this->height,
         	'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
-        	'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0)
+        	'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
+            'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
     	);
 
         // Generate a JSON string of substituted items.

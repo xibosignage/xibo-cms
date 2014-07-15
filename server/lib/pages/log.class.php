@@ -164,6 +164,50 @@ class logDAO
 		$response->Respond();
 	}
 
+	function LastHundredForDisplay() {
+        $response = new ResponseManager();
+        $displayId = Kit::GetParam('displayid', _GET, _INT);
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT logid, logdate, page, function, message FROM log WHERE displayid = :displayid ORDER BY logid DESC LIMIT 100');
+            $sth->execute(array(
+                    'displayid' => $displayId
+                ));
+                
+            $log = $sth->fetchAll();
+
+            if (count($log) <= 0)
+                throw new Exception(__('No log messages for this display'));
+
+            $rows = array();
+   
+            foreach ($log as $row) { 
+    
+                $row['logid'] = Kit::ValidateParam($row['logid'], _INT);
+                $row['logdate'] = Kit::ValidateParam($row['logdate'], _STRING);
+                $row['page'] = Kit::ValidateParam($row['page'], _STRING);
+                $row['function'] = Kit::ValidateParam($row['function'], _STRING);
+                $row['message'] = nl2br(htmlspecialchars($row['message']));
+                
+                $rows[] = $row;
+            }
+        
+            Theme::Set('table_rows', $rows);
+                
+            $output = Theme::RenderReturn('log_form_display_last100');
+                
+            $response->initialSortOrder = 2;
+            $response->pageSize = 10;
+            $response->SetGridResponse($output);
+            $response->Respond();  
+        }
+        catch (Exception $e) {
+            trigger_error($e->getMessage(), E_USER_ERROR);
+        }
+    }
+
 	public function TruncateForm() {
 		$db =& $this->db;
         $user =& $this->user;
@@ -192,7 +236,7 @@ class logDAO
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
 		$db =& $this->db;
 

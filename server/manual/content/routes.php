@@ -102,6 +102,7 @@ $allowed_routes = array(
 		'admin/api_displaygroups',
 		'admin/api_layouts',
 		'admin/api_library',
+		'admin/api_datasets',
 		'admin/api_schedule',
 		'admin/api_template',
 		'admin/api_resolution',
@@ -148,6 +149,7 @@ $allowed_routes = array(
 		'admin/release_notes_1.6.0-rc2',
 		'admin/release_notes_1.6.0',
 		'admin/release_notes_1.6.1',
+		'admin/release_notes_1.6.2',
 		'admin/pyclient_libbrowsernode_build'
 	);
 

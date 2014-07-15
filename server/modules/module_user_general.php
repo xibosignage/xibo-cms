@@ -527,7 +527,7 @@
         $userid     =& $this->userid;
         $usertypeid     =& $this->usertypeid;
         
-        Debug::LogEntry('audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
+        //Debug::LogEntry('audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
         
         // Get some information about this menu
         // I.e. get the Menu Items this user has access to
@@ -559,7 +559,6 @@
         }
         $SQL .= " ORDER BY menuitem.Sequence";
         
-        Debug::LogEntry('audit', $SQL);
         
         if (!$result = $db->query($SQL))
         {
@@ -770,7 +769,7 @@ END;
         $SQL .= " WHERE lklayoutmediagroup.MediaID = '%s' AND lklayoutmediagroup.RegionID = '%s' AND lklayoutmediagroup.LayoutID = %d ";
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
-        $SQL = sprintf($SQL, $db->escape_string($mediaId), $db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $this->db->escape_string($mediaId), $this->db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
         //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
@@ -1388,8 +1387,8 @@ END;
             }
         }
         
-        if ($isDisplaySpecific == 1)
-            $SQL .= " AND displaygroup.IsDisplaySpecific = 1 ";
+        if ($isDisplaySpecific != -1)
+            $SQL .= sprintf(" AND displaygroup.IsDisplaySpecific = %d ", $isDisplaySpecific);
 
         $SQL .= " ORDER BY displaygroup.DisplayGroup ";
         
@@ -1467,6 +1466,21 @@ END;
         // Filter by Display ID?
         if (Kit::GetParam('displayid', $filter_by, _INT) != 0) {
             $SQL .= sprintf(' AND display.displayid = %d ', Kit::GetParam('displayid', $filter_by, _INT));
+        }
+
+        // Filter by Display Name?
+        if (Kit::GetParam('display', $filter_by, _STRING) != '') {
+            // convert into a space delimited array
+            $names = explode(' ', Kit::GetParam('display', $filter_by, _STRING));
+
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (display.display NOT LIKE '%" . sprintf('%s', ltrim($this->db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (display.display LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
+            }
         }
 
         // Exclude a group?
