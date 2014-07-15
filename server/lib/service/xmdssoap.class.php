@@ -235,6 +235,9 @@ class XMDSSoap
             return new SoapFault('Sender', 'Unable to get a list of files');
         }
 
+        // Added paths
+        $paths = array();
+
         while ($row = $db->get_assoc_row($results))
         {
             $recordType	= Kit::ValidateParam($row['RecordType'], _WORD);
@@ -284,11 +287,14 @@ class XMDSSoap
             
             $fileElements->appendChild($file);
 
+            // Add this to the paths array
+            $paths[] = $path;
+
             // If this is a layout type and there is a background then add the background node
             // TODO: We need to alter the layout table to have a background ID rather than a path
             // TODO: We need to alter the background edit method to create a lklayoutmedia link for
             // background images (and maintain it when they change)
-            if ($recordType == 'layout' && $background != '')
+            if ($recordType == 'layout' && $background != '' && !in_array($background, $paths))
             {
                 // Also append another file node for the background image (if there is one)
                 $file = $requiredFilesXml->createElement("file");
@@ -297,6 +303,9 @@ class XMDSSoap
                 $file->setAttribute("md5", md5_file($libraryLocation.$background));
                 $file->setAttribute("size", filesize($libraryLocation.$background));
                 $fileElements->appendChild($file);
+
+                // Add this to the paths array
+                $paths[] = $background;
             }
         }
 
@@ -311,7 +320,7 @@ class XMDSSoap
 
             foreach($layoutInformation['regions'] as $region) {
                 foreach($region['media'] as $media) {
-                    if ($media['mediatype'] == 'ticker' || $media['mediatype'] == 'text' || $media['mediatype'] == 'datasetview') {
+                    if ($media['mediatype'] == 'ticker' || $media['mediatype'] == 'text' || $media['mediatype'] == 'datasetview' || $media['mediatype'] == 'webpage') {
                         // Append this item to required files
                         $file = $requiredFilesXml->createElement("file");
                         $file->setAttribute('type', 'resource');
@@ -319,6 +328,7 @@ class XMDSSoap
                         $file->setAttribute('layoutid', $layoutId);
                         $file->setAttribute('regionid', $region['regionid']);
                         $file->setAttribute('mediaid', $media['mediaid']);
+                        $file->setAttribute('updated', (isset($media['updated']) ? $media['updated'] : 0));
                         
                         $fileElements->appendChild($file);
                     }
@@ -1118,7 +1128,8 @@ class XMDSSoap
 
         // See if the client was offline and if appropriate send an alert
         // to say that it has come back online
-        if ($row[5] == 0 && $row[6] == 1 && Config::GetSetting('MAINTENANCE_ENABLED') == 'On' && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On')
+        if ($row[5] == 0 && $row[6] == 1 && Config::GetSetting('MAINTENANCE_ENABLED') == 'On' && 
+            (Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On' || Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'Protected'))
         {
             $msgTo    = Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
             $msgFrom  = Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);
@@ -1192,7 +1203,7 @@ class XMDSSoap
      */
     private function LogBandwidth($displayId, $type, $sizeInBytes)
     {
-        $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
+        $startOfMonth = strtotime(date('m').'/02/'.date('Y').' 00:00:00');
     
         $sql  = "INSERT INTO `bandwidth` (Month, Type, DisplayID, Size) VALUES (%d, %d, %d, %d) ";
         $sql .= "ON DUPLICATE KEY UPDATE Size = Size + %d ";

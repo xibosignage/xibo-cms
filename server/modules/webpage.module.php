@@ -188,6 +188,7 @@ class webpage extends Module
 		$this->duration = $duration;
 		
 		// Any Options
+		$this->SetOption('xmds', true);
 		$this->SetOption('uri', $uri);
                 $this->SetOption('scaling', $scaling);
                 $this->SetOption('transparency', $transparency);
@@ -259,6 +260,7 @@ class webpage extends Module
 		}
 		
 		// Any Options
+		$this->SetOption('xmds', true);
 		$this->SetOption('uri', $uri);
                 $this->SetOption('scaling', $scaling);
                 $this->SetOption('transparency', $transparency);
@@ -288,8 +290,7 @@ class webpage extends Module
      * @param <type> $height
      * @return <type>
      */
-    public function Preview($width, $height)
-    {
+    public function Preview($width, $height) {
         if ($this->previewEnabled == 0)
             return parent::Preview ($width, $height);
         
@@ -300,20 +301,58 @@ class webpage extends Module
         $lkId = $this->lkid;
         $mediaType = $this->type;
         $mediaDuration = $this->duration;
+        
+        $widthPx	= $width.'px';
+        $heightPx	= $height.'px';
+
+        return '<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=1&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+    }
+
+    public function GetResource($displayId = 0) {
+
+    	// Load in the template
+        $template = file_get_contents('modules/preview/HtmlTemplateSimple.html');
+
+        // Get some parameters
+        $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
+        $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
+        $duration = $this->duration;
 
         // Work out the url
         $url = urldecode($this->GetOption('uri'));
         $url = (preg_match('/^' . preg_quote('http') . "/", $url)) ? $url : 'http://' . $url;
 
-        $offsetTop = $this->GetOption('offsetTop', 0);
-        $offsetLeft = $this->GetOption('offsetLeft', 0);
+        $options = array(
+        		'originalWidth' => $this->width,
+        		'originalHeight' => $this->height,
+        		'previewWidth' => $width,
+        		'previewHeight' => $height,
+        		'offsetTop' => $this->GetOption('offsetTop', 0),
+        		'offsetLeft' => $this->GetOption('offsetLeft', 0),
+        		'scale' => ($this->GetOption('scaling', 100) / 100),
+        		'scale_override' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+        	);
 
-        $widthPx = ($width + $offsetLeft) . 'px';
-        $heightPx = ($height + $offsetTop) . 'px';
+        // Head Content
+        $headContent = '<style>#iframe { border:0; }</style>';
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
-        $iframeStyle = 'margin-top:-' . $offsetTop . 'px; margin-left: -' . $offsetLeft . 'px; border:0;';
+        // Body content
+        $output = '<div id="wrap"><iframe id="iframe" scrolling="no" src="' . $url . '"></iframe></div>';
+        
+        // Replace the Body Content with our generated text
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $output, $template);
 
-        return '<iframe scrolling="no" src="' . $url . '" width="' . $widthPx . '" height="' . $heightPx . '" style="' . $iframeStyle . '"></iframe>';
+        // After body content
+    	$after_body  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
+        $after_body .= '<script>
+        	var options = ' . json_encode($options) . '
+        	' . file_get_contents('modules/preview/xibo-webpage-render.js') . '</script>';
+
+        // Replace the After body Content
+        $template = str_replace('<!--[[[AFTERBODYCONTENT]]]-->', $after_body, $template);
+
+        return $template;
     }
 
     public function IsValid() {

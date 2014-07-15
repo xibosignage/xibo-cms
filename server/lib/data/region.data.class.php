@@ -22,6 +22,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Region extends Data
 {
+	// Caching
+	private $layoutXml;
+	private $layoutDocument;
+
 	public function __construct(database $db) 
 	{
 		$this->db 	=& $db;
@@ -37,9 +41,23 @@ class Region extends Data
 	 */
 	public function GetLayoutXml($layoutid)
 	{
-		$layout = new Layout($this->db);
+		if ($this->layoutXml == '') {
+			$layout = new Layout($this->db);
+			$this->layoutXml = $layout->GetLayoutXml($layoutid);
+		}
 
-		return $layout->GetLayoutXml($layoutid);
+		return $this->layoutXml;
+	}
+
+	public function GetLayoutDom($layoutId) {
+
+		if ($this->layoutDocument == NULL) {
+			// Load the XML into a new DOMDocument
+	        $this->layoutDocument = new DOMDocument();
+	        $this->layoutDocument->loadXML($this->GetLayoutXml($layoutId));
+		}
+
+        return $this->layoutDocument;
 	}
 	
 	/**
@@ -50,6 +68,9 @@ class Region extends Data
 	 */
 	private function SetLayoutXml($layoutid, $xml)
 	{
+		// Update Cache
+		$this->layoutXml = $xml;
+
 		$layout = new Layout($this->db);
 
 		if (!$layout->SetLayoutXml($layoutid, $xml))
@@ -901,6 +922,41 @@ class Region extends Data
 
         $xpath = new DOMXPath($document);
         return $xpath->query("//region[@id='$regionId']/media");
+    }
+
+    /**
+     * Get Option for Media Id
+     * @param int $layoutId The Layout ID
+     * @param string $mediaId  The Media ID
+     * @param string $name     The Option Name
+     * @param string $default  The Default Value if none found
+     */
+    public function GetOptionForMediaId($layoutId, $mediaId, $name, $default = false) {
+
+    	if ($name == '') 
+			return false;
+
+		if (!$this->GetLayoutDom($layoutId))
+			return false;
+
+		// Check to see if we already have this option or not
+		$xpath = new DOMXPath($this->layoutDocument);
+
+		// Xpath for it
+		$userOptions = $xpath->query('//region/media[@id=\'' . $mediaId . '\']/options/' . $name);
+
+        // Debug::LogEntry('audit', '//region/media[@id=\'' . $mediaId . '\']/options/' . $name);
+
+		if ($userOptions->length == 0) {
+			// We do not have an option - return the default
+			Debug::LogEntry('audit', 'GetOption ' . $name . ': Not Set - returning default ' . $default, 'region');
+			return $default;
+		}
+		else {
+			// Replace the old node we found with XPath with the new node we just created
+			Debug::LogEntry('audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue, 'region');
+			return ($userOptions->item(0)->nodeValue != '') ? $userOptions->item(0)->nodeValue : $default;
+		}
     }
 
     /**

@@ -197,7 +197,7 @@ class timelineDAO {
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db 	=& $this->db;
         $user 	=& $this->user;
@@ -780,7 +780,7 @@ END;
 
             // Put the media name in
             $response->html .= '        <div class="timelineMediaDetails ' . $mediaBlockColouringClass . '">';
-            $response->html .= '            <h3>' . (($mediaName == '') ? $tmpModule->displayType : $mediaName) . ' (' . $mediaDuration . ' seconds)</h3>';
+            $response->html .= '            <h3>' . sprintf('%s (%d seconds)', (($mediaName == '') ? __($tmpModule->displayType) : $mediaName), $mediaDuration) . '</h3>';
             $response->html .= '        </div>';
 
             // Put the media hover preview in

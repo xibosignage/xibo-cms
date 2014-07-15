@@ -33,7 +33,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	</div>
 	<div class="span6">
 		<h3 class="text-center">Library Usage</h3>
-		<div id="flot_library_chart" style="height: 400px;" class="flot-chart"></div>
+		<?php echo Theme::Get('library-widget'); ?>
 	</div>
 </div>
 <div class="row">
@@ -63,6 +63,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	</div>
 </div>
 <script type="text/javascript">
-	var flot_bandwidth_chart = <?php echo Theme::Get('bandwidth-widget') ?>;
-	var flot_library_chart = <?php echo Theme::Get('library-widget') ?>;
+	<?php echo Theme::Get('bandwidth-widget'); ?>
+	<?php echo Theme::Get('library-widget-js'); ?>
 </script>

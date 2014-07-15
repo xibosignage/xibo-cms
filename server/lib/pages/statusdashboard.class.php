@@ -76,7 +76,7 @@ class statusdashboardDAO
             }
 		  
 		  	// Set the data
-		  	Theme::Set('bandwidth-widget', json_encode($output));
+		  	Theme::Set('bandwidth-widget', 'var flot_bandwidth_chart = ' . json_encode($output));
 
 		  	// We would also like a library usage pie chart!
 		  	$libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
@@ -84,22 +84,28 @@ class statusdashboardDAO
             // Library Size in Bytes
             $sth = $dbh->prepare('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media;');
             $sth->execute();
-		    $librarySize = $sth->fetchColumn();
+            $librarySize = $sth->fetchColumn();
 
-		    // Pie chart
-		    $output = array();
-		    $output['points'][] = array('label' => 'Used', 'data' => (double)$librarySize);
+		  	if ($libraryLimit == 0) {
 
-		    if ($libraryLimit > 0) {
-		    	$libraryLimit = $libraryLimit * 1024;
-		    	$output['points'][] = array('label' => 'Available', 'data' => ((double)$libraryLimit - $librarySize));
-		    }
-		    
-		    $output['config']['series']['pie']['show'] = true;
-		    $output['config']['legend']['show'] = false;
+		  		Theme::Set('library-widget', '<p class="bold-counter text-center">' . Kit::formatBytes($librarySize) . '</p>');
+		  	}
+		  	else {
+			    // Pie chart
+			    $output = array();
+			    $output['points'][] = array('label' => 'Used', 'data' => (double)$librarySize);
 
-		    Theme::Set('library-widget', json_encode($output));
+			    if ($libraryLimit > 0) {
+			    	$libraryLimit = $libraryLimit * 1024;
+			    	$output['points'][] = array('label' => 'Available', 'data' => ((double)$libraryLimit - $librarySize));
+			    }
+			    
+			    $output['config']['series']['pie']['show'] = true;
+			    $output['config']['legend']['show'] = false;
 
+			    Theme::Set('library-widget', '<div id="flot_library_chart" style="height: 400px;" class="flot-chart"></div>');
+			    Theme::Set('library-widget-js', 'var flot_library_chart = ' . json_encode($output));
+		  	}
 
 		    // Also a display widget
 		    $sort_order = array('display');

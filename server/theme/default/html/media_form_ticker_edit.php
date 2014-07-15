@@ -28,10 +28,16 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <?php echo Theme::Get('form_meta'); ?>
     	<div class="row-fluid">
         	<div class="span6">
+                <div class="control-group">
+                    <label class="control-label" for="uri" title="The Link for the RSS feed"><?php echo Theme::Translate('Feed URL'); ?></label>
+                    <div class="controls">
+                        <input class="required" id="uri" name="uri" value="<?php echo Theme::Get('uri'); ?>" type="text">
+                    </div>
+                </div>
     			<div class="control-group">
-    				<label class="control-label" for="uri" title="The Link for the RSS feed"><?php echo Theme::Translate('Feed URL'); ?></label>
+    				<label class="control-label" for="name" title="A friendly name for this Ticker"><?php echo Theme::Translate('Name'); ?></label>
     				<div class="controls">
-    					<input class="required" id="uri" name="uri" value="<?php echo Theme::Get('uri'); ?>" type="text">
+    					<input id="name" name="name" value="<?php echo Theme::Get('name'); ?>" type="text">
     				</div>
     			</div>
     			<div class="control-group">

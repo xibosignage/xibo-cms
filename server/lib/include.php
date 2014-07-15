@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-define('WEBSITE_VERSION', 69);
+define('WEBSITE_VERSION', 70);
 
 // No errors reported until we read the settings from the DB
 error_reporting(0);
@@ -137,8 +137,8 @@ TranslationEngine::InitLocale();
 // Create login control system
 require_once('modules/' . Config::GetSetting("userModule"));
 
-$user 		= new User($db);
-$session 	= new Session();
+// Create a Session
+$session = new Session();
 
 // Work out the location of this service
 $serviceLocation = Kit::GetXiboRoot();
@@ -151,6 +151,9 @@ $page = Kit::GetParam('p', _REQUEST, _WORD, 'index');
 
 // Assign the page name to the session
 $session->set_page(session_id(), $page);
+
+// Create a user
+$user = new User($db);
 
 // Create Page
 try {

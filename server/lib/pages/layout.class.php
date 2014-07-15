@@ -148,6 +148,9 @@ class layoutDAO
    				// Set up the theme variables for the Layout Jump List
    				$this->LayoutJumpListFilter();
 
+   				// Set up any JavaScript translations
+   				Theme::Set('translations', json_encode(array('save_position_button' => __('Save Position'))));
+
    				// Call the render the template
    				Theme::Render('layout_designer');
 
@@ -168,7 +171,7 @@ class layoutDAO
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db             =& $this->db;
         $response       = new ResponseManager();
@@ -199,7 +202,7 @@ class layoutDAO
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
 		$db 			=& $this->db;
 		$response		= new ResponseManager();
@@ -277,7 +280,7 @@ class layoutDAO
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $response = new ResponseManager();
@@ -303,7 +306,7 @@ class layoutDAO
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
 		$db =& $this->db;
         $response = new ResponseManager();
@@ -609,7 +612,7 @@ class layoutDAO
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
 		$db 			=& $this->db;
 		$user 			=& $this->user;
@@ -810,7 +813,7 @@ HTML;
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $user =& $this->user;

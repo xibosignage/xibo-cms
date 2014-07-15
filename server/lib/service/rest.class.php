@@ -257,7 +257,7 @@ class Rest
      */
     public function LibraryMediaList()
     {
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         $media = $this->user->MediaList();
@@ -276,7 +276,7 @@ class Rest
     public function LibraryMediaFileUpload()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('file');
@@ -330,7 +330,7 @@ class Rest
     public function LibraryMediaAdd()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('Media');
@@ -360,7 +360,7 @@ class Rest
      */
     public function LibraryMediaEdit()
     {      
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('Media');
@@ -388,7 +388,7 @@ class Rest
      */
     public function LibraryMediaRetire()
     {
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('Media');
@@ -410,7 +410,7 @@ class Rest
      */
     public function LibraryMediaDelete()
     {
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('Media');
@@ -434,7 +434,7 @@ class Rest
     public function LibraryMediaFileRevise()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('Media');
@@ -1164,7 +1164,7 @@ class Rest
     public function ModuleList()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('media'))
+        if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('Media');
@@ -1176,6 +1176,462 @@ class Rest
             return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
         return $this->Respond($this->NodeListFromArray($modules, 'module'));
+    }
+
+    /**
+     * DataSet List
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetList() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataset = $this->user->DataSetList();
+
+        if (!is_array($dataset))
+            return $this->Error(2, 'No datasets');
+
+        return $this->Respond($this->NodeListFromArray($dataset, 'dataset'));
+    }
+
+    /**
+     * DataSet Add
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetAdd() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSet = $this->GetParam('dataset', _STRING);
+        $description = $this->GetParam('description', _STRING);
+
+        Kit::ClassLoader('dataset');
+        $dataSetObject = new DataSet($this->db);
+        if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->user->userid))
+            return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('dataset', $dataSetId));
+    }
+
+    /**
+     * DataSet Edit
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetEdit() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        $dataSet = $this->GetParam('dataset', _STRING);
+        $description = $this->GetParam('description', _STRING);
+
+        Kit::ClassLoader('dataset');
+        $dataSetObject = new DataSet($this->db);
+        if (!$dataSetObject->Edit($dataSetId, $dataSet, $description))
+            return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
+    }
+
+    /**
+     * DataSet Delete
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetDelete() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->delete)
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('dataset');
+        $dataSetObject = new DataSet($this->db);
+        if (!$dataSetObject->Delete($dataSetId))
+            return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
+    }
+
+    /**
+     * DataSet Column List
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetColumnList() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->view)
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('datasetcolumn');
+        $dataSetObject = new DataSetColumn($this->db);
+        if (!$columns = $dataSetObject->GetColumns($dataSetId))
+            return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
+
+        return $this->Respond($this->NodeListFromArray($columns, 'datasetcolumn'));
+    }
+
+    /**
+     * DataSet Column Add
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetColumnAdd() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        $heading = $this->GetParam('heading', _STRING);
+        $listContent = $this->GetParam('listContent', _STRING);
+        $columnOrder = $this->GetParam('columnOrder', _INT);
+        $dataTypeId = $this->GetParam('dataTypeId', _INT);
+        $dataSetColumnTypeId = $this->GetParam('datasetColumnTypeId', _INT);
+        $formula = $this->GetParam('formula', _STRING);
+
+        Kit::ClassLoader('datasetcolumn');
+        $dataSetColumnObject = new DataSetColumn($this->db);
+        if (!$dataSetColumnId = $dataSetColumnObject->Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
+            return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('datasetcolumn', $dataSetColumnId));
+    }
+
+    /**
+     * DataSet Column Edit
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetColumnEdit() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetColumnId = $this->GetParam('datasetColumnId', _POST, _INT);
+        $heading = $this->GetParam('heading', _STRING);
+        $listContent = $this->GetParam('listContent', _STRING);
+        $columnOrder = $this->GetParam('columnOrder', _INT);
+        $dataTypeId = $this->GetParam('dataTypeId', _INT);
+        $dataSetColumnTypeId = $this->GetParam('datasetColumnTypeId', _INT);
+        $formula = $this->GetParam('formula', _STRING);
+
+        Kit::ClassLoader('datasetcolumn');
+        $dataSetColumnObject = new DataSetColumn($this->db);
+        if (!$dataSetColumnObject->Edit($dataSetColumnId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
+            return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
+    }
+
+    /**
+     * DataSet Column Delete
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetColumnDelete() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetColumnId = $this->GetParam('datasetColumnId', _POST, _INT);
+
+        Kit::ClassLoader('datasetcolumn');
+        $dataSetColumnObject = new DataSetColumn($this->db);
+        if (!$dataSetColumnId = $dataSetColumnObject->Delete($dataSetColumnId))
+            return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
+    }
+
+    /**
+     * DataSet Data List
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetDataList() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->view)
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('datasetdata');
+        $dataSetObject = new DataSetData($this->db);
+        if (!$columns = $dataSetObject->GetData($dataSetId))
+            return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
+
+        return $this->Respond($this->NodeListFromArray($columns, 'datasetdata'));
+    }
+
+    /**
+     * DataSet Data Add
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetDataAdd() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // Parameters
+        $dataSetColumnId = $this->GetParam('dataSetColumnId', _INT);
+        $rowNumber = $this->GetParam('rowNumber', _INT);
+        $value = $this->GetParam('value', _STRING);
+
+        // Use the DataSetData class to do the insert
+        Kit::ClassLoader('datasetdata');
+        $data = new DataSetData($this->db);
+
+        if (!$id = $data->Add($dataSetColumnId, $rowNumber, $value))
+            return $this->Error($data->GetErrorNumber(), $data->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('datasetdata', $id));
+    }
+
+    /**
+     * DataSet Data Edit
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetDataEdit() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // Parameters
+        $dataSetColumnId = $this->GetParam('dataSetColumnId', _INT);
+        $rowNumber = $this->GetParam('rowNumber', _INT);
+        $value = $this->GetParam('value', _STRING);
+
+        // Use the DataSetData class to do the update
+        Kit::ClassLoader('datasetdata');
+        $data = new DataSetData($this->db);
+
+        if (!$data->Edit($dataSetColumnId, $rowNumber, $value))
+            return $this->Error($data->GetErrorNumber(), $data->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
+    }
+
+    /**
+     * DataSet Data Delete
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetDataDelete() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->delete)
+            return $this->Error(1, 'Access Denied');
+
+        // Parameters
+        $dataSetColumnId = $this->GetParam('dataSetColumnId', _INT);
+        $rowNumber = $this->GetParam('rowNumber', _INT);
+
+        // Use the DataSetData class to do the delete
+        Kit::ClassLoader('datasetdata');
+        $data = new DataSetData($this->db);
+
+        if (!$id = $data->Delete($dataSetColumnId, $rowNumber))
+            return $this->Error($data->GetErrorNumber(), $data->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('datasetdata', $id));
+    }
+
+    /**
+     * DataSet Security List
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetSecurityList() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->view)
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('datasetgroupsecurity');
+        $security = new DataSetGroupSecurity($this->db);
+
+        if (!$results = $security->ListSecurity($dataSetId, $this->user->getGroupFromId($this->user->userid, true))) {
+            return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
+        }
+
+        return $this->Respond($this->NodeListFromArray($results, 'datasetgroupsecurity'));
+    }
+
+    /**
+     * DataSet Security Add
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetSecurityAdd() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->modifyPermissions)
+            return $this->Error(1, 'Access Denied');
+
+        $groupId = $this->GetParam('groupId', _INT);
+        $view = $this->GetParam('view', _INT);
+        $edit = $this->GetParam('edit', _INT);
+        $del = $this->GetParam('delete', _INT);
+
+        Kit::ClassLoader('datasetgroupsecurity');
+        $security = new DataSetGroupSecurity($this->db);
+
+        if (!$results = $security->Link($dataSetId, $groupId, $view, $edit, $del)) {
+            return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
+        }
+
+        return $this->Respond($this->ReturnId('success', true));
+    }
+
+    /**
+     * DataSet Security Delete
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetSecurityDelete() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->modifyPermissions)
+            return $this->Error(1, 'Access Denied');
+
+        $groupId = $this->GetParam('groupId', _INT);
+
+        Kit::ClassLoader('datasetgroupsecurity');
+        $security = new DataSetGroupSecurity($this->db);
+
+        if (!$results = $security->Unlink($dataSetId, $groupId)) {
+            return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
+        }
+
+        return $this->Respond($this->ReturnId('success', true));
+    }
+
+    /**
+     * DataSet Import CSV
+     * @return <XiboAPIResponse>
+     */
+    public function DataSetImportCsv() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        $dataSetId = $this->GetParam('dataSetId', _INT);
+
+        $auth = $this->user->DataSetAuth($dataSetId, true);
+        if (!$auth->edit)
+            return $this->Error(1, 'Access Denied');
+
+        // Expect a file id
+        $fileId = $this->GetParam('fileId', _INT);
+
+        if (!$this->user->FileAuth($fileId))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('file');
+        $file = new File($this->db);
+
+        if (!$csvFileLocation = $file->GetPath($fileId))
+            return $this->Error($file->GetErrorNumber(), $file->GetErrorMessage());
+
+        // Other parameters
+        // Filter using HTML string because _STRING strips some of the JSON characters.
+        $spreadSheetMapping = $this->GetParam('spreadSheetMapping', _HTMLSTRING);
+        $overwrite = $this->GetParam('overwrite', _INT);
+        $ignoreFirstRow = $this->GetParam('ignoreFirstRow', _INT);
+
+        // Convert the spread sheet mapping into an Array
+        $spreadSheetMapping = json_decode($spreadSheetMapping, true);
+
+        Kit::ClassLoader('datasetdata');
+        $dataSetObject = new DataSetData($this->db);
+
+        if (!$dataSetObject->ImportCsv($dataSetId, $csvFileLocation, $spreadSheetMapping, ($overwrite == 1), ($ignoreFirstRow == 1)))
+            return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
+
+        return $this->Respond($this->ReturnId('success', true));
+    }
+
+    public function DataTypeList() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('dataset');
+        $dataSet = new DataSet($this->db);
+
+        return $this->Respond($this->NodeListFromArray($dataSet->GetDataTypes(), 'datatype'));
+    }
+
+    public function DataSetColumnTypeList() {
+        // Auth
+        if (!$this->user->PageAuth('dataset'))
+            return $this->Error(1, 'Access Denied');
+
+        Kit::ClassLoader('dataset');
+        $dataSet = new DataSet($this->db);
+
+        return $this->Respond($this->NodeListFromArray($dataSet->GetDataSetColumnTypes(), 'datasetcolumntype'));
     }
 
     /**

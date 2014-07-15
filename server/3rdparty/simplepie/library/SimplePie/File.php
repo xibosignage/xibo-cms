@@ -137,6 +137,10 @@ class SimplePie_File
 				{
 					$info = curl_getinfo($fp);
 					curl_close($fp);
+
+					// DG: Patch to strip double headers
+					$this->headers = SimplePie_HTTP_Parser::strip_double_headers($this->headers);
+
 					$this->headers = explode("\r\n\r\n", $this->headers, $info['redirect_count'] + 1);
 					$this->headers = array_pop($this->headers);
 					$parser = new SimplePie_HTTP_Parser($this->headers);
