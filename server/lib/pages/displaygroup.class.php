@@ -264,37 +264,40 @@ class displaygroupDAO
         $SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
         $SQL .= " ORDER BY display.Display ";
         
-        $displaysAssigned = $db->GetArray($SQL);
+        $displays_assigned = $this->user->DisplayList(array('display'), array('displaygroupid' => $displayGroupID), 'edit');
 
-        if (!is_array($displaysAssigned))
-        {
-            trigger_error($db->error());
+        if (!is_array($displays_assigned))
             trigger_error(__('Error getting Displays'), E_USER_ERROR);
+
+        // Build a new available array, based on the view permissions.
+        $displaysAssigned = array();
+
+        foreach ($displays_assigned as $display) {
+            
+            // Go through each and set the appropriate fields
+            $displaysAssigned[] = array(
+                    'Display' => $display['display'],
+                    'list_id' => 'DisplayID_' . $display['displayid']
+                );
         }
 
         Theme::Set('displays_assigned', $displaysAssigned);
         
-        // Displays not in group
-        $SQL  = "";
-        $SQL .= "SELECT display.DisplayID, ";
-        $SQL .= "       display.Display, ";
-        $SQL .= "       CONCAT('DisplayID_', display.DisplayID) AS list_id ";
-        $SQL .= "FROM   display ";
-        $SQL .= " WHERE display.DisplayID NOT       IN ";
-        $SQL .= "       (SELECT display.DisplayID ";
-        $SQL .= "       FROM    display ";
-        $SQL .= "               INNER JOIN lkdisplaydg ";
-        $SQL .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
-        $SQL .= sprintf("   WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
-        $SQL .= "       )";
-        $SQL .= " ORDER BY display.Display ";
-
-        $displaysAvailable = $db->GetArray($SQL);
+        // All Displays 
+        $displays = $this->user->DisplayList(array('display'), array('exclude_displaygroupid' => $displayGroupID), 'edit');
         
-        if (!is_array($displaysAvailable))
-        {
-            trigger_error($db->error());
+        if (!is_array($displays))
             trigger_error(__('Error getting Displays'), E_USER_ERROR);
+
+        // Build a new available array, based on the view permissions.
+        $displaysAvailable = array();
+
+        foreach ($displays as $display) {
+            // Go through each and set the appropriate fields
+            $displaysAvailable[] = array(
+                    'Display' => $display['display'],
+                    'list_id' => 'DisplayID_' . $display['displayid']
+                );
         }
 
         Theme::Set('displays_available', $displaysAvailable);
@@ -327,10 +330,16 @@ class displaygroupDAO
         
         $displayGroupObject = new DisplayGroup($db);
         
-        if (!$displayGroupObject->Add($displayGroup, 0, $description))
+        if (!$displayGroupId = $displayGroupObject->Add($displayGroup, 0, $description))
         {
             trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
         }
+
+        // Add full permissions for this user to this group
+        $security = new DisplayGroupSecurity($db);
+
+        if (!$security->Link($displayGroupId, $this->user->getGroupFromID($this->user->userid, true), 1, 1, 1))
+            trigger_error(__('Unable to set permissions'));
         
         $response->SetFormSubmitResponse(__('Display Group Added'), false);
         $response->Respond();

@@ -233,27 +233,32 @@ class Module implements ModuleInterface
                 $this->existingMedia = true;
                 $this->assignedMedia = false;
 
-                // Load what we know about this media into the object
-                $SQL = "SELECT duration, name, UserId, storedAs FROM media WHERE mediaID = '$mediaid'";
+                try {
+                    $dbh = PDOConnect::init();
+                
+                    // Load what we know about this media into the object
+                    $sth = $dbh->prepare('SELECT duration, name, UserId, storedAs FROM media WHERE mediaID = :media_id');
+                    $sth->execute(array(
+                            'media_id' => $mediaid
+                        ));
+                    
+                    $rows = $sth->fetchAll();
+                
+                    if (count($rows) != 1) {
+                        return $this->SetError(__('Unable to find media record with the provided ID'));
+                    }
 
-                Debug::LogEntry('audit', $SQL, 'Module', 'SetMediaInformation');
-
-                if (!$result = $db->query($SQL))
-                {
-                	// log the error
-                    trigger_error($db->error());
+                    $this->duration = $rows[0]['duration'];
+                    $this->name = $rows[0]['name'];
+                    $this->originalUserId = $rows[0]['UserId'];
+                    $this->storedAs = $rows[0]['storedAs'];
                 }
-
-                if ($db->num_rows($result) != 0)
-                {
-                    $row = $db->get_row($result);
-                    $this->duration = $row[0];
-                    $this->name = $row[1];
-                    $this->originalUserId = $row[2];
-                    $this->storedAs = $row[3];
+                catch (Exception $e) {
+                    
+                    Debug::LogEntry('error', $e->getMessage());
+                
+                    return $this->SetError(__('Unable to find media record with the provided ID'));
                 }
-                else
-                	return $this->SetError(__('Unable to find media record with the provided ID'));
 
                 $this->auth = $this->user->MediaAuth($this->mediaid, true);
             }
@@ -1201,52 +1206,79 @@ END;
         // Create a region object for later use
         $region = new region($db);
 
-        // Loop through a list of layouts this user has access to
-        foreach($this->user->LayoutList() as $layout)
-        {
-            $layoutId = $layout['layoutid'];
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Some update statements to use
+            $sth = $dbh->prepare('SELECT lklayoutmediaid, regionid FROM lklayoutmedia WHERE mediaid = :media_id AND layoutid = :layout_id');
+            $sth_update = $dbh->prepare('UPDATE lklayoutmedia SET mediaid = :media_id WHERE lklayoutmediaid = :lklayoutmediaid');
 
-            // Does this layout use the old media id?
-            $SQL = sprintf("SELECT lklayoutmediaid, regionid FROM lklayoutmedia WHERE mediaid = %d and layoutid = %d", $oldMediaId, $layoutId);
-            
-            if (!$results = $db->query($SQL))
-                return false;
-            
-            // Loop through each media link for this layout
-            while ($row = $db->get_assoc_row($results))
+            // Loop through a list of layouts this user has access to
+            foreach($this->user->LayoutList() as $layout)
             {
-                // Get the LKID of the link between this layout and this media.. could be more than one?
-                $lkId = $row['lklayoutmediaid'];
-                $regionId = $row['regionid'];
+                $layoutId = $layout['layoutid'];
+                
+                // Does this layout use the old media id?
+                $sth->execute(array(
+                        'media_id' => $oldMediaId,
+                        'layout_id' => $layoutId
+                    ));
 
-                // Get the Type of this media
-                if (!$type = $region->GetMediaNodeType($layoutId, '', '', $lkId))
+                $results = $sth->fetchAll();
+                
+                if (count($results) <= 0)
                     continue;
 
-                // Create a new media node use it to swap the nodes over
-                Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
-                require_once('modules/' . $type . '.module.php');
-
-                // Create a new module as if we were assigning it for the first time
-                if (!$module = new $type($db, $this->user, $newMediaId))
-                	return false;
-
-                // Sets the URI field
-                if (!$module->SetRegionInformation($layoutId, $regionId))
-                	return false;
-
-                // Get the media xml string to use in the swap.
-                $mediaXmlString = $module->AsXml();
-
-                // Swap the nodes
-                if (!$region->SwapMedia($layoutId, $regionId, $lkId, $oldMediaId, $newMediaId, $mediaXmlString))
-                    return false;
-
-                // Update the LKID with the new media id
-                $db->query("UPDATE lklayoutmedia SET mediaid = %d WHERE lklayoutmediaid = %d", $newMediaId, $row['lklayoutmediaid']);
-
-                $count++;
+                Debug::LogEntry('audit', sprintf('%d linked media items for layoutid %d', count($results), $layoutId), 'module', 'ReplaceMediaInAllLayouts');
+                
+                // Loop through each media link for this layout
+                foreach ($results as $row)
+                {
+                    // Get the LKID of the link between this layout and this media.. could be more than one?
+                    $lkId = $row['lklayoutmediaid'];
+                    $regionId = $row['regionid'];
+    
+                    // Get the Type of this media
+                    if (!$type = $region->GetMediaNodeType($layoutId, '', '', $lkId))
+                        continue;
+    
+                    // Create a new media node use it to swap the nodes over
+                    Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
+                    require_once('modules/' . $type . '.module.php');
+    
+                    // Create a new module as if we were assigning it for the first time
+                    if (!$module = new $type($db, $this->user, $newMediaId))
+                        return false;
+    
+                    // Sets the URI field
+                    if (!$module->SetRegionInformation($layoutId, $regionId))
+                        return false;
+    
+                    // Get the media xml string to use in the swap.
+                    $mediaXmlString = $module->AsXml();
+    
+                    // Swap the nodes
+                    if (!$region->SwapMedia($layoutId, $regionId, $lkId, $oldMediaId, $newMediaId, $mediaXmlString))
+                        return false;
+    
+                    // Update the LKID with the new media id
+                    $sth_update->execute(array(
+                        'media_id' => $newMediaId,
+                        'layout_id' => $row['lklayoutmediaid']
+                    ));
+    
+                    $count++;
+                }
             }
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
         }
 
         Debug::LogEntry('audit', sprintf('Replaced media in %d layouts', $count), 'module', 'ReplaceMediaInAllLayouts');

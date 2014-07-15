@@ -368,7 +368,7 @@
                 if (!$groupID = $userGroupObject->Add($this->getNameFromID($id), 1))
                 {
                     // Error
-                    trigger_error(__('User does not have a group and Xibo is unable to add one.'), E_USER_ERROR);
+                    trigger_error(__('User does not have a group and we are unable to add one.'), E_USER_ERROR);
                 }
 
                 // Link the two
@@ -805,7 +805,7 @@ END;
         $SQL .= " WHERE lklayoutregiongroup.RegionID = '%s' AND lklayoutregiongroup.LayoutID = %d ";
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
-        $SQL = sprintf($SQL, $db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $this->db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
         //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
@@ -1316,7 +1316,11 @@ END;
         if ($this->usertypeid == 1)
         {
             $auth->FullAccess();
-            return $auth;
+
+            if ($fullObject)
+                return $auth;
+
+            return true;
         }
 
         // Permissions for groups the user is assigned to, and Everyone
@@ -1429,7 +1433,7 @@ END;
     /**
      * List of Displays this user has access to view
      */
-    public function DisplayList($sort_order = array('displayid'), $filter_by = array()) {
+    public function DisplayList($sort_order = array('displayid'), $filter_by = array(), $auth_level = 'view') {
 
         $SQL  = 'SELECT display.displayid, ';
         $SQL .= '    display.display, ';
@@ -1463,6 +1467,17 @@ END;
         // Filter by Display ID?
         if (Kit::GetParam('displayid', $filter_by, _INT) != 0) {
             $SQL .= sprintf(' AND display.displayid = %d ', Kit::GetParam('displayid', $filter_by, _INT));
+        }
+
+        // Exclude a group?
+        if (Kit::GetParam('exclude_displaygroupid', $filter_by, _INT) != 0) {
+            $SQL .= " AND display.DisplayID NOT IN ";
+            $SQL .= "       (SELECT display.DisplayID ";
+            $SQL .= "       FROM    display ";
+            $SQL .= "               INNER JOIN lkdisplaydg ";
+            $SQL .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
+            $SQL .= sprintf("   WHERE  lkdisplaydg.DisplayGroupID   = %d ", Kit::GetParam('exclude_displaygroupid', $filter_by, _INT));
+            $SQL .= "       )";
         }
 
         // Sorting?
@@ -1502,6 +1517,10 @@ END;
 
             if ($auth->view)
             {
+                // If auth level = edit and we don't have edit, then leave them off
+                if ($auth_level == 'edit' && !$auth->edit)
+                    continue;
+
                 $displayItem['view'] = (int) $auth->view;
                 $displayItem['edit'] = (int) $auth->edit;
                 $displayItem['del'] = (int) $auth->del;

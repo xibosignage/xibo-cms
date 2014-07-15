@@ -46,29 +46,14 @@ class video extends Module
      * @param $regionid Object
      * @param $mediaid Object
      */
-    public function SetRegionInformation($layoutid, $regionid)
-    {
+    public function SetRegionInformation($layoutid, $regionid) {
         $db =& $this->db;
-        $this->layoutid = $layoutid;
-        $this->regionid = $regionid;
-        $mediaid = $this->mediaid;
-        $this->existingMedia = false;
-
-        if ($this->regionSpecific == 1) return;
-
-        // Load what we know about this media into the object
-        $SQL = "SELECT storedAs FROM media WHERE mediaID = $mediaid ";
-
-        if (!$row= $db->GetSingleRow($SQL))
-        {
-            trigger_error($db->error());
-            return false;
-        }
-
-        $storedAs   = $row['storedAs'];
+        
+        parent::SetRegionInformation($layoutid, $regionid);
 
         // Any Options
-        $this->SetOption('uri', $storedAs);
+        $this->SetOption('uri', $this->storedAs);
+        $this->existingMedia = false;
 
         return true;
     }
