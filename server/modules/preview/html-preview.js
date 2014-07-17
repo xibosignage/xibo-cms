@@ -336,6 +336,7 @@ function region(parent, id, xml) {
 
             if (oldMedia.mediaType == "video") {
                 $("#" + oldMedia.containerName + "-vid").get(0).pause();
+                $("#" + oldMedia.containerName + "-vid").get(0).currentTime = 0;
             }
         }
         
