@@ -43,6 +43,13 @@ $LP_RELEASE_PAGE = 'https://launchpad.net/xibo/1.6/1.6.2';
 
 <p>Xibo requires PHP 5.3.3 or higher. A full list of module requirements is presented at the point of installation - we'll even tell you which modules you're missing!</p>
 
+<h3>Xibo for Windows</h3>
+<p>Series 1.6 of Xibo has brought about advancements in text formatting, layout scaling and other general presentation improvements. As a result of this the recommended version of IE to have installed is IE9 on the client. IE9 is not supported on Windows XP.</p>
+
+<p>The Xibo team have made every effort to maintain support for XP as a platform and as a result Xibo will run on Windows XP, but may experience some visual defects and artefacts.</p>
+
+<p>We are looking to replace IE as a rendering engine in 1.7 Series. More information <a href="https://blueprints.launchpad.net/xibo/+spec/netclient-berkelium-sharp">here</a>.</p>
+
 <h2 id="Upgrading">Upgrading</h2>
 <p>There are significant database schema changes between the 1.4 series of Xibo and prior released. The upgrade wizard will take a prior database and convert it to a schema suitable for the 1.4 series to date. Note that this is a one-way conversion. Please do not upgrade your production database to test Xibo 1.6 functionality, and then expect to run a prior series code base against that database.</p>
 
