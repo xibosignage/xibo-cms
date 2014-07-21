@@ -116,4 +116,33 @@ echo __('Date');
 echo __('Value');
 echo __('Formula');
 
+
+echo __('Media will be created with these settings. If public everyone will be able to view and use this media.');
+echo __('New layouts will be created with these settings. If public everyone will be able to view and use this layout.');
+echo __('Sets the default user type selected when creating a user.\r\n<br />\r\nWe recommend that this is set to "User"');
+echo __('Sets whether debug information is recorded when an error occurs.\r\n<br />\r\nThis should be set to "off" to ensure smaller log sizes');
+echo __('This sets which user authentication module is currently being used.');
+echo __('Sets the admin message to be displayed on the client page at all times');
+echo __('Set the default timezone for the application');
+echo __('Errors will be mailed here');
+echo __('Mail will be sent from this address');
+echo __('This is the fully qualified URI of the site. e.g http://www.xibo.co.uk/');
+echo __('Default length for JPG files (in seconds)');
+echo __('Default length for PPT files');
+echo __('Default height for PPT files');
+echo __('Default length for PPT files (in seconds)');
+echo __('Default length for SWF files');
+echo __('Turn on the auditing information. Warning this will quickly fill up the log');
+echo __('Should the server send anonymous statistics back to the Xibo project?');
+echo __('Key used to distinguish each Xibo instance. This is generated randomly based on the time you first installed Xibo, and is completely untraceable.');
+echo __('The URL to connect to to PHONE_HOME (if enabled)');
+echo __('The last time we PHONED_HOME in seconds since the epoch');
+echo __('This should only be set if you want to display the maximum allowed error messaging through the user interface. <br /> Useful for capturing critical php errors and environment issues.');
+echo __('Allow the maintenance script to run if it is called?');
+echo __('Global switch for email alerts to be sent');
+echo __('String appended to the maintenance script to prevent malicious calls to the script.');
+echo __('Maximum age for log entries. Set to 0 to keep logs indefinitely.');
+echo __('Maximum age for statistics entries. Set to 0 to keep statistics indefinitely.');
+echo __('How long in minutes after the last time a client connects should we send an alert? Can be overridden on a per client basis.');
+
 ?>
