@@ -145,4 +145,18 @@ echo __('Maximum age for log entries. Set to 0 to keep logs indefinitely.');
 echo __('Maximum age for statistics entries. Set to 0 to keep statistics indefinitely.');
 echo __('How long in minutes after the last time a client connects should we send an alert? Can be overridden on a per client basis.');
 
+
+echo __('January');
+echo __('February');
+echo __('March');
+echo __('April');
+echo __('May');
+echo __('June');
+echo __('July');
+echo __('August');
+echo __('September');
+echo __('October');
+echo __('November');
+echo __('December');
+
 ?>

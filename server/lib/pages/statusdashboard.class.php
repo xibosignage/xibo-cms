@@ -45,7 +45,7 @@ class statusdashboardDAO
 
 		    foreach ($results as $row) {
 		        
-		        $points['data'][] = array($row['month'], ((double)$row['size']) / 1024 / 1024 / 1024);
+		        $points['data'][] = array(__($row['month']), ((double)$row['size']) / 1024 / 1024 / 1024);
 		    }
 
 		    $points['label'] = __('GB');
