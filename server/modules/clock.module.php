@@ -253,7 +253,12 @@ class clock extends Module
         $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
         $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
 
-        // Render our clock
+        // Render our clock face
+        //$template = str_replace('<!--[[[CLOCK_FACE]]]-->', base64_encode(file_get_contents('modules/theme/clock_bg.png')), $template);
+        $template = str_replace('<!--[[[CLOCK_FACE]]]-->', base64_encode(file_get_contents('modules/theme/clock_bg_modern_dark.png')), $template);
+        
+        // Light or dark?
+        $template = str_replace('<!--[[[CLOCK_THEME]]]-->', 'dark', $template);
 
         // After body content
         $javaScriptContent  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
