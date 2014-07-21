@@ -31,4 +31,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<input class="required number" name="duration" type="text" id="duration" tabindex="1" />
 		</div>
 	</div>
+    <div class="control-group">
+        <label class="control-label" for="themeid" accesskey="t" title="<?php echo Theme::Translate('Should the clock be light or dark?'); ?>"><?php echo Theme::Translate('Theme'); ?></label>
+        <div class="controls">
+            <?php echo Theme::SelectList('themeid', Theme::Get('theme_field_list'), 'themeid', 'theme'); ?>
+        </div>
+    </div>
 </form>

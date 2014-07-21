@@ -107,6 +107,7 @@ class clock extends Module
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
     
         // Any values for the form fields should be added to the theme here.
+        Theme::Set('theme_field_list', array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')));
 
         // Modules should be rendered using the theme engine.
         $this->response->html = Theme::RenderReturn('media_form_clock_add');
@@ -137,6 +138,7 @@ class clock extends Module
 
         // You must also provide a duration (all media items must provide this field)
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -167,11 +169,14 @@ class clock extends Module
         // All forms should set some meta data about the form.
         // Usually, you would want this meta data to remain the same.
         Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $this->mediaid . '">');
     
         // Any values for the form fields should be added to the theme here.
         Theme::Set('duration', $this->duration);
+        Theme::Set('theme', $this->GetOption('theme'));
+
+        Theme::Set('theme_field_list', array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')));
 
         // Modules should be rendered using the theme engine.
         $this->response->html = Theme::RenderReturn('media_form_clock_edit');
@@ -202,6 +207,7 @@ class clock extends Module
 
         // You must also provide a duration (all media items must provide this field)
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -254,11 +260,13 @@ class clock extends Module
         $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
 
         // Render our clock face
-        //$template = str_replace('<!--[[[CLOCK_FACE]]]-->', base64_encode(file_get_contents('modules/theme/clock_bg.png')), $template);
-        $template = str_replace('<!--[[[CLOCK_FACE]]]-->', base64_encode(file_get_contents('modules/theme/clock_bg_modern_dark.png')), $template);
+        $theme = ($this->GetOption('theme') == 1 ? 'light' : 'dark');
+        $theme_face = ($this->GetOption('theme') == 1 ? 'clock_bg_modern_light.png' : 'clock_bg_modern_dark.png');
+         
+        $template = str_replace('<!--[[[CLOCK_FACE]]]-->', base64_encode(file_get_contents('modules/theme/' . $theme_face)), $template);
         
         // Light or dark?
-        $template = str_replace('<!--[[[CLOCK_THEME]]]-->', 'dark', $template);
+        $template = str_replace('<!--[[[CLOCK_THEME]]]-->', $theme, $template);
 
         // After body content
         $javaScriptContent  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
