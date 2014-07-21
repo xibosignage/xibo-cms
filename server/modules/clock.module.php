@@ -97,8 +97,8 @@ class clock extends Module
         // You also have access to $settings, which is the array of settings you configured for your module.
         
         // The CMS provides the region width and height in case they are needed
-        $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
-        $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
+        $rWidth = Kit::GetParam('rWidth', _REQUEST, _STRING);
+        $rHeight = Kit::GetParam('rHeight', _REQUEST, _STRING);
 
         // All forms should set some meta data about the form.
         // Usually, you would want this meta data to remain the same.
@@ -109,20 +109,13 @@ class clock extends Module
         // Any values for the form fields should be added to the theme here.
 
         // Modules should be rendered using the theme engine.
-        $this->response->html = Theme::RenderReturn('media_form_text_add');
+        $this->response->html = Theme::RenderReturn('media_form_clock_add');
 
-        // Any JavaScript call backs should be set (you can use text_callback to set up a text editor should you need one)
-        $this->response->callBack = 'text_callback';
-
-        $this->response->dialogTitle = __('Add Text');
+        $this->response->dialogTitle = __('Add Clock');
         
-        // You can have a bigger form
-        //$this->response->dialogClass = 'modal-big';
-
         // The response object outputs the required JSON object to the browser
         // which is then processed by the CMS JavaScript library (xibo-cms.js).
         $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
-        $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         // The response must be returned.
@@ -145,25 +138,6 @@ class clock extends Module
         // You must also provide a duration (all media items must provide this field)
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
 
-        // You should validate all form input using the Kit::GetParam helper classes
-        //Kit::GetParam('duration', _POST, _INT, 0);
-        
-        // You should also validate that fields are set to your liking
-        if ($text == '')
-        {
-            $this->response->SetError('Please enter some text');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        // You can store any additional options for your module using the SetOption method
-        $this->SetOption('direction', $direction);
-        $this->SetOption('scrollSpeed', $scrollSpeed);
-        $this->SetOption('fitText', $fitText);
-
-        // You may also store raw XML/HTML using SetRaw. You should provide a containing node (in this example: <text>)
-        $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
-
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
         $this->UpdateRegion();
@@ -172,8 +146,7 @@ class clock extends Module
         // In some cases you will want to load the edit form for that module
         $this->response->loadForm = true;
         $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
-        //$this->response->loadFormUri = "index.php?p=module&mod=$this->type&q=Exec&method=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$this->mediaid";
-
+        
         return $this->response;
     }
 
@@ -182,7 +155,36 @@ class clock extends Module
      * @return
      */
     public function EditForm() {
-        // Edit forms are the same as add forms, except you will have the $this->mediaid member variable available for use.
+        
+        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
+        if (!$this->auth->edit)
+        {
+            $this->response->SetError('You do not have permission to edit this assignment.');
+            $this->response->keepOpen = false;
+            return $this->response;
+        }
+
+        // All forms should set some meta data about the form.
+        // Usually, you would want this meta data to remain the same.
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+    
+        // Any values for the form fields should be added to the theme here.
+        Theme::Set('duration', $this->duration);
+
+        // Modules should be rendered using the theme engine.
+        $this->response->html = Theme::RenderReturn('media_form_clock_edit');
+
+        $this->response->dialogTitle = __('Edit Clock');
+        
+        // The response object outputs the required JSON object to the browser
+        // which is then processed by the CMS JavaScript library (xibo-cms.js).
+        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+
+        // The response must be returned.
+        return $this->response;
     }
 
     /**
@@ -197,6 +199,20 @@ class clock extends Module
             $this->response->keepOpen = false;
             return $this->response;
         }
+
+        // You must also provide a duration (all media items must provide this field)
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+
+        // Should have built the media object entirely by this time
+        // This saves the Media Object to the Region
+        $this->UpdateRegion();
+
+        // Usually you will want to load the region options form again once you have added your module.
+        // In some cases you will want to load the edit form for that module
+        $this->response->loadForm = true;
+        $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
+        
+        return $this->response;
     }
 
     /**
@@ -230,28 +246,21 @@ class clock extends Module
         // A template is provided which contains a number of different libraries that might
         // be useful (jQuery, etc).
         // You can provide your own template, or just output the HTML directly in this method. It is up to you.
-        //$template = file_get_contents('modules/preview/HtmlTemplateSimple.html');
-        $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
+        $template = file_get_contents('modules/preview/HtmlTemplateForClock.html');
 
         // If we are coming from a CMS preview or the Layout Designer we will have some additional variables passed in
         // These will not be passed in from the client.
         $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
         $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
 
-        // Get any options you require from the XLF
-        $myvariable = $this->GetOption('myvariable');
-        
-        // The duration is always available
-        $duration = $this->duration;
+        // Render our clock
 
-        // Get the text out of RAW
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
+        // After body content
+        $javaScriptContent  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
+        $javaScriptContent .= '<script>' . file_get_contents('modules/preview/vendor/moment.js') . '</script>';
 
-        // Get the Text Node
-        $textNodes = $rawXml->getElementsByTagName('text');
-        $textNode = $textNodes->item(0);
-        $text = $textNode->nodeValue;
+        // Replace the After body Content
+        $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
 
         // Do whatever it is you need to do to render your content.
         // Return that content.

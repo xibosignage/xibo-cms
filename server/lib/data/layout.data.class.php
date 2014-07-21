@@ -809,7 +809,7 @@ class Layout extends Data
             if ($layoutId == 0)
                 $this->ThrowError(__('Layout not selected'));
     
-            if ($layoutId == 0)
+            if ($resolutionId == 0)
                 $this->ThrowError(__('Resolution not selected'));
     
             // Allow for the 0 media idea (no background image)

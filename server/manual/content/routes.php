@@ -35,6 +35,7 @@ if (INCLUDE_DEVELOPER) {
 	$allowed_toc[] = 'developer';
 	$allowed_toc[] = 'developer_api';
 	$allowed_toc[] = 'developer_releasenotes';
+	$allowed_toc[] = 'developer_module';
 }
 
 $allowed_routes = array(
@@ -149,5 +150,10 @@ $allowed_routes = array(
 		'admin/release_notes_1.6.0',
 		'admin/pyclient_libbrowsernode_build'
 	);
+
+if (INCLUDE_DEVELOPER) {
+	$allowed_routes[] = 'admin/module_overview';
+	$allowed_routes[] = 'admin/module_template';
+}
 
 ?>

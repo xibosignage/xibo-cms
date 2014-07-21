@@ -238,7 +238,7 @@ class moduletemplate extends Module
         // be useful (jQuery, etc).
         // You can provide your own template, or just output the HTML directly in this method. It is up to you.
         //$template = file_get_contents('modules/preview/HtmlTemplateSimple.html');
-        $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
+        $template = file_get_contents('modules/preview/HtmlTemplate.html');
 
         // If we are coming from a CMS preview or the Layout Designer we will have some additional variables passed in
         // These will not be passed in from the client.

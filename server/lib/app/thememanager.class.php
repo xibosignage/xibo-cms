@@ -85,8 +85,12 @@ class Theme {
 		if (file_exists('theme/' . $theme->name . '/html/' . $item . '.php')) {
 			include('theme/' . $theme->name . '/html/' . $item . '.php');
 		}
+		// Check the module theme folder
+		else if (file_exists('modules/theme/' . $item . '.php')) {
+			include('modules/theme/' . $item . '.php');	
+		}
 		// If not, then use the default folder
-		elseif (file_exists('theme/default/html/' . $item . '.php')) {
+		else if (file_exists('theme/default/html/' . $item . '.php')) {
 			include('theme/default/html/' . $item . '.php');
 		}
 		else

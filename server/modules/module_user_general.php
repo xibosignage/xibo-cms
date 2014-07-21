@@ -217,7 +217,7 @@
         global $session;
         
         $userid = Kit::GetParam('userid', _SESSION, _INT, 0);
-        
+
         // Checks for a user ID in the session variable
         if($userid == 0) 
         {

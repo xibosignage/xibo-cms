@@ -37,7 +37,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 <dl class="dl-horizontal">
     <dt>Description</dt>
-    <dd>A breif description of the module.</dd>
+    <dd>A brief description of the module.</dd>
 </dl>
 
 <dl class="dl-horizontal">
