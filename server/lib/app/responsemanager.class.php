@@ -29,6 +29,7 @@ class ResponseManager
 	public $html;
 	public $callBack;
 	public $buttons;
+	public $fieldActions;
 	
 	public $sortable;
 	public $sortingDiv;
@@ -73,6 +74,7 @@ class ResponseManager
         $this->appendHiddenSubmit = true;
         $this->uniqueReference = '';
 		$this->buttons = '';
+		$this->fieldActions = '';
         $this->pageSize = 10;
         $this->pageNumber = 0;
         $this->initialSortColumn = 1;
@@ -211,6 +213,24 @@ class ResponseManager
 		return true;
 	}
 
+	/**
+	 * Add a Field Action to a Field
+	 * @param string $field   The field name
+	 * @param string $action  The action name
+	 * @param string $value  The value to trigger on
+	 * @param string $actions The actions (field => action)
+	 */
+	public function AddFieldAction($field, $action, $value, $actions) {
+		$this->fieldActions[] = array(
+			'field' => $field,
+			'trigger' => $action, 
+			'value' => $value, 
+			'actions' => $actions
+			);
+
+		return true;
+	}
+
         /**
          * Responds with an Error
          * @param <string> $message
@@ -255,6 +275,7 @@ class ResponseManager
 			// General
 			$response['html'] 			= $this->html;
 			$response['buttons']		= $this->buttons;
+			$response['fieldActions'] = $this->fieldActions;
             $response['uniqueReference'] = $this->uniqueReference;
 			
 			$response['success']		= $this->success;

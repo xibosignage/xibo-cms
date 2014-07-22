@@ -399,6 +399,31 @@ function XiboFormRender(formUrl) {
                     }
                 }
 
+                // Set up dependencies between controls
+                if (response.fieldActions != '') {
+                    $.each(response.fieldActions, function(index, fieldAction) {
+                        
+                        console.log("Processing field action for " + fieldAction.field);
+
+                        if (fieldAction.trigger == "init") {
+                            // Process the actions straight away.
+                            var fieldVal = $("#" + fieldAction.field).val();
+
+                            console.log("Init action with value " + fieldVal);
+
+                            if (fieldVal == fieldAction.value) {
+                                console.log("Value match");
+
+                                $.each(fieldAction.actions, function(index, action) {
+                                    console.log("Setting child field on " + index + " to " + JSON.stringify(action));
+                                    // Action the field
+                                    $("#" + index).css(action);
+                                });
+                            }
+                        }
+                    });
+                }
+
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
             }

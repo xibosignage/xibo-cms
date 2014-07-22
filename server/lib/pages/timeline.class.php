@@ -716,7 +716,7 @@ END;
 
         foreach($region->GetMediaNodeList($layoutId, $regionId) as $mediaNode)
         {
-            // Put this node vertically in the region timeline
+            // Put this node vertically in the region time line
             $mediaId = $mediaNode->getAttribute('id');
             $lkId = $mediaNode->getAttribute('lkid');
             $mediaType = $mediaNode->getAttribute('type');
@@ -740,7 +740,7 @@ END;
             $transitionOut = $tmpModule->GetTransition('out');
             
             // Colouring for the media block
-            if ($timeBarColouring == 'Permissions')
+            if ($timeBarColouring == 'Permissions' || !file_exists('timelineMediaItemColouring_' . $mediaType))
                 $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($auth->edit) ? 'enabled' : 'disabled');
             else
                 $mediaBlockColouringClass = 'timelineMediaItemColouring_' . $mediaType;

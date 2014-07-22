@@ -110,10 +110,17 @@ class clock extends Module
         // Any values for the form fields should be added to the theme here.
         Theme::Set('theme_field_list', array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')));
 
+        // Set a default format
+        Theme::Set('format', '[HH:mm]');
+
+        // Dependencies (some fields should be shown/hidden)
+        $this->SetFieldDependencies();
+
         // Modules should be rendered using the theme engine.
         $this->response->html = Theme::RenderReturn('media_form_clock_add');
 
         $this->response->dialogTitle = __('Add Clock');
+        $this->response->callBack = 'text_callback';
         
         // The response object outputs the required JSON object to the browser
         // which is then processed by the CMS JavaScript library (xibo-cms.js).
@@ -141,6 +148,7 @@ class clock extends Module
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
         $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
         $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
+        $this->SetRaw('<format><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></format>');
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -179,6 +187,15 @@ class clock extends Module
         Theme::Set('theme', $this->GetOption('theme'));
         Theme::Set('clockTypeId', $this->GetOption('clockTypeId'));
 
+        // Extract the format from the raw node in the XLF
+        $rawXml = new DOMDocument();
+        $rawXml->loadXML($this->GetRaw());
+        $formatNodes = $rawXml->getElementsByTagName('format');
+        $formatNode = $formatNodes->item(0);
+
+        if ($formatNode != NULL)
+            Theme::Set('format', $formatNode->nodeValue);
+
         Theme::Set('theme_field_list', array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')));
 
         // Offer a choice of clock type
@@ -188,10 +205,14 @@ class clock extends Module
                 array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
             ));
 
+        // Dependencies (some fields should be shown/hidden)
+        $this->SetFieldDependencies();
+
         // Modules should be rendered using the theme engine.
         $this->response->html = Theme::RenderReturn('media_form_clock_edit');
 
         $this->response->dialogTitle = __('Edit Clock');
+        $this->response->callBack = 'text_callback';
         
         // The response object outputs the required JSON object to the browser
         // which is then processed by the CMS JavaScript library (xibo-cms.js).
@@ -225,6 +246,7 @@ class clock extends Module
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
         $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
         $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
+        $this->SetRaw('<format><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></format>');
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -238,6 +260,18 @@ class clock extends Module
         }
         
         return $this->response;
+    }
+
+    private function SetFieldDependencies() {
+
+        $this->response->AddFieldAction('clockTypeId', 'init', 1, array('format-control-group' => array('display' => 'none')));
+        $this->response->AddFieldAction('clockTypeId', 'init', 2, 
+            array(
+                'format-control-group' => array('display' => 'block'),
+                'theme-control-group' => array('display' => 'none')
+                )
+            );
+        $this->response->AddFieldAction('clockTypeId', 'init', 3, array('format-control-group' => array('display' => 'none')));
     }
 
     /**
@@ -294,7 +328,96 @@ class clock extends Module
 
             case 2:
                 // Digital
-                $template = file_get_contents('modules/theme/HtmlTemplateForDigitalClock.html');
+                // Digital clock is essentially a cut down text module which always fits to the region
+                $template = file_get_contents('modules/preview/HtmlTemplate.html');
+
+                // Extract the format from the raw node in the XLF
+                $rawXml = new DOMDocument();
+                $rawXml->loadXML($this->GetRaw());
+                $formatNodes = $rawXml->getElementsByTagName('format');
+                $formatNode = $formatNodes->item(0);
+                $format = $formatNode->nodeValue;
+
+                // Strip out the bit between the [] brackets and use that as the format mask for moment.
+                $matches = '';
+                preg_match_all('/\[.*?\]/', $format, $matches);
+
+                foreach($matches[0] as $subs) {
+                    $format = str_replace($subs, '<span class="clock" format="' . str_replace('[', '', str_replace(']', '', $subs)) . '"></span>', $format);
+                }
+
+                // Replace all the subs
+                $template = str_replace('<!--[[[BODYCONTENT]]]-->', $format, $template);
+
+                // After body content
+                $options = array(
+                        'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
+                        'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
+                        'originalWidth' => $this->width,
+                        'originalHeight' => $this->height,
+                        'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+                    );
+
+                $javaScriptContent  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
+                $javaScriptContent .= '<script>' . file_get_contents('modules/preview/vendor/moment.js') . '</script>';
+                $javaScriptContent .= '<script>' . file_get_contents('modules/preview/vendor/fittext.js') . '</script>';
+                $javaScriptContent .= '<script>
+
+                    var options = ' . json_encode($options) . '
+
+                    function updateClock() {
+                        $(".clock").each(function() {
+                            $(this).html(moment().format($(this).attr("format")));
+                        });
+                    }
+
+                    $(document).ready(function() {
+
+                        var width; var height;
+
+                        if (options.previewWidth == 0 || options.previewHeight == 0) {
+                            width = $(window).width(); 
+                            height = $(window).height();
+                        }
+                        else {
+                            width = options.previewWidth;
+                            height = options.previewHeight;
+                        }
+
+                        var ratio = Math.min(width / options.originalWidth, height / options.originalHeight);
+
+                        console.log(ratio);
+
+                        if (options.scaleOverride != 0)
+                            ratio = options.scaleOverride;
+
+                        updateClock();
+
+                        $("body").css({
+                            width: options.originalWidth,
+                            height: options.originalHeight
+                        });
+                        
+                        // Handle the scaling
+                        // What IE are we?
+                        if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
+                            $("body").css({
+                                "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + ratio + ", M12=0, M21=0, M22=" + ratio + ", SizingMethod=\'auto expand\'"
+                            });
+                        }
+                        else {
+                            $("body").css({
+                                "transform": "scale(" + ratio + ")",
+                                "transform-origin": "0 0"
+                            });
+                        }
+
+                        setInterval(updateClock, 1000);
+                    });
+                </script>';
+
+                // Replace the After body Content
+                $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
 
                 break;
 
