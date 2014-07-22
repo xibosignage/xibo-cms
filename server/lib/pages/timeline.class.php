@@ -499,7 +499,7 @@ END;
 	$form .= '<input type="hidden" name="layoutid" value="' . $layoutid . '" />';
 	$form .= '<input type="hidden" name="regionid" value="' . $regionid . '" />';
         $form .= '<div class="dialog_table">';
-	$form .= '  <table style="width:100%">';
+	$form .= '  <table class="table table-bordered">';
         $form .= '      <tr>';
         $form .= '          <th>' . __('Group') . '</th>';
         $form .= '          <th>' . __('View') . '</th>';

@@ -106,7 +106,13 @@
 
         $(document).ready(function() {
 
-            var size = Math.min($(window).width(), $(window).height());
+            var previewWidth = <!--[[[PREVIEW_WIDTH]]]-->;
+            var previewHeight = <!--[[[PREVIEW_HEIGHT]]]-->;
+
+            if (previewWidth == 0 || previewHeight == 0)
+                var size = Math.min($(window).width(), $(window).height());
+            else 
+                var size = Math.min(previewWidth, previewHeight);
 
             // Shrink by 2px to get a bit of space to the side.
             size -= 2;

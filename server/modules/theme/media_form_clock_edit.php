@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -25,6 +25,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
     <?php echo Theme::Get('form_meta'); ?>
+    <div class="control-group">
+        <label class="control-label" for="clockTypeId" accesskey="t" title="<?php echo Theme::Translate('What clock type is required?'); ?>"><?php echo Theme::Translate('Clock Type'); ?></label>
+        <div class="controls">
+            <?php echo Theme::SelectList('clockTypeId', Theme::Get('clockType_field_list'), 'clockTypeId', 'clockType', Theme::Get('clockTypeId')); ?>
+        </div>
+    </div>
     <div class="control-group">
         <label class="control-label" for="duration" accesskey="d" title="<?php echo Theme::Translate('The duration in seconds this counter should be displayed'); ?>"><?php echo Theme::Translate('Duration'); ?></label>
         <div class="controls">

@@ -90,12 +90,6 @@ class clock extends Module
         // This is the logged in user and can be used to assess permissions
         $user =& $this->user;
 
-        // All modules will have:
-        //  $this->layoutid
-        //  $this->regionid
-
-        // You also have access to $settings, which is the array of settings you configured for your module.
-        
         // The CMS provides the region width and height in case they are needed
         $rWidth = Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight = Kit::GetParam('rHeight', _REQUEST, _STRING);
@@ -106,6 +100,13 @@ class clock extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
     
+        // Offer a choice of clock type
+        Theme::Set('clockType_field_list', array(
+                array('clockTypeId' => '1', 'clockType' => 'Analogue'),
+                array('clockTypeId' => '2', 'clockType' => 'Digital'),
+                array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
+            ));
+
         // Any values for the form fields should be added to the theme here.
         Theme::Set('theme_field_list', array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')));
 
@@ -139,6 +140,7 @@ class clock extends Module
         // You must also provide a duration (all media items must provide this field)
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
         $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
+        $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -175,8 +177,16 @@ class clock extends Module
         // Any values for the form fields should be added to the theme here.
         Theme::Set('duration', $this->duration);
         Theme::Set('theme', $this->GetOption('theme'));
+        Theme::Set('clockTypeId', $this->GetOption('clockTypeId'));
 
         Theme::Set('theme_field_list', array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')));
+
+        // Offer a choice of clock type
+        Theme::Set('clockType_field_list', array(
+                array('clockTypeId' => '1', 'clockType' => 'Analogue'),
+                array('clockTypeId' => '2', 'clockType' => 'Digital'),
+                array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
+            ));
 
         // Modules should be rendered using the theme engine.
         $this->response->html = Theme::RenderReturn('media_form_clock_edit');
@@ -185,7 +195,13 @@ class clock extends Module
         
         // The response object outputs the required JSON object to the browser
         // which is then processed by the CMS JavaScript library (xibo-cms.js).
-        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+        if ($this->showRegionOptions) {
+            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+        }
+        else {
+            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
+
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         // The response must be returned.
@@ -208,6 +224,7 @@ class clock extends Module
         // You must also provide a duration (all media items must provide this field)
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
         $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
+        $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -215,8 +232,10 @@ class clock extends Module
 
         // Usually you will want to load the region options form again once you have added your module.
         // In some cases you will want to load the edit form for that module
-        $this->response->loadForm = true;
-        $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
+        if ($this->showRegionOptions) {
+            $this->response->loadForm = true;
+            $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
+        }
         
         return $this->response;
     }
@@ -249,33 +268,57 @@ class clock extends Module
     public function GetResource($displayId = 0) {
         // Behave exactly like the client.
 
-        // A template is provided which contains a number of different libraries that might
-        // be useful (jQuery, etc).
-        // You can provide your own template, or just output the HTML directly in this method. It is up to you.
-        $template = file_get_contents('modules/preview/HtmlTemplateForClock.html');
+        // Clock Type
+        switch ($this->GetOption('clockTypeId', 1)) {
 
-        // If we are coming from a CMS preview or the Layout Designer we will have some additional variables passed in
-        // These will not be passed in from the client.
-        $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
-        $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
+            case 1:
+                // Analogue
+                $template = file_get_contents('modules/theme/HtmlTemplateForClock.html');
+                
+                // Render our clock face
+                $theme = ($this->GetOption('theme') == 1 ? 'light' : 'dark');
+                $theme_face = ($this->GetOption('theme') == 1 ? 'clock_bg_modern_light.png' : 'clock_bg_modern_dark.png');
+                 
+                $template = str_replace('<!--[[[CLOCK_FACE]]]-->', base64_encode(file_get_contents('modules/theme/' . $theme_face)), $template);
+                
+                // Light or dark?
+                $template = str_replace('<!--[[[CLOCK_THEME]]]-->', $theme, $template);
 
-        // Render our clock face
-        $theme = ($this->GetOption('theme') == 1 ? 'light' : 'dark');
-        $theme_face = ($this->GetOption('theme') == 1 ? 'clock_bg_modern_light.png' : 'clock_bg_modern_dark.png');
-         
-        $template = str_replace('<!--[[[CLOCK_FACE]]]-->', base64_encode(file_get_contents('modules/theme/' . $theme_face)), $template);
-        
-        // Light or dark?
-        $template = str_replace('<!--[[[CLOCK_THEME]]]-->', $theme, $template);
+                // After body content
+                $javaScriptContent  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
+                $javaScriptContent .= '<script>' . file_get_contents('modules/preview/vendor/moment.js') . '</script>';
 
-        // After body content
-        $javaScriptContent  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
-        $javaScriptContent .= '<script>' . file_get_contents('modules/preview/vendor/moment.js') . '</script>';
+                // Replace the After body Content
+                $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+                break;
 
-        // Replace the After body Content
-        $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+            case 2:
+                // Digital
+                $template = file_get_contents('modules/theme/HtmlTemplateForDigitalClock.html');
 
-        // Do whatever it is you need to do to render your content.
+                break;
+
+            case 3:
+                // Flip Clock
+                $template = file_get_contents('modules/theme/HtmlTemplateForFlipClock.html');
+
+                // Head Content (CSS for flip clock)
+                $template = str_replace('<!--[[[HEADCONTENT]]]-->', '<style type="text/css">' . file_get_contents('modules/preview/vendor/flipclock.css') . '</style>', $template);
+
+                // After body content
+                $javaScriptContent  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
+                $javaScriptContent .= '<script>' . file_get_contents('modules/preview/vendor/flipclock.min.js') . '</script>';
+
+                // Replace the After body Content
+                $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+
+                break;
+        }
+
+        // If we are a preview, then pass in the width and height
+        $template = str_replace('<!--[[[PREVIEW_WIDTH]]]-->', Kit::GetParam('width', _GET, _DOUBLE, 0), $template);
+        $template = str_replace('<!--[[[PREVIEW_HEIGHT]]]-->', Kit::GetParam('height', _GET, _DOUBLE, 0), $template);
+
         // Return that content.
         return $template;
     }
@@ -283,8 +326,6 @@ class clock extends Module
     public function HoverPreview() {
         // Default Hover window contains a thumbnail, media type and duration
         $output = parent::HoverPreview();
-
-        // You can add anything you like to this, or completely replace it
 
         return $output;
     }
