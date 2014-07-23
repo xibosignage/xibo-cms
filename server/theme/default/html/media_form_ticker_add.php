@@ -30,18 +30,18 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         	<?php echo Theme::Translate('Please choose between a RSS/Atom feed or a DataSet as the source of this Ticker'); ?>
         </div>
         <div class="control-group">
-            <label class="control-label" for="source" accesskey="n" title="<?php echo Theme::Translate('The source for this Ticker'); ?>"><?php echo Theme::Translate('Source Type'); ?></label>
+            <label class="control-label" for="sourceid" accesskey="n" title="<?php echo Theme::Translate('The source for this Ticker'); ?>"><?php echo Theme::Translate('Source Type'); ?></label>
             <div class="controls">
                 <?php echo Theme::SelectList('sourceid', Theme::Get('source_field_list'), 'sourceid', 'source'); ?>
             </div>
         </div>
-    	<div class="control-group">
+    	<div class="control-group feed-fields">
     		<label class="control-label" for="uri" title="The Link for the RSS feed"><?php echo Theme::Translate('Feed URL'); ?></label>
     		<div class="controls">
     			<input id="uri" name="uri" value="" type="text">
     		</div>
     	</div>
-    	<div class="control-group">
+    	<div class="control-group dataset-fields">
             <label class="control-label" for="dataset" accesskey="n" title="<?php echo Theme::Translate('The DataSet for this Ticker'); ?>"><?php echo Theme::Translate('DataSet'); ?></label>
             <div class="controls">
                 <?php echo Theme::SelectList('datasetid', Theme::Get('dataset_field_list'), 'datasetid', 'dataset'); ?>

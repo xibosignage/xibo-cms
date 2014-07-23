@@ -55,6 +55,22 @@ class ticker extends Module
 		$datasets = $user->DataSetList();
 		array_unshift($datasets, array('datasetid' => '0', 'dataset' => 'None'));
         Theme::Set('dataset_field_list', $datasets);
+
+        // Field dependencies
+        $sourceFieldDepencies_1 = array(
+                '.feed-fields' => array('display' => 'block'),
+                '.dataset-fields' => array('display' => 'none'),
+            );
+
+        $sourceFieldDepencies_2 = array(
+                '.feed-fields' => array('display' => 'none'),
+                '.dataset-fields' => array('display' => 'block'),
+            );
+
+        $this->response->AddFieldAction('sourceid', 'init', 1, $sourceFieldDepencies_1);
+        $this->response->AddFieldAction('sourceid', 'change', 1, $sourceFieldDepencies_1);
+        $this->response->AddFieldAction('sourceid', 'init', 2, $sourceFieldDepencies_2);
+        $this->response->AddFieldAction('sourceid', 'change', 2, $sourceFieldDepencies_2);
 		        
 		// Return
 		$this->response->html = Theme::RenderReturn('media_form_ticker_add');
