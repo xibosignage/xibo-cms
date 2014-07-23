@@ -601,6 +601,10 @@ END;
 	{
 		return extension_loaded("fileinfo");
 	}
+
+	function CheckZip() {
+		return extension_loaded('zip');
+	}
 	
 	/**
 	 * Check PHP is setup for large file uploads

@@ -1152,5 +1152,107 @@ class Layout extends Data
 
         return $info;
     }
+
+    /**
+     * Export a layout.
+     * @param [type] $layoutId [description]
+     */
+    function Export($layoutId) {
+
+        if ($layoutId == 0 || $layoutId == '')
+            return $this->SetError(__('Must provide layoutId'));
+
+        if (!Config::CheckZip())
+            return $this->SetError(__('Zip is not enabled on this server'));
+
+        $libraryPath = Config::GetSetting('LIBRARY_LOCATION');
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('
+                SELECT layout, description, tags, background, xml 
+                  FROM layout
+                 WHERE layoutid = :layoutid');
+
+            $sth->execute(array('layoutid' => $layoutId));
+        
+            if (!$row = $sth->fetch())
+                $this->ThrowError(__('Layout not found.'));
+            
+            $layoutName = $row['layout'];
+            $xml = $row['xml'];
+            $backgroundImage = $row['background'];
+    
+            $fileName = $libraryPath . 'temp/export_' . Kit::ValidateParam($row['layout'], _FILENAME) . '.zip';
+
+            $zip = new ZipArchive();
+            $zip->open($fileName, ZIPARCHIVE::OVERWRITE);        
+            $zip->addFromString('layout.xml', $xml);
+    
+            if (!empty($backgroundImage)) {
+                $zip->addFile($libraryPath . '/' . $backgroundImage, 'library/' . $backgroundImage);
+            }
+    
+            $mediaSth = $dbh->prepare(' 
+                SELECT media.name, media.storedAs  
+                  FROM `media` 
+                    INNER JOIN `lklayoutmedia`
+                    ON lklayoutmedia.mediaid = media.mediaid
+                 WHERE lklayoutmedia.layoutid = :layoutid');
+
+            $mediaSth->execute(array('layoutid' => $layoutId));
+
+            foreach ($sth->fetchAll() as $media) {
+                $mediaFilePath = $libraryPath . $media['storedAs'];
+                $zip->addFile($mediaFilePath, 'library/' . $media['name']);
+            }
+    
+            $zip->close();
+    
+            // Uncomment only if you are having permission issues
+            // chmod($fileName, 0777);
+    
+            // Push file back to browser
+            if (ini_get('zlib.output_compression')) {
+                ini_set('zlib.output_compression', 'Off');      
+            }
+
+            $size = filesize($fileName);
+
+            header('Content-Type: application/octet-stream');
+            header("Content-Transfer-Encoding: Binary"); 
+            header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
+    
+            //Output a header
+            header('Pragma: public');
+            header('Cache-Control: max-age=86400');
+            header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+            header('Content-Length: ' . $size);
+            
+            // Send via Apache X-Sendfile header?
+            if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
+                header("X-Sendfile: $fileName");
+                exit();
+            }
+            
+            // Return the file with PHP
+            // Disable any buffering to prevent OOM errors.
+            @ob_end_clean();
+            @ob_end_flush();
+            readfile($fileName);
+    
+            exit;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
 }
 ?>
