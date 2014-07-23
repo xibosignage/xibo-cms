@@ -596,7 +596,7 @@ class layoutDAO
 		}
 		
 		Theme::Set('resolutionid', $resolutionid);
-		Theme::Set('resolution_field_list', $db->GetArray('SELECT resolutionid, resolution FROM resolution WHERE enabled = 1 ORDER BY resolution'));
+		Theme::Set('resolution_field_list', $user->ResolutionList(NULL, array('withCurrent' => $resolutionid)));
 		
 		// Begin the form output
 		$form = Theme::RenderReturn('layout_form_background');

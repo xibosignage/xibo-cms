@@ -1200,12 +1200,27 @@ END;
         return $templates;
     }
 
-    public function ResolutionList() {
+    public function ResolutionList($sort_order = array('resolution'), $filter_by = array()) {
         try {
             $dbh = PDOConnect::init();
         
-            $sth = $dbh->prepare('SELECT * FROM resolution WHERE enabled = 1 ORDER BY resolution');
-            $sth->execute();
+            $params = array();
+            $SQL = 'SELECT * FROM resolution WHERE enabled = 1';
+
+            // Include the current?
+            if (Kit::GetParam('withCurrent', $filter_by, _INT, 0) != 0) {
+                $SQL .= ' OR resolutionid = :resolutionid ';
+                $params['resolutionid'] = Kit::GetParam('withCurrent', $filter_by, _INT);
+            }
+
+            // Sorting?
+            if (is_array($sort_order))
+                $SQL .= 'ORDER BY ' . implode(',', $sort_order);
+
+            Debug::LogEntry('audit', $SQL, 'user', 'ResolutionList');
+
+            $sth = $dbh->prepare($SQL);
+            $sth->execute($params);
           
             $results = $sth->fetchAll();
             $resolutions = array();
@@ -1230,9 +1245,6 @@ END;
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage());
-        
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
         
             return false;
         }

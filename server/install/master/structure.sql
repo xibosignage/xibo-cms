@@ -450,7 +450,7 @@ CREATE TABLE IF NOT EXISTS `pages` (
 
 CREATE TABLE IF NOT EXISTS `resolution` (
   `resolutionID` int(11) NOT NULL AUTO_INCREMENT,
-  `resolution` varchar(20) NOT NULL,
+  `resolution` varchar(254) NOT NULL,
   `width` smallint(6) NOT NULL,
   `height` smallint(6) NOT NULL,
   `intended_width` smallint(6) NOT NULL,

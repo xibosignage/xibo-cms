@@ -61,47 +61,30 @@ class resolutionDAO
         $user 	=& $this->user;
         $response = new ResponseManager();
 
-        $SQL = "SELECT * FROM resolution ORDER BY resolution";
+        $rows = $user->ResolutionList();
+        $resolutions = array();
 
-        if (!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error('Unable to Query for resolutions.');
-        }
-
-        $rows = array();
-
-        while($row = $db->get_assoc_row($results))
-        {
-            $resolutionID = Kit::ValidateParam($row['resolutionID'], _INT);
-            $row['id'] = Kit::ValidateParam($row['resolutionID'], _INT);
-            $row['resolution'] = Kit::ValidateParam($row['resolution'], _STRING);
-            $row['width'] = Kit::ValidateParam($row['width'], _INT);
-            $row['height'] = Kit::ValidateParam($row['height'], _INT);
-            $row['intended_width'] = Kit::ValidateParam($row['intended_width'], _INT);
-            $row['intended_height'] = Kit::ValidateParam($row['intended_height'], _INT);
-            $row['version'] = Kit::ValidateParam($row['version'], _INT);
-            $row['enabled'] = Kit::ValidateParam($row['enabled'], _INT);
+        foreach($rows as $row) {
 
             // Edit Button
             $row['buttons'][] = array(
                     'id' => 'resolution_button_edit',
-                    'url' => 'index.php?p=resolution&q=EditForm&resolutionid=' . $resolutionID,
+                    'url' => 'index.php?p=resolution&q=EditForm&resolutionid=' . $row['resolutionid'],
                     'text' => __('Edit')
                 );
 
             // Delete Button
             $row['buttons'][] = array(
                     'id' => 'resolution_button_delete',
-                    'url' => 'index.php?p=resolution&q=DeleteForm&resolutionid=' . $resolutionID,
+                    'url' => 'index.php?p=resolution&q=DeleteForm&resolutionid=' . $row['resolutionid'],
                     'text' => __('Delete')
                 );
 
             // Add to the rows objects
-            $rows[] = $row;
+            $resolutions[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
+        Theme::Set('table_rows', $resolutions);
 
         $output = Theme::RenderReturn('resolution_page_grid');
 

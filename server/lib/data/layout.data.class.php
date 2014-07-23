@@ -869,7 +869,7 @@ class Layout extends Data
             }
         
             // Look up the width and the height
-            $sth = $dbh->prepare('SELECT intended_width, intended_height FROM resolution WHERE resolutionID = :resolutionid');
+            $sth = $dbh->prepare('SELECT intended_width, intended_height, width, height, version FROM resolution WHERE resolutionID = :resolutionid');
             $sth->execute(array(
                 'resolutionid' => $resolutionId
             ));
@@ -878,8 +878,16 @@ class Layout extends Data
             if (!$row = $sth->fetch())
                 return $this->SetError(__('Unable to get the Resolution information'));
 
-            $width  =  Kit::ValidateParam($row['intended_width'], _INT);
-            $height =  Kit::ValidateParam($row['intended_height'], _INT);
+            $version = Kit::ValidateParam($row['version'], _INT);
+
+            if ($version == 1) {
+                $width  =  Kit::ValidateParam($row['width'], _INT);
+                $height =  Kit::ValidateParam($row['height'], _INT);
+            }
+            else {
+                $width  =  Kit::ValidateParam($row['intended_width'], _INT);
+                $height =  Kit::ValidateParam($row['intended_height'], _INT);
+            }
 
             include_once("lib/data/region.data.class.php");
             

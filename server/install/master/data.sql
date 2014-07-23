@@ -196,15 +196,13 @@ INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class
 (39, 9, 30, NULL, 'Help Links', NULL, NULL, 6, 0);
 
 
-INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`) VALUES
-(1, '4:3 Monitor', 800, 600, 1024, 768),
-(2, '3:2 Tv', 720, 480, 1440, 960),
-(3, '16:10 Widescreen Mon', 800, 500, 1680, 1050),
-(4, '16:9 HD Widescreen', 800, 450, 1920, 1080),
-(5, '3:4 Monitor', 600, 800, 768, 1024),
-(6, '2:3 Tv', 480, 720, 960, 1440),
-(7, '10:16 Widescreen', 500, 800, 1050, 1680),
-(8, '9:16 HD Widescreen', 450, 800, 1080, 1920);
+INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
+(9, '1080p HD Landscape', 800, 450, 1920, 1080, 2, 1),
+(10, '720p HD Landscape', 800, 450, 1280, 720, 2, 1),
+(11, '1080p HD Portrait', 450, 800, 1080, 1920, 2, 1),
+(12, '720p HD Portrait', 450, 800, 720, 1280, 2, 1),
+(13, '4k', 800, 450, 4096, 2304, 2, 1),
+(14, 'Common PC Monitor 4:3', 800, 600, 1024, 768, 2, 1);
 
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `options`, `cat`, `userChange`) VALUES
 (1, 'MEDIA_DEFAULT', 'private', 'dropdown', 'Media will be created with these settings. If public everyone will be able to view and use this media.', 'private|public', 'default', 1),

@@ -46,7 +46,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<tbody>
 		<?php foreach(Theme::Get('table_rows') as $row) { ?>
 		<tr>
-			<td><?php echo $row['id']; ?></td>
+			<td><?php echo $row['resolutionid']; ?></td>
 			<td><?php echo $row['resolution']; ?></td>
 			<td><?php echo $row['intended_width']; ?></td>
 			<td><?php echo $row['intended_height']; ?></td>
