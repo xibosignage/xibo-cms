@@ -653,26 +653,30 @@ class layoutDAO
 
 		// Get the display width / height
 		if ($resolutionid != 0) {
-			$SQL = sprintf("SELECT intended_width, intended_height FROM `resolution` WHERE resolutionid = %d", $resolutionid);
+			$SQL = sprintf("SELECT intended_width, intended_height, width, height, version FROM `resolution` WHERE resolutionid = %d", $resolutionid);
 		}
 		else {
-			$SQL = sprintf("SELECT intended_width, intended_height FROM `resolution`  WHERE width = %d AND height = %d", $width, $height);
+			$SQL = sprintf("SELECT intended_width, intended_height, width, height, version FROM `resolution` WHERE width = %d AND height = %d", $width, $height);
 		}
 
 		if (!$resolution = $db->GetSingleRow($SQL)) {
 			trigger_error(__('Unable to determine display resolution'));
 
-			$intended_width = $width;
-			$intended_height = $height;
+			$version = 1;
+			$designerScale = 1;
+			$tipScale = 1;
 		}
 		else {
-			$intended_width = $resolution['intended_width'];
-			$intended_height = $resolution['intended_height'];
-		}
+			// Version 1 layouts had the designer resolution in the XLF and therefore did not need anything scaling in the designer.
+			// Version 2 layouts have the layout resolution in the XLF and therefore need to be scaled back by the designer.
+			$version = $resolution['version'];
 
-		// Work out the scaling factor for the tip
-		// _scaleFactor = Math.Min(_clientSize.Width / _layoutWidth, _clientSize.Height / _layoutHeight);
-		$scaleFactor = min($intended_width / $width, $intended_height / $height);
+			$tipScale = ($version == 1) ? min($resolution['intended_width'] / $resolution['width'], $resolution['intended_height'] / $resolution['height']) : 1;
+			$designerScale = ($version == 1) ? 1 : min($resolution['width'] / $resolution['intended_width'], $resolution['intended_height'] / $resolution['height']);
+
+			// To do - version 2 layout can support zooming?
+			$designerScale = $designerScale * Kit::GetParam('zoom', _GET, _DOUBLE, 1);
+		}
 		
 		// do we have a background? Or a background color (or both)
 		$bgImage = $xml->documentElement->getAttribute('background');
@@ -695,8 +699,8 @@ class layoutDAO
             $background_css = "url('index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=$bgImageId&width=$width&height=$height&dynamic&proportional=0') top center no-repeat; background-color:$bgColor";
 		}
 		
-		$width 	= $width . "px";
-		$height = $height . "px";
+		$width 	= ($width * $designerScale) . "px";
+		$height = ($height * $designerScale) . "px";
 		
 		// Get all the regions and draw them on
 		$regionHtml 	= "";
@@ -706,15 +710,15 @@ class layoutDAO
 		foreach ($regionNodeList as $region)
 		{
 			// get dimensions
-            $tipWidth       = round($region->getAttribute('width') * $scaleFactor, 0);
-            $tipHeight      = round($region->getAttribute('height') * $scaleFactor, 0);
-            $tipLeft        = round($region->getAttribute('left') * $scaleFactor, 0);
-            $tipTop         = round($region->getAttribute('top') * $scaleFactor, 0);
+            $tipWidth       = round($region->getAttribute('width') * $tipScale, 0);
+            $tipHeight      = round($region->getAttribute('height') * $tipScale, 0);
+            $tipLeft        = round($region->getAttribute('left') * $tipScale, 0);
+            $tipTop         = round($region->getAttribute('top') * $tipScale, 0);
 
-			$regionWidth 	= $region->getAttribute('width') . "px";
-			$regionHeight 	= $region->getAttribute('height') . "px";
-			$regionLeft	= $region->getAttribute('left') . "px";
-			$regionTop	= $region->getAttribute('top') . "px";
+			$regionWidth 	= ($region->getAttribute('width') * $designerScale) . "px";
+			$regionHeight 	= ($region->getAttribute('height') * $designerScale) . "px";
+			$regionLeft	= ($region->getAttribute('left') * $designerScale) . "px";
+			$regionTop	= ($region->getAttribute('top') * $designerScale) . "px";
 			$regionid	= $region->getAttribute('id');
             $ownerId = $region->getAttribute('userId');
 
@@ -730,9 +734,9 @@ class layoutDAO
 			$regionTransparency  = '<div class="regionTransparency ' . $regionAuthTransparency . '" style="width:100%; height:100%;"></div>';
 			$doubleClickLink = ($regionAuth->edit) ? "XiboFormRender($(this).attr('href'))" : '';
 
-			$regionHtml .= "<div id='region_$regionid' regionEnabled='$regionAuth->edit' regionid='$regionid' layoutid='$this->layoutid' scale='$scaleFactor' width='$regionWidth' height='$regionHeight' href='index.php?p=timeline&layoutid=$this->layoutid&regionid=$regionid&q=Timeline' ondblclick=\"$doubleClickLink\"' class='$regionDisabledClass $regionPreviewClass' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
+			$regionHtml .= "<div id='region_$regionid' regionEnabled='$regionAuth->edit' regionid='$regionid' layoutid='$this->layoutid' tip_scale='$tipScale' designer_scale='$designerScale' width='$regionWidth' height='$regionHeight' href='index.php?p=timeline&layoutid=$this->layoutid&regionid=$regionid&q=Timeline' ondblclick=\"$doubleClickLink\"' class='$regionDisabledClass $regionPreviewClass' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
 					  $regionTransparency";
-                                          
+
 			if ($regionAuth->edit) {
 
 				$regionHtml .= '<div class="btn-group regionInfo pull-right">';
@@ -766,7 +770,7 @@ class layoutDAO
 		//render the view pane
 		$surface = <<<HTML
 
-		<div id="layout" class="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; border: 1px solid #000; background:$background_css;">
+		<div id="layout" version="$version" class="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; border: 1px solid #000; background:$background_css;">
 		$regionHtml
 		</div>
 HTML;

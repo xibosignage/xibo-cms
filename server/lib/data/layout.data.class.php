@@ -237,8 +237,9 @@ class Layout extends Data
                 $xmlDoc = new DOMDocument("1.0");
                 $layoutNode = $xmlDoc->createElement("layout");
     
-                $layoutNode->setAttribute("width", 800);
-                $layoutNode->setAttribute("height", 450);
+                $layoutNode->setAttribute("width", 1920);
+                $layoutNode->setAttribute("height", 1080);
+                $layoutNode->setAttribute("resolutionid", 9);
                 $layoutNode->setAttribute("bgcolor", "#000000");
                 $layoutNode->setAttribute("schemaVersion", Config::Version('XlfVersion'));
     
@@ -833,7 +834,7 @@ class Layout extends Data
             }
         
             // Look up the width and the height
-            $sth = $dbh->prepare('SELECT width, height FROM resolution WHERE resolutionID = :resolutionid');
+            $sth = $dbh->prepare('SELECT intended_width, intended_height FROM resolution WHERE resolutionID = :resolutionid');
             $sth->execute(array(
                 'resolutionid' => $resolutionId
             ));
@@ -842,8 +843,8 @@ class Layout extends Data
             if (!$row = $sth->fetch())
                 return $this->SetError(__('Unable to get the Resolution information'));
 
-            $width  =  Kit::ValidateParam($row['width'], _INT);
-            $height =  Kit::ValidateParam($row['height'], _INT);
+            $width  =  Kit::ValidateParam($row['intended_width'], _INT);
+            $height =  Kit::ValidateParam($row['intended_height'], _INT);
 
             include_once("lib/data/region.data.class.php");
             
@@ -1040,6 +1041,33 @@ class Layout extends Data
         $info = array();
         $info['regions'] = array();
 
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT * FROM `layout` WHERE layoutid = :layout_id');
+            $sth->execute(array('layout_id' => $layoutId));
+          
+            $rows = $sth->fetchAll();
+
+            if (count($rows) <= 0)
+                $this->ThrowError(__('Unable to find layout'));
+
+            $row = $rows[0];
+
+            $info['layout'] = Kit::ValidateParam($row['layout'], _STRING);
+            $modifiedDt = new DateTime($row['modifieddt']);
+            $info['updated'] = $modifiedDt->getTimestamp();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+
         // Use the Region class to help
         Kit::ClassLoader('region');
 
@@ -1070,7 +1098,9 @@ class Layout extends Data
                 $region['media'][] = array(
                         'mediaid' => $mediaNode->getAttribute('id'),
                         'lkid' => $mediaNode->getAttribute('lkid'),
-                        'mediatype' => $mediaNode->getAttribute('type')
+                        'mediatype' => $mediaNode->getAttribute('type'),
+                        'render' => $mediaNode->getAttribute('render'),
+                        'updated' => $info['updated']
                     );
             }
 

@@ -104,3 +104,8 @@ span[lang]
 {
    font-style: italic;
 }
+
+.cke_panel_listItem a span
+{
+    font-size: 12px !important;
+}

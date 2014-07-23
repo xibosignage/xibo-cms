@@ -311,7 +311,7 @@ class XMDSSoap
 
             foreach($layoutInformation['regions'] as $region) {
                 foreach($region['media'] as $media) {
-                    if ($media['mediatype'] == 'ticker' || $media['mediatype'] == 'text' || $media['mediatype'] == 'dataset') {
+                    if ($media['render'] == 'html' || $media['mediatype'] == 'ticker' || $media['mediatype'] == 'text' || $media['mediatype'] == 'dataset') {
                         // Append this item to required files
                         $file = $requiredFilesXml->createElement("file");
                         $file->setAttribute('type', 'resource');
@@ -319,6 +319,7 @@ class XMDSSoap
                         $file->setAttribute('layoutid', $layoutId);
                         $file->setAttribute('regionid', $region['regionid']);
                         $file->setAttribute('mediaid', $media['mediaid']);
+                        $file->setAttribute('updated', (isset($media['updated']) ? $media['updated'] : 0));
                         
                         $fileElements->appendChild($file);
                     }

@@ -60,19 +60,23 @@ $(document).ready(function(){
 
     $('.RegionOptionsMenuItem').click(function() {
 
-        var width   = $(this).closest('.region').css("width");
-        var height  = $(this).closest('.region').css("height");
-        var top     = $(this).closest('.region').css("top");
-        var left    = $(this).closest('.region').css("left");
-        var regionid = $(this).closest('.region').attr("regionid");
-        var layoutid = $(this).closest('.region').attr("layoutid");
-        var scale = $(this).closest('.region').attr("scale");
-        var layoutWidth = $(this).closest('.layout').css("width");
-        var layoutHeight = $(this).closest('.layout').css("height");
+        var designer_scale = $(this).closest('.region').attr("designer_scale");
+        var position = $(this).closest('.region').position();
+        var data = {
+            layoutid: $(this).closest('.region').attr("layoutid"),
+            regionid: $(this).closest('.region').attr("regionid"),
+            scale: $(this).closest('.region').attr("tip_scale"),
+            layoutWidth: Math.round($(this).closest('.layout').width() / designer_scale, 2),
+            layoutHeight: Math.round($(this).closest('.layout').height() / designer_scale, 2),
+            width: Math.round($(this).closest('.region').width() / designer_scale, 2),
+            height: Math.round($(this).closest('.region').height() / designer_scale, 2),
+            top: Math.round(position.top / designer_scale, 2),
+            left: Math.round(position.left / designer_scale, 2)
+        }
 
-        var url = "index.php?p=timeline&q=ManualRegionPositionForm&layoutid=" + layoutid + "&regionid=" + regionid + "&top=" + top + "&left=" + left + "&width=" + width + "&height=" + height + "&scale=" + scale + "&layoutWidth=" + layoutWidth + "&layoutHeight=" + layoutHeight;
+        var url = "index.php?p=timeline&q=ManualRegionPositionForm";
 
-        XiboFormRender(url);
+        XiboFormRender(url, data);
     });
 
 });
@@ -86,18 +90,15 @@ $(document).ready(function(){
 function updateRegionInfo(e, ui) {
 
     var pos = $(this).position();
-    var scale = $(this).attr("scale");
-    $('.region-tip', this).html(Math.round($(this).width() * scale, 0) + " x " + Math.round($(this).height() * scale, 0) + " (" + Math.round(pos.left * scale, 0) + "," + Math.round(pos.top * scale, 0) + ")");
+    var scale = ($(this).closest('.layout').attr("version") == 1) ? (1 / $(this).attr("tip_scale")) : $(this).attr("designer_scale");
+    $('.region-tip', this).html(Math.round($(this).width() / scale, 0) + " x " + Math.round($(this).height() / scale, 0) + " (" + Math.round(pos.left / scale, 0) + "," + Math.round(pos.top / scale, 0) + ")");
 }
 
 function regionPositionUpdate(e, ui) {
 
 	var width 	= $(this).css("width");
 	var height 	= $(this).css("height");
-	var top 	= $(this).css("top");
-	var left 	= $(this).css("left");
 	var regionid = $(this).attr("regionid");
-	var layoutid = $(this).attr("layoutid");
 
     // Update the region width / height attributes
     $(this).attr("width", width).attr("height", height);
@@ -138,12 +139,13 @@ function savePositions() {
         var regions = new Array();
 
 		$(this).find(".region").each(function(){
-
+            var designer_scale = $(this).attr("designer_scale");
+            var position = $(this).position();
             var region = {
-                width: $(this).css("width"),
-                height: $(this).css("height"),
-                top: $(this).css("top"),
-                left: $(this).css("left"),
+                width: $(this).width() / designer_scale,
+                height: $(this).height() / designer_scale,
+                top: position.top / designer_scale,
+                left: position.left / designer_scale,
                 regionid: $(this).attr("regionid")
             }
 

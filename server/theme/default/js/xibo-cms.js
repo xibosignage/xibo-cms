@@ -314,7 +314,7 @@ function XiboGridRender(gridId){
  * Renders the formid provided
  * @param {String} formUrl
  */
-function XiboFormRender(formUrl) {
+function XiboFormRender(formUrl, data) {
 
 	// Currently only support one of these at once.
 	bootbox.hideAll();
@@ -325,6 +325,7 @@ function XiboFormRender(formUrl) {
         url: formUrl + "&ajax=true",
         cache: false,
         dataType: "json",
+        data: data,
         success: function(response) {
 
             // Was the Call successful
@@ -403,19 +404,19 @@ function XiboFormRender(formUrl) {
                 if (response.fieldActions != '') {
                     $.each(response.fieldActions, function(index, fieldAction) {
                         
-                        console.log("Processing field action for " + fieldAction.field);
+                        //console.log("Processing field action for " + fieldAction.field);
 
                         if (fieldAction.trigger == "init") {
                             // Process the actions straight away.
                             var fieldVal = $("#" + fieldAction.field).val();
 
-                            console.log("Init action with value " + fieldVal);
+                            //console.log("Init action with value " + fieldVal);
 
                             if (fieldVal == fieldAction.value) {
-                                console.log("Value match");
+                                //console.log("Value match");
 
                                 $.each(fieldAction.actions, function(index, action) {
-                                    console.log("Setting child field on " + index + " to " + JSON.stringify(action));
+                                    //console.log("Setting child field on " + index + " to " + JSON.stringify(action));
                                     // Action the field
                                     $(index).css(action);
                                 });
@@ -426,13 +427,13 @@ function XiboFormRender(formUrl) {
                                 // Process the actions straight away.
                                 var fieldVal = $(this).val();
 
-                                console.log("Init action with value " + fieldVal);
+                                //console.log("Init action with value " + fieldVal);
 
                                 if (fieldVal == fieldAction.value) {
-                                    console.log("Value match");
+                                    //console.log("Value match");
 
                                     $.each(fieldAction.actions, function(index, action) {
-                                        console.log("Setting child field on " + index + " to " + JSON.stringify(action));
+                                        //console.log("Setting child field on " + index + " to " + JSON.stringify(action));
                                         // Action the field
                                         $(index).css(action);
                                     });

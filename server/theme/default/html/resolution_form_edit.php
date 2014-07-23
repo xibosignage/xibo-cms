@@ -20,30 +20,45 @@
  * 
  * Theme variables:
  *  form_id = The ID of the Form
- * 	form_action = The URL for calling the Layout Edit Transaction
- * 	form_meta = Additional META information required by Xibo in the form submit call
- * 	layout = The Name of the Layout
- * 	description = The Description of the Layout
- * 	tags = The tags associated with the Layout
- * 	retired = A flag (0|1) indicating whether the Layout is retired or not
- * 	retired_field_list = An array of retired options for a select list (retiredid => retired text)
+ *  form_action = The URL for calling the Layout Edit Transaction
+ *  form_meta = Additional META information required by Xibo in the form submit call
+ *  layout = The Name of the Layout
+ *  description = The Description of the Layout
+ *  tags = The tags associated with the Layout
+ *  retired = A flag (0|1) indicating whether the Layout is retired or not
+ *  retired_field_list = An array of retired options for a select list (retiredid => retired text)
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
-	<?php echo Theme::Get('form_meta'); ?>
-	<table>
-		<tr>
-			<td><label for="resolution" accesskey="r" title="<?php echo Theme::Translate('A name for this Resolution'); ?>"><?php echo Theme::Translate('Resolution'); ?></label></td>
-			<td><input name="resolution" type="text" id="resolution" tabindex="1" value="<?php echo Theme::Get('resolution'); ?>" /></td>
-		</tr>
-		<tr>
-			<td><label for="width" accesskey="w" title="<?php echo Theme::Translate('The Width for this Resolution'); ?>"><?php echo Theme::Translate('Width'); ?></label></td>
-			<td><input name="width" type="text" id="width" tabindex="2" value="<?php echo Theme::Get('width'); ?>" /></td>
-		</tr>
-		<tr>
-			<td><label for="height" accesskey="t" title="<?php echo Theme::Translate('Height for this Resolution'); ?>"><?php echo Theme::Translate('Height'); ?></label></td>
-			<td><input name="height" type="text" id="height" tabindex="3" value="<?php echo Theme::Get('height'); ?>" /></td>
-		</tr>
-	</table>
+    <?php echo Theme::Get('form_meta'); ?>
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="control-group">
+                <label class="control-label" for="resolution" accesskey="r" title="<?php echo Theme::Translate('A name for this Resolution'); ?>"><?php echo Theme::Translate('Resolution'); ?></label>
+                <div class="controls">
+                    <input class="required" name="resolution" type="text" id="resolution" tabindex="1" value="<?php echo Theme::Get('resolution'); ?>" />
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="width" accesskey="w" title="<?php echo Theme::Translate('The Width for this Resolution'); ?>"><?php echo Theme::Translate('Width'); ?></label>
+                <div class="controls">
+                    <input class="required number" name="width" type="text" id="width" tabindex="2" value="<?php echo Theme::Get('width'); ?>" />
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="height" accesskey="h" title="<?php echo Theme::Translate('The Height for this Resolution'); ?>"><?php echo Theme::Translate('Height'); ?></label>
+                <div class="controls">
+                    <input class="required number" name="height" type="text" id="height" tabindex="3" value="<?php echo Theme::Get('height'); ?>" />
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox" for="enabled" accesskey="e" title="<?php echo Theme::Translate('Is the Resolution enabled for use?'); ?>"><?php echo Theme::Translate('Enable?'); ?>
+                        <input class="checkbox" type="checkbox" id="enabled" name="enabled" <?php echo Theme::Get('enabled_checked'); ?>>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
 </form>

@@ -455,6 +455,8 @@ CREATE TABLE IF NOT EXISTS `resolution` (
   `height` smallint(6) NOT NULL,
   `intended_width` smallint(6) NOT NULL,
   `intended_height` smallint(6) NOT NULL,
+  `version` tinyint(4) NOT NULL DEFAULT '1',
+  `enabled` tinyint(4) NOT NULL DEFAULT '1',
   PRIMARY KEY (`resolutionID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Supported Resolutions' AUTO_INCREMENT=9 ;
 

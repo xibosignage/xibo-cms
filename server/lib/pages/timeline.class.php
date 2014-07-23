@@ -139,7 +139,7 @@ class timelineDAO {
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        // Scale the layout width/height
+        // Scale the layout width / height
         $layoutWidth = round($layoutWidth * $scale, 0);
         $layoutHeight = round($layoutHeight * $scale, 0);
 
@@ -278,18 +278,12 @@ class timelineDAO {
         foreach ($regions as $region) {
 
             $regionid = Kit::ValidateParam($region->regionid, _STRING);
-            $top = Kit::ValidateParam($region->top, _INT);
-            $left = Kit::ValidateParam($region->left, _INT);
-            $width = Kit::ValidateParam($region->width, _INT);
-            $height = Kit::ValidateParam($region->height, _INT);
+            $top = Kit::ValidateParam($region->top, _DOUBLE);
+            $left = Kit::ValidateParam($region->left, _DOUBLE);
+            $width = Kit::ValidateParam($region->width, _DOUBLE);
+            $height = Kit::ValidateParam($region->height, _DOUBLE);
 
             Debug::LogEntry('audit', 'Editing Region ' . $regionid);
-
-            // Remove the "px" from them
-            $width  = str_replace("px", '', $width);
-            $height = str_replace("px", '', $height);
-            $top    = str_replace("px", '', $top);
-            $left   = str_replace("px", '', $left);
             
             Kit::ClassLoader('region');
             $regionObject = new region($db);

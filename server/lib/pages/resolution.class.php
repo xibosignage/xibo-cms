@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2013 Daniel Garner
+ * Copyright (C) 2009-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -74,11 +74,14 @@ class resolutionDAO
         while($row = $db->get_assoc_row($results))
         {
             $resolutionID = Kit::ValidateParam($row['resolutionID'], _INT);
+            $row['id'] = Kit::ValidateParam($row['resolutionID'], _INT);
             $row['resolution'] = Kit::ValidateParam($row['resolution'], _STRING);
             $row['width'] = Kit::ValidateParam($row['width'], _INT);
             $row['height'] = Kit::ValidateParam($row['height'], _INT);
             $row['intended_width'] = Kit::ValidateParam($row['intended_width'], _INT);
             $row['intended_height'] = Kit::ValidateParam($row['intended_height'], _INT);
+            $row['version'] = Kit::ValidateParam($row['version'], _INT);
+            $row['enabled'] = Kit::ValidateParam($row['enabled'], _INT);
 
             // Edit Button
             $row['buttons'][] = array(
@@ -138,7 +141,7 @@ class resolutionDAO
 
         $resolutionID   = Kit::GetParam('resolutionid', _GET, _INT);
 
-        $SQL = sprintf("SELECT resolution, width, height, intended_width, intended_height FROM resolution WHERE resolutionID = %d", $resolutionID);
+        $SQL = sprintf("SELECT resolution, width, height, intended_width, intended_height, enabled FROM resolution WHERE resolutionID = %d", $resolutionID);
 
         if (!$result = $db->query($SQL))
         {
@@ -154,6 +157,7 @@ class resolutionDAO
         Theme::Set('resolution', Kit::ValidateParam($row['resolution'], _STRING));
         Theme::Set('width', Kit::ValidateParam($row['intended_width'], _INT));
         Theme::Set('height', Kit::ValidateParam($row['intended_height'], _INT));
+        Theme::Set('enabled_checked', (Kit::ValidateParam($row['enabled'], _INT) == 1) ? ' checked' : '');
 
         Theme::Set('form_id', 'ResolutionForm');
         Theme::Set('form_action', 'index.php?p=resolution&q=Edit');
@@ -231,11 +235,12 @@ class resolutionDAO
         $resolution = Kit::GetParam('resolution', _POST, _STRING);
         $width = Kit::GetParam('width', _POST, _INT);
         $height = Kit::GetParam('height', _POST, _INT);
+        $enabled = Kit::GetParam('enabled', _POST, _CHECKBOX);
 
         // Edit the resolution
         $resObject = new Resolution($db);
 
-        if (!$resObject->Edit($resolutionID, $resolution, $width, $height))
+        if (!$resObject->Edit($resolutionID, $resolution, $width, $height, $enabled))
             trigger_error($resObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse('Resolution edited');

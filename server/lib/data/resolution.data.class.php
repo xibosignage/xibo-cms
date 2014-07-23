@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-13 Daniel Garner
+ * Copyright (C) 2009-14 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -43,13 +43,14 @@ class Resolution extends Data
             $final_width    = round ($width * $factor);
             $final_height   = round ($height * $factor);
 
-            $sth = $dbh->prepare('INSERT INTO resolution (resolution, width, height, intended_width, intended_height) VALUES (:resolution, :width, :height, :intended_width, :intended_height)');
+            $sth = $dbh->prepare('INSERT INTO resolution (resolution, width, height, intended_width, intended_height, version) VALUES (:resolution, :width, :height, :intended_width, :intended_height, :version)');
             $sth->execute(array(
                     'resolution' => $resolution,
                     'width' => $final_width,
                     'height' => $final_height,
                     'intended_width' => $width,
-                    'intended_height' => $height
+                    'intended_height' => $height,
+                    'version' => 2
                 ));
             
             return true;  
@@ -73,7 +74,7 @@ class Resolution extends Data
      * @param <type> $height
      * @return <type>
      */
-    public function Edit($resolutionID, $resolution, $width, $height)
+    public function Edit($resolutionID, $resolution, $width, $height, $enabled)
     {
         try {
             $dbh = PDOConnect::init();
@@ -87,14 +88,23 @@ class Resolution extends Data
             $final_width    = round ($width * $factor);
             $final_height   = round ($height * $factor);
     
-            $sth = $dbh->prepare('UPDATE resolution SET resolution = :resolution, width = :width, height = :height, intended_width = :intended_width, intended_height = :intended_height WHERE resolutionID = :resolutionid');
+            $sth = $dbh->prepare('
+                UPDATE resolution SET resolution = :resolution, 
+                    width = :width, 
+                    height = :height, 
+                    intended_width = :intended_width, 
+                    intended_height = :intended_height,
+                    enabled = :enabled
+                 WHERE resolutionID = :resolutionid');
+
             $sth->execute(array(
                     'resolution' => $resolution,
                     'width' => $final_width,
                     'height' => $final_height,
                     'intended_width' => $width,
                     'intended_height' => $height,
-                    'resolutionid' => $resolutionID
+                    'resolutionid' => $resolutionID,
+                    'enabled' => $enabled
                 ));
             
             return true;

@@ -33,21 +33,27 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <table class="table">
 	<thead>
 		<tr>
+			<th><?php echo Theme::Translate('ID'); ?></th>
 			<th><?php echo Theme::Translate('Resolution'); ?></th>
 			<th><?php echo Theme::Translate('Width'); ?></th>
 			<th><?php echo Theme::Translate('Height'); ?></th>
 			<th><?php echo Theme::Translate('Designer Width'); ?></th>
 			<th><?php echo Theme::Translate('Designer Height'); ?></th>
+			<th><?php echo Theme::Translate('Version'); ?></th>
+			<th><?php echo Theme::Translate('Enabled?'); ?></th>
 		</tr>
 	</thead>
 	<tbody>
 		<?php foreach(Theme::Get('table_rows') as $row) { ?>
 		<tr>
+			<td><?php echo $row['id']; ?></td>
 			<td><?php echo $row['resolution']; ?></td>
 			<td><?php echo $row['intended_width']; ?></td>
 			<td><?php echo $row['intended_height']; ?></td>
 			<td><?php echo $row['width']; ?></td>
 			<td><?php echo $row['height']; ?></td>
+			<td><?php echo $row['version']; ?></td>
+			<td><span class="<?php echo ($row['enabled'] == 1) ? 'icon-ok' : 'icon-remove'; ?>"></span></td>
 			<td>
 				<div class="btn-group pull-right">
     				<button class="btn dropdown-toggle" data-toggle="dropdown">
