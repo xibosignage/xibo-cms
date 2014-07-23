@@ -417,9 +417,27 @@ function XiboFormRender(formUrl) {
                                 $.each(fieldAction.actions, function(index, action) {
                                     console.log("Setting child field on " + index + " to " + JSON.stringify(action));
                                     // Action the field
-                                    $("#" + index).css(action);
+                                    $(index).css(action);
                                 });
                             }
+                        }
+                        else {
+                            $("#" + fieldAction.field).on(fieldAction.trigger, function() {
+                                // Process the actions straight away.
+                                var fieldVal = $(this).val();
+
+                                console.log("Init action with value " + fieldVal);
+
+                                if (fieldVal == fieldAction.value) {
+                                    console.log("Value match");
+
+                                    $.each(fieldAction.actions, function(index, action) {
+                                        console.log("Setting child field on " + index + " to " + JSON.stringify(action));
+                                        // Action the field
+                                        $(index).css(action);
+                                    });
+                                }
+                            });
                         }
                     });
                 }

@@ -264,14 +264,30 @@ class clock extends Module
 
     private function SetFieldDependencies() {
 
-        $this->response->AddFieldAction('clockTypeId', 'init', 1, array('format-control-group' => array('display' => 'none')));
-        $this->response->AddFieldAction('clockTypeId', 'init', 2, 
-            array(
-                'format-control-group' => array('display' => 'block'),
-                'theme-control-group' => array('display' => 'none')
-                )
+        $clockTypeId_1 = array(
+                '.analogue-control-group' => array('display' => 'block'),
+                '.digital-control-group' => array('display' => 'none'),
+                '.flip-control-group' => array('display' => 'none')
             );
-        $this->response->AddFieldAction('clockTypeId', 'init', 3, array('format-control-group' => array('display' => 'none')));
+
+        $clockTypeId_2 = array(
+                '.analogue-control-group' => array('display' => 'none'),
+                '.digital-control-group' => array('display' => 'block'),
+                '.flip-control-group' => array('display' => 'none')
+            );
+
+        $clockTypeId_3 = array(
+                '.analogue-control-group' => array('display' => 'none'),
+                '.digital-control-group' => array('display' => 'none'),
+                '.flip-control-group' => array('display' => 'block')
+            );
+            
+        $this->response->AddFieldAction('clockTypeId', 'init', 1, $clockTypeId_1);
+        $this->response->AddFieldAction('clockTypeId', 'change', 1, $clockTypeId_1);
+        $this->response->AddFieldAction('clockTypeId', 'init', 2, $clockTypeId_2);
+        $this->response->AddFieldAction('clockTypeId', 'change', 2, $clockTypeId_2);
+        $this->response->AddFieldAction('clockTypeId', 'init', 3, $clockTypeId_3);
+        $this->response->AddFieldAction('clockTypeId', 'change', 3, $clockTypeId_3);
     }
 
     /**

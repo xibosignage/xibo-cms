@@ -39,7 +39,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                     <input class="required number" name="duration" type="text" id="duration" tabindex="1" />
                 </div>
             </div>
-            <div class="control-group" id="theme-control-group">
+            <div class="control-group analogue-control-group">
                 <label class="control-label" for="themeid" accesskey="t" title="<?php echo Theme::Translate('Should the clock be light or dark?'); ?>"><?php echo Theme::Translate('Theme'); ?></label>
                 <div class="controls">
                     <?php echo Theme::SelectList('themeid', Theme::Get('theme_field_list'), 'themeid', 'theme'); ?>
@@ -47,13 +47,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             </div>
         </div>
     </div> 
-    <div class="row-fluid">
+    <div class="row-fluid digital-control-group">
         <div class="span12">
             <p><?php echo Theme::Translate('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY].'); ?></p>
         </div>
     </div>
-    <div class="row-fluid">
-        <div class="span12" id="format-control-group">
+    <div class="row-fluid digital-control-group">
+        <div class="span12">
             <textarea id="ta_text" class="wide_textarea" cols="80" rows="10" name="ta_text"><?php echo Theme::Get('format'); ?></textarea>
         </div>
     </div>
