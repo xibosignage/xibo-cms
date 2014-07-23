@@ -113,6 +113,7 @@ class layoutDAO
                 }
                 
                 Theme::Set('layout_form_add_url', 'index.php?p=layout&q=displayForm');
+                Theme::Set('layout_form_import_url', 'index.php?p=layout&q=ImportForm');
 
                 $id = uniqid();
                 Theme::Set('id', $id);
@@ -1009,6 +1010,70 @@ HTML;
         }
 
         exit;
+    }
+
+    public function ImportForm() {
+        global $session;
+        $db =& $this->db;
+        $response = new ResponseManager();
+        
+        // Set the Session / Security information
+        $sessionId = session_id();
+        $securityToken = CreateFormToken();
+
+        $session->setSecurityToken($securityToken);
+
+        // Find the max file size
+        $maxFileSizeBytes = convertBytes(ini_get('upload_max_filesize'));
+
+         // Set some information about the form
+        Theme::Set('form_id', 'LayoutImportForm');
+        Theme::Set('form_action', 'index.php?p=layout&q=Import');
+        Theme::Set('form_meta', '<input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
+
+        Theme::Set('form_upload_id', 'file_upload');
+        Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
+        Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $maxFileSizeBytes . '" />');
+
+        $form = Theme::RenderReturn('layout_form_import');
+
+        $response->SetFormRequestResponse($form, __('Import Layout'), '350px', '200px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'ImportCsv') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Import'), '$("#LayoutImportForm").submit()');
+        $response->Respond();
+    }
+
+    public function Import() {
+
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        $layout = Kit::GetParam('layout', _POST, _STRING);
+        
+        // File data
+        $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
+
+        if ($tmpName == '')
+            trigger_error(__('Please ensure you have picked a file and it has finished uploading'), E_USER_ERROR);
+
+        // File name and extension (orignial name)
+        $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
+        $fileName = basename($fileName);
+        $ext = strtolower(substr(strrchr($fileName, "."), 1));
+
+        // File upload directory.. get this from the settings object
+        $fileLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $tmpName;
+
+        Kit::ClassLoader('layout');
+        $layoutObject = new Layout($this->db);
+
+        if (!$layoutObject->Import($fileLocation, $layout, $this->user->userid)) {
+            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+        }
+
+        $response->SetFormSubmitResponse(__('Layout Imported'));
+        $response->Respond();
     }
 }
 ?>

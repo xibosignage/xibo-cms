@@ -39,9 +39,11 @@ class Layout extends Data
      * @param <type> $tags
      * @param <type> $userid
      * @param <type> $templateId
+     * @param <type> $templateId
+     * @param <string> $xml Use the provided XML instead of a template
      * @return <type>
      */
-    public function Add($layout, $description, $tags, $userid, $templateId, $resolutionId)
+    public function Add($layout, $description, $tags, $userid, $templateId, $resolutionId, $xml = '')
     {
         Debug::LogEntry('audit', 'Adding new Layout', 'Layout', 'Add');
 
@@ -51,7 +53,7 @@ class Layout extends Data
             $currentdate = date("Y-m-d H:i:s");
 
             // We must provide either a template or a resolution
-            if ($templateId == 0 && $resolutionId == 0)
+            if ($templateId == 0 && $resolutionId == 0 && $xml == '')
                 $this->ThrowError(__('To add a Layout either a Template or Resolution must be provided'));
         
             // Validation
@@ -78,7 +80,13 @@ class Layout extends Data
             // End Validation
         
             // Get the XML for this template.
-            $initialXml = $this->GetInitialXml($resolutionId, $templateId, $userid);
+            if ($xml != '') {
+                $initialXml = $xml;
+            }
+            else {
+                if (!$initialXml = $this->GetInitialXml($resolutionId, $templateId, $userid))
+                    throw new Exception(__('Unable to get initial XML'));
+            }
         
             Debug::LogEntry('audit', 'Retrieved template xml', 'Layout', 'Add');
 
@@ -1180,33 +1188,56 @@ class Layout extends Data
             if (!$row = $sth->fetch())
                 $this->ThrowError(__('Layout not found.'));
             
-            $layoutName = $row['layout'];
             $xml = $row['xml'];
-            $backgroundImage = $row['background'];
     
             $fileName = $libraryPath . 'temp/export_' . Kit::ValidateParam($row['layout'], _FILENAME) . '.zip';
 
             $zip = new ZipArchive();
             $zip->open($fileName, ZIPARCHIVE::OVERWRITE);        
             $zip->addFromString('layout.xml', $xml);
-    
-            if (!empty($backgroundImage)) {
-                $zip->addFile($libraryPath . '/' . $backgroundImage, 'library/' . $backgroundImage);
-            }
-    
-            $mediaSth = $dbh->prepare(' 
-                SELECT media.name, media.storedAs  
+
+            $params = array('layoutid' => $layoutId);    
+            $SQL = ' 
+                SELECT media.mediaid, media.name, media.storedAs, originalFileName, type, duration
                   FROM `media` 
                     INNER JOIN `lklayoutmedia`
                     ON lklayoutmedia.mediaid = media.mediaid
-                 WHERE lklayoutmedia.layoutid = :layoutid');
+                 WHERE lklayoutmedia.layoutid = :layoutid
+                ';
 
-            $mediaSth->execute(array('layoutid' => $layoutId));
+            if (!empty($row['background'])) {
+                $SQL .= '
+                    UNION ALL
+                    SELECT media.mediaid, media.name, media.storedAs, originalFileName, type, duration
+                      FROM `media`
+                     WHERE media.storedAs = :background
+                ';
 
-            foreach ($sth->fetchAll() as $media) {
-                $mediaFilePath = $libraryPath . $media['storedAs'];
-                $zip->addFile($mediaFilePath, 'library/' . $media['name']);
+                $params['background'] = $row['background'];
             }
+
+            // Add the media to the ZIP
+            $mediaSth = $dbh->prepare($SQL);
+
+            $mediaSth->execute($params);
+
+            $mappings = array();
+
+            foreach ($mediaSth->fetchAll() as $media) {
+                $mediaFilePath = $libraryPath . $media['storedAs'];
+                $zip->addFile($mediaFilePath, 'library/' . $media['originalFileName']);
+
+                $mappings[] = array(
+                    'file' => $media['originalFileName'], 
+                    'mediaid' => $media['mediaid'], 
+                    'name' => $media['name'],
+                    'type' => $media['type'],
+                    'duration' => $media['duration']
+                    );
+            }
+
+            // Add the mappings file to the ZIP
+            $zip->addFromString('mapping.json', json_encode($mappings));
     
             $zip->close();
     
@@ -1252,6 +1283,54 @@ class Layout extends Data
                 $this->SetError(1, __('Unknown Error'));
         
             return false;
+        }
+    }
+
+    function Import($zipFile, $layout, $userId) {
+        // I think I might add a layout and then import
+        
+        if (!file_exists($zipFile))
+            return $this->SetError(__('File does not exist'));
+
+        // Open the Zip file
+        $zip = new ZipArchive();
+        if (!$zip->open($zipFile))
+            return $this->SetError(__('Unable to open ZIP'));
+
+        // Get the layout xml
+        $xml = $zip->getFromName('layout.xml');
+
+        // Add the layout
+        if (!$layoutId = $this->Add($layout, NULL, NULL, $userId, NULL, NULL, $xml))
+            return false;
+
+        // Go through each region and add the media (updating the media ids)
+        $mappings = json_decode($zip->getFromName('mapping.json'), true);
+
+        foreach($mappings as $file) {
+
+            // Does a media item with this name already exist?
+            
+
+            // Add this file
+            Kit::ClassLoader('file');
+            $fileObject = new File($this->db);
+
+            if (!$fileId = $fileObject->NewFile($zip->getFromName('library/' . $file['file']), $userId))
+                return $this->SetError(__('Unable to add a media item'));
+
+            // Add this media to the library
+            Kit::ClassLoader('media');
+            $mediaObject = new Media($this->db);
+
+            if (!$mediaid = $mediaObject->Add($fileId, $file['type'], $file['name'], $file['duration'], $file['file'], $userId)) {
+                return $this->SetError($mediaObject->GetErrorMessage());
+            }
+            
+            // Get this media node from the layout using the old media id
+            
+            // Update the ID
+            
         }
     }
 }

@@ -42,6 +42,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			}
 		?>
 		<li class="pull-right"><a title="<?php echo Theme::Translate('Open the filter form'); ?>" href="#" onclick="ToggleFilterView('LayoutFilter')"><span><?php echo Theme::Translate('Filter'); ?></span></a></li>
+		<li class="pull-right"><a title="<?php echo Theme::Translate('Import a Layout from a ZIP file.'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('layout_form_import_url'); ?>" ><span><?php echo Theme::Translate('Import'); ?></span></a></li>
 		<li class="pull-right"><a title="<?php echo Theme::Translate('Add a new Layout and jump to the layout designer.'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('layout_form_add_url'); ?>" ><span><?php echo Theme::Translate('Add Layout'); ?></span></a></li>
 	</ul>
 </div>
