@@ -219,12 +219,14 @@ class ResponseManager
 	 * @param string $action  The action name
 	 * @param string $value  The value to trigger on
 	 * @param string $actions The actions (field => action)
+	 * @param string $operation The Operation (optional)
 	 */
-	public function AddFieldAction($field, $action, $value, $actions) {
+	public function AddFieldAction($field, $action, $value, $actions, $operation = "equals") {
 		$this->fieldActions[] = array(
 			'field' => $field,
 			'trigger' => $action, 
-			'value' => $value, 
+			'value' => $value,
+			'operation' => $operation,
 			'actions' => $actions
 			);
 

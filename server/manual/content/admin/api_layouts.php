@@ -34,6 +34,7 @@
 </li><li> permissionid - PermissionID for the layout
 </li><li> tags - Tags for the Layout
 </li><li> templateid - Template for the Layout
+</li><li> resolutionid - Resolution for the Layout (not required if a template is provided)
 </li></ul>
 <p>Response
 </p>

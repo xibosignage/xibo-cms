@@ -1134,7 +1134,6 @@ END;
         $SQL  = "";
         $SQL .= "SELECT  template.templateID, ";
         $SQL .= "        template.template, ";
-        $SQL .= "        CASE WHEN template.issystem = 1 THEN 'Yes' ELSE 'No' END AS issystem, ";
         $SQL .= "        template.tags, ";
         $SQL .= "        template.userID ";
         $SQL .= "  FROM  template ";
@@ -1182,7 +1181,6 @@ END;
             // Validate each param and add it to the array.
             $item['templateid'] = Kit::ValidateParam($row['templateID'], _INT);
             $item['template']   = Kit::ValidateParam($row['template'], _STRING);
-            $item['issystem'] = Kit::ValidateParam($row['issystem'], _STRING);
             $item['tags'] = Kit::ValidateParam($row['tags'], _STRING);
             $item['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
 
@@ -1200,6 +1198,44 @@ END;
         }
 
         return $templates;
+    }
+
+    public function ResolutionList() {
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT * FROM resolution WHERE enabled = 1 ORDER BY resolution');
+            $sth->execute();
+          
+            $results = $sth->fetchAll();
+            $resolutions = array();
+
+            foreach ($results as $row) {
+                $res = array();
+                
+                $res['resolutionid'] = Kit::ValidateParam($row['resolutionID'], _INT);
+                $res['resolution'] = Kit::ValidateParam($row['resolution'], _STRING);
+                $res['width'] = Kit::ValidateParam($row['width'], _INT);
+                $res['height'] = Kit::ValidateParam($row['height'], _INT);
+                $res['intended_width'] = Kit::ValidateParam($row['intended_width'], _INT);
+                $res['intended_height'] = Kit::ValidateParam($row['intended_height'], _INT);
+                $res['version'] = Kit::ValidateParam($row['version'], _INT);
+                $res['enabled'] = Kit::ValidateParam($row['enabled'], _INT);
+
+                $resolutions[] = $res;
+            }
+
+            return $resolutions;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
     }
 
     /**

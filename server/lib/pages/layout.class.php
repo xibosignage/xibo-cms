@@ -177,12 +177,13 @@ class layoutDAO
         $description    = Kit::GetParam('description', _POST, _STRING);
         $tags           = Kit::GetParam('tags', _POST, _STRING);
         $templateId     = Kit::GetParam('templateid', _POST, _INT, 0);
+        $resolutionId = Kit::GetParam('resolutionid', _POST, _INT, 0);
         $userid         = Kit::GetParam('userid', _SESSION, _INT);
 
         // Add this layout
         $layoutObject = new Layout($db);
 
-        if (!$id = $layoutObject->Add($layout, $description, $tags, $userid, $templateId))
+        if (!$id = $layoutObject->Add($layout, $description, $tags, $userid, $templateId, $resolutionId))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
         // Successful layout creation
@@ -501,6 +502,12 @@ class layoutDAO
             array_unshift($templates, array('templateid' => '0', 'template' => 'None'));
                     
             Theme::Set('template_field_list', $templates);
+
+            // List of resolutions.
+            Theme::Set('resolution_field_list', $user->ResolutionList());
+
+            $response->AddFieldAction('templateid', 'change', 0, array('.resolution-control-group' => array('display' => 'block')));
+            $response->AddFieldAction('templateid', 'change', 0, array('.resolution-control-group' => array('display' => 'none')), "not");
 		}
 
 		// Initialise the template and capture the output
@@ -589,7 +596,7 @@ class layoutDAO
 		}
 		
 		Theme::Set('resolutionid', $resolutionid);
-		Theme::Set('resolution_field_list', $db->GetArray('SELECT resolutionid, resolution FROM resolution ORDER BY resolution'));
+		Theme::Set('resolution_field_list', $db->GetArray('SELECT resolutionid, resolution FROM resolution WHERE enabled = 1 ORDER BY resolution'));
 		
 		// Begin the form output
 		$form = Theme::RenderReturn('layout_form_background');

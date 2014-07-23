@@ -411,8 +411,15 @@ function XiboFormRender(formUrl, data) {
                             var fieldVal = $("#" + fieldAction.field).val();
 
                             //console.log("Init action with value " + fieldVal);
+                            var valueMatch = false;
+                            if (fieldAction.operation == "not") {
+                                valueMatch = (fieldVal != fieldAction.value);
+                            }
+                            else {
+                                valueMatch = (fieldVal == fieldAction.value);
+                            }
 
-                            if (fieldVal == fieldAction.value) {
+                            if (valueMatch) {
                                 //console.log("Value match");
 
                                 $.each(fieldAction.actions, function(index, action) {
@@ -428,8 +435,15 @@ function XiboFormRender(formUrl, data) {
                                 var fieldVal = $(this).val();
 
                                 //console.log("Init action with value " + fieldVal);
+                                var valueMatch = false;
+                                if (fieldAction.operation == "not") {
+                                    valueMatch = (fieldVal != fieldAction.value);
+                                }
+                                else {
+                                    valueMatch = (fieldVal == fieldAction.value);
+                                }
 
-                                if (fieldVal == fieldAction.value) {
+                                if (valueMatch) {
                                     //console.log("Value match");
 
                                     $.each(fieldAction.actions, function(index, action) {

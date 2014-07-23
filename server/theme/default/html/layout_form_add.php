@@ -52,5 +52,11 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         		<?php echo Theme::SelectList('templateid', Theme::Get('template_field_list'), 'templateid', 'template'); ?>
     		</div>
         </div>
+		<div class="control-group resolution-control-group">
+        	<label class="control-label" for='resolutionid'><?php echo Theme::Translate('Resolution'); ?></label>
+        	<div class="controls">
+        		<?php echo Theme::SelectList('resolutionid', Theme::Get('resolution_field_list'), 'resolutionid', 'resolution'); ?>
+    		</div>
+        </div>
 	</fieldset>
 </form>

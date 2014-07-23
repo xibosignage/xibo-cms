@@ -41,7 +41,7 @@ class Layout extends Data
      * @param <type> $templateId
      * @return <type>
      */
-    public function Add($layout, $description, $tags, $userid, $templateId)
+    public function Add($layout, $description, $tags, $userid, $templateId, $resolutionId)
     {
         Debug::LogEntry('audit', 'Adding new Layout', 'Layout', 'Add');
 
@@ -49,6 +49,10 @@ class Layout extends Data
             $dbh = PDOConnect::init();
         
             $currentdate = date("Y-m-d H:i:s");
+
+            // We must provide either a template or a resolution
+            if ($templateId == 0 && $resolutionId == 0)
+                $this->ThrowError(__('To add a Layout either a Template or Resolution must be provided'));
         
             // Validation
             if (strlen($layout) > 50 || strlen($layout) < 1)
@@ -74,7 +78,7 @@ class Layout extends Data
             // End Validation
         
             // Get the XML for this template.
-            $templateXml = $this->GetTemplateXml($templateId, $userid);
+            $initialXml = $this->GetInitialXml($resolutionId, $templateId, $userid);
         
             Debug::LogEntry('audit', 'Retrieved template xml', 'Layout', 'Add');
 
@@ -89,7 +93,7 @@ class Layout extends Data
                     'createddt' => $currentdate,
                     'modifieddt' => $currentdate,
                     'tags' => $tags,
-                    'xml' => $templateXml,
+                    'xml' => $initialXml,
                     'status' => 3
                 ));
 
@@ -120,8 +124,17 @@ class Layout extends Data
                 Kit::ClassLoader('campaignsecurity');
                 $security = new CampaignSecurity($this->db);
                 $security->LinkEveryone($campaignId, 1, 0, 0);
+                
+                // Permissions on the new region(s)?
+                $layout = new Layout($this->db);
+
+                foreach($layout->GetRegionList($id) as $region) {
+                    Kit::ClassLoader('layoutregiongroupsecurity');
+                    $security = new LayoutRegionGroupSecurity($this->db);
+                    $security->LinkEveryone($id, $region['regionid'], 1, 0, 0);
+                }
             }
-    
+
             Debug::LogEntry('audit', 'Complete', 'Layout', 'Add');
     
             return $id;  
@@ -224,26 +237,48 @@ class Layout extends Data
     }
 
     /**
-     * Gets the XML for the specified template id
+     * Gets the initial XML for a layout
+     * @param <type> $resolutionId
      * @param <type> $templateId
+     * @param <type> $userId
      */
-    private function GetTemplateXml($templateId, $userId)
+    private function GetInitialXml($resolutionId, $templateId, $userId)
     {
         try {
             $dbh = PDOConnect::init();
         
             if ($templateId == 0) {
+
+                // Look up the width and height for the resolution
+                $sth = $dbh->prepare('SELECT * FROM resolution WHERE resolutionid = :resolutionid');
+                $sth->execute(array(
+                        'resolutionid' => $resolutionId
+                    ));
+
+                if (!$row = $sth->fetch())
+                    $this->ThrowError(__('Unknown Resolution'));
+
                 // make some default XML
                 $xmlDoc = new DOMDocument("1.0");
                 $layoutNode = $xmlDoc->createElement("layout");
     
-                $layoutNode->setAttribute("width", 1920);
-                $layoutNode->setAttribute("height", 1080);
-                $layoutNode->setAttribute("resolutionid", 9);
+                $layoutNode->setAttribute("width", $row['intended_width']);
+                $layoutNode->setAttribute("height", $row['intended_height']);
+                $layoutNode->setAttribute("resolutionid", $resolutionId);
                 $layoutNode->setAttribute("bgcolor", "#000000");
                 $layoutNode->setAttribute("schemaVersion", Config::Version('XlfVersion'));
     
                 $xmlDoc->appendChild($layoutNode);
+
+                $newRegion = $xmlDoc->createElement('region');
+                $newRegion->setAttribute('id', uniqid());
+                $newRegion->setAttribute('userId', $userId);
+                $newRegion->setAttribute('width', $row['intended_width']);
+                $newRegion->setAttribute('height', $row['intended_height']);
+                $newRegion->setAttribute('top', 0);
+                $newRegion->setAttribute('left', 0);
+
+                $layoutNode->appendChild($newRegion);
     
                 $xml = $xmlDoc->saveXML();
             }
