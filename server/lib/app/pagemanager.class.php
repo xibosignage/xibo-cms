@@ -74,11 +74,7 @@ class PageManager
             || (in_array($this->p, $this->nonAuthedPagesWithoutFunctionCall) && $this->q == ''))
         {
             // Automatically authed
-            $this->authed = true;
-
-                Debug::LogEntry('audit', 'UserId' . $this->user->userid);
-
-        
+            $this->authed = true;        
         }
         else
         {

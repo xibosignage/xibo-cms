@@ -26,6 +26,9 @@ class Media extends Data
     private $regionSpecific;
     private $validExtensions;
 
+    public $mediaId;
+    public $storedAs;
+
     /**
      * Adds a new media record
      * @param <type> $fileId
@@ -143,6 +146,10 @@ class Media extends Data
                 $security = new MediaGroupSecurity($this->db);
                 $security->LinkEveryone($mediaId, 1, 0, 0);
             }
+
+            // Set some properties
+            $this->storedAs = $mediaId . '.' . $extension;
+            $this->mediaId = $mediaId;
     
             return $mediaId;  
         }

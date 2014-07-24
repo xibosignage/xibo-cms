@@ -45,6 +45,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             <input name="layout" class="required" type="text" id="layout" tabindex="1" />
         </div>
     </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox" for="replaceExisting" accesskey="n" title="<?php echo Theme::Translate('Replace existing media with the same name or use that media.'); ?>"><?php echo Theme::Translate('Replace Existing Media?'); ?>
+                <input class="checkbox" type="checkbox" id="replaceExisting" name="replaceExisting">
+            </label>
+        </div>
+    </div>
 </form>
 <div style="display:none">
     <iframe name="fileupload" width="1px" height="1px"></iframe>

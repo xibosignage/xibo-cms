@@ -1198,7 +1198,7 @@ class Layout extends Data
 
             $params = array('layoutid' => $layoutId);    
             $SQL = ' 
-                SELECT media.mediaid, media.name, media.storedAs, originalFileName, type, duration
+                SELECT media.mediaid, media.name, media.storedAs, originalFileName, type, duration, 0 AS background
                   FROM `media` 
                     INNER JOIN `lklayoutmedia`
                     ON lklayoutmedia.mediaid = media.mediaid
@@ -1208,7 +1208,7 @@ class Layout extends Data
             if (!empty($row['background'])) {
                 $SQL .= '
                     UNION ALL
-                    SELECT media.mediaid, media.name, media.storedAs, originalFileName, type, duration
+                    SELECT media.mediaid, media.name, media.storedAs, originalFileName, type, duration, 1 AS background
                       FROM `media`
                      WHERE media.storedAs = :background
                 ';
@@ -1232,7 +1232,8 @@ class Layout extends Data
                     'mediaid' => $media['mediaid'], 
                     'name' => $media['name'],
                     'type' => $media['type'],
-                    'duration' => $media['duration']
+                    'duration' => $media['duration'],
+                    'background' => $media['background']
                     );
             }
 
@@ -1286,7 +1287,7 @@ class Layout extends Data
         }
     }
 
-    function Import($zipFile, $layout, $userId) {
+    function Import($zipFile, $layout, $userId, $replaceExisting) {
         // I think I might add a layout and then import
         
         if (!file_exists($zipFile))
@@ -1297,41 +1298,146 @@ class Layout extends Data
         if (!$zip->open($zipFile))
             return $this->SetError(__('Unable to open ZIP'));
 
-        // Get the layout xml
-        $xml = $zip->getFromName('layout.xml');
-
-        // Add the layout
-        if (!$layoutId = $this->Add($layout, NULL, NULL, $userId, NULL, NULL, $xml))
-            return false;
-
-        // Go through each region and add the media (updating the media ids)
-        $mappings = json_decode($zip->getFromName('mapping.json'), true);
-
-        foreach($mappings as $file) {
-
-            // Does a media item with this name already exist?
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT mediaid, storedAs FROM `media` WHERE name = :name AND IsEdited = 0');
             
+            // Get the layout xml
+            $xml = $zip->getFromName('layout.xml');
+    
+            // Add the layout
+            if (!$layoutId = $this->Add($layout, NULL, NULL, $userId, NULL, NULL, $xml))
+                return false;
 
-            // Add this file
+            // Set the DOM XML
+            $this->SetDomXml($layoutId);
+
+            // We will need a file object and a media object
             Kit::ClassLoader('file');
-            $fileObject = new File($this->db);
-
-            if (!$fileId = $fileObject->NewFile($zip->getFromName('library/' . $file['file']), $userId))
-                return $this->SetError(__('Unable to add a media item'));
-
-            // Add this media to the library
             Kit::ClassLoader('media');
+            $fileObject = new File($this->db);
             $mediaObject = new Media($this->db);
+    
+            // Go through each region and add the media (updating the media ids)
+            $mappings = json_decode($zip->getFromName('mapping.json'), true);
+    
+            foreach($mappings as $file) {
 
-            if (!$mediaid = $mediaObject->Add($fileId, $file['type'], $file['name'], $file['duration'], $file['file'], $userId)) {
-                return $this->SetError($mediaObject->GetErrorMessage());
+                Debug::LogEntry('audit', 'Found file ' . $file['name']);
+    
+                // Does a media item with this name already exist?
+                $sth->execute(array('name' => $file['name']));
+                $rows = $sth->fetchAll();
+
+                if (count($rows) > 0) {
+                    if ($replaceExisting) {
+                        // Alter the name of the file and add it
+                        $file['name'] = 'import_' . $layout . '_' . uniqid();
+
+                        // Add the file
+                        if (!$fileId = $fileObject->NewFile($zip->getFromName('library/' . $file['file']), $userId))
+                            return $this->SetError(__('Unable to add a media item'));
+
+                        // Add this media to the library
+                        if (!$mediaObject->Add($fileId, $file['type'], $file['name'], $file['duration'], $file['file'], $userId))
+                            return $this->SetError($mediaObject->GetErrorMessage());
+                    }
+                    else {
+                        // Don't add the file, use the one that already exists
+                        $mediaObject->mediaId = $rows[0]['mediaid'];
+                        $mediaObject->storedAs = $rows[0]['storedAs'];
+                    }
+                }
+                else {
+                    // Add the file
+                    if (!$fileId = $fileObject->NewFile($zip->getFromName('library/' . $file['file']), $userId))
+                        return $this->SetError(__('Unable to add a media item'));
+
+                    // Add this media to the library
+                    if (!$mediaObject->Add($fileId, $file['type'], $file['name'], $file['duration'], $file['file'], $userId))
+                        return $this->SetError($mediaObject->GetErrorMessage());
+                }
+    
+                // Get this media node from the layout using the old media id
+                if (!$this->PostImportFix($layoutId, $file['mediaid'], $mediaObject->mediaId, $mediaObject->storedAs, $file['background']))
+                    return false;
             }
-            
-            // Get this media node from the layout using the old media id
-            
-            // Update the ID
-            
+
+            // Save the updated XLF
+            if (!$this->SetLayoutXml($layoutId, $this->DomXml->saveXML()))
+                return false;
+
+            $this->SetValid($layoutId);
+
+            // Finished, so delete
+            @unlink($zipFile);
+
+            return true;
         }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    public function PostImportFix($layoutId, $oldMediaId, $newMediaId, $storedAs = '', $background = 0) {
+        
+        // Are we the background image?
+        if ($background == 1) {
+            // Background Image
+            $this->DomXml->documentElement->setAttribute('background', $storedAs);
+        }
+        else {
+            // Media Items
+            $xpath = new DOMXPath($this->DomXml);
+            $mediaNodeList = $xpath->query('//media[@id=' . $oldMediaId . ']');
+
+            foreach ($mediaNodeList as $node) {
+                // Update the ID
+                $node->setAttribute('id', $newMediaId);
+
+                // Update the URI option
+                // Get the options node from this document
+                $optionNodes = $node->getElementsByTagName('options');
+                // There is only 1
+                $optionNode = $optionNodes->item(0);
+
+                // Get the option node for the URI
+                $oldUriNode = $xpath->query('//uri', $optionNode);
+
+                // Create a new uri option node and use it as a replacement for this one.
+                $newNode = $this->DomXml->createElement('uri', $storedAs);
+
+                if ($oldUriNode->length == 0) {
+                    // Append the new node to the list
+                    $optionNode->appendChild($newNode);
+                }
+                else {
+                    // Replace the old node we found with XPath with the new node we just created
+                    $optionNode->replaceChild($newNode, $oldUriNode->item(0));
+                }
+                
+                // Get the parent node (the region node)
+                $regionId = $node->parentNode->getAttribute('id');
+
+                // Insert a link
+                Kit::ClassLoader('region');
+                $region = new Region($this->db);
+                if (!$lkId = $region->AddDbLink($layoutId, $regionId, $newMediaId))
+                    return false;
+
+                // Attach this lkid to the media item
+                $node->setAttribute("lkid", $lkId);
+            }
+        }
+
+        return true;
     }
 }
 ?>

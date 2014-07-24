@@ -243,7 +243,7 @@ class Region extends Data
 	 * @param $region Object
 	 * @param $mediaid Object
 	 */
-	private function AddDbLink($layoutid, $region, $mediaid)
+	public function AddDbLink($layoutid, $region, $mediaid)
 	{
 		try {
 		    $dbh = PDOConnect::init();
@@ -437,7 +437,7 @@ class Region extends Data
 	{
 		$user 	=& $this->user;
 		
-		//Load the XML for this layout
+		// Load the XML for this layout
 		$xml = new DOMDocument("1.0");
 		$xml->loadXML($this->GetLayoutXml($layoutid));
 			
@@ -890,17 +890,32 @@ class Region extends Data
      * @param <type> $layoutId
      * @param <type> $regionId
      */
-    public function GetMediaNodeList($layoutId, $regionId)
-    {
-        if (!$xml = $this->GetLayoutXml($layoutId))
+    public function GetMediaNodeList($layoutId, $regionId = '', $mediaId = '', $lkId = '') {
+
+    	// Validate
+        if ($regionId == '' && $mediaId == '' && $lkId == '')
             return false;
 
-        // Load the XML into a new DOMDocument
-        $document = new DOMDocument();
-        $document->loadXML($xml);
+        // Load the XML for this layout
+        $xml = new DOMDocument("1.0");
+        $xml->loadXML($this->GetLayoutXml($layoutId));
 
-        $xpath = new DOMXPath($document);
-        return $xpath->query("//region[@id='$regionId']/media");
+        $xpath = new DOMXPath($xml);
+
+		if ($lkId != '') {
+            $mediaNodeList = $xpath->query('//media[@lkid=' . $lkId . ']');
+        }
+        else if ($mediaId != '' && $regionId == '') {
+            $mediaNodeList = $xpath->query('//media[@id=' . $mediaId . ']');
+        }
+        else if ($mediaId != '' && $regionId != '') {
+            $mediaNodeList = $xpath->query('//region[@id="' . $regionId . '"]/media[@id="' . $mediaId . '"]');
+        }
+        else {
+            $mediaNodeList = $xpath->query('//region[@id="' . $regionId . '"]/media');
+        }
+
+        return $mediaNodeList;
     }
 
     /**

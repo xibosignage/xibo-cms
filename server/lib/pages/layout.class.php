@@ -431,13 +431,6 @@ class layoutDAO
                         'text' => __('Copy')
                     );
 
-                // Export Button
-                $row['buttons'][] = array(
-                        'id' => 'layout_button_export',
-                        'url' => 'index.php?p=layout&q=Export&layoutid=' . $layout['layoutid'],
-                        'text' => __('Export')
-                    );
-
                 // Extra buttons if have delete permissions
                 if ($layout['del']) {
                     // Copy Button
@@ -447,6 +440,13 @@ class layoutDAO
                             'text' => __('Delete')
                         );              
                 }
+
+                // Export Button
+                $row['buttons'][] = array(
+                        'id' => 'layout_button_export',
+                        'url' => 'index.php?p=layout&q=Export&layoutid=' . $layout['layoutid'],
+                        'text' => __('Export')
+                    );
 
                 // Extra buttons if we have modify permissions
                 if ($layout['modifyPermissions']) {
@@ -1050,6 +1050,7 @@ HTML;
         $response = new ResponseManager();
 
         $layout = Kit::GetParam('layout', _POST, _STRING);
+        $replaceExisting = Kit::GetParam('replaceExisting', _POST, _CHECKBOX);
         
         // File data
         $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
@@ -1068,7 +1069,7 @@ HTML;
         Kit::ClassLoader('layout');
         $layoutObject = new Layout($this->db);
 
-        if (!$layoutObject->Import($fileLocation, $layout, $this->user->userid)) {
+        if (!$layoutObject->Import($fileLocation, $layout, $this->user->userid, $replaceExisting)) {
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
         }
 

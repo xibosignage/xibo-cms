@@ -1067,7 +1067,7 @@ END;
         
         $SQL .= " ORDER BY Layout ";
 
-        Debug::LogEntry('audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        //Debug::LogEntry('audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1205,7 +1205,7 @@ END;
             $dbh = PDOConnect::init();
         
             $params = array();
-            $SQL = 'SELECT * FROM resolution WHERE enabled = 1';
+            $SQL = 'SELECT * FROM resolution WHERE enabled = 1 ';
 
             // Include the current?
             if (Kit::GetParam('withCurrent', $filter_by, _INT, 0) != 0) {
