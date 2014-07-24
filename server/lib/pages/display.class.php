@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -24,37 +24,13 @@ class displayDAO
 {
     private $db;
     private $user;
-    private $has_permissions = true;
-
-    //display table fields
-    private $displayid;
-    private $display;
-    private $layoutid;
-    private $license;
-    private $licensed;
-    private $inc_schedule;
-    private $auditing;
-    private $email_alert;
-    private $alert_timeout;
-    private $ajax;
-    private $mediaInventoryStatus;
-    private $mediaInventoryXml;
-    private $macAddress;
-    private $wakeOnLan;
-    private $wakeOnLanTime;
-    private $broadCastAddress;
-    private $secureOn;
-    private $cidr;
-    private $clientIpAddress;
-    private $latitude;
-    private $longitude;
 
     function __construct(database $db, user $user)
     {
         $this->db   =& $db;
         $this->user =& $user;
 
-        include_once('lib/data/display.data.class.php');
+        Kit::ClassLoader('Display');
 
         $this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
         $this->ajax     = Kit::GetParam('ajax', _REQUEST, _WORD, 'false');
@@ -62,78 +38,6 @@ class displayDAO
 
         // validate displays so we get a realistic view of the table
         $this->validateDisplays();
-
-        if(isset($_GET['modify']) || $displayid != 0)
-        {
-            $this->sub_page = 'edit';
-
-            if (!$this->has_permissions && $this->ajax == 'true')
-                trigger_error(__("You do not have permissions to edit this display"), E_USER_ERROR);
-
-            $SQL = <<<SQL
-                SELECT display.displayid,
-                    display.display,
-                    display.defaultlayoutid,
-                    display.license,
-                    display.licensed,
-                    display.inc_schedule,
-                    display.isAuditing,
-                    display.email_alert,
-                    display.alert_timeout,
-                    display.MediaInventoryStatus,
-                    display.MediaInventoryXml,
-                    display.MacAddress,
-                    display.WakeOnLan,
-                    display.WakeOnLanTime,
-                    display.BroadCastAddress,
-                    display.SecureOn,
-                    display.Cidr,
-                    display.ClientAddress,
-                    X(display.GeoLocation) AS Latitude,
-                    Y(display.GeoLocation) AS Longitude
-             FROM display
-            WHERE display.displayid = %d
-SQL;
-
-            $SQL = sprintf($SQL, $displayid);
-
-            Debug::LogEntry('audit', $SQL);
-
-            if(!$results = $db->query($SQL))
-            {
-                trigger_error($db->error());
-                trigger_error(__("Can not get the display information for display") . '[$this->displayid]', E_USER_ERROR);
-            }
-
-            while($row = $db->get_row($results))
-            {
-                $this->displayid        = Kit::ValidateParam($row[0], _INT);
-                $this->display          = Kit::ValidateParam($row[1], _STRING);
-                $this->layoutid         = Kit::ValidateParam($row[2], _INT);
-                $this->license          = Kit::ValidateParam($row[3], _STRING);
-                $this->licensed         = Kit::ValidateParam($row[4], _INT);
-                $this->inc_schedule     = Kit::ValidateParam($row[5], _INT);
-                $this->auditing         = Kit::ValidateParam($row[6], _INT);
-                $this->email_alert      = Kit::ValidateParam($row[7], _INT);
-                $this->alert_timeout    = Kit::ValidateParam($row[8], _INT);
-                $this->mediaInventoryStatus = Kit::ValidateParam($row[9], _INT);
-                $this->mediaInventoryXml = Kit::ValidateParam($row[10], _HTMLSTRING);
-                $this->macAddress = Kit::ValidateParam($row[11], _STRING);
-                $this->wakeOnLan = Kit::ValidateParam($row[12], _INT);
-                $this->wakeOnLanTime = Kit::ValidateParam($row[13], _STRING);
-                $this->broadCastAddress = Kit::ValidateParam($row[14], _STRING);
-                $this->secureOn = Kit::ValidateParam($row[15], _STRING);
-                $this->cidr = Kit::ValidateParam($row[16], _INT);
-                $this->clientIpAddress = Kit::ValidateParam($row[17], _STRING);
-                $this->latitude = Kit::ValidateParam($row[18], _DOUBLE);
-                $this->longitude = Kit::ValidateParam($row[19], _DOUBLE);
-
-                // Make cidr null if its a 0
-                $this->cidr = ($this->cidr == 0) ? '' : $this->cidr;
-            }
-        }
-
-        return true;
     }
 
     /**
@@ -164,45 +68,37 @@ SQL;
         if (!Kit::CheckToken())
             trigger_error('Token does not match', E_USER_ERROR);
         
-        $db             =& $this->db;
-        $response       = new ResponseManager();
+        $response = new ResponseManager();
 
-        $displayid      = Kit::GetParam('displayid', _POST, _INT);
+        $displayObject  = new Display();
+        $displayObject->displayId = Kit::GetParam('displayid', _POST, _INT);
 
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
+        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
-        $display        = Kit::GetParam('display', _POST, _STRING);
-        $layoutid       = Kit::GetParam('defaultlayoutid', _POST, _INT);
-        $inc_schedule   = Kit::GetParam('inc_schedule', _POST, _INT);
-        $auditing       = Kit::GetParam('auditing', _POST, _INT);
-        $email_alert    = Kit::GetParam('email_alert', _POST, _INT);
-        $alert_timeout  = Kit::GetParam('alert_timeout', _POST, _INT);
-        $wakeOnLanEnabled = Kit::GetParam('wakeOnLanEnabled', _POST, _CHECKBOX);
-        $wakeOnLanTime = Kit::GetParam('wakeOnLanTime', _POST, _STRING);
-        $broadCastAddress = Kit::GetParam('broadCastAddress', _POST, _STRING);
-        $secureOn = Kit::GetParam('secureOn', _POST, _STRING);
-        $cidr = Kit::GetParam('cidr', _POST, _INT);
-        $latitude = Kit::GetParam('latitude', _POST, _DOUBLE);
-        $longitude = Kit::GetParam('longitude', _POST, _DOUBLE);
-
-        // Do we take, or revoke a license
-        $licensed = Kit::GetParam('licensed', _POST, _INT);
-        
-        // Validation
-        if ($display == '')
-            trigger_error(__("Can not have a display without a name"), E_USER_ERROR);
-
-        if ($wakeOnLanEnabled == 1 && $wakeOnLanTime == '')
-            trigger_error(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), E_USER_ERROR);
-
-        $displayObject  = new Display($db);
-
-        if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr, $latitude, $longitude))
-        {
+        if (!$displayObject->Load())
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-        }
+
+        // Update properties
+        $displayObject->display = Kit::GetParam('display', _POST, _STRING);
+        $displayObject->description = Kit::GetParam('description', _POST, _STRING);
+        $displayObject->isAuditing = Kit::GetParam('auditing', _POST, _INT);
+        $displayObject->defaultLayoutId = Kit::GetParam('defaultlayoutid', _POST, _INT);
+        $displayObject->licensed = Kit::GetParam('licensed', _POST, _INT);
+        $displayObject->incSchedule = Kit::GetParam('inc_schedule', _POST, _INT);
+        $displayObject->emailAlert = Kit::GetParam('email_alert', _POST, _INT);
+        $displayObject->alertTimeout = Kit::GetParam('alert_timeout', _POST, _INT);
+        $displayObject->wakeOnLanEnabled = Kit::GetParam('wakeOnLanEnabled', _POST, _CHECKBOX);
+        $displayObject->wakeOnLanTime = Kit::GetParam('wakeOnLanTime', _POST, _STRING);
+        $displayObject->broadCastAddress = Kit::GetParam('broadCastAddress', _POST, _STRING);
+        $displayObject->secureOn = Kit::GetParam('secureOn', _POST, _STRING);
+        $displayObject->cidr = Kit::GetParam('cidr', _POST, _INT);
+        $displayObject->latitude = Kit::GetParam('latitude', _POST, _DOUBLE);
+        $displayObject->longitude = Kit::GetParam('longitude', _POST, _DOUBLE);
+
+        if (!$displayObject->Edit())
+            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Display Saved.'));
         $response->Respond();
@@ -219,35 +115,41 @@ SQL;
         $response       = new ResponseManager();
 
         // Get the display Id
-        $displayid = $this->displayid;
+        $displayObject = new Display();
+        $displayObject->displayId = Kit::GetParam('displayid', _GET, _INT);
 
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
+        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
+
+        // Load this display
+        if (!$displayObject->Load())
+            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 
         // Set some information about the form
         Theme::Set('form_id', 'DisplayEditForm');
         Theme::Set('form_action', 'index.php?p=display&q=modify');
-        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayid . '" />');
+        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayObject->displayId . '" />');
         
         // Set the field values
-        Theme::Set('display', $this->display);
-        Theme::Set('defaultlayoutid', $this->layoutid);
-        Theme::Set('license', $this->license);
-        Theme::Set('licensed', $this->licensed);
-        Theme::Set('inc_schedule', $this->inc_schedule);
-        Theme::Set('auditing', $this->auditing);
-        Theme::Set('email_alert', $this->email_alert);
-        Theme::Set('alert_timeout', $this->alert_timeout);
-        Theme::Set('wakeonlanenabled', $this->wakeOnLan);
-        Theme::Set('wakeonlantime', $this->wakeOnLanTime);
-        Theme::Set('secureon', $this->secureOn);
-        Theme::Set('cidr', $this->cidr);
-        Theme::Set('latitude', $this->latitude);
-        Theme::Set('longitude', $this->longitude);
+        Theme::Set('display', $displayObject->display);
+        Theme::Set('description', $displayObject->description);
+        Theme::Set('defaultlayoutid', $displayObject->defaultLayoutId);
+        Theme::Set('license', $displayObject->license);
+        Theme::Set('licensed', $displayObject->licensed);
+        Theme::Set('inc_schedule', $displayObject->incSchedule);
+        Theme::Set('auditing', $displayObject->isAuditing);
+        Theme::Set('email_alert', $displayObject->emailAlert);
+        Theme::Set('alert_timeout', $displayObject->alertTimeout);
+        Theme::Set('wakeOnLanEnabled', $displayObject->wakeOnLanEnabled);
+        Theme::Set('wakeOnLanTime', $displayObject->wakeOnLanTime);
+        Theme::Set('secureOn', $displayObject->secureOn);
+        Theme::Set('cidr', $displayObject->cidr);
+        Theme::Set('latitude', $displayObject->latitude);
+        Theme::Set('longitude', $displayObject->longitude);
         
         // If the broadcast address has not been set, then default to the client ip address
-        Theme::Set('broadcastaddress', (($this->broadCastAddress == '') ? $this->clientIpAddress : $this->broadCastAddress));
+        Theme::Set('broadCastAddress', (($displayObject->broadCastAddress == '') ? $displayObject->clientAddress : $displayObject->broadCastAddress));
 
         // List of Layouts
         Theme::Set('default_layout_field_list', $this->user->LayoutList());
@@ -257,7 +159,7 @@ SQL;
         Theme::Set('license_field_list', array(array('licensedid' => '1', 'licensed' => 'Yes'), array('licensedid' => '0', 'licensed' => 'No')));
 
         // Is the wake on lan field checked?
-        Theme::Set('wake_on_lan_checked', (($this->wakeOnLan == 1) ? ' checked' : ''));
+        Theme::Set('wake_on_lan_checked', (($displayObject->wakeOnLanEnabled == 1) ? ' checked' : ''));
         
         // Render the form and output
         $form = Theme::RenderReturn('display_form_edit');

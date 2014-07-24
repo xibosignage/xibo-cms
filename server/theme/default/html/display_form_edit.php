@@ -81,6 +81,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             </div>
             <div class="span6">
                 <div class="control-group">
+                    <label class="control-label" for="description" title="<?php echo Theme::Translate('A description - (1 - 254 characters).'); ?>"><?php echo Theme::Translate('Description'); ?></label>
+                    <div class="controls">
+                        <input class="" name="description" type="text" id="description" tabindex="2" value="<?php echo Theme::Get('description'); ?>" maxlength="50" />
+                    </div>
+                </div>
+                <div class="control-group">
                     <div class="controls">
                         <label class="checkbox" for="wakeOnLanEnabled" accesskey="n" title="<?php echo Theme::Translate('Wake on Lan requires the correct network configuration to route the magic packet to the display PC'); ?>"><?php echo Theme::Translate('Enable Wake on LAN'); ?>
                             <input class="checkbox" type="checkbox" id="wakeOnLanEnabled" name="wakeOnLanEnabled" <?php echo Theme::Get('wake_on_lan_checked'); ?>>

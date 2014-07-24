@@ -1481,6 +1481,7 @@ END;
 
         $SQL  = 'SELECT display.displayid, ';
         $SQL .= '    display.display, ';
+        $SQL .= '    display.description, ';
         $SQL .= '    layout.layout, ';
         $SQL .= '    display.loggedin, ';
         $SQL .= '    IFNULL(display.lastaccessed, 0) AS lastaccessed, ';
@@ -1532,6 +1533,7 @@ END;
             // Validate each param and add it to the array.
             $displayItem['displayid'] = Kit::ValidateParam($row['displayid'], _INT);
             $displayItem['display'] = Kit::ValidateParam($row['display'], _STRING);
+            $displayItem['description'] = Kit::ValidateParam($row['description'], _STRING);
             $displayItem['layout'] = Kit::ValidateParam($row['layout'], _STRING);
             $displayItem['loggedin'] = Kit::ValidateParam($row['loggedin'], _INT);
             $displayItem['lastaccessed'] = Kit::ValidateParam($row['lastaccessed'], _STRING);

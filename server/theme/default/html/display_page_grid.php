@@ -44,6 +44,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<th><?php echo Theme::Translate('ID'); ?></th>
 			<th><?php echo Theme::Translate('License'); ?></th>
 			<th><?php echo Theme::Translate('Display'); ?></th>	
+			<th><?php echo Theme::Translate('Description'); ?></th>	
 			<th><?php echo Theme::Translate('Default Layout'); ?></th>	
 			<th><?php echo Theme::Translate('Interleave Default'); ?></th>	
 			<th><?php echo Theme::Translate('Email Alert'); ?></th>	
@@ -59,6 +60,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<td><?php echo $row['displayid']; ?></td>
 			<td><span class="<?php echo $row['licensed']; ?>"></span></td>
 			<td><?php echo $row['display']; ?></td>
+			<td><?php echo $row['description']; ?></td>
 			<td><?php echo $row['layout']; ?></td>
 			<td><span class="<?php echo $row['inc_schedule']; ?>"></span></td>
 			<td><span class="<?php echo $row['email_alert']; ?>"></span></td>

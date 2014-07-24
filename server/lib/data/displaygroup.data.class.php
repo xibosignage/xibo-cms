@@ -22,12 +22,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class DisplayGroup extends Data
 {
-    public function __construct(database $db)
+    public function __construct()
     {
         include_once('lib/data/schedule.data.class.php');
         include_once('lib/data/displaygroupsecurity.data.class.php');
         
-        parent::__construct($db);
+        parent::__construct();
     }
     
     /**
