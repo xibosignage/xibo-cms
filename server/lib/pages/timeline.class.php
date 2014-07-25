@@ -445,6 +445,7 @@ END;
 		$type = (string) $node->getAttribute("type");
 		$mediaDurationText = (string) $node->getAttribute("duration");
         $mediaid = (string) $node->getAttribute("id");
+        $lkId = (string) $node->getAttribute("lkid");
 
         // Create a module to deal with this
         if (!file_exists('modules/' . $type . '.module.php'))
@@ -454,7 +455,7 @@ END;
 
         require_once("modules/$type.module.php");
 
-        if (!$moduleObject = new $type($db, $user, $mediaid, $layoutid, $regionid))
+        if (!$moduleObject = new $type($db, $user, $mediaid, $layoutid, $regionid, $lkId))
             trigger_error($moduleObject->GetErrorMessage(), E_USER_ERROR);
 
         $return .= '<div class="regionPreviewOverlay"></div>';

@@ -139,11 +139,11 @@ class image extends Module
         $valign = $this->GetOption('valign', 'middle');
  
         $html = '<div style="text-align:%s; display: table-cell; vertical-align: %s; height: %dpx">
-            <img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=%d&width=%d&height=%d&dynamic=true&proportional=%s" />
+            <img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=%d&lkid=%d&width=%d&height=%d&dynamic=true&proportional=%s" />
         </div>';
 
         // Show the image - scaled to the aspect ratio of this region (get from GET)
-        return sprintf($html, $align, $valign, $height, $this->mediaid, $width, $height, $proportional);
+        return sprintf($html, $align, $valign, $height, $this->mediaid, $this->lkid, $width, $height, $proportional);
     }
 
     public function HoverPreview()
