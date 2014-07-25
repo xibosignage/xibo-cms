@@ -166,34 +166,35 @@ class image extends Module
         $thumb = Kit::GetParam('thumb', _GET, _BOOL, false);
         $dynamic = isset($_REQUEST['dynamic']);
         $file = $this->storedAs;
+        $width = Kit::GetParam('width', _REQUEST, _INT, 80);
+        $height = Kit::GetParam('height', _REQUEST, _INT, 80);
 
         //File upload directory.. get this from the settings object
         $library = Config::GetSetting("LIBRARY_LOCATION");
         $fileName = $library . $file;
 
         // If we are a thumb request then output the cached thumbnail
-        if ($thumb)
-            $fileName = $library . 'tn_' . $file;
+        if ($thumb) {
+            $fileName = $library . sprintf('tn_%dx%d_%s', $width, $height, $file);
 
-        // If the thumbnail doesnt exist then create one
-        if (!file_exists($fileName))
-        {
-            Debug::LogEntry('audit', 'File doesnt exist, creating a thumbnail for ' . $fileName);
+            // If the thumbnail doesn't exist then create one
+            if (!file_exists($fileName)) {
+                Debug::LogEntry('audit', 'File doesnt exist, creating a thumbnail for ' . $fileName);
 
-            if (!$info = getimagesize($library . $file))
-                die($library . $file . ' is not an image');
+                if (!$info = getimagesize($library . $file))
+                    die($library . $file . ' is not an image');
 
-            ResizeImage($library . $file, $fileName, 80, 80, $proportional, 'file');
+                ResizeImage($library . $file, $fileName, $width, $height, $proportional, 'file');
+            }
         }
         
         // Get the info for this new temporary file
-        if (!$info = getimagesize($fileName))
-        {
+        if (!$info = getimagesize($fileName)) {
             echo $fileName . ' is not an image';
             exit;
         }
 
-        if ($dynamic && $info[2])
+        if ($dynamic && !$thumb && $info[2])
         {
             $width  = Kit::GetParam('width', _GET, _INT);
             $height = Kit::GetParam('height', _GET, _INT);
@@ -204,8 +205,7 @@ class image extends Module
             exit;
         }
 
-        if (!file_exists($fileName))
-        {
+        if (!file_exists($fileName)) {
             //not sure
             Debug::LogEntry('audit', "Cant find: $uid", 'module', 'GetResource');
 

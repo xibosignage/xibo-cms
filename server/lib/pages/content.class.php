@@ -47,6 +47,8 @@ class contentDAO
             Theme::Set('filter_owner', Session::Get('content', 'filter_owner'));
             Theme::Set('filter_duration_in_seconds', Session::Get('content', 'filter_duration_in_seconds'));
             Theme::Set('filter_duration_in_seconds_checked', ((Theme::Get('filter_duration_in_seconds') == 1) ? 'checked' : ''));
+            Theme::Set('filter_showThumbnail', Session::Get('content', 'filter_showThumbnail'));
+            Theme::Set('filter_showThumbnail_checked', ((Theme::Get('filter_showThumbnail') == 1) ? 'checked' : ''));
         }
         else {
             Theme::Set('filter_retired', 0);
@@ -90,13 +92,16 @@ class contentDAO
 		$filter_name = Kit::GetParam('filter_name', _REQUEST, _STRING);
 		$filter_userid = Kit::GetParam('filter_owner', _REQUEST, _INT);
         $filter_retired = Kit::GetParam('filter_retired', _REQUEST, _INT);
-		$filter_duration_in_seconds = Kit::GetParam('filter_duration_in_seconds', _REQUEST, _CHECKBOX);
+        $filter_duration_in_seconds = Kit::GetParam('filter_duration_in_seconds', _REQUEST, _CHECKBOX);
+        $filter_showThumbnail = Kit::GetParam('filter_showThumbnail', _REQUEST, _CHECKBOX);
+		Theme::Set('filter_showThumbnail', $filter_showThumbnail);
                 
 		setSession('content', 'filter_type', $filter_type);
 		setSession('content', 'filter_name', $filter_name);
 		setSession('content', 'filter_owner', $filter_userid);
         setSession('content', 'filter_retired', $filter_retired);
-		setSession('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
+        setSession('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
+		setSession('content', 'filter_showThumbnail', $filter_showThumbnail);
         setSession('content', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		// Construct the SQL
@@ -114,6 +119,12 @@ class contentDAO
 
 			// Display a friendly file size
 			$row['size_text'] = Kit::FormatBytes($row['filesize']);
+
+            // Thumbnail URL
+            $row['thumbnail'] = '';
+
+            if ($row['mediatype'] == 'image')
+                $row['thumbnail'] = 'index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '&width=100&height=100&dynamic=true&thumb=true';
 
 			$row['buttons'] = array();
 

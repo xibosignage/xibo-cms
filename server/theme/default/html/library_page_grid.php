@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -41,6 +41,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<th><?php echo Theme::Translate('ID'); ?></th>
 			<th><?php echo Theme::Translate('Name'); ?></th>
 			<th><?php echo Theme::Translate('Type'); ?></th>
+			<?php if (Theme::Get('filter_showThumbnail') == 1) { ?>
+			<th><?php echo Theme::Translate('Thumbnail'); ?></th>	
+			<?php } ?>
 			<th><?php echo Theme::Translate('Duration'); ?></th>	
 			<th><?php echo Theme::Translate('Size'); ?></th>	
 			<th><?php echo Theme::Translate('Owner'); ?></th>	
@@ -55,6 +58,20 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<td><?php echo $row['mediaid']; ?></td>
 			<td><?php echo $row['media']; ?></td>
 			<td><?php echo $row['mediatype']; ?></td>
+			<?php 
+				if (Theme::Get('filter_showThumbnail') == 1) { 
+					if (!empty($row['thumbnail'])) {
+			?>
+			<td><img src="<?php echo $row['thumbnail']; ?>" alt="<?php echo $row['media']; ?>" /></td>	
+			<?php 
+					}
+					else {
+						?>
+						<td></td>	
+						<?php
+					}
+				} 
+			?>
 			<td><?php echo $row['duration_text']; ?></td>
 			<td><?php echo $row['size_text']; ?></td>
 			<td><?php echo $row['owner']; ?></td>

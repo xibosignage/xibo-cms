@@ -57,6 +57,7 @@ class Display extends Data {
     public $clientType;
     public $clientVersion;
     public $clientCode;
+    public $clientConfig;
 
     public $displayGroupId;
     
@@ -107,6 +108,10 @@ class Display extends Data {
             $this->clientType = Kit::ValidateParam($row['client_type'], _STRING);
             $this->clientVersion = Kit::ValidateParam($row['client_version'], _STRING);
             $this->clientCode = Kit::ValidateParam($row['client_code'], _INT);
+            $this->clientConfig = Kit::ValidateParam($row['client_config'], _HTMLSTRING);
+
+            // Load the client settings into an array
+            $this->clientConfig = ($this->clientConfig == '') ? array() : json_decode($this->clientConfig, true);
             
             $this->displayGroupId = Kit::ValidateParam($row['displaygroupid'], _INT);
 
@@ -280,7 +285,8 @@ class Display extends Data {
                         BroadCastAddress = :broadcastaddress,
                         SecureOn = :secureon,
                         Cidr = :cidr,
-                        GeoLocation = POINT(:latitude, :longitude)
+                        GeoLocation = POINT(:latitude, :longitude),
+                        client_config = :client_config
              WHERE displayid = :displayid';
 
             $sth = $dbh->prepare($SQL);
@@ -299,6 +305,7 @@ class Display extends Data {
                     'cidr' => $this->cidr,
                     'latitude' => $this->latitude,
                     'longitude' => $this->longitude,
+                    'client_config' => json_encode($this->clientConfig),
                     'displayid' => $this->displayId
                 ));
 
