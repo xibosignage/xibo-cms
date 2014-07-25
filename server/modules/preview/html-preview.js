@@ -469,6 +469,12 @@ function media(parent, id, xml) {
         $("#" + self.containerName).css("background-image", "url('" + tmpUrl + "')");
         if (self.options['scaletype'] == 'stretch')
             $("#" + self.containerName).css("background-size", "cover");
+        else {
+            // Center scale type, do we have align or valign?
+            var align = (self.options['align'] == "") ? "center" : self.options['align'];
+            var valign = (self.options['valign'] == "" || self.options['valign'] == "middle") ? "center" : self.options['valign'];
+            $("#" + self.containerName).css("background-position", align + " " + valign);
+        }
     }
     else if (self.mediaType == "text") {
         $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=text&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');

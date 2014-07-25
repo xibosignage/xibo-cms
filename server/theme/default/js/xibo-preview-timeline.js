@@ -45,7 +45,7 @@ function Preview(regionElement)
 
 	$('.prevSeq', $(this.previewElement)).click(function() {
 		var preview = Preview.instances[regionid];
-		var maxSeq 	= $('.preview-media-information', this.previewElement).data("maxSeq");
+		var maxSeq 	= $('.preview-media-information', preview.previewElement).data("maxSeq");
 				
 		var currentSeq = preview.seq;
 		currentSeq--;
@@ -60,15 +60,13 @@ function Preview(regionElement)
 	
 	$('.nextSeq', $(this.previewElement)).click(function() {
 		var preview = Preview.instances[regionid];
-		var maxSeq 	= $('.preview-media-information', this.previewElement).data("maxSeq");
+		var maxSeq 	= $('.preview-media-information', preview.previewElement).data("maxSeq");
 		
 		var currentSeq = preview.seq;
 		currentSeq++;
 		
-		if (currentSeq > maxSeq + 1)
-		{
+		if (currentSeq > maxSeq)
 			currentSeq = 1;
-		}
 		
 		preview.SetSequence(currentSeq);
 	});	

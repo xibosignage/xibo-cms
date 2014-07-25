@@ -91,6 +91,18 @@ class image extends Module
         Theme::Set('scaleType', $this->GetOption('scaleType'));
         Theme::Set('scaleType_field_list', array(array('scaleTypeId' => 'center', 'scaleType' => __('Center')), array('scaleTypeId' => 'stretch', 'scaleType' => __('Stretch'))));
 
+        // Alignment
+        Theme::Set('align', $this->GetOption('align', 'center'));
+        Theme::Set('valign', $this->GetOption('valign', 'middle'));
+        Theme::Set('align_field_list', array(array('alignId' => 'left', 'align' => __('Left')), array('alignId' => 'center', 'align' => __('Centre')), array('alignId' => 'right', 'align' => __('Right'))));
+        Theme::Set('valign_field_list', array(array('valignId' => 'top', 'valign' => __('Top')), array('valignId' => 'middle', 'valign' => __('Middle')), array('valignId' => 'bottom', 'valign' => __('Bottom'))));
+
+        // Set some field dependencies
+        $this->response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'block')));
+        $this->response->AddFieldAction('scaleTypeId', 'change', 'center', array('.align-fields' => array('display' => 'block')));
+        $this->response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'none')), 'not');
+        $this->response->AddFieldAction('scaleTypeId', 'change', 'center', array('.align-fields' => array('display' => 'none')), 'not');
+
         return $this->EditFormForLibraryMedia('image_form_media_edit');
     }
 
@@ -111,6 +123,8 @@ class image extends Module
     {
         // Set the properties specific to Images
         $this->SetOption('scaleType', Kit::GetParam('scaleTypeId', _POST, _WORD, 'center'));
+        $this->SetOption('align', Kit::GetParam('alignId', _POST, _WORD, 'center'));
+        $this->SetOption('valign', Kit::GetParam('valignId', _POST, _WORD, 'middle'));
 
         return $this->EditLibraryMedia();
     }
@@ -121,9 +135,15 @@ class image extends Module
             return parent::Preview ($width, $height);
         
         $proportional = ($this->GetOption('scaleType') == 'stretch') ? 'false' : 'true';
+        $align = $this->GetOption('align', 'center');
+        $valign = $this->GetOption('valign', 'middle');
+ 
+        $html = '<div style="text-align:%s; display: table-cell; vertical-align: %s; height: %dpx">
+            <img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=%d&width=%d&height=%d&dynamic=true&proportional=%s" />
+        </div>';
 
         // Show the image - scaled to the aspect ratio of this region (get from GET)
-        return sprintf('<div style="text-align:center;"><img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=%d&width=%d&height=%d&dynamic=true&proportional=%s" /></div>', $this->mediaid, $width, $height, $proportional);
+        return sprintf($html, $align, $valign, $height, $this->mediaid, $width, $height, $proportional);
     }
 
     public function HoverPreview()

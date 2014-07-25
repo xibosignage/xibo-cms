@@ -51,12 +51,24 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<input name="duration" type="text" id="duration" tabindex="3" value="<?php echo Theme::Get('duration'); ?>" <?php echo Theme::Get('is_duration_field_enabled'); ?> />
 		</div>
 	</div>
-        <div class="control-group">
-            <label class="control-label" for="scaleTypeId" accesskey="n" title="<?php echo Theme::Translate('How should this image be scaled?'); ?>"><?php echo Theme::Translate('Scale Type'); ?></label>
-            <div class="controls">
-                <?php echo Theme::SelectList('scaleTypeId', Theme::Get('scaleType_field_list'), 'scaleTypeId', 'scaleType', Theme::Get('scaleType')); ?>
-            </div>
+    <div class="control-group">
+        <label class="control-label" for="scaleTypeId" accesskey="n" title="<?php echo Theme::Translate('How should this image be scaled?'); ?>"><?php echo Theme::Translate('Scale Type'); ?></label>
+        <div class="controls">
+            <?php echo Theme::SelectList('scaleTypeId', Theme::Get('scaleType_field_list'), 'scaleTypeId', 'scaleType', Theme::Get('scaleType')); ?>
         </div>
+    </div>
+    <div class="control-group align-fields">
+        <label class="control-label" for="alignId" accesskey="n" title="<?php echo Theme::Translate('How should this image be aligned?'); ?>"><?php echo Theme::Translate('Align'); ?></label>
+        <div class="controls">
+            <?php echo Theme::SelectList('alignId', Theme::Get('align_field_list'), 'alignId', 'align', Theme::Get('align')); ?>
+        </div>
+    </div>
+    <div class="control-group align-fields">
+        <label class="control-label" for="valignId" accesskey="n" title="<?php echo Theme::Translate('How should this image be vertically aligned?'); ?>"><?php echo Theme::Translate('Vertical Align'); ?></label>
+        <div class="controls">
+            <?php echo Theme::SelectList('valignId', Theme::Get('valign_field_list'), 'valignId', 'valign', Theme::Get('valign')); ?>
+        </div>
+    </div>
 	<?php if (Theme::Get('is_assignable')) { ?>
 	<div class="control-group">
 		<div class="controls">
