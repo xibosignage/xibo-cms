@@ -324,7 +324,7 @@ class DisplayGroup extends Data
      * @param $displayID Object
      * @param $display Object
      */
-    public function EditDisplayGroup($displayID, $display)
+    public function EditDisplayGroup($displayID, $display, $description = '')
     {
         Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'EditDisplayGroup');
         
@@ -367,10 +367,11 @@ class DisplayGroup extends Data
             }
             
             // Update the Display group name
-            $sth = $dbh->prepare('UPDATE displaygroup SET DisplayGroup = :displaygroup WHERE  DisplayGroupID = :displaygroupid');
+            $sth = $dbh->prepare('UPDATE displaygroup SET DisplayGroup = :displaygroup, description = :description WHERE  DisplayGroupID = :displaygroupid');
             $sth->execute(array(
                     'displaygroupid' => $displayGroupID,
-                    'displaygroup' => $display
+                    'displaygroup' => $display,
+                    'description' => $description,
                 ));
             
             Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayGroup');

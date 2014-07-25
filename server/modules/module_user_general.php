@@ -1481,7 +1481,7 @@ END;
 
         $SQL  = 'SELECT display.displayid, ';
         $SQL .= '    display.display, ';
-        $SQL .= '    display.description, ';
+        $SQL .= '    displaygroup.description, ';
         $SQL .= '    layout.layout, ';
         $SQL .= '    display.loggedin, ';
         $SQL .= '    IFNULL(display.lastaccessed, 0) AS lastaccessed, ';

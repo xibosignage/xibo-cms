@@ -65,7 +65,6 @@ CREATE TABLE IF NOT EXISTS `display` (
   `displayid` int(8) NOT NULL AUTO_INCREMENT,
   `isAuditing` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is this display auditing',
   `display` varchar(50) NOT NULL,
-  `description` varchar(254) NULL,
   `defaultlayoutid` int(8) NOT NULL,
   `license` varchar(40) DEFAULT NULL,
   `licensed` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Is the Requested License Key Allowed',

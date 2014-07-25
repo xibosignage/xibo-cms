@@ -20,6 +20,9 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
+// Companion classes
+Kit::ClassLoader('displaygroup');
+
 class Display extends Data {
 
     public $loaded;
@@ -54,12 +57,23 @@ class Display extends Data {
     public $clientType;
     public $clientVersion;
     public $clientCode;
+
+    public $displayGroupId;
     
     public function Load() {
         try {
             $dbh = PDOConnect::init();
         
-            $sth = $dbh->prepare('SELECT *, X(display.GeoLocation) AS Latitude, Y(display.GeoLocation) AS Longitude FROM `display` WHERE displayid = :display_id');
+            $sth = $dbh->prepare('
+                SELECT display.*, displaygroup.displaygroupid, displaygroup.description, X(display.GeoLocation) AS Latitude, Y(display.GeoLocation) AS Longitude 
+                  FROM `display`
+                    INNER JOIN `lkdisplaydg`
+                    ON lkdisplaydg.displayid = display.displayId
+                    INNER JOIN `displaygroup`
+                    ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
+                        AND isdisplayspecific = 1
+                WHERE display.displayid = :display_id');
+            
             $sth->execute(array('display_id' => $this->displayId));
           
             if (!$row = $sth->fetch())
@@ -93,6 +107,8 @@ class Display extends Data {
             $this->clientType = Kit::ValidateParam($row['client_type'], _STRING);
             $this->clientVersion = Kit::ValidateParam($row['client_version'], _STRING);
             $this->clientCode = Kit::ValidateParam($row['client_code'], _INT);
+            
+            $this->displayGroupId = Kit::ValidateParam($row['displaygroupid'], _INT);
 
             // Store the current licensed flag, in case we are changing it and need to check it.
             $this->currentLicensed = $this->licensed;
@@ -253,7 +269,6 @@ class Display extends Data {
             $SQL  = '
                 UPDATE display 
                     SET display = :display,
-                        description = :description,
                         defaultlayoutid = :defaultlayoutid,
                         inc_schedule = :incschedule,
                         licensed = :licensed,
@@ -271,7 +286,6 @@ class Display extends Data {
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
                     'display' => $this->display,
-                    'description' => $this->description,
                     'defaultlayoutid' => $this->defaultLayoutId,
                     'incschedule' => $this->incSchedule,
                     'licensed' => $this->licensed,
@@ -295,7 +309,7 @@ class Display extends Data {
             $displayGroupObject = new DisplayGroup();
             
             // Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
-            if (!$displayGroupObject->EditDisplayGroup($this->displayId, $this->display)) {
+            if (!$displayGroupObject->Edit($this->displayGroupId, $this->display, $this->description)) {
                 $this->ThrowError(25002, __('Could not update this display with a new name.'));
             }
 
