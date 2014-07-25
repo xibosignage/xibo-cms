@@ -690,7 +690,8 @@ class layoutDAO
             $designerScale = ($version == 1) ? 1 : min($resolution['width'] / $resolution['intended_width'], $resolution['intended_height'] / $resolution['height']);
 
             // To do - version 2 layout can support zooming?
-            $designerScale = $designerScale * Kit::GetParam('zoom', _GET, _DOUBLE, 1);
+            if ($version > 1)
+                $designerScale = $designerScale * Kit::GetParam('zoom', _GET, _DOUBLE, 1);
         }
         
         // do we have a background? Or a background color (or both)

@@ -85,9 +85,13 @@ class image extends Module
      * Return the Edit Form as HTML
      * @return
      */
-    public function EditForm()
-    {
-        return $this->EditFormForLibraryMedia();
+    public function EditForm() {
+
+        // List of image fit options
+        Theme::Set('scaleType', $this->GetOption('scaleType'));
+        Theme::Set('scaleType_field_list', array(array('scaleTypeId' => 'center', 'scaleType' => __('Center')), array('scaleTypeId' => 'stretch', 'scaleType' => __('Stretch'))));
+
+        return $this->EditFormForLibraryMedia('image_form_media_edit');
     }
 
     /**
@@ -105,6 +109,9 @@ class image extends Module
      */
     public function EditMedia()
     {
+        // Set the properties specific to Images
+        $this->SetOption('scaleType', Kit::GetParam('scaleTypeId', _POST, _WORD, 'center'));
+
         return $this->EditLibraryMedia();
     }
 
@@ -113,8 +120,10 @@ class image extends Module
         if ($this->previewEnabled == 0)
             return parent::Preview ($width, $height);
         
+        $proportional = ($this->GetOption('scaleType') == 'stretch') ? 'false' : 'true';
+
         // Show the image - scaled to the aspect ratio of this region (get from GET)
-        return sprintf('<div style="text-align:center;"><img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=%d&width=%d&height=%d&dynamic=true" /></div>', $this->mediaid, $width, $height);
+        return sprintf('<div style="text-align:center;"><img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=%d&width=%d&height=%d&dynamic=true&proportional=%s" /></div>', $this->mediaid, $width, $height, $proportional);
     }
 
     public function HoverPreview()
@@ -186,7 +195,6 @@ class image extends Module
     	$this->ReturnFile($fileName);
         
         exit();
-    	
     }
 }
 ?>

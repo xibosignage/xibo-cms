@@ -51,10 +51,16 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<input name="duration" type="text" id="duration" tabindex="3" value="<?php echo Theme::Get('duration'); ?>" <?php echo Theme::Get('is_duration_field_enabled'); ?> />
 		</div>
 	</div>
+        <div class="control-group">
+            <label class="control-label" for="scaleTypeId" accesskey="n" title="<?php echo Theme::Translate('How should this image be scaled?'); ?>"><?php echo Theme::Translate('Scale Type'); ?></label>
+            <div class="controls">
+                <?php echo Theme::SelectList('scaleTypeId', Theme::Get('scaleType_field_list'), 'scaleTypeId', 'scaleType', Theme::Get('scaleType')); ?>
+            </div>
+        </div>
 	<?php if (Theme::Get('is_assignable')) { ?>
 	<div class="control-group">
 		<div class="controls">
-			<label class="checkbox" for="replaceInLayouts" accesskey="n" title="<?php echo Theme::Translate('Note: It will only be replaced in layouts you have permission to edit.'); ?>"><?php echo Theme::Translate('Update this media in all layouts it is assigned to.'); ?>
+			<label class="checkbox" for="replaceInLayouts" accesskey="n" title="<?php echo Theme::Translate('Note: It will only be replaced in layouts you have permission to edit.'); ?>"><?php echo Theme::Translate('Update this media file / duration in all layouts it is assigned to.'); ?>
 				<input type="checkbox" id="replaceInLayouts" name="replaceInLayouts" <?php echo Theme::Get('is_replace_field_checked'); ?> />
 			</label>
 		</div>

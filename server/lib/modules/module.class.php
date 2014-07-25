@@ -881,7 +881,7 @@ END;
         return $this->response;
     }
 
-    protected function EditFormForLibraryMedia()
+    protected function EditFormForLibraryMedia($formTheme = 'library_form_media_edit')
     {
         global $session;
         $db =& $this->db;
@@ -963,7 +963,7 @@ END;
 		Theme::Set('is_replace_field_checked', ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 'checked' : ''));
         Theme::Set('is_assignable', $this->assignable);
 
-		$form = Theme::RenderReturn('library_form_media_edit');
+		$form = Theme::RenderReturn($formTheme);
 
         $this->response->html = $form;
         $this->response->dialogTitle = 'Edit ' . $this->displayType;

@@ -49,7 +49,7 @@ class ticker extends Module
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
     
         // Source list
-        Theme::Set('source_field_list', array(array('sourceid' => '1', 'source' => 'Feed'),array('sourceid' => '2', 'source' => 'DataSet')));
+        Theme::Set('source_field_list', array(array('sourceid' => '1', 'source' => __('Feed')), array('sourceid' => '2', 'source' => __('DataSet'))));
 
 		// Data set list
 		$datasets = $user->DataSetList();

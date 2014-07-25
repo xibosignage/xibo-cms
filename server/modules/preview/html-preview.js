@@ -454,6 +454,9 @@ function media(parent, id, xml) {
     $("#" + self.containerName).css("width", self.divWidth + "px");
     $("#" + self.containerName).css("height", self.divHeight + "px");
     $("#" + self.containerName).css("position", "absolute");
+    $("#" + self.containerName).css("background-size", "contain");
+    $("#" + self.containerName).css("background-repeat", "no-repeat");
+    $("#" + self.containerName).css("background-position", "center");
     /* $("#" + self.containerName).css("left", self.offsetX + "px");
     $("#" + self.containerName).css("top", self.offsetY + "px"); */
     
@@ -464,6 +467,8 @@ function media(parent, id, xml) {
         var tmpUrl = "index.php?p=module&mod=image&q=Exec&method=GetResource&layoutid=" + self.region.layout.id + "&regionid=" + self.region.id + "&mediaid=" + self.id + "&lkid=" + self.lkid;
         PRELOAD.addFiles(tmpUrl);
         $("#" + self.containerName).css("background-image", "url('" + tmpUrl + "')");
+        if (self.options['scaletype'] == 'stretch')
+            $("#" + self.containerName).css("background-size", "cover");
     }
     else if (self.mediaType == "text") {
         $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=text&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
@@ -511,9 +516,6 @@ function media(parent, id, xml) {
     else {
         $("#" + self.containerName).css("outline", "red solid thin");
     }
-    $("#" + self.containerName).css("background-size", "contain");
-    $("#" + self.containerName).css("background-repeat", "no-repeat");
-    $("#" + self.containerName).css("background-position", "center");
     
     playLog(5, "debug", "Created media " + self.id)
 }
