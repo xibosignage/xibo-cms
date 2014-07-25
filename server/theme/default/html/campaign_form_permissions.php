@@ -48,6 +48,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<td><input type="checkbox" name="groupids[]" value="<?php echo $row['value_edit']; ?>" <?php echo $row['value_edit_checked']; ?>></td>
 			<td><input type="checkbox" name="groupids[]" value="<?php echo $row['value_del']; ?>" <?php echo $row['value_del_checked']; ?>></td>
 		</tr>
-		<?php } ?>
-  	</table>
+        <?php } ?>
+    </table>
+    <div class="control-group">
+        <div class="controls">
+          <label class="checkbox" for="replaceInLayouts" accesskey="n" title="<?php echo Theme::Translate('Note: It will only be replaced in layouts you have permission to edit.'); ?>"><?php echo Theme::Translate('Update these permissions on all layouts, regions and media.'); ?>
+            <input type="checkbox" id="replaceInLayouts" name="replaceInLayouts" />
+          </label>
+        </div>
+    </div>
 </form>

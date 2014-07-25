@@ -997,8 +997,7 @@ END;
     /**
      * Returns an array of layouts that this user has access to
      */
-    public function LayoutList($filterLayout = '', $filterUserId = 0, $filterRetired = -1, $filterTags = '', $filterMediaId = 0)
-    {
+    public function LayoutList($sort_order = array('layout'), $filter_by = array()) {
         $SQL  = "";
         $SQL .= "SELECT layout.layoutID, ";
         $SQL .= "        layout.layout, ";
@@ -1010,7 +1009,7 @@ END;
         $SQL .= "        layout.status, ";
         
         // MediaID
-        if ($filterMediaId != 0) {
+        if (Kit::GetParam('mediaId', $filter_by, _INT, 0) != 0) {
             $SQL .= "   lklayoutmedia.regionid, ";
             $SQL .= "   lklayoutmedia.lklayoutmediaid, ";
             $SQL .= "   media.userID AS mediaownerid ";
@@ -1028,18 +1027,25 @@ END;
         $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
         $SQL .= "       AND campaign.IsLayoutSpecific = 1";
 
+        if (Kit::GetParam('campaignId', $filter_by, _INT, 0) != 0) {
+            // Join Campaign back onto it again
+            $SQL .= sprintf(" INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = %d", Kit::GetParam('campaignId', $filter_by, _INT, 0));
+        }
+        else {
+        }
+
         // MediaID
-        if ($filterMediaId != 0) {
-            $SQL .= sprintf(" INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = %d", $filterMediaId);
+        if (Kit::GetParam('mediaId', $filter_by, _INT, 0) != 0) {
+            $SQL .= sprintf(" INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = %d", Kit::GetParam('mediaId', $filter_by, _INT, 0));
             $SQL .= " INNER JOIN `media` ON lklayoutmedia.mediaid = media.mediaid ";
         }
 
         $SQL .= " WHERE 1 = 1 ";
 
-        if ($filterLayout != '')
+        if (Kit::GetParam('layout', $filter_by, _STRING) != '')
         {
             // convert into a space delimited array
-            $names = explode(' ', $filterLayout);
+            $names = explode(' ', Kit::GetParam('layout', $filter_by, _STRING));
 
             foreach($names as $searchName)
             {
@@ -1052,22 +1058,24 @@ END;
         }
 
         // Owner filter
-        if ($filterUserId != 0) 
-            $SQL .= sprintf(" AND layout.userid = %d ", $filterUserId);
+        if (Kit::GetParam('userId', $filter_by, _INT, 0) != 0) 
+            $SQL .= sprintf(" AND layout.userid = %d ", Kit::GetParam('userId', $filter_by, _INT, 0));
         
         // Retired options
-        if ($filterRetired != -1) 
-            $SQL .= sprintf(" AND layout.retired = %d ", $filterRetired);
+        if (Kit::GetParam('retired', $filter_by, _INT, -1) != -1) 
+            $SQL .= sprintf(" AND layout.retired = %d ", Kit::GetParam('retired', $filter_by, _INT, -1));
         else
             $SQL .= " AND layout.retired = 0 ";
 
         // Tags
-        if ($filterTags != '')
-            $SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $this->db->escape_string($filterTags)) . "%' ";
+        if (Kit::GetParam('tags', $filter_by, _STRING) != '')
+            $SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $this->db->escape_string(Kit::GetParam('tags', $filter_by, _STRING))) . "%' ";
         
-        $SQL .= " ORDER BY Layout ";
+        // Sorting?
+        if (is_array($sort_order))
+            $SQL .= 'ORDER BY ' . implode(',', $sort_order);
 
-        //Debug::LogEntry('audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        Debug::LogEntry('audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {

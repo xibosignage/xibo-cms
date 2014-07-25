@@ -78,7 +78,7 @@ class mediamanagerDAO
         
         // We would like a list of all layouts, media and media assignments that this user
         // has access to.
-        $layouts = $user->LayoutList($filterLayout);
+        $layouts = $user->LayoutList(NULL, array('layout' => $filterLayout));
 
         $rows = array();
 

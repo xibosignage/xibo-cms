@@ -348,9 +348,10 @@ class campaignDAO
         $SQL .= '   LEFT OUTER JOIN lkcampaigngroup ';
         $SQL .= '   ON lkcampaigngroup.GroupID = group.GroupID ';
         $SQL .= '       AND lkcampaigngroup.CampaignID = %d ';
+        $SQL .= ' WHERE `group`.GroupID <> %d ';
         $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
 
-        $SQL = sprintf($SQL, $campaignId);
+        $SQL = sprintf($SQL, $campaignId, $this->user->getGroupFromID($this->user->userid, true));
 
         if (!$results = $db->query($SQL))
         {
@@ -422,6 +423,8 @@ class campaignDAO
         $edit = 0;
         $del = 0;
 
+        $permissions = array();
+
         // List of groupIds with view, edit and del assignments
         foreach($groupIds as $groupPermission)
         {
@@ -441,6 +444,9 @@ class campaignDAO
                 // Link new permissions
                 if (!$security->Link($campaignId, $lastGroupId, $view, $edit, $del))
                     trigger_error(__('Unable to set permissions'));
+
+                // Store
+                $permissions[] = array('groupId' => $lastGroupId, 'view' => $view, 'edit' => $edit, 'del' => $del);
 
                 // Reset
                 $lastGroupId = $groupId;
@@ -470,6 +476,89 @@ class campaignDAO
         {
             if (!$security->Link($campaignId, $lastGroupId, $view, $edit, $del))
                 trigger_error(__('Unable to set permissions'));
+
+            $permissions[] = array('groupId' => $lastGroupId, 'view' => $view, 'edit' => $edit, 'del' => $del);
+        }
+
+        $replaceInLayouts = Kit::GetParam('replaceInLayouts', _POST, _CHECKBOX);
+
+        if ($replaceInLayouts) {
+            Debug::LogEntry('audit', 'Permissions to push down: ' . json_encode($permissions), get_class(), __FUNCTION__);
+
+            // Layout object to deal with layout information
+            Kit::ClassLoader('layout');
+            $layoutObject = new Layout($db);
+
+            // Get all layouts for this Campaign
+            foreach ($this->user->LayoutList(NULL, array('campaignId' => $campaignId)) as $layout) {
+
+                // Set for ease of use
+                $layoutId = $layout['layoutid'];
+
+                Debug::LogEntry('audit', 'Processing permissions for layout id' . $layoutId, get_class(), __FUNCTION__);
+
+                // Set the permissions on this layout (if its not the same one!)
+                if ($layout['campaignid'] != $campaignId) {
+                    // Set permissions on this Layout
+                    $auth = $this->user->CampaignAuth($layout['campaignid'], true);
+
+                    if ($auth->modifyPermissions) {
+
+                        if (!$security->UnlinkAll($layout['campaignid']))
+                            continue;
+
+                        foreach ($permissions as $permission) {
+                            $security->Link($layout['campaignid'], $permission['groupId'], $permission['view'], $permission['edit'], $permission['del']);
+                        }
+                    }
+                }
+
+                // Get all regions and media and set permissions on those too
+                $layoutInformation = $layoutObject->LayoutInformation($layoutId);
+                
+                // Region and Media Security Class
+                Kit::ClassLoader('layoutregiongroupsecurity');
+                Kit::ClassLoader('layoutmediagroupsecurity');
+                $layoutSecurity = new LayoutRegionGroupSecurity($this->db);
+                $layoutMediaSecurity = new LayoutMediaGroupSecurity($this->db);
+
+                foreach($layoutInformation['regions'] as $region) {
+                    
+                    // Make sure we have permission
+                    $regionAuth = $this->user->RegionAssignmentAuth($region['ownerid'], $layoutId, $region['regionid'], true);
+                    if (!$regionAuth->modifyPermissions)
+                        continue;
+
+                    // Set the permissions on the region
+                    // Unlink all
+                    if (!$layoutSecurity->UnlinkAll($layoutId, $region['regionid']))
+                        continue;
+
+                    foreach ($permissions as $permission) {
+                        if (!$layoutSecurity->Link($layoutId, $region['regionid'], $permission['groupId'], $permission['view'], $permission['edit'], $permission['del']))
+                            trigger_error($layoutSecurity->GetErrorMessage(), E_USER_ERROR);
+                    }
+
+                    // Find all media nodes
+                    foreach($region['media'] as $media) {
+                        $originalUserId = ($media['userid'] == '') ? $layout['ownerid'] : $media['userid'];
+
+                        // Make sure we have permission
+                        $mediaAuth = $this->user->MediaAssignmentAuth($originalUserId, $layoutId, $region['regionid'], $media['mediaid'], true);
+                        if (!$mediaAuth->modifyPermissions)
+                            continue;
+
+                        // Set the permissions on the media node
+                        if (!$layoutMediaSecurity->UnlinkAll($layoutId, $region['regionid'], $media['mediaid']))
+                            continue;
+
+                        foreach ($permissions as $permission) {
+                            if (!$layoutMediaSecurity->Link($layoutId, $region['regionid'], $media['mediaid'], $permission['groupId'], $permission['view'], $permission['edit'], $permission['del']))
+                                trigger_error($layoutMediaSecurity->GetErrorMessage(), E_USER_ERROR);
+                        }
+                    }
+                }
+            }
         }
 
         $response->SetFormSubmitResponse(__('Permissions Changed'));
@@ -594,7 +683,7 @@ class campaignDAO
         $name = Kit::GetParam('filter_name', _POST, _STRING);
 
         // Get a list of media
-        $layoutList = $user->LayoutList($name);
+        $layoutList = $user->LayoutList(NULL, array('layout' => $name));
 
         $rows = array();
 

@@ -355,7 +355,7 @@ class layoutDAO
         setSession('layout', 'LayoutFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         
         // Get all layouts
-        $layouts = $user->LayoutList($name, $filter_userid, $filter_retired, $filter_tags);
+        $layouts = $user->LayoutList(NULL, array('layout' => $name, 'userId' => $filter_userid, 'retired' => $filter_retired, 'tags' => $filter_tags));
 
         if (!is_array($layouts))
             trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
@@ -938,7 +938,7 @@ HTML;
         setSession('layoutDesigner', 'Name', $layoutName);       
 
         // Get a layout list
-        $layoutList = $user->LayoutList($layoutName);
+        $layoutList = $user->LayoutList(NULL, array('layout' => $layoutName));
 
         $rows = array();
 

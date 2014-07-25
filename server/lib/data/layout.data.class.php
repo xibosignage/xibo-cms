@@ -1106,7 +1106,7 @@ class Layout extends Data
             $row = $rows[0];
 
             $info['layout'] = Kit::ValidateParam($row['layout'], _STRING);
-            $modifiedDt = new DateTime($row['modifieddt']);
+            $modifiedDt = new DateTime($row['modifiedDT']);
             $info['updated'] = $modifiedDt->getTimestamp();
         }
         catch (Exception $e) {
@@ -1151,6 +1151,7 @@ class Layout extends Data
                         'lkid' => $mediaNode->getAttribute('lkid'),
                         'mediatype' => $mediaNode->getAttribute('type'),
                         'render' => $mediaNode->getAttribute('render'),
+                        'userid' => $mediaNode->getAttribute('userid'),
                         'updated' => $info['updated']
                     );
             }

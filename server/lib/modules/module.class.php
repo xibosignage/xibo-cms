@@ -759,7 +759,7 @@ END;
     public function UnassignFromAll($mediaId) {
 
         // Get a list of layouts with this media id on them that this user has permission for.
-        $layouts = $this->user->LayoutList('', 0, 0, '', $mediaId);
+        $layouts = $this->user->LayoutList(NULL, array('mediaId' => $mediaId));
 
         // Create a media object for each, and call delete
         foreach ($layouts as $layout) {
