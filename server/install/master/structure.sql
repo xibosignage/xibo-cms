@@ -90,10 +90,10 @@ CREATE TABLE IF NOT EXISTS `display` (
   `client_type` VARCHAR( 20 ) NULL ,
   `client_version` VARCHAR( 5 ) NULL ,
   `client_code` SMALLINT NULL,
-  `client_config` TEXT NULL,
+  `displayprofileid` int(11) NULL,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 CREATE TABLE IF NOT EXISTS `displaygroup` (
   `DisplayGroupID` int(11) NOT NULL AUTO_INCREMENT,

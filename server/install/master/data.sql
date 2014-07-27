@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.7.0-alpha', 3, 1, 80);
+('1.7.0-alpha', 4, 1, 80);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
 (1, 'Users', 0, 0),
@@ -157,7 +157,8 @@ INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES
 (39, 'timeline', 3),
 (40, 'sessions', 9),
 (41, 'preview', 3),
-(42, 'statusdashboard', 2);
+(42, 'statusdashboard', 2),
+(43, 'displayprofile', 7);
 
 INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`, `External`) VALUES
 (1, 1, 2, NULL, 'Schedule', NULL, NULL, 1, 0),
@@ -193,7 +194,8 @@ INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class
 (36, 8, 24, NULL, 'Modules', NULL, NULL, 5, 0),
 (37, 6, 37, NULL, 'Campaigns', NULL, NULL, 1, 0),
 (38, 8, 38, NULL, 'Transitions', NULL, NULL, 6, 0),
-(39, 9, 30, NULL, 'Help Links', NULL, NULL, 6, 0);
+(39, 9, 30, NULL, 'Help Links', NULL, NULL, 6, 0),
+(39, 7, 42, NULL, 'Display Settings', NULL, NULL, 4, 0);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES

@@ -1762,5 +1762,60 @@ END;
 
         return $transitions;
     }
+
+    /**
+     * List of Displays this user has access to view
+     */
+    public function DisplayProfileList($sort_order = array('name'), $filter_by = array()) {
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $params = array();
+            $SQL  = 'SELECT displayprofileid, name, type, config, isdefault, userid FROM displayprofile ';
+        
+            // Sorting?
+            if (is_array($sort_order))
+                $SQL .= 'ORDER BY ' . implode(',', $sort_order);
+    
+            $sth = $dbh->prepare($SQL);
+            $sth->execute($params);
+                
+            $profiles = array();
+    
+            while ($row = $sth->fetch()) {
+                $displayItem = array();
+    
+                // Validate each param and add it to the array.
+                $displayItem['displayprofileid'] = Kit::ValidateParam($row['displayprofileid'], _INT);
+                $displayItem['name'] = Kit::ValidateParam($row['name'], _STRING);
+                $displayItem['type'] = Kit::ValidateParam($row['type'], _STRING);
+                $displayItem['config'] = Kit::ValidateParam($row['config'], _STRING);
+                $displayItem['isdefault'] = Kit::ValidateParam($row['isdefault'], _INT);
+                $displayItem['userid'] = Kit::ValidateParam($row['userid'], _INT);
+    
+                $auth = new PermissionManager($this->db, $this);
+                
+                // If we are the owner, or a super admin then give full permissions
+                if ($this->usertypeid != 1 && $this->userid != $displayItem['userid'])
+                    continue;
+    
+                $displayItem['view'] = 1;
+                $displayItem['edit'] = 1;
+                $displayItem['del'] = 1;
+                $displayItem['modifypermissions'] = 1;
+    
+                $profiles[] = $displayItem;
+            }
+    
+            return $profiles;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            return false;
+        }
+    }
 }
 ?>

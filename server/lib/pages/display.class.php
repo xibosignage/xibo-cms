@@ -247,13 +247,6 @@ class displayDAO
                         'text' => __('Edit')
                     );
 
-                // Configuration
-                $row['buttons'][] = array(
-                        'id' => 'display_button_config',
-                        'url' => 'index.php?p=display&q=ConfigForm&displayid=' . $row['displayid'],
-                        'text' => __('Configuration')
-                    );
-
                 // Wake On LAN
                 $row['buttons'][] = array(
                         'id' => 'display_button_wol',
@@ -755,114 +748,6 @@ class displayDAO
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Wake on Lan command sent.'));
-        $response->Respond();
-    }
-
-    public function ConfigForm() {
-        // Create a form out of the config object.
-        $displayObject  = new Display();
-        $displayObject->displayId = Kit::GetParam('displayid', _GET, _INT);
-
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
-
-        if (!$displayObject->Load())
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-
-        if (empty($displayObject->clientType))
-            trigger_error(__('Unknown Client Type, please register this client.'), E_USER_ERROR);
-
-        // Capture and validate the posted form parameters in accordance with the display config object.
-        include_once('config/client.config.php');
-
-        if (!isset($CLIENT_CONFIG[$displayObject->clientType]))
-            trigger_error(__('CMS Config not supported for ' . $displayObject->clientType . ' displays.'), E_USER_ERROR);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'DisplayConfigForm');
-        Theme::Set('form_action', 'index.php?p=display&q=Config');
-        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayObject->displayId . '" />');
-
-        // Go through each setting and output a form control to the theme.
-        $formFields = array();
-
-        foreach($CLIENT_CONFIG[$displayObject->clientType]['settings'] as $setting) {
-
-            // Check to see if we have a value for this setting as yet, if so we use that.
-            // TODO: there must be a way to improve this?
-            foreach ($displayObject->clientConfig as $set) {
-                if ($set['name'] == $setting['name'])
-                    $setting['value'] = $set['value'];
-            }
-
-            // Each field needs to have a type, a name and a default
-            $formFields[] = array(
-                    'name' => $setting['name'],
-                    'fieldType' => $setting['fieldType'],
-                    'helpText' => $setting['helpText'],
-                    'title' => $setting['title'],
-                    'value' => ((isset($setting['value']) && !empty($setting['value'])) ? Kit::ValidateParam($setting['value'], $setting['type']) : $setting['default'])
-                );
-        }
-
-        Theme::Set('form_fields', $formFields);
-
-        // Render the form and output
-        $form = Theme::RenderReturn('display_form_config');
-
-        $response = new ResponseManager();
-        $response->SetFormRequestResponse($form, __('Edit Display Configuration'), '650px', '350px');
-        //$response->dialogClass = 'modal-big';
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#DisplayConfigForm").submit()');
-        $response->Respond();
-    }  
-
-    public function Config() {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
-        
-        $displayObject  = new Display();
-        $displayObject->displayId = Kit::GetParam('displayid', _POST, _INT);
-
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
-
-        if (!$displayObject->Load())
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-
-        if (empty($displayObject->clientType))
-            trigger_error(__('Unknown Client Type, please register this client.'), E_USER_ERROR);
-
-        // Capture and validate the posted form parameters in accordance with the display config object.
-        include_once('config/client.config.php');
-
-        if (!isset($CLIENT_CONFIG[$displayObject->clientType]))
-            trigger_error(__('CMS Config not supported for ' . $displayObject->clientType . ' displays.'), E_USER_ERROR);
-
-        $combined = array();
-
-        foreach($CLIENT_CONFIG[$displayObject->clientType]['settings'] as $setting) {
-            // Validate the parameter
-            $value = Kit::GetParam($setting['name'], _POST, $setting['type'], $setting['default']);
-
-            // Add the parameter to the settings for this display
-            $setting['value'] = $value;
-            $combined[] = $setting;
-        }
-
-        // Recursively merge the arrays and update
-        $displayObject->clientConfig = $combined;
-
-        if (!$displayObject->Edit())
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response = new ResponseManager();
-        $response->SetFormSubmitResponse(__('Display Configuration Saved.'));
         $response->Respond();
     }
 }

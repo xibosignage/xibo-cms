@@ -21,8 +21,16 @@ DELETE FROM `template` WHERE isSystem = 1;
 
 ALTER TABLE `template` DROP `isSystem`;
 
-ALTER TABLE  `display` ADD  `client_config` TEXT NULL;
+ALTER TABLE  `display` ADD  `displayprofileid` INT NULL;
 
-UPDATE `version` SET `app_ver` = '1.7.0-alpha', `XmdsVersion` = 3;
+INSERT INTO `pages` (`name`, `pagegroupID`)
+SELECT 'displayprofile', pagegroupID FROM `pagegroup` WHERE pagegroup.pagegroup = 'Displays';
+
+INSERT INTO `menuitem` (MenuID, PageID, Args, Text, Class, Img, Sequence, External)
+SELECT 7, PageID, NULL, 'Display Settings', NULL, NULL, 4, 0
+  FROM `pages`
+ WHERE name = 'displayprofile';
+
+UPDATE `version` SET `app_ver` = '1.7.0-alpha', `XmdsVersion` = 4;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '80';
