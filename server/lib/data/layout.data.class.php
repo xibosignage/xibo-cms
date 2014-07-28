@@ -910,6 +910,31 @@ class Layout extends Data
                 'background' => $bg_image,
                 'layoutid' => $layoutId
             ));
+
+            // Check to see if we already have a LK record for this.
+            $lkSth = $dbh->prepare('SELECT lklayoutmediaid FROM `lklayoutmedia` WHERE layoutid = :layoutid AND regionID = :regionid');
+            $lkSth->execute(array('layoutid' => $layoutId, 'regionid' => 'background'));
+
+            if ($lk = $lkSth->fetch()) {
+                // We have one
+                if ($backgroundImageId != 0) {
+                    // Update it
+                    if (!$region->UpdateDbLink($lk['lklayoutmediaid'], $backgroundImageId))
+                        $this->ThrowError(__('Unable to update background link'));
+                }
+                else {
+                    // Delete it
+                    if (!$region->RemoveDbLink($lk['lklayoutmediaid']))
+                        $this->ThrowError(__('Unable to remove background link'));
+                }
+            }
+            else {
+                // None - do we need one?
+                if ($backgroundImageId != 0) {
+                    if (!$region->AddDbLink($layoutId, 'background', $backgroundImageId))
+                        $this->ThrowError(__('Unable to create background link'));
+                }
+            }
     
             // Is this layout valid
             $this->SetValid($layoutId);

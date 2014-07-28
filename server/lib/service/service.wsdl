@@ -46,15 +46,6 @@
     <message name="ScheduleResponse">
         <part name="ScheduleXml" type="xsd:string" />
     </message>
-    <message name="RecieveXmlLogRequest">
-        <part name="serverKey" type="xsd:string" />
-        <part name="hardwareKey" type="xsd:string" />
-        <part name="xml" type="xsd:string" />
-        <part name="version" type="xsd:string" />
-    </message>
-    <message name="RecieveXmlLogResponse">
-        <part name="success" type="xsd:boolean" />
-    </message>
     <message name="BlackListRequest">
         <part name="serverKey" type="xsd:string" />
         <part name="hardwareKey" type="xsd:string" />
@@ -125,11 +116,6 @@
             <input message="tns:ScheduleRequest"/>
             <output message="tns:ScheduleResponse"/>
         </operation>
-        <operation name="RecieveXmlLog">
-            <documentation>Recieves the Log Xml</documentation>
-            <input message="tns:RecieveXmlLogRequest"/>
-            <output message="tns:RecieveXmlLogResponse"/>
-        </operation>
         <operation name="BlackList">
             <documentation>Set media to be blacklisted</documentation>
             <input message="tns:BlackListRequest"/>
@@ -187,15 +173,6 @@
         </operation>
         <operation name="Schedule">
             <soap:operation soapAction="urn:xmds#Schedule" style="rpc"/>
-            <input>
-                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-            </input>
-            <output>
-                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-            </output>
-        </operation>
-        <operation name="RecieveXmlLog">
-            <soap:operation soapAction="urn:xmds#RecieveXmlLog" style="rpc"/>
             <input>
                 <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
             </input>

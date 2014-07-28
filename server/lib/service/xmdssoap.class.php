@@ -30,6 +30,14 @@ class XMDSSoap {
     private $defaultLayoutId;
     private $version_instructions;
 
+    // Unfortunately we still need this for this data classes that require a DB
+    private $db;
+    public function __construct()
+    {
+        global $db;
+        $this->db =& $db;
+    }
+
     /**
      * Registers a new display
      * @param <type> $serverKey
@@ -88,7 +96,7 @@ class XMDSSoap {
         }
 
         // Use a display object to Add or Edit the display
-        $displayObject = new Display($db);
+        $displayObject = new Display();
 
         // Return an XML formatted string
         $return = new DOMDocument('1.0');
@@ -144,24 +152,19 @@ class XMDSSoap {
                         $params['displayprofileid'] = $displayProfileId;
                     }
                 
-                    $sth->execute(array($params));
+                    $sth->execute($params);
 
                     if ($row = $sth->fetch()) {
                         // Add a settings element
-                        $configElement = $displayElement->createElement('config', Kit::ValidateParam($row['config'], _HTMLSTRING));
+                        $configElement = $return->createElement('config', Kit::ValidateParam($row['config'], _HTMLSTRING));
                         $configElement->setAttribute('name', Kit::ValidateParam($row['name'], _STRING));
                         
                         $displayElement->appendChild($configElement);
                     }
                 }
                 catch (Exception $e) {
-                    
                     Debug::LogEntry('error', $e->getMessage());
-                
-                    if (!$this->IsError())
-                        $this->SetError(1, __('Unknown Error'));
-                
-                    return false;
+                    throw new SoapFault('Sender', 'Error after display found');
                 }
             }
         }
@@ -235,7 +238,7 @@ class XMDSSoap {
             $sth->execute(array(
                     'hardwareKey' => $hardwareKey,
                     'fromdt' => $rfLookahead,
-                    'todo' => ($currentdate - 3600)
+                    'todt' => ($currentdate - 3600)
                 ));
     
             // Our layout list will always include the default layout
@@ -342,7 +345,7 @@ class XMDSSoap {
         // Go through each layout and see if we need to supply any resource nodes.
         foreach ($layouts as $layoutId) {
             // Load the layout XML and work out if we have any ticker / text / dataset media items
-            $layout = new Layout($db);
+            $layout = new Layout($this->db);
 
             $layoutInformation = $layout->LayoutInformation($layoutId);
 
@@ -379,7 +382,7 @@ class XMDSSoap {
                 ));
         
             // Add a black list element for each file
-            foreach ($sth->fetchAll as $row) {
+            foreach ($sth->fetchAll() as $row) {
                 $file = $requiredFilesXml->createElement("file");
                 $file->setAttribute("id", $row['MediaID']);
     
@@ -452,7 +455,7 @@ class XMDSSoap {
                 $dbh = PDOConnect::init();
             
                 $sth = $dbh->prepare('SELECT xml FROM layout WHERE layoutid = :layoutid');
-                $sth->execute(array('layoutid' -> $fileId));
+                $sth->execute(array('layoutid' => $fileId));
             
                 if (!$row = $sth->fetch())
                     throw new Exception('No file found with that ID');
@@ -473,7 +476,7 @@ class XMDSSoap {
                 $dbh = PDOConnect::init();
             
                 $sth = $dbh->prepare('SELECT storedAs FROM `media` WHERE mediaid = :mediaid');
-                $sth->execute(array('mediaid' -> $fileId));
+                $sth->execute(array('mediaid' => $fileId));
             
                 if (!$row = $sth->fetch())
                     throw new Exception('No file found with that ID');
@@ -541,7 +544,7 @@ class XMDSSoap {
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
             $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID, schedule_detail.is_priority, ";
-            $SQL .= "  (SELECT GROUP_CONCAT(StoredAs) FROM media INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID WHERE lklayoutmedia.LayoutID = layout.LayoutID GROUP BY lklayoutmedia.LayoutID) AS Dependents";
+            $SQL .= "  (SELECT GROUP_CONCAT(DISTINCT StoredAs) FROM media INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID WHERE lklayoutmedia.LayoutID = layout.LayoutID GROUP BY lklayoutmedia.LayoutID) AS Dependents";
             $SQL .= " FROM `campaign` ";
             $SQL .= " INNER JOIN schedule_detail ON schedule_detail.CampaignID = campaign.CampaignID ";
             $SQL .= " INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
@@ -678,7 +681,7 @@ class XMDSSoap {
                             'displayid' => $displayId, 
                             'reportingdisplayid' => $this->displayId, 
                             'reason' => $reason
-                        );
+                        ));
                 }
                 else {
                     $displaySth = $dbh->prepare('SELECT displayID FROM `display`');
@@ -691,7 +694,7 @@ class XMDSSoap {
                             'displayid' => $row['displayID'], 
                             'reportingdisplayid' => $this->displayId, 
                             'reason' => $reason
-                        );
+                        ));
                     }
                 }
             }
@@ -1164,8 +1167,7 @@ class XMDSSoap {
     /**
      * Check we havent exceeded the bandwidth limits
      */
-    private function CheckBandwidth()
-    {
+    private function CheckBandwidth() {
         $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
         if ($xmdsLimit <= 0)
@@ -1196,8 +1198,7 @@ class XMDSSoap {
      * @param <type> $type
      * @param <type> $sizeInBytes
      */
-    private function LogBandwidth($displayId, $type, $sizeInBytes)
-    {
+    private function LogBandwidth($displayId, $type, $sizeInBytes) {
         try {
             $dbh = PDOConnect::init();
         
@@ -1217,12 +1218,7 @@ class XMDSSoap {
             return true;  
         }
         catch (Exception $e) {
-            
             Debug::LogEntry('error', $e->getMessage());
-        
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-        
             return false;
         }
     }

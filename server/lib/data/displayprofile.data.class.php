@@ -84,6 +84,10 @@ class DisplayProfile extends Data {
         if (empty($this->type))
             return $this->SetError(__('Missing type'));
 
+        // Display profile should be null if 0
+        if ($this->displayProfileId == 0)
+            $this->displayProfileId = NULL;
+
         // Check that there aren't other defaults for this type.
         try {
             $dbh = PDOConnect::init();

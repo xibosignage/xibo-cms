@@ -701,6 +701,9 @@ class layoutDAO
         // Library location
         $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
         
+        $width  = ($width * $designerScale) . "px";
+        $height = ($height * $designerScale) . "px";
+        
         // Fix up the background css
         if ($bgImage == '')
         {
@@ -714,9 +717,6 @@ class layoutDAO
 
             $background_css = "url('index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=$bgImageId&width=$width&height=$height&dynamic&proportional=0') top center no-repeat; background-color:$bgColor";
         }
-        
-        $width  = ($width * $designerScale) . "px";
-        $height = ($height * $designerScale) . "px";
         
         // Get all the regions and draw them on
         $regionHtml     = "";

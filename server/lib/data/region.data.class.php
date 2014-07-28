@@ -274,7 +274,7 @@ class Region extends Data
 	 * @param $lkid Object
 	 * @param $mediaid Object
 	 */
-	private function UpdateDbLink($lkid, $mediaid)
+	public function UpdateDbLink($lkid, $mediaid)
 	{
 		try {
 		    $dbh = PDOConnect::init();
@@ -302,7 +302,7 @@ class Region extends Data
 	 * Removes the DBlink for records for the given id's
 	 * @return 
 	 */
-	private function RemoveDbLink($lkid)
+	public function RemoveDbLink($lkid)
 	{
 		try {
 		    $dbh = PDOConnect::init();

@@ -96,6 +96,7 @@ class displayDAO
         $displayObject->cidr = Kit::GetParam('cidr', _POST, _INT);
         $displayObject->latitude = Kit::GetParam('latitude', _POST, _DOUBLE);
         $displayObject->longitude = Kit::GetParam('longitude', _POST, _DOUBLE);
+        $displayObject->displayProfileId = Kit::GetParam('displayprofileid', _POST, _INT);
 
         if (!$displayObject->Edit())
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
@@ -158,7 +159,10 @@ class displayDAO
         Theme::Set('auditing_field_list', array(array('auditingid' => '1', 'auditing' => 'Yes'), array('auditingid' => '0', 'auditing' => 'No')));
         Theme::Set('email_alert_field_list', array(array('email_alertid' => '1', 'email_alert' => 'Yes'), array('email_alertid' => '0', 'email_alert' => 'No')));
         Theme::Set('license_field_list', array(array('licensedid' => '1', 'licensed' => 'Yes'), array('licensedid' => '0', 'licensed' => 'No')));
-        Theme::Set('displayprofile_field_list', $this->user->DisplayProfileList(NULL, array('type' => $displayObject->clientType)));
+        
+        $displayProfileList = $this->user->DisplayProfileList(NULL, array('type' => $displayObject->clientType));
+        array_unshift($displayProfileList, array('displayprofileid' => 0, 'name' => ''));
+        Theme::Set('displayprofile_field_list', $displayProfileList);
 
         // Is the wake on lan field checked?
         Theme::Set('wake_on_lan_checked', (($displayObject->wakeOnLanEnabled == 1) ? ' checked' : ''));
