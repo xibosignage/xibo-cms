@@ -49,6 +49,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                     </div>
                 </div>
                 <div class="control-group">
+                    <label class="control-label" for="displayprofileid" accesskey="p" title="<?php echo Theme::Translate('What display profile should this display use.'); ?>"><?php echo Theme::Translate('Settings Profile?'); ?></label>
+                    <div class="controls">
+                        <?php echo Theme::SelectList('displayprofileid', Theme::Get('displayprofile_field_list'), 'displayprofileid', 'name', Theme::Get('displayprofileid')); ?>
+                    </div>
+                </div>
+                <div class="control-group">
                     <label class="control-label" for="inc_schedule" accesskey="n" title="<?php echo Theme::Translate('Whether to always put the default layout into the cycle.'); ?>"><?php echo Theme::Translate('Interleave Default'); ?></label>
                     <div class="controls">
                         <?php echo Theme::SelectList('inc_schedule', Theme::Get('interleave_default_field_list'), 'inc_scheduleid', 'inc_schedule', Theme::Get('inc_schedule')); ?>

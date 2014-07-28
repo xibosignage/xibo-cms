@@ -147,6 +147,7 @@ class displayDAO
         Theme::Set('cidr', $displayObject->cidr);
         Theme::Set('latitude', $displayObject->latitude);
         Theme::Set('longitude', $displayObject->longitude);
+        Theme::Set('displayprofileid', $displayObject->displayProfileId);
         
         // If the broadcast address has not been set, then default to the client ip address
         Theme::Set('broadCastAddress', (($displayObject->broadCastAddress == '') ? $displayObject->clientAddress : $displayObject->broadCastAddress));
@@ -157,6 +158,7 @@ class displayDAO
         Theme::Set('auditing_field_list', array(array('auditingid' => '1', 'auditing' => 'Yes'), array('auditingid' => '0', 'auditing' => 'No')));
         Theme::Set('email_alert_field_list', array(array('email_alertid' => '1', 'email_alert' => 'Yes'), array('email_alertid' => '0', 'email_alert' => 'No')));
         Theme::Set('license_field_list', array(array('licensedid' => '1', 'licensed' => 'Yes'), array('licensedid' => '0', 'licensed' => 'No')));
+        Theme::Set('displayprofile_field_list', $this->user->DisplayProfileList(NULL, array('type' => $displayObject->clientType)));
 
         // Is the wake on lan field checked?
         Theme::Set('wake_on_lan_checked', (($displayObject->wakeOnLanEnabled == 1) ? ' checked' : ''));

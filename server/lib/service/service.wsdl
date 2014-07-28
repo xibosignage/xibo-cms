@@ -9,6 +9,10 @@
         <part name="serverKey" type="xsd:string" />
         <part name="hardwareKey" type="xsd:string" />
         <part name="displayName" type="xsd:string" />
+        <part name="clientType" type="xsd:string" />
+        <part name="clientVersion" type="xsd:string" />
+        <part name="clientCode" type="xsd:int" />
+        <part name="macAddress" type="xsd:string" />
         <part name="version" type="xsd:string" />
     </message>
     <message name="RegisterDisplayResponse">
@@ -25,7 +29,7 @@
     <message name="GetFileRequest">
         <part name="serverKey" type="xsd:string" />
         <part name="hardwareKey" type="xsd:string" />
-        <part name="filePath" type="xsd:string" />
+        <part name="fileId" type="xsd:int" />
         <part name="fileType" type="xsd:string" />
         <part name="chunkOffset" type="xsd:int" />
         <part name="chuckSize" type="xsd:int" />

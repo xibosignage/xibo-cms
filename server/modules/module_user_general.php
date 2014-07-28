@@ -1774,6 +1774,12 @@ END;
             $params = array();
             $SQL  = 'SELECT displayprofileid, name, type, config, isdefault, userid FROM displayprofile ';
         
+            $type = Kit::GetParam('type', $filter_by, _WORD);
+            if (!empty($type)) {
+                $SQL .= ' WHERE type = :type ';
+                $params['type'] = $type;
+            }
+
             // Sorting?
             if (is_array($sort_order))
                 $SQL .= 'ORDER BY ' . implode(',', $sort_order);
