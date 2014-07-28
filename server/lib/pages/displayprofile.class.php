@@ -100,7 +100,7 @@ class displayprofileDAO {
         $displayProfile = new DisplayProfile();
         $displayProfile->name = Kit::GetParam('name', _POST, _STRING);
         $displayProfile->type = Kit::GetParam('type', _POST, _STRING);
-        $displayProfile->isDefault = Kit::GetParam('isdefault', _POST, _INT);
+        $displayProfile->isDefault = Kit::GetParam('isdefault', _POST, _CHECKBOX);
         $displayProfile->userId = $this->user->userid;
 
         if (!$displayProfile->Save())
@@ -214,7 +214,8 @@ class displayprofileDAO {
             // Add to the combined array
             $combined[] = array(
                     'name' => $setting['name'],
-                    'value' => $value
+                    'value' => $value,
+                    'type' => $setting['type']
                 );
         }
 

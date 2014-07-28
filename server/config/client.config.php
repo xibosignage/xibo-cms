@@ -134,7 +134,7 @@ $CLIENT_CONFIG = array(
                         'title' => __('Duration for Empty Layouts'),
                         'type' => _INT,
                         'fieldType' => 'text',
-                        'default' => true,
+                        'default' => 10,
                         'helpText' => __('If an empty layout is detected how long should it remain on screen. Must be greater then 1.'),
                         'validation' => 'number'
                     ),
@@ -200,19 +200,127 @@ $CLIENT_CONFIG = array(
                         'helpText' => __('Which shell commands should the client execute?')
                     )
                 )
-            )/*,
+            ),
 
-        'ubuntu' => array(
+        /*'ubuntu' => array(
             'synonym' => 'python',
             'settings' => array(
 
                 )
-            ),
+            ),*/
 
         'android' => array(
             'synonym' => 'xiboforandroid',
             'settings' => array(
-
+                    array(
+                        'name' => 'emailAddress',
+                        'title' => __('Email Address'),
+                        'type' => _STRING,
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('The email address will be used to license this client. This is the email address you provided when you purchased the licence.')
+                    ),
+                    array(
+                        'name' => 'settingsPassword',
+                        'title' => __('Password Protect Settings'),
+                        'type' => _STRING,
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('Provide a Password which will be required to access settings')
+                    ),
+                    array(
+                        'name' => 'collectInterval',
+                        'title' => __('Collect interval'),
+                        'type' => _INT,
+                        'fieldType' => 'text',
+                        'default' => 900,
+                        'helpText' => __('How often should the Player check for new content.'),
+                        'validation' => 'numeric'
+                    ),
+                    array(
+                        'name' => 'orientation',
+                        'title' => __('Orientation'),
+                        'type' => _INT,
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                                array('id' => 0, 'value' => 'Landscape'),
+                                array('id' => 1, 'value' => 'Portrait'),
+                                array('id' => 8, 'value' => 'Reverse Landscape'),
+                                array('id' => 9, 'value' => 'Reverse Portrait')
+                            ),
+                        'default' => 0,
+                        'helpText' => __('Set the orientation of the device (portrait mode will only work if supported by the hardware) Application Restart Required.')
+                    ),
+                    array(
+                        'name' => 'startOnBoot',
+                        'title' => __('Start during device start up?'),
+                        'type' => _CHECKBOX,
+                        'fieldType' => 'checkbox',
+                        'default' => true,
+                        'helpText' => __('When the device starts and Android finishes loading, should the client start up and come to the foreground?'),
+                    ),
+                    array(
+                        'name' => 'actionBarMode',
+                        'title' => __('Action Bar Mode'),
+                        'type' => _INT,
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                                array('id' => 0, 'value' => 'Hide'),
+                                array('id' => 1, 'value' => 'Timed')
+                            ),
+                        'default' => 1,
+                        'helpText' => __('How should the action bar behave?')
+                    ),
+                    array(
+                        'name' => 'actionBarDisplayDuration',
+                        'title' => __('Action Bar Display Duration'),
+                        'type' => _INT,
+                        'fieldType' => 'text',
+                        'default' => 30,
+                        'helpText' => __('How long should the Action Bar be shown for, in seconds?'),
+                        'validation' => 'numeric'
+                    ),
+                    array(
+                        'name' => 'screenDimensions',
+                        'title' => __('Screen Dimensions'),
+                        'type' => _STRING,
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('Override the screen dimensions (left,top,width,height). Requires restart. Care should be taken to ensure these are within the actual screen size.')
+                    ),
+                    array(
+                        'name' => 'autoRestart',
+                        'title' => __('Automatic Restart'),
+                        'type' => _CHECKBOX,
+                        'fieldType' => 'checkbox',
+                        'default' => true,
+                        'helpText' => __('Automatically Restart the application if we detect it is not visible.'),
+                    ),
+                    array(
+                        'name' => 'startOnBootDelay',
+                        'title' => __('Start delay for device start up'),
+                        'type' => _INT,
+                        'fieldType' => 'text',
+                        'default' => 60,
+                        'helpText' => __('The number of seconds to wait before starting the application after the device has started. Minimum 10.'),
+                        'validation' => 'numeric'
+                    ),
+                    array(
+                        'name' => 'blacklistVideo',
+                        'title' => __('Blacklist Videos?'),
+                        'type' => _CHECKBOX,
+                        'fieldType' => 'checkbox',
+                        'default' => true,
+                        'helpText' => __('Should Videos we fail to play be blacklisted and no longer attempted?'),
+                    ),
+                    array(
+                        'name' => 'storeHtmlOnInternal',
+                        'title' => __('Store HTML resources on the Internal Storage?'),
+                        'type' => _CHECKBOX,
+                        'fieldType' => 'checkbox',
+                        'default' => false,
+                        'helpText' => __('Store all HTML resources on the Internal Storage? Should be selected if the device cannot display text, ticker, dataset media.'),
+                    )
                 )
-            )*/
+            )
     );

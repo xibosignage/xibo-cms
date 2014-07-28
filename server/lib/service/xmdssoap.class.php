@@ -79,7 +79,7 @@ class XMDSSoap {
         try {
             $dbh = PDOConnect::init();
             $sth = $dbh->prepare('
-                SELECT licensed, display, displayid, displayprofileid
+                SELECT licensed, display, displayid, displayprofileid, client_type
                   FROM display 
                 WHERE license = :hardwareKey');
 
@@ -122,6 +122,8 @@ class XMDSSoap {
             $row = $result[0];
 
             $displayid = Kit::ValidateParam($row['displayid'], _INT);
+            $display = Kit::ValidateParam($row['display'], _STRING);
+            $clientType = Kit::ValidateParam($row['client_type'], _WORD);
 
             // Determine if we are licensed or not
             if ($row['licensed'] == 0) {
@@ -155,11 +157,32 @@ class XMDSSoap {
                     $sth->execute($params);
 
                     if ($row = $sth->fetch()) {
-                        // Add a settings element
-                        $configElement = $return->createElement('config', Kit::ValidateParam($row['config'], _HTMLSTRING));
-                        $configElement->setAttribute('name', Kit::ValidateParam($row['name'], _STRING));
-                        
-                        $displayElement->appendChild($configElement);
+
+                        // Load the config and inject the display name
+                        $config = json_decode(Kit::ValidateParam($row['config'], _HTMLSTRING), true);
+                        $config[] = array(
+                            'name' => 'displayName',
+                            'value' => $display,
+                            'type' => 'string'
+                        );
+
+                        // Return XML to windows
+                        if ($clientType == 'windows') {
+                            
+                            // Create the XML nodes
+                            foreach($config as $arrayItem) {
+                                $node = $return->createElement($arrayItem['name'], $arrayItem['value']);
+                                $node->setAttribute('type', $arrayItem['type']);
+                                $displayElement->appendChild($node);
+                            }
+                        }
+                        else {
+                            // Add a settings element
+                            $configElement = $return->createElement('config', json_encode($config));
+                            $configElement->setAttribute('name', Kit::ValidateParam($row['name'], _STRING));
+                            
+                            $displayElement->appendChild($configElement);
+                        }
                     }
                 }
                 catch (Exception $e) {
@@ -173,9 +196,10 @@ class XMDSSoap {
         $displayObject->Touch($hardwareKey, $clientAddress, NULL, NULL, $macAddress, $clientType, $clientVersion, $clientCode);
 
         // Log Bandwidth
-        $this->LogBandwidth($displayid, 1, strlen($active));
+        $returnXml = $return->saveXML();
+        $this->LogBandwidth($displayid, 1, strlen($returnXml));
 
-        Debug::LogEntry('audit', $return->saveXML(), get_class(), __FUNCTION__);
+        Debug::LogEntry('audit', $returnXml, get_class(), __FUNCTION__);
 
         return $return->saveXML();
     }
@@ -261,11 +285,11 @@ class XMDSSoap {
             $dbh = PDOConnect::init();
         
             // Add file nodes to the $fileElements
-            $SQL  = " SELECT 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, MD5(layout.xml) AS `MD5`, NULL AS FileSize, layout.background, layout.xml AS xml ";
+            $SQL  = " SELECT 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, MD5(layout.xml) AS `MD5`, NULL AS FileSize, layout.xml AS xml ";
             $SQL .= "   FROM layout ";
             $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
             $SQL .= " UNION ";
-            $SQL .= " SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS background, NULL AS xml ";
+            $SQL .= " SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml ";
             $SQL .= "   FROM media ";
             $SQL .= "   INNER JOIN lklayoutmedia ";
             $SQL .= "   ON lklayoutmedia.MediaID = media.MediaID ";
@@ -274,7 +298,7 @@ class XMDSSoap {
             $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
             $SQL .= "
                     UNION
-                    SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS background, NULL AS xml 
+                    SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml 
                        FROM `media`
                         INNER JOIN `lkmediadisplaygroup`
                         ON lkmediadisplaygroup.mediaid = media.MediaID
@@ -299,7 +323,6 @@ class XMDSSoap {
                 $id     = Kit::ValidateParam($row['id'], _STRING);
                 $md5    = Kit::ValidateParam($row['MD5'], _HTMLSTRING);
                 $fileSize   = Kit::ValidateParam($row['FileSize'], _INT);
-                $background = Kit::ValidateParam($row['background'], _STRING);
                 $xml = Kit::ValidateParam($row['xml'], _HTMLSTRING);
 
                 if ($recordType == 'layout') {
