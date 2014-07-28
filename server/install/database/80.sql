@@ -31,6 +31,12 @@ SELECT 7, PageID, NULL, 'Display Settings', NULL, NULL, 4, 0
   FROM `pages`
  WHERE name = 'displayprofile';
 
+UPDATE layout SET background = SUBSTRING_INDEX(background, '.', 1) WHERE IFNULL(background, '') <> '';
+ALTER TABLE  `layout` CHANGE  `background`  `backgroundImageId` INT( 11 ) NULL DEFAULT NULL;
+
+INSERT INTO `lklayoutmedia` (mediaid, layoutid, regionid)
+SELECT backgroundimageid, layoutid, 'background' FROM `layout` WHERE IFNULL(backgroundImageId, 0) <> 0;
+
 UPDATE `version` SET `app_ver` = '1.7.0-alpha', `XmdsVersion` = 4;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '80';

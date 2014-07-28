@@ -905,9 +905,9 @@ class Layout extends Data
                 throw new Exception("Error Processing Request", 1);
                     
             // Update the layout record with the new background
-            $sth = $dbh->prepare('UPDATE layout SET background = :background WHERE layoutid = :layoutid');
+            $sth = $dbh->prepare('UPDATE layout SET backgroundimageid = :backgroundimageid WHERE layoutid = :layoutid');
             $sth->execute(array(
-                'background' => $bg_image,
+                'backgroundimageid' => $backgroundImageId,
                 'layoutid' => $layoutId
             ));
 

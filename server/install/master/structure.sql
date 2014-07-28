@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS `layout` (
   `templateID` int(11) DEFAULT NULL COMMENT 'The ID of the template',
   `retired` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is this layout retired',
   `duration` int(11) NOT NULL DEFAULT '0' COMMENT 'The duration in seconds',
-  `background` varchar(254) DEFAULT NULL,
+  `backgroundImageId` int(11) DEFAULT NULL,
   `status` TINYINT NOT NULL DEFAULT  '0',
   PRIMARY KEY (`layoutID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Layouts' AUTO_INCREMENT=5 ;
