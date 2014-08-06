@@ -262,13 +262,13 @@ END;
                     // Monthly bandwidth - optionally tested against limits
                     $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
                     $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
-
-                    $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = %d', $startOfMonth);
-                    $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
-
-                    Debug::LogEntry('audit', $sql);
                     
-                    $usagePcnt = ($xmdsLimit > 0) ? (($bandwidthUsage / ($xmdsLimit * 1024)) * 100) : '';
+                    $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month > %d AND Month < %d', $startOfMonth, $startOfMonth + (86400 * 2));
+                    $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _DOUBLE);
+
+                    Debug::LogEntry('audit', $sql . '. Usage: ' . $bandwidthUsage);
+                    
+                    $usagePcnt = ($xmdsLimit > 0) ? (((double)$bandwidthUsage / ($xmdsLimit * 1024)) * 100) : '';
                     
                     $output .= '<p>' . sprintf(__('You have used %s of bandwidth this month.'), $this->FormatByteSize($bandwidthUsage)) . (($xmdsLimit > 0) ? sprintf(__(' This is %d %% of your %s limit.'), $usagePcnt, $this->FormatByteSize($xmdsLimit * 1024)) : '') . '</p>';
                 }
