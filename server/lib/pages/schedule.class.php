@@ -1100,8 +1100,9 @@ HTML;
             // Determine if we are authed against this group.
             $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
 
-                        if (!$auth->view)
-                            continue;
+            // We should only be able to schedule if we have edit permission or if the SCHEDULE_WITH_VIEW permission is ON
+            if (!$auth->edit && Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'No')
+                continue;
             
             // Do we need to nest yet? We only nest display specific groups
             if ($isDisplaySpecific == 1 && !$nested)

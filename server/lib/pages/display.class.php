@@ -338,11 +338,13 @@ SQL;
             $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'error' : 'warning');
 
             // Schedule Now
-            $row['buttons'][] = array(
-                    'id' => 'display_button_schedulenow',
-                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $row['displaygroupid'],
-                    'text' => __('Schedule Now')
-                );
+            if ($row['edit'] == 1 || Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes') {
+                $row['buttons'][] = array(
+                        'id' => 'display_button_schedulenow',
+                        'url' => 'index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $row['displaygroupid'],
+                        'text' => __('Schedule Now')
+                    );
+            }
 
             // Media Inventory
             $row['buttons'][] = array(
