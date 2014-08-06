@@ -414,10 +414,6 @@ class DisplayGroup extends Data
 
         try {
             $dbh = PDOConnect::init();
-
-            // Check that some media assignments have been made
-            if (count($mediaList) == 0)
-                $this->ThrowError(25006, __('No media to assign'));
         
             // Drop all current assignments
             if (!$link->UnlinkAllFromDisplayGroup($displayGroupId))
