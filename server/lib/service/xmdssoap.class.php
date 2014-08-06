@@ -137,6 +137,7 @@ class XMDSSoap {
                 $displayElement->setAttribute('status', 0);
                 $displayElement->setAttribute('code', 'READY');
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
+                $displayElement->setAttribute('version_instructions', $this->version_instructions);
 
                 // Use the display profile and type to get this clients settings
                 try {
@@ -166,22 +167,11 @@ class XMDSSoap {
                             'type' => 'string'
                         );
 
-                        // Return XML to windows
-                        if ($clientType == 'windows') {
-                            
-                            // Create the XML nodes
-                            foreach($config as $arrayItem) {
-                                $node = $return->createElement($arrayItem['name'], $arrayItem['value']);
-                                $node->setAttribute('type', $arrayItem['type']);
-                                $displayElement->appendChild($node);
-                            }
-                        }
-                        else {
-                            // Add a settings element
-                            $configElement = $return->createElement('config', json_encode($config));
-                            $configElement->setAttribute('name', Kit::ValidateParam($row['name'], _STRING));
-                            
-                            $displayElement->appendChild($configElement);
+                        // Create the XML nodes
+                        foreach($config as $arrayItem) {
+                            $node = $return->createElement($arrayItem['name'], $arrayItem['value']);
+                            $node->setAttribute('type', $arrayItem['type']);
+                            $displayElement->appendChild($node);
                         }
                     }
                 }
@@ -236,8 +226,6 @@ class XMDSSoap {
 
         $requiredFilesXml = new DOMDocument("1.0");
         $fileElements = $requiredFilesXml->createElement("files");
-        $fileElements->setAttribute('version_instructions', $this->version_instructions);
-
         $requiredFilesXml->appendChild($fileElements);
 
         $currentdate = time();
@@ -983,7 +971,7 @@ class XMDSSoap {
 
         // Touch the display record
         $displayObject = new Display();
-        $displayObject->Touch($hardwareKey, '', $mediaInventoryComplete, $inventory, $macAddress, $clientType, $clientVersion, $clientCode);
+        $displayObject->Touch($hardwareKey, '', $mediaInventoryComplete, $inventory);
 
         return true;
     }

@@ -152,6 +152,15 @@ class displayprofileDAO {
                     $setting['value'] = $set['value'];
             }
 
+            if ($setting['type'] == 'checkbox' && isset($setting['value']))
+                $validated = $setting['value'];
+            else if (isset($setting['value']))
+                $validated = Kit::ValidateParam($setting['value'], $setting['type']);
+            else
+                $validated = $setting['default'];
+
+            //Debug::LogEntry('audit', 'Validated ' . $setting['name'] . '. [' . $setting['value'] . '] as [' . $validated . ']. With type ' . $setting['type']);
+
             // Each field needs to have a type, a name and a default
             $formFields[] = array(
                     'name' => $setting['name'],
@@ -160,7 +169,7 @@ class displayprofileDAO {
                     'title' => $setting['title'],
                     'options' => ((isset($setting['options']) ? $setting['options'] : array())),
                     'validation' => ((isset($setting['validation']) ? $setting['validation'] : '')),
-                    'value' => ((isset($setting['value']) && !empty($setting['value'])) ? Kit::ValidateParam($setting['value'], $setting['type']) : $setting['default'])
+                    'value' => $validated
                 );
         }
 
@@ -176,7 +185,7 @@ class displayprofileDAO {
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayConfigForm").submit()');
         $response->Respond();
-    }  
+    }
 
     public function Edit() {
         // Check the token
@@ -209,7 +218,7 @@ class displayprofileDAO {
 
         foreach($CLIENT_CONFIG[$displayProfile->type]['settings'] as $setting) {
             // Validate the parameter
-            $value = Kit::GetParam($setting['name'], _POST, $setting['type'], $setting['default']);
+            $value = Kit::GetParam($setting['name'], _POST, $setting['type'], (($setting['type'] == 'checkbox') ? NULL : $setting['default']));
 
             // Add to the combined array
             $combined[] = array(

@@ -347,8 +347,14 @@ class Kit
 				break;
 				
 			case _CHECKBOX:
-				if ($return == 'on') $return = 1;
-				if ($return == 'off' || $return == '') $return = 0;
+				if ($return == 'on') {
+					$return = 1;
+				}
+				if ($return == 'off' || $return == '') {
+					$return = 0;
+				}
+
+				break;
 
 			default :
 				// No casting necessary

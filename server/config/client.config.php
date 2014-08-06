@@ -232,7 +232,16 @@ $CLIENT_CONFIG = array(
                         'name' => 'collectInterval',
                         'title' => __('Collect interval'),
                         'type' => _INT,
-                        'fieldType' => 'text',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                                array('id' => 60, 'value' => __('1 minute')),
+                                array('id' => 300, 'value' => __('5 minutes')),
+                                array('id' => 600, 'value' => __('10 minutes')),
+                                array('id' => 1800, 'value' => __('30 minutes')),
+                                array('id' => 3600, 'value' => __('1 hour')),
+                                array('id' => 14400, 'value' => __('4 hours')),
+                                array('id' => 43200, 'value' => __('12 hours'))
+                            ),
                         'default' => 900,
                         'helpText' => __('How often should the Player check for new content.'),
                         'validation' => 'numeric'
@@ -243,10 +252,10 @@ $CLIENT_CONFIG = array(
                         'type' => _INT,
                         'fieldType' => 'dropdown',
                         'options' => array(
-                                array('id' => 0, 'value' => 'Landscape'),
-                                array('id' => 1, 'value' => 'Portrait'),
-                                array('id' => 8, 'value' => 'Reverse Landscape'),
-                                array('id' => 9, 'value' => 'Reverse Portrait')
+                                array('id' => 0, 'value' => __('Landscape')),
+                                array('id' => 1, 'value' => __('Portrait')),
+                                array('id' => 8, 'value' => __('Reverse Landscape')),
+                                array('id' => 9, 'value' => __('Reverse Portrait'))
                             ),
                         'default' => 0,
                         'helpText' => __('Set the orientation of the device (portrait mode will only work if supported by the hardware) Application Restart Required.')

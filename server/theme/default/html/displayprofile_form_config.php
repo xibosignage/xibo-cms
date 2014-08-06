@@ -44,7 +44,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                 $count = count(Theme::Get('form_fields')) + 2;
                 $i = 0;
                 foreach(Theme::Get('form_fields') as $field) {
-
+                    
                     $i++;
                     if ($i > $count / 2) {
                         $i = 0;
