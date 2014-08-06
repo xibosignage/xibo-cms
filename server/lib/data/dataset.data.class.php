@@ -441,8 +441,7 @@ class DataSet extends Data
 
         Debug::LogEntry('audit', $SQL);
 
-        if (!$rows = $db->GetArray($SQL, $associative))
-            trigger_error($db->error());
+        $rows = $db->GetArray($SQL, $associative);
 
         if (!is_array($rows))
             $rows = array();
