@@ -1203,9 +1203,6 @@ END;
         
         Debug::LogEntry('audit', sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
 
-        // Create a region object for later use
-        $region = new region($db);
-
         try {
             $dbh = PDOConnect::init();
         
@@ -1231,6 +1228,9 @@ END;
 
                 Debug::LogEntry('audit', sprintf('%d linked media items for layoutid %d', count($results), $layoutId), 'module', 'ReplaceMediaInAllLayouts');
                 
+                // Create a region object for later use (new one each time)
+                $region = new region($db);
+
                 // Loop through each media link for this layout
                 foreach ($results as $row)
                 {
