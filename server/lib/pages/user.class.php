@@ -430,23 +430,11 @@ class userDAO
                 trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
 
             // Delete the user
-            $sqldel = "DELETE FROM user";
-            $sqldel .= " WHERE UserID = %d"; 
-
-            if (!$db->query(sprintf($sqldel, $userid)))
-            {
-                trigger_error($db->error());
-                trigger_error(__("This user has been active, you may only retire them."), E_USER_ERROR);
-            }
-
-            // We should delete this users sessions record.
-            $SQL = "DELETE FROM session WHERE userID = %d ";
-
-            if (!$db->query(sprintf($SQL, $userid)))
-            {
-                trigger_error($db->error());
-                trigger_error(__("If logged in, this user will be deleted once they log out."), E_USER_ERROR);
-            }
+            Kit::ClassLoader('userdata');
+            $user = new UserData($this->db);
+            $user->userId = $userid;
+            if (!$user->Delete())
+                trigger_error($user->GetErrorMessage(), E_USER_ERROR);
 
             $response->SetFormSubmitResponse(__('User Deleted.'));
             $response->Respond();
