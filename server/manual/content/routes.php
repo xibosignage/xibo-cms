@@ -94,6 +94,7 @@ $allowed_routes = array(
 		'admin/displays',
 		'admin/displaygroups',
 		'admin/displaystats',
+		'admin/displayprofiles',
 		'admin/display_wakeonlan',
 		'admin/overview',
 		'admin/api_overview',

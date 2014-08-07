@@ -57,10 +57,18 @@ class displayprofileDAO {
             
             // Default Layout
             $profile['buttons'][] = array(
-                    'id' => 'display_button_defaultlayout',
+                    'id' => 'displayprofile_button_edit',
                     'url' => 'index.php?p=displayprofile&q=EditForm&displayprofileid=' . $profile['displayprofileid'],
                     'text' => __('Edit')
                 );
+
+            if ($profile['del'] == 1) {
+                $profile['buttons'][] = array(
+                    'id' => 'displayprofile_button_delete',
+                    'url' => 'index.php?p=displayprofile&q=DeleteForm&displayprofileid=' . $profile['displayprofileid'],
+                    'text' => __('Delete')
+                );
+            }
 
             $rows[] = $profile;
         }
@@ -97,6 +105,7 @@ class displayprofileDAO {
     }
 
     public function Add() {
+        $response = new ResponseManager();
         $displayProfile = new DisplayProfile();
         $displayProfile->name = Kit::GetParam('name', _POST, _STRING);
         $displayProfile->type = Kit::GetParam('type', _POST, _STRING);
@@ -106,7 +115,6 @@ class displayprofileDAO {
         if (!$displayProfile->Save())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
-        $response = new ResponseManager();
         $response->SetFormSubmitResponse(__('Display Profile Saved.'));
         $response->Respond();
     }
@@ -181,7 +189,7 @@ class displayprofileDAO {
         $response = new ResponseManager();
         $response->SetFormRequestResponse($form, __('Edit Profile'), '650px', '350px');
         $response->dialogClass = 'modal-big';
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Edit') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayProfile', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayConfigForm").submit()');
         $response->Respond();
@@ -191,6 +199,8 @@ class displayprofileDAO {
         // Check the token
         if (!Kit::CheckToken())
             trigger_error('Token does not match', E_USER_ERROR);
+
+        $response = new ResponseManager();
         
         // Create a form out of the config object.
         $displayProfile  = new DisplayProfile();
@@ -234,8 +244,63 @@ class displayprofileDAO {
         if (!$displayProfile->Save())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
-        $response = new ResponseManager();
         $response->SetFormSubmitResponse(__('Display Configuration Saved.'));
+        $response->Respond();
+    }
+
+    /**
+     * Shows the Delete Group Form
+     */
+    function DeleteForm() {
+        
+        $displayProfile  = new DisplayProfile();
+        $displayProfile->displayProfileId = Kit::GetParam('displayprofileid', _GET, _INT);
+
+        if (!$displayProfile->Load())
+            trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
+
+        if ($this->user->usertypeid != 1 && $this->user->userid != $displayProfile->userId)
+            trigger_error(__('You do not have permission to edit this profile'), E_USER_ERROR);
+        
+        // Set some information about the form
+        Theme::Set('form_id', 'DisplayProfileDeleteForm');
+        Theme::Set('form_action', 'index.php?p=displayprofile&q=Delete');
+        Theme::Set('form_meta', '<input type="hidden" name="displayprofileid" value="' . $displayProfile->displayProfileId . '" />');
+
+        $form = Theme::RenderReturn('displayprofile_form_delete');
+        
+        $response  = new ResponseManager();
+        $response->SetFormRequestResponse($form, __('Delete Display Profile'), '350px', '175px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayProfile', 'Delete') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#DisplayProfileDeleteForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Deletes a Group
+     * @return 
+     */
+    function Delete() {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error('Token does not match', E_USER_ERROR);
+
+        $response = new ResponseManager();
+        
+        $displayProfile  = new DisplayProfile();
+        $displayProfile->displayProfileId = Kit::GetParam('displayprofileid', _POST, _INT);
+
+        if (!$displayProfile->Load())
+            trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
+
+        if ($this->user->usertypeid != 1 && $this->user->userid != $displayProfile->userId)
+            trigger_error(__('You do not have permission to edit this profile'), E_USER_ERROR);
+        
+        if (!$displayProfile->Delete($displayProfile->displayProfileId))
+            trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Display Profile Deleted'), false);
         $response->Respond();
     }
 }

@@ -79,7 +79,7 @@ class XMDSSoap {
         try {
             $dbh = PDOConnect::init();
             $sth = $dbh->prepare('
-                SELECT licensed, display, displayid, displayprofileid, client_type
+                SELECT licensed, display, displayid, displayprofileid, client_type, version_instructions
                   FROM display 
                 WHERE license = :hardwareKey');
 
@@ -124,6 +124,7 @@ class XMDSSoap {
             $displayid = Kit::ValidateParam($row['displayid'], _INT);
             $display = Kit::ValidateParam($row['display'], _STRING);
             $clientType = Kit::ValidateParam($row['client_type'], _WORD);
+            $versionInstructions = Kit::ValidateParam($row['version_instructions'], _HTMLSTRING);
 
             // Determine if we are licensed or not
             if ($row['licensed'] == 0) {
@@ -137,7 +138,7 @@ class XMDSSoap {
                 $displayElement->setAttribute('status', 0);
                 $displayElement->setAttribute('code', 'READY');
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
-                $displayElement->setAttribute('version_instructions', $this->version_instructions);
+                $displayElement->setAttribute('version_instructions', $versionInstructions);
 
                 // Use the display profile and type to get this clients settings
                 try {

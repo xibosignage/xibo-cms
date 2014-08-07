@@ -89,6 +89,22 @@ class DisplayProfile extends Data {
             $this->displayProfileId = NULL;
 
         // Check that there aren't other defaults for this type.
+        if (!$this->ValidateDefault())
+            return false;        
+
+        if ($this->isNew) {
+            return $this->Add();
+        }
+        else {
+            if (empty($this->displayProfileId) || $this->displayProfileId == 0)
+                return $this->SetError(__('Missing displayProfileId'));
+
+            return $this->Update();
+        }
+    }
+
+    private function ValidateDefault() {
+        // Check that there aren't other defaults for this type.
         try {
             $dbh = PDOConnect::init();
         
@@ -99,6 +115,8 @@ class DisplayProfile extends Data {
             
             if ($count != 1)
                 $this->ThrowError(__('Must have 1 default per display type.'));
+
+            return true;
         }
         catch (Exception $e) {
             
@@ -108,17 +126,6 @@ class DisplayProfile extends Data {
                 $this->SetError(1, __('Unknown Error'));
         
             return false;
-        }
-        
-
-        if ($this->isNew) {
-            return $this->Add();
-        }
-        else {
-            if (empty($this->displayProfileId) || $this->displayProfileId == 0)
-                return $this->SetError(__('Missing displayProfileId'));
-
-            return $this->Update();
         }
     }
 
@@ -161,6 +168,34 @@ class DisplayProfile extends Data {
                     'isdefault' => $this->isDefault,
                     'displayprofileid' => $this->displayProfileId
                 ));
+          
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    public function Delete() {
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM `displayprofile` WHERE displayprofileid = :displayprofileid');
+            $sth->execute(array('displayprofileid' => $this->displayProfileId));
+
+            // This one is no longer a default
+            $this->isDefault = 0;
+
+            // Check that there aren't other defaults for this type.
+            if (!$this->ValidateDefault())
+                $this->ThrowError(__('Deleting this Profile would result in there not being a default for this type of client'));
           
             return true;
         }
