@@ -511,13 +511,19 @@ CREATE TABLE IF NOT EXISTS `setting` (
   `settingid` int(11) NOT NULL AUTO_INCREMENT,
   `setting` varchar(50) NOT NULL,
   `value` varchar(1000) NOT NULL,
-  `type` varchar(24) NOT NULL,
-  `helptext` text ,
+  `fieldType` varchar(24) NOT NULL,
+  `helptext` text,
   `options` varchar(254) DEFAULT NULL,
   `cat` varchar(24) NOT NULL DEFAULT 'general',
   `userChange` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Can the user change this setting',
+  `title` varchar(254) NOT NULL,
+  `validation` varchar(50) NOT NULL,
+  `ordering` int(11) NOT NULL,
+  `default` varchar(1000) NOT NULL,
+  `userSee` tinyint(4) NOT NULL DEFAULT '1',
+  `type` varchar(50) NOT NULL,
   PRIMARY KEY (`settingid`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=62 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=74 ;
 
 CREATE TABLE IF NOT EXISTS `stat` (
   `statID` bigint(20) NOT NULL AUTO_INCREMENT,

@@ -37,425 +37,143 @@ class adminDAO
 	
 		// Set some information about the form
         Theme::Set('form_id', 'SettingsForm');
-        Theme::Set('form_action', 'index.php?p=group&q=Delete');
-		Theme::Set('settings_help_button_url', HelpManager::Link('Content', 'Config'));
-		Theme::Set('settings_form', $this->display_settings());
+        Theme::Set('form_action', 'index.php?p=admin&q=Edit');
+
+        // Buttons
+        Theme::Set('settings_help_button_url', HelpManager::Link('Content', 'Config'));
+        Theme::Set('import_button_url', 'index.php?p=admin&q=RestoreForm');
+        Theme::Set('export_button_url', 'index.php?p=admin&q=BackupForm');
+		Theme::Set('tidy_button_url', 'index.php?p=admin&q=TidyLibrary');
+
+        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
+
+        // Get all of the settings in an array
+        $settings = Config::GetAll(NULL, array('userSee' => 1));
+
+        $currentCategory = '';
+        $catagories = array();
+        $formFields = array();
+
+        // Go through each setting, validate it and add it to the array
+        foreach ($settings as $setting) {
+
+            if ($currentCategory != $setting['cat']) {
+                $currentCategory = $setting['cat'];
+                $catagories[] = array('tabId' => $setting['cat'], 'tabName' => ucfirst($setting['cat']));
+            }
+
+            // Are there any options
+            $options = NULL;
+            if (!empty($setting['options'])) {
+                // Change to an id=>value array
+                foreach (explode('|', Kit::ValidateParam($setting['options'], _HTMLSTRING)) as $tempOption)
+                    $options[] = array('id' => $tempOption, 'value' => $tempOption);
+            }
+
+            // Validate the current setting
+            if ($setting['type'] == 'checkbox' && isset($setting['value']))
+                $validated = $setting['value'];
+            else if (isset($setting['value']))
+                $validated = Kit::ValidateParam($setting['value'], $setting['type']);
+            else
+                $validated = $setting['default'];
+
+            // Time zone type requires special handling.
+            if ($setting['fieldType'] == 'timezone') {
+                $options = $this->TimeZoneDropDown($validated);
+            }
+
+            // Get a list of settings and assign them to the settings field
+            $formFields[] = array(
+                'name' => $setting['setting'],
+                'type' => $setting['type'],
+                'fieldType' => $setting['fieldType'],
+                'helpText' => $setting['helptext'],
+                'title' => $setting['title'],
+                'options' => $options,
+                'validation' => $setting['validation'],
+                'value' => $validated,
+                'enabled' => $setting['userChange'],
+                'catId' => $setting['cat'],
+                'cat' => ucfirst($setting['cat'])
+            );
+        }
+
+        Theme::Set('cats', $catagories);
+		Theme::Set('form_fields', $formFields);
+
+        // Provide some bandwidth and library information to the theme.
+        // Library Size in Bytes
+        $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
+        $limitPcnt = ($libraryLimit > 0) ? (($fileSize / ($libraryLimit * 1024)) * 100) : '';
+
+        Theme::Set('library_info', $this->FormatByteSize($fileSize) . (($libraryLimit > 0) ? sprintf(__(' / %d %% of %s'), $limitPcnt, $this->FormatByteSize($libraryLimit * 1024)) : ''));
+    
+        // Monthly bandwidth - optionally tested against limits
+        $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+        $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
+
+        $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = %d', $startOfMonth);
+        $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
+        $usagePcnt = ($xmdsLimit > 0) ? (($bandwidthUsage / ($xmdsLimit * 1024)) * 100) : '';
+        
+        Theme::Set('bandwidth_info', $this->FormatByteSize($bandwidthUsage) . (($xmdsLimit > 0) ? sprintf(__(' / %d %% of %s'), $usagePcnt, $this->FormatByteSize($xmdsLimit * 1024)) : ''));
+
 
 		// Render the Theme and output
         Theme::Render('settings_page');
 	}
 
-	function modify() 
-	{
-		$db =& $this->db;
+    function Edit() {
+        $response = new ResponseManager();
 
-		// Check the token
+        // Check the token
         if (!Kit::CheckToken())
             trigger_error('Token does not match', E_USER_ERROR);
 
-		$refer 		= Kit::GetParam('refer', _POST, _STRING);
-		$usertype 	= Kit::GetParam('usertype', _SESSION, _INT);
-		
-		$ids		= Kit::GetParam('id', _POST, _ARRAY);
-		$values		= Kit::GetParam('value', _POST, _ARRAY);
-		
-		$size 		= count($ids);
-		
-		if ($usertype != 1) 
-		{
-			setMessage(__("Only admin users are allowed to modify settings"));
-			return $refer;
-		}
-		
-		// Get the SettingId for LIBRARY_LOCATION
-		$SQL = sprintf("SELECT settingid FROM setting WHERE setting = '%s'", 'LIBRARY_LOCATION');
-		
-		if (!$result = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			trigger_error(__('Cannot find the Library Location Setting - this is serious.'), E_USER_ERROR);
-		}
-		
-		if ($db->num_rows($result) == 0)
-		{
-			trigger_error(__('Cannot find the Library Location Setting - this is serious.'), E_USER_ERROR);
-		}
-		
-		$row 				= $db->get_row($result);
-		$librarySettingId 	= $row[0];
-	
-		// Loop through and modify the settings
-		for ($i=0; $i<$size; $i++) 
-		{
-			$value = Kit::ValidateParam($values[$i], _STRING);
-			$id = $ids[$i];
-			
-			// Is this the library location setting
-			if ($id == $librarySettingId)
-			{
-				// Check for a trailing slash and add it if its not there
-				$value = rtrim($value, '/') . '/';
-				
-				// Attempt to add the directory specified
-				if (!file_exists($value . 'temp'))
-				{
-					// Make the directory with broad permissions recursively (so will add the whole path)
-					mkdir($value . 'temp', 0777, true);
-				}
-				
-				if (!is_writable($value . 'temp'))
-				{
-					trigger_error(__('The Library Location you have picked is not writable'), E_USER_ERROR);
-				}
-			}
-			
-			$SQL = sprintf("UPDATE setting SET value = '%s' WHERE settingid = %d ", $db->escape_string($value), $id);
+        Kit::ClassLoader('setting');
+        $data = new Setting($this->db);
 
-			if(!$db->query($SQL)) 
-			{
-				trigger_error($db->error());
-				trigger_error(__('Update of settings failed.'), E_USER_ERROR);
-			}
-		}
+        // Get all of the settings in an array
+        $settings = Config::GetAll(NULL, array('userChange' => 1, 'userSee' => 1));
 
-		$response = new ResponseManager();
-		$response->SetFormSubmitResponse(__('Settings Updated'), false);
-        $response->Respond();
-	}
-	
-	function display_settings() 
-	{
-		$db 			=& $this->db;
-		$user			=& $this->user;
-		
-		$helpObject		= new HelpManager($db, $user);
-			
-		$helpButton 	= $helpObject->HelpButton("content/config/settings", true);
-		
-		//one giant form, split into tabs
-		$form = '<form id="SettingsForm" method="post" class="XiboForm" action="index.php?p=admin&q=modify">' . Kit::Token();
-		$tabs = '';
-		$pages = '';
-		
-		//get all the tabs, ordered by catagory
-		$SQL = "SELECT DISTINCT cat FROM setting WHERE userChange = 1 ORDER BY cat";
-		
-		if (!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error(__("Can't get the setting catagories"), E_USER_ERROR);
-		}
-		
-		while ($row = $db->get_row($results)) 
-		{
-			$cat = $row[0];
-			$ucat = ucfirst($cat);
-			$cat_tab = $cat."_tab";
-			
-			// generate the li and a for this tab
-			$tabs .= "<li><a href='#$cat_tab'><span>$ucat</span><i class='icon-chevron-right pull-right'></i></a></li>";
-		
-			// for each one, call display_cat to get the settings specific to that cat
-			$cat_page = $this->display_cat($cat);
-			
-			$pages .= <<<PAGES
-			<div id="$cat_tab">
-				$cat_page
-			</div>
-PAGES;
-		}
-		
-		$msgSave = __('Save');
-		$msgCategories = __('Categories');
+        // Go through each setting, validate it and add it to the array
+        foreach ($settings as $setting) {
+            // Check to see if we have a setting that matches in the provided POST vars.
+            $value = Kit::GetParam($setting['setting'], _POST, $setting['type'], (($setting['type'] == 'checkbox') ? NULL : $setting['default']));
 
-		// Output it all
-		$form .= <<<FORM
-		<div class="span2">
-			<div class="well affix">
-				<ul class="nav nav-list ">
-					<li class="nav-header">$msgCategories</li>
-					$tabs
-				</ul>
-			</div>
-		</div>
-		<div class="span10">
-			$pages
-		</div>
-FORM;
-	
-		//end the form and output
-		$form .= "</form>";
-		
-		return $form;
-	}
-
-	function display_cat($cat) 
-	{
-		$db =& $this->db;
-		
-		$output = "";
-		
-		$title 	 = ucfirst($cat);
-		$output .= '<h3>' . __($title) . ' ' . __('Settings') . '</h3>';
-			
-		/*
-			Firstly we want to individually get the user module
-		*/
-		if ($cat == 'user')
-		{
-		
-			$SQL = "";
-			$SQL.= "SELECT settingid, setting, value, helptext FROM setting WHERE setting = 'userModule'";
-	
-			if(!$results = $db->query($SQL))
-			{
-				trigger_error($db->error());
-				trigger_error(__('Can not get settings'), E_USER_ERROR);				
-			}
-	
-			$row 		= $db->get_row($results);
-			$settingid 	= Kit::ValidateParam($row[0], _INT);
-			$setting 	= Kit::ValidateParam($row[1], _STRING);
-			$setting 	= __($setting);
-			$value 		= Kit::ValidateParam($row[2], _STRING);
-			$helptext	= Kit::ValidateParam($row[3], _HTMLSTRING);
-			
-			$output .= <<<END
-			<h5>$setting</h5>
-			<p>$helptext</p>
-END;
-
-			// we need to make a drop down out of the files that match a string, in a directory
-			$files 	= scandir("modules/");
-			$select = "";
-			
-			foreach ($files as $file) 
-			{
-                            $selected = "";
-                            if($file == $value) $selected = "selected";
-
-                            if(preg_match("^module_user^", $file))
-                            {
-                                    //var for drop down
-                                    $select.= "<option value='$file' $selected>$file</option>";
-                            }
-			}
-				
-			$output .=  <<<END
-			<input type="hidden" name="id[]" value="$settingid">
-			<select name="value[]">
-				$select
-			</select>
-END;
-		}
-
-                if ($cat == 'content')
-                {
-                    $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
-
-                    // Library Size in Bytes
-                    $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
-                    $limitPcnt = ($libraryLimit > 0) ? (($fileSize / ($libraryLimit * 1024)) * 100) : '';
-
-                    $output .= '<p>' . sprintf(__('You have %s of media in the library.'), $this->FormatByteSize($fileSize)) . (($libraryLimit > 0) ? sprintf(__(' This is %d %% of your %s limit.'), $limitPcnt, $this->FormatByteSize($libraryLimit * 1024)) : '') . '</p>';
+            // Check the library location setting
+            if ($setting['setting'] == 'LIBRARY_LOCATION') {
+                // Check for a trailing slash and add it if its not there
+                $value = rtrim($value, '/') . '/';
                 
-                    // Monthly bandwidth - optionally tested against limits
-                    $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
-                    $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
+                // Attempt to add the directory specified
+                if (!file_exists($value . 'temp'))
+                    // Make the directory with broad permissions recursively (so will add the whole path)
+                    mkdir($value . 'temp', 0777, true);
+                
+                if (!is_writable($value . 'temp'))
+                    trigger_error(__('The Library Location you have picked is not writeable'), E_USER_ERROR);
+            }
 
-                    $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = %d', $startOfMonth);
-                    $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
+            // Actually edit
+            if (!$data->Edit($setting['setting'], $value))
+                trigger_error($data->GetErrorMessage(), E_USER_ERROR);
+        }
 
-                    Debug::LogEntry('audit', $sql);
-                    
-                    $usagePcnt = ($xmdsLimit > 0) ? (($bandwidthUsage / ($xmdsLimit * 1024)) * 100) : '';
-                    
-                    $output .= '<p>' . sprintf(__('You have used %s of bandwidth this month.'), $this->FormatByteSize($bandwidthUsage)) . (($xmdsLimit > 0) ? sprintf(__(' This is %d %% of your %s limit.'), $usagePcnt, $this->FormatByteSize($xmdsLimit * 1024)) : '') . '</p>';
-                }
-
-                if ($cat == 'general')
-                {
-                    $output .= '<p>' . __('Import / Export Database') . '</p>';
-
-                    if (Config::GetSetting('SETTING_IMPORT_ENABLED') == 'On')
-                    	$output .= '<button class="XiboFormButton" href="index.php?p=admin&q=RestoreForm">' . __('Import') . '</button>';
-                    
-                    $output .= '<button class="XiboFormButton" href="index.php?p=admin&q=BackupForm">' . __('Export') . '</button>';
-                    
-                    if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') == 'On')
-                    	$output .= '<button class="XiboFormButton" href="index.php?p=admin&q=TidyLibrary">' . __('Tidy Library') . '</button>';
-                }
-		
-		// Need to now get all the Misc settings 
-		$SQL = "";
-		$SQL.= sprintf("SELECT settingid, setting, value, helptext FROM setting WHERE type = 'text' AND cat='%s' AND userChange = 1", $cat);
-
-		if (!$results = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			trigger_error(__('Can not get settings'), E_USER_ERROR);				
-		}
-
-		while($row = $db->get_row($results)) 
-		{
-			$settingid 	= Kit::ValidateParam($row[0], _INT);
-			$setting 	= Kit::ValidateParam($row[1], _STRING);
-			$value 		= Kit::ValidateParam($row[2], _STRING);
-			$helptext	= Kit::ValidateParam($row[3], _HTMLSTRING);
-
-			$output .=  <<<END
-			<h5>$setting</h5>
-			<p>$helptext</p>
-			<input type="hidden" name="id[]" value="$settingid">
-			<input type="text" name="value[]" value="$value">
-END;
-			if($setting == "mail_to") 
-			{
-				$msgTestEmail = __('Test Email');
-				//show another form here, for test
-				$output .= <<<END
-				<a id="test_email" href="index.php?p=admin&q=SendEmail" class="XiboFormButton">$msgTestEmail</a>
-END;
-			}
-		}	
-			
-		// Drop downs
-		$SQL = "";
-		$SQL.= sprintf("SELECT settingid, setting, value, helptext, options FROM setting WHERE type = 'dropdown' AND cat='%s' AND userChange = 1", $db->escape_string($cat));
-
-		if (!$results = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			trigger_error(__('Can not get settings'), E_USER_ERROR);				
-		}
-
-		while($row = $db->get_row($results)) 
-		{
-			$settingid 	= Kit::ValidateParam($row[0], _INT);
-			$setting 	= Kit::ValidateParam($row[1], _STRING);
-			$value 		= Kit::ValidateParam($row[2], _STRING);
-			$helptext	= Kit::ValidateParam($row[3], _HTMLSTRING);
-			$options	= Kit::ValidateParam($row[4], _STRING);
-
-			$select = "";
-			
-			$options = explode("|", $options);
-			foreach ($options as $option) 
-			{
-				if($option == $value) 
-				{
-					$select.="<option value='$option' selected>$option</option>";
-				}
-				else 
-				{
-					$select.="<option value='$option'>$option</option>";
-				}
-			}
-			
-			$output .= <<<END
-			<h5>$setting</h5>
-			<p>$helptext</p>
-			<input type="hidden" name="id[]" value="$settingid">
-			<select name="value[]">$select</select>
-END;
-		}
-		
-		// Also deal with the timezone setting type
-		$SQL = "";
-		$SQL.= sprintf("SELECT settingid, setting, value, helptext FROM setting WHERE type = 'timezone' AND cat='%s' AND userChange = 1", $cat);
-
-		if (!$results = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			trigger_error(__('Can not get settings'), E_USER_ERROR);				
-		}
-
-		while($row = $db->get_row($results)) 
-		{
-			$settingid 	= Kit::ValidateParam($row[0], _INT);
-			$setting 	= Kit::ValidateParam($row[1], _STRING);
-			$selectedzone = Kit::ValidateParam($row[2], _STRING);
-			$helptext	= Kit::ValidateParam($row[3], _HTMLSTRING);
-			$options	= $this->TimeZoneIdentifiersList();
-			
-			$structure 	= '';
-			$i 			= 0;
-			
-			// Create a Zone array containing the timezones
-			// From: http://php.oregonstate.edu/manual/en/function.timezone-identifiers-list.php
-			foreach($options as $zone) 
-			{
-				$zone 					= explode('/',$zone);
-				$zonen[$i]['continent'] = isset($zone[0]) ? $zone[0] : '';
-				$zonen[$i]['city'] 		= isset($zone[1]) ? $zone[1] : '';
-				$zonen[$i]['subcity'] 	= isset($zone[2]) ? $zone[2] : '';
-				$i++;
-			}
-			
-			// Sort them
-			asort($zonen);
-			
-			foreach($zonen as $zone) 
-			{
-				extract($zone);
-				
-				if($continent == 'Africa' || $continent == 'America' || $continent == 'Antarctica' || $continent == 'Arctic' || $continent == 'Asia' || $continent == 'Atlantic' || $continent == 'Australia' || $continent == 'Europe' || $continent == 'Indian' || $continent == 'Pacific' || $continent == 'General') 
-				{
-					if(!isset($selectcontinent)) 
-					{
-						$structure .= '<optgroup label="'.$continent.'">'; // continent
-					} 
-					elseif($selectcontinent != $continent) 
-					{
-						$structure .= '</optgroup><optgroup label="'.$continent.'">'; // continent
-					}
-			
-					if(isset($city) != '')
-					{
-						if (!empty($subcity) != '')
-						{
-							$city = $city . '/'. $subcity;
-						}
-						$structure .= "<option ".((($continent.'/'.$city)==$selectedzone)?'selected="selected "':'')." value=\"".($continent.'/'.$city)."\">".str_replace('_',' ',$city)."</option>"; //Timezone
-					} 
-					else 
-					{
-						if (!empty($subcity) != '')
-						{
-							$city = $city . '/'. $subcity;
-						}
-						$structure .= "<option ".(($continent==$selectedzone)?'selected="selected "':'')." value=\"".$continent."\">".$continent."</option>"; //Timezone
-					}
-			
-					$selectcontinent = $continent;
-				}
-			}
-			$structure .= '</optgroup>';
-			
-			// End
-			
-			$output .= <<<END
-			<h5>$setting</h5>
-			<p>$helptext</p>
-			<input type="hidden" name="id[]" value="$settingid">
-			<select name="value[]">$structure</select>
-END;
-		}
-		
-		return $output;
-	}
+        $response->SetFormSubmitResponse(__('Settings Updated'), false);
+        $response->Respond();
+    }
 	
 	/**
 	 * Timezone functionality
 	 * @return 
 	 */
-	private function TimeZoneIdentifiersList()
-	{
-		if (function_exists('timezone_identifiers_list')) 
-		{
-			return timezone_identifiers_list();
-		}
-
+	private function TimeZoneIdentifiersList() {
+		
+        if (function_exists('timezone_identifiers_list')) 
+            return timezone_identifiers_list();
+		
 		$list[] = 'Europe/London';
 		$list[] = 'America/New_York';
 		$list[] = 'Europe/Paris';
@@ -476,6 +194,64 @@ END;
 		
 		return $list;
 	}
+
+    public function TimeZoneDropDown($selectedzone) {
+        $structure  = '';
+        $i = 0;
+        
+        // Create a Zone array containing the timezones
+        // From: http://php.oregonstate.edu/manual/en/function.timezone-identifiers-list.php
+        foreach($this->TimeZoneIdentifiersList() as $zone)
+        {
+            $zone                   = explode('/',$zone);
+            $zonen[$i]['continent'] = isset($zone[0]) ? $zone[0] : '';
+            $zonen[$i]['city']      = isset($zone[1]) ? $zone[1] : '';
+            $zonen[$i]['subcity']   = isset($zone[2]) ? $zone[2] : '';
+            $i++;
+        }
+        
+        // Sort them
+        asort($zonen);
+        
+        foreach($zonen as $zone) 
+        {
+            extract($zone);
+            
+            if($continent == 'Africa' || $continent == 'America' || $continent == 'Antarctica' || $continent == 'Arctic' || $continent == 'Asia' || $continent == 'Atlantic' || $continent == 'Australia' || $continent == 'Europe' || $continent == 'Indian' || $continent == 'Pacific' || $continent == 'General') 
+            {
+                if(!isset($selectcontinent)) 
+                {
+                    $structure .= '<optgroup label="'.$continent.'">'; // continent
+                } 
+                elseif($selectcontinent != $continent) 
+                {
+                    $structure .= '</optgroup><optgroup label="'.$continent.'">'; // continent
+                }
+        
+                if(isset($city) != '')
+                {
+                    if (!empty($subcity) != '')
+                    {
+                        $city = $city . '/'. $subcity;
+                    }
+                    $structure .= "<option ".((($continent.'/'.$city)==$selectedzone)?'selected="selected "':'')." value=\"".($continent.'/'.$city)."\">".str_replace('_',' ',$city)."</option>"; //Timezone
+                } 
+                else 
+                {
+                    if (!empty($subcity) != '')
+                    {
+                        $city = $city . '/'. $subcity;
+                    }
+                    $structure .= "<option ".(($continent==$selectedzone)?'selected="selected "':'')." value=\"".$continent."\">".$continent."</option>"; //Timezone
+                }
+        
+                $selectcontinent = $continent;
+            }
+        }
+        $structure .= '</optgroup>';
+
+        return $structure;
+    }
 	
 	/**
 	 * Sets all debugging to maximum
@@ -641,7 +417,7 @@ END;
     {
         $response = new ResponseManager();
 
-        if (Config::GetSetting('SETTING_IMPORT_ENABLED') != 'On')
+        if (Config::GetSetting('SETTING_IMPORT_ENABLED') != 1)
         	trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
 
         // Check we have permission to do this
@@ -681,7 +457,7 @@ FORM;
     {
         $db =& $this->db;
 
-        if (Config::GetSetting('SETTING_IMPORT_ENABLED') != 'On')
+        if (Config::GetSetting('SETTING_IMPORT_ENABLED') != 1)
         	trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
 
         include('install/header.inc');
@@ -754,7 +530,7 @@ FORM;
         $db =& $this->db;
         $response = new ResponseManager();
 
-        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 'On')
+        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
         	trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
 
         // Also run a script to tidy up orphaned media in the library
@@ -809,7 +585,7 @@ FORM;
             }
         }
 
-        trigger_error(__('Library Tidy Complete'));
+        trigger_error(__('Library Tidy Complete'), E_USER_ERROR);
     }
 }
 ?>

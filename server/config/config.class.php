@@ -75,6 +75,42 @@ class Config
 			return false;
 		}
 	}
+
+	static function GetAll($sort_order = array('cat', 'ordering'), $filter_by = array()) {
+
+		if ($sort_order == NULL)
+			$sort_order = array('cat', 'ordering');
+
+		try {
+			$dbh = PDOConnect::init();
+			
+			$SQL = 'SELECT * FROM setting WHERE 1 = 1 ';
+			$params = array();
+
+			if (Kit::GetParam('userChange', $filter_by, _INT, -1) != -1) {
+				$SQL .= ' AND userChange = :userChange ';
+				$params['userChange'] = Kit::GetParam('userChange', $filter_by, _INT);
+			}
+
+			if (Kit::GetParam('userSee', $filter_by, _INT, -1) != -1) {
+				$SQL .= ' AND userSee = :userSee ';
+				$params['userSee'] = Kit::GetParam('userSee', $filter_by, _INT);
+			}
+			
+			// Sorting?
+        	if (is_array($sort_order))
+            	$SQL .= 'ORDER BY ' . implode(',', $sort_order);
+
+			$sth = $dbh->prepare($SQL);
+			$sth->execute($params);
+
+			return $sth->fetchAll();
+		}
+		catch (Exception $e) {
+			trigger_error($e->getMessage());
+			return false;
+		}
+	}
 	
 	/**
 	 * Defines the Version and returns it
