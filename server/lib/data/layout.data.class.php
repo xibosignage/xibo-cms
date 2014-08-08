@@ -534,7 +534,7 @@ class Layout extends Data
      * @param <bool> $copyMedia Make copies of this layouts media
      * @return <int> 
      */
-    public function Copy($oldLayoutId, $newLayoutName, $userId, $copyMedia = false)
+    public function Copy($oldLayoutId, $newLayoutName, $newDescription, $userId, $copyMedia = false)
     {
         try {
             $dbh = PDOConnect::init();
@@ -561,14 +561,15 @@ class Layout extends Data
     
             // The Layout ID is the old layout
             $SQL  = "";
-            $SQL .= " INSERT INTO layout (layout, xml, userID, description, tags, templateID, retired, duration, background, createdDT, modifiedDT, status) ";
-            $SQL .= " SELECT :layout, xml, :userid, description, tags, templateID, retired, duration, background, :createddt, :modifieddt, status ";
+            $SQL .= " INSERT INTO layout (layout, xml, userID, description, tags, templateID, retired, duration, backgroundImageId, createdDT, modifiedDT, status) ";
+            $SQL .= " SELECT :layout, xml, :userid, :description, tags, templateID, retired, duration, backgroundImageId, :createddt, :modifieddt, status ";
             $SQL .= "  FROM layout ";
             $SQL .= " WHERE layoutid = :layoutid";
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
                     'layout' => $newLayoutName,
+                    'description' => $newDescription,
                     'userid' => $userId,
                     'createddt' => $currentdate,
                     'modifieddt' => $currentdate,

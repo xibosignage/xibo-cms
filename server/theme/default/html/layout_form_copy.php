@@ -37,6 +37,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             </div>
         </div>
         <div class="control-group">
+            <label class="control-label" for="description" accesskey="d" title="<?php echo Theme::Translate('An optional description of the Layout. (1 - 250 characters)'); ?>"><?php echo Theme::Translate('Description'); ?></label>
+            <div class="controls">
+                <input name="description" type="text" id="description" value="<?php echo Theme::Get('new_description_default'); ?>" tabindex="2" />
+            </div>
+        </div>
+        <div class="control-group">
             <div class="controls">
                 <input class="checkbox" type="checkbox" id="copyMediaFiles" name="copyMediaFiles" <?php echo Theme::Get('copy_media_checked'); ?> />
                 <label for="copyMediaFiles" accesskey="c" title="<?php echo Theme::Translate('Make new copies of all media on this layout?'); ?>"><?php echo Theme::Translate('Make new copies of all media on this layout?'); ?></label>

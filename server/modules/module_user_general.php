@@ -1057,6 +1057,10 @@ END;
             }
         }
 
+        // Layout
+        if (Kit::GetParam('layoutId', $filter_by, _INT, 0) != 0) 
+            $SQL .= sprintf(" AND layout.layoutId = %d ", Kit::GetParam('layoutId', $filter_by, _INT, 0));
+
         // Owner filter
         if (Kit::GetParam('userId', $filter_by, _INT, 0) != 0) 
             $SQL .= sprintf(" AND layout.userid = %d ", Kit::GetParam('userId', $filter_by, _INT, 0));

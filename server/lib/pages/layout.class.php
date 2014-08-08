@@ -804,7 +804,8 @@ HTML;
         $response = new ResponseManager();
 
         $layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
-        $oldLayout = Kit::GetParam('oldlayout', _REQUEST, _STRING);
+
+        $layout = $user->LayoutList(NULL, array('layoutId' => $layoutid));
 
         $copyMediaChecked = (Config::GetSetting('LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 'checked' : '';
 
@@ -812,7 +813,8 @@ HTML;
         Theme::Set('form_action', 'index.php?p=layout&q=Copy');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
         Theme::Set('copy_media_checked', $copyMediaChecked);
-        Theme::Set('new_layout_default', $oldLayout . ' 2');
+        Theme::Set('new_layout_default', $layout[0]['layout'] . ' 2');
+        Theme::Set('new_description_default', $layout[0]['description']);
 
         $form = Theme::RenderReturn('layout_form_copy');
 
@@ -838,13 +840,14 @@ HTML;
 
         $layoutid = Kit::GetParam('layoutid', _POST, _INT);
         $layout = Kit::GetParam('layout', _POST, _STRING);
+        $description = Kit::GetParam('description', _POST, _STRING);
         $copyMedia = Kit::GetParam('copyMediaFiles', _POST, _CHECKBOX);
 
         Kit::ClassLoader('Layout');
 
         $layoutObject = new Layout($db);
 
-        if (!$layoutObject->Copy($layoutid, $layout, $user->userid, (bool)$copyMedia))
+        if (!$layoutObject->Copy($layoutid, $layout, $description, $user->userid, (bool)$copyMedia))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Layout Copied'));
