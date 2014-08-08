@@ -49,6 +49,7 @@ $allowed_routes = array(
 		'install/offline_download_client',
 		'install/troubleshooting',
 		'admin/settings',
+		'admin/settings_maintenance',
 		'coreconcepts/overview',
 		'coreconcepts/login',
 		'coreconcepts/navbar',
