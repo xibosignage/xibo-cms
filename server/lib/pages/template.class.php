@@ -103,7 +103,7 @@ class templateDAO
             $template['owner'] = $user->getNameFromID($template['ownerid']);
             $template['buttons'] = array();
 
-            if ($template['del'] && $template['issystem'] == 'No') {
+            if ($template['del']) {
 
                 // Delete Button
                 $template['buttons'][] = array(
@@ -113,7 +113,7 @@ class templateDAO
                     );
             }
 
-            if ($template['modifyPermissions'] && $template['issystem'] == 'No') {
+            if ($template['modifyPermissions']) {
 
                 // Permissions Button
                 $template['buttons'][] = array(

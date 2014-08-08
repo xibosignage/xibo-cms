@@ -62,15 +62,14 @@ class Template extends Data
                 $this->ThrowError(__('Cannot get the Layout Structure.'));
             
             // Insert the template
-            $SQL = "INSERT INTO template (template, tags, issystem, retired, description, createdDT, modifiedDT, userID, xml) ";
-            $SQL.= "  VALUES (:template, :tags, :issystem, :retired, :description, :createddt, :modifieddt, :userid, :xml) ";
+            $SQL = "INSERT INTO template (template, tags, retired, description, createdDT, modifiedDT, userID, xml) ";
+            $SQL.= "  VALUES (:template, :tags, :retired, :description, :createddt, :modifieddt, :userid, :xml) ";
             
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
                     'template' => $template,
                     'userid' => $userId,
                     'tags' => $tags,
-                    'issystem' => 0,
                     'retired' => 0,
                     'description' => $description,
                     'createddt' => $currentdate,

@@ -33,7 +33,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<thead>
 		<tr>
 			<th><?php echo Theme::Translate('Name'); ?></th>
-			<th><?php echo Theme::Translate('Is System'); ?></th>
 			<th><?php echo Theme::Translate('Tags'); ?></th>
 			<th><?php echo Theme::Translate('Owner'); ?></th>
 			<th><?php echo Theme::Translate('Permissions'); ?></th>
@@ -43,7 +42,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<?php foreach(Theme::Get('table_rows') as $row) { ?>
 		<tr>
 			<td><?php echo $row['template']; ?></td>
-			<td><?php echo $row['issystem']; ?></td>
 			<td><?php echo $row['tags']; ?></td>
 			<td><?php echo $row['owner']; ?></td>
 			<td><?php echo $row['permissions']; ?></td>

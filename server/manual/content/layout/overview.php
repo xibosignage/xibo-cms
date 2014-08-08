@@ -120,7 +120,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 <dl class="dl-horizontal">
 	<dt>Template</dt>
-	<dd>Optionally you can choose a template to base the new layout on. Templates typically provide an aspect ratio, a background image and one or more empty region timelines.</dd>
+	<dd>Optionally you can choose a template to base the new layout on. Templates typically provide a resolution, a background image and one or more empty region timelines. If a template is selected the resolution option will be removed.</dd>
+</dl>
+
+<dl class="dl-horizontal">
+	<dt>Resolution</dt>
+	<dd>Choose the resolution for the layout. This should be the resolution of the intended display. If the resolution is not known or incorrect the client will resize the layout to fit at runtime.</dd>
 </dl>
 
 <p class="alert alert-info">When a new layout is created (Save is clicked) the user is automatically taken to the Layout Designer.</p>
