@@ -35,7 +35,12 @@ $(document).ready(function() {
     });
 
     // Margins on frame
-    $("#iframe").css({"margin-top": -1 * options.offsetTop, "margin-left": -1 * options.offsetLeft});
+    $("#iframe").css({
+        "margin-top": -1 * options.offsetTop, 
+        "margin-left": -1 * options.offsetLeft,
+        "width": options.width,
+        "height": options.height
+    });
 
     // Transform on the frame
     if (options.scale != 1) {

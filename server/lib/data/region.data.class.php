@@ -26,6 +26,8 @@ class Region extends Data
 	private $layoutXml;
 	private $layoutDocument;
 
+	public $delayFinalise = false;
+
 	public function __construct(database $db) 
 	{
 		$this->db 	=& $db;
@@ -632,10 +634,12 @@ class Region extends Data
 			if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
 				return false;
 	
-			// Update layout status
-	        Kit::ClassLoader('Layout');
-	        $layout = new Layout($this->db);
-	        $layout->SetValid($layoutid, true);
+			if (!$this->delayFinalise) {
+    			// Update layout status
+    	        Kit::ClassLoader('Layout');
+    	        $layout = new Layout($this->db);
+    	        $layout->SetValid($layoutid, true);
+            }
 			
 			//Its swapped
 			return true;  

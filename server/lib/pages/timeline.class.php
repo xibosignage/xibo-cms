@@ -293,6 +293,7 @@ class timelineDAO {
             
             Kit::ClassLoader('region');
             $regionObject = new region($db);
+            $regionObject->delayFinalise = true;
             $ownerId = $regionObject->GetOwnerId($layoutid, $regionid);
 
             $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
@@ -302,6 +303,11 @@ class timelineDAO {
     		if (!$regionObject->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
     			trigger_error($regionObject->GetErrorMessage(), E_USER_ERROR);
         }
+
+        // Set the layout status
+        Kit::ClassLoader('Layout');
+        $layout = new Layout($this->db);
+        $layout->SetValid($layoutid, true);
 		
 		$response->SetFormSubmitResponse('');
 		$response->hideMessage = true;

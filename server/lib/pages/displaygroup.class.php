@@ -775,7 +775,7 @@ class displaygroupDAO
         $response   = new ResponseManager();
 
         $displayGroupId = Kit::GetParam('displaygroupid', _GET, _INT);
-        $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY_INT, array(), false);
+        $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY_INT, NULL, false);
 
         if ($displayGroupId == 0)
             trigger_error(__('Display Group not selected'), E_USER_ERROR);

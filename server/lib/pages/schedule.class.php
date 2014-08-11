@@ -1100,8 +1100,9 @@ HTML;
             // Determine if we are authed against this group.
             $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
 
-                        if (!$auth->view)
-                            continue;
+            // We should only be able to schedule if we have edit permission or if the SCHEDULE_WITH_VIEW permission is ON
+            if (!$auth->edit && Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'No')
+                continue;
             
             // Do we need to nest yet? We only nest display specific groups
             if ($isDisplaySpecific == 1 && !$nested)
@@ -1760,19 +1761,23 @@ END;
      * @return 
      * @param $eventDGIDs Object
      */
-    private function IsEventEditable($eventDGIDs)
-    {
-        $db             =& $this->db;
-        $user           =& $this->user;
+    private function IsEventEditable($eventDGIDs) {
+        
+        $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
         
         // Work out if this event is editable or not. To do this we need to compare the permissions
         // of each display group this event is associated with
-        foreach ($eventDGIDs as $dgID)
-        {
-            if (!$user->DisplayGroupAuth($dgID))
-            {
+        foreach ($eventDGIDs as $dgID) {
+            // Permissions for display group
+            $auth = $this->user->DisplayGroupAuth($dgID, true);
+
+            // Can schedule with view, but no view permissions
+            if ($scheduleWithView && !$auth->view)
                 return false;
-            }
+
+            // Can't schedule with view, but no edit permissions
+            if (!$scheduleWithView && !$auth->edit)
+                return false;
         }
         
         return true;

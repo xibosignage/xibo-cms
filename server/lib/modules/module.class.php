@@ -52,6 +52,7 @@ class Module implements ModuleInterface
     protected $showRegionOptions;
     protected $originalUserId;
     protected $storedAs;
+    protected $originalFilename;
 
     // Track the error state
 	private $error;
@@ -237,7 +238,7 @@ class Module implements ModuleInterface
                     $dbh = PDOConnect::init();
                 
                     // Load what we know about this media into the object
-                    $sth = $dbh->prepare('SELECT duration, name, UserId, storedAs FROM media WHERE mediaID = :media_id');
+                    $sth = $dbh->prepare('SELECT duration, name, UserId, storedAs, originalFilename FROM media WHERE mediaID = :media_id');
                     $sth->execute(array(
                             'media_id' => $mediaid
                         ));
@@ -252,6 +253,7 @@ class Module implements ModuleInterface
                     $this->name = $rows[0]['name'];
                     $this->originalUserId = $rows[0]['UserId'];
                     $this->storedAs = $rows[0]['storedAs'];
+                    $this->originalFilename = $rows[0]['originalFilename'];
                 }
                 catch (Exception $e) {
                     
@@ -1203,9 +1205,6 @@ END;
         
         Debug::LogEntry('audit', sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
 
-        // Create a region object for later use
-        $region = new region($db);
-
         try {
             $dbh = PDOConnect::init();
         
@@ -1231,6 +1230,9 @@ END;
 
                 Debug::LogEntry('audit', sprintf('%d linked media items for layoutid %d', count($results), $layoutId), 'module', 'ReplaceMediaInAllLayouts');
                 
+                // Create a region object for later use (new one each time)
+                $region = new region($db);
+
                 // Loop through each media link for this layout
                 foreach ($results as $row)
                 {
@@ -1958,13 +1960,14 @@ END;
         }
         
         $download = Kit::GetParam('download', _REQUEST, _BOOLEAN, false);
+        $downloadFromLibrary = Kit::GetParam('downloadFromLibrary', _REQUEST, _BOOLEAN, false);
 
         $size = filesize($fileName);
         
         if ($download) {
             header('Content-Type: application/octet-stream');
             header("Content-Transfer-Encoding: Binary"); 
-            header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
+            header("Content-disposition: attachment; filename=\"" . (($downloadFromLibrary) ? $this->originalFilename : basename($fileName)) . "\"");
         }
         else {
             $fi = new finfo( FILEINFO_MIME_TYPE );
