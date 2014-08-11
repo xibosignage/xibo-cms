@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-class templateDAO 
+class templateDAO extends baseDAO 
 {
     private $db;
     private $user;
@@ -69,6 +69,19 @@ class templateDAO
 
         // Call to render the template
         Theme::Render('template_page');
+    }
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Filter'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Open the filter form'),
+                    'onclick' => 'ToggleFilterView(\'Filter\')'
+                    )
+            );                   
     }
     
     /**
@@ -148,9 +161,19 @@ class templateDAO
         Theme::Set('form_action', 'index.php?p=template&q=AddTemplate');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
 
-        $form = Theme::RenderReturn('template_form_add');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('template', __('Name'), NULL, 
+            __('The Name of the Template - (1 - 50 characters)'), 'n', 'maxlength="50" required');
 
-        $response->SetFormRequestResponse($form, __('Save this Layout as a Template?'), '550px', '230px');
+        $formFields[] = FormManager::AddText('tags', __('Tags'), NULL, 
+            __('Tags for this Template - used when searching for it. Space delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
+
+        $formFields[] = FormManager::AddMultiText('description', __('Description'), NULL, 
+            __('An optional description of the Template. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
+
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Save this Layout as a Template?'), '550px', '230px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Template', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#TemplateAddForm").submit()');
@@ -249,10 +272,9 @@ class templateDAO
         Theme::Set('form_id', 'DeleteTemplateForm');
         Theme::Set('form_action', 'index.php?p=template&q=DeleteTemplate');
         Theme::Set('form_meta', '<input type="hidden" name="templateid" value="' . $templateId . '" />');
-
-        $form = Theme::RenderReturn('campaign_form_delete');
-
-        $response->SetFormRequestResponse($form, __('Delete a Template'), '350px', '150px');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
+        
+        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete a Template'), '350px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Template', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteTemplateForm").submit()');
@@ -359,11 +381,11 @@ class templateDAO
             $checkboxes[] = $checkbox;
         }
 
-        Theme::Set('form_rows', $checkboxes);
+        $formFields = array();
+        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
+        Theme::Set('form_fields', $formFields);
 
-        $form = Theme::RenderReturn('campaign_form_permissions');
-
-        $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
+        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Permissions'), '350px', '500px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Template', 'Permissions') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#TemplatePermissionsForm").submit()');

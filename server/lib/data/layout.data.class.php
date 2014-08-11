@@ -1197,7 +1197,8 @@ class Layout extends Data
         if ($layoutId == 0 || $layoutId == '')
             return $this->SetError(__('Must provide layoutId'));
 
-        if (!Config::CheckZip())
+        $config = new Config();
+        if (!$config->CheckZip())
             return $this->SetError(__('Zip is not enabled on this server'));
 
         $libraryPath = Config::GetSetting('LIBRARY_LOCATION');
@@ -1206,7 +1207,7 @@ class Layout extends Data
             $dbh = PDOConnect::init();
         
             $sth = $dbh->prepare('
-                SELECT layout, description, tags, background, xml 
+                SELECT layout, description, tags, backgroundImageId, xml 
                   FROM layout
                  WHERE layoutid = :layoutid');
 
@@ -1225,23 +1226,12 @@ class Layout extends Data
 
             $params = array('layoutid' => $layoutId);    
             $SQL = ' 
-                SELECT media.mediaid, media.name, media.storedAs, originalFileName, type, duration, 0 AS background
+                SELECT media.mediaid, media.name, media.storedAs, originalFileName, type, duration
                   FROM `media` 
                     INNER JOIN `lklayoutmedia`
                     ON lklayoutmedia.mediaid = media.mediaid
                  WHERE lklayoutmedia.layoutid = :layoutid
                 ';
-
-            if (!empty($row['background'])) {
-                $SQL .= '
-                    UNION ALL
-                    SELECT media.mediaid, media.name, media.storedAs, originalFileName, type, duration, 1 AS background
-                      FROM `media`
-                     WHERE media.storedAs = :background
-                ';
-
-                $params['background'] = $row['background'];
-            }
 
             // Add the media to the ZIP
             $mediaSth = $dbh->prepare($SQL);
@@ -1260,7 +1250,7 @@ class Layout extends Data
                     'name' => $media['name'],
                     'type' => $media['type'],
                     'duration' => $media['duration'],
-                    'background' => $media['background']
+                    'background' => ($media['mediaid'] == $row['backgroundImageId']) ? 1 : 0
                     );
             }
 

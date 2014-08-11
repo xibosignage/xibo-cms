@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class helpDAO
+class helpDAO extends baseDAO
 {
     private $db;
     private $user;
@@ -43,12 +43,24 @@ class helpDAO
         // Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
-        Theme::Set('help_form_add_url', 'index.php?p=help&q=AddForm');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="help"><input type="hidden" name="q" value="Grid">');
         Theme::Set('pager', ResponseManager::Pager($id));
 
         // Render the Theme and output
         Theme::Render('help_page');
+    }
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Add Help Link'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=help&q=AddForm',
+                    'help' => __('Add a new Help page'),
+                    'onclick' => ''
+                    )
+            );
     }
 
     /**
@@ -181,17 +193,25 @@ SQL;
 
     public function AddForm()
     {
-        $db =& $this->db;
-        $user =& $this->user;
         $response = new ResponseManager();
         
         // Set some information about the form
         Theme::Set('form_id', 'HelpAddForm');
         Theme::Set('form_action', 'index.php?p=help&q=Add');
 
-        $form = Theme::RenderReturn('help_form_add');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('Topic', __('Topic'), NULL, 
+            __('The Topic for this Help Link'), 't', 'maxlength="254" required');
 
-        $response->SetFormRequestResponse($form, __('Add Help Link'), '350px', '325px');
+        $formFields[] = FormManager::AddText('Category', __('Category'), NULL, 
+            __('The Category for this Help Link'), 'c', 'maxlength="254" required');
+
+        $formFields[] = FormManager::AddText('Link', __('Link'), NULL, 
+            __('The Link to open for this help topic and category'), 'c', 'maxlength="254" required');
+
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Add Help Link'), '350px', '325px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#HelpAddForm").submit()');
         $response->Respond();
@@ -223,13 +243,19 @@ SQL;
         Theme::Set('form_action', 'index.php?p=help&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="HelpID" value="' . $helpId . '" />');
 
-        Theme::Set('topic', Kit::ValidateParam($row['Topic'], _STRING));
-        Theme::Set('category', Kit::ValidateParam($row['Category'], _STRING));
-        Theme::Set('link', Kit::ValidateParam($row['Link'], _STRING));
+        $formFields = array();
+        $formFields[] = FormManager::AddText('Topic', __('Topic'), Kit::ValidateParam($row['Topic'], _STRING), 
+            __('The Topic for this Help Link'), 't', 'maxlength="254" required');
 
-        $form = Theme::RenderReturn('help_form_edit');
+        $formFields[] = FormManager::AddText('Category', __('Category'), Kit::ValidateParam($row['Category'], _STRING), 
+            __('The Category for this Help Link'), 'c', 'maxlength="254" required');
 
-        $response->SetFormRequestResponse($form, __('Edit Help Link'), '350px', '325px');
+        $formFields[] = FormManager::AddText('Link', __('Link'), Kit::ValidateParam($row['Link'], _STRING), 
+            __('The Link to open for this help topic and category'), 'c', 'maxlength="254" required');
+
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Edit Help Link'), '350px', '325px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#HelpEditForm").submit()');
         $response->Respond();
@@ -249,9 +275,9 @@ SQL;
         Theme::Set('form_action', 'index.php?p=help&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="HelpID" value="' . $helpId . '" />');
 
-        $form = Theme::RenderReturn('help_form_delete');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
 
-        $response->SetFormRequestResponse($form, __('Delete Help Link'), '350px', '175px');
+        $response->SetFormRequestResponse(NULL, __('Delete Help Link'), '350px', '175px');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#HelpDeleteForm").submit()');
         $response->Respond();

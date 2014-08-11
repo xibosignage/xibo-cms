@@ -286,7 +286,7 @@ class Theme {
      */
     public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = null, $callBack = '', $classColumn = '', $styleColumn = '')
     {
-    	$list = '<select name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
+    	$list = '<select class="form-control" name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
 
         foreach ($listValues as $listItem)
         {

@@ -29,7 +29,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<button type="submit"><?php echo Theme::Translate('Export'); ?></button>
 </form>
 
-<p><?php echo Theme::Translate('Layouts Shown'); ?></p>
+<p class="sub-header"><?php echo Theme::Translate('Layouts Shown'); ?></p>
 <table class="table">
 	<thead>
 		<tr>
@@ -57,7 +57,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	</tbody>
 </table>
 
-<p><?php echo Theme::Translate('Library Media Shown'); ?></p>
+<p class="sub-header"><?php echo Theme::Translate('Library Media Shown'); ?></p>
 <table class="table">
 	<thead>
 		<tr>
@@ -85,7 +85,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	</tbody>
 </table>
 
-<p><?php echo Theme::Translate('Media on Layouts Shown'); ?></p>
+<p class="sub-header"><?php echo Theme::Translate('Media on Layouts Shown'); ?></p>
 <table class="table">
 	<thead>
 		<tr>

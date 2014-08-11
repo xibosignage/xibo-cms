@@ -69,7 +69,7 @@ class clock extends Module
     public function ModuleSettingsForm() {
         // Output any form fields (formatted via a Theme file)
         // These are appended to the bottom of the "Edit" form in Module Administration
-        return '';
+        return array();
     }
 
     /**
@@ -100,24 +100,50 @@ class clock extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
     
+        $formFields = array();
+
         // Offer a choice of clock type
-        Theme::Set('clockType_field_list', array(
-                array('clockTypeId' => '1', 'clockType' => 'Analogue'),
-                array('clockTypeId' => '2', 'clockType' => 'Digital'),
-                array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
-            ));
+        $formFields[] = FormManager::AddCombo(
+                    'clockTypeId', 
+                    __('Clock Type'), 
+                    NULL,
+                    array(
+                        array('clockTypeId' => '1', 'clockType' => 'Analogue'),
+                        array('clockTypeId' => '2', 'clockType' => 'Digital'),
+                        array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
+                    ),
+                    'clockTypeId',
+                    'clockType',
+                    __('Please select the type of clock to display.'), 
+                    'c');
 
-        // Any values for the form fields should be added to the theme here.
-        Theme::Set('theme_field_list', array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')));
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+            __('The duration in seconds this item should be displayed'), 'd', 'required');
 
-        // Set a default format
-        Theme::Set('format', '[HH:mm]');
+        // Offer a choice of theme
+        $formFields[] = FormManager::AddCombo(
+                    'themeid', 
+                    __('Theme'), 
+                    NULL,
+                    array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')),
+                    'themeid',
+                    'theme',
+                    __('Please select a theme for the clock.'), 
+                    't',
+                    'analogue-control-group');
 
-        // Dependencies (some fields should be shown/hidden)
+        $formFields[] = FormManager::AddMessage(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY].'), 'digital-control-group');
+        
+        $formFields[] = FormManager::AddMultiText('ta_text', NULL, '[HH:mm]', 
+            __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
+
+        Theme::Set('form_fields', $formFields);
+
+        // Dependencies (some fields should be shown / hidden)
         $this->SetFieldDependencies();
 
         // Modules should be rendered using the theme engine.
-        $this->response->html = Theme::RenderReturn('media_form_clock_add');
+        $this->response->html = Theme::RenderReturn('form_render');
 
         $this->response->dialogTitle = __('Add Clock');
         $this->response->callBack = 'text_callback';
@@ -181,11 +207,6 @@ class clock extends Module
         Theme::Set('form_id', 'ModuleForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $this->mediaid . '">');
-    
-        // Any values for the form fields should be added to the theme here.
-        Theme::Set('duration', $this->duration);
-        Theme::Set('theme', $this->GetOption('theme'));
-        Theme::Set('clockTypeId', $this->GetOption('clockTypeId'));
 
         // Extract the format from the raw node in the XLF
         $rawXml = new DOMDocument();
@@ -193,23 +214,50 @@ class clock extends Module
         $formatNodes = $rawXml->getElementsByTagName('format');
         $formatNode = $formatNodes->item(0);
 
-        if ($formatNode != NULL)
-            Theme::Set('format', $formatNode->nodeValue);
-
-        Theme::Set('theme_field_list', array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')));
+        $formFields = array();
 
         // Offer a choice of clock type
-        Theme::Set('clockType_field_list', array(
-                array('clockTypeId' => '1', 'clockType' => 'Analogue'),
-                array('clockTypeId' => '2', 'clockType' => 'Digital'),
-                array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
-            ));
+        $formFields[] = FormManager::AddCombo(
+                    'clockTypeId', 
+                    __('Clock Type'), 
+                    $this->GetOption('clockTypeId'),
+                    array(
+                        array('clockTypeId' => '1', 'clockType' => 'Analogue'),
+                        array('clockTypeId' => '2', 'clockType' => 'Digital'),
+                        array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
+                    ),
+                    'clockTypeId',
+                    'clockType',
+                    __('Please select the type of clock to display.'), 
+                    'c');
 
-        // Dependencies (some fields should be shown/hidden)
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+            __('The duration in seconds this item should be displayed'), 'd', 'required');
+
+        // Offer a choice of theme
+        $formFields[] = FormManager::AddCombo(
+                    'themeid', 
+                    __('Theme'), 
+                    $this->GetOption('theme'),
+                    array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')),
+                    'themeid',
+                    'theme',
+                    __('Please select a theme for the clock.'), 
+                    't',
+                    'analogue-control-group');
+
+        $formFields[] = FormManager::AddMessage(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY].'), 'digital-control-group');
+        
+        $formFields[] = FormManager::AddMultiText('ta_text', (($formatNode != NULL) ? $formatNode->nodeValue : ''), '[HH:mm]', 
+            __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
+
+        Theme::Set('form_fields', $formFields);
+
+        // Dependencies (some fields should be shown / hidden)
         $this->SetFieldDependencies();
 
         // Modules should be rendered using the theme engine.
-        $this->response->html = Theme::RenderReturn('media_form_clock_edit');
+        $this->response->html = Theme::RenderReturn('form_render');
 
         $this->response->dialogTitle = __('Edit Clock');
         $this->response->callBack = 'text_callback';

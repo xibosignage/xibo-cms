@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class oauthDAO
+class oauthDAO extends baseDAO
 {
     private $db;
     private $user;
@@ -39,13 +39,31 @@ class oauthDAO
         // Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
-        Theme::Set('application_form_add_url', 'index.php?p=oauth&q=RegisterForm');
-        Theme::Set('oauth_log_button_url', 'index.php?p=oauth&q=ViewLog');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="oauth"><input type="hidden" name="q" value="Grid">');
         Theme::Set('pager', ResponseManager::Pager($id));
 
         // Render the Theme and output
         Theme::Render('applications_page');
+    }
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Add Application'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=oauth&q=RegisterForm',
+                    'help' => __('Add an Application'),
+                    'onclick' => ''
+                    ),
+                array('title' => __('View Activity'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=oauth&q=ViewLog',
+                    'help' => __('View a log of application activity'),
+                    'onclick' => ''
+                    )
+            );                   
     }
 
     /**
@@ -202,9 +220,22 @@ class oauthDAO
         Theme::Set('form_id', 'RegisterOAuth');
         Theme::Set('form_action', 'index.php?p=oauth&q=Register');
 
-        $form = Theme::RenderReturn('application_form_register');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('requester_name', __('Full Name'), NULL, 
+            __('The name of the person or organization that authored this application.'), 'n', 'required');
 
-        $response->SetFormRequestResponse($form, __('Registration for Consumer Information'), '550px', '475px');
+        $formFields[] = FormManager::AddEmail('requester_email', __('Email Address'), NULL, 
+            __('The email address of the person or organization that authored this application.'), 'e', 'required');
+
+        $formFields[] = FormManager::AddText('application_uri', __('Application Homepage'), NULL, 
+            __('The URL of your application homepage'), 'h', '');
+
+        $formFields[] = FormManager::AddText('callback_uri', __('Application Homepage'), NULL, 
+            __('The call back URL for requests'), 'c', '');
+
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Registration for Consumer Information'), '550px', '475px');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Services&Category=Register')");
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Register'), '$("#RegisterOAuth").submit()');

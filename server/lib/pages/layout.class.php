@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class layoutDAO 
+class layoutDAO extends baseDAO 
 {
     private $db;
     private $user;
@@ -159,7 +159,37 @@ class layoutDAO
         }
         
         return false;
-    }   
+    }
+
+    function actionMenu() {
+
+        if ($this->sub_page != 'view')
+            return NULL;
+
+        return array(
+                array('title' => __('Filter'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Open the filter form'),
+                    'onclick' => 'ToggleFilterView(\'LayoutFilter\')'
+                    ),
+                array('title' => __('Add Layout'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=layout&q=displayForm',
+                    'help' => __('Add a new Layout and jump to the layout designer.'),
+                    'onclick' => ''
+                    ),
+                array('title' => __('Import'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=layout&q=ImportForm',
+                    'help' => __('Import a Layout from a ZIP file.'),
+                    'onclick' => ''
+                    )
+            );                   
+    }
 
     /**
      * Adds a layout record to the db
@@ -253,17 +283,18 @@ class layoutDAO
         if ($db->num_rows($results) == 0) 
         {
             // Delete the layout
-            $themeFile = 'layout_form_delete';
             Theme::Set('form_action', 'index.php?p=layout&q=delete');
+            Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this layout? All media will be unassigned. Any layout specific media such as text/rss will be lost.'))));
         }
         else 
         {
             // Retire the layout
-            $themeFile = 'layout_form_retire';
             Theme::Set('form_action', 'index.php?p=layout&q=retire');
+            Theme::Set('form_fields', array(FormManager::AddMessage(__('Sorry unable to delete this layout. Would you like to retire this layout instead?'))));
         }
 
-        $form = Theme::RenderReturn($themeFile);
+
+        $form = Theme::RenderReturn('form_render');
         
         $response->SetFormRequestResponse($form, __('Delete Layout'), '300px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Delete') . '")');
@@ -375,19 +406,19 @@ class layoutDAO
             switch ($layout['status']) {
 
                 case 1:
-                    $row['status'] = '<span title="' . __('This Layout is ready to play') . '" class="icon-ok-circle"></span>';
+                    $row['status'] = '<span title="' . __('This Layout is ready to play') . '" class="glyphicon glyphicon-ok-circle"></span>';
                     break;
 
                 case 2:
-                    $row['status'] = '<span title="' . __('There are items on this Layout that can only be assessed by the client') . '" class="icon-question-sign"></span>';
+                    $row['status'] = '<span title="' . __('There are items on this Layout that can only be assessed by the client') . '" class="glyphicon glyphicon-question-sign"></span>';
                     break;
 
                 case 3:
-                    $row['status'] = '<span title="' . __('This Layout is invalid and should not be scheduled') . '" class="icon-remove-sign"></span>';
+                    $row['status'] = '<span title="' . __('This Layout is invalid and should not be scheduled') . '" class="glyphicon glyphicon-remove-sign"></span>';
                     break;
 
                 default:
-                    $row['status'] = '<span title="' . __('The Status of this Layout is not known') . '" class="icon-warning-sign"></span>';
+                    $row['status'] = '<span title="' . __('The Status of this Layout is not known') . '" class="glyphicon glyphicon-warning-sign"></span>';
             }
 
             
@@ -483,43 +514,65 @@ class layoutDAO
         $user =& $this->user;
         $response = new ResponseManager();
         
-        Theme::Set('layoutid', $this->layoutid); 
-        Theme::Set('layout', $this->layout);
-        Theme::Set('description', $this->description);
-        Theme::Set('retired', $this->retired);
-        Theme::Set('tags', $this->tags);
         Theme::Set('form_id', 'LayoutForm');
+        
+        $formFields = array();
+        $formFields[] = FormManager::AddText('layout', __('Name'), $this->layout, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields[] = FormManager::AddText('description', __('Description'), $this->description, __('An optional description of the Layout. (1 - 250 characters)'), 'd', 'maxlength="250"');
+        $formFields[] = FormManager::AddText('tags', __('Tags'), $this->tags, __('Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
 
-        if ($this->layoutid != '')
-        {
+        if ($this->layoutid != '') {
             // We are editing
-            $theme = 'layout_form_edit';
             Theme::Set('form_action', 'index.php?p=layout&q=modify');
             Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '">');
-            
-            // build the retired option
-            Theme::Set('retired_field_list', array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')));
+
+            $formFields[] = FormManager::AddCombo(
+                    'retired', 
+                    __('Retired'), 
+                    $this->retired,
+                    array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')),
+                    'retiredid',
+                    'retired',
+                    __('Retire this layout or not? It will no longer be visible in lists'), 
+                    'r');
         }
         else
         {
             // We are adding
-            $theme = 'layout_form_add';
             Theme::Set('form_action', 'index.php?p=layout&q=add');
 
             $templates = $user->TemplateList();
             array_unshift($templates, array('templateid' => '0', 'template' => 'None'));
-                    
-            Theme::Set('template_field_list', $templates);
 
-            // List of resolutions.
-            Theme::Set('resolution_field_list', $user->ResolutionList());
+            $formFields[] = FormManager::AddCombo(
+                    'templateid', 
+                    __('Template'), 
+                    NULL,
+                    $templates,
+                    'templateid',
+                    'template',
+                    __('Optionally choose a template you have saved before.'), 
+                    't');
 
-            $response->AddFieldAction('templateid', 'change', 0, array('.resolution-control-group' => array('display' => 'block')));
-            $response->AddFieldAction('templateid', 'change', 0, array('.resolution-control-group' => array('display' => 'none')), "not");
+            $formFields[] = FormManager::AddCombo(
+                    'resolutionid', 
+                    __('Resolution'), 
+                    NULL,
+                    $user->ResolutionList(),
+                    'resolutionid',
+                    'resolution',
+                    __('Choose the resolution this Layout should be designed for.'), 
+                    'r',
+                    'resolution-group');
+
+            $response->AddFieldAction('templateid', 'change', 0, array('.resolution-group' => array('display' => 'block')));
+            $response->AddFieldAction('templateid', 'change', 0, array('.resolution-group' => array('display' => 'none')), "not");
         }
 
+        Theme::Set('form_fields', $formFields);
+
         // Initialise the template and capture the output
-        $form = Theme::RenderReturn($theme);
+        $form = Theme::RenderReturn('form_render');
 
         $dialogTitle = ($this->layoutid == 0) ? __('Add Layout') : __('Edit Layout');
 
@@ -567,7 +620,7 @@ class layoutDAO
             $bgImageInfo = explode('.', $backgroundImage);
             $bgImageId = $bgImageInfo[0];
 
-            $thumbBgImage = "index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=$bgImageId&width=80&height=80&dynamic";
+            $thumbBgImage = "index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=$bgImageId&width=200&height=200&dynamic";
         }
         else
         {
@@ -578,19 +631,6 @@ class layoutDAO
         Theme::Set('form_id', 'LayoutBackgroundForm');
         Theme::Set('form_action', 'index.php?p=layout&q=EditBackground');
         Theme::Set('form_meta', '<input type="hidden" id="layoutid" name="layoutid" value="' . $this->layoutid . '">');
-        Theme::Set('background_thumbnail_url', $thumbBgImage);
-
-        // A list of available backgrounds
-        $backgrounds = $user->MediaList('image');
-        array_unshift($backgrounds, array('mediaid' => '0', 'media' => 'None'));
-
-        Theme::Set('background_image_list', $backgrounds);
-        Theme::Set('background_id', $bgImageId);
-        
-        // A list of web safe colors
-        // Strip the # from the currently set color
-        Theme::Set('background_color', trim($backgroundColor,'#'));
-        Theme::Set('background_color_list', gwsc());
         
         // Get the ID of the current resolution
         if ($resolutionid == 0) {
@@ -603,13 +643,48 @@ class layoutDAO
             }
         }
         
-        Theme::Set('resolutionid', $resolutionid);
-        Theme::Set('resolution_field_list', $user->ResolutionList(NULL, array('withCurrent' => $resolutionid)));
-        
         // Begin the form output
-        $form = Theme::RenderReturn('layout_form_background');
+        $formFields = array();
 
-        $response->SetFormRequestResponse($form, __('Change the Background Properties'), '550px', '240px');
+        // A list of web safe colours
+        $formFields[] = FormManager::AddCombo(
+                    'bg_color', 
+                    __('Background Colour'), 
+                    trim($backgroundColor,'#'),
+                    gwsc(),
+                    'colorid',
+                    'color',
+                    __('Use the colour picker to select the background colour'), 
+                    'c', '', true, '', 'style');
+
+        // A list of available backgrounds
+        $backgrounds = $user->MediaList('image');
+        array_unshift($backgrounds, array('mediaid' => '0', 'media' => 'None'));
+
+        $formFields[] = FormManager::AddCombo(
+                    'bg_image', 
+                    __('Background Image'), 
+                    $bgImageId,
+                    $backgrounds,
+                    'mediaid',
+                    'media',
+                    __('Select the background image from the library'), 
+                    'b', '', true, 'onchange="background_button_callback()"');
+
+        $formFields[] = FormManager::AddCombo(
+                    'resolutionid', 
+                    __('Resolution'), 
+                    $resolutionid,
+                    $user->ResolutionList(NULL, array('withCurrent' => $resolutionid)),
+                    'resolutionid',
+                    'resolution',
+                    __('Change the resolution'), 
+                    'r');
+
+        Theme::Set('append', '<img id="bg_image_image" src="' . $thumbBgImage . '" alt="' . __('Background thumbnail') . '" />');
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Change the Background Properties'), '550px', '240px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Background') . '")');
         $response->AddButton(__('Add Image'), 'XiboFormRender("index.php?p=module&q=Exec&mod=image&method=AddForm&backgroundImage=true&layoutid=' . $this->layoutid . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
@@ -807,16 +882,21 @@ HTML;
 
         $layout = $user->LayoutList(NULL, array('layoutId' => $layoutid));
 
-        $copyMediaChecked = (Config::GetSetting('LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 'checked' : '';
+        $copyMediaChecked = (Config::GetSetting('LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 1 : 0;
 
         Theme::Set('form_id', 'LayoutCopyForm');
         Theme::Set('form_action', 'index.php?p=layout&q=Copy');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
-        Theme::Set('copy_media_checked', $copyMediaChecked);
-        Theme::Set('new_layout_default', $layout[0]['layout'] . ' 2');
-        Theme::Set('new_description_default', $layout[0]['description']);
 
-        $form = Theme::RenderReturn('layout_form_copy');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('layout', __('Name'), $layout[0]['layout'] . ' 2', __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields[] = FormManager::AddText('description', __('Description'), $layout[0]['description'], __('An optional description of the Layout. (1 - 250 characters)'), 'd', 'maxlength="250"');
+        $formFields[] = FormManager::AddCheckbox('copyMediaFiles', __('Make new copies of all media on this layout?'), $copyMediaChecked, 
+            __('This will duplicate all media that is currently assigned to the Layout being copied.'), 'c');
+
+        Theme::Set('form_fields', $formFields);
+
+        $form = Theme::RenderReturn('form_render');
 
         $response->SetFormRequestResponse($form, __('Copy a Layout.'), '350px', '275px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Copy') . '")');
@@ -982,19 +1062,19 @@ HTML;
         switch ($layout->IsValid($layoutId)) {
 
             case 1:
-                $status = '<span title="' . __('This Layout is ready to play') . '" class="icon-ok-circle"></span>';
+                $status = '<span title="' . __('This Layout is ready to play') . '" class="glyphicon glyphicon-ok-circle"></span>';
                 break;
 
             case 2:
-                $status = '<span title="' . __('There are items on this Layout that can only be assessed by the client') . '" class="icon-question-sign"></span>';
+                $status = '<span title="' . __('There are items on this Layout that can only be assessed by the client') . '" class="glyphicon glyphicon-question-sign"></span>';
                 break;
 
             case 3:
-                $status = '<span title="' . __('This Layout is invalid and should not be scheduled') . '" class="icon-remove-sign"></span>';
+                $status = '<span title="' . __('This Layout is invalid and should not be scheduled') . '" class="glyphicon glyphicon-remove-sign"></span>';
                 break;
 
             default:
-                $status = '<span title="' . __('The Status of this Layout is not known') . '" class="icon-warning-sign"></span>';
+                $status = '<span title="' . __('The Status of this Layout is not known') . '" class="glyphicon glyphicon-warning-sign"></span>';
         }
 
         $response->html = $status;

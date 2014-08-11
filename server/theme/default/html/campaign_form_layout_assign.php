@@ -31,7 +31,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<div>
     	<ul id="LayoutAssignSortable">
     		<?php foreach(Theme::Get('layouts_assigned') as $row) { ?>
-    		<li id="<?php echo $row['list_id']; ?>" class="li-sortable"><?php echo $row['layout']; ?><span class="icon-minus-sign"></span></li>
+    		<li id="<?php echo $row['list_id']; ?>" class="li-sortable"><?php echo $row['layout']; ?><span class="glyphicon glyphicon-minus-sign"></span></li>
 			<?php } ?>
     	</ul>
     </div>
@@ -45,7 +45,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<table class="filterform">
 					<tr>
 						<td><?php echo Theme::Translate('Name') ?></td>
-						<td><input type="text" name="filter_name" value="<?php echo Theme::Get('filter_name'); ?>"></td>
+						<td><input class="form-control" type="text" name="filter_name" value="<?php echo Theme::Get('filter_name'); ?>"></td>
 					</tr>
 				</table>
 			</form>

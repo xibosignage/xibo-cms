@@ -152,6 +152,9 @@ class ResponseManager
 	 */
 	public function SetFormRequestResponse($form, $title, $width = '', $height = '', $callBack = '')
 	{
+		if ($form == NULL)
+			$form = Theme::RenderReturn('form_render');
+
 		$this->html 					= $form;
 		$this->dialogTitle 				= $title;
 		$this->callBack 				= $callBack;
@@ -351,12 +354,10 @@ class ResponseManager
 		return;
 	}
         
-    public static function Pager($id)
-    {
+    public static function Pager($id, $type = 'grid_pager') {
         Theme::Set('pager_id', 'XiboPager_' . $id);
         
-        return Theme::RenderReturn('grid_pager');
+        return Theme::RenderReturn($type);
     }
 }
-
 ?>

@@ -44,26 +44,19 @@ class localvideo extends Module
         $rWidth = Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight = Kit::GetParam('rHeight', _REQUEST, _STRING);
 
-        $msgDuration = __('Duration');
-        $msgVideoPath = __('Video Path');
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+        
+        $formFields = array();
+        
+        $formFields[] = FormManager::AddText('uri', __('Video Path'), NULL, 
+            __('A local file path or URL to the video. This can be a RTSP stream.'), 'p', 'required');
 
-        $this->response->html = <<<FORM
-            <form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=AddMedia">
-                <input type="hidden" name="layoutid" value="$layoutid">
-                <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-                <table>
-                    <tr>
-                        <td><label for="uri" title="$msgVideoPath">$msgVideoPath<span class="required">*</span></label></td>
-                        <td><input id="uri" name="uri" type="text" class="required"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="duration" title="$msgDuration">$msgDuration<span class="required">*</span></label></td>
-                        <td><input id="duration" name="duration" type="text" class="numeric required"></td>
-                    </tr>
-                </table>
-            </form>
-FORM;
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+            __('The duration in seconds this counter should be displayed'), 'd', 'required');
+
+        Theme::Set('form_fields', $formFields);
 
         if ($this->showRegionOptions)
         {
@@ -74,6 +67,7 @@ FORM;
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
 
+        $this->response->html = Theme::RenderReturn('form_render');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
         $this->response->dialogTitle = __('Add Local Video');
         $this->response->dialogSize 	= true;
@@ -102,33 +96,20 @@ FORM;
             $this->response->keepOpen = true;
             return $this->response;
         }
-		
-        $direction = $this->GetOption('direction');
-        $uri = urldecode($this->GetOption('uri'));
-                
-        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
 
-        $msgDuration = __('Duration');
-        $msgVideoPath = __('Video Path');
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
+        
+        $formFields = array();
+        
+        $formFields[] = FormManager::AddText('uri', __('Video Path'), urldecode($this->GetOption('uri')), 
+            __('A local file path or URL to the video. This can be a RTSP stream.'), 'p', 'required');
 
-        $this->response->html = <<<FORM
-            <form id="ModuleForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=EditMedia">
-                <input type="hidden" name="layoutid" value="$layoutid">
-                <input type="hidden" id="iRegionId" name="regionid" value="$regionid">
-                <input type="hidden" name="mediaid" value="$mediaid">
-                <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" />
-                <table>
-                    <tr>
-                        <td><label for="uri" title="$msgVideoPath">$msgVideoPath<span class="required">*</span></label></td>
-                        <td><input id="uri" name="uri" value="$uri" type="text" class="required"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="duration" title="$msgDuration">$msgDuration<span class="required">*</span></label></td>
-                        <td><input id="duration" name="duration" value="$this->duration" type="text" class="numeric required"></td>
-                    </tr>
-                </table>
-            </form>
-FORM;
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+            __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
+
+        Theme::Set('form_fields', $formFields);
 		
         if ($this->showRegionOptions)
         {
@@ -139,6 +120,7 @@ FORM;
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
         
+        $this->response->html = Theme::RenderReturn('form_render');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
         $this->response->dialogTitle = __('Edit Local Video');
         $this->response->dialogSize 	= true;

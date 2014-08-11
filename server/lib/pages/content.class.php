@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class contentDAO 
+class contentDAO extends baseDAO 
 {
 	private $db;
 	private $user;
@@ -54,8 +54,6 @@ class contentDAO
             Theme::Set('filter_retired', 0);
 			Theme::Set('filter_duration_in_seconds', 0);
         }
-		
-    	Theme::Set('library_form_add_url', 'index.php?p=content&q=displayForms');
 
 		$id = uniqid();
 		Theme::Set('id', $id);
@@ -77,6 +75,26 @@ class contentDAO
 		// Call to render the template
 		Theme::Render('library_page');
 	}
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Filter'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Open the filter form'),
+                    'onclick' => 'ToggleFilterView(\'Filter\')'
+                    ),
+                array('title' => __('Add Media'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=content&q=displayForms',
+                    'help' => __('Add a new media item to the library'),
+                    'onclick' => ''
+                    )
+            );                   
+    }
 	
 	/**
 	 * Prints out a Table of all media items
@@ -234,7 +252,7 @@ class contentDAO
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryAssignView">');
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ResponseManager::Pager($id, 'form_grid_pager'));
         
         // Module types filter
         $modules = $this->user->ModuleAuth(0, '', 1);

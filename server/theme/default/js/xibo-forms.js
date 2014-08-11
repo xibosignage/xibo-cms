@@ -31,27 +31,6 @@ var text_callback = function(dialog)
     return false;
 }
 
-var microblog_callback = function(dialog)
-{
-    // Conjure up a text editor
-    CKEDITOR.replace("ta_template");
-    CKEDITOR.replace("ta_nocontent");
-    CKEDITOR.config.contentsCss = 'body {background-color:' + $('#layout').css('background-color'); + ';}';
-
-    // Make sure when we close the dialog we also destroy the editor
-    dialog.on("hide", function() {
-        if (CKEDITOR.instances["ta_template"] != undefined) {
-            CKEDITOR.instances["ta_template"].destroy();
-        }
-        
-        if (CKEDITOR.instances["ta_nocontent"] != undefined) {
-            CKEDITOR.instances["ta_nocontent"].destroy();
-        }
-    });
-
-    return false;
-}
-
 var datasetview_callback = function(dialog)
 {
     $("#columnsIn, #columnsOut").sortable({
@@ -122,7 +101,7 @@ var LayoutAssignCallback = function()
 
         // Add a span to that new item
         $("<span/>", {
-            "class": "icon-minus-sign",
+            "class": "glyphicon glyphicon-minus-sign",
             click: function(){
                 $(this).parent().remove();
             }
@@ -355,7 +334,7 @@ var FileAssociationsCallback = function()
 
         // Add a span to that new item
         $("<span/>", {
-            "class": "icon-minus-sign",
+            "class": "glyphicon glyphicon-minus-sign",
             click: function(){
                 $(this).parent().remove();
                 $(".modal-body .XiboGrid").each(function(){
@@ -374,7 +353,7 @@ var FileAssociationsCallback = function()
     });
 
     // Attach a click handler to all of the little points in the trough
-    $("#FileAssociationsSortable li .icon-minus-sign").click(function() {
+    $("#FileAssociationsSortable li .glyphicon-minus-sign").click(function() {
 
         // Remove this and refresh the table
         $(this).parent().remove();

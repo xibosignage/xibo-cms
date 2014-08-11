@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class transitionDAO 
+class transitionDAO extends baseDAO 
 {
 	private $db;
 	private $user;
@@ -86,13 +86,13 @@ class transitionDAO
             $row['transitionid'] = Kit::ValidateParam($transition['TransitionID'], _INT);
             $row['name'] = Kit::ValidateParam($transition['Transition'], _STRING);
             $row['hasduration'] = Kit::ValidateParam($transition['HasDuration'], _INT);
-            $row['hasduration_image'] = ($row['hasduration'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['hasduration_image'] = ($row['hasduration'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
             $row['hasdirection'] = Kit::ValidateParam($transition['HasDirection'], _INT);
-            $row['hasdirection_image'] = ($row['hasdirection'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['hasdirection_image'] = ($row['hasdirection'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
             $row['enabledforin'] = Kit::ValidateParam($transition['AvailableAsIn'], _INT);
-            $row['enabledforin_image'] = ($row['enabledforin'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['enabledforin_image'] = ($row['enabledforin'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
             $row['enabledforout'] = Kit::ValidateParam($transition['AvailableAsOut'], _INT);
-            $row['enabledforout_image'] = ($row['enabledforout'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['enabledforout_image'] = ($row['enabledforout'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
 
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();
@@ -148,18 +148,26 @@ class transitionDAO
             trigger_error(__('Error getting Transition'));
         }
 
-        $name = Kit::ValidateParam($row['Transition'], _STRING);
-        Theme::Set('enabledforin_checked', ((Kit::ValidateParam($row['AvailableAsIn'], _INT) == 1) ? 'Checked' : ''));
-        Theme::Set('enabledforout_checked', ((Kit::ValidateParam($row['AvailableAsOut'], _INT) == 1) ? 'Checked' : ''));        
+        $name = Kit::ValidateParam($row['Transition'], _STRING);      
 
         // Set some information about the form
         Theme::Set('form_id', 'TransitionEditForm');
         Theme::Set('form_action', 'index.php?p=transition&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="TransitionID" value="'. $transitionId . '" />');
         
-        $form = Theme::RenderReturn('transition_form_edit');
+        $formFields = array();
+        
+        $formFields[] = FormManager::AddCheckbox('EnabledForIn', __('Available for In Transitions?'), 
+            Kit::ValidateParam($row['AvailableAsIn'], _INT), __('Can this transition be used for media start?'), 
+            'i');
+        
+        $formFields[] = FormManager::AddCheckbox('EnabledForOut', __('Available for Out Transitions?'), 
+            Kit::ValidateParam($row['AvailableAsOut'], _INT), __('Can this transition be used for media end?'), 
+            'o');
 
-        $response->SetFormRequestResponse($form, sprintf(__('Edit %s'), $name), '350px', '325px');
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, sprintf(__('Edit %s'), $name), '350px', '325px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Transition', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#TransitionEditForm").submit()');

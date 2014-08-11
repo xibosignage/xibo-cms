@@ -50,22 +50,17 @@
   }
 
 /* Define some modal widths and heights */
-body .modal-big {
+.modal-big .modal-dialog {
     width:80%;
-    margin-left:-40%;
 }
 
 /* Define some modal widths and heights */
-body .help-modal-big {
-    height: 70%;
+.help-modal-big .modal-dialog {
+    height: 700px;
 }
 
-/*body .modal-big .modal-body {
-    max-height: 500px;
-}*/
-
 @media (max-width: 767px) {
-    body .modal-big {
+    .modal-big .modal-dialog {
         width: auto;
         margin-left: auto;
     }
@@ -78,18 +73,9 @@ body .help-modal-big {
 }
 
 /* Some small tweaks for the validation plugin to work nicely with bootstrap */
-label.valid {
-  width: 24px;
-  height: 24px;
-  display: inline-block;
-  text-indent: -9999px;
-}
-
-label.error {
+span.error {
   font-weight: bold;
   color: red;
-  padding: 2px 8px;
-  margin-top: 2px;
 }
 
 /* Layout Jump List */
@@ -255,4 +241,12 @@ ul#FileAssociationsSortable {
     cursor: pointer;
     float: left;
     list-style: none;
+}
+
+.form-error {
+  margin-top: 10px;
+}
+
+.tab-pane {
+  padding-top: 15px;
 }

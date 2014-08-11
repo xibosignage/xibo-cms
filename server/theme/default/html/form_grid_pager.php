@@ -19,13 +19,23 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Theme variables:
- *  form_id = The ID of the Form
- * 	form_action = The URL for calling the Layout Add Transaction
- * 	form_meta = Additional form meta data
+ * 	pager_id = The ID of this pager control
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
-	<?php echo Theme::Get('form_meta'); ?>
-	<p><?php echo Theme::Translate('Are you sure you want to delete this layout? All media will be unassigned. Any layout specific media such as text/rss will be lost.'); ?></p>
-</form>
+<div class="pagination" id="<?php echo Theme::Get('pager_id'); ?>">
+    <form class="form-inline">
+        <span class="first glyphicon glyphicon-fast-backward"></span>
+        <span class="prev glyphicon glyphicon-step-backward"></span>
+        <input type="text" class="form-control pagedisplay"/>
+        <span class="next glyphicon glyphicon-step-forward"></span>
+        <span class="last glyphicon glyphicon-fast-forward"></span>
+        <select class="form-control pagesize input-mini">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+            <option value="40">40</option>
+        </select>
+    </form>
+</div>

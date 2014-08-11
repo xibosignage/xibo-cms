@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.');
 
-class datasetDAO
+class datasetDAO extends baseDAO
 {
     private $db;
     private $user;
@@ -41,10 +41,10 @@ class datasetDAO
 
         // Configure the theme
         $id = uniqid();
-        Theme::Set('id', $id);
         
         // Different pages for data entry and admin    
         if ($subpage == 'DataEntry') {
+            Theme::Set('id', 'DataEntryGrid');
             $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
             $dataSet = Kit::GetParam('dataset', _GET, _STRING);
             
@@ -55,13 +55,40 @@ class datasetDAO
         else {
             $id = uniqid();
             Theme::Set('id', $id);
-            Theme::Set('dataset_form_add_url', 'index.php?p=dataset&q=AddDataSetForm');
             Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetGrid">');
             Theme::Set('pager', ResponseManager::Pager($id));
 
             // Render the Theme and output
             Theme::Render('dataset_page');
         }
+    }
+
+    function actionMenu() {
+
+        if (Kit::GetParam('sp', _GET, _WORD, 'view') == 'view') {
+            return array(
+                array('title' => __('Add DataSet'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=dataset&q=AddDataSetForm',
+                    'help' => __('Add a new DataSet'),
+                    'onclick' => ''
+                    )
+            );
+        }
+        else if (Kit::GetParam('sp', _GET, _WORD, 'view') == 'DataEntry') {
+            return array(
+                array('title' => __('More Rows'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Add more rows to the end of this DataSet'),
+                    'onclick' => 'XiboGridRender(\'DataEntryGrid\')'
+                    )
+            );
+        }
+        else
+            return NULL;
     }
 
     public function DataSetGrid()
@@ -151,9 +178,16 @@ class datasetDAO
         Theme::Set('form_id', 'AddDataSetForm');
         Theme::Set('form_action', 'index.php?p=dataset&q=AddDataSet');
 
-        $form = Theme::RenderReturn('dataset_form_add');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('dataset', __('Name'), NULL, 
+            __('A name for this DataSet'), 'n', 'required');
 
-        $response->SetFormRequestResponse($form, __('Add DataSet'), '350px', '275px');
+        $formFields[] = FormManager::AddText('description', __('Description'), NULL, 
+            __('An optional description'), 'd', 'maxlength="250"');
+        
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Add DataSet'), '350px', '275px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Add'), '$("#AddDataSetForm").submit()');
@@ -211,12 +245,16 @@ class datasetDAO
         Theme::Set('form_action', 'index.php?p=dataset&q=EditDataSet');
         Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
-        Theme::Set('dataset', Kit::ValidateParam($row['DataSet'], _STRING));
-        Theme::Set('description', Kit::ValidateParam($row['Description'], _STRING));
+        $formFields = array();
+        $formFields[] = FormManager::AddText('dataset', __('Name'), Kit::ValidateParam($row['DataSet'], _STRING), 
+            __('A name for this DataSet'), 'n', 'required');
 
-        $form = Theme::RenderReturn('dataset_form_edit');
+        $formFields[] = FormManager::AddText('description', __('Description'), Kit::ValidateParam($row['Description'], _STRING), 
+            __('An optional description'), 'd', 'maxlength="250"');
+        
+        Theme::Set('form_fields', $formFields);
 
-        $response->SetFormRequestResponse($form, __('Edit DataSet'), '350px', '275px');
+        $response->SetFormRequestResponse(NULL, __('Edit DataSet'), '350px', '275px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Edit'), '$("#EditDataSetForm").submit()');
@@ -270,9 +308,9 @@ class datasetDAO
         Theme::Set('form_action', 'index.php?p=dataset&q=DeleteDataSet');
         Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
-        $form = Theme::RenderReturn('dataset_form_delete');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
 
-        $response->SetFormRequestResponse($form, __('Delete this DataSet?'), '350px', '200px');
+        $response->SetFormRequestResponse(NULL, __('Delete this DataSet?'), '350px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'Delete') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Delete'), '$("#DataSetDeleteForm").submit()');
@@ -393,13 +431,33 @@ class datasetDAO
         Theme::Set('form_action', 'index.php?p=dataset&q=AddDataSetColumn');
         Theme::Set('form_meta', '<input type="hidden" name="dataset" value="' . $dataSet . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
         
-        // Dropdown list for DataType and DataColumnType
-        Theme::Set('datatype_field_list', $db->GetArray('SELECT datatypeid, datatype FROM datatype'));
-        Theme::Set('datasetcolumntype_field_list', $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'));
+        $formFields = array();
+        $formFields[] = FormManager::AddText('heading', __('Heading'), NULL, __('The heading for this Column'), 'h', 'required');
+        $formFields[] = FormManager::AddCombo(
+                    'datasetcolumntypeid', 
+                    __('Column Type'), 
+                    NULL,
+                    $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'),
+                    'datasetcolumntypeid',
+                    'datasetcolumntype',
+                    __('Whether this column is a value or a formula'), 
+                    't');
+        $formFields[] = FormManager::AddCombo(
+                    'datatypeid', 
+                    __('Data Type'), 
+                    NULL,
+                    $db->GetArray('SELECT datatypeid, datatype FROM datatype'),
+                    'datatypeid',
+                    'datatype',
+                    __('The DataType of the Intended Data'), 
+                    'd');
+        $formFields[] = FormManager::AddText('listcontent', __('List Content'), NULL, __('A comma separated list of items to present in a combo box'), 'l', '');
+        $formFields[] = FormManager::AddNumber('columnorder', __('Column Order'), NULL, __('The order this column should be displayed in when entering data'), 'o', '');
+        $formFields[] = FormManager::AddText('formula', __('Formula'), NULL, __('A formula to use as a calculation for formula column types'), 'f', '');
+        
+        Theme::Set('form_fields', $formFields);
 
-        $form = Theme::RenderReturn('dataset_form_column_add');
-
-        $response->SetFormRequestResponse($form, __('Add Column'), '350px', '200px');
+        $response->SetFormRequestResponse(NULL, __('Add Column'), '350px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'AddColumn') . '")');
         $response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
         $response->AddButton(__('Save'), '$("#DataSetColumnAddForm").submit()');
@@ -470,16 +528,42 @@ class datasetDAO
         Theme::Set('datatype_field_list', $db->GetArray('SELECT datatypeid, datatype FROM datatype'));
         Theme::Set('datasetcolumntype_field_list', $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'));
 
-        Theme::Set('heading',  Kit::ValidateParam($row['Heading'], _STRING));
-        Theme::Set('listcontent',  Kit::ValidateParam($row['ListContent'], _STRING));
-        Theme::Set('columnorder',  Kit::ValidateParam($row['ColumnOrder'], _INT));
-        Theme::Set('datatypeid',  Kit::ValidateParam($row['DataTypeID'], _INT));
-        Theme::Set('datasetcolumntypeid',  Kit::ValidateParam($row['DataSetColumnTypeID'], _INT));
-        Theme::Set('formula',  Kit::ValidateParam($row['Formula'], _STRING));
+        $formFields = array();
+        $formFields[] = FormManager::AddText('heading', __('Heading'), Kit::ValidateParam($row['Heading'], _STRING), 
+            __('The heading for this Column'), 'h', 'required');
 
-        $form = Theme::RenderReturn('dataset_form_column_edit');
+        $formFields[] = FormManager::AddCombo(
+                    'datasetcolumntypeid', 
+                    __('Column Type'), 
+                    Kit::ValidateParam($row['DataSetColumnTypeID'], _INT),
+                    $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'),
+                    'datasetcolumntypeid',
+                    'datasetcolumntype',
+                    __('Whether this column is a value or a formula'), 
+                    't');
 
-        $response->SetFormRequestResponse($form, __('Edit Column'), '350px', '200px');
+        $formFields[] = FormManager::AddCombo(
+                    'datatypeid', 
+                    __('Data Type'), 
+                    Kit::ValidateParam($row['DataTypeID'], _INT),
+                    $db->GetArray('SELECT datatypeid, datatype FROM datatype'),
+                    'datatypeid',
+                    'datatype',
+                    __('The DataType of the Intended Data'), 
+                    'd');
+
+        $formFields[] = FormManager::AddText('listcontent', __('List Content'), Kit::ValidateParam($row['ListContent'], _STRING), 
+            __('A comma separated list of items to present in a combo box'), 'l', '');
+
+        $formFields[] = FormManager::AddNumber('columnorder', __('Column Order'), Kit::ValidateParam($row['ColumnOrder'], _INT), 
+            __('The order this column should be displayed in when entering data'), 'o', '');
+
+        $formFields[] = FormManager::AddText('formula', __('Formula'), Kit::ValidateParam($row['Formula'], _STRING), 
+            __('A formula to use as a calculation for formula column types'), 'f', '');
+        
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Edit Column'), '350px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'EditColumn') . '")');
         $response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
         $response->AddButton(__('Save'), '$("#DataSetColumnEditForm").submit()');
@@ -542,9 +626,9 @@ class datasetDAO
         Theme::Set('form_action', 'index.php?p=dataset&q=DeleteDataSetColumn');
         Theme::Set('form_meta', '<input type="hidden" name="dataset" value="' . $dataSet . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '" /><input type="hidden" name="datasetcolumnid" value="' . $dataSetColumnId . '" />');
 
-        $form = Theme::RenderReturn('dataset_form_column_delete');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
 
-        $response->SetFormRequestResponse($form, __('Delete this Column?'), '350px', '200px');
+        $response->SetFormRequestResponse(NULL, __('Delete this Column?'), '350px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'DeleteColumn') . '")');
         $response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
         $response->AddButton(__('Delete'), '$("#DataSetColumnDeleteForm").submit()');
@@ -689,7 +773,7 @@ class datasetDAO
                 {
                     $listItems = explode(',', $listContent);
                     $selected = ($value == '') ? ' selected' : '';
-                    $select = '<select name="value">';
+                    $select = '<select class="form-control" name="value">';
                     $select.= '     <option value="" ' . $selected . '></option>';
 
                     for ($i=0; $i < count($listItems); $i++)
@@ -704,13 +788,13 @@ class datasetDAO
                 else
                 {
                     // Numbers are always small
-                    $size = ($dataTypeId == 2) ? ' class="input-mini"' : '';
+                    $size = ($dataTypeId == 2) ? ' class="form-control col-sm-3"' : '';
 
                     if ($dataTypeId == 1) {
                         // Strings should be based on something - not sure what.
                     }
 
-                    $select = '<input type="text" class="' . $size . '" name="value" value="' . $value . '">';
+                    $select = '<input type="text" class="form-control ' . $size . '" name="value" value="' . $value . '">';
                 }
 
                 $action = ($value == '') ? 'AddDataSetData' : 'EditDataSetData';
@@ -902,11 +986,12 @@ END;
             $checkboxes[] = $checkbox;
         }
 
-        Theme::Set('form_rows', $checkboxes);
+        $formFields = array();
+        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
+        
+        Theme::Set('form_fields', $formFields);
 
-        $form = Theme::RenderReturn('dataset_form_permissions');
-
-        $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
+        $response->SetFormRequestResponse(NULL, __('Permissions'), '350px', '500px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Permissions') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DataSetPermissionsForm").submit()');

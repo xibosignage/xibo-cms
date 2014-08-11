@@ -537,7 +537,7 @@ class Kit
      */
     public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = '', $callBack = '', $classColumn = '')
     {
-        $list = '<select name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
+        $list = '<select class="form-control" name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
 
         foreach ($listValues as $listItem)
         {

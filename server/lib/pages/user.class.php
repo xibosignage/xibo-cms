@@ -20,7 +20,7 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class userDAO 
+class userDAO extends baseDAO 
 {
 	private $db;
 	private $user;
@@ -53,10 +53,6 @@ class userDAO
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
-        // Button URL's
-        Theme::Set('user_form_add_url', 'index.php?p=user&q=DisplayForm');
-        Theme::Set('myapplications_form_add_url', 'index.php?p=user&q=MyApplications');
-
         if (Kit::IsFilterPinned('user', 'Filter')) {
             Theme::Set('filter_pinned', 'checked');
             Theme::Set('filter_username', Session::Get('user', 'filter_username'));
@@ -73,6 +69,33 @@ class userDAO
 
         // Render the Theme and output
         Theme::Render('user_page');
+    }
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Add User'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=user&q=DisplayForm',
+                    'help' => __('Add a new User'),
+                    'onclick' => ''
+                    ),
+                array('title' => __('My Applications'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=user&q=MyApplications',
+                    'help' => __('View my authenticated applications'),
+                    'onclick' => ''
+                    ),
+                array('title' => __('Filter'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Open the filter form'),
+                    'onclick' => 'ToggleFilterView(\'Filter\')'
+                    )
+            );                   
     }
 
     /**
@@ -212,8 +235,8 @@ class userDAO
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $username = Kit::GetParam('username', _POST, _STRING);
-        $password = Kit::GetParam('password', _POST, _STRING);
+        $username = Kit::GetParam('edit_username', _POST, _STRING);
+        $password = Kit::GetParam('edit_password', _POST, _STRING);
         $email = Kit::GetParam('email', _POST, _STRING);
         $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT);
         $homepage = Kit::GetParam('homepage', _POST, _STRING);
@@ -303,8 +326,8 @@ class userDAO
         $response	= new ResponseManager();
 
         $userID	= Kit::GetParam('userid', _POST, _INT, 0);
-        $username   = Kit::GetParam('username', _POST, _STRING);
-        $email      = Kit::GetParam('email', _POST, _STRING);
+        $username   = Kit::GetParam('edit_username', _POST, _STRING);
+        $email      = Kit::GetParam('edit_email', _POST, _STRING);
         $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT, 0);
         $homepage   = Kit::GetParam('homepage', _POST, _STRING, 'dashboard');
         $retired = Kit::GetParam('retired', _POST, _CHECKBOX);
@@ -466,9 +489,12 @@ class userDAO
 
         // Set some information about the form
         Theme::Set('form_id', 'UserForm');
-        
+
+        // Are we an edit?
         if ($userid != 0) {
 
+            $form_title = 'Edit Form';
+            $form_help_link = HelpManager::Link('User', 'Edit');
             Theme::Set('form_action', 'index.php?p=user&q=EditUser');
             Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userid . '" />');
 
@@ -489,20 +515,22 @@ class userDAO
                 trigger_error(__('Error getting user information.'), E_USER_ERROR);
             }
 
-            Theme::Set('username', Kit::ValidateParam($aRow['UserName'], _USERNAME));
-            Theme::Set('password', Kit::ValidateParam($aRow['UserPassword'], _PASSWORD));
-            Theme::Set('usertypeid', Kit::ValidateParam($aRow['usertypeid'], _INT));
-            Theme::Set('email', Kit::ValidateParam($aRow['email'], _STRING));
-            Theme::Set('homepage', Kit::ValidateParam($aRow['homepage'], _STRING));
-            Theme::Set('retired', Kit::ValidateParam($aRow['Retired'], _INT));
-            Theme::Set('retired_option_checked', ((Kit::ValidateParam($aRow['Retired'], _INT) == 0) ? '' : ' checked'));
+            // Store some information for later use
+            $username = Kit::ValidateParam($aRow['UserName'], _USERNAME);
+            $password = Kit::ValidateParam($aRow['UserPassword'], _PASSWORD);
+            $usertypeid = Kit::ValidateParam($aRow['usertypeid'], _INT);
+            $email = Kit::ValidateParam($aRow['email'], _STRING);
+            $homepage = Kit::ValidateParam($aRow['homepage'], _STRING);
+            $retired = Kit::ValidateParam($aRow['Retired'], _INT);
 
-            $theme_file = 'user_form_edit';
-            $form_title = 'Edit Form';
-            $form_help_link = HelpManager::Link('User', 'Edit');
+            $retiredFormField = FormManager::AddCheckbox('retired', __('Retired?'), 
+                $retired, __('Is this user retired?'),
+                'r');
         }
         else {
 
+            $form_title = 'Add Form';
+            $form_help_link = HelpManager::Link('User', 'Add');
             Theme::Set('form_action', 'index.php?p=user&q=AddUser');
 
             // We are adding a new user
@@ -516,33 +544,76 @@ class userDAO
                 trigger_error("Can not get Usertype information", E_USER_ERROR);
             }
 
-            Theme::Set('usertypeid', $usertypeid);
+            // Defaults
+            $username = NULL;
+            $password = NULL;
+            $usertypeid = NULL;
+            $email = NULL;
+            $homepage = NULL;
+            $retired = NULL;
 
-            // List of values for the inital user group
-            $userGroupList = $db->GetArray('SELECT GroupID, `Group` FROM `group` WHERE IsUserSpecific = 0 AND IsEveryone = 0 ORDER BY 2');
-            Theme::Set('user_group_field_list', $userGroupList);
-
-            $theme_file = 'user_form_add';
-            $form_title = 'Add Form';
-            $form_help_link = HelpManager::Link('User', 'Add');
+            // List of values for the initial user group
+            $userGroupField = FormManager::AddCombo(
+                    'groupid', 
+                    __('Initial User Group'), 
+                    NULL,
+                    $db->GetArray('SELECT GroupID, `Group` FROM `group` WHERE IsUserSpecific = 0 AND IsEveryone = 0 ORDER BY 2'),
+                    'GroupID',
+                    'Group',
+                    __('What is the initial user group for this user?'), 
+                    'g');
         }
 
-        // List of homepages for both forms
-        Theme::Set('homepage_field_list', array(array("homepageid" => "dashboard", 'homepage' => 'Icon Dashboard'), 
-            array("homepageid" => "mediamanager", 'homepage' => 'Media Dashboard'), 
-            array("homepageid" => "statusdashboard", 'homepage' => 'Status Dashboard')));
+        // Render the return and output
+        $formFields = array();
+        $formFields[] = FormManager::AddText('edit_username', __('User Name'), $username, 
+            __('The Login Name of the user.'), 'n', 'required');
+
+        $formFields[] = FormManager::AddPassword('edit_password', __('Password'), $password, 
+            __('The Password for this user.'), 'p', 'required');
+
+        $formFields[] = FormManager::AddText('email', __('Email'), $email, 
+            __('The Email Address for this user.'), 'e', NULL);
+
+        $formFields[] = FormManager::AddCombo(
+                    'homepage', 
+                    __('Homepage'), 
+                    $homepage,
+                    array(
+                        array("homepageid" => "dashboard", 'homepage' => 'Icon Dashboard'), 
+                        array("homepageid" => "mediamanager", 'homepage' => 'Media Dashboard'), 
+                        array("homepageid" => "statusdashboard", 'homepage' => 'Status Dashboard')
+                    ),
+                    'homepageid',
+                    'homepage',
+                    __('Homepage for this user. This is the page they will be taken to when they login.'), 
+                    'h');
 
         // Only allow the selection of a usertype if we are a super admin
         $SQL = 'SELECT usertypeid, usertype FROM usertype';
         if ($user->usertypeid != 1)
             $SQL .= ' WHERE UserTypeID = 3';
 
-        Theme::Set('usertype_field_list', $db->GetArray($SQL));
+        $formFields[] = FormManager::AddCombo(
+                    'usertypeid', 
+                    __('User Type'), 
+                    $usertypeid,
+                    $db->GetArray($SQL),
+                    'usertypeid',
+                    'usertype',
+                    __('What is this users type?'), 
+                    't', NULL, ($user->usertypeid == 1));
 
-        // Render the return and output
-        $form = Theme::RenderReturn($theme_file);
+        // Add the user group field if set
+        if (isset($userGroupField) && is_array($userGroupField))
+            $formFields[] = $userGroupField;
 
-        $response->SetFormRequestResponse($form, $form_title, '550px', '320px');
+        if (isset($retiredFormField) && is_array($retiredFormField))
+            $formFields[] = $retiredFormField;
+
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, $form_title, '550px', '320px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $form_help_link . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#UserForm").submit()');
@@ -566,9 +637,9 @@ class userDAO
         Theme::Set('form_action', 'index.php?p=user&q=DeleteUser');
         Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userid . '" />');
 
-        $form = Theme::RenderReturn('user_form_delete');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete? You may not be able to delete this user if they have associated content. You can retire users by using the Edit Button.'))));
 
-		$response->SetFormRequestResponse($form, __('Delete this User?'), '430px', '200px');
+		$response->SetFormRequestResponse(NULL, __('Delete this User?'), '430px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'Delete') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#UserDeleteForm").submit()');
@@ -590,13 +661,22 @@ class userDAO
         Theme::Set('form_action', 'index.php?p=user&q=SetUserHomepage');
         Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userid . '" />');
 
-        // List of homepages
-        Theme::Set('homepage_field_list', array(array("homepageid" => "dashboard", 'homepage' => 'dashboard'), array("homepageid" => "mediamanager", 'homepage' => 'mediamanager')));
-        Theme::Set('homepage', $this->user->GetHomePage($userid));
+        // Render the return and output
+        $formFields = array();
 
-        $form = Theme::RenderReturn('user_form_set_homepage');
+        $formFields[] = FormManager::AddCombo(
+                    'homepage', 
+                    __('Homepage'), 
+                    $this->user->GetHomePage($userid),
+                    array(array("homepageid" => "dashboard", 'homepage' => 'dashboard'), array("homepageid" => "mediamanager", 'homepage' => 'mediamanager')),
+                    'homepageid',
+                    'homepage',
+                    __('The users Homepage. This should not be changed until you want to reset their homepage.'), 
+                    'h');
 
-        $response->SetFormRequestResponse($form, __('Set the homepage for this user'), '350px', '150px');
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Set the homepage for this user'), '350px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'SetHomepage') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#SetUserHomePageForm").submit()');
@@ -685,9 +765,19 @@ class userDAO
         Theme::Set('form_id', 'ChangePasswordForm');
         Theme::Set('form_action', 'index.php?p=user&q=ChangePassword');
 
-        $form = Theme::RenderReturn('user_form_change_password');
+        $formFields = array();
+        $formFields[] = FormManager::AddPassword('oldPassword', __('Current Password'), NULL, 
+            __('Please enter your current password'), 'p', 'required');
 
-        $response->SetFormRequestResponse($form, __('Change Password'), '450', '300');
+        $formFields[] = FormManager::AddPassword('newPassword', __('New Password'), NULL, 
+            __('Please enter your new password'), 'n', 'required');
+
+        $formFields[] = FormManager::AddPassword('retypeNewPassword', __('Retype New Password'), NULL, 
+            __('Please repeat the new Password.'), 'r', 'required');
+        
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Change Password'), '450', '300');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'ChangePassword') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ChangePasswordForm").submit()');
@@ -736,9 +826,16 @@ class userDAO
         Theme::Set('form_action', 'index.php?p=user&q=SetPassword');
         Theme::Set('form_meta', '<input type="hidden" name="UserId" value="' . $userId . '" />');
 
-        $form = Theme::RenderReturn('user_form_set_password');
+        $formFields = array();
+        $formFields[] = FormManager::AddPassword('newPassword', __('New Password'), NULL, 
+            __('The new Password for this user.'), 'p', 'required');
 
-        $response->SetFormRequestResponse($form, __('Set Password'), '450', '300');
+        $formFields[] = FormManager::AddPassword('retypeNewPassword', __('Retype New Password'), NULL, 
+            __('Repeat the new Password for this user.'), 'r', 'required');
+        
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Set Password'), '450', '300');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'SetPassword') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#SetPasswordForm").submit()');

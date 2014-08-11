@@ -20,7 +20,7 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class adminDAO 
+class adminDAO extends baseDAO 
 {
 	private $db;
 	private $user;
@@ -38,12 +38,6 @@ class adminDAO
 		// Set some information about the form
         Theme::Set('form_id', 'SettingsForm');
         Theme::Set('form_action', 'index.php?p=admin&q=Edit');
-
-        // Buttons
-        Theme::Set('settings_help_button_url', HelpManager::Link('Content', 'Config'));
-        Theme::Set('import_button_url', 'index.php?p=admin&q=RestoreForm');
-        Theme::Set('export_button_url', 'index.php?p=admin&q=BackupForm');
-		Theme::Set('tidy_button_url', 'index.php?p=admin&q=TidyLibrary');
 
         $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
 
@@ -123,6 +117,45 @@ class adminDAO
 		// Render the Theme and output
         Theme::Render('settings_page');
 	}
+
+    function actionMenu() {
+
+        $menu = array();
+        
+        if (Config::GetSetting('SETTING_IMPORT_ENABLED') == 1) {
+            $menu[] = array(
+                'title' => __('Import'),
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=admin&q=RestoreForm',
+                'help' => __('Import a database'),
+                'onclick' => ''
+                );
+        }
+
+        // Always show export
+        $menu[] = array(
+            'title' => __('Export'),
+            'class' => 'XiboFormButton',
+            'selected' => false,
+            'link' => 'index.php?p=admin&q=BackupForm',
+            'help' => __('Export a database'),
+            'onclick' => ''
+            );
+
+        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') == 1) {
+            $menu[] = array(
+                'title' => __('Tidy Library'),
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=admin&q=TidyLibrary',
+                'help' => __('Run through the library and remove and unnecessary files'),
+                'onclick' => ''
+                );
+        }
+
+        return $menu;                 
+    }
 
     function Edit() {
         $response = new ResponseManager();

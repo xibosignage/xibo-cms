@@ -49,7 +49,7 @@ $(document).ready(function() {
         // hide gif here, eg:
         $("#xibo-loading-gif").hide();
     }
-});
+    });
 
 	XiboInitialise("");
 });
@@ -133,14 +133,13 @@ function XiboInitialise(scope) {
     // NOTE: The validation plugin does not like binding to multiple forms at once.
     $(scope + ' .XiboForm').validate({
         submitHandler: XiboFormSubmit,
+        errorElement: "span",
         highlight: function(element) {
-			$(element).closest('.control-group').removeClass('success').addClass('error');
-		},
-		success: function(element) {
-			element
-				.text('OK!').addClass('valid')
-				.closest('.control-group').removeClass('error').addClass('success');
-		}
+            $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
+        },
+        success: function(element) {
+            $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
+        }
     });
 
     // Links that just need to be submitted as forms
@@ -167,13 +166,12 @@ function XiboInitialise(scope) {
     // Search for any text forms that will need submitting
     $(scope + ' .XiboTextForm').validate({
         submitHandler: XiboFormSubmit,
+        errorElement: "span",
         highlight: function(element) {
-            $(element).closest('.control-group').removeClass('success').addClass('error');
+            $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
         },
         success: function(element) {
-            element
-                .text('OK!').addClass('valid')
-                .closest('.control-group').removeClass('error').addClass('success');
+            $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
         }
     });
 
@@ -367,13 +365,12 @@ function XiboFormRender(formUrl, data) {
                 var id = new Date().getTime();
 
                 // Create the dialog with our parameters
-                var dialog = bootbox.dialog(
-                		response.html,
-                		buttons, {
-            				"header": dialogTitle,
-                            "animate": false
-                		}
-                	).attr("id", id);
+                var dialog = bootbox.dialog({
+                		message: response.html,
+                        title: dialogTitle,
+                		buttons: buttons,
+                        animate: false
+                	}).attr("id", id);
 
                 if (response.dialogClass != '') {
                 	dialog.addClass(response.dialogClass);
@@ -447,7 +444,7 @@ function XiboFormRender(formUrl, data) {
                                     //console.log("Value match");
 
                                     $.each(fieldAction.actions, function(index, action) {
-                                        //console.log("Setting child field on " + index + " to " + JSON.stringify(action));
+                                        console.log("Setting child field on " + index + " to " + JSON.stringify(action));
                                         // Action the field
                                         $(index).css(action);
                                     });
@@ -676,22 +673,26 @@ function XiboHelpRender(formUrl) {
                     dialogTitle =  response.dialogTitle;
                 }
 
+                var buttons = [];
+                buttons.push({
+                    label: 'Close',
+                        callback: function() {
+                            dialog.modal('hide');
+                        }
+                });
+
                 // Create the dialog with our parameters
-                bootbox.dialog(
-                		response.html,
-                		[], {
-            				"header": dialogTitle
-                		}
-                	).addClass(
-                		'modal-big'
-                	).addClass(
-                        'help-modal-big'
-                    );
+                var dialog = bootbox.dialog({
+                    message: response.html,
+                    title: "Manual",
+                    buttons: buttons,
+                    animate: false,
+                    className: "modal-big help-modal-big"
+                });
 
                 // Adjust the height of the iframe
-                var height = $(".full-iframe").parent().parent().height(); 
-                $(".full-iframe").height(height - 80);
-                $(".full-iframe").parent().css("max-height", (height - 70) + "px");
+                var height = $(window).height(); 
+                $(".full-iframe").height(height - 250);
             }
             else {
                 // Login Form needed?
@@ -852,10 +853,11 @@ function SystemMessage(messageText, success) {
 	// Buttons
 	var buttons = [];
 
+    var title = null;
+
 	// Only add certain things
 	if (!success) {
-		options.header = 'Application Message';
-
+        title = "Application Message";
 		buttons.push({
 		label: 'Close',
 			callback: function() {
@@ -864,10 +866,12 @@ function SystemMessage(messageText, success) {
 		});
 	}
 
-	// Open dialog
-    var dialog = bootbox.dialog(
-    		messageText, buttons, options
-    	);
+    var dialog = bootbox.dialog({
+        message: messageText,
+        title: title,
+        buttons: buttons,
+        animate: true
+    });
 
     if (success) {    
 	    // Close after 1 second
@@ -895,7 +899,7 @@ function SystemMessageInline(messageText, modal) {
     $(".text-error", modal).remove();
 
     $("<div/>", {
-    	class: "well text-error text-center",
+    	class: "well text-danger text-center form-error",
     	html: messageText
     }).appendTo(modal.find(".modal-footer"));
 }

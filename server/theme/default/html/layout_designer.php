@@ -34,7 +34,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="row">
-	<div class="span1">
+	<div class="col-md-1">
 		<div class="btn-group">
 			<button class="btn dropdown-toggle" data-toggle="dropdown">
 				<?php echo Theme::Translate('Options'); ?>
@@ -51,16 +51,16 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			</ul>
 		</div>
 	</div>
-	<div class="span5">
+	<div class="col-md-5">
 		<h4><?php echo Theme::Translate('Layout Design'); ?> - <?php echo Theme::Get('layout'); ?></h4>
 	</div>
-	<div class="span1 layout-status">
+	<div class="col-md-1 layout-status">
 	</div>
-	<div class="span5 layout-meta">
+	<div class="col-md-5 layout-meta">
 	</div>
 </div>
 <div class="row">
-	<div class="span12">
+	<div class="col-md-12">
 		<?php echo Theme::Get('layout_designer_editor'); ?>
 	</div>
 </div>

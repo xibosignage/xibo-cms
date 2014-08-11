@@ -27,15 +27,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="row">
-	<ul class="nav nav-pills span12">
-		<?php
-			foreach (Theme::GetMenu('Display Menu') as $item) {
-				echo $item['li'];
-			}
-		?>
-	</ul>
-</div>
+<h1 class="page-header"><?php echo Theme::Translate('Statistics'); ?></h1>
 <div class="row">
 	<div class="XiboGrid span12" id="<?php echo Theme::Get('id'); ?>">
 		<div class="XiboFilter">
@@ -45,9 +37,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 					<table class="stats_filterform">
 						<tr>
 							<td><label for="fromdt"><?php echo Theme::Translate('From Date') ?></label></td>
-							<td><input type="text" class="date-pick" name="fromdt" value="<?php echo Theme::Get('fromdt'); ?>"/></td>
+							<td><input class="form-control" type="text" class="date-pick" name="fromdt" value="<?php echo Theme::Get('fromdt'); ?>"/></td>
 							<td><label for="todt"><?php echo Theme::Translate('To Date') ?></label></td>
-							<td><input type="text" class="date-pick" name="todt" value="<?php echo Theme::Get('todt'); ?>"/></td>
+							<td><input class="form-control" type="text" class="date-pick" name="todt" value="<?php echo Theme::Get('todt'); ?>"/></td>
 						</tr>
 						<tr>
 							<td><?php echo Theme::Translate('Display') ?></td>

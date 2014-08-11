@@ -25,6 +25,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<tr>
 			<th><?php echo Theme::Translate('Name'); ?></th>
 			<th><?php echo Theme::Translate('Type'); ?></th>
+			<th></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -32,7 +33,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<tr rowid="<?php echo $row['list_id']; ?>" litext="<?php echo $row['media']; ?>">
 			<td><?php echo $row['media']; ?></td>
 			<td><?php echo $row['mediatype']; ?></td>
-			<td><span class="library_assign_list_select icon-plus-sign"></span>
+			<td><span class="library_assign_list_select glyphicon glyphicon-plus-sign"></span>
 		</tr>
 		<?php } ?>
 	</tbody>

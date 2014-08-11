@@ -25,90 +25,127 @@ $CLIENT_CONFIG = array(
 
         'windows' => array(
             'synonym' => 'dotnetclient',
+            'tabs' => array(
+                    array('id' => 'general', 'name' => __('General')),
+                    array('id' => 'location', 'name' => __('Location')),
+                    array('id' => 'trouble', 'name' => __('Troubleshooting')),
+                    array('id' => 'advanced', 'name' => __('Advanced')),
+                ),
             'settings' => array(
                     array(
                         'name' => 'collectInterval',
+                        'tabId' => 'general',
                         'title' => __('Collection Interval (seconds)'),
                         'type' => _INT,
-                        'fieldType' => 'text',
+                        'fieldType' => 'number',
                         'default' => 900,
                         'helpText' => __('The number of seconds between connections to the CMS.'),
-                        'validation' => 'numeric'
+                        'validation' => 'numeric',
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'powerpointEnabled',
+                        'tabId' => 'general',
                         'title' => __('Enable PowerPoint?'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => false,
                         'helpText' => __('Should Microsoft PowerPoint be Enabled?'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'statsEnabled',
+                        'tabId' => 'general',
                         'title' => __('Enable stats reporting?'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => true,
                         'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'sizeX',
+                        'tabId' => 'location',
                         'title' => __('Width'),
                         'type' => _DOUBLE,
-                        'fieldType' => 'text',
+                        'fieldType' => 'number',
                         'default' => '0',
-                        'helpText' => __('The Width of the Display Window. 0 means full width.')
+                        'helpText' => __('The Width of the Display Window. 0 means full width.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'sizeY',
+                        'tabId' => 'location',
                         'title' => __('Height'),
                         'type' => _DOUBLE,
-                        'fieldType' => 'text',
+                        'fieldType' => 'number',
                         'default' => '0',
-                        'helpText' => __('The Height of the Display Window. 0 means full height.')
+                        'helpText' => __('The Height of the Display Window. 0 means full height.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'offsetX',
+                        'tabId' => 'location',
                         'title' => __('Left Coordinate'),
                         'type' => _DOUBLE,
-                        'fieldType' => 'text',
+                        'fieldType' => 'number',
                         'default' => '0',
-                        'helpText' => __('The left pixel position the display window should be sized from.')
+                        'helpText' => __('The left pixel position the display window should be sized from.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'offsetY',
+                        'tabId' => 'location',
                         'title' => __('Top Coordinate'),
                         'type' => _DOUBLE,
-                        'fieldType' => 'text',
+                        'fieldType' => 'number',
                         'default' => '0',
-                        'helpText' => __('The top pixel position the display window should be sized from.')
+                        'helpText' => __('The top pixel position the display window should be sized from.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'ShowInTaskbar',
+                        'tabId' => 'advanced',
                         'title' => __('Show the icon in the task bar?'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => true,
                         'helpText' => __('Should the application icon be shown in the task bar?'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'ClientInfomationCtrlKey',
+                        'tabId' => 'trouble',
                         'title' => __('CTRL Key required to access Client Information Screen?'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => false,
-                        'helpText' => __('Should the client information screen require the CTRL key?')
+                        'helpText' => __('Should the client information screen require the CTRL key?'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'ClientInformationKeyCode',
+                        'tabId' => 'trouble',
                         'title' => __('Key for Client Information Screen'),
                         'type' => _WORD,
                         'fieldType' => 'text',
                         'default' => 'I',
-                        'helpText' => __('Which key should activate the client information screen? A single character.')
+                        'helpText' => __('Which key should activate the client information screen? A single character.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'CursorStartPosition',
+                        'tabId' => 'advanced',
                         'title' => __('Cursor Start Position'),
                         'type' => _STRING,
                         'fieldType' => 'dropdown',
@@ -119,51 +156,69 @@ $CLIENT_CONFIG = array(
                                 array('id' => 'Bottom Right', 'value' => 'Bottom Right'),
                             ),
                         'default' => 'Bottom Right',
-                        'helpText' => __('The position of the cursor when the client starts up.')
+                        'helpText' => __('The position of the cursor when the client starts up.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'DoubleBuffering',
+                        'tabId' => 'advanced',
                         'title' => __('Enable Double Buffering'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => true,
-                        'helpText' => __('Double buffering helps smooth the playback but should be disabled if graphics errors occur')
+                        'helpText' => __('Double buffering helps smooth the playback but should be disabled if graphics errors occur'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'emptyLayoutDuration',
+                        'tabId' => 'advanced',
                         'title' => __('Duration for Empty Layouts'),
                         'type' => _INT,
                         'fieldType' => 'text',
                         'default' => 10,
                         'helpText' => __('If an empty layout is detected how long should it remain on screen. Must be greater then 1.'),
-                        'validation' => 'number'
+                        'validation' => 'number',
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'EnableMouse',
+                        'tabId' => 'advanced',
                         'title' => __('Enable Mouse'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => true,
                         'helpText' => __('Enable the mouse.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'EnableShellCommands',
+                        'tabId' => 'advanced',
                         'title' => __('Enable Shell Commands'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => true,
                         'helpText' => __('Enable the Shell Command module.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'expireModifiedLayouts',
+                        'tabId' => 'advanced',
                         'title' => __('Expire Modified Layouts'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => true,
                         'helpText' => __('Expire Modified Layouts immediately on change. This means a layout can be cut during playback if it receives an update from the CMS'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'LogLevel',
+                        'tabId' => 'trouble',
                         'title' => __('Log Level'),
                         'type' => _WORD,
                         'fieldType' => 'dropdown',
@@ -173,31 +228,42 @@ $CLIENT_CONFIG = array(
                                 array('id' => 'error', 'value' => 'Error')
                             ),
                         'default' => 'error',
-                        'helpText' => __('The position of the cursor when the client starts up.')
+                        'helpText' => __('The position of the cursor when the client starts up.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'LogToDiskLocation',
+                        'tabId' => 'trouble',
                         'title' => __('Log file path name.'),
                         'type' => _STRING,
                         'fieldType' => 'text',
                         'default' => '',
-                        'helpText' => __('Create a log file on disk in this location. Please enter a fully qualified path.')
+                        'helpText' => __('Create a log file on disk in this location. Please enter a fully qualified path.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'MaxConcurrentDownloads',
+                        'tabId' => 'advanced',
                         'title' => __('Maximum concurrent downloads'),
                         'type' => _INT,
                         'fieldType' => 'text',
                         'default' => '5',
-                        'helpText' => __('The maximum number of concurrent downloads the client will attempt.')
+                        'helpText' => __('The maximum number of concurrent downloads the client will attempt.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'ShellCommandAllowList',
+                        'tabId' => 'advanced',
                         'title' => __('Shell Command Allow List'),
                         'type' => _STRING,
                         'fieldType' => 'text',
                         'default' => '',
-                        'helpText' => __('Which shell commands should the client execute?')
+                        'helpText' => __('Which shell commands should the client execute?'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     )
                 )
             ),
@@ -211,25 +277,38 @@ $CLIENT_CONFIG = array(
 
         'android' => array(
             'synonym' => 'xiboforandroid',
+            'tabs' => array(
+                    array('id' => 'general', 'name' => __('General')),
+                    array('id' => 'location', 'name' => __('Location')),
+                    array('id' => 'trouble', 'name' => __('Troubleshooting')),
+                    array('id' => 'advanced', 'name' => __('Advanced')),
+                ),
             'settings' => array(
                     array(
                         'name' => 'emailAddress',
+                        'tabId' => 'general',
                         'title' => __('Email Address'),
                         'type' => _STRING,
                         'fieldType' => 'text',
                         'default' => '',
-                        'helpText' => __('The email address will be used to license this client. This is the email address you provided when you purchased the licence.')
+                        'helpText' => __('The email address will be used to license this client. This is the email address you provided when you purchased the licence.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'settingsPassword',
+                        'tabId' => 'general',
                         'title' => __('Password Protect Settings'),
                         'type' => _STRING,
                         'fieldType' => 'text',
                         'default' => '',
-                        'helpText' => __('Provide a Password which will be required to access settings')
+                        'helpText' => __('Provide a Password which will be required to access settings'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'collectInterval',
+                        'tabId' => 'general',
                         'title' => __('Collect interval'),
                         'type' => _INT,
                         'fieldType' => 'dropdown',
@@ -244,10 +323,13 @@ $CLIENT_CONFIG = array(
                             ),
                         'default' => 900,
                         'helpText' => __('How often should the Player check for new content.'),
-                        'validation' => 'numeric'
+                        'validation' => 'numeric',
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'orientation',
+                        'tabId' => 'location',
                         'title' => __('Orientation'),
                         'type' => _INT,
                         'fieldType' => 'dropdown',
@@ -258,18 +340,24 @@ $CLIENT_CONFIG = array(
                                 array('id' => 9, 'value' => __('Reverse Portrait'))
                             ),
                         'default' => 0,
-                        'helpText' => __('Set the orientation of the device (portrait mode will only work if supported by the hardware) Application Restart Required.')
+                        'helpText' => __('Set the orientation of the device (portrait mode will only work if supported by the hardware) Application Restart Required.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'startOnBoot',
+                        'tabId' => 'advanced',
                         'title' => __('Start during device start up?'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => true,
                         'helpText' => __('When the device starts and Android finishes loading, should the client start up and come to the foreground?'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'actionBarMode',
+                        'tabId' => 'advanced',
                         'title' => __('Action Bar Mode'),
                         'type' => _INT,
                         'fieldType' => 'dropdown',
@@ -278,57 +366,77 @@ $CLIENT_CONFIG = array(
                                 array('id' => 1, 'value' => 'Timed')
                             ),
                         'default' => 1,
-                        'helpText' => __('How should the action bar behave?')
+                        'helpText' => __('How should the action bar behave?'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'actionBarDisplayDuration',
+                        'tabId' => 'advanced',
                         'title' => __('Action Bar Display Duration'),
                         'type' => _INT,
                         'fieldType' => 'text',
                         'default' => 30,
                         'helpText' => __('How long should the Action Bar be shown for, in seconds?'),
-                        'validation' => 'numeric'
+                        'validation' => 'numeric',
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'screenDimensions',
+                        'tabId' => 'location',
                         'title' => __('Screen Dimensions'),
                         'type' => _STRING,
                         'fieldType' => 'text',
                         'default' => '',
-                        'helpText' => __('Override the screen dimensions (left,top,width,height). Requires restart. Care should be taken to ensure these are within the actual screen size.')
+                        'helpText' => __('Override the screen dimensions (left,top,width,height). Requires restart. Care should be taken to ensure these are within the actual screen size.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'autoRestart',
+                        'tabId' => 'advanced',
                         'title' => __('Automatic Restart'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => true,
                         'helpText' => __('Automatically Restart the application if we detect it is not visible.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'startOnBootDelay',
+                        'tabId' => 'advanced',
                         'title' => __('Start delay for device start up'),
                         'type' => _INT,
                         'fieldType' => 'text',
                         'default' => 60,
                         'helpText' => __('The number of seconds to wait before starting the application after the device has started. Minimum 10.'),
-                        'validation' => 'numeric'
+                        'validation' => 'numeric',
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'blacklistVideo',
+                        'tabId' => 'trouble',
                         'title' => __('Blacklist Videos?'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => true,
                         'helpText' => __('Should Videos we fail to play be blacklisted and no longer attempted?'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     ),
                     array(
                         'name' => 'storeHtmlOnInternal',
+                        'tabId' => 'trouble',
                         'title' => __('Store HTML resources on the Internal Storage?'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => false,
                         'helpText' => __('Store all HTML resources on the Internal Storage? Should be selected if the device cannot display text, ticker, dataset media.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     )
                 )
             )

@@ -20,7 +20,7 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class scheduleDAO 
+class scheduleDAO extends baseDAO 
 {
     private $db;
     private $user;
@@ -43,7 +43,11 @@ class scheduleDAO
 
     function displayPage() 
     {
-        $db     =& $this->db;
+        // Render the Theme and output
+        Theme::Render('schedule_page');
+    }
+
+    function sideBarContent() {
         
         // Configure the theme
         $id = uniqid();
@@ -52,8 +56,7 @@ class scheduleDAO
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
-        // Render the Theme and output
-        Theme::Render('schedule_page');
+        return Theme::RenderReturn('schedule_sidebar');
     }
     
     /**
@@ -1047,80 +1050,6 @@ HTML;
         return $events;
     }
     
-    
-    
-    /**
-     * Outputs an unordered list of displays optionally with a form
-     * @return 
-     * @param $outputForm Object
-     */
-    private function UnorderedListofDisplays($outputForm, $displayGroupIDs)
-    {
-        $db                 =& $this->db;
-        $user               =& $this->user;
-        $output             = '';
-        $name               = Kit::GetParam('name', _POST, _STRING);
-        
-        // Get a list of display groups
-        $SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, IsDisplaySpecific ";
-        $SQL .= "  FROM displaygroup ";
-        if ($name != '')
-        {
-            $SQL .= sprintf(" WHERE displaygroup.DisplayGroup LIKE '%%%s%%' ", $db->escape_string($name));
-        }
-        $SQL .= " ORDER BY IsDisplaySpecific, displaygroup.DisplayGroup ";
-        
-        Debug::LogEntry('audit', $SQL, 'Schedule', 'UnorderedListofDisplays');
-
-
-        if(!($results = $db->query($SQL))) 
-        {
-            trigger_error($db->error());
-            trigger_error(__("Can not list Display Groups"), E_USER_ERROR);
-        }
-        
-        if ($db->num_rows($results) == 0)
-            trigger_error(__('No Display Groups'), E_USER_ERROR);
-            
-        if ($outputForm) $output .= '<form id="DisplayList" class="DisplayListForm">';
-                $output         .= __('Groups');
-        $output     .= '<ul class="DisplayList">';
-        $nested     = false;
-        
-        while($row = $db->get_assoc_row($results))
-        {
-            $displayGroupID     = Kit::ValidateParam($row['DisplayGroupID'], _INT);
-            $isDisplaySpecific  = Kit::ValidateParam($row['IsDisplaySpecific'], _INT);
-            $displayGroup       = Kit::ValidateParam($row['DisplayGroup'], _STRING);
-            $checked            = (in_array($displayGroupID, $displayGroupIDs)) ? 'checked' : '';
-            
-            // Determine if we are authed against this group.
-            $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
-
-                        if (!$auth->view)
-                            continue;
-            
-            // Do we need to nest yet? We only nest display specific groups
-            if ($isDisplaySpecific == 1 && !$nested)
-            {
-                // Start a new UL to display these
-                $output .= '</ul>' . __('Displays') . '<br/><ul class="DisplayList">';
-                
-                $nested = true;
-            }
-            
-            $output .= '<li>';
-            $output .= '<label class="checkbox">' . $displayGroup . '<input type="checkbox" name="DisplayGroupIDs[]" value="' . $displayGroupID . '" ' . $checked . '/></label>';
-            $output .= '</li>';
-        }
-        
-        if ($nested) $output .= '  </ul></li>';
-        $output .= '</ul>';
-        if ($outputForm) $output .= '</form>';
-        
-        return $output;
-    }
-    
     private function EventFormLayoutFilter($campaignId = '')
     {
         $msgName = __('Layout');
@@ -1259,14 +1188,14 @@ HTML;
         $form = <<<HTML
         <div class="XiboFilterInner">     
             <div class="scheduleFormCheckAll pull-right"><label for"checkAll"><input type="checkbox" name="checkAll">Check All</label></div>
-            <form onsubmit="return false">
+            <form class="form-inline" onsubmit="return false">
                 <input type="hidden" name="p" value="schedule">
                 <input type="hidden" name="q" value="EventFormDisplay">
                 $displayGroupIdsSerialized
                 <table>
                     <tr>
                         <td>$msgName</td>
-                        <td><input type="text" name="name" value="$filterName"></td>
+                        <td><input class="form-control" type="text" name="name" value="$filterName"></td>
                         <td>
                             <label for="XiboFilterPinned">Pin?</label>
                             <input id="XiboFilterPinned" name="XiboFilterPinned" type="checkbox" class="XiboFilter" $filterPinned />
@@ -1365,16 +1294,16 @@ HTML;
         
         $form = <<<END
 <div class="container-fluid">
-    <div class="row-fluid">
-    <div class="span6">
+    <div class="row">
+    <div class="col-md-6">
         $layoutFilter
     </div>
-    <div class="span6">
+    <div class="col-md-6">
         $displayFilter
     </div>
 </div>
-<div class="row-fluid">
-    <div class="span12">
+<div class="row">
+    <div class="col-md-12">
 <form id="AddEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=AddEvent" method="post">
     $token
     <table style="width:100%;">
@@ -1387,7 +1316,7 @@ HTML;
                 <div class="date-pick input-append date">
                     <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="starttime" id="starttime" value="$dateText"></input>
                     <span class="add-on">
-                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+                        <i data-time-icon="glyphicon glyphicon-time" data-date-icon="glyphicon glyphicon-calendar"></i>
                     </span>
                 </div>
             </td>
@@ -1396,7 +1325,7 @@ HTML;
                 <div class="date-pick input-append date">
                     <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="endtime" id="endtime" value="$toDateText"></input>
                     <span class="add-on">
-                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+                        <i data-time-icon="glyphicon glyphicon-time" data-date-icon="glyphicon glyphicon-calendar"></i>
                     </span>
                 </div>
             </td>
@@ -1428,7 +1357,7 @@ END;
                 <div class="date-pick input-append date">
                     <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="rec_range" id="rec_range"></input>
                     <span class="add-on">
-                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+                        <i data-time-icon="glyphicon glyphicon-time" data-date-icon="glyphicon glyphicon-calendar"></i>
                     </span>
                 </div>
             </td>
@@ -1531,16 +1460,16 @@ END;
         
         $form = <<<END
 <div class="container-fluid">
-<div class="row-fluid">
-    <div class="span6">
+<div class="row">
+    <div class="col-md-6">
         $layoutFilter
     </div>
-    <div class="span6">
+    <div class="col-md-6">
         $displayFilter
     </div>
 </div>
-<div class="row-fluid">
-    <div class="span12">
+<div class="row">
+    <div class="col-md-12">
 <form id="EditEventForm" class="XiboScheduleForm" action="index.php?p=schedule&q=EditEvent" method="post">
     $token
     <input type="hidden" id="EventID" name="EventID" value="$eventID" />
@@ -1555,7 +1484,7 @@ END;
                 <div class="date-pick input-append date">
                     <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="starttime" id="starttime" value="$fromDtText"></input>
                     <span class="add-on">
-                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+                        <i data-time-icon="glyphicon glyphicon-time" data-date-icon="glyphicon glyphicon-calendar"></i>
                     </span>
                 </div>
             </td>
@@ -1564,7 +1493,7 @@ END;
                 <div class="date-pick input-append date">
                     <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="endtime" id="endtime" value="$toDtText"></input>
                     <span class="add-on">
-                        <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+                        <i data-time-icon="glyphicon glyphicon-time" data-date-icon="glyphicon glyphicon-calendar"></i>
                     </span>
                 </div>
             </td>
@@ -1595,7 +1524,7 @@ END;
             <td><div class="date-pick input-append date">
                 <input data-format="dd/MM/yyyy hh:mm" type="text" class="input-medium" name="rec_range" id="rec_range" value="$recToDtText"></input>
                 <span class="add-on">
-                    <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
+                    <i data-time-icon="glyphicon glyphicon-time" data-date-icon="glyphicon glyphicon-calendar"></i>
                 </span>
             </div></td>
         </tr>
@@ -1893,49 +1822,44 @@ END;
         // We might have a layout id, or a display id
         $campaignId = Kit::GetParam('CampaignID', _GET, _INT, 0);
         $displayGroupIds = Kit::GetParam('displayGroupId', _GET, _ARRAY);
-
-        // Layout list
-        $layouts = $user->CampaignList();
-        $layoutList = Kit::SelectList('CampaignID', $layouts, 'campaignid', 'campaign', $campaignId);
         
-        $outputForm = false;
-        $displayList = $this->UnorderedListofDisplays($outputForm, $displayGroupIds);
-        $token = Kit::Token();
+        // Show a form for adding a display profile.
+        Theme::Set('form_class', 'XiboScheduleForm');
+        Theme::Set('form_id', 'ScheduleNowForm');
+        Theme::Set('form_action', 'index.php?p=schedule&q=ScheduleNow');
 
-        $form = <<<END
-            <form id="ScheduleNowForm" class="XiboForm" action="index.php?p=schedule&q=ScheduleNow" method="post">
-                $token
-                <table style="width:100%;">
-                    <tr>
-                        <td><label for="duration" title="How long should this event be scheduled for">Duration<span class="required">*</span></label></td>
-                        <td>H: <input type="text" name="hours" id="hours" size="2" class="number span1">
-                        M: <input type="text" name="minutes" id="minutes" size="2" class="number span1">
-                        S: <input type="text" name="seconds" id="seconds" size="2" class="number span1"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="CampaignID" title="Select which layout this event will show.">Campaign/Layout<span class="required">*</span></label></td>
-                        <td>$layoutList</td>
-                    </tr>
-                    <tr>
-                        <td><label for="DisplayOrder" title="Select the Order for this Event">Display Order</label></td>
-                        <td><input type=text" name="DisplayOrder" value="0" />
-                    </tr>
-                    <tr>
-                        <td><label title="Sets whether or not this event has priority. If set the event will be show in preference to other events." for="cb_is_priority">Priority</label></td>
-                        <td><input type="checkbox" id="cb_is_priority" name="is_priority" value="1" title="Sets whether or not this event has priority. If set the event will be show in preference to other events."></td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="FormDisplayList">
-                            $displayList
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </form>
-END;
+        $formFields = array();
+        $formFields[] = FormManager::AddText('hours', __('Hours'), NULL, 
+            __('Hours this event should be scheduled for'), 'h', '');
 
-        $response->SetFormRequestResponse($form, __('Schedule Now'), '700px', '400px');
+        $formFields[] = FormManager::AddText('minutes', __('Minutes'), NULL, 
+            __('Minutes this event should be scheduled for'), 'h', '');
+
+        $formFields[] = FormManager::AddText('seconds', __('Seconds'), NULL, 
+            __('Seconds this event should be scheduled for'), 'h', '');
+
+        $formFields[] = FormManager::AddCombo(
+                    'CampaignID', 
+                    __('Campaign / Layout'), 
+                    Kit::GetParam('CampaignID', _GET, _INT, 0),
+                    $user->CampaignList(),
+                    'campaignid',
+                    'campaign',
+                    __('Select which Layout or Campaign this event will show.'), 
+                    'c');
+
+        $formFields[] = FormManager::AddNumber('DisplayOrder', __('Display Order'), 0, 
+            __('Should this event have an order?'), 'o', '');
+
+        $formFields[] = FormManager::AddCheckbox('is_priority', __('Priority?'), 
+            NULL, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'), 
+            'p');
+
+        Theme::Set('form_fields', $formFields);
+        Theme::Set('append', $this->EventFormDisplayFilter($displayGroupIds));
+
+        $response->SetFormRequestResponse(NULL, __('Schedule Now'), '700px', '400px');
+        $response->callBack = 'setupScheduleNowForm';
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=ScheduleNow')");
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ScheduleNowForm").submit()');

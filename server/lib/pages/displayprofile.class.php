@@ -23,7 +23,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 // Companion classes
 Kit::ClassLoader('displayprofile');
 
-class displayprofileDAO {
+class displayprofileDAO extends baseDAO {
     private $db;
     private $user;
 
@@ -40,13 +40,25 @@ class displayprofileDAO {
         // Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
-        Theme::Set('form_add_url', 'index.php?p=displayprofile&q=AddForm');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="displayprofile"><input type="hidden" name="q" value="Grid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
         // Render the Theme and output
         Theme::Render('displayprofile_page');
+    }
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Add Profile'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=displayprofile&q=AddForm',
+                    'help' => __('Add a new Display Settings Profile'),
+                    'onclick' => ''
+                    )
+            );                   
     }
 
     function Grid() {
@@ -87,18 +99,32 @@ class displayprofileDAO {
         Theme::Set('form_id', 'ProfileForm');
         Theme::Set('form_action', 'index.php?p=displayprofile&q=Add');
 
-        // A list of types
-        Theme::Set('type_field_list', array(
-                array('typeid' => 'windows', 'type' => 'Windows'), 
-                array('typeid' => 'ubuntu', 'type' => 'Ubuntu'),
-                array('typeid' => 'android', 'type' => 'Android')
-            ));
+        $formFields = array();
+        $formFields[] = FormManager::AddText('name', __('Name'), NULL, 
+            __('The Name of the Profile - (1 - 50 characters)'), 'n', 'maxlength="50" required');
 
-        // Initialise the template and capture the output
-        $form = Theme::RenderReturn('displayprofile_form_add');
+        $formFields[] = FormManager::AddCombo(
+                    'type', 
+                    __('Client Type'), 
+                    NULL,
+                    array(
+                        array('typeid' => 'windows', 'type' => 'Windows'), 
+                        array('typeid' => 'ubuntu', 'type' => 'Ubuntu'),
+                        array('typeid' => 'android', 'type' => 'Android')
+                    ),
+                    'typeid',
+                    'type',
+                    __('What type of display client is this profile intended for?'), 
+                    't');
+
+        $formFields[] = FormManager::AddCheckbox('isdefault', __('Default Profile?'), 
+            NULL, __('Is this the default profile for all Displays of this type? Only 1 profile can be the default.'), 
+            'd');
+
+        Theme::Set('form_fields', $formFields);
 
         $response = new ResponseManager();
-        $response->SetFormRequestResponse($form, 'Add Profile', '350px', '275px');
+        $response->SetFormRequestResponse(NULL, 'Add Profile', '350px', '275px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ProfileForm").submit()');
         $response->Respond();
@@ -144,12 +170,25 @@ class displayprofileDAO {
         Theme::Set('form_action', 'index.php?p=displayprofile&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="displayprofileid" value="' . $displayProfile->displayProfileId . '" />');
 
-        // Set the known theme fields
-        Theme::Set('name', $displayProfile->name);
-        Theme::Set('isdefault', $displayProfile->isDefault);
+        $formFields = array();
+        $formTabs = array();
+
+        // Tabs?
+        foreach($CLIENT_CONFIG[$displayProfile->type]['tabs'] as $tab) {
+            // Create an empty array of form fields for this tab.
+            $formFields[$tab['id']] = array();
+
+            // Also add the tab
+            $formTabs[] = FormManager::AddTab($tab['id'], $tab['name']);
+        }
 
         // Go through each setting and output a form control to the theme.
-        $formFields = array();
+        $formFields['general'][] = FormManager::AddText('name', __('Name'), $displayProfile->name, 
+            __('The Name of the Profile - (1 - 50 characters)'), 'n', 'maxlength="50" required');
+
+        $formFields['general'][] = FormManager::AddCheckbox('isdefault', __('Default Profile?'), 
+            $displayProfile->isDefault, __('Is this the default profile for all Displays of this type? Only 1 profile can be the default.'), 
+            'd');
 
         foreach($CLIENT_CONFIG[$displayProfile->type]['settings'] as $setting) {
 
@@ -170,25 +209,30 @@ class displayprofileDAO {
             //Debug::LogEntry('audit', 'Validated ' . $setting['name'] . '. [' . $setting['value'] . '] as [' . $validated . ']. With type ' . $setting['type']);
 
             // Each field needs to have a type, a name and a default
-            $formFields[] = array(
+            $formFields[$setting['tabId']][] = array(
                     'name' => $setting['name'],
                     'fieldType' => $setting['fieldType'],
                     'helpText' => $setting['helpText'],
                     'title' => $setting['title'],
                     'options' => ((isset($setting['options']) ? $setting['options'] : array())),
+                    'optionId' => 'id',
+                    'optionValue' => 'value',
                     'validation' => ((isset($setting['validation']) ? $setting['validation'] : '')),
-                    'value' => $validated
+                    'value' => $validated,
+                    'enabled' => $setting['enabled'],
+                    'groupClass' => NULL,
+                    'accesskey' => ''
                 );
         }
 
-        Theme::Set('form_fields', $formFields);
+        Theme::Set('form_tabs', $formTabs);
 
-        // Render the form and output
-        $form = Theme::RenderReturn('displayprofile_form_config');
+        foreach($CLIENT_CONFIG[$displayProfile->type]['tabs'] as $tab) {
+            Theme::Set('form_fields_' . $tab['id'], $formFields[$tab['id']]);
+        }
 
         $response = new ResponseManager();
-        $response->SetFormRequestResponse($form, __('Edit Profile'), '650px', '350px');
-        $response->dialogClass = 'modal-big';
+        $response->SetFormRequestResponse(NULL, __('Edit Profile'), '650px', '350px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayProfile', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayConfigForm").submit()');
@@ -267,10 +311,10 @@ class displayprofileDAO {
         Theme::Set('form_action', 'index.php?p=displayprofile&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="displayprofileid" value="' . $displayProfile->displayProfileId . '" />');
 
-        $form = Theme::RenderReturn('displayprofile_form_delete');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
         
         $response  = new ResponseManager();
-        $response->SetFormRequestResponse($form, __('Delete Display Profile'), '350px', '175px');
+        $response->SetFormRequestResponse(NULL, __('Delete Display Profile'), '350px', '175px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayProfile', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DisplayProfileDeleteForm").submit()');

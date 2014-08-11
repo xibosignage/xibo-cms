@@ -132,6 +132,9 @@ class PageManager
         }
         else 
         {
+            Theme::Set('sidebar_html', $this->thePage->sideBarContent());
+            Theme::Set('action_menu', $this->thePage->actionMenu());
+
             // Display a page instead
 			Theme::Render('header');
 			

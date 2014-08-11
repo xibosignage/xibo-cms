@@ -103,6 +103,29 @@ function CallGenerateCalendar() {
 }
 
 /**
+ * Callback for the schedule form
+ */
+var setupScheduleForm = function() {
+    //set up any date fields we have with the date picker
+    $('.date-pick').datetimepicker({
+            language: "en",
+            pickSeconds: false
+        });
+    
+    // We submit this form ourselves (outside framework)
+    $('.XiboScheduleForm').validate({
+        submitHandler: ScheduleFormSubmit,
+        errorElement: "span",
+        highlight: function(element) {
+            $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
+        },
+        success: function(element) {
+            $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
+        }
+    });    
+}
+
+/**
  * Callback fired when the Display Select List on the left hand pane is rendered
  */
 function DisplayListRender() {
@@ -118,22 +141,6 @@ function DisplayListRender() {
         
         CallGenerateCalendar();
     });
-}
-
-/**
- * Callback for the schedule form
- */
-function setupScheduleForm() {
-    //set up any date fields we have with the date picker
-    $('.date-pick').datetimepicker({
-            language: "en",
-            pickSeconds: false
-        });
-    
-    // We submit this form ourselves (outside framework)
-    $('.XiboScheduleForm').validate({
-        submitHandler: ScheduleFormSubmit
-    });    
 }
 
 /**
@@ -173,6 +180,44 @@ function ScheduleFormSubmit(form) {
         cache:false,
         dataType:"json",
         data:$(form).serialize() + "&CampaignID=" + layoutId + "&" + displayGroupIds + "&iso_starttime=" + startDate + "&iso_endtime=" + endDate + "&iso_rec_range=" + recurUntil,
+        success: XiboSubmitResponse
+    });
+
+    return;
+}
+
+/**
+ * Callback for the schedule form
+ */
+var setupScheduleNowForm = function() {
+    
+    // We submit this form ourselves (outside framework)
+    $('.XiboScheduleForm').validate({
+        submitHandler: ScheduleNowFormSubmit,
+        errorElement: "span",
+        highlight: function(element) {
+            $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
+        },
+        success: function(element) {
+            $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
+        }
+    });    
+}
+
+function ScheduleNowFormSubmit(form) {
+    // Get the URL from the action part of the form)
+    var url = $(form).attr("action") + "&ajax=true";
+    
+    var displayGroupIds = $("input:checkbox[name='DisplayGroupIDs[]']:checked", $(form).closest(".modal")).serialize();
+    if (displayGroupIds == undefined)
+        displayGroupIds = 0;
+    
+    $.ajax({
+        type:"post",
+        url:url,
+        cache:false,
+        dataType:"json",
+        data:$(form).serialize() + "&" + displayGroupIds,
         success: XiboSubmitResponse
     });
 

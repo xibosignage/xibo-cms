@@ -198,28 +198,6 @@ function setFullScreenLayout() {
     $('#left', '.XiboForm').val('0');
 }
 
-function transitionFormLoad() {
-    $("#transitionType").change(transitionSelectListChanged);
-    
-    // Fire once for initialisation
-    transitionSelectListChanged();
-}
-
-function transitionSelectListChanged() {
-    // See if we need to disable any of the other form elements based on this selection
-    var selectionOption = $("#transitionType option:selected");
-    
-    if (!selectionOption.hasClass("hasDuration"))
-        $("tr.transitionDuration").hide();
-    else
-        $("tr.transitionDuration").show();
-        
-    if (!selectionOption.hasClass("hasDirection"))
-        $("tr.transitionDirection").hide();
-    else
-        $("tr.transitionDirection").show();
-}
-
 var LoadTimeLineCallback = function() {
 
     // Refresh the preview
@@ -295,7 +273,7 @@ var LibraryAssignCallback = function()
 
         // Add a span to that new item
         $("<span/>", {
-            "class": "icon-minus-sign",
+            "class": "glyphicon glyphicon-minus-sign",
             click: function(){
                 $(this).parent().remove();
             }
@@ -330,5 +308,5 @@ var background_button_callback = function() {
 	//Want to attach an onchange event to the drop down for the bg-image
 	var id = $('#bg_image').val();
 
-	$('#bg_image_image').attr("src", "index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=" + id + "&width=80&height=80&dynamic");
+	$('#bg_image_image').attr("src", "index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=" + id + "&width=200&height=200&dynamic");
 }

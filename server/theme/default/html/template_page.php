@@ -26,16 +26,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="row">
-	<ul class="nav nav-pills span12">
-		<?php
-			foreach (Theme::GetMenu('Design Menu') as $item) {
-				echo $item['li'];
-			}
-		?>
-		<li class="pull-right"><a title="<?php echo Theme::Translate('Open the filter form'); ?>" href="#" onclick="ToggleFilterView('Filter')"><span><?php echo Theme::Translate('Filter'); ?></span></a></li>
-	</ul>
-</div>
+<h1 class="page-header"><?php echo Theme::Translate('Templates'); ?></h1>
 <div class="row">
 	<div class="XiboGrid span12" id="<?php echo Theme::Get('id'); ?>">
 		<div class="XiboFilter">

@@ -27,11 +27,11 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="row">
-	<div class="span12">
+	<div class="col-md-12">
 		<h3><?php echo Theme::Translate('Modules available to Install'); ?></h3>
 		<?php foreach(Theme::Get('to_install') as $row) { ?>
 		<div class="row">
-			<div class="span12">
+			<div class="col-md-12">
 				<?php echo '<a href="' . Theme::Get('module_install_url') . $row . '">' . $row . '</a>'; ?>
 			</div>
 		</div>

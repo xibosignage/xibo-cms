@@ -27,26 +27,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="row">
-	<div class="span2">
-		<div id="main-calendar-picker" class="input-append date">
-			<input data-format="MM/yyyy" type="text" class="input-medium"></input>
-			<span class="add-on">
-				<i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>
-			</span>
-		</div>
-		<div class="XiboGrid" id="<?php echo Theme::Get('id'); ?>">
-			<div class="XiboFilter">
-				<div class="FilterDiv" id="Filter">
-					<form>
-						<?php echo Theme::Get('form_meta'); ?>
-						<input class="input-medium search-query" placeholder="<?php echo Theme::Translate('Name') ?>" type="text" name="filter_name">
-					</form>
-				</div>
-			</div>
-			<div class="XiboData"></div>
-		</div>
-	</div>
-	<div id="Calendar" class="span10">
+	<div id="Calendar" class="col-md-12">
 		
 	</div>
 </div>

@@ -26,15 +26,6 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="row">
-	<ul class="nav nav-pills span12">
-		<?php
-			foreach (Theme::GetMenu('Administration Menu') as $item) {
-				echo $item['li'];
-			}
-		?>
-	</ul>
-</div>
 <?php echo Theme::Get('modules_to_install'); ?>
 <div class="row">
 	<div class="XiboGrid span12" id="<?php echo Theme::Get('id'); ?>">

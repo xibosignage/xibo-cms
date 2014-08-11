@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class sessionsDAO 
+class sessionsDAO extends baseDAO 
 {
 	private $db;
 	private $user;
@@ -59,6 +59,19 @@ class sessionsDAO
         // Render the Theme and output
         Theme::Render('sessions_page');
 	}
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Filter'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Open the filter form'),
+                    'onclick' => 'ToggleFilterView(\'Filter\')'
+                    )
+            );
+    }
 	
 	function Grid() 
 	{
@@ -110,7 +123,7 @@ class sessionsDAO
 
             $row['userid'] = Kit::ValidateParam($row['userID'], _INT);
 			$row['username'] = Kit::ValidateParam($row['UserName'], _STRING);
-			$row['isexpired'] = (Kit::ValidateParam($row['IsExpired'], _INT) == 0) ? 'icon-ok' : 'icon-remove';
+			$row['isexpired'] = (Kit::ValidateParam($row['IsExpired'], _INT) == 0) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
 			$row['lastpage'] = Kit::ValidateParam($row['LastPage'], _STRING);
 			$row['lastaccessed'] = Kit::ValidateParam($row['LastAccessed'], _STRING);
 			$row['ip'] = Kit::ValidateParam($row['RemoteAddr'], _STRING);
@@ -146,9 +159,9 @@ class sessionsDAO
         Theme::Set('form_action', 'index.php?p=sessions&q=LogoutUser');
         Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userid . '" />');
 
-        $form = Theme::RenderReturn('sessions_form_logout');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to logout this user?'))));
 
-		$response->SetFormRequestResponse($form, __('Logout User'), '430px', '200px');
+		$response->SetFormRequestResponse(NULL, __('Logout User'), '430px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Sessions', 'Logout') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#SessionsLogoutForm").submit()');

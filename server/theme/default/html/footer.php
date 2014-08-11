@@ -20,7 +20,10 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-		</div> <!-- container-->
+                    </div>
+                </div>
+            </div>
+        </div>
         <div id="xibo-loading-gif"><img src="theme/default/img/ajax-loader.gif" alt="Loading..." /></div>
 
 		<script src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>

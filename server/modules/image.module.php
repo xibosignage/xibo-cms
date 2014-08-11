@@ -87,15 +87,38 @@ class image extends Module
      */
     public function EditForm() {
 
-        // List of image fit options
-        Theme::Set('scaleType', $this->GetOption('scaleType'));
-        Theme::Set('scaleType_field_list', array(array('scaleTypeId' => 'center', 'scaleType' => __('Center')), array('scaleTypeId' => 'stretch', 'scaleType' => __('Stretch'))));
+        // Provide some extra form fields
+        $formFields = array();
 
-        // Alignment
-        Theme::Set('align', $this->GetOption('align', 'center'));
-        Theme::Set('valign', $this->GetOption('valign', 'middle'));
-        Theme::Set('align_field_list', array(array('alignId' => 'left', 'align' => __('Left')), array('alignId' => 'center', 'align' => __('Centre')), array('alignId' => 'right', 'align' => __('Right'))));
-        Theme::Set('valign_field_list', array(array('valignId' => 'top', 'valign' => __('Top')), array('valignId' => 'middle', 'valign' => __('Middle')), array('valignId' => 'bottom', 'valign' => __('Bottom'))));
+        $formFields[] = FormManager::AddCombo(
+                    'scaleTypeId', 
+                    __('Scale Type'), 
+                    $this->GetOption('scaleType'),
+                    array(array('scaleTypeId' => 'center', 'scaleType' => __('Center')), array('scaleTypeId' => 'stretch', 'scaleType' => __('Stretch'))),
+                    'scaleTypeId',
+                    'scaleType',
+                    __('How should this image be scaled?'), 
+                    's');
+
+        $formFields[] = FormManager::AddCombo(
+                    'alignId', 
+                    __('Align'), 
+                    $this->GetOption('align', 'center'),
+                    array(array('alignId' => 'left', 'align' => __('Left')), array('alignId' => 'center', 'align' => __('Centre')), array('alignId' => 'right', 'align' => __('Right'))),
+                    'alignId',
+                    'align',
+                    __('How should this image be aligned?'), 
+                    'a', 'align-fields');
+
+        $formFields[] = FormManager::AddCombo(
+                    'alignId', 
+                    __('Vertical Align'), 
+                    $this->GetOption('valign', 'middle'),
+                    array(array('valignId' => 'top', 'valign' => __('Top')), array('valignId' => 'middle', 'valign' => __('Middle')), array('valignId' => 'bottom', 'valign' => __('Bottom'))),
+                    'valignId',
+                    'valign',
+                    __('How should this image be vertically aligned?'), 
+                    'v', 'align-fields');
 
         // Set some field dependencies
         $this->response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'block')));
@@ -103,7 +126,7 @@ class image extends Module
         $this->response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'none')), 'not');
         $this->response->AddFieldAction('scaleTypeId', 'change', 'center', array('.align-fields' => array('display' => 'none')), 'not');
 
-        return $this->EditFormForLibraryMedia('image_form_media_edit');
+        return $this->EditFormForLibraryMedia($formFields);
     }
 
     /**

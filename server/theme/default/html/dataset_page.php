@@ -26,16 +26,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="row">
-	<ul class="nav nav-pills span12">
-		<?php
-			foreach (Theme::GetMenu('Library Menu') as $item) {
-				echo $item['li'];
-			}
-		?>
-		<li class="pull-right"><a title="<?php echo Theme::Translate('Add a new DataSet'); ?>" class="XiboFormButton" href="<?php echo Theme::Get('dataset_form_add_url'); ?>" ><span><?php echo Theme::Translate('Add DataSet'); ?></span></a></li>
-	</ul>
-</div>
+<h1 class="page-header"><?php echo Theme::Translate('DataSets'); ?></h1>
 <div class="row">
 	<div class="XiboGrid span12" id="<?php echo Theme::Get('id'); ?>">
 		<div class="XiboFilter">

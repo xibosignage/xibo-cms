@@ -73,7 +73,7 @@ class moduletemplate extends Module
     public function ModuleSettingsForm() {
         // Output any form fields (formatted via a Theme file)
         // These are appended to the bottom of the "Edit" form in Module Administration
-        return '';
+        return array();
     }
 
     /**
@@ -113,7 +113,7 @@ class moduletemplate extends Module
         // Any values for the form fields should be added to the theme here.
 
         // Modules should be rendered using the theme engine.
-        $this->response->html = Theme::RenderReturn('media_form_text_add');
+        $this->response->html = Theme::RenderReturn('form_render');
 
         // Any JavaScript call backs should be set (you can use text_callback to set up a text editor should you need one)
         $this->response->callBack = 'text_callback';

@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class resolutionDAO
+class resolutionDAO extends baseDAO
 {
     private $db;
     private $user;
@@ -43,13 +43,25 @@ class resolutionDAO
         // Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
-        Theme::Set('resolution_form_add_url', 'index.php?p=resolution&q=AddForm');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="resolution"><input type="hidden" name="q" value="ResolutionGrid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
         // Render the Theme and output
         Theme::Render('resolution_page');
+    }
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Add Resolution'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=resolution&q=AddForm',
+                    'help' => __('Add a new resolution for use on layouts'),
+                    'onclick' => ''
+                    )
+            );                   
     }
 
     /**
@@ -104,9 +116,19 @@ class resolutionDAO
         Theme::Set('form_id', 'AddForm');
         Theme::Set('form_action', 'index.php?p=resolution&q=Add');
 
-        $form = Theme::RenderReturn('resolution_form_add');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('resolution', __('Resolution'), NULL, 
+            __('A name for this Resolution'), 'r', 'required');
 
-        $response->SetFormRequestResponse($form, __('Add Resolution'), '350px', '250px');
+        $formFields[] = FormManager::AddNumber('width', __('Width'), NULL, 
+            __('The Width for this Resolution'), 'w', 'required');
+
+        $formFields[] = FormManager::AddNumber('height', __('Height'), NULL, 
+            __('The Height for this Resolution'), 'h', 'required');
+        
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Add Resolution'), '350px', '250px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Resolution', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#AddForm").submit()');
@@ -137,18 +159,26 @@ class resolutionDAO
 
         $row = $db->get_assoc_row($result);
 
-        Theme::Set('resolution', Kit::ValidateParam($row['resolution'], _STRING));
-        Theme::Set('width', Kit::ValidateParam($row['intended_width'], _INT));
-        Theme::Set('height', Kit::ValidateParam($row['intended_height'], _INT));
-        Theme::Set('enabled_checked', (Kit::ValidateParam($row['enabled'], _INT) == 1) ? ' checked' : '');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('resolution', __('Resolution'), Kit::ValidateParam($row['resolution'], _STRING), 
+            __('A name for this Resolution'), 'r', 'required');
+
+        $formFields[] = FormManager::AddNumber('width', __('Width'), Kit::ValidateParam($row['intended_width'], _INT), 
+            __('The Width for this Resolution'), 'w', 'required');
+
+        $formFields[] = FormManager::AddNumber('height', __('Height'), Kit::ValidateParam($row['intended_height'], _INT), 
+            __('The Height for this Resolution'), 'h', 'required');
+
+        $formFields[] = FormManager::AddCheckbox('enabled', __('Enable?'), Kit::ValidateParam($row['enabled'], _INT), 
+            __('Is the Resolution enabled for use?'), 'e');
+        
+        Theme::Set('form_fields', $formFields);
 
         Theme::Set('form_id', 'ResolutionForm');
         Theme::Set('form_action', 'index.php?p=resolution&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolutionID . '" >');
 
-        $form = Theme::RenderReturn('resolution_form_edit');
-
-        $response->SetFormRequestResponse($form, __('Edit Resolution'), '350px', '250px');
+        $response->SetFormRequestResponse(NULL, __('Edit Resolution'), '350px', '250px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Template', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ResolutionForm").submit()');
@@ -170,10 +200,9 @@ class resolutionDAO
         Theme::Set('form_id', 'DeleteForm');
         Theme::Set('form_action', 'index.php?p=resolution&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolutionid . '" />');
-
-        $form = Theme::RenderReturn('resolution_form_delete');
-
-        $response->SetFormRequestResponse($form, __('Delete Resolution'), '250px', '150px');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
+        
+        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete Resolution'), '250px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteForm").submit()');

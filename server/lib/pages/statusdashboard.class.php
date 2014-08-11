@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class statusdashboardDAO 
+class statusdashboardDAO extends baseDAO 
 {
 	private $db;
 	private $user;
@@ -110,8 +110,7 @@ class statusdashboardDAO
 	        if (is_array($displays) && count($displays) > 0) {
 	            // Output a table showing the displays
 	            foreach($displays as $row) {
-					$row['licensed'] = ($row['licensed'] == 1) ? 'icon-ok' : 'icon-remove';
-		            $row['loggedin'] = ($row['loggedin'] == 1) ? 'icon-ok' : 'icon-remove';
+					
 		            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'error' : 'warning');
 					
 					// Assign this to the table row

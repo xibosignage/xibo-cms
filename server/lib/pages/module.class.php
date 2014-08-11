@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class moduleDAO 
+class moduleDAO extends baseDAO 
 {
     private $db;
     private $user;
@@ -149,10 +149,10 @@ class moduleDAO
             $row['enabled'] = Kit::ValidateParam($module['Enabled'], _INT);
             $row['preview_enabled'] = Kit::ValidateParam($module['PreviewEnabled'], _INT);
             $row['assignable'] = Kit::ValidateParam($module['assignable'], _INT);
-            $row['isregionspecific_image'] = ($row['isregionspecific'] == 0) ? 'icon-ok' : 'icon-remove';
-            $row['enabled_image'] = ($row['enabled'] == 1) ? 'icon-ok' : 'icon-remove';
-            $row['preview_enabled_image'] = ($row['preview_enabled'] == 1) ? 'icon-ok' : 'icon-remove';
-            $row['assignable_image'] = ($row['assignable'] == 1) ? 'icon-ok' : 'icon-remove';
+            $row['isregionspecific_image'] = ($row['isregionspecific'] == 0) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
+            $row['enabled_image'] = ($row['enabled'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
+            $row['preview_enabled_image'] = ($row['preview_enabled'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
+            $row['assignable_image'] = ($row['assignable'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
 
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();
@@ -219,26 +219,37 @@ class moduleDAO
 
         $type = Kit::ValidateParam($row['Module'], _WORD);
 
-        Theme::Set('validextensions', Kit::ValidateParam($row['ValidExtensions'], _STRING));
-        Theme::Set('imageuri', Kit::ValidateParam($row['ImageUri'], _STRING));
-        Theme::Set('isregionspecific', Kit::ValidateParam($row['RegionSpecific'], _INT));
-        Theme::Set('enabled_checked', ((Kit::ValidateParam($row['Enabled'], _INT)) ? 'checked' : ''));
-        Theme::Set('preview_enabled_checked', ((Kit::ValidateParam($row['PreviewEnabled'], _INT)) ? 'checked' : ''));
-
         // Set some information about the form
         Theme::Set('form_id', 'ModuleEditForm');
         Theme::Set('form_action', 'index.php?p=module&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="ModuleID" value="'. $moduleId . '" /><input type="hidden" name="type" value="' . $type . '" />');
 
+        $formFields = array();
+        $formFields[] = FormManager::AddText('ValidExtensions', __('Valid Extensions'), Kit::ValidateParam($row['ValidExtensions'], _STRING), 
+            __('The Extensions allowed on files uploaded using this module. Comma Separated.'), 'e', '');
+
+        $formFields[] = FormManager::AddText('ImageUri', __('Image Uri'), Kit::ValidateParam($row['ImageUri'], _STRING), 
+            __('The Image to display for this module. This should be a path relative to the root of the installation.'), 'i', '');
+
+        $formFields[] = FormManager::AddCheckbox('PreviewEnabled', __('Preview Enabled?'), 
+            Kit::ValidateParam($row['PreviewEnabled'], _INT), __('When PreviewEnabled users will be able to see a preview in the layout designer'), 
+            'p');
+
+        $formFields[] = FormManager::AddCheckbox('Enabled', __('Enabled?'), 
+            Kit::ValidateParam($row['Enabled'], _INT), __('When Enabled users will be able to add media using this module'), 
+            'b');
+
+        Theme::Set('form_fields', $formFields);
+
         // Set any module specific form fields
         include_once('modules/' . $type . '.module.php');
         $module = new $type($this->db, $this->user);
 
-        Theme::Set('module_settings_form_items', $module->ModuleSettingsForm());
-        
-        $form = Theme::RenderReturn('module_form_edit');
+        // Merge in the fields from the settings
+        foreach($module->ModuleSettingsForm() as $field)
+            $formFields[] = $field;
 
-        $response->SetFormRequestResponse($form, __('Edit Module'), '350px', '325px');
+        $response->SetFormRequestResponse(NULL, __('Edit Module'), '350px', '325px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Module', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ModuleEditForm").submit()');

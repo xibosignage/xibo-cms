@@ -19,17 +19,27 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Theme variables:
- *  form_id = The ID of the Form
- * 	form_action = The URL for calling the Add Transaction
+ * 	id = The GridID for rendering AJAX layout table return
+ * 	filter_id = The Filter Form ID
+ * 	form_meta = Extra form meta that needs to be sent to the CMS to return the list of layouts
+ * 	pager = A paging control for this Xibo Grid
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">
-	<?php echo Theme::Get('form_meta'); ?>
-	<table>
-        <tr>
-            <td><label for="group" title="<?php echo Theme::Translate('The Name for this User Group'); ?>"><?php echo Theme::Translate('Name'); ?></label></td>
-            <td><input class="required" type="text" name="group" maxlength="50"></td>
-        </tr>
-    </table>
-</form>
+<div id="main-calendar-picker" class="form-group input-append date">
+	<input data-format="MM/yyyy" type="text" class="form-control input-medium"></input>
+	<span class="add-on">
+		<i data-time-icon="glyphicon glyphicon-time" data-date-icon="glyphicon glyphicon-calendar"></i>
+	</span>
+</div>
+<div class="XiboGrid" id="<?php echo Theme::Get('id'); ?>">
+	<div class="XiboFilter">
+		<div class="FilterDiv" id="Filter">
+			<form>
+				<?php echo Theme::Get('form_meta'); ?>
+				<input class="form-control input-medium search-query" placeholder="<?php echo Theme::Translate('Name') ?>" type="text" name="filter_name">
+			</form>
+		</div>
+	</div>
+	<div class="XiboData"></div>
+</div>

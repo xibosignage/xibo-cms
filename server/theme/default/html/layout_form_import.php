@@ -26,9 +26,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <form class="form-horizontal" id="<?php echo Theme::Get('form_upload_id'); ?>" method="post" action="<?php echo Theme::Get('form_upload_action'); ?>" enctype="multipart/form-data" target="fileupload">
     <fieldset>
         <?php echo Theme::Get('form_upload_meta'); ?>
-        <div class="control-group">
-            <label class="control-label" for="media_file" accesskey="n" title="<?php echo Theme::Translate('Select the file to upload'); ?>"><?php echo Theme::Translate('File'); ?></label>
-            <div class="controls">
+        <div class="form-group">
+            <label for="media_file" accesskey="n" title="<?php echo Theme::Translate('Select the file to upload'); ?>"><?php echo Theme::Translate('File'); ?></label>
+            <div class="col-sm-10">
                 <input name="media_file" type="file" id="media_file" tabindex="1" onchange="fileFormSubmit();this.form.submit();" />
             </div>
         </div>
@@ -39,14 +39,14 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 </div>
 <form class="XiboForm form-horizontal" id="<?php echo Theme::Get('form_id'); ?>" method="post" action="<?php echo Theme::Get('form_action'); ?>">
     <?php echo Theme::Get('form_meta'); ?>
-    <div class="control-group">
-        <label class="control-label" for="layout" accesskey="n" title="<?php echo Theme::Translate('The Name of the Layout - (1 - 50 characters)'); ?>"><?php echo Theme::Translate('Name'); ?></label>
-        <div class="controls">
+    <div class="form-group">
+        <label for="layout" accesskey="n" title="<?php echo Theme::Translate('The Name of the Layout - (1 - 50 characters)'); ?>"><?php echo Theme::Translate('Name'); ?></label>
+        <div class="col-sm-10">
             <input name="layout" class="required" type="text" id="layout" tabindex="1" />
         </div>
     </div>
-    <div class="control-group">
-        <div class="controls">
+    <div class="form-group">
+        <div class="col-sm-10">
             <label class="checkbox" for="replaceExisting" accesskey="n" title="<?php echo Theme::Translate('Replace existing media with the same name or use that media.'); ?>"><?php echo Theme::Translate('Replace Existing Media?'); ?>
                 <input class="checkbox" type="checkbox" id="replaceExisting" name="replaceExisting">
             </label>

@@ -26,18 +26,20 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
+<h1 class="page-header"><?php echo Theme::Translate('Dashboard'); ?></h1>
+
 <div class="row">
-	<div class="span6">
+	<div class="col-md-6">
 		<h3 class="text-center">Bandwidth Usage</h3>
 		<div id="flot_bandwidth_chart" style="height: 400px;" class="flot-chart"></div>
 	</div>
-	<div class="span6">
+	<div class="col-md-6">
 		<h3 class="text-center">Library Usage</h3>
 		<div id="flot_library_chart" style="height: 400px;" class="flot-chart"></div>
 	</div>
 </div>
 <div class="row">
-	<div class="span6">
+	<div class="col-md-6">
 		<h3 class="text-center">Display Activity</h3>
 		<table class="table">
 			<thead>
@@ -51,14 +53,14 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<?php foreach(Theme::Get('display-widget-rows') as $row) { ?>
 				<tr class="<?php echo $row['mediainventorystatus']; ?>">
 					<td><?php echo $row['display']; ?></td>
-					<td><span class="<?php echo $row['loggedin']; ?>"></span></td>
-					<td><span class="<?php echo $row['licensed']; ?>"></span></td>
+					<td><span class="<?php echo ($row['loggedin'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'; ?>"></span></td>
+					<td><span class="<?php echo ($row['licensed'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'; ?>"></span></td>
 				</tr>
 				<?php } ?>
 			</tbody>
 		</table>
 	</div>
-	<div class="span6">
+	<div class="col-md-6">
 		<?php echo Theme::Get('embedded-widget'); ?>
 	</div>
 </div>

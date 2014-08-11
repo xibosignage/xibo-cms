@@ -881,7 +881,7 @@ END;
         return $this->response;
     }
 
-    protected function EditFormForLibraryMedia($formTheme = 'library_form_media_edit')
+    protected function EditFormForLibraryMedia($extraFormFields = NULL)
     {
         global $session;
         $db =& $this->db;
@@ -945,9 +945,7 @@ END;
 
         $this->response->AddButton(__('Save'), '$("#EditLibraryBasedMedia").submit()');
 
-        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
-
-		// Setup the theme
+        // Setup the theme
         Theme::Set('form_id', 'EditLibraryBasedMedia');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
 		Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '"><input type="hidden" name="mediaid" value="' . $mediaid . '"><input type="hidden" name="lkid" value="' . $lkid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
@@ -956,16 +954,34 @@ END;
         Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
 		Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSizeBytes . '" />');
 
-		Theme::Set('name', $name);
-		Theme::Set('duration', $this->duration);
-		Theme::Set('is_duration_field_enabled', $durationFieldEnabled);
-		Theme::Set('valid_extensions', 'This form accepts: ' . $this->validExtensionsText . ' files up to a maximum size of ' . $this->maxFileSize);
-		Theme::Set('is_replace_field_checked', ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 'checked' : ''));
-        Theme::Set('is_assignable', $this->assignable);
+        Theme::Set('prepend', Theme::RenderReturn('library_form_media_edit'));
 
-		$form = Theme::RenderReturn($formTheme);
+        $formFields = array();
+        $formFields[] = FormManager::AddText('name', __('Name'), $name, 
+            __('The Name of this item - Leave blank to use the file name'), 'n');
 
-        $this->response->html = $form;
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
+
+        $formFields[] = FormManager::AddMessage(sprintf(__('This form accepts: %s files up to a maximum size of %s'), $this->validExtensionsText, $this->maxFileSize));
+
+        if ($this->assignable) {
+            $formFields[] = FormManager::AddCheckbox('replaceInLayouts', __('Update this media in all layouts it is assigned to.'), 
+                ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0), 
+                __('Note: It will only be replaced in layouts you have permission to edit.'), 
+                'r');
+        }
+
+        // Add in any extra form fields we might have provided by the super-class
+        if ($extraFormFields != NULL && is_array($extraFormFields)) {
+            foreach($extraFormFields as $field) {
+                $formFields[] = $field;
+            }
+        }
+
+        Theme::Set('form_fields', $formFields);
+
+        $this->response->html = Theme::RenderReturn('form_render');
         $this->response->dialogTitle = 'Edit ' . $this->displayType;
         $this->response->dialogSize = true;
         $this->response->dialogWidth = '450px';
@@ -1309,19 +1325,6 @@ END;
         if (!$this->auth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this media'), E_USER_ERROR);
 
-        // Form content
-        $form = '<form id="LayoutPermissionsForm" class="XiboForm" method="post" action="index.php?p=module&mod=' . $this->type . '&q=Exec&method=Permissions">';
-	$form .= '<input type="hidden" name="layoutid" value="' . $this->layoutid . '" />';
-	$form .= '<input type="hidden" name="regionid" value="' . $this->regionid . '" />';
-	$form .= '<input type="hidden" name="mediaid" value="' . $this->mediaid . '" />';
-	$form .= '  <table class="table table-bordered">';
-        $form .= '      <tr>';
-        $form .= '          <th>' . __('Group') . '</th>';
-        $form .= '          <th>' . __('View') . '</th>';
-        $form .= '          <th>' . __('Edit') . '</th>';
-        $form .= '          <th>' . __('Delete') . '</th>';
-        $form .= '      </tr>';
-
         // List of all Groups with a view/edit/delete checkbox
         $SQL = '';
         $SQL .= 'SELECT `group`.GroupID, `group`.`Group`, View, Edit, Del, `group`.IsUserSpecific ';
@@ -1353,23 +1356,36 @@ END;
             trigger_error(__('Unable to get permissions for this layout'), E_USER_ERROR);
         }
 
-        while($row = $db->get_assoc_row($results))
+        while ($row = $db->get_assoc_row($results))
         {
             $groupId = $row['GroupID'];
-            $group = ($row['IsUserSpecific'] == 0) ? '<strong>' . $row['Group'] . '</strong>' : $row['Group'];
+            $rowClass = ($row['IsUserSpecific'] == 0) ? 'strong_text' : '';
 
-            $form .= '<tr>';
-            $form .= ' <td>' . $group . '</td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_view" ' . (($row['View'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_edit" ' . (($row['Edit'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_del" ' . (($row['Del'] == 1) ? 'checked' : '') . '></td>';
-            $form .= '</tr>';
+            $checkbox = array(
+                    'id' => $groupId,
+                    'name' => Kit::ValidateParam($row['Group'], _STRING),
+                    'class' => $rowClass,
+                    'value_view' => $groupId . '_view',
+                    'value_view_checked' => (($row['View'] == 1) ? 'checked' : ''),
+                    'value_edit' => $groupId . '_edit',
+                    'value_edit_checked' => (($row['Edit'] == 1) ? 'checked' : ''),
+                    'value_del' => $groupId . '_del',
+                    'value_del_checked' => (($row['Del'] == 1) ? 'checked' : ''),
+                );
+
+            $checkboxes[] = $checkbox;
         }
 
-        $form .= '</table>';
-        $form .= '</form>';
+        $formFields = array();
+        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
+        Theme::Set('form_fields', $formFields);
 
-        $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
+        // Set some information about the form
+        Theme::Set('form_id', 'LayoutPermissionsForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=Permissions');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '" /><input type="hidden" name="regionid" value="' . $this->regionid . '" /><input type="hidden" name="mediaid" value="' . $this->mediaid . '" />');
+
+        $response->SetFormRequestResponse(NULL, __('Permissions'), '350px', '500px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != 0) ? $helpManager->Link('LayoutMedia', 'Permissions') : $helpManager->Link('Media', 'Permissions')) . '")');
         
         if ($this->assignedMedia) {
@@ -1571,9 +1587,6 @@ END;
         $transitions = $this->user->TransitionAuth($type);
         $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
         
-        // Prepare a list of options
-        $transitionDropdown = Kit::SelectList('transitionType', $transitions, 'code', 'transition', $transition, '', 'class');
-        
         // Compass points for direction
         $compassPoints = array(
             array('id' => 'N', 'name' => __('North')), 
@@ -1586,41 +1599,47 @@ END;
             array('id' => 'NW', 'name' => __('North West'))
         );
         
-        // Prepare a list of compass points
-        $directionDropdown = Kit::SelectList('transitionDirection', $compassPoints, 'id', 'name', $direction);
+        Theme::Set('form_id', 'TransitionForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=TransitionEdit');
+        Theme::Set('form_meta', '
+            <input type="hidden" name="type" value="' . $type . '">
+            <input type="hidden" name="layoutid" value="' . $this->layoutid . '">
+            <input type="hidden" name="mediaid" value="' . $this->mediaid . '">
+            <input type="hidden" name="lkid" value="' . $this->lkid . '">
+            <input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '">
+            <input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />
+            ');
+
+        $formFields[] = FormManager::AddCombo(
+                    'transitionType', 
+                    __('Transition'), 
+                    $transition,
+                    $transitions,
+                    'code',
+                    'transition',
+                    __('What transition should be applied when this region is finished?'), 
+                    't');
+
+        $formFields[] = FormManager::AddNumber('transitionDuration', __('Duration'), $duration, 
+            __('The duration for this transition, in milliseconds.'), 'l', '', 'transition-group');
         
-        // Some messages for the form
-        $msgTransition = __('What transition should be applied to this media item?');
-        $msgDuration = __('The duration for this transition, in milliseconds.');
-        $msgDirection = __('The direction for this transition.');
-        
-        // Construct the form
-        $form = <<<END
-        <form id="TransitionForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=TransitionEdit">
-            <input type="hidden" name="type" value="$type">
-            <input type="hidden" name="layoutid" value="$this->layoutid">
-            <input type="hidden" name="mediaid" value="$this->mediaid">
-            <input type="hidden" name="lkid" value="$this->lkid">
-            <input type="hidden" id="iRegionId" name="regionid" value="$this->regionid">
-            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" /> 
-            
-            <table>
-                <tr>
-                    <td><label for="tranisitionType" title="$msgTransition">$msgTransition</label></td>
-                    <td>$transitionDropdown</td>
-                </tr>
-                <tr class="transitionDuration">
-                    <td><label for="transitionDuration">$msgDuration</label></td>
-                    <td><input type="text" class="numeric" name="transitionDuration" id="transitionDuration" value="$duration" /></td>
-                </tr>
-                <tr class="transitionDirection">
-                    <td><label for="transitionDirection">$msgDirection</label></td>
-                    <td>$directionDropdown</td>
-                </tr>
-            </table>
-        </form>
-END;
-        
+        $formFields[] = FormManager::AddCombo(
+                    'transitionDirection', 
+                    __('Direction'), 
+                    $direction,
+                    $compassPoints,
+                    'id',
+                    'name',
+                    __('The direction for this transition. Only appropriate for transitions that move, such as Fly.'),
+                    'd',
+                    'transition-group transition-direction');
+
+        // Add some dependencies
+        $this->response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'none')));
+        $this->response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'block')), 'not');
+        $this->response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'none')));
+        $this->response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'block')), 'not');
+
         // Decide where the cancel button will take us
         if ($this->showRegionOptions)
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
@@ -1631,9 +1650,9 @@ END;
         $this->response->AddButton(__('Save'), '$("#TransitionForm").submit()');
         
         // Output the form and dialog
-        $this->response->html = $form;
-        $this->response->callBack = 'transitionFormLoad';
-        $this->response->dialogTitle = 'Edit ' . $type . ' Transition for ' . $this->displayType;
+        Theme::Set('form_fields', $formFields);
+        $this->response->html = Theme::RenderReturn('form_render');
+        $this->response->dialogTitle = sprintf(__('Edit %s Transition for %s'), $type, $this->displayType);
         $this->response->dialogSize = true;
         $this->response->dialogWidth = '450px';
         $this->response->dialogHeight = '280px';
@@ -2015,7 +2034,7 @@ END;
      * Form for updating the module settings
      */
     public function ModuleSettingsForm() {
-        return '';
+        return array();
     }
 
     /**

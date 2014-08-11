@@ -53,12 +53,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<td><?php echo $row['width']; ?></td>
 			<td><?php echo $row['height']; ?></td>
 			<td><?php echo $row['version']; ?></td>
-			<td><span class="<?php echo ($row['enabled'] == 1) ? 'icon-ok' : 'icon-remove'; ?>"></span></td>
+			<td><span class="<?php echo ($row['enabled'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'; ?>"></span></td>
 			<td>
 				<div class="btn-group pull-right">
     				<button class="btn dropdown-toggle" data-toggle="dropdown">
       					<?php echo Theme::Translate('Action'); ?>
-      					<span class="icon-tasks"></span>
+      					<span class="glyphicon glyphicon-tasks"></span>
     				</button>
     				<ul class="dropdown-menu">
 						<?php foreach($row['buttons'] as $button) { ?>

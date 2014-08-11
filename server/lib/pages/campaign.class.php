@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class campaignDAO
+class campaignDAO extends baseDAO
 {
     private $db;
     private $user;
@@ -36,13 +36,25 @@ class campaignDAO
         // Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
-        Theme::Set('campaign_form_add_url', 'index.php?p=campaign&q=AddForm');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="Grid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
         // Render the Theme and output
         Theme::Render('campaign_page');
+    }
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Add Campaign'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=campaign&q=AddForm',
+                    'help' => __('Add a new Campaign'),
+                    'onclick' => ''
+                    )
+            );
     }
 
     /**
@@ -138,9 +150,11 @@ class campaignDAO
         Theme::Set('form_id', 'CampaignAddForm');
         Theme::Set('form_action', 'index.php?p=campaign&q=Add');
 
-        $form = Theme::RenderReturn('campaign_form_add');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('Name', __('Name'), NULL, __('The Name for this Campaign'), 'n', 'required');
+        Theme::Set('form_fields', $formFields);
 
-        $response->SetFormRequestResponse($form, __('Add Campaign'), '350px', '150px');
+        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Add Campaign'), '350px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#CampaignAddForm").submit()');
@@ -202,15 +216,16 @@ class campaignDAO
 
         $campaign = Kit::ValidateParam($row['Campaign'], _STRING);
 
+        $formFields = array();
+        $formFields[] = FormManager::AddText('Name', __('Name'), $campaign, __('The Name for this Campaign'), 'n', 'required');
+        Theme::Set('form_fields', $formFields);
+
         // Set some information about the form
         Theme::Set('form_id', 'CampaignEditForm');
         Theme::Set('form_action', 'index.php?p=campaign&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="CampaignID" value="' . $campaignId . '" />');
-        Theme::Set('campaign', $campaign);
-        
-        $form = Theme::RenderReturn('campaign_form_edit');
 
-        $response->SetFormRequestResponse($form, __('Edit Campaign'), '350px', '150px');
+        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Edit Campaign'), '350px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#CampaignEditForm").submit()');
@@ -277,9 +292,9 @@ class campaignDAO
         Theme::Set('form_action', 'index.php?p=campaign&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="CampaignID" value="' . $campaignId . '" />');
 
-        $form = Theme::RenderReturn('campaign_form_delete');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
 
-        $response->SetFormRequestResponse($form, __('Delete Campaign'), '350px', '175px');
+        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete Campaign'), '350px', '175px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#CampaignDeleteForm").submit()');
@@ -381,9 +396,16 @@ class campaignDAO
             $checkboxes[] = $checkbox;
         }
 
-        Theme::Set('form_rows', $checkboxes);
+        $formFields = array();
+        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
+        $formFields[] = FormManager::AddCheckbox('replaceInLayouts', 
+            __('Update these permissions on all layouts, regions and media.'), 0, 
+            __('Note: It will only be replaced in layouts you have permission to edit.'), 
+            'r');
 
-        $form = Theme::RenderReturn('campaign_form_permissions');
+        Theme::Set('form_fields', $formFields);
+
+        $form = Theme::RenderReturn('form_render');
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Permissions') . '")');
@@ -625,7 +647,7 @@ class campaignDAO
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="LayoutAssignView">');
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ResponseManager::Pager($id, 'form_grid_pager'));
         
         // Get the currently assigned layouts and put them in the "well"
         // // Layouts in group

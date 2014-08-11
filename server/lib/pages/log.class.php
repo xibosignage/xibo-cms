@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class logDAO 
+class logDAO extends baseDAO 
 {
 	private $db;
 	private $user;
@@ -37,12 +37,11 @@ class logDAO
 
 		// Configure the theme
         $id = uniqid();
-        Theme::Set('id', $id);
+        Theme::Set('id', 'LogGridForRefresh');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="log"><input type="hidden" name="q" value="Grid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
-        Theme::Set('truncate_url', 'index.php?p=log&q=TruncateForm');
-
+        
         // Construct Filter Form
         if (Kit::IsFilterPinned('log', 'Filter')) {
             Theme::Set('filter_pinned', 'checked');
@@ -80,6 +79,33 @@ class logDAO
         // Render the Theme and output
         Theme::Render('log_page');
 	}
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Truncate'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=log&q=TruncateForm',
+                    'help' => __('Truncate the Log'),
+                    'onclick' => ''
+                    ),
+                array('title' => __('Refresh'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Truncate the Log'),
+                    'onclick' => 'XiboGridRender(\'LogGridForRefresh\')'
+                    ),
+                array('title' => __('Filter'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Open the filter form'),
+                    'onclick' => 'ToggleFilterView(\'Filter\')'
+                    )
+            );
+    }
 	
 	function Grid() 
 	{
@@ -176,9 +202,9 @@ class logDAO
         Theme::Set('form_id', 'TruncateForm');
         Theme::Set('form_action', 'index.php?p=log&q=Truncate');
 
-        $form = Theme::RenderReturn('log_form_truncate');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to truncate?'))));
 
-		$response->SetFormRequestResponse($form, __('Truncate Log'), '430px', '200px');
+		$response->SetFormRequestResponse(NULL, __('Truncate Log'), '430px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Log', 'Truncate') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#TruncateForm").submit()');

@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class displayDAO
+class displayDAO extends baseDAO
 {
     private $db;
     private $user;
@@ -132,46 +132,138 @@ class displayDAO
         Theme::Set('form_action', 'index.php?p=display&q=modify');
         Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayObject->displayId . '" />');
         
-        // Set the field values
-        Theme::Set('display', $displayObject->display);
-        Theme::Set('description', $displayObject->description);
-        Theme::Set('defaultlayoutid', $displayObject->defaultLayoutId);
-        Theme::Set('license', $displayObject->license);
-        Theme::Set('licensed', $displayObject->licensed);
-        Theme::Set('inc_schedule', $displayObject->incSchedule);
-        Theme::Set('auditing', $displayObject->isAuditing);
-        Theme::Set('email_alert', $displayObject->emailAlert);
-        Theme::Set('alert_timeout', $displayObject->alertTimeout);
-        Theme::Set('wakeOnLanEnabled', $displayObject->wakeOnLanEnabled);
-        Theme::Set('wakeOnLanTime', $displayObject->wakeOnLanTime);
-        Theme::Set('secureOn', $displayObject->secureOn);
-        Theme::Set('cidr', $displayObject->cidr);
-        Theme::Set('latitude', $displayObject->latitude);
-        Theme::Set('longitude', $displayObject->longitude);
-        Theme::Set('displayprofileid', $displayObject->displayProfileId);
-        
-        // If the broadcast address has not been set, then default to the client ip address
-        Theme::Set('broadCastAddress', (($displayObject->broadCastAddress == '') ? $displayObject->clientAddress : $displayObject->broadCastAddress));
+        // Column 1
+        $formFields = array();
+        $formFields[] = FormManager::AddText('display', __('Display'), $displayObject->display, 
+            __('The Name of the Display - (1 - 50 characters).'), 'd', 'required');
 
-        // List of Layouts
-        Theme::Set('default_layout_field_list', $this->user->LayoutList());
-        Theme::Set('interleave_default_field_list', array(array('inc_scheduleid' => '1', 'inc_schedule' => 'Yes'), array('inc_scheduleid' => '0', 'inc_schedule' => 'No')));
-        Theme::Set('auditing_field_list', array(array('auditingid' => '1', 'auditing' => 'Yes'), array('auditingid' => '0', 'auditing' => 'No')));
-        Theme::Set('email_alert_field_list', array(array('email_alertid' => '1', 'email_alert' => 'Yes'), array('email_alertid' => '0', 'email_alert' => 'No')));
-        Theme::Set('license_field_list', array(array('licensedid' => '1', 'licensed' => 'Yes'), array('licensedid' => '0', 'licensed' => 'No')));
+        $formFields[] = FormManager::AddText('hardwareKey', __('Display\'s Hardware Key'), $displayObject->license, 
+            __('A unique identifier for this display.'), 'h', 'required', NULL, false);
+
+        $formFields[] = FormManager::AddText('description', __('Description'), $displayObject->description, 
+            __('A description - (1 - 254 characters).'), 'p', 'maxlength="50"');
+
+        $formFields[] = FormManager::AddCombo(
+                    'licensed', 
+                    __('Licence Display?'), 
+                    $displayObject->licensed,
+                    array(array('licensedid' => '1', 'licensed' => 'Yes'), array('licensedid' => '0', 'licensed' => 'No')),
+                    'licensedid',
+                    'licensed',
+                    __('Use one of the available licenses for this display?'), 
+                    'l');
+
+        $formFields[] = FormManager::AddCombo(
+                    'defaultlayoutid', 
+                    __('Default Layout'), 
+                    $displayObject->defaultLayoutId,
+                    $this->user->LayoutList(),
+                    'layoutid',
+                    'layout',
+                    __('The Default Layout to Display where there is no other content.'), 
+                    't');
+
+        Theme::Set('form_fields_general', $formFields);
+
+        // Maintenance
+        $formFields = array();
+        $formFields[] = FormManager::AddCombo(
+                    'email_alert', 
+                    __('Email Alerts'), 
+                    $displayObject->emailAlert,
+                    array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
+                    'id',
+                    'value',
+                    __('Do you want to be notified by email if there is a problem with this display?'), 
+                    'a');
+
+        $formFields[] = FormManager::AddNumber('alert_timeout', __('Alert Timeout'), $displayObject->alertTimeout, 
+            __('How long in minutes after the display last connected to the webservice should we send an alert. Set this value higher than the collection interval on the client. Set to 0 to use global default.'), 
+            'o');
+
+        Theme::Set('form_fields_maintenance', $formFields);
+        
+        // Location
+        $formFields = array();
+
+        $formFields[] = FormManager::AddNumber('latitude', __('Latitude'), $displayObject->latitude, 
+            __('The Latitude of this display'), 'g');
+
+        $formFields[] = FormManager::AddNumber('longitude', __('Longitude'), $displayObject->longitude, 
+            __('The Longitude of this Display'), 'g');
+
+        Theme::Set('form_fields_location', $formFields);
+
+        // Wake on LAN
+        $formFields = array();
+        
+        $formFields[] = FormManager::AddCheckbox('wakeOnLanEnabled', __('Enable Wake on LAN'), 
+            $displayObject->wakeOnLanEnabled, __('Wake on Lan requires the correct network configuration to route the magic packet to the display PC'), 
+            'w');
+
+        $formFields[] = FormManager::AddText('broadCastAddress', __('BroadCast Address'), (($displayObject->broadCastAddress == '') ? $displayObject->clientAddress : $displayObject->broadCastAddress), 
+            __('The IP address of the remote host\'s broadcast address (or gateway)'), 'b');
+
+        $formFields[] = FormManager::AddText('secureOn', __('Wake on LAN SecureOn'), $displayObject->secureOn, 
+            __('Enter a hexidecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn).'), 's');
+
+        $formFields[] = FormManager::AddText('wakeOnLanTime', __('Wake on LAN Time'), $displayObject->wakeOnLanTime, 
+            __('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), 't');
+
+        $formFields[] = FormManager::AddText('cidr', __('Wake on LAN CIDR'), $displayObject->cidr, 
+            __('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unkown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), 'c');
+
+        Theme::Set('form_fields_wol', $formFields);
+
+        // Advanced
+        $formFields = array();
         
         $displayProfileList = $this->user->DisplayProfileList(NULL, array('type' => $displayObject->clientType));
         array_unshift($displayProfileList, array('displayprofileid' => 0, 'name' => ''));
-        Theme::Set('displayprofile_field_list', $displayProfileList);
 
-        // Is the wake on lan field checked?
-        Theme::Set('wake_on_lan_checked', (($displayObject->wakeOnLanEnabled == 1) ? ' checked' : ''));
-        
-        // Render the form and output
-        $form = Theme::RenderReturn('display_form_edit');
+        $formFields[] = FormManager::AddCombo(
+                    'displayprofileid', 
+                    __('Settings Profile?'), 
+                    $displayObject->displayProfileId,
+                    $displayProfileList,
+                    'displayprofileid',
+                    'name',
+                    __('What display profile should this display use?'), 
+                    'p');
 
-        $response->SetFormRequestResponse($form, __('Edit a Display'), '650px', '350px');
-        $response->dialogClass = 'modal-big';
+        $formFields[] = FormManager::AddCombo(
+                    'inc_schedule', 
+                    __('Interleave Default'), 
+                    $displayObject->incSchedule,
+                    array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
+                    'id',
+                    'value',
+                    __('Whether to always put the default layout into the cycle.'), 
+                    'i');
+
+        $formFields[] = FormManager::AddCombo(
+                    'auditing', 
+                    __('Auditing'), 
+                    $displayObject->isAuditing,
+                    array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
+                    'id',
+                    'value',
+                    __('Collect auditing from this client. Should only be used if there is a problem with the display.'), 
+                    'a');
+
+        Theme::Set('form_fields_advanced', $formFields);
+
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('location', __('Location'));
+        $tabs[] = FormManager::AddTab('maintenance', __('Maintenance'));
+        $tabs[] = FormManager::AddTab('wol', __('Wake on LAN'));
+        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+
+        Theme::Set('form_tabs', $tabs);
+
+        $response->SetFormRequestResponse(NULL, __('Edit a Display'), '650px', '350px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayEditForm").submit()');
@@ -217,11 +309,11 @@ class displayDAO
             $row['lastaccessed'] = date("Y-m-d H:i:s", $row['lastaccessed']);
 
             // Create some login lights
-            $row['licensed'] = ($row['licensed'] == 1) ? 'icon-ok' : 'icon-remove';
-            $row['inc_schedule'] = ($row['inc_schedule'] == 1) ? 'icon-ok' : 'icon-remove';
-            $row['email_alert'] = ($row['email_alert'] == 1) ? 'icon-ok' : 'icon-remove';
-            $row['loggedin'] = ($row['loggedin'] == 1) ? 'icon-ok' : 'icon-remove';
-            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'error' : 'warning');
+            $row['licensed'] = ($row['licensed'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
+            $row['inc_schedule'] = ($row['inc_schedule'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
+            $row['email_alert'] = ($row['email_alert'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
+            $row['loggedin'] = ($row['loggedin'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
+            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
 
             // Schedule Now
             $row['buttons'][] = array(
@@ -378,9 +470,9 @@ class displayDAO
         Theme::Set('form_action', 'index.php?p=display&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayid . '">');
 
-        $form = Theme::RenderReturn('display_form_delete');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this display? This cannot be undone.'))));
 
-        $response->SetFormRequestResponse($form, __('Delete this Display?'), '350px', '210');
+        $response->SetFormRequestResponse(NULL, __('Delete this Display?'), '350px', '210');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DisplayDeleteForm").submit()');
@@ -439,12 +531,21 @@ class displayDAO
         Theme::Set('form_id', 'DefaultLayoutForm');
         Theme::Set('form_action', 'index.php?p=display&q=DefaultLayout');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayId" value="' . $displayId . '">');
-        Theme::Set('layout_field_list', $this->user->LayoutList());
-        Theme::Set('defaultlayoutid', $defaultLayoutId);
 
-        $form = Theme::RenderReturn('display_form_default_layout');
+        $formFields = array();
+        $formFields[] = FormManager::AddCombo(
+                    'defaultlayoutid', 
+                    __('Default Layout'), 
+                    $defaultLayoutId,
+                    $this->user->LayoutList(),
+                    'layoutid',
+                    'layout',
+                    __('The Default Layout will be shown there are no other scheduled Layouts. It is usually a full screen logo or holding image.'), 
+                    'd');
 
-        $response->SetFormRequestResponse($form, __('Edit Default Layout'), '300px', '150px');
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Edit Default Layout'), '300px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'DefaultLayout') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DefaultLayoutForm").submit()');
@@ -495,7 +596,7 @@ class displayDAO
             trigger_error(__('No DisplayId Given'));
 
         // Get the media inventory xml for this display
-        $SQL = "SELECT MediaInventoryXml FROM display WHERE DisplayId = %d";
+        $SQL = "SELECT IFNULL(MediaInventoryXml, '<xml></xml>') AS MediaInventoryXml FROM display WHERE DisplayId = %d";
         $SQL = sprintf($SQL, $displayId);
 
         if (!$mediaInventoryXml = $db->GetSingleValue($SQL, 'MediaInventoryXml', _HTMLSTRING))
@@ -727,9 +828,9 @@ class displayDAO
         Theme::Set('form_action', 'index.php?p=display&q=WakeOnLan');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayId" value="' . $displayId . '"><input type="hidden" name="MacAddress" value="' . $macAddress . '">');
 
-        $form = Theme::RenderReturn('display_form_wakeonlan');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to send a Wake On Lan message to this display?'))));
 
-        $response->SetFormRequestResponse($form, __('Wake On Lan'), '300px', '250px');
+        $response->SetFormRequestResponse(NULL, __('Wake On Lan'), '300px', '250px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Send'), '$("#WakeOnLanForm").submit()');
         $response->Respond();
