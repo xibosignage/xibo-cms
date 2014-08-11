@@ -285,37 +285,40 @@ class displaygroupDAO extends baseDAO
         $SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
         $SQL .= " ORDER BY display.Display ";
         
-        $displaysAssigned = $db->GetArray($SQL);
+        $displays_assigned = $this->user->DisplayList(array('display'), array('displaygroupid' => $displayGroupID), 'edit');
 
-        if (!is_array($displaysAssigned))
-        {
-            trigger_error($db->error());
+        if (!is_array($displays_assigned))
             trigger_error(__('Error getting Displays'), E_USER_ERROR);
+
+        // Build a new available array, based on the view permissions.
+        $displaysAssigned = array();
+
+        foreach ($displays_assigned as $display) {
+            
+            // Go through each and set the appropriate fields
+            $displaysAssigned[] = array(
+                    'Display' => $display['display'],
+                    'list_id' => 'DisplayID_' . $display['displayid']
+                );
         }
 
         Theme::Set('displays_assigned', $displaysAssigned);
         
-        // Displays not in group
-        $SQL  = "";
-        $SQL .= "SELECT display.DisplayID, ";
-        $SQL .= "       display.Display, ";
-        $SQL .= "       CONCAT('DisplayID_', display.DisplayID) AS list_id ";
-        $SQL .= "FROM   display ";
-        $SQL .= " WHERE display.DisplayID NOT       IN ";
-        $SQL .= "       (SELECT display.DisplayID ";
-        $SQL .= "       FROM    display ";
-        $SQL .= "               INNER JOIN lkdisplaydg ";
-        $SQL .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
-        $SQL .= sprintf("   WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
-        $SQL .= "       )";
-        $SQL .= " ORDER BY display.Display ";
-
-        $displaysAvailable = $db->GetArray($SQL);
+        // All Displays 
+        $displays = $this->user->DisplayList(array('display'), array('exclude_displaygroupid' => $displayGroupID), 'edit');
         
-        if (!is_array($displaysAvailable))
-        {
-            trigger_error($db->error());
+        if (!is_array($displays))
             trigger_error(__('Error getting Displays'), E_USER_ERROR);
+
+        // Build a new available array, based on the view permissions.
+        $displaysAvailable = array();
+
+        foreach ($displays as $display) {
+            // Go through each and set the appropriate fields
+            $displaysAvailable[] = array(
+                    'Display' => $display['display'],
+                    'list_id' => 'DisplayID_' . $display['displayid']
+                );
         }
 
         Theme::Set('displays_available', $displaysAvailable);
@@ -338,7 +341,7 @@ class displaygroupDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $response = new ResponseManager();
@@ -348,10 +351,16 @@ class displaygroupDAO extends baseDAO
         
         $displayGroupObject = new DisplayGroup($db);
         
-        if (!$displayGroupObject->Add($displayGroup, 0, $description))
+        if (!$displayGroupId = $displayGroupObject->Add($displayGroup, 0, $description))
         {
             trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
         }
+
+        // Add full permissions for this user to this group
+        $security = new DisplayGroupSecurity($db);
+
+        if (!$security->Link($displayGroupId, $this->user->getGroupFromID($this->user->userid, true), 1, 1, 1))
+            trigger_error(__('Unable to set permissions'));
         
         $response->SetFormSubmitResponse(__('Display Group Added'), false);
         $response->Respond();
@@ -365,7 +374,7 @@ class displaygroupDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db             =& $this->db;
         $response       = new ResponseManager();
@@ -399,7 +408,7 @@ class displaygroupDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db             =& $this->db;   
         $response       = new ResponseManager();
@@ -572,7 +581,7 @@ class displaygroupDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $user =& $this->user;
@@ -788,7 +797,7 @@ class displaygroupDAO extends baseDAO
         $response   = new ResponseManager();
 
         $displayGroupId = Kit::GetParam('displaygroupid', _GET, _INT);
-        $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY_INT, array(), false);
+        $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY_INT, NULL, false);
 
         if ($displayGroupId == 0)
             trigger_error(__('Display Group not selected'), E_USER_ERROR);

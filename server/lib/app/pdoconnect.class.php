@@ -34,8 +34,18 @@ Class PDOConnect {
 			global $dbpass;
 			global $dbname;
 
+			$dbport = '';
+
+			if (strstr($dbhost, ':')) {
+				$hostParts = explode(':', $dbhost);
+				$dsn = 'mysql:host=' . $hostParts[0] . ';port=' . $hostParts[1] . ';dbname=' . $dbname . ';';
+			}
+			else {
+				$dsn = 'mysql:host=' . $dbhost . ';dbname=' . $dbname . ';';
+			}
+
 			// Open the connection and set the error mode
-			self::$conn = new PDO('mysql:host=' . $dbhost . ';dbname=' . $dbname . ';', $dbuser, $dbpass);
+			self::$conn = new PDO($dsn, $dbuser, $dbpass);
 			self::$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 			self::$conn->query("SET NAMES 'utf8'");

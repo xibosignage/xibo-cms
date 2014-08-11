@@ -162,7 +162,7 @@ class adminDAO extends baseDAO
 
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
         Kit::ClassLoader('setting');
         $data = new Setting($this->db);

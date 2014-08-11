@@ -55,8 +55,8 @@ class userDAO extends baseDAO
 
         if (Kit::IsFilterPinned('user', 'Filter')) {
             Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_username', Session::Get('user', 'filter_username'));
-            Theme::Set('filter_usertypeid', Session::Get('user', 'filter_usertypeid'));
+            Theme::Set('filter_username', Session::Get('user_admin', 'filter_username'));
+            Theme::Set('filter_usertypeid', Session::Get('user_admin', 'filter_usertypeid'));
         }
         else {
             Theme::Set('filter_usertypeid', 0);
@@ -111,14 +111,14 @@ class userDAO extends baseDAO
         // Capture the filter options
         // User ID
         $filter_username = Kit::GetParam('filter_username', _POST, _STRING);
-        setSession('user', 'filter_username', $filter_username);
+        setSession('user_admin', 'filter_username', $filter_username);
         
         // User Type ID
         $filter_usertypeid = Kit::GetParam('filter_usertypeid', _POST, _INT);
-        setSession('user', 'filter_usertypeid', $filter_usertypeid);
+        setSession('user_admin', 'filter_usertypeid', $filter_usertypeid);
 
         // Pinned option?        
-        setSession('user', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('user_admin', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Generate the results
         $sql  = "SELECT user.UserID, user.UserName, user.usertypeid, user.loggedin, user.lastaccessed, user.email, user.homepage ";
@@ -230,7 +230,7 @@ class userDAO extends baseDAO
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $response = new ResponseManager();
@@ -320,7 +320,7 @@ class userDAO extends baseDAO
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db 	=& $this->db;
         $response	= new ResponseManager();
@@ -393,7 +393,7 @@ class userDAO extends baseDAO
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
             $db 	=& $this->db;
             $user       =& $this->user;
@@ -453,23 +453,11 @@ class userDAO extends baseDAO
                 trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
 
             // Delete the user
-            $sqldel = "DELETE FROM user";
-            $sqldel .= " WHERE UserID = %d"; 
-
-            if (!$db->query(sprintf($sqldel, $userid)))
-            {
-                trigger_error($db->error());
-                trigger_error(__("This user has been active, you may only retire them."), E_USER_ERROR);
-            }
-
-            // We should delete this users sessions record.
-            $SQL = "DELETE FROM session WHERE userID = %d ";
-
-            if (!$db->query(sprintf($SQL, $userid)))
-            {
-                trigger_error($db->error());
-                trigger_error(__("If logged in, this user will be deleted once they log out."), E_USER_ERROR);
-            }
+            Kit::ClassLoader('userdata');
+            $user = new UserData($this->db);
+            $user->userId = $userid;
+            if (!$user->Delete())
+                trigger_error($user->GetErrorMessage(), E_USER_ERROR);
 
             $response->SetFormSubmitResponse(__('User Deleted.'));
             $response->Respond();
@@ -691,7 +679,7 @@ class userDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $response = new ResponseManager();
@@ -791,7 +779,7 @@ class userDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $response = new ResponseManager();
@@ -849,7 +837,7 @@ class userDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $response = new ResponseManager();

@@ -368,7 +368,7 @@
                 if (!$groupID = $userGroupObject->Add($this->getNameFromID($id), 1))
                 {
                     // Error
-                    trigger_error(__('User does not have a group and Xibo is unable to add one.'), E_USER_ERROR);
+                    trigger_error(__('User does not have a group and we are unable to add one.'), E_USER_ERROR);
                 }
 
                 // Link the two
@@ -527,7 +527,7 @@
         $userid     =& $this->userid;
         $usertypeid     =& $this->usertypeid;
         
-        Debug::LogEntry('audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
+        //Debug::LogEntry('audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
         
         // Get some information about this menu
         // I.e. get the Menu Items this user has access to
@@ -559,7 +559,6 @@
         }
         $SQL .= " ORDER BY menuitem.Sequence";
         
-        Debug::LogEntry('audit', $SQL);
         
         if (!$result = $db->query($SQL))
         {
@@ -1376,7 +1375,11 @@ END;
         if ($this->usertypeid == 1)
         {
             $auth->FullAccess();
-            return $auth;
+
+            if ($fullObject)
+                return $auth;
+
+            return true;
         }
 
         // Permissions for groups the user is assigned to, and Everyone
@@ -1444,8 +1447,8 @@ END;
             }
         }
         
-        if ($isDisplaySpecific == 1)
-            $SQL .= " AND displaygroup.IsDisplaySpecific = 1 ";
+        if ($isDisplaySpecific != -1)
+            $SQL .= sprintf(" AND displaygroup.IsDisplaySpecific = %d ", $isDisplaySpecific);
 
         $SQL .= " ORDER BY displaygroup.DisplayGroup ";
         
@@ -1489,7 +1492,7 @@ END;
     /**
      * List of Displays this user has access to view
      */
-    public function DisplayList($sort_order = array('displayid'), $filter_by = array()) {
+    public function DisplayList($sort_order = array('displayid'), $filter_by = array(), $auth_level = 'view') {
 
         $SQL  = 'SELECT display.displayid, ';
         $SQL .= '    display.display, ';
@@ -1524,6 +1527,32 @@ END;
         // Filter by Display ID?
         if (Kit::GetParam('displayid', $filter_by, _INT) != 0) {
             $SQL .= sprintf(' AND display.displayid = %d ', Kit::GetParam('displayid', $filter_by, _INT));
+        }
+
+        // Filter by Display Name?
+        if (Kit::GetParam('display', $filter_by, _STRING) != '') {
+            // convert into a space delimited array
+            $names = explode(' ', Kit::GetParam('display', $filter_by, _STRING));
+
+            foreach($names as $searchName)
+            {
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-')
+                    $SQL.= " AND  (display.display NOT LIKE '%" . sprintf('%s', ltrim($this->db->escape_string($searchName), '-')) . "%') ";
+                else
+                    $SQL.= " AND  (display.display LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
+            }
+        }
+
+        // Exclude a group?
+        if (Kit::GetParam('exclude_displaygroupid', $filter_by, _INT) != 0) {
+            $SQL .= " AND display.DisplayID NOT IN ";
+            $SQL .= "       (SELECT display.DisplayID ";
+            $SQL .= "       FROM    display ";
+            $SQL .= "               INNER JOIN lkdisplaydg ";
+            $SQL .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
+            $SQL .= sprintf("   WHERE  lkdisplaydg.DisplayGroupID   = %d ", Kit::GetParam('exclude_displaygroupid', $filter_by, _INT));
+            $SQL .= "       )";
         }
 
         // Sorting?
@@ -1564,6 +1593,10 @@ END;
 
             if ($auth->view)
             {
+                // If auth level = edit and we don't have edit, then leave them off
+                if ($auth_level == 'edit' && !$auth->edit)
+                    continue;
+
                 $displayItem['view'] = (int) $auth->view;
                 $displayItem['edit'] = (int) $auth->edit;
                 $displayItem['del'] = (int) $auth->del;

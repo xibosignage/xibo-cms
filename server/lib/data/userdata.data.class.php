@@ -34,6 +34,34 @@ define("HASH_PBKDF2_INDEX", 3);
 
 class Userdata extends Data
 {
+    public $userId;
+
+    public function Delete() {
+        if (!isset($this->userId) || $this->userId == 0)
+            return $this->SetError(__('Missing userId'));
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM `user` WHERE userid = :userid');
+            $sth->execute(array('userid' => $this->userId));
+
+            $sth = $dbh->prepare('DELETE FROM `session` WHERE userid = :userid');
+            $sth->execute(array('userid' => $this->userId));
+
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
     /**
      * Change a users password
      * @param <type> $userId

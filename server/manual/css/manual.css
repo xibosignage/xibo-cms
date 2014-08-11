@@ -117,3 +117,8 @@ body {
     width: 263px;
   }
 }
+
+.api-method-call-doc {
+  margin-top: 30px;
+  border-bottom: 1px solid #eee
+}

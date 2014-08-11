@@ -213,7 +213,7 @@ class resolutionDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db 	=& $this->db;
         $user 	=& $this->user;
@@ -237,7 +237,7 @@ class resolutionDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db 	=& $this->db;
         $user 	=& $this->user;
@@ -263,7 +263,7 @@ class resolutionDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db 	=& $this->db;
         $user 	=& $this->user;

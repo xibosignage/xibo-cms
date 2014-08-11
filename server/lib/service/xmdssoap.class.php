@@ -352,6 +352,83 @@ class XMDSSoap {
             return new SoapFault('Sender', 'Unable to get a list of files');
         }
 
+<<<<<<< TREE
+=======
+        // Added paths
+        $paths = array();
+
+        while ($row = $db->get_assoc_row($results))
+        {
+            $recordType	= Kit::ValidateParam($row['RecordType'], _WORD);
+            $path	= Kit::ValidateParam($row['path'], _STRING);
+            $id		= Kit::ValidateParam($row['id'], _STRING);
+            $md5	= Kit::ValidateParam($row['MD5'], _HTMLSTRING);
+            $fileSize	= Kit::ValidateParam($row['FileSize'], _INT);
+            $background	= Kit::ValidateParam($row['background'], _STRING);
+            $xml = Kit::ValidateParam($row['xml'], _HTMLSTRING);
+
+            if ($recordType == 'layout')
+            {
+                // For layouts the MD5 column is the layout xml
+                $fileSize 	= strlen($xml);
+                
+                if ($this->isAuditing == 1) 
+                    Debug::LogEntry("audit", 'MD5 for layoutid ' . $id . ' is: [' . $md5 . ']', "xmds", "RequiredFiles");
+            }
+            else if ($recordType == 'media')
+            {
+                // If they are empty calculate them and save them back to the media.
+                if ($md5 == '' || $fileSize == 0)
+                {
+                    $md5 	= md5_file($libraryLocation.$path);
+                    $fileSize	= filesize($libraryLocation.$path);
+                    
+                    // Update the media record with this information
+                    $SQL = sprintf("UPDATE media SET `MD5` = '%s', FileSize = %d WHERE MediaID = %d", $md5, $fileSize, $id);
+
+                    if (!$db->query($SQL))
+                        trigger_error($db->error());
+                }
+            }
+            else
+            {
+                continue;
+            }
+
+            // Add the file node
+            $file = $requiredFilesXml->createElement("file");
+
+            $file->setAttribute("type", $recordType);
+            $file->setAttribute("path", $path);
+            $file->setAttribute("id", $id);
+            $file->setAttribute("size", $fileSize);
+            $file->setAttribute("md5", $md5);
+            
+            $fileElements->appendChild($file);
+
+            // Add this to the paths array
+            $paths[] = $path;
+
+            // If this is a layout type and there is a background then add the background node
+            // TODO: We need to alter the layout table to have a background ID rather than a path
+            // TODO: We need to alter the background edit method to create a lklayoutmedia link for
+            // background images (and maintain it when they change)
+            if ($recordType == 'layout' && $background != '' && !in_array($background, $paths))
+            {
+                // Also append another file node for the background image (if there is one)
+                $file = $requiredFilesXml->createElement("file");
+                $file->setAttribute("type", "media");
+                $file->setAttribute("path", $background);
+                $file->setAttribute("md5", md5_file($libraryLocation.$background));
+                $file->setAttribute("size", filesize($libraryLocation.$background));
+                $fileElements->appendChild($file);
+
+                // Add this to the paths array
+                $paths[] = $background;
+            }
+        }
+
+>>>>>>> MERGE-SOURCE
         Kit::ClassLoader('layout');
 
         // Go through each layout and see if we need to supply any resource nodes.
@@ -363,7 +440,11 @@ class XMDSSoap {
 
             foreach($layoutInformation['regions'] as $region) {
                 foreach($region['media'] as $media) {
+<<<<<<< TREE
                     if ($media['render'] == 'html' || $media['mediatype'] == 'ticker' || $media['mediatype'] == 'text' || $media['mediatype'] == 'dataset') {
+=======
+                    if ($media['mediatype'] == 'ticker' || $media['mediatype'] == 'text' || $media['mediatype'] == 'datasetview' || $media['mediatype'] == 'webpage') {
+>>>>>>> MERGE-SOURCE
                         // Append this item to required files
                         $file = $requiredFilesXml->createElement("file");
                         $file->setAttribute('type', 'resource');
@@ -1092,6 +1173,7 @@ class XMDSSoap {
      * @param <type> $hardwareKey
      * @return <type>
      */
+<<<<<<< TREE
     private function AuthDisplay($hardwareKey) {
     
         try {
@@ -1156,6 +1238,62 @@ class XMDSSoap {
             Debug::LogEntry('error', $e->getMessage());
             return false;
         }
+=======
+    private function AuthDisplay($hardwareKey)
+    {
+	$db =& $this->db;
+
+	// check in the database for this hardwareKey
+	$SQL = "SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin, email_alert, display, version_instructions FROM display WHERE license = '$hardwareKey'";
+
+        if (!$result = $db->query($SQL))
+	{
+            trigger_error("License key query failed:" .$db->error());
+            return false;
+	}
+
+	//Is it there?
+	if ($db->num_rows($result) == 0)
+            return false;
+	
+        //we have seen this display before, so check the licensed value
+        $row = $db->get_row($result);
+
+        if ($row[0] == 0)
+            return false;
+
+        // Pull the client IP address
+        $clientAddress = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
+
+        // See if the client was offline and if appropriate send an alert
+        // to say that it has come back online
+        if ($row[5] == 0 && $row[6] == 1 
+            && (Config::GetSetting('MAINTENANCE_ENABLED') == 'On' || Config::GetSetting('MAINTENANCE_ENABLED') == 'Protected') 
+            && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On')
+        {
+            $msgTo    = Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
+            $msgFrom  = Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);
+
+            $subject  = sprintf(__("Recovery for Display %s"),$row[7]);
+            $body     = sprintf(__("Display %s with ID %d is now back online."), $row[7], $row[3]);
+
+            Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
+        }
+
+        // Last accessed date on the display
+        $displayObject = new Display($db);
+        $displayObject->Touch($hardwareKey, $clientAddress);
+
+        // It is licensed?
+        $this->licensed = true;
+        $this->includeSchedule = $row[1];
+        $this->isAuditing = $row[2];
+        $this->displayId = $row[3];
+        $this->defaultLayoutId = $row[4];
+        $this->version_instructions = $row[8];
+        
+        return true;
+>>>>>>> MERGE-SOURCE
     }
 
     /**
@@ -1210,6 +1348,7 @@ class XMDSSoap {
      * @param <type> $type
      * @param <type> $sizeInBytes
      */
+<<<<<<< TREE
     private function LogBandwidth($displayId, $type, $sizeInBytes) {
         try {
             $dbh = PDOConnect::init();
@@ -1233,6 +1372,19 @@ class XMDSSoap {
             Debug::LogEntry('error', $e->getMessage());
             return false;
         }
+=======
+    private function LogBandwidth($displayId, $type, $sizeInBytes)
+    {
+        $startOfMonth = strtotime(date('m').'/02/'.date('Y').' 00:00:00');
+    
+        $sql  = "INSERT INTO `bandwidth` (Month, Type, DisplayID, Size) VALUES (%d, %d, %d, %d) ";
+        $sql .= "ON DUPLICATE KEY UPDATE Size = Size + %d ";
+        $sql  = sprintf($sql, $startOfMonth, $type, $displayId, $sizeInBytes, $sizeInBytes);
+
+        $this->db->query($sql);
+
+        return true;
+>>>>>>> MERGE-SOURCE
     }
 }
 ?>

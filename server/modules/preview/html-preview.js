@@ -22,7 +22,7 @@
 var LOG_LEVEL;
 
 /* String: Client Version */
-var VERSION = "1.6.0";
+var VERSION = "1.6.2";
 
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
@@ -333,6 +333,11 @@ function region(parent, id, xml) {
         
         if (oldMedia) {
             $("#" + oldMedia.containerName).css("display", "none");
+
+            if (oldMedia.mediaType == "video") {
+                $("#" + oldMedia.containerName + "-vid").get(0).pause();
+                $("#" + oldMedia.containerName + "-vid").get(0).currentTime = 0;
+            }
         }
         
         $("#" + newMedia.containerName).css("display", "block");
@@ -476,17 +481,8 @@ function media(parent, id, xml) {
             $("#" + self.containerName).css("background-position", align + " " + valign);
         }
     }
-    else if (self.mediaType == "text") {
-        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=text&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
-    }
-    else if (self.mediaType == "datasetview") {
-        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=datasetview&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
-    }
-    else if (self.mediaType == "webpage") {
-        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + decodeURIComponent(self.options['uri']) + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
-    }
-    else if (self.mediaType == "embedded") {
-        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=embedded&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+    else if (self.mediaType == "text" || self.mediaType == "datasetview" || self.mediaType == "webpage" || self.mediaType == "embedded") {
+        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=' + self.mediaType + '&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
     else if (self.mediaType == "ticker") {
         $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=ticker&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');

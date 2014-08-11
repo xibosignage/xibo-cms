@@ -151,7 +151,8 @@ class DisplayGroup extends Data
      */
     public function Delete($displayGroupID)
     {
-        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Delete');
+        if ($displayGroupID == NULL || $displayGroupID == 0)
+            return $this->SetError(__('Missing displayGroupId'));
 
         try {
             $dbh = PDOConnect::init();
@@ -161,6 +162,13 @@ class DisplayGroup extends Data
     
             if (!$schedule->DeleteScheduleForDisplayGroup($displayGroupID))
                 throw new Exception('Unable to DeleteScheduleForDisplayGroup');
+
+            // Remove all permissions
+            Kit::ClassLoader('displaygroupsecurity');
+            $security = new DisplayGroupSecurity($this->db);
+
+            if (!$security->UnlinkAll($displayGroupID))
+                throw new Exception('Unable to Unlink all Display Group Permissions');                
 
             // Delete the Display Group
             $sth = $dbh->prepare('DELETE FROM displaygroup WHERE DisplayGroupID = :displaygroupid');
@@ -415,10 +423,6 @@ class DisplayGroup extends Data
 
         try {
             $dbh = PDOConnect::init();
-
-            // Check that some media assignments have been made
-            if (count($mediaList) == 0)
-                $this->ThrowError(25006, __('No media to assign'));
         
             // Drop all current assignments
             if (!$link->UnlinkAllFromDisplayGroup($displayGroupId))

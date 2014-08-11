@@ -20,11 +20,6 @@
  */ 
 DEFINE('XIBO', true);
 
-if (! checkPHP()) 
-{
-	die('Xibo requires PHP 5.2.4 or later');
-}
-
 error_reporting(0);
 ini_set('display_errors', 0);
 
@@ -32,6 +27,12 @@ include('lib/app/kit.class.php');
 include('install/header.inc');
 include('config/config.class.php');
 include('config/db_config.php');
+
+$config = new Config();
+
+if (!$config->CheckPHP()) {
+  die(sprintf('Xibo required PHP version %s.', Config::$VERSION_REQUIRED));
+}
 
 // Setup for the Translations using Gettext.
 // There is normally a class that will do this for us - but it requires a DB object (which we do not have at install time)
@@ -689,11 +690,6 @@ function gen_secret() {
   } 
   
   return $key;
-}
-
-function checkPHP() 
-{
-	return (version_compare("5.2.4",phpversion(), "<="));
 }
 
 function CheckGettext() 

@@ -132,6 +132,20 @@ class File extends Data
     }
 
     /**
+     * Get the Path to a file
+     * @param int $fileId The File ID
+     */
+    public function GetPath($fileId) {
+
+        if ($fileId == '' || $fileId == 0)
+            return $this->SetError(25001, __('Missing fileId'));
+
+        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryFolder = $libraryFolder . 'temp';
+        return $libraryFolder . '/' . $fileId;
+    }
+
+    /**
      * The current size of a file
      * @param <type> $fileId
      * @return <int> filesize

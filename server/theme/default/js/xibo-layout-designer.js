@@ -113,7 +113,7 @@ function regionPositionUpdate(e, ui) {
 	    $("<button/>",  {
 	    		"class": "btn",
 	    		id: "layout-save-all",
-	    		html: "Save Position"
+	    		html: translations.save_position_button
 		    })
 	    	.click(function() {
 	    		// Save positions for all layouts / regions

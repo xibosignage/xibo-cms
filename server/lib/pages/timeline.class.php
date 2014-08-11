@@ -226,7 +226,7 @@ class timelineDAO extends baseDAO {
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db 	=& $this->db;
         $user 	=& $this->user;
@@ -316,6 +316,7 @@ class timelineDAO extends baseDAO {
             
             Kit::ClassLoader('region');
             $regionObject = new region($db);
+            $regionObject->delayFinalise = true;
             $ownerId = $regionObject->GetOwnerId($layoutid, $regionid);
 
             $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
@@ -325,6 +326,11 @@ class timelineDAO extends baseDAO {
     		if (!$regionObject->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
     			trigger_error($regionObject->GetErrorMessage(), E_USER_ERROR);
         }
+
+        // Set the layout status
+        Kit::ClassLoader('Layout');
+        $layout = new Layout($this->db);
+        $layout->SetValid($layoutid, true);
 		
 		$response->SetFormSubmitResponse('');
 		$response->hideMessage = true;
@@ -796,7 +802,7 @@ class timelineDAO extends baseDAO {
 
             // Put the media name in
             $response->html .= '        <div class="timelineMediaDetails ' . $mediaBlockColouringClass . '">';
-            $response->html .= '            <h3>' . (($mediaName == '') ? $tmpModule->displayType : $mediaName) . ' (' . $mediaDuration . ' seconds)</h3>';
+            $response->html .= '            <h3>' . sprintf('%s (%d seconds)', (($mediaName == '') ? __($tmpModule->displayType) : $mediaName), $mediaDuration) . '</h3>';
             $response->html .= '        </div>';
 
             // Put the media hover preview in

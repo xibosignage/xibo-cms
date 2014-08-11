@@ -22,8 +22,75 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class DataSetData extends Data
 {
+    private $updateWatermark;
+
+    public function __construct(database $db) {
+
+        $this->updateWatermark = true;
+
+        parent::__construct($db);
+    }
+
+    /**
+     * List all data for this dataset
+     * @param int $dataSetId The DataSet ID
+     */
+    public function GetData($dataSetId) {
+
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT datasetdata.DataSetColumnID, datasetdata.RowNumber, datasetdata.Value 
+                  FROM datasetdata
+                    INNER JOIN datasetcolumn
+                    ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID
+                 WHERE datasetcolumn.DataSetID = :dataset_id');
+
+            $sth->execute(array('dataset_id' => $dataSetId));
+
+            $results = $sth->fetchAll();
+
+            // Check there are some columns returned
+            if (count($results) <= 0)
+                $this->ThrowError(__('No data'));
+
+            $rows = array();
+
+            foreach($results as $row) {
+
+                $col['datasetcolumnid'] = Kit::ValidateParam($row['DataSetColumnID'], _INT);
+                $col['rownumber'] = Kit::ValidateParam($row['RowNumber'], _INT);
+                $col['value'] = Kit::ValidateParam($row['Value'], _STRING);
+
+                $rows[] = $col;
+            }
+
+            Debug::LogEntry('audit', sprintf('Returning %d columns.', count($rows)), 'DataSetColumn', 'GetData');
+          
+            return $rows;          
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
     public function Add($dataSetColumnId, $rowNumber, $value)
     {
+        if ($dataSetColumnId == 0 || $dataSetColumnId == '')
+            return $this->SetError(25001, __('Missing dataSetColumnId'));
+
+        if ($rowNumber == 0 || $rowNumber == '')
+            return $this->SetError(25001, __('Missing rowNumber'));
+
         try {
             $dbh = PDOConnect::init();
 
@@ -39,6 +106,9 @@ class DataSetData extends Data
 
             $id = $dbh->lastInsertId();
 
+            // Update the Water Mark
+            $this->UpdateWatermarkWithColumnId($dataSetColumnId);
+
             Debug::LogEntry('audit', 'Complete', 'DataSetData', 'Add');
             
             return $id;
@@ -51,6 +121,12 @@ class DataSetData extends Data
 
     public function Edit($dataSetColumnId, $rowNumber, $value)
     {
+        if ($dataSetColumnId == 0 || $dataSetColumnId == '')
+            return $this->SetError(25001, __('Missing dataSetColumnId'));
+
+        if ($rowNumber == 0 || $rowNumber == '')
+            return $this->SetError(25001, __('Missing rowNumber'));
+
         try {
             $dbh = PDOConnect::init();
 
@@ -63,6 +139,8 @@ class DataSetData extends Data
                     'rownumber' => $rowNumber,
                     'value' => $value
                ));
+
+            $this->UpdateWatermarkWithColumnId($dataSetColumnId);
 
             Debug::LogEntry('audit', 'Complete', 'DataSetData', 'Edit');
 
@@ -88,6 +166,8 @@ class DataSetData extends Data
                     'rownumber' => $rowNumber
                ));
 
+            $this->UpdateWatermarkWithColumnId($dataSetColumnId);
+
             Debug::LogEntry('audit', 'Complete', 'DataSetData', 'Delete');
 
             return true;
@@ -99,6 +179,9 @@ class DataSetData extends Data
     }
 
     public function DeleteAll($dataSetId) {
+
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
 
         try {
             $dbh = PDOConnect::init();
@@ -113,6 +196,8 @@ class DataSetData extends Data
                     'datasetid' => $dataSetId
                ));
 
+            $this->UpdateWatermark($dataSetId);
+
             return true;
         }
         catch (Exception $e) {
@@ -121,7 +206,97 @@ class DataSetData extends Data
         }
     }
 
+    /**
+     * Update the Water Mark to indicate the last data edit
+     * @param int $dataSetColumnId The Data Set Column ID
+     */
+    private function UpdateWatermarkWithColumnId($dataSetColumnId) {
+
+        if (!$this->updateWatermark)
+            return;
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT DataSetID FROM `datasetcolumn` WHERE DataSetColumnID = :dataset_column_id');
+            $sth->execute(array(
+                    'dataset_column_id' => $dataSetColumnId
+                ));
+          
+            $this->UpdateWatermark($sth->fetchColumn(0));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Update the Water Mark to indicate the last data edit
+     * @param int $dataSetId The Data Set ID to Update
+     */
+    private function UpdateWatermark($dataSetId) {
+
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
+        
+        if (!$this->updateWatermark)
+            return;
+
+        Debug::LogEntry('audit', sprintf('Updating water mark on DataSetId: %d', $dataSetId), 'DataSetData', 'UpdateWatermark');
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('UPDATE `dataset` SET LastDataEdit = :last_data_edit WHERE DataSetID = :dataset_id');
+            $sth->execute(array(
+                    'last_data_edit' => time(),
+                    'dataset_id' => $dataSetId
+                ));
+
+            // Get affected Campaigns
+            Kit::ClassLoader('dataset');
+            $dataSet = new DataSet($this->db);
+            $campaigns = $dataSet->GetCampaignsForDataSet($dataSetId);
+
+            Kit::ClassLoader('display');
+            $display = new Display($this->db);
+
+            foreach ($campaigns as $campaignId) {
+                // Assess all displays  
+                $campaigns = $display->NotifyDisplays($campaignId);
+            }
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
     public function ImportCsv($dataSetId, $csvFile, $spreadSheetMapping, $overwrite = false, $ignoreFirstRow = true) {
+
+        if ($dataSetId == 0 || $dataSetId == '')
+            return $this->SetError(25001, __('Missing dataSetId'));
+
+        if (!file_exists($csvFile))
+            return $this->SetError(25001, __('CSV File does not exist'));
+
+        if (!is_array($spreadSheetMapping) || count($spreadSheetMapping) <= 0)
+            return $this->SetError(25001, __('Missing spreadSheetMapping'));
+
+        Debug::LogEntry('audit', 'spreadSheetMapping: ' . json_encode($spreadSheetMapping), 'DataSetData', 'ImportCsv');
+        
+        $this->updateWatermark = false;
 
         try {
             $dbh = PDOConnect::init();
@@ -186,6 +361,8 @@ class DataSetData extends Data
             @unlink($csvFile);
 
             // TODO: Update list content definitions
+
+            $this->UpdateWatermark($dataSetId);
 
             return true;
         }

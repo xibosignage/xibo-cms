@@ -83,8 +83,8 @@
 </li><li> left
 </li><li> ownerid
 </li><li> permission_edit
-</li><li> permission_del
-</li><li> permission_update_permissions
+</li><li> permissions_del
+</li><li> permissions_update_permissions
 </li></ul>
 <p>Error Codes
 </p>
@@ -158,7 +158,7 @@
 </p>
 <ul><li> mediaid
 </li><li> lkid
-</li><li> type
+</li><li> mediatype
 </li><li> duration
 </li><li> permission_edit
 </li><li> permission_del
@@ -169,19 +169,42 @@
 </p>
 <ul><li> 1 - Access Denied
 </li></ul>
-<h3> <span class="mw-headline" id="LayoutRegionMediaDetails"> LayoutRegionMediaDetails </span></h3>
-<p>Parameters
+
+<h2 class="api-method-call-doc" id="LayoutRegionMediaDetails">LayoutRegionMediaDetails</h2>
+<h3>Parameters</h3>
+<dl>
+    <dt>layoutId</dt>
+    <dd>The ID for this Layout. Required.</dd>
+</dl>
+<dl>
+    <dt>regionId</dt>
+    <dd>The ID for this Region. Required</dd>
+</dl>
+<dl>
+    <dt>mediaId</dt>
+    <dd>The ID for this media. Required</dd>
+</dl>
+<dl>
+    <dt>type</dt>
+    <dd>The media type. Required</dd>
+</dl>
+
+<h3>Response</h3>
+The XLF for the provided media id (XML format). Base 64 encoded.
+<pre>
+{
+    "media": {
+        "id": "1",
+        "base64Xlf": "base64"
+    },
+    "status": "ok"
+}
+</pre>
+
+<h3>Errors</h3>
+<p>General Errors Only.
 </p>
-<ul><li> layoutId
-</li><li> regionId
-</li><li> mediaId
-</li></ul>
-<p>Response
-The XLF for the provided media id (XML format)
-</p><p>Error Codes
-</p>
-<ul><li> 1 - Access Denied
-</li></ul>
+
 <h3> <span class="mw-headline" id="LayoutRegionMediaAdd"> LayoutRegionMediaAdd </span></h3>
 <p>Parameters
 </p>

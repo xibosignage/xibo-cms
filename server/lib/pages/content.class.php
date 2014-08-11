@@ -180,7 +180,7 @@ class contentDAO extends baseDAO
             // Download
             $row['buttons'][] = array(
                     'id' => 'content_button_download',
-                    'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=GetResource&download=1&mediaid=' . $row['mediaid'],
+                    'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=GetResource&download=1&downloadFromLibrary=1&mediaid=' . $row['mediaid'],
                     'text' => __('Download')
                 );
 

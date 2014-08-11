@@ -45,8 +45,8 @@ class sessionsDAO extends baseDAO
 		// Construct Filter Form
         if (Kit::IsFilterPinned('sessions', 'Filter')) {
             Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_type', Session::Get('user', 'filter_type'));
-            Theme::Set('filter_fromdt', Session::Get('user', 'filter_fromdt'));
+            Theme::Set('filter_type', Session::Get('sessions', 'filter_type'));
+            Theme::Set('filter_fromdt', Session::Get('sessions', 'filter_fromdt'));
         }
         else {
             Theme::Set('filter_type', 0);
@@ -97,7 +97,7 @@ class sessionsDAO extends baseDAO
 		$SQL .= "WHERE 1 = 1 ";
 
 		if ($fromdt != '')
-			$SQL .= sprintf(" AND session_expiration < '%s' ", $starttime_timestamp);
+			$SQL .= sprintf(" AND session.LastAccessed < '%s' ", date("Y-m-d h:i:s", $starttime_timestamp));
 		
 		if ($type == "active")
 			$SQL .= " AND IsExpired = 0 ";
@@ -110,6 +110,8 @@ class sessionsDAO extends baseDAO
 		
 		// Load results into an array
         $log = $db->GetArray($SQL);
+
+        Debug::LogEntry('audit', $SQL);
 
         if (!is_array($log)) 
         {
@@ -176,7 +178,7 @@ class sessionsDAO extends baseDAO
 	{
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
 		$db =& $this->db;
 		

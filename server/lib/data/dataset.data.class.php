@@ -152,6 +152,7 @@ class DataSet extends Data
             $security->UnlinkAll($dataSetId);
 
             // Delete columns
+            Kit::ClassLoader('datasetcolumn');
             $dataSetObject = new DataSetColumn($this->db);
             if (!$dataSetObject->DeleteAll($dataSetId))
                 return $this->SetError(25005, __('Cannot delete dataset, columns could not be deleted.'));
@@ -171,6 +172,129 @@ class DataSet extends Data
             if (!$this->IsError())
                 $this->SetError(25005, sprintf(__('Cannot edit dataset %s'), $dataSet));
 
+            return false;
+        }
+    }
+
+    public function LinkLayout($dataSetId, $layoutId, $regionId, $mediaId) {
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('INSERT INTO `lkdatasetlayout` (DataSetID, LayoutID, RegionID, MediaID) VALUES (:datasetid, :layoutid, :regionid, :mediaid)');
+            $sth->execute(array(
+                    'datasetid' => $dataSetId, 
+                    'layoutid' => $layoutId, 
+                    'regionid' => $regionId, 
+                    'mediaid' => $mediaId
+                ));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    public function UnlinkLayout($dataSetId, $layoutId, $regionId, $mediaId) {
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM `lkdatasetlayout` WHERE DataSetID = :datasetid AND LayoutID = :layoutid AND RegionID = :regionid AND MediaID = :mediaid');
+            $sth->execute(array(
+                    'datasetid' => $dataSetId, 
+                    'layoutid' => $layoutId, 
+                    'regionid' => $regionId, 
+                    'mediaid' => $mediaId
+                ));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    public function GetDataSetFromLayout($layoutId, $regionId, $mediaId) {
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT `dataset`.* FROM `lkdatasetlayout` INNER JOIN `dataset` ON lkdatasetlayout.DataSetId = dataset.DataSetID WHERE LayoutID = :layoutid AND RegionID = :regionid AND MediaID = :mediaid');
+            $sth->execute(array(
+                    'layoutid' => $layoutId, 
+                    'regionid' => $regionId, 
+                    'mediaid' => $mediaId
+                ));
+
+            return $sth->fetchAll();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    public function GetCampaignsForDataSet($dataSetId) {
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT `lkcampaignlayout`.CampaignID FROM `lkdatasetlayout` INNER JOIN `lkcampaignlayout` ON `lkcampaignlayout`.LayoutID = `lkdatasetlayout`.LayoutID WHERE DataSetID = :datasetid');
+            $sth->execute(array(
+                    'datasetid' => $dataSetId
+                ));
+
+            $ids = array();
+
+            foreach ($sth->fetchAll() as $id)
+                $ids[] = $id['CampaignID'];
+
+            return $ids;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    public function GetLastDataEditTime($dataSetId) {
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT LastDataEdit FROM `dataset` WHERE DataSetID = :dataset_id');
+            $sth->execute(array(
+                    'dataset_id' => $dataSetId
+                ));
+
+            $updateDate = $sth->fetchColumn(0);
+          
+            Debug::LogEntry('audit', sprintf('Returning update date %s for DataSetId %d', $updateDate, $dataSetId), 'dataset', 'GetLastDataEditTime');
+
+            return $updateDate;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
             return false;
         }
     }
@@ -317,8 +441,7 @@ class DataSet extends Data
 
         Debug::LogEntry('audit', $SQL);
 
-        if (!$rows = $db->GetArray($SQL, $associative))
-            trigger_error($db->error());
+        $rows = $db->GetArray($SQL, $associative);
 
         if (!is_array($rows))
             $rows = array();
@@ -326,6 +449,46 @@ class DataSet extends Data
         $results['Rows'] = $rows;
 
         return $results;
+    }
+
+    public function GetDataTypes() {
+        try {
+            $dbh = PDOConnect::init();
+
+            $sth = $dbh->prepare('SELECT datatypeid, datatype FROM datatype');
+            $sth->execute();
+          
+            return $sth->fetchAll();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+
+            return false;
+        }
+    }
+
+    public function GetDataSetColumnTypes() {
+        try {
+            $dbh = PDOConnect::init();
+
+            $sth = $dbh->prepare('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype');
+            $sth->execute();
+          
+            return $sth->fetchAll();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+
+            return false;
+        }
     }
 }
 ?>

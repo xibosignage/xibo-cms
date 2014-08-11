@@ -250,3 +250,15 @@ ul#FileAssociationsSortable {
 .tab-pane {
   padding-top: 15px;
 }
+
+.bold-counter {
+  font-weight: 100;
+  line-height: 70px;
+  font-size: 70px;
+  text-shadow: 1px 1px 5px #000;
+  filter: dropshadow(color=#000, offx=1, offy=1);
+}
+
+.FormDisplayList .DisplayList {
+  list-style: none;
+}

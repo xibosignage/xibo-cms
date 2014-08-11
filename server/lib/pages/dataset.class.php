@@ -201,7 +201,7 @@ class datasetDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $user =& $this->user;
@@ -265,7 +265,7 @@ class datasetDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $user =& $this->user;
@@ -321,7 +321,7 @@ class datasetDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $user =& $this->user;
@@ -364,29 +364,24 @@ class datasetDAO extends baseDAO
         $SQL .= sprintf(" WHERE DataSetID = %d ", $dataSetId);
         $SQL .= "ORDER BY ColumnOrder ";
 
-        // Load results into an array
-        $dataSetColumns = $db->GetArray($SQL);
+        Kit::ClassLoader('datasetcolumn');
+        $dataSetColumnObject = new DataSetColumn($db);
 
-        if (!is_array($dataSetColumns)) 
-        {
-            trigger_error($db->error());
-            trigger_error(__('Error getting list of dataSetColumns'), E_USER_ERROR);
-        }
+        // Load results into an array
+        if (!$dataSetColumns = $dataSetColumnObject->GetColumns($dataSetId))
+            trigger_error($dataSetColumnObject->GetErrorMessage(), E_USER_ERROR);
 
         $rows = array();
 
         foreach ($dataSetColumns as $row) {
 
-            $row['heading'] = Kit::ValidateParam($row['Heading'], _STRING);
-            $row['listcontent'] = Kit::ValidateParam($row['ListContent'], _STRING);
-            $row['columnorder'] = Kit::ValidateParam($row['ColumnOrder'], _INT);
-            $row['datatype'] = __(Kit::ValidateParam($row['DataType'], _STRING));
-            $row['datasetcolumntype'] = __(Kit::ValidateParam($row['DataSetColumnType'], _STRING));
+            $row['datatype'] = __($row['datatype']);
+            $row['datasetcolumntype'] = __($row['datasetcolumntype']);
 
             // Edit        
             $row['buttons'][] = array(
                     'id' => 'dataset_button_edit',
-                    'url' => 'index.php?p=dataset&q=EditDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['DataSetColumnID'] . '&dataset=' . $dataSet,
+                    'url' => 'index.php?p=dataset&q=EditDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['datasetcolumnid'] . '&dataset=' . $dataSet,
                     'text' => __('Edit')
                 );
 
@@ -394,7 +389,7 @@ class datasetDAO extends baseDAO
                 // Delete
                 $row['buttons'][] = array(
                         'id' => 'dataset_button_delete',
-                        'url' => 'index.php?p=dataset&q=DeleteDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['DataSetColumnID'] . '&dataset=' . $dataSet,
+                        'url' => 'index.php?p=dataset&q=DeleteDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['datasetcolumnid'] . '&dataset=' . $dataSet,
                         'text' => __('Delete')
                     );
             }
@@ -468,7 +463,7 @@ class datasetDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $user =& $this->user;
@@ -574,7 +569,7 @@ class datasetDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $user =& $this->user;
@@ -639,7 +634,7 @@ class datasetDAO extends baseDAO
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $user =& $this->user;
@@ -947,40 +942,29 @@ END;
         Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
         // List of all Groups with a view/edit/delete checkbox
-        $SQL = '';
-        $SQL .= 'SELECT `group`.GroupID, `group`.`Group`, View, Edit, Del, `group`.IsUserSpecific ';
-        $SQL .= '  FROM `group` ';
-        $SQL .= '   LEFT OUTER JOIN lkdatasetgroup ';
-        $SQL .= '   ON lkdatasetgroup.GroupID = group.GroupID ';
-        $SQL .= '       AND lkdatasetgroup.DataSetID = %d ';
-        $SQL .= ' WHERE `group`.GroupID <> %d ';
-        $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
+        Kit::ClassLoader('datasetgroupsecurity');
+        $security = new DataSetGroupSecurity($this->db);
 
-        $SQL = sprintf($SQL, $dataSetId, $user->getGroupFromId($user->userid, true));
-
-        if (!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
+        if (!$results = $security->ListSecurity($dataSetId, $user->getGroupFromId($user->userid, true))) {
             trigger_error(__('Unable to get permissions for this dataset'), E_USER_ERROR);
         }
 
         $checkboxes = array();
 
-        while ($row = $db->get_assoc_row($results))
-        {
-            $groupId = $row['GroupID'];
-            $rowClass = ($row['IsUserSpecific'] == 0) ? 'strong_text' : '';
+        foreach ($results as $row) {
+            $groupId = $row['groupid'];
+            $rowClass = ($row['isuserspecific'] == 0) ? 'strong_text' : '';
 
             $checkbox = array(
                     'id' => $groupId,
-                    'name' => Kit::ValidateParam($row['Group'], _STRING),
+                    'name' => Kit::ValidateParam($row['group'], _STRING),
                     'class' => $rowClass,
                     'value_view' => $groupId . '_view',
-                    'value_view_checked' => (($row['View'] == 1) ? 'checked' : ''),
+                    'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
                     'value_edit' => $groupId . '_edit',
-                    'value_edit_checked' => (($row['Edit'] == 1) ? 'checked' : ''),
+                    'value_edit_checked' => (($row['edit'] == 1) ? 'checked' : ''),
                     'value_del' => $groupId . '_del',
-                    'value_del_checked' => (($row['Del'] == 1) ? 'checked' : ''),
+                    'value_del_checked' => (($row['del'] == 1) ? 'checked' : ''),
                 );
 
             $checkboxes[] = $checkbox;
@@ -1002,7 +986,7 @@ END;
     {
         // Check the token
         if (!Kit::CheckToken())
-            trigger_error('Token does not match', E_USER_ERROR);
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
         $user =& $this->user;
@@ -1172,14 +1156,14 @@ END;
         if ($tmpName == '')
             trigger_error(__('Please ensure you have picked a file and it has finished uploading'), E_USER_ERROR);
 
-        // File name and extension (orignial name)
+        // File name and extension (original name)
         $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
         $fileName = basename($fileName);
         $ext = strtolower(substr(strrchr($fileName, "."), 1));
 
         // Check it is a CSV file
         if ($ext != 'csv')
-            trigger_error(__('Files with a CSV extention only.'));
+            trigger_error(__('Files with a CSV extension only.'), E_USER_ERROR);
 
         // File upload directory.. get this from the settings object
         $csvFileLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $tmpName;
@@ -1207,8 +1191,10 @@ END;
 
             $dataSetColumnId = Kit::ValidateParam($row['DataSetColumnID'], _INT);
             $spreadSheetColumn = Kit::GetParam('csvImport_' . $dataSetColumnId, _POST, _INT);
-            
-            $spreadSheetMapping[($spreadSheetColumn - 1)] = $dataSetColumnId;
+
+            // If it has been left blank, then skip
+            if ($spreadSheetColumn != 0)
+                $spreadSheetMapping[($spreadSheetColumn - 1)] = $dataSetColumnId;
         }
 
         $dataSetObject = new DataSetData($db);

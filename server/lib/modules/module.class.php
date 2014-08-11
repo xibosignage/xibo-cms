@@ -62,6 +62,7 @@ abstract class Module implements ModuleInterface
     protected $showRegionOptions;
     protected $originalUserId;
     protected $storedAs;
+    protected $originalFilename;
 
     // Track the error state
     private $error;
@@ -258,27 +259,33 @@ abstract class Module implements ModuleInterface
                 $this->existingMedia = true;
                 $this->assignedMedia = false;
 
-                // Load what we know about this media into the object
-                $SQL = "SELECT duration, name, UserId, storedAs FROM media WHERE mediaID = '$mediaid'";
+                try {
+                    $dbh = PDOConnect::init();
+                
+                    // Load what we know about this media into the object
+                    $sth = $dbh->prepare('SELECT duration, name, UserId, storedAs, originalFilename FROM media WHERE mediaID = :media_id');
+                    $sth->execute(array(
+                            'media_id' => $mediaid
+                        ));
+                    
+                    $rows = $sth->fetchAll();
+                
+                    if (count($rows) != 1) {
+                        return $this->SetError(__('Unable to find media record with the provided ID'));
+                    }
 
-                Debug::LogEntry('audit', $SQL, 'Module', 'SetMediaInformation');
-
-                if (!$result = $db->query($SQL))
-                {
-                	// log the error
-                    trigger_error($db->error());
+                    $this->duration = $rows[0]['duration'];
+                    $this->name = $rows[0]['name'];
+                    $this->originalUserId = $rows[0]['UserId'];
+                    $this->storedAs = $rows[0]['storedAs'];
+                    $this->originalFilename = $rows[0]['originalFilename'];
                 }
-
-                if ($db->num_rows($result) != 0)
-                {
-                    $row = $db->get_row($result);
-                    $this->duration = $row[0];
-                    $this->name = $row[1];
-                    $this->originalUserId = $row[2];
-                    $this->storedAs = $row[3];
+                catch (Exception $e) {
+                    
+                    Debug::LogEntry('error', $e->getMessage());
+                
+                    return $this->SetError(__('Unable to find media record with the provided ID'));
                 }
-                else
-                	return $this->SetError(__('Unable to find media record with the provided ID'));
 
                 $this->auth = $this->user->MediaAuth($this->mediaid, true);
             }
@@ -534,7 +541,7 @@ XML;
             if ($this->regionSpecific)
             {
                 $form = <<<END
-                <form id="MediaDeleteForm" class="XiboForm" method="post" action="index.php?p=module&mod=text&q=Exec&method=DeleteMedia">
+                <form id="MediaDeleteForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=DeleteMedia">
                         <input type="hidden" name="mediaid" value="$mediaid">
                         <input type="hidden" name="layoutid" value="$layoutid">
                         <input type="hidden" name="regionid" value="$regionid">
@@ -865,13 +872,13 @@ END;
 		Theme::Set('form_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="type" value="' . $this->type . '"><input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '">');
 		Theme::Set('form_valid_ext', '/(\.|\/)' . implode('|', $this->validExtensions) . '$/i');
 		Theme::Set('form_max_size', Kit::ReturnBytes($this->maxFileSize));
-		Theme::Set('valid_extensions', 'This form accepts: ' . $this->validExtensionsText . ' files up to a maximum size of ' . $this->maxFileSize);
+		Theme::Set('valid_extensions', sprintf(__('This form accepts: %s files up to a maximum size of %s'), $this->validExtensionsText, $this->maxFileSize));
 		Theme::Set('default_duration', $defaultDuration);
 
 		$form = Theme::RenderReturn('library_form_media_add');
 
         $this->response->html = $form;
-        $this->response->dialogTitle = 'Add New ' . $this->displayType;
+        $this->response->dialogTitle = sprintf(__('Add New %s'), __($this->displayType));
         $this->response->dialogSize = true;
         $this->response->dialogWidth = '450px';
         $this->response->dialogHeight = '280px';
@@ -1173,55 +1180,82 @@ END;
         
         Debug::LogEntry('audit', sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
 
-        // Create a region object for later use
-        $region = new region($db);
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Some update statements to use
+            $sth = $dbh->prepare('SELECT lklayoutmediaid, regionid FROM lklayoutmedia WHERE mediaid = :media_id AND layoutid = :layout_id');
+            $sth_update = $dbh->prepare('UPDATE lklayoutmedia SET mediaid = :media_id WHERE lklayoutmediaid = :lklayoutmediaid');
 
-        // Loop through a list of layouts this user has access to
-        foreach($this->user->LayoutList() as $layout)
-        {
-            $layoutId = $layout['layoutid'];
-
-            // Does this layout use the old media id?
-            $SQL = sprintf("SELECT lklayoutmediaid, regionid FROM lklayoutmedia WHERE mediaid = %d and layoutid = %d", $oldMediaId, $layoutId);
-            
-            if (!$results = $db->query($SQL))
-                return false;
-            
-            // Loop through each media link for this layout
-            while ($row = $db->get_assoc_row($results))
+            // Loop through a list of layouts this user has access to
+            foreach($this->user->LayoutList() as $layout)
             {
-                // Get the LKID of the link between this layout and this media.. could be more than one?
-                $lkId = $row['lklayoutmediaid'];
-                $regionId = $row['regionid'];
+                $layoutId = $layout['layoutid'];
+                
+                // Does this layout use the old media id?
+                $sth->execute(array(
+                        'media_id' => $oldMediaId,
+                        'layout_id' => $layoutId
+                    ));
 
-                // Get the Type of this media
-                if (!$type = $region->GetMediaNodeType($layoutId, '', '', $lkId))
+                $results = $sth->fetchAll();
+                
+                if (count($results) <= 0)
                     continue;
 
-                // Create a new media node use it to swap the nodes over
-                Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
-                require_once('modules/' . $type . '.module.php');
+                Debug::LogEntry('audit', sprintf('%d linked media items for layoutid %d', count($results), $layoutId), 'module', 'ReplaceMediaInAllLayouts');
+                
+                // Create a region object for later use (new one each time)
+                $region = new region($db);
 
-                // Create a new module as if we were assigning it for the first time
-                if (!$module = new $type($db, $this->user, $newMediaId))
-                	return false;
-
-                // Sets the URI field
-                if (!$module->SetRegionInformation($layoutId, $regionId))
-                	return false;
-
-                // Get the media xml string to use in the swap.
-                $mediaXmlString = $module->AsXml();
-
-                // Swap the nodes
-                if (!$region->SwapMedia($layoutId, $regionId, $lkId, $oldMediaId, $newMediaId, $mediaXmlString))
-                    return false;
-
-                // Update the LKID with the new media id
-                $db->query("UPDATE lklayoutmedia SET mediaid = %d WHERE lklayoutmediaid = %d", $newMediaId, $row['lklayoutmediaid']);
-
-                $count++;
+                // Loop through each media link for this layout
+                foreach ($results as $row)
+                {
+                    // Get the LKID of the link between this layout and this media.. could be more than one?
+                    $lkId = $row['lklayoutmediaid'];
+                    $regionId = $row['regionid'];
+    
+                    // Get the Type of this media
+                    if (!$type = $region->GetMediaNodeType($layoutId, '', '', $lkId))
+                        continue;
+    
+                    // Create a new media node use it to swap the nodes over
+                    Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
+                    require_once('modules/' . $type . '.module.php');
+    
+                    // Create a new module as if we were assigning it for the first time
+                    if (!$module = new $type($db, $this->user, $newMediaId))
+                        return false;
+    
+                    // Sets the URI field
+                    if (!$module->SetRegionInformation($layoutId, $regionId))
+                        return false;
+    
+                    // Get the media xml string to use in the swap.
+                    $mediaXmlString = $module->AsXml();
+    
+                    // Swap the nodes
+                    if (!$region->SwapMedia($layoutId, $regionId, $lkId, $oldMediaId, $newMediaId, $mediaXmlString))
+                        return false;
+    
+                    // Update the LKID with the new media id
+                    $sth_update->execute(array(
+                        'media_id' => $newMediaId,
+                        'lklayoutmediaid' => $row['lklayoutmediaid']
+                    ));
+    
+                    $count++;
+                }
             }
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
         }
 
         Debug::LogEntry('audit', sprintf('Replaced media in %d layouts', $count), 'module', 'ReplaceMediaInAllLayouts');
@@ -2088,13 +2122,14 @@ END;
         }
         
         $download = Kit::GetParam('download', _REQUEST, _BOOLEAN, false);
+        $downloadFromLibrary = Kit::GetParam('downloadFromLibrary', _REQUEST, _BOOLEAN, false);
 
         $size = filesize($fileName);
         
         if ($download) {
             header('Content-Type: application/octet-stream');
             header("Content-Transfer-Encoding: Binary"); 
-            header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
+            header("Content-disposition: attachment; filename=\"" . (($downloadFromLibrary) ? $this->originalFilename : basename($fileName)) . "\"");
         }
         else {
             $fi = new finfo( FILEINFO_MIME_TYPE );

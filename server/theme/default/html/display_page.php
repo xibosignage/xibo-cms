@@ -29,11 +29,19 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <h1 class="page-header"><?php echo Theme::Translate('Displays'); ?></h1>
 <div class="row">
-	<div class="XiboGrid span12" id="<?php echo Theme::Get('id'); ?>">
+	<div class="XiboGrid" id="<?php echo Theme::Get('id'); ?>">
 		<div class="XiboFilter">
 			<div class="FilterDiv" id="Filter">
-				<form>
+				<form class="form-inline">
 					<?php echo Theme::Get('form_meta'); ?>
+                    <input type="text" name="filter_display" placeholder="<?php echo Theme::Translate('Name') ?>" value="<?php echo Theme::Get('filter_display'); ?>">
+                    <label class="select"><?php echo Theme::Translate('Group') ?>
+                        <?php echo Theme::SelectList('filter_displaygroup', Theme::Get('displaygroup_field_list'), 'displaygroupid', 'displaygroup', Theme::Get('filter_displaygroup')); ?>
+                    </label>
+                    <label class="checkbox pull-right">
+                        <input type="checkbox" id="<?php echo Theme::Get('filter_id'); ?>" name="XiboFilterPinned" class="XiboFilterPinned" <?php echo Theme::Get('filter_pinned'); ?> />
+                        <?php echo Theme::Translate('Keep Open') ?>
+                    </label>
 				</form>
 			</div>
 		</div>

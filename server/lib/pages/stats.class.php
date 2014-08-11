@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2013 Daniel Garner
+ * Copyright (C) 2009-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -72,9 +72,26 @@ class statsDAO extends baseDAO
         $displayId = Kit::GetParam('displayid', _POST, _INT);
         $mediaId = Kit::GetParam('mediaid', _POST, _INT);
 
-        Theme::Set('form_action', 'index.php?p=stats&q=OutputCSV');
-        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayId . '" /><input type="hidden" name="fromdt" value="' . $fromDt . '" /><input type="hidden" name="todt" value="' . $toDt . '" />');
+        // What if the fromdt and todt are exactly the same?
+        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+        if ($fromDt == $toDt) {
+            $toDt = date("Y-m-d", strtotime($toDt) + 86399);
+        }
+
+        Theme::Set('form_action', '');
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"/><input type="hidden" name="q" value="OutputCSV"/><input type="hidden" name="displayid" value="' . $displayId . '" /><input type="hidden" name="fromdt" value="' . $fromDt . '" /><input type="hidden" name="todt" value="' . $toDt . '" />');
         
+        // Get an array of display id this user has access to.
+        $displays = $this->user->DisplayList();
+        $display_ids = array();
+
+        foreach($displays as $display) {
+            $display_ids[] = $display['displayid'];
+        }
+
+        if (count($display_ids) <= 0)
+            trigger_error(__('No displays with View permissions'), E_USER_ERROR);
+
         // 3 grids showing different stats.
 
         // Layouts Ran
@@ -85,6 +102,8 @@ class statsDAO extends baseDAO
         $SQL .= " WHERE stat.type = 'layout' ";
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
         $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
+
+        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
 
         if ($displayId != 0)
             $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
@@ -123,6 +142,7 @@ class statsDAO extends baseDAO
         $SQL .= " WHERE stat.type = 'media' ";
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
         $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
+        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
 
         if ($mediaId != 0)
             $SQL .= sprintf("  AND media.MediaID = %d ", $mediaId);
@@ -165,6 +185,7 @@ class statsDAO extends baseDAO
         $SQL .= " WHERE stat.type = 'media' ";
         $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
         $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
+        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
 
         if ($mediaId != 0)
             $SQL .= sprintf("  AND media.MediaID = %d ", $mediaId);
@@ -215,16 +236,33 @@ class statsDAO extends baseDAO
 		$output		= '';
 		
 		// We are expecting some parameters
-		$fromdt		= Kit::GetParam('fromdt', _POST, _STRING);
-		$todt		= Kit::GetParam('todt', _POST, _STRING);
-		$displayID	= Kit::GetParam('displayid', _POST, _INT);
-		
+		$fromdt		= Kit::GetParam('fromdt', _GET, _STRING);
+		$todt		= Kit::GetParam('todt', _GET, _STRING);
+		$displayID	= Kit::GetParam('displayid', _GET, _INT);
+
+        if ($fromdt == $todt) {
+            $todt = date("Y-m-d", strtotime($todt) + 86399);
+        }
+
 		// We want to output a load of stuff to the browser as a text file.
 		header('Content-Type: text/csv');
 		header('Content-Disposition: attachment; filename="stats.csv"');
 		header("Content-Transfer-Encoding: binary");
 		header('Accept-Ranges: bytes');
 		
+        // Get an array of display id this user has access to.
+        $displays = $this->user->DisplayList();
+        $display_ids = array();
+
+        foreach($displays as $display) {
+            $display_ids[] = $display['displayid'];
+        }
+
+        if (count($display_ids) <= 0) {
+            echo __('No displays with View permissions');
+            exit;
+        }
+        
 		$SQL =  'SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName ';
 		$SQL .= '  FROM stat ';
 		$SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
@@ -233,6 +271,8 @@ class statsDAO extends baseDAO
 		$SQL .= ' WHERE 1=1 ';
 		$SQL .= sprintf("  AND stat.end > '%s' ", $fromdt);
 		$SQL .= sprintf("  AND stat.start <= '%s' ", $todt);
+
+        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
 
 		if ($displayID != 0)
 		{

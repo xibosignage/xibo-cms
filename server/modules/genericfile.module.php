@@ -46,35 +46,14 @@ class genericfile extends Module
      * @param $regionid Object
      * @param $mediaid Object
      */
-    public function SetRegionInformation($layoutid, $regionid)
-    {
+    public function SetRegionInformation($layoutid, $regionid) {
         $db =& $this->db;
-        $this->layoutid = $layoutid;
-        $this->regionid = $regionid;
-        $mediaid = $this->mediaid;
+        
+        parent::SetRegionInformation($layoutid, $regionid);
+
+        // Any Options
+        $this->SetOption('uri', $this->storedAs);
         $this->existingMedia = false;
-
-        if ($this->regionSpecific == 1) 
-            return;
-
-        try {
-            $dbh = PDOConnect::init();
-        
-            // Load what we know about this media into the object
-            $sth = $dbh->prepare('SELECT storedAs FROM media WHERE mediaID = :mediaid');
-            $sth->execute(array('mediaid' => $mediaid));
-
-            if (!$storedAs = $sth->fetchColumn())
-                return false;
-            
-            $this->SetOption('uri', $storedAs);  
-        }
-        catch (Exception $e) {
-            
-            Debug::LogEntry('error', $e->getMessage());
-        
-            return false;
-        }
 
         return true;
     }

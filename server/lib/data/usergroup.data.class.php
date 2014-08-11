@@ -255,7 +255,7 @@ class UserGroup extends Data
         
             $sth = $dbh->prepare('DELETE FROM lkusergroup WHERE UserID = :userid');
             $sth->execute(array(
-                    'userid' => $userID
+                    'userid' => $userId
                 ));
 
             Debug::LogEntry('audit', 'OUT', 'UserGroup', 'UnlinkAllGroups');

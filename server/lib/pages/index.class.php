@@ -50,7 +50,7 @@ class indexDAO extends baseDAO
             // Split on &amp; and rejoin with &
             $params = explode('&amp;', $referingpage, 3);
             unset($params['message']);
-			$referingpage = implode('&', $params) . '&message=Token Error';
+			$referingpage = implode('&', $params) . '&message=' . __('Sorry the form has expired. Please refresh.');
 
             header('Location:index.php?' . $referingpage);
             exit;
