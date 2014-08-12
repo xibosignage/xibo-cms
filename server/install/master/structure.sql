@@ -472,6 +472,7 @@ CREATE TABLE IF NOT EXISTS `schedule` (
   `FromDT` bigint(20) NOT NULL DEFAULT '0',
   `ToDT` bigint(20) NOT NULL DEFAULT '0',
   `recurrence_range` bigint(20) DEFAULT NULL,
+  `DisplayOrder` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`eventID`),
   KEY `layoutID` (`CampaignID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='High level schedule information' AUTO_INCREMENT=2 ;
@@ -479,13 +480,10 @@ CREATE TABLE IF NOT EXISTS `schedule` (
 CREATE TABLE IF NOT EXISTS `schedule_detail` (
   `schedule_detailID` int(11) NOT NULL AUTO_INCREMENT,
   `DisplayGroupID` int(11) NOT NULL,
-  `CampaignID` int(11) NOT NULL,
   `userID` int(8) NOT NULL DEFAULT '1' COMMENT 'Owner of the Event',
-  `is_priority` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'This scheduled event has priority and will take precidence over any others scheduled',
   `eventID` int(11) DEFAULT NULL,
   `FromDT` bigint(20) NOT NULL DEFAULT '0',
   `ToDT` bigint(20) NOT NULL DEFAULT '0',
-  `DisplayOrder` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`schedule_detailID`),
   KEY `layoutID` (`CampaignID`),
   KEY `scheduleID` (`eventID`),
@@ -713,7 +711,6 @@ ALTER TABLE `schedule`
   ADD CONSTRAINT `schedule_ibfk_1` FOREIGN KEY (`CampaignID`) REFERENCES `campaign` (`CampaignID`);
 
 ALTER TABLE `schedule_detail`
-  ADD CONSTRAINT `schedule_detail_ibfk_9` FOREIGN KEY (`CampaignID`) REFERENCES `campaign` (`CampaignID`),
   ADD CONSTRAINT `schedule_detail_ibfk_7` FOREIGN KEY (`eventID`) REFERENCES `schedule` (`eventID`),
   ADD CONSTRAINT `schedule_detail_ibfk_8` FOREIGN KEY (`DisplayGroupID`) REFERENCES `displaygroup` (`DisplayGroupID`);
 

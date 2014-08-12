@@ -262,3 +262,9 @@ ul#FileAssociationsSortable {
 .FormDisplayList .DisplayList {
   list-style: none;
 }
+
+ul.dropdown-menu-form {
+    padding: 5px 10px 0;
+    max-height: 300px;
+    overflow-y: scroll;
+}

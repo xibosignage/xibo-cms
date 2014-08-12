@@ -238,7 +238,8 @@ class XMDSSoap {
             // Get a list of all layout ids in the schedule right now.
             $SQL  = " SELECT DISTINCT layout.layoutID ";
             $SQL .= " FROM `campaign` ";
-            $SQL .= "   INNER JOIN schedule_detail ON schedule_detail.CampaignID = campaign.CampaignID ";
+            $SQL .= "   INNER JOIN schedule ON schedule.CampaignID = campaign.CampaignID ";
+            $SQL .= "   INNER JOIN schedule_detail ON schedule_detail.eventID = schedule.eventID ";
             $SQL .= "   INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
             $SQL .= "   INNER JOIN `layout` ON lkcampaignlayout.LayoutID = layout.LayoutID ";
             $SQL .= "   INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
@@ -555,10 +556,11 @@ class XMDSSoap {
         
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
-            $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule_detail.eventID, schedule_detail.is_priority, ";
+            $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule.eventID, schedule.is_priority, ";
             $SQL .= "  (SELECT GROUP_CONCAT(DISTINCT StoredAs) FROM media INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID WHERE lklayoutmedia.LayoutID = layout.LayoutID GROUP BY lklayoutmedia.LayoutID) AS Dependents";
             $SQL .= " FROM `campaign` ";
-            $SQL .= " INNER JOIN schedule_detail ON schedule_detail.CampaignID = campaign.CampaignID ";
+            $SQL .= " INNER JOIN schedule ON schedule.CampaignID = campaign.CampaignID ";
+            $SQL .= " INNER JOIN schedule_detail ON schedule_detail.eventID = schedule.eventID ";
             $SQL .= " INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
             $SQL .= " INNER JOIN `layout` ON lkcampaignlayout.LayoutID = layout.LayoutID ";
             $SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
@@ -566,7 +568,7 @@ class XMDSSoap {
             $SQL .= " WHERE display.license = :hardwareKey ";
             $SQL .= " AND (schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt )";
             $SQL .= "   AND layout.retired = 0  ";
-            $SQL .= " ORDER BY schedule_detail.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID ";
+            $SQL .= " ORDER BY schedule.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID ";
     
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(

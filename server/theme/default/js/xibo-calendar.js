@@ -17,89 +17,74 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+// Global calendar object
+var calendar;
+
 $(document).ready(function() {
-	// Store the default view for first load
-	$('#Calendar').data('view', 'month');
-
-    $('#Calendar').each(function (){
-
-
-        var picker = $('#main-calendar-picker').datetimepicker({
-                language: "en",
-                pickTime: false
-            });
-            
-        picker.on('changeDate', function(e) {
-                
-                // Store the date on our hidden form (or in the data object)
-                $('#Calendar').data({
-                    view: 'month',
-                    date: e.date,
-                    localDate: e.localDate
-                });
-                
-                // Call the AJAX to refresh
-                CallGenerateCalendar();
-            });
-
-        picker.data('datetimepicker').setDate(new Date());
+	
+    // Set up the navigational controls
+    $('.btn-group button[data-calendar-nav]').each(function() {
+        var $this = $(this);
+        $this.click(function() {
+            calendar.navigate($this.data('calendar-nav'));
+        });
     });
 
+    $('.btn-group button[data-calendar-view]').each(function() {
+        var $this = $(this);
+        $this.click(function() {
+            calendar.view($this.data('calendar-view'));
+        });
+    });
+
+    var options = {
+        events_source: function () { return []; },
+        view: 'month',
+        tmpl_path: "theme/default/libraries/calendar/tmpls/",
+        tmpl_cache: true,
+        onAfterEventsLoad: function(events) {
+            if(!events) {
+                return;
+            }
+        },
+        onAfterViewLoad: function(view) {
+            $('h1.page-header').text(this.getTitle());
+            $('.btn-group button').removeClass('active');
+            $('button[data-calendar-view="' + view + '"]').addClass('active');
+        }
+    };
+
+    // Calendar is initialised without any event_source (that is changed when the selector is used)
+    if (($('#Calendar').length > 0))
+        calendar = $('#Calendar').calendar(options);
+
+    // Set up our display selector control
+    $('#DisplayList').on('change', function(){
+        CallGenerateCalendar();
+    });
+
+    // Generate the calendar now we have a list set up
+    CallGenerateCalendar();
 });
 
 /**
  * Generates the Calendar
  */
 function CallGenerateCalendar() {
-	// Pull the data out
-	var url				= 'index.php?p=schedule&q=GenerateCalendar&ajax=true';
-	var calendar 		= $('#Calendar');
-	var view 			= calendar.data('view') || 'month';
-	var date			= calendar.data('date') || new Date();
-	var displayGroups	= $('#DisplayList').serialize();
-	
-	var data 			= $.extend({date: date.toISOString()}, {view: view});
-	
-	if (displayGroups != '') 
+    
+    var url = 'index.php?p=schedule&q=GenerateCalendar&ajax=true';
+
+    // Append display groups
+    var displayGroups = $('#DisplayList').serialize();
+    if (displayGroups != '') 
         url += '&' + displayGroups;
-	
-	$.ajax({
-        type: "post",
-        url: url,
-		data: data,
-        dataType: "json",
-        success: function(response) {
 
-            var respHtml;
-            
-            if (response.success) {
-                respHtml = response.html;
-            }
-            else {
-                // Login Form needed?
-                if (response.login) {
-                    LoginBox(response.message);
-                    return false;
-                }
-                else {
-                    // Just an error we dont know about
-                    respHtml = response.message;
-                }
-            }
-            
-            $('#Calendar').html(respHtml);
-			
-			// Call XiboInitialise for this form
-			XiboInitialise('#Calendar');
+    // Override the calendar URL
+    calendar.setOptions({events_source: url});
 
-            // Make sure the calendar will fit in the window
-            var height = $("#Calendar").parent().height();
-            $("#Calendar").height($(window).height() * 0.8);
-            $("#display-list-well").css("max-height", (($(window).height() * 0.8) - 110) + "px");
-            
-            return false;
-        }
-    });
+    // Navigate
+    calendar.view();
 }
 
 /**
@@ -123,24 +108,6 @@ var setupScheduleForm = function() {
             $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
         }
     });    
-}
-
-/**
- * Callback fired when the Display Select List on the left hand pane is rendered
- */
-function DisplayListRender() {
-    // Bind a click event to all the display list checkboxes
-    $('.DisplayListForm input[type=checkbox]').click(function(){
-            CallGenerateCalendar();
-    });
-
-    CallGenerateCalendar();
-        
-    $('input:checkbox[name=checkAll]', '#checkAllForDisplayList').click(function(){
-        $("input:checkbox[name='DisplayGroupIDs[]']", ".DisplayListForm").prop("checked", this.checked);
-        
-        CallGenerateCalendar();
-    });
 }
 
 /**

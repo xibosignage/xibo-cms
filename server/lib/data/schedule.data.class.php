@@ -64,11 +64,12 @@ class Schedule extends Data
 					'userid' => $userID,
 					'is_priority' => $isPriority,
 					'fromdt' => $fromDT,
-					'todt' => $toDT
+					'todt' => $toDT,
+					'displayorder' => $displayOrder
 				);
     		
     		$SQL  = "";
-    		$SQL .= "INSERT INTO `schedule` (CampaignId, DisplayGroupIDs, userID, is_priority, FromDT, ToDT ";
+    		$SQL .= "INSERT INTO `schedule` (CampaignId, DisplayGroupIDs, userID, is_priority, FromDT, ToDT, DisplayOrder ";
     		
     		// Columns for Recurrence
     		if ($recType != '' && $recType != 'null') {
@@ -76,7 +77,7 @@ class Schedule extends Data
     		}
     		
     		$SQL .= ") ";
-    		$SQL .= " VALUES ( :campaignid, :displaygroupids, :userid, :is_priority, :fromdt, :todt ";
+    		$SQL .= " VALUES ( :campaignid, :displaygroupids, :userid, :is_priority, :fromdt, :todt :displayorder ";
     		
     		// Values for Recurrence
     		if ($recType != '' && $recType != 'null')
@@ -103,7 +104,7 @@ class Schedule extends Data
     		foreach ($displayGroupIDs as $displayGroupID)
     		{
     			// Add the parent detail record for this event
-    			if (!$this->AddDetail($displayGroupID, $campaignId, $fromDT, $toDT, $userID, $isPriority, $eventID, $displayOrder))
+    			if (!$this->AddDetail($displayGroupID, $fromDT, $toDT, $userID, $eventID))
     				throw new Exception("Error Processing Request", 1);
     			    
     			// Is there any recurrance to take care of?
@@ -149,7 +150,7 @@ class Schedule extends Data
     					// after we have added the appropriate amount, are we still valid
     					if ($t_start_temp > $recToDT) break;
     					
-    					if (!$this->AddDetail($displayGroupID, $campaignId, $t_start_temp, $t_end_temp, $userID, $isPriority, $eventID, $displayOrder))
+    					if (!$this->AddDetail($displayGroupID, $t_start_temp, $t_end_temp, $userID, $eventID))
     						throw new Exception("Error Processing Request", 1);		
     				}
     			}
@@ -178,7 +179,6 @@ class Schedule extends Data
     /**
      * Edits a Schedule
      * @param <type> $eventID
-     * @param <type> $eventDetailID
      * @param <type> $displayGroupIDs
      * @param <type> $fromDT
      * @param <type> $toDT
@@ -191,7 +191,7 @@ class Schedule extends Data
      * @param <int> $displayOrder
      * @return <type>
      */
-	public function Edit($eventID, $eventDetailID, $displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid, $displayOrder)
+	public function Edit($eventID, $displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid, $displayOrder)
 	{
 		Debug::LogEntry('audit', 'IN', 'Schedule', 'Edit');
 
@@ -262,7 +262,7 @@ class Schedule extends Data
 	 * @param $isPriority Object
 	 * @param $eventID Object[optional]
 	 */
-	public function AddDetail($displayGroupID, $campaignId, $fromDT, $toDT, $userID = 1, $isPriority = 0, $eventID = '', $displayOrder = 0)
+	public function AddDetail($displayGroupID, $fromDT, $toDT, $userID, $eventID)
 	{
 		Debug::LogEntry('audit', 'IN', 'Schedule', 'AddDetail');
 		
@@ -272,16 +272,13 @@ class Schedule extends Data
 		    // The parameters for the INSERT
 		    $params = array(
 					'displaygroupid' => $displayGroupID,
-					'campaignid' => $campaignId,
 					'fromdt' => $fromDT,
 					'todt' => $toDT,
-					'userid' => $userID,
-					'is_priority' => $isPriority,
-					'displayorder' => $displayOrder
+					'userid' => $userID
 				);
 		
 			// Insert statement
-			$SQL = "INSERT INTO schedule_detail (DisplayGroupID, CampaignId, FromDT, ToDT, userID, is_priority, DisplayOrder";
+			$SQL = "INSERT INTO schedule_detail (DisplayGroupID, FromDT, ToDT, userID";
 			
 			// Extras for Event ID
 			if ($eventID != '')
@@ -293,7 +290,7 @@ class Schedule extends Data
 			$SQL .= ") ";
 			
 			// Values
-			$SQL .= "VALUES (:displaygroupid, :campaignid, :fromdt, :todt, :userid, :is_priority, :displayorder";
+			$SQL .= "VALUES (:displaygroupid, :fromdt, :todt, :userid";
 			
 			if ($eventID != '')
 				$SQL .= ", :eventid";
@@ -317,41 +314,6 @@ class Schedule extends Data
 		
 		    return false;
 		}	
-	}
-	
-	/**
-	 * Edits the LayoutID of a Schedule Detail record
-	 * @return 
-	 * @param $scheduleDetailID Object
-	 * @param $layoutID Object
-	 */
-	public function EditDetailLayoutID($scheduleDetailID, $campaignId)
-	{
-		Debug::LogEntry('audit', 'IN', 'Schedule', 'EditDetailLayoutID');
-		
-		try {
-		    $dbh = PDOConnect::init();
-		
-			// Update the default layoutdisplay record
-		    $sth = $dbh->prepare('UPDATE schedule_detail SET CampaignId = :campaignid WHERE schedule_detailID = :scheduledetailid');
-		    $sth->execute(array(
-		            'scheduledetailid' => $scheduleDetailID,
-		            'campaignid' => $campaignId
-		        ));
-
-			Debug::LogEntry('audit', 'OUT', 'Schedule', 'EditDetailLayoutID');
-			
-			return true;  
-		}
-		catch (Exception $e) {
-		    
-		    Debug::LogEntry('error', $e->getMessage());
-		
-		    if (!$this->IsError())
-		        $this->SetError(25002, __('Could not update Layout on Schedule'));
-		
-		    return false;
-		}
 	}
 	
 	/**

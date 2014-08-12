@@ -19,15 +19,48 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Theme variables:
- * 	id = The GridID for rendering AJAX layout table return
- * 	filter_id = The Filter Form ID
- * 	form_meta = Extra form meta that needs to be sent to the CMS to return the list of layouts
- * 	pager = A paging control for this Xibo Grid
+ *  id = The GridID for rendering AJAX layout table return
+ *  filter_id = The Filter Form ID
+ *  form_meta = Extra form meta that needs to be sent to the CMS to return the list of layouts
+ *  pager = A paging control for this Xibo Grid
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="row">
-	<div id="Calendar" class="col-md-12">
-		
-	</div>
+    <div class="col-sm-12">
+        <div class="btn-group pull-right xibo-calendar-controls">
+            <button type="button" class="btn btn-warning" data-calendar-view="year"><?php echo Theme::Translate('Year'); ?></button>
+            <button type="button" class="btn btn-warning active" data-calendar-view="month"><?php echo Theme::Translate('Month'); ?></button>
+            <button type="button" class="btn btn-warning" data-calendar-view="week"><?php echo Theme::Translate('Week'); ?></button>
+            <button type="button" class="btn btn-warning" data-calendar-view="day"><?php echo Theme::Translate('Day'); ?></button>
+        </div>
+        <div class="btn-group pull-right xibo-calendar-controls">
+            <button type="button" class="btn btn-primary" data-calendar-nav="prev"><span class="glyphicon glyphicon-backward"></span> <?php echo Theme::Translate('Prev'); ?></button>
+            <button type="button" class="btn btn-default" data-calendar-nav="today">Today</button>
+            <button type="button" class="btn btn-primary" data-calendar-nav="next"><?php echo Theme::Translate('Next'); ?> <span class="glyphicon glyphicon-forward"></span></button>
+        </div>
+        <div class="btn-group pull-right xibo-calendar-controls">
+            <button class="btn btn-success XiboFormButton" href="<?php echo Theme::Get('event_add_url'); ?>"><?php echo Theme::Translate('Add Event'); ?></button>
+        </div>
+        <div class="xibo-calendar-controls dropdown pull-right">
+            <select id="<?php echo Theme::Get('id'); ?>" type="form-control" name="DisplayGroupIDs[]" multiple>
+                <optgroup label="<?php echo Theme::Translate('Groups'); ?>">
+                    <?php foreach(Theme::Get('groups') as $row) { ?>
+                    <option value="<?php echo $row['displaygroupid']; ?>"<?php echo $row['checked_text']; ?>><?php echo $row['displaygroup']; ?></option>
+                    <?php } ?>
+                </optgroup>
+                <optgroup label="<?php echo Theme::Translate('Displays'); ?>">
+                    <?php foreach(Theme::Get('displays') as $row) { ?>
+                    <option value="<?php echo $row['displaygroupid']; ?>"<?php echo $row['checked_text']; ?>><?php echo $row['displaygroup']; ?></option>
+                    <?php } ?>  
+                </optgroup>
+            </select>
+        </div>
+        <h1 class="page-header"></h1>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div id="Calendar"></div>
+    </div>
 </div>

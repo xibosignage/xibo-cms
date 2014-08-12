@@ -104,6 +104,14 @@ UPDATE `setting` SET cat = 'users', ordering = 10, usersee = '1', userchange = '
 UPDATE `setting` SET cat = 'users', ordering = 20, usersee = '1', userchange = '1', `default` = '' WHERE setting = 'USER_PASSWORD_POLICY';
 UPDATE `setting` SET cat = 'users', ordering = 30, usersee = '1', userchange = '1', `default` = '' WHERE setting = 'USER_PASSWORD_ERROR';
 
+ALTER TABLE  `schedule` ADD  `DisplayOrder` INT NOT NULL DEFAULT  '0';
+
+UPDATE `schedule` SET DisplayOrder = (SELECT MAX(DisplayOrder) FROM `schedule_detail` WHERE schedule_detail.eventid = schedule.eventid);
+
+ALTER TABLE  `schedule_detail` DROP FOREIGN KEY  `schedule_detail_ibfk_9` ;
+ALTER TABLE `schedule_detail` DROP `CampaignID`;
+ALTER TABLE `schedule_detail` DROP `is_priority`;
+ALTER TABLE `schedule_detail` DROP `DisplayOrder`;
 
 UPDATE `version` SET `app_ver` = '1.7.0-alpha', `XmdsVersion` = 4;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

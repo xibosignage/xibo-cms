@@ -194,6 +194,16 @@ function XiboInitialise(scope) {
         $.plot("#" + id, data.points, data.config);
 
     });
+
+    // Special drop down forms (to act as a menu instead of a usual dropdown)
+    $(scope + ' .dropdown-menu').on('click', function(e) {
+        if($(this).hasClass('dropdown-menu-form')) {
+            e.stopPropagation();
+        }
+    });
+
+    // Select statements
+    $(scope + " select").selectpicker();
 }
 
 /**
