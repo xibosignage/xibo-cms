@@ -107,9 +107,9 @@ class adminDAO extends baseDAO
         $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
         $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
 
-        $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = %d', $startOfMonth);
+        $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month > %d AND Month < %d', $startOfMonth, $startOfMonth + (86400 * 2));
         $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
-        $usagePcnt = ($xmdsLimit > 0) ? (($bandwidthUsage / ($xmdsLimit * 1024)) * 100) : '';
+        $usagePcnt = ($xmdsLimit > 0) ? (((double)$bandwidthUsage / ($xmdsLimit * 1024)) * 100) : '';
         
         Theme::Set('bandwidth_info', $this->FormatByteSize($bandwidthUsage) . (($xmdsLimit > 0) ? sprintf(__(' / %d %% of %s'), $usagePcnt, $this->FormatByteSize($xmdsLimit * 1024)) : ''));
 

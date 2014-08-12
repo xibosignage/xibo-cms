@@ -1097,6 +1097,19 @@ END;
         Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
         Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $maxFileSizeBytes . '" />');
 
+        Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
+
+        $formFields = array();
+        $formFields[] = FormManager::AddCheckbox('overwrite', __('Overwrite existing data?'), 
+            NULL, 
+            __('Erase all content in this DataSet and overwrite it with the new content in this import.'), 
+            'o');
+
+        $formFields[] = FormManager::AddCheckbox('ignorefirstrow', __('Ignore first row?'), 
+            NULL, 
+            __('Ignore the first row? Useful if the CSV has headings.'), 
+            'i');
+    
         // Enumerate over the columns in the DataSet and offer a column mapping for each one (from the file)
         $SQL  = "";
         $SQL .= "SELECT DataSetColumnID, Heading ";
@@ -1114,24 +1127,18 @@ END;
             trigger_error(__('Error getting list of dataSetColumns'), E_USER_ERROR);
         }
 
-        $rows = array();
         $i = 0;
 
         foreach ($dataSetColumns as $row) {
             $i++;
 
-            $row['heading'] = Kit::ValidateParam($row['Heading'], _STRING);
-            $row['formfieldid'] = 'csvImport_' . Kit::ValidateParam($row['DataSetColumnID'], _INT);
-            $row['auto_column_number'] = $i;
-
-            $rows[] = $row;
+            $formFields[] = FormManager::AddNumber('csvImport_' . Kit::ValidateParam($row['DataSetColumnID'], _INT), 
+                Kit::ValidateParam($row['Heading'], _STRING), $i, NULL, 'c');
         }
 
-        Theme::Set('fields', $rows);
+        Theme::Set('form_fields', $formFields);
 
-        $form = Theme::RenderReturn('dataset_form_csv_import');
-
-        $response->SetFormRequestResponse($form, __('CSV Import'), '350px', '200px');
+        $response->SetFormRequestResponse(NULL, __('CSV Import'), '350px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'ImportCsv') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Import'), '$("#DataSetImportCsvForm").submit()');

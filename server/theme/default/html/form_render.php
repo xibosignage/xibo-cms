@@ -113,7 +113,7 @@ $cols = (is_array($form_cols) && count($form_cols > 0));
                     <?php } 
                     else if ($field['fieldType'] == 'message') { ?>
                         <div class="col-sm-12 <?php echo $field['groupClass']; ?>">
-                            <p class="alert alert-info"><?php echo $field['helpText']; ?></p>
+                            <p><?php echo $field['helpText']; ?></p>
                         </div>
                     <?php } 
                     else if ($field['fieldType'] == 'raw') { ?>

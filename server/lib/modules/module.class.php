@@ -961,7 +961,7 @@ END;
         Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
 		Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSizeBytes . '" />');
 
-        Theme::Set('prepend', Theme::RenderReturn('library_form_media_edit'));
+        Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
 
         $formFields = array();
         $formFields[] = FormManager::AddText('name', __('Name'), $name, 

@@ -51,6 +51,9 @@ class embedded extends Module
 
         $formFields = array();
         
+		$formFields[] = FormManager::AddText('name', __('Name'), NULL, 
+            __('An optional name for this media'), 'n');
+
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this item should be displayed'), 'd', 'required');
 
@@ -125,7 +128,7 @@ function EmbedInit()
 		
 		$formFields = array();
 
-		$formFields[] = FormManager::AddNumber('name', __('Name'), $this->GetOption('name'), 
+		$formFields[] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
             __('An optional name for this media'), 'n');
         
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 

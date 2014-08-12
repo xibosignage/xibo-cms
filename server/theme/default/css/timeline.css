@@ -93,6 +93,9 @@ div.timelineMediaDetails h3 {
     padding-left: 20px;
     color: whiteSmoke;
 }
+div.timelineMediaItemColouringDefault {
+    background-color: green;
+}
 
 div.timelineMediaItemColouring_powerpoint {
     background:url(../img/timeline/blue_bar.gif) no-repeat;

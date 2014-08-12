@@ -150,6 +150,9 @@ class ticker extends Module
         $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
         Theme::Set('form_tabs', $tabs);
 
+        $field_name = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
+            __('An optional name for this media'), 'n');
+
         $field_duration = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
@@ -196,6 +199,7 @@ class ticker extends Module
         // Data Set Source
         if ($sourceId == 2) {
 
+            $formFields['general'][] = $field_name;
             $formFields['general'][] = $field_duration;
             $formFields['general'][] = $field_direction;
             $formFields['general'][] = $field_scrollSpeed;
@@ -228,6 +232,7 @@ class ticker extends Module
             $formFields['general'][] = FormManager::AddText('uri', __('Feed URL'), urldecode($this->GetOption('uri')), 
                 __('The Link for the RSS feed'), 'f');
 
+            $formFields['general'][] = $field_name;
             $formFields['general'][] = $field_duration;
             $formFields['general'][] = $field_direction;
             $formFields['general'][] = $field_scrollSpeed;

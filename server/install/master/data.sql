@@ -1,9 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-<<<<<<< TREE
 ('1.7.0-alpha', 4, 1, 80);
-=======
-('1.6.2', 3, 1, 70);
->>>>>>> MERGE-SOURCE
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
 (1, 'Users', 0, 0),
