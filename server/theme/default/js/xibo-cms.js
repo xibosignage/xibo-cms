@@ -203,7 +203,7 @@ function XiboInitialise(scope) {
     });
 
     // Select statements
-    $(scope + " select").selectpicker();
+    //$(scope + " select").selectpicker();
 }
 
 /**
@@ -906,7 +906,7 @@ function SystemMessageInline(messageText, modal) {
         modal = $(".modal");
 
     // Remove existing errors
-    $(".text-error", modal).remove();
+    $(".form-error", modal).remove();
 
     $("<div/>", {
     	class: "well text-danger text-center form-error",

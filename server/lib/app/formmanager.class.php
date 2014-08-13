@@ -52,6 +52,15 @@ class FormManager {
         );
     }
 
+    public static function AddHidden($name, $value) {
+        return array(
+            'name' => $name,
+            'value' => $value,
+            'fieldType' => 'hidden',
+            'enabled' => true
+        );
+    }
+
     public static function AddText($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '', $enabled = true) {
         return array(
             'name' => $name,
@@ -143,7 +152,7 @@ class FormManager {
         );
     }
 
-    public static function AddCombo($name, $title, $value, $options, $optionId, $optionValue, $helpText, $accessKey, $groupClass = '', $enabled = true, $callBack = '', $classColumn = '', $styleColumn = '') {
+    public static function AddCombo($name, $title, $value, $options, $optionId, $optionValue, $helpText, $accessKey, $groupClass = '', $enabled = true, $callBack = '', $classColumn = '', $styleColumn = '', $optionGroups = '', $attributes = array()) {
         return array(
             'name' => $name,
             'title' => $title,
@@ -159,7 +168,31 @@ class FormManager {
             'enabled' => $enabled,
             'callBack' => $callBack,
             'classColumn' => $classColumn,
-            'styleColumn' => $styleColumn
+            'styleColumn' => $styleColumn,
+            'optionGroups' => $optionGroups,
+            'dataAttributes' => $attributes
+        );
+    }
+
+    public static function AddMultiCombo($name, $title, $value, $options, $optionId, $optionValue, $helpText, $accessKey, $groupClass = '', $enabled = true, $callBack = '', $classColumn = '', $styleColumn = '', $optionGroups = '', $attributes = array()) {
+        return array(
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'helpText' => $helpText,
+            'fieldType' => 'dropdownmulti',
+            'options' => $options,
+            'optionId' => $optionId,
+            'optionValue' => $optionValue,
+            'validation' => NULL,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass,
+            'enabled' => $enabled,
+            'callBack' => $callBack,
+            'classColumn' => $classColumn,
+            'styleColumn' => $styleColumn,
+            'optionGroups' => $optionGroups,
+            'dataAttributes' => $attributes
         );
     }
 

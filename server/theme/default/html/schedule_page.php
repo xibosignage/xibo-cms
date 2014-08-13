@@ -43,7 +43,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             <button class="btn btn-success XiboFormButton" href="<?php echo Theme::Get('event_add_url'); ?>"><?php echo Theme::Translate('Add Event'); ?></button>
         </div>
         <div class="xibo-calendar-controls dropdown pull-right">
-            <select id="<?php echo Theme::Get('id'); ?>" type="form-control" name="DisplayGroupIDs[]" multiple>
+            <select id="<?php echo Theme::Get('id'); ?>" type="form-control" name="DisplayGroupIDs[]" data-live-search="true" data-selected-text-format="count > 4" multiple>
+                <option value="-1"<?php echo (Theme::Get('allSelected') == 1) ? 'selected' : ''; ?>><?php echo Theme::Translate('All'); ?></option>
                 <optgroup label="<?php echo Theme::Translate('Groups'); ?>">
                     <?php foreach(Theme::Get('groups') as $row) { ?>
                     <option value="<?php echo $row['displaygroupid']; ?>"<?php echo $row['checked_text']; ?>><?php echo $row['displaygroup']; ?></option>

@@ -33,8 +33,8 @@ if (!$tabs)
 //var_dump($form_tabs);
 
 // Are we columns?
-$form_cols = Theme::Get('form_cols');
-$cols = (is_array($form_cols) && count($form_cols > 0));
+//$form_cols = Theme::Get('form_cols');
+//$cols = (is_array($form_cols) && count($form_cols > 0));
 
 ?>
 <div class="row">
@@ -151,11 +151,47 @@ $cols = (is_array($form_cols) && count($form_cols > 0));
                             </div>
                         </div>
                     <?php }
-                    else if ($field['fieldType'] == 'dropdown') { ?>
+                    else if ($field['fieldType'] == 'dropdown' || $field['fieldType'] == 'dropdownmulti') { ?>
                         <div class="form-group <?php echo $field['groupClass']; ?>">
                             <label class="col-sm-2 control-label" for="<?php echo $field['name']; ?>" title="<?php echo $field['helpText']; ?>" accesskey="<?php echo $field['accesskey']; ?>"><?php echo $field['title']; ?></label>
                             <div class="col-sm-10">
-                                <?php echo Theme::SelectList($field['name'], $field['options'], $field['optionId'], $field['optionValue'], $field['value'], $field['callBack'], $field['classColumn'], $field['styleColumn']); ?>
+                                <select class="form-control" <?php echo (($field['fieldType'] == 'dropdownmulti') ? 'multiple' : ''); ?> name="<?php echo $field['name']; ?>" id="<?php echo $field['name']; ?>"<?php echo $field['callBack']; ?> <?php 
+                                foreach ($field['dataAttributes'] as $attribute) { echo $attribute['name'] . '="' . $attribute['value'] . '"'; } ?>>
+
+                                <?php 
+                                // Option groups?
+                                $groups = is_array($field['optionGroups']) && count($field['optionGroups']) > 0;
+                                if (!$groups)
+                                    $field['optionGroups'] = array('label' => 'General');
+
+                                foreach ($field['optionGroups'] as $group) {
+
+                                    // If we are groups then output an option group node
+                                    if ($groups) {
+                                        echo '<optgroup label="' . $group['label'] . '">';
+                                        $options = $field['options'][$group['id']];
+                                    }
+                                    else {
+                                        $options = $field['options'];
+                                    }
+
+                                    foreach ($options as $item) { 
+
+                                        $class = ($field['classColumn'] == '') ? '' : ' class="' . $item[$field['classColumn']] . '"';
+                                        $style = ($field['styleColumn'] == '') ? '' : ' style="' . $item[$field['styleColumn']] . '"';
+                                        if ($field['fieldType'] == 'dropdownmulti')
+                                            $selected = ((in_array($item[$field['optionId']], $field['value'])) ? 'selected' : '');
+                                        else
+                                            $selected = (($item[$field['optionId']] == $field['value']) ? 'selected' : '');
+                                         ?>
+                                        <option<?php echo $class . $style ?> value="<?php echo $item[$field['optionId']]; ?>" <?php echo $selected; ?>><?php echo $item[$field['optionValue']]; ?></option>
+                                    <?php } 
+
+                                    if ($groups)
+                                        echo '</optgroup>';
+                                }
+                                ?>
+                                </select>
                                 <span class="help-block"><?php echo $field['helpText']; ?></span>
                             </div>
                         </div>

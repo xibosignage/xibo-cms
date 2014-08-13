@@ -64,6 +64,9 @@ $(document).ready(function() {
         CallGenerateCalendar();
     });
 
+    // Make the select list nicer
+    $('#DisplayList').selectpicker();
+
     // Generate the calendar now we have a list set up
     CallGenerateCalendar();
 });
@@ -90,103 +93,47 @@ function CallGenerateCalendar() {
 /**
  * Callback for the schedule form
  */
-var setupScheduleForm = function() {
-    //set up any date fields we have with the date picker
-    $('.date-pick').datetimepicker({
-            language: "en",
-            pickSeconds: false
-        });
-    
-    // We submit this form ourselves (outside framework)
-    $('.XiboScheduleForm').validate({
-        submitHandler: ScheduleFormSubmit,
-        errorElement: "span",
-        highlight: function(element) {
-            $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
-        },
-        success: function(element) {
-            $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
-        }
-    });    
-}
+var setupScheduleForm = function(form) {
 
-/**
- * Call back fired by the Display Grid on the Add/Edit Event Form.
- * @return {[type]} [description]
- */
-function displayGridCallback(gridId) {
+    // Select lists
+    $('#CampaignID', form).selectpicker();
+    $('select[name="DisplayGroupIDs[]"]', form).selectpicker();
 
-    var modal = $('#' + gridId).closest(".modal");
-
-    $('input:checkbox[name=checkAll]', modal).click(function(){
-        $("input:checkbox[name='DisplayGroupIDs[]']", modal).prop("checked", this.checked);
-    });
-}
-
-function ScheduleFormSubmit(form) {
-    // Get the URL from the action part of the form)
-    var url = $(form).attr("action") + "&ajax=true";
-
-    // Get additional fields from the form
-    var layoutId = $('input:radio[name=CampaignID]:checked').val();
-    if (layoutId == undefined)
-        layoutId = 0;
-    
-    var displayGroupIds = $("input:checkbox[name='DisplayGroupIDs[]']:checked", $(form).closest(".modal")).serialize();
-    if (displayGroupIds == undefined)
-        displayGroupIds = 0;
-
-    // Get the values from our datepickers
-    var startDate = dateFormat($("#starttime").closest(".date-pick").data('datetimepicker').getLocalDate(), "isoDateTime");
-    var endDate = dateFormat($("#endtime").closest(".date-pick").data('datetimepicker').getLocalDate(), "isoDateTime");
-    var recurUntil = dateFormat($("#rec_range").closest(".date-pick").data('datetimepicker').getLocalDate(), "isoDateTime");
-
-    $.ajax({
-        type:"post",
-        url:url,
-        cache:false,
-        dataType:"json",
-        data:$(form).serialize() + "&CampaignID=" + layoutId + "&" + displayGroupIds + "&iso_starttime=" + startDate + "&iso_endtime=" + endDate + "&iso_rec_range=" + recurUntil,
-        success: XiboSubmitResponse
+    // Set up any date fields we have with the date picker
+    $('#starttimeControl', form).datetimepicker({
+        format: "dd MM yyyy - hh:ii",
+        linkField: "starttime",
+        linkFormat: "yyyy-mm-dd hh:ii",
+        minuteStep: 5,
+        autoClose: true,
+        startDate: $("#starttime", form).val()
     });
 
-    return;
+    $('#endtimeControl', form).datetimepicker({
+        format: "dd MM yyyy - hh:ii",
+        linkField: "endtime",
+        linkFormat: "yyyy-mm-dd hh:ii",
+        minuteStep: 5,
+        autoClose: true,
+        startDate: $("#endtime", form).val()
+    });
+
+    $('#rec_rangeControl', form).datetimepicker({
+        format: "dd MM yyyy - hh:ii",
+        linkField: "rec_range",
+        linkFormat: "yyyy-mm-dd hh:ii",
+        minuteStep: 5,
+        autoClose: true,
+        startDate: $("#rec_range", form).val()
+    });
 }
 
 /**
  * Callback for the schedule form
  */
-var setupScheduleNowForm = function() {
+var setupScheduleNowForm = function(form) {
     
     // We submit this form ourselves (outside framework)
-    $('.XiboScheduleForm').validate({
-        submitHandler: ScheduleNowFormSubmit,
-        errorElement: "span",
-        highlight: function(element) {
-            $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
-        },
-        success: function(element) {
-            $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
-        }
-    });    
-}
-
-function ScheduleNowFormSubmit(form) {
-    // Get the URL from the action part of the form)
-    var url = $(form).attr("action") + "&ajax=true";
-    
-    var displayGroupIds = $("input:checkbox[name='DisplayGroupIDs[]']:checked", $(form).closest(".modal")).serialize();
-    if (displayGroupIds == undefined)
-        displayGroupIds = 0;
-    
-    $.ajax({
-        type:"post",
-        url:url,
-        cache:false,
-        dataType:"json",
-        data:$(form).serialize() + "&" + displayGroupIds,
-        success: XiboSubmitResponse
-    });
-
-    return;
+    $('#CampaignID', form).selectpicker();
+    $('select[name="DisplayGroupIDs[]"]', form).selectpicker();   
 }

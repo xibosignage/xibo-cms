@@ -77,7 +77,7 @@ class Schedule extends Data
     		}
     		
     		$SQL .= ") ";
-    		$SQL .= " VALUES ( :campaignid, :displaygroupids, :userid, :is_priority, :fromdt, :todt :displayorder ";
+    		$SQL .= " VALUES ( :campaignid, :displaygroupids, :userid, :is_priority, :fromdt, :todt, :displayorder ";
     		
     		// Values for Recurrence
     		if ($recType != '' && $recType != 'null')

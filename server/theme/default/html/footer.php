@@ -35,7 +35,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<script src="theme/default/libraries/jquery/jquery-ui/jquery-ui-1.10.2.custom.min.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>
-        <script src="theme/default/libraries/bootstrap/js/bootstrap-datetimepicker.min.js"></script>
+        <script src="theme/default/libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
         <script src="theme/default/libraries/bootstrap-select/js/bootstrap-select.min.js"></script>
         <script src="theme/default/libraries/underscore/underscore-min.js"></script>
         <script src="theme/default/libraries/jstimezonedetect/jstz.min.js"></script>

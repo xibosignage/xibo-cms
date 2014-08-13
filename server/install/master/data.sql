@@ -195,7 +195,7 @@ INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class
 (37, 6, 37, NULL, 'Campaigns', NULL, NULL, 1, 0),
 (38, 8, 38, NULL, 'Transitions', NULL, NULL, 6, 0),
 (39, 9, 30, NULL, 'Help Links', NULL, NULL, 6, 0),
-(39, 7, 42, NULL, 'Display Settings', NULL, NULL, 4, 0);
+(40, 7, 42, NULL, 'Display Settings', NULL, NULL, 4, 0);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES

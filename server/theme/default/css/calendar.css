@@ -21,3 +21,7 @@
  .xibo-calendar-controls {
  	margin-left: 20px;
  }
+
+ #cal-week-box {
+ 	z-index: 1000;
+ }
