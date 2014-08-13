@@ -675,15 +675,8 @@ class layoutDAO extends baseDAO
         $formFields = array();
 
         // A list of web safe colours
-        $formFields[] = FormManager::AddCombo(
-                    'bg_color', 
-                    __('Background Colour'), 
-                    trim($backgroundColor,'#'),
-                    gwsc(),
-                    'colorid',
-                    'color',
-                    __('Use the colour picker to select the background colour'), 
-                    'c', '', true, '', 'style');
+        $formFields[] = FormManager::AddText('bg_color', __('Background Colour'), $backgroundColor, 
+            __('Use the colour picker to select the background colour'), 'c', 'required');
 
         // A list of available backgrounds
         $backgrounds = $user->MediaList('image');
@@ -713,6 +706,7 @@ class layoutDAO extends baseDAO
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Change the Background Properties'), '550px', '240px');
+        $response->callBack = 'backGroundFormSetup';
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Background') . '")');
         $response->AddButton(__('Add Image'), 'XiboFormRender("index.php?p=module&q=Exec&mod=image&method=AddForm&backgroundImage=true&layoutid=' . $this->layoutid . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
@@ -734,7 +728,7 @@ class layoutDAO extends baseDAO
         $response       = new ResponseManager();
 
         $layoutid       = Kit::GetParam('layoutid', _POST, _INT);
-        $bg_color       = Kit::GetParam('bg_color', _POST, _STRING);
+        $bg_color       = trim(Kit::GetParam('bg_color', _POST, _STRING), '#');
         $mediaID        = Kit::GetParam('bg_image', _POST, _INT);
         $resolutionid   = Kit::GetParam('resolutionid', _POST, _INT);
 

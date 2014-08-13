@@ -310,3 +310,7 @@ var background_button_callback = function() {
 
 	$('#bg_image_image').attr("src", "index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=" + id + "&width=200&height=200&dynamic");
 }
+
+var backGroundFormSetup = function() {
+    $('#bg_color').colorpicker();
+}

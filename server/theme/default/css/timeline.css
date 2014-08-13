@@ -98,59 +98,59 @@ div.timelineMediaItemColouringDefault {
 }
 
 div.timelineMediaItemColouring_powerpoint {
-    background:url(../img/timeline/blue_bar.gif) no-repeat;
+    background-color: #3333D6;
 }
 
 div.timelineMediaItemColouring_image {
-    background:url(../img/timeline/red_bar.gif) no-repeat;
+    background-color: #FF3030;
 }
 
 div.timelineMediaItemColouring_webpage {
-    background:url(../img/timeline/green_bar.gif) no-repeat;
+    background-color: #009933;
 }
 
 div.timelineMediaItemColouring_shellcommand {
-    background:url(../img/timeline/green_bar.gif) no-repeat;
+    background-color: #66C285;
 }
 
 div.timelineMediaItemColouring_microblog {
-    background:url(../img/timeline/orange_bar.gif) no-repeat;
+    background-color: #FF6600;
 }
 
 div.timelineMediaItemColouring_embedded {
-    background:url(../img/timeline/green_bar.gif) no-repeat;
+    background-color: #FF3399;
 }
 
 div.timelineMediaItemColouring_text {
-    background:url(../img/timeline/yellow_bar.gif) no-repeat;
+    background-color: #CCCC00;
 }
 
 div.timelineMediaItemColouring_ticker {
-    background:url(../img/timeline/orange_bar.gif) no-repeat;
+    background-color: #006600;
 }
 
 div.timelineMediaItemColouring_video {
-    background:url(../img/timeline/purple_bar.gif) no-repeat;
+    background-color: #990099;
 }
 
 div.timelineMediaItemColouring_flash {
-    background:url(../img/timeline/grey_bar.gif) no-repeat;
+    background-color: #ADAD85;
 }
 
 div.timelineMediaItemColouring_counter {
-    background:url(../img/timeline/grey_bar.gif) no-repeat;
+    background-color: #3366FF;
 }
 
 div.timelineMediaItemColouring_datasetview {
-    background:url(../img/timeline/grey_bar.gif) no-repeat;
+    background-color: #009999;
 }
 
 div.timelineMediaItemColouring_enabled {
-    background:url(../img/timeline/green_bar.gif) no-repeat;
+    background-color: green;
 }
 
 div.timelineMediaItemColouring_disabled{
-    background:url(../img/timeline/grey_bar.gif) no-repeat;
+    background-color: #999966;
 }
 
 span.library_assign_list_select {

@@ -214,11 +214,10 @@ if (!$tabs)
                             <?php } ?>
                         </table>
                     <?php }
-                    } // End for loop
-                    echo '</div>';
-                } // End for loop ?>
-            </form>
-            <?php echo Theme::Get('append'); ?>
-        </div>
+                } // End for loop
+                echo '</div>';
+            } // End for loop ?>
+        </form>
+        <?php echo Theme::Get('append'); ?>
     </div>
-
+</div>
