@@ -56,19 +56,20 @@ $(document).ready(function() {
     };
 
     // Calendar is initialised without any event_source (that is changed when the selector is used)
-    if (($('#Calendar').length > 0))
+    if (($('#Calendar').length > 0)) {
         calendar = $('#Calendar').calendar(options);
 
-    // Set up our display selector control
-    $('#DisplayList').on('change', function(){
+        // Set up our display selector control
+        $('#DisplayList').on('change', function(){
+            CallGenerateCalendar();
+        });
+
+        // Make the select list nicer
+        $('#DisplayList').selectpicker();
+
+        // Generate the calendar now we have a list set up
         CallGenerateCalendar();
-    });
-
-    // Make the select list nicer
-    $('#DisplayList').selectpicker();
-
-    // Generate the calendar now we have a list set up
-    CallGenerateCalendar();
+    }
 });
 
 /**

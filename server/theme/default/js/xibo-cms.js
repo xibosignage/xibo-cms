@@ -186,13 +186,17 @@ function XiboInitialise(scope) {
     });
 
     // Search for any charts
-    $(scope + " .flot-chart").each(function() {
-        
-        var id = $(this).attr("id");
-        var data = eval(id);
+    $(scope + " div.morrisChart").each(function() {
 
-        $.plot("#" + id, data.points, data.config);
+        // Look for a variable with the same ID as this element
+        var data = eval($(this).attr("id"));
 
+        if (data.type == "line")
+            new Morris.Line(data.data);
+        else if (data.type == "donut")
+            new Morris.Donut(data.data);
+        else if (data.type == "bar")
+            new Morris.Bar(data.data);
     });
 
     // Special drop down forms (to act as a menu instead of a usual dropdown)
