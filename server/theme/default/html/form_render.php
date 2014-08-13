@@ -21,7 +21,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 // Get the form class
-$formClass = (Theme::Get('form_class') == '') ? 'XiboForm' : Theme::Get('form_class');
+$formClass = (Theme::Get('form_class') == '') ? 'XiboForm form-horizontal' : Theme::Get('form_class');
 
 // Are we tabs?
 $form_tabs = Theme::Get('form_tabs');
@@ -57,7 +57,7 @@ if (!$tabs)
             <?php } ?>
         </ul>
         <?php } ?>
-        <form id="<?php echo Theme::Get('form_id'); ?>" class="<?php echo $formClass; ?> form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+        <form id="<?php echo Theme::Get('form_id'); ?>" class="<?php echo $formClass; ?>" method="post" action="<?php echo Theme::Get('form_action'); ?>">
             <?php echo Theme::Get('form_meta'); 
 
             // Always add content container (it does no harm)
@@ -221,4 +221,4 @@ if (!$tabs)
             <?php echo Theme::Get('append'); ?>
         </div>
     </div>
-</div>
+

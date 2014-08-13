@@ -1390,11 +1390,15 @@ class Layout extends Data
                     if (!$mediaObject->Add($fileId, $file['type'], $file['name'], $file['duration'], $file['file'], $userId))
                         return $this->SetError($mediaObject->GetErrorMessage());
                 }
+
+                Debug::LogEntry('audit', 'Post File Import Fix', get_class(), __FUNCTION__);
     
                 // Get this media node from the layout using the old media id
                 if (!$this->PostImportFix($layoutId, $file['mediaid'], $mediaObject->mediaId, $mediaObject->storedAs, $file['background']))
                     return false;
             }
+
+            Debug::LogEntry('audit', 'Saving XLF', get_class(), __FUNCTION__);
 
             // Save the updated XLF
             if (!$this->SetLayoutXml($layoutId, $this->DomXml->saveXML()))
@@ -1420,6 +1424,8 @@ class Layout extends Data
 
     public function PostImportFix($layoutId, $oldMediaId, $newMediaId, $storedAs = '', $background = 0) {
         
+        Debug::LogEntry('audit', 'Swapping ' . $oldMediaId . ' for ' . $newMediaId, get_class(), __FUNCTION__);
+
         // Are we the background image?
         if ($background == 1) {
             // Background Image
@@ -1437,26 +1443,31 @@ class Layout extends Data
                 // Update the URI option
                 // Get the options node from this document
                 $optionNodes = $node->getElementsByTagName('options');
+
                 // There is only 1
                 $optionNode = $optionNodes->item(0);
 
                 // Get the option node for the URI
-                $oldUriNode = $xpath->query('//uri', $optionNode);
+                $oldUriNode = $xpath->query('.//uri', $optionNode);
 
                 // Create a new uri option node and use it as a replacement for this one.
                 $newNode = $this->DomXml->createElement('uri', $storedAs);
 
                 if ($oldUriNode->length == 0) {
+                    
                     // Append the new node to the list
                     $optionNode->appendChild($newNode);
                 }
                 else {
+                    
                     // Replace the old node we found with XPath with the new node we just created
                     $optionNode->replaceChild($newNode, $oldUriNode->item(0));
                 }
                 
                 // Get the parent node (the region node)
                 $regionId = $node->parentNode->getAttribute('id');
+
+                Debug::LogEntry('audit', 'Adding Link ' . $regionId, get_class(), __FUNCTION__);
 
                 // Insert a link
                 Kit::ClassLoader('region');

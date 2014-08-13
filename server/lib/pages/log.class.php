@@ -40,7 +40,7 @@ class logDAO extends baseDAO
         Theme::Set('id', 'LogGridForRefresh');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="log"><input type="hidden" name="q" value="Grid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ResponseManager::Pager('LogGridForRefresh'));
         
         // Construct Filter Form
         if (Kit::IsFilterPinned('log', 'Filter')) {

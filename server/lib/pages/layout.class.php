@@ -102,33 +102,58 @@ class layoutDAO extends baseDAO
 
                 // Default options
                 if (Kit::IsFilterPinned('layout', 'LayoutFilter')) {
-                    Theme::Set('filter_pinned', 'checked');
-                    Theme::Set('layout', Session::Get('layout', 'filter_layout'));
-                    Theme::Set('retired', Session::Get('layout', 'filter_retired'));
-                    Theme::Set('filter_userid', Session::Get('layout', 'filter_userid'));
-                    Theme::Set('filter_tags', Session::Get('layout', 'filter_tags'));
+                    $layout = Session::Get('layout', 'filter_layout');
+                    $tags = Session::Get('layout', 'filter_tags');
+                    $retired = Session::Get('layout', 'filter_retired');
+                    $owner = Session::Get('layout', 'filter_userid');
+                    $pinned = 1;
                 }
                 else {
-                    Theme::Set('retired', 0);
+                    $layout = NULL;
+                    $tags = NULL;
+                    $retired = 0;
+                    $owner = NULL;
+                    $pinned = 0;
                 }
                 
-                Theme::Set('layout_form_add_url', 'index.php?p=layout&q=displayForm');
-                Theme::Set('layout_form_import_url', 'index.php?p=layout&q=ImportForm');
-
                 $id = uniqid();
+                Theme::Set('header_text', __('Layouts'));
                 Theme::Set('id', $id);
                 Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
                 Theme::Set('pager', ResponseManager::Pager($id));
                 Theme::Set('form_meta', '<input type="hidden" name="p" value="layout"><input type="hidden" name="q" value="LayoutGrid">');
                 
-                // Field list for a "retired" dropdown list
-                Theme::Set('retired_field_list', array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')));
-                
-                // Field list for a "owner" dropdown list
-                Theme::Set('owner_field_list', $db->GetArray("SELECT 0 AS UserID, 'All' AS UserName UNION SELECT DISTINCT user.UserID, user.UserName FROM `layout` INNER JOIN `user` ON layout.UserID = user.UserID "));
+                $formFields = array();
+                $formFields[] = FormManager::AddText('filter_layout', __('Name'), $layout, NULL, 'l');
+                $formFields[] = FormManager::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
+                $formFields[] = FormManager::AddCombo(
+                    'filter_userid', 
+                    __('Owner'), 
+                    $owner,
+                    $db->GetArray("SELECT 0 AS UserID, 'All' AS UserName UNION SELECT DISTINCT user.UserID, user.UserName FROM `layout` INNER JOIN `user` ON layout.UserID = user.UserID "),
+                    'UserID',
+                    'UserName',
+                    NULL, 
+                    'r');
+                $formFields[] = FormManager::AddCombo(
+                    'filter_retired', 
+                    __('Retired'), 
+                    $retired,
+                    array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')),
+                    'retiredid',
+                    'retired',
+                    NULL, 
+                    'r');
+                $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+                    $pinned, NULL, 
+                    'w');
+
+                Theme::Set('form_fields', $formFields);
 
                 // Call to render the template
-                Theme::Render('layout_page');
+                Theme::Set('form_class', 'form-inline');
+                Theme::Set('filter_form', Theme::RenderReturn('form_render'));
+                Theme::Render('grid_render');
                 break;
                 
             case 'edit':
@@ -151,7 +176,6 @@ class layoutDAO extends baseDAO
 
 				// Set up any JavaScript translations
    				Theme::Set('translations', json_encode(array('save_position_button' => __('Save Position'))));
-
 
                 // Call the render the template
                 Theme::Render('layout_designer');
@@ -176,7 +200,7 @@ class layoutDAO extends baseDAO
                     'selected' => false,
                     'link' => '#',
                     'help' => __('Open the filter form'),
-                    'onclick' => 'ToggleFilterView(\'LayoutFilter\')'
+                    'onclick' => 'ToggleFilterView(\'Filter\')'
                     ),
                 array('title' => __('Add Layout'),
                     'class' => 'XiboFormButton',
@@ -1123,9 +1147,18 @@ HTML;
         Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
         Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $maxFileSizeBytes . '" />');
 
-        $form = Theme::RenderReturn('layout_form_import');
+        Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
 
-        $response->SetFormRequestResponse($form, __('Import Layout'), '350px', '200px');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('layout', __('Name'), NULL, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields[] = FormManager::AddCheckbox('replaceExisting', __('Replace Existing Media?'), 
+            NULL, 
+            __('If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.'), 
+            'r');
+
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Import Layout'), '350px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'ImportCsv') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Import'), '$("#LayoutImportForm").submit()');
