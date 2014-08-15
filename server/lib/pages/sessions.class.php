@@ -20,16 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class sessionsDAO extends baseDAO 
-{
-	private $db;
-	private $user;
-
-	function __construct(database $db, user $user) 
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-	}
+class sessionsDAO extends baseDAO {
 	
 	function displayPage() 
 	{
@@ -44,20 +35,37 @@ class sessionsDAO extends baseDAO
 		
 		// Construct Filter Form
         if (Kit::IsFilterPinned('sessions', 'Filter')) {
-            Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_type', Session::Get('sessions', 'filter_type'));
-            Theme::Set('filter_fromdt', Session::Get('sessions', 'filter_fromdt'));
+        	$filter_pinned = 1;
+            $filter_type = Session::Get('sessions', 'filter_type');
+            $filter_fromdt = Session::Get('sessions', 'filter_fromdt');
         }
         else {
-            Theme::Set('filter_type', 0);
+        	$filter_pinned = 0;
+            $filter_type = 0;
+            $filter_fromdt = NULL;
         }
 
-        // Lists
-        $types = array(array('typeid' => 0, 'type' => 'All'), array('typeid' => 'active', 'type' => 'Active'), array('typeid' => 'guest', 'type' => 'Guest'), array('typeid' => 'expired', 'type' => 'Expired'));
-        Theme::Set('type_field_list', $types);
+		$formFields = array();
+        $formFields[] = FormManager::AddText('filter_fromdt', __('From Date'), $filter_fromdt, NULL, 't');
 
-        // Render the Theme and output
-        Theme::Render('sessions_page');
+        $formFields[] = FormManager::AddCombo(
+            'filter_type', 
+            __('Type'), 
+            $filter_type,
+            array(array('typeid' => 0, 'type' => 'All'), array('typeid' => 'active', 'type' => 'Active'), array('typeid' => 'guest', 'type' => 'Guest'), array('typeid' => 'expired', 'type' => 'Expired')),
+            'typeid',
+            'type',
+            NULL, 
+            'd');
+
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+            $filter_pinned, NULL, 
+            'k');
+
+        // Call to render the template
+        Theme::Set('header_text', __('Sessions'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Render('grid_render');
 	}
 
     function actionMenu() {

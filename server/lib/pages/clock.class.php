@@ -20,22 +20,7 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class clockDAO extends baseDAO
-{
-	private $db;
-	private $user;
-
-	function __construct(database $db, user $user) 
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-		
-	}
-	
-	function displayPage() 
-	{		
-		return false;
-	}
+class clockDAO extends baseDAO {
 	
 	/**
 	 * Shows the Time Information

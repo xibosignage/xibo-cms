@@ -20,17 +20,8 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class indexDAO extends baseDAO 
-{
-	private $db;
-	private $user;
-
-	function __construct(database $db, user $user) 
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-	}
-
+class indexDAO extends baseDAO {
+	
 	function login() 
 	{
 		$db 		=& $this->db;

@@ -22,8 +22,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class moduleDAO extends baseDAO 
 {
-    private $db;
-    private $user;
     private $module;
 
     /**
@@ -100,11 +98,13 @@ class moduleDAO extends baseDAO
         if (count($to_install) > 0) {
             Theme::Set('module_install_url', 'index.php?p=module&q=Install&module=');
             Theme::Set('to_install', $to_install);
-            Theme::Set('modules_to_install', Theme::RenderReturn('module_page_install_modules'));
+            Theme::Set('prepend', Theme::RenderReturn('module_page_install_modules'));
         }
 
-        // Render the Theme and output
-        Theme::Render('module_page');
+        // Call to render the template
+        Theme::Set('header_text', __('Modules'));
+        Theme::Set('form_fields', array());
+        Theme::Render('grid_render');
     }
 
     /**

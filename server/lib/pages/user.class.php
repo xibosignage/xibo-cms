@@ -20,25 +20,10 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class userDAO extends baseDAO 
-{
-	private $db;
-	private $user;
+include_once('lib/data/usergroup.data.class.php');
+
+class userDAO extends baseDAO {
 	
-	/**
-	 * Contructor
-	 *
-	 * @param database $db
-	 */
-	function __construct(database $db, user $user) 
-	{
-        $this->db   =& $db;
-        $this->user =& $user;
-
-        // Include the group data classes
-        include_once('lib/data/usergroup.data.class.php');
-	}
-
     /**
      * Controls which pages are to be displayed
      * @return 
@@ -53,22 +38,40 @@ class userDAO extends baseDAO
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
-        if (Kit::IsFilterPinned('user', 'Filter')) {
-            Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_username', Session::Get('user_admin', 'filter_username'));
-            Theme::Set('filter_usertypeid', Session::Get('user_admin', 'filter_usertypeid'));
+        if (Kit::IsFilterPinned('user_admin', 'Filter')) {
+            $filter_pinned = 1;
+            $filter_username = Session::Get('user_admin', 'filter_username');
+            $filter_usertypeid = Session::Get('user_admin', 'filter_usertypeid');
         }
         else {
-            Theme::Set('filter_usertypeid', 0);
+            $filter_pinned = 0;
+            $filter_username = NULL;
+            $filter_usertypeid = NULL;
         }
 
-        // List of Displays this user has permission for
+        $formFields = array();
+        $formFields[] = FormManager::AddText('filter_username', __('Name'), $filter_username, NULL, 'n');
+
         $usertypes = $this->db->GetArray("SELECT usertypeID, usertype FROM usertype ORDER BY usertype");
         array_unshift($usertypes, array('usertypeID' => 0, 'usertype' => 'All'));
-        Theme::Set('usertype_field_list', $usertypes);
+        $formFields[] = FormManager::AddCombo(
+            'filter_usertypeid', 
+            __('User Type'), 
+            $filter_usertypeid,
+            $usertypes,
+            'usertypeID',
+            'usertype',
+            NULL, 
+            't');
+        
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+            $filter_pinned, NULL, 
+            'k');
 
-        // Render the Theme and output
-        Theme::Render('user_page');
+        // Call to render the template
+        Theme::Set('header_text', __('Users'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Render('grid_render');
     }
 
     function actionMenu() {
@@ -107,7 +110,6 @@ class userDAO extends baseDAO
         $db         =& $this->db;
         $user       =& $this->user;
         $response   = new ResponseManager();
-
         // Capture the filter options
         // User ID
         $filter_username = Kit::GetParam('filter_username', _POST, _STRING);
@@ -656,7 +658,11 @@ class userDAO extends baseDAO
                     'homepage', 
                     __('Homepage'), 
                     $this->user->GetHomePage($userid),
-                    array(array("homepageid" => "dashboard", 'homepage' => 'dashboard'), array("homepageid" => "mediamanager", 'homepage' => 'mediamanager')),
+                    array(
+                        array("homepageid" => "dashboard", 'homepage' => 'Icon Dashboard'), 
+                        array("homepageid" => "mediamanager", 'homepage' => 'Media Dashboard'), 
+                        array("homepageid" => "statusdashboard", 'homepage' => 'Status Dashboard')
+                    ),
                     'homepageid',
                     'homepage',
                     __('The users Homepage. This should not be changed until you want to reset their homepage.'), 

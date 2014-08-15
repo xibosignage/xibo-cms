@@ -20,16 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class logDAO extends baseDAO 
-{
-	private $db;
-	private $user;
-
-	function __construct(database $db, user $user) 
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-	}
+class logDAO extends baseDAO {
 
 	public function displayPage() 
 	{
@@ -44,40 +35,71 @@ class logDAO extends baseDAO
         
         // Construct Filter Form
         if (Kit::IsFilterPinned('log', 'Filter')) {
-            Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_type', Session::Get('user', 'filter_type'));
-            Theme::Set('filter_page', Session::Get('user', 'filter_page'));
-            Theme::Set('filter_function', Session::Get('user', 'filter_function'));
-            Theme::Set('filter_display', Session::Get('user', 'filter_display'));
-            Theme::Set('filter_fromdt', Session::Get('user', 'filter_fromdt'));
-            Theme::Set('filter_seconds', Session::Get('user', 'filter_seconds'));
+            $filter_pinned = 1;
+            $filter_type = Session::Get('log', 'filter_type');
+            $filter_page = Session::Get('log', 'filter_page');
+            $filter_function = Session::Get('log', 'filter_function');
+            $filter_display = Session::Get('log', 'filter_display');
+            $filter_fromdt = Session::Get('log', 'filter_fromdt');
+            $filter_seconds = Session::Get('log', 'filter_seconds');
         }
         else {
-            Theme::Set('filter_type', '0');
-            Theme::Set('filter_seconds', 120);
-            Theme::Set('filter_page', '0');
-            Theme::Set('filter_function', '0');
-			Theme::Set('filter_display', 0);
+            $filter_pinned = 0;
+            $filter_type = 0;
+            $filter_page = NULL;
+            $filter_function = NULL;
+			$filter_display = 0;
+            $filter_fromdt = NULL;
+            $filter_seconds = 120;
         }
 
-        // Lists
-        $types = array(array('typeid' => '0', 'type' => 'All'), array('typeid' => 'audit', 'type' => 'Audit'), array('typeid' => 'error', 'type' => 'Error'));
-        Theme::Set('type_field_list', $types);
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
 
-		$pages = $db->GetArray("SELECT DISTINCT IFNULL(page, '-1') AS pageid, page FROM log ORDER BY 2");
-        array_unshift($pages, array('pageid' => '0', 'page' => 'All'));
-        Theme::Set('page_field_list', $pages);
+        $formFields = array();
+        $formFields['general'][] = FormManager::AddCombo(
+            'filter_type', 
+            __('Type'), 
+            $filter_type,
+            array(array('typeid' => 0, 'type' => 'All'), array('typeid' => 2, 'type' => 'Audit'), array('typeid' => 1, 'type' => 'Error')),
+            'typeid',
+            'type',
+            NULL, 
+            't');
 
-        $functions = $db->GetArray("SELECT DISTINCT IFNULL(function, '-1') AS functionid, function FROM log ORDER BY 2");
-        array_unshift($functions, array('functionid' => '0', 'function' => 'All'));
-        Theme::Set('function_field_list', $functions);
+        $formFields['general'][] = FormManager::AddText('filter_seconds', __('Seconds back'), $filter_seconds, NULL, 's');
 
-        $displays = $db->GetArray('SELECT displayid, display FROM display WHERE licensed = 1 ORDER BY 2');
+        $formFields['general'][] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+            $filter_pinned, NULL, 
+            'k');
+
+        // Advanced Tab
+        $formFields['advanced'][] = FormManager::AddText('filter_fromdt', __('From Date'), $filter_fromdt, NULL, 't');
+        $formFields['advanced'][] = FormManager::AddText('filter_page', __('Page'), $filter_page, NULL, 'p');
+        $formFields['advanced'][] = FormManager::AddText('filter_function', __('Function'), $filter_function, NULL, 'f');
+        
+        // Display
+        $displays = $this->user->DisplayList();
         array_unshift($displays, array('displayid' => 0, 'display' => 'All'));
-        Theme::Set('display_field_list', $displays);
 
-        // Render the Theme and output
-        Theme::Render('log_page');
+        $formFields['advanced'][] = FormManager::AddCombo(
+            'filter_display', 
+            __('Type'), 
+            $filter_display,
+            $displays,
+            'displayid',
+            'display',
+            NULL, 
+            't');
+
+        // Call to render the template
+        Theme::Set('header_text', __('Logs'));
+        Theme::Set('form_tabs', $tabs);
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_advanced', $formFields['advanced']);
+        Theme::Render('grid_render');
 	}
 
     function actionMenu() {
@@ -113,9 +135,9 @@ class logDAO extends baseDAO
 		$user		=& $this->user;
 		$response	= new ResponseManager();
 		
-		$type 		= Kit::GetParam('filter_type', _REQUEST, _STRING, '0');
-		$function 	= Kit::GetParam('filter_function', _REQUEST, _STRING, '0');
-		$page 		= Kit::GetParam('filter_page', _REQUEST, _STRING, '0');
+		$type 		= Kit::GetParam('filter_type', _REQUEST, _INT, 0);
+		$function 	= Kit::GetParam('filter_function', _REQUEST, _STRING);
+		$page 		= Kit::GetParam('filter_page', _REQUEST, _STRING);
 		$fromdt 	= Kit::GetParam('filter_fromdt', _REQUEST, _STRING);
 		$displayid	= Kit::GetParam('filter_display', _REQUEST, _INT);
 		$seconds 	= Kit::GetParam('filter_seconds', _POST, _INT, 120);
@@ -144,13 +166,13 @@ class logDAO extends baseDAO
 		$SQL .= "SELECT logid, logdate, page, function, message FROM log ";
 		$SQL .= sprintf(" WHERE  logdate > '%s' AND logdate <= '%s' ", $fromdt, $todt);
 
-		if ($type != "0") 
-			$SQL .= sprintf("AND type = '%s' ", $db->escape_string($type));
+		if ($type != 0) 
+			$SQL .= sprintf("AND type = '%s' ", ($type == 1) ? 'error' : 'audit');
 		
-		if($page != "0") 
+		if($page != "") 
 			$SQL .= sprintf("AND page = '%s' ", $db->escape_string($page));
 		
-		if($function != "0") 
+		if($function != "") 
 			$SQL .= sprintf("AND function = '%s' ", $db->escape_string($function));
 		
 		if($displayid != 0) 
@@ -184,7 +206,8 @@ class logDAO extends baseDAO
         
         $output = Theme::RenderReturn('log_page_grid');
 		
-		$response->initialSortOrder = 2;
+        $response->initialSortOrder = 2;
+		$response->initialSortColumn = 1;
 		$response->pageSize = 20;
 		$response->SetGridResponse($output);
 		$response->Respond();

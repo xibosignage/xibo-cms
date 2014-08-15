@@ -20,21 +20,12 @@
  */
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.');
 
+Kit::ClassLoader('dataset');
+Kit::ClassLoader('datasetcolumn');
+Kit::ClassLoader('datasetdata');
+
 class datasetDAO extends baseDAO
 {
-    private $db;
-    private $user;
-
-    function __construct(database $db, user $user)
-    {
-        $this->db =& $db;
-        $this->user =& $user;
-
-        Kit::ClassLoader('dataset');
-        Kit::ClassLoader('datasetcolumn');
-        Kit::ClassLoader('datasetdata');
-    }
-
     public function displayPage()
     {
         $subpage = Kit::GetParam('sp', _GET, _WORD, '');
@@ -50,7 +41,10 @@ class datasetDAO extends baseDAO
             
             Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetDataForm"><input type="hidden" name="datasetid" value="' . $dataSetId . '"><input type="hidden" name="dataset" value="' . $dataSet . '">');
             
-            Theme::Render('dataset_dataentry_page');
+            // Call to render the template
+            Theme::Set('header_text', $dataSet);
+            Theme::Set('form_fields', array());
+            Theme::Render('grid_render');
         }
         else {
             $id = uniqid();
@@ -58,8 +52,10 @@ class datasetDAO extends baseDAO
             Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetGrid">');
             Theme::Set('pager', ResponseManager::Pager($id));
 
-            // Render the Theme and output
-            Theme::Render('dataset_page');
+            // Call to render the template
+            Theme::Set('header_text', __('DataSets'));
+            Theme::Set('form_fields', array());
+            Theme::Render('grid_render');
         }
     }
 

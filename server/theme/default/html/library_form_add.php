@@ -23,8 +23,8 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div id="canvas">
-	<div id="buttons">
+<div class="row">
+	<div class="col-md-12">
 		<?php foreach (Theme::Get('buttons') as $button) { ?>
 			<div class="regionicons">
 				<a class="XiboFormButton" title="<?php echo $button['title']; ?>" href="<?php echo $button['uri']; ?>">

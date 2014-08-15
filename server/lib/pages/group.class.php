@@ -20,11 +20,7 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class groupDAO extends baseDAO 
-{
-	private $db;
-	private $user;
-	
+class groupDAO extends baseDAO {	
 	//general fields
 	private $groupid;
 	private $group = "";
@@ -81,12 +77,25 @@ END;
 
         // Default options
         if (Kit::IsFilterPinned('usergroup', 'Filter')) {
-            Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_name', Session::Get('usergroup', 'filter_name'));
+            $filter_pinned = 1;
+            $filter_name = Session::Get('usergroup', 'filter_name');
+        }
+        else {
+            $filter_pinned = 0;
+            $filter_name = NULL;
         }
 
-        // Render the Theme and output
-        Theme::Render('usergroup_page');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
+
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+            $filter_pinned, NULL, 
+            'k');
+
+        // Call to render the template
+        Theme::Set('header_text', __('User Groups'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Render('grid_render');
 	}
 
     function actionMenu() {

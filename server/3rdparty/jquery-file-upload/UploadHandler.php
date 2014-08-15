@@ -36,10 +36,7 @@ class UploadHandler
         'min_height' => 'Image requires a minimum height'
     );
 
-    function __construct($db, $user, $options = null, $initialize = true, $error_messages = null) {
-        $this->db =& $db;
-        $this->user =& $user;
-
+    function __construct($options = null, $initialize = true, $error_messages = null) {
         $this->options = array(
             'script_url' => $this->get_full_url().'/',
             'upload_dir' => dirname($this->get_server_var('SCRIPT_FILENAME')).'/files/',
@@ -506,38 +503,6 @@ class UploadHandler
             $index,
             $content_range
         );
-    }
-
-    protected function handle_form_data($file, $index) {
-        // Handle form data, e.g. $_REQUEST['description'][$index]
-        
-        // Link the file to the module
-        $name = $_REQUEST['name'][$index];
-        $duration = $_REQUEST['duration'][$index];
-
-        $layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
-        $regionid = Kit::GetParam('regionid', _REQUEST, _STRING);
-        $type = Kit::GetParam('type', _REQUEST, _WORD);
-
-        Debug::LogEntry('audit', 'Upload complete for Type: ' . $type . ' and file name: ' . $file->name . '. Name: ' . $name . '. Duration:' . $duration);
-
-        // We want to create a module for each of the uploaded files.
-        // Do not pass in the region ID so that we only assign to the library and not to the layout
-        require_once("modules/$type.module.php");
-        if (!$module = new $type($this->db, $this->user, '', $layoutid, '', '')) {
-            $file->error = $module->GetErrorMessage();
-        }
-
-        // We want to add this item to our library
-        if (!$storedAs = $module->AddLibraryMedia($file->name, $name, $duration, $file->name)) {
-            $file->error = $module->GetErrorMessage();
-        }
-
-        // Set new file details
-        $file->storedas = $storedAs;
-
-        // Delete the file
-        @unlink($this->get_upload_path($file->name));
     }
 
     protected function orient_image($file_path) {

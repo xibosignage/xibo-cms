@@ -19,19 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-
-class adminDAO extends baseDAO 
-{
-	private $db;
-	private $user;
-
-	function __construct(database $db, user $user) 
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-		
-		require_once('lib/data/setting.data.class.php');
-	}
+require_once('lib/data/setting.data.class.php');
+class adminDAO extends baseDAO {
 	
 	function displayPage() {
 	

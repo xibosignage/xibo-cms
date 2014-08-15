@@ -79,7 +79,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <input class="form-control" name="username" type="text" class="input-block-level" placeholder="<?php echo Theme::Translate('User'); ?>" autofocus>
         <input class="form-control" name="password" type="password" class="input-block-level" placeholder="<?php echo Theme::Translate('Password'); ?>">
 
-        <div class="login_message"><?php echo Theme::Get('login_message'); ?></div>
+        <?php if (Theme::Get('login_message') != '') { ?>
+        <div class="alert alert-danger"><?php echo Theme::Get('login_message'); ?></div>
+        <?php } ?>
 
         <button class="btn btn-large btn-primary" type="submit"><?php echo Theme::Translate('Login'); ?></button>
 			</form>

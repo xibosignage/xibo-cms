@@ -71,7 +71,7 @@
                 Theme::Set('form_meta', '<input type="hidden" name="token" value="' . CreateFormToken() . '" />');
                 Theme::Set('form_action', 'index.php?q=login&referingPage=' . $requestUri);
                 Theme::Set('about_url', 'index.php?p=index&q=About');
-                Theme::Set('source_url', 'https://launchpad.net/xibo/1.6');
+                Theme::Set('source_url', Theme::SourceLink());
 
                 // Message (either from the URL or the session)
                 $message = Kit::GetParam('message', _GET, _STRING, Kit::GetParam('message', _SESSION, _STRING, ''));
@@ -637,6 +637,54 @@
             return false;
         }
     }
+
+    public function ModuleList($sort_order = array('Name'), $filter_by = array()) {
+        try {
+            $dbh = PDOConnect::init();
+
+            $params = array();
+
+            $SQL = '';
+            $SQL .= 'SELECT ModuleID, ';
+            $SQL .= '   Name, ';
+            $SQL .= '   Enabled, ';
+            $SQL .= '   Description, ';
+            $SQL .= '   RegionSpecific, ';
+            $SQL .= '   ValidExtensions, ';
+            $SQL .= '   ImageUri, ';
+            $SQL .= '   PreviewEnabled, ';
+            $SQL .= '   assignable ';
+            $SQL .= '  FROM `module` ';
+            $SQL .= ' WHERE 1 = 1 ';
+
+            if (Kit::GetParam('id', $filter_by, _INT, 0) != 0) {
+                $params['id'] = Kit::GetParam('id', $filter_by, _INT);
+                $SQL .= ' AND ModuleID = :id ';
+            }
+
+            if (Kit::GetParam('name', $filter_by, _STRING) != '') {
+                $params['id'] = Kit::GetParam('name', $filter_by, _STRING);
+                $SQL .= ' AND name = :name ';
+            }
+            
+            // Sorting?
+            if (is_array($sort_order))
+                $SQL .= 'ORDER BY ' . implode(',', $sort_order);
+        
+            //Debug::LogEntry('audit', 'SQL: ' . $SQL . '. Params: ' . var_export($params, true), get_class(), __FUNCTION__);
+
+            $sth = $dbh->prepare($SQL);
+            $sth->execute($params);
+          
+            return $sth->fetchAll();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            return false;
+        }
+    }
     
     /**
      * Returns the usertypeid for this user object.
@@ -1138,7 +1186,7 @@ END;
      * @param string $tags     [description]
      * @param string $isSystem [description]
      */
-    public function TemplateList($template = '', $tags = '', $isSystem = -1)
+    public function TemplateList($template = '', $tags = '')
     {
         $db =& $this->db;
 
@@ -1168,11 +1216,6 @@ END;
         if ($tags != '') 
         {
             $SQL .= " AND template.tags LIKE '%" . $db->escape_string($tags) . "%' ";
-        }
-        
-        if ($isSystem != -1) 
-        {
-            $SQL .= sprintf(" AND template.issystem = %d ", $isSystem);
         }
 
         Debug::LogEntry('audit', sprintf('Retreiving list of templates for %s with SQL: %s', $this->userName, $SQL));

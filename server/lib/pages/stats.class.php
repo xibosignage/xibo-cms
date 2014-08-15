@@ -21,16 +21,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class statsDAO extends baseDAO
-{
-	private $db;
-	private $user;
-	
-	function __construct(database $db, user $user) 
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-	}
-	
+{	
     /**
      * Stats page
      */
@@ -41,21 +32,40 @@ class statsDAO extends baseDAO
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="StatsGrid">');
         
-        Theme::Set('fromdt', date("Y-m-d", time() - 86400));
-        Theme::Set('todt', date("Y-m-d"));
+        $formFields = array();
+                $formFields[] = FormManager::AddText('fromdt', __('From Date'), date("Y-m-d", time() - 86400), NULL, 'f');
+                $formFields[] = FormManager::AddText('todt', __('To Date'), date("Y-m-d"), NULL, 't');
 
-        // List of Displays this user has permission for
-        $displays = $this->user->DisplayGroupList(1);
-        array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
-        Theme::Set('display_field_list', $displays);
+                // List of Displays this user has permission for
+                $displays = $this->user->DisplayGroupList(1);
+                array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
+                $formFields[] = FormManager::AddCombo(
+                    'displayid', 
+                    __('Display'), 
+                    NULL,
+                    $displays,
+                    'displayid',
+                    'displaygroup',
+                    NULL, 
+                    'd');
 
-        // List of Media this user has permission for
-        $media = $this->user->MediaList();
-        array_unshift($media, array('mediaid' => 0, 'media' => 'All'));
-        Theme::Set('media_field_list', $media);
-        
-        // Render the Theme and output
-        Theme::Render('stats_page');
+                // List of Media this user has permission for
+                $media = $this->user->MediaList();
+                array_unshift($media, array('mediaid' => 0, 'media' => 'All'));
+                $formFields[] = FormManager::AddCombo(
+                    'mediaid', 
+                    __('Media'), 
+                    NULL,
+                    $media,
+                    'mediaid',
+                    'media',
+                    NULL, 
+                    'm');
+
+        // Call to render the template
+        Theme::Set('header_text', __('Statistics'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Render('grid_render');
 	}
 
     /**

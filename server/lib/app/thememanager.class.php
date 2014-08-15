@@ -221,6 +221,10 @@ class Theme {
 		return Theme::GetInstance()->config['theme_name'];
 	}
 
+	public static function SourceLink() {
+		return (isset(Theme::GetInstance()->config['cms_source_url']) ? Theme::GetInstance()->config['cms_source_url'] : 'https://launchpad.net/xibo/1.7');
+	}
+
 	public static function ThemeFolder() {
 		return Theme::GetInstance()->name;
 	}

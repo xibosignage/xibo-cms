@@ -22,8 +22,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
  
 class layoutDAO extends baseDAO 
 {
-    private $db;
-    private $user;
     private $auth;
     private $has_permissions = true;
     
@@ -146,13 +144,11 @@ class layoutDAO extends baseDAO
                     'r');
                 $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
                     $pinned, NULL, 
-                    'w');
+                    'k');
 
                 Theme::Set('form_fields', $formFields);
 
                 // Call to render the template
-                Theme::Set('form_class', 'form-inline');
-                Theme::Set('filter_form', Theme::RenderReturn('form_render'));
                 Theme::Render('grid_render');
                 break;
                 

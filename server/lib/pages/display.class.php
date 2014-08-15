@@ -22,9 +22,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class displayDAO extends baseDAO
 {
-    private $db;
-    private $user;
-
     function __construct(database $db, user $user)
     {
         $this->db   =& $db;
@@ -55,18 +52,52 @@ class displayDAO extends baseDAO
 
         // Default options
         if (Kit::IsFilterPinned('display', 'DisplayFilter')) {
-            Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_displaygroup', Session::Get('display', 'filter_displaygroup'));
-            Theme::Set('filter_display', Session::Get('display', 'filter_display'));
+            $filter_pinned = 1;
+            $filter_displaygroup = Session::Get('display', 'filter_displaygroup');
+            $filter_display = Session::Get('display', 'filter_display');
         }
+        else {
+            $filter_pinned = 0;
+            $filter_displaygroup = NULL;
+            $filter_display = NULL;
+        }
+
+        $formFields = array();
+        $formFields[] = FormManager::AddText('filter_display', __('Name'), $filter_display, NULL, 'n');
 
         $displayGroups = $this->user->DisplayGroupList(0);
         array_unshift($displayGroups, array('displaygroupid' => '0', 'displaygroup' => 'All'));
+        $formFields[] = FormManager::AddCombo(
+            'filter_displaygroup', 
+            __('Owner'), 
+            $filter_displaygroup,
+            $displayGroups,
+            'displaygroupid',
+            'displaygroup',
+            NULL, 
+            'd');
 
-        Theme::Set('displaygroup_field_list', $displayGroups);
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+            $filter_pinned, NULL, 
+            'k');
 
-        // Render the Theme and output
-        Theme::Render('display_page');
+        // Call to render the template
+        Theme::Set('header_text', __('Displays'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Render('grid_render');
+    }
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Filter'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Open the filter form'),
+                    'onclick' => 'ToggleFilterView(\'Filter\')'
+                    )
+            );                   
     }
 
     /**

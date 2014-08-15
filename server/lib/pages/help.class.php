@@ -20,19 +20,8 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class helpDAO extends baseDAO
-{
-    private $db;
-    private $user;
+class helpDAO extends baseDAO {
     private $helpLink;
-
-    function __construct(database $db, user $user)
-    {
-        $this->db =& $db;
-        $this->user =& $user;
-
-        return true;
-    }
 
     /**
      * No display page functionaility
@@ -46,8 +35,10 @@ class helpDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="p" value="help"><input type="hidden" name="q" value="Grid">');
         Theme::Set('pager', ResponseManager::Pager($id));
 
-        // Render the Theme and output
-        Theme::Render('help_page');
+        // Call to render the template
+        Theme::Set('header_text', __('Help Links'));
+        Theme::Set('form_fields', array());
+        Theme::Render('grid_render');
     }
 
     function actionMenu() {

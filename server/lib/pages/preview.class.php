@@ -20,10 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class previewDAO extends baseDAO 
-{
-    private $db;
-    private $user;
+class previewDAO extends baseDAO {
     private $auth;
 	private $has_permissions = true;
 	
@@ -76,11 +73,6 @@ class previewDAO extends baseDAO
                 $this->xml = $aRow[5];
             }
         }
-    }
-	
-    function displayPage() 
-    {
-        return false;
     }
 
     function render()

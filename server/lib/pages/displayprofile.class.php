@@ -24,14 +24,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 Kit::ClassLoader('displayprofile');
 
 class displayprofileDAO extends baseDAO {
-    private $db;
-    private $user;
-
-    function __construct(database $db, user $user) {
-        $this->db   =& $db;
-        $this->user =& $user;
-    }
-
     /**
      * Include display page template page based on sub page selected
      * @return
@@ -44,8 +36,10 @@ class displayprofileDAO extends baseDAO {
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
-        // Render the Theme and output
-        Theme::Render('displayprofile_page');
+        // Call to render the template
+        Theme::Set('header_text', __('Display Setting Profiles'));
+        Theme::Set('form_fields', array());
+        Theme::Render('grid_render');
     }
 
     function actionMenu() {

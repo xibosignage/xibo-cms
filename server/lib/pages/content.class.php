@@ -20,17 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class contentDAO extends baseDAO 
-{
-	private $db;
-	private $user;
-
-	function __construct(database $db, user $user) 
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-	}
-
+class contentDAO extends baseDAO {
 	/**
 	 * Displays the page logic
 	 */
@@ -40,19 +30,22 @@ class contentDAO extends baseDAO
 		
 		// Default options
         if (Kit::IsFilterPinned('content', 'Filter')) {
-            Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_name', Session::Get('content', 'filter_name'));
-            Theme::Set('filter_type', Session::Get('content', 'filter_type'));
-            Theme::Set('filter_retired', Session::Get('content', 'filter_retired'));
-            Theme::Set('filter_owner', Session::Get('content', 'filter_owner'));
-            Theme::Set('filter_duration_in_seconds', Session::Get('content', 'filter_duration_in_seconds'));
-            Theme::Set('filter_duration_in_seconds_checked', ((Theme::Get('filter_duration_in_seconds') == 1) ? 'checked' : ''));
-            Theme::Set('filter_showThumbnail', Session::Get('content', 'filter_showThumbnail'));
-            Theme::Set('filter_showThumbnail_checked', ((Theme::Get('filter_showThumbnail') == 1) ? 'checked' : ''));
+            $filter_pinned = 1;
+            $filter_name = Session::Get('content', 'filter_name');
+            $filter_type = Session::Get('content', 'filter_type');
+            $filter_retired = Session::Get('content', 'filter_retired');
+            $filter_owner = Session::Get('content', 'filter_owner');
+            $filter_duration_in_seconds = Session::Get('content', 'filter_duration_in_seconds');
+            $filter_showThumbnail = Session::Get('content', 'filter_showThumbnail');
         }
         else {
-            Theme::Set('filter_retired', 0);
-			Theme::Set('filter_duration_in_seconds', 0);
+            $filter_pinned = 0;
+            $filter_name = NULL;
+            $filter_type = NULL;
+            $filter_retired = 0;
+            $filter_owner = NULL;
+            $filter_duration_in_seconds = 0;
+            $filter_showThumbnail = 0;
         }
 
 		$id = uniqid();
@@ -60,20 +53,57 @@ class contentDAO extends baseDAO
 		Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
 		Theme::Set('pager', ResponseManager::Pager($id));
 		Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryGrid">');
-		
-		// Field list for a "retired" dropdown list
-        Theme::Set('retired_field_list', array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')));
-		
-		// Field list for a "owner" dropdown list
-		Theme::Set('owner_field_list', $db->GetArray("SELECT 0 AS UserID, 'All' AS UserName UNION SELECT DISTINCT user.UserID, user.UserName FROM `media` INNER JOIN `user` ON media.UserID = user.UserID "));
 
-		// Module types filter
-		$types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
-        array_unshift($types, array('moduleid' => '', 'module' => 'All'));
-        Theme::Set('module_field_list', $types);
+        $formFields = array();
+                $formFields[] = FormManager::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
+                $formFields[] = FormManager::AddCombo(
+                    'filter_owner', 
+                    __('Owner'), 
+                    $filter_owner,
+                    $db->GetArray("SELECT 0 AS UserID, 'All' AS UserName UNION SELECT DISTINCT user.UserID, user.UserName FROM `media` INNER JOIN `user` ON media.UserID = user.UserID "),
+                    'UserID',
+                    'UserName',
+                    NULL, 
+                    'o');
 
-		// Call to render the template
-		Theme::Render('library_page');
+                $types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
+                array_unshift($types, array('moduleid' => '', 'module' => 'All'));
+                $formFields[] = FormManager::AddCombo(
+                    'filter_type', 
+                    __('Type'), 
+                    $filter_type,
+                    $types,
+                    'moduleid',
+                    'module',
+                    NULL, 
+                    'y');
+
+                $formFields[] = FormManager::AddCombo(
+                    'filter_retired', 
+                    __('Retired'), 
+                    $filter_retired,
+                    array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')),
+                    'retiredid',
+                    'retired',
+                    NULL, 
+                    'r');
+
+                $formFields[] = FormManager::AddCheckbox('filter_duration_in_seconds', __('Duration in Seconds'), 
+                    $filter_duration_in_seconds, NULL, 
+                    's');
+
+                $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'), 
+                    $filter_duration_in_seconds, NULL, 
+                    's');
+
+                $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+                    $filter_pinned, NULL, 
+                    'k');
+
+        // Call to render the template
+        Theme::Set('header_text', __('Library'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Render('grid_render');
 	}
 
     function actionMenu() {
@@ -445,7 +475,7 @@ HTML;
     public function JqueryFileUpload() {
         $db =& $this->db;
 
-        require_once("3rdparty/jquery-file-upload/UploadHandler.php");
+        require_once("3rdparty/jquery-file-upload/XiboUploadHandler.php");
         $type = Kit::GetParam('type', _REQUEST, _WORD);
 
         Kit::ClassLoader('file');
@@ -462,6 +492,8 @@ HTML;
         $validExt = $media->ValidExtensions($type);
 
         $options = array(
+                'db' => $this->db,
+                'user' => $this->user,
                 'upload_dir' => $libraryFolder . 'temp/', 
                 'download_via_php' => true,
                 'script_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
@@ -471,7 +503,7 @@ HTML;
             );
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        $handler = new UploadHandler($db, $this->user, $options);
+        $handler = new XiboUploadHandler($options);
 
         // Must commit if in a transaction
         try {

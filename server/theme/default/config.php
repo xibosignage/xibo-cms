@@ -25,6 +25,7 @@ $config = array(
 		'theme_name' => 'Xibo Default Theme',
 		'theme_title' => 'Xibo Digital Signage',
 		'app_name' => 'Xibo',
-		'theme_url' => 'http://www.xibo.org.uk'
+		'theme_url' => 'http://www.xibo.org.uk',
+		'cms_source_url' => 'https://launchpad.net/xibo/1.7'
 	);
 ?>

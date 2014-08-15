@@ -20,26 +20,9 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class scheduleDAO extends baseDAO 
-{
-    private $db;
-    private $user;
-    
-    private $lastEventID;
-    private $eventsList;
+require_once('lib/data/schedule.data.class.php');
 
-    /**
-     * Constructor
-     */
-    function __construct(database $db, user $user) 
-    {
-        $this->db =& $db;
-        $this->user =& $user;
-        
-        require_once('lib/data/schedule.data.class.php');
-                
-        return true;
-    }
+class scheduleDAO extends baseDAO {    
 
     function displayPage() 
     {

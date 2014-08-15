@@ -20,20 +20,11 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
+include_once('lib/data/displaygroup.data.class.php');
+include_once('lib/data/displaygroupsecurity.data.class.php');
+
 class displaygroupDAO extends baseDAO
-{
-    private $db;
-    private $user;
-    
-    function __construct(database $db, user $user) 
-    {
-        $this->db   =& $db;
-        $this->user =& $user;
-    
-        include_once('lib/data/displaygroup.data.class.php');
-        include_once('lib/data/displaygroupsecurity.data.class.php');       
-    }
-    
+{    
     /**
      * Display Group Page Render
      */
@@ -46,8 +37,10 @@ class displaygroupDAO extends baseDAO
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
-        // Render the Theme and output
-        Theme::Render('displaygroup_page');
+        // Call to render the template
+        Theme::Set('header_text', __('Display Groups'));
+        Theme::Set('form_fields', array());
+        Theme::Render('grid_render');
     }
 
     function actionMenu() {

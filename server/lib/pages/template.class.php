@@ -18,23 +18,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
-class templateDAO extends baseDAO 
-{
-    private $db;
-    private $user;
-    private $auth;
-    
-    /**
-     * Constructor
-     * @return 
-     * @param $db Object
-     */
-    function __construct(database $db, user $user) 
-    {
-        $this->db           =& $db;
-        $this->user         =& $user;
-    }
-    
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
+class templateDAO extends baseDAO {
     /**
      * Display page logic
      */
@@ -44,31 +30,34 @@ class templateDAO extends baseDAO
 
         // Default options
         if (Kit::IsFilterPinned('template', 'Filter')) {
-            Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_name', Session::Get('template', 'filter_name'));
-            Theme::Set('filter_tags', Session::Get('template', 'filter_tags'));
-            Theme::Set('filter_is_system', Session::Get('template', 'filter_is_system'));
+            $pinned = 1;
+            $name = Session::Get('template', 'filter_name');
+            $tags = Session::Get('template', 'filter_tags');
         }
         else {
-            Theme::Set('filter_is_system', -1);
+            $pinned = 0;
+            $name = '';
+            $tags = '';
         }
         
         $id = uniqid();
+        Theme::Set('header_text', __('Templates'));
         Theme::Set('id', $id);
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
         Theme::Set('form_meta', '<input type="hidden" name="p" value="template"><input type="hidden" name="q" value="TemplateView">');
         
-        // Field list for a "retired" dropdown list
-        Theme::Set('is_system_field_list', array(
-                    array('is_systemid' => -1, 'is_system' => 'All'), 
-                    array('is_systemid' => 1, 'is_system' => 'Yes'),
-                    array('is_systemid' => 0, 'is_system' => 'No')
-                )
-            );
+        $formFields = array();
+                $formFields[] = FormManager::AddText('filter_name', __('Name'), $name, NULL, 'n');
+                $formFields[] = FormManager::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
+                $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+                    $pinned, NULL, 
+                    'k');
+
+        Theme::Set('form_fields', $formFields);
 
         // Call to render the template
-        Theme::Render('template_page');
+        Theme::Render('grid_render');
     }
 
     function actionMenu() {
@@ -95,14 +84,12 @@ class templateDAO extends baseDAO
         
         $filter_name = Kit::GetParam('filter_name', _POST, _STRING);
         $filter_tags = Kit::GetParam('filter_tags', _POST, _STRING);
-        $filter_is_system = Kit::GetParam('filter_is_system', _POST, _INT);
         
         setSession('template', 'filter_name', $filter_name);
         setSession('template', 'filter_tags', $filter_tags);
-        setSession('template', 'filter_is_system', $filter_is_system);
         setSession('template', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
     
-        $templates = $user->TemplateList($filter_name, $filter_tags, $filter_is_system);
+        $templates = $user->TemplateList($filter_name, $filter_tags);
 
         if (!is_array($templates)) {
             trigger_error(__('Unable to get list of templates for this user'), E_USER_ERROR);
