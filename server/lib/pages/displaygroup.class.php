@@ -71,6 +71,12 @@ class displaygroupDAO extends baseDAO
         if (!is_array($displayGroups))
             trigger_error(__('Cannot get list of display groups.'), E_USER_ERROR);
 
+        $cols = array(
+                array('name' => 'displaygroup', 'title' => __('Name')),
+                array('name' => 'description', 'title' => __('Description'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         foreach ($displayGroups as $row)
@@ -137,7 +143,7 @@ class displaygroupDAO extends baseDAO
 
         Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('displaygroup_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();

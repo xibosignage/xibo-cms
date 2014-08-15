@@ -127,13 +127,23 @@ class sessionsDAO extends baseDAO {
             trigger_error(__('Error getting the log'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
+                array('name' => 'isexpired', 'title' => __('Active'), 'icons' => true),
+                array('name' => 'username', 'title' => __('User Name')),
+                array('name' => 'lastpage', 'title' => __('Last Page')),
+                array('name' => 'ip', 'title' => __('IP Address')),
+                array('name' => 'browser', 'title' => __('Browser'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 		
 		foreach ($log as $row) { 
 
             $row['userid'] = Kit::ValidateParam($row['userID'], _INT);
 			$row['username'] = Kit::ValidateParam($row['UserName'], _STRING);
-			$row['isexpired'] = (Kit::ValidateParam($row['IsExpired'], _INT) == 0) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
+			$row['isexpired'] = Kit::ValidateParam($row['IsExpired'], _INT);
 			$row['lastpage'] = Kit::ValidateParam($row['LastPage'], _STRING);
 			$row['lastaccessed'] = Kit::ValidateParam($row['LastAccessed'], _STRING);
 			$row['ip'] = Kit::ValidateParam($row['RemoteAddr'], _STRING);
@@ -151,7 +161,7 @@ class sessionsDAO extends baseDAO {
 
 		Theme::Set('table_rows', $rows);
         
-        $output = Theme::RenderReturn('sessions_page_grid');
+        $output = Theme::RenderReturn('table_render');
 		
 		$response->SetGridResponse($output);
 		$response->Respond();

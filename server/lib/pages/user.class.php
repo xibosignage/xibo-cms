@@ -141,7 +141,7 @@ class userDAO extends baseDAO {
 
         $sql .= " ORDER by UserName";
         
-        Debug::LogEntry('audit', $sql);
+        //Debug::LogEntry('audit', $sql);
 
         // Load results into an array
         $users = $db->GetArray($sql);
@@ -152,11 +152,17 @@ class userDAO extends baseDAO {
             trigger_error(__('Error getting list of users'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'UserName', 'title' => __('Name')),
+                array('name' => 'homepage', 'title' => __('Homepage')),
+                array('name' => 'email', 'title' => __('Email'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         foreach ($users as $row) {
 
-            $row['loggedin'] = ($row['loggedin'] == 1) ? Theme::Image('act.gif') : Theme::Image('disact.gif');
             $row['groupid'] = $user->getGroupFromID($row['UserID'], true);
 
             // Super admins have some buttons
@@ -217,7 +223,7 @@ class userDAO extends baseDAO {
 
         Theme::Set('table_rows', $rows);
         
-        $table = Theme::RenderReturn('user_page_grid');
+        $table = Theme::RenderReturn('table_render');
         
         $response->SetGridResponse($table);
         $response->Respond();

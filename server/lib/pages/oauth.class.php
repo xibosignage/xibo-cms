@@ -80,6 +80,15 @@ class oauthDAO extends baseDAO {
             trigger_error(__('Error listing Applications.'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'application_title', 'title' => __('Title')),
+                array('name' => 'application_descr', 'title' => __('Description')),
+                array('name' => 'application_uri', 'title' => __('Homepage')),
+                array('name' => 'consumer_key', 'title' => __('Key')),
+                array('name' => 'consumer_secret', 'title' => __('Secret'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         foreach ($list as $app)
@@ -95,7 +104,7 @@ class oauthDAO extends baseDAO {
 
         Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('applications_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();

@@ -135,6 +135,13 @@ SQL;
             trigger_error(__('Error getting list of helplinks'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'topic', 'title' => __('Topic')),
+                array('name' => 'category', 'title' => __('Category')),
+                array('name' => 'link', 'title' => __('Link'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         foreach ($helplinks as $row) {
@@ -176,7 +183,7 @@ SQL;
 
         Theme::Set('table_rows', $rows);
         
-        $output = Theme::RenderReturn('help_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();

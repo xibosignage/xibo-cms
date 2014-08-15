@@ -57,6 +57,13 @@ class displayprofileDAO extends baseDAO {
 
     function Grid() {
 
+        $cols = array(
+                array('name' => 'name', 'title' => __('Name')),
+                array('name' => 'type', 'title' => __('Type')),
+                array('name' => 'isdefault', 'title' => __('Default'), 'icons' => true)
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         foreach ($this->user->DisplayProfileList() as $profile) {
@@ -81,7 +88,7 @@ class displayprofileDAO extends baseDAO {
 
         Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('displayprofile_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response = new ResponseManager();
         $response->SetGridResponse($output);

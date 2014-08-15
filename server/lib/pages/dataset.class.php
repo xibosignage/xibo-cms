@@ -93,6 +93,14 @@ class datasetDAO extends baseDAO
         $user =& $this->user;
         $response = new ResponseManager();
 
+        $cols = array(
+                array('name' => 'dataset', 'title' => __('Name')),
+                array('name' => 'description', 'title' => __('Description')),
+                array('name' => 'owner', 'title' => __('Owner')),
+                array('name' => 'groups', 'title' => __('Permissions'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         foreach ($this->user->DataSetList() as $dataSet)
@@ -107,6 +115,7 @@ class datasetDAO extends baseDAO
                 // View Data
                 $dataSet['buttons'][] = array(
                         'id' => 'dataset_button_viewdata',
+                        'class' => 'XiboRedirectButton',
                         'url' => 'index.php?p=dataset&sp=DataEntry&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
                         'text' => __('View Data')
                     );
@@ -158,7 +167,7 @@ class datasetDAO extends baseDAO
 
         Theme::Set('table_rows', $rows);
         
-        $output = Theme::RenderReturn('dataset_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();

@@ -135,6 +135,18 @@ class moduleDAO extends baseDAO
             trigger_error(__('Unable to get the list of modules'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'name', 'title' => __('Name')),
+                array('name' => 'description', 'title' => __('Description')),
+                array('name' => 'isregionspecific', 'title' => __('Library Media'), 'icons' => true),
+                array('name' => 'validextensions', 'title' => __('Valid Extensions')),
+                array('name' => 'imageuri', 'title' => __('Image Uri')),
+                array('name' => 'preview_enabled', 'title' => __('Preview Enabled'), 'icons' => true),
+                array('name' => 'assignable', 'title' => __('Assignable'), 'icons' => true, 'helpText' => __('Can this module be assigned to a Layout?')),
+                array('name' => 'enabled', 'title' => __('Enabled'), 'icons' => true)
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         foreach($modules as $module)
@@ -149,11 +161,7 @@ class moduleDAO extends baseDAO
             $row['enabled'] = Kit::ValidateParam($module['Enabled'], _INT);
             $row['preview_enabled'] = Kit::ValidateParam($module['PreviewEnabled'], _INT);
             $row['assignable'] = Kit::ValidateParam($module['assignable'], _INT);
-            $row['isregionspecific_image'] = ($row['isregionspecific'] == 0) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
-            $row['enabled_image'] = ($row['enabled'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
-            $row['preview_enabled_image'] = ($row['preview_enabled'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
-            $row['assignable_image'] = ($row['assignable'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
-
+            
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();
 
@@ -173,7 +181,7 @@ class moduleDAO extends baseDAO
 
         Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('module_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();

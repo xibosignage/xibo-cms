@@ -69,6 +69,18 @@ class resolutionDAO extends baseDAO
         $rows = $user->ResolutionList();
         $resolutions = array();
 
+        $cols = array(
+                array('name' => 'resolutionid', 'title' => __('ID')),
+                array('name' => 'resolution', 'title' => __('Resolution')),
+                array('name' => 'intended_width', 'title' => __('Width')),
+                array('name' => 'intended_height', 'title' => __('Height')),
+                array('name' => 'width', 'title' => __('Designer Width')),
+                array('name' => 'height', 'title' => __('Designer Height')),
+                array('name' => 'version', 'title' => __('Version')),
+                array('name' => 'enabled', 'title' => __('Enabled?'), 'icons' => true)
+            );
+        Theme::Set('table_cols', $cols);
+
         foreach($rows as $row) {
 
             // Edit Button
@@ -91,7 +103,7 @@ class resolutionDAO extends baseDAO
 
         Theme::Set('table_rows', $resolutions);
 
-        $output = Theme::RenderReturn('resolution_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();

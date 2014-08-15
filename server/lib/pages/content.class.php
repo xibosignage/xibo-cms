@@ -155,6 +155,23 @@ class contentDAO extends baseDAO {
 		// Construct the SQL
 		$mediaList = $user->MediaList($filter_type, $filter_name, $filter_userid, $filter_retired);
 
+        $cols = array();
+        $cols[] = array('name' => 'mediaid', 'title' => __('ID'));
+        $cols[] = array('name' => 'media', 'title' => __('Name'));
+        $cols[] = array('name' => 'mediatype', 'title' => __('Type'));
+
+        if ($filter_showThumbnail == 1)
+            $cols[] = array('name' => 'thumbnail', 'title' => __('Thumbnail'));
+
+        $cols[] = array('name' => 'duration_text', 'title' => __('Duration'));
+        $cols[] = array('name' => 'size_text', 'title' => __('Size'));
+        $cols[] = array('name' => 'owner', 'title' => __('Owner'));
+        $cols[] = array('name' => 'permissions', 'title' => __('Permissions'));
+        $cols[] = array('name' => 'revised', 'title' => __('Revised?'), 'icons' => true);
+        $cols[] = array('name' => 'filename', 'title' => __('File Name'));
+            
+        Theme::Set('table_cols', $cols);
+
 		$rows = array();
 
 		// Add some additional row content
@@ -163,7 +180,7 @@ class contentDAO extends baseDAO {
 			$row['duration_text'] = ($filter_duration_in_seconds == 1) ? $row['duration'] : sec2hms($row['duration']);
 			$row['owner'] = $user->getNameFromID($row['ownerid']);
 			$row['permissions'] = $group = $this->GroupsForMedia($row['mediaid']);
-			$row['revised'] = ($row['parentid'] != 0) ? Theme::Image('act.gif') : '';
+			$row['revised'] = ($row['parentid'] != 0) ? 1 : 0;
 
 			// Display a friendly file size
 			$row['size_text'] = Kit::FormatBytes($row['filesize']);
@@ -172,7 +189,7 @@ class contentDAO extends baseDAO {
             $row['thumbnail'] = '';
 
             if ($row['mediatype'] == 'image')
-                $row['thumbnail'] = 'index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '&width=100&height=100&dynamic=true&thumb=true';
+                $row['thumbnail'] = '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '&width=100&height=100&dynamic=true&thumb=true" alt="' . $row['media'] . '" />';
 
 			$row['buttons'] = array();
 
@@ -210,6 +227,7 @@ class contentDAO extends baseDAO {
             // Download
             $row['buttons'][] = array(
                     'id' => 'content_button_download',
+                    'linkType' => '_self',
                     'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=GetResource&download=1&downloadFromLibrary=1&mediaid=' . $row['mediaid'],
                     'text' => __('Download')
                 );
@@ -220,7 +238,7 @@ class contentDAO extends baseDAO {
 		
     	Theme::Set('table_rows', $rows);
         
-        $output = Theme::RenderReturn('library_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
     	$response->SetGridResponse($output);
         $response->initialSortColumn = 2;

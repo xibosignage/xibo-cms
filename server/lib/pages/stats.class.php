@@ -127,6 +127,17 @@ class statsDAO extends baseDAO
             trigger_error(__('Unable to get Layouts Shown'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'Display', 'title' => __('Display')),
+                array('name' => 'Layout', 'title' => __('Layout')),
+                array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
+                array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
+                array('name' => 'Duration', 'title' => __('Total Duration')),
+                array('name' => 'MinStart', 'title' => __('First Shown')),
+                array('name' => 'MaxEnd', 'title' => __('Last Shown'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         while ($row = $db->get_assoc_row($results))
@@ -142,7 +153,8 @@ class statsDAO extends baseDAO
             $rows[] = $row;
         }
 
-        Theme::Set('table_layouts_shown', $rows);
+        Theme::Set('table_rows', $rows);
+        Theme::Set('table_layouts_shown', Theme::RenderReturn('table_render'));
 
         // Media Ran
         $SQL =  'SELECT display.Display, media.Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ';
@@ -169,6 +181,16 @@ class statsDAO extends baseDAO
             trigger_error(__('Unable to get Library Media Ran'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'Display', 'title' => __('Display')),
+                array('name' => 'Media', 'title' => __('Media')),
+                array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
+                array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
+                array('name' => 'Duration', 'title' => __('Total Duration')),
+                array('name' => 'MinStart', 'title' => __('First Shown')),
+                array('name' => 'MaxEnd', 'title' => __('Last Shown'))
+            );
+        Theme::Set('table_cols', $cols);
         $rows = array();
 
         while ($row = $db->get_assoc_row($results))
@@ -183,8 +205,8 @@ class statsDAO extends baseDAO
 
             $rows[] = $row;
         }
-
-        Theme::Set('table_media_shown', $rows);
+        Theme::Set('table_rows', $rows);
+        Theme::Set('table_media_shown', Theme::RenderReturn('table_render'));
 
         // Media on Layouts Ran
         $SQL =  "SELECT display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') AS Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ";
@@ -212,6 +234,18 @@ class statsDAO extends baseDAO
             trigger_error(__('Unable to get Library Media Ran'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'Display', 'title' => __('Display')),
+                array('name' => 'Layout', 'title' => __('Layout')),
+                array('name' => 'Media', 'title' => __('Media')),
+                array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
+                array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
+                array('name' => 'Duration', 'title' => __('Total Duration')),
+                array('name' => 'MinStart', 'title' => __('First Shown')),
+                array('name' => 'MaxEnd', 'title' => __('Last Shown'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         while ($row = $db->get_assoc_row($results))
@@ -227,8 +261,9 @@ class statsDAO extends baseDAO
 
             $rows[] = $row;
         }
+        Theme::Set('table_rows', $rows);
 
-        Theme::Set('table_media_on_layouts_shown', $rows);
+        Theme::Set('table_media_on_layouts_shown', Theme::RenderReturn('table_render'));
 
         $output = Theme::RenderReturn('stats_page_grid');
 

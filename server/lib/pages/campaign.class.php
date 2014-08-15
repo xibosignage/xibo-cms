@@ -67,6 +67,12 @@ class campaignDAO extends baseDAO
             trigger_error(__('Unable to get list of campaigns'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'campaign', 'title' => __('Name')),
+                array('name' => 'numlayouts', 'title' => __('# Layouts'))
+            );
+        Theme::Set('table_cols', $cols);
+        
         $rows = array();
 
         foreach($campaigns as $row)
@@ -125,7 +131,7 @@ class campaignDAO extends baseDAO
 
         Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('campaign_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();

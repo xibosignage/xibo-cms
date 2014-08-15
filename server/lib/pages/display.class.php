@@ -345,6 +345,22 @@ class displayDAO extends baseDAO
         $vncTemplate = Config::GetSetting('SHOW_DISPLAY_AS_VNCLINK');
         $linkTarget = Kit::ValidateParam(Config::GetSetting('SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
         
+        $cols = array(
+                array('name' => 'displayid', 'title' => __('ID')),
+                array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
+                array('name' => 'display', 'title' => __('Display')),
+                array('name' => 'description', 'title' => __('Description')),
+                array('name' => 'layout', 'title' => __('Default Layout')),
+                array('name' => 'inc_schedule', 'title' => __('Interleave Default')),
+                array('name' => 'email_alert', 'title' => __('Email Alert')),
+                array('name' => 'loggedin', 'title' => __('Logged In')),
+                array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
+                array('name' => 'clientaddress', 'title' => __('IP Address')),
+                array('name' => 'macaddress', 'title' => __('Mac Address'))
+            );
+        Theme::Set('table_cols', $cols);
+        Theme::Set('rowClass', 'mediainventorystatus');
+
         $rows = array();
 
         foreach($displays as $row)
@@ -362,10 +378,6 @@ class displayDAO extends baseDAO
             $row['lastaccessed'] = date("Y-m-d H:i:s", $row['lastaccessed']);
 
             // Create some login lights
-            $row['licensed'] = ($row['licensed'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
-            $row['inc_schedule'] = ($row['inc_schedule'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
-            $row['email_alert'] = ($row['email_alert'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
-            $row['loggedin'] = ($row['loggedin'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
             $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
 
             // Schedule Now
@@ -462,7 +474,7 @@ class displayDAO extends baseDAO
 
         Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('display_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();

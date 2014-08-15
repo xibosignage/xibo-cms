@@ -145,13 +145,18 @@ END;
 		
 		$SQL .= " ORDER BY group.group ";
 		
-		Debug::LogEntry('audit', $SQL);
+		//Debug::LogEntry('audit', $SQL);
 		
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
 			trigger_error(__("Can not get group information."), E_USER_ERROR);
 		}
+
+		$cols = array(
+                array('name' => 'usergroup', 'title' => __('User Group'))
+            );
+        Theme::Set('table_cols', $cols);
 
 		$rows = array();
 
@@ -206,7 +211,7 @@ END;
 
 		Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('usergroup_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
 		$response = new ResponseManager();
         $response->SetGridResponse($output);

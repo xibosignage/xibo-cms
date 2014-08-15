@@ -95,6 +95,14 @@ class templateDAO extends baseDAO {
             trigger_error(__('Unable to get list of templates for this user'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'template', 'title' => __('Name')),
+                array('name' => 'tags', 'title' => __('Tags')),
+                array('name' => 'owner', 'title' => __('Owner')),
+                array('name' => 'permissions', 'title' => __('Permissions'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         foreach ($templates as $template) {
@@ -129,7 +137,7 @@ class templateDAO extends baseDAO {
 
         Theme::Set('table_rows', $rows);
         
-        $response->SetGridResponse(Theme::RenderReturn('template_page_grid'));
+        $response->SetGridResponse(Theme::RenderReturn('table_render'));
         $response->Respond();
     }
     

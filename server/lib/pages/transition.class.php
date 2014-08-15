@@ -64,6 +64,15 @@ class transitionDAO extends baseDAO {
             trigger_error(__('Unable to get the list of transitions'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'name', 'title' => __('Name')),
+                array('name' => 'hasduration', 'title' => __('Has Duration'), 'icons' => true),
+                array('name' => 'hasdirection', 'title' => __('Has Direction'), 'icons' => true),
+                array('name' => 'enabledforin', 'title' => __('Enabled for In'), 'icons' => true),
+                array('name' => 'enabledforout', 'title' => __('Enabled for Out'), 'icons' => true)
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         foreach($transitions as $transition)
@@ -72,14 +81,10 @@ class transitionDAO extends baseDAO {
             $row['transitionid'] = Kit::ValidateParam($transition['TransitionID'], _INT);
             $row['name'] = Kit::ValidateParam($transition['Transition'], _STRING);
             $row['hasduration'] = Kit::ValidateParam($transition['HasDuration'], _INT);
-            $row['hasduration_image'] = ($row['hasduration'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
             $row['hasdirection'] = Kit::ValidateParam($transition['HasDirection'], _INT);
-            $row['hasdirection_image'] = ($row['hasdirection'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
             $row['enabledforin'] = Kit::ValidateParam($transition['AvailableAsIn'], _INT);
-            $row['enabledforin_image'] = ($row['enabledforin'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
             $row['enabledforout'] = Kit::ValidateParam($transition['AvailableAsOut'], _INT);
-            $row['enabledforout_image'] = ($row['enabledforout'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove';
-
+            
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();
 
@@ -99,7 +104,7 @@ class transitionDAO extends baseDAO {
 
         Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('transition_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();

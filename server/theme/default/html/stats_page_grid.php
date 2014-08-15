@@ -29,88 +29,11 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<button type="submit"><?php echo Theme::Translate('Export'); ?></button>
 </form>
 
-<p class="sub-header"><?php echo Theme::Translate('Layouts Shown'); ?></p>
-<table class="table">
-	<thead>
-		<tr>
-			<th><?php echo Theme::Translate('Display'); ?></th>
-			<th><?php echo Theme::Translate('Layout'); ?></th>
-			<th><?php echo Theme::Translate('Number of Plays'); ?></th>
-			<th><?php echo Theme::Translate('Total Duration (s)'); ?></th>
-			<th><?php echo Theme::Translate('Total Duration'); ?></th>	
-			<th><?php echo Theme::Translate('First Shown'); ?></th>	
-			<th><?php echo Theme::Translate('Last Shown'); ?></th>	
-		</tr>
-	</thead>
-	<tbody>
-		<?php foreach(Theme::Get('table_layouts_shown') as $row) { ?>
-		<tr>
-			<td><?php echo $row['Display']; ?></td>
-			<td><?php echo $row['Layout']; ?></td>
-			<td><?php echo $row['NumberPlays']; ?></td>
-			<td><?php echo $row['DurationSec']; ?></td>
-			<td><?php echo $row['Duration']; ?></td>
-			<td><?php echo $row['MinStart']; ?></td>
-			<td><?php echo $row['MaxEnd']; ?></td>
-		</tr>
-		<?php } ?>
-	</tbody>
-</table>
+<p class="sub-heading"><?php echo Theme::Translate('Layouts Shown'); ?></p>
+<?php echo Theme::Get('table_layouts_shown'); ?>
 
-<p class="sub-header"><?php echo Theme::Translate('Library Media Shown'); ?></p>
-<table class="table">
-	<thead>
-		<tr>
-			<th><?php echo Theme::Translate('Display'); ?></th>
-			<th><?php echo Theme::Translate('Media'); ?></th>
-			<th><?php echo Theme::Translate('Number of Plays'); ?></th>
-			<th><?php echo Theme::Translate('Total Duration (s)'); ?></th>
-			<th><?php echo Theme::Translate('Total Duration'); ?></th>	
-			<th><?php echo Theme::Translate('First Shown'); ?></th>	
-			<th><?php echo Theme::Translate('Last Shown'); ?></th>	
-		</tr>
-	</thead>
-	<tbody>
-		<?php foreach(Theme::Get('table_media_shown') as $row) { ?>
-		<tr>
-			<td><?php echo $row['Display']; ?></td>
-			<td><?php echo $row['Media']; ?></td>
-			<td><?php echo $row['NumberPlays']; ?></td>
-			<td><?php echo $row['DurationSec']; ?></td>
-			<td><?php echo $row['Duration']; ?></td>
-			<td><?php echo $row['MinStart']; ?></td>
-			<td><?php echo $row['MaxEnd']; ?></td>
-		</tr>
-		<?php } ?>
-	</tbody>
-</table>
+<p class="sub-heading"><?php echo Theme::Translate('Library Media Shown'); ?></p>
+<?php echo Theme::Get('table_media_shown'); ?>
 
-<p class="sub-header"><?php echo Theme::Translate('Media on Layouts Shown'); ?></p>
-<table class="table">
-	<thead>
-		<tr>
-			<th><?php echo Theme::Translate('Display'); ?></th>
-			<th><?php echo Theme::Translate('Layout'); ?></th>
-			<th><?php echo Theme::Translate('Media'); ?></th>
-			<th><?php echo Theme::Translate('Number of Plays'); ?></th>
-			<th><?php echo Theme::Translate('Total Duration (s)'); ?></th>
-			<th><?php echo Theme::Translate('Total Duration'); ?></th>	
-			<th><?php echo Theme::Translate('First Shown'); ?></th>	
-			<th><?php echo Theme::Translate('Last Shown'); ?></th>	
-		</tr>
-	</thead>
-	<tbody>
-		<?php foreach(Theme::Get('table_media_on_layouts_shown') as $row) { ?>
-		<tr>
-			<td><?php echo $row['Display']; ?></td>
-			<td><?php echo $row['Layout']; ?></td>
-			<td><?php echo $row['Media']; ?></td>
-			<td><?php echo $row['NumberPlays']; ?></td>
-			<td><?php echo $row['DurationSec']; ?></td>
-			<td><?php echo $row['Duration']; ?></td>
-			<td><?php echo $row['MinStart']; ?></td>
-			<td><?php echo $row['MaxEnd']; ?></td>
-		</tr>
-		<?php } ?>
-	</tbody>
-</table>
+<p class="sub-heading"><?php echo Theme::Translate('Media on Layouts Shown'); ?></p>
+<?php echo Theme::Get('table_media_on_layouts_shown'); ?>

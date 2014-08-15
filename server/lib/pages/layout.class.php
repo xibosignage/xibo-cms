@@ -415,6 +415,16 @@ class layoutDAO extends baseDAO
         if (!is_array($layouts))
             trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
 
+        $cols = array(
+                array('name' => 'layoutid', 'title' => __('ID')),
+                array('name' => 'layout', 'title' => __('Name')),
+                array('name' => 'description', 'title' => __('Description')),
+                array('name' => 'owner', 'title' => __('Owner')),
+                array('name' => 'permissions', 'title' => __('Permissions')),
+                array('name' => 'status', 'title' => __('Status'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         foreach ($layouts as $layout) {
@@ -458,6 +468,7 @@ class layoutDAO extends baseDAO
 
             $row['buttons'][] = array(
                     'id' => 'layout_button_preview',
+                    'linkType' => '_blank',
                     'url' => 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layout['layoutid'],
                     'text' => __('Preview Layout')
                 );
@@ -468,6 +479,7 @@ class layoutDAO extends baseDAO
                 // Design Button
                 $row['buttons'][] = array(
                         'id' => 'layout_button_design',
+                        'linkType' => '_self',
                         'url' => 'index.php?p=layout&modify=true&layoutid=' . $layout['layoutid'],
                         'text' => __('Design')
                     );
@@ -499,6 +511,7 @@ class layoutDAO extends baseDAO
                 // Export Button
                 $row['buttons'][] = array(
                         'id' => 'layout_button_export',
+                        'linkType' => '_self',
                         'url' => 'index.php?p=layout&q=Export&layoutid=' . $layout['layoutid'],
                         'text' => __('Export')
                     );
@@ -522,7 +535,7 @@ class layoutDAO extends baseDAO
         Theme::Set('table_rows', $rows);
 
         // Initialise the theme and capture the output
-        $output = Theme::RenderReturn('layout_page_grid');
+        $output = Theme::RenderReturn('table_render');
         
         $response->SetGridResponse($output);
         $response->initialSortColumn = 2;

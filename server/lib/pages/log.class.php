@@ -189,6 +189,15 @@ class logDAO extends baseDAO {
             trigger_error(__('Error getting the log'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'logid', 'title' => __('ID')),
+                array('name' => 'logdate', 'title' => __('Date')),
+                array('name' => 'page', 'title' => __('Page')),
+                array('name' => 'function', 'title' => __('Function')),
+                array('name' => 'message', 'title' => __('Message'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 		
 		foreach ($log as $row) { 
@@ -204,7 +213,7 @@ class logDAO extends baseDAO {
 
 		Theme::Set('table_rows', $rows);
         
-        $output = Theme::RenderReturn('log_page_grid');
+        $output = Theme::RenderReturn('table_render');
 		
         $response->initialSortOrder = 2;
 		$response->initialSortColumn = 1;
@@ -230,6 +239,15 @@ class logDAO extends baseDAO {
             if (count($log) <= 0)
                 throw new Exception(__('No log messages for this display'));
 
+            $cols = array(
+                    array('name' => 'logid', 'title' => __('ID')),
+                    array('name' => 'logdate', 'title' => __('Date')),
+                    array('name' => 'page', 'title' => __('Page')),
+                    array('name' => 'function', 'title' => __('Function')),
+                    array('name' => 'message', 'title' => __('Message'))
+                );
+            Theme::Set('table_cols', $cols);
+
             $rows = array();
    
             foreach ($log as $row) { 
@@ -245,7 +263,7 @@ class logDAO extends baseDAO {
         
             Theme::Set('table_rows', $rows);
                 
-            $output = Theme::RenderReturn('log_form_display_last100');
+            $output = Theme::RenderReturn('table_render');
                 
             $response->initialSortOrder = 2;
             $response->pageSize = 10;
