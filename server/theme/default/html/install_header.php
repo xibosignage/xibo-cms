@@ -45,7 +45,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			</div>
 		</div>
 
-		<?php if ($xibo_step == 1) { ?>
+		<?php if (Theme::Get('step') == 1) { ?>
     	<div class="jumbotron">
       		<div class="container">
         		<h1><?php echo sprintf(Theme::Translate('Welcome to the %s Installation!'), Theme::GetConfig('app_name')); ?></h1>

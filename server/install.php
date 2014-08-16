@@ -133,9 +133,10 @@ switch ($xibo_step) {
         break;
 }
 
+Theme::Set('step', $xibo_step);
 Theme::Set('stepContent', $content);
 
 // Include the header
-include('install/header.php');
-include('install/footer.php');
+Theme::Render('install_header');
+Theme::Render('install_footer');
 ?>
