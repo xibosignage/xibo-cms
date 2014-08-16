@@ -476,6 +476,13 @@ END;
         catch (Exception $e) {
             throw new Exception(sprintf(__('An error occurred updating these settings. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
+
+        // Delete install and upgrade
+        if (!unlink('install.php'))
+            throw new Exception(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
+
+        if (!unlink('upgrade.php'))
+            throw new Exception(__("Unable to delete upgrade.php. Please ensure the webserver has permission to unlink this file and retry"));
     }
 
     public function Step8() {
