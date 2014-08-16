@@ -485,7 +485,6 @@ CREATE TABLE IF NOT EXISTS `schedule_detail` (
   `FromDT` bigint(20) NOT NULL DEFAULT '0',
   `ToDT` bigint(20) NOT NULL DEFAULT '0',
   PRIMARY KEY (`schedule_detailID`),
-  KEY `layoutID` (`CampaignID`),
   KEY `scheduleID` (`eventID`),
   KEY `DisplayGroupID` (`DisplayGroupID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Replicated schedule across displays and recurrence' AUTO_INCREMENT=6 ;

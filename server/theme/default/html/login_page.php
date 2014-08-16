@@ -91,7 +91,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 
     <script src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
-		<script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
     <script src="theme/default/libraries/jquery/jquery.validate.min.js"></script>
     <script src="theme/default/libraries/jquery/additional-methods.min.js"></script>
     <script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>

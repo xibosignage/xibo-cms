@@ -82,12 +82,6 @@ if (!file_exists("settings.php"))
 	die();
 }
 
-if (file_exists("upgrade.php"))
-{
-    Kit::Redirect("upgrade.php");
-    die();
-}
-
 // parse and init the settings.php
 Config::Load();
 
@@ -121,8 +115,15 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 Config::Version();
 
 // Does the version in the DB match the version of the code?
-if (DBVERSION != WEBSITE_VERSION)
-    die(sprintf('Incompatible database version detected. Please ensure your database and website versions match. You have database %d and website %d', DBVERSION, WEBSITE_VERSION));
+if (DBVERSION != WEBSITE_VERSION) {
+    if (file_exists("upgrade.php")) {
+        Kit::Redirect("upgrade.php");
+        die();
+    }
+    else {
+        die(sprintf('Incompatible database version detected. Please ensure your database and website versions match. You have database %d and website %d', DBVERSION, WEBSITE_VERSION));
+    }
+}
 
 // What is the production mode of the server?
 if(Config::GetSetting('SERVER_MODE') == 'Test') 

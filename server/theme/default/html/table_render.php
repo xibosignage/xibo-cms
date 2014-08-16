@@ -44,7 +44,7 @@ $rowClass = (Theme::Get('rowClass') != '') ? Theme::Get('rowClass') : '';
 		<tr<?php if ($rowClass != '') { echo ' class="' . $row[$rowClass] . '"';} ?>>
 			<?php foreach(Theme::Get('table_cols') as $col) { ?>
 			<?php if (isset($col['icons']) && $col['icons']) { ?>
-			<td><span class="<?php echo ($row[$col['name']] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'; ?>"></span></td>
+			<td><span class="<?php echo ($row[$col['name']] == 1) ? 'glyphicon glyphicon-ok' : (($row[$col['name']] == 0) ? 'glyphicon glyphicon-remove' : 'glyphicon glyphicon-exclamation-sign'); ?>"></span></td>
 			<?php } else { ?>
 			<td><?php echo $row[$col['name']]; ?></td>
 			<?php } ?>

@@ -61,6 +61,17 @@ class FormManager {
         );
     }
 
+    public static function AddButton($title, $type = 'submit', $link = '', $groupClass = '') {
+        return array(
+            'title' => $title,
+            'type' => $type,
+            'link' => $link,
+            'groupClass' => $groupClass,
+            'fieldType' => 'button',
+            'enabled' => true
+        );
+    }
+
     public static function AddText($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '', $enabled = true) {
         return array(
             'name' => $name,
@@ -129,6 +140,23 @@ class FormManager {
             'value' => $value,
             'helpText' => $helpText,
             'fieldType' => 'checkbox',
+            'options' => NULL,
+            'validation' => NULL,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass,
+            'enabled' => $enabled
+        );
+    }
+
+    public static function AddRadio($name, $id, $title, $value, $setValue, $helpText, $accessKey, $groupClass = '', $enabled = true) {
+        return array(
+            'id' => $id,
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'setValue' => $setValue,
+            'helpText' => $helpText,
+            'fieldType' => 'radio',
             'options' => NULL,
             'validation' => NULL,
             'accesskey' => $accessKey,

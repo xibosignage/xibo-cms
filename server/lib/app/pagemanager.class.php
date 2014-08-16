@@ -57,7 +57,7 @@ class PageManager
         $this->authed = false;
 
         // Create a theme
-		new Theme($db, $user);
+		new Theme($user);
 		Theme::SetPagename($this->p);
     }
 	

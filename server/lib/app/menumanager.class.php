@@ -22,27 +22,17 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class MenuManager
 {
-	private $db;
 	private $user;
-	private $p;
-	private $q;
-
-	private $ajax;
-	private $userid;
+	
 	public $message;
 	
 	private $theMenu;
 	private $current;
 	private $numberItems;
 	
-	public function __construct(database $db, User $user, $menu)
+	public function __construct(User $user, $menu)
 	{
-		$this->db 		=& $db;
 		$this->user 	=& $user;
-		$this->ajax		= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
-		$this->q		= Kit::GetParam('q', _REQUEST, _WORD);
-		$this->userid 	= Kit::GetParam('userid', _SESSION, _INT);
-		$usertypeid		= Kit::GetParam('usertype', _SESSION, _INT);
 		
 		if ($menu == '')
 		{

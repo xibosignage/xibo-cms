@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2009-14 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -31,10 +31,10 @@ class TranslationEngine
 	 * Gets and Sets the Local 
 	 * @return 
 	 */
-	public static function InitLocale()
+	public static function InitLocale($language = NULL)
 	{
             $localeDir	= 'locale';
-            $default    = Config::GetSetting('DEFAULT_LANGUAGE');
+            $default = ($language == NULL) ? Config::GetSetting('DEFAULT_LANGUAGE') : $language;
             
             global $transEngine;
             global $stream;
@@ -50,7 +50,7 @@ class TranslationEngine
             if ($lang != '')
             {
                 // Set the language
-                Debug::LogEntry('audit', 'Set the Language from REQUEST [' . $lang . ']', 'TranslationEngine', 'InitLocal');
+                //Debug::LogEntry('audit', 'Set the Language from REQUEST [' . $lang . ']', 'TranslationEngine', 'InitLocal');
 
                 // Is this language supported?
                 // if not just use the default (eb_GB).

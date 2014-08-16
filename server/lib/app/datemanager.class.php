@@ -21,14 +21,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class DateManager
-{
-	private $db;
-	
-	public function __construct(database $db)
-	{
-		$this->db 	=& $db;
-	}
-	
+{	
 	public static function GetClock()
 	{
 		return date("H:i T");

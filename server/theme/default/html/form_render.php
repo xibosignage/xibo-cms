@@ -20,6 +20,10 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
+// Buttons?
+$form_buttons = Theme::Get('form_buttons');
+$buttons = (is_array($form_buttons) && count($form_buttons > 0));
+
 // Are we tabs?
 $form_tabs = Theme::Get('form_tabs');
 $tabs = (is_array($form_tabs) && count($form_tabs > 0));
@@ -109,10 +113,23 @@ if (!$tabs)
                         <input name="<?php echo $field['name']; ?>" type="hidden" id="<?php echo $field['name']; ?>" value="<?php echo $field['value']; ?>" />
                     <?php } 
                     else if ($field['fieldType'] == 'message') { ?>
-                        <div class="col-sm-12 <?php echo $field['groupClass']; ?>">
-                            <p><?php echo $field['helpText']; ?></p>
+                        <div class="row">
+                            <div class="col-sm-12 <?php echo $field['groupClass']; ?>">
+                                <p><?php echo $field['helpText']; ?></p>
+                            </div>
                         </div>
                     <?php } 
+                    else if ($field['fieldType'] == 'button') { ?>
+                        <div class="form-group <?php echo $field['groupClass']; ?>">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <?php if ($field['type'] == 'link') { ?>
+                                <a class="btn btn-default" href="<?php echo $field['link']; ?>"><?php echo $field['title']; ?></a>
+                                <?php } else { ?>
+                                <button class="btn btn-default" type="<?php echo $field['type']; ?>"><?php echo $field['title']; ?></button>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    <?php }
                     else if ($field['fieldType'] == 'raw') { ?>
                         <div class="col-sm-12 <?php echo $field['groupClass']; ?>">
                             <?php echo $field['helpText']; ?>
@@ -141,6 +158,19 @@ if (!$tabs)
                                 <div class="checkbox">
                                     <label for="<?php echo $field['name']; ?>" title="<?php echo $field['helpText']; ?>" accesskey="<?php echo $field['accesskey']; ?>">
                                         <input type="checkbox" id="<?php echo $field['name']; ?>" name="<?php echo $field['name']; ?>" <?php echo ($field['value'] == 1) ? ' checked' : '' ?>>
+                                        <?php echo $field['title']; ?>
+                                    </label>
+                                </div>
+                                <span class="help-block"><?php echo $field['helpText']; ?></span>
+                            </div>
+                        </div>
+                    <?php }
+                    else if ($field['fieldType'] == 'radio') { ?>
+                        <div class="form-group <?php echo $field['groupClass']; ?>">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <div class="radio">
+                                    <label for="<?php echo $field['name']; ?>" title="<?php echo $field['helpText']; ?>" accesskey="<?php echo $field['accesskey']; ?>">
+                                        <input type="radio" id="<?php echo $field['id']; ?>" name="<?php echo $field['name']; ?>" value="<?php echo $field['setValue']; ?>" <?php echo ($field['value'] == $field['setValue']) ? ' checked' : '' ?>>
                                         <?php echo $field['title']; ?>
                                     </label>
                                 </div>
@@ -214,6 +244,26 @@ if (!$tabs)
                 } // End for loop
                 echo '</div>';
             } // End for loop ?>
+            <?php
+            // Any buttons?
+            if ($buttons) { ?>
+                <div class="">
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <div class="btn-group">
+                            <?php foreach ($form_buttons as $button) {
+                                if ($button['type'] == 'link') { ?>
+                                <a class="btn btn-default" href="<?php echo $button['link']; ?>"><?php echo $button['title']; ?></a>
+                                <?php } else { ?>
+                                <button class="btn btn-default" type="<?php echo $button['type']; ?>"><?php echo $button['title']; ?></button>
+                                <?php }
+                            } ?>
+                            </div>
+                        </div> 
+                    </div> 
+                </div> 
+            <?php } ?>
+            </div>
         </form>
         <?php echo Theme::Get('append'); ?>
     </div>

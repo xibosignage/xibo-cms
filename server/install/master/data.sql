@@ -267,10 +267,10 @@ INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (3, 'User');
 
 INSERT INTO `user` (`UserID`, `usertypeid`, `UserName`, `UserPassword`, `loggedin`, `lastaccessed`, `email`, `homepage`, `Retired`) VALUES
-(1, 1, 'xibo_admin', '21232f297a57a5a743894a0e4a801fc3', 1, '2013-02-02 15:07:29', 'info@xibo.org.uk', 'statusdashboard', 0);
+(1, 1, 'xibo_admin', '21232f297a57a5a743894a0e4a801fc3', 1, NOW(), '', 'statusdashboard', 0);
 
 
-INSERT INTO `layout` (`layoutID`, `layout`, `xml`, `userID`, `createdDT`, `modifiedDT`, `description`, `tags`, `templateID`, `retired`, `duration`, `background`) VALUES
+INSERT INTO `layout` (`layoutID`, `layout`, `xml`, `userID`, `createdDT`, `modifiedDT`, `description`, `tags`, `templateID`, `retired`, `duration`, `backgroundImageId`) VALUES
 (4, 'Default Layout', '<?xml version="1.0"?><layout schemaVersion="1" width="800" height="450" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="401" top="0" left="0" userId="1"><media id="522caef6e13cb6c9fe5fac15dde59ef7" type="text" duration="15" lkid="" userId="1" schemaVersion="1">
                             <options><xmds>1</xmds><direction>none</direction><scrollSpeed>2</scrollSpeed><fitText>0</fitText></options>
                             <raw><text><![CDATA[<p style="text-align: center;"><strong><span style="font-family:arial,helvetica,sans-serif;"><span style="font-size:72px;"><span style="color:#FFFFFF;">Welcome to&nbsp;<br />
@@ -317,16 +317,6 @@ INSERT INTO `lkpagegroup` (`lkpagegroupID`, `pageID`, `groupID`) VALUES
 (8, 39, 1),
 (9, 41, 1),
 (10, 42, 1);
-
-INSERT INTO `lktemplategroup` (`LkTemplateGroupID`, `TemplateID`, `GroupID`, `View`, `Edit`, `Del`) VALUES
-(1, 1, 2, 1, 0, 0),
-(2, 2, 2, 1, 0, 0),
-(3, 3, 2, 1, 0, 0),
-(4, 4, 2, 1, 0, 0),
-(5, 5, 2, 1, 0, 0),
-(6, 6, 2, 1, 0, 0),
-(7, 7, 2, 1, 0, 0),
-(8, 8, 2, 1, 0, 0);
 
 INSERT INTO `lkusergroup` (`LkUserGroupID`, `GroupID`, `UserID`) VALUES
 (10, 3, 1);

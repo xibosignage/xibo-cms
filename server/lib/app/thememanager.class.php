@@ -23,7 +23,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class Theme {
 	private static $instance = null;
 	
-	private $db;
 	private $user;
 	private $helpManager;
 	private $dateManager;
@@ -33,18 +32,15 @@ class Theme {
 	private $vars = null;
 	private $config = null;
 	
-	public function __construct(database $db, user $user) {
+	public function __construct(user $user, $theme = NULL) {
 
 		// Store some things for the Theme engine to use
-		$this->db =& $db;
 		$this->user =& $user;
-		$this->help = new HelpManager($db, $user);
-		$this->dateManager = new DateManager($db);
-
-		// TODO: Perhaps we also allow the user to configure their own theme for their session?
+		$this->help = new HelpManager();
+		$this->dateManager = new DateManager();
 
 		// What is the currently selected theme?
-		$globalTheme = Config::GetSetting('GLOBAL_THEME_NAME');
+		$globalTheme = ($theme == NULL) ? Config::GetSetting('GLOBAL_THEME_NAME') : $theme;
 
 		// Is this theme valid?
 		if (!is_dir('theme/' . $globalTheme))
@@ -248,7 +244,7 @@ class Theme {
 		$theme = Theme::GetInstance();
 		$array = array();
 
-		if (!$menu = new MenuManager($theme->db, $theme->user, $menu))
+		if (!$menu = new MenuManager($theme->user, $menu))
 			trigger_error($menu->message, E_USER_ERROR);
 					
 		while ($menuItem = $menu->GetNextMenuItem()) {

@@ -20,23 +20,7 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class HelpManager
-{
-	private $db;
-	private $user;
-	
-	/**
-	 * Constructs the Module Manager.
-	 * @return 
-	 * @param $db Object
-	 * @param $user Object
-	 */
-	public function __construct(database $db, User $user)
-	{
-            $this->db       =& $db;
-            $this->user 	=& $user;
-	}
-	
+class HelpManager {	
 	/**
 	 * Help Button
 	 * @return 

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -17,16 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-
-$config = array(
-
-		'theme_name' => 'Xibo Default Theme',
-		'theme_title' => 'Xibo Digital Signage',
-		'app_name' => 'Xibo',
-		'theme_url' => 'http://www.xibo.org.uk',
-		'cms_source_url' => 'https://launchpad.net/xibo/1.7',
-		'cms_install_url' => 'manual/index.php?toc=getting_started&p=install/install_server'
-	);
 ?>
+<p class="alert alert-danger"><?php echo Theme::Get('message'); ?></p>
