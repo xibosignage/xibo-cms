@@ -25,41 +25,86 @@
  *  pager = A paging control for this Xibo Grid
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-?>
-<h1 class="page-header"><?php echo Theme::Translate('Dashboard'); ?></h1>
 
+$displays = Theme::Get('display-widget-rows');
+$displays = (is_array($displays)) ? $displays : array();
+?>
 <div class="row">
-    <div class="col-md-6">
-        <h3 class="text-center"><?php echo Theme::Translate('Bandwidth Usage'); ?></h3>
-        <div id="bandwidthChart" class="morrisChart" style="height: 250px;"></div>
-    </div>
-    <div class="col-md-6">
-        <h3 class="text-center"><?php echo Theme::Translate('Library Usage'); ?></h3>
-        <div id="libraryChart" class="morrisChart" style="height: 250px;"></div>
+    <div class="col-lg-3 col-md-6 col-xs-12">
+      <div class="widget">
+        <div class="widget-body">
+          <div class="widget-icon orange pull-left">
+            <i class="fa fa-sitemap"></i>
+          </div>
+          <div class="widget-content pull-left">
+            <div class="title"><?php echo count($displays); ?></div>
+            <div class="comment"><?php echo Theme::Translate('Displays'); ?></div>
+          </div>
+          <div class="clearfix"></div>
+        </div>
+      </div>
     </div>
 </div>
 <div class="row">
-    <div class="col-md-6">
-        <h3 class="text-center"><?php echo Theme::Translate('Display Activity'); ?></h3>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th><?php echo Theme::Translate('Display'); ?></th> 
-                    <th><?php echo Theme::Translate('Logged In'); ?></th>   
-                    <th><?php echo Theme::Translate('Licence'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach(Theme::Get('display-widget-rows') as $row) { ?>
-                <tr class="<?php echo $row['mediainventorystatus']; ?>">
-                    <td><?php echo $row['display']; ?></td>
-                    <td><span class="<?php echo ($row['loggedin'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'; ?>"></span></td>
-                    <td><span class="<?php echo ($row['licensed'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'; ?>"></span></td>
-                </tr>
-                <?php } ?>
-            </tbody>
-        </table>
+    <div class="col-lg-6">
+        <div class="widget">
+            <div class="widget-title">
+                <i class="fa fa-tasks"></i>
+                <?php echo Theme::Translate('Bandwidth Usage'); ?>
+                <div class="clearfix"></div>
+            </div>
+            <div class="widget-body medium no-padding">
+                <div id="bandwidthChart" class="morrisChart" style="height: 230px;"></div>   
+            </div>
+        </div>
     </div>
+    <div class="col-lg-6">
+        <div class="widget">
+            <div class="widget-title">
+                <i class="fa fa-tasks"></i>
+                <?php echo Theme::Translate('Library Usage'); ?>
+                <div class="clearfix"></div>
+            </div>
+            <div class="widget-body medium no-padding">
+                <div id="libraryChart" class="morrisChart" style="height: 230px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-6">
+        <div class="widget">
+            <div class="widget-title">
+                <i class="fa fa-tasks"></i>
+                <?php echo Theme::Translate('Display Activity'); ?>
+                <div class="clearfix"></div>
+            </div>
+            <div class="widget-body medium no-padding">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th><?php echo Theme::Translate('Display'); ?></th> 
+                                <th><?php echo Theme::Translate('Logged In'); ?></th>   
+                                <th><?php echo Theme::Translate('Licence'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach($displays as $row) { ?>
+                            <tr class="<?php echo $row['mediainventorystatus']; ?>">
+                                <td><?php echo $row['display']; ?></td>
+                                <td><span class="<?php echo ($row['loggedin'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'; ?>"></span></td>
+                                <td><span class="<?php echo ($row['licensed'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'; ?>"></span></td>
+                            </tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
     <div class="col-md-6">
         <?php echo Theme::Get('embedded-widget'); ?>
     </div>

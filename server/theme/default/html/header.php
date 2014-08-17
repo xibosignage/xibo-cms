@@ -30,6 +30,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
         <link href="theme/default/libraries/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
         <link href="theme/default/libraries/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet" media="screen">
+        <link href="theme/default/libraries/font-awesome/css/font-awesome.min.css" rel="stylesheet">
         <link href="theme/default/libraries/bootstrap-select/css/bootstrap-select.css" rel="stylesheet">
         <link href="theme/default/libraries/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
         <link href="theme/default/libraries/bootstrap-colorpicker/css/bootstrap-colorpicker.min.css" rel="stylesheet">
@@ -43,96 +44,102 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <link href="theme/default/css/timeline.css" rel="stylesheet" media="screen">
         <link href="theme/default/css/calendar.css" rel="stylesheet" media="screen">
         <link href="theme/default/css/override.css" rel="stylesheet" media="screen">
+        <!-- Copyright 2006-2013 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
     </head>
     <body>
-        <!-- Copyright 2006-2013 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
-        <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-            <div class="container-fluid">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                        <span class="sr-only"><?php echo Theme::Translate('Toggle navigation'); ?></span>
-                        <span class="glyphicon glyphicon-bar"></span>
-                        <span class="glyphicon glyphicon-bar"></span>
-                        <span class="glyphicon glyphicon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="#"><?php echo Theme::ApplicationName(); ?></a>
-                </div>
-                <div class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav navbar-right">
-                        <li><a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo Theme::Translate('Click to show more time information'); ?>"><?php echo Theme::GetClock(); ?></a></li>
-                        <li><a class="XiboFormButton" href="index.php?p=user&q=ChangePasswordForm" title="<?php echo Theme::Translate('Change Password') ?>"><?php echo Theme::Translate('Change Password') ?></a></li>
-                        <li><a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo Theme::Translate('About the CMS'); ?>"><?php echo Theme::Translate('About'); ?></a></li>
-                        <li><a title="Show Help" class="XiboHelpButton" href="<?php echo Theme::GetPageHelpLink(); ?>"><?php echo Theme::Translate('Help'); ?></a></li>
-                        <li><a href="manual/" target="_blank" title="<?php echo Theme::Translate('Open the Manual in a new Window'); ?>"><?php echo Theme::Translate('Manual'); ?></a></li>
-                        <li><a title="Logout" href="index.php?q=logout"><?php echo Theme::Translate("Logout"); ?></a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        <div id="page-wrapper" class="active">
+        
+            <div id="sidebar-wrapper">
+                <?php
+                if (Theme::Get('sidebar_html' != NULL)) {
+                    echo Theme::Get('sidebar_html');
+                }
+                ?>
+                <ul class="sidebar">
+                    <li class="sidebar-main"><a href="<?php echo Theme::GetUserHomeLink(); ?>"><?php echo Theme::Translate('Dashboard'); ?></a></li>
+                    <?php
+                        foreach (Theme::GetMenu('Top Nav') as $item) {
+                            
+                            // Sub menu?
+                            $menu = NULL;
+                            switch ($item['page']) {
+                                case 'layout':
+                                    $menu = Theme::GetMenu('Design Menu');
+                                    break;
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-sm-3 col-md-2 sidebar">
-                    <?php if (is_array(Theme::Get('action_menu'))) { ?>
-                        <ul class="nav nav-sidebar">
-                            <h4><?php echo Theme::Translate('Action Menu'); ?></h4>
+                                case 'content':
+                                    $menu = Theme::GetMenu('Library Menu');
+                                    break;
 
-                        <?php foreach (Theme::Get('action_menu') as $item) {
-                            echo '<li class="' . (($item['selected']) ? ' active' : '') . '"><a title="' . $item['help'] . '" href="' . $item['link'] . '" class="' . $item['class'] . (($item['selected']) ? ' active' : '') . '" onclick="' . $item['onclick'] . '">' . $item['title'] . '</a></li>';
-                        }
-                        echo '</ul>';
-                    }  
-                    if (Theme::Get('sidebar_html' != NULL)) {
-                        echo Theme::Get('sidebar_html');
-                    }
-                    ?>
-                    <ul class="nav nav-sidebar">
-                        <h4><?php echo Theme::Translate('Navigation Menu'); ?></h4>
-                        <li><a href="<?php echo Theme::GetUserHomeLink(); ?>"><?php echo Theme::Translate('Dashboard'); ?></a></li>
-                        <?php
-                            foreach (Theme::GetMenu('Top Nav') as $item) {
-                                
-                                // Sub menu?
-                                $menu = NULL;
-                                switch ($item['page']) {
-                                    case 'layout':
-                                        $menu = Theme::GetMenu('Design Menu');
-                                        break;
+                                case 'display':
+                                    $menu = Theme::GetMenu('Display Menu');
+                                    break;
 
-                                    case 'content':
-                                        $menu = Theme::GetMenu('Library Menu');
-                                        break;
+                                case 'user':
+                                    $menu = Theme::GetMenu('Administration Menu');
+                                    break;
+                                    
+                                case 'log':
+                                    $menu = Theme::GetMenu('Advanced Menu');
+                                    break;
+                            }
 
-                                    case 'display':
-                                        $menu = Theme::GetMenu('Display Menu');
-                                        break;
+                            if (empty($menu))
+                                echo '<li class="sidebar-list ' . $item['class'] . (($item['selected']) ? ' active' : '') . '"><a href="' . $item['link'] . '" class="' . $item['class'] . (($item['selected']) ? ' active' : '') . '">' . $item['title'] . '</a></li>';
+                            else
+                                echo '<li class="sidebar-title"><a>' . $item['title'] . '</a></li>';
 
-                                    case 'user':
-                                        $menu = Theme::GetMenu('Administration Menu');
-                                        break;
-                                        
-                                    case 'log':
-                                        $menu = Theme::GetMenu('Advanced Menu');
-                                        break;
-                                }
-
-                                if (empty($menu))
-                                    echo $item['li'];
-                                else
-                                    echo '<li><a>' . $item['title'] . '</a></li>';
-
-                                if (!empty($menu)) {
-                                    echo '<ul class="nav nav-sidebar-sub">';
-                                    foreach ($menu as $sub_item) {
-                                        echo $sub_item['li'];
-                                    }
-                                    echo '</ul>';
+                            if (!empty($menu)) {
+                                foreach ($menu as $sub_item) {
+                                    echo '<li class="sidebar-list ' . $sub_item['class'] . (($sub_item['selected']) ? ' active' : '') . '"><a href="' . $sub_item['link'] . '" class="' . $sub_item['class'] . (($sub_item['selected']) ? ' active' : '') . '">' . $sub_item['title'] . '</a></li>';
                                 }
                             }
-                        ?>
-                    </ul>
-                    <div class="text-center">
-                        <img class="xibo-logo" src='<?php echo Theme::ImageUrl('xibologo.png'); ?>'>
+                        }
+                    ?>
+                </ul>
+                <div class="sidebar-footer">
+                    <div class="col-sm-4">
+                        <a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo Theme::Translate('Click to show more time information'); ?>"><?php echo Theme::GetClock(); ?></a>
+                    </div>
+                    <div class="col-sm-4">
+                        <a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo Theme::Translate('About the CMS'); ?>"><?php echo Theme::Translate('About'); ?></a>
+                    </div>
+                    <div class="col-sm-4">
+                        <a href="manual/" target="_blank" title="<?php echo Theme::Translate('Open the Manual in a new Window'); ?>"><?php echo Theme::Translate('Manual'); ?></a>
                     </div>
                 </div>
-                <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            </div>
+            <div id="content-wrapper">
+                <div class="page-content">
+                    <div class="row header">
+                        <div class="col-sm-12">
+                            <div class="meta pull-left">
+                                <div class="page"><img class="xibo-logo" src='<?php echo Theme::ImageUrl('xibologo.png'); ?>'></div>
+                            </div>
+                            <div class="user pull-right">
+                                <div class="item dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                        <img src="<?php echo Theme::ImageUrl('avatar.jpg'); ?>" />
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-right">
+                                        <li class="dropdown-header"><?php echo Theme::GetUsername(); ?></li>
+                                        <li class="divider"></li>
+                                        <li><a class="XiboFormButton" href="index.php?p=user&q=ChangePasswordForm" title="<?php echo Theme::Translate('Change Password') ?>"><?php echo Theme::Translate('Change Password') ?></a></li>
+                                        <li><a title="Show Help" class="XiboHelpButton" href="<?php echo Theme::GetPageHelpLink(); ?>"><?php echo Theme::Translate('Help'); ?></a></li>
+                                        <li class="divider"></li>
+                                        <li><a title="Logout" href="index.php?q=logout"><?php echo Theme::Translate("Logout"); ?></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                        <?php if (is_array(Theme::Get('action_menu'))) { ?>
+                            <ul class="nav nav-pills pull-right">
+
+                            <?php foreach (Theme::Get('action_menu') as $item) {
+                                echo '<li class="' . (($item['selected']) ? ' active' : '') . '"><a title="' . $item['help'] . '" href="' . $item['link'] . '" class="' . $item['class'] . (($item['selected']) ? ' active' : '') . '" onclick="' . $item['onclick'] . '">' . $item['title'] . '</a></li>';
+                            }
+                            echo '</ul>';
+                        } ?>

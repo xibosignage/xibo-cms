@@ -19,9 +19,8 @@
  */ 
 
 .xibo-logo {
-    width: 100px;
-    margin-bottom: 20px;
-    margin-top: 10px;
+    height: 40px;
+    margin-left: 15px;
 }
 
 .form-signin {

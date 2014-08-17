@@ -478,8 +478,8 @@ END;
         }
 
         // Delete install
-        //if (!unlink('install.php'))
-        //    throw new Exception(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
+        if (!unlink('install.php'))
+            throw new Exception(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
     }
 
     public function Step8() {

@@ -260,8 +260,8 @@ class upgradeDAO extends baseDAO {
         }
 
         // Delete install
-        //if (!unlink('install.php'))
-        //    $formFields[] = FormManager::AddMessage(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
+        if (!unlink('install.php'))
+            $formFields[] = FormManager::AddMessage(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
         
         $formFields[] = FormManager::AddMessage(__('The upgrade was a success!'));
 

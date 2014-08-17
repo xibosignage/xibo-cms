@@ -168,7 +168,8 @@ class layoutDAO extends baseDAO
                 Theme::Set('layout_designer_editor', $this->RenderDesigner());
 
                 // Set up the theme variables for the Layout Jump List
-                $this->LayoutJumpListFilter();
+                Theme::Set('layoutId', $this->layoutid);
+                Theme::Set('layouts', $this->user->LayoutList());
 
 				// Set up any JavaScript translations
    				Theme::Set('translations', json_encode(array('save_position_button' => __('Save Position'))));
@@ -1004,79 +1005,6 @@ HTML;
         $groups = trim($groups, ',');
 
         return $groups;
-    }
-    
-    /**
-     * Filter form for the layout jump list
-     */
-    public function LayoutJumpListFilter()
-    {
-        // Default values?
-        if (Kit::IsFilterPinned('layoutDesigner', 'JumpList'))
-        {
-            $filterPinned = 'checked';
-            $listPinned = 'block';
-            $arrowDirection = 'v';
-            $filterName = Session::Get('layoutDesigner', 'Name');
-        }
-        else 
-        {
-            $filterPinned = '';
-            $listPinned = 'none';
-            $arrowDirection = '^';
-            $filterName = '';
-        }
-
-        $id = uniqid();
-
-        Theme::Set('jumplist_id', $id);
-        Theme::Set('jumplist_pager', ResponseManager::Pager($id));
-        Theme::Set('jumplist_form_meta', '<input type="hidden" name="p" value="layout"><input type="hidden" name="q" value="LayoutJumpList">');
-        Theme::Set('jumplist_filter_pinned', $filterPinned);
-        Theme::Set('jumplist_list_pinned', $listPinned);
-        Theme::Set('jumplist_arrow_direction', $arrowDirection);
-        Theme::Set('jumplist_filter_name', $filterName);
-    }
-
-    /**
-     * A List of Layouts we have permission to design
-     */
-    public function LayoutJumpList()
-    {
-        $user =& $this->user;
-        $response = new ResponseManager();
-        
-        // Layout filter?
-        $layoutName = Kit::GetParam('name', _POST, _STRING, '');
-        setSession('layoutDesigner', 'JumpList', Kit::GetParam('XiboJumpListPinned', _REQUEST, _CHECKBOX, 'off'));
-        setSession('layoutDesigner', 'Name', $layoutName);       
-
-        // Get a layout list
-        $layoutList = $user->LayoutList(NULL, array('layout' => $layoutName));
-
-        $rows = array();
-
-        foreach ($layoutList as $layout)
-        {
-            if (!$layout['edit'] == 1)
-                continue;
-
-            // We have permission to edit this layout
-            $row = array();
-            $row['layoutid'] = $layout['layoutid'];
-            $row['layout'] = $layout['layout'];
-            $row['jump_to_url'] = 'index.php?p=layout&modify=true&layoutid=' . $layout['layoutid'];
-
-            $rows[] = $row;
-        }
-
-        // Store the table rows
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('layout_jumplist_grid');
-
-        $response->SetGridResponse($output);
-        $response->Respond();
     }
 
     public function LayoutStatus() {
