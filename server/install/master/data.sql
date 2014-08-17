@@ -195,7 +195,7 @@ INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class
 (37, 6, 37, NULL, 'Campaigns', NULL, NULL, 1, 0),
 (38, 8, 38, NULL, 'Transitions', NULL, NULL, 6, 0),
 (39, 9, 30, NULL, 'Help Links', NULL, NULL, 6, 0),
-(40, 7, 42, NULL, 'Display Settings', NULL, NULL, 4, 0);
+(40, 7, 43, NULL, 'Display Settings', NULL, NULL, 4, 0);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
@@ -334,3 +334,7 @@ INSERT INTO `datatype` (`DataTypeID`, `DataType`) VALUES
 INSERT INTO `datasetcolumntype` (`DataSetColumnTypeID`, `DataSetColumnType`) VALUES
 (1, 'Value'),
 (2, 'Formula');
+
+INSERT INTO `displayprofile` (`displayprofileid`, `name`, `type`, `config`, `isdefault`, `userid`) VALUES
+(1, 'Production', 'windows', '[{"name":"collectInterval","value":"900","type":"int"},{"name":"powerpointEnabled","value":1,"type":"checkbox"},{"name":"statsEnabled","value":1,"type":"checkbox"},{"name":"sizeX","value":"1280","type":"double"},{"name":"sizeY","value":"720","type":"double"},{"name":"offsetX","value":0,"type":"double"},{"name":"offsetY","value":0,"type":"double"},{"name":"ShowInTaskbar","value":1,"type":"checkbox"},{"name":"ClientInfomationCtrlKey","value":0,"type":"checkbox"},{"name":"ClientInformationKeyCode","value":"I","type":"word"},{"name":"CursorStartPosition","value":"Bottom Right","type":"string"},{"name":"DoubleBuffering","value":1,"type":"checkbox"},{"name":"emptyLayoutDuration","value":"1","type":"int"},{"name":"EnableMouse","value":0,"type":"checkbox"},{"name":"EnableShellCommands","value":1,"type":"checkbox"},{"name":"expireModifiedLayouts","value":1,"type":"checkbox"},{"name":"LogLevel","value":"audit","type":"word"},{"name":"LogToDiskLocation","value":"","type":"string"},{"name":"MaxConcurrentDownloads","value":"2","type":"int"},{"name":"ShellCommandAllowList","value":"","type":"string"}]', 1, 1),
+(2, 'Production', 'android', '[{"name":"emailAddress","value":"dan@springsignage.com","type":"string"},{"name":"settingsPassword","value":"test2","type":"string"},{"name":"collectInterval","value":"600","type":"int"},{"name":"orientation","value":0,"type":"int"},{"name":"startOnBoot","value":0,"type":"checkbox"},{"name":"actionBarMode","value":"1","type":"int"},{"name":"actionBarDisplayDuration","value":"60","type":"int"},{"name":"screenDimensions","value":"","type":"string"},{"name":"autoRestart","value":0,"type":"checkbox"},{"name":"startOnBootDelay","value":"60","type":"int"},{"name":"blacklistVideo","value":1,"type":"checkbox"},{"name":"storeHtmlOnInternal","value":1,"type":"checkbox"}]', 1, 1);

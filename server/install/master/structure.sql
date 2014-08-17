@@ -620,6 +620,16 @@ CREATE TABLE IF NOT EXISTS `lkdatasetlayout` (
   PRIMARY KEY (`LkDataSetLayoutID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
+CREATE TABLE IF NOT EXISTS `displayprofile` (
+  `displayprofileid` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `type` varchar(15) NOT NULL,
+  `config` text NOT NULL,
+  `isdefault` int(11) NOT NULL,
+  `userid` int(11) NOT NULL,
+  PRIMARY KEY (`displayprofileid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+
 --
 -- Constraints for dumped tables
 --

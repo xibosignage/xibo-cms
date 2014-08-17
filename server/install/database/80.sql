@@ -31,6 +31,16 @@ SELECT 7, PageID, NULL, 'Display Settings', NULL, NULL, 4, 0
   FROM `pages`
  WHERE name = 'displayprofile';
 
+CREATE TABLE IF NOT EXISTS `displayprofile` (
+  `displayprofileid` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `type` varchar(15) NOT NULL,
+  `config` text NOT NULL,
+  `isdefault` int(11) NOT NULL,
+  `userid` int(11) NOT NULL,
+  PRIMARY KEY (`displayprofileid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+
 UPDATE layout SET background = SUBSTRING_INDEX(background, '.', 1) WHERE IFNULL(background, '') <> '';
 ALTER TABLE  `layout` CHANGE  `background`  `backgroundImageId` INT( 11 ) NULL DEFAULT NULL;
 
