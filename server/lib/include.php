@@ -114,17 +114,6 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 // Define the VERSION
 Config::Version();
 
-// Does the version in the DB match the version of the code?
-if (DBVERSION != WEBSITE_VERSION) {
-    if (file_exists("upgrade.php")) {
-        Kit::Redirect("upgrade.php");
-        die();
-    }
-    else {
-        die(sprintf('Incompatible database version detected. Please ensure your database and website versions match. You have database %d and website %d', DBVERSION, WEBSITE_VERSION));
-    }
-}
-
 // What is the production mode of the server?
 if(Config::GetSetting('SERVER_MODE') == 'Test') 
     ini_set('display_errors', 1);
@@ -139,6 +128,28 @@ TranslationEngine::InitLocale();
 // Create login control system
 require_once('modules/' . Config::GetSetting("userModule"));
 
+// Page variable set? Otherwise default to index
+$page = Kit::GetParam('p', _REQUEST, _WORD, 'index');
+$function = Kit::GetParam('q', _REQUEST, _WORD);
+
+// Does the version in the DB match the version of the code?
+// If not then we need to run an upgrade. Change the page variable to upgrade
+if (DBVERSION != WEBSITE_VERSION && !($page == 'index' && $function == 'login')) {
+    require_once('install/upgradestep.class.php');
+    $page = 'upgrade';
+
+    if (Kit::GetParam('includes', _POST, _BOOL)) {
+        $upgradeFrom = Kit::GetParam('upgradeFrom', _POST, _INT);
+        $upgradeTo = Kit::GetParam('upgradeTo', _POST, _INT);
+
+        for ($i = $upgradeFrom + 1; $i <= $upgradeTo; $i++) {
+            if (file_exists('install/database/' . $i . '.php')) {
+                include_once('install/database/' . $i . '.php');
+            }
+        }
+    }
+}
+
 // Create a Session
 $session = new Session();
 
@@ -147,9 +158,6 @@ $serviceLocation = Kit::GetXiboRoot();
 
 // OAuth
 require_once('lib/oauth.inc.php');
-
-// Page variable set? Otherwise default to index
-$page = Kit::GetParam('p', _REQUEST, _WORD, 'index');
 
 // Assign the page name to the session
 $session->set_page(session_id(), $page);
@@ -164,7 +172,7 @@ try {
     $pageManager->Render();    
 }
 catch (Exception $e) {
-    print $e->getMessage();
+    trigger_error($e->getMessage(), E_USER_ERROR);
 }
 
 die();

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -269,8 +269,8 @@ class Install {
             foreach ($sql_files as $filename) {
                 $delimiter = ';';
                 $sql_file = @file_get_contents('install/master/' . $filename);
-                $sql_file = $this->remove_remarks($sql_file);
-                $sql_file = $this->split_sql_file($sql_file, $delimiter);
+                $sql_file = Install::remove_remarks($sql_file);
+                $sql_file = Install::split_sql_file($sql_file, $delimiter);
                 
                 foreach ($sql_file as $sql) {
                     $sqlStatementCount++;
@@ -290,7 +290,7 @@ class Install {
         if (!$fh)
             throw new Exception(__('Unable to write to settings.php. We already checked this was possible earlier, so something changed.'));
 
-        $secretKey = $this->gen_secret();
+        $secretKey = Install::gen_secret();
         $settings = <<<END
 <?php
 
@@ -390,7 +390,7 @@ END;
         $formFields[] = FormManager::AddText('library_location', __('Library Location'), NULL, 
             sprintf(__('%s needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your web server - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, we will attempt to create it for you.'), Theme::GetConfig('app_name')), 'n');
 
-        $formFields[] = FormManager::AddText('server_key', __('Server Key'), $this->gen_secret(6), 
+        $formFields[] = FormManager::AddText('server_key', __('Server Key'), Install::gen_secret(6), 
             sprintf(__('%s needs you to choose a "key". This will be required each time you set-up a new client. It should be complicated, and hard to remember. It is visible in the CMS interface, so it need not be written down separately.'), Theme::GetConfig('app_name')), 'n');
 
         $formFields[] = FormManager::AddCheckbox('stats', __('Statistics'), 1, 
@@ -442,7 +442,7 @@ END;
             throw new Exception(__('The Library Location you gave is not writable by the webserver. Please fix the permissions and try again.'));
 
         // Is library_location empty?
-        if (count($this->ls("*",$library_location,true)) > 0)
+        if (count(Install::ls("*",$library_location,true)) > 0)
             throw new Exception(__('The Library Location you gave is not empty. Please give the location of an empty folder'));
 
         // Check if the user has added a trailing slash. If not, add one.
@@ -477,12 +477,9 @@ END;
             throw new Exception(sprintf(__('An error occurred updating these settings. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
 
-        // Delete install and upgrade
-        if (!unlink('install.php'))
-            throw new Exception(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
-
-        if (!unlink('upgrade.php'))
-            throw new Exception(__("Unable to delete upgrade.php. Please ensure the webserver has permission to unlink this file and retry"));
+        // Delete install
+        //if (!unlink('install.php'))
+        //    throw new Exception(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
     }
 
     public function Step8() {
@@ -513,7 +510,7 @@ END;
     /**
      * remove_remarks will strip the sql comment lines out of an uploaded sql file
      */
-    function remove_remarks($sql){
+    public static function remove_remarks($sql){
         $sql = preg_replace('/\n{2,}/', "\n", preg_replace('/^[-].*$/m', "\n", $sql));
         $sql = preg_replace('/\n{2,}/', "\n", preg_replace('/^#.*$/m', "\n", $sql));
         return $sql;
@@ -525,7 +522,7 @@ END;
      * split_sql_file will split an uploaded sql file into single sql statements.
      * Note: expects trim() to have already been run on $sql.
      */
-    function split_sql_file($sql, $delimiter){
+    public static function split_sql_file($sql, $delimiter){
         $sql = str_replace("\r" , '', $sql);
         $data = preg_split('/' . preg_quote($delimiter, '/') . '$/m', $sql);
         $data = array_map('trim', $data);
@@ -548,7 +545,7 @@ END;
      *                    $options - An array of values 'return_files' or 'return_folders' or both
      * Returns       : A flat list with the path of all the files(no folders) that matches the condition given.
      */
-    function ls($pattern="*", $folder="", $recursivly=false, $options=array('return_files','return_folders')) {
+    public static function ls($pattern="*", $folder="", $recursivly=false, $options=array('return_files','return_folders')) {
         if($folder) {
             $current_folder = realpath('.');
             if(in_array('quiet', $options)) { // If quiet is on, we will suppress the 'no such folder' error
@@ -587,7 +584,7 @@ END;
                 
                 if($recursivly) {
                     // Continue calling this function for all the folders
-                    $deep_items = ls($pattern, $this_folder, $recursivly, $options); # :RECURSION:
+                    $deep_items = Install::ls($pattern, $this_folder, $recursivly, $options); # :RECURSION:
                     foreach ($deep_items as $item) {
                         array_push($all, $this_folder . $item);
                     }
@@ -599,7 +596,7 @@ END;
         return $all;
     }
 
-    function gen_secret($length = 12) {
+    public static function gen_secret($length = 12) {
       # Generates a random 12 character alphanumeric string to use as a salt
       mt_srand((double)microtime()*1000000);
       $key = "";

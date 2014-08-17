@@ -20,12 +20,12 @@
  */ 
 DEFINE('XIBO', true);
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
-include('lib/app/kit.class.php');
-include('config/config.class.php');
-include('config/db_config.php');
+require_once('lib/app/kit.class.php');
+require_once('config/config.class.php');
+require_once('config/db_config.php');
 require_once("lib/app/pdoconnect.class.php");
 require_once("lib/app/translationengine.class.php");
 require_once("lib/app/thememanager.class.php");
@@ -33,12 +33,13 @@ require_once("lib/app/helpmanager.class.php");
 require_once("lib/app/datemanager.class.php");
 require_once("lib/app/formmanager.class.php");
 require_once('modules/module_user_general.php');
-require_once('install/install.class.php');
+require_once('lib/pages/install.class.php');
+require_once("lib/data/data.class.php");
+require_once('lib/app/debug.class.php');
 
 // Create a theme
 new Theme(new User(new Database()), 'default');
 Theme::SetPagename('install');
-
 
 $config = new Config();
 if (!$config->CheckPHP())
@@ -47,7 +48,6 @@ if (!$config->CheckPHP())
 // Set-up the translations for get text
 TranslationEngine::InitLocale('en_GB');
 
-$fault = false;
 $xibo_step = Kit::GetParam('step', _REQUEST, _INT, 1);
 
 $content = '';

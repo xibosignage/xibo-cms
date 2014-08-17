@@ -156,8 +156,8 @@ class Theme {
 	 * @param string $string The String to Translate
 	 * @param array $args   Variables to insert (will replace %d %s in order)
 	 */
-	public static function Translate($string, $args = null) {
-		return __($string, $args);
+	public static function Translate($string) {
+		return call_user_func_array('__', func_get_args());
 	}
 
 	public static function Set($key, $value) {

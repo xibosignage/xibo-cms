@@ -36,12 +36,11 @@ class indexDAO extends baseDAO {
 		// Check the token
         if (!Kit::CheckToken()) {
         	// We would usually issue a HALT error here - but in the case of login we should redirect instead
-            trigger_error('Token does not match');
-
             // Split on &amp; and rejoin with &
             $params = explode('&amp;', $referingpage, 3);
-            unset($params['message']);
-			$referingpage = implode('&', $params) . '&message=' . __('Sorry the form has expired. Please refresh.');
+            $referingpage = implode('&', $params);
+
+            $session->set('message', __('Sorry the form has expired. Please refresh.'));
 
             header('Location:index.php?' . $referingpage);
             exit;
@@ -50,13 +49,11 @@ class indexDAO extends baseDAO {
 		if ($user->login($username,$password)) 
 		{
 			$userid 	= Kit::GetParam('userid', _SESSION, _INT);
-			$username 	= Kit::GetParam('username', _SESSION, _USERNAME);
-				
-			setMessage($username . ' logged in');
+			
 			$session->set_user(session_id(), $userid, 'user');
 		}
 		
-		Debug::LogEntry('audit', 'Login with refering page: ' . $referingpage);
+		Debug::LogEntry('audit', 'Login with referring page: ' . $referingpage);
 		
 		if ($referingpage == '') 
 		{
@@ -95,8 +92,8 @@ class indexDAO extends baseDAO {
 	
 	function forgotten() 
 	{
-		//Called by a submit to the Forgotten Details form 
-		//	Checks the validity of the data provided, and emails a new password to the user
+		// Called by a submit to the Forgotten Details form 
+		// Checks the validity of the data provided, and emails a new password to the user
 		$db =& $this->db;
 		
 		$username 	= Kit::GetParam('f_username', _POST, _USERNAME);

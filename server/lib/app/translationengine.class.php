@@ -113,12 +113,15 @@ class TranslationEngine
  * @return 
  * @param $string Object
  */ 
-function __($string, $args = null)
+function __($string)
 {
 	global $transEngine;
         
     if ($transEngine != '')
 	   $string = $transEngine->translate($string);
+
+    $args = func_get_args();
+    array_shift($args);
 
     if (count($args) > 0)
         $string = vsprintf($string, $args);

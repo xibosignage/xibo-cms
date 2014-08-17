@@ -26,8 +26,8 @@ class PageManager
     private $db;
     private $user;
 
-    private $p;
-    private $q;
+    public $p;
+    public $q;
 
     private $page;
     private $path;
@@ -36,10 +36,13 @@ class PageManager
     private $authed;
     private $thePage;
     
-    // Maintain a list of pages/functions we are allowed to get to without going through the authentication system
+    // Maintain a list of pages / functions we are allowed to get to without going through the authentication system
     private $nonAuthedPages = array('index', 'clock', 'error');
     private $nonAuthedPagesWithoutFunctionCall = array('error');
     private $nonAuthedFunctions = array('login', 'logout', 'GetClock', 'About');
+
+    // Maintain a list of pages we can get to that are not checked in the database but require a valid login
+    private $nonPageAuthedPages = array('upgrade');
 	
     function __construct(database $db, user $user, $page)
     {
@@ -82,7 +85,7 @@ class PageManager
             if (!$user->attempt_login($this->ajax))
                 return false;
 
-            $this->authed = $user->PageAuth($this->p);
+            $this->authed = (in_array($this->p, $this->nonPageAuthedPages)) ? true : $user->PageAuth($this->p);
         }
     }
 	

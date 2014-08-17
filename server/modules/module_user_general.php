@@ -484,7 +484,7 @@
         }
         
         // Check the security
-        if ($usertype == 1 || $page == 'error')
+        if ($usertype == 1)
             return true;
         
         // We have access to only the pages assigned to this group
