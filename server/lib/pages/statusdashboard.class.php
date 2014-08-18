@@ -83,6 +83,7 @@ class statusdashboardDAO extends baseDAO {
                 );
             }
 
+            Theme::Set('librarySize', Kit::formatBytes($totalSize, 1));
             Theme::Set('libraryWidget', json_encode($output));
 
             // Also a display widget
@@ -103,6 +104,52 @@ class statusdashboardDAO extends baseDAO {
             }
 
             Theme::Set('display-widget-rows', $rows);
+
+            // Get a count of users
+            $sth = $dbh->prepare('SELECT IFNULL(COUNT(*), 0) AS count_users FROM `user`');
+            $sth->execute();
+
+            Theme::Set('countUsers', $sth->fetchColumn(0));
+
+            // Get a count of active layouts
+            $sth = $dbh->prepare('SELECT IFNULL(COUNT(*), 0) AS count_scheduled FROM `schedule_detail` WHERE :now BETWEEN FromDT AND ToDT');
+            $sth->execute(array('now' => time()));
+
+            Theme::Set('nowShowing', $sth->fetchColumn(0));
+
+            // Latest news
+            // Make sure we have the cache location configured
+            Kit::ClassLoader('file');
+            $file = new File($this->db);
+            $file->EnsureLibraryExists();
+
+            // Use SimplePie to get the feed
+            include_once('3rdparty/simplepie/autoloader.php');
+
+            $feed = new SimplePie();
+            $feed->set_cache_location($file->GetLibraryCacheUri());
+            $feed->set_feed_url(Theme::GetConfig('latest_news_url'));
+            $feed->set_cache_duration(86400);
+            $feed->handle_content_type();
+            $feed->init();
+
+            $latestNews = array();
+
+            if ($feed->error()) {
+                Debug::LogEntry('audit', 'Feed Error: ' . $feed->error(), get_class(), __FUNCTION__);
+            }
+            else {
+                // Store our formatted items
+                foreach ($feed->get_items() as $item) {
+                    $latestNews[] = array(
+                            'title' => $item->get_title(),
+                            'description' => $item->get_description(),
+                            'link' => $item->get_link()
+                        );
+                }
+            }
+
+            Theme::Set('latestNews', $latestNews);
         }
         catch (Exception $e) {
             

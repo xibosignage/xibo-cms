@@ -574,6 +574,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `homepage` varchar(254) NOT NULL DEFAULT 'dashboard.php' COMMENT 'The users homepage',
   `Retired` tinyint(4) NOT NULL DEFAULT '0',
   `CSPRNG` tinyint(4) NOT NULL DEFAULT '0',
+  `newUserWizard` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`UserID`),
   KEY `usertypeid` (`usertypeid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;

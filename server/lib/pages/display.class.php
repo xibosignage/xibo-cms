@@ -351,9 +351,9 @@ class displayDAO extends baseDAO
                 array('name' => 'display', 'title' => __('Display')),
                 array('name' => 'description', 'title' => __('Description')),
                 array('name' => 'layout', 'title' => __('Default Layout')),
-                array('name' => 'inc_schedule', 'title' => __('Interleave Default')),
-                array('name' => 'email_alert', 'title' => __('Email Alert')),
-                array('name' => 'loggedin', 'title' => __('Logged In')),
+                array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true),
+                array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true),
+                array('name' => 'loggedin', 'title' => __('Logged In'), 'icons' => true),
                 array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
                 array('name' => 'clientaddress', 'title' => __('IP Address')),
                 array('name' => 'macaddress', 'title' => __('Mac Address'))

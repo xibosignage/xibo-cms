@@ -797,8 +797,14 @@ class layoutDAO extends baseDAO
             $designerScale = ($version == 1) ? 1 : min($resolution['width'] / $resolution['intended_width'], $resolution['intended_height'] / $resolution['height']);
 
             // To do - version 2 layout can support zooming?
-            if ($version > 1)
-                $designerScale = $designerScale * Kit::GetParam('zoom', _GET, _DOUBLE, 1);
+            if ($version > 1) {
+                $zoom = Kit::GetParam('zoom', _GET, _DOUBLE, 1);
+                $designerScale = $designerScale * $zoom;
+
+                Theme::Set('layoutVersion', 2);
+                Theme::Set('layout_zoom_in_url', 'index.php?p=layout&modify=true&layoutid=' . $this->layoutid . '&zoom=' . ($zoom - 0.3));
+                Theme::Set('layout_zoom_out_url', 'index.php?p=layout&modify=true&layoutid=' . $this->layoutid . '&zoom=' . ($zoom + 0.3));
+            }
         }
         
         // do we have a background? Or a background color (or both)

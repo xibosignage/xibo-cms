@@ -19,19 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+include_once("lib/data/layout.data.class.php");
 
 class timelineDAO extends baseDAO {
-
-    private $db;
-    private $user;
-
-    function __construct(database $db, user $user)
-    {
-        $this->db =& $db;
-        $this->user =& $user;
-
-        include_once("lib/data/layout.data.class.php");
-    }
 
     /**
 	 * Adds a new region for a layout

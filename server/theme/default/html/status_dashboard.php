@@ -31,25 +31,72 @@ $displays = (is_array($displays)) ? $displays : array();
 ?>
 <div class="row">
     <div class="col-lg-3 col-md-6 col-xs-12">
-      <div class="widget">
-        <div class="widget-body">
-          <div class="widget-icon orange pull-left">
-            <i class="fa fa-sitemap"></i>
-          </div>
-          <div class="widget-content pull-left">
-            <div class="title"><?php echo count($displays); ?></div>
-            <div class="comment"><?php echo Theme::Translate('Displays'); ?></div>
-          </div>
-          <div class="clearfix"></div>
+        <div class="widget">
+            <div class="widget-body">
+                <div class="widget-icon orange pull-left">
+                    <i class="fa fa-desktop"></i>
+                </div>
+                <div class="widget-content pull-left">
+                    <div class="title"><?php echo count($displays); ?></div>
+                    <div class="comment"><?php echo Theme::Translate('Displays'); ?></div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
         </div>
-      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-xs-12">
+        <div class="widget">
+            <div class="widget-body">
+                <div class="widget-icon red pull-left">
+                    <i class="fa fa-tasks"></i>
+                </div>
+                <div class="widget-content pull-left">
+                    <div class="title"><?php echo Theme::Get('librarySize'); ?></div>
+                    <div class="comment"><?php echo Theme::Translate('Library Size'); ?></div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-xs-12">
+        <div class="widget">
+            <div class="widget-body">
+                <div class="widget-icon green pull-left">
+                    <i class="fa fa-users"></i>
+                </div>
+                <div class="widget-content pull-left">
+                    <div class="title"><?php echo Theme::Get('countUsers'); ?></div>
+                    <div class="comment"><?php echo Theme::Translate('Users'); ?></div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 col-xs-12">
+        <div class="widget">
+            <div class="widget-body">
+                <div class="widget-icon blue pull-left">
+                    <i class="fa fa-cogs"></i>
+                </div>
+                <div class="widget-content pull-left">
+                    <?php if (Theme::Get('embedded-widget') != '') {
+                        echo Theme::Get('embedded-widget'); 
+                    } else {
+                    ?>
+                    <div class="title"><?php echo Theme::Get('nowShowing'); ?></div>
+                    <div class="comment"><?php echo Theme::Translate('Now showing'); ?></div>
+                    <?php } ?>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
     </div>
 </div>
 <div class="row">
     <div class="col-lg-6">
         <div class="widget">
             <div class="widget-title">
-                <i class="fa fa-tasks"></i>
+                <i class="fa fa-cloud-download"></i>
                 <?php echo Theme::Translate('Bandwidth Usage'); ?>
                 <div class="clearfix"></div>
             </div>
@@ -75,7 +122,7 @@ $displays = (is_array($displays)) ? $displays : array();
     <div class="col-lg-6">
         <div class="widget">
             <div class="widget-title">
-                <i class="fa fa-tasks"></i>
+                <i class="fa fa-desktop"></i>
                 <?php echo Theme::Translate('Display Activity'); ?>
                 <div class="clearfix"></div>
             </div>
@@ -103,10 +150,22 @@ $displays = (is_array($displays)) ? $displays : array();
             </div>
         </div>
     </div>
-</div>
-<div class="row">
-    <div class="col-md-6">
-        <?php echo Theme::Get('embedded-widget'); ?>
+    <div class="col-lg-6">
+        <div class="widget news-widget">
+            <div class="widget-title">
+                <i class="fa fa-book"></i>
+                <?php echo Theme::Translate('Latest News'); ?>
+                <div class="clearfix"></div>
+            </div>
+            <div class="widget-body medium">
+                <?php foreach(Theme::Get('latestNews') as $news) { ?>
+                <div class="article">
+                    <h4 class="article_title"><?php echo $news['title']; ?></h4>
+                    <p><?php echo $news['description']; ?></p>
+                </div>
+                <?php } ?>
+            </div>
+        </div>
     </div>
 </div>
 <script type="text/javascript">

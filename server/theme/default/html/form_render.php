@@ -187,8 +187,12 @@ if (!$tabs)
                         <div class="form-group <?php echo $field['groupClass']; ?>">
                             <label class="col-sm-2 control-label" for="<?php echo $field['name']; ?>" title="<?php echo $field['helpText']; ?>" accesskey="<?php echo $field['accesskey']; ?>"><?php echo $field['title']; ?></label>
                             <div class="col-sm-10">
-                                <select class="form-control" <?php echo (($field['fieldType'] == 'dropdownmulti') ? 'multiple' : ''); ?> name="<?php echo $field['name']; ?>" id="<?php echo $field['name']; ?>"<?php echo $field['callBack']; ?> <?php 
-                                foreach ($field['dataAttributes'] as $attribute) { echo $attribute['name'] . '="' . $attribute['value'] . '"'; } ?>>
+                                <select class="form-control" <?php echo (($field['fieldType'] == 'dropdownmulti') ? 'multiple' : ''); ?> name="<?php echo $field['name']; ?>" id="<?php echo $field['name']; ?>"<?php echo ((isset($field['callBack'])) ? $field['callBack'] : ''); ?> <?php 
+                                if (isset($field['dataAttributes']) && is_array($field['dataAttributes'])) {
+                                    foreach ($field['dataAttributes'] as $attribute) { 
+                                        echo $attribute['name'] . '="' . $attribute['value'] . '"'; 
+                                    }
+                                } ?>>
 
                                 <?php 
                                 // Option groups?

@@ -123,6 +123,8 @@ ALTER TABLE `schedule_detail` DROP `CampaignID`;
 ALTER TABLE `schedule_detail` DROP `is_priority`;
 ALTER TABLE `schedule_detail` DROP `DisplayOrder`;
 
+ALTER TABLE  `user` ADD  `newUserWizard` TINYINT NOT NULL DEFAULT  '0';
+
 UPDATE `version` SET `app_ver` = '1.7.0-alpha', `XmdsVersion` = 4;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '80';

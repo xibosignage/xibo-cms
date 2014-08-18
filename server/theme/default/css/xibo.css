@@ -267,3 +267,14 @@ ul.dropdown-menu-form {
     max-height: 300px;
     overflow-y: scroll;
 }
+
+.page-header {
+  maring: 0;
+}
+
+#new-user-welcome-carousel .carousel-caption {
+  background-color: rgba(0, 0, 0, .7);
+  border-radius: 5px;
+  top: 20px;
+  bottom: auto;
+}

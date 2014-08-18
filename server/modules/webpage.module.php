@@ -306,18 +306,7 @@ class webpage extends Module
         if ($this->previewEnabled == 0)
             return parent::Preview ($width, $height);
         
-        $layoutId = $this->layoutid;
-        $regionId = $this->regionid;
-
-        $mediaId = $this->mediaid;
-        $lkId = $this->lkid;
-        $mediaType = $this->type;
-        $mediaDuration = $this->duration;
-        
-        $widthPx	= $width.'px';
-        $heightPx	= $height.'px';
-
-        return '<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=1&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return $this->PreviewAsClient($width, $height);
     }
 
     public function GetResource($displayId = 0) {
