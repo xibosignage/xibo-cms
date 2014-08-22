@@ -29,6 +29,9 @@ class XMDSSoap {
     private $displayId;
     private $defaultLayoutId;
     private $version_instructions;
+    private $clientType;
+    private $clientVersion;
+    private $clientCode;
 
     // Unfortunately we still need this for this data classes that require a DB
     private $db;
@@ -225,6 +228,11 @@ class XMDSSoap {
         if ($this->isAuditing == 1)
             Debug::LogEntry("audit", '[IN] with hardware key: ' . $hardwareKey, "xmds", "RequiredFiles");
 
+        // Remove all Nonces for this display
+        $nonce = new Nonce();
+        $nonce->RemoveAllXmdsNonce($this->displayId);
+
+        // Build a new RF
         $requiredFilesXml = new DOMDocument("1.0");
         $fileElements = $requiredFilesXml->createElement("files");
         $requiredFilesXml->appendChild($fileElements);
@@ -305,7 +313,11 @@ class XMDSSoap {
                     'hardwareKey' => $hardwareKey
                 ));
 
+            // Prepare a SQL statement in case we need to update the MD5 and FileSize on media nodes.
             $mediaSth = $dbh->prepare('UPDATE media SET `MD5` = :md5, FileSize = :size WHERE MediaID = :mediaid');
+
+            // What is the send file mode?
+            $sendFileMode = Config::GetSetting('SENDFILE_MODE');
 
             foreach ($sth->fetchAll() as $row) {
                 $recordType = Kit::ValidateParam($row['RecordType'], _WORD);
@@ -314,6 +326,7 @@ class XMDSSoap {
                 $md5    = Kit::ValidateParam($row['MD5'], _HTMLSTRING);
                 $fileSize   = Kit::ValidateParam($row['FileSize'], _INT);
                 $xml = Kit::ValidateParam($row['xml'], _HTMLSTRING);
+                $mediaNonce = '';
 
                 if ($recordType == 'layout') {
                     // For layouts the MD5 column is the layout xml
@@ -321,6 +334,9 @@ class XMDSSoap {
                     
                     if ($this->isAuditing == 1) 
                         Debug::LogEntry("audit", 'MD5 for layoutid ' . $id . ' is: [' . $md5 . ']', "xmds", "RequiredFiles");
+
+                    // Add nonce
+                    $nonce->AddXmdsNonce('layout', $this->displayId, NULL, $fileSize, NULL, $id);
                 }
                 else if ($recordType == 'media') {
                     // If they are empty calculate them and save them back to the media.
@@ -332,6 +348,9 @@ class XMDSSoap {
                         // Update the media record with this information
                         $mediaSth->execute(array('md5' => $md5, 'size' => $fileSize, 'mediaid' => $id));
                     }
+
+                    // Add nonce
+                    $mediaNonce = $nonce->AddXmdsNonce('file', $this->displayId, $id, $fileSize, $path);
                 }
                 else {
                     continue;
@@ -340,10 +359,17 @@ class XMDSSoap {
                 // Add the file node
                 $file = $requiredFilesXml->createElement("file");
                 $file->setAttribute("type", $recordType);
-                $file->setAttribute("path", $path);
                 $file->setAttribute("id", $id);
                 $file->setAttribute("size", $fileSize);
                 $file->setAttribute("md5", $md5);
+
+                if ($recordType == 'media' && $this->clientType == 'android' && $sendFileMode != 'Off') {
+                    // Serve a link instead (standard HTTP link)
+                    $file->setAttribute("path", Kit::GetXiboRoot() . '?file=' . $mediaNonce);
+                }
+                else {
+                    $file->setAttribute("path", $path);
+                }
                 
                 $fileElements->appendChild($file);
             }
@@ -375,6 +401,8 @@ class XMDSSoap {
                         $file->setAttribute('updated', (isset($media['updated']) ? $media['updated'] : 0));
                         
                         $fileElements->appendChild($file);
+
+                        $nonce->AddXmdsNonce('resource', $this->displayId, NULL, NULL, NULL, $layoutId, $region['regionid'], $media['mediaid']);
                     }
                 }
             }
@@ -459,10 +487,16 @@ class XMDSSoap {
             throw new SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry("audit", "[IN] Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]", "xmds", "GetFile");
+            Debug::LogEntry("audit", "[IN] Params: [$hardwareKey] [$fileId] [$fileType] [$chunkOffset] [$chunkSize]", "xmds", "GetFile");
         
+        $nonce = new Nonce();
+
         if ($fileType == "layout") {
-            $filePath = Kit::ValidateParam($filePath, _INT);
+            $fileId = Kit::ValidateParam($fileId, _INT);
+
+            // Validate the nonce
+            if (!$nonce->AllowedFile('layout', $this->displayId, NULL, $fileId))
+                throw new SoapFault('Receiver', 'Requested an invalid file.');
 
             try {
                 $dbh = PDOConnect::init();
@@ -485,6 +519,10 @@ class XMDSSoap {
         }
         else if ($fileType == "media")
         {
+            // Validate the nonce
+            if (!$nonce->AllowedFile('file', $this->displayId, $fileId))
+                throw new SoapFault('Receiver', 'Requested an invalid file.');
+
             try {
                 $dbh = PDOConnect::init();
             
@@ -1010,6 +1048,11 @@ class XMDSSoap {
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', "This display client is not licensed");
 
+        // Validate the nonce
+        $nonce = new Nonce();
+        if (!$nonce->AllowedFile('resource', $this->displayId, NULL, $layoutId, $regionId, $mediaId))
+            throw new SoapFault('Receiver', 'Requested an invalid file.');
+
         // What type of module is this?
         Kit::ClassLoader('region');
         $region = new region($this->db);
@@ -1100,7 +1143,8 @@ class XMDSSoap {
             $dbh = PDOConnect::init();
         
             $sth = $dbh->prepare('
-                SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin, email_alert, display, version_instructions 
+                SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin, 
+                    email_alert, display, version_instructions, client_type, client_code, client_version
                   FROM display 
                  WHERE license = :hardwareKey
                 ');
@@ -1151,6 +1195,9 @@ class XMDSSoap {
             $this->displayId = $row['displayID'];
             $this->defaultLayoutId = $row['defaultlayoutid'];
             $this->version_instructions = $row['version_instructions'];
+            $this->clientType = $row['client_type'];
+            $this->clientVersion = $row['client_version'];
+            $this->clientCode = $row['client_code'];
                 
             return true;
         }
@@ -1213,28 +1260,9 @@ class XMDSSoap {
      * @param <type> $sizeInBytes
      */
     private function LogBandwidth($displayId, $type, $sizeInBytes) {
-        try {
-            $dbh = PDOConnect::init();
         
-            $sth = $dbh->prepare('
-                INSERT INTO `bandwidth` (Month, Type, DisplayID, Size) VALUES (:month, :type, :displayid, :size)
-                ON DUPLICATE KEY UPDATE Size = Size + :size2
-                ');
-
-            $sth->execute(array(
-                    'month' => strtotime(date('m').'/02/'.date('Y').' 00:00:00'), 
-                    'type' => $type, 
-                    'displayid' => $displayId, 
-                    'size' => $sizeInBytes,
-                    'size2' => $sizeInBytes
-                ));
-            
-            return true;  
-        }
-        catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
-            return false;
-        }
+        $bandwidth = new Bandwidth();
+        $bandwidth->Log($displayId, $type, $sizeInBytes);
     }
 }
 ?>

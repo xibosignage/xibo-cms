@@ -51,6 +51,43 @@ if (defined('XMDS') || $method != '')
 
             Kit::ClassLoader('xmdssoap');
 
+            // Check to see if we have a file attribute set (for HTTP file downloads)
+            if (isset($_GET['file'])) {
+                // Check send file mode is enabled
+                $sendFileMode = Config::GetSetting('SENDFILE_MODE');
+
+                if ($sendFileMode == 'Off') {
+                    header('HTTP/1.0 404 Not Found');
+                    exit;
+                }
+
+                // Check nonce, output appropriate headers, log bandwidth and stop.
+                $nonce = new Nonce();
+                if (!$file = $nonce->Details(Kit::GetParam('file', _GET, _STRING))) {
+                    // 404
+                    header('HTTP/1.0 404 Not Found');
+                }
+                else {
+                    // Issue magic packet
+                    // Send via Apache X-Sendfile header?
+                    if ($sendFileMode == 'Apache') {
+                        header('X-Sendfile: ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs']);
+                    }
+                    // Send via Nginx X-Accel-Redirect?
+                    else if ($sendFileMode == 'Nginx') {
+                        header('X-Accel-Redirect: /download/' . $file['storedAs']);
+                    }
+                    else {
+                        header('HTTP/1.0 404 Not Found');
+                    }
+
+                    // Log bandwidth
+                    $bandwidth = new Bandwidth();
+                    $bandwidth->Log($file['displayId'], 4, $file['size']);
+                }
+                exit;
+            }
+
             try
             {
                 $soap = new SoapServer('lib/service/service.wsdl');

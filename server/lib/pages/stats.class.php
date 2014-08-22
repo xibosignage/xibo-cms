@@ -27,40 +27,66 @@ class statsDAO extends baseDAO
      */
 	function displayPage() 
 	{
-		// Configure the theme
+        // Render a Bandwidth Widget
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="BandwidthGrid">');
+        
+        $formFields = array();
+        $formFields[] = FormManager::AddText('fromdt', __('From Date'), date("Y-m-d", time() - (86400 * 35)), NULL, 'f');
+        $formFields[] = FormManager::AddText('todt', __('To Date'), date("Y-m-d"), NULL, 't');
+
+        // List of Displays this user has permission for
+        $displays = $this->user->DisplayGroupList(1);
+        array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
+        $formFields[] = FormManager::AddCombo(
+            'displayid', 
+            __('Display'), 
+            NULL,
+            $displays,
+            'displayid',
+            'displaygroup',
+            NULL, 
+            'd');
+
+        Theme::Set('header_text', __('Bandwidth'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Render('grid_render');
+
+		// Proof of Play stats widget
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="StatsGrid">');
         
         $formFields = array();
-                $formFields[] = FormManager::AddText('fromdt', __('From Date'), date("Y-m-d", time() - 86400), NULL, 'f');
-                $formFields[] = FormManager::AddText('todt', __('To Date'), date("Y-m-d"), NULL, 't');
+        $formFields[] = FormManager::AddText('fromdt', __('From Date'), date("Y-m-d", time() - 86400), NULL, 'f');
+        $formFields[] = FormManager::AddText('todt', __('To Date'), date("Y-m-d"), NULL, 't');
 
-                // List of Displays this user has permission for
-                $displays = $this->user->DisplayGroupList(1);
-                array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
-                $formFields[] = FormManager::AddCombo(
-                    'displayid', 
-                    __('Display'), 
-                    NULL,
-                    $displays,
-                    'displayid',
-                    'displaygroup',
-                    NULL, 
-                    'd');
+        // List of Displays this user has permission for
+        $displays = $this->user->DisplayGroupList(1);
+        array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
+        $formFields[] = FormManager::AddCombo(
+            'displayid', 
+            __('Display'), 
+            NULL,
+            $displays,
+            'displayid',
+            'displaygroup',
+            NULL, 
+            'd');
 
-                // List of Media this user has permission for
-                $media = $this->user->MediaList();
-                array_unshift($media, array('mediaid' => 0, 'media' => 'All'));
-                $formFields[] = FormManager::AddCombo(
-                    'mediaid', 
-                    __('Media'), 
-                    NULL,
-                    $media,
-                    'mediaid',
-                    'media',
-                    NULL, 
-                    'm');
+        // List of Media this user has permission for
+        $media = $this->user->MediaList();
+        array_unshift($media, array('mediaid' => 0, 'media' => 'All'));
+        $formFields[] = FormManager::AddCombo(
+            'mediaid', 
+            __('Media'), 
+            NULL,
+            $media,
+            'mediaid',
+            'media',
+            NULL, 
+            'm');
 
         // Call to render the template
         Theme::Set('header_text', __('Statistics'));
@@ -269,6 +295,76 @@ class statsDAO extends baseDAO
 
         $response->SetGridResponse($output);
         $response->Respond();
+    }
+
+    public function BandwidthGrid() {
+
+        $fromDt = strtotime(Kit::GetParam('fromdt', _POST, _STRING));
+        $toDt = strtotime(Kit::GetParam('todt', _POST, _STRING));
+
+        // Get some data for a bandwidth chart
+        try {
+            $dbh = PDOConnect::init();
+        
+            $displayId = Kit::GetParam('displayid', _POST, _INT);
+            $params = array(
+                'month' => $fromDt,
+                'month2' => $toDt
+                );
+
+            $SQL = '
+                SELECT display.display, IFNULL(SUM(Size), 0) AS size 
+                  FROM `bandwidth`
+                    INNER JOIN `display`
+                    ON display.displayid = bandwidth.displayid
+                 WHERE month > :month 
+                    AND month < :month2 ';
+
+            if ($displayId != 0) {
+                $SQL .= ' AND display.displayid = :displayid ';
+                $params['displayid'] = $displayId;
+            }
+
+            $SQL .= '
+                GROUP BY display.display
+                ORDER BY display.display;
+                ';
+
+            Debug::LogEntry('audit', $SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
+
+            $sth = $dbh->prepare($SQL);
+
+            $sth->execute($params);
+
+            // Get the results
+            $results = $sth->fetchAll();
+
+            $output = array();
+
+            foreach ($results as $row) {
+                $size = ((double)$row['size']) / 1024 / 1024;
+                $output[] = array(
+                        'label' => __($row['display']), 
+                        'value' => round($size, 2)
+                    );
+            }
+
+            // Set the data
+            Theme::Set('bandwidthWidget', json_encode($output));
+            
+            $output = Theme::RenderReturn('stats_page_bandwidth');
+
+            $response = new ResponseManager();
+            $response->SetGridResponse($output);
+            $response->Respond();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            // Show the error in place of the bandwidth chart
+            Theme::Set('widget-error', 'Unable to get widget details');
+        }
     }
 	
 	/**

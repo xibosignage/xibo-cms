@@ -1,6 +1,7 @@
 <h4>Version 1.6 "Pons-Winnecke"</h4>
 <div class="list-group">
 	<a class="list-group-item" href="index.php?toc=developer&p=admin/overview">Developer</a>
+	<a class="list-group-item" href="index.php?toc=developer_releasenotes&p=admin/release_notes_1.6.3">1.6.3</a>
 	<a class="list-group-item" href="index.php?toc=developer_releasenotes&p=admin/release_notes_1.6.2">1.6.2</a>
 	<a class="list-group-item" href="index.php?toc=developer_releasenotes&p=admin/release_notes_1.6.1">1.6.1</a>
 	<a class="list-group-item" href="index.php?toc=developer_releasenotes&p=admin/release_notes_1.6.0">1.6.0</a>

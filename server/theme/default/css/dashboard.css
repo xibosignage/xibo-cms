@@ -284,6 +284,11 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 .widget .widget-title input {
   width: 25%;
 }
+/* Reset */
+.widget .widget-title .bootstrap-select-searchbox input {
+  width: 100%;
+}
+
 .widget .widget-body {
   padding: 20px;
 }

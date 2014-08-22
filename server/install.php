@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 DEFINE('XIBO', true);
+DEFINE('MAX_EXECUTION', true);
 
 error_reporting(0);
 ini_set('display_errors', 0);
@@ -40,10 +41,6 @@ require_once('lib/app/debug.class.php');
 // Create a theme
 new Theme(new User(new Database()), 'default');
 Theme::SetPagename('install');
-
-$config = new Config();
-if (!$config->CheckPHP())
-    die(sprintf('Xibo required PHP version %s.', Config::$VERSION_REQUIRED));
 
 // Set-up the translations for get text
 TranslationEngine::InitLocale('en_GB');
@@ -68,6 +65,9 @@ switch ($xibo_step) {
 
     case 3:
         // Check and validate DB details
+        if (defined('MAX_EXECUTION') && MAX_EXECUTION)
+            set_time_limit(0);
+
         try {
             $install->Step3();
 

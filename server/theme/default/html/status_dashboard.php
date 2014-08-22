@@ -98,6 +98,7 @@ $displays = (is_array($displays)) ? $displays : array();
             <div class="widget-title">
                 <i class="fa fa-cloud-download"></i>
                 <?php echo Theme::Translate('Bandwidth Usage'); ?>
+                <a class="pull-right" href="index.php?p=stats"><?php echo Theme::Translate('More Statistics'); ?></a>
                 <div class="clearfix"></div>
             </div>
             <div class="widget-body medium no-padding">
@@ -161,7 +162,7 @@ $displays = (is_array($displays)) ? $displays : array();
                 <?php foreach(Theme::Get('latestNews') as $news) { ?>
                 <div class="article">
                     <h4 class="article_title"><?php echo $news['title']; ?></h4>
-                    <p><?php echo $news['description']; ?></p>
+                    <p><?php echo $news['description']; ?> <a href="<?php echo $news['link']; ?>" title="Read" target="_blank"><?php echo Theme::Translate('Full Article'); ?></a>.</p>
                 </div>
                 <?php } ?>
             </div>

@@ -38,8 +38,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             <button class="btn btn-save btn-block" title="<?php echo Theme::Translate('Save Settings'); ?>" href="#" onclick="$('#<?php echo Theme::Get('form_id'); ?>').submit()"><span><?php echo Theme::Translate('Save'); ?></span></button>
         </div>
     </div>
-    <div class="col-md-8 col-md-offset-1">
-
+    <div class="col-md-8 col-md-offset-2">
         <form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
         <?php echo Theme::Get('form_meta'); 
         

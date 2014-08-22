@@ -17,27 +17,30 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Theme variables:
- *  table_rows = Array containing the table rows
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="row">
     <div class="col-md-12">
-        <p><?php echo Theme::Translate('Export raw data to CSV'); ?></p>
-        <form action="<?php echo Theme::Get('form_action'); ?>">
-            <?php echo Theme::Get('form_meta'); ?>
-            <button type="submit"><?php echo Theme::Translate('Export'); ?></button>
-        </form>
-
-        <p class="sub-heading"><?php echo Theme::Translate('Layouts Shown'); ?></p>
-        <?php echo Theme::Get('table_layouts_shown'); ?>
-
-        <p class="sub-heading"><?php echo Theme::Translate('Library Media Shown'); ?></p>
-        <?php echo Theme::Get('table_media_shown'); ?>
-
-        <p class="sub-heading"><?php echo Theme::Translate('Media on Layouts Shown'); ?></p>
-        <?php echo Theme::Get('table_media_on_layouts_shown'); ?>
+        <div id="bandwidthChart" class="morrisChart" style="height: 230px;"></div>
     </div>
 </div>
+
+<?php if (Theme::Get('bandwidthWidget') != '') { ?>
+<script type="text/javascript">
+
+    var yKeys = ['value'];
+    var labels = ['<?php echo Theme::Translate("Bandwidth"); ?>'];
+    var bandwidthChart = {
+        type: 'bar',
+        data: {
+            element: 'bandwidthChart',
+            data: <?php echo Theme::Get('bandwidthWidget'); ?>,
+            xkey: 'label',
+            ykeys: yKeys,
+            labels: labels,
+            stacked: <?php echo (Theme::Get('xmdsLimitSet') == '') ? 'false' : 'true'; ?>
+        }
+    };
+</script>
+<?php } ?>

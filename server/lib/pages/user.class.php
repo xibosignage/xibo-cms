@@ -543,7 +543,6 @@ class userDAO extends baseDAO {
             // Defaults
             $username = NULL;
             $password = NULL;
-            $usertypeid = NULL;
             $email = NULL;
             $homepage = NULL;
             $retired = NULL;

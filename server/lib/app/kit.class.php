@@ -593,7 +593,7 @@ class Kit
 	public static function Token($tokenName = "token")
 	{
 		//Store in the users session
-		$token = md5(uniqid()."xsmsalt".time());
+		$token = md5(uniqid() . SECRET_KEY . time());
 		
 		$_SESSION[$tokenName] = $token;
 		$_SESSION[$tokenName.'_timeout'] = time();

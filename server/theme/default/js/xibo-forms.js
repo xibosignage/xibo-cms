@@ -263,13 +263,11 @@ function DisplayGroupMembersSubmit() {
 function MediaFormInitUpload(dialog) {
     // URL for the file upload handler
     var url = $('#fileupload').attr("action");
-    //var url = "upload.php";
-
+    
     // Initialize the jQuery File Upload widget:
     $('#fileupload').fileupload({
-        // Uncomment the following to send cross-domain cookies:
-        //xhrFields: {withCredentials: true},
-        url: url
+        url: url,
+        disableImageResize: false
     });
 
     // Upload server status check for browsers with CORS support:
@@ -285,12 +283,6 @@ function MediaFormInitUpload(dialog) {
         });
     }
     
-    // Initialize the jQuery File Upload widget:
-    $('#fileupload').fileupload('option', {
-        url: url,
-        disableImageResize: false
-    });
-
     // Enable iframe cross-domain access via redirect option:
     $('#fileupload').fileupload(
         'option',

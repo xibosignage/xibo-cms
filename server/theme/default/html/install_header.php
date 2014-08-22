@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -30,7 +30,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         
 		<link href="theme/default/libraries/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
         <link href="theme/default/libraries/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet" media="screen">
-		<link rel="stylesheet" type="text/css" href="install/install.css" />
+		<link rel="stylesheet" type="text/css" href="theme/default/css/install.css" />
         
 	</head>
 
