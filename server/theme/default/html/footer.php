@@ -24,7 +24,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             </div>
         </div>
         </div>
-        <div id="xibo-loading-gif"><img src="theme/default/img/ajax-loader.gif" alt="Loading..." /></div>
 
 		<script src="theme/default/libraries/jquery/jquery-1.11.1.min.js"></script>
 		<script src="theme/default/libraries/jquery/jquery.validate.min.js"></script>

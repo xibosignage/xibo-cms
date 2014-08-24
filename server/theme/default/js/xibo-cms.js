@@ -41,16 +41,6 @@ $(document).ready(function() {
 	
 	setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes	
 
-    $.ajaxSetup({
-    beforeSend:function(){
-        $("#xibo-loading-gif").css({top:'50%',left:'50%',margin:'-'+($('#myDiv').height() / 2)+'px 0 0 -'+($('#myDiv').width() / 2)+'px'}).show();
-    },
-    complete:function(){
-        // hide gif here, eg:
-        $("#xibo-loading-gif").hide();
-    }
-    });
-
 	XiboInitialise("");
 });
 
@@ -221,6 +211,9 @@ function XiboGridRender(gridId){
     var filter 		= $('#' + gridId + ' .XiboFilter form');
     var outputDiv 	= $('#' + gridId + ' .XiboData ');
 
+    // Add a spinner
+    $(gridDiv).closest('.widget').children(".widget-title").append(' <span class="saving fa fa-cog fa-spin"></span>');
+
     // AJAX call to get the XiboData
     $.ajax({
         type: "post",
@@ -228,6 +221,9 @@ function XiboGridRender(gridId){
         dataType: "json",
         data: filter.serialize(),
         success: function(response) {
+
+            // Remove the spinner
+            $(gridDiv).closest(".widget").find(".saving").remove();
 
             var respHtml;
 
@@ -354,40 +350,52 @@ function XiboFormRender(formUrl, data) {
                     dialogTitle =  response.dialogTitle;
                 }
 
-                // Buttons?
-                var buttons = [];
-
-                if (response.buttons != '') {
-                    $.each(
-                        response.buttons,
-                        function(index, value) {
-                            var extrabutton = {};
-
-                            extrabutton.label = index;
-                            extrabutton.callback = function(){
-                                eval(value);
-
-                                // Keep the modal window open!
-                                return false;
-                            }
-
-                            buttons.push(extrabutton);
-                        }
-                        );
-                }
-
                 var id = new Date().getTime();
 
                 // Create the dialog with our parameters
                 var dialog = bootbox.dialog({
                 		message: response.html,
                         title: dialogTitle,
-                		buttons: buttons,
                         animate: false
                 	}).attr("id", id);
 
                 if (response.dialogClass != '') {
                 	dialog.addClass(response.dialogClass);
+                }
+
+                // Buttons?
+                if (response.buttons != '') {
+
+                    // Append a footer to the dialog
+                    var footer = $("<div>").addClass("modal-footer");
+                    dialog.find(".modal-content").append(footer);
+
+                    var i = 0;
+                    $.each(
+                        response.buttons,
+                        function(index, value) {
+                            var extrabutton = $('<button class="btn">').html(index);
+
+                            if (value.indexOf("submit()") > -1) {
+                                extrabutton.addClass('btn-primary save-button');
+                            }
+                            else {
+                                extrabutton.addClass('btn-default');
+                            }
+
+                            extrabutton.click(function() {
+
+                                if ($(this).hasClass("save-button"))
+                                    $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
+
+                                eval(value);
+
+                                // Keep the modal window open!
+                                return false;
+                            });
+
+                            footer.append(extrabutton);
+                        });
                 }
 
                 // Do we have to call any functions due to this success?
@@ -458,7 +466,7 @@ function XiboFormRender(formUrl, data) {
                                     //console.log("Value match");
 
                                     $.each(fieldAction.actions, function(index, action) {
-                                        console.log("Setting child field on " + index + " to " + JSON.stringify(action));
+                                        //console.log("Setting child field on " + index + " to " + JSON.stringify(action));
                                         // Action the field
                                         $(index).css(action);
                                     });
@@ -559,6 +567,7 @@ function XiboClockUpdate(time)
  * @param {Object} form
  */
 function XiboFormSubmit(form) {
+
     // Get the URL from the action part of the form)
     var url = $(form).attr("action") + "&ajax=true";
 
@@ -593,6 +602,9 @@ function XiboFormSubmit(form) {
  */
 function XiboSubmitResponse(response, form) {
 	
+    // Remove the spinner
+    $(form).closest(".modal-dialog").find(".saving").remove();
+
     // Did we actually succeed
     if (response.success) {
         // Success - what do we do now?

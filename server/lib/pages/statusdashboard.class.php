@@ -24,6 +24,9 @@ class statusdashboardDAO extends baseDAO {
 
     function displayPage() {
 
+        // Set up some suffixes
+        $suffixes = array('', 'k', 'M', 'G', 'T');    
+
         // Get some data for a bandwidth chart
         try {
             $dbh = PDOConnect::init();
@@ -36,15 +39,24 @@ class statusdashboardDAO extends baseDAO {
             // Monthly bandwidth - optionally tested against limits
             $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
+            $maxSize = 0;
+            foreach ($results as $row) {
+                $maxSize = ($row['size'] > $maxSize) ? $row['size'] : $maxSize;
+            }
+
+            // Decide what our units are going to be, based on the size
+            $base = floor(log($maxSize) / log(1024));
+
             if ($xmdsLimit > 0) {
-                // Convert to MB
-                $xmdsLimit = $xmdsLimit / 1024 / 1024;
+                // Convert to appropriate size (xmds limit is in KB)
+                $xmdsLimit = ($xmdsLimit * 1024) / (pow(1024, $base));
+                Theme::Set('xmdsLimit', $xmdsLimit . ' ' . $suffixes[$base]);
             }
 
             $output = array();
 
             foreach ($results as $row) {
-                $size = ((double)$row['size']) / 1024 / 1024;
+                $size = ((double)$row['size']) / (pow(1024, $base));
                 $remaining = $xmdsLimit - $size;
                 $output[] = array(
                         'label' => __($row['month']), 
@@ -63,12 +75,23 @@ class statusdashboardDAO extends baseDAO {
             // Library Size in Bytes
             $sth = $dbh->prepare('SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM media GROUP BY type;');
             $sth->execute();
+
+            $results = $sth->fetchAll();
+
+            // Lets see what the max size is
+            $maxSize = 0;
+            foreach ($results as $library) {
+                $maxSize = ($library['SumSize'] > $maxSize) ? $library['SumSize'] : $maxSize;
+            }
+
+            // Decide what our units are going to be, based on the size
+            $base = floor(log($maxSize) / log(1024));
             
             $output = array();
             $totalSize = 0;
-            foreach ($sth->fetchAll() as $library) {
+            foreach ($results as $library) {
                 $output[] = array(
-                    'value' => round((double)$library['SumSize'] / 1024 / 1024, 2),
+                    'value' => round((double)$library['SumSize'] / (pow(1024, $base)), 2),
                     'label' => ucfirst($library['type'])
                 );
                 $totalSize = $totalSize + $library['SumSize'];
@@ -76,14 +99,16 @@ class statusdashboardDAO extends baseDAO {
 
             // Do we need to add the library remaining?
             if ($libraryLimit > 0) {
-                $remaining = $libraryLimit - $totalSize;
+                $remaining = round(($libraryLimit - $totalSize) / (pow(1024, $base)), 2);
+                Theme::Set('libraryLimit', $remaining . ' ' . $suffixes[$base]);
                 $output[] = array(
-                    'value' => round($remaining / 1024 / 1024),
+                    'value' => $remaining,
                     'label' => __('Free')
                 );
             }
 
             Theme::Set('librarySize', Kit::formatBytes($totalSize, 1));
+            Theme::Set('librarySuffix', $suffixes[$base]);
             Theme::Set('libraryWidget', json_encode($output));
 
             // Also a display widget

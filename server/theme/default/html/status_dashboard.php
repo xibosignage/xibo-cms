@@ -97,7 +97,12 @@ $displays = (is_array($displays)) ? $displays : array();
         <div class="widget">
             <div class="widget-title">
                 <i class="fa fa-cloud-download"></i>
-                <?php echo Theme::Translate('Bandwidth Usage'); ?>
+                <?php if (Theme::Get('xmdsLimit') != '' ) {
+                    echo Theme::Translate('Bandwidth Usage. Limit %s', Theme::Get('xmdsLimit'));
+                }
+                else {
+                    echo Theme::Translate('Bandwidth Usage');
+                } ?>
                 <a class="pull-right" href="index.php?p=stats"><?php echo Theme::Translate('More Statistics'); ?></a>
                 <div class="clearfix"></div>
             </div>
@@ -110,7 +115,12 @@ $displays = (is_array($displays)) ? $displays : array();
         <div class="widget">
             <div class="widget-title">
                 <i class="fa fa-tasks"></i>
-                <?php echo Theme::Translate('Library Usage'); ?>
+                <?php if (Theme::Get('xmdsLimit') != '' ) {
+                    echo Theme::Translate('Library Usage. Limit %s', Theme::Get('libraryLimit'));
+                }
+                else {
+                    echo Theme::Translate('Library Usage');
+                } ?>
                 <div class="clearfix"></div>
             </div>
             <div class="widget-body medium no-padding">
@@ -195,7 +205,8 @@ $displays = (is_array($displays)) ? $displays : array();
         type: 'donut',
         data: {
             element: 'libraryChart',
-            data: <?php echo Theme::Get('libraryWidget'); ?>
+            data: <?php echo Theme::Get('libraryWidget'); ?>,
+            formatter: function (y, data) { return y + "<?php echo Theme::Get('librarySuffix')?>"; }
         }
     };
 </script>

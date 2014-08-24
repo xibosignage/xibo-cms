@@ -366,8 +366,11 @@ class XMDSSoap {
                 if ($recordType == 'media' && $this->clientType == 'android' && $sendFileMode != 'Off') {
                     // Serve a link instead (standard HTTP link)
                     $file->setAttribute("path", Kit::GetXiboRoot() . '?file=' . $mediaNonce);
+                    $file->setAttribute("saveAs", $path);
+                    $file->setAttribute("download", 'http');
                 }
                 else {
+                    $file->setAttribute("download", 'xmds');
                     $file->setAttribute("path", $path);
                 }
                 
