@@ -210,10 +210,16 @@ class scheduleDAO extends baseDAO {
 
         $groups = array();
         $displays = array();
+        $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         foreach ($this->user->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
 
-            if ($display['edit'] != 1 && Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'No')
+            // Can schedule with view, but no view permissions
+            if ($scheduleWithView && !$auth->view)
+                continue;
+
+            // Can't schedule with view, but no edit permissions
+            if (!$scheduleWithView && !$auth->edit)
                 continue;
 
             $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIds)) ? ' selected' : '';
@@ -476,10 +482,16 @@ class scheduleDAO extends baseDAO {
 
         $groups = array();
         $displays = array();
+        $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         foreach ($this->user->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
 
-            if ($display['edit'] != 1 && Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'No')
+            // Can schedule with view, but no view permissions
+            if ($scheduleWithView && !$auth->view)
+                continue;
+
+            // Can't schedule with view, but no edit permissions
+            if (!$scheduleWithView && !$auth->edit)
                 continue;
 
             $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIds)) ? ' selected' : '';
@@ -832,10 +844,16 @@ class scheduleDAO extends baseDAO {
 
         $groups = array();
         $displays = array();
+        $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         foreach ($this->user->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
 
-            if ($display['edit'] != 1 && Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'No')
+            // Can schedule with view, but no view permissions
+            if ($scheduleWithView && !$auth->view)
+                continue;
+
+            // Can't schedule with view, but no edit permissions
+            if (!$scheduleWithView && !$auth->edit)
                 continue;
 
             $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIds)) ? ' selected' : '';
