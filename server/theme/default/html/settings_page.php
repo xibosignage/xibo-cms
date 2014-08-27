@@ -101,7 +101,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                 <div class="form-group">
                     <label class="col-sm-2 control-label" for="<?php echo $field['name']; ?>" title="<?php echo $field['helpText']; ?>"><?php echo $field['title']; ?></label>
                     <div class="col-sm-10">
-                        <select name="<?php echo $field['name']; ?>"><?php echo $field['options']; ?></select>
+                        <select class="form-control" name="<?php echo $field['name']; ?>"><?php echo $field['options']; ?></select>
                         <span class="help-block"><?php echo $field['helpText']; ?></span>
                         <span class="help-block"><?php echo sprintf(Theme::Translate('This setting is referred to as: %s'), $field['name']); ?></span>
                     </div>

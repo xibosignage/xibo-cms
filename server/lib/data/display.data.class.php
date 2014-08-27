@@ -562,12 +562,14 @@ class Display extends Data {
 
             // Which displays does a change to this layout effect?
             $SQL  = " SELECT DISTINCT display.DisplayID ";
-            $SQL .= "   FROM schedule_detail ";
+            $SQL .= "   FROM schedule ";
+            $SQL .= "   INNER JOIN schedule_detail ";
+            $SQL .= "   ON schedule_detail.eventid = schedule.eventid ";
             $SQL .= "   INNER JOIN lkdisplaydg ";
             $SQL .= "   ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
             $SQL .= "   INNER JOIN display ";
             $SQL .= "   ON lkdisplaydg.DisplayID = display.displayID ";
-            $SQL .= " WHERE schedule_detail.CampaignID = :campaignid ";
+            $SQL .= " WHERE schedule.CampaignID = :campaignid ";
             $SQL .= " AND schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt ";
             $SQL .= " UNION ";
             $SQL .= " SELECT DISTINCT display.DisplayID ";

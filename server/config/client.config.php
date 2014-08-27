@@ -33,7 +33,7 @@ $CLIENT_CONFIG = array(
                 ),
             'settings' => array(
                     array(
-                        'name' => 'collectInterval',
+                        'name' => 'CollectInterval',
                         'tabId' => 'general',
                         'title' => __('Collection Interval (seconds)'),
                         'type' => _INT,
@@ -45,7 +45,7 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'powerpointEnabled',
+                        'name' => 'PowerpointEnabled',
                         'tabId' => 'general',
                         'title' => __('Enable PowerPoint?'),
                         'type' => _CHECKBOX,
@@ -56,7 +56,7 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'statsEnabled',
+                        'name' => 'StatsEnabled',
                         'tabId' => 'general',
                         'title' => __('Enable stats reporting?'),
                         'type' => _CHECKBOX,
@@ -67,7 +67,7 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'sizeX',
+                        'name' => 'SizeX',
                         'tabId' => 'location',
                         'title' => __('Width'),
                         'type' => _DOUBLE,
@@ -78,7 +78,7 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'sizeY',
+                        'name' => 'SizeY',
                         'tabId' => 'location',
                         'title' => __('Height'),
                         'type' => _DOUBLE,
@@ -89,7 +89,7 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'offsetX',
+                        'name' => 'OffsetX',
                         'tabId' => 'location',
                         'title' => __('Left Coordinate'),
                         'type' => _DOUBLE,
@@ -100,7 +100,7 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'offsetY',
+                        'name' => 'OffsetY',
                         'tabId' => 'location',
                         'title' => __('Top Coordinate'),
                         'type' => _DOUBLE,
@@ -172,7 +172,7 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'emptyLayoutDuration',
+                        'name' => 'EmptyLayoutDuration',
                         'tabId' => 'advanced',
                         'title' => __('Duration for Empty Layouts'),
                         'type' => _INT,
@@ -206,7 +206,7 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'expireModifiedLayouts',
+                        'name' => 'ExpireModifiedLayouts',
                         'tabId' => 'advanced',
                         'title' => __('Expire Modified Layouts'),
                         'type' => _CHECKBOX,

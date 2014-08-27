@@ -20,15 +20,9 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class DisplayGroupSecurity extends Data
-{
-	public function __construct(database $db)
-	{
-		include_once('lib/data/schedule.data.class.php');
-		
-		parent::__construct($db);
-	}
-	
+include_once('lib/data/schedule.data.class.php');
+
+class DisplayGroupSecurity extends Data {	
 	/**
 	 * Links a Display Group to a Group
 	 * @return 

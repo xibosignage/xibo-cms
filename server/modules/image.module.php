@@ -96,7 +96,7 @@ class image extends Module
                     'a', 'align-fields');
 
         $formFields[] = FormManager::AddCombo(
-                    'alignId', 
+                    'valignId', 
                     __('Vertical Align'), 
                     $this->GetOption('valign', 'middle'),
                     array(array('valignId' => 'top', 'valign' => __('Top')), array('valignId' => 'middle', 'valign' => __('Middle')), array('valignId' => 'bottom', 'valign' => __('Bottom'))),
@@ -146,12 +146,14 @@ class image extends Module
         $align = $this->GetOption('align', 'center');
         $valign = $this->GetOption('valign', 'middle');
  
-        $html = '<div style="text-align:%s; display: table-cell; vertical-align: %s; height: %dpx">
-            <img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=%d&lkid=%d&width=%d&height=%d&dynamic=true&proportional=%s" />
+        $html = '<div style="display:table; width:100%%; height: %dpx">
+            <div style="text-align:%s; display: table-cell; vertical-align: %s;">
+                <img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=%d&lkid=%d&width=%d&height=%d&dynamic=true&proportional=%s" />
+            </div>
         </div>';
 
         // Show the image - scaled to the aspect ratio of this region (get from GET)
-        return sprintf($html, $align, $valign, $height, $this->mediaid, $this->lkid, $width, $height, $proportional);
+        return sprintf($html, $height, $align, $valign, $this->mediaid, $this->lkid, $width, $height, $proportional);
     }
 
     public function HoverPreview()

@@ -476,10 +476,6 @@ END;
         catch (Exception $e) {
             throw new Exception(sprintf(__('An error occurred updating these settings. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
-
-        // Delete install
-        if (!unlink('install.php'))
-            throw new Exception(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
     }
 
     public function Step8() {
@@ -498,6 +494,11 @@ END;
         Theme::Set('login_message', sprintf(__("%s was successfully installed. Please log-in with the user details you chose earlier."), Theme::GetConfig('app_name')));
 
         Theme::Render('login_page');
+
+        // Delete install
+        if (!unlink('install.php'))
+            throw new Exception(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
+
         exit();
     }
 

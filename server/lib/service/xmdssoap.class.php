@@ -165,11 +165,21 @@ class XMDSSoap {
 
                         // Load the config and inject the display name
                         $config = json_decode(Kit::ValidateParam($row['config'], _HTMLSTRING), true);
-                        $config[] = array(
-                            'name' => 'displayName',
-                            'value' => $display,
-                            'type' => 'string'
-                        );
+
+                        if ($clientType == 'windows') {
+                            $config[] = array(
+                                'name' => 'DisplayName',
+                                'value' => $display,
+                                'type' => 'string'
+                            );
+                        }
+                        else {
+                            $config[] = array(
+                                'name' => 'displayName',
+                                'value' => $display,
+                                'type' => 'string'
+                            );
+                        }
 
                         // Create the XML nodes
                         foreach($config as $arrayItem) {

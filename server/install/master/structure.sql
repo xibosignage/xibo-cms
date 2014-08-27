@@ -619,7 +619,7 @@ CREATE TABLE IF NOT EXISTS `lkdatasetlayout` (
   `RegionID` varchar(50) NOT NULL,
   `MediaID` varchar(50) NOT NULL,
   PRIMARY KEY (`LkDataSetLayoutID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 CREATE TABLE IF NOT EXISTS `displayprofile` (
   `displayprofileid` int(11) NOT NULL AUTO_INCREMENT,
@@ -629,7 +629,22 @@ CREATE TABLE IF NOT EXISTS `displayprofile` (
   `isdefault` int(11) NOT NULL,
   `userid` int(11) NOT NULL,
   PRIMARY KEY (`displayprofileid`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `xmdsnonce` (
+  `nonceId` bigint(20) NOT NULL AUTO_INCREMENT,
+  `nonce` varchar(100) NOT NULL,
+  `expiry` int(11) NOT NULL,
+  `lastUsed` int(11) DEFAULT NULL,
+  `displayId` int(11) NOT NULL,
+  `fileId` int(11) DEFAULT NULL,
+  `size` bigint(20) DEFAULT NULL,
+  `storedAs` varchar(100) DEFAULT NULL,
+  `layoutId` int(11) DEFAULT NULL,
+  `regionId` varchar(100) DEFAULT NULL,
+  `mediaId` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`nonceId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --
 -- Constraints for dumped tables
