@@ -101,7 +101,7 @@ $displays = (is_array($displays)) ? $displays : array();
                     echo Theme::Translate('Bandwidth Usage. Limit %s', Theme::Get('xmdsLimit'));
                 }
                 else {
-                    echo Theme::Translate('Bandwidth Usage');
+                    echo Theme::Translate('Bandwidth Usage (%s)', Theme::Get('bandwidthSuffix'));
                 } ?>
                 <a class="pull-right" href="index.php?p=stats"><?php echo Theme::Translate('More Statistics'); ?></a>
                 <div class="clearfix"></div>

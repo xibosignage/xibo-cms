@@ -250,7 +250,7 @@ class DataSet extends Data
         try {
             $dbh = PDOConnect::init();
         
-            $sth = $dbh->prepare('SELECT `lkcampaignlayout`.CampaignID FROM `lkdatasetlayout` INNER JOIN `lkcampaignlayout` ON `lkcampaignlayout`.LayoutID = `lkdatasetlayout`.LayoutID WHERE DataSetID = :datasetid');
+            $sth = $dbh->prepare('SELECT DISTINCT `lkcampaignlayout`.CampaignID FROM `lkdatasetlayout` INNER JOIN `lkcampaignlayout` ON `lkcampaignlayout`.LayoutID = `lkdatasetlayout`.LayoutID WHERE DataSetID = :datasetid');
             $sth->execute(array(
                     'datasetid' => $dataSetId
                 ));

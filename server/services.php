@@ -57,6 +57,7 @@ if (defined('XMDS') || $method != '')
                 $sendFileMode = Config::GetSetting('SENDFILE_MODE');
 
                 if ($sendFileMode == 'Off') {
+                    Debug::LogEntry('audit', 'HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
                     header('HTTP/1.0 404 Not Found');
                     exit;
                 }
@@ -64,6 +65,7 @@ if (defined('XMDS') || $method != '')
                 // Check nonce, output appropriate headers, log bandwidth and stop.
                 $nonce = new Nonce();
                 if (!$file = $nonce->Details(Kit::GetParam('file', _GET, _STRING))) {
+                    Debug::LogEntry('audit', 'HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
                     // 404
                     header('HTTP/1.0 404 Not Found');
                 }
@@ -71,6 +73,7 @@ if (defined('XMDS') || $method != '')
                     // Issue magic packet
                     // Send via Apache X-Sendfile header?
                     if ($sendFileMode == 'Apache') {
+                        Debug::LogEntry('audit', 'HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs'], 'services');
                         header('X-Sendfile: ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs']);
                     }
                     // Send via Nginx X-Accel-Redirect?

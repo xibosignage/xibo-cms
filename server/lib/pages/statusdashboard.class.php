@@ -25,7 +25,7 @@ class statusdashboardDAO extends baseDAO {
     function displayPage() {
 
         // Set up some suffixes
-        $suffixes = array('', 'k', 'M', 'G', 'T');    
+        $suffixes = array('bytes', 'k', 'M', 'G', 'T');    
 
         // Get some data for a bandwidth chart
         try {
@@ -67,6 +67,7 @@ class statusdashboardDAO extends baseDAO {
 
             // Set the data
             Theme::Set('xmdsLimitSet', ($xmdsLimit > 0));
+            Theme::Set('bandwidthSuffix', $suffixes[$base]);
             Theme::Set('bandwidthWidget', json_encode($output));
 
             // We would also like a library usage pie chart!

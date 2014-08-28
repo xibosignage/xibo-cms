@@ -215,11 +215,11 @@ class scheduleDAO extends baseDAO {
         foreach ($this->user->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
 
             // Can schedule with view, but no view permissions
-            if ($scheduleWithView && !$auth->view)
+            if ($scheduleWithView && $display['view'] != 1)
                 continue;
 
             // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$auth->edit)
+            if (!$scheduleWithView && $display['edit'] != 1)
                 continue;
 
             $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIds)) ? ' selected' : '';
@@ -487,11 +487,11 @@ class scheduleDAO extends baseDAO {
         foreach ($this->user->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
 
             // Can schedule with view, but no view permissions
-            if ($scheduleWithView && !$auth->view)
+            if ($scheduleWithView && $display['view'] != 1)
                 continue;
 
             // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$auth->edit)
+            if (!$scheduleWithView && $display['edit'] != 1)
                 continue;
 
             $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIds)) ? ' selected' : '';
@@ -849,11 +849,11 @@ class scheduleDAO extends baseDAO {
         foreach ($this->user->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
 
             // Can schedule with view, but no view permissions
-            if ($scheduleWithView && !$auth->view)
+            if ($scheduleWithView && $display['view'] != 1)
                 continue;
 
             // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$auth->edit)
+            if (!$scheduleWithView && $display['edit'] != 1)
                 continue;
 
             $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIds)) ? ' selected' : '';

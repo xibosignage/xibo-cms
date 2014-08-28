@@ -373,7 +373,7 @@ class XMDSSoap {
                 $file->setAttribute("size", $fileSize);
                 $file->setAttribute("md5", $md5);
 
-                if ($recordType == 'media' && $this->clientType == 'android' && $sendFileMode != 'Off') {
+                if ($recordType == 'media' && $sendFileMode != 'Off') {
                     // Serve a link instead (standard HTTP link)
                     $file->setAttribute("path", Kit::GetXiboRoot() . '?file=' . $mediaNonce);
                     $file->setAttribute("saveAs", $path);
