@@ -98,7 +98,8 @@ Preview.prototype.SetSequence = function(seq)
 			"seq": seq,
 			"regionid": regionid,
 			"width": this.width, 
-			"height": this.height
+			"height": this.height,
+			"scale_override": $(this.regionElement).attr("designer_scale")
 		},
 		success: function(response) {
 		

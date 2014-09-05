@@ -852,6 +852,10 @@ function XiboRefreshAllGrids() {
     });
 }
 
+function XiboRedirect(url) {
+    windows.location = url;
+}
+
 /**
  * Display a login box
  * @param {String} message

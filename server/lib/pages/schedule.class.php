@@ -200,6 +200,12 @@ class scheduleDAO extends baseDAO {
         Theme::Set('form_action', 'index.php?p=schedule&q=AddEvent');
         Theme::Set('form_meta', $token_field . $token);
 
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('repeats', __('Repeats'));
+        Theme::Set('form_tabs', $tabs);
+
         $formFields = array();
 
         // List of Display Groups
@@ -232,7 +238,7 @@ class scheduleDAO extends baseDAO {
             }
         }
 
-        $formFields[] = FormManager::AddMultiCombo(
+        $formFields['general'][] = FormManager::AddMultiCombo(
                     'DisplayGroupIDs[]', 
                     __('Display'), 
                     $displayGroupIds,
@@ -243,15 +249,15 @@ class scheduleDAO extends baseDAO {
                     'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
 
         // Time controls
-        $formFields[] = FormManager::AddText('starttimeControl', __('Start Time'), NULL, 
+        $formFields['general'][] = FormManager::AddText('starttimeControl', __('Start Time'), NULL, 
             __('Select the start time for this event'), 's', 'required');
 
-        $formFields[] = FormManager::AddText('endtimeControl', __('End Time'), NULL, 
+        $formFields['general'][] = FormManager::AddText('endtimeControl', __('End Time'), NULL, 
             __('Select the end time for this event'), 'e', 'required');
 
         // Add two hidden fields to always carry the ISO date
-        $formFields[] = FormManager::AddHidden('starttime', NULL);
-        $formFields[] = FormManager::AddHidden('endtime', NULL);
+        $formFields['general'][] = FormManager::AddHidden('starttime', NULL);
+        $formFields['general'][] = FormManager::AddHidden('endtime', NULL);
         
         // Generate a list of layouts.
         $layouts = $user->CampaignList(NULL, false /* isRetired */);
@@ -284,7 +290,7 @@ class scheduleDAO extends baseDAO {
             }
         }
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields['general'][] = FormManager::AddCombo(
                     'CampaignID', 
                     __('Layout'), 
                     NULL,
@@ -294,19 +300,20 @@ class scheduleDAO extends baseDAO {
                     __('Please select a Layout or Campaign for this Event to show'), 
                     'l', '', true, '', '', '', $optionGroups);
 
-        $formFields[] = FormManager::AddNumber('DisplayOrder', __('Display Order'), NULL, 
+        $formFields['general'][] = FormManager::AddNumber('DisplayOrder', __('Display Order'), NULL, 
             __('Please select the order this event should appear in relation to others when there is more than one event scheduled'), 'o');
 
-        $formFields[] = FormManager::AddCheckbox('is_priority', __('Priority'), 
+        $formFields['general'][] = FormManager::AddCheckbox('is_priority', __('Priority'), 
             NULL, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'), 
             'p');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields['repeats'][] = FormManager::AddCombo(
                     'rec_type', 
                     __('Repeats'), 
                     NULL,
                     array(
                         array('id' => '', 'name' => __('None')),
+                        array('id' => 'Minute', 'name' => __('Per Minute')),
                         array('id' => 'Hour', 'name' => __('Hourly')),
                         array('id' => 'Day', 'name' => __('Daily')),
                         array('id' => 'Week', 'name' => __('Weekly')),
@@ -318,13 +325,13 @@ class scheduleDAO extends baseDAO {
                     __('What type of repeat is required?'), 
                     'r');
 
-        $formFields[] = FormManager::AddNumber('rec_detail', __('Repeat every'), NULL, 
+        $formFields['repeats'][] = FormManager::AddNumber('rec_detail', __('Repeat every'), NULL, 
             __('How often does this event repeat?'), 'o', '', 'repeat-control-group');
 
-        $formFields[] = FormManager::AddText('rec_rangeControl', __('Until'), NULL, 
+        $formFields['repeats'][] = FormManager::AddText('rec_rangeControl', __('Until'), NULL, 
             __('When should this event stop repeating?'), 'u', '', 'repeat-control-group');
         
-        $formFields[] = FormManager::AddHidden('rec_range', NULL);
+        $formFields['repeats'][] = FormManager::AddHidden('rec_range', NULL);
 
         // Set some field dependencies
         $response->AddFieldAction('rec_type', 'init', '', array('.repeat-control-group' => array('display' => 'none')));
@@ -332,7 +339,8 @@ class scheduleDAO extends baseDAO {
         $response->AddFieldAction('rec_type', 'change', '', array('.repeat-control-group' => array('display' => 'none')));
         $response->AddFieldAction('rec_type', 'change', '', array('.repeat-control-group' => array('display' => 'block')), "not");
 
-        Theme::Set('form_fields', $formFields);
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_repeats', $formFields['repeats']);
 
         $response->SetFormRequestResponse(NULL, __('Schedule Event'), '800px', '600px');
         $response->callBack = 'setupScheduleForm';
@@ -457,7 +465,7 @@ class scheduleDAO extends baseDAO {
         $recDetail = Kit::ValidateParam($row['recurrence_detail'], _STRING);
         $recToDT = Kit::ValidateParam($row['recurrence_range'], _INT);
         $campaignId = Kit::ValidateParam($row['CampaignID'], _STRING);
-        $isPriority = (Kit::ValidateParam($row['is_priority'], _CHECKBOX) == 1) ? 'checked' : '';
+        $isPriority = Kit::ValidateParam($row['is_priority'], _INT);
         $displayOrder = Kit::ValidateParam($row['DisplayOrder'], _INT);
 
         // Check that we have permission to edit this event.
@@ -471,6 +479,12 @@ class scheduleDAO extends baseDAO {
         Theme::Set('form_id', 'EditEventForm');
         Theme::Set('form_action', 'index.php?p=schedule&q=EditEvent');
         Theme::Set('form_meta', $token_field . $token . '<input type="hidden" id="EventID" name="EventID" value="' . $eventID . '" />');
+
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('repeats', __('Repeats'));
+        Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
 
@@ -504,7 +518,7 @@ class scheduleDAO extends baseDAO {
             }
         }
 
-        $formFields[] = FormManager::AddMultiCombo(
+        $formFields['general'][] = FormManager::AddMultiCombo(
                     'DisplayGroupIDs[]', 
                     __('Display'), 
                     $displayGroupIds,
@@ -515,15 +529,15 @@ class scheduleDAO extends baseDAO {
                     'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
 
         // Time controls
-        $formFields[] = FormManager::AddText('starttimeControl', __('Start Time'), date("Y-m-d H:i", $fromDT), 
+        $formFields['general'][] = FormManager::AddText('starttimeControl', __('Start Time'), date("Y-m-d H:i", $fromDT), 
             __('Select the start time for this event'), 's', 'required');
 
-        $formFields[] = FormManager::AddText('endtimeControl', __('End Time'), date("Y-m-d H:i", $toDT), 
+        $formFields['general'][] = FormManager::AddText('endtimeControl', __('End Time'), date("Y-m-d H:i", $toDT), 
             __('Select the end time for this event'), 'e', 'required');
 
         // Add two hidden fields to always carry the ISO date
-        $formFields[] = FormManager::AddHidden('starttime', date("Y-m-d H:i", $fromDT));
-        $formFields[] = FormManager::AddHidden('endtime', date("Y-m-d H:i", $toDT));
+        $formFields['general'][] = FormManager::AddHidden('starttime', date("Y-m-d H:i", $fromDT));
+        $formFields['general'][] = FormManager::AddHidden('endtime', date("Y-m-d H:i", $toDT));
         
         // Generate a list of layouts.
         $layouts = $user->CampaignList(NULL, false /* isRetired */);
@@ -556,7 +570,7 @@ class scheduleDAO extends baseDAO {
             }
         }
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields['general'][] = FormManager::AddCombo(
                     'CampaignID', 
                     __('Layout'), 
                     $campaignId,
@@ -566,19 +580,20 @@ class scheduleDAO extends baseDAO {
                     __('Please select a Layout or Campaign for this Event to show'), 
                     'l', '', true, '', '', '', $optionGroups);
 
-        $formFields[] = FormManager::AddNumber('DisplayOrder', __('Display Order'), $displayOrder, 
+        $formFields['general'][] = FormManager::AddNumber('DisplayOrder', __('Display Order'), $displayOrder, 
             __('Please select the order this event should appear in relation to others when there is more than one event scheduled'), 'o');
 
-        $formFields[] = FormManager::AddCheckbox('is_priority', __('Priority'), 
+        $formFields['general'][] = FormManager::AddCheckbox('is_priority', __('Priority'), 
             $isPriority, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'), 
             'p');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields['repeats'][] = FormManager::AddCombo(
                     'rec_type', 
                     __('Repeats'), 
                     $recType,
                     array(
                         array('id' => '', 'name' => __('None')),
+                        array('id' => 'Minute', 'name' => __('Per Minute')),
                         array('id' => 'Hour', 'name' => __('Hourly')),
                         array('id' => 'Day', 'name' => __('Daily')),
                         array('id' => 'Week', 'name' => __('Weekly')),
@@ -590,13 +605,13 @@ class scheduleDAO extends baseDAO {
                     __('What type of repeat is required?'), 
                     'r');
 
-        $formFields[] = FormManager::AddNumber('rec_detail', __('Repeat every'), $recDetail, 
+        $formFields['repeats'][] = FormManager::AddNumber('rec_detail', __('Repeat every'), $recDetail, 
             __('How often does this event repeat?'), 'o', '', 'repeat-control-group');
 
-        $formFields[] = FormManager::AddText('rec_rangeControl', __('Until'), ((($recToDT == 0) ? '' : date("Y-m-d H:i", $recToDT))), 
+        $formFields['repeats'][] = FormManager::AddText('rec_rangeControl', __('Until'), ((($recToDT == 0) ? '' : date("Y-m-d H:i", $recToDT))), 
             __('When should this event stop repeating?'), 'u', '', 'repeat-control-group');
         
-        $formFields[] = FormManager::AddHidden('rec_range', date("Y-m-d H:i", $recToDT));
+        $formFields['repeats'][] = FormManager::AddHidden('rec_range', date("Y-m-d H:i", $recToDT));
 
         // Set some field dependencies
         $response->AddFieldAction('rec_type', 'init', '', array('.repeat-control-group' => array('display' => 'none')));
@@ -604,7 +619,8 @@ class scheduleDAO extends baseDAO {
         $response->AddFieldAction('rec_type', 'change', '', array('.repeat-control-group' => array('display' => 'none')));
         $response->AddFieldAction('rec_type', 'change', '', array('.repeat-control-group' => array('display' => 'block')), "not");
 
-        Theme::Set('form_fields', $formFields);
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_repeats', $formFields['repeats']);
         
         $response->SetFormRequestResponse(NULL, __('Edit Event'), '800px', '600px');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Edit')");
@@ -664,9 +680,6 @@ class scheduleDAO extends baseDAO {
         // validate the dates
         if ($toDT < $fromDT) 
             trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);   
-        
-        if ($fromDT < (time()- 86400)) 
-            trigger_error(__("Your start time is in the past. Cannot schedule events in the past"), E_USER_ERROR);
         
         // Check recurrence dT is in the future or empty
         if (($recToDT != '') && ($recToDT < (time()- 86400))) 

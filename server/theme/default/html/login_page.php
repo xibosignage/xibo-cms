@@ -61,8 +61,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
       }
 
     </style>
-    <link href="theme/default/libraries/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
-
     <link rel="shortcut icon" href="<?php echo Theme::ImageUrl('favicon.ico'); ?>" />
   </head>
 

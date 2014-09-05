@@ -121,6 +121,11 @@ class Schedule extends Data
     					// add the appropriate time to the start and end
     					switch ($recType) 
     					{
+    						case 'Minute':
+    							$t_start_temp 	= mktime(date("H", $t_start_temp), date("i", $t_start_temp) + $recDetail, date("s", $t_start_temp) ,date("m", $t_start_temp) ,date("d", $t_start_temp), date("Y", $t_start_temp));
+    							$t_end_temp 	= mktime(date("H", $t_end_temp), date("i", $t_end_temp) + $recDetail, date("s", $t_end_temp) ,date("m", $t_end_temp) ,date("d", $t_end_temp), date("Y", $t_end_temp));
+    							break;
+    							
     						case 'Hour':
     							$t_start_temp 	= mktime(date("H", $t_start_temp) + $recDetail, date("i", $t_start_temp), date("s", $t_start_temp) ,date("m", $t_start_temp) ,date("d", $t_start_temp), date("Y", $t_start_temp));
     							$t_end_temp 	= mktime(date("H", $t_end_temp) + $recDetail, date("i", $t_end_temp), date("s", $t_end_temp) ,date("m", $t_end_temp) ,date("d", $t_end_temp), date("Y", $t_end_temp));

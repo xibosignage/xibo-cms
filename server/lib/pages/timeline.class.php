@@ -425,12 +425,13 @@ class timelineDAO extends baseDAO {
 		$seqGiven 	= Kit::GetParam('seq', _POST, _INT, 0);
 		$seq	 	= Kit::GetParam('seq', _POST, _INT, 0);
 		$width	 	= Kit::GetParam('width', _POST, _INT, 0);
-		$height	 	= Kit::GetParam('height', _POST, _INT, 0);
+        $height     = Kit::GetParam('height', _POST, _INT, 0);
+		$scale_override = Kit::GetParam('scale_override', _POST, _DOUBLE, 0);
 		
 		// The sequence will not be zero based, so adjust it
 		$seq--;
 		
-		// Get some region imformation
+		// Get some region information
 		$return		= "";
 		$xml		= new DOMDocument("1.0");
 		$region 	= new region($db);
@@ -475,7 +476,7 @@ class timelineDAO extends baseDAO {
             trigger_error($moduleObject->GetErrorMessage(), E_USER_ERROR);
 
         $return .= '<div class="regionPreviewOverlay"></div>';
-        $return .= $moduleObject->Preview($width, $height);
+        $return .= $moduleObject->Preview($width, $height, $scale_override);
 
 		$response->html = $return;
 		$response->extra['type'] = $type;

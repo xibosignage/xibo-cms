@@ -264,6 +264,17 @@ $CLIENT_CONFIG = array(
                         'helpText' => __('Which shell commands should the client execute?'),
                         'enabled' => true,
                         'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'UseCefWebBrowser',
+                        'tabId' => 'advanced',
+                        'title' => __('Use CEF as the Web Browser'),
+                        'type' => _CHECKBOX,
+                        'fieldType' => 'checkbox',
+                        'default' => 1,
+                        'helpText' => __('CEF is Chrome Embedded and offers up to date web rendering. If unselected the default Internet Explorer control will be used.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     )
                 )
             ),

@@ -57,9 +57,11 @@ jQuery.fn.extend({
         // Are we overriding the scale factor?
         // We would only do this from the layout designer
         if (options.scaleOverride != 0) {
-            options.originalWidth = options.previewWidth;
-            options.originalHeight = options.previewHeight;
             options.scaleFactor = options.scaleOverride;
+
+            // Scale the region up by the scale factor provided
+            options.originalWidth = options.previewWidth * options.scaleFactor;
+            options.originalHeight = options.previewHeight * options.scaleFactor;
         }
 
         //console.log("Scale Factor: " + options.scaleFactor);
@@ -286,9 +288,11 @@ jQuery.fn.extend({
             // Are we overriding the scale factor?
             // We would only do this from the layout designer
             if (options.scaleOverride != 0) {
-                options.originalWidth = options.previewWidth;
-                options.originalHeight = options.previewHeight;
                 options.scaleFactor = options.scaleOverride;
+
+                // Scale the region up by the scale factor provided
+                options.originalWidth = options.previewWidth * options.scaleFactor;
+                options.originalHeight = options.previewHeight * options.scaleFactor;
             }
 
             $("body").css({

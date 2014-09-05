@@ -465,7 +465,7 @@ CREATE TABLE IF NOT EXISTS `schedule` (
   `eventID` int(11) NOT NULL AUTO_INCREMENT,
   `CampaignID` int(11) NOT NULL,
   `DisplayGroupIDs` varchar(254) NOT NULL COMMENT 'A list of the display group ids for this event',
-  `recurrence_type` enum('Hour','Day','Week','Month','Year') DEFAULT NULL,
+  `recurrence_type` enum('Minute','Hour','Day','Week','Month','Year') DEFAULT NULL,
   `recurrence_detail` varchar(100) DEFAULT NULL,
   `userID` int(11) NOT NULL,
   `is_priority` tinyint(4) NOT NULL,
