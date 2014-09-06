@@ -1089,6 +1089,7 @@ HTML;
         $output         .= __('Groups');
         $output     .= '<ul class="DisplayList">';
         $nested     = false;
+        $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
         
         while($row = $db->get_assoc_row($results))
         {
@@ -1100,8 +1101,12 @@ HTML;
             // Determine if we are authed against this group.
             $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
 
-            // We should only be able to schedule if we have edit permission or if the SCHEDULE_WITH_VIEW permission is ON
-            if (!$auth->edit && Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'No')
+            // Can schedule with view, but no view permissions
+            if ($scheduleWithView && $display['view'] != 1)
+                continue;
+
+            // Can't schedule with view, but no edit permissions
+            if (!$scheduleWithView && $display['edit'] != 1)
                 continue;
             
             // Do we need to nest yet? We only nest display specific groups
@@ -1327,9 +1332,16 @@ HTML;
         $output .= '    </thead>';
         $output .= '    <tbody>';
 
+        $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+
         foreach($displays as $display)
         {
-            if ($display['edit'] != 1 && Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'No')
+            // Can schedule with view, but no view permissions
+            if ($scheduleWithView && $display['view'] != 1)
+                continue;
+
+            // Can't schedule with view, but no edit permissions
+            if (!$scheduleWithView && $display['edit'] != 1)
                 continue;
 
             // We have permission to edit this layout

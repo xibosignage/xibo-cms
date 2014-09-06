@@ -361,7 +361,7 @@ class DataSetData extends Data
             @unlink($csvFile);
 
             // TODO: Update list content definitions
-
+            $this->updateWatermark = true;
             $this->UpdateWatermark($dataSetId);
 
             return true;
