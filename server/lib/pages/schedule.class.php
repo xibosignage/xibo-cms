@@ -1102,11 +1102,11 @@ HTML;
             $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
 
             // Can schedule with view, but no view permissions
-            if ($scheduleWithView && $display['view'] != 1)
+            if ($scheduleWithView && $auth->view != 1)
                 continue;
 
             // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && $display['edit'] != 1)
+            if (!$scheduleWithView && $auth->edit != 1)
                 continue;
             
             // Do we need to nest yet? We only nest display specific groups
