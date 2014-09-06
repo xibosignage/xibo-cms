@@ -1212,9 +1212,6 @@ HTML;
         $found = false;
         foreach($layouts as $layout)
         {
-            if (!$layout['edit'] == 1)
-                continue;
-
             // We have permission to edit this layout
             $output .= '<tr>';
             $output .= '    <td>' . $layout['campaign'] . '</td>';
