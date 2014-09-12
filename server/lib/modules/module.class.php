@@ -1153,10 +1153,22 @@ END;
         	$this->mediaid	= $new_mediaid;
         	
         	// Find out what we stored this item as
-        	$storedAs = $db->GetSingleValue(sprintf("SELECT StoredAs FROM `media` WHERE mediaid = %d", $new_mediaid), 'StoredAs', _STRING);
-        	$this->SetOption('uri', $storedAs);
+            try {
+                $dbh = PDOConnect::init();
 
-        	Debug::LogEntry('audit', 'New revision uploaded: ' . $storedAs, 'module', 'EditLibraryMedia');
+                $sth = $dbh->prepare('SELECT StoredAs FROM `media` WHERE mediaid = :mediaId');
+                $sth->execute(array('mediaId' => $new_mediaid));
+                
+                $storedAs = Kit::ValidateParam($sth->fetchColumn(0), _FILENAME);
+                $this->SetOption('uri', $storedAs);
+            }
+            catch (Exception $e) {
+                Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+             
+                trigger_error(__('Unable to find uploaded file.'), E_USER_ERROR);
+            }
+
+            Debug::LogEntry('audit', 'New revision uploaded: ' . $storedAs, 'module', 'EditLibraryMedia');
         }
 
         // Edit the media record
