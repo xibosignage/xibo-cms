@@ -86,7 +86,7 @@ class logDAO extends baseDAO {
 
         $formFields['advanced'][] = FormManager::AddCombo(
             'filter_display', 
-            __('Type'), 
+            __('Display'), 
             $filter_display,
             $displays,
             'displayid',
