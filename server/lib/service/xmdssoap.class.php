@@ -1218,7 +1218,7 @@ class XMDSSoap
             return true;
 
         // Test bandwidth for the current month
-        $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
+        $startOfMonth = strtotime(date('m').'/02/'.date('Y').' 00:00:00');
 
         $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = %d', $startOfMonth);
         $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
