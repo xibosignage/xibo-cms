@@ -195,7 +195,13 @@ class XMDSSoap {
         }
 
         // Touch the display record
-        $displayObject->Touch($hardwareKey, $clientAddress, NULL, NULL, $macAddress, $clientType, $clientVersion, $clientCode);
+        $displayObject->Touch($displayid, array(
+            'clientAddress' => $clientAddress,
+            'macAddress' => $macAddress,
+            'clientType' => $clientType,
+            'clientVersion' => $clientVersion,
+            'clientCode' => $clientCode
+            ));
 
         // Log Bandwidth
         $returnXml = $return->saveXML();
@@ -1069,7 +1075,7 @@ class XMDSSoap {
 
         // Touch the display record
         $displayObject = new Display();
-        $displayObject->Touch($hardwareKey, '', $mediaInventoryComplete, $inventory);
+        $displayObject->Touch($this->displayId, array('mediaInventoryStatus' => $mediaInventoryComplete, 'mediaInventoryXml' => $inventory));
 
         return true;
     }
@@ -1144,6 +1150,39 @@ class XMDSSoap {
         return $resource;
     }
 
+    public function NotifyStatus($version, $serverKey, $hardwareKey, $status) {
+        // Sanitize
+        $serverKey = Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
+        $version = Kit::ValidateParam($version, _STRING);
+        $status = Kit::ValidateParam($status, _HTMLSTRING);
+
+        // Make sure we are talking the same language
+        if (!$this->CheckVersion($version))
+            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
+
+        // Check the serverKey matches
+        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+            throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
+
+        // Auth this request...
+        if (!$this->AuthDisplay($hardwareKey))
+            throw new SoapFault('Receiver', 'This display client is not licensed');
+
+        if ($this->isAuditing == 1) 
+            Debug::LogEntry( 'audit', $inventory, 'xmds', 'Status', '', $this->displayId);
+
+        // Touch the display record
+        $displayObject = new Display();
+        $displayObject->Touch($this->displayId, json_decode($status, true));
+
+        return true;
+    }
+
     /**
      * PHONE_HOME if required
      */
@@ -1198,7 +1237,7 @@ class XMDSSoap {
      * @param <type> $hardwareKey
      * @return <type>
      */
-    private function AuthDisplay($hardwareKey) {
+    private function AuthDisplay($hardwareKey, $status = NULL) {
     
         try {
             $dbh = PDOConnect::init();
@@ -1245,10 +1284,6 @@ class XMDSSoap {
                 Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
             }
         
-            // Last accessed date on the display
-            $displayObject = new Display();
-            $displayObject->Touch($hardwareKey, $clientAddress);
-
             // It is licensed?
             $this->licensed = true;
             $this->includeSchedule = $row['inc_schedule'];
@@ -1259,6 +1294,10 @@ class XMDSSoap {
             $this->clientType = $row['client_type'];
             $this->clientVersion = $row['client_version'];
             $this->clientCode = $row['client_code'];
+            
+            // Last accessed date on the display
+            $displayObject = new Display();
+            $displayObject->Touch($this->displayId, array('clientAddress' => $clientAddress));
                 
             return true;
         }
@@ -1301,7 +1340,7 @@ class XMDSSoap {
             // Test bandwidth for the current month
             $sth = $dbh->prepare('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = :month');
             $sth->execute(array(
-                    'month' => strtotime(date('m').'/01/'.date('Y').' 00:00:00')
+                    'month' => strtotime(date('m').'/02/'.date('Y').' 00:00:00')
                 ));
 
             $bandwidthUsage = $sth->fetchColumn(0);

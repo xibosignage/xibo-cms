@@ -36,6 +36,7 @@ class Display extends Data {
     public $licensed;
     public $currentLicensed;
     public $loggedIn;
+    public $lastAccessed;
     public $incSchedule;
     public $emailAlert;
     public $alertTimeout;
@@ -58,6 +59,7 @@ class Display extends Data {
     public $clientVersion;
     public $clientCode;
     public $displayProfileId;
+    public $currentLayoutId;
 
     public $displayGroupId;
     
@@ -87,6 +89,7 @@ class Display extends Data {
             $this->license = Kit::ValidateParam($row['license'], _STRING);
             $this->licensed = Kit::ValidateParam($row['licensed'], _INT);
             $this->loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
+            $this->lastAccessed = Kit::ValidateParam($row['lastaccessed'], _INT);
             $this->incSchedule = Kit::ValidateParam($row['inc_schedule'], _INT);
             $this->emailAlert = Kit::ValidateParam($row['email_alert'], _INT);
             $this->alertTimeout = Kit::ValidateParam($row['alert_timeout'], _INT);
@@ -109,6 +112,7 @@ class Display extends Data {
             $this->clientVersion = Kit::ValidateParam($row['client_version'], _STRING);
             $this->clientCode = Kit::ValidateParam($row['client_code'], _INT);
             $this->displayProfileId = Kit::ValidateParam($row['displayprofileid'], _INT);
+            $this->currentLayoutId = Kit::ValidateParam($row['currentLayoutId'], _INT);
             
             $this->displayGroupId = Kit::ValidateParam($row['displaygroupid'], _INT);
 
@@ -424,95 +428,77 @@ class Display extends Data {
     
     /**
      * Sets the information required on the display to indicate that it is still logged in
-     * @param string  $license                The display licence key
-     * @param string  $clientAddress          The client IP address
-     * @param integer $mediaInventoryComplete The Media Inventory Status
-     * @param string  $mediaInventoryXml      The Media Inventory XML
-     * @param string  $macAddress             The Client Mac Address
-     * @param string  $clientType             The Client Type
-     * @param string  $clientVersion          The Client Version
-     * @param integer $clientCode             The Client Version Code
+     * @param int  $displayId The Display ID
+     * @param array  $status The Display Status
      */
-    public function Touch($license, $clientAddress = '', $mediaInventoryComplete = 0, $mediaInventoryXml = '', $macAddress = '', $clientType = '', $clientVersion = '', $clientCode = 0)
+    public function Touch($displayId, $status = array())
     {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
         
         try {
             $dbh = PDOConnect::init();
 
-            // Set the last accessed flag on the display
-            $SQL  = "";
-            $SQL .= "UPDATE display SET lastaccessed = :lastaccessed, loggedin = :loggedin ";
+            $this->displayId = $displayId;
+            $this->Load();
 
-            $params = array();
-            $params['lastaccessed'] = time();
-            $params['loggedin'] = 1;
-            $params['license'] = $license;
+            // Update last accessed and set to be logged in
+            $this->lastAccessed = time();
+            $this->loggedIn = 1;
 
-            // We will want to update the client Address if it is given
-            if ($clientAddress != '') {
-                $SQL .= " , ClientAddress = :clientaddress ";
-                $params['clientaddress'] = $clientAddress;
-            }
+            // Pull in any of the optional parameters from the status array
+            $this->clientAddress = (Kit::GetParam('clientAddress', $status, _STRING) == '') ? $this->clientAddress : Kit::GetParam('clientAddress', $status, _STRING);
+            $this->mediaInventoryStatus = (Kit::GetParam('mediaInventoryStatus', $status, _INT) == 0) ? $this->mediaInventoryStatus : Kit::GetParam('mediaInventoryStatus', $status, _INT);
+            $this->mediaInventoryXml = (Kit::GetParam('mediaInventoryXml', $status, _HTMLSTRING) == '') ? $this->mediaInventoryXml : Kit::GetParam('mediaInventoryXml', $status, _HTMLSTRING);
+            $this->clientType = (Kit::GetParam('clientType', $status, _STRING) == '') ? $this->clientType : Kit::GetParam('clientType', $status, _STRING);
+            $this->clientVersion = (Kit::GetParam('clientVersion', $status, _STRING) == '') ? $this->clientVersion : Kit::GetParam('clientVersion', $status, _STRING);
+            $this->clientCode = (Kit::GetParam('clientCode', $status, _INT) == 0) ? $this->clientCode : Kit::GetParam('clientCode', $status, _INT);
+            $this->currentLayoutId = (Kit::GetParam('currentLayoutId', $status, _INT) == 0) ? $this->currentLayoutId : Kit::GetParam('currentLayoutId', $status, _INT);
 
-            // Media Inventory Settings (if appropriate)
-            if ($mediaInventoryComplete != 0) {
-                $SQL .= " , MediaInventoryStatus = :mediainventorystatus ";
-                $params['mediainventorystatus'] = $mediaInventoryComplete;
-            }
-
-            if ($mediaInventoryXml != '') {
-                $SQL .= " , MediaInventoryXml = :mediainventoryxml ";
-                $params['mediainventoryxml'] = $mediaInventoryXml;
-            }
-
-            // Client information if present
-            if ($clientType != '') {
-                $SQL .= " , client_type = :client_type ";
-                $params['client_type'] = $clientType;
-            }
-
-            if ($clientVersion != '') {
-                $SQL .= " , client_version = :client_version ";
-                $params['client_version'] = $clientVersion;
-            }
-
-            if ($clientCode != '') {
-                $SQL .= " , client_code = :client_code ";
-                $params['client_code'] = $clientCode;
-            }
-
-            // Mac address storage
-            if ($macAddress != '')
-            {
-                // Address changed.
-                $sth = $dbh->prepare('SELECT MacAddress FROM display WHERE license = :license');
-                $sth->execute(array(
-                        'license' => $license
-                    ));
-
-                if (!$row = $sth->fetch())
-                    $currentAddress = '';
-                else
-                    $currentAddress = $row['MacAddress'];
-
-                if ($macAddress != $currentAddress)
-                {
-                    $SQL .= " , MacAddress = :macaddress, LastChanged = :lastchanged, NumberOfMacAddressChanges = NumberOfMacAddressChanges + 1 ";
-                    $params['macaddress'] = $macAddress;
-                    $params['lastchanged'] = time();
+            // Has the mac address changed
+            if (Kit::GetParam('macAddress', $status, _STRING) != '') {
+                if ($this->macAddress != Kit::GetParam('macAddress', $status, _STRING)) {
+                    // Mac address change detected
+                    $this->macAddress = Kit::GetParam('macAddress', $status, _STRING);
+                    $this->numberOfMacAddressChanges++;
+                    $this->lastChanged = time();
                 }
             }
 
-            // Restrict to the display license
-            $SQL .= " WHERE license = :license";
+            // Save
+            $SQL = '
+                    UPDATE display SET lastaccessed = :lastAccessed, 
+                        loggedin = :loggedIn,
+                        ClientAddress = :clientAddress,
+                        MediaInventoryStatus = :mediaInventoryStatus,
+                        MediaInventoryXml = :mediaInventoryXml,
+                        client_type = :clientType,
+                        client_version = :clientVersion,
+                        client_code = :clientCode,
+                        MacAddress = :macAddress, 
+                        LastChanged = :lastChanged, 
+                        NumberOfMacAddressChanges = :numberOfMacAddressChanges,
+                        currentLayoutId = :currentLayoutId
+                     WHERE displayId = :displayId
+                ';
 
-            // Update the display with its new name (using the license as the key)
+            // Update the display
             $sth = $dbh->prepare($SQL);
-            $sth->execute($params);
-            
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Touch');
-            
+            $sth->execute(array(
+                    'displayId' => $this->displayId,
+                    'lastAccessed' => $this->lastAccessed,
+                    'loggedIn' => $this->loggedIn,
+                    'clientAddress' => $this->clientAddress,
+                    'mediaInventoryStatus' => $this->mediaInventoryStatus,
+                    'mediaInventoryXml' => $this->mediaInventoryXml,
+                    'clientType' => $this->clientType,
+                    'clientVersion' => $this->clientVersion,
+                    'clientCode' => $this->clientCode,
+                    'macAddress' => $this->macAddress,
+                    'lastChanged' => $this->lastChanged,
+                    'numberOfMacAddressChanges' => $this->numberOfMacAddressChanges,
+                    'currentLayoutId' => $this->currentLayoutId
+                ));
+
             return true;
         }
         catch (Exception $e) {

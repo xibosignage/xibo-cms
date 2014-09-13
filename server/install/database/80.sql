@@ -142,6 +142,10 @@ CREATE TABLE IF NOT EXISTS `xmdsnonce` (
 
 ALTER TABLE  `schedule` CHANGE  `recurrence_type`  `recurrence_type` ENUM(  'Minute',  'Hour',  'Day',  'Week',  'Month',  'Year' ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
 
+ALTER TABLE  `display` CHANGE  `client_version`  `client_version` VARCHAR( 15 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
+
+ALTER TABLE  `display` ADD  `currentLayoutId` INT NULL;
+
 UPDATE `version` SET `app_ver` = '1.7.0-alpha', `XmdsVersion` = 4;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '80';

@@ -272,10 +272,6 @@ class scheduleDAO extends baseDAO {
 
         foreach($layouts as $layout) {
 
-            // Permissions?
-            if (!$layout['edit'] == 1)
-                continue;
-
             if ($layout['islayoutspecific'] == 1) {
                 $layoutOptions[] = array(
                         'id' => $layout['campaignid'],
@@ -552,10 +548,6 @@ class scheduleDAO extends baseDAO {
 
         foreach($layouts as $layout) {
 
-            // Permissions?
-            if (!$layout['edit'] == 1)
-                continue;
-
             if ($layout['islayoutspecific'] == 1) {
                 $layoutOptions[] = array(
                         'id' => $layout['campaignid'],
@@ -811,10 +803,6 @@ class scheduleDAO extends baseDAO {
         $campaignOptions = array();
 
         foreach($layouts as $layout) {
-
-            // Permissions?
-            if (!$layout['edit'] == 1)
-                continue;
 
             if ($layout['islayoutspecific'] == 1) {
                 $layoutOptions[] = array(

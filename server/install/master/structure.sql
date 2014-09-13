@@ -88,9 +88,10 @@ CREATE TABLE IF NOT EXISTS `display` (
   `GeoLocation` POINT NULL,
   `version_instructions` varchar(255) NULL,
   `client_type` VARCHAR( 20 ) NULL ,
-  `client_version` VARCHAR( 5 ) NULL ,
+  `client_version` VARCHAR( 15 ) NULL ,
   `client_code` SMALLINT NULL,
   `displayprofileid` int(11) NULL,
+  `currentLayoutId` int(11) NULL,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

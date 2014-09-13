@@ -90,6 +90,14 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 
 date_default_timezone_set(Config::GetSetting('defaultTimezone'));
 
+// What is the production mode of the server?
+if(Config::GetSetting('SERVER_MODE') == 'Test') 
+    ini_set('display_errors', 1);
+
+// Debugging?
+if(Config::GetSetting('debug') == 'On') 
+    error_reporting(E_ALL);
+
 // Work out the location of this service
 $serviceLocation = Kit::GetXiboRoot();
 
