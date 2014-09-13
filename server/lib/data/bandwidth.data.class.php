@@ -22,6 +22,17 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Bandwidth extends Data {
 
+    public static $REGISTER = 1;
+    public static $RF = 2;
+    public static $SCHEDULE = 3;
+    public static $GETFILE = 4;
+    public static $GETRESOURCE = 5;
+    public static $MEDIAINVENTORY = 6;
+    public static $NOTIFYSTATUS = 7;
+    public static $SUBMITSTATS = 8;
+    public static $SUBMITLOG = 9;
+    public static $BLACKLIST = 10;
+
 	public function Log($displayId, $type, $sizeInBytes) {
         try {
             $dbh = PDOConnect::init();

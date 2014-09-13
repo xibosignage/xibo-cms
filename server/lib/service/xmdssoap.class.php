@@ -205,7 +205,7 @@ class XMDSSoap {
 
         // Log Bandwidth
         $returnXml = $return->saveXML();
-        $this->LogBandwidth($displayid, 1, strlen($returnXml));
+        $this->LogBandwidth($displayid, Bandwidth::$REGISTER, strlen($returnXml));
 
         Debug::LogEntry('audit', $returnXml, get_class(), __FUNCTION__);
 
@@ -473,7 +473,7 @@ class XMDSSoap {
         $output = $requiredFilesXml->saveXML();
 
         // Log Bandwidth
-        $this->LogBandwidth($this->displayId, 2, strlen($output));
+        $this->LogBandwidth($this->displayId, Bandwidth::$RF, strlen($output));
 
         return $output;
     }
@@ -583,7 +583,7 @@ class XMDSSoap {
         }
 
         // Log Bandwidth
-        $this->LogBandwidth($this->displayId, 4, $chunkSize);
+        $this->LogBandwidth($this->displayId, Bandwidth::$GETFILE, $chunkSize);
         
         return $file;
     }
@@ -717,7 +717,7 @@ class XMDSSoap {
         $output = $scheduleXml->saveXML();
 
         // Log Bandwidth
-        $this->LogBandwidth($this->displayId, 3, strlen($output));
+        $this->LogBandwidth($this->displayId, Bandwidth::$SCHEDULE, strlen($output));
 
         return $output;
     }
@@ -810,6 +810,8 @@ class XMDSSoap {
             Debug::LogEntry('error', $e->getMessage());
             return new SoapFault("Unable to query for BlackList records.");
         }
+
+        $this->LogBandwidth($this->displayId, Bandwidth::$BLACKLIST, strlen($reason));
 
         return true;
     }
@@ -923,6 +925,8 @@ class XMDSSoap {
             Debug::LogEntry($logType, $message, 'Client', $thread . $method, $date, $this->displayId, $scheduleID, $layoutID, $mediaID);
         }
 
+        $this->LogBandwidth($this->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
+
         return true;
     }
 
@@ -1012,6 +1016,8 @@ class XMDSSoap {
             }
         }
 
+        $this->LogBandwidth($this->displayId, Bandwidth::$SUBMITSTATS, strlen($statXml));
+
         return true;
     }
 
@@ -1076,6 +1082,8 @@ class XMDSSoap {
         // Touch the display record
         $displayObject = new Display();
         $displayObject->Touch($this->displayId, array('mediaInventoryStatus' => $mediaInventoryComplete, 'mediaInventoryXml' => $inventory));
+
+        $this->LogBandwidth($this->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
 
         return true;
     }
@@ -1145,7 +1153,7 @@ class XMDSSoap {
             throw new SoapFault('Receiver', 'Unable to get the media resource');
 
         // Log Bandwidth
-        $this->LogBandwidth($this->displayId, 5, strlen($resource));
+        $this->LogBandwidth($this->displayId, Bandwidth::$GETRESOURCE, strlen($resource));
 
         return $resource;
     }
@@ -1174,11 +1182,13 @@ class XMDSSoap {
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->isAuditing == 1) 
-            Debug::LogEntry( 'audit', $inventory, 'xmds', 'Status', '', $this->displayId);
+            Debug::LogEntry('audit', $status, 'xmds', 'Status', '', $this->displayId);
 
         // Touch the display record
         $displayObject = new Display();
         $displayObject->Touch($this->displayId, json_decode($status, true));
+
+        $this->LogBandwidth($this->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
         return true;
     }
