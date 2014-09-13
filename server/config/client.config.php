@@ -275,6 +275,17 @@ $CLIENT_CONFIG = array(
                         'helpText' => __('CEF is Chrome Embedded and offers up to date web rendering. If unselected the default Internet Explorer control will be used.'),
                         'enabled' => true,
                         'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'SendCurrentLayoutAsStatusUpdate',
+                        'tabId' => 'advanced',
+                        'title' => __('Notify current layout'),
+                        'type' => _CHECKBOX,
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     )
                 )
             ),
