@@ -39,7 +39,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             xkey: 'label',
             ykeys: yKeys,
             labels: labels,
-            stacked: <?php echo (Theme::Get('xmdsLimitSet') == '') ? 'false' : 'true'; ?>
+            stacked: false,
+            postUnits: '<?php echo Theme::Get('bandwidthWidgetUnits'); ?>'
         }
     };
 </script>

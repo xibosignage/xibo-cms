@@ -55,11 +55,13 @@ class displayDAO extends baseDAO
             $filter_pinned = 1;
             $filter_displaygroup = Session::Get('display', 'filter_displaygroup');
             $filter_display = Session::Get('display', 'filter_display');
+            $filter_showThumbnail = Session::Get('display', 'filter_showThumbnail');
         }
         else {
             $filter_pinned = 0;
             $filter_displaygroup = NULL;
             $filter_display = NULL;
+            $filter_showThumbnail = 0;
         }
 
         $formFields = array();
@@ -76,6 +78,10 @@ class displayDAO extends baseDAO
             'displaygroup',
             NULL, 
             'd');
+
+        $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'), 
+            $filter_showThumbnail, NULL, 
+            't');
 
         $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
             $filter_pinned, NULL, 
@@ -330,6 +336,10 @@ class displayDAO extends baseDAO
         $filter_displaygroupid = Kit::GetParam('filter_displaygroup', _POST, _INT);
         setSession('display', 'filter_displaygroup', $filter_displaygroupid);
 
+        // Thumbnail?
+        $filter_showThumbnail = Kit::GetParam('filter_showThumbnail', _REQUEST, _CHECKBOX);
+        setSession('display', 'filter_showThumbnail', $filter_showThumbnail);
+
         // Pinned option?        
         setSession('display', 'DisplayFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
@@ -358,6 +368,10 @@ class displayDAO extends baseDAO
                 array('name' => 'clientaddress', 'title' => __('IP Address')),
                 array('name' => 'macaddress', 'title' => __('Mac Address'))
             );
+        
+        if ($filter_showThumbnail == 1)
+            $cols[] = array('name' => 'thumbnail', 'title' => __('Thumbnail'));
+
         Theme::Set('table_cols', $cols);
         Theme::Set('rowClass', 'mediainventorystatus');
 
@@ -379,6 +393,12 @@ class displayDAO extends baseDAO
 
             // Create some login lights
             $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
+
+            // Thumbnail
+            $row['thumbnail'] = '';
+            if (file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
+                $row['thumbnail'] = '<img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '&width=100&height=100&dynamic=true&thumb=true" />';
+            }
 
             // Schedule Now
             if ($row['edit'] == 1 || Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes') {
@@ -930,6 +950,49 @@ class displayDAO extends baseDAO
 
         $response->SetFormSubmitResponse(__('Wake on Lan command sent.'));
         $response->Respond();
+    }
+
+    public function ScreenShot() {
+        $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+        $width = Kit::GetParam('width', _REQUEST, _INT, 80);
+        $height = Kit::GetParam('height', _REQUEST, _INT, 80);
+        $thumb = Kit::GetParam('thumb', _GET, _BOOL, false);
+        $dynamic = isset($_REQUEST['dynamic']);
+
+        // Output an image if present, otherwise not found image.
+        $file = 'screenshots/' . $displayId . '_screenshot.jpg';
+        
+        // File upload directory.. get this from the settings object
+        $library = Config::GetSetting("LIBRARY_LOCATION");
+        $fileName = $library . $file;
+        
+        if (!file_exists($fileName)) {
+            $fileName = Theme::ImageUrl('forms/filenotfound.gif');
+        }
+
+        $size = filesize($fileName);
+
+        $fi = new finfo( FILEINFO_MIME_TYPE );
+        $mime = $fi->file( $fileName );
+        header("Content-Type: {$mime}");
+
+        //Output a header
+        header('Pragma: public');
+        header('Cache-Control: max-age=86400');
+        header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+        header('Content-Length: ' . $size);
+        
+        // Send via Apache X-Sendfile header?
+        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
+            header("X-Sendfile: $fileName");
+            exit();
+        }
+
+        // Return the file with PHP
+        // Disable any buffering to prevent OOM errors.
+        @ob_end_clean();
+        @ob_end_flush();
+        readfile($fileName);
     }
 }
 ?>

@@ -1193,6 +1193,44 @@ class XMDSSoap {
         return true;
     }
 
+    public function SubmitScreenShot($version, $serverKey, $hardwareKey, $screenShot) {
+        // Sanitize
+        $serverKey = Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
+        $version = Kit::ValidateParam($version, _STRING);
+        $screenShot = Kit::ValidateParam($screenShot, _HTMLSTRING);
+
+        // Make sure we are talking the same language
+        if (!$this->CheckVersion($version))
+            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
+
+        // Check the serverKey matches
+        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+            throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+
+        // Make sure we are sticking to our bandwidth limit
+        if (!$this->CheckBandwidth())
+            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
+
+        // Auth this request...
+        if (!$this->AuthDisplay($hardwareKey))
+            throw new SoapFault('Receiver', 'This display client is not licensed');
+
+        if ($this->isAuditing == 1) 
+            Debug::LogEntry('audit', $screenShot, 'xmds', 'SubmitScreenShot', '', $this->displayId);
+
+        // Open this displays screen shot file and save this.
+        File::EnsureLibraryExists();
+        $location = Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->displayId . '_screenshot.jpg';
+        $fp = fopen($location, 'wb');
+        fwrite($fp, $screenShot);
+        fclose($fp);
+
+        $this->LogBandwidth($this->displayId, Bandwidth::$SCREENSHOT, filesize($location));
+
+        return true;
+    }
+
     /**
      * PHONE_HOME if required
      */

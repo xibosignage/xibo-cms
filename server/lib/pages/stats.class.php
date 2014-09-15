@@ -312,12 +312,22 @@ class statsDAO extends baseDAO
                 'month2' => $toDt
                 );
 
-            $SQL = '
-                SELECT display.display, IFNULL(SUM(Size), 0) AS size 
-                  FROM `bandwidth`
+            $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
+            
+            if ($displayId != 0)
+                $SQL .= ', bandwidthtype.name AS type ';
+
+            $SQL .= ' FROM `bandwidth`
                     INNER JOIN `display`
-                    ON display.displayid = bandwidth.displayid
-                 WHERE month > :month 
+                    ON display.displayid = bandwidth.displayid';
+
+            if ($displayId  != 0)
+                $SQL .= '
+                        INNER JOIN bandwidthtype
+                        ON bandwidthtype.bandwidthtypeid = bandwidth.type
+                    ';
+
+            $SQL .= '  WHERE month > :month 
                     AND month < :month2 ';
 
             if ($displayId != 0) {
@@ -325,10 +335,12 @@ class statsDAO extends baseDAO
                 $params['displayid'] = $displayId;
             }
 
-            $SQL .= '
-                GROUP BY display.display
-                ORDER BY display.display;
-                ';
+            $SQL .= 'GROUP BY display.display ';
+
+            if ($displayId != 0)
+                $SQL .= ' , bandwidthtype.name ';
+
+            $SQL .= 'ORDER BY display.display';
 
             Debug::LogEntry('audit', $SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
 
@@ -339,18 +351,38 @@ class statsDAO extends baseDAO
             // Get the results
             $results = $sth->fetchAll();
 
+            $maxSize = 0;
+            foreach ($results as $library) {
+                $maxSize = ($library['size'] > $maxSize) ? $library['size'] : $maxSize;
+            }
+
+            // Decide what our units are going to be, based on the size
+            $base = floor(log($maxSize) / log(1024));
+
             $output = array();
 
             foreach ($results as $row) {
-                $size = ((double)$row['size']) / 1024 / 1024;
+
+                // label depends whether we are filtered by display
+                if ($displayId != 0) {
+                    $label = $row['type'];
+                }
+                else {
+                    $label = $row['display'];
+                }
+
                 $output[] = array(
-                        'label' => __($row['display']), 
-                        'value' => round($size, 2)
+                        'label' => $label, 
+                        'value' => round((double)$row['size'] / (pow(1024, $base)), 2)
                     );
             }
 
             // Set the data
             Theme::Set('bandwidthWidget', json_encode($output));
+
+            // Set up some suffixes
+            $suffixes = array('bytes', 'k', 'M', 'G', 'T');    
+            Theme::Set('bandwidthWidgetUnits', $suffixes[$base]);
             
             $output = Theme::RenderReturn('stats_page_bandwidth');
 

@@ -146,6 +146,26 @@ ALTER TABLE  `display` CHANGE  `client_version`  `client_version` VARCHAR( 15 ) 
 
 ALTER TABLE  `display` ADD  `currentLayoutId` INT NULL;
 
+CREATE TABLE IF NOT EXISTS `bandwidthtype` (
+  `bandwidthtypeid` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(25) NOT NULL,
+  PRIMARY KEY (`bandwidthtypeid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=12 ;
+
+INSERT INTO `bandwidthtype` (`bandwidthtypeid`, `name`) VALUES
+(1, 'Register'),
+(2, 'Required Files'),
+(3, 'Schedule'),
+(4, 'Get File'),
+(5, 'Get Resource'),
+(6, 'Media Inventory'),
+(7, 'Notify Status'),
+(8, 'Submit Stats'),
+(9, 'Submit Log'),
+(10, 'Blacklist'),
+(11, 'Screen Shot');
+
+
 UPDATE `version` SET `app_ver` = '1.7.0-alpha', `XmdsVersion` = 4;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '80';

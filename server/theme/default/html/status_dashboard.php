@@ -107,7 +107,7 @@ $displays = (is_array($displays)) ? $displays : array();
                 <div class="clearfix"></div>
             </div>
             <div class="widget-body medium no-padding">
-                <div id="bandwidthChart" class="morrisChart" style="height: 230px;"></div>   
+                <div id="bandwidthChart" class="morrisChart" style="width:99%; height: 230px;"></div>   
             </div>
         </div>
     </div>
@@ -124,7 +124,7 @@ $displays = (is_array($displays)) ? $displays : array();
                 <div class="clearfix"></div>
             </div>
             <div class="widget-body medium no-padding">
-                <div id="libraryChart" class="morrisChart" style="height: 230px;"></div>
+                <div id="libraryChart" class="morrisChart" style="width:99%; height: 230px;"></div>
             </div>
         </div>
     </div>

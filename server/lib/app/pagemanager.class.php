@@ -85,7 +85,10 @@ class PageManager
             if (!$user->attempt_login($this->ajax))
                 return false;
 
-            $this->authed = (in_array($this->p, $this->nonPageAuthedPages)) ? true : $user->PageAuth($this->p);
+            if (in_array($this->p, $this->nonPageAuthedPages))
+                $this->authed = true;
+            else
+                $this->authed = $user->PageAuth($this->p);
         }
     }
 	

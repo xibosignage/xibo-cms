@@ -278,3 +278,7 @@ ul.dropdown-menu-form {
   top: 20px;
   bottom: auto;
 }
+
+.display-screenshot {
+  width: 200px;
+}

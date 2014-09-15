@@ -122,7 +122,7 @@ class statusdashboardDAO extends baseDAO {
                 // Output a table showing the displays
                 foreach($displays as $row) {
                     
-                    $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'error' : 'warning');
+                    $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
                     
                     // Assign this to the table row
                     $rows[] = $row;
@@ -147,7 +147,7 @@ class statusdashboardDAO extends baseDAO {
             // Make sure we have the cache location configured
             Kit::ClassLoader('file');
             $file = new File($this->db);
-            $file->EnsureLibraryExists();
+            File::EnsureLibraryExists();
 
             // Use SimplePie to get the feed
             include_once('3rdparty/simplepie/autoloader.php');

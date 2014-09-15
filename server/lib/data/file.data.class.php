@@ -104,7 +104,7 @@ class File extends Data
             $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
             $libraryFolder = $libraryFolder . 'temp';
     
-            if (!$this->EnsureLibraryExists($libraryFolder))
+            if (!File::EnsureLibraryExists($libraryFolder))
                 return false;
     
             // Open a file pointer
@@ -189,7 +189,7 @@ class File extends Data
         }
     }
 
-    public function EnsureLibraryExists()
+    public static function EnsureLibraryExists()
     {
         $libraryFolder 	= Config::GetSetting('LIBRARY_LOCATION');
 
@@ -202,6 +202,9 @@ class File extends Data
 
         if (!file_exists($libraryFolder . '/cache'))
             mkdir($libraryFolder . '/cache', 0777, true);
+
+        if (!file_exists($libraryFolder . '/screenshots'))
+            mkdir($libraryFolder . '/screenshots', 0777, true);
 
         // Check that we are now writable - if not then error
         if (!is_writable($libraryFolder))

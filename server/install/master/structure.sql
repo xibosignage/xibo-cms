@@ -647,6 +647,13 @@ CREATE TABLE IF NOT EXISTS `xmdsnonce` (
   PRIMARY KEY (`nonceId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+CREATE TABLE IF NOT EXISTS `bandwidthtype` (
+  `bandwidthtypeid` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(25) NOT NULL,
+  PRIMARY KEY (`bandwidthtypeid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=12 ;
+
+
 --
 -- Constraints for dumped tables
 --

@@ -723,7 +723,7 @@ class ticker extends Module
         // Make sure we have the cache location configured
         Kit::ClassLoader('file');
         $file = new File($this->db);
-        $file->EnsureLibraryExists();
+        File::EnsureLibraryExists();
 
         // Parse the text template
         $matches = '';

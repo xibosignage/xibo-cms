@@ -179,7 +179,7 @@ class image extends Module
         $width = Kit::GetParam('width', _REQUEST, _INT, 80);
         $height = Kit::GetParam('height', _REQUEST, _INT, 80);
 
-        //File upload directory.. get this from the settings object
+        // File upload directory.. get this from the settings object
         $library = Config::GetSetting("LIBRARY_LOCATION");
         $fileName = $library . $file;
 

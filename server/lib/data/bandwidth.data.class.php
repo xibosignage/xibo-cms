@@ -32,6 +32,7 @@ class Bandwidth extends Data {
     public static $SUBMITSTATS = 8;
     public static $SUBMITLOG = 9;
     public static $BLACKLIST = 10;
+    public static $SCREENSHOT = 11;
 
 	public function Log($displayId, $type, $sizeInBytes) {
         try {

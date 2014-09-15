@@ -39,6 +39,7 @@ require_once('config/db_config.php');
 require_once('config/config.class.php');
 include_once('lib/data/stat.data.class.php');
 require_once('lib/data/display.data.class.php');
+require_once('lib/data/file.data.class.php');
 require_once('lib/service/serviceresponse.class.php');
 require_once('modules/module_user_general.php');
 require_once('lib/modules/module.interface.php');

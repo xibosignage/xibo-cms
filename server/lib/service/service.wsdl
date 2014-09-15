@@ -104,6 +104,15 @@
     <message name="NotifyStatusResponse">
         <part name="success" type="xsd:boolean" />
     </message>
+    <message name="SubmitScreenShotRequest">
+        <part name="version" type="xsd:string" />
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="screenShot" type="xsd:base64Binary" />
+    </message>
+    <message name="SubmitScreenShotResponse">
+        <part name="success" type="xsd:boolean" />
+    </message>
     <portType name="xmdsPortType">
         <operation name="RegisterDisplay">
             <documentation>Register the Display with the CMS</documentation>
@@ -154,6 +163,11 @@
             <documentation>Report back the current status</documentation>
             <input message="tns:NotifyStatusRequest"/>
             <output message="tns:NotifyStatusResponse"/>
+        </operation>
+        <operation name="SubmitScreenShot">
+            <documentation>Submit a screen shot for a display</documentation>
+            <input message="tns:SubmitScreenShotRequest"/>
+            <output message="tns:SubmitScreenShotResponse"/>
         </operation>
     </portType>
     <binding name="xmdsBinding" type="tns:xmdsPortType">
@@ -241,6 +255,15 @@
         </operation>
         <operation name="NotifyStatus">
             <soap:operation soapAction="urn:xmds#NotifyStatus" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="SubmitScreenShot">
+            <soap:operation soapAction="urn:xmds#SubmitScreenShot" style="rpc"/>
             <input>
                 <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
             </input>

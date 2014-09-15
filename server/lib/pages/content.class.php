@@ -93,8 +93,8 @@ class contentDAO extends baseDAO {
                     's');
 
                 $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'), 
-                    $filter_duration_in_seconds, NULL, 
-                    's');
+                    $filter_showThumbnail, NULL, 
+                    't');
 
                 $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
                     $filter_pinned, NULL, 
@@ -403,7 +403,7 @@ class contentDAO extends baseDAO {
             $fileLocation   = $libraryFolder . 'temp/' . $fileId;
 
             // Make sure the library exists
-            $fileObject->EnsureLibraryExists();
+            File::EnsureLibraryExists();
 
             // Save the FILE
             Debug::LogEntry('audit', 'Saving the file to: ' . $fileLocation, 'FileUpload');
