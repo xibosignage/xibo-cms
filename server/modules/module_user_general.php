@@ -505,7 +505,7 @@
                 
             $results = $sth->fetchAll();
 
-            return (count($results > 0));
+            return (count($results) > 0);
         }
         catch (Exception $e) {
             
