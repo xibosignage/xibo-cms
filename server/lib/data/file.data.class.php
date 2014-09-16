@@ -142,7 +142,7 @@ class File extends Data
 
         $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
         $libraryFolder = $libraryFolder . 'temp';
-        return $libraryFolder . '/' . $fileId;
+        return $libraryFolder . DIRECTORY_SEPARATOR . $fileId;
     }
 
     /**

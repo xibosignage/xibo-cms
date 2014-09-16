@@ -274,7 +274,7 @@ class Layout extends Data
                 $layoutNode->setAttribute("height", $row['intended_height']);
                 $layoutNode->setAttribute("resolutionid", $resolutionId);
                 $layoutNode->setAttribute("bgcolor", "#000000");
-                $layoutNode->setAttribute("schemaVersion", Config::Version('XlfVersion'));
+                $layoutNode->setAttribute("schemaVersion", $row['version']);
     
                 $xmlDoc->appendChild($layoutNode);
 

@@ -225,7 +225,8 @@ $CLIENT_CONFIG = array(
                         'options' => array(
                                 array('id' => 'audit', 'value' => 'Audit'),
                                 array('id' => 'info', 'value' => 'Information'),
-                                array('id' => 'error', 'value' => 'Error')
+                                array('id' => 'error', 'value' => 'Error'),
+                                array('id' => 'off', 'value' => 'Off')
                             ),
                         'default' => 'error',
                         'helpText' => __('The position of the cursor when the client starts up.'),

@@ -129,6 +129,10 @@ function XiboInitialise(scope) {
         },
         success: function(element) {
             $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
+        },
+        invalidHandler: function() {
+            // Remove the spinner
+            $(this).closest(".modal-dialog").find(".saving").remove();
         }
     });
 

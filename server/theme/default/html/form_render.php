@@ -196,7 +196,7 @@ if (!$tabs)
 
                                 <?php 
                                 // Option groups?
-                                $groups = is_array($field['optionGroups']) && count($field['optionGroups']) > 0;
+                                $groups = (isset($field['optionGroups']) && is_array($field['optionGroups']) && count($field['optionGroups']) > 0);
                                 if (!$groups)
                                     $field['optionGroups'] = array('label' => 'General');
 
@@ -213,8 +213,8 @@ if (!$tabs)
 
                                     foreach ($options as $item) { 
 
-                                        $class = ($field['classColumn'] == '') ? '' : ' class="' . $item[$field['classColumn']] . '"';
-                                        $style = ($field['styleColumn'] == '') ? '' : ' style="' . $item[$field['styleColumn']] . '"';
+                                        $class = (!isset($field['classColumn']) || $field['classColumn'] == '') ? '' : ' class="' . $item[$field['classColumn']] . '"';
+                                        $style = (!isset($field['styleColumn']) || $field['styleColumn'] == '') ? '' : ' style="' . $item[$field['styleColumn']] . '"';
                                         if ($field['fieldType'] == 'dropdownmulti')
                                             $selected = ((in_array($item[$field['optionId']], $field['value'])) ? 'selected' : '');
                                         else

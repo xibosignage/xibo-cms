@@ -772,6 +772,7 @@ class layoutDAO extends baseDAO
         $resolutionid = (int)$xml->documentElement->getAttribute('resolutionid');
         $width  = $xml->documentElement->getAttribute('width');
         $height = $xml->documentElement->getAttribute('height');
+        $version = (int)$xml->documentElement->getAttribute('schemaVersion');
 
         // Get the display width / height
         if ($resolutionid != 0) {
@@ -784,14 +785,12 @@ class layoutDAO extends baseDAO
         if (!$resolution = $db->GetSingleRow($SQL)) {
             trigger_error(__('Unable to determine display resolution'));
 
-            $version = 1;
             $designerScale = 1;
             $tipScale = 1;
         }
         else {
             // Version 1 layouts had the designer resolution in the XLF and therefore did not need anything scaling in the designer.
             // Version 2 layouts have the layout resolution in the XLF and therefore need to be scaled back by the designer.
-            $version = $resolution['version'];
 
             $tipScale = ($version == 1) ? min($resolution['intended_width'] / $resolution['width'], $resolution['intended_height'] / $resolution['height']) : 1;
             $designerScale = ($version == 1) ? 1 : min($resolution['width'] / $resolution['intended_width'], $resolution['intended_height'] / $resolution['height']);
@@ -899,7 +898,7 @@ class layoutDAO extends baseDAO
         //render the view pane
         $surface = <<<HTML
 
-        <div id="layout" version="$version" class="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; border: 1px solid #000; background:$background_css;">
+        <div id="layout" version="$version" class="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; background:$background_css;">
         $regionHtml
         </div>
 HTML;

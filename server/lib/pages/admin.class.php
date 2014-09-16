@@ -167,7 +167,8 @@ class adminDAO extends baseDAO {
             // Check the library location setting
             if ($setting['setting'] == 'LIBRARY_LOCATION') {
                 // Check for a trailing slash and add it if its not there
-                $value = rtrim($value, '/') . '/';
+                $value = rtrim($value, '/');
+                $value = rtrim($value, '\\') . DIRECTORY_SEPARATOR;
                 
                 // Attempt to add the directory specified
                 if (!file_exists($value . 'temp'))
