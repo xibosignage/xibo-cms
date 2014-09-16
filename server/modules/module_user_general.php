@@ -1552,7 +1552,8 @@ END;
         $SQL .= '    display.MacAddress, ';
         $SQL .= '    display.client_type, ';
         $SQL .= '    display.client_version, ';
-        $SQL .= '    display.client_code ';
+        $SQL .= '    display.client_code, ';
+        $SQL .= '    display.screenShotRequested ';
         $SQL .= '  FROM display ';
         $SQL .= '    INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID ';
         $SQL .= '    INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID ';
@@ -1631,6 +1632,7 @@ END;
             $displayItem['client_type'] = Kit::ValidateParam($row['client_type'], _STRING);
             $displayItem['client_version'] = Kit::ValidateParam($row['client_version'], _STRING);
             $displayItem['client_code'] = Kit::ValidateParam($row['client_code'], _STRING);
+            $displayItem['screenShotRequested'] = Kit::ValidateParam($row['screenShotRequested'], _INT);
 
             $auth = $this->DisplayGroupAuth($displayItem['displaygroupid'], true);
 

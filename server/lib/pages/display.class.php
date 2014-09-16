@@ -369,8 +369,10 @@ class displayDAO extends baseDAO
                 array('name' => 'macaddress', 'title' => __('Mac Address'))
             );
         
-        if ($filter_showThumbnail == 1)
+        if ($filter_showThumbnail == 1) {
+            $cols[] = array('name' => 'screenShotRequested', 'title' => __('Screen shot?'), 'icons' => true);
             $cols[] = array('name' => 'thumbnail', 'title' => __('Thumbnail'));
+        }
 
         Theme::Set('table_cols', $cols);
         Theme::Set('rowClass', 'mediainventorystatus');
@@ -396,8 +398,31 @@ class displayDAO extends baseDAO
 
             // Thumbnail
             $row['thumbnail'] = '';
-            if (file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
-                $row['thumbnail'] = '<img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '&width=100&height=100&dynamic=true&thumb=true" />';
+            if ($filter_showThumbnail == 1 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
+                $row['thumbnail'] = '<img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '" />';
+            }
+
+            // Edit and Delete buttons first
+            if ($row['edit'] == 1) {
+                // Edit
+                $row['buttons'][] = array(
+                        'id' => 'display_button_edit',
+                        'url' => 'index.php?p=display&q=displayForm&displayid=' . $row['displayid'],
+                        'text' => __('Edit')
+                    );
+            }
+
+            // Delete
+            if ($row['del'] == 1) {
+                $row['buttons'][] = array(
+                        'id' => 'display_button_delete',
+                        'url' => 'index.php?p=display&q=DeleteForm&displayid=' . $row['displayid'],
+                        'text' => __('Delete')
+                    );
+            }
+
+            if ($row['edit'] == 1 || $row['del'] == 1) {
+                $row['buttons'][] = array('linkType' => 'divider');
             }
 
             // Schedule Now
@@ -409,13 +434,6 @@ class displayDAO extends baseDAO
                     );
             }
 
-            // Media Inventory
-            $row['buttons'][] = array(
-                    'id' => 'display_button_mediainventory',
-                    'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $row['displayid'],
-                    'text' => __('Media Inventory')
-                );
-
             if ($row['edit'] == 1) {
 
                 // Default Layout
@@ -425,20 +443,6 @@ class displayDAO extends baseDAO
                         'text' => __('Default Layout')
                     );
 
-                // Edit
-                $row['buttons'][] = array(
-                        'id' => 'display_button_edit',
-                        'url' => 'index.php?p=display&q=displayForm&displayid=' . $row['displayid'],
-                        'text' => __('Edit')
-                    );
-
-                // Wake On LAN
-                $row['buttons'][] = array(
-                        'id' => 'display_button_wol',
-                        'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $row['displayid'],
-                        'text' => __('Wake on LAN')
-                    );
-
                 // File Associations
                 $row['buttons'][] = array(
                         'id' => 'displaygroup_button_fileassociations',
@@ -446,22 +450,33 @@ class displayDAO extends baseDAO
                         'text' => __('Assign Files')
                     );
 
+                // Screen Shot
+                $row['buttons'][] = array(
+                        'id' => 'display_button_requestScreenShot',
+                        'url' => 'index.php?p=display&q=RequestScreenShotForm&displayId=' . $row['displayid'],
+                        'text' => __('Request Screen Shot')
+                    );
+
+                $row['buttons'][] = array('linkType' => 'divider');
+            }
+
+            // Media Inventory
+            $row['buttons'][] = array(
+                    'id' => 'display_button_mediainventory',
+                    'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $row['displayid'],
+                    'text' => __('Media Inventory')
+                );
+
+            if ($row['edit'] == 1) {
+
                 // Logs
                 $row['buttons'][] = array(
                         'id' => 'displaygroup_button_logs',
                         'url' => 'index.php?p=log&q=LastHundredForDisplay&displayid=' . $row['displayid'],
-                        'text' => __('Last 100 Log Messages')
+                        'text' => __('Recent Log')
                     );
-            }
 
-            if ($row['del'] == 1) {
-
-                // Delete
-                $row['buttons'][] = array(
-                        'id' => 'display_button_delete',
-                        'url' => 'index.php?p=display&q=DeleteForm&displayid=' . $row['displayid'],
-                        'text' => __('Delete')
-                    );
+                $row['buttons'][] = array('linkType' => 'divider');
             }
 
             if ($row['modifypermissions'] == 1) {
@@ -485,6 +500,17 @@ class displayDAO extends baseDAO
                         'id' => 'display_button_version_instructions',
                         'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'] . '&displayid=' . $row['displayid'],
                         'text' => __('Version Information')
+                    );
+
+                $row['buttons'][] = array('linkType' => 'divider');
+            }
+
+            if ($row['edit'] == 1) {
+                // Wake On LAN
+                $row['buttons'][] = array(
+                        'id' => 'display_button_wol',
+                        'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $row['displayid'],
+                        'text' => __('Wake on LAN')
                     );
             }
 
@@ -954,11 +980,7 @@ class displayDAO extends baseDAO
 
     public function ScreenShot() {
         $displayId = Kit::GetParam('DisplayId', _GET, _INT);
-        $width = Kit::GetParam('width', _REQUEST, _INT, 80);
-        $height = Kit::GetParam('height', _REQUEST, _INT, 80);
-        $thumb = Kit::GetParam('thumb', _GET, _BOOL, false);
-        $dynamic = isset($_REQUEST['dynamic']);
-
+        
         // Output an image if present, otherwise not found image.
         $file = 'screenshots/' . $displayId . '_screenshot.jpg';
         
@@ -977,22 +999,51 @@ class displayDAO extends baseDAO
         header("Content-Type: {$mime}");
 
         //Output a header
-        header('Pragma: public');
-        header('Cache-Control: max-age=86400');
-        header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+        header('Cache-Control: no-cache, must-revalidate');
         header('Content-Length: ' . $size);
         
-        // Send via Apache X-Sendfile header?
-        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
-            header("X-Sendfile: $fileName");
-            exit();
-        }
-
         // Return the file with PHP
         // Disable any buffering to prevent OOM errors.
         @ob_end_clean();
         @ob_end_flush();
         readfile($fileName);
+    }
+
+    public function RequestScreenShotForm() {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        $displayId = Kit::GetParam('displayId', _GET, _INT);
+
+        // Set some information about the form
+        Theme::Set('form_id', 'RequestScreenShotForm');
+        Theme::Set('form_action', 'index.php?p=display&q=RequestScreenShot');
+        Theme::Set('form_meta', '<input type="hidden" name="displayId" value="' . $displayId . '">');
+
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to request a screen shot? The next time the client connects to the CMS the screen shot will be sent.'))));
+
+        $response->SetFormRequestResponse(NULL, __('Request Screen Shot'), '300px', '250px');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Request'), '$("#RequestScreenShotForm").submit()');
+        $response->Respond();
+    }
+
+    public function RequestScreenShot() {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+        
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $displayObject  = new Display($db);
+
+        $displayId = Kit::GetParam('displayId', _POST, _INT);
+
+        if (!$displayObject->RequestScreenShot($displayId))
+            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Request Sent.'));
+        $response->Respond();
     }
 }
 ?>

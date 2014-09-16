@@ -165,6 +165,7 @@ INSERT INTO `bandwidthtype` (`bandwidthtypeid`, `name`) VALUES
 (10, 'Blacklist'),
 (11, 'Screen Shot');
 
+ALTER TABLE  `display` ADD  `screenShotRequested` TINYINT NOT NULL DEFAULT  '0';
 
 UPDATE `version` SET `app_ver` = '1.7.0-alpha', `XmdsVersion` = 4;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

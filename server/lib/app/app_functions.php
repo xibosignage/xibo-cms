@@ -40,112 +40,6 @@ function setMessage($message) {
 	$_SESSION['message'] = $message;
 }
 
-// Returns a drop down list based on the provided SQL - the ID should be the first field, and the name the second
-function dropdownlist($SQL, $list_name, $selected = "", $callback = "", $flat_list = false, $checkPermissions = false, $userid = "", $permissionLevel = "see", $useQueryId = false) {
-	global $db;
-	global $user;
-
-	if (!$result = $db->query($SQL)) 
-	{
-		trigger_error($db->error());
-		return "Query Error";
-	}
-	
-	if ($db->num_rows($result)==0) 
-	{
-		$list = "No selections available";
-		return $list;
-	}
-	
-	if ($flat_list) 
-	{
-		//we want to generate a flat list of option | value pairs
-		$list = "";
-	
-		while ($results = $db->get_row($result)) 
-		{
-			$col0 = $results[0];
-			$col1 = $results[1];
-			
-			if ($checkPermissions) 
-			{
-				$permissionid = $results[2];
-				$ownerid	  = $results[3];
-				
-				if ($useQueryId)
-				{
-					list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $col0);					
-				}
-				else
-				{
-					list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $userid);
-				}
-
-				if (($permissionLevel == "see" && $see_permissions) || $permissionLevel == "edit" && $edit_permissions) {
-					$list .= "$col0|$col1,";
-				}
-			}
-			else 
-			{
-				$list .= "$col0|$col1,";
-			}
-		}
-		//trim the commas
-		$list = rtrim($list,",");
-	}
-	else 
-	{
-		$list = <<<END
-		<select name="$list_name" id="$list_name" $callback>
-END;
-		while ($results = $db->get_row($result)) 
-		{
-			$col0 = $results[0];
-			$col1 = $results[1];
-			
-			if ($checkPermissions) 
-			{
-				$permissionid = $results[2];
-				$ownerid	  = $results[3];
-				
-				if ($useQueryId)
-				{
-					list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $col0);					
-				}
-				else
-				{
-					list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $userid);
-				}
-
-				if (($permissionLevel == "see" && $see_permissions) || $permissionLevel == "edit" && $edit_permissions) 
-				{
-					if ($col0 == $selected) 
-					{
-						$list .= "<option value='" . $col0 . "' selected>" . $col1 . "</option>\n";
-					}
-					else 
-					{
-						$list .= "<option value='" . $col0 . "'>" . $col1 . "</option>\n";
-					}
-				}
-			}
-			else 
-			{
-				if ($col0 == $selected) 
-				{
-					$list .= "<option value='" . $col0 . "' selected>" . $col1 . "</option>\n";
-				}
-				else 
-				{
-					$list .= "<option value='" . $col0 . "'>" . $col1 . "</option>\n";
-				}
-			}
-		}
-		$list .= "</select>\n";
-	}
-	return $list;
-}
-
 function listcontent($list_string, $list_name, $selected = "", $callback = "") 
 {
 	//generates a list based on a list option | value, list
@@ -180,47 +74,6 @@ END;
 	return $list;
 }
 
-
-//generates a list of all the users - assuming that the SQL given contains userid's
-function userlist($SQL) 
-{
-	global $db;
-	global $user;
-
-	if (!$result = $db->query($SQL)) 
-	{
-		trigger_error($db->error());
-		return "Query Error";
-	}
-	
-	if ($db->num_rows($result)==0) 
-	{
-		$list = "No selections available";
-		return $list;
-	}
-	
-	while ($row = $db->get_row($result)) 
-	{
-	
-		$userid 	= $row[0];
-		$username 	= $user->getNameFromID($userid);
-		
-		$user_ids[] = array('id'=>$userid);
-		$user_names[] = array('name'=>$username);
-	}
-	
-	array_multisort($user_names, SORT_DESC, $user_ids, SORT_ASC); //sorts the two arrays, so that the usernames are Alpha sorted, and the ID's tag along
-
-	$list = "";
-	foreach ($user_names as $key => $row) 
-	{
-		
-		if($list != "") $list .= ","; //if we arnt equal to the first, append a seperator
-		
-		$list .= $user_ids[$key]['id']."|".$row['name'];
-	}
-	return $list;
-}
 
 /**
  * Sets a session variable from a javascript call (so when we XMLHTTPRequest we can set a sesson var)
@@ -267,30 +120,6 @@ function sec2hms($sec, $padHours = false)
 
 	// done!
 	return $hms;
-}
-
-/**
- * Gets web safe colors
- * @return 
- */
-function gwsc() 
-{
-	$colors = array();
-    $cs = array('00', '33', '66', '99', 'CC', 'FF');
-	
-    for($i=0; $i<6; $i++) 
-	{
-        for($j=0; $j<6; $j++) 
-		{
-            for($k=0; $k<6; $k++) 
-			{
-                $c = $cs[$i] .$cs[$j] .$cs[$k];
-				$colors[] = array('colorid' => $c, 'color' => '#' . $c, 'style' => 'background-color:#' . $c . ';color:#' . $c);
-			}
-        }
-    }
-	
-	return $colors;
 }
 
 /**

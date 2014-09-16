@@ -80,7 +80,7 @@ class XMDSSoap {
         try {
             $dbh = PDOConnect::init();
             $sth = $dbh->prepare('
-                SELECT licensed, display, displayid, displayprofileid, client_type, version_instructions
+                SELECT licensed, display, displayid, displayprofileid, client_type, version_instructions, screenShotRequested
                   FROM display 
                 WHERE license = :hardwareKey');
 
@@ -126,6 +126,7 @@ class XMDSSoap {
             $display = Kit::ValidateParam($row['display'], _STRING);
             $clientType = Kit::ValidateParam($row['client_type'], _WORD);
             $versionInstructions = Kit::ValidateParam($row['version_instructions'], _HTMLSTRING);
+            $screenShotRequested = Kit::ValidateParam($row['screenShotRequested'], _INT);
 
             // Determine if we are licensed or not
             if ($row['licensed'] == 0) {
@@ -170,12 +171,22 @@ class XMDSSoap {
                                 'value' => $display,
                                 'type' => 'string'
                             );
+                            $config[] = array(
+                                'name' => 'ScreenShotRequested',
+                                'value' => $screenShotRequested,
+                                'type' => 'checkbox'
+                            );
                         }
                         else {
                             $config[] = array(
                                 'name' => 'displayName',
                                 'value' => $display,
                                 'type' => 'string'
+                            );
+                            $config[] = array(
+                                'name' => 'screenShotRequested',
+                                'value' => $screenShotRequested,
+                                'type' => 'checkbox'
                             );
                         }
 
@@ -876,8 +887,8 @@ class XMDSSoap {
             // This will be a bunch of trace nodes
             $message = $node->textContent;
 
-            if ($this->isAuditing == 1) 
-                Debug::LogEntry("audit", 'Trace Message: [' . $message . ']', "xmds", "SubmitLog", "", $this->displayId);
+            // if ($this->isAuditing == 1) 
+            //    Debug::LogEntry("audit", 'Trace Message: [' . $message . ']', "xmds", "SubmitLog", "", $this->displayId);
 
             // Each element should have a category and a date
             $date = $node->getAttribute('date');
@@ -1217,7 +1228,7 @@ class XMDSSoap {
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->isAuditing == 1) 
-            Debug::LogEntry('audit', $screenShot, 'xmds', 'SubmitScreenShot', '', $this->displayId);
+            Debug::LogEntry('audit', 'Received Screenshot', 'xmds', 'SubmitScreenShot', '', $this->displayId);
 
         // Open this displays screen shot file and save this.
         File::EnsureLibraryExists();
@@ -1225,6 +1236,10 @@ class XMDSSoap {
         $fp = fopen($location, 'wb');
         fwrite($fp, $screenShot);
         fclose($fp);
+
+        // Touch the display record
+        $displayObject = new Display();
+        $displayObject->Touch($this->displayId, array('screenShotRequested' => 0));
 
         $this->LogBandwidth($this->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 

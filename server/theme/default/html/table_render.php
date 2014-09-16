@@ -58,7 +58,9 @@ $rowClass = (Theme::Get('rowClass') != '') ? Theme::Get('rowClass') : '';
     				</button>
     				<ul class="dropdown-menu">
 						<?php foreach($row['buttons'] as $button) {
-							if (isset($button['linkType']) && $button['linkType'] != '') { ?>
+							if (isset($button['linkType']) && $button['linkType'] == 'divider') { ?>
+								<li class="divider"></li>
+							<?php } else if (isset($button['linkType']) && $button['linkType'] != '') { ?>
 								<li><a tabindex="-1" target="<?php echo $button['linkType']; ?>" href="<?php echo $button['url']; ?>"><?php echo $button['text']; ?></a></li>
 							<?php } else { ?>
 								<li class="<?php echo (isset($button['class']) ? $button['class'] : 'XiboFormButton'); ?>" href="<?php echo $button['url']; ?>"><a tabindex="-1" href="#"><?php echo $button['text']; ?></a></li>

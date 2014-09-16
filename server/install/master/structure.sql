@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS `display` (
   `client_code` SMALLINT NULL,
   `displayprofileid` int(11) NULL,
   `currentLayoutId` int(11) NULL,
+  `screenShotRequested` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

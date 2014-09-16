@@ -60,6 +60,7 @@ class Display extends Data {
     public $clientCode;
     public $displayProfileId;
     public $currentLayoutId;
+    public $screenShotRequested;
 
     public $displayGroupId;
     
@@ -113,6 +114,7 @@ class Display extends Data {
             $this->clientCode = Kit::ValidateParam($row['client_code'], _INT);
             $this->displayProfileId = Kit::ValidateParam($row['displayprofileid'], _INT);
             $this->currentLayoutId = Kit::ValidateParam($row['currentLayoutId'], _INT);
+            $this->screenShotRequested = Kit::ValidateParam($row['screenShotRequested'], _INT);
             
             $this->displayGroupId = Kit::ValidateParam($row['displaygroupid'], _INT);
 
@@ -453,6 +455,7 @@ class Display extends Data {
             $this->clientVersion = (Kit::GetParam('clientVersion', $status, _STRING) == '') ? $this->clientVersion : Kit::GetParam('clientVersion', $status, _STRING);
             $this->clientCode = (Kit::GetParam('clientCode', $status, _INT) == 0) ? $this->clientCode : Kit::GetParam('clientCode', $status, _INT);
             $this->currentLayoutId = (Kit::GetParam('currentLayoutId', $status, _INT) == 0) ? $this->currentLayoutId : Kit::GetParam('currentLayoutId', $status, _INT);
+            $this->screenShotRequested = (Kit::GetParam('screenShotRequested', $status, _INT, -1) == -1) ? $this->screenShotRequested : Kit::GetParam('screenShotRequested', $status, _INT);
 
             // Has the mac address changed
             if (Kit::GetParam('macAddress', $status, _STRING) != '') {
@@ -477,7 +480,8 @@ class Display extends Data {
                         MacAddress = :macAddress, 
                         LastChanged = :lastChanged, 
                         NumberOfMacAddressChanges = :numberOfMacAddressChanges,
-                        currentLayoutId = :currentLayoutId
+                        currentLayoutId = :currentLayoutId,
+                        screenShotRequested = :screenShotRequested
                      WHERE displayId = :displayId
                 ';
 
@@ -496,7 +500,8 @@ class Display extends Data {
                     'macAddress' => $this->macAddress,
                     'lastChanged' => $this->lastChanged,
                     'numberOfMacAddressChanges' => $this->numberOfMacAddressChanges,
-                    'currentLayoutId' => $this->currentLayoutId
+                    'currentLayoutId' => $this->currentLayoutId,
+                    'screenShotRequested' => $this->screenShotRequested
                 ));
 
             return true;
@@ -505,6 +510,10 @@ class Display extends Data {
             Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25002, __("Error updating this displays last accessed information."));
         }
+    }
+
+    public function RequestScreenShot($displayId) {
+        return $this->Touch($displayId, array('screenShotRequested' => 1));
     }
 
     /**
