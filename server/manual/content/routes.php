@@ -153,6 +153,8 @@ $allowed_routes = array(
 		'admin/release_notes_1.6.0',
 		'admin/release_notes_1.6.1',
 		'admin/release_notes_1.6.2',
+		'admin/release_notes_1.6.3',
+		'admin/release_notes_1.7.0-alpha',
 		'admin/pyclient_libbrowsernode_build'
 	);
 

@@ -41,7 +41,7 @@ class sessionsDAO extends baseDAO {
         }
         else {
         	$filter_pinned = 0;
-            $filter_type = 0;
+            $filter_type = '0';
             $filter_fromdt = NULL;
         }
 
@@ -52,7 +52,7 @@ class sessionsDAO extends baseDAO {
             'filter_type', 
             __('Type'), 
             $filter_type,
-            array(array('typeid' => 0, 'type' => 'All'), array('typeid' => 'active', 'type' => 'Active'), array('typeid' => 'guest', 'type' => 'Guest'), array('typeid' => 'expired', 'type' => 'Expired')),
+            array(array('typeid' => '0', 'type' => 'All'), array('typeid' => 'active', 'type' => 'Active'), array('typeid' => 'guest', 'type' => 'Guest'), array('typeid' => 'expired', 'type' => 'Expired')),
             'typeid',
             'type',
             NULL, 
