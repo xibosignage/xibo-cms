@@ -143,27 +143,38 @@ class scheduleDAO extends baseDAO {
                 //$class = 'event-warning';
             
                 // Event is on a single display
-                if (count($eventDisplayGroupIds) <= 1)
+                if (count($eventDisplayGroupIds) <= 1) {
                     $class = 'event-info';
-                else
+                    $extra = 'single-display';
+                }
+                else {
                     $class = "event-success";
+                    $extra = 'multi-display';
+                }
 
-                if ($row['recurrence_type'] != '')
+                if ($row['recurrence_type'] != '') {
                     $class = 'event-special';
+                    $extra = 'recurring';
+                }
 
                 // Priority event
-                if ($row['is_priority'] == 1)
+                if ($row['is_priority'] == 1) {
                     $class = 'event-important';
+                    $extra = 'priority';
+                }
 
                 // Is this event editable?
-                if (!$editable)
+                if (!$editable) {
                     $class = 'event-inverse';
+                    $extra = 'view-only';
+                }
 
                 $events[] = array(
                     'id' => $row['EventID'],
                     'title' => $title,
                     'url' => $url,
                     'class' => 'XiboFormButton ' . $class,
+                    'extra' => $extra,
                     'start' => $row['FromDT'] * 1000,
                     'end' => $row['ToDT'] * 1000
                 );

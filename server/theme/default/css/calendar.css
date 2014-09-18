@@ -25,3 +25,7 @@
  #cal-week-box {
  	z-index: 1000;
  }
+
+ .cal-legend ul {
+ 	list-style: none;
+ }

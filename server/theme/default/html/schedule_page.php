@@ -65,3 +65,16 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <div id="Calendar"></div>
     </div>
 </div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="cal-legend">
+            <ul>
+                <li class="event-info"><span class="fa fa-desktop"></span> <?php echo Theme::Translate('Single Display'); ?></li>
+                <li class="event-success"><span class="fa fa-desktop"></span> <?php echo Theme::Translate('Multi Display'); ?></li>
+                <li class="event-important"><span class="fa fa-bullseye"></span> <?php echo Theme::Translate('Priority'); ?></li>
+                <li class="event-special"><span class="fa fa-repeat"></span> <?php echo Theme::Translate('Recurring'); ?></li>
+                <li class="event-inverse"><span class="fa fa-lock"></span> <?php echo Theme::Translate('View Permission Only'); ?></li>
+            </ul>
+        </div>
+    </div>
+</div>

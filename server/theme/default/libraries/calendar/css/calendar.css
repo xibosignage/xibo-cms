@@ -312,15 +312,6 @@
 }
 .event {
   display: block;
-  background-color: #c3c3c3;
-  width: 12px;
-  height: 12px;
-  margin-right: 2px;
-  margin-bottom: 2px;
-  -webkit-box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 0.4);
-  box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 0.4);
-  border-radius: 8px;
-  border: 1px solid #ffffff;
 }
 .event-block {
   display: block;
@@ -332,22 +323,22 @@
   margin-top: 3px;
 }
 .event-important {
-  background-color: #ad2121;
+  color: #ad2121;
 }
 .event-info {
-  background-color: #1e90ff;
+  color: #1e90ff;
 }
 .event-warning {
-  background-color: #e3bc08;
+  color: #e3bc08;
 }
 .event-inverse {
-  background-color: #1b1b1b;
+  color: #1b1b1b;
 }
 .event-success {
-  background-color: #006400;
+  color: #006400;
 }
 .event-special {
-  background-color: #800080;
+  color: #800080;
 }
 .day-highlight:hover,
 .day-highlight {
