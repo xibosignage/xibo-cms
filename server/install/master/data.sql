@@ -84,7 +84,10 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (78, 'User', 'SetPassword', 'manual/single.php?p=users/users#Set_Password'),
 (79, 'DataSet', 'ImportCSV', 'manual/single.php?p=content/content_dataset#Import_CSV'),
 (80, 'DisplayGroup', 'FileAssociations', 'manual/single.php?p=admin/fileassociations'),
-(81, 'Statusdashboard', 'General', 'manual/single.php?p=coreconcepts/dashboard#Status_Dashboard');
+(81, 'Statusdashboard', 'General', 'manual/single.php?p=coreconcepts/dashboard#Status_Dashboard'),
+(82, 'Displayprofile', 'General', 'manual/single.php?p=admin/displayprofiles'),
+(83, 'DisplayProfile', 'Edit', 'manual/single.php?p=admin/displayprofiles#edit'),
+(84, 'DisplayProfile', 'Delete', 'manual/single.php?p=admin/displayprofiles#delete');
 
 INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
 (8, 'Administration Menu'),

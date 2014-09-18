@@ -118,7 +118,10 @@ class clock extends Module
                     'c');
 
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
-            __('The duration in seconds this item should be displayed'), 'd', 'required');
+            __('The duration in seconds this item should be displayed.'), 'd', 'required');
+
+        $formFields[] = FormManager::AddNumber('offset', __('Offset'), NULL, 
+            __('The offset in minutes that should be applied to the current time.'), 'o', NULL, 'offset-control-group');
 
         // Offer a choice of theme
         $formFields[] = FormManager::AddCombo(
@@ -174,6 +177,7 @@ class clock extends Module
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
         $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
         $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
+        $this->SetOption('offset', Kit::GetParam('offset', _POST, _INT, 0));
         $this->SetRaw('<format><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></format>');
 
         // Should have built the media object entirely by this time
@@ -234,6 +238,10 @@ class clock extends Module
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this item should be displayed'), 'd', 'required');
 
+
+        $formFields[] = FormManager::AddNumber('offset', __('Offset'), $this->GetOption('offset'), 
+            __('The offset in minutes that should be applied to the current time.'), 'o', NULL, 'offset-control-group');
+
         // Offer a choice of theme
         $formFields[] = FormManager::AddCombo(
                     'themeid', 
@@ -248,7 +256,7 @@ class clock extends Module
 
         $formFields[] = FormManager::AddMessage(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY].'), 'digital-control-group');
         
-        $formFields[] = FormManager::AddMultiText('ta_text', (($formatNode != NULL) ? $formatNode->nodeValue : ''), '[HH:mm]', 
+        $formFields[] = FormManager::AddMultiText('ta_text', NULL, (($formatNode != NULL) ? $formatNode->nodeValue : ''), 
             __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
 
         Theme::Set('form_fields', $formFields);
@@ -294,6 +302,7 @@ class clock extends Module
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
         $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
         $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
+        $this->SetOption('offset', Kit::GetParam('offset', _POST, _INT, 0));
         $this->SetRaw('<format><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></format>');
 
         // Should have built the media object entirely by this time
@@ -315,19 +324,22 @@ class clock extends Module
         $clockTypeId_1 = array(
                 '.analogue-control-group' => array('display' => 'block'),
                 '.digital-control-group' => array('display' => 'none'),
-                '.flip-control-group' => array('display' => 'none')
+                '.flip-control-group' => array('display' => 'none'),
+                '.offset-control-group' => array('display' => 'block')
             );
 
         $clockTypeId_2 = array(
                 '.analogue-control-group' => array('display' => 'none'),
                 '.digital-control-group' => array('display' => 'block'),
-                '.flip-control-group' => array('display' => 'none')
+                '.flip-control-group' => array('display' => 'none'),
+                '.offset-control-group' => array('display' => 'block')
             );
 
         $clockTypeId_3 = array(
                 '.analogue-control-group' => array('display' => 'none'),
                 '.digital-control-group' => array('display' => 'none'),
-                '.flip-control-group' => array('display' => 'block')
+                '.flip-control-group' => array('display' => 'block'),
+                '.offset-control-group' => array('display' => 'none')
             );
             
         $this->response->AddFieldAction('clockTypeId', 'init', 1, $clockTypeId_1);
@@ -381,6 +393,7 @@ class clock extends Module
                 
                 // Light or dark?
                 $template = str_replace('<!--[[[CLOCK_THEME]]]-->', $theme, $template);
+                $template = str_replace('<!--[[[OFFSET]]]-->', $this->GetOption('offset', 0), $template);
 
                 // After body content
                 $javaScriptContent  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
@@ -431,7 +444,7 @@ class clock extends Module
 
                     function updateClock() {
                         $(".clock").each(function() {
-                            $(this).html(moment().format($(this).attr("format")));
+                            $(this).html(moment().add(' . $this->GetOption('offset', 0) . ', "m").format($(this).attr("format")));
                         });
                     }
 
@@ -491,6 +504,7 @@ class clock extends Module
 
                 // Head Content (CSS for flip clock)
                 $template = str_replace('<!--[[[HEADCONTENT]]]-->', '<style type="text/css">' . file_get_contents('modules/preview/vendor/flipclock.css') . '</style>', $template);
+                $template = str_replace('<!--[[[OFFSET]]]-->', $this->GetOption('offset', 0), $template);
 
                 // After body content
                 $javaScriptContent  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';

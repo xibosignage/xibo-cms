@@ -63,6 +63,8 @@
                 clockFace: 'TwentyFourHourClock',
                 includedSeconds: false
             });
+
+            clock.setTime(clock.getTime() + (<!--[[[OFFSET]]]--> * 60 * 1000));
         });
     </script>
 </html>
