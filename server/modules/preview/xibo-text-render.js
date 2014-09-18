@@ -176,7 +176,7 @@ jQuery.fn.extend({
             // What IE are we?
             if ($("body").hasClass('ie7') || $("body").hasClass('ie8')) {
                 $(this).css({
-                    "zoom": options.scaleFactor
+                    "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + options.scaleFactor + ", M12=0, M21=0, M22=" + options.scaleFactor + ", SizingMethod='auto expand'"
                 });
             }
             else {
@@ -299,7 +299,7 @@ jQuery.fn.extend({
             // What IE are we?
             if ($("body").hasClass('ie7') || $("body").hasClass('ie8')) {
                 $("body").css({
-                    "zoom": options.scaleFactor
+                    "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + options.scaleFactor + ", M12=0, M21=0, M22=" + options.scaleFactor + ", SizingMethod='auto expand'"
                 });
             }
             else {

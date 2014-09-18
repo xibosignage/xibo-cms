@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner and James Packer
+ * Copyright (C) 2006-2014 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -22,6 +22,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
  
 class Config 
 {
+	public static $VERSION_REQUIRED = '5.3.3';
+
 	private $extensions;
 	private $envTested;
 	private $envFault;
@@ -129,7 +131,7 @@ class Config
 		// Check for PHP version
 		$message = __('PHP Version');
 
-		if ($this->CheckPHP() == 1) 
+		if ($this->CheckPHP()) 
 		{
 			$output .= $imgGood.$message.'<br />';
 		}
@@ -138,7 +140,7 @@ class Config
 			$this->envFault = true;
 			
 			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"> <p>' . __("PHP version 5.3.3 or later required.") . '. Detected ' . phpversion() . '</p></div>';
+			$output .= '<div class="check_explain"> <p>' . sprintf(__("PHP version %s or later required."), Config::$VERSION_REQUIRED) . '. Detected ' . phpversion() . '</p></div>';
 		}
 		
 		// Check for file system permissions
@@ -463,7 +465,7 @@ END;
 	 */
 	function CheckPHP() 
 	{
-		return ((version_compare('5.3.3', phpversion(), '>='))) ? 1 : 0;
+		return (version_compare(phpversion(), Config::$VERSION_REQUIRED) != -1);
 	}
 	
 	/**

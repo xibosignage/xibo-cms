@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `dataset` (
   `DataSet` varchar(50) NOT NULL,
   `Description` varchar(254) DEFAULT NULL,
   `UserID` int(11) NOT NULL,
+  `LastDataEdit` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`DataSetID`),
   KEY `UserID` (`UserID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -601,6 +602,15 @@ CREATE TABLE IF NOT EXISTS `lkmediadisplaygroup` (
   `displaygroupid` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='File associations directly to Display Groups' AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `lkdatasetlayout` (
+  `LkDataSetLayoutID` int(11) NOT NULL AUTO_INCREMENT,
+  `DataSetID` int(11) NOT NULL,
+  `LayoutID` int(11) NOT NULL,
+  `RegionID` varchar(50) NOT NULL,
+  `MediaID` varchar(50) NOT NULL,
+  PRIMARY KEY (`LkDataSetLayoutID`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 --
 -- Constraints for dumped tables

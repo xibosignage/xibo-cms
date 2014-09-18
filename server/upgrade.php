@@ -20,10 +20,6 @@
  */ 
 DEFINE('XIBO', true);
 
-if (! checkPHP()) {
-  die("Xibo requires PHP 5.3.3 or later");
-}
-
 error_reporting(0);
 ini_set('display_errors', 0);
 
@@ -33,6 +29,12 @@ include("lib/data/data.class.php");
 include('lib/app/debug.class.php');
 include('config/db_config.php');
 include('config/config.class.php');
+
+$config = new Config();
+
+if (!$config->CheckPHP()) {
+  die(sprintf('Xibo required PHP version %s.', Config::$VERSION_REQUIRED));
+}
 
 // Setup the translations for gettext
 require_once("lib/app/translationengine.class.php");
@@ -384,12 +386,6 @@ else {
 }
  
 include('install/footer.inc');
-
-# Functions
-function checkPHP() {
-  # Check PHP version > 5
-  return (version_compare("5.3.3",phpversion(), "<="));
-}
 
 function checkMySQL() {
   # Check PHP has MySQL module installed
