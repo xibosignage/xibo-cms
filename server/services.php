@@ -26,6 +26,10 @@ $service    = Kit::GetParam('service', _REQUEST, _WORD, 'rest');
 $response   = Kit::GetParam('response', _REQUEST, _WORD, 'xml');
 $serviceResponse = new XiboServiceResponse();
 
+// Version Request?
+if (isset($_GET['v']))
+    die(Config::Version('XmdsVersion'));
+
 // Is the WSDL being requested.
 if (isset($_GET['wsdl']) || isset($_GET['WSDL']))
     $serviceResponse->WSDL();
@@ -46,6 +50,46 @@ if (defined('XMDS') || $method != '')
         case 'soap':
 
             Kit::ClassLoader('xmdssoap');
+
+            // Check to see if we have a file attribute set (for HTTP file downloads)
+            if (isset($_GET['file'])) {
+                // Check send file mode is enabled
+                $sendFileMode = Config::GetSetting('SENDFILE_MODE');
+
+                if ($sendFileMode == 'Off') {
+                    Debug::LogEntry('audit', 'HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
+                    header('HTTP/1.0 404 Not Found');
+                    exit;
+                }
+
+                // Check nonce, output appropriate headers, log bandwidth and stop.
+                $nonce = new Nonce();
+                if (!$file = $nonce->Details(Kit::GetParam('file', _GET, _STRING))) {
+                    Debug::LogEntry('audit', 'HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
+                    // 404
+                    header('HTTP/1.0 404 Not Found');
+                }
+                else {
+                    // Issue magic packet
+                    // Send via Apache X-Sendfile header?
+                    if ($sendFileMode == 'Apache') {
+                        Debug::LogEntry('audit', 'HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs'], 'services');
+                        header('X-Sendfile: ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs']);
+                    }
+                    // Send via Nginx X-Accel-Redirect?
+                    else if ($sendFileMode == 'Nginx') {
+                        header('X-Accel-Redirect: /download/' . $file['storedAs']);
+                    }
+                    else {
+                        header('HTTP/1.0 404 Not Found');
+                    }
+
+                    // Log bandwidth
+                    $bandwidth = new Bandwidth();
+                    $bandwidth->Log($file['displayId'], 4, $file['size']);
+                }
+                exit;
+            }
 
             try
             {

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,46 +20,54 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class Module implements ModuleInterface
+abstract class Module implements ModuleInterface
 {
-	// Media information
+    // Session Variables
 	protected $db;
 	protected $user;
-	protected $region;
 	protected $response;
     public $auth;
-	protected $type;
-  	public $displayType;
 
-	protected $layoutid;
-	protected $regionid;
-
-	protected $mediaid;
-	protected $name;
-	private   $schemaVersion;
-	protected $regionSpecific;
-	protected $duration;
-	protected $lkid;
-	protected $validExtensions;
-	protected $validExtensionsText;
+    // Module Information
+    private $module_id;
+    protected $render_as;
+    public $displayType;
+    protected $type;
+    protected $regionSpecific;
     protected $previewEnabled;
-        
-	protected $xml;
+    protected $validExtensions;
+    protected $validExtensionsText;
+    protected $settings;
 
-	protected $existingMedia;
-	protected $assignedMedia;
+    // The Schema Version of this code
+	protected $schemaVersion;
+    protected $codeSchemaVersion = -1;
+    
+    // Layout Information
+    protected $region;
+    protected $layoutid;
+    protected $regionid;
+    protected $xml;
 	protected $deleteFromRegion;
+    protected $width;
+    protected $height;
+
+    // Media information
+    protected $mediaid;
+    protected $name;
+    protected $duration;
+    protected $lkid;
+    protected $existingMedia;
+    protected $assignedMedia;
     protected $showRegionOptions;
     protected $originalUserId;
     protected $storedAs;
+    protected $originalFilename;
 
     // Track the error state
-	private $error;
+    private $error;
     private $errorNo;
-	private $errorMessage;
-
-    protected $width;
-    protected $height;
+    private $errorMessage;
 
     /**
      * Constructor - sets up this media object with all the available information
@@ -72,10 +80,10 @@ class Module implements ModuleInterface
      */
     public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
     {
-        require_once("lib/data/region.data.class.php");
+        Kit::ClassLoader('region');
 
-        $this->db 	=& $db;
-        $this->user 	=& $user;
+        $this->db =& $db;
+        $this->user =& $user;
 
         // Initialise the error state
         $this->error = false;
@@ -93,7 +101,7 @@ class Module implements ModuleInterface
         $this->region 	= new region($db);
         $this->response = new ResponseManager();
 
-        $this->existingMedia 	= false;
+        $this->existingMedia = false;
         $this->assignedMedia = false;
         $this->deleteFromRegion = false;
         $this->assignable = true;
@@ -109,10 +117,7 @@ class Module implements ModuleInterface
         Debug::LogEntry('audit', 'Module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 
         // Either the information from the region - or some blanks
-        if (!$this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid))
-        	return false;
-
-        return true;
+        return ($this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid));
     }
 
 	/**
@@ -121,31 +126,52 @@ class Module implements ModuleInterface
 	 */
 	final private function SetModuleInformation()
 	{
-		$db =& $this->db;
-		$type = $this->type;
+        if ($this->type == '')
+            return $this->SetError(__('Unable to create Module [No type given] - please refer to the Module Documentation.'));
 
-		if ($type == '')
-			return $this->SetError(__('Unable to create Module [No type given] - please refer to the Module Documentation.'));
+		try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT * FROM module WHERE Module = :type');
+            $sth->execute(array(
+                    'type' => $this->type
+                ));
 
-		$SQL = sprintf("SELECT * FROM module WHERE Module = '%s'", $db->escape_string($type));
+            $row = $sth->fetch();
+        
+            $this->module_id = Kit::ValidateParam($row['ModuleID'], _INT);
+            $this->schemaVersion = Kit::ValidateParam($row['SchemaVersion'], _INT);
+            $this->regionSpecific = Kit::ValidateParam($row['RegionSpecific'], _INT);
+            $this->validExtensionsText = Kit::ValidateParam($row['ValidExtensions'], _STRING);
+            $this->previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
+            $this->assignable = Kit::ValidateParam($row['assignable'], _INT);
+            $this->render_as = Kit::ValidateParam($row['render_as'], _WORD);
+            $this->settings = Kit::ValidateParam($row['settings'], _HTMLSTRING);
 
-		if (!$result = $db->query($SQL))
-			return $this->SetError(__('Unable to create Module [Cannot find type in the database] - please refer to the Module Documentation.'));
+            // Assume native rendering if none provided
+            $this->render_as = ($this->render_as == '') ? 'native' : $this->render_as;
 
-		if ($db->num_rows($result) != 1)
-			return $this->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
+            // Settings needs to be converted into an array (it will be stored as a JSON string)
+            if ($this->settings == '')
+                $this->settings = array();
+            else
+                $this->settings = json_decode($this->settings);
 
-		$row = $db->get_assoc_row($result);
+            // Translated name of this module
+            $this->displayType = __(Kit::ValidateParam($row['Name'], _STRING));
+            
+            // Parse out the valid extensions
+            $this->validExtensions = explode(',', $this->validExtensionsText);
+            $this->validExtensionsText = str_replace(',', ', ', $this->validExtensionsText);
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            return $this->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
+        }
 
-		$this->schemaVersion 		= Kit::ValidateParam($row['SchemaVersion'], _INT);
-		$this->regionSpecific 		= Kit::ValidateParam($row['RegionSpecific'], _INT);
-		$this->validExtensionsText 	= Kit::ValidateParam($row['ValidExtensions'], _STRING);
-		$this->validExtensions 		= explode(',', $this->validExtensionsText);
-		$this->validExtensionsText	= str_replace(',', ', ', $this->validExtensionsText);
-        $this->previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
-        $this->assignable = Kit::ValidateParam($row['assignable'], _INT);
-
-		return true;
+        return true;
 	}
 
     /**
@@ -237,7 +263,7 @@ class Module implements ModuleInterface
                     $dbh = PDOConnect::init();
                 
                     // Load what we know about this media into the object
-                    $sth = $dbh->prepare('SELECT duration, name, UserId, storedAs FROM media WHERE mediaID = :media_id');
+                    $sth = $dbh->prepare('SELECT duration, name, UserId, storedAs, originalFilename FROM media WHERE mediaID = :media_id');
                     $sth->execute(array(
                             'media_id' => $mediaid
                         ));
@@ -252,6 +278,7 @@ class Module implements ModuleInterface
                     $this->name = $rows[0]['name'];
                     $this->originalUserId = $rows[0]['UserId'];
                     $this->storedAs = $rows[0]['storedAs'];
+                    $this->originalFilename = $rows[0]['originalFilename'];
                 }
                 catch (Exception $e) {
                     
@@ -270,7 +297,7 @@ class Module implements ModuleInterface
 
             $xml = <<<XML
             <root>
-                    <media id="" type="$this->type" duration="" lkid="" userId="$this->originalUserId" schemaVersion="$this->schemaVersion">
+                    <media id="" type="$this->type" render="$this->render_as" duration="" lkid="" userId="$this->originalUserId" schemaVersion="$this->schemaVersion">
                             <options />
                             <raw />
                     </media>
@@ -316,7 +343,8 @@ XML;
 
 		$mediaNode->setAttribute('id', $this->mediaid);
 		$mediaNode->setAttribute('duration', $this->duration);
-		$mediaNode->setAttribute('type', $this->type);
+        $mediaNode->setAttribute('type', $this->type);
+		$mediaNode->setAttribute('render', $this->render_as);
         $mediaNode->setAttribute('userId', $this->originalUserId);
 
 		return $this->xml->saveXML($mediaNode);
@@ -449,42 +477,33 @@ XML;
 	 */
 	final public function UpdateRegion()
 	{
-            Debug::LogEntry('audit', 'Updating Region');
+        Debug::LogEntry('audit', 'Updating Region');
 
-            // By this point we expect to have a MediaID, duration
-            $layoutid = $this->layoutid;
-            $regionid = $this->regionid;
+        // By this point we expect to have a MediaID, duration
+        $layoutid = $this->layoutid;
+        $regionid = $this->regionid;
 
-            if ($this->deleteFromRegion)
-            {
-                    // We call region delete
-                    if (!$this->region->RemoveMedia($layoutid, $regionid, $this->lkid, $this->mediaid))
-                    {
-                            return $this->SetError(__("Unable to Remove this media from the Layout"));
-                    }
+        if ($this->deleteFromRegion) {
+            // We call region delete
+            if (!$this->region->RemoveMedia($layoutid, $regionid, $this->lkid, $this->mediaid))
+                return $this->SetError(__("Unable to Remove this media from the Layout"));
+        }
+        else {
+            if ($this->assignedMedia) {
+                // We call region swap with the same media id
+                if (!$this->region->SwapMedia($layoutid, $regionid, $this->lkid, $this->mediaid, $this->mediaid, $this->AsXml()))
+                    return $this->SetError(__("Unable to assign to the Region"));
             }
-            else
-            {
-                    if ($this->assignedMedia)
-                    {
-                            // We call region swap with the same media id
-                            if (!$this->region->SwapMedia($layoutid, $regionid, $this->lkid, $this->mediaid, $this->mediaid, $this->AsXml()))
-                            {
-                                    return $this->SetError(__("Unable to assign to the Region"));
-                            }
-                    }
-                    else
-                    {
-                            // We call region add
-                            if (!$this->region->AddMedia($layoutid, $regionid, $this->regionSpecific, $this->AsXml()))
-                            {
-                                    return $this->SetError(__("Error adding this media to the library"));
-                            }
-                    }
+            else {
+                // We call region add
+                if (!$this->region->AddMedia($layoutid, $regionid, $this->regionSpecific, $this->AsXml()))
+                    return $this->SetError(__("Error adding this media to the library"));
             }
-            Debug::LogEntry('audit', 'Finished Updating Region');
+        }
 
-            return true;
+        Debug::LogEntry('audit', 'Finished Updating Region');
+
+        return true;
 	}
 
 	/**
@@ -747,7 +766,7 @@ END;
     public function UnassignFromAll($mediaId) {
 
         // Get a list of layouts with this media id on them that this user has permission for.
-        $layouts = $this->user->LayoutList('', 0, 0, '', $mediaId);
+        $layouts = $this->user->LayoutList(NULL, array('mediaId' => $mediaId));
 
         // Create a media object for each, and call delete
         foreach ($layouts as $layout) {
@@ -767,23 +786,6 @@ END;
         $this->response->message = __('Media unassigned from all Layouts');
         return $this->response;
     }
-
-	/**
-	 * Default AddForm
-	 * @return
-	 */
-	public function AddForm()
-	{
-		$form = '<p>' . __('Not yet implemented by this module.') . '</p>';
-
-		$this->response->html 		 	= $form;
-		$this->response->dialogTitle 	= __('Add Item');
-		$this->response->dialogSize 	= true;
-		$this->response->dialogWidth 	= '450px';
-		$this->response->dialogHeight 	= '150px';
-
-		return $this->response;
-	}
 
     protected function AddFormForLibraryMedia()
     {
@@ -886,24 +888,7 @@ END;
         return $this->response;
     }
 
-	/**
-	 * Default Edit Form
-	 * @return
-	 */
-	public function EditForm()
-	{
-		$form = '<p>' . __('Not yet implemented by this module.') . '</p>';
-
-		$this->response->html 		 	= $form;
-		$this->response->dialogTitle 	= __('Add Item');
-		$this->response->dialogSize 	= true;
-		$this->response->dialogWidth 	= '450px';
-		$this->response->dialogHeight 	= '150px';
-
-		return $this->response;
-	}
-
-    protected function EditFormForLibraryMedia()
+    protected function EditFormForLibraryMedia($extraFormFields = NULL)
     {
         global $session;
         $db =& $this->db;
@@ -967,9 +952,7 @@ END;
 
         $this->response->AddButton(__('Save'), '$("#EditLibraryBasedMedia").submit()');
 
-        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
-
-		// Setup the theme
+        // Setup the theme
         Theme::Set('form_id', 'EditLibraryBasedMedia');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
 		Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '"><input type="hidden" name="mediaid" value="' . $mediaid . '"><input type="hidden" name="lkid" value="' . $lkid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
@@ -978,16 +961,34 @@ END;
         Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
 		Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSizeBytes . '" />');
 
-		Theme::Set('name', $name);
-		Theme::Set('duration', $this->duration);
-		Theme::Set('is_duration_field_enabled', $durationFieldEnabled);
-		Theme::Set('valid_extensions', 'This form accepts: ' . $this->validExtensionsText . ' files up to a maximum size of ' . $this->maxFileSize);
-		Theme::Set('is_replace_field_checked', ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 'checked' : ''));
-        Theme::Set('is_assignable', $this->assignable);
+        Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
 
-		$form = Theme::RenderReturn('library_form_media_edit');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('name', __('Name'), $name, 
+            __('The Name of this item - Leave blank to use the file name'), 'n');
 
-        $this->response->html = $form;
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
+
+        $formFields[] = FormManager::AddMessage(sprintf(__('This form accepts: %s files up to a maximum size of %s'), $this->validExtensionsText, $this->maxFileSize));
+
+        if ($this->assignable) {
+            $formFields[] = FormManager::AddCheckbox('replaceInLayouts', __('Update this media in all layouts it is assigned to.'), 
+                ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0), 
+                __('Note: It will only be replaced in layouts you have permission to edit.'), 
+                'r');
+        }
+
+        // Add in any extra form fields we might have provided by the super-class
+        if ($extraFormFields != NULL && is_array($extraFormFields)) {
+            foreach($extraFormFields as $field) {
+                $formFields[] = $field;
+            }
+        }
+
+        Theme::Set('form_fields', $formFields);
+
+        $this->response->html = Theme::RenderReturn('form_render');
         $this->response->dialogTitle = 'Edit ' . $this->displayType;
         $this->response->dialogSize = true;
         $this->response->dialogWidth = '450px';
@@ -995,18 +996,6 @@ END;
 
         return $this->response;
     }
-
-	/**
-	 * Default Add Media
-	 * @return
-	 */
-	public function AddMedia()
-	{
-		// We want to load a new form
-		$this->response->message = __('Add Media has not been implemented for this module.');
-		
-		return $this->response;	
-	}
 
 	/**
 	 * Adds Library Media
@@ -1079,18 +1068,6 @@ END;
         return $mediaid;
     }
 
-	/**
-	 * Default EditMedia
-	 * @return
-	 */
-	public function EditMedia()
-	{
-		// We want to load a new form
-		$this->response->message = __('Edit Media has not been implemented for this module.');
-		
-		return $this->response;	
-	}
-
     protected function EditLibraryMedia()
     {
         $db =& $this->db;
@@ -1151,10 +1128,22 @@ END;
         	$this->mediaid	= $new_mediaid;
         	
         	// Find out what we stored this item as
-        	$storedAs = $db->GetSingleValue(sprintf("SELECT StoredAs FROM `media` WHERE mediaid = %d", $new_mediaid), 'StoredAs', _STRING);
-        	$this->SetOption('uri', $storedAs);
+            try {
+                $dbh = PDOConnect::init();
 
-        	Debug::LogEntry('audit', 'New revision uploaded: ' . $storedAs, 'module', 'EditLibraryMedia');
+                $sth = $dbh->prepare('SELECT StoredAs FROM `media` WHERE mediaid = :mediaId');
+                $sth->execute(array('mediaId' => $new_mediaid));
+                
+                $storedAs = Kit::ValidateParam($sth->fetchColumn(0), _FILENAME);
+                $this->SetOption('uri', $storedAs);
+            }
+            catch (Exception $e) {
+                Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+             
+                trigger_error(__('Unable to find uploaded file.'), E_USER_ERROR);
+            }
+
+            Debug::LogEntry('audit', 'New revision uploaded: ' . $storedAs, 'module', 'EditLibraryMedia');
         }
 
         // Edit the media record
@@ -1203,9 +1192,6 @@ END;
         
         Debug::LogEntry('audit', sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
 
-        // Create a region object for later use
-        $region = new region($db);
-
         try {
             $dbh = PDOConnect::init();
         
@@ -1231,6 +1217,9 @@ END;
 
                 Debug::LogEntry('audit', sprintf('%d linked media items for layoutid %d', count($results), $layoutId), 'module', 'ReplaceMediaInAllLayouts');
                 
+                // Create a region object for later use (new one each time)
+                $region = new region($db);
+
                 // Loop through each media link for this layout
                 foreach ($results as $row)
                 {
@@ -1305,15 +1294,28 @@ END;
         return $this->name;
     }
 
-        /**
-         * Preview code for a module
-         * @param <type> $width
-         * @param <type> $height
-         */
-        public function Preview($width, $height)
-        {
-            return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
-        }
+    /**
+     * Preview code for a module
+     * @param <type> $width
+     * @param <type> $height
+     */
+    public function Preview($width, $height) {
+        return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
+    }
+
+    /**
+     * Preview as the Client
+     * @param <double> $width
+     * @param <double> $height
+     * @return <string>
+     */
+    public function PreviewAsClient($width, $height, $scale_override = 0)
+    {
+        $widthPx    = $width .'px';
+        $heightPx   = $height .'px';
+
+        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $this->type . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=' . $scale_override . '&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&mediaid=' . $this->mediaid . '&lkid=' . $this->lkid . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+    }
 
     /**
      * Is this media node region specific
@@ -1369,19 +1371,6 @@ END;
         if (!$this->auth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this media'), E_USER_ERROR);
 
-        // Form content
-        $form = '<form id="LayoutPermissionsForm" class="XiboForm" method="post" action="index.php?p=module&mod=' . $this->type . '&q=Exec&method=Permissions">';
-	$form .= '<input type="hidden" name="layoutid" value="' . $this->layoutid . '" />';
-	$form .= '<input type="hidden" name="regionid" value="' . $this->regionid . '" />';
-	$form .= '<input type="hidden" name="mediaid" value="' . $this->mediaid . '" />';
-	$form .= '  <table class="table table-bordered">';
-        $form .= '      <tr>';
-        $form .= '          <th>' . __('Group') . '</th>';
-        $form .= '          <th>' . __('View') . '</th>';
-        $form .= '          <th>' . __('Edit') . '</th>';
-        $form .= '          <th>' . __('Delete') . '</th>';
-        $form .= '      </tr>';
-
         // List of all Groups with a view/edit/delete checkbox
         $SQL = '';
         $SQL .= 'SELECT `group`.GroupID, `group`.`Group`, View, Edit, Del, `group`.IsUserSpecific ';
@@ -1413,23 +1402,36 @@ END;
             trigger_error(__('Unable to get permissions for this layout'), E_USER_ERROR);
         }
 
-        while($row = $db->get_assoc_row($results))
+        while ($row = $db->get_assoc_row($results))
         {
             $groupId = $row['GroupID'];
-            $group = ($row['IsUserSpecific'] == 0) ? '<strong>' . $row['Group'] . '</strong>' : $row['Group'];
+            $rowClass = ($row['IsUserSpecific'] == 0) ? 'strong_text' : '';
 
-            $form .= '<tr>';
-            $form .= ' <td>' . $group . '</td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_view" ' . (($row['View'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_edit" ' . (($row['Edit'] == 1) ? 'checked' : '') . '></td>';
-            $form .= ' <td><input type="checkbox" name="groupids[]" value="' . $groupId . '_del" ' . (($row['Del'] == 1) ? 'checked' : '') . '></td>';
-            $form .= '</tr>';
+            $checkbox = array(
+                    'id' => $groupId,
+                    'name' => Kit::ValidateParam($row['Group'], _STRING),
+                    'class' => $rowClass,
+                    'value_view' => $groupId . '_view',
+                    'value_view_checked' => (($row['View'] == 1) ? 'checked' : ''),
+                    'value_edit' => $groupId . '_edit',
+                    'value_edit_checked' => (($row['Edit'] == 1) ? 'checked' : ''),
+                    'value_del' => $groupId . '_del',
+                    'value_del_checked' => (($row['Del'] == 1) ? 'checked' : ''),
+                );
+
+            $checkboxes[] = $checkbox;
         }
 
-        $form .= '</table>';
-        $form .= '</form>';
+        $formFields = array();
+        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
+        Theme::Set('form_fields', $formFields);
 
-        $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
+        // Set some information about the form
+        Theme::Set('form_id', 'LayoutPermissionsForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=Permissions');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '" /><input type="hidden" name="regionid" value="' . $this->regionid . '" /><input type="hidden" name="mediaid" value="' . $this->mediaid . '" />');
+
+        $response->SetFormRequestResponse(NULL, __('Permissions'), '350px', '500px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != 0) ? $helpManager->Link('LayoutMedia', 'Permissions') : $helpManager->Link('Media', 'Permissions')) . '")');
         
         if ($this->assignedMedia) {
@@ -1631,9 +1633,6 @@ END;
         $transitions = $this->user->TransitionAuth($type);
         $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
         
-        // Prepare a list of options
-        $transitionDropdown = Kit::SelectList('transitionType', $transitions, 'code', 'transition', $transition, '', 'class');
-        
         // Compass points for direction
         $compassPoints = array(
             array('id' => 'N', 'name' => __('North')), 
@@ -1646,41 +1645,47 @@ END;
             array('id' => 'NW', 'name' => __('North West'))
         );
         
-        // Prepare a list of compass points
-        $directionDropdown = Kit::SelectList('transitionDirection', $compassPoints, 'id', 'name', $direction);
+        Theme::Set('form_id', 'TransitionForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=TransitionEdit');
+        Theme::Set('form_meta', '
+            <input type="hidden" name="type" value="' . $type . '">
+            <input type="hidden" name="layoutid" value="' . $this->layoutid . '">
+            <input type="hidden" name="mediaid" value="' . $this->mediaid . '">
+            <input type="hidden" name="lkid" value="' . $this->lkid . '">
+            <input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '">
+            <input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />
+            ');
+
+        $formFields[] = FormManager::AddCombo(
+                    'transitionType', 
+                    __('Transition'), 
+                    $transition,
+                    $transitions,
+                    'code',
+                    'transition',
+                    __('What transition should be applied when this region is finished?'), 
+                    't');
+
+        $formFields[] = FormManager::AddNumber('transitionDuration', __('Duration'), $duration, 
+            __('The duration for this transition, in milliseconds.'), 'l', '', 'transition-group');
         
-        // Some messages for the form
-        $msgTransition = __('What transition should be applied to this media item?');
-        $msgDuration = __('The duration for this transition, in milliseconds.');
-        $msgDirection = __('The direction for this transition.');
-        
-        // Construct the form
-        $form = <<<END
-        <form id="TransitionForm" class="XiboTextForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=TransitionEdit">
-            <input type="hidden" name="type" value="$type">
-            <input type="hidden" name="layoutid" value="$this->layoutid">
-            <input type="hidden" name="mediaid" value="$this->mediaid">
-            <input type="hidden" name="lkid" value="$this->lkid">
-            <input type="hidden" id="iRegionId" name="regionid" value="$this->regionid">
-            <input type="hidden" name="showRegionOptions" value="$this->showRegionOptions" /> 
-            
-            <table>
-                <tr>
-                    <td><label for="tranisitionType" title="$msgTransition">$msgTransition</label></td>
-                    <td>$transitionDropdown</td>
-                </tr>
-                <tr class="transitionDuration">
-                    <td><label for="transitionDuration">$msgDuration</label></td>
-                    <td><input type="text" class="numeric" name="transitionDuration" id="transitionDuration" value="$duration" /></td>
-                </tr>
-                <tr class="transitionDirection">
-                    <td><label for="transitionDirection">$msgDirection</label></td>
-                    <td>$directionDropdown</td>
-                </tr>
-            </table>
-        </form>
-END;
-        
+        $formFields[] = FormManager::AddCombo(
+                    'transitionDirection', 
+                    __('Direction'), 
+                    $direction,
+                    $compassPoints,
+                    'id',
+                    'name',
+                    __('The direction for this transition. Only appropriate for transitions that move, such as Fly.'),
+                    'd',
+                    'transition-group transition-direction');
+
+        // Add some dependencies
+        $this->response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'none')));
+        $this->response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'block')), 'not');
+        $this->response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'none')));
+        $this->response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'block')), 'not');
+
         // Decide where the cancel button will take us
         if ($this->showRegionOptions)
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
@@ -1691,9 +1696,9 @@ END;
         $this->response->AddButton(__('Save'), '$("#TransitionForm").submit()');
         
         // Output the form and dialog
-        $this->response->html = $form;
-        $this->response->callBack = 'transitionFormLoad';
-        $this->response->dialogTitle = 'Edit ' . $type . ' Transition for ' . $this->displayType;
+        Theme::Set('form_fields', $formFields);
+        $this->response->html = Theme::RenderReturn('form_render');
+        $this->response->dialogTitle = sprintf(__('Edit %s Transition for %s'), $type, $this->displayType);
         $this->response->dialogSize = true;
         $this->response->dialogWidth = '450px';
         $this->response->dialogHeight = '280px';
@@ -1921,7 +1926,7 @@ END;
 	 */
 	protected function SetError($errNo, $errMessage = '')
 	{
-		$this->error		= true;
+		$this->error = true;
 
 		// Is an error No provided?
 		if (!is_numeric($errNo)) {
@@ -1929,7 +1934,7 @@ END;
 			$errNo = -1;
 		}
 
-		$this->errorNo 		= $errNo;
+		$this->errorNo = $errNo;
 		$this->errorMessage	= $errMessage;
 		
 		Debug::LogEntry('audit', sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Media Module', 'SetError');
@@ -1938,13 +1943,184 @@ END;
 		return false;
 	}
 
+    protected function ThrowError($errNo, $errMessage = '') {
+        $this->SetError($errNo, $errMessage);
+        throw new Exception(sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage));
+    }
+
     public function IsValid() {
         // Defaults: Stored media is valid, region specific is unknown
         return ($this->regionSpecific) ? 0 : 1;
     }
+
+    /**
+     * Default behaviour for install / upgrade
+     * this should be overridden for new modules
+     */
+    public function InstallOrUpdate() {
+
+        if ($this->render_as != 'native')
+            return $this->SetError(1, __('Module must implement InstallOrUpgrade'));
+
+        return true;
+    }
+
+    public function InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings) {
+        
+        Debug::LogEntry('audit', 'Request to install module with name: ' . $name, 'module', 'InstallModule');
+
+        try {
+            // Validate some things.
+            if ($this->type == '')
+                $this->ThrowError(__('Module has not set the module type'));
+
+            if ($name == '')
+                $this->ThrowError(__('Module has not set the module name'));
+
+            if ($description == '')
+                $this->ThrowError(__('Module has not set the description'));
+
+            if (!is_numeric($previewEnabled))
+                $this->ThrowError(__('Preview Enabled variable must be a number'));
+
+            if (!is_numeric($assignable))
+                $this->ThrowError(__('Assignable variable must be a number'));
+
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('
+                    INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, 
+                        `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`) 
+                    VALUES (:module, :name, :enabled, :region_specific, :description, 
+                        :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings);
+                ');
+
+            Debug::LogEntry('audit', 'Executing SQL', 'module', 'InstallModule');
+
+            $sth->execute(array(
+                    'module' =>  $this->type,
+                    'name' =>  $name,
+                    'enabled' =>  1,
+                    'region_specific' =>  1,
+                    'description' =>  $description, 
+                    'image_uri' =>  $imageUri,
+                    'schema_version' =>  $this->codeSchemaVersion,
+                    'valid_extensions' =>  '',
+                    'preview_enabled' =>  $previewEnabled,
+                    'assignable' =>  $assignable,
+                    'render_as' =>  'html',
+                    'settings' => json_encode($settings)
+                ));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            throw new Exception(__('Unable to install module. Please check the Error Log'));
+        }
+    }
+
+    public function UpgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings) {
+        
+        try {
+            // Validate some things.
+            if ($this->module_id == '')
+                $this->ThrowError(__('This module does not exist - should you have called Install?'));
+
+            if ($name == '')
+                $this->ThrowError(__('Module has not set the module name'));
+
+            if ($description == '')
+                $this->ThrowError(__('Module has not set the description'));
+
+            if (!is_numeric($regionSpecific))
+                $this->ThrowError(__('Region Specific variable must be a number'));
+
+            if (!is_numeric($previewEnabled))
+                $this->ThrowError(__('Preview Enabled variable must be a number'));
+
+            if (!is_numeric($assignable))
+                $this->ThrowError(__('Assignable variable must be a number'));
+
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('
+                    UPDATE `module` SET `Name` = :name, `Description` = :description, 
+                        `ImageUri` = :image_uri, `SchemaVersion` = :schema_version, `PreviewEnabled` = :preview_enabled, 
+                        `assignable` = :assignable, `settings` = :settings
+                     WHERE ModuleID = :module_id
+                ');
+
+            $sth->execute(array(
+                    'name' =>  $name,
+                    'description' =>  $description, 
+                    'image_uri' =>  $imageUri,
+                    'schema_version' =>  $this->codeSchemaVersion,
+                    'preview_enabled' =>  $previewEnabled,
+                    'assignable' =>  $assignable,
+                    'settings' => $settings,
+                    'module_id' => $this->module_id
+                ));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Form for updating the module settings
+     */
+    public function ModuleSettingsForm() {
+        return array();
+    }
+
+    /**
+     * Process any module settings
+     */
+    public function ModuleSettings() {
+        return array();
+    }
+
+    /**
+     * Updates the settings on the module
+     * @param [array] $settings [The Settings]
+     */
+    public function UpdateModuleSettings($settings) {
+        if (!is_array($settings))
+            return $this->SetError(__('Module settings must be an array'));
+
+        // Update the settings on the module record.
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('UPDATE `module` SET settings = :settings WHERE ModuleID = :module_id');
+            $sth->execute(array(
+                    'settings' => json_encode($settings),
+                    'module_id' => $this->module_id
+                ));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
     
     /**
-	 * Return filebased media items to the browser for Download/Preview
+	 * Return file based media items to the browser for Download/Preview
 	 * @return 
 	 * @param $download Boolean
 	 */
@@ -1958,13 +2134,14 @@ END;
         }
         
         $download = Kit::GetParam('download', _REQUEST, _BOOLEAN, false);
+        $downloadFromLibrary = Kit::GetParam('downloadFromLibrary', _REQUEST, _BOOLEAN, false);
 
         $size = filesize($fileName);
         
         if ($download) {
             header('Content-Type: application/octet-stream');
             header("Content-Transfer-Encoding: Binary"); 
-            header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
+            header("Content-disposition: attachment; filename=\"" . (($downloadFromLibrary) ? $this->originalFilename : basename($fileName)) . "\"");
         }
         else {
             $fi = new finfo( FILEINFO_MIME_TYPE );

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -37,7 +37,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 <dl class="dl-horizontal">
     <dt>Description</dt>
-    <dd>A breif description of the module.</dd>
+    <dd>A brief description of the module.</dd>
 </dl>
 
 <dl class="dl-horizontal">
@@ -65,6 +65,14 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     <dd>Can this module be used?</dd>
 </dl>
 
+<h2>Installing new Modules</h2>
+<p>New modules must be uploaded to the CMS manually and then installed from the Module Administration screen. Un-installed modules are detected automatically and will be offered as installation options. See the below image for an example:</p>
+<p><img class="img-thumbnail" alt="Modules" src="content/admin/modules_install_list.png"></p>
+
+<p>Clicking on the module name will install the module and refresh the page.</p>
+
+<h3>Designing a Module</h3>
+<p>More information related to designing a module can be found in the <a href="index.php?toc=developer_module&p=admin/module_overview">developer section</a>.</p>
 
 <h2>Modules Settings</h2>
 <p>A Module can have a selection of its settings adjusted, exactly which ones depends on the module.</p>

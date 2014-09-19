@@ -25,8 +25,6 @@ class counter extends Module
     {
         // Must set the type of the class
         $this->type = 'counter';
-        $this->displayType = 'Counter';
-        $this->name = 'Counter';
 
         // Must call the parent class
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -51,10 +49,21 @@ class counter extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
-        // Output the form
-        $form = Theme::RenderReturn('media_form_counter_add');
+        $formFields = array();
+        $formFields[] = FormManager::AddMessage(__('Ubuntu Client Only'));
 
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+            __('The duration in seconds this counter should be displayed'), 'd', 'required');
 
+        $formFields[] = FormManager::AddCheckbox('popupNotification', __('Pop-up Notification?'), 
+            NULL, __('Popup a notification when the counter changes?'), 
+            'n');
+
+        $formFields[] = FormManager::AddMultiText('ta_text', NULL, NULL, 
+            __('Enter a format that should be applied to the counter when it is show.'), 't', 10);
+
+        Theme::Set('form_fields', $formFields);
+        
         if ($this->showRegionOptions)
         {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
@@ -64,7 +73,7 @@ class counter extends Module
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
 
-        $this->response->html = $form;
+        $this->response->html = Theme::RenderReturn('form_render');
         $this->response->callBack = 'text_callback';
         $this->response->dialogTitle = __('Add Counter');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
@@ -106,20 +115,24 @@ class counter extends Module
         $textNode = $textNodes->item(0);
         $text = $textNode->nodeValue;
 
-        $durationFieldEnabled = ($this->auth->modifyPermissions) ? '' : ' readonly';
-        $popupNotificationChecked = ($popupNotification) ? 'checked' : '';
-
         Theme::Set('form_id', 'ModuleForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="mediaid" value="' . $mediaid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
-        Theme::Set('duration', $this->duration);
-        Theme::Set('is_duration_enabled', $durationFieldEnabled);
-        Theme::Set('is_popup_notification_checked', $popupNotificationChecked);
-        Theme::Set('text_template', $text);
+        $formFields = array();
+        $formFields[] = FormManager::AddMessage(__('Ubuntu Client Only'));
 
-        // Output the form
-        $form = Theme::RenderReturn('media_form_counter_edit');
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+            __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
+
+        $formFields[] = FormManager::AddCheckbox('popupNotification', __('Pop-up Notification?'), 
+            $popupNotification, __('Popup a notification when the counter changes?'), 
+            'n');
+
+        $formFields[] = FormManager::AddMultiText('ta_text', NULL, $text, 
+            __('Enter a format that should be applied to the counter when it is show.'), 't', 10);
+
+        Theme::Set('form_fields', $formFields);
 
         if ($this->showRegionOptions)
         {
@@ -130,7 +143,7 @@ class counter extends Module
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
 
-        $this->response->html = $form;
+        $this->response->html = Theme::RenderReturn('form_render');
         $this->response->callBack = 'text_callback';
         $this->response->dialogTitle = __('Edit Counter');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');

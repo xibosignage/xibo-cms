@@ -28,7 +28,6 @@ class video extends Module
     {
         // Must set the type of the class
         $this->type= 'video';
-        $this->displayType = __('Video');
 
         // Get the max upload size from PHP
         $this->maxFileSize 	= ini_get('upload_max_filesize');

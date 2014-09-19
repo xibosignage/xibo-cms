@@ -25,13 +25,14 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<thead>
 		<tr>
 			<th><?php echo Theme::Translate('Name'); ?></th>
+			<th></th>
 		</tr>
 	</thead>
 	<tbody>
 		<?php foreach(Theme::Get('table_rows') as $row) { ?>
 		<tr rowid="<?php echo $row['list_id']; ?>" litext="<?php echo $row['layout']; ?>">
 			<td><?php echo $row['layout']; ?></td>
-			<td><span class="layout_assign_list_select icon-plus-sign"></span>
+			<td><span class="layout_assign_list_select glyphicon glyphicon-plus-sign"></span>
 		</tr>
 		<?php } ?>
 	</tbody>

@@ -20,10 +20,8 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class moduleDAO 
+class moduleDAO extends baseDAO 
 {
-    private $db;
-    private $user;
     private $module;
 
     /**
@@ -71,8 +69,42 @@ class moduleDAO
         Theme::Set('form_meta', '<input type="hidden" name="p" value="module"><input type="hidden" name="q" value="Grid">');
         Theme::Set('pager', ResponseManager::Pager($id));
 
-        // Render the Theme and output
-        Theme::Render('module_page');
+        //
+        // Do we have any modules to install?!
+        //
+        // Get a list of matching files in the modules folder
+        $files = glob('modules/*.module.php');
+
+        // Get a list of all currently installed modules
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare("SELECT CONCAT('modules/', LOWER(Module), '.module.php') AS Module FROM `module`");
+            $sth->execute();
+
+            $rows = $sth->fetchAll();
+            $installed = array();
+
+            foreach($rows as $row)
+                $installed[] = $row['Module'];
+        }
+        catch (Exception $e) {
+            trigger_error(__('Cannot get installed modules'), E_USER_ERROR);
+        }
+
+        // Compare the two
+        $to_install = array_diff($files, $installed);
+
+        if (count($to_install) > 0) {
+            Theme::Set('module_install_url', 'index.php?p=module&q=Install&module=');
+            Theme::Set('to_install', $to_install);
+            Theme::Set('prepend', Theme::RenderReturn('module_page_install_modules'));
+        }
+
+        // Call to render the template
+        Theme::Set('header_text', __('Modules'));
+        Theme::Set('form_fields', array());
+        Theme::Render('grid_render');
     }
 
     /**
@@ -103,6 +135,18 @@ class moduleDAO
             trigger_error(__('Unable to get the list of modules'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'name', 'title' => __('Name')),
+                array('name' => 'description', 'title' => __('Description')),
+                array('name' => 'isregionspecific', 'title' => __('Library Media'), 'icons' => true),
+                array('name' => 'validextensions', 'title' => __('Valid Extensions')),
+                array('name' => 'imageuri', 'title' => __('Image Uri')),
+                array('name' => 'preview_enabled', 'title' => __('Preview Enabled'), 'icons' => true),
+                array('name' => 'assignable', 'title' => __('Assignable'), 'icons' => true, 'helpText' => __('Can this module be assigned to a Layout?')),
+                array('name' => 'enabled', 'title' => __('Enabled'), 'icons' => true)
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         foreach($modules as $module)
@@ -117,11 +161,7 @@ class moduleDAO
             $row['enabled'] = Kit::ValidateParam($module['Enabled'], _INT);
             $row['preview_enabled'] = Kit::ValidateParam($module['PreviewEnabled'], _INT);
             $row['assignable'] = Kit::ValidateParam($module['assignable'], _INT);
-            $row['isregionspecific_image'] = ($row['isregionspecific'] == 0) ? 'icon-ok' : 'icon-remove';
-            $row['enabled_image'] = ($row['enabled'] == 1) ? 'icon-ok' : 'icon-remove';
-            $row['preview_enabled_image'] = ($row['preview_enabled'] == 1) ? 'icon-ok' : 'icon-remove';
-            $row['assignable_image'] = ($row['assignable'] == 1) ? 'icon-ok' : 'icon-remove';
-
+            
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();
 
@@ -141,7 +181,7 @@ class moduleDAO
 
         Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('module_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();
@@ -166,6 +206,7 @@ class moduleDAO
         // Pull the currently known info from the DB
         $SQL = '';
         $SQL .= 'SELECT ModuleID, ';
+        $SQL .= '   Module, ';
         $SQL .= '   Name, ';
         $SQL .= '   Enabled, ';
         $SQL .= '   Description, ';
@@ -184,20 +225,39 @@ class moduleDAO
             trigger_error(__('Error getting Module'));
         }
 
-        Theme::Set('validextensions', Kit::ValidateParam($row['ValidExtensions'], _STRING));
-        Theme::Set('imageuri', Kit::ValidateParam($row['ImageUri'], _STRING));
-        Theme::Set('isregionspecific', Kit::ValidateParam($row['RegionSpecific'], _INT));
-        Theme::Set('enabled_checked', ((Kit::ValidateParam($row['Enabled'], _INT)) ? 'checked' : ''));
-        Theme::Set('preview_enabled_checked', ((Kit::ValidateParam($row['PreviewEnabled'], _INT)) ? 'checked' : ''));
+        $type = Kit::ValidateParam($row['Module'], _WORD);
 
         // Set some information about the form
         Theme::Set('form_id', 'ModuleEditForm');
         Theme::Set('form_action', 'index.php?p=module&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="ModuleID" value="'. $moduleId . '" />');
-        
-        $form = Theme::RenderReturn('module_form_edit');
+        Theme::Set('form_meta', '<input type="hidden" name="ModuleID" value="'. $moduleId . '" /><input type="hidden" name="type" value="' . $type . '" />');
 
-        $response->SetFormRequestResponse($form, __('Edit Module'), '350px', '325px');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('ValidExtensions', __('Valid Extensions'), Kit::ValidateParam($row['ValidExtensions'], _STRING), 
+            __('The Extensions allowed on files uploaded using this module. Comma Separated.'), 'e', '');
+
+        $formFields[] = FormManager::AddText('ImageUri', __('Image Uri'), Kit::ValidateParam($row['ImageUri'], _STRING), 
+            __('The Image to display for this module. This should be a path relative to the root of the installation.'), 'i', '');
+
+        $formFields[] = FormManager::AddCheckbox('PreviewEnabled', __('Preview Enabled?'), 
+            Kit::ValidateParam($row['PreviewEnabled'], _INT), __('When PreviewEnabled users will be able to see a preview in the layout designer'), 
+            'p');
+
+        $formFields[] = FormManager::AddCheckbox('Enabled', __('Enabled?'), 
+            Kit::ValidateParam($row['Enabled'], _INT), __('When Enabled users will be able to add media using this module'), 
+            'b');
+
+        Theme::Set('form_fields', $formFields);
+
+        // Set any module specific form fields
+        include_once('modules/' . $type . '.module.php');
+        $module = new $type($this->db, $this->user);
+
+        // Merge in the fields from the settings
+        foreach($module->ModuleSettingsForm() as $field)
+            $formFields[] = $field;
+
+        $response->SetFormRequestResponse(NULL, __('Edit Module'), '350px', '325px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Module', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ModuleEditForm").submit()');
@@ -218,6 +278,7 @@ class moduleDAO
             trigger_error(__('Module Config Locked'), E_USER_ERROR);
 
         $moduleId = Kit::GetParam('ModuleID', _POST, _INT);
+        $type = Kit::GetParam('type', _POST, _WORD);
         $validExtensions = Kit::GetParam('ValidExtensions', _POST, _STRING, '');
         $imageUri = Kit::GetParam('ImageUri', _POST, _STRING);
         $enabled = Kit::GetParam('Enabled', _POST, _CHECKBOX);
@@ -227,20 +288,93 @@ class moduleDAO
         if ($moduleId == 0 || $moduleId == '')
             trigger_error(__('Module ID is missing'), E_USER_ERROR);
 
+        if ($type == '')
+            trigger_error(__('Type is missing'), E_USER_ERROR);
+
         if ($imageUri == '')
             trigger_error(__('Image Uri is a required field.'), E_USER_ERROR);
 
-        // Deal with the Edit
-        $SQL = "UPDATE `module` SET ImageUri = '%s', ValidExtensions = '%s', Enabled = %d, PreviewEnabled = %d WHERE ModuleID = %d";
-        $SQL = sprintf($SQL, $db->escape_string($imageUri), $db->escape_string($validExtensions), $enabled, $previewEnabled, $moduleId);
+        // Process any module specific form fields
+        include_once('modules/' . $type . '.module.php');
+        $module = new $type($this->db, $this->user);
 
-        if (!$db->query($SQL))
-        {
-            trigger_error($db->error());
+        $settings = json_encode($module->ModuleSettings());
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('
+                UPDATE `module` SET ImageUri = :image_url, ValidExtensions = :valid_extensions, 
+                    Enabled = :enabled, PreviewEnabled = :preview_enabled, settings = :settings 
+                 WHERE ModuleID = :module_id');
+
+            $sth->execute(array(
+                    'image_url' => $imageUri,
+                    'valid_extensions' => $validExtensions,
+                    'enabled' => $enabled,
+                    'preview_enabled' => $previewEnabled,
+                    'settings' => $settings,
+                    'module_id' => $moduleId
+                ));
+          
+            $response->SetFormSubmitResponse(__('Module Edited'), false);
+            $response->Respond();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
             trigger_error(__('Unable to update module'), E_USER_ERROR);
         }
+    }
 
-        $response->SetFormSubmitResponse(__('Module Edited'), false);
+    public function Install() {
+        // Module file name
+        $file = Kit::GetParam('module', _GET, _STRING);
+
+        if ($file == '')
+            trigger_error(__('Unable to install module'), E_USER_ERROR);
+
+        Debug::LogEntry('audit', 'Request to install Module: ' . $file, 'module', 'Install');
+
+        // Check that the file exists
+        if (!file_exists($file))
+            trigger_error(__('File does not exist'), E_USER_ERROR);
+
+        // Make sure the file is in our list of expected module files
+        $files = glob('modules/*.module.php');
+        
+        if (!in_array($file, $files))
+            trigger_error(__('Not a module file'), E_USER_ERROR);
+
+        // Load the file
+        include_once($file);
+
+        $type = str_replace('modules/', '', $file);
+        $type = str_replace('.module.php', '', $type);
+
+        // Load the module object inside the file
+        if (!class_exists($type))
+            trigger_error(__('Module file does not contain a class of the correct name'), E_USER_ERROR);
+
+        try {
+            Debug::LogEntry('audit', 'Validation passed, installing module.', 'module', 'Install');
+            $moduleObject = new $type($this->db, $this->user);
+            $moduleObject->InstallOrUpdate();
+        }
+        catch (Exception $e) {
+            trigger_error(__('Unable to install module'), E_USER_ERROR);
+        }
+
+        Debug::LogEntry('audit', 'Module Installed: ' . $file, 'module', 'Install');
+
+        // Excellent... capital... success
+        $response = new ResponseManager();
+        $response->refresh = true;
+        $response->refreshLocation = 'index.php?p=module';
         $response->Respond();
     }
     

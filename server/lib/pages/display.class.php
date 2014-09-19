@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,41 +20,14 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class displayDAO
+class displayDAO extends baseDAO
 {
-    private $db;
-    private $user;
-    private $has_permissions = true;
-
-    //display table fields
-    private $displayid;
-    private $display;
-    private $layoutid;
-    private $license;
-    private $licensed;
-    private $inc_schedule;
-    private $auditing;
-    private $email_alert;
-    private $alert_timeout;
-    private $ajax;
-    private $mediaInventoryStatus;
-    private $mediaInventoryXml;
-    private $macAddress;
-    private $wakeOnLan;
-    private $wakeOnLanTime;
-    private $broadCastAddress;
-    private $secureOn;
-    private $cidr;
-    private $clientIpAddress;
-    private $latitude;
-    private $longitude;
-
     function __construct(database $db, user $user)
     {
         $this->db   =& $db;
         $this->user =& $user;
 
-        include_once('lib/data/display.data.class.php');
+        Kit::ClassLoader('Display');
 
         $this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
         $this->ajax     = Kit::GetParam('ajax', _REQUEST, _WORD, 'false');
@@ -62,78 +35,6 @@ class displayDAO
 
         // validate displays so we get a realistic view of the table
         $this->validateDisplays();
-
-        if(isset($_GET['modify']) || $displayid != 0)
-        {
-            $this->sub_page = 'edit';
-
-            if (!$this->has_permissions && $this->ajax == 'true')
-                trigger_error(__("You do not have permissions to edit this display"), E_USER_ERROR);
-
-            $SQL = <<<SQL
-                SELECT display.displayid,
-                    display.display,
-                    display.defaultlayoutid,
-                    display.license,
-                    display.licensed,
-                    display.inc_schedule,
-                    display.isAuditing,
-                    display.email_alert,
-                    display.alert_timeout,
-                    display.MediaInventoryStatus,
-                    display.MediaInventoryXml,
-                    display.MacAddress,
-                    display.WakeOnLan,
-                    display.WakeOnLanTime,
-                    display.BroadCastAddress,
-                    display.SecureOn,
-                    display.Cidr,
-                    display.ClientAddress,
-                    X(display.GeoLocation) AS Latitude,
-                    Y(display.GeoLocation) AS Longitude
-             FROM display
-            WHERE display.displayid = %d
-SQL;
-
-            $SQL = sprintf($SQL, $displayid);
-
-            Debug::LogEntry('audit', $SQL);
-
-            if(!$results = $db->query($SQL))
-            {
-                trigger_error($db->error());
-                trigger_error(__("Can not get the display information for display") . '[$this->displayid]', E_USER_ERROR);
-            }
-
-            while($row = $db->get_row($results))
-            {
-                $this->displayid        = Kit::ValidateParam($row[0], _INT);
-                $this->display          = Kit::ValidateParam($row[1], _STRING);
-                $this->layoutid         = Kit::ValidateParam($row[2], _INT);
-                $this->license          = Kit::ValidateParam($row[3], _STRING);
-                $this->licensed         = Kit::ValidateParam($row[4], _INT);
-                $this->inc_schedule     = Kit::ValidateParam($row[5], _INT);
-                $this->auditing         = Kit::ValidateParam($row[6], _INT);
-                $this->email_alert      = Kit::ValidateParam($row[7], _INT);
-                $this->alert_timeout    = Kit::ValidateParam($row[8], _INT);
-                $this->mediaInventoryStatus = Kit::ValidateParam($row[9], _INT);
-                $this->mediaInventoryXml = Kit::ValidateParam($row[10], _HTMLSTRING);
-                $this->macAddress = Kit::ValidateParam($row[11], _STRING);
-                $this->wakeOnLan = Kit::ValidateParam($row[12], _INT);
-                $this->wakeOnLanTime = Kit::ValidateParam($row[13], _STRING);
-                $this->broadCastAddress = Kit::ValidateParam($row[14], _STRING);
-                $this->secureOn = Kit::ValidateParam($row[15], _STRING);
-                $this->cidr = Kit::ValidateParam($row[16], _INT);
-                $this->clientIpAddress = Kit::ValidateParam($row[17], _STRING);
-                $this->latitude = Kit::ValidateParam($row[18], _DOUBLE);
-                $this->longitude = Kit::ValidateParam($row[19], _DOUBLE);
-
-                // Make cidr null if its a 0
-                $this->cidr = ($this->cidr == 0) ? '' : $this->cidr;
-            }
-        }
-
-        return true;
     }
 
     /**
@@ -151,18 +52,58 @@ SQL;
 
         // Default options
         if (Kit::IsFilterPinned('display', 'DisplayFilter')) {
-            Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_displaygroup', Session::Get('display', 'filter_displaygroup'));
-            Theme::Set('filter_display', Session::Get('display', 'filter_display'));
+            $filter_pinned = 1;
+            $filter_displaygroup = Session::Get('display', 'filter_displaygroup');
+            $filter_display = Session::Get('display', 'filter_display');
+            $filter_showThumbnail = Session::Get('display', 'filter_showThumbnail');
         }
+        else {
+            $filter_pinned = 0;
+            $filter_displaygroup = NULL;
+            $filter_display = NULL;
+            $filter_showThumbnail = 0;
+        }
+
+        $formFields = array();
+        $formFields[] = FormManager::AddText('filter_display', __('Name'), $filter_display, NULL, 'n');
 
         $displayGroups = $this->user->DisplayGroupList(0);
         array_unshift($displayGroups, array('displaygroupid' => '0', 'displaygroup' => 'All'));
+        $formFields[] = FormManager::AddCombo(
+            'filter_displaygroup', 
+            __('Owner'), 
+            $filter_displaygroup,
+            $displayGroups,
+            'displaygroupid',
+            'displaygroup',
+            NULL, 
+            'd');
 
-        Theme::Set('displaygroup_field_list', $displayGroups);
+        $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'), 
+            $filter_showThumbnail, NULL, 
+            't');
 
-        // Render the Theme and output
-        Theme::Render('display_page');
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+            $filter_pinned, NULL, 
+            'k');
+
+        // Call to render the template
+        Theme::Set('header_text', __('Displays'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Render('grid_render');
+    }
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Filter'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Open the filter form'),
+                    'onclick' => 'ToggleFilterView(\'Filter\')'
+                    )
+            );                   
     }
 
     /**
@@ -175,45 +116,38 @@ SQL;
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $db             =& $this->db;
-        $response       = new ResponseManager();
+        $response = new ResponseManager();
 
-        $displayid      = Kit::GetParam('displayid', _POST, _INT);
+        $displayObject  = new Display();
+        $displayObject->displayId = Kit::GetParam('displayid', _POST, _INT);
 
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
+        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
-        $display        = Kit::GetParam('display', _POST, _STRING);
-        $layoutid       = Kit::GetParam('defaultlayoutid', _POST, _INT);
-        $inc_schedule   = Kit::GetParam('inc_schedule', _POST, _INT);
-        $auditing       = Kit::GetParam('auditing', _POST, _INT);
-        $email_alert    = Kit::GetParam('email_alert', _POST, _INT);
-        $alert_timeout  = Kit::GetParam('alert_timeout', _POST, _INT);
-        $wakeOnLanEnabled = Kit::GetParam('wakeOnLanEnabled', _POST, _CHECKBOX);
-        $wakeOnLanTime = Kit::GetParam('wakeOnLanTime', _POST, _STRING);
-        $broadCastAddress = Kit::GetParam('broadCastAddress', _POST, _STRING);
-        $secureOn = Kit::GetParam('secureOn', _POST, _STRING);
-        $cidr = Kit::GetParam('cidr', _POST, _INT);
-        $latitude = Kit::GetParam('latitude', _POST, _DOUBLE);
-        $longitude = Kit::GetParam('longitude', _POST, _DOUBLE);
-
-        // Do we take, or revoke a license
-        $licensed = Kit::GetParam('licensed', _POST, _INT);
-        
-        // Validation
-        if ($display == '')
-            trigger_error(__("Can not have a display without a name"), E_USER_ERROR);
-
-        if ($wakeOnLanEnabled == 1 && $wakeOnLanTime == '')
-            trigger_error(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), E_USER_ERROR);
-
-        $displayObject  = new Display($db);
-
-        if (!$displayObject->Edit($displayid, $display, $auditing, $layoutid, $licensed, $inc_schedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr, $latitude, $longitude))
-        {
+        if (!$displayObject->Load())
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-        }
+
+        // Update properties
+        $displayObject->display = Kit::GetParam('display', _POST, _STRING);
+        $displayObject->description = Kit::GetParam('description', _POST, _STRING);
+        $displayObject->isAuditing = Kit::GetParam('auditing', _POST, _INT);
+        $displayObject->defaultLayoutId = Kit::GetParam('defaultlayoutid', _POST, _INT);
+        $displayObject->licensed = Kit::GetParam('licensed', _POST, _INT);
+        $displayObject->incSchedule = Kit::GetParam('inc_schedule', _POST, _INT);
+        $displayObject->emailAlert = Kit::GetParam('email_alert', _POST, _INT);
+        $displayObject->alertTimeout = Kit::GetParam('alert_timeout', _POST, _INT);
+        $displayObject->wakeOnLanEnabled = Kit::GetParam('wakeOnLanEnabled', _POST, _CHECKBOX);
+        $displayObject->wakeOnLanTime = Kit::GetParam('wakeOnLanTime', _POST, _STRING);
+        $displayObject->broadCastAddress = Kit::GetParam('broadCastAddress', _POST, _STRING);
+        $displayObject->secureOn = Kit::GetParam('secureOn', _POST, _STRING);
+        $displayObject->cidr = Kit::GetParam('cidr', _POST, _INT);
+        $displayObject->latitude = Kit::GetParam('latitude', _POST, _DOUBLE);
+        $displayObject->longitude = Kit::GetParam('longitude', _POST, _DOUBLE);
+        $displayObject->displayProfileId = Kit::GetParam('displayprofileid', _POST, _INT);
+
+        if (!$displayObject->Edit())
+            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Display Saved.'));
         $response->Respond();
@@ -230,51 +164,154 @@ SQL;
         $response       = new ResponseManager();
 
         // Get the display Id
-        $displayid = $this->displayid;
+        $displayObject = new Display();
+        $displayObject->displayId = Kit::GetParam('displayid', _GET, _INT);
 
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
+        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
+
+        // Load this display
+        if (!$displayObject->Load())
+            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 
         // Set some information about the form
         Theme::Set('form_id', 'DisplayEditForm');
         Theme::Set('form_action', 'index.php?p=display&q=modify');
-        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayid . '" />');
+        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayObject->displayId . '" />');
         
-        // Set the field values
-        Theme::Set('display', $this->display);
-        Theme::Set('defaultlayoutid', $this->layoutid);
-        Theme::Set('license', $this->license);
-        Theme::Set('licensed', $this->licensed);
-        Theme::Set('inc_schedule', $this->inc_schedule);
-        Theme::Set('auditing', $this->auditing);
-        Theme::Set('email_alert', $this->email_alert);
-        Theme::Set('alert_timeout', $this->alert_timeout);
-        Theme::Set('wakeonlanenabled', $this->wakeOnLan);
-        Theme::Set('wakeonlantime', $this->wakeOnLanTime);
-        Theme::Set('secureon', $this->secureOn);
-        Theme::Set('cidr', $this->cidr);
-        Theme::Set('latitude', $this->latitude);
-        Theme::Set('longitude', $this->longitude);
+        // Column 1
+        $formFields = array();
+        $formFields[] = FormManager::AddText('display', __('Display'), $displayObject->display, 
+            __('The Name of the Display - (1 - 50 characters).'), 'd', 'required');
+
+        $formFields[] = FormManager::AddText('hardwareKey', __('Display\'s Hardware Key'), $displayObject->license, 
+            __('A unique identifier for this display.'), 'h', 'required', NULL, false);
+
+        $formFields[] = FormManager::AddText('description', __('Description'), $displayObject->description, 
+            __('A description - (1 - 254 characters).'), 'p', 'maxlength="50"');
+
+        $formFields[] = FormManager::AddCombo(
+                    'licensed', 
+                    __('Licence Display?'), 
+                    $displayObject->licensed,
+                    array(array('licensedid' => '1', 'licensed' => 'Yes'), array('licensedid' => '0', 'licensed' => 'No')),
+                    'licensedid',
+                    'licensed',
+                    __('Use one of the available licenses for this display?'), 
+                    'l');
+
+        $formFields[] = FormManager::AddCombo(
+                    'defaultlayoutid', 
+                    __('Default Layout'), 
+                    $displayObject->defaultLayoutId,
+                    $this->user->LayoutList(),
+                    'layoutid',
+                    'layout',
+                    __('The Default Layout to Display where there is no other content.'), 
+                    't');
+
+        Theme::Set('form_fields_general', $formFields);
+
+        // Maintenance
+        $formFields = array();
+        $formFields[] = FormManager::AddCombo(
+                    'email_alert', 
+                    __('Email Alerts'), 
+                    $displayObject->emailAlert,
+                    array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
+                    'id',
+                    'value',
+                    __('Do you want to be notified by email if there is a problem with this display?'), 
+                    'a');
+
+        $formFields[] = FormManager::AddNumber('alert_timeout', __('Alert Timeout'), $displayObject->alertTimeout, 
+            __('How long in minutes after the display last connected to the webservice should we send an alert. Set this value higher than the collection interval on the client. Set to 0 to use global default.'), 
+            'o');
+
+        Theme::Set('form_fields_maintenance', $formFields);
         
-        // If the broadcast address has not been set, then default to the client ip address
-        Theme::Set('broadcastaddress', (($this->broadCastAddress == '') ? $this->clientIpAddress : $this->broadCastAddress));
+        // Location
+        $formFields = array();
 
-        // List of Layouts
-        Theme::Set('default_layout_field_list', $this->user->LayoutList());
-        Theme::Set('interleave_default_field_list', array(array('inc_scheduleid' => '1', 'inc_schedule' => 'Yes'), array('inc_scheduleid' => '0', 'inc_schedule' => 'No')));
-        Theme::Set('auditing_field_list', array(array('auditingid' => '1', 'auditing' => 'Yes'), array('auditingid' => '0', 'auditing' => 'No')));
-        Theme::Set('email_alert_field_list', array(array('email_alertid' => '1', 'email_alert' => 'Yes'), array('email_alertid' => '0', 'email_alert' => 'No')));
-        Theme::Set('license_field_list', array(array('licensedid' => '1', 'licensed' => 'Yes'), array('licensedid' => '0', 'licensed' => 'No')));
+        $formFields[] = FormManager::AddNumber('latitude', __('Latitude'), $displayObject->latitude, 
+            __('The Latitude of this display'), 'g');
 
-        // Is the wake on lan field checked?
-        Theme::Set('wake_on_lan_checked', (($this->wakeOnLan == 1) ? ' checked' : ''));
+        $formFields[] = FormManager::AddNumber('longitude', __('Longitude'), $displayObject->longitude, 
+            __('The Longitude of this Display'), 'g');
+
+        Theme::Set('form_fields_location', $formFields);
+
+        // Wake on LAN
+        $formFields = array();
         
-        // Render the form and output
-        $form = Theme::RenderReturn('display_form_edit');
+        $formFields[] = FormManager::AddCheckbox('wakeOnLanEnabled', __('Enable Wake on LAN'), 
+            $displayObject->wakeOnLanEnabled, __('Wake on Lan requires the correct network configuration to route the magic packet to the display PC'), 
+            'w');
 
-        $response->SetFormRequestResponse($form, __('Edit a Display'), '650px', '350px');
-        $response->dialogClass = 'modal-big';
+        $formFields[] = FormManager::AddText('broadCastAddress', __('BroadCast Address'), (($displayObject->broadCastAddress == '') ? $displayObject->clientAddress : $displayObject->broadCastAddress), 
+            __('The IP address of the remote host\'s broadcast address (or gateway)'), 'b');
+
+        $formFields[] = FormManager::AddText('secureOn', __('Wake on LAN SecureOn'), $displayObject->secureOn, 
+            __('Enter a hexidecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn).'), 's');
+
+        $formFields[] = FormManager::AddText('wakeOnLanTime', __('Wake on LAN Time'), $displayObject->wakeOnLanTime, 
+            __('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), 't');
+
+        $formFields[] = FormManager::AddText('cidr', __('Wake on LAN CIDR'), $displayObject->cidr, 
+            __('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unkown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), 'c');
+
+        Theme::Set('form_fields_wol', $formFields);
+
+        // Advanced
+        $formFields = array();
+        
+        $displayProfileList = $this->user->DisplayProfileList(NULL, array('type' => $displayObject->clientType));
+        array_unshift($displayProfileList, array('displayprofileid' => 0, 'name' => ''));
+
+        $formFields[] = FormManager::AddCombo(
+                    'displayprofileid', 
+                    __('Settings Profile?'), 
+                    $displayObject->displayProfileId,
+                    $displayProfileList,
+                    'displayprofileid',
+                    'name',
+                    __('What display profile should this display use?'), 
+                    'p');
+
+        $formFields[] = FormManager::AddCombo(
+                    'inc_schedule', 
+                    __('Interleave Default'), 
+                    $displayObject->incSchedule,
+                    array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
+                    'id',
+                    'value',
+                    __('Whether to always put the default layout into the cycle.'), 
+                    'i');
+
+        $formFields[] = FormManager::AddCombo(
+                    'auditing', 
+                    __('Auditing'), 
+                    $displayObject->isAuditing,
+                    array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
+                    'id',
+                    'value',
+                    __('Collect auditing from this client. Should only be used if there is a problem with the display.'), 
+                    'a');
+
+        Theme::Set('form_fields_advanced', $formFields);
+
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('location', __('Location'));
+        $tabs[] = FormManager::AddTab('maintenance', __('Maintenance'));
+        $tabs[] = FormManager::AddTab('wol', __('Wake on LAN'));
+        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+
+        Theme::Set('form_tabs', $tabs);
+
+        $response->SetFormRequestResponse(NULL, __('Edit a Display'), '650px', '350px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayEditForm").submit()');
@@ -299,6 +336,10 @@ SQL;
         $filter_displaygroupid = Kit::GetParam('filter_displaygroup', _POST, _INT);
         setSession('display', 'filter_displaygroup', $filter_displaygroupid);
 
+        // Thumbnail?
+        $filter_showThumbnail = Kit::GetParam('filter_showThumbnail', _REQUEST, _CHECKBOX);
+        setSession('display', 'filter_showThumbnail', $filter_showThumbnail);
+
         // Pinned option?        
         setSession('display', 'DisplayFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
@@ -314,6 +355,28 @@ SQL;
         $vncTemplate = Config::GetSetting('SHOW_DISPLAY_AS_VNCLINK');
         $linkTarget = Kit::ValidateParam(Config::GetSetting('SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
         
+        $cols = array(
+                array('name' => 'displayid', 'title' => __('ID')),
+                array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
+                array('name' => 'display', 'title' => __('Display')),
+                array('name' => 'description', 'title' => __('Description')),
+                array('name' => 'layout', 'title' => __('Default Layout')),
+                array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true),
+                array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true),
+                array('name' => 'loggedin', 'title' => __('Logged In'), 'icons' => true),
+                array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
+                array('name' => 'clientaddress', 'title' => __('IP Address')),
+                array('name' => 'macaddress', 'title' => __('Mac Address'))
+            );
+        
+        if ($filter_showThumbnail == 1) {
+            $cols[] = array('name' => 'screenShotRequested', 'title' => __('Screen shot?'), 'icons' => true);
+            $cols[] = array('name' => 'thumbnail', 'title' => __('Thumbnail'));
+        }
+
+        Theme::Set('table_cols', $cols);
+        Theme::Set('rowClass', 'mediainventorystatus');
+
         $rows = array();
 
         foreach($displays as $row)
@@ -331,25 +394,45 @@ SQL;
             $row['lastaccessed'] = date("Y-m-d H:i:s", $row['lastaccessed']);
 
             // Create some login lights
-            $row['licensed'] = ($row['licensed'] == 1) ? 'icon-ok' : 'icon-remove';
-            $row['inc_schedule'] = ($row['inc_schedule'] == 1) ? 'icon-ok' : 'icon-remove';
-            $row['email_alert'] = ($row['email_alert'] == 1) ? 'icon-ok' : 'icon-remove';
-            $row['loggedin'] = ($row['loggedin'] == 1) ? 'icon-ok' : 'icon-remove';
-            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'error' : 'warning');
+            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
+
+            // Thumbnail
+            $row['thumbnail'] = '';
+            if ($filter_showThumbnail == 1 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
+                $row['thumbnail'] = '<img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '" />';
+            }
+
+            // Edit and Delete buttons first
+            if ($row['edit'] == 1) {
+                // Edit
+                $row['buttons'][] = array(
+                        'id' => 'display_button_edit',
+                        'url' => 'index.php?p=display&q=displayForm&displayid=' . $row['displayid'],
+                        'text' => __('Edit')
+                    );
+            }
+
+            // Delete
+            if ($row['del'] == 1) {
+                $row['buttons'][] = array(
+                        'id' => 'display_button_delete',
+                        'url' => 'index.php?p=display&q=DeleteForm&displayid=' . $row['displayid'],
+                        'text' => __('Delete')
+                    );
+            }
+
+            if ($row['edit'] == 1 || $row['del'] == 1) {
+                $row['buttons'][] = array('linkType' => 'divider');
+            }
 
             // Schedule Now
-            $row['buttons'][] = array(
-                    'id' => 'display_button_schedulenow',
-                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $row['displaygroupid'],
-                    'text' => __('Schedule Now')
-                );
-
-            // Media Inventory
-            $row['buttons'][] = array(
-                    'id' => 'display_button_mediainventory',
-                    'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $row['displayid'],
-                    'text' => __('Media Inventory')
-                );
+            if ($row['edit'] == 1 || Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes') {
+                $row['buttons'][] = array(
+                        'id' => 'display_button_schedulenow',
+                        'url' => 'index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $row['displaygroupid'],
+                        'text' => __('Schedule Now')
+                    );
+            }
 
             if ($row['edit'] == 1) {
 
@@ -360,20 +443,6 @@ SQL;
                         'text' => __('Default Layout')
                     );
 
-                // Edit
-                $row['buttons'][] = array(
-                        'id' => 'display_button_edit',
-                        'url' => 'index.php?p=display&q=displayForm&displayid=' . $row['displayid'],
-                        'text' => __('Edit')
-                    );
-
-                // Wake On LAN
-                $row['buttons'][] = array(
-                        'id' => 'display_button_wol',
-                        'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $row['displayid'],
-                        'text' => __('Wake on LAN')
-                    );
-
                 // File Associations
                 $row['buttons'][] = array(
                         'id' => 'displaygroup_button_fileassociations',
@@ -381,22 +450,33 @@ SQL;
                         'text' => __('Assign Files')
                     );
 
+                // Screen Shot
+                $row['buttons'][] = array(
+                        'id' => 'display_button_requestScreenShot',
+                        'url' => 'index.php?p=display&q=RequestScreenShotForm&displayId=' . $row['displayid'],
+                        'text' => __('Request Screen Shot')
+                    );
+
+                $row['buttons'][] = array('linkType' => 'divider');
+            }
+
+            // Media Inventory
+            $row['buttons'][] = array(
+                    'id' => 'display_button_mediainventory',
+                    'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $row['displayid'],
+                    'text' => __('Media Inventory')
+                );
+
+            if ($row['edit'] == 1) {
+
                 // Logs
                 $row['buttons'][] = array(
                         'id' => 'displaygroup_button_logs',
                         'url' => 'index.php?p=log&q=LastHundredForDisplay&displayid=' . $row['displayid'],
-                        'text' => __('Last 100 Log Messages')
+                        'text' => __('Recent Log')
                     );
-            }
 
-            if ($row['del'] == 1) {
-
-                // Delete
-                $row['buttons'][] = array(
-                        'id' => 'display_button_delete',
-                        'url' => 'index.php?p=display&q=DeleteForm&displayid=' . $row['displayid'],
-                        'text' => __('Delete')
-                    );
+                $row['buttons'][] = array('linkType' => 'divider');
             }
 
             if ($row['modifypermissions'] == 1) {
@@ -421,6 +501,17 @@ SQL;
                         'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'] . '&displayid=' . $row['displayid'],
                         'text' => __('Version Information')
                     );
+
+                $row['buttons'][] = array('linkType' => 'divider');
+            }
+
+            if ($row['edit'] == 1) {
+                // Wake On LAN
+                $row['buttons'][] = array(
+                        'id' => 'display_button_wol',
+                        'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $row['displayid'],
+                        'text' => __('Wake on LAN')
+                    );
             }
 
             // Assign this to the table row
@@ -429,7 +520,7 @@ SQL;
 
         Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('display_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();
@@ -499,9 +590,9 @@ SQL;
         Theme::Set('form_action', 'index.php?p=display&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayid . '">');
 
-        $form = Theme::RenderReturn('display_form_delete');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this display? This cannot be undone.'))));
 
-        $response->SetFormRequestResponse($form, __('Delete this Display?'), '350px', '210');
+        $response->SetFormRequestResponse(NULL, __('Delete this Display?'), '350px', '210');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DisplayDeleteForm").submit()');
@@ -560,12 +651,21 @@ SQL;
         Theme::Set('form_id', 'DefaultLayoutForm');
         Theme::Set('form_action', 'index.php?p=display&q=DefaultLayout');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayId" value="' . $displayId . '">');
-        Theme::Set('layout_field_list', $this->user->LayoutList());
-        Theme::Set('defaultlayoutid', $defaultLayoutId);
 
-        $form = Theme::RenderReturn('display_form_default_layout');
+        $formFields = array();
+        $formFields[] = FormManager::AddCombo(
+                    'defaultlayoutid', 
+                    __('Default Layout'), 
+                    $defaultLayoutId,
+                    $this->user->LayoutList(),
+                    'layoutid',
+                    'layout',
+                    __('The Default Layout will be shown there are no other scheduled Layouts. It is usually a full screen logo or holding image.'), 
+                    'd');
 
-        $response->SetFormRequestResponse($form, __('Edit Default Layout'), '300px', '150px');
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Edit Default Layout'), '300px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'DefaultLayout') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DefaultLayoutForm").submit()');
@@ -616,7 +716,7 @@ SQL;
             trigger_error(__('No DisplayId Given'));
 
         // Get the media inventory xml for this display
-        $SQL = "SELECT MediaInventoryXml FROM display WHERE DisplayId = %d";
+        $SQL = "SELECT IFNULL(MediaInventoryXml, '<xml></xml>') AS MediaInventoryXml FROM display WHERE DisplayId = %d";
         $SQL = sprintf($SQL, $displayId);
 
         if (!$mediaInventoryXml = $db->GetSingleValue($SQL, 'MediaInventoryXml', _HTMLSTRING))
@@ -848,9 +948,9 @@ SQL;
         Theme::Set('form_action', 'index.php?p=display&q=WakeOnLan');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayId" value="' . $displayId . '"><input type="hidden" name="MacAddress" value="' . $macAddress . '">');
 
-        $form = Theme::RenderReturn('display_form_wakeonlan');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to send a Wake On Lan message to this display?'))));
 
-        $response->SetFormRequestResponse($form, __('Wake On Lan'), '300px', '250px');
+        $response->SetFormRequestResponse(NULL, __('Wake On Lan'), '300px', '250px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Send'), '$("#WakeOnLanForm").submit()');
         $response->Respond();
@@ -876,6 +976,74 @@ SQL;
 
         $response->SetFormSubmitResponse(__('Wake on Lan command sent.'));
         $response->Respond();
-    }    
+    }
+
+    public function ScreenShot() {
+        $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+        
+        // Output an image if present, otherwise not found image.
+        $file = 'screenshots/' . $displayId . '_screenshot.jpg';
+        
+        // File upload directory.. get this from the settings object
+        $library = Config::GetSetting("LIBRARY_LOCATION");
+        $fileName = $library . $file;
+        
+        if (!file_exists($fileName)) {
+            $fileName = Theme::ImageUrl('forms/filenotfound.gif');
+        }
+
+        $size = filesize($fileName);
+
+        $fi = new finfo( FILEINFO_MIME_TYPE );
+        $mime = $fi->file( $fileName );
+        header("Content-Type: {$mime}");
+
+        //Output a header
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Content-Length: ' . $size);
+        
+        // Return the file with PHP
+        // Disable any buffering to prevent OOM errors.
+        @ob_end_clean();
+        @ob_end_flush();
+        readfile($fileName);
+    }
+
+    public function RequestScreenShotForm() {
+        $db =& $this->db;
+        $response = new ResponseManager();
+
+        $displayId = Kit::GetParam('displayId', _GET, _INT);
+
+        // Set some information about the form
+        Theme::Set('form_id', 'RequestScreenShotForm');
+        Theme::Set('form_action', 'index.php?p=display&q=RequestScreenShot');
+        Theme::Set('form_meta', '<input type="hidden" name="displayId" value="' . $displayId . '">');
+
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to request a screen shot? The next time the client connects to the CMS the screen shot will be sent.'))));
+
+        $response->SetFormRequestResponse(NULL, __('Request Screen Shot'), '300px', '250px');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Request'), '$("#RequestScreenShotForm").submit()');
+        $response->Respond();
+    }
+
+    public function RequestScreenShot() {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+        
+        $db =& $this->db;
+        $response = new ResponseManager();
+        $displayObject  = new Display($db);
+
+        $displayId = Kit::GetParam('displayId', _POST, _INT);
+
+        if (!$displayObject->RequestScreenShot($displayId))
+            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Request Sent.'));
+        $response->Respond();
+    }
 }
 ?>

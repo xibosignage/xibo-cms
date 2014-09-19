@@ -33,7 +33,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<table class="user_filterform">
 					<tr>
 						<td><label for="filter_name"><?php echo Theme::Translate('Name') ?></label></td>
-						<td><input type="text" id="filter_name" name="filter_name" value="<?php echo Theme::Get('filter_name'); ?>"></td>
+						<td><input class="form-control" type="text" id="filter_name" name="filter_name" value="<?php echo Theme::Get('filter_name'); ?>"></td>
 					</tr>
 				</table>
 			</form>

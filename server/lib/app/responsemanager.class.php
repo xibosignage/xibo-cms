@@ -29,6 +29,7 @@ class ResponseManager
 	public $html;
 	public $callBack;
 	public $buttons;
+	public $fieldActions;
 	
 	public $sortable;
 	public $sortingDiv;
@@ -73,6 +74,7 @@ class ResponseManager
         $this->appendHiddenSubmit = true;
         $this->uniqueReference = '';
 		$this->buttons = '';
+		$this->fieldActions = '';
         $this->pageSize = 10;
         $this->pageNumber = 0;
         $this->initialSortColumn = 1;
@@ -150,6 +152,9 @@ class ResponseManager
 	 */
 	public function SetFormRequestResponse($form, $title, $width = '', $height = '', $callBack = '')
 	{
+		if ($form == NULL)
+			$form = Theme::RenderReturn('form_render');
+
 		$this->html 					= $form;
 		$this->dialogTitle 				= $title;
 		$this->callBack 				= $callBack;
@@ -211,6 +216,26 @@ class ResponseManager
 		return true;
 	}
 
+	/**
+	 * Add a Field Action to a Field
+	 * @param string $field   The field name
+	 * @param string $action  The action name
+	 * @param string $value  The value to trigger on
+	 * @param string $actions The actions (field => action)
+	 * @param string $operation The Operation (optional)
+	 */
+	public function AddFieldAction($field, $action, $value, $actions, $operation = "equals") {
+		$this->fieldActions[] = array(
+			'field' => $field,
+			'trigger' => $action, 
+			'value' => $value,
+			'operation' => $operation,
+			'actions' => $actions
+			);
+
+		return true;
+	}
+
         /**
          * Responds with an Error
          * @param <string> $message
@@ -255,6 +280,7 @@ class ResponseManager
 			// General
 			$response['html'] 			= $this->html;
 			$response['buttons']		= $this->buttons;
+			$response['fieldActions'] = $this->fieldActions;
             $response['uniqueReference'] = $this->uniqueReference;
 			
 			$response['success']		= $this->success;
@@ -307,42 +333,31 @@ class ResponseManager
 			// End the execution
 			die();
 		}
-		else
-		{			
+		else {			
 			// If the response does not equal success then output an error
-			if (!$this->success)
-			{
+			if (!$this->success) {
 				// Store the message
 				$_SESSION['ErrorMessage'] 	= $this->message;
 				
 				// Redirect to the following
-				$url						= 'index.php?p=error';
-				
-				// Header or JS redirect
-				if (headers_sent()) 
-				{
-					echo "<script>document.location.href='$url';</script>\n";
-				} 
-				else 
-				{
-					header( 'HTTP/1.1 301 Moved Permanently' );
-					header( 'Location: ' . $url );
-				}
-				
-				// End the execution
-				die();
+				$url = 'index.php?p=error';
 			}
+			else {
+				// Have we been asked to refresh?
+				$url = ($this->refresh) ? $this->refreshLocation : 'index.php?p=' . Kit::GetParam('p', _GET, _WORD, 'index');
+			}
+
+			// Redirect and end execution
+			Kit::Redirect($url);
 		}
 		
 		return;
 	}
         
-    public static function Pager($id)
-    {
+    public static function Pager($id, $type = 'grid_pager') {
         Theme::Set('pager_id', 'XiboPager_' . $id);
         
-        return Theme::RenderReturn('grid_pager');
+        return Theme::RenderReturn($type);
     }
 }
-
 ?>

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -19,135 +19,225 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-	
-class FormManager
-{
-	private $db;
-	private $user;
-	
-	public function __construct(database $db, user $user)
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-	}
-	
-	/**
-	 * Returns a drop down list based on the provided SQL - the ID should be the first field, and the name the second
-	 * @return 
-	 * @param $SQL Object
-	 * @param $list_name Object
-	 * @param $selected Object[optional]
-	 * @param $callback Object[optional]
-	 * @param $flat_list Object[optional]
-	 * @param $checkPermissions Object[optional]
-	 * @param $userid Object[optional]
-	 * @param $permissionLevel Object[optional]
-	 * @param $useQueryId Object[optional]
-	 */
-	public function DropDown($SQL, $list_name, $selected = "", $callback = "", $flat_list = false, $checkPermissions = false, $userid = "", $permissionLevel = "see", $useQueryId = false) 
-	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-	
-		if (!$result = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			return __("Query Error");
-		}
-		
-		if ($db->num_rows($result)==0) 
-		{
-			$list = __("No selections available");
-			return $list;
-		}
-		
-		if ($flat_list) 
-		{
-			//we want to generate a flat list of option | value pairs
-			$list = "";
-		
-			while ($results = $db->get_row($result)) 
-			{
-				$col0 = $results[0];
-				$col1 = $results[1];
-				
-				if ($checkPermissions) 
-				{
-					$permissionid = $results[2];
-					$ownerid	  = $results[3];
-					
-					if ($useQueryId)
-					{
-						list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $col0);					
-					}
-					else
-					{
-						list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $userid);
-					}
-	
-					if (($permissionLevel == "see" && $see_permissions) || $permissionLevel == "edit" && $edit_permissions) {
-						$list .= "$col0|$col1,";
-					}
-				}
-				else 
-				{
-					$list .= "$col0|$col1,";
-				}
-			}
-			//trim the commas
-			$list = rtrim($list,",");
-		}
-		else 
-		{
-			$list = <<<END
-			<select name="$list_name" id="$list_name" $callback>
-END;
-			while ($results = $db->get_row($result)) 
-			{
-				$col0 = $results[0];
-				$col1 = $results[1];
-				
-				if ($checkPermissions) 
-				{
-					$permissionid = $results[2];
-					$ownerid	  = $results[3];
-					
-					if ($useQueryId)
-					{
-						list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $col0);					
-					}
-					else
-					{
-						list($see_permissions , $edit_permissions) = $user->eval_permission($ownerid, $permissionid, $userid);
-					}
-	
-					if (($permissionLevel == "see" && $see_permissions) || $permissionLevel == "edit" && $edit_permissions) 
-					{
-						if ($col0 == $selected) 
-						{
-							$list .= "<option value='" . $col0 . "' selected>" . $col1 . "</option>\n";
-						}
-						else 
-						{
-							$list .= "<option value='" . $col0 . "'>" . $col1 . "</option>\n";
-						}
-					}
-				}
-				else 
-				{
-					if ($col0 == $selected) 
-					{
-						$list .= "<option value='" . $col0 . "' selected>" . $col1 . "</option>\n";
-					}
-					else 
-					{
-						$list .= "<option value='" . $col0 . "'>" . $col1 . "</option>\n";
-					}
-				}
-			}
-			$list .= "</select>\n";
-		}
-		return $list;
-	}
+    
+class FormManager {
+
+    public static function AddMessage($message, $groupClass = '') {
+        return array(
+            'name' => NULL,
+            'title' => NULL,
+            'value' => NULL,
+            'helpText' => $message,
+            'fieldType' => 'message',
+            'options' => NULL,
+            'validation' => NULL,
+            'accesskey' => NULL,
+            'groupClass' => $groupClass,
+            'enabled' => true
+        );
+    }
+
+    public static function AddRaw($raw) {
+        return array(
+            'name' => NULL,
+            'title' => NULL,
+            'value' => NULL,
+            'helpText' => $raw,
+            'fieldType' => 'raw',
+            'options' => NULL,
+            'validation' => NULL,
+            'accesskey' => NULL,
+            'groupClass' => '',
+            'enabled' => true
+        );
+    }
+
+    public static function AddHidden($name, $value) {
+        return array(
+            'name' => $name,
+            'value' => $value,
+            'fieldType' => 'hidden',
+            'enabled' => true
+        );
+    }
+
+    public static function AddButton($title, $type = 'submit', $link = '', $groupClass = '') {
+        return array(
+            'title' => $title,
+            'type' => $type,
+            'link' => $link,
+            'groupClass' => $groupClass,
+            'fieldType' => 'button',
+            'enabled' => true
+        );
+    }
+
+    public static function AddText($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '', $enabled = true) {
+        return array(
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'helpText' => $helpText,
+            'fieldType' => 'text',
+            'options' => NULL,
+            'validation' => $validation,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass,
+            'enabled' => $enabled
+        );
+    }
+
+    public static function AddMultiText($name, $title, $value, $helpText, $accessKey, $rows, $validation = '', $groupClass = '', $enabled = true) {
+        return array(
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'helpText' => $helpText,
+            'fieldType' => 'textarea',
+            'options' => NULL,
+            'validation' => $validation,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass,
+            'enabled' => $enabled,
+            'rows' => $rows
+        );
+    }
+
+    public static function AddNumber($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '', $enabled = true) {
+        return array(
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'helpText' => $helpText,
+            'fieldType' => 'number',
+            'options' => NULL,
+            'validation' => $validation,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass,
+            'enabled' => $enabled
+        );
+    }
+
+    public static function AddEmail($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '', $enabled = true) {
+        return array(
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'helpText' => $helpText,
+            'fieldType' => 'email',
+            'options' => NULL,
+            'validation' => $validation,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass,
+            'enabled' => $enabled
+        );
+    }
+
+    public static function AddCheckbox($name, $title, $value, $helpText, $accessKey, $groupClass = '', $enabled = true) {
+        return array(
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'helpText' => $helpText,
+            'fieldType' => 'checkbox',
+            'options' => NULL,
+            'validation' => NULL,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass,
+            'enabled' => $enabled
+        );
+    }
+
+    public static function AddRadio($name, $id, $title, $value, $setValue, $helpText, $accessKey, $groupClass = '', $enabled = true) {
+        return array(
+            'id' => $id,
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'setValue' => $setValue,
+            'helpText' => $helpText,
+            'fieldType' => 'radio',
+            'options' => NULL,
+            'validation' => NULL,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass,
+            'enabled' => $enabled
+        );
+    }
+
+    public static function AddPassword($name, $title, $value, $helpText, $accessKey, $groupClass = '', $enabled = true) {
+        return array(
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'helpText' => $helpText,
+            'fieldType' => 'password',
+            'options' => NULL,
+            'validation' => NULL,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass,
+            'enabled' => $enabled
+        );
+    }
+
+    public static function AddCombo($name, $title, $value, $options, $optionId, $optionValue, $helpText, $accessKey, $groupClass = '', $enabled = true, $callBack = '', $classColumn = '', $styleColumn = '', $optionGroups = '', $attributes = array()) {
+        return array(
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'helpText' => $helpText,
+            'fieldType' => 'dropdown',
+            'options' => $options,
+            'optionId' => $optionId,
+            'optionValue' => $optionValue,
+            'validation' => NULL,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass,
+            'enabled' => $enabled,
+            'callBack' => $callBack,
+            'classColumn' => $classColumn,
+            'styleColumn' => $styleColumn,
+            'optionGroups' => $optionGroups,
+            'dataAttributes' => $attributes
+        );
+    }
+
+    public static function AddMultiCombo($name, $title, $value, $options, $optionId, $optionValue, $helpText, $accessKey, $groupClass = '', $enabled = true, $callBack = '', $classColumn = '', $styleColumn = '', $optionGroups = '', $attributes = array()) {
+        return array(
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'helpText' => $helpText,
+            'fieldType' => 'dropdownmulti',
+            'options' => $options,
+            'optionId' => $optionId,
+            'optionValue' => $optionValue,
+            'validation' => NULL,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass,
+            'enabled' => $enabled,
+            'callBack' => $callBack,
+            'classColumn' => $classColumn,
+            'styleColumn' => $styleColumn,
+            'optionGroups' => $optionGroups,
+            'dataAttributes' => $attributes
+        );
+    }
+
+    public static function AddPermissions($name, $options) {
+        return array(
+            'name' => $name,
+            'fieldType' => 'permissions',
+            'options' => $options,
+            'groupClass' => NULL,
+            'enabled' => true
+        );
+    }
+
+    public static function AddTab($id, $name) {
+        return array(
+            'id' => $id, 'name' => $name
+        );
+    }
 }
 ?>

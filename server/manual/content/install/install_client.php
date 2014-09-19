@@ -71,84 +71,63 @@ browse. After making the selection (or if leaving to the default) click "Next" t
 
 
 <h2>Configuring your Client <small>The Options Screen</small></h2>
-<p>All newly installed client must be configured and registered with the <?php echo PRODUCT_NAME; ?> Server before it can be used. The <?php echo PRODUCT_NAME; ?> Configuration Options are accessible on each client installation from the Start Menu -&gt; All programs</p>
+<p>Newly installed clients must be configured and registered with the <?php echo PRODUCT_NAME; ?> Server before they can be used. The <?php echo PRODUCT_NAME; ?> Configuration Options are accessible on each client installation from the <code>Start Menu, All programs</code>.</p>
 
 <p><img class="img-thumbnail" alt="Program Menu" src="content/install/pm.png"></p>
 
 <p>Select "<?php echo PRODUCT_NAME; ?> Client Options" to register this display on the <?php echo PRODUCT_NAME; ?> Network; or to
 make changes to this display configuration.</p>
 
-<h3>Options <small>General</small></h3>
 
-<p><img class="img-thumbnail" alt="<?php echo PRODUCT_NAME; ?> General Settings" src="content/install/settings_gen.png" /></p>
+<h3>The Client Options Screen</h3>
+<p>Most of the client options are set on the CMS and delivered over the internet to the client. This keeps the client configuration to a minimum on each new installation.</p>
 
-<p>
-	<ul>
-		<li>Server Address: Fill in the address of your <?php echo PRODUCT_NAME; ?> server address. If your <?php echo PRODUCT_NAME; ?> server is on the same machine as the client, enter "http://localhost/<?php echo PRODUCT_NAME; ?>". If <?php echo PRODUCT_NAME; ?> server is installed on a different computer, enter the IP address or hostname of the machine the <?php echo PRODUCT_NAME; ?> server is installed on - for example "http://192.168.0.4/<?php echo PRODUCT_NAME; ?>" or "http://www.my-server.com/<?php echo PRODUCT_NAME; ?>" or similar.</li>
+<p>Before the options can be transmitted from the CMS it is necessary to register the display with the CMS. This can be done from the client options screen, pictured below. There are a few other settings that can only be set on the client side. These are explained below.</p>
 
-		<li>Server Key: Enter your server key in the "Server Key" box. If you cannot remember the key you can find it in the Settings dialogue on the <a href="../admin/settings.php#server_key">Administration->Settings</a> menu in the web interface on the server.</li>
+<p><img class="img-thumbnail" alt="Program Menu" src="content/install/settings_gen.png"></p>
 
-		<li><p>Local Library Location: defaults to a folder called "<?php echo PRODUCT_NAME; ?> Library" It is used to cache content from the <?php echo PRODUCT_NAME; ?> server so that the client can continue to play if the connection to the <?php echo PRODUCT_NAME; ?> server is lost. If you want to change to a different folder, use the "Browse" button to choose an alternative folder. The library folder must be given write access right to the <?php echo PRODUCT_NAME; ?> client.</p>
-		
-		<div class="alert alert-warning">You must NOT use the server's library location (if it is on the same PC as the client or via a file share)</div>
-		</li>
+<h3>The Settings <small>An explanation of each setting</small></h3>
+<dl>
+	<dt>CMS Address</dt>
+	<dd>This is the fully qualified address of your CMS installation. For example <code>http://your.domain/cms/</code>.</dd>
+</dl>
+<dl>
+	<dt>Key</dt>
+	<dd>The secret CMS Key that will authenticate this display with the CMS.</dd>
+</dl>
+<dl>
+	<dt>Local Library</dt>
+	<dd>The location for the display client to store its local files. Files are downloaded from the CMS so that the client will still function if it looses connection with the CMS. </dd>
+</dl>
+<dl>
+	<dt>Display ID</dt>
+	<dd>The unique ID for this display. An automatically generated unique ID will be assigned at installation but can be modified if appropriate.</dd>
+</dl>
+<dl>
+	<dt>Splash Screen</dt>
+	<dd>Optionally override the splash screen with an image stored locally on the client PC.</dd>
+</dl>
 
-		<li>The collection interval for content: is the interval in seconds that the client will poll the server for new content. The more
-		frequent the collections, the quicker the client will update when changes are made on the server - but at the expense of bandwidth 
-		and possibly minor freezes in things like scrolling text when the collection happens. We don't recommend values lower than 60 seconds.</li>
+<h3>Proxy settings</h3>
+<p>The display client needs to have access to the CMS during the registration process and also to get new content. If the client is behind a proxy server, then details of that server can be entered in the proxy section.</p>
+<dl>
+	<dt>Username</dt>
+	<dd>The user name used to authenticate with the Proxy Server.</dd>
+</dl>
+<dl>
+	<dt>Password</dt>
+	<dd>The password used to authenticate with the Proxy Server.</dd>
+</dl>
+<dl>
+	<dt>Domain</dt>
+	<dd>The domain used to authenticate with the Proxy Server.</dd>
+</dl>
 
-		<li>The unique key for this client: is a unique identifier for this client machine. It is generated from a mix of Windows system identifiers and
-		your hardware. If you are installing for the first time, there is no need to amend this value. If you are changing hardware or want to have
-		two clients using the same server account then you can edit the key as required.</li>
+<h3>The Save button and Status Messages</h3>
+<p>Once all of the settings have been filled in (minimum CMS Address, Key, Local Library and Display ID) the Save button should be pressed. At this point the message window will update with the status <strong>Saving with CMS... Please Wait...</strong>.</p>
 
-		<li>Scroll Step Amount (px): is the number of pixels scrolling text will advance each time scrolling text items are told to move. You should
-		leave this set to 1px for smooth viewing.</li>
+<p>Assuming there are no errors with the communication between the CMS Address and the client, the display will be registered and awaiting approval.</p>
 
-		<li><p>Enable Powerpoint: Tick the box if you have the full version of PowerPoint 2003 or later installed and want to use PowerPoint media items.</p>
-		<div class="alert alert-info">Be sure to read the notes on Powerpoint setup here: <a href="#windows_modifications"> Windows Modifications.</a></div></li>
-
-		<li>Enable Statistics: Tick the box if you want the client to send statistics back to the <?php echo PRODUCT_NAME; ?> server. This will generate alot of data that will be 
-		stored in the <?php echo PRODUCT_NAME; ?> database. If you don't have any specific use for statistics, we recommend you turn this option off.
-
-		<p>Click the "Save" button.</p></li>	
-	</ul>
-</p>
-
-<h3>Options <small>Proxy</small></h3>
-
-<p>If you use a proxy server to access your <?php echo PRODUCT_NAME; ?> server, go to the "Proxy" server tab and fill in the details for your network, 
-then click "Save". Make sure to set your proxy information in Internet Explorer too.</p>
-
-<p><img class="img-thumbnail" alt="<?php echo PRODUCT_NAME; ?> General Settings" src="content/install/settings_proxy.png" /></p>	
-
-<h3>Options <small>Apperance</small></h3>
-
-<p>Click "Apperance" tab to set the client display window size, and the offsets from the screen origin if so required.</p>
-<p>When the specified client display window size i.e. width &amp; height is different from the original layout intended size, some 
-of the content will be cropped. e.g. embbedded html, linked html, dataset table etc.</p>
-<p>You may use the "Offset X' i.e. set equal to the primary display width, to place the client diplay window on an extended display monitor.</p>
-
-<p><img class="img-thumbnail" alt="<?php echo PRODUCT_NAME; ?> General Settings" src="content/install/settings_app.png" /></p>
-
-<p>The default <?php echo PRODUCT_NAME; ?> Splash screen is display when the client is first launch. You may specify your own Splash Image by entering
-the image filename in the "Override Splash Screen" box.</p>
-
-<h3>Options <small>Advanced</small></h3>
-<p>The advanced options control some of the fine tuning options as well as settings to aid in troubleshooting. These options are discussed in greater detail in the Troubleshooting section of this manual.</p>
-<p><img class="img-thumbnail" alt="<?php echo PRODUCT_NAME; ?> General Settings" src="content/install/settings_adv.png" /></p>
-
-<h3>Options <small>Register</small></h3>
-<p>Finally go to the "Register" display tab.</p>
-
-<p><img class="img-thumbnail" alt="<?php echo PRODUCT_NAME; ?> General Settings" src="content/install/settings_reg.png" /></p>
-
-<br />
-<p>Optionally rename the client by entering a name in the "Display Name" box. It defaults to the hostname of the PC.
-Click the "Register" button.</p>
-
-<p>You should see a message "Display registered and awaiting licensing". If you don't get that message, ensure you entered
-the correct URL for the <?php echo PRODUCT_NAME; ?> server, and that your server key is entered correctly.</p>
-</blockquote>
 
 <h2>CMS Display Management <small>Enabling your new display client</small></h2>
 
@@ -157,12 +136,15 @@ You should see your newly registered client in the list. Click the "Edit" button
 option will automatically change to "Yes". Optionally select a different default layout (the layout the client will play 
 if nothing is scheduled).</p>
 
+<h3>Display Setting Profiles</h3>
+<p>Once registered the display client will be given a default display setting profile. For more information see the <a href="index.php?toc=user_and_display&p=admin/displayprofiles" title="Display Setting Profiles">display profiles section</a>.</p>
+
 <p class="alert alert-warning">Make sure you click Click "Save" before exiting the Client Options.</p>
 
 <h2>Start Client Player</h2>
 
 <p>You can now start the <?php echo PRODUCT_NAME; ?> Client Player. It should show you the <?php echo PRODUCT_NAME; ?> splash screen while the default layout and its media contents
-(and anything else you have scheduled) are downloaded and then begin playing layouts'contents.
+(and anything else you have scheduled) are downloaded and then begin playing layout contents.
 
 
 <h2 id="windows_modifications">Windows Modifications</h1>

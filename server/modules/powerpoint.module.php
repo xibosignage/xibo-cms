@@ -28,8 +28,7 @@ class powerpoint extends Module
     {
         // Must set the type of the class
         $this->type= 'powerpoint';
-        $this->displayType = __('PowerPoint');
-
+        
         // Get the max upload size from PHP
         $this->maxFileSize 	= ini_get('upload_max_filesize');
         $this->maxFileSizeBytes = convertBytes($this->maxFileSize);

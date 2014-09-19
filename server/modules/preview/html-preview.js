@@ -413,6 +413,9 @@ function media(parent, id, xml) {
     self.containerName = "M-" + self.id + "-" + nextId();
     self.iframeName = self.containerName + "-iframe";
     self.mediaType = $(self.xml).attr('type');
+    self.render = $(self.xml).attr('render');
+    if (self.render == undefined)
+        self.render = "module";
     
     self.run = function() {
         playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds")
@@ -456,13 +459,27 @@ function media(parent, id, xml) {
     $("#" + self.containerName).css("width", self.divWidth + "px");
     $("#" + self.containerName).css("height", self.divHeight + "px");
     $("#" + self.containerName).css("position", "absolute");
+    $("#" + self.containerName).css("background-size", "contain");
+    $("#" + self.containerName).css("background-repeat", "no-repeat");
+    $("#" + self.containerName).css("background-position", "center");
     /* $("#" + self.containerName).css("left", self.offsetX + "px");
     $("#" + self.containerName).css("top", self.offsetY + "px"); */
     
-    if (self.mediaType == "image") {
+    if (self.render == "html") {
+        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=' + self.mediaType + '&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+    }
+    else if (self.mediaType == "image") {
         var tmpUrl = "index.php?p=module&mod=image&q=Exec&method=GetResource&layoutid=" + self.region.layout.id + "&regionid=" + self.region.id + "&mediaid=" + self.id + "&lkid=" + self.lkid;
         PRELOAD.addFiles(tmpUrl);
         $("#" + self.containerName).css("background-image", "url('" + tmpUrl + "')");
+        if (self.options['scaletype'] == 'stretch')
+            $("#" + self.containerName).css("background-size", "cover");
+        else {
+            // Center scale type, do we have align or valign?
+            var align = (self.options['align'] == "") ? "center" : self.options['align'];
+            var valign = (self.options['valign'] == "" || self.options['valign'] == "middle") ? "center" : self.options['valign'];
+            $("#" + self.containerName).css("background-position", align + " " + valign);
+        }
     }
     else if (self.mediaType == "text" || self.mediaType == "datasetview" || self.mediaType == "webpage" || self.mediaType == "embedded") {
         $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=' + self.mediaType + '&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
@@ -501,9 +518,6 @@ function media(parent, id, xml) {
     else {
         $("#" + self.containerName).css("outline", "red solid thin");
     }
-    $("#" + self.containerName).css("background-size", "contain");
-    $("#" + self.containerName).css("background-repeat", "no-repeat");
-    $("#" + self.containerName).css("background-position", "center");
     
     playLog(5, "debug", "Created media " + self.id)
 }

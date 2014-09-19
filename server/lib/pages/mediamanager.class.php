@@ -20,16 +20,7 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class mediamanagerDAO 
-{
-    private $db;
-    private $user;
-
-    function __construct(database $db, user $user)
-    {
-        $this->db =& $db;
-        $this->user =& $user;
-    }
+class mediamanagerDAO extends baseDAO {
 
     public function displayPage()
     {
@@ -37,11 +28,18 @@ class mediamanagerDAO
         
         // Default options
         if (Kit::IsFilterPinned('mediamanager', 'Filter')) {
-            Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_layout_name', Session::Get('mediamanager', 'filter_layout_name'));
-            Theme::Set('filter_region_name', Session::Get('mediamanager', 'filter_region_name'));
-            Theme::Set('filter_media_name', Session::Get('mediamanager', 'filter_media_name'));
-            Theme::Set('filter_type', Session::Get('mediamanager', 'filter_type'));
+            $filter_pinned = 1;
+            $filter_layout_name = Session::Get('mediamanager', 'filter_layout_name');
+            $filter_region_name = Session::Get('mediamanager', 'filter_region_name');
+            $filter_media_name = Session::Get('mediamanager', 'filter_media_name');
+            $filter_type = Session::Get('mediamanager', 'filter_type');
+        }
+        else {
+            $filter_pinned = 0;
+            $filter_layout_name = NULL;
+            $filter_region_name = NULL;
+            $filter_media_name = NULL;
+            $filter_type = 0;
         }
         
         $id = uniqid();
@@ -50,13 +48,45 @@ class mediamanagerDAO
         Theme::Set('pager', ResponseManager::Pager($id));
         Theme::Set('form_meta', '<input type="hidden" name="p" value="mediamanager"><input type="hidden" name="q" value="MediaManagerGrid">');
         
-        // Module types filter
-        $types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE Enabled = 1 ORDER BY 2");
-        array_unshift($types, array('moduleid' => '', 'module' => 'All'));
-        Theme::Set('module_field_list', $types);
+        $formFields = array();
+        $formFields[] = FormManager::AddText('filter_layout_name', __('Layout'), $filter_layout_name, NULL, 'l');
+        $formFields[] = FormManager::AddText('filter_region_name', __('Region'), $filter_region_name, NULL, 'r');
+        $formFields[] = FormManager::AddText('filter_media_name', __('Media'), $filter_media_name, NULL, 'm');
+
+        $types = $db->GetArray("SELECT moduleid AS moduleid, Name AS module FROM `module` WHERE Enabled = 1 ORDER BY 2");
+        array_unshift($types, array('moduleid' => 0, 'module' => 'All'));
+        
+        $formFields[] = FormManager::AddCombo(
+            'filter_type', 
+            __('Type'), 
+            $filter_type,
+            $types,
+            'moduleid',
+            'module',
+            NULL, 
+            't');
+
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+            $filter_pinned, NULL, 
+            'k');
 
         // Call to render the template
-        Theme::Render('homepage_mediamanager');
+        Theme::Set('header_text', __('Media Manager'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Render('grid_render');
+    }
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Filter'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Open the filter form'),
+                    'onclick' => 'ToggleFilterView(\'Filter\')'
+                    )
+            );                   
     }
 
     public function MediaManagerGrid()
@@ -68,17 +98,28 @@ class mediamanagerDAO
         $filterLayout = Kit::GetParam('filter_layout_name', _POST, _STRING);
         $filterRegion = Kit::GetParam('filter_region_name', _POST, _STRING);
         $filterMediaName = Kit::GetParam('filter_media_name', _POST, _STRING);
-        $filterMediaType = Kit::GetParam('filter_type', _POST, _STRING);
+        $filterMediaType = Kit::GetParam('filter_type', _POST, _INT);
 
         setSession('mediamanager', 'filter_layout_name', $filterLayout);
         setSession('mediamanager', 'filter_region_name', $filterRegion);
         setSession('mediamanager', 'filter_media_name', $filterMediaName);
         setSession('mediamanager', 'filter_type', $filterMediaType);
         setSession('mediamanager', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+
+        // Lookup the module name
+        if ($filterMediaType != 0) {
+
+            $module = $this->user->ModuleList(NULL, array('id' => $filterMediaType));
+            if (count($module) > 0) {
+                $filterMediaType = $module[0]['Name'];
+
+                Debug::LogEntry('audit', 'Matched module type ' . $filterMediaType, get_class(), __FUNCTION__);
+            }
+        }
         
         // We would like a list of all layouts, media and media assignments that this user
         // has access to.
-        $layouts = $user->LayoutList($filterLayout);
+        $layouts = $user->LayoutList(NULL, array('layout' => $filterLayout));
 
         $rows = array();
 

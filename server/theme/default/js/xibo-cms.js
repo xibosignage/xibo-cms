@@ -41,16 +41,6 @@ $(document).ready(function() {
 	
 	setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes	
 
-    $.ajaxSetup({
-    beforeSend:function(){
-        $("#xibo-loading-gif").css({top:'50%',left:'50%',margin:'-'+($('#myDiv').height() / 2)+'px 0 0 -'+($('#myDiv').width() / 2)+'px'}).show();
-    },
-    complete:function(){
-        // hide gif here, eg:
-        $("#xibo-loading-gif").hide();
-    }
-});
-
 	XiboInitialise("");
 });
 
@@ -71,8 +61,8 @@ function XiboInitialise(scope) {
         var gridId = $(this).attr("id");
         
         // Keep this filter form open?
-        if ($('.XiboFilter form :input.XiboFilterPinned', this).length > 0) {
-            if ($('.XiboFilter form :input.XiboFilterPinned', this).is(':checked')) {
+        if ($('.XiboFilter form :input#XiboFilterPinned', this).length > 0) {
+            if ($('.XiboFilter form :input#XiboFilterPinned', this).is(':checked')) {
                 $('.XiboFilter', this).children(':first').show();
             }
             else {
@@ -133,14 +123,17 @@ function XiboInitialise(scope) {
     // NOTE: The validation plugin does not like binding to multiple forms at once.
     $(scope + ' .XiboForm').validate({
         submitHandler: XiboFormSubmit,
+        errorElement: "span",
         highlight: function(element) {
-			$(element).closest('.control-group').removeClass('success').addClass('error');
-		},
-		success: function(element) {
-			element
-				.text('OK!').addClass('valid')
-				.closest('.control-group').removeClass('error').addClass('success');
-		}
+            $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
+        },
+        success: function(element) {
+            $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
+        },
+        invalidHandler: function() {
+            // Remove the spinner
+            $(this).closest(".modal-dialog").find(".saving").remove();
+        }
     });
 
     // Links that just need to be submitted as forms
@@ -167,13 +160,12 @@ function XiboInitialise(scope) {
     // Search for any text forms that will need submitting
     $(scope + ' .XiboTextForm').validate({
         submitHandler: XiboFormSubmit,
+        errorElement: "span",
         highlight: function(element) {
-            $(element).closest('.control-group').removeClass('success').addClass('error');
+            $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
         },
         success: function(element) {
-            element
-                .text('OK!').addClass('valid')
-                .closest('.control-group').removeClass('error').addClass('success');
+            $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
         }
     });
 
@@ -188,14 +180,28 @@ function XiboInitialise(scope) {
     });
 
     // Search for any charts
-    $(scope + " .flot-chart").each(function() {
-        
-        var id = $(this).attr("id");
-        var data = eval(id);
+    $(scope + " div.morrisChart").each(function() {
 
-        $.plot("#" + id, data.points, data.config);
+        // Look for a variable with the same ID as this element
+        var data = eval($(this).attr("id"));
 
+        if (data.type == "line")
+            new Morris.Line(data.data);
+        else if (data.type == "donut")
+            new Morris.Donut(data.data);
+        else if (data.type == "bar")
+            new Morris.Bar(data.data);
     });
+
+    // Special drop down forms (to act as a menu instead of a usual dropdown)
+    $(scope + ' .dropdown-menu').on('click', function(e) {
+        if($(this).hasClass('dropdown-menu-form')) {
+            e.stopPropagation();
+        }
+    });
+
+    // Select statements
+    //$(scope + " select").selectpicker();
 }
 
 /**
@@ -209,6 +215,9 @@ function XiboGridRender(gridId){
     var filter 		= $('#' + gridId + ' .XiboFilter form');
     var outputDiv 	= $('#' + gridId + ' .XiboData ');
 
+    // Add a spinner
+    $(gridDiv).closest('.widget').children(".widget-title").append(' <span class="saving fa fa-cog fa-spin"></span>');
+
     // AJAX call to get the XiboData
     $.ajax({
         type: "post",
@@ -216,6 +225,9 @@ function XiboGridRender(gridId){
         dataType: "json",
         data: filter.serialize(),
         success: function(response) {
+
+            // Remove the spinner
+            $(gridDiv).closest(".widget").find(".saving").remove();
 
             var respHtml;
 
@@ -314,7 +326,7 @@ function XiboGridRender(gridId){
  * Renders the formid provided
  * @param {String} formUrl
  */
-function XiboFormRender(formUrl) {
+function XiboFormRender(formUrl, data) {
 
 	// Currently only support one of these at once.
 	bootbox.hideAll();
@@ -325,6 +337,7 @@ function XiboFormRender(formUrl) {
         url: formUrl + "&ajax=true",
         cache: false,
         dataType: "json",
+        data: data,
         success: function(response) {
 
             // Was the Call successful
@@ -341,41 +354,52 @@ function XiboFormRender(formUrl) {
                     dialogTitle =  response.dialogTitle;
                 }
 
-                // Buttons?
-                var buttons = [];
+                var id = new Date().getTime();
 
+                // Create the dialog with our parameters
+                var dialog = bootbox.dialog({
+                		message: response.html,
+                        title: dialogTitle,
+                        animate: false
+                	}).attr("id", id);
+
+                if (response.dialogClass != '') {
+                	dialog.addClass(response.dialogClass);
+                }
+
+                // Buttons?
                 if (response.buttons != '') {
+
+                    // Append a footer to the dialog
+                    var footer = $("<div>").addClass("modal-footer");
+                    dialog.find(".modal-content").append(footer);
+
+                    var i = 0;
                     $.each(
                         response.buttons,
                         function(index, value) {
-                            var extrabutton = {};
+                            var extrabutton = $('<button class="btn">').html(index);
 
-                            extrabutton.label = index;
-                            extrabutton.callback = function(){
+                            if (value.indexOf("submit()") > -1) {
+                                extrabutton.addClass('btn-primary save-button');
+                            }
+                            else {
+                                extrabutton.addClass('btn-default');
+                            }
+
+                            extrabutton.click(function() {
+
+                                if ($(this).hasClass("save-button"))
+                                    $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
+
                                 eval(value);
 
                                 // Keep the modal window open!
                                 return false;
-                            }
+                            });
 
-                            buttons.push(extrabutton);
-                        }
-                        );
-                }
-
-                var id = new Date().getTime();
-
-                // Create the dialog with our parameters
-                var dialog = bootbox.dialog(
-                		response.html,
-                		buttons, {
-            				"header": dialogTitle,
-                            "animate": false
-                		}
-                	).attr("id", id);
-
-                if (response.dialogClass != '') {
-                	dialog.addClass(response.dialogClass);
+                            footer.append(extrabutton);
+                        });
                 }
 
                 // Do we have to call any functions due to this success?
@@ -397,6 +421,63 @@ function XiboFormRender(formUrl) {
                             widthFixed: true
                         })
                     }
+                }
+
+                // Set up dependencies between controls
+                if (response.fieldActions != '') {
+                    $.each(response.fieldActions, function(index, fieldAction) {
+                        
+                        //console.log("Processing field action for " + fieldAction.field);
+
+                        if (fieldAction.trigger == "init") {
+                            // Process the actions straight away.
+                            var fieldVal = $("#" + fieldAction.field).val();
+
+                            //console.log("Init action with value " + fieldVal);
+                            var valueMatch = false;
+                            if (fieldAction.operation == "not") {
+                                valueMatch = (fieldVal != fieldAction.value);
+                            }
+                            else {
+                                valueMatch = (fieldVal == fieldAction.value);
+                            }
+
+                            if (valueMatch) {
+                                //console.log("Value match");
+
+                                $.each(fieldAction.actions, function(index, action) {
+                                    //console.log("Setting child field on " + index + " to " + JSON.stringify(action));
+                                    // Action the field
+                                    $(index).css(action);
+                                });
+                            }
+                        }
+                        else {
+                            $("#" + fieldAction.field).on(fieldAction.trigger, function() {
+                                // Process the actions straight away.
+                                var fieldVal = $(this).val();
+
+                                //console.log("Init action with value " + fieldVal);
+                                var valueMatch = false;
+                                if (fieldAction.operation == "not") {
+                                    valueMatch = (fieldVal != fieldAction.value);
+                                }
+                                else {
+                                    valueMatch = (fieldVal == fieldAction.value);
+                                }
+
+                                if (valueMatch) {
+                                    //console.log("Value match");
+
+                                    $.each(fieldAction.actions, function(index, action) {
+                                        //console.log("Setting child field on " + index + " to " + JSON.stringify(action));
+                                        // Action the field
+                                        $(index).css(action);
+                                    });
+                                }
+                            });
+                        }
+                    });
                 }
 
                 // Call Xibo Init for this form
@@ -490,6 +571,7 @@ function XiboClockUpdate(time)
  * @param {Object} form
  */
 function XiboFormSubmit(form) {
+
     // Get the URL from the action part of the form)
     var url = $(form).attr("action") + "&ajax=true";
 
@@ -524,6 +606,9 @@ function XiboFormSubmit(form) {
  */
 function XiboSubmitResponse(response, form) {
 	
+    // Remove the spinner
+    $(form).closest(".modal-dialog").find(".saving").remove();
+
     // Did we actually succeed
     if (response.success) {
         // Success - what do we do now?
@@ -618,22 +703,26 @@ function XiboHelpRender(formUrl) {
                     dialogTitle =  response.dialogTitle;
                 }
 
+                var buttons = [];
+                buttons.push({
+                    label: 'Close',
+                        callback: function() {
+                            dialog.modal('hide');
+                        }
+                });
+
                 // Create the dialog with our parameters
-                bootbox.dialog(
-                		response.html,
-                		[], {
-            				"header": dialogTitle
-                		}
-                	).addClass(
-                		'modal-big'
-                	).addClass(
-                        'help-modal-big'
-                    );
+                var dialog = bootbox.dialog({
+                    message: response.html,
+                    title: "Manual",
+                    buttons: buttons,
+                    animate: false,
+                    className: "modal-big help-modal-big"
+                });
 
                 // Adjust the height of the iframe
-                var height = $(".full-iframe").parent().parent().height(); 
-                $(".full-iframe").height(height - 80);
-                $(".full-iframe").parent().css("max-height", (height - 70) + "px");
+                var height = $(window).height(); 
+                $(".full-iframe").height(height - 250);
             }
             else {
                 // Login Form needed?
@@ -767,6 +856,10 @@ function XiboRefreshAllGrids() {
     });
 }
 
+function XiboRedirect(url) {
+    windows.location = url;
+}
+
 /**
  * Display a login box
  * @param {String} message
@@ -794,10 +887,11 @@ function SystemMessage(messageText, success) {
 	// Buttons
 	var buttons = [];
 
+    var title = null;
+
 	// Only add certain things
 	if (!success) {
-		options.header = 'Application Message';
-
+        title = "Application Message";
 		buttons.push({
 		label: 'Close',
 			callback: function() {
@@ -806,10 +900,12 @@ function SystemMessage(messageText, success) {
 		});
 	}
 
-	// Open dialog
-    var dialog = bootbox.dialog(
-    		messageText, buttons, options
-    	);
+    var dialog = bootbox.dialog({
+        message: messageText,
+        title: title,
+        buttons: buttons,
+        animate: true
+    });
 
     if (success) {    
 	    // Close after 1 second
@@ -834,10 +930,10 @@ function SystemMessageInline(messageText, modal) {
         modal = $(".modal");
 
     // Remove existing errors
-    $(".text-error", modal).remove();
+    $(".form-error", modal).remove();
 
     $("<div/>", {
-    	class: "well text-error text-center",
+    	class: "well text-danger text-center form-error",
     	html: messageText
     }).appendTo(modal.find(".modal-footer"));
 }

@@ -26,29 +26,29 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <form id="<?php echo Theme::Get('form_upload_id'); ?>" action="<?php echo Theme::Get('form_action'); ?>" method="POST" enctype="multipart/form-data" data-max-file-size="<?php echo Theme::Get('form_max_size'); ?>" data-accept-file-types="<?php echo Theme::Get('form_valid_ext'); ?>">
     <?php echo Theme::Get('form_meta'); ?>
 	<div class="row fileupload-buttonbar">
-	    <div class="span7">
+	    <div class="col-md-7">
 			<div class="well">
 				<?php echo Theme::Get('valid_extensions'); ?>
 			</div>
 	        <!-- The fileinput-button span is used to style the file input field as button -->
 	        <span class="btn btn-success fileinput-button">
-	            <i class="icon-plus icon-white"></i>
+	            <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
 	            <span><?php echo Theme::Translate('Add files'); ?></span>
 	            <input type="file" name="files[]" multiple>
 	        </span>
 	        <button type="submit" class="btn btn-primary start">
-	            <i class="icon-upload icon-white"></i>
+	            <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
 	            <span><?php echo Theme::Translate('Start upload'); ?></span>
 	        </button>
 	        <button type="reset" class="btn btn-warning cancel">
-	            <i class="icon-ban-circle icon-white"></i>
+	            <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
 	            <span><?php echo Theme::Translate('Cancel upload'); ?></span>
 	        </button>
 	        <!-- The loading indicator is shown during file processing -->
 	        <span class="fileupload-loading"></span>
 	    </div>
 	    <!-- The global progress information -->
-	    <div class="span4 fileupload-progress fade">
+	    <div class="col-md-4 fileupload-progress fade">
 	        <!-- The global progress bar -->
 	        <div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
 	            <div class="bar" style="width:0%;"></div>
@@ -85,13 +85,13 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <td>
             {% if (!o.files.error && !i && !o.options.autoUpload) { %}
                 <button class="btn btn-primary start">
-                    <i class="icon-upload icon-white"></i>
+                    <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
                     <span><?php echo Theme::Translate('Start'); ?></span>
                 </button>
             {% } %}
             {% if (!i) { %}
                 <button class="btn btn-warning cancel">
-                    <i class="icon-ban-circle icon-white"></i>
+                    <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
                     <span><?php echo Theme::Translate('Cancel'); ?></span>
                 </button>
             {% } %}
@@ -117,7 +117,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <td>
 			<?php if (Theme::Get('background_override_url') != '') { ?>
             	<button class="btn XiboFormButton" href="#" onclick="XiboSwapDialog('<?php echo Theme::Get('background_override_url'); ?>{%=file.storedas%}')">
-                    <i class="icon-ban-circle icon-white"></i>
+                    <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
                     <span><?php echo Theme::Translate('Set Background'); ?></span>
                 </button>
         	<?php } ?>

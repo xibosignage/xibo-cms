@@ -33,8 +33,15 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
+<div class="pull-right">
+	<select id="layoutJumpList" data-live-search="true">
+		<?php foreach(Theme::Get('layouts') as $layout) { ?>
+		<option value="<?php echo $layout['layoutid']; ?>"<?php echo ($layout['layoutid'] == Theme::Get('layoutId') ? ' selected' : ''); ?>><?php echo $layout['layout']; ?></option> 
+		<?php } ?>
+	</select>
+</div>
 <div class="row">
-	<div class="span1">
+	<div class="col-md-1">
 		<div class="btn-group">
 			<button class="btn dropdown-toggle" data-toggle="dropdown">
 				<?php echo Theme::Translate('Options'); ?>
@@ -48,43 +55,25 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                 <li><a href="<?php echo Theme::Get('layout_form_preview_url'); ?>" title="<?php echo Theme::Translate('Preview Layout'); ?>" target="_blank"><span><?php echo Theme::Translate('Preview Layout'); ?></span></a></li>
 				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_schedulenow_url'); ?>" title="<?php echo Theme::Translate('Schedule Now'); ?>"><span><?php echo Theme::Translate('Schedule Now'); ?></span></a></li>
 				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_savetemplate_url'); ?>" title="<?php echo Theme::Translate('Save Template'); ?>"><span><?php echo Theme::Translate('Save Template'); ?></span></a></li>
+				<?php if (Theme::Get('layoutVersion') >= 2) { ?>
+				<li class="divider"></li>
+				<li><a href="<?php echo Theme::Get('layout_zoom_in_url'); ?>"><span><?php echo Theme::Translate('Zoom In'); ?></span></a></li>
+				<li><a href="<?php echo Theme::Get('layout_zoom_out_url'); ?>"><span><?php echo Theme::Translate('Zoom Out'); ?></span></a></li>
+				<?php } ?>
 			</ul>
 		</div>
 	</div>
-	<div class="span5">
+	<div class="col-md-5">
 		<h4><?php echo Theme::Translate('Layout Design'); ?> - <?php echo Theme::Get('layout'); ?></h4>
 	</div>
-	<div class="span1 layout-status">
+	<div class="col-md-1 layout-status">
 	</div>
-	<div class="span5 layout-meta">
+	<div class="col-md-2 layout-meta">
 	</div>
 </div>
 <div class="row">
-	<div class="span12">
+	<div class="col-md-12">
 		<?php echo Theme::Get('layout_designer_editor'); ?>
-	</div>
-</div>
-<div class="row">
-	<!-- Layout Jump list -->
-	<div id="LayoutJumpList">
-        <div id="JumpListHeader" JumpListGridId="<?php echo Theme::Get('jumplist_id'); ?>">
-            <?php echo Theme::Translate('Layout Jump List'); ?><span id="JumpListOpenClose"><?php echo Theme::Get('jumplist_arrow_direction'); ?></span>
-        </div>
-        <div class="XiboGrid" id="<?php echo Theme::Get('jumplist_id'); ?>" style="display:<?php echo Theme::Get('jumplist_list_pinned'); ?>;">
-            <div class="XiboFilter">
-                <div class="XiboFilterInner">     
-		        <form class="form-inline">
-		        	<?php echo Theme::Get('jumplist_form_meta'); ?>
-		            <input type="checkbox" class="XiboFilterPinned" style="display:none" checked />
-		            
-		            <input type="text" name="name" placeholder="<?php echo Theme::Translate('Layout'); ?>" value="<?php echo Theme::Get('jumplist_filter_name'); ?>">
-		            <label for="XiboJumpListPinned"><?php echo Theme::Translate('Pin?'); ?></label><input id="XiboJumpListPinned" name="XiboJumpListPinned" type="checkbox" class="XiboJumpListPinned" <?php echo Theme::Get('jumplist_filter_pinned'); ?> />
-		        </form>
-		        </div>
-            </div>
-            <?php echo Theme::Get('jumplist_pager'); ?>
-            <div class="XiboData"></div>
-        </div>
 	</div>
 </div>
 <script type="text/javascript">

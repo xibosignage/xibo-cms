@@ -22,7 +22,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="span2">
+<div class="col-md-2">
 	<div class="well">
 		<ul class="nav nav-list">
 			<li class="nav-header"><?php echo Theme::Translate('Add Media'); ?></li>

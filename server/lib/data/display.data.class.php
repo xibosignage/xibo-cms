@@ -20,28 +20,134 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class Display extends Data
-{
-	public function __construct(database $db)
-	{
-		include_once('lib/data/displaygroup.data.class.php');
-		
-		parent::__construct($db);
-	}
-	
-	/**
-	 * Adds a Display
-	 * @return 
-	 * @param $display Object
-	 * @param $isAuditing Object
-	 * @param $defaultLayoutID Object
-	 * @param $license Object
-	 * @param $licensed Object
-	 * @param $incSchedule Object
-	 */
-	public function Add($display, $isAuditing, $defaultLayoutID, $license, $licensed, $incSchedule)
-	{
-        Debug::LogEntry('audit', 'IN', 'Display', 'Add');
+// Companion classes
+Kit::ClassLoader('displaygroup');
+
+class Display extends Data {
+
+    public $loaded;
+
+    public $displayId;
+    public $isAuditing;
+    public $display;
+    public $description;
+    public $defaultLayoutId;
+    public $license;
+    public $licensed;
+    public $currentLicensed;
+    public $loggedIn;
+    public $lastAccessed;
+    public $incSchedule;
+    public $emailAlert;
+    public $alertTimeout;
+    public $clientAddress;
+    public $mediaInventoryStatus;
+    public $mediaInventoryXml;
+    public $macAddress;
+    public $lastChanged;
+    public $numberOfMacAddressChanges;
+    public $lastWakeOnLanCommandSent;
+    public $wakeOnLanEnabled;
+    public $wakeOnLanTime;
+    public $broadCastAddress;
+    public $secureOn;
+    public $cidr;
+    public $latitude;
+    public $longitude;
+    public $versionInstructions;
+    public $clientType;
+    public $clientVersion;
+    public $clientCode;
+    public $displayProfileId;
+    public $currentLayoutId;
+    public $screenShotRequested;
+
+    public $displayGroupId;
+    
+    public function Load() {
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('
+                SELECT display.*, displaygroup.displaygroupid, displaygroup.description, X(display.GeoLocation) AS Latitude, Y(display.GeoLocation) AS Longitude 
+                  FROM `display`
+                    INNER JOIN `lkdisplaydg`
+                    ON lkdisplaydg.displayid = display.displayId
+                    INNER JOIN `displaygroup`
+                    ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
+                        AND isdisplayspecific = 1
+                WHERE display.displayid = :display_id');
+            
+            $sth->execute(array('display_id' => $this->displayId));
+          
+            if (!$row = $sth->fetch())
+                $this->ThrowError(25004, __('Cannot find display record'));
+
+            $this->isAuditing = Kit::ValidateParam($row['isAuditing'], _INT);
+            $this->display = Kit::ValidateParam($row['display'], _STRING);
+            $this->description = Kit::ValidateParam($row['description'], _STRING);
+            $this->defaultLayoutId = Kit::ValidateParam($row['defaultlayoutid'], _INT);
+            $this->license = Kit::ValidateParam($row['license'], _STRING);
+            $this->licensed = Kit::ValidateParam($row['licensed'], _INT);
+            $this->loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
+            $this->lastAccessed = Kit::ValidateParam($row['lastaccessed'], _INT);
+            $this->incSchedule = Kit::ValidateParam($row['inc_schedule'], _INT);
+            $this->emailAlert = Kit::ValidateParam($row['email_alert'], _INT);
+            $this->alertTimeout = Kit::ValidateParam($row['alert_timeout'], _INT);
+            $this->clientAddress = Kit::ValidateParam($row['ClientAddress'], _STRING);
+            $this->mediaInventoryStatus = Kit::ValidateParam($row['MediaInventoryStatus'], _INT);
+            $this->mediaInventoryXml = Kit::ValidateParam($row['MediaInventoryXml'], _HTMLSTRING);
+            $this->macAddress = Kit::ValidateParam($row['MacAddress'], _STRING);
+            $this->lastChanged = Kit::ValidateParam($row['LastChanged'], _INT);
+            $this->numberOfMacAddressChanges = Kit::ValidateParam($row['NumberOfMacAddressChanges'], _INT);
+            $this->lastWakeOnLanCommandSent = Kit::ValidateParam($row['LastWakeOnLanCommandSent'], _INT);
+            $this->wakeOnLanEnabled = Kit::ValidateParam($row['WakeOnLan'], _INT);
+            $this->wakeOnLanTime = Kit::ValidateParam($row['WakeOnLanTime'], _STRING);
+            $this->broadCastAddress = Kit::ValidateParam($row['BroadCastAddress'], _STRING);
+            $this->secureOn = Kit::ValidateParam($row['SecureOn'], _STRING);
+            $this->cidr = Kit::ValidateParam($row['Cidr'], _INT);
+            $this->latitude = Kit::ValidateParam($row['Latitude'], _DOUBLE);
+            $this->longitude = Kit::ValidateParam($row['Longitude'], _DOUBLE);
+            $this->versionInstructions = Kit::ValidateParam($row['version_instructions'], _STRING);
+            $this->clientType = Kit::ValidateParam($row['client_type'], _STRING);
+            $this->clientVersion = Kit::ValidateParam($row['client_version'], _STRING);
+            $this->clientCode = Kit::ValidateParam($row['client_code'], _INT);
+            $this->displayProfileId = Kit::ValidateParam($row['displayprofileid'], _INT);
+            $this->currentLayoutId = Kit::ValidateParam($row['currentLayoutId'], _INT);
+            $this->screenShotRequested = Kit::ValidateParam($row['screenShotRequested'], _INT);
+            
+            $this->displayGroupId = Kit::ValidateParam($row['displaygroupid'], _INT);
+
+            // Store the current licensed flag, in case we are changing it and need to check it.
+            $this->currentLicensed = $this->licensed;
+
+            $this->loaded = true;
+
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Adds a Display
+     * @return 
+     * @param $display Object
+     * @param $isAuditing Object
+     * @param $defaultLayoutID Object
+     * @param $license Object
+     * @param $licensed Object
+     * @param $incSchedule Object
+     */
+    public function Add($display, $isAuditing, $defaultLayoutID, $license, $licensed, $incSchedule) {
+        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
         
         try {
             $dbh = PDOConnect::init();
@@ -62,7 +168,7 @@ class Display extends Data
                     'email_alert' => 0,
                     'alert_timeout' => 0
                 ));
-		
+        
             // Get the ID of the inserted record
             $displayId = $dbh->lastInsertId();
 
@@ -89,20 +195,26 @@ class Display extends Data
 
             return false;
         }
-	}
-	
-	/**
-	 * Edits a Display 
-	 * @return 
-	 * @param $displayID Object
-	 * @param $isAuditing Object
-	 * @param $defaultLayoutID Object
-	 * @param $licensed Object
-	 * @param $incSchedule Object
-	 */
-	public function Edit($displayID, $display, $isAuditing, $defaultLayoutID, $licensed, $incSchedule, $email_alert, $alert_timeout, $wakeOnLanEnabled, $wakeOnLanTime, $broadCastAddress, $secureOn, $cidr, $latitude, $longitude)
-    {
-		Debug::LogEntry('audit', 'IN', 'Display', 'Edit');
+    }
+    
+    /**
+     * Edits a Display 
+     * @return 
+     * @param $displayID Object
+     * @param $isAuditing Object
+     * @param $defaultLayoutID Object
+     * @param $licensed Object
+     * @param $incSchedule Object
+     */
+    public function Edit() {
+        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+
+        // Validation
+        if ($this->display == '')
+            return $this->SetError(__("Can not have a display without a name"));
+
+        if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '')
+            return $this->SetError(__('Wake on Lan is enabled, but you have not specified a time to wake the display'));
         
         try {
             $dbh = PDOConnect::init();
@@ -110,19 +222,10 @@ class Display extends Data
             // Check the number of licensed displays
             $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');
 
-            if ($maxDisplays > 0)
-            {
+            if ($maxDisplays > 0) {
                 // See if this is a license switch
-                $sth = $dbh->prepare('SELECT licensed FROM display WHERE DisplayID = :displayid');
-                $sth->execute(array(
-                        'displayid' => $displayID
-                    ));
-
-                if (!$row = $sth->fetch())
-                    $this->ThrowError(25004, __('Cannot find display record'));
-
                 // Has the licence flag toggled?
-                if (Kit::ValidateParam($row['licensed'], _INT) != $licensed && $licensed == 1)
+                if ($this->currentLicensed != $this->licensed && $this->licensed == 1)
                 {
                     // License change - test number of licensed displays.
                     $sth = $dbh->prepare('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1');
@@ -143,101 +246,106 @@ class Display extends Data
             // Validate some parameters
 
             // Fill $addr with client's IP address, if $addr is empty
-            if ($broadCastAddress != '')
+            if ($this->broadCastAddress != '')
             {
                 // Resolve broadcast address
                 // same as (but easier than):  preg_match("/\b(([01]?\d?\d|2[0-4]\d|25[0-5])\.){3}([01]?\d?\d|2[0-4]\d|25[0-5])\b/",$addr)
-                if (!filter_var($broadCastAddress, FILTER_VALIDATE_IP))
+                if (!filter_var($this->broadCastAddress, FILTER_VALIDATE_IP))
                     $this->ThrowError(25015, __('BroadCast Address is not a valid IP Address'));
             }
 
             // Check whether $cidr is valid
-            if ($cidr != '')
+            if ($this->cidr != '')
             {
-                if ((!is_numeric($cidr)) || ($cidr < 0) || ($cidr > 32))
+                if ((!is_numeric($this->cidr)) || ($this->cidr < 0) || ($this->cidr > 32))
                     $this->ThrowError(25015, __('CIDR subnet mask is not a number within the range of 0 to 32.'));
             }
 
             // Check whether $secureOn is valid
-            if ($secureOn != '')
+            if ($this->secureOn != '')
             {
-                $secureOn = strtoupper($secureOn);
-                $secureOn = str_replace(":", "-", $secureOn);
+                $this->secureOn = strtoupper($this->secureOn);
+                $this->secureOn = str_replace(":", "-", $this->secureOn);
 
-                if ((!preg_match("/([A-F0-9]{2}[-]){5}([0-9A-F]){2}/", $secureOn)) || (strlen($secureOn) != 17))
+                if ((!preg_match("/([A-F0-9]{2}[-]){5}([0-9A-F]){2}/", $this->secureOn)) || (strlen($this->secureOn) != 17))
                     $this->ThrowError(25015, __('Pattern of secureOn-password is not "xx-xx-xx-xx-xx-xx" (x = digit or CAPITAL letter)'));
             }
 
             Debug::LogEntry('audit', 'Validation Complete and Passed', 'Display', 'Edit');
 
-    		// Update the display record
-    		$SQL  = "UPDATE display SET display = :display, ";
-    		$SQL .= "		defaultlayoutid = :defaultlayoutid, ";
-    		$SQL .= "		inc_schedule = :incschedule, ";
-    		$SQL .= " 		licensed = :licensed, ";
-    		$SQL .= "		isAuditing = :isauditing, ";
-            $SQL .= "       email_alert = :emailalert, ";
-            $SQL .= "       alert_timeout = :alerttimeout, ";
-            $SQL .= "       WakeOnLan = :wakeonlan, ";
-            $SQL .= "       WakeOnLanTime = :wakeonlantime, ";
-            $SQL .= "       BroadCastAddress = :broadcastaddress, ";
-            $SQL .= "       SecureOn = :secureon, ";
-            $SQL .= "       Cidr = :cidr, ";
-            $SQL .= "       GeoLocation = POINT(:latitude, :longitude) ";
-    		$SQL .= " WHERE displayid = :displayid ";
+            // Update the display record
+            $SQL  = '
+                UPDATE display 
+                    SET display = :display,
+                        defaultlayoutid = :defaultlayoutid,
+                        inc_schedule = :incschedule,
+                        licensed = :licensed,
+                        isAuditing = :isauditing,
+                        email_alert = :emailalert,
+                        alert_timeout = :alerttimeout,
+                        WakeOnLan = :wakeonlan,
+                        WakeOnLanTime = :wakeonlantime,
+                        BroadCastAddress = :broadcastaddress,
+                        SecureOn = :secureon,
+                        Cidr = :cidr,
+                        GeoLocation = POINT(:latitude, :longitude),
+                        displayprofileid = :displayprofileid
+             WHERE displayid = :displayid';
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
-                    'display' => $display,
-                    'defaultlayoutid' => $defaultLayoutID,
-                    'incschedule' => $incSchedule,
-                    'licensed' => $licensed,
-                    'isauditing' => $isAuditing,
-                    'emailalert' => $email_alert,
-                    'alerttimeout' => $alert_timeout,
-                    'wakeonlan' => $wakeOnLanEnabled,
-                    'wakeonlantime' => $wakeOnLanTime,
-                    'broadcastaddress' => $broadCastAddress,
-                    'secureon' => $secureOn,
-                    'cidr' => $cidr,
-                    'latitude' => $latitude,
-                    'longitude' => $longitude,
-                    'displayid' => $displayID
+                    'display' => $this->display,
+                    'defaultlayoutid' => $this->defaultLayoutId,
+                    'incschedule' => $this->incSchedule,
+                    'licensed' => $this->licensed,
+                    'isauditing' => $this->isAuditing,
+                    'emailalert' => $this->emailAlert,
+                    'alerttimeout' => $this->alertTimeout,
+                    'wakeonlan' => $this->wakeOnLanEnabled,
+                    'wakeonlantime' => $this->wakeOnLanTime,
+                    'broadcastaddress' => $this->broadCastAddress,
+                    'secureon' => $this->secureOn,
+                    'cidr' => $this->cidr,
+                    'latitude' => $this->latitude,
+                    'longitude' => $this->longitude,
+                    'displayprofileid' => $this->displayProfileId,
+                    'displayid' => $this->displayId
                 ));
 
             Debug::LogEntry('audit', 'Display Edited', 'Display', 'Edit');
-        
-    		// Use a DisplayGroup to handle the default layout and displaygroup name for this display
-    		$displayGroupObject = new DisplayGroup($this->db);
-    		
-    		// Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
-    		if (!$displayGroupObject->EditDisplayGroup($displayID, $display)) {
+
+            // Use a DisplayGroup to handle the default layout and displaygroup name for this display
+            Kit::ClassLoader('displaygroup');
+            $displayGroupObject = new DisplayGroup();
+            
+            // Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
+            if (!$displayGroupObject->Edit($this->displayGroupId, $this->display, $this->description)) {
                 $this->ThrowError(25002, __('Could not update this display with a new name.'));
             }
 
-    		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');
-    		
-    		return true;
+            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');
+            
+            return true;
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
 
             if (!$this->IsError())
                 $this->SetError(25000, __('Could not update display'));
 
             return false;
         }
-	}
-	
-	/**
-	 * Deletes a Display
-	 * @return 
-	 * @param $displayID Object
-	 */
-	public function Delete($displayID)
-	{
-        Debug::LogEntry('audit', 'IN', 'Display', 'Delete');
+    }
+    
+    /**
+     * Deletes a Display
+     * @return 
+     * @param $displayID Object
+     */
+    public function Delete($displayID)
+    {
+        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
         
         try {
             $dbh = PDOConnect::init();
@@ -276,17 +384,17 @@ class Display extends Data
 
             return false;
         }
-	}
-	
-	/**
-	 * Edits a Displays Name
-	 * @return 
-	 * @param $license Object
-	 * @param $display Object
-	 */
-	public function EditDisplayName($license, $display) 
-	{
-		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'EditDisplayName');
+    }
+    
+    /**
+     * Edits a Displays Name
+     * @return 
+     * @param $license Object
+     * @param $display Object
+     */
+    public function EditDisplayName($license, $display) 
+    {
+        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
         try {
             $dbh = PDOConnect::init();
@@ -297,17 +405,17 @@ class Display extends Data
                     'display' => $display,
                     'license' => $license
                 ));
-			
-    		// Also need to update the display group name here.
-    		$displayGroupObject = new DisplayGroup($this->db);
-    		
-    		// Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
-    		if (!$displayGroupObject->EditDisplayGroup($displayID, $display))
-    			$this->ThrowError(25015, __('Could not update this display with a new name.'));
-    		
-    		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayName');
-    		
-    		return true;
+            
+            // Also need to update the display group name here.
+            $displayGroupObject = new DisplayGroup($this->db);
+            
+            // Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
+            if (!$displayGroupObject->EditDisplayGroup($displayID, $display))
+                $this->ThrowError(25015, __('Could not update this display with a new name.'));
+            
+            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayName');
+            
+            return true;
         }
         catch (Exception $e) {
             
@@ -318,106 +426,95 @@ class Display extends Data
 
             return false;
         }
-	}
-	
-	/**
+    }
+    
+    /**
      * Sets the information required on the display to indicate that it is still logged in
-     * @param string  $license                The display licence key
-     * @param string  $clientAddress          The client IP address
-     * @param integer $mediaInventoryComplete The Media Inventory Status
-     * @param string  $mediaInventoryXml      The Media Inventory XML
-     * @param string  $macAddress             The Client Mac Address
-     * @param string  $clientType             The Client Type
-     * @param string  $clientVersion          The Client Version
-     * @param integer $clientCode             The Client Version Code
+     * @param int  $displayId The Display ID
+     * @param array  $status The Display Status
      */
-	public function Touch($license, $clientAddress = '', $mediaInventoryComplete = 0, $mediaInventoryXml = '', $macAddress = '', $clientType = '', $clientVersion = '', $clientCode = 0)
-	{
-		Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Touch');
+    public function Touch($displayId, $status = array())
+    {
+        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
         
         try {
             $dbh = PDOConnect::init();
 
-            // Set the last accessed flag on the display
-            $SQL  = "";
-            $SQL .= "UPDATE display SET lastaccessed = :lastaccessed, loggedin = :loggedin ";
+            $this->displayId = $displayId;
+            $this->Load();
 
-            $params = array();
-            $params['lastaccessed'] = time();
-            $params['loggedin'] = 1;
-            $params['license'] = $license;
+            // Update last accessed and set to be logged in
+            $this->lastAccessed = time();
+            $this->loggedIn = 1;
 
-            // We will want to update the client Address if it is given
-            if ($clientAddress != '') {
-                $SQL .= " , ClientAddress = :clientaddress ";
-                $params['clientaddress'] = $clientAddress;
-            }
+            // Pull in any of the optional parameters from the status array
+            $this->clientAddress = (Kit::GetParam('clientAddress', $status, _STRING) == '') ? $this->clientAddress : Kit::GetParam('clientAddress', $status, _STRING);
+            $this->mediaInventoryStatus = (Kit::GetParam('mediaInventoryStatus', $status, _INT) == 0) ? $this->mediaInventoryStatus : Kit::GetParam('mediaInventoryStatus', $status, _INT);
+            $this->mediaInventoryXml = (Kit::GetParam('mediaInventoryXml', $status, _HTMLSTRING) == '') ? $this->mediaInventoryXml : Kit::GetParam('mediaInventoryXml', $status, _HTMLSTRING);
+            $this->clientType = (Kit::GetParam('clientType', $status, _STRING) == '') ? $this->clientType : Kit::GetParam('clientType', $status, _STRING);
+            $this->clientVersion = (Kit::GetParam('clientVersion', $status, _STRING) == '') ? $this->clientVersion : Kit::GetParam('clientVersion', $status, _STRING);
+            $this->clientCode = (Kit::GetParam('clientCode', $status, _INT) == 0) ? $this->clientCode : Kit::GetParam('clientCode', $status, _INT);
+            $this->currentLayoutId = (Kit::GetParam('currentLayoutId', $status, _INT) == 0) ? $this->currentLayoutId : Kit::GetParam('currentLayoutId', $status, _INT);
+            $this->screenShotRequested = (Kit::GetParam('screenShotRequested', $status, _INT, -1) == -1) ? $this->screenShotRequested : Kit::GetParam('screenShotRequested', $status, _INT);
 
-            // Media Inventory Settings (if appropriate)
-            if ($mediaInventoryComplete != 0) {
-                $SQL .= " , MediaInventoryStatus = :mediainventorystatus ";
-                $params['mediainventorystatus'] = $mediaInventoryComplete;
-            }
-
-            if ($mediaInventoryXml != '') {
-                $SQL .= " , MediaInventoryXml = :mediainventoryxml ";
-                $params['mediainventoryxml'] = $mediaInventoryXml;
-            }
-
-            // Client information if present
-            if ($clientType != '') {
-                $SQL .= " , client_type = :client_type ";
-                $params['client_type'] = $clientType;
-            }
-
-            if ($clientVersion != '') {
-                $SQL .= " , client_version = :client_version ";
-                $params['client_version'] = $clientVersion;
-            }
-
-            if ($clientCode != '') {
-                $SQL .= " , client_code = :client_code ";
-                $params['client_code'] = $clientCode;
-            }
-
-            // Mac address storage
-            if ($macAddress != '')
-            {
-                // Address changed.
-                $sth = $dbh->prepare('SELECT MacAddress FROM display WHERE license = :license');
-                $sth->execute(array(
-                        'license' => $license
-                    ));
-
-                if (!$row = $sth->fetch())
-                    $currentAddress = '';
-                else
-                    $currentAddress = $row['MacAddress'];
-
-                if ($macAddress != $currentAddress)
-                {
-                    $SQL .= " , MacAddress = :macaddress, LastChanged = :lastchanged, NumberOfMacAddressChanges = NumberOfMacAddressChanges + 1 ";
-                    $params['macaddress'] = $macAddress;
-                    $params['lastchanged'] = time();
+            // Has the mac address changed
+            if (Kit::GetParam('macAddress', $status, _STRING) != '') {
+                if ($this->macAddress != Kit::GetParam('macAddress', $status, _STRING)) {
+                    // Mac address change detected
+                    $this->macAddress = Kit::GetParam('macAddress', $status, _STRING);
+                    $this->numberOfMacAddressChanges++;
+                    $this->lastChanged = time();
                 }
             }
 
-            // Restrict to the display license
-            $SQL .= " WHERE license = :license";
+            // Save
+            $SQL = '
+                    UPDATE display SET lastaccessed = :lastAccessed, 
+                        loggedin = :loggedIn,
+                        ClientAddress = :clientAddress,
+                        MediaInventoryStatus = :mediaInventoryStatus,
+                        MediaInventoryXml = :mediaInventoryXml,
+                        client_type = :clientType,
+                        client_version = :clientVersion,
+                        client_code = :clientCode,
+                        MacAddress = :macAddress, 
+                        LastChanged = :lastChanged, 
+                        NumberOfMacAddressChanges = :numberOfMacAddressChanges,
+                        currentLayoutId = :currentLayoutId,
+                        screenShotRequested = :screenShotRequested
+                     WHERE displayId = :displayId
+                ';
 
-            // Update the display with its new name (using the license as the key)
+            // Update the display
             $sth = $dbh->prepare($SQL);
-            $sth->execute($params);
-    		
-    		Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Touch');
-    		
-    		return true;
+            $sth->execute(array(
+                    'displayId' => $this->displayId,
+                    'lastAccessed' => $this->lastAccessed,
+                    'loggedIn' => $this->loggedIn,
+                    'clientAddress' => $this->clientAddress,
+                    'mediaInventoryStatus' => $this->mediaInventoryStatus,
+                    'mediaInventoryXml' => $this->mediaInventoryXml,
+                    'clientType' => $this->clientType,
+                    'clientVersion' => $this->clientVersion,
+                    'clientCode' => $this->clientCode,
+                    'macAddress' => $this->macAddress,
+                    'lastChanged' => $this->lastChanged,
+                    'numberOfMacAddressChanges' => $this->numberOfMacAddressChanges,
+                    'currentLayoutId' => $this->currentLayoutId,
+                    'screenShotRequested' => $this->screenShotRequested
+                ));
+
+            return true;
         }
         catch (Exception $e) {
             Debug::LogEntry('error', $e->getMessage());
             return $this->SetError(25002, __("Error updating this displays last accessed information."));
         }
-	}
+    }
+
+    public function RequestScreenShot($displayId) {
+        return $this->Touch($displayId, array('screenShotRequested' => 1));
+    }
 
     /**
      * Flags a display as being incomplete
@@ -460,12 +557,14 @@ class Display extends Data
 
             // Which displays does a change to this layout effect?
             $SQL  = " SELECT DISTINCT display.DisplayID ";
-            $SQL .= "   FROM schedule_detail ";
-            $SQL .= " 	INNER JOIN lkdisplaydg ";
-            $SQL .= "	ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
-            $SQL .= " 	INNER JOIN display ";
-            $SQL .= "	ON lkdisplaydg.DisplayID = display.displayID ";
-            $SQL .= " WHERE schedule_detail.CampaignID = :campaignid ";
+            $SQL .= "   FROM schedule ";
+            $SQL .= "   INNER JOIN schedule_detail ";
+            $SQL .= "   ON schedule_detail.eventid = schedule.eventid ";
+            $SQL .= "   INNER JOIN lkdisplaydg ";
+            $SQL .= "   ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
+            $SQL .= "   INNER JOIN display ";
+            $SQL .= "   ON lkdisplaydg.DisplayID = display.displayID ";
+            $SQL .= " WHERE schedule.CampaignID = :campaignid ";
             $SQL .= " AND schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt ";
             $SQL .= " UNION ";
             $SQL .= " SELECT DISTINCT display.DisplayID ";
@@ -505,7 +604,7 @@ class Display extends Data
      */
     public function EditDefaultLayout($displayId, $defaultLayoutId)
     {
-        Debug::LogEntry('audit', 'IN', 'Display', 'EditDefaultLayout');
+        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
         try {
             $dbh = PDOConnect::init();
@@ -567,7 +666,7 @@ class Display extends Data
      */
     public function WakeOnLan($displayId)
     {
-        Debug::LogEntry('audit', 'IN', 'Display', 'WakeOnLan');
+        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
         try {
             $dbh = PDOConnect::init();
@@ -613,15 +712,16 @@ class Display extends Data
      * Wake On Lan Script
      *  // Version: 2
      *  // Author of this application:
-     *  //	DS508_customer (http://www.synology.com/enu/forum/memberlist.php?mode=viewprofile&u=12636)
-     *  //	Please inform the author of any suggestions on (the functionality, graphical design, ... of) this application.
-     *  //	More info: http://wolviaphp.sourceforge.net
+     *  //  DS508_customer (http://www.synology.com/enu/forum/memberlist.php?mode=viewprofile&u=12636)
+     *  //  Please inform the author of any suggestions on (the functionality, graphical design, ... of) this application.
+     *  //  More info: http://wolviaphp.sourceforge.net
      *  // License: GPLv2.0
      *
      * Modified for use with the Xibo project by Dan Garner.
      */
-    function TransmitWakeOnLan($mac_address, $secureon, $addr, $cidr, $port)
-    {
+    function TransmitWakeOnLan($mac_address, $secureon, $addr, $cidr, $port) {
+        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+
         // Prepare magic packet: part 1/3 (defined constant)
         $buf = "";
         

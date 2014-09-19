@@ -493,11 +493,12 @@ class Rest
         $description    = $this->GetParam('description', _STRING);
         $tags           = $this->GetParam('tags', _STRING);
         $templateId     = $this->GetParam('templateid', _INT, 0);
+        $resolutionId = $this->GetParam('resolutionid', _INT, 0);
 
         // Add this layout
         $layoutObject = new Layout($this->db);
 
-        if(!$id = $layoutObject->Add($layout, $description, $tags, $this->user->userid, $templateId))
+        if(!$id = $layoutObject->Add($layout, $description, $tags, $this->user->userid, $templateId, $resolutionId))
             return $this->Error($layoutObject->GetErrorNumber(), $layoutObject->GetErrorMessage());
 
         Debug::LogEntry('audit', 'Added new layout with id' . $id);

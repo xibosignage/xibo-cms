@@ -243,7 +243,7 @@ else
 
         // Log Tidy
         print "<h1>" . __("Tidy Logs") . "</h1>";
-        if(Config::GetSetting("MAINTENANCE_LOG_MAXAGE")!=0)
+        if(Config::GetSetting("MAINTENANCE_LOG_MAXAGE")!=0 && Kit::GetParam('quick', _REQUEST, _INT) != 1)
         {
             $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_LOG_MAXAGE"),_INT)));
             
@@ -265,7 +265,7 @@ else
 
         // Stats Tidy
         print "<h1>" . __("Tidy Stats") . "</h1>";
-        if(Config::GetSetting("MAINTENANCE_STAT_MAXAGE")!=0)
+        if(Config::GetSetting("MAINTENANCE_STAT_MAXAGE")!=0 && Kit::GetParam('quick', _REQUEST, _INT) != 1)
         {
             $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_STAT_MAXAGE"),_INT)));
             

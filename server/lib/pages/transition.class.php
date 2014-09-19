@@ -20,24 +20,8 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class transitionDAO 
-{
-	private $db;
-	private $user;
+class transitionDAO extends baseDAO {
 	private $transition;
-
-    /**
-     * Transition constructor.
-     * @return
-     * @param $db Object
-     */
-    function __construct(database $db, user $user)
-    {
-        $this->db =& $db;
-        $this->user =& $user;
-
-        return true;
-    }
 	
     /**
      * No display page functionaility
@@ -51,8 +35,10 @@ class transitionDAO
         Theme::Set('form_meta', '<input type="hidden" name="p" value="transition"><input type="hidden" name="q" value="Grid">');
         Theme::Set('pager', ResponseManager::Pager($id));
 
-        // Render the Theme and output
-        Theme::Render('transition_page');
+        // Call to render the template
+        Theme::Set('header_text', __('Transitions'));
+        Theme::Set('form_fields', array());
+        Theme::Render('grid_render');
     }
 
     public function Grid()
@@ -78,6 +64,15 @@ class transitionDAO
             trigger_error(__('Unable to get the list of transitions'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'name', 'title' => __('Name')),
+                array('name' => 'hasduration', 'title' => __('Has Duration'), 'icons' => true),
+                array('name' => 'hasdirection', 'title' => __('Has Direction'), 'icons' => true),
+                array('name' => 'enabledforin', 'title' => __('Enabled for In'), 'icons' => true),
+                array('name' => 'enabledforout', 'title' => __('Enabled for Out'), 'icons' => true)
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         foreach($transitions as $transition)
@@ -86,14 +81,10 @@ class transitionDAO
             $row['transitionid'] = Kit::ValidateParam($transition['TransitionID'], _INT);
             $row['name'] = Kit::ValidateParam($transition['Transition'], _STRING);
             $row['hasduration'] = Kit::ValidateParam($transition['HasDuration'], _INT);
-            $row['hasduration_image'] = ($row['hasduration'] == 1) ? 'icon-ok' : 'icon-remove';
             $row['hasdirection'] = Kit::ValidateParam($transition['HasDirection'], _INT);
-            $row['hasdirection_image'] = ($row['hasdirection'] == 1) ? 'icon-ok' : 'icon-remove';
             $row['enabledforin'] = Kit::ValidateParam($transition['AvailableAsIn'], _INT);
-            $row['enabledforin_image'] = ($row['enabledforin'] == 1) ? 'icon-ok' : 'icon-remove';
             $row['enabledforout'] = Kit::ValidateParam($transition['AvailableAsOut'], _INT);
-            $row['enabledforout_image'] = ($row['enabledforout'] == 1) ? 'icon-ok' : 'icon-remove';
-
+            
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();
 
@@ -113,7 +104,7 @@ class transitionDAO
 
         Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('transition_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();
@@ -148,18 +139,26 @@ class transitionDAO
             trigger_error(__('Error getting Transition'));
         }
 
-        $name = Kit::ValidateParam($row['Transition'], _STRING);
-        Theme::Set('enabledforin_checked', ((Kit::ValidateParam($row['AvailableAsIn'], _INT) == 1) ? 'Checked' : ''));
-        Theme::Set('enabledforout_checked', ((Kit::ValidateParam($row['AvailableAsOut'], _INT) == 1) ? 'Checked' : ''));        
+        $name = Kit::ValidateParam($row['Transition'], _STRING);      
 
         // Set some information about the form
         Theme::Set('form_id', 'TransitionEditForm');
         Theme::Set('form_action', 'index.php?p=transition&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="TransitionID" value="'. $transitionId . '" />');
         
-        $form = Theme::RenderReturn('transition_form_edit');
+        $formFields = array();
+        
+        $formFields[] = FormManager::AddCheckbox('EnabledForIn', __('Available for In Transitions?'), 
+            Kit::ValidateParam($row['AvailableAsIn'], _INT), __('Can this transition be used for media start?'), 
+            'i');
+        
+        $formFields[] = FormManager::AddCheckbox('EnabledForOut', __('Available for Out Transitions?'), 
+            Kit::ValidateParam($row['AvailableAsOut'], _INT), __('Can this transition be used for media end?'), 
+            'o');
 
-        $response->SetFormRequestResponse($form, sprintf(__('Edit %s'), $name), '350px', '325px');
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, sprintf(__('Edit %s'), $name), '350px', '325px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Transition', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#TransitionEditForm").submit()');

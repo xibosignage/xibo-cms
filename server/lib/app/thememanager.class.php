@@ -23,7 +23,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class Theme {
 	private static $instance = null;
 	
-	private $db;
 	private $user;
 	private $helpManager;
 	private $dateManager;
@@ -33,18 +32,15 @@ class Theme {
 	private $vars = null;
 	private $config = null;
 	
-	public function __construct(database $db, user $user) {
+	public function __construct(user $user, $theme = NULL) {
 
 		// Store some things for the Theme engine to use
-		$this->db =& $db;
 		$this->user =& $user;
-		$this->help = new HelpManager($db, $user);
-		$this->dateManager = new DateManager($db);
-
-		// TODO: Perhaps we also allow the user to configure their own theme for their session?
+		$this->help = new HelpManager();
+		$this->dateManager = new DateManager();
 
 		// What is the currently selected theme?
-		$globalTheme = Config::GetSetting('GLOBAL_THEME_NAME');
+		$globalTheme = ($theme == NULL) ? Config::GetSetting('GLOBAL_THEME_NAME') : $theme;
 
 		// Is this theme valid?
 		if (!is_dir('theme/' . $globalTheme))
@@ -85,8 +81,12 @@ class Theme {
 		if (file_exists('theme/' . $theme->name . '/html/' . $item . '.php')) {
 			include('theme/' . $theme->name . '/html/' . $item . '.php');
 		}
+		// Check the module theme folder
+		else if (file_exists('modules/theme/' . $item . '.php')) {
+			include('modules/theme/' . $item . '.php');	
+		}
 		// If not, then use the default folder
-		elseif (file_exists('theme/default/html/' . $item . '.php')) {
+		else if (file_exists('theme/default/html/' . $item . '.php')) {
 			include('theme/default/html/' . $item . '.php');
 		}
 		else
@@ -156,8 +156,8 @@ class Theme {
 	 * @param string $string The String to Translate
 	 * @param array $args   Variables to insert (will replace %d %s in order)
 	 */
-	public static function Translate($string, $args = null) {
-		return __($string, $args);
+	public static function Translate($string) {
+		return call_user_func_array('__', func_get_args());
 	}
 
 	public static function Set($key, $value) {
@@ -217,6 +217,10 @@ class Theme {
 		return Theme::GetInstance()->config['theme_name'];
 	}
 
+	public static function SourceLink() {
+		return (isset(Theme::GetInstance()->config['cms_source_url']) ? Theme::GetInstance()->config['cms_source_url'] : 'https://launchpad.net/xibo/1.7');
+	}
+
 	public static function ThemeFolder() {
 		return Theme::GetInstance()->name;
 	}
@@ -240,7 +244,7 @@ class Theme {
 		$theme = Theme::GetInstance();
 		$array = array();
 
-		if (!$menu = new MenuManager($theme->db, $theme->user, $menu))
+		if (!$menu = new MenuManager($theme->user, $menu))
 			trigger_error($menu->message, E_USER_ERROR);
 					
 		while ($menuItem = $menu->GetNextMenuItem()) {
@@ -282,7 +286,7 @@ class Theme {
      */
     public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = null, $callBack = '', $classColumn = '', $styleColumn = '')
     {
-    	$list = '<select name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
+    	$list = '<select class="form-control" name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
 
         foreach ($listValues as $listItem)
         {

@@ -20,10 +20,12 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-		</div> <!-- container-->
-        <div id="xibo-loading-gif"><img src="theme/default/img/ajax-loader.gif" alt="Loading..." /></div>
+                </div>
+            </div>
+        </div>
+        </div>
 
-		<script src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
+		<script src="theme/default/libraries/jquery/jquery-1.11.1.min.js"></script>
 		<script src="theme/default/libraries/jquery/jquery.validate.min.js"></script>
 		<script src="theme/default/libraries/jquery/additional-methods.min.js"></script>
 		<script src="theme/default/libraries/jquery/jquery.metadata.js"></script>
@@ -32,7 +34,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<script src="theme/default/libraries/jquery/jquery-ui/jquery-ui-1.10.2.custom.min.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>
-    	<script src="theme/default/libraries/bootstrap/js/bootstrap-datetimepicker.min.js"></script>
+        <script src="theme/default/libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+        <script src="theme/default/libraries/bootstrap-colorpicker/js/bootstrap-colorpicker.min.js"></script>
+        <script src="theme/default/libraries/bootstrap-select/js/bootstrap-select.min.js"></script>
+        <script src="theme/default/libraries/underscore/underscore-min.js"></script>
+        <script src="theme/default/libraries/jstimezonedetect/jstz.min.js"></script>
+    	<script src="theme/default/libraries/calendar/js/calendar.js"></script>
         <script src="theme/default/libraries/ckeditor/ckeditor.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootstrap-ckeditor-fix.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/tmpl.min.js"></script>
@@ -44,10 +51,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <script src="theme/default/libraries/jquery-file-upload/js/jquery.fileupload-validate.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/jquery.fileupload-ui.js"></script>
         <script src="theme/default/libraries/date-time-format.js"></script>
-        <script src="theme/default/libraries/flot/jquery.flot.min.js"></script>
-        <script src="theme/default/libraries/flot/jquery.flot.categories.min.js"></script>
-        <script src="theme/default/libraries/flot/jquery.flot.pie.min.js"></script>
-        <script src="theme/default/libraries/flot/jquery.flot.time.min.js"></script>
+        <script src="theme/default/libraries/morrisjs/raphael.min.js"></script>
+        <script src="theme/default/libraries/morrisjs/morris.min.js"></script>
         <script src="theme/default/js/xibo-cms.js"></script>
     	<script src="theme/default/js/xibo-forms.js"></script>
     	<script src="theme/default/js/xibo-layout-designer.js"></script>

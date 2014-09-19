@@ -20,29 +20,34 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class campaignDAO
+class campaignDAO extends baseDAO
 {
-    private $db;
-    private $user;
-
-    function __construct(database $db, user $user)
-    {
-        $this->db =& $db;
-        $this->user =& $user;
-    }
-
     public function displayPage()
     {
         // Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
-        Theme::Set('campaign_form_add_url', 'index.php?p=campaign&q=AddForm');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="Grid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
-        // Render the Theme and output
-        Theme::Render('campaign_page');
+        // Call to render the template
+        Theme::Set('header_text', __('Campaigns'));
+        Theme::Set('form_fields', array());
+        Theme::Render('grid_render');
+    }
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Add Campaign'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=campaign&q=AddForm',
+                    'help' => __('Add a new Campaign'),
+                    'onclick' => ''
+                    )
+            );
     }
 
     /**
@@ -62,6 +67,12 @@ class campaignDAO
             trigger_error(__('Unable to get list of campaigns'), E_USER_ERROR);
         }
 
+        $cols = array(
+                array('name' => 'campaign', 'title' => __('Name')),
+                array('name' => 'numlayouts', 'title' => __('# Layouts'))
+            );
+        Theme::Set('table_cols', $cols);
+        
         $rows = array();
 
         foreach($campaigns as $row)
@@ -120,7 +131,7 @@ class campaignDAO
 
         Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('campaign_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();
@@ -138,9 +149,11 @@ class campaignDAO
         Theme::Set('form_id', 'CampaignAddForm');
         Theme::Set('form_action', 'index.php?p=campaign&q=Add');
 
-        $form = Theme::RenderReturn('campaign_form_add');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('Name', __('Name'), NULL, __('The Name for this Campaign'), 'n', 'required');
+        Theme::Set('form_fields', $formFields);
 
-        $response->SetFormRequestResponse($form, __('Add Campaign'), '350px', '150px');
+        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Add Campaign'), '350px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#CampaignAddForm").submit()');
@@ -202,15 +215,16 @@ class campaignDAO
 
         $campaign = Kit::ValidateParam($row['Campaign'], _STRING);
 
+        $formFields = array();
+        $formFields[] = FormManager::AddText('Name', __('Name'), $campaign, __('The Name for this Campaign'), 'n', 'required');
+        Theme::Set('form_fields', $formFields);
+
         // Set some information about the form
         Theme::Set('form_id', 'CampaignEditForm');
         Theme::Set('form_action', 'index.php?p=campaign&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="CampaignID" value="' . $campaignId . '" />');
-        Theme::Set('campaign', $campaign);
-        
-        $form = Theme::RenderReturn('campaign_form_edit');
 
-        $response->SetFormRequestResponse($form, __('Edit Campaign'), '350px', '150px');
+        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Edit Campaign'), '350px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#CampaignEditForm").submit()');
@@ -277,9 +291,9 @@ class campaignDAO
         Theme::Set('form_action', 'index.php?p=campaign&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="CampaignID" value="' . $campaignId . '" />');
 
-        $form = Theme::RenderReturn('campaign_form_delete');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
 
-        $response->SetFormRequestResponse($form, __('Delete Campaign'), '350px', '175px');
+        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete Campaign'), '350px', '175px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#CampaignDeleteForm").submit()');
@@ -348,9 +362,10 @@ class campaignDAO
         $SQL .= '   LEFT OUTER JOIN lkcampaigngroup ';
         $SQL .= '   ON lkcampaigngroup.GroupID = group.GroupID ';
         $SQL .= '       AND lkcampaigngroup.CampaignID = %d ';
+        $SQL .= ' WHERE `group`.GroupID <> %d ';
         $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
 
-        $SQL = sprintf($SQL, $campaignId);
+        $SQL = sprintf($SQL, $campaignId, $this->user->getGroupFromID($this->user->userid, true));
 
         if (!$results = $db->query($SQL))
         {
@@ -380,9 +395,16 @@ class campaignDAO
             $checkboxes[] = $checkbox;
         }
 
-        Theme::Set('form_rows', $checkboxes);
+        $formFields = array();
+        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
+        $formFields[] = FormManager::AddCheckbox('replaceInLayouts', 
+            __('Update these permissions on all layouts, regions and media.'), 0, 
+            __('Note: It will only be replaced in layouts you have permission to edit.'), 
+            'r');
 
-        $form = Theme::RenderReturn('campaign_form_permissions');
+        Theme::Set('form_fields', $formFields);
+
+        $form = Theme::RenderReturn('form_render');
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Permissions') . '")');
@@ -422,6 +444,8 @@ class campaignDAO
         $edit = 0;
         $del = 0;
 
+        $permissions = array();
+
         // List of groupIds with view, edit and del assignments
         foreach($groupIds as $groupPermission)
         {
@@ -441,6 +465,9 @@ class campaignDAO
                 // Link new permissions
                 if (!$security->Link($campaignId, $lastGroupId, $view, $edit, $del))
                     trigger_error(__('Unable to set permissions'));
+
+                // Store
+                $permissions[] = array('groupId' => $lastGroupId, 'view' => $view, 'edit' => $edit, 'del' => $del);
 
                 // Reset
                 $lastGroupId = $groupId;
@@ -470,6 +497,89 @@ class campaignDAO
         {
             if (!$security->Link($campaignId, $lastGroupId, $view, $edit, $del))
                 trigger_error(__('Unable to set permissions'));
+
+            $permissions[] = array('groupId' => $lastGroupId, 'view' => $view, 'edit' => $edit, 'del' => $del);
+        }
+
+        $replaceInLayouts = Kit::GetParam('replaceInLayouts', _POST, _CHECKBOX);
+
+        if ($replaceInLayouts) {
+            Debug::LogEntry('audit', 'Permissions to push down: ' . json_encode($permissions), get_class(), __FUNCTION__);
+
+            // Layout object to deal with layout information
+            Kit::ClassLoader('layout');
+            $layoutObject = new Layout($db);
+
+            // Get all layouts for this Campaign
+            foreach ($this->user->LayoutList(NULL, array('campaignId' => $campaignId)) as $layout) {
+
+                // Set for ease of use
+                $layoutId = $layout['layoutid'];
+
+                Debug::LogEntry('audit', 'Processing permissions for layout id' . $layoutId, get_class(), __FUNCTION__);
+
+                // Set the permissions on this layout (if its not the same one!)
+                if ($layout['campaignid'] != $campaignId) {
+                    // Set permissions on this Layout
+                    $auth = $this->user->CampaignAuth($layout['campaignid'], true);
+
+                    if ($auth->modifyPermissions) {
+
+                        if (!$security->UnlinkAll($layout['campaignid']))
+                            continue;
+
+                        foreach ($permissions as $permission) {
+                            $security->Link($layout['campaignid'], $permission['groupId'], $permission['view'], $permission['edit'], $permission['del']);
+                        }
+                    }
+                }
+
+                // Get all regions and media and set permissions on those too
+                $layoutInformation = $layoutObject->LayoutInformation($layoutId);
+                
+                // Region and Media Security Class
+                Kit::ClassLoader('layoutregiongroupsecurity');
+                Kit::ClassLoader('layoutmediagroupsecurity');
+                $layoutSecurity = new LayoutRegionGroupSecurity($this->db);
+                $layoutMediaSecurity = new LayoutMediaGroupSecurity($this->db);
+
+                foreach($layoutInformation['regions'] as $region) {
+                    
+                    // Make sure we have permission
+                    $regionAuth = $this->user->RegionAssignmentAuth($region['ownerid'], $layoutId, $region['regionid'], true);
+                    if (!$regionAuth->modifyPermissions)
+                        continue;
+
+                    // Set the permissions on the region
+                    // Unlink all
+                    if (!$layoutSecurity->UnlinkAll($layoutId, $region['regionid']))
+                        continue;
+
+                    foreach ($permissions as $permission) {
+                        if (!$layoutSecurity->Link($layoutId, $region['regionid'], $permission['groupId'], $permission['view'], $permission['edit'], $permission['del']))
+                            trigger_error($layoutSecurity->GetErrorMessage(), E_USER_ERROR);
+                    }
+
+                    // Find all media nodes
+                    foreach($region['media'] as $media) {
+                        $originalUserId = ($media['userid'] == '') ? $layout['ownerid'] : $media['userid'];
+
+                        // Make sure we have permission
+                        $mediaAuth = $this->user->MediaAssignmentAuth($originalUserId, $layoutId, $region['regionid'], $media['mediaid'], true);
+                        if (!$mediaAuth->modifyPermissions)
+                            continue;
+
+                        // Set the permissions on the media node
+                        if (!$layoutMediaSecurity->UnlinkAll($layoutId, $region['regionid'], $media['mediaid']))
+                            continue;
+
+                        foreach ($permissions as $permission) {
+                            if (!$layoutMediaSecurity->Link($layoutId, $region['regionid'], $media['mediaid'], $permission['groupId'], $permission['view'], $permission['edit'], $permission['del']))
+                                trigger_error($layoutMediaSecurity->GetErrorMessage(), E_USER_ERROR);
+                        }
+                    }
+                }
+            }
         }
 
         $response->SetFormSubmitResponse(__('Permissions Changed'));
@@ -536,7 +646,7 @@ class campaignDAO
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="LayoutAssignView">');
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ResponseManager::Pager($id, 'form_grid_pager'));
         
         // Get the currently assigned layouts and put them in the "well"
         // // Layouts in group
@@ -594,7 +704,7 @@ class campaignDAO
         $name = Kit::GetParam('filter_name', _POST, _STRING);
 
         // Get a list of media
-        $layoutList = $user->LayoutList($name);
+        $layoutList = $user->LayoutList(NULL, array('layout' => $name));
 
         $rows = array();
 

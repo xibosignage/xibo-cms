@@ -39,13 +39,13 @@ function Preview(regionElement)
 	
 	// Create the Nav Buttons
 	$('.previewNav', this.previewElement)
-		.append("<div class='prevSeq icon-arrow-left'></div>")
-		.append("<div class='nextSeq icon-arrow-right'></div>")
+		.append("<div class='prevSeq glyphicon glyphicon-arrow-left'></div>")
+		.append("<div class='nextSeq glyphicon glyphicon-arrow-right'></div>")
 		.append("<div class='preview-media-information'></div>");
 
 	$('.prevSeq', $(this.previewElement)).click(function() {
 		var preview = Preview.instances[regionid];
-		var maxSeq 	= $('.preview-media-information', this.previewElement).data("maxSeq");
+		var maxSeq 	= $('.preview-media-information', preview.previewElement).data("maxSeq");
 				
 		var currentSeq = preview.seq;
 		currentSeq--;
@@ -60,15 +60,13 @@ function Preview(regionElement)
 	
 	$('.nextSeq', $(this.previewElement)).click(function() {
 		var preview = Preview.instances[regionid];
-		var maxSeq 	= $('.preview-media-information', this.previewElement).data("maxSeq");
+		var maxSeq 	= $('.preview-media-information', preview.previewElement).data("maxSeq");
 		
 		var currentSeq = preview.seq;
 		currentSeq++;
 		
-		if (currentSeq > maxSeq + 1)
-		{
+		if (currentSeq > maxSeq)
 			currentSeq = 1;
-		}
 		
 		preview.SetSequence(currentSeq);
 	});	
@@ -100,7 +98,8 @@ Preview.prototype.SetSequence = function(seq)
 			"seq": seq,
 			"regionid": regionid,
 			"width": this.width, 
-			"height": this.height
+			"height": this.height,
+			"scale_override": $(this.regionElement).attr("designer_scale")
 		},
 		success: function(response) {
 		

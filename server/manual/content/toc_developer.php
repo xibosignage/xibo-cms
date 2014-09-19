@@ -3,6 +3,7 @@
 	<a class="list-group-item" href="index.php?toc=developer&p=admin/advanced">Troubleshooting</a>
 	<a class="list-group-item" href="index.php?toc=developer&p=admin/theme">Theme</a>
 	<a class="list-group-item" href="index.php?toc=developer_api&p=admin/api_overview">API</a>
+	<a class="list-group-item" href="index.php?toc=developer_module&p=admin/module_overview">Modules</a>
 	<a class="list-group-item" href="index.php?toc=developer_releasenotes&p=admin/release_notes">Release Notes</a>
 	<a class="list-group-item" href="index.php?toc=developer&p=admin/contributing">Contributing</a>
 	<a class="list-group-item" href="index.php?toc=developer&p=admin/blueprints"><?php echo PRODUCT_NAME; ?> Blueprints</a>

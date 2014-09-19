@@ -33,6 +33,9 @@ CKEDITOR.editorConfig = function( config ) {
 	// Set the most common block elements.
 	config.format_tags = 'p;h1;h2;h3;pre';
 
+	// Add some more font-sizes
+	config.fontSize_sizes += ';80/80px;88/88px;96/96px;128/128px;';
+
 	// Make dialogs simpler.
 	config.removeDialogTabs = 'image:advanced;link:advanced';
 

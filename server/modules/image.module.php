@@ -28,7 +28,6 @@ class image extends Module
     {
         // Must set the type of the class
         $this->type= 'image';
-        $this->displayType = __('Image');
 
         // Get the max upload size from PHP
         $this->maxFileSize 	= ini_get('upload_max_filesize');
@@ -71,9 +70,48 @@ class image extends Module
      * Return the Edit Form as HTML
      * @return
      */
-    public function EditForm()
-    {
-        return $this->EditFormForLibraryMedia();
+    public function EditForm() {
+
+        // Provide some extra form fields
+        $formFields = array();
+
+        $formFields[] = FormManager::AddCombo(
+                    'scaleTypeId', 
+                    __('Scale Type'), 
+                    $this->GetOption('scaleType'),
+                    array(array('scaleTypeId' => 'center', 'scaleType' => __('Center')), array('scaleTypeId' => 'stretch', 'scaleType' => __('Stretch'))),
+                    'scaleTypeId',
+                    'scaleType',
+                    __('How should this image be scaled?'), 
+                    's');
+
+        $formFields[] = FormManager::AddCombo(
+                    'alignId', 
+                    __('Align'), 
+                    $this->GetOption('align', 'center'),
+                    array(array('alignId' => 'left', 'align' => __('Left')), array('alignId' => 'center', 'align' => __('Centre')), array('alignId' => 'right', 'align' => __('Right'))),
+                    'alignId',
+                    'align',
+                    __('How should this image be aligned?'), 
+                    'a', 'align-fields');
+
+        $formFields[] = FormManager::AddCombo(
+                    'valignId', 
+                    __('Vertical Align'), 
+                    $this->GetOption('valign', 'middle'),
+                    array(array('valignId' => 'top', 'valign' => __('Top')), array('valignId' => 'middle', 'valign' => __('Middle')), array('valignId' => 'bottom', 'valign' => __('Bottom'))),
+                    'valignId',
+                    'valign',
+                    __('How should this image be vertically aligned?'), 
+                    'v', 'align-fields');
+
+        // Set some field dependencies
+        $this->response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'block')));
+        $this->response->AddFieldAction('scaleTypeId', 'change', 'center', array('.align-fields' => array('display' => 'block')));
+        $this->response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'none')), 'not');
+        $this->response->AddFieldAction('scaleTypeId', 'change', 'center', array('.align-fields' => array('display' => 'none')), 'not');
+
+        return $this->EditFormForLibraryMedia($formFields);
     }
 
     /**
@@ -91,6 +129,11 @@ class image extends Module
      */
     public function EditMedia()
     {
+        // Set the properties specific to Images
+        $this->SetOption('scaleType', Kit::GetParam('scaleTypeId', _POST, _WORD, 'center'));
+        $this->SetOption('align', Kit::GetParam('alignId', _POST, _WORD, 'center'));
+        $this->SetOption('valign', Kit::GetParam('valignId', _POST, _WORD, 'middle'));
+
         return $this->EditLibraryMedia();
     }
 
@@ -99,8 +142,18 @@ class image extends Module
         if ($this->previewEnabled == 0)
             return parent::Preview ($width, $height);
         
+        $proportional = ($this->GetOption('scaleType') == 'stretch') ? 'false' : 'true';
+        $align = $this->GetOption('align', 'center');
+        $valign = $this->GetOption('valign', 'middle');
+ 
+        $html = '<div style="display:table; width:100%%; height: %dpx">
+            <div style="text-align:%s; display: table-cell; vertical-align: %s;">
+                <img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=%d&lkid=%d&width=%d&height=%d&dynamic=true&proportional=%s" />
+            </div>
+        </div>';
+
         // Show the image - scaled to the aspect ratio of this region (get from GET)
-        return sprintf('<div style="text-align:center;"><img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=%d&width=%d&height=%d&dynamic=true" /></div>', $this->mediaid, $width, $height);
+        return sprintf($html, $height, $align, $valign, $this->mediaid, $this->lkid, $width, $height, $proportional);
     }
 
     public function HoverPreview()
@@ -123,34 +176,35 @@ class image extends Module
         $thumb = Kit::GetParam('thumb', _GET, _BOOL, false);
         $dynamic = isset($_REQUEST['dynamic']);
         $file = $this->storedAs;
+        $width = Kit::GetParam('width', _REQUEST, _INT, 80);
+        $height = Kit::GetParam('height', _REQUEST, _INT, 80);
 
-        //File upload directory.. get this from the settings object
+        // File upload directory.. get this from the settings object
         $library = Config::GetSetting("LIBRARY_LOCATION");
         $fileName = $library . $file;
 
         // If we are a thumb request then output the cached thumbnail
-        if ($thumb)
-            $fileName = $library . 'tn_' . $file;
+        if ($thumb) {
+            $fileName = $library . sprintf('tn_%dx%d_%s', $width, $height, $file);
 
-        // If the thumbnail doesnt exist then create one
-        if (!file_exists($fileName))
-        {
-            Debug::LogEntry('audit', 'File doesnt exist, creating a thumbnail for ' . $fileName);
+            // If the thumbnail doesn't exist then create one
+            if (!file_exists($fileName)) {
+                Debug::LogEntry('audit', 'File doesnt exist, creating a thumbnail for ' . $fileName);
 
-            if (!$info = getimagesize($library . $file))
-                die($library . $file . ' is not an image');
+                if (!$info = getimagesize($library . $file))
+                    die($library . $file . ' is not an image');
 
-            ResizeImage($library . $file, $fileName, 80, 80, $proportional, 'file');
+                ResizeImage($library . $file, $fileName, $width, $height, $proportional, 'file');
+            }
         }
         
         // Get the info for this new temporary file
-        if (!$info = getimagesize($fileName))
-        {
+        if (!$info = getimagesize($fileName)) {
             echo $fileName . ' is not an image';
             exit;
         }
 
-        if ($dynamic && $info[2])
+        if ($dynamic && !$thumb && $info[2])
         {
             $width  = Kit::GetParam('width', _GET, _INT);
             $height = Kit::GetParam('height', _GET, _INT);
@@ -161,8 +215,7 @@ class image extends Module
             exit;
         }
 
-        if (!file_exists($fileName))
-        {
+        if (!file_exists($fileName)) {
             //not sure
             Debug::LogEntry('audit', "Cant find: $uid", 'module', 'GetResource');
 
@@ -172,7 +225,6 @@ class image extends Module
     	$this->ReturnFile($fileName);
         
         exit();
-    	
     }
 }
 ?>

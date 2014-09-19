@@ -46,7 +46,7 @@ define('_PASSWORDBOX', "password");
 class Kit 
 {
 	// Ends the current execution and issues a redirect - should only be called before headers have been sent (i.e. no output)
-	static function Redirect($page, $message = '', $pageIsUrl = false)
+	static function Redirect($page, $message = '')
 	{
 		$url 	= $page;
 		$ajax 	= Kit::GetParam('ajax', _REQUEST, _BOOL, false);
@@ -64,6 +64,7 @@ class Kit
 		} 
 		else 
 		{
+			header( 'HTTP/1.1 302 Moved Temporarily' );
 			header( 'Location: ' . $url );
 		}
 		
@@ -351,8 +352,14 @@ class Kit
 				break;
 				
 			case _CHECKBOX:
-				if ($return == 'on') $return = 1;
-				if ($return == 'off' || $return == '') $return = 0;
+				if ($return == 'on') {
+					$return = 1;
+				}
+				if ($return == 'off' || $return == '') {
+					$return = 0;
+				}
+
+				break;
 
 			default :
 				// No casting necessary
@@ -372,7 +379,7 @@ class Kit
 	 */
 	public static function GetURL($page = "")
 	{
-		$page = $this->ValidateParam($page, _WORD);
+		$page = Kit::ValidateParam($page, _WORD);
 		$fullUrl = 'http';
 		
 		if(isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on')
@@ -535,7 +542,7 @@ class Kit
      */
     public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = '', $callBack = '', $classColumn = '')
     {
-        $list = '<select name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
+        $list = '<select class="form-control" name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
 
         foreach ($listValues as $listItem)
         {
@@ -586,7 +593,7 @@ class Kit
 	public static function Token($tokenName = "token")
 	{
 		//Store in the users session
-		$token = md5(uniqid()."xsmsalt".time());
+		$token = md5(uniqid() . SECRET_KEY . time());
 		
 		$_SESSION[$tokenName] = $token;
 		$_SESSION[$tokenName.'_timeout'] = time();

@@ -22,12 +22,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class DisplayGroup extends Data
 {
-    public function __construct(database $db)
+    public function __construct()
     {
         include_once('lib/data/schedule.data.class.php');
         include_once('lib/data/displaygroupsecurity.data.class.php');
         
-        parent::__construct($db);
+        parent::__construct();
     }
     
     /**
@@ -151,7 +151,8 @@ class DisplayGroup extends Data
      */
     public function Delete($displayGroupID)
     {
-        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Delete');
+        if ($displayGroupID == NULL || $displayGroupID == 0)
+            return $this->SetError(__('Missing displayGroupId'));
 
         try {
             $dbh = PDOConnect::init();
@@ -161,6 +162,13 @@ class DisplayGroup extends Data
     
             if (!$schedule->DeleteScheduleForDisplayGroup($displayGroupID))
                 throw new Exception('Unable to DeleteScheduleForDisplayGroup');
+
+            // Remove all permissions
+            Kit::ClassLoader('displaygroupsecurity');
+            $security = new DisplayGroupSecurity($this->db);
+
+            if (!$security->UnlinkAll($displayGroupID))
+                throw new Exception('Unable to Unlink all Display Group Permissions');                
 
             // Delete the Display Group
             $sth = $dbh->prepare('DELETE FROM displaygroup WHERE DisplayGroupID = :displaygroupid');
@@ -324,7 +332,7 @@ class DisplayGroup extends Data
      * @param $displayID Object
      * @param $display Object
      */
-    public function EditDisplayGroup($displayID, $display)
+    public function EditDisplayGroup($displayID, $display, $description = '')
     {
         Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'EditDisplayGroup');
         
@@ -367,10 +375,11 @@ class DisplayGroup extends Data
             }
             
             // Update the Display group name
-            $sth = $dbh->prepare('UPDATE displaygroup SET DisplayGroup = :displaygroup WHERE  DisplayGroupID = :displaygroupid');
+            $sth = $dbh->prepare('UPDATE displaygroup SET DisplayGroup = :displaygroup, description = :description WHERE  DisplayGroupID = :displaygroupid');
             $sth->execute(array(
                     'displaygroupid' => $displayGroupID,
-                    'displaygroup' => $display
+                    'displaygroup' => $display,
+                    'description' => $description,
                 ));
             
             Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayGroup');
@@ -414,10 +423,6 @@ class DisplayGroup extends Data
 
         try {
             $dbh = PDOConnect::init();
-
-            // Check that some media assignments have been made
-            if (count($mediaList) == 0)
-                $this->ThrowError(25006, __('No media to assign'));
         
             // Drop all current assignments
             if (!$link->UnlinkAllFromDisplayGroup($displayGroupId))

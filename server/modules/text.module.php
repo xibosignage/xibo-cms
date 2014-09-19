@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner and James Packer
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,14 +20,11 @@
  */ 
 class text extends Module
 {
-
     public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
     {
         // Must set the type of the class
         $this->type = 'text';
-        $this->displayType = 'Text';
-        $this->name = 'Text';
-
+        
         // Must call the parent class
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
@@ -47,30 +44,53 @@ class text extends Module
         $rWidth		= Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 
-        // Direction Options
-        $directionOptions = array(
-            array('directionid' => 'none', 'direction' => __('None')), 
-            array('directionid' => 'left', 'direction' => __('Left')), 
-            array('directionid' => 'right', 'direction' => __('Right')), 
-            array('directionid' => 'up', 'direction' => __('Up')), 
-            array('directionid' => 'down', 'direction' => __('Down'))
-        );
-        Theme::Set('direction_field_list', $directionOptions);
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+    
+        $formFields = array();
+        $formFields[] = FormManager::AddCombo(
+                    'direction', 
+                    __('Direction'), 
+                    NULL,
+                    array(
+                        array('directionid' => 'none', 'direction' => __('None')), 
+                        array('directionid' => 'left', 'direction' => __('Left')), 
+                        array('directionid' => 'right', 'direction' => __('Right')), 
+                        array('directionid' => 'up', 'direction' => __('Up')), 
+                        array('directionid' => 'down', 'direction' => __('Down'))
+                    ),
+                    'directionid',
+                    'direction',
+                    __('Please select which direction this text should scroll. If scrolling is not required, select None'), 
+                    's');
 
+        $formFields[] = FormManager::AddNumber('scrollSpeed', __('Scroll Speed'), NULL, 
+            __('The scroll speed to apply if a direction is specified. Higher is faster.'), 'e');
+
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+            __('The duration in seconds this counter should be displayed'), 'd', 'required');
+
+        $formFields[] = FormManager::AddCheckbox('fitText', __('Fit text to region?'), 
+            NULL, __('Should the text try to fit to the region dimensions'), 
+            'f');
+
+        // Handle the substitutions as RAW items
         $subs = array(
                 array('Substitute' => 'Clock'),
                 array('Substitute' => 'Date')
             );
         Theme::Set('substitutions', $subs);
+        $formFields[] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
 
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
-    
-        $this->response->html = Theme::RenderReturn('media_form_text_add');
+        $formFields[] = FormManager::AddMultiText('ta_text', NULL, NULL, 
+            __('Enter the text to display. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+
+        Theme::Set('form_fields', $formFields);
+
+        $this->response->html = Theme::RenderReturn('form_render');
         $this->response->callBack = 'text_callback';
         $this->response->dialogTitle = __('Add Text');
-        $this->response->dialogClass = 'modal-big';
 
         if ($this->showRegionOptions)
         {
@@ -109,47 +129,57 @@ class text extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
         
-        // Other properties
-        Theme::Set('direction', $this->GetOption('direction'));
-        Theme::Set('scrollSpeed', $this->GetOption('scrollSpeed'));
-        Theme::Set('fitTextChecked', ($this->GetOption('fitText', 0) == 0) ? '' : ' checked');
+        $formFields = array();
+        $formFields[] = FormManager::AddCombo(
+                    'direction', 
+                    __('Direction'), 
+                    $this->GetOption('direction'),
+                    array(
+                        array('directionid' => 'none', 'direction' => __('None')), 
+                        array('directionid' => 'left', 'direction' => __('Left')), 
+                        array('directionid' => 'right', 'direction' => __('Right')), 
+                        array('directionid' => 'up', 'direction' => __('Up')), 
+                        array('directionid' => 'down', 'direction' => __('Down'))
+                    ),
+                    'directionid',
+                    'direction',
+                    __('Please select which direction this text should scroll. If scrolling is not required, select None'), 
+                    's');
 
-        // Get the text out of RAW
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
+        $formFields[] = FormManager::AddNumber('scrollSpeed', __('Scroll Speed'), $this->GetOption('scrollSpeed'), 
+            __('The scroll speed to apply if a direction is specified. Higher is faster.'), 'e');
 
-        Debug::LogEntry('audit', 'Raw XML returned: ' . $this->GetRaw());
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+            __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
-        // Get the Text Node out of this
-        $textNodes = $rawXml->getElementsByTagName('text');
-        $textNode = $textNodes->item(0);
-        Theme::Set('text', $textNode->nodeValue);
+        $formFields[] = FormManager::AddCheckbox('fitText', __('Fit text to region?'), 
+            $this->GetOption('fitText', 0), __('Should the text try to fit to the region dimensions'), 
+            'f');
 
-        // Direction Options
-        $directionOptions = array(
-            array('directionid' => 'none', 'direction' => __('None')), 
-            array('directionid' => 'left', 'direction' => __('Left')), 
-            array('directionid' => 'right', 'direction' => __('Right')), 
-            array('directionid' => 'up', 'direction' => __('Up')), 
-            array('directionid' => 'down', 'direction' => __('Down'))
-        );
-        Theme::Set('direction_field_list', $directionOptions);
-
+        // Handle the substitutions as RAW items
         $subs = array(
                 array('Substitute' => 'Clock'),
                 array('Substitute' => 'Date')
             );
         Theme::Set('substitutions', $subs);
 
-        Theme::Set('duration', $this->duration);
-        Theme::Set('is_duration_enabled', ($this->auth->modifyPermissions) ? '' : ' readonly');
+        // Get the text out of RAW
+        $rawXml = new DOMDocument();
+        $rawXml->loadXML($this->GetRaw());
 
-        $msgFitText = __('Fit text to region');
+        // Get the Text Node out of this
+        $textNodes = $rawXml->getElementsByTagName('text');
+        $textNode = $textNodes->item(0);
 
-        
-        $this->response->html = Theme::RenderReturn('media_form_text_edit');
+        $formFields[] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
+
+        $formFields[] = FormManager::AddMultiText('ta_text', NULL, $textNode->nodeValue, 
+            __('Enter the text to display. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+
+        Theme::Set('form_fields', $formFields);
+
+        $this->response->html = Theme::RenderReturn('form_render');
         $this->response->callBack = 'text_callback';
-        $this->response->dialogClass = 'modal-big';
         $this->response->dialogTitle = __('Edit Text');
         if ($this->showRegionOptions)
         {
@@ -312,18 +342,7 @@ class text extends Module
         if ($this->previewEnabled == 0)
             return parent::Preview ($width, $height);
         
-        $layoutId = $this->layoutid;
-        $regionId = $this->regionid;
-
-        $mediaId = $this->mediaid;
-        $lkId = $this->lkid;
-        $mediaType = $this->type;
-        $mediaDuration = $this->duration;
-        
-        $widthPx	= $width.'px';
-        $heightPx	= $height.'px';
-
-        return '<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=1&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return $this->PreviewAsClient($width, $height);
     }
 
     /**

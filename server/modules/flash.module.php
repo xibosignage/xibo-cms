@@ -28,7 +28,6 @@ class flash extends Module
     {
         // Must set the type of the class
         $this->type= 'flash';
-        $this->displayType = __('Flash');
 
         // Get the max upload size from PHP
         $this->maxFileSize 	= ini_get('upload_max_filesize');

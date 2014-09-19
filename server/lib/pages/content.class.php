@@ -20,17 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class contentDAO 
-{
-	private $db;
-	private $user;
-
-	function __construct(database $db, user $user) 
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-	}
-
+class contentDAO extends baseDAO {
 	/**
 	 * Displays the page logic
 	 */
@@ -40,41 +30,101 @@ class contentDAO
 		
 		// Default options
         if (Kit::IsFilterPinned('content', 'Filter')) {
-            Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_name', Session::Get('content', 'filter_name'));
-            Theme::Set('filter_type', Session::Get('content', 'filter_type'));
-            Theme::Set('filter_retired', Session::Get('content', 'filter_retired'));
-            Theme::Set('filter_owner', Session::Get('content', 'filter_owner'));
-            Theme::Set('filter_duration_in_seconds', Session::Get('content', 'filter_duration_in_seconds'));
-            Theme::Set('filter_duration_in_seconds_checked', ((Theme::Get('filter_duration_in_seconds') == 1) ? 'checked' : ''));
+            $filter_pinned = 1;
+            $filter_name = Session::Get('content', 'filter_name');
+            $filter_type = Session::Get('content', 'filter_type');
+            $filter_retired = Session::Get('content', 'filter_retired');
+            $filter_owner = Session::Get('content', 'filter_owner');
+            $filter_duration_in_seconds = Session::Get('content', 'filter_duration_in_seconds');
+            $filter_showThumbnail = Session::Get('content', 'filter_showThumbnail');
         }
         else {
-            Theme::Set('filter_retired', 0);
-			Theme::Set('filter_duration_in_seconds', 0);
+            $filter_pinned = 0;
+            $filter_name = NULL;
+            $filter_type = NULL;
+            $filter_retired = 0;
+            $filter_owner = NULL;
+            $filter_duration_in_seconds = 0;
+            $filter_showThumbnail = 0;
         }
-		
-    	Theme::Set('library_form_add_url', 'index.php?p=content&q=displayForms');
 
 		$id = uniqid();
 		Theme::Set('id', $id);
 		Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
 		Theme::Set('pager', ResponseManager::Pager($id));
 		Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryGrid">');
-		
-		// Field list for a "retired" dropdown list
-        Theme::Set('retired_field_list', array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')));
-		
-		// Field list for a "owner" dropdown list
-		Theme::Set('owner_field_list', $db->GetArray("SELECT 0 AS UserID, 'All' AS UserName UNION SELECT DISTINCT user.UserID, user.UserName FROM `media` INNER JOIN `user` ON media.UserID = user.UserID "));
 
-		// Module types filter
-		$types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
-        array_unshift($types, array('moduleid' => '', 'module' => 'All'));
-        Theme::Set('module_field_list', $types);
+        $formFields = array();
+                $formFields[] = FormManager::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
+                $formFields[] = FormManager::AddCombo(
+                    'filter_owner', 
+                    __('Owner'), 
+                    $filter_owner,
+                    $db->GetArray("SELECT 0 AS UserID, 'All' AS UserName UNION SELECT DISTINCT user.UserID, user.UserName FROM `media` INNER JOIN `user` ON media.UserID = user.UserID "),
+                    'UserID',
+                    'UserName',
+                    NULL, 
+                    'o');
 
-		// Call to render the template
-		Theme::Render('library_page');
+                $types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
+                array_unshift($types, array('moduleid' => '', 'module' => 'All'));
+                $formFields[] = FormManager::AddCombo(
+                    'filter_type', 
+                    __('Type'), 
+                    $filter_type,
+                    $types,
+                    'moduleid',
+                    'module',
+                    NULL, 
+                    'y');
+
+                $formFields[] = FormManager::AddCombo(
+                    'filter_retired', 
+                    __('Retired'), 
+                    $filter_retired,
+                    array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')),
+                    'retiredid',
+                    'retired',
+                    NULL, 
+                    'r');
+
+                $formFields[] = FormManager::AddCheckbox('filter_duration_in_seconds', __('Duration in Seconds'), 
+                    $filter_duration_in_seconds, NULL, 
+                    's');
+
+                $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'), 
+                    $filter_showThumbnail, NULL, 
+                    't');
+
+                $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+                    $filter_pinned, NULL, 
+                    'k');
+
+        // Call to render the template
+        Theme::Set('header_text', __('Library'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Render('grid_render');
 	}
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Filter'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Open the filter form'),
+                    'onclick' => 'ToggleFilterView(\'Filter\')'
+                    ),
+                array('title' => __('Add Media'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=content&q=displayForms',
+                    'help' => __('Add a new media item to the library'),
+                    'onclick' => ''
+                    )
+            );                   
+    }
 	
 	/**
 	 * Prints out a Table of all media items
@@ -90,17 +140,37 @@ class contentDAO
 		$filter_name = Kit::GetParam('filter_name', _REQUEST, _STRING);
 		$filter_userid = Kit::GetParam('filter_owner', _REQUEST, _INT);
         $filter_retired = Kit::GetParam('filter_retired', _REQUEST, _INT);
-		$filter_duration_in_seconds = Kit::GetParam('filter_duration_in_seconds', _REQUEST, _CHECKBOX);
+        $filter_duration_in_seconds = Kit::GetParam('filter_duration_in_seconds', _REQUEST, _CHECKBOX);
+        $filter_showThumbnail = Kit::GetParam('filter_showThumbnail', _REQUEST, _CHECKBOX);
+		Theme::Set('filter_showThumbnail', $filter_showThumbnail);
                 
 		setSession('content', 'filter_type', $filter_type);
 		setSession('content', 'filter_name', $filter_name);
 		setSession('content', 'filter_owner', $filter_userid);
         setSession('content', 'filter_retired', $filter_retired);
-		setSession('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
+        setSession('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
+		setSession('content', 'filter_showThumbnail', $filter_showThumbnail);
         setSession('content', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		// Construct the SQL
 		$mediaList = $user->MediaList($filter_type, $filter_name, $filter_userid, $filter_retired);
+
+        $cols = array();
+        $cols[] = array('name' => 'mediaid', 'title' => __('ID'));
+        $cols[] = array('name' => 'media', 'title' => __('Name'));
+        $cols[] = array('name' => 'mediatype', 'title' => __('Type'));
+
+        if ($filter_showThumbnail == 1)
+            $cols[] = array('name' => 'thumbnail', 'title' => __('Thumbnail'));
+
+        $cols[] = array('name' => 'duration_text', 'title' => __('Duration'));
+        $cols[] = array('name' => 'size_text', 'title' => __('Size'));
+        $cols[] = array('name' => 'owner', 'title' => __('Owner'));
+        $cols[] = array('name' => 'permissions', 'title' => __('Permissions'));
+        $cols[] = array('name' => 'revised', 'title' => __('Revised?'), 'icons' => true);
+        $cols[] = array('name' => 'filename', 'title' => __('File Name'));
+            
+        Theme::Set('table_cols', $cols);
 
 		$rows = array();
 
@@ -110,10 +180,16 @@ class contentDAO
 			$row['duration_text'] = ($filter_duration_in_seconds == 1) ? $row['duration'] : sec2hms($row['duration']);
 			$row['owner'] = $user->getNameFromID($row['ownerid']);
 			$row['permissions'] = $group = $this->GroupsForMedia($row['mediaid']);
-			$row['revised'] = ($row['parentid'] != 0) ? Theme::Image('act.gif') : '';
+			$row['revised'] = ($row['parentid'] != 0) ? 1 : 0;
 
 			// Display a friendly file size
 			$row['size_text'] = Kit::FormatBytes($row['filesize']);
+
+            // Thumbnail URL
+            $row['thumbnail'] = '';
+
+            if ($row['mediatype'] == 'image')
+                $row['thumbnail'] = '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '&width=100&height=100&dynamic=true&thumb=true" alt="' . $row['media'] . '" />';
 
 			$row['buttons'] = array();
 
@@ -151,7 +227,8 @@ class contentDAO
             // Download
             $row['buttons'][] = array(
                     'id' => 'content_button_download',
-                    'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=GetResource&download=1&mediaid=' . $row['mediaid'],
+                    'linkType' => '_self',
+                    'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=GetResource&download=1&downloadFromLibrary=1&mediaid=' . $row['mediaid'],
                     'text' => __('Download')
                 );
 
@@ -161,7 +238,7 @@ class contentDAO
 		
     	Theme::Set('table_rows', $rows);
         
-        $output = Theme::RenderReturn('library_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
     	$response->SetGridResponse($output);
         $response->initialSortColumn = 2;
@@ -223,7 +300,7 @@ class contentDAO
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryAssignView">');
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ResponseManager::Pager($id, 'form_grid_pager'));
         
         // Module types filter
         $modules = $this->user->ModuleAuth(0, '', 1);
@@ -326,7 +403,7 @@ class contentDAO
             $fileLocation   = $libraryFolder . 'temp/' . $fileId;
 
             // Make sure the library exists
-            $fileObject->EnsureLibraryExists();
+            File::EnsureLibraryExists();
 
             // Save the FILE
             Debug::LogEntry('audit', 'Saving the file to: ' . $fileLocation, 'FileUpload');
@@ -416,7 +493,7 @@ HTML;
     public function JqueryFileUpload() {
         $db =& $this->db;
 
-        require_once("3rdparty/jquery-file-upload/UploadHandler.php");
+        require_once("3rdparty/jquery-file-upload/XiboUploadHandler.php");
         $type = Kit::GetParam('type', _REQUEST, _WORD);
 
         Kit::ClassLoader('file');
@@ -433,6 +510,8 @@ HTML;
         $validExt = $media->ValidExtensions($type);
 
         $options = array(
+                'db' => $this->db,
+                'user' => $this->user,
                 'upload_dir' => $libraryFolder . 'temp/', 
                 'download_via_php' => true,
                 'script_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
@@ -442,7 +521,7 @@ HTML;
             );
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        $handler = new UploadHandler($db, $this->user, $options);
+        $handler = new XiboUploadHandler($options);
 
         // Must commit if in a transaction
         try {

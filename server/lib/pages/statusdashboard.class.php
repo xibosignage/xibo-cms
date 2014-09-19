@@ -20,126 +20,176 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class statusdashboardDAO 
-{
-	private $db;
-	private $user;
+class statusdashboardDAO extends baseDAO {
 
-	function __construct(database $db, user $user) {
-		$this->db 	=& $db;
-		$this->user =& $user;
-	}
+    function displayPage() {
 
-	function displayPage() {
+        // Set up some suffixes
+        $suffixes = array('bytes', 'k', 'M', 'G', 'T');    
 
-		// Get some data for a bandwidth chart
-		try {
-		    $dbh = PDOConnect::init();
-		
-		    $sth = $dbh->prepare('SELECT MONTHNAME(FROM_UNIXTIME(month)) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY MONTHNAME(FROM_UNIXTIME(month)) ORDER BY MIN(month);');
-		    $sth->execute(array('month' => time() - (86400 * 365)));
+        // Get some data for a bandwidth chart
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT MONTHNAME(FROM_UNIXTIME(month)) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY MONTHNAME(FROM_UNIXTIME(month)) ORDER BY MIN(month);');
+            $sth->execute(array('month' => time() - (86400 * 365)));
 
-		    $results = $sth->fetchAll();
+            $results = $sth->fetchAll();
 
-		    $points = array();
-
-		    foreach ($results as $row) {
-		        
-		        $points['data'][] = array($row['month'], ((double)$row['size']) / 1024 / 1024 / 1024);
-		    }
-
-		    $points['label'] = __('GB');
-
-		    $output = array();
-		    $output['points'][] = $points;
-
-		    // Some config options
-		    $output['config']['series']['bars']['show'] = true;
-		    $output['config']['series']['bars']['barWidth'] = 0.6;
-		    $output['config']['series']['bars']['align'] = "center";
-		    $output['config']['xaxis']['mode'] = "categories";
-		    $output['config']['xaxis']['tickLength'] = 0;
-
-		    // Monthly bandwidth - optionally tested against limits
+            // Monthly bandwidth - optionally tested against limits
             $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
-            if ($xmdsLimit > 0) {
-            	// Convert to MB
-            	$xmdsLimit = $xmdsLimit / 1024 / 1024;
-
-            	// Plot as a line
-            	$markings = array();
-
-            	$markings[] = array('color' => '#FF0000', 'lineWidth' => 2, 'yaxis' => array('from' => $xmdsLimit, 'to' => $xmdsLimit));
-
-            	$output['config']['grid']['markings'] = $markings;
+            $maxSize = 0;
+            foreach ($results as $row) {
+                $maxSize = ($row['size'] > $maxSize) ? $row['size'] : $maxSize;
             }
-		  
-		  	// Set the data
-		  	Theme::Set('bandwidth-widget', 'var flot_bandwidth_chart = ' . json_encode($output));
 
-		  	// We would also like a library usage pie chart!
-		  	$libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
+            // Decide what our units are going to be, based on the size
+            $base = floor(log($maxSize) / log(1024));
+
+            if ($xmdsLimit > 0) {
+                // Convert to appropriate size (xmds limit is in KB)
+                $xmdsLimit = ($xmdsLimit * 1024) / (pow(1024, $base));
+                Theme::Set('xmdsLimit', $xmdsLimit . ' ' . $suffixes[$base]);
+            }
+
+            $output = array();
+
+            foreach ($results as $row) {
+                $size = ((double)$row['size']) / (pow(1024, $base));
+                $remaining = $xmdsLimit - $size;
+                $output[] = array(
+                        'label' => __($row['month']), 
+                        'value' => round($size, 2),
+                        'limit' => round($remaining, 2)
+                    );
+            }
+
+            // Set the data
+            Theme::Set('xmdsLimitSet', ($xmdsLimit > 0));
+            Theme::Set('bandwidthSuffix', $suffixes[$base]);
+            Theme::Set('bandwidthWidget', json_encode($output));
+
+            // We would also like a library usage pie chart!
+            $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
 
             // Library Size in Bytes
-            $sth = $dbh->prepare('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media;');
+            $sth = $dbh->prepare('SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM media GROUP BY type;');
             $sth->execute();
-            $librarySize = $sth->fetchColumn();
 
-		  	if ($libraryLimit == 0) {
+            $results = $sth->fetchAll();
 
-		  		Theme::Set('library-widget', '<p class="bold-counter text-center">' . Kit::formatBytes($librarySize) . '</p>');
-		  	}
-		  	else {
-			    // Pie chart
-			    $output = array();
-			    $output['points'][] = array('label' => 'Used', 'data' => (double)$librarySize);
+            // Lets see what the max size is
+            $maxSize = 0;
+            foreach ($results as $library) {
+                $maxSize = ($library['SumSize'] > $maxSize) ? $library['SumSize'] : $maxSize;
+            }
 
-			    if ($libraryLimit > 0) {
-			    	$libraryLimit = $libraryLimit * 1024;
-			    	$output['points'][] = array('label' => 'Available', 'data' => ((double)$libraryLimit - $librarySize));
-			    }
-			    
-			    $output['config']['series']['pie']['show'] = true;
-			    $output['config']['legend']['show'] = false;
+            // Decide what our units are going to be, based on the size
+            $base = floor(log($maxSize) / log(1024));
+            
+            $output = array();
+            $totalSize = 0;
+            foreach ($results as $library) {
+                $output[] = array(
+                    'value' => round((double)$library['SumSize'] / (pow(1024, $base)), 2),
+                    'label' => ucfirst($library['type'])
+                );
+                $totalSize = $totalSize + $library['SumSize'];
+            }
 
-			    Theme::Set('library-widget', '<div id="flot_library_chart" style="height: 400px;" class="flot-chart"></div>');
-			    Theme::Set('library-widget-js', 'var flot_library_chart = ' . json_encode($output));
-		  	}
+            // Do we need to add the library remaining?
+            if ($libraryLimit > 0) {
+                $remaining = round(($libraryLimit - $totalSize) / (pow(1024, $base)), 2);
+                Theme::Set('libraryLimit', $remaining . ' ' . $suffixes[$base]);
+                $output[] = array(
+                    'value' => $remaining,
+                    'label' => __('Free')
+                );
+            }
 
-		    // Also a display widget
-		    $sort_order = array('display');
-		    $displays = $this->user->DisplayList($sort_order);
+            Theme::Set('librarySize', Kit::formatBytes($totalSize, 1));
+            Theme::Set('librarySuffix', $suffixes[$base]);
+            Theme::Set('libraryWidget', json_encode($output));
 
-		    $rows = array();
+            // Also a display widget
+            $sort_order = array('display');
+            $displays = $this->user->DisplayList($sort_order);
 
-	        if (is_array($displays) && count($displays) > 0) {
-	            // Output a table showing the displays
-	            foreach($displays as $row) {
-					$row['licensed'] = ($row['licensed'] == 1) ? 'icon-ok' : 'icon-remove';
-		            $row['loggedin'] = ($row['loggedin'] == 1) ? 'icon-ok' : 'icon-remove';
-		            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'error' : 'warning');
-					
-					// Assign this to the table row
-					$rows[] = $row;
-	            }
-	        }
+            $rows = array();
 
-	        Theme::Set('display-widget-rows', $rows);
-		}
-		catch (Exception $e) {
-		    
-		    Debug::LogEntry('error', $e->getMessage());
-		
-		    // Show the error in place of the bandwidth chart
-		    Theme::Set('widget-error', 'Unable to get widget details');
-		}
+            if (is_array($displays) && count($displays) > 0) {
+                // Output a table showing the displays
+                foreach($displays as $row) {
+                    
+                    $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
+                    
+                    // Assign this to the table row
+                    $rows[] = $row;
+                }
+            }
 
-		// Do we have an embedded widget?
-		Theme::Set('embedded-widget', html_entity_decode(Config::GetSetting('EMBEDDED_STATUS_WIDGET')));
+            Theme::Set('display-widget-rows', $rows);
 
-		// Render the Theme and output
+            // Get a count of users
+            $sth = $dbh->prepare('SELECT IFNULL(COUNT(*), 0) AS count_users FROM `user`');
+            $sth->execute();
+
+            Theme::Set('countUsers', $sth->fetchColumn(0));
+
+            // Get a count of active layouts
+            $sth = $dbh->prepare('SELECT IFNULL(COUNT(*), 0) AS count_scheduled FROM `schedule_detail` WHERE :now BETWEEN FromDT AND ToDT');
+            $sth->execute(array('now' => time()));
+
+            Theme::Set('nowShowing', $sth->fetchColumn(0));
+
+            // Latest news
+            // Make sure we have the cache location configured
+            Kit::ClassLoader('file');
+            $file = new File($this->db);
+            File::EnsureLibraryExists();
+
+            // Use SimplePie to get the feed
+            include_once('3rdparty/simplepie/autoloader.php');
+
+            $feed = new SimplePie();
+            $feed->set_cache_location($file->GetLibraryCacheUri());
+            $feed->set_feed_url(Theme::GetConfig('latest_news_url'));
+            $feed->set_cache_duration(86400);
+            $feed->handle_content_type();
+            $feed->init();
+
+            $latestNews = array();
+
+            if ($feed->error()) {
+                Debug::LogEntry('audit', 'Feed Error: ' . $feed->error(), get_class(), __FUNCTION__);
+            }
+            else {
+                // Store our formatted items
+                foreach ($feed->get_items() as $item) {
+                    $latestNews[] = array(
+                            'title' => $item->get_title(),
+                            'description' => $item->get_description(),
+                            'link' => $item->get_link()
+                        );
+                }
+            }
+
+            Theme::Set('latestNews', $latestNews);
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            // Show the error in place of the bandwidth chart
+            Theme::Set('widget-error', 'Unable to get widget details');
+        }
+
+        // Do we have an embedded widget?
+        Theme::Set('embedded-widget', html_entity_decode(Config::GetSetting('EMBEDDED_STATUS_WIDGET')));
+
+        // Render the Theme and output
         Theme::Render('status_dashboard');
-	}
+    }
 }
 ?>

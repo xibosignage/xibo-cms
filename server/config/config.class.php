@@ -77,6 +77,42 @@ class Config
 			return false;
 		}
 	}
+
+	static function GetAll($sort_order = array('cat', 'ordering'), $filter_by = array()) {
+
+		if ($sort_order == NULL)
+			$sort_order = array('cat', 'ordering');
+
+		try {
+			$dbh = PDOConnect::init();
+			
+			$SQL = 'SELECT * FROM setting WHERE 1 = 1 ';
+			$params = array();
+
+			if (Kit::GetParam('userChange', $filter_by, _INT, -1) != -1) {
+				$SQL .= ' AND userChange = :userChange ';
+				$params['userChange'] = Kit::GetParam('userChange', $filter_by, _INT);
+			}
+
+			if (Kit::GetParam('userSee', $filter_by, _INT, -1) != -1) {
+				$SQL .= ' AND userSee = :userSee ';
+				$params['userSee'] = Kit::GetParam('userSee', $filter_by, _INT);
+			}
+			
+			// Sorting?
+        	if (is_array($sort_order))
+            	$SQL .= 'ORDER BY ' . implode(',', $sort_order);
+
+			$sth = $dbh->prepare($SQL);
+			$sth->execute($params);
+
+			return $sth->fetchAll();
+		}
+		catch (Exception $e) {
+			trigger_error($e->getMessage());
+			return false;
+		}
+	}
 	
 	/**
 	 * Defines the Version and returns it
@@ -116,311 +152,365 @@ class Config
 	}
 	
 	/**
-	 * Checks the Environment and Determines if it is suitable for Xibo
+	 * Checks the Environment and Determines if it is suitable
 	 * @return 
 	 */
 	public function CheckEnvironment()
 	{
-		$output  = '';
-		$imgGood = '<img src="install/dot_green.gif"> ';
-		$imgBad  = '<img src="install/dot_red.gif"> ';
-		$imgWarn = '<img src="install/dot_amber.gif"> ';
-		
-		$output .= '<div class="checks">';
-		
-		// Check for PHP version
-		$message = __('PHP Version');
+		$cols = array(
+                array('name' => 'item', 'title' => __('Item')),
+                array('name' => 'status', 'title' => __('Status'), 'icons' => true),
+                array('name' => 'advice', 'title' => __('Advice'))
+            );
+        Theme::Set('table_cols', $cols);
 
+        $rows = array();
+
+		// Check for PHP version
+		$advice = sprintf(__("PHP version %s or later required."), Config::$VERSION_REQUIRED) . ' Detected ' . phpversion();
 		if ($this->CheckPHP()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
-			
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"> <p>' . sprintf(__("PHP version %s or later required."), Config::$VERSION_REQUIRED) . '. Detected ' . phpversion() . '</p></div>';
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('PHP Version'),
+				'status' => $status,
+				'advice' => $advice
+			);
 		
 		// Check for file system permissions
-		$message = __('Filesystem Permissions');
-
+		$advice = __("Write access required for settings.php, install.php and upgrade.php");
 		if ($this->CheckFsPermissions()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __("Write access required for the following:");
-			$output .= <<<END
-      			<ul>
-        			<li> settings.php
-        			<li> install.php
-				<li> upgrade.php
-      			</ul>
-END;
-      			$output .= __('Please fix this, and retest.') . '</p></div>';
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('File System Permissions'),
+				'status' => $status,
+				'advice' => $advice
+			);
 		
 		// Check for MySQL
-		$message = __('MySQL database (PHP MySql)');
-
+		$advice = __('MySQL support must be enabled in PHP.');
 		if ($this->CheckMySQL()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= <<<END
-			<div class="check_explain">
-      			<p>Xibo requires the PHP MySQL Extension to function.</p>
-      		</div>
-END;
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('MySQL database (PHP MySql)'),
+				'status' => $status,
+				'advice' => $advice
+			);
 
 		// Check for PDO
-		$message = __('MySQL database (PDO MySql)');
-
+		$advice = __('PDO support with MySQL drivers must be enabled in PHP.');
 		if ($this->CheckPDO()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= <<<END
-			<div class="check_explain">
-      			<p>Xibo requires the PHP PDO Extension to function.</p>
-      		</div>
-END;
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('MySQL database (PDO MySql)'),
+				'status' => $status,
+				'advice' => $advice
+			);
 		
 		// Check for JSON
-		$message = __('JSON Extension');
-
+		$advice = __('PHP JSON extension required to function.');
 		if ($this->CheckJson())
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('PHP JSON extension required to function.') . '</p></div>';
+			$status = 0;
 		}
 
-                // Check for SOAP
-		$message = __('SOAP Extension');
+		$rows[] = array(
+				'item' => __('JSON Extension'),
+				'status' => $status,
+				'advice' => $advice
+			);
 
+        // Check for SOAP
+		$advice = __('PHP SOAP extension required to function.');
 		if ($this->CheckSoap())
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('PHP SOAP extension required to function.') . '</p></div>';
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('SOAP Extension'),
+				'status' => $status,
+				'advice' => $advice
+			);
 		
 		// Check for GD (graphics)
-		$message = __('GD Extension');
-
+		$advice = __('PHP GD extension to function.');
 		if ($this->CheckGd()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('PHP GD extension to function.') . '</p></div>';
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('GD Extension'),
+				'status' => $status,
+				'advice' => $advice
+			);
 
 		// Check for PHP Session
-		$message = __('Session');
-
+		$advice = __('PHP session support to function.');
 		if ($this->CheckSession()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('PHP session support to function.') . '</p></div>';
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('Session'),
+				'status' => $status,
+				'advice' => $advice
+			);
 
 		// Check for PHP FileInfo
-		$message = __('FileInfo');
-
+		$advice = __('Requires PHP FileInfo support to function. If you are on Windows you need to enable the php_fileinfo.dll in your php.ini file.');
 		if ($this->CheckFileInfo()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('Requires PHP FileInfo support to function. If you are on Windows you need to enable the php_fileinfo.dll in your php.ini file.') . '</p></div>';
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('FileInfo'),
+				'status' => $status,
+				'advice' => $advice
+			);
 		
 		// Check for PHP PCRE
-		$message = __('PCRE');
-
+		$advice = __('PHP PCRE support to function.');
 		if ($this->CheckPCRE()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('PHP PCRE support to function.') . '</p></div>';
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('PCRE'),
+				'status' => $status,
+				'advice' => $advice
+			);
 		
 		// Check for PHP Gettext
-		$message = __('Gettext');
-
-		/**
-         * we now use PHP-Gettext which is shipped.
-         */
+		$advice = __('PHP Gettext support to function.');
 		if ($this->CheckGettext())
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('PHP Gettext support to function.') . '</p></div>';
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('Gettext'),
+				'status' => $status,
+				'advice' => $advice
+			);
 	
 		// Check for Calendar
-		$message = __('Calendar Extension');
-
+		$advice = __('PHP Calendar extension to function.');
 		if ($this->CheckCal()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('PHP Calendar extension to function.') . '</p></div>';
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('Calendar Extension'),
+				'status' => $status,
+				'advice' => $advice
+			);
 		
 		// Check for DOM
-		$message = __('DOM Extension');
-
+		$advice = __('PHP DOM core functionality enabled.');
 		if ($this->CheckDom()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('PHP DOM core functionality enabled.') . '</p></div>';
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('DOM Extension'),
+				'status' => $status,
+				'advice' => $advice
+			);
 		
 		// Check for DOM XML
-		$message = __('DOM XML Extension');
-
+		$advice = __('PHP DOM XML extension to function.');
 		if ($this->CheckDomXml()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('PHP DOM XML extension to function.') . '</p></div>';
+			$status = 0;
 		}
+
+		$rows[] = array(
+				'item' => __('DOM XML Extension'),
+				'status' => $status,
+				'advice' => $advice
+			);
 		
 		// Check for Mcrypt
-		$message = __('Mcrypt Extension');
-
+		$advice = __('PHP Mcrypt extension to function.');
 		if ($this->CheckMcrypt()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envFault = true;
 			
-			$output .= $imgBad.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('PHP Mcrypt extension to function.') . '</p></div>';
+			$status = 0;
 		}
-		
-		// Check to see if we are allowed to open remote URLs (homecall will not work otherwise)
-		$message = __('Allow PHP to open external URLs');
 
+		$rows[] = array(
+				'item' => __('Mcrypt Extension'),
+				'status' => $status,
+				'advice' => $advice
+			);
+		
+		// Check to see if we are allowed to open remote URLs (home call will not work otherwise)
+		$advice = __('You must have allow_url_fopen = On in your PHP.ini file for RSS Feeds / Anonymous statistics gathering to function.');
 		if (ini_get('allow_url_fopen')) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
-			// Not a fault as this will not block installation/upgrade. Informational.
+			// Not a fault as this will not block installation / upgrade. Informational.
 			$this->envWarning = true;
-			$output .= $imgWarn.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('You must have allow_url_fopen = On in your PHP.ini file for anonymous statistics gathering to function.') . '<br />';
-			$output .= __('If you do not intend to enable anonymous statistics gathering you need not worry about this problem.') . '</p></div>';
+			$status = 2;
 		}
 
-		// Check to see if timezone_identifiers_list exists
-		$message = 'DateTimeZone';
+		$rows[] = array(
+				'item' => __('Allow PHP to open external URLs'),
+				'status' => $status,
+				'advice' => $advice
+			);
 
+		// Check to see if timezone_identifiers_list exists
+		$advice = __('This enables us to get a list of time zones supported by the hosting server.');
 		if (function_exists('timezone_identifiers_list')) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envWarning = true;
 			
-			$output .= $imgWarn.$message.'<br />';
 		}
+
+		$rows[] = array(
+				'item' => __('DateTimeZone'),
+				'status' => $status,
+				'advice' => $advice
+			);
 		
 		// Check to see if large file uploads enabled
-		$message = 'Large File Uploads';
-
+		$advice = __('Support for uploading large files is recommended.');
 		if ($this->CheckPHPUploads()) 
 		{
-			$output .= $imgGood.$message.'<br />';
+			$status = 1;
 		}
 		else
 		{
 			$this->envWarning = true;
-			$output .= $imgWarn.$message.'<br />';
-			$output .= '<div class="check_explain"><p>' . __('You probably want to allow larger files to be uploaded than is currently available with your PHP configuration.') . '<br />';
-			$output .= __('We suggest setting your PHP post_max_size and upload_max_size to at least 128M, and also increasing your max_execution_time to at least 120 seconds.') . '</p></div>';
+			$status = 2;
+			$advice = __('You probably want to allow larger files to be uploaded than is currently available with your PHP configuration.') . '<br />';
+			$advice .= __('We suggest setting your PHP post_max_size and upload_max_size to at least 128M, and also increasing your max_execution_time to at least 120 seconds.');
 		}
-				
-		$output .= '</div>';
+
+		$rows[] = array(
+				'item' => __('Large File Uploads'),
+				'status' => $status,
+				'advice' => $advice
+			);
 		
 		$this->envTested = true;
-		return $output;
+
+		Theme::Set('table_rows', $rows);
+		return Theme::RenderReturn('table_render');
 	}
 	
 	/**
@@ -581,6 +671,10 @@ END;
 	function CheckFileInfo()
 	{
 		return extension_loaded("fileinfo");
+	}
+
+	function CheckZip() {
+		return extension_loaded('zip');
 	}
 	
 	/**

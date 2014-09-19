@@ -20,16 +20,9 @@
 $(document).ready(function(){
 	
 	// Set the height of the grid to be something sensible for the current screen resolution
-	$('#LayoutJumpList .XiboGrid').css("height", $(window).height() - 200);
-    
-	$('#JumpListHeader').click(function(){
-       if ($('#JumpListOpenClose').html() == "^")
-           $('#JumpListOpenClose').html("v");
-       else
-           $('#JumpListOpenClose').html("^");
-       
-       $('#' + $(this).attr('JumpListGridID')).slideToggle("slow", "swing");
-	});
+	$("#layoutJumpList").change(function(){
+        window.location = 'index.php?p=layout&modify=true&layoutid=' + $(this).val();
+    }).selectpicker();
 
 	$("#layout").each(function(){
 
@@ -60,19 +53,23 @@ $(document).ready(function(){
 
     $('.RegionOptionsMenuItem').click(function() {
 
-        var width   = $(this).closest('.region').css("width");
-        var height  = $(this).closest('.region').css("height");
-        var top     = $(this).closest('.region').css("top");
-        var left    = $(this).closest('.region').css("left");
-        var regionid = $(this).closest('.region').attr("regionid");
-        var layoutid = $(this).closest('.region').attr("layoutid");
-        var scale = $(this).closest('.region').attr("scale");
-        var layoutWidth = $(this).closest('.layout').css("width");
-        var layoutHeight = $(this).closest('.layout').css("height");
+        var designer_scale = $(this).closest('.region').attr("designer_scale");
+        var position = $(this).closest('.region').position();
+        var data = {
+            layoutid: $(this).closest('.region').attr("layoutid"),
+            regionid: $(this).closest('.region').attr("regionid"),
+            scale: $(this).closest('.region').attr("tip_scale"),
+            layoutWidth: Math.round(($(this).closest('.layout').width() + 2) / designer_scale, 2),
+            layoutHeight: Math.round(($(this).closest('.layout').height() + 2) / designer_scale, 2),
+            width: Math.round($(this).closest('.region').width() / designer_scale, 2),
+            height: Math.round($(this).closest('.region').height() / designer_scale, 2),
+            top: Math.round(position.top / designer_scale, 2),
+            left: Math.round(position.left / designer_scale, 2)
+        }
 
-        var url = "index.php?p=timeline&q=ManualRegionPositionForm&layoutid=" + layoutid + "&regionid=" + regionid + "&top=" + top + "&left=" + left + "&width=" + width + "&height=" + height + "&scale=" + scale + "&layoutWidth=" + layoutWidth + "&layoutHeight=" + layoutHeight;
+        var url = "index.php?p=timeline&q=ManualRegionPositionForm";
 
-        XiboFormRender(url);
+        XiboFormRender(url, data);
     });
 
 });
@@ -86,18 +83,15 @@ $(document).ready(function(){
 function updateRegionInfo(e, ui) {
 
     var pos = $(this).position();
-    var scale = $(this).attr("scale");
-    $('.region-tip', this).html(Math.round($(this).width() * scale, 0) + " x " + Math.round($(this).height() * scale, 0) + " (" + Math.round(pos.left * scale, 0) + "," + Math.round(pos.top * scale, 0) + ")");
+    var scale = ($(this).closest('.layout').attr("version") == 1) ? (1 / $(this).attr("tip_scale")) : $(this).attr("designer_scale");
+    $('.region-tip', this).html(Math.round($(this).width() / scale, 0) + " x " + Math.round($(this).height() / scale, 0) + " (" + Math.round(pos.left / scale, 0) + "," + Math.round(pos.top / scale, 0) + ")");
 }
 
 function regionPositionUpdate(e, ui) {
 
 	var width 	= $(this).css("width");
 	var height 	= $(this).css("height");
-	var top 	= $(this).css("top");
-	var left 	= $(this).css("left");
 	var regionid = $(this).attr("regionid");
-	var layoutid = $(this).attr("layoutid");
 
     // Update the region width / height attributes
     $(this).attr("width", width).attr("height", height);
@@ -138,12 +132,13 @@ function savePositions() {
         var regions = new Array();
 
 		$(this).find(".region").each(function(){
-
+            var designer_scale = $(this).attr("designer_scale");
+            var position = $(this).position();
             var region = {
-                width: $(this).css("width"),
-                height: $(this).css("height"),
-                top: $(this).css("top"),
-                left: $(this).css("left"),
+                width: $(this).width() / designer_scale,
+                height: $(this).height() / designer_scale,
+                top: position.top / designer_scale,
+                left: position.left / designer_scale,
                 regionid: $(this).attr("regionid")
             }
 
@@ -194,28 +189,6 @@ function setFullScreenLayout() {
     $('#height', '.XiboForm').val($('#layoutHeight').val());
     $('#top', '.XiboForm').val('0');
     $('#left', '.XiboForm').val('0');
-}
-
-function transitionFormLoad() {
-    $("#transitionType").change(transitionSelectListChanged);
-    
-    // Fire once for initialisation
-    transitionSelectListChanged();
-}
-
-function transitionSelectListChanged() {
-    // See if we need to disable any of the other form elements based on this selection
-    var selectionOption = $("#transitionType option:selected");
-    
-    if (!selectionOption.hasClass("hasDuration"))
-        $("tr.transitionDuration").hide();
-    else
-        $("tr.transitionDuration").show();
-        
-    if (!selectionOption.hasClass("hasDirection"))
-        $("tr.transitionDirection").hide();
-    else
-        $("tr.transitionDirection").show();
 }
 
 var LoadTimeLineCallback = function() {
@@ -293,7 +266,7 @@ var LibraryAssignCallback = function()
 
         // Add a span to that new item
         $("<span/>", {
-            "class": "icon-minus-sign",
+            "class": "glyphicon glyphicon-minus-sign",
             click: function(){
                 $(this).parent().remove();
             }
@@ -328,5 +301,9 @@ var background_button_callback = function() {
 	//Want to attach an onchange event to the drop down for the bg-image
 	var id = $('#bg_image').val();
 
-	$('#bg_image_image').attr("src", "index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=" + id + "&width=80&height=80&dynamic");
+	$('#bg_image_image').attr("src", "index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=" + id + "&width=200&height=200&dynamic");
+}
+
+var backGroundFormSetup = function() {
+    $('#bg_color').colorpicker();
 }

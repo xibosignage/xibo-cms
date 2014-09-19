@@ -24,16 +24,7 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="row">
-	<ul class="nav nav-pills span12">
-		<?php
-			foreach (Theme::GetMenu('Advanced Menu') as $item) {
-				echo $item['li'];
-			}
-		?>
-	</ul>
-</div>
-<div class="row">
-	<div class="span12">
+	<div class="col-md-12">
 		<?php echo Theme::Get('text'); ?>
 	</div>
 </div>

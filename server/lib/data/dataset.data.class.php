@@ -250,7 +250,7 @@ class DataSet extends Data
         try {
             $dbh = PDOConnect::init();
         
-            $sth = $dbh->prepare('SELECT `lkcampaignlayout`.CampaignID FROM `lkdatasetlayout` INNER JOIN `lkcampaignlayout` ON `lkcampaignlayout`.LayoutID = `lkdatasetlayout`.LayoutID WHERE DataSetID = :datasetid');
+            $sth = $dbh->prepare('SELECT DISTINCT `lkcampaignlayout`.CampaignID FROM `lkdatasetlayout` INNER JOIN `lkcampaignlayout` ON `lkcampaignlayout`.LayoutID = `lkdatasetlayout`.LayoutID WHERE DataSetID = :datasetid');
             $sth->execute(array(
                     'datasetid' => $dataSetId
                 ));
@@ -441,8 +441,7 @@ class DataSet extends Data
 
         Debug::LogEntry('audit', $SQL);
 
-        if (!$rows = $db->GetArray($SQL, $associative))
-            trigger_error($db->error());
+        $rows = $db->GetArray($SQL, $associative);
 
         if (!is_array($rows))
             $rows = array();

@@ -20,27 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class errorDAO 
-{
-	private $db;
-	private $user;
-
-	function __construct(database $db, user $user) 
-	{
-		$this->db 	=& $db;
-		$this->user =& $user;
-	}
-	
-	function on_page_load() 
-	{
-    	return '';
-	}
-	
-	function echo_page_heading() 
-	{
-		echo __("Application Error");
-		return true;
-	} 
+class errorDAO extends baseDAO {
 	
 	function displayPage() 
 	{

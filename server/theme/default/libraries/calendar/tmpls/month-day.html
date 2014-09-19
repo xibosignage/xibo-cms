@@ -1,0 +1,25 @@
+<div class="cal-month-day <%= cls %>">
+	<span class="pull-right" data-cal-date="<%= data_day %>" data-cal-view="day" data-toggle="tooltip" title="<%= tooltip %>"><%= day %></span>
+	<% if (events.length > 0) { %>
+		<div class="events-list" data-cal-start="<%= start %>" data-cal-end="<%= end %>">
+			<% _.each(events, function(event) { %>
+				<% 
+				var icon = "fa-circle";
+				if (event['extra'] == "single-display")
+					icon = "fa-desktop";
+				if (event['extra'] == "multi-display")
+					icon = "fa-desktop";
+				if (event['extra'] == "recurring")
+					icon = "fa-repeat";
+				if (event['extra'] == "priority")
+					icon = "fa-bullseye";
+				if (event['extra'] == "view-only")
+					icon = "fa-lock";
+				%>
+				<a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" data-event-class="<%= event['class'] %>"
+					class="pull-left event <%= event['class'] %>" data-toggle="tooltip"
+					title="<%= event.title %>"><span class="fa <%= icon %>"></span></a>
+			<% }); %>
+		</div>
+	<% } %>
+</div>

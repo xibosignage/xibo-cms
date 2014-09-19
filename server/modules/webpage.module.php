@@ -25,7 +25,6 @@ class webpage extends Module
 	{
 		// Must set the type of the class
 		$this->type = 'webpage';
-        $this->displayType = 'Webpage';
 	
 		// Must call the parent class	
 		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -46,21 +45,32 @@ class webpage extends Module
 		$rWidth		= Kit::GetParam('rWidth', _REQUEST, _STRING);
 		$rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
 		
-		// Direction Options
-        $directionOptions = array(
-            array('directionid' => 'none', 'direction' => __('None')), 
-            array('directionid' => 'left', 'direction' => __('Left')), 
-            array('directionid' => 'right', 'direction' => __('Right')), 
-            array('directionid' => 'up', 'direction' => __('Up')), 
-            array('directionid' => 'down', 'direction' => __('Down'))
-        );
-        Theme::Set('direction_field_list', $directionOptions);
-
         Theme::Set('form_id', 'ModuleForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
-        $this->response->html = Theme::RenderReturn('media_form_webpage_add');
+        $formFields = array();
+        
+        $formFields[] = FormManager::AddText('uri', __('Link'), NULL, 
+            __('The Location (URL) of the webpage'), 'l', 'required');
+
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+            __('The duration in seconds this counter should be displayed'), 'd', 'required');
+
+        $formFields[] = FormManager::AddNumber('offsetTop', __('Offset Top'), NULL, 
+            __('The starting point from the top in pixels'), 't');
+
+        $formFields[] = FormManager::AddNumber('offsetLeft', __('Offset Left'), NULL, 
+            __('The starting point from the left in pixels'), 'l');
+
+        $formFields[] = FormManager::AddNumber('scaling', __('Scale Percentage'), NULL, 
+            __('The Percentage to Scale this Webpage (0 - 100'), 's');
+
+        $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
+            NULL, __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'), 
+            't');
+
+        Theme::Set('form_fields', $formFields);
 
         if ($this->showRegionOptions)
         {
@@ -70,6 +80,8 @@ class webpage extends Module
         {
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
+
+        $this->response->html = Theme::RenderReturn('form_render');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
         $this->response->dialogTitle = __('Add Webpage');
         $this->response->dialogSize 	= true;
@@ -103,31 +115,29 @@ class webpage extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
         	
-		// Direction Options
-        $directionOptions = array(
-            array('directionid' => 'none', 'direction' => __('None')), 
-            array('directionid' => 'left', 'direction' => __('Left')), 
-            array('directionid' => 'right', 'direction' => __('Right')), 
-            array('directionid' => 'up', 'direction' => __('Up')), 
-            array('directionid' => 'down', 'direction' => __('Down'))
-        );
-        Theme::Set('direction_field_list', $directionOptions);
+		$formFields = array();
+        
+        $formFields[] = FormManager::AddText('uri', __('Link'), urldecode($this->GetOption('uri')), 
+            __('The Location (URL) of the webpage'), 'l', 'required');
 
-		Theme::Set('direction', $this->GetOption('direction'));
-		Theme::Set('copyright', $this->GetOption('copyright'));
-		Theme::Set('scaling', $this->GetOption('scaling'));
-		Theme::Set('uri', urldecode($this->GetOption('uri')));
-        Theme::Set('offsetLeft', $this->GetOption('offsetLeft'));
-        Theme::Set('offsetTop', $this->GetOption('offsetTop'));
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+            __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
-        // Is the transparency option set?		
-		if ($this->GetOption('transparency'))
-            Theme::Set('transparency_checked', 'checked');
+        $formFields[] = FormManager::AddNumber('offsetTop', __('Offset Top'), $this->GetOption('offsetTop'), 
+            __('The starting point from the top in pixels'), 't');
 
-        Theme::Set('duration', $this->duration);
-        Theme::Set('is_duration_enabled', ($this->auth->modifyPermissions) ? '' : ' readonly');
+        $formFields[] = FormManager::AddNumber('offsetLeft', __('Offset Left'), $this->GetOption('offsetLeft'), 
+            __('The starting point from the left in pixels'), 'l');
 
-        $this->response->html = Theme::RenderReturn('media_form_webpage_edit');
+        $formFields[] = FormManager::AddNumber('scaling', __('Scale Percentage'), $this->GetOption('scaling'), 
+            __('The Percentage to Scale this Webpage (0 - 100'), 's');
+           
+        $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
+            $this->GetOption('transparency'), __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'), 
+            't');
+
+        Theme::Set('form_fields', $formFields);
+
 		
         if ($this->showRegionOptions)
         {
@@ -137,13 +147,15 @@ class webpage extends Module
         {
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
-            $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
-            $this->response->dialogTitle = __('Edit Webpage');
-            $this->response->dialogSize 	= true;
-            $this->response->dialogWidth 	= '450px';
-            $this->response->dialogHeight 	= '250px';
 
-            return $this->response;
+        $this->response->html = Theme::RenderReturn('form_render');
+        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+        $this->response->dialogTitle = __('Edit Webpage');
+        $this->response->dialogSize 	= true;
+        $this->response->dialogWidth 	= '450px';
+        $this->response->dialogHeight 	= '250px';
+
+        return $this->response;
 	}
 	
 	/**
@@ -294,18 +306,7 @@ class webpage extends Module
         if ($this->previewEnabled == 0)
             return parent::Preview ($width, $height);
         
-        $layoutId = $this->layoutid;
-        $regionId = $this->regionid;
-
-        $mediaId = $this->mediaid;
-        $lkId = $this->lkid;
-        $mediaType = $this->type;
-        $mediaDuration = $this->duration;
-        
-        $widthPx	= $width.'px';
-        $heightPx	= $height.'px';
-
-        return '<iframe scrolling="no" id="innerIframe" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=1&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return $this->PreviewAsClient($width, $height);
     }
 
     public function GetResource($displayId = 0) {

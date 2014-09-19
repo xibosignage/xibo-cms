@@ -88,11 +88,14 @@ CREATE TABLE IF NOT EXISTS `display` (
   `GeoLocation` POINT NULL,
   `version_instructions` varchar(255) NULL,
   `client_type` VARCHAR( 20 ) NULL ,
-  `client_version` VARCHAR( 5 ) NULL ,
+  `client_version` VARCHAR( 15 ) NULL ,
   `client_code` SMALLINT NULL,
+  `displayprofileid` int(11) NULL,
+  `currentLayoutId` int(11) NULL,
+  `screenShotRequested` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 CREATE TABLE IF NOT EXISTS `displaygroup` (
   `DisplayGroupID` int(11) NOT NULL AUTO_INCREMENT,
@@ -138,7 +141,7 @@ CREATE TABLE IF NOT EXISTS `layout` (
   `templateID` int(11) DEFAULT NULL COMMENT 'The ID of the template',
   `retired` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is this layout retired',
   `duration` int(11) NOT NULL DEFAULT '0' COMMENT 'The duration in seconds',
-  `background` varchar(254) DEFAULT NULL,
+  `backgroundImageId` int(11) DEFAULT NULL,
   `status` TINYINT NOT NULL DEFAULT  '0',
   PRIMARY KEY (`layoutID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Layouts' AUTO_INCREMENT=5 ;
@@ -355,6 +358,8 @@ CREATE TABLE IF NOT EXISTS `module` (
   `ValidExtensions` varchar(254) DEFAULT NULL,
   `PreviewEnabled` tinyint(4) NOT NULL DEFAULT '1',
   `assignable` tinyint(4) NOT NULL DEFAULT '1',
+  `render_as` varchar(10) DEFAULT NULL,
+  `settings` TEXT,
   PRIMARY KEY (`ModuleID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Functional Modules' AUTO_INCREMENT=14 ;
 
@@ -448,11 +453,13 @@ CREATE TABLE IF NOT EXISTS `pages` (
 
 CREATE TABLE IF NOT EXISTS `resolution` (
   `resolutionID` int(11) NOT NULL AUTO_INCREMENT,
-  `resolution` varchar(20) NOT NULL,
+  `resolution` varchar(254) NOT NULL,
   `width` smallint(6) NOT NULL,
   `height` smallint(6) NOT NULL,
   `intended_width` smallint(6) NOT NULL,
   `intended_height` smallint(6) NOT NULL,
+  `version` tinyint(4) NOT NULL DEFAULT '1',
+  `enabled` tinyint(4) NOT NULL DEFAULT '1',
   PRIMARY KEY (`resolutionID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Supported Resolutions' AUTO_INCREMENT=9 ;
 
@@ -460,13 +467,14 @@ CREATE TABLE IF NOT EXISTS `schedule` (
   `eventID` int(11) NOT NULL AUTO_INCREMENT,
   `CampaignID` int(11) NOT NULL,
   `DisplayGroupIDs` varchar(254) NOT NULL COMMENT 'A list of the display group ids for this event',
-  `recurrence_type` enum('Hour','Day','Week','Month','Year') DEFAULT NULL,
+  `recurrence_type` enum('Minute','Hour','Day','Week','Month','Year') DEFAULT NULL,
   `recurrence_detail` varchar(100) DEFAULT NULL,
   `userID` int(11) NOT NULL,
   `is_priority` tinyint(4) NOT NULL,
   `FromDT` bigint(20) NOT NULL DEFAULT '0',
   `ToDT` bigint(20) NOT NULL DEFAULT '0',
   `recurrence_range` bigint(20) DEFAULT NULL,
+  `DisplayOrder` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`eventID`),
   KEY `layoutID` (`CampaignID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='High level schedule information' AUTO_INCREMENT=2 ;
@@ -474,15 +482,11 @@ CREATE TABLE IF NOT EXISTS `schedule` (
 CREATE TABLE IF NOT EXISTS `schedule_detail` (
   `schedule_detailID` int(11) NOT NULL AUTO_INCREMENT,
   `DisplayGroupID` int(11) NOT NULL,
-  `CampaignID` int(11) NOT NULL,
   `userID` int(8) NOT NULL DEFAULT '1' COMMENT 'Owner of the Event',
-  `is_priority` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'This scheduled event has priority and will take precidence over any others scheduled',
   `eventID` int(11) DEFAULT NULL,
   `FromDT` bigint(20) NOT NULL DEFAULT '0',
   `ToDT` bigint(20) NOT NULL DEFAULT '0',
-  `DisplayOrder` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`schedule_detailID`),
-  KEY `layoutID` (`CampaignID`),
   KEY `scheduleID` (`eventID`),
   KEY `DisplayGroupID` (`DisplayGroupID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Replicated schedule across displays and recurrence' AUTO_INCREMENT=6 ;
@@ -506,13 +510,19 @@ CREATE TABLE IF NOT EXISTS `setting` (
   `settingid` int(11) NOT NULL AUTO_INCREMENT,
   `setting` varchar(50) NOT NULL,
   `value` varchar(1000) NOT NULL,
-  `type` varchar(24) NOT NULL,
-  `helptext` text ,
+  `fieldType` varchar(24) NOT NULL,
+  `helptext` text,
   `options` varchar(254) DEFAULT NULL,
   `cat` varchar(24) NOT NULL DEFAULT 'general',
   `userChange` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Can the user change this setting',
+  `title` varchar(254) NOT NULL,
+  `validation` varchar(50) NOT NULL,
+  `ordering` int(11) NOT NULL,
+  `default` varchar(1000) NOT NULL,
+  `userSee` tinyint(4) NOT NULL DEFAULT '1',
+  `type` varchar(50) NOT NULL,
   PRIMARY KEY (`settingid`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=62 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=74 ;
 
 CREATE TABLE IF NOT EXISTS `stat` (
   `statID` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -566,6 +576,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `homepage` varchar(254) NOT NULL DEFAULT 'dashboard.php' COMMENT 'The users homepage',
   `Retired` tinyint(4) NOT NULL DEFAULT '0',
   `CSPRNG` tinyint(4) NOT NULL DEFAULT '0',
+  `newUserWizard` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`UserID`),
   KEY `usertypeid` (`usertypeid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
@@ -610,7 +621,39 @@ CREATE TABLE IF NOT EXISTS `lkdatasetlayout` (
   `RegionID` varchar(50) NOT NULL,
   `MediaID` varchar(50) NOT NULL,
   PRIMARY KEY (`LkDataSetLayoutID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `displayprofile` (
+  `displayprofileid` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `type` varchar(15) NOT NULL,
+  `config` text NOT NULL,
+  `isdefault` int(11) NOT NULL,
+  `userid` int(11) NOT NULL,
+  PRIMARY KEY (`displayprofileid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `xmdsnonce` (
+  `nonceId` bigint(20) NOT NULL AUTO_INCREMENT,
+  `nonce` varchar(100) NOT NULL,
+  `expiry` int(11) NOT NULL,
+  `lastUsed` int(11) DEFAULT NULL,
+  `displayId` int(11) NOT NULL,
+  `fileId` int(11) DEFAULT NULL,
+  `size` bigint(20) DEFAULT NULL,
+  `storedAs` varchar(100) DEFAULT NULL,
+  `layoutId` int(11) DEFAULT NULL,
+  `regionId` varchar(100) DEFAULT NULL,
+  `mediaId` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`nonceId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `bandwidthtype` (
+  `bandwidthtypeid` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(25) NOT NULL,
+  PRIMARY KEY (`bandwidthtypeid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=12 ;
+
 
 --
 -- Constraints for dumped tables
@@ -702,7 +745,6 @@ ALTER TABLE `schedule`
   ADD CONSTRAINT `schedule_ibfk_1` FOREIGN KEY (`CampaignID`) REFERENCES `campaign` (`CampaignID`);
 
 ALTER TABLE `schedule_detail`
-  ADD CONSTRAINT `schedule_detail_ibfk_9` FOREIGN KEY (`CampaignID`) REFERENCES `campaign` (`CampaignID`),
   ADD CONSTRAINT `schedule_detail_ibfk_7` FOREIGN KEY (`eventID`) REFERENCES `schedule` (`eventID`),
   ADD CONSTRAINT `schedule_detail_ibfk_8` FOREIGN KEY (`DisplayGroupID`) REFERENCES `displaygroup` (`DisplayGroupID`);
 

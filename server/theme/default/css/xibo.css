@@ -19,9 +19,8 @@
  */ 
 
 .xibo-logo {
-    width: 100px;
-    margin-bottom: 20px;
-    margin-top: 10px;
+    height: 40px;
+    margin-left: 15px;
 }
 
 .form-signin {
@@ -50,22 +49,17 @@
   }
 
 /* Define some modal widths and heights */
-body .modal-big {
+.modal-big .modal-dialog {
     width:80%;
-    margin-left:-40%;
 }
 
 /* Define some modal widths and heights */
-body .help-modal-big {
-    height: 70%;
+.help-modal-big .modal-dialog {
+    height: 700px;
 }
 
-/*body .modal-big .modal-body {
-    max-height: 500px;
-}*/
-
 @media (max-width: 767px) {
-    body .modal-big {
+    .modal-big .modal-dialog {
         width: auto;
         margin-left: auto;
     }
@@ -78,18 +72,9 @@ body .help-modal-big {
 }
 
 /* Some small tweaks for the validation plugin to work nicely with bootstrap */
-label.valid {
-  width: 24px;
-  height: 24px;
-  display: inline-block;
-  text-indent: -9999px;
-}
-
-label.error {
+span.error {
   font-weight: bold;
   color: red;
-  padding: 2px 8px;
-  margin-top: 2px;
 }
 
 /* Layout Jump List */
@@ -257,6 +242,14 @@ ul#FileAssociationsSortable {
     list-style: none;
 }
 
+.form-error {
+  margin-top: 10px;
+}
+
+.tab-pane {
+  padding-top: 15px;
+}
+
 .bold-counter {
   font-weight: 100;
   line-height: 70px;
@@ -267,4 +260,25 @@ ul#FileAssociationsSortable {
 
 .FormDisplayList .DisplayList {
   list-style: none;
+}
+
+ul.dropdown-menu-form {
+    padding: 5px 10px 0;
+    max-height: 300px;
+    overflow-y: scroll;
+}
+
+.page-header {
+  maring: 0;
+}
+
+#new-user-welcome-carousel .carousel-caption {
+  background-color: rgba(0, 0, 0, .7);
+  border-radius: 5px;
+  top: 20px;
+  bottom: auto;
+}
+
+.display-screenshot {
+  width: 200px;
 }

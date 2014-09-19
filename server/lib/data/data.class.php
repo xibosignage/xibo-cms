@@ -31,9 +31,10 @@ class Data
          * Data Class
          * @param database $db
          */
-	public function __construct(database $db)
+	public function __construct(database $db = null)
 	{
-		$this->db =& $db;
+		if ($db != null)
+			$this->db =& $db;
 		
 		$this->error		= false;
 		$this->errorNo 		= 0;

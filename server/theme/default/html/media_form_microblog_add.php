@@ -26,67 +26,67 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
     <?php echo Theme::Get('form_meta'); ?>
     <div class="row">
-    	<div class="span6">
-			<div class="control-group">
-                <div class="controls">
+    	<div class="col-md-6">
+			<div class="form-group">
+                <div class="col-sm-10">
                     <input class="checkbox" type="checkbox" name="twitter" />
-					<label class="control-label" for="twitter" accesskey="t" title="<?php echo Theme::Translate('Enable Twitter Feed'); ?>"><?php echo Theme::Translate('Twitter'); ?></label>
+					<label for="twitter" accesskey="t" title="<?php echo Theme::Translate('Enable Twitter Feed'); ?>"><?php echo Theme::Translate('Twitter'); ?></label>
                 </div>
 			</div>
-			<div class="control-group">
-				<label class="control-label" for="searchTerm" accesskey="n" title="<?php echo Theme::Translate('Enter a search term'); ?>"><?php echo Theme::Translate('Search Term'); ?></label>
-			    <div class="controls">
+			<div class="form-group">
+				<label for="searchTerm" accesskey="n" title="<?php echo Theme::Translate('Enter a search term'); ?>"><?php echo Theme::Translate('Search Term'); ?></label>
+			    <div class="col-sm-10">
 			        <input class="required" name="searchTerm" type="text" id="searchTerm" tabindex="1" />
 			    </div>
 			</div>
-			<div class="control-group">
-				<label class="control-label" for="fadeInterval" accesskey="n" title="<?php echo Theme::Translate('Fade Interval'); ?>"><?php echo Theme::Translate('Fade Interval'); ?></label>
-			    <div class="controls">
+			<div class="form-group">
+				<label for="fadeInterval" accesskey="n" title="<?php echo Theme::Translate('Fade Interval'); ?>"><?php echo Theme::Translate('Fade Interval'); ?></label>
+			    <div class="col-sm-10">
 			        <input class="required" name="fadeInterval" type="text" id="fadeInterval" tabindex="1" />
 			    </div>
 			</div>
-			<div class="control-group">
-				<label class="control-label" for="updateInterval" accesskey="n" title="<?php echo Theme::Translate('How often to update this feed'); ?>"><?php echo Theme::Translate('Update Interval'); ?></label>
-			    <div class="controls">
+			<div class="form-group">
+				<label for="updateInterval" accesskey="n" title="<?php echo Theme::Translate('How often to update this feed'); ?>"><?php echo Theme::Translate('Update Interval'); ?></label>
+			    <div class="col-sm-10">
 			        <input class="required number" name="updateInterval" type="text" id="updateInterval" tabindex="1" />
 			    </div>
 			</div>
     	</div>
-    	<div class="span6">
-    		<div class="control-group">
-			    <div class="controls">
+    	<div class="col-md-6">
+    		<div class="form-group">
+			    <div class="col-sm-10">
 			        <input class="checkbox" name="identica" type="checkbox" id="identica" />
-					<label class="control-label" for="identica" accesskey="n" title="<?php echo Theme::Translate('Enable Identica Feed'); ?>"><?php echo Theme::Translate('Identica'); ?></label>
+					<label for="identica" accesskey="n" title="<?php echo Theme::Translate('Enable Identica Feed'); ?>"><?php echo Theme::Translate('Identica'); ?></label>
 			    </div>
 			</div>
-    		<div class="control-group">
-                <label class="control-label" for="duration" accesskey="n" title="<?php echo Theme::Translate('The duration in seconds this media should be displayed'); ?>"><?php echo Theme::Translate('Duration'); ?></label>
-                <div class="controls">
+    		<div class="form-group">
+                <label for="duration" accesskey="n" title="<?php echo Theme::Translate('The duration in seconds this media should be displayed'); ?>"><?php echo Theme::Translate('Duration'); ?></label>
+                <div class="col-sm-10">
                     <input class="required number" name="duration" type="text" id="duration" tabindex="1" value="<?php echo Theme::Get('duration'); ?>" <?php echo Theme::Get('is_duration_enabled'); ?> />
                 </div>
             </div>
-            <div class="control-group">
-            	<label class="control-label" for="speedInterval" accesskey="n" title="<?php echo Theme::Translate('The speed in seconds between each item'); ?>"><?php echo Theme::Translate('Speed'); ?></label>
-                <div class="controls">
+            <div class="form-group">
+            	<label for="speedInterval" accesskey="n" title="<?php echo Theme::Translate('The speed in seconds between each item'); ?>"><?php echo Theme::Translate('Speed'); ?></label>
+                <div class="col-sm-10">
                     <input class="required number" name="speedInterval" type="text" id="speedInterval" tabindex="1" />
                 </div>
             </div>
-            <div class="control-group">
-            	<label class="control-label" for="historySize" accesskey="n" title="<?php echo Theme::Translate('The History Size in Number of Items'); ?>"><?php echo Theme::Translate('History Size'); ?></label>
-                <div class="controls">
+            <div class="form-group">
+            	<label for="historySize" accesskey="n" title="<?php echo Theme::Translate('The History Size in Number of Items'); ?>"><?php echo Theme::Translate('History Size'); ?></label>
+                <div class="col-sm-10">
                     <input class="required number" name="historySize" type="text" id="historySize" tabindex="1" />
                 </div>
             </div>
     	</div>
     </div>
     <div class="row">
-        <div class="span12">
+        <div class="col-md-12">
             <p class="text-info text-center"><?php echo Theme::Translate('Message Template'); ?></p>
             <textarea id="ta_template" class="wide_textarea" cols="80" rows="10" name="template"></textarea>
         </div>
     </div>
     <div class="row">
-        <div class="span12">
+        <div class="col-md-12">
             <p class="text-info text-center"><?php echo Theme::Translate('Message to display when there are no messages'); ?></p>
             <textarea id="ta_nocontent" class="wide_textarea" cols="80" rows="10" name="nocontent"></textarea>
         </div>

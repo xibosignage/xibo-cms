@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -32,11 +32,14 @@ require_once('lib/app/kit.class.php');
 require_once('lib/app/permissionmanager.class.php');
 require_once("lib/app/responsemanager.class.php");
 require_once('lib/data/data.class.php');
+require_once('lib/data/nonce.data.class.php');
+require_once('lib/data/bandwidth.data.class.php');
+require_once('lib/pages/base.class.php');
 require_once('config/db_config.php');
 require_once('config/config.class.php');
 include_once('lib/data/stat.data.class.php');
-require_once('lib/data/data.class.php');
 require_once('lib/data/display.data.class.php');
+require_once('lib/data/file.data.class.php');
 require_once('lib/service/serviceresponse.class.php');
 require_once('modules/module_user_general.php');
 require_once('lib/modules/module.interface.php');
@@ -87,6 +90,14 @@ if (!$db->select_db($dbname)) trigger_error($db->error(), E_USER_ERROR);
 set_error_handler(array(new Debug(), "ErrorHandler"));
 
 date_default_timezone_set(Config::GetSetting('defaultTimezone'));
+
+// What is the production mode of the server?
+if(Config::GetSetting('SERVER_MODE') == 'Test') 
+    ini_set('display_errors', 1);
+
+// Debugging?
+if(Config::GetSetting('debug') == 'On') 
+    error_reporting(E_ALL);
 
 // Work out the location of this service
 $serviceLocation = Kit::GetXiboRoot();

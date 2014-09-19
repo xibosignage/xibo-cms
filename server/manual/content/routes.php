@@ -35,6 +35,7 @@ if (INCLUDE_DEVELOPER) {
 	$allowed_toc[] = 'developer';
 	$allowed_toc[] = 'developer_api';
 	$allowed_toc[] = 'developer_releasenotes';
+	$allowed_toc[] = 'developer_module';
 }
 
 $allowed_routes = array(
@@ -48,6 +49,7 @@ $allowed_routes = array(
 		'install/offline_download_client',
 		'install/troubleshooting',
 		'admin/settings',
+		'admin/settings_maintenance',
 		'coreconcepts/overview',
 		'coreconcepts/login',
 		'coreconcepts/navbar',
@@ -93,6 +95,7 @@ $allowed_routes = array(
 		'admin/displays',
 		'admin/displaygroups',
 		'admin/displaystats',
+		'admin/displayprofiles',
 		'admin/display_wakeonlan',
 		'admin/overview',
 		'admin/api_overview',
@@ -150,7 +153,14 @@ $allowed_routes = array(
 		'admin/release_notes_1.6.0',
 		'admin/release_notes_1.6.1',
 		'admin/release_notes_1.6.2',
+		'admin/release_notes_1.6.3',
+		'admin/release_notes_1.7.0-alpha',
 		'admin/pyclient_libbrowsernode_build'
 	);
+
+if (INCLUDE_DEVELOPER) {
+	$allowed_routes[] = 'admin/module_overview';
+	$allowed_routes[] = 'admin/module_template';
+}
 
 ?>

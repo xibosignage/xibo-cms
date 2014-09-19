@@ -61,8 +61,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
       }
 
     </style>
-    <link href="theme/default/libraries/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
-
     <link rel="shortcut icon" href="<?php echo Theme::ImageUrl('favicon.ico'); ?>" />
   </head>
 
@@ -70,28 +68,30 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 	    <div class="container">
 
-			<form class="form-signin text-center" action="<?php echo Theme::Get('form_action'); ?>" method="post">
+			<form id="login-form" class="form-signin text-center" action="<?php echo Theme::Get('form_action'); ?>" method="post">
         <?php echo Theme::Get('form_meta'); ?>
         <p><a href="<?php echo Theme::GetConfig('theme_url'); ?>"><img src='<?php echo Theme::ImageUrl('xibologo.png'); ?>'></a></p>
 
         <p><?php echo Theme::Translate('Please provide your credentials'); ?></p>
 
-        <input name="username" type="text" class="input-block-level" placeholder="<?php echo Theme::Translate('User'); ?>" autofocus>
-        <input name="password" type="password" class="input-block-level" placeholder="<?php echo Theme::Translate('Password'); ?>">
+        <input id="username" class="form-control" name="username" type="text" class="input-block-level" placeholder="<?php echo Theme::Translate('User'); ?>" autofocus>
+        <input id="password" class="form-control" name="password" type="password" class="input-block-level" placeholder="<?php echo Theme::Translate('Password'); ?>">
 
-        <div class="login_message"><?php echo Theme::Get('login_message'); ?></div>
+        <?php if (Theme::Get('login_message') != '') { ?>
+        <div class="alert alert-danger"><?php echo Theme::Get('login_message'); ?></div>
+        <?php } ?>
 
         <button class="btn btn-large btn-primary" type="submit"><?php echo Theme::Translate('Login'); ?></button>
 			</form>
 
-			<p class="text-center"><?php echo Theme::Translate('Version %s', VERSION); ?> | <a href="<?php echo Theme::Get('source_url'); ?>"><?php echo Theme::Translate('Source'); ?></a> | <a class="XiboFormButton" href="<?php echo Theme::Get('about_url'); ?>" title="<?php echo Theme::Translate('About'); ?>"><?php echo Theme::Translate('About'); ?></a></p>
+			<p class="text-center"><?php echo Theme::Translate('Version %s', VERSION); ?> | <a id="source-link" href="<?php echo Theme::Get('source_url'); ?>"><?php echo Theme::Translate('Source'); ?></a> | <a id="about-link" class="XiboFormButton" href="<?php echo Theme::Get('about_url'); ?>" title="<?php echo Theme::Translate('About'); ?>"><?php echo Theme::Translate('About'); ?></a></p>
 	    </div> <!-- /container -->
 
 
     <script src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
-		<script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
     <script src="theme/default/libraries/jquery/jquery.validate.min.js"></script>
     <script src="theme/default/libraries/jquery/additional-methods.min.js"></script>
+    <script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
     <script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>
     <script src="theme/default/js/xibo-cms.js"></script>
 	</body>

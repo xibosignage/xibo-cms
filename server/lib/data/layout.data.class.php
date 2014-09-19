@@ -39,9 +39,11 @@ class Layout extends Data
      * @param <type> $tags
      * @param <type> $userid
      * @param <type> $templateId
+     * @param <type> $templateId
+     * @param <string> $xml Use the provided XML instead of a template
      * @return <type>
      */
-    public function Add($layout, $description, $tags, $userid, $templateId)
+    public function Add($layout, $description, $tags, $userid, $templateId, $resolutionId, $xml = '')
     {
         Debug::LogEntry('audit', 'Adding new Layout', 'Layout', 'Add');
 
@@ -49,6 +51,10 @@ class Layout extends Data
             $dbh = PDOConnect::init();
         
             $currentdate = date("Y-m-d H:i:s");
+
+            // We must provide either a template or a resolution
+            if ($templateId == 0 && $resolutionId == 0 && $xml == '')
+                $this->ThrowError(__('To add a Layout either a Template or Resolution must be provided'));
         
             // Validation
             if (strlen($layout) > 50 || strlen($layout) < 1)
@@ -74,7 +80,13 @@ class Layout extends Data
             // End Validation
         
             // Get the XML for this template.
-            $templateXml = $this->GetTemplateXml($templateId, $userid);
+            if ($xml != '') {
+                $initialXml = $xml;
+            }
+            else {
+                if (!$initialXml = $this->GetInitialXml($resolutionId, $templateId, $userid))
+                    throw new Exception(__('Unable to get initial XML'));
+            }
         
             Debug::LogEntry('audit', 'Retrieved template xml', 'Layout', 'Add');
 
@@ -89,7 +101,7 @@ class Layout extends Data
                     'createddt' => $currentdate,
                     'modifieddt' => $currentdate,
                     'tags' => $tags,
-                    'xml' => $templateXml,
+                    'xml' => $initialXml,
                     'status' => 3
                 ));
 
@@ -120,8 +132,17 @@ class Layout extends Data
                 Kit::ClassLoader('campaignsecurity');
                 $security = new CampaignSecurity($this->db);
                 $security->LinkEveryone($campaignId, 1, 0, 0);
+                
+                // Permissions on the new region(s)?
+                $layout = new Layout($this->db);
+
+                foreach($layout->GetRegionList($id) as $region) {
+                    Kit::ClassLoader('layoutregiongroupsecurity');
+                    $security = new LayoutRegionGroupSecurity($this->db);
+                    $security->LinkEveryone($id, $region['regionid'], 1, 0, 0);
+                }
             }
-    
+
             Debug::LogEntry('audit', 'Complete', 'Layout', 'Add');
     
             return $id;  
@@ -224,25 +245,48 @@ class Layout extends Data
     }
 
     /**
-     * Gets the XML for the specified template id
+     * Gets the initial XML for a layout
+     * @param <type> $resolutionId
      * @param <type> $templateId
+     * @param <type> $userId
      */
-    private function GetTemplateXml($templateId, $userId)
+    private function GetInitialXml($resolutionId, $templateId, $userId)
     {
         try {
             $dbh = PDOConnect::init();
         
             if ($templateId == 0) {
+
+                // Look up the width and height for the resolution
+                $sth = $dbh->prepare('SELECT * FROM resolution WHERE resolutionid = :resolutionid');
+                $sth->execute(array(
+                        'resolutionid' => $resolutionId
+                    ));
+
+                if (!$row = $sth->fetch())
+                    $this->ThrowError(__('Unknown Resolution'));
+
                 // make some default XML
                 $xmlDoc = new DOMDocument("1.0");
                 $layoutNode = $xmlDoc->createElement("layout");
     
-                $layoutNode->setAttribute("width", 800);
-                $layoutNode->setAttribute("height", 450);
+                $layoutNode->setAttribute("width", $row['intended_width']);
+                $layoutNode->setAttribute("height", $row['intended_height']);
+                $layoutNode->setAttribute("resolutionid", $resolutionId);
                 $layoutNode->setAttribute("bgcolor", "#000000");
-                $layoutNode->setAttribute("schemaVersion", Config::Version('XlfVersion'));
+                $layoutNode->setAttribute("schemaVersion", $row['version']);
     
                 $xmlDoc->appendChild($layoutNode);
+
+                $newRegion = $xmlDoc->createElement('region');
+                $newRegion->setAttribute('id', uniqid());
+                $newRegion->setAttribute('userId', $userId);
+                $newRegion->setAttribute('width', $row['intended_width']);
+                $newRegion->setAttribute('height', $row['intended_height']);
+                $newRegion->setAttribute('top', 0);
+                $newRegion->setAttribute('left', 0);
+
+                $layoutNode->appendChild($newRegion);
     
                 $xml = $xmlDoc->saveXML();
             }
@@ -490,7 +534,7 @@ class Layout extends Data
      * @param <bool> $copyMedia Make copies of this layouts media
      * @return <int> 
      */
-    public function Copy($oldLayoutId, $newLayoutName, $userId, $copyMedia = false)
+    public function Copy($oldLayoutId, $newLayoutName, $newDescription, $userId, $copyMedia = false)
     {
         try {
             $dbh = PDOConnect::init();
@@ -517,14 +561,15 @@ class Layout extends Data
     
             // The Layout ID is the old layout
             $SQL  = "";
-            $SQL .= " INSERT INTO layout (layout, xml, userID, description, tags, templateID, retired, duration, background, createdDT, modifiedDT, status) ";
-            $SQL .= " SELECT :layout, xml, :userid, description, tags, templateID, retired, duration, background, :createddt, :modifieddt, status ";
+            $SQL .= " INSERT INTO layout (layout, xml, userID, description, tags, templateID, retired, duration, backgroundImageId, createdDT, modifiedDT, status) ";
+            $SQL .= " SELECT :layout, xml, :userid, :description, tags, templateID, retired, duration, backgroundImageId, :createddt, :modifieddt, status ";
             $SQL .= "  FROM layout ";
             $SQL .= " WHERE layoutid = :layoutid";
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
                     'layout' => $newLayoutName,
+                    'description' => $newDescription,
                     'userid' => $userId,
                     'createddt' => $currentdate,
                     'modifieddt' => $currentdate,
@@ -809,7 +854,7 @@ class Layout extends Data
             if ($layoutId == 0)
                 $this->ThrowError(__('Layout not selected'));
     
-            if ($layoutId == 0)
+            if ($resolutionId == 0)
                 $this->ThrowError(__('Resolution not selected'));
     
             // Allow for the 0 media idea (no background image)
@@ -833,7 +878,7 @@ class Layout extends Data
             }
         
             // Look up the width and the height
-            $sth = $dbh->prepare('SELECT width, height FROM resolution WHERE resolutionID = :resolutionid');
+            $sth = $dbh->prepare('SELECT intended_width, intended_height, width, height, version FROM resolution WHERE resolutionID = :resolutionid');
             $sth->execute(array(
                 'resolutionid' => $resolutionId
             ));
@@ -842,8 +887,16 @@ class Layout extends Data
             if (!$row = $sth->fetch())
                 return $this->SetError(__('Unable to get the Resolution information'));
 
-            $width  =  Kit::ValidateParam($row['width'], _INT);
-            $height =  Kit::ValidateParam($row['height'], _INT);
+            $version = Kit::ValidateParam($row['version'], _INT);
+
+            if ($version == 1) {
+                $width  =  Kit::ValidateParam($row['width'], _INT);
+                $height =  Kit::ValidateParam($row['height'], _INT);
+            }
+            else {
+                $width  =  Kit::ValidateParam($row['intended_width'], _INT);
+                $height =  Kit::ValidateParam($row['intended_height'], _INT);
+            }
 
             include_once("lib/data/region.data.class.php");
             
@@ -853,11 +906,36 @@ class Layout extends Data
                 throw new Exception("Error Processing Request", 1);
                     
             // Update the layout record with the new background
-            $sth = $dbh->prepare('UPDATE layout SET background = :background WHERE layoutid = :layoutid');
+            $sth = $dbh->prepare('UPDATE layout SET backgroundimageid = :backgroundimageid WHERE layoutid = :layoutid');
             $sth->execute(array(
-                'background' => $bg_image,
+                'backgroundimageid' => $backgroundImageId,
                 'layoutid' => $layoutId
             ));
+
+            // Check to see if we already have a LK record for this.
+            $lkSth = $dbh->prepare('SELECT lklayoutmediaid FROM `lklayoutmedia` WHERE layoutid = :layoutid AND regionID = :regionid');
+            $lkSth->execute(array('layoutid' => $layoutId, 'regionid' => 'background'));
+
+            if ($lk = $lkSth->fetch()) {
+                // We have one
+                if ($backgroundImageId != 0) {
+                    // Update it
+                    if (!$region->UpdateDbLink($lk['lklayoutmediaid'], $backgroundImageId))
+                        $this->ThrowError(__('Unable to update background link'));
+                }
+                else {
+                    // Delete it
+                    if (!$region->RemoveDbLink($lk['lklayoutmediaid']))
+                        $this->ThrowError(__('Unable to remove background link'));
+                }
+            }
+            else {
+                // None - do we need one?
+                if ($backgroundImageId != 0) {
+                    if (!$region->AddDbLink($layoutId, 'background', $backgroundImageId))
+                        $this->ThrowError(__('Unable to create background link'));
+                }
+            }
     
             // Is this layout valid
             $this->SetValid($layoutId);
@@ -1040,6 +1118,33 @@ class Layout extends Data
         $info = array();
         $info['regions'] = array();
 
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT * FROM `layout` WHERE layoutid = :layout_id');
+            $sth->execute(array('layout_id' => $layoutId));
+          
+            $rows = $sth->fetchAll();
+
+            if (count($rows) <= 0)
+                $this->ThrowError(__('Unable to find layout'));
+
+            $row = $rows[0];
+
+            $info['layout'] = Kit::ValidateParam($row['layout'], _STRING);
+            $modifiedDt = new DateTime($row['modifiedDT']);
+            $info['updated'] = $modifiedDt->getTimestamp();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+
         // Use the Region class to help
         Kit::ClassLoader('region');
 
@@ -1074,7 +1179,10 @@ class Layout extends Data
                 $node = array(
                         'mediaid' => $mediaNode->getAttribute('id'),
                         'lkid' => $mediaNode->getAttribute('lkid'),
-                        'mediatype' => $mediaNode->getAttribute('type')
+                        'mediatype' => $mediaNode->getAttribute('type'),
+                        'render' => $mediaNode->getAttribute('render'),
+                        'userid' => $mediaNode->getAttribute('userid'),
+                        'updated' => $info['updated']
                     );
 
                 // DataSets are a special case. We want to get the last updated time from the dataset.
@@ -1093,6 +1201,286 @@ class Layout extends Data
         }
 
         return $info;
+    }
+
+    /**
+     * Export a layout.
+     * @param [type] $layoutId [description]
+     */
+    function Export($layoutId) {
+
+        if ($layoutId == 0 || $layoutId == '')
+            return $this->SetError(__('Must provide layoutId'));
+
+        $config = new Config();
+        if (!$config->CheckZip())
+            return $this->SetError(__('Zip is not enabled on this server'));
+
+        $libraryPath = Config::GetSetting('LIBRARY_LOCATION');
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('
+                SELECT layout, description, tags, backgroundImageId, xml 
+                  FROM layout
+                 WHERE layoutid = :layoutid');
+
+            $sth->execute(array('layoutid' => $layoutId));
+        
+            if (!$row = $sth->fetch())
+                $this->ThrowError(__('Layout not found.'));
+            
+            $xml = $row['xml'];
+    
+            $fileName = $libraryPath . 'temp/export_' . Kit::ValidateParam($row['layout'], _FILENAME) . '.zip';
+
+            $zip = new ZipArchive();
+            $zip->open($fileName, ZIPARCHIVE::OVERWRITE);        
+            $zip->addFromString('layout.xml', $xml);
+
+            $params = array('layoutid' => $layoutId);    
+            $SQL = ' 
+                SELECT media.mediaid, media.name, media.storedAs, originalFileName, type, duration
+                  FROM `media` 
+                    INNER JOIN `lklayoutmedia`
+                    ON lklayoutmedia.mediaid = media.mediaid
+                 WHERE lklayoutmedia.layoutid = :layoutid
+                ';
+
+            // Add the media to the ZIP
+            $mediaSth = $dbh->prepare($SQL);
+
+            $mediaSth->execute($params);
+
+            $mappings = array();
+
+            foreach ($mediaSth->fetchAll() as $media) {
+                $mediaFilePath = $libraryPath . $media['storedAs'];
+                $zip->addFile($mediaFilePath, 'library/' . $media['originalFileName']);
+
+                $mappings[] = array(
+                    'file' => $media['originalFileName'], 
+                    'mediaid' => $media['mediaid'], 
+                    'name' => $media['name'],
+                    'type' => $media['type'],
+                    'duration' => $media['duration'],
+                    'background' => ($media['mediaid'] == $row['backgroundImageId']) ? 1 : 0
+                    );
+            }
+
+            // Add the mappings file to the ZIP
+            $zip->addFromString('mapping.json', json_encode($mappings));
+    
+            $zip->close();
+    
+            // Uncomment only if you are having permission issues
+            // chmod($fileName, 0777);
+    
+            // Push file back to browser
+            if (ini_get('zlib.output_compression')) {
+                ini_set('zlib.output_compression', 'Off');      
+            }
+
+            $size = filesize($fileName);
+
+            header('Content-Type: application/octet-stream');
+            header("Content-Transfer-Encoding: Binary"); 
+            header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
+    
+            //Output a header
+            header('Pragma: public');
+            header('Cache-Control: max-age=86400');
+            header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+            header('Content-Length: ' . $size);
+            
+            // Send via Apache X-Sendfile header?
+            if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
+                header("X-Sendfile: $fileName");
+                exit();
+            }
+            
+            // Return the file with PHP
+            // Disable any buffering to prevent OOM errors.
+            @ob_end_clean();
+            @ob_end_flush();
+            readfile($fileName);
+    
+            exit;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    function Import($zipFile, $layout, $userId, $replaceExisting) {
+        // I think I might add a layout and then import
+        
+        if (!file_exists($zipFile))
+            return $this->SetError(__('File does not exist'));
+
+        // Open the Zip file
+        $zip = new ZipArchive();
+        if (!$zip->open($zipFile))
+            return $this->SetError(__('Unable to open ZIP'));
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT mediaid, storedAs FROM `media` WHERE name = :name AND IsEdited = 0');
+            
+            // Get the layout xml
+            $xml = $zip->getFromName('layout.xml');
+    
+            // Add the layout
+            if (!$layoutId = $this->Add($layout, NULL, NULL, $userId, NULL, NULL, $xml))
+                return false;
+
+            // Set the DOM XML
+            $this->SetDomXml($layoutId);
+
+            // We will need a file object and a media object
+            Kit::ClassLoader('file');
+            Kit::ClassLoader('media');
+            $fileObject = new File($this->db);
+            $mediaObject = new Media($this->db);
+    
+            // Go through each region and add the media (updating the media ids)
+            $mappings = json_decode($zip->getFromName('mapping.json'), true);
+    
+            foreach($mappings as $file) {
+
+                Debug::LogEntry('audit', 'Found file ' . $file['name']);
+    
+                // Does a media item with this name already exist?
+                $sth->execute(array('name' => $file['name']));
+                $rows = $sth->fetchAll();
+
+                if (count($rows) > 0) {
+                    if ($replaceExisting) {
+                        // Alter the name of the file and add it
+                        $file['name'] = 'import_' . $layout . '_' . uniqid();
+
+                        // Add the file
+                        if (!$fileId = $fileObject->NewFile($zip->getFromName('library/' . $file['file']), $userId))
+                            return $this->SetError(__('Unable to add a media item'));
+
+                        // Add this media to the library
+                        if (!$mediaObject->Add($fileId, $file['type'], $file['name'], $file['duration'], $file['file'], $userId))
+                            return $this->SetError($mediaObject->GetErrorMessage());
+                    }
+                    else {
+                        // Don't add the file, use the one that already exists
+                        $mediaObject->mediaId = $rows[0]['mediaid'];
+                        $mediaObject->storedAs = $rows[0]['storedAs'];
+                    }
+                }
+                else {
+                    // Add the file
+                    if (!$fileId = $fileObject->NewFile($zip->getFromName('library/' . $file['file']), $userId))
+                        return $this->SetError(__('Unable to add a media item'));
+
+                    // Add this media to the library
+                    if (!$mediaObject->Add($fileId, $file['type'], $file['name'], $file['duration'], $file['file'], $userId))
+                        return $this->SetError($mediaObject->GetErrorMessage());
+                }
+
+                Debug::LogEntry('audit', 'Post File Import Fix', get_class(), __FUNCTION__);
+    
+                // Get this media node from the layout using the old media id
+                if (!$this->PostImportFix($layoutId, $file['mediaid'], $mediaObject->mediaId, $mediaObject->storedAs, $file['background']))
+                    return false;
+            }
+
+            Debug::LogEntry('audit', 'Saving XLF', get_class(), __FUNCTION__);
+
+            // Save the updated XLF
+            if (!$this->SetLayoutXml($layoutId, $this->DomXml->saveXML()))
+                return false;
+
+            $this->SetValid($layoutId);
+
+            // Finished, so delete
+            @unlink($zipFile);
+
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    public function PostImportFix($layoutId, $oldMediaId, $newMediaId, $storedAs = '', $background = 0) {
+        
+        Debug::LogEntry('audit', 'Swapping ' . $oldMediaId . ' for ' . $newMediaId, get_class(), __FUNCTION__);
+
+        // Are we the background image?
+        if ($background == 1) {
+            // Background Image
+            $this->DomXml->documentElement->setAttribute('background', $storedAs);
+        }
+        else {
+            // Media Items
+            $xpath = new DOMXPath($this->DomXml);
+            $mediaNodeList = $xpath->query('//media[@id=' . $oldMediaId . ']');
+
+            foreach ($mediaNodeList as $node) {
+                // Update the ID
+                $node->setAttribute('id', $newMediaId);
+
+                // Update the URI option
+                // Get the options node from this document
+                $optionNodes = $node->getElementsByTagName('options');
+
+                // There is only 1
+                $optionNode = $optionNodes->item(0);
+
+                // Get the option node for the URI
+                $oldUriNode = $xpath->query('.//uri', $optionNode);
+
+                // Create a new uri option node and use it as a replacement for this one.
+                $newNode = $this->DomXml->createElement('uri', $storedAs);
+
+                if ($oldUriNode->length == 0) {
+                    
+                    // Append the new node to the list
+                    $optionNode->appendChild($newNode);
+                }
+                else {
+                    
+                    // Replace the old node we found with XPath with the new node we just created
+                    $optionNode->replaceChild($newNode, $oldUriNode->item(0));
+                }
+                
+                // Get the parent node (the region node)
+                $regionId = $node->parentNode->getAttribute('id');
+
+                Debug::LogEntry('audit', 'Adding Link ' . $regionId, get_class(), __FUNCTION__);
+
+                // Insert a link
+                Kit::ClassLoader('region');
+                $region = new Region($this->db);
+                if (!$lkId = $region->AddDbLink($layoutId, $regionId, $newMediaId))
+                    return false;
+
+                // Attach this lkid to the media item
+                $node->setAttribute("lkid", $lkId);
+            }
+        }
+
+        return true;
     }
 }
 ?>

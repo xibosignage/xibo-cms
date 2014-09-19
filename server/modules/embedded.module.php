@@ -25,7 +25,6 @@ class embedded extends Module
 	{
 		// Must set the type of the class
 		$this->type = 'embedded';
-                $this->displayType = 'Embedded HTML';
 	
 		// Must call the parent class	
 		parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -50,7 +49,22 @@ class embedded extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
-		Theme::Set('default_head_content', '
+        $formFields = array();
+        
+		$formFields[] = FormManager::AddText('name', __('Name'), NULL, 
+            __('An optional name for this media'), 'n');
+
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+            __('The duration in seconds this item should be displayed'), 'd', 'required');
+
+        $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
+            NULL, __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'), 
+            't');
+
+        $formFields[] = FormManager::AddMultiText('embedHtml', NULL, NULL, 
+            __('HTML to Embed'), 'h', 10);
+
+        $formFields[] = FormManager::AddMultiText('embedScript', NULL, '
 <script type="text/javascript">
 function EmbedInit()
 {
@@ -58,9 +72,10 @@ function EmbedInit()
 	
 	return;
 }
-</script>');
+</script>', 
+            __('HEAD content to Embed (including script tags)'), 'h', 10);
 
-		$form = Theme::RenderReturn('media_form_embedded_add');
+		Theme::Set('form_fields', $formFields);
 
         if ($this->showRegionOptions)
         {
@@ -71,7 +86,7 @@ function EmbedInit()
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
 
-        $this->response->html 			= $form;
+        $this->response->html 			= Theme::RenderReturn('form_render');
         $this->response->dialogTitle 	= 'Add Embedded HTML';
         $this->response->dialogSize 	= true;
         $this->response->dialogWidth 	= '650px';
@@ -104,32 +119,38 @@ function EmbedInit()
         Theme::Set('form_id', 'ModuleForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
-		Theme::Set('name', $this->GetOption('name'));
-
-		// Get the embedded HTML out of RAW
+		
+        // Get the embedded HTML out of RAW
 		$rawXml = new DOMDocument();
 		$rawXml->loadXML($this->GetRaw());
 		
-		Debug::LogEntry('audit', 'Raw XML returned: ' . $this->GetRaw());
+		//Debug::LogEntry('audit', 'Raw XML returned: ' . $this->GetRaw());
 		
-		// Get the HTML Node out of this
-		$textNodes 	= $rawXml->getElementsByTagName('embedHtml');
-		$textNode 	= $textNodes->item(0);
-		Theme::Set('embedHtml', $textNode->nodeValue);
-		
-		$textNodes 	= $rawXml->getElementsByTagName('embedScript');
-		$textNode 	= $textNodes->item(0);
-		Theme::Set('embedScript', $textNode->nodeValue);
+		$formFields = array();
 
-		Theme::Set('duration', $this->duration);
-        Theme::Set('durationFieldEnabled', (($this->auth->modifyPermissions) ? '' : ' readonly'));
+		$formFields[] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
+            __('An optional name for this media'), 'n');
+        
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
-		// Is the transparency option set?
-		if ($this->GetOption('transparency'))
-            Theme::Set('transparency_checked', 'checked');
-		
-		//Output the form
-		$form = Theme::RenderReturn('media_form_embedded_edit');
+        $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
+            $this->GetOption('transparency'), __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'), 
+            't');
+
+        $textNodes 	= $rawXml->getElementsByTagName('embedHtml');
+		$textNode 	= $textNodes->item(0);
+
+        $formFields[] = FormManager::AddMultiText('embedHtml', NULL, $textNode->nodeValue, 
+            __('HTML to Embed'), 'h', 10);
+
+        $textNodes 	= $rawXml->getElementsByTagName('embedScript');
+		$textNode 	= $textNodes->item(0);
+
+        $formFields[] = FormManager::AddMultiText('embedScript', NULL, $textNode->nodeValue, 
+            __('HEAD content to Embed (including script tags)'), 'h', 10);
+
+		Theme::Set('form_fields', $formFields);
 
         if ($this->showRegionOptions)
         {
@@ -140,8 +161,8 @@ function EmbedInit()
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
 
-		$this->response->html 			= $form;
-		$this->response->dialogTitle 	= 'Edit Embedded HTML';
+		$this->response->html 			= Theme::RenderReturn('form_render');;
+		$this->response->dialogTitle 	= __('Edit Embedded HTML');
 		$this->response->dialogSize 	= true;
 		$this->response->dialogWidth 	= '650px';
 		$this->response->dialogHeight 	= '450px';

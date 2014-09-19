@@ -23,14 +23,14 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="pagination pagination-right" id="<?php echo Theme::Get('pager_id'); ?>">
+<div class="pagination pull-right" id="<?php echo Theme::Get('pager_id'); ?>">
     <form class="form-inline">
-        <span class="first icon-fast-backward"></span>
-        <span class="prev icon-step-backward"></span>
-        <input type="text" class="pagedisplay"/>
-        <span class="next icon-step-forward"></span>
-        <span class="last icon-fast-forward"></span>
-        <select class="pagesize input-mini">
+        <span class="first glyphicon glyphicon-fast-backward"></span>
+        <span class="prev glyphicon glyphicon-step-backward"></span>
+        <input type="text" class="form-control pagedisplay"/>
+        <span class="next glyphicon glyphicon-step-forward"></span>
+        <span class="last glyphicon glyphicon-fast-forward"></span>
+        <select class="form-control pagesize input-mini">
             <option value="5">5</option>
             <option value="10">10</option>
             <option value="20">20</option>

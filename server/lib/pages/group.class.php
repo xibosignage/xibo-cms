@@ -20,11 +20,7 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
-class groupDAO 
-{
-	private $db;
-	private $user;
-	
+class groupDAO extends baseDAO {	
 	//general fields
 	private $groupid;
 	private $group = "";
@@ -75,20 +71,52 @@ END;
 		// Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
-        Theme::Set('usergroup_form_add_url', 'index.php?p=group&q=GroupForm');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="Grid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
         // Default options
         if (Kit::IsFilterPinned('usergroup', 'Filter')) {
-            Theme::Set('filter_pinned', 'checked');
-            Theme::Set('filter_name', Session::Get('usergroup', 'filter_name'));
+            $filter_pinned = 1;
+            $filter_name = Session::Get('usergroup', 'filter_name');
+        }
+        else {
+            $filter_pinned = 0;
+            $filter_name = NULL;
         }
 
-        // Render the Theme and output
-        Theme::Render('usergroup_page');
+        $formFields = array();
+        $formFields[] = FormManager::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
+
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+            $filter_pinned, NULL, 
+            'k');
+
+        // Call to render the template
+        Theme::Set('header_text', __('User Groups'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Render('grid_render');
 	}
+
+    function actionMenu() {
+
+        return array(
+                array('title' => __('Add User Group'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=group&q=GroupForm',
+                    'help' => __('Add a new User Group'),
+                    'onclick' => ''
+                    ),
+                array('title' => __('Filter'),
+                    'class' => '',
+                    'selected' => false,
+                    'link' => '#',
+                    'help' => __('Open the filter form'),
+                    'onclick' => 'ToggleFilterView(\'Filter\')'
+                    )
+            );                   
+    }
 
 	/**
 	 * Group Grid
@@ -117,13 +145,18 @@ END;
 		
 		$SQL .= " ORDER BY group.group ";
 		
-		Debug::LogEntry('audit', $SQL);
+		//Debug::LogEntry('audit', $SQL);
 		
 		if (!$results = $db->query($SQL)) 
 		{
 			trigger_error($db->error());
 			trigger_error(__("Can not get group information."), E_USER_ERROR);
 		}
+
+		$cols = array(
+                array('name' => 'usergroup', 'title' => __('User Group'))
+            );
+        Theme::Set('table_cols', $cols);
 
 		$rows = array();
 
@@ -178,7 +211,7 @@ END;
 
 		Theme::Set('table_rows', $rows);
 
-        $output = Theme::RenderReturn('usergroup_page_grid');
+        $output = Theme::RenderReturn('table_render');
 
 		$response = new ResponseManager();
         $response->SetGridResponse($output);
@@ -202,7 +235,6 @@ END;
 		{
         	Theme::Set('form_action', 'index.php?p=group&q=Add');
 
-        	$theme_file = 'usergroup_form_add';
         	$form_name = 'Add User Group';
         	$form_help_link = HelpManager::Link('UserGroup', 'Add');
 		}
@@ -212,15 +244,18 @@ END;
         	Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $this->groupid . '">');
         	Theme::Set('group', $this->group);
 
-        	$theme_file = 'usergroup_form_edit';
         	$form_name = 'Edit User Group';
         	$form_help_link = HelpManager::Link('UserGroup', 'Edit');
 		}
-		
-		$form = Theme::RenderReturn($theme_file);
+
+		$formFields = array();
+        $formFields[] = FormManager::AddText('group', __('Name'), $this->group, 
+            __('The Name for this User Group'), 'n', 'maxlength="50" required');
+
+        Theme::Set('form_fields', $formFields);
 
 		// Construct the Response		
-		$response->SetFormRequestResponse($form, $form_name, '400', '180');
+		$response->SetFormRequestResponse(NULL, $form_name, '400', '180');
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . $form_help_link . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#UserGroupForm").submit()');
@@ -302,7 +337,7 @@ END;
 		{
 			$row['name'] = $row['pagegroup'];
 			$row['pageid'] = $row['pagegroupID'];
-			$row['assigned'] = (($row['AssignedID'] == 1) ? 'icon-ok' : 'icon-remove');
+			$row['assigned'] = (($row['AssignedID'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove');
 			$row['assignedid'] = $row['AssignedID'];
 			$row['checkbox_value'] = $row['AssignedID'] . ',' . $row['pagegroupID'];
 			$row['checkbox_ticked'] = '';
@@ -335,10 +370,10 @@ END;
         Theme::Set('form_action', 'index.php?p=group&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupid . '">');
 
-        $form = Theme::RenderReturn('usergroup_form_delete');
-				
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
+
 		// Construct the Response		
-		$response->SetFormRequestResponse($form, __('Delete Group'), '400', '180');
+		$response->SetFormRequestResponse(NULL, __('Delete Group'), '400', '180');
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('UserGroup', 'Delete') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#UserGroupDeleteForm").submit()');
@@ -561,7 +596,7 @@ END;
 		{
 			$row['name'] = $row['Text'];
 			$row['pageid'] = $row['MenuItemID'];
-			$row['assigned'] = (($row['AssignedID'] == 1) ? 'icon-ok' : 'icon-remove');
+			$row['assigned'] = (($row['AssignedID'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove');
 			$row['assignedid'] = $row['AssignedID'];
 			$row['checkbox_value'] = $row['AssignedID'] . ',' . $row['MenuItemID'];
 			$row['checkbox_ticked'] = '';

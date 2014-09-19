@@ -28,7 +28,6 @@ class datasetview extends Module
     {
         // Must set the type of the class
         $this->type= 'datasetview';
-        $this->displayType = __('DataSet View');
 
         // Must call the parent class
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -50,14 +49,24 @@ class datasetview extends Module
         Theme::Set('form_id', 'ModuleForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
-
-        // Data set list
-        Theme::Set('dataset_field_list', $user->DataSetList());
         
-        $form = Theme::RenderReturn('media_form_datasetview_add');
+        $formFields = array();
+        $formFields[] = FormManager::AddCombo(
+                    'datasetid', 
+                    __('DataSet'), 
+                    NULL,
+                    $user->DataSetList(),
+                    'datasetid',
+                    'dataset',
+                    __('Please select the DataSet to use as a source of data for this view.'), 
+                    'd');
 
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+            __('The duration in seconds this counter should be displayed'), 'd', 'required');
+
+        Theme::Set('form_fields', $formFields);
         
-        $this->response->SetFormRequestResponse($form, __('Add DataSet View'), '350px', '275px');
+        $this->response->SetFormRequestResponse(NULL, __('Add DataSet View'), '350px', '275px');
 
         // Cancel button
         if ($this->showRegionOptions)
@@ -102,36 +111,29 @@ class datasetview extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '"><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
 
-        Theme::Set('dataSetId', $dataSetId);
-        $dataSetName = $db->GetSingleValue(sprintf('SELECT dataset FROM `dataset` WHERE DataSetID = %d', $dataSetId), 'dataset', _STRING);
-        Theme::Set('dataSetName', $dataSetName);
-        Theme::Set('updateInterval', $this->GetOption('updateInterval', 0));
-        Theme::Set('upperLimit', $this->GetOption('upperLimit'));
-        Theme::Set('lowerLimit', $this->GetOption('lowerLimit'));
-        Theme::Set('filter', $this->GetOption('filter'));
-        Theme::Set('ordering', $this->GetOption('ordering'));
-        Theme::Set('rowsPerPage', $this->GetOption('rowsPerPage'));
-        Theme::Set('showHeadings', $this->GetOption('showHeadings'));
-        Theme::Set('showHeadingsChecked', ($this->GetOption('showHeadings') == 1) ? ' checked' : '');
-        Theme::Set('duration', $this->duration);
+        // We want 2 tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        Theme::Set('form_tabs', $tabs);
 
+        $formFields = array();
+        
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
+
+        $formFields[] = FormManager::AddNumber('ordering', __('Order'), $this->GetOption('ordering'), 
+            __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
+
+        $formFields[] = FormManager::AddText('filter', __('Filter'), $this->GetOption('filter'), 
+            __('Please enter a SQL clause to filter this DataSet.'), 'f');
+
+        $formFields[] = FormManager::AddCheckbox('showHeadings', __('Show the table headings?'), 
+            $this->GetOption('showHeadings'), __('Should the Table headings be shown?'), 
+            'h');
+
+        // Handle the columns
         $columns = $this->GetOption('columns');
-        Theme::Set('columns', $columns);
-
-        // Get the embedded HTML out of RAW
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
-        $rawNodes = $rawXml->getElementsByTagName('styleSheet');
-
-        if ($rawNodes->length == 0)
-        {
-            Theme::Set('styleSheet', $this->DefaultStyleSheet());
-        }
-        else
-        {
-            $rawNode = $rawNodes->item(0);
-            Theme::Set('styleSheet', $rawNode->nodeValue);
-        }
 
         if ($columns != '')
         {
@@ -172,26 +174,50 @@ class datasetview extends Module
 
         Theme::Set('columns_selected_list', $columnsSelected);
         Theme::Set('columns_available_list', $columnsNotSelected);
-        Theme::Set('durationFieldEnabled', (($this->auth->modifyPermissions) ? '' : ' readonly'));
 
-        // Render the Theme
-        $form = Theme::RenderReturn('media_form_datasetview_edit');
+        // Add the columns in as a RAW message
+        $formFields[] = FormManager::AddRaw(Theme::RenderReturn('media_form_datasetview_edit'));
 
-        $this->response->SetFormRequestResponse($form, sprintf(__('Edit DataSet View for DataSet %s'), $dataSetName), '650px', '575px');
+        Theme::Set('form_fields_general', $formFields);
+        
+        // Advanced Tab
+        $formFields = array();
+        $formFields[] = FormManager::AddNumber('lowerLimit', __('Lower Row Limit'), $this->GetOption('lowerLimit'), 
+            __('Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)'), 'l');
+
+        $formFields[] = FormManager::AddNumber('upperLimit', __('Upper Row Limit'), $this->GetOption('upperLimit'), 
+            __('Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)'), 'u');
+
+        $formFields[] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5), 
+            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60.'),
+            'n', 'required');
+
+        $formFields[] = FormManager::AddNumber('rowsPerPage', __('Rows per page'), $this->GetOption('rowsPerPage'), 
+            __('Please enter the number of rows per page. 0 for no pages.'), 'u');
+
+        // Get the embedded HTML out of RAW
+        $rawXml = new DOMDocument();
+        $rawXml->loadXML($this->GetRaw());
+        $rawNodes = $rawXml->getElementsByTagName('styleSheet');
+
+        if ($rawNodes->length != 0)
+            $rawNode = $rawNodes->item(0);
+        
+        $formFields[] = FormManager::AddMultiText('styleSheet', NULL, (($rawNodes->length == 0) ? $this->DefaultStyleSheet() : $rawNode->nodeValue), 
+            __('Enter a style sheet for the table'), 's', 10);
+
+        Theme::Set('form_fields_advanced', $formFields);
+
+        $this->response->SetFormRequestResponse(NULL, 'Edit DataSet View for DataSet', '650px', '575px');
 
         // Cancel button
         if ($this->showRegionOptions)
-        {
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
         else
-        {
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
-
+        
         $this->response->AddButton(__('Save'), 'DataSetViewSubmit()');
         $this->response->callBack = 'datasetview_callback';
-        $this->response->dialogClass = 'modal-big';
 
         return $this->response;
     }
@@ -369,23 +395,12 @@ class datasetview extends Module
         return parent::DeleteMedia();
     }
 
-    public function Preview($width, $height)
+    public function Preview($width, $height, $scaleOverride = 0)
     {
         if ($this->previewEnabled == 0)
-            return parent::Preview ($width, $height);
+            return parent::Preview($width, $height);
         
-        $layoutId = $this->layoutid;
-        $regionId = $this->regionid;
-
-        $mediaId = $this->mediaid;
-        $lkId = $this->lkid;
-        $mediaType = $this->type;
-        $mediaDuration = $this->duration;
-
-        $widthPx    = $width.'px';
-        $heightPx   = $height.'px';
-
-        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=GetResource&preview=true&raw=true&scale_override=1&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return $this->PreviewAsClient($width, $height, $scaleOverride);
     }
 
     public function GetResource($displayId = 0)

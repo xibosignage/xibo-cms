@@ -8,6 +8,7 @@
 	<a class="list-group-item" href="index.php?toc=user_and_display&p=admin/displays">Display Administration</a>
 	<a class="list-group-item" href="index.php?toc=user_and_display&p=admin/displaygroups">Display Groups</a>
 	<a class="list-group-item" href="index.php?toc=user_and_display&p=admin/displaystats">Display Statistics</a>
+	<a class="list-group-item" href="index.php?toc=user_and_display&p=admin/displayprofiles">Display Setting Profiles</a>
 	<a class="list-group-item" href="index.php?toc=user_and_display&p=admin/display_wakeonlan">Display Wake on LAN</a>
 	<a class="list-group-item" href="index.php?toc=user_and_display&p=admin/fileassociations">File Associations</a>
 </div>
