@@ -2,11 +2,11 @@
 ALTER TABLE  `module` ADD  `render_as` VARCHAR( 10 ) NULL;
 ALTER TABLE  `module` ADD  `settings` TEXT NULL;
 
-UPDATE `resolution` SET enabled = 0;
-
 ALTER TABLE  `resolution` ADD  `version` TINYINT NOT NULL DEFAULT  '1';
 ALTER TABLE  `resolution` ADD  `enabled` TINYINT NOT NULL DEFAULT  '1';
 ALTER TABLE  `resolution` CHANGE  `resolution`  `resolution` VARCHAR( 254 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+
+UPDATE `resolution` SET enabled = 0;
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
 (9, '1080p HD Landscape', 800, 450, 1920, 1080, 2, 1),
