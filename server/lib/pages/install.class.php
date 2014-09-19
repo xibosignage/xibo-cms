@@ -486,7 +486,6 @@ END;
         Config::Version();
         
         Theme::Set('form_action', 'index.php?q=login');
-        Theme::Set('form_meta', '<input type="hidden" name="token" value="' . CreateFormToken() . '" />');
         Theme::Set('about_url', 'index.php?p=index&q=About');
         Theme::Set('source_url', Theme::SourceLink());
 

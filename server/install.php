@@ -128,6 +128,9 @@ switch ($xibo_step) {
 
     case 8:
         include_once('settings.php');
+        require_once('lib/app/session.class.php');
+        // Create a Session
+        $session = new Session();
         // Step 8 ends the execution
         $install->Step8();
         break;

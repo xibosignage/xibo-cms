@@ -98,22 +98,22 @@ INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
 (5, 'Library Menu'),
 (1, 'Top Nav');
 
-INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`) VALUES
-(1, 'Image', 'Image', 1, 0, 'Images. PNG, JPG, BMP, GIF', 'forms/image.gif', 1, 'jpg,jpeg,png,bmp,gif', 1, 1),
-(2, 'Video', 'Video', 1, 0, 'Videos - support varies depending on the client hardware you are using.', 'forms/video.gif', 1, 'wmv,avi,mpg,mpeg,webm,mp4', 1, 1),
-(3, 'Flash', 'Flash', 1, 0, 'Flash', 'forms/flash.gif', 1, 'swf', 1, 1),
-(4, 'PowerPoint', 'PowerPoint', 1, 0, 'Powerpoint. PPT, PPS', 'forms/powerpoint.gif', 1, 'ppt,pps,pptx', 1, 1),
-(5, 'Webpage', 'Webpage', 1, 1, 'Webpages.', 'forms/webpage.gif', 1, NULL, 1, 1),
-(6, 'Ticker', 'Ticker', 1, 1, 'RSS Ticker.', 'forms/ticker.gif', 1, NULL, 1, 1),
-(7, 'Text', 'Text', 1, 1, 'Text. With Directional Controls.', 'forms/text.gif', 1, NULL, 1, 1),
-(8, 'Embedded', 'Embedded', 1, 1, 'Embedded HTML', 'forms/webpage.gif', 1, NULL, 1, 1),
-(9, 'MicroBlog', 'MicroBlog', 0, 1, NULL, 'forms/microblog.gif', 1, NULL, 1, 1),
-(10, 'Counter', 'Counter', 0, 1, 'Customer Counter connected to a Remote Control', 'forms/counter.gif', 1, NULL, 1, 1),
-(11, 'datasetview', 'Data Set', 1, 1, 'A view on a DataSet', 'forms/datasetview.gif', 1, NULL, 1, 1),
-(12, 'shellcommand', 'Shell Command', 1, 1, 'Execute a shell command on the client', 'forms/shellcommand.gif', 1, NULL, 1, 1),
-(13, 'localvideo', 'Local Video', 1, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 1, 1),
-(14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,js,html,htm', 0, 0),
-(15, 'clock', 'Clock', 1, 1, 'Display a Clock', 'forms/library.gif', 1, '', 1, 1, 'html', '[]');
+INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`) VALUES
+(1, 'Image', 'Image', 1, 0, 'Images. PNG, JPG, BMP, GIF', 'forms/image.gif', 1, 'jpg,jpeg,png,bmp,gif', 1, 1, NULL, NULL),
+(2, 'Video', 'Video', 1, 0, 'Videos - support varies depending on the client hardware you are using.', 'forms/video.gif', 1, 'wmv,avi,mpg,mpeg,webm,mp4', 1, 1, NULL, NULL),
+(3, 'Flash', 'Flash', 1, 0, 'Flash', 'forms/flash.gif', 1, 'swf', 1, 1, NULL, NULL),
+(4, 'PowerPoint', 'PowerPoint', 1, 0, 'Powerpoint. PPT, PPS', 'forms/powerpoint.gif', 1, 'ppt,pps,pptx', 1, 1, NULL, NULL),
+(5, 'Webpage', 'Webpage', 1, 1, 'Webpages.', 'forms/webpage.gif', 1, NULL, 1, 1, NULL, NULL),
+(6, 'Ticker', 'Ticker', 1, 1, 'RSS Ticker.', 'forms/ticker.gif', 1, NULL, 1, 1, NULL, NULL),
+(7, 'Text', 'Text', 1, 1, 'Text. With Directional Controls.', 'forms/text.gif', 1, NULL, 1, 1, NULL, NULL),
+(8, 'Embedded', 'Embedded', 1, 1, 'Embedded HTML', 'forms/webpage.gif', 1, NULL, 1, 1, NULL, NULL),
+(9, 'MicroBlog', 'MicroBlog', 0, 1, NULL, 'forms/microblog.gif', 1, NULL, 1, 1, NULL, NULL),
+(10, 'Counter', 'Counter', 0, 1, 'Customer Counter connected to a Remote Control', 'forms/counter.gif', 1, NULL, 1, 1, NULL, NULL),
+(11, 'datasetview', 'Data Set', 1, 1, 'A view on a DataSet', 'forms/datasetview.gif', 1, NULL, 1, 1, NULL, NULL),
+(12, 'shellcommand', 'Shell Command', 1, 1, 'Execute a shell command on the client', 'forms/shellcommand.gif', 1, NULL, 1, 1, NULL, NULL),
+(13, 'localvideo', 'Local Video', 1, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 1, 1, NULL, NULL),
+(14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,js,html,htm', 0, 0, NULL, NULL),
+(15, 'clock', 'Clock', 1, 1, 'Display a Clock', 'forms/library.gif', 1, NULL, 1, 1, 'html', '[]');
 
 INSERT INTO `pagegroup` (`pagegroupID`, `pagegroup`) VALUES
 (1, 'Schedule'),
@@ -340,8 +340,8 @@ INSERT INTO `datasetcolumntype` (`DataSetColumnTypeID`, `DataSetColumnType`) VAL
 (2, 'Formula');
 
 INSERT INTO `displayprofile` (`displayprofileid`, `name`, `type`, `config`, `isdefault`, `userid`) VALUES
-(1, 'Production', 'windows', '[{"name":"collectInterval","value":"900","type":"int"},{"name":"powerpointEnabled","value":1,"type":"checkbox"},{"name":"statsEnabled","value":1,"type":"checkbox"},{"name":"sizeX","value":"1280","type":"double"},{"name":"sizeY","value":"720","type":"double"},{"name":"offsetX","value":0,"type":"double"},{"name":"offsetY","value":0,"type":"double"},{"name":"ShowInTaskbar","value":1,"type":"checkbox"},{"name":"ClientInfomationCtrlKey","value":0,"type":"checkbox"},{"name":"ClientInformationKeyCode","value":"I","type":"word"},{"name":"CursorStartPosition","value":"Bottom Right","type":"string"},{"name":"DoubleBuffering","value":1,"type":"checkbox"},{"name":"emptyLayoutDuration","value":"1","type":"int"},{"name":"EnableMouse","value":0,"type":"checkbox"},{"name":"EnableShellCommands","value":1,"type":"checkbox"},{"name":"expireModifiedLayouts","value":1,"type":"checkbox"},{"name":"LogLevel","value":"audit","type":"word"},{"name":"LogToDiskLocation","value":"","type":"string"},{"name":"MaxConcurrentDownloads","value":"2","type":"int"},{"name":"ShellCommandAllowList","value":"","type":"string"}]', 1, 1),
-(2, 'Production', 'android', '[{"name":"emailAddress","value":"dan@springsignage.com","type":"string"},{"name":"settingsPassword","value":"test2","type":"string"},{"name":"collectInterval","value":"600","type":"int"},{"name":"orientation","value":0,"type":"int"},{"name":"startOnBoot","value":0,"type":"checkbox"},{"name":"actionBarMode","value":"1","type":"int"},{"name":"actionBarDisplayDuration","value":"60","type":"int"},{"name":"screenDimensions","value":"","type":"string"},{"name":"autoRestart","value":0,"type":"checkbox"},{"name":"startOnBootDelay","value":"60","type":"int"},{"name":"blacklistVideo","value":1,"type":"checkbox"},{"name":"storeHtmlOnInternal","value":1,"type":"checkbox"}]', 1, 1);
+(1, 'Production', 'windows', '[{"name":"CollectInterval","value":"900","type":"int"},{"name":"PowerpointEnabled","value":0,"type":"checkbox"},{"name":"StatsEnabled","value":1,"type":"checkbox"},{"name":"SizeX","value":0,"type":"double"},{"name":"SizeY","value":0,"type":"double"},{"name":"OffsetX","value":0,"type":"double"},{"name":"OffsetY","value":0,"type":"double"},{"name":"ShowInTaskbar","value":1,"type":"checkbox"},{"name":"ClientInfomationCtrlKey","value":0,"type":"checkbox"},{"name":"ClientInformationKeyCode","value":"I","type":"word"},{"name":"CursorStartPosition","value":"Bottom Right","type":"string"},{"name":"DoubleBuffering","value":1,"type":"checkbox"},{"name":"EmptyLayoutDuration","value":"10","type":"int"},{"name":"EnableMouse","value":0,"type":"checkbox"},{"name":"EnableShellCommands","value":0,"type":"checkbox"},{"name":"ExpireModifiedLayouts","value":0,"type":"checkbox"},{"name":"LogLevel","value":"off","type":"word"},{"name":"LogToDiskLocation","value":"","type":"string"},{"name":"MaxConcurrentDownloads","value":"2","type":"int"},{"name":"ShellCommandAllowList","value":"","type":"string"},{"name":"UseCefWebBrowser","value":1,"type":"checkbox"},{"name":"SendCurrentLayoutAsStatusUpdate","value":0,"type":"checkbox"},{"name":"ScreenShotRequestInterval","value":0,"type":"int"}]', 1, 1),
+(2, 'Production', 'android', '[{"name":"emailAddress","value":"","type":"string"},{"name":"settingsPassword","value":"","type":"string"},{"name":"collectInterval","value":"600","type":"int"},{"name":"orientation","value":0,"type":"int"},{"name":"startOnBoot","value":1,"type":"checkbox"},{"name":"actionBarMode","value":"1","type":"int"},{"name":"actionBarDisplayDuration","value":"60","type":"int"},{"name":"screenDimensions","value":"","type":"string"},{"name":"autoRestart","value":1,"type":"checkbox"},{"name":"startOnBootDelay","value":"60","type":"int"},{"name":"blacklistVideo","value":1,"type":"checkbox"},{"name":"storeHtmlOnInternal","value":0,"type":"checkbox"}]', 1, 1);
 
 INSERT INTO `bandwidthtype` (`bandwidthtypeid`, `name`) VALUES
 (1, 'Register'),

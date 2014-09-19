@@ -45,7 +45,7 @@ class statusdashboardDAO extends baseDAO {
             }
 
             // Decide what our units are going to be, based on the size
-            $base = floor(log($maxSize) / log(1024));
+            $base = ($maxSize == 0) ? 0 : floor(log($maxSize) / log(1024));
 
             if ($xmdsLimit > 0) {
                 // Convert to appropriate size (xmds limit is in KB)
@@ -62,6 +62,15 @@ class statusdashboardDAO extends baseDAO {
                         'label' => __($row['month']), 
                         'value' => round($size, 2),
                         'limit' => round($remaining, 2)
+                    );
+            }
+
+            // What if we are empty?
+            if (count($output) == 0) {
+                $output[] = array(
+                        'label' => __(date("M")), 
+                        'value' => 0,
+                        'limit' => 0
                     );
             }
 
@@ -86,7 +95,7 @@ class statusdashboardDAO extends baseDAO {
             }
 
             // Decide what our units are going to be, based on the size
-            $base = floor(log($maxSize) / log(1024));
+            $base = ($maxSize == 0) ? 0 : floor(log($maxSize) / log(1024));
             
             $output = array();
             $totalSize = 0;
@@ -106,6 +115,14 @@ class statusdashboardDAO extends baseDAO {
                     'value' => $remaining,
                     'label' => __('Free')
                 );
+            }
+
+            // What if we are empty?
+            if (count($output) == 0) {
+                $output[] = array(
+                        'label' => __('Empty'), 
+                        'value' => 0
+                    );
             }
 
             Theme::Set('librarySize', Kit::formatBytes($totalSize, 1));
