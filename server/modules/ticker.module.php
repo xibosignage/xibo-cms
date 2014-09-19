@@ -761,10 +761,19 @@ class ticker extends Module
                 // Pick the appropriate column out
                 if (strstr($sub, '|') !== false) {
                     // Use the provided namespace to extract a tag
-                    list($tag, $namespace) = explode('|', $sub);
+                    $attribs = NULL;
+                    if (substr_count($sub, '|') > 1)
+                        list($tag, $namespace, $attribs) = explode('|', $sub);
+                    else
+                        list($tag, $namespace) = explode('|', $sub);
 
                     $tags = $item->get_item_tags(str_replace(']', '', $namespace), str_replace('[', '', $tag));
-                    $replace = (is_array($tags)) ? $tags[0]['data'] : '';
+                    Debug::LogEntry('audit', var_export($tags, true));
+
+                    if ($attribs != NULL)
+                        $replace = (is_array($tags)) ? $tags[0]['attribs'][''][str_replace(']', '', $attribs)] : '';
+                    else
+                        $replace = (is_array($tags)) ? $tags[0]['data'] : '';
                 }
                 else {
                     
