@@ -646,6 +646,7 @@ class ticker extends Module
     	$feed->set_cache_location($file->GetLibraryCacheUri());
     	$feed->set_feed_url(urldecode($this->GetOption('uri')));
     	$feed->set_cache_duration(($this->GetOption('updateInterval', 3600) * 60));
+    	$feed->force_feed(true);
     	$feed->handle_content_type();
     	$feed->init();
 
