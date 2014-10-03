@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2013 Daniel Garner
+ * Copyright (C) 2009-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -49,8 +49,7 @@ class XMDSSoap
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
     {
 	$db =& $this->db;
-	define('SERVER_KEY', Config::GetSetting('SERVER_KEY'));
-
+	
 	// Sanitize
 	$serverKey 	= Kit::ValidateParam($serverKey, _STRING);
 	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
@@ -66,8 +65,8 @@ class XMDSSoap
 	Debug::LogEntry("audit", "serverKey [$serverKey], hardwareKey [$hardwareKey], displayName [$displayName]", "xmds", "RegisterDisplay");
 
 	// Check the serverKey matches the one we have stored in this servers lic.txt file
-	if ($serverKey != SERVER_KEY)
-            throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+	if ($serverKey != Config::GetSetting('SERVER_KEY'))
+        throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
 	// Check the Length of the hardwareKey
 	if (strlen($hardwareKey) > 40)
@@ -147,6 +146,9 @@ class XMDSSoap
         if (!$this->CheckVersion($version))
             throw new SoapFault('Sender', 'Your client is not of the correct version for communication with this server.');
 
+        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+            throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
             throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
@@ -158,7 +160,7 @@ class XMDSSoap
             throw new SoapFault('Sender', 'This display is not licensed.');
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry("audit", '[IN] with hardware key: ' . $hardwareKey, "xmds", "RequiredFiles");
+            Debug::LogEntry("audit", '[IN] with hardware key: ' . $hardwareKey, 'xmds', 'RequiredFiles', '', $this->displayId);
 
         $requiredFilesXml = new DOMDocument("1.0");
         $fileElements 	= $requiredFilesXml->createElement("files");
@@ -166,8 +168,16 @@ class XMDSSoap
 
         $requiredFilesXml->appendChild($fileElements);
 
-        $currentdate 	= time();
-        $rfLookahead 	= $currentdate + $rfLookahead;
+        // Hour to hour time bands for the query
+        // Start at the current hour
+        $fromFilter = time();
+        // Move forwards an hour and the rf lookahead
+        $rfLookahead = $fromFilter + 3600 + $rfLookahead;
+        // Dial both items back to the top of the hour
+        $fromFilter = $fromFilter - ($fromFilter % 3600);
+        $toFilter = $rfLookahead - ($rfLookahead % 3600);
+
+        Debug::LogEntry('audit', sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), 'xmds', 'RequiredFiles', '', $this->displayId);
 
         // Get a list of all layout ids in the schedule right now.
         $SQL  = " SELECT DISTINCT layout.layoutID ";
@@ -176,13 +186,12 @@ class XMDSSoap
         $SQL .= "   INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
         $SQL .= "   INNER JOIN `layout` ON lkcampaignlayout.LayoutID = layout.LayoutID ";
         $SQL .= "   INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
-        $SQL .= "   INNER JOIN display ON lkdisplaydg.DisplayID = display.displayID ";
-        $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
-        $SQL .= sprintf(" AND schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d ", $rfLookahead, $currentdate - 3600);
+        $SQL .= sprintf(" WHERE lkdisplaydg.DisplayID = %d  ", $this->displayId);
+        $SQL .= sprintf(" AND schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d ", $toFilter, $fromFilter);
         $SQL .= "   AND layout.retired = 0  ";
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry("audit", $SQL, "xmds", "RequiredFiles");
+            Debug::LogEntry("audit", $SQL, 'xmds', 'RequiredFiles', '', $this->displayId);
 
         if (!$results = $db->query($SQL))
         {
@@ -221,13 +230,12 @@ class XMDSSoap
                     ON lkmediadisplaygroup.mediaid = media.MediaID
                     INNER JOIN lkdisplaydg 
                     ON lkdisplaydg.DisplayGroupID = lkmediadisplaygroup.DisplayGroupID
-                    INNER JOIN display 
-                    ON lkdisplaydg.DisplayID = display.displayID
                 ";
-        $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
+        $SQL .= sprintf(" WHERE lkdisplaydg.DisplayID = %d  ", $this->displayId);
         $SQL .= " ORDER BY RecordType DESC";
 
-        if ($this->isAuditing == 1) Debug::LogEntry("audit", $SQL, "xmds", "RequiredFiles");
+        if ($this->isAuditing == 1) 
+            Debug::LogEntry("audit", $SQL, 'xmds', 'RequiredFiles', '', $this->displayId);
 
         if (!$results = $db->query($SQL))
         {
@@ -254,7 +262,7 @@ class XMDSSoap
                 $fileSize 	= strlen($xml);
                 
                 if ($this->isAuditing == 1) 
-                    Debug::LogEntry("audit", 'MD5 for layoutid ' . $id . ' is: [' . $md5 . ']', "xmds", "RequiredFiles");
+                    Debug::LogEntry("audit", 'MD5 for layoutid ' . $id . ' is: [' . $md5 . ']', 'xmds', 'RequiredFiles', '', $this->displayId);
             }
             else if ($recordType == 'media')
             {
@@ -367,11 +375,8 @@ class XMDSSoap
         $this->PhoneHome();
 
         if ($this->isAuditing == 1)
-        {
-            Debug::LogEntry("audit", $requiredFilesXml->saveXML(), "xmds", "RequiredFiles");
-            Debug::LogEntry("audit", "[OUT]", "xmds", "RequiredFiles");
-        }
-
+            Debug::LogEntry("audit", $requiredFilesXml->saveXML(), 'xmds', 'RequiredFiles', '', $this->displayId);
+        
         // Return the results of requiredFiles()
         $requiredFilesXml->formatOutput = true;
         $output = $requiredFilesXml->saveXML();
@@ -408,6 +413,9 @@ class XMDSSoap
         {
             throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
         }
+
+        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+            throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
@@ -484,11 +492,14 @@ class XMDSSoap
         $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
         $version 	= Kit::ValidateParam($version, _STRING);
-        $sLookahead     = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
+        $rfLookahead = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
             throw new SoapFault('Sender', "Your client is not of the correct version for communication with this server.");
+
+        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+            throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
@@ -499,23 +510,28 @@ class XMDSSoap
             throw new SoapFault('Sender', "This display client is not licensed");
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry("audit", "[IN] $hardwareKey", "xmds", "Schedule");
+            Debug::LogEntry("audit", "[IN] $hardwareKey", 'xmds', 'Schedule', '', $this->displayId);
 
         $scheduleXml = new DOMDocument("1.0");
         $layoutElements = $scheduleXml->createElement("schedule");
 
         $scheduleXml->appendChild($layoutElements);
 
-        $currentdate 	= time();
+        // Hour to hour time bands for the query
+        // Start at the current hour
+        $fromFilter = time();
+        // Move forwards an hour and the rf lookahead
+        $rfLookahead = $fromFilter + 3600 + $rfLookahead;
+        // Dial both items back to the top of the hour
+        $fromFilter = $fromFilter - ($fromFilter % 3600);
 
         if (Config::GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
-        {
-            $sLookahead = $currentdate + $sLookahead;
-        }
-        else
-        {
-            $sLookahead = $currentdate;
-        }
+            $toFilter = $rfLookahead - ($rfLookahead % 3600);
+        else 
+            $toFilter = ($fromFilter + 3600) - (($fromFilter + 3600) % 3600);
+
+        if ($this->isAuditing == 1)
+            Debug::LogEntry('audit', sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), 'xmds', 'Schedule', '', $this->displayId);
 
         // Add file nodes to the $fileElements
         // Firstly get all the scheduled layouts
@@ -526,14 +542,13 @@ class XMDSSoap
         $SQL .= " INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
         $SQL .= " INNER JOIN `layout` ON lkcampaignlayout.LayoutID = layout.LayoutID ";
         $SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
-        $SQL .= " INNER JOIN display ON lkdisplaydg.DisplayID = display.displayID ";
-        $SQL .= sprintf(" WHERE display.license = '%s'  ", $hardwareKey);
-        $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $sLookahead, $currentdate - 3600);
+        $SQL .= sprintf(" WHERE lkdisplaydg.DisplayID = %d  ", $this->displayId);
+        $SQL .= sprintf(" AND (schedule_detail.FromDT < %d AND schedule_detail.ToDT > %d )", $toFilter, $fromFilter);
         $SQL .= "   AND layout.retired = 0  ";
         $SQL .= " ORDER BY schedule_detail.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID ";
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry("audit", $SQL, "xmds", "Schedule");
+            Debug::LogEntry("audit", $SQL, 'xmds', 'Schedule', '', $this->displayId);
 
         // Run the query
         if (!$results = $db->query($SQL))
@@ -589,7 +604,7 @@ class XMDSSoap
         $scheduleXml->formatOutput = true;
         
         if ($this->isAuditing == 1)
-            Debug::LogEntry("audit", $scheduleXml->saveXML(), "xmds", "Schedule");
+            Debug::LogEntry("audit", $scheduleXml->saveXML(), 'xmds', 'Schedule', '', $this->displayId);
 
         $output = $scheduleXml->saveXML();
 
@@ -623,6 +638,9 @@ class XMDSSoap
         {
                 throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.", $serverKey);
         }
+
+        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+            throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
@@ -707,6 +725,9 @@ class XMDSSoap
         {
             throw new SoapFault('Sender', "Your client is not of the correct version for communication with this server.");
         }
+
+        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+            throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
@@ -833,6 +854,9 @@ class XMDSSoap
             throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
         }
 
+        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+            throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
             throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
@@ -926,6 +950,9 @@ class XMDSSoap
         if (!$this->CheckVersion($version))
             throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
 
+        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+            throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
             throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
@@ -1001,6 +1028,9 @@ class XMDSSoap
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
             throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
+
+        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+            throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
@@ -1188,7 +1218,7 @@ class XMDSSoap
             return true;
 
         // Test bandwidth for the current month
-        $startOfMonth = strtotime(date('m').'/01/'.date('Y').' 00:00:00');
+        $startOfMonth = strtotime(date('m').'/02/'.date('Y').' 00:00:00');
 
         $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = %d', $startOfMonth);
         $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
