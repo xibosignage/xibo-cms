@@ -21,7 +21,7 @@ This folder contains the Xibo SERVER application.
 
 Requirements:
 
-PHP 5.2.9+
+PHP 5.3.3+
 MySQL
 
 Libraries
