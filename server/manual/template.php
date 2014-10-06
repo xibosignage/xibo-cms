@@ -7,7 +7,7 @@
     define('PRODUCT_NAME', 'Xibo');
 
     # Product Version
-    define('PRODUCT_VERSION', '1.6.3');
+    define('PRODUCT_VERSION', '1.6.4');
 
     # Home page URL
     define('PRODUCT_HOME', 'http://xibo.org.uk');
