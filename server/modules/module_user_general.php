@@ -884,7 +884,7 @@ END;
         $SQL .= " FROM media ";
         $SQL .= "   LEFT OUTER JOIN media parentmedia ";
         $SQL .= "   ON parentmedia.MediaID = media.MediaID ";
-        $SQL .= " WHERE   media.isEdited = 0 ";
+        $SQL .= " WHERE   media.isEdited = 0 AND media.is_module = 0 ";
         
         if ($name != '') 
         {

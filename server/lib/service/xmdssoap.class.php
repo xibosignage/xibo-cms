@@ -340,7 +340,12 @@ class XMDSSoap {
                         INNER JOIN lkdisplaydg 
                         ON lkdisplaydg.DisplayGroupID = lkmediadisplaygroup.DisplayGroupID
                     ";
-            $SQL .= " WHERE lkdisplaydg.DisplayID = :displayId ";
+            $SQL .= " WHERE lkdisplaydg.DisplayID = :displayId ";$SQL .= "
+                    UNION
+                    SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml 
+                       FROM `media`
+                    ";
+            $SQL .= " WHERE media.type = 'module' ";
             $SQL .= " ORDER BY RecordType DESC";
     
             $sth = $dbh->prepare($SQL);

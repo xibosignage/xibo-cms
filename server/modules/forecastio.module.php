@@ -24,6 +24,7 @@
  *
  * The class name must be equal to the $this->type and the file name must be equal to modules/type.module.php
  */ 
+include_once('lib/data/media.data.class.php');
 include_once('modules/3rdparty/forecast.php');
 use Forecast\Forecast;
 
@@ -66,6 +67,9 @@ class ForecastIo extends Module
             // Call "$this->UpdateModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)" with the updated items
         }
 
+        // Check we are all installed
+        $this->InstallFiles();
+
         // After calling either Install or Update your code schema version will match the database schema version and this method will not be called
         // again. This means that if you want to change those fields in an update to your module, you will need to increment your codeSchemaVersion.
     }
@@ -88,6 +92,16 @@ class ForecastIo extends Module
         return $formFields;
     }
 
+    private function InstallFiles() {
+        $media = new Media();
+        $media->AddModuleFile('modules/theme/forecastio/weather_icons/weather-icons.min.css');
+        $media->AddModuleFile('modules/theme/forecastio/weather_icons/WeatherIcons-Regular.otf');
+        $media->AddModuleFile('modules/theme/forecastio/weather_icons/weathericons-regular-webfont.eot');
+        $media->AddModuleFile('modules/theme/forecastio/weather_icons/weathericons-regular-webfont.svg');
+        $media->AddModuleFile('modules/theme/forecastio/weather_icons/weathericons-regular-webfont.ttf');
+        $media->AddModuleFile('modules/theme/forecastio/weather_icons/weathericons-regular-webfont.woff');
+    }
+
     /**
      * Process any module settings
      */
@@ -100,6 +114,9 @@ class ForecastIo extends Module
 
         $this->settings['apiKey'] = $apiKey;
         $this->settings['cachePeriod'] = Kit::GetParam('cachePeriod', _POST, _INT, 300);
+
+        // Check we are all installed
+        $this->InstallFiles();
 
         // Return an array of the processed settings.
         return $this->settings;
@@ -342,18 +359,46 @@ class ForecastIo extends Module
         // Query the API and Dump the Results.
         $forecast = new Forecast($apiKey);
 
-        if (!Cache::has($defaultLat . '/' . $defaultLong))
-            Cache::put($defaultLat . '/' . $defaultLong, $forecast->get($defaultLat, $defaultLong), $this->GetSetting('cachePeriod'));
-        
-        $data = Cache::get($defaultLat . '/' . $defaultLong);
+        $key = md5($defaultLat . $defaultLong . 'null' . implode('.', array('units' => 'auto', 'exclude' => 'flags,minutely,hourly')));
 
-        var_dump($data);
+        if (!Cache::has($key)) {
+            Debug::LogEntry('audit', 'Getting Forecast from the API', $this->type, __FUNCTION__);
+            $data = $forecast->get($defaultLat, $defaultLong, null, array('units' => 'auto', 'exclude' => 'flags,minutely,hourly'));
+            Cache::put($key, $data, $this->GetSetting('cachePeriod'));
+        }
+        else {
+            Debug::LogEntry('audit', 'Getting Forecast from the Cache with key: ' . $key, $this->type, __FUNCTION__);
+            $data = Cache::get($key);
+        }
+        Debug::LogEntry('audit', 'Data: ' . var_export($data, true), $this->type, __FUNCTION__);
+
+        // Icon Mappings
+        $icons = array(
+                'unmapped' => 'wi-alien',
+                'clear-day' => 'wi-day-sunny',
+                'clear-night' => 'wi-night-clear',
+                'rain' => 'wi-rain',
+                'snow' => 'wi-snow',
+                'sleet' => 'wi-hail',
+                'wind' => 'wi-windy',
+                'fog' => 'wi-fog',
+                'cloudy' => 'wi-cloudy',
+                'partly-cloudy-day' => 'wi-day-cloudy',
+                'partly-cloudy-night' => 'wi-night-partly-cloudy',
+            );
+
+        $icon = (isset($icons[$data->currently->icon]) ? $icons[$data->currently->icon] : $icons['unmapped']);
+
+        //var_dump($data);
 
         // A template is provided which contains a number of different libraries that might
         // be useful (jQuery, etc).
+        $pathPrefix = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true') ? 'modules/theme/forecastio/weather_icons/' : '';
         // You can provide your own template, or just output the HTML directly in this method. It is up to you.
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
-
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', '<link href="' . $pathPrefix . 'weather-icons.min.css" rel="stylesheet" media="screen">', $template);
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', '<i class="wi ' . $icon . '"></li>', $template);
+        
         // Do whatever it is you need to do to render your content.
         // Return that content.
         return $template;

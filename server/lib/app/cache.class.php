@@ -61,7 +61,7 @@ class Cache {
         if (!self::$_data)
             self::load();
 
-        return (isset(self::$_data[$key]));
+        return (isset(self::$_data[$key]) && self::$_data[$key] != null && self::$_data[$key]['expires'] >= time());
     }
 
     private static function load() {
