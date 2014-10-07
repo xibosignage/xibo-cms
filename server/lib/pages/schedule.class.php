@@ -299,7 +299,7 @@ class scheduleDAO extends baseDAO {
 
         $formFields['general'][] = FormManager::AddCombo(
                     'CampaignID', 
-                    __('Layout'), 
+                    __('Layout / Campaign'), 
                     NULL,
                     array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
                     'id',
@@ -575,7 +575,7 @@ class scheduleDAO extends baseDAO {
 
         $formFields['general'][] = FormManager::AddCombo(
                     'CampaignID', 
-                    __('Layout'), 
+                    __('Layout / Campaign'), 
                     $campaignId,
                     array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
                     'id',
