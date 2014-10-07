@@ -82,6 +82,10 @@ class Schedule extends Data
     		// Values for Recurrence
     		if ($recType != '' && $recType != 'null')
     		{
+    			// Check that we have an end date
+    			if ($recToDT == '' || $recToDT == 0)
+    				$this->ThrowError(__('Please provide an until date or set repeats to None'));
+
     			$SQL .= ", :recurrence_type, :recurrence_detail, :recurrence_range ";
     			$params['recurrence_type'] = $recType;
     			$params['recurrence_detail'] = $recDetail;

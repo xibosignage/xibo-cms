@@ -127,7 +127,7 @@ var setupScheduleForm = function(form) {
         autoClose: true,
         startDate: $("#rec_range", form).val()
     });
-}
+};
 
 /**
  * Callback for the schedule form
