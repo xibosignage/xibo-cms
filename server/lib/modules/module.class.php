@@ -155,7 +155,7 @@ abstract class Module implements ModuleInterface
             if ($this->settings == '')
                 $this->settings = array();
             else
-                $this->settings = json_decode($this->settings);
+                $this->settings = json_decode($this->settings, true);
 
             // Translated name of this module
             $this->displayType = __(Kit::ValidateParam($row['Name'], _STRING));
@@ -2117,6 +2117,13 @@ END;
         
             return false;
         }
+    }
+
+    public function GetSetting($setting, $default = NULL) {
+        if (isset($this->settings[$setting]))
+            return $this->settings[$setting];
+        else
+            return $default;
     }
     
     /**

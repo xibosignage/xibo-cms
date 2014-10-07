@@ -36,12 +36,12 @@ $(document).ready(function() {
           }
         }());
     }
-	
-	setInterval("XiboPing('index.php?p=clock&q=GetClock')", 1000 * 60); // Every minute
-	
-	setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes	
+    
+    setInterval("XiboPing('index.php?p=clock&q=GetClock')", 1000 * 60); // Every minute
+    
+    setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes  
 
-	XiboInitialise("");
+    XiboInitialise("");
 });
 
 /**
@@ -138,16 +138,16 @@ function XiboInitialise(scope) {
 
     // Links that just need to be submitted as forms
     $(scope + ' .XiboAjaxSubmit').click(function(){
-		
-		$.ajax({
-			type: "post", 
-			url: $(this).attr("href") + "&ajax=true", 
-			cache:false, 
-			dataType:"json",
-			success: XiboSubmitResponse
-		});
+        
+        $.ajax({
+            type: "post", 
+            url: $(this).attr("href") + "&ajax=true", 
+            cache:false, 
+            dataType:"json",
+            success: XiboSubmitResponse
+        });
 
-		return false;
+        return false;
     });
 
     // Forms that we want to be submitted without validation.
@@ -211,9 +211,9 @@ function XiboInitialise(scope) {
 function XiboGridRender(gridId){
 
     // Grid ID tells us which grid we need to render
-    var gridDiv 	= '#' + gridId;
-    var filter 		= $('#' + gridId + ' .XiboFilter form');
-    var outputDiv 	= $('#' + gridId + ' .XiboData ');
+    var gridDiv     = '#' + gridId;
+    var filter      = $('#' + gridId + ' .XiboFilter form');
+    var outputDiv   = $('#' + gridId + ' .XiboData ');
 
     // Add a spinner
     $(gridDiv).closest('.widget').children(".widget-title").append(' <span class="saving fa fa-cog fa-spin"></span>');
@@ -328,8 +328,8 @@ function XiboGridRender(gridId){
  */
 function XiboFormRender(formUrl, data) {
 
-	// Currently only support one of these at once.
-	bootbox.hideAll();
+    // Currently only support one of these at once.
+    bootbox.hideAll();
 
     // Call with AJAX
     $.ajax({
@@ -358,13 +358,13 @@ function XiboFormRender(formUrl, data) {
 
                 // Create the dialog with our parameters
                 var dialog = bootbox.dialog({
-                		message: response.html,
+                        message: response.html,
                         title: dialogTitle,
                         animate: false
-                	}).attr("id", id);
+                    }).attr("id", id);
 
                 if (response.dialogClass != '') {
-                	dialog.addClass(response.dialogClass);
+                    dialog.addClass(response.dialogClass);
                 }
 
                 // Buttons?
@@ -438,6 +438,9 @@ function XiboFormRender(formUrl, data) {
                             if (fieldAction.operation == "not") {
                                 valueMatch = (fieldVal != fieldAction.value);
                             }
+                            else if (fieldAction.operation == "is:checked") {
+                                valueMatch = (fieldAction.value == $("#" + fieldAction.field).is(':checked'));
+                            }
                             else {
                                 valueMatch = (fieldVal == fieldAction.value);
                             }
@@ -461,6 +464,9 @@ function XiboFormRender(formUrl, data) {
                                 var valueMatch = false;
                                 if (fieldAction.operation == "not") {
                                     valueMatch = (fieldVal != fieldAction.value);
+                                }
+                                else if (fieldAction.operation == "is:checked") {
+                                    valueMatch = (fieldAction.value == $("#" + fieldAction.field).is(':checked'));
                                 }
                                 else {
                                     valueMatch = (fieldVal == fieldAction.value);
@@ -592,8 +598,8 @@ function XiboFormSubmit(form) {
         dataType:"json",
         data:$(form).serialize(),
         success: function(xhr, textStatus, error) {
-        	
-        	XiboSubmitResponse(xhr, form);
+            
+            XiboSubmitResponse(xhr, form);
         }
     });
 
@@ -605,7 +611,7 @@ function XiboFormSubmit(form) {
  * @param {Object} response
  */
 function XiboSubmitResponse(response, form) {
-	
+    
     // Remove the spinner
     $(form).closest(".modal-dialog").find(".saving").remove();
 
@@ -684,7 +690,7 @@ function XiboSubmitResponse(response, form) {
  */
 function XiboHelpRender(formUrl) {
 
-	// Call with AJAX
+    // Call with AJAX
     $.ajax({
         type: "get",
         url: formUrl + "&ajax=true",
@@ -771,8 +777,8 @@ function XiboHoverRender(url, x, y)
 
                 // Do we need to alter the dialog size?
                 if (response.dialogSize) {
-                    dialogWidth 	= response.dialogWidth;
-                    dialogHeight	= response.dialogHeight;
+                    dialogWidth     = response.dialogWidth;
+                    dialogHeight    = response.dialogHeight;
                 }
 
                 // Create the the popup bubble with our parameters
@@ -879,26 +885,26 @@ function LoginBox(message) {
 function SystemMessage(messageText, success) {
 
     if (messageText == '' || messageText == null) 
-    	return;
+        return;
 
     var options = {};
-	options.backdrop = false;
+    options.backdrop = false;
 
-	// Buttons
-	var buttons = [];
+    // Buttons
+    var buttons = [];
 
     var title = null;
 
-	// Only add certain things
-	if (!success) {
+    // Only add certain things
+    if (!success) {
         title = "Application Message";
-		buttons.push({
-		label: 'Close',
-			callback: function() {
-				dialog.modal('hide');
-			}
-		});
-	}
+        buttons.push({
+        label: 'Close',
+            callback: function() {
+                dialog.modal('hide');
+            }
+        });
+    }
 
     var dialog = bootbox.dialog({
         message: messageText,
@@ -908,11 +914,11 @@ function SystemMessage(messageText, success) {
     });
 
     if (success) {    
-	    // Close after 1 second
-    	setTimeout(function() {
-        	dialog.modal('hide');
-    	}, 2000);
-	}
+        // Close after 1 second
+        setTimeout(function() {
+            dialog.modal('hide');
+        }, 2000);
+    }
 }
 
 /**
@@ -923,7 +929,7 @@ function SystemMessage(messageText, success) {
 function SystemMessageInline(messageText, modal) {
 
     if (messageText == '' || messageText == null) 
-    	return;
+        return;
 
     // TODO: if modal is null (or not a form), then pick the nearest .text error instead.
     if (modal == undefined || modal == null || modal.length == 0)
@@ -933,8 +939,8 @@ function SystemMessageInline(messageText, modal) {
     $(".form-error", modal).remove();
 
     $("<div/>", {
-    	class: "well text-danger text-center form-error",
-    	html: messageText
+        class: "well text-danger text-center form-error",
+        html: messageText
     }).appendTo(modal.find(".modal-footer"));
 }
 

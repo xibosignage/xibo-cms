@@ -247,8 +247,6 @@ class moduleDAO extends baseDAO
             Kit::ValidateParam($row['Enabled'], _INT), __('When Enabled users will be able to add media using this module'), 
             'b');
 
-        Theme::Set('form_fields', $formFields);
-
         // Set any module specific form fields
         include_once('modules/' . $type . '.module.php');
         $module = new $type($this->db, $this->user);
@@ -256,6 +254,8 @@ class moduleDAO extends baseDAO
         // Merge in the fields from the settings
         foreach($module->ModuleSettingsForm() as $field)
             $formFields[] = $field;
+        
+        Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Edit Module'), '350px', '325px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Module', 'Edit') . '")');
@@ -298,9 +298,10 @@ class moduleDAO extends baseDAO
         include_once('modules/' . $type . '.module.php');
         $module = new $type($this->db, $this->user);
 
-        $settings = json_encode($module->ModuleSettings());
-
         try {
+            // Get the settings (may throw an exception)
+            $settings = json_encode($module->ModuleSettings());
+            
             $dbh = PDOConnect::init();
         
             $sth = $dbh->prepare('

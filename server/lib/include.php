@@ -45,6 +45,7 @@ require_once("lib/modules/module.interface.php");
 require_once("lib/modules/module.class.php");
 require_once("lib/data/data.class.php");
 require_once("lib/app/session.class.php");
+require_once("lib/app/cache.class.php");
 require_once("lib/app/thememanager.class.php");
 require_once("lib/pages/base.class.php");
 
