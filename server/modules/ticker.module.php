@@ -737,6 +737,7 @@ class ticker extends Module
         $feed = new SimplePie();
         $feed->set_cache_location($file->GetLibraryCacheUri());
         $feed->set_feed_url(urldecode($this->GetOption('uri')));
+        $feed->force_feed(true);
         $feed->set_cache_duration(($this->GetOption('updateInterval', 3600) * 60));
         $feed->handle_content_type();
         $feed->init();
