@@ -407,7 +407,7 @@ class ForecastIo extends Module
 
         // Replace the View Port Width?
         if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->width . 'px', $template);
+            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
 
         $headContent = '
             <link href="' . $pathPrefix . 'weather-icons.min.css" rel="stylesheet" media="screen">
@@ -452,7 +452,7 @@ class ForecastIo extends Module
 
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $body, $template);
         
-        // JavaScript to control the size
+        // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
                 'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
                 'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
