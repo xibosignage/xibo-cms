@@ -191,9 +191,6 @@ function EmbedInit()
      */
     public function AddMedia()
     {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;
@@ -254,10 +251,7 @@ function EmbedInit()
      * @return 
      */
     public function EditMedia()
-    {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-        
+    {        
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;
@@ -344,6 +338,9 @@ function EmbedInit()
     }
    
     public function GetResource($display = 0) {
+        // Make sure this module is installed correctly
+        $this->InstallFiles();
+        
         // Behave exactly like the client.
 
         // Load in the template

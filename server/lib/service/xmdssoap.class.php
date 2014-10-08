@@ -655,6 +655,15 @@ class XMDSSoap {
         
         try {
             $dbh = PDOConnect::init();
+
+            // Get all the module dependants
+            $sth = $dbh->prepare('SELECT DISTINCT StoredAs FROM `media` WHERE type = \'module\'');
+            $sth->execute(array());
+            $rows = $sth->fetchAll();
+            $moduleDependents = array();
+
+            foreach($rows as $dependent)
+                $moduleDependents[] = $dependent['StoredAs'];
         
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
@@ -685,7 +694,7 @@ class XMDSSoap {
                 $todt = date('Y-m-d H:i:s', $row[2]);
                 $scheduleid = $row[3];
                 $is_priority = Kit::ValidateParam($row[4], _INT);
-                $dependents = Kit::ValidateParam($row[5], _STRING);
+                $dependents = implode(',', $moduleDependents) . ',' . Kit::ValidateParam($row[5], _STRING);
     
                 // Add a layout node to the schedule
                 $layout = $scheduleXml->createElement("layout");
@@ -715,6 +724,7 @@ class XMDSSoap {
             $layout->setAttribute("todt", '2030-01-19 00:00:00');
             $layout->setAttribute("scheduleid", 0);
             $layout->setAttribute("priority", 0);
+            $layout->setAttribute("dependents", implode(',', $moduleDependents));
 
             $layoutElements->appendChild($layout);
         }
@@ -722,6 +732,7 @@ class XMDSSoap {
         // Add on the default layout node
         $default = $scheduleXml->createElement("default");
         $default->setAttribute("file", $this->defaultLayoutId);
+        $default->setAttribute("dependents", implode(',', $moduleDependents));
         $layoutElements->appendChild($default);
 
         // Format the output

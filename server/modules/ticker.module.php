@@ -28,6 +28,16 @@ class ticker extends Module
         // Must call the parent class   
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
+
+    private function InstallFiles() {
+        $media = new Media();
+        $media->AddModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
+        $media->AddModuleFile('modules/preview/vendor/moment.js');
+        $media->AddModuleFile('modules/preview/vendor/jquery.marquee.min.js');
+        $media->AddModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
+        $media->AddModuleFile('modules/preview/xibo-layout-scaler.js');
+        $media->AddModuleFile('modules/preview/xibo-text-render.js');
+    }
     
     /**
      * Return the Add Form as HTML
@@ -180,10 +190,6 @@ class ticker extends Module
         $field_itemsPerPage = FormManager::AddNumber('itemsPerPage', __('Items per page'), $this->GetOption('itemsPerPage'), 
             __('When in single mode how many items per page should be shown.'), 'p');
 
-        $field_fitText = FormManager::AddCheckbox('fitText', __('Fit text to region?'), 
-            $this->GetOption('fitText', 0), __('Should the text try to fit to the region dimensions'), 
-            'f');
-
         $field_updateInterval = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5), 
             __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60.'),
             'n', 'required');
@@ -221,7 +227,6 @@ class ticker extends Module
 
             $formFields['advanced'][] = $field_itemsPerPage;
             $formFields['advanced'][] = $field_itemsSideBySide;
-            $formFields['advanced'][] = $field_fitText;
 
             Theme::Set('columns', $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId)));
 
@@ -241,7 +246,6 @@ class ticker extends Module
                 __('The Number of RSS items you want to display'), 'o');
 
             $formFields['advanced'][] = $field_itemsPerPage;
-            $formFields['advanced'][] = $field_fitText;
 
             $formFields['advanced'][] = FormManager::AddText('copyright', __('Copyright'), $this->GetOption('copyright'), 
                 __('Copyright information to display as the last item in this feed.'), 'f');
@@ -329,8 +333,6 @@ class ticker extends Module
      */
     public function AddMedia()
     {
-        $db =& $this->db;
-        
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
         $mediaid = $this->mediaid;
@@ -408,8 +410,6 @@ class ticker extends Module
      */
     public function EditMedia()
     {
-        $db         =& $this->db;
-        
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;
@@ -435,7 +435,6 @@ class ticker extends Module
         $numItems = Kit::GetParam('numItems', _POST, _STRING);
         $takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
         $durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
-        $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
         $itemsSideBySide = Kit::GetParam('itemsSideBySide', _POST, _CHECKBOX);
         
         // DataSet Specific Options
@@ -512,7 +511,6 @@ class ticker extends Module
         $this->SetOption('numItems', $numItems);
         $this->SetOption('takeItemsFrom', $takeItemsFrom);
         $this->SetOption('durationIsPerItem', $durationIsPerItem);
-        $this->SetOption('fitText', $fitText);
         $this->SetOption('itemsSideBySide', $itemsSideBySide);
         $this->SetOption('upperLimit', $upperLimit);
         $this->SetOption('lowerLimit', $lowerLimit);
@@ -605,8 +603,15 @@ class ticker extends Module
      */
     public function GetResource($displayId = 0)
     {
+        // Make sure this module is installed correctly
+        $this->InstallFiles();
+        
         // Load the HtmlTemplate
-        $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
+        $template = file_get_contents('modules/preview/HtmlTemplate.html');
+
+        // Replace the View Port Width?
+        if (isset($_GET['preview']))
+            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
 
         // What is the data source for this ticker?
         $sourceId = $this->GetOption('sourceId', 1);
@@ -642,8 +647,7 @@ class ticker extends Module
             $css = '';
         }
 
-        $options = array('type' => 'ticker',
-            'sourceid' => $sourceId,
+        $options = array(
             'direction' => $direction,
             'duration' => $duration,
             'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
@@ -651,7 +655,6 @@ class ticker extends Module
             'takeItemsFrom' => $takeItemsFrom,
             'itemsPerPage' => $itemsPerPage,
             'scrollSpeed' => $scrollSpeed,
-            'scaleMode' => (($fitText == 0) ? 'scale' : 'fit'),
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
@@ -686,13 +689,7 @@ class ticker extends Module
         $template = str_replace('<!--[[[CONTROLMETA]]]-->', '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->', $template);
 
         // Replace the head content
-        $headContent  = '<script type="text/javascript">';
-        $headContent .= '   function init() { ';
-        $headContent .= '       $("body").xiboRender(options, items);';
-        $headContent .= '   } ';
-        $headContent .= '   var options = ' . json_encode($options) . ';';
-        $headContent .= '   var items = ' . json_encode($items) . ';';
-        $headContent .= '</script>';
+        $headContent  = '';
 
         if ($itemsSideBySide == 1) {
             $headContent .= '<style type="text/css">';
@@ -705,12 +702,34 @@ class ticker extends Module
             $headContent .= '<style type="text/css">' . $css . '</style>';
         }
 
-        // Replace the View Port Width?
-        if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->width . 'px', $template);
-
         // Replace the Head Content with our generated javascript
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+
+        // Add some scripts to the JavaScript Content
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+
+        // Need the marquee plugin?
+        if ($direction != 'none' && $direction != 'single')
+            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
+        
+        // Need the cycle plugin?
+        if ($direction == 'single')
+            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
+        
+        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-text-render.js"></script>';
+
+        $javaScriptContent .= '<script type="text/javascript">';
+        $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
+        $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
+        $javaScriptContent .= '   $(document).ready(function() { ';
+        $javaScriptContent .= '       $("#content").xiboTextRender(options, items); $("body").xiboLayoutScaler(options);';
+        $javaScriptContent .= '   }); ';
+        $javaScriptContent .= '</script>';
+
+        // Replace the Head Content with our generated javascript
+        $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
 
         // Replace the Body Content with our generated text
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', '', $template);
@@ -755,7 +774,7 @@ class ticker extends Module
             // Substitute for all matches in the template
             $rowString = $text;
             
-            // Substitite
+            // Substitute
             foreach ($matches[0] as $sub) {
                 $replace = '';
 

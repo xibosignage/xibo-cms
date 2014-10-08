@@ -205,11 +205,6 @@ class text extends Module
      */
     public function AddMedia()
     {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-
-        $db =& $this->db;
-
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;
@@ -269,10 +264,6 @@ class text extends Module
      */
     public function EditMedia()
     {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-
-        $db =& $this->db;
         $user =& $this->user;
 
         $layoutid = $this->layoutid;
@@ -354,8 +345,9 @@ class text extends Module
      */
     public function GetResource($displayId = 0)
     {
-        // Behave exactly like the client.
-
+        // Make sure this module is installed correctly
+        $this->InstallFiles();
+        
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
 
@@ -479,7 +471,6 @@ class text extends Module
         $textNodes = $rawXml->getElementsByTagName('text');
         $textNode = $textNodes->item(0);
         $text = $textNode->nodeValue;
-
 
         $output .= '<div class="hoverPreview" style="transform: scale(0.43); transform-origin: 0 0;">';
         $output .= '    ' . $text;

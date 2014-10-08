@@ -339,6 +339,9 @@ class ForecastIo extends Module
      * @param integer $displayId If this comes from a real client, this will be the display id.
      */
     public function GetResource($displayId = 0) {
+        // Make sure this module is installed correctly
+        $this->InstallFiles();
+        
         // Behave exactly like the client.
         if ($this->GetOption('useDisplayLocation') == 1) {
             // Use the display ID or the default.

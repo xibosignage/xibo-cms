@@ -653,14 +653,18 @@ class Media extends Data
 
     public function AddModuleFile($file) {
         try {
-            if ($this->ModuleFileExists($file))
+            $name = basename($file);
+
+            if ($this->ModuleFileExists($name)) {
+                Debug::LogEntry('audit', $name . ' exists.');
                 return;
+            }
+            Debug::LogEntry('audit', $name . ' doesnt exist.');
 
             $dbh = PDOConnect::init();
             $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 
             // Get the name
-            $name = basename($file);
             $storedAs = $libraryFolder . $name;
             
             // Now copy the file
@@ -686,6 +690,8 @@ class Media extends Data
                     'filesize' => $fileSize
                 ));
 
+            $dbh->commit();
+
             // Add to the cache
             $this->_moduleFiles[] = $name;
         }
@@ -705,15 +711,18 @@ class Media extends Data
             if ($this->_moduleFiles == NULL || count($this->_moduleFiles) < 1) {
                 $dbh = PDOConnect::init();
             
-                $sth = $dbh->prepare('SELECT name, storedAs FROM `media` WHERE type = :type');
+                $sth = $dbh->prepare('SELECT storedAs FROM `media` WHERE type = :type');
                 $sth->execute(array(
                         'type' => 'module'
                     ));
                 
-                $this->_moduleFiles = $sth->fetchAll();
+                $this->_moduleFiles = array();
+
+                foreach ($sth->fetchAll() as $moduleFile)
+                    $this->_moduleFiles[] = $moduleFile['storedAs'];
             }
 
-            return in_array(basename($file), $this->_moduleFiles);
+            return (in_array($file, $this->_moduleFiles));
         }
         catch (Exception $e) {
             
