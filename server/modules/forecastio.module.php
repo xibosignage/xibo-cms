@@ -24,7 +24,6 @@
  *
  * The class name must be equal to the $this->type and the file name must be equal to modules/type.module.php
  */ 
-include_once('lib/data/media.data.class.php');
 include_once('modules/3rdparty/forecast.php');
 use Forecast\Forecast;
 
@@ -94,6 +93,8 @@ class ForecastIo extends Module
 
     private function InstallFiles() {
         $media = new Media();
+        $media->AddModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
+        $media->AddModuleFile('modules/preview/xibo-layout-scaler.js');
         $media->AddModuleFile('modules/theme/forecastio/weather_icons/weather-icons.min.css');
         $media->AddModuleFile('modules/theme/forecastio/weather_icons/WeatherIcons-Regular.otf');
         $media->AddModuleFile('modules/theme/forecastio/weather_icons/weathericons-regular-webfont.eot');
@@ -240,6 +241,9 @@ class ForecastIo extends Module
         $formFields[] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'), 
             __('The Latitude of this display'), 'l', '', 'locationControls');
 
+        $formFields[] = FormManager::AddText('color', __('Colour'), $this->GetOption('color', '000'), 
+            __('Please select a colour for the foreground text.'), 'c', 'required');
+
         // Configure the field dependencies
         $this->SetFieldDepencencies();
 
@@ -248,7 +252,7 @@ class ForecastIo extends Module
         $this->response->html = Theme::RenderReturn('form_render');
 
         $this->response->dialogTitle = __('Forecast IO');
-
+        $this->response->callBack = 'forecastIoFormSetup';
         // The response object outputs the required JSON object to the browser
         // which is then processed by the CMS JavaScript library (xibo-cms.js).
         $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
@@ -277,6 +281,7 @@ class ForecastIo extends Module
 
         // You can store any additional options for your module using the SetOption method
         $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX, 0));
+        $this->SetOption('color', Kit::GetParam('color', _POST, _STRING, '#000'));
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -388,18 +393,89 @@ class ForecastIo extends Module
             );
 
         $icon = (isset($icons[$data->currently->icon]) ? $icons[$data->currently->icon] : $icons['unmapped']);
+        $temperature = (isset($data->currently->temperature) ? floor($data->currently->temperature) : '--');
+        $summary = (isset($data->currently->summary) ? $data->currently->summary : '--');
 
         //var_dump($data);
 
         // A template is provided which contains a number of different libraries that might
         // be useful (jQuery, etc).
         $pathPrefix = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true') ? 'modules/theme/forecastio/weather_icons/' : '';
-        // You can provide your own template, or just output the HTML directly in this method. It is up to you.
-        $template = file_get_contents('modules/preview/HtmlTemplate.html');
-        $template = str_replace('<!--[[[HEADCONTENT]]]-->', '<link href="' . $pathPrefix . 'weather-icons.min.css" rel="stylesheet" media="screen">', $template);
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', '<i class="wi ' . $icon . '"></li>', $template);
         
-        // Do whatever it is you need to do to render your content.
+        // Get the template
+        $template = file_get_contents('modules/preview/HtmlTemplate.html');
+
+        // Replace the View Port Width?
+        if (isset($_GET['preview']))
+            $template = str_replace('[[ViewPortWidth]]', $this->width . 'px', $template);
+
+        $headContent = '
+            <link href="' . $pathPrefix . 'weather-icons.min.css" rel="stylesheet" media="screen">
+            <style type="text/css">
+                body {
+                    font-family:Arial;
+                    margin:0;
+                    padding-top: 10px;
+                }
+
+                .container {
+                    color: ' . $this->GetOption('color', '000'). ';
+                    text-align: center;
+                    width: 150px;
+                    height: 100px;
+                }
+
+                .icon {
+                    font-size: 44px;
+                }
+
+                .desc {
+                    margin-top: 10px;
+                    font-size: 20px;
+                }
+
+                .powered-by {
+                    font-size: 8px;
+                }
+            </style>
+        ';
+
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+        
+        // Make some body content
+        $body = '<div class="container">
+            <div class="icon"><i class="wi ' . $icon . '"></i> ' . $temperature . '<i class="wi wi-degrees"></i></div>
+            <div class="desc">' . $summary . '</div>
+            <div class="powered-by">Powered by Forecast</div>
+        </div>
+        ';
+
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $body, $template);
+        
+        // JavaScript to control the size
+        $options = array(
+                'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
+                'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
+                'originalWidth' => 150,
+                'originalHeight' => 100,
+                'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+            );
+
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $javaScriptContent  = '<script src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+        $javaScriptContent .= '<script src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
+        $javaScriptContent .= '<script>
+
+            var options = ' . json_encode($options) . '
+
+            $(document).ready(function() {
+                $("body").xiboLayoutScaler(options);
+            });
+        </script>';
+
+        // Replace the After body Content
+        $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+
         // Return that content.
         return $template;
     }

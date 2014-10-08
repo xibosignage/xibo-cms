@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+include_once('lib/data/media.data.class.php');
 
 abstract class Module implements ModuleInterface
 {
@@ -37,6 +38,7 @@ abstract class Module implements ModuleInterface
     protected $previewEnabled;
     protected $validExtensions;
     protected $validExtensionsText;
+    protected $imageUri;
     protected $settings;
 
     // The Schema Version of this code
@@ -145,6 +147,7 @@ abstract class Module implements ModuleInterface
             $this->validExtensionsText = Kit::ValidateParam($row['ValidExtensions'], _STRING);
             $this->previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
             $this->assignable = Kit::ValidateParam($row['assignable'], _INT);
+            $this->imageUri = Kit::ValidateParam($row['ImageUri'], _STRING);
             $this->render_as = Kit::ValidateParam($row['render_as'], _WORD);
             $this->settings = Kit::ValidateParam($row['settings'], _HTMLSTRING);
 
@@ -1337,7 +1340,7 @@ END;
 
         // Default Hover window contains a thumbnail, media type and duration
         $output = '<div class="well">';
-        $output .= '<div class="preview-module-image"><img alt="' . $this->displayType . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif"></div>';
+        $output .= '<div class="preview-module-image"><img alt="' . $this->displayType . ' thumbnail" src="theme/default/img/' . $this->imageUri . '"></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';

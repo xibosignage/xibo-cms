@@ -368,4 +368,7 @@ var FileAssociationsSubmit = function(displayGroupId)
         data: mediaList,
         success: XiboSubmitResponse
     });
-}
+};
+var forecastIoFormSetup = function() {
+    $('#color').colorpicker();
+};
