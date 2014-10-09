@@ -35,6 +35,15 @@ class clock extends Module
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
 
+    private function InstallFiles() {
+        $media = new Media();
+        $media->AddModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
+        $media->AddModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
+        $media->AddModuleFile('modules/preview/vendor/moment.js');
+        $media->AddModuleFile('modules/preview/vendor/flipclock.min.js');
+        $media->AddModuleFile('modules/preview/xibo-layout-scaler.js');
+    }
+
     /**
      * Install or Update this module
      */
@@ -376,7 +385,8 @@ class clock extends Module
      * @param integer $displayId If this comes from a real client, this will be the display id.
      */
     public function GetResource($displayId = 0) {
-        // Behave exactly like the client.
+        // Make sure this module is installed correctly
+        $this->InstallFiles();
 
         // Clock Type
         switch ($this->GetOption('clockTypeId', 1)) {
@@ -396,9 +406,10 @@ class clock extends Module
                 $template = str_replace('<!--[[[OFFSET]]]-->', $this->GetOption('offset', 0), $template);
 
                 // After body content
-                $javaScriptContent  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
-                $javaScriptContent .= '<script>' . file_get_contents('modules/preview/vendor/moment.js') . '</script>';
-
+                $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+                $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
+                
                 // Replace the After body Content
                 $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
                 break;
@@ -435,9 +446,10 @@ class clock extends Module
                         'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
                     );
 
-                $javaScriptContent  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
-                $javaScriptContent .= '<script>' . file_get_contents('modules/preview/vendor/moment.js') . '</script>';
-                $javaScriptContent .= '<script>' . file_get_contents('modules/preview/vendor/fittext.js') . '</script>';
+                $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+                $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
                 $javaScriptContent .= '<script>
 
                     var options = ' . json_encode($options) . '
@@ -449,47 +461,9 @@ class clock extends Module
                     }
 
                     $(document).ready(function() {
-
-                        var width; var height;
-
-                        if (options.previewWidth == 0 || options.previewHeight == 0) {
-                            width = $(window).width(); 
-                            height = $(window).height();
-                        }
-                        else {
-                            width = options.previewWidth;
-                            height = options.previewHeight;
-                        }
-
-                        var ratio = Math.min(width / options.originalWidth, height / options.originalHeight);
-
-                        console.log(ratio);
-
-                        if (options.scaleOverride != 0)
-                            ratio = options.scaleOverride;
-
                         updateClock();
-
-                        $("body").css({
-                            width: options.originalWidth,
-                            height: options.originalHeight
-                        });
-                        
-                        // Handle the scaling
-                        // What IE are we?
-                        if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
-                            $("body").css({
-                                "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + ratio + ", M12=0, M21=0, M22=" + ratio + ", SizingMethod=\'auto expand\'"
-                            });
-                        }
-                        else {
-                            $("body").css({
-                                "transform": "scale(" + ratio + ")",
-                                "transform-origin": "0 0"
-                            });
-                        }
-
                         setInterval(updateClock, 1000);
+                        $("body").xiboLayoutScaler(options);
                     });
                 </script>';
 
@@ -507,8 +481,9 @@ class clock extends Module
                 $template = str_replace('<!--[[[OFFSET]]]-->', $this->GetOption('offset', 0), $template);
 
                 // After body content
-                $javaScriptContent  = '<script>' . file_get_contents('modules/preview/vendor/jquery-1.11.1.min.js') . '</script>';
-                $javaScriptContent .= '<script>' . file_get_contents('modules/preview/vendor/flipclock.min.js') . '</script>';
+                $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+                $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'flipclock.min.js"></script>';
 
                 // Replace the After body Content
                 $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
@@ -519,6 +494,10 @@ class clock extends Module
         // If we are a preview, then pass in the width and height
         $template = str_replace('<!--[[[PREVIEW_WIDTH]]]-->', Kit::GetParam('width', _GET, _DOUBLE, 0), $template);
         $template = str_replace('<!--[[[PREVIEW_HEIGHT]]]-->', Kit::GetParam('height', _GET, _DOUBLE, 0), $template);
+
+        // Replace the View Port Width?
+        if (isset($_GET['preview']))
+            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
 
         // Return that content.
         return $template;

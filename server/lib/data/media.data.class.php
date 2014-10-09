@@ -656,7 +656,6 @@ class Media extends Data
             $name = basename($file);
 
             if ($this->ModuleFileExists($name)) {
-                Debug::LogEntry('audit', $name . ' exists.');
                 return;
             }
             Debug::LogEntry('audit', $name . ' doesnt exist.');
