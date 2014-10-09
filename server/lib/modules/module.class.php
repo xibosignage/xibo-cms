@@ -53,6 +53,7 @@ abstract class Module implements ModuleInterface
 	protected $deleteFromRegion;
     protected $width;
     protected $height;
+    protected $layoutSchemaVersion;
 
     // Media information
     protected $mediaid;
@@ -203,6 +204,8 @@ abstract class Module implements ModuleInterface
 
             $layoutDoc = new DOMDocument();
             $layoutDoc->loadXML($layoutXml);
+            
+            $this->layoutSchemaVersion = (int)$layoutDoc->documentElement->getAttribute('schemaVersion');
 
             $layoutXpath = new DOMXPath($layoutDoc);
 

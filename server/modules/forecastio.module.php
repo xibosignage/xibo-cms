@@ -341,7 +341,7 @@ class ForecastIo extends Module
     public function GetResource($displayId = 0) {
         // Make sure this module is installed correctly
         $this->InstallFiles();
-        
+
         // Behave exactly like the client.
         if ($this->GetOption('useDisplayLocation') == 1) {
             // Use the display ID or the default.
@@ -418,7 +418,6 @@ class ForecastIo extends Module
                 body {
                     font-family:Arial;
                     margin:0;
-                    padding-top: 10px;
                 }
 
                 .container {

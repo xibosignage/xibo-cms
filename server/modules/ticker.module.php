@@ -606,8 +606,11 @@ class ticker extends Module
         // Make sure this module is installed correctly
         $this->InstallFiles();
         
-        // Load the HtmlTemplate
-        $template = file_get_contents('modules/preview/HtmlTemplate.html');
+        // Load in the template
+        if ($this->layoutSchemaVersion == 1)
+            $template = file_get_contents('modules/preview/Html4TransitionalTemplate.html');
+        else
+            $template = file_get_contents('modules/preview/HtmlTemplate.html');
 
         // Replace the View Port Width?
         if (isset($_GET['preview']))
