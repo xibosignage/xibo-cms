@@ -470,6 +470,10 @@ class clock extends Module
                 // Replace the After body Content
                 $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
 
+                // Add our fonts.css file
+                $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+                $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+
                 break;
 
             case 3:

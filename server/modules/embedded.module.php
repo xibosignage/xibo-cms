@@ -340,7 +340,7 @@ function EmbedInit()
     public function GetResource($display = 0) {
         // Make sure this module is installed correctly
         $this->InstallFiles();
-        
+
         // Behave exactly like the client.
 
         // Load in the template
@@ -392,6 +392,10 @@ function EmbedInit()
                 });
             </script>';
         }
+
+        // Add our fonts.css file
+        $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
         
         // Replace the Head Content with our generated java script
         $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);

@@ -452,13 +452,15 @@ class datasetview extends Module
         );
 
         $headContent  = '<style type="text/css">' . $styleSheet . '</style>';
+        // Add our fonts.css file
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
         
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml($displayId), $template);
 
         // Build some JS nodes
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';

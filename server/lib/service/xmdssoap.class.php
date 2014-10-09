@@ -320,11 +320,17 @@ class XMDSSoap {
             $dbh = PDOConnect::init();
         
             // Add file nodes to the $fileElements
-            $SQL  = " SELECT 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, MD5(layout.xml) AS `MD5`, NULL AS FileSize, layout.xml AS xml ";
+            $SQL  = "
+                    SELECT 1 AS DownloadOrder, 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml 
+                       FROM `media`
+                     WHERE media.type IN ('module', 'font') 
+                    UNION
+                    ";
+            $SQL .= " SELECT 4 AS DownloadOrder, 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, MD5(layout.xml) AS `MD5`, NULL AS FileSize, layout.xml AS xml ";
             $SQL .= "   FROM layout ";
             $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
             $SQL .= " UNION ";
-            $SQL .= " SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml ";
+            $SQL .= " SELECT 3 AS DownloadOrder, 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml ";
             $SQL .= "   FROM media ";
             $SQL .= "   INNER JOIN lklayoutmedia ";
             $SQL .= "   ON lklayoutmedia.MediaID = media.MediaID ";
@@ -333,20 +339,15 @@ class XMDSSoap {
             $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
             $SQL .= "
                     UNION
-                    SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml 
+                    SELECT 2 AS DownloadOrder, 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml 
                        FROM `media`
                         INNER JOIN `lkmediadisplaygroup`
                         ON lkmediadisplaygroup.mediaid = media.MediaID
                         INNER JOIN lkdisplaydg 
                         ON lkdisplaydg.DisplayGroupID = lkmediadisplaygroup.DisplayGroupID
                     ";
-            $SQL .= " WHERE lkdisplaydg.DisplayID = :displayId ";$SQL .= "
-                    UNION
-                    SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml 
-                       FROM `media`
-                    ";
-            $SQL .= " WHERE media.type = 'module' ";
-            $SQL .= " ORDER BY RecordType DESC";
+            $SQL .= " WHERE lkdisplaydg.DisplayID = :displayId ";
+            $SQL .= " ORDER BY DownloadOrder, RecordType DESC";
     
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
@@ -657,7 +658,7 @@ class XMDSSoap {
             $dbh = PDOConnect::init();
 
             // Get all the module dependants
-            $sth = $dbh->prepare('SELECT DISTINCT StoredAs FROM `media` WHERE type = \'module\'');
+            $sth = $dbh->prepare('SELECT DISTINCT StoredAs FROM `media` WHERE type IN (\'module\', \'font\')');
             $sth->execute(array());
             $rows = $sth->fetchAll();
             $moduleDependents = array();
@@ -732,8 +733,16 @@ class XMDSSoap {
         // Add on the default layout node
         $default = $scheduleXml->createElement("default");
         $default->setAttribute("file", $this->defaultLayoutId);
-        $default->setAttribute("dependents", implode(',', $moduleDependents));
         $layoutElements->appendChild($default);
+
+        // Add on a list of global dependants
+        $globalDependents = $scheduleXml->createElement("dependants");
+
+        foreach ($moduleDependents as $dep) {
+            $dependent = $scheduleXml->createElement("file", $dep);
+            $globalDependents->appendChild($dependent);
+        }
+        $layoutElements->appendChild($globalDependents);
 
         // Format the output
         $scheduleXml->formatOutput = true;

@@ -712,11 +712,14 @@ class ticker extends Module
             $headContent .= '<style type="text/css">' . $css . '</style>';
         }
 
+        // Add our fonts.css file
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $headContent .= '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+        
         // Replace the Head Content with our generated javascript
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
         // Add some scripts to the JavaScript Content
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
 
         // Need the marquee plugin?

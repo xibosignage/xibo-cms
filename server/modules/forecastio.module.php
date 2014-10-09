@@ -341,7 +341,7 @@ class ForecastIo extends Module
     public function GetResource($displayId = 0) {
         // Make sure this module is installed correctly
         $this->InstallFiles();
-        
+
         // Behave exactly like the client.
         if ($this->GetOption('useDisplayLocation') == 1) {
             // Use the display ID or the default.
@@ -442,7 +442,10 @@ class ForecastIo extends Module
                 }
             </style>
         ';
-
+        
+        // Add our fonts.css file
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $headContent .= '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
         
         // Make some body content
@@ -464,7 +467,6 @@ class ForecastIo extends Module
                 'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
             );
 
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $javaScriptContent  = '<script src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
         $javaScriptContent .= '<script src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
         $javaScriptContent .= '<script>
