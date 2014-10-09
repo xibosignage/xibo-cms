@@ -157,6 +157,7 @@ class ticker extends Module
 
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('format', __('Format'));
         $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
         Theme::Set('form_tabs', $tabs);
 
@@ -225,8 +226,8 @@ class ticker extends Module
             $formFields['advanced'][] = FormManager::AddNumber('upperLimit', __('Upper Row Limit'), $this->GetOption('upperLimit'), 
                 __('Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)'), 'u');
 
-            $formFields['advanced'][] = $field_itemsPerPage;
-            $formFields['advanced'][] = $field_itemsSideBySide;
+            $formFields['format'][] = $field_itemsPerPage;
+            $formFields['format'][] = $field_itemsSideBySide;
 
             Theme::Set('columns', $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId)));
 
@@ -240,19 +241,19 @@ class ticker extends Module
             $formFields['general'][] = $field_name;
             $formFields['general'][] = $field_duration;
             $formFields['general'][] = $field_direction;
-            $formFields['general'][] = $field_scrollSpeed;
+            $formFields['format'][] = $field_scrollSpeed;
             
-            $formFields['advanced'][] = FormManager::AddNumber('numItems', __('Number of Items'), $this->GetOption('numItems'), 
+            $formFields['format'][] = FormManager::AddNumber('numItems', __('Number of Items'), $this->GetOption('numItems'), 
                 __('The Number of RSS items you want to display'), 'o');
 
-            $formFields['advanced'][] = $field_itemsPerPage;
+            $formFields['format'][] = $field_itemsPerPage;
 
-            $formFields['advanced'][] = FormManager::AddText('copyright', __('Copyright'), $this->GetOption('copyright'), 
+            $formFields['format'][] = FormManager::AddText('copyright', __('Copyright'), $this->GetOption('copyright'), 
                 __('Copyright information to display as the last item in this feed.'), 'f');
 
             $formFields['advanced'][] = $field_updateInterval;
 
-            $formFields['advanced'][] = FormManager::AddCombo(
+            $formFields['format'][] = FormManager::AddCombo(
                     'takeItemsFrom', 
                     __('Take items from the '), 
                     $this->GetOption('takeItemsFrom'),
@@ -265,12 +266,16 @@ class ticker extends Module
                     __('Take the items from the beginning or the end of the list'), 
                     't');
 
-            $formFields['advanced'][] = $field_durationIsPerItem;
-            $formFields['advanced'][] = $field_itemsSideBySide;
+            $formFields['format'][] = $field_durationIsPerItem;
+            $formFields['format'][] = $field_itemsSideBySide;
+
+            $formFields['format'][] = FormManager::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'), 
+                __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
 
             $subs = array(
                     array('Substitute' => 'Title'),
                     array('Substitute' => 'Description'),
+                    array('Substitute' => 'Date'),
                     array('Substitute' => 'Content'),
                     array('Substitute' => 'Copyright'),
                     array('Substitute' => 'Link'),
@@ -306,6 +311,7 @@ class ticker extends Module
             __('Optional Stylesheet'), 's', 10);
 
         Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_format', $formFields['format']);
         Theme::Set('form_fields_advanced', $formFields['advanced']);
 
         // Generate the Response
@@ -517,6 +523,7 @@ class ticker extends Module
         $this->SetOption('filter', $filter);
         $this->SetOption('ordering', $ordering);
         $this->SetOption('itemsPerPage', $itemsPerPage);
+        $this->SetOption('dateFormat', Kit::GetParam('dateFormat', _POST, _STRING));
         
         // Text Template
         $this->SetRaw('<template><![CDATA[' . $text . ']]></template><css><![CDATA[' . $css . ']]></css>');
@@ -605,7 +612,7 @@ class ticker extends Module
     {
         // Make sure this module is installed correctly
         $this->InstallFiles();
-        
+
         // Load in the template
         if ($this->layoutSchemaVersion == 1)
             $template = file_get_contents('modules/preview/Html4TransitionalTemplate.html');
@@ -819,7 +826,7 @@ class ticker extends Module
                             break;
 
                         case '[Date]':
-                            $replace = $item->get_local_date();
+                            $replace = ($this->GetOption('dateFormat') == '') ? $item->get_local_date() : $item->get_date($this->GetOption('dateFormat'));
                             break;
 
                         case '[PermaLink]':
