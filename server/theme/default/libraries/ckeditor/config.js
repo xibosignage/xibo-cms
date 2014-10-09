@@ -16,7 +16,7 @@ CKEDITOR.editorConfig = function( config ) {
 		{ name: 'insert' },
 		{ name: 'forms' },
 		{ name: 'tools' },
-		{ name: 'document',	   groups: [ 'mode', 'document', 'doctools' ] },
+		{ name: 'document',    groups: [ 'mode', 'document', 'doctools' ] },
 		{ name: 'others' },
 		'/',
 		{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
@@ -40,6 +40,9 @@ CKEDITOR.editorConfig = function( config ) {
 	config.removeDialogTabs = 'image:advanced;link:advanced';
 
 	config.extraPlugins = 'iframe';
+
+	config.contentsCss = [ CKEDITOR.getUrl('contents.css'), '../../../../modules/preview/fonts.css' ];
+	/*REPLACE*/ var = font_names_in_here; /*ENDREPLACE*/
 
 	// Change the allowed content behaviour
 	//config.extraAllowedContent = 'table[*]';

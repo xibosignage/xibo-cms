@@ -827,6 +827,7 @@ END;
             case 'video':
             case 'localvideo':
             case 'genericfile':
+            case 'font':
                 $defaultDuration = 0;
                 break;
 
@@ -843,7 +844,7 @@ END;
                 break;
 
             default:
-                $defaultDuration = '';
+                $defaultDuration = 10;
         }
         
 

@@ -82,7 +82,7 @@ class Media extends Data
                 $this->ThrowError(10, __('The name cannot be longer than 100 characters'));
     
             // Test the duration (except for video and localvideo which can have a 0)
-            if ($duration == 0 && $type != 'video' && $type != 'localvideo' && $type != 'genericfile')
+            if ($duration == 0 && $type != 'video' && $type != 'localvideo' && $type != 'genericfile' && $type != 'font')
                 $this->ThrowError(11, __('You must enter a duration.'));
     
             // Check the naming of this item to ensure it doesnt conflict
@@ -195,7 +195,7 @@ class Media extends Data
             if (strlen($name) > 100)
                 $this->ThrowError(10, __('The name cannot be longer than 100 characters'));
     
-            if ($duration == 0 && $type != 'video' && $type != 'localvideo' && $type != 'genericfile')
+            if ($duration == 0 && $type != 'video' && $type != 'localvideo' && $type != 'genericfile' && $type != 'font')
                 $this->ThrowError(11, __('You must enter a duration.'));
     
             // Any media (not this one) already has this name?
@@ -651,14 +651,15 @@ class Media extends Data
         }
     }
 
-    public function AddModuleFile($file) {
+    public function AddModuleFile($file, $force = false) {
         try {
             $name = basename($file);
 
-            if ($this->ModuleFileExists($name)) {
+            $moduleExists = $this->ModuleFileExists($name);
+
+            if (!$force && $moduleExists) {
                 return;
             }
-            Debug::LogEntry('audit', $name . ' doesnt exist.');
 
             $dbh = PDOConnect::init();
             $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
@@ -674,20 +675,33 @@ class Media extends Data
             $md5        = md5_file($storedAs);
             $fileSize   = filesize($storedAs);
         
-            // All OK to insert this record
-            $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired, is_module, storedAs, FileSize) ";
-            $SQL .= "VALUES (:name, :type, :duration, :originalfilename, 1, :retired, 1, :storedas, :filesize) ";
+            if ($moduleExists) {
+                $SQL = "UPDATE `media` SET md5 = :md5, filesize = :filesize WHERE storedAs = :storedas ";
 
-            $sth = $dbh->prepare($SQL);
-            $sth->execute(array(
-                    'name' => $name,
-                    'type' => 'module',
-                    'duration' => 10,
-                    'originalfilename' => $name,
-                    'retired' => 0,
-                    'storedas' => $name,
-                    'filesize' => $fileSize
-                ));
+                $sth = $dbh->prepare($SQL);
+                $sth->execute(array(
+                        'storedas' => $name,
+                        'filesize' => $fileSize,
+                        'md5' => $md5
+                    ));
+            }
+            else {
+                // All OK to insert this record
+                $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired, is_module, storedAs, FileSize, MD5) ";
+                $SQL .= "VALUES (:name, :type, :duration, :originalfilename, 1, :retired, 1, :storedas, :filesize, :md5) ";
+
+                $sth = $dbh->prepare($SQL);
+                $sth->execute(array(
+                        'name' => $name,
+                        'type' => 'module',
+                        'duration' => 10,
+                        'originalfilename' => $name,
+                        'retired' => 0,
+                        'storedas' => $name,
+                        'filesize' => $fileSize,
+                        'md5' => $md5
+                    ));
+            }
 
             $dbh->commit();
 

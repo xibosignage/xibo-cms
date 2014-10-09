@@ -455,6 +455,10 @@ class text extends Module
         // Replace the Head Content with our generated javascript
         $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
 
+        // Add our fonts.css file
+        $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+
         // Replace the Body Content with our generated text
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', '', $template);
 
