@@ -164,7 +164,7 @@ class contentDAO extends baseDAO {
             $cols[] = array('name' => 'thumbnail', 'title' => __('Thumbnail'));
 
         $cols[] = array('name' => 'duration_text', 'title' => __('Duration'));
-        $cols[] = array('name' => 'size_text', 'title' => __('Size'));
+        $cols[] = array('name' => 'size_text', 'title' => __('Size'), 'sorter' => 'filesize');
         $cols[] = array('name' => 'owner', 'title' => __('Owner'));
         $cols[] = array('name' => 'permissions', 'title' => __('Permissions'));
         $cols[] = array('name' => 'revised', 'title' => __('Revised?'), 'icons' => true);

@@ -35,9 +35,9 @@ $rowClass = (Theme::Get('rowClass') != '') ? Theme::Get('rowClass') : '';
 	<thead>
 		<tr>
 			<?php foreach(Theme::Get('table_cols') as $col) { ?>
-			<th<?php if (isset($col['helpText']) && $col['helpText'] != '') { echo ' title="' . $col['helpText'] . '"'; } ?>><?php echo $col['title']; ?></th>
+			<th<?php if (isset($col['helpText']) && $col['helpText'] != '') { echo ' title="' . $col['helpText'] . '"'; } ?><?php if (isset($col['icons']) && $col['icons']) { ?> data-sorter="tickcross"<?php } else if (isset($col['sorter']) && $col['sorter'] != '') { ?> data-sorter="<?php echo $col['sorter'] ?>"<?php } ?>><?php echo $col['title']; ?></th>
 			<?php } ?>
-			<th></th>
+			<th data-sorter="false"></th>
 		</tr>
 	</thead>
 	<tbody>

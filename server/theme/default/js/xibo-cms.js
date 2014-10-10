@@ -38,6 +38,44 @@ $(function() {
         even       : '', // odd row zebra striping
         odd        : ''  // even row zebra striping
     });
+
+    // add parser through the tablesorter addParser method
+    $.tablesorter.addParser({
+      // set a unique id
+      id: 'tickcross',
+      is: function() {
+        // return false so this parser is not auto detected
+        return false;
+      },
+      format: function(s, table, cell, cellIndex) {
+        return $(cell).html().toLowerCase()
+          .replace(/<span class="glyphicon glyphicon-ok"><\/span>/, 1)
+          .replace(/<span class="glyphicon glyphicon-remove"><\/span>/, 0);
+      },
+      type: 'numeric'
+    });
+    $.tablesorter.addParser({
+      // set a unique id
+      id: 'filesize',
+      is: function() {
+        // return false so this parser is not auto detected
+        return false;
+      },
+      format: function(s, table, cell, cellIndex) {
+        if (s.indexOf("k") > -1)
+            s = "B" + s;
+        else if (s.indexOf("M") > -1)
+            s = "C" + s;
+        else if (s.indexOf("G") > -1)
+            s = "D" + s;
+        else if (s.indexOf("T") > -1)
+            s = "E" + s;
+        else
+            s = "A" + s;
+        return s;
+      },
+      type: 'text'
+    });
 });
 
 $(document).ready(function() {

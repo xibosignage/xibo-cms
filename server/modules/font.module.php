@@ -73,7 +73,9 @@ class font extends Module
      */
     public function EditForm()
     {
-        return $this->EditFormForLibraryMedia();
+        $formFields = array();
+        $formFields[] = FormManager::AddMessage(__('Renaming a font will cause existing layouts that use the font to break. Please be cautious.'));
+        return $this->EditFormForLibraryMedia($formFields);
     }
 
     /**
