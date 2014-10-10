@@ -178,6 +178,6 @@ INSERT INTO `help` (`Topic`, `Category`, `Link`) VALUES
 ('DisplayProfile', 'Delete', 'manual/single.php?p=admin/displayprofiles#delete');
 
 
-UPDATE `version` SET `app_ver` = '1.7.0-alpha', `XmdsVersion` = 4;
+UPDATE `version` SET `app_ver` = '1.7.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2 ;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '80';

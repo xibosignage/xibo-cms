@@ -37,6 +37,7 @@ $rowClass = (Theme::Get('rowClass') != '') ? Theme::Get('rowClass') : '';
 			<?php foreach(Theme::Get('table_cols') as $col) { ?>
 			<th<?php if (isset($col['helpText']) && $col['helpText'] != '') { echo ' title="' . $col['helpText'] . '"'; } ?>><?php echo $col['title']; ?></th>
 			<?php } ?>
+			<th></th>
 		</tr>
 	</thead>
 	<tbody>

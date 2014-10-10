@@ -17,6 +17,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+$(function() {
+    // Configure the table sorter theme
+    $.extend($.tablesorter.themes.bootstrap, {
+        // these classes are added to the table. To see other table classes available,
+        // look here: http://twitter.github.com/bootstrap/base-css.html#tables
+        table      : 'table table-bordered',
+        caption    : 'caption',
+        header     : 'bootstrap-header', // give the header a gradient background
+        footerRow  : '',
+        footerCells: '',
+        icons      : '', // add "icon-white" to make them white; this icon class is added to the <i> in the header
+        sortNone   : 'bootstrap-icon-unsorted',
+        sortAsc    : 'glyphicon glyphicon-chevron-up',     // includes classes for Bootstrap v2 & v3
+        sortDesc   : 'glyphicon glyphicon-chevron-down', // includes classes for Bootstrap v2 & v3
+        active     : '', // applied when column is sorted
+        hover      : '', // use custom css here - bootstrap class may not override it
+        filterRow  : '', // filter row class
+        even       : '', // odd row zebra striping
+        odd        : ''  // even row zebra striping
+    });
+});
+
 $(document).ready(function() {
 
     // Code from: http://stackoverflow.com/questions/7585351/testing-for-console-log-statements-in-ie/7585409#7585409
@@ -140,9 +163,9 @@ function XiboInitialise(scope) {
     $(scope + ' .XiboAjaxSubmit').click(function(){
         
         $.ajax({
-            type: "post", 
-            url: $(this).attr("href") + "&ajax=true", 
-            cache:false, 
+            type: "post",
+            url: $(this).attr("href") + "&ajax=true",
+            cache:false,
             dataType:"json",
             success: XiboSubmitResponse
         });
@@ -271,7 +294,9 @@ function XiboGridRender(gridId){
                     $(sortingDiv).tablesorter({
                         sortList: sortOrder,
                         widthFixed: true,
-                        theme: 'blue'
+                        theme: 'bootstrap',
+                        widgets : [ "uitheme", "zebra" ],
+                        headerTemplate: '{content} {icon}',
                     });
                     
                     $(sortingDiv).on('sortEnd', function(e) { 
@@ -296,10 +321,14 @@ function XiboGridRender(gridId){
                     $("#XiboPager_" + gridId).show();
                     
                     $(sortingDiv + ".tablesorter").tablesorterPager({
-                       container: $("#XiboPager_" + gridId),
-                       positionFixed: false,
-                       page: pageNumber,
-                       size: response.pageSize
+                        container: $("#XiboPager_" + gridId),
+                        positionFixed: false,
+                        page: pageNumber,
+                        size: response.pageSize,
+                        // target the pager page select dropdown - choose a page
+                        cssGoto  : ".pagenum",
+                        removeRows: true,
+                        output: '{startRow} - {endRow} / {filteredRows} ({totalRows})'
                     });
                        
                     $(sortingDiv).on('pagerComplete', function(e,c) {

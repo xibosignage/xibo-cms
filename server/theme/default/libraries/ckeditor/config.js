@@ -42,7 +42,7 @@ CKEDITOR.editorConfig = function( config ) {
 	config.extraPlugins = 'iframe';
 
 	config.contentsCss = [ CKEDITOR.getUrl('contents.css'), '../../../../modules/preview/fonts.css' ];
-	/*REPLACE*/ var = font_names_in_here; /*ENDREPLACE*/
+	/*REPLACE*/ config.font_names = 'Nothing you could Do/Nothing you could Do;JustMeAgainDownHere/JustMeAgainDownHere;' + config.font_names; /*ENDREPLACE*/
 
 	// Change the allowed content behaviour
 	//config.extraAllowedContent = 'table[*]';

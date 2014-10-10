@@ -23,19 +23,17 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="pagination pull-right" id="<?php echo Theme::Get('pager_id'); ?>">
-    <form class="form-inline">
-        <span class="first glyphicon glyphicon-fast-backward"></span>
-        <span class="prev glyphicon glyphicon-step-backward"></span>
-        <input type="text" class="form-control pagedisplay"/>
-        <span class="next glyphicon glyphicon-step-forward"></span>
-        <span class="last glyphicon glyphicon-fast-forward"></span>
-        <select class="form-control pagesize input-mini">
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="30">30</option>
-            <option value="40">40</option>
-        </select>
-    </form>
+<div class="pagination form-inline" id="<?php echo Theme::Get('pager_id'); ?>">
+    <button type="button" class="btn first"><i class="icon-step-backward glyphicon glyphicon-step-backward"></i></button>
+    <button type="button" class="btn prev"><i class="icon-arrow-left glyphicon glyphicon-backward"></i></button>
+    <span class="pagedisplay"></span> <!-- this can be any element, including an input -->
+    <button type="button" class="btn next"><i class="icon-arrow-right glyphicon glyphicon-forward"></i></button>
+    <button type="button" class="btn last"><i class="icon-step-forward glyphicon glyphicon-step-forward"></i></button>
+    <select class="pagesize input-mini form-control" title="Select page size">
+        <option selected="selected" value="10">10</option>
+        <option value="20">20</option>
+        <option value="30">30</option>
+        <option value="40">40</option>
+    </select>
+    <select class="pagenum input-mini form-control" title="Select page number"></select>
 </div>
