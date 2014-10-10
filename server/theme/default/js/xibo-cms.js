@@ -54,6 +54,7 @@ $(function() {
       },
       type: 'numeric'
     });
+
     $.tablesorter.addParser({
       // set a unique id
       id: 'filesize',
@@ -76,6 +77,12 @@ $(function() {
       },
       type: 'text'
     });
+});
+
+// Set up the light boxes
+$(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
+    event.preventDefault();
+    $(this).ekkoLightbox();
 });
 
 $(document).ready(function() {

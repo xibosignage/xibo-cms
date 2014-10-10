@@ -399,7 +399,7 @@ class displayDAO extends baseDAO
             // Thumbnail
             $row['thumbnail'] = '';
             if ($filter_showThumbnail == 1 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
-                $row['thumbnail'] = '<img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '" />';
+                $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '" /></a>';
             }
 
             // Edit and Delete buttons first

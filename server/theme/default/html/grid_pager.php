@@ -30,6 +30,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     <button type="button" class="btn next"><i class="icon-arrow-right glyphicon glyphicon-forward"></i></button>
     <button type="button" class="btn last"><i class="icon-step-forward glyphicon glyphicon-step-forward"></i></button>
     <select class="pagesize input-mini form-control" title="Select page size">
+        <option value="5">5</option>
         <option selected="selected" value="10">10</option>
         <option value="20">20</option>
         <option value="30">30</option>
