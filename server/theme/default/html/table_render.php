@@ -30,11 +30,30 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 // Row class defined?
 $rowClass = (Theme::Get('rowClass') != '') ? Theme::Get('rowClass') : '';
+// Any buttons multi-select?
+$multiSelect = false;
+$multiSelectButtons = array();
+foreach(Theme::Get('table_rows') as $row) {
+	if (isset($row['buttons']) && is_array($row['buttons']) && count($row['buttons'] > 0)) {
+		foreach($row['buttons'] as $button) {
+			if (isset($button['multi-select']) && $button['multi-select']) {
+				$multiSelect = true;
+				if (!array_key_exists($button['id'], $multiSelectButtons)) {
+					$multiSelectButtons[$button['id']] = $button;
+				}
+			}
+		}
+	}
+}
 ?>
 <table class="table">
 	<thead>
 		<tr>
-			<?php foreach(Theme::Get('table_cols') as $col) { ?>
+			<?php if ($multiSelect) { ?><th data-sorter="false"><input type="checkbox"></th><?php } ?>
+			<?php foreach(Theme::Get('table_cols') as $col) { 
+				if (isset($col['hidden']) && $col['hidden'])
+					continue;
+			?>
 			<th<?php if (isset($col['helpText']) && $col['helpText'] != '') { echo ' title="' . $col['helpText'] . '"'; } ?><?php if (isset($col['icons']) && $col['icons']) { ?> data-sorter="tickcross"<?php } else if (isset($col['sorter']) && $col['sorter'] != '') { ?> data-sorter="<?php echo $col['sorter'] ?>"<?php } ?>><?php echo $col['title']; ?></th>
 			<?php } ?>
 			<th data-sorter="false"></th>
@@ -43,7 +62,11 @@ $rowClass = (Theme::Get('rowClass') != '') ? Theme::Get('rowClass') : '';
 	<tbody>
 		<?php foreach(Theme::Get('table_rows') as $row) { ?>
 		<tr<?php if ($rowClass != '') { echo ' class="' . $row[$rowClass] . '"';} ?>>
-			<?php foreach(Theme::Get('table_cols') as $col) { ?>
+			<?php if ($multiSelect) { ?><td><input type="checkbox"></td><?php } ?>
+			<?php foreach(Theme::Get('table_cols') as $col) { 
+				if (isset($col['hidden']) && $col['hidden'])
+					continue;
+			?>
 			<?php if (isset($col['icons']) && $col['icons']) { ?>
 			<td><span class="<?php echo ($row[$col['name']] == 1) ? 'glyphicon glyphicon-ok' : (($row[$col['name']] == 0) ? 'glyphicon glyphicon-remove' : 'glyphicon glyphicon-exclamation-sign'); ?>"></span></td>
 			<?php } else { ?>
@@ -62,9 +85,13 @@ $rowClass = (Theme::Get('rowClass') != '') ? Theme::Get('rowClass') : '';
 							if (isset($button['linkType']) && $button['linkType'] == 'divider') { ?>
 								<li class="divider"></li>
 							<?php } else if (isset($button['linkType']) && $button['linkType'] != '') { ?>
-								<li><a tabindex="-1" target="<?php echo $button['linkType']; ?>" href="<?php echo $button['url']; ?>"><?php echo $button['text']; ?></a></li>
+								<li class="<?php echo $button['id']; ?>"><a tabindex="-1" target="<?php echo $button['linkType']; ?>" href="<?php echo $button['url']; ?>"><?php echo $button['text']; ?></a></li>
 							<?php } else { ?>
-								<li class="<?php echo (isset($button['class']) ? $button['class'] : 'XiboFormButton'); ?>" href="<?php echo $button['url']; ?>"><a tabindex="-1" href="#"><?php echo $button['text']; ?></a></li>
+								<li <?php if (isset($button['dataAttributes']) && is_array($button['dataAttributes'])) {
+                                    foreach ($button['dataAttributes'] as $attribute) { 
+                                        echo 'data-' . $attribute['name'] . '="' . $attribute['value'] . '"'; 
+                                    }
+                                } ?>class="<?php echo (isset($button['class']) ? $button['class'] : 'XiboFormButton'); ?> <?php echo $button['id']; ?>" href="<?php echo $button['url']; ?>"><a tabindex="-1" href="#"><?php echo $button['text']; ?></a></li>
 							<?php } ?>
 						<?php } ?>
     				</ul>
@@ -75,3 +102,14 @@ $rowClass = (Theme::Get('rowClass') != '') ? Theme::Get('rowClass') : '';
 		<?php } ?>
 	</tbody>
 </table>
+<?php
+if ($multiSelect) {
+	echo Theme::Translate('With selected..');
+	// Get the buttons that are multi-select
+	foreach ($multiSelectButtons as $key => $button) {
+		?>
+		<div class="XiboMultiSelectFormButton" data-button-id="<?php echo $key; ?>"><a tabindex="-1" href="#"><?php echo $button['text']; ?></a></div>
+		<?php
+	}
+}
+?>

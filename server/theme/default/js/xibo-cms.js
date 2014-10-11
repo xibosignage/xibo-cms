@@ -162,6 +162,14 @@ function XiboInitialise(scope) {
         return false;
     });
 
+    // Search for any Buttons / Links on the page that are used to load forms
+    $(scope + " .XiboMultiSelectFormButton").click(function() {
+
+        XiboMultiSelectFormRender(this);
+
+        return false;
+    });
+
     // Search for any Buttons that redirect to another page
     $(scope + " .XiboRedirectButton").click(function() {
 
@@ -590,6 +598,144 @@ function XiboFormRender(formUrl, data) {
 
     // Dont then submit the link/button
     return false;
+}
+
+function XiboMultiSelectFormRender(button) {
+
+    var buttonId = $(button).data().buttonId;
+    var matches = [];
+
+    $("." + buttonId).each(function() {
+        if ($(this).closest('tr').find('input[type="checkbox"]').is(':checked')) {
+            // This particular button should be included.
+            matches.push($(this));
+        }
+    });
+
+    var message = translations.multiselectMessage.replace('%s', "" + matches.length);
+
+    // Open a Dialog containing all the items we have identified.
+    var dialog = bootbox.dialog({
+            message: message,
+            title: translations.multiselect,
+            animate: false
+        });
+
+    // Append a footer to the dialog
+    var dialogContent = dialog.find(".modal-body");
+    var footer = $("<div>").addClass("modal-footer");
+    dialog.find(".modal-content").append(footer);
+
+    // Add some buttons
+    var extrabutton;
+
+    if (matches.length > 0) {
+        extrabutton = $('<button class="btn">').html(translations.save).addClass('btn-primary save-button');
+        extrabutton.click(function() {
+
+            $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
+
+            // We want to submit each action in turn (we don't actually have a form token yet, so we need one)
+            $.get('index.php?p=index&q=GetFormToken', null, function(response) {
+                var token = $(response).val();
+                
+                // Create a new queue.
+                window.queue = $.jqmq({
+
+                    // Next item will be processed only when queue.next() is called in callback.
+                    delay: -1,
+
+                    // Process queue items one-at-a-time.
+                    batch: 1,
+
+                    // For each queue item, execute this function, making an AJAX request. Only
+                    // continue processing the queue once the AJAX request's callback executes.
+                    callback: function( item ) {
+                        var data = $(item).data();
+                        data.token = token;
+                        console.log(data);
+
+                        // Make an AJAX call
+                        $.ajax({
+                            type: "post",
+                            url: data.multiselectlink + "&ajax=true",
+                            cache: false,
+                            dataType: "json",
+                            data: data,
+                            success: function(response, textStatus, error) {
+
+                                if (response.success) {
+                                    token = $(response.nextToken).val();
+
+                                    dialogContent.append($("<div>").html(data.rowtitle + ": " + translations.success));
+
+                                    // Process the next item
+                                    queue.next();
+                                }
+                                else {
+                                    // Why did we fail?
+                                    if (response.login) {
+                                        // We were logged out
+                                        LoginBox(response.message);
+                                    }
+                                    else {
+                                        dialogContent.append($("<div>").html(data.rowtitle + ": " + translations.failure));
+
+                                        // Likely just an error that we want to report on
+                                        footer.find(".saving").remove();
+                                        SystemMessageInline(response.message, footer.closest(".modal"));
+                                    }
+                                }
+                            }
+                        });
+                    },
+                    // When the queue completes naturally, execute this function.
+                    complete: function() {
+                        // Remove the save button
+                        footer.find(".saving").parent().remove();
+
+                        // Refresh the grids
+                        // (this is a global refresh)
+                        $(" .XiboGrid").each(function(){
+
+                            var gridId = $(this).attr("id");
+
+                            // Render
+                            XiboGridRender(gridId);
+                        });
+                    }
+                });
+
+                // Add our selected items to the queue
+                $(matches).each(function() {
+                    queue.add(this);
+                });
+
+                queue.start();
+            });
+
+            // Keep the modal window open!
+            return false;
+        });
+
+        footer.append(extrabutton);
+    }
+
+    // Close button
+    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-default');
+    extrabutton.click(function() {
+
+        $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
+
+        // Do our thing
+        XiboDialogClose();
+
+        // Keep the modal window open!
+        return false;
+    });
+
+    footer.append(extrabutton);
+
 }
 
 /**

@@ -181,6 +181,22 @@ class Theme {
 		return $return;
 	}
 
+	public static function SetTranslation($key, $value) {
+		// Get existing translations
+		$translations = Theme::Get('translations');
+
+		if ($translations == '') {
+			$translations = array();
+		}
+		else {
+			$translations = json_decode($translations, true);
+		}
+
+		$translations[$key] = $value;
+
+		Theme::Set('translations', json_encode($translations));
+	}
+
 	public static function Prepare($string) {
 		return htmlspecialchars($string);
 	}

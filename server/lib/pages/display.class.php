@@ -359,21 +359,18 @@ class displayDAO extends baseDAO
                 array('name' => 'displayid', 'title' => __('ID')),
                 array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
                 array('name' => 'display', 'title' => __('Display')),
-                array('name' => 'description', 'title' => __('Description')),
-                array('name' => 'layout', 'title' => __('Default Layout')),
-                array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true),
-                array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true),
+                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showThumbnail == 1)),
+                array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showThumbnail == 1)),
+                array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1)),
+                array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1)),
                 array('name' => 'loggedin', 'title' => __('Logged In'), 'icons' => true),
                 array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
-                array('name' => 'clientaddress', 'title' => __('IP Address')),
-                array('name' => 'macaddress', 'title' => __('Mac Address'))
+                array('name' => 'clientaddress', 'title' => __('IP Address'), 'hidden' => ($filter_showThumbnail == 1)),
+                array('name' => 'macaddress', 'title' => __('Mac Address'), 'hidden' => ($filter_showThumbnail == 1)),
+                array('name' => 'screenShotRequested', 'title' => __('Screen shot?'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 0)),
+                array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($filter_showThumbnail == 0))
             );
         
-        if ($filter_showThumbnail == 1) {
-            $cols[] = array('name' => 'screenShotRequested', 'title' => __('Screen shot?'), 'icons' => true);
-            $cols[] = array('name' => 'thumbnail', 'title' => __('Thumbnail'));
-        }
-
         Theme::Set('table_cols', $cols);
         Theme::Set('rowClass', 'mediainventorystatus');
 

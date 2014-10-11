@@ -76,6 +76,3 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<?php echo Theme::Get('layout_designer_editor'); ?>
 	</div>
 </div>
-<script type="text/javascript">
-var translations = <?php echo Theme::Get('translations'); ?>;
-</script>

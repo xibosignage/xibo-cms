@@ -264,5 +264,10 @@ class indexDAO extends baseDAO {
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }
+
+    function GetFormToken() {
+        echo Kit::Token();
+        exit();
+    }
 }
 ?>

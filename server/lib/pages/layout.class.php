@@ -172,7 +172,7 @@ class layoutDAO extends baseDAO
                 Theme::Set('layouts', $this->user->LayoutList());
 
 				// Set up any JavaScript translations
-   				Theme::Set('translations', json_encode(array('save_position_button' => __('Save Position'))));
+   				Theme::SetTranslation('save_position_button', __('Save Position'));
 
                 // Call the render the template
                 Theme::Render('layout_designer');
@@ -505,8 +505,14 @@ class layoutDAO extends baseDAO
                     $row['buttons'][] = array(
                             'id' => 'layout_button_delete',
                             'url' => 'index.php?p=layout&q=DeleteLayoutForm&layoutid=' . $layout['layoutid'],
-                            'text' => __('Delete')
-                        );              
+                            'text' => __('Delete'),
+                            'multi-select' => true,
+                            'dataAttributes' => array(
+                                array('name' => 'multiselectlink', 'value' => 'index.php?p=layout&q=delete'),
+                                array('name' => 'rowtitle', 'value' => $row['layout']),
+                                array('name' => 'layoutid', 'value' => $layout['layoutid'])
+                            )
+                        );
                 }
 
                 // Export Button

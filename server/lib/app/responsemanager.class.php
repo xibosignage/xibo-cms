@@ -54,6 +54,7 @@ class ResponseManager
 	public $focusInFirstInput;
     public $appendHiddenSubmit;
     public $modal;
+    public $nextToken;
 	
 	public $login;
 	public $clockUpdate;
@@ -199,7 +200,7 @@ class ResponseManager
 		$this->message			= $message;
 		$this->refresh			= $refresh;
 		$this->refreshLocation 	= $refreshLocation;
-		
+		$this->nextToken = Kit::Token();	
 		return;
 	}
 	
@@ -317,6 +318,7 @@ class ResponseManager
 			$response['refreshLocation']= $this->refreshLocation;
 			$response['focusInFirstInput']= $this->focusInFirstInput;
 			$response['modal'] = $this->modal;
+			$response['nextToken'] = $this->nextToken;
 			
 			// Login
 			$response['login']			= $this->login;
