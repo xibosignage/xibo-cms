@@ -593,7 +593,7 @@ class campaignDAO extends baseDAO
     public function SetMembers()
     {
         // Check the token
-        if (!Kit::CheckToken())
+        if (!Kit::CheckToken('assign_token'))
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
@@ -646,10 +646,10 @@ class campaignDAO extends baseDAO
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="LayoutAssignView">');
-        Theme::Set('pager', ResponseManager::Pager($id, 'form_grid_pager'));
+        Theme::Set('pager', ResponseManager::Pager($id, 'grid_pager'));
         
         // Get the currently assigned layouts and put them in the "well"
-        // // Layouts in group
+        // Layouts in group
         $SQL  = "SELECT layout.Layoutid, ";
         $SQL .= "       layout.layout, ";
         $SQL .= "       CONCAT('LayoutID_', layout.LayoutID) AS list_id ";
@@ -669,11 +669,17 @@ class campaignDAO extends baseDAO
 
         Debug::LogEntry('audit', count($layoutsAssigned) . ' layouts assigned already');
 
+        $formFields = array();
+        $formFields[] = FormManager::AddText('filter_name', __('Name'), NULL, NULL, 'l');
+        Theme::Set('form_fields', $formFields);
+
         // Set the layouts assigned
         Theme::Set('layouts_assigned', $layoutsAssigned);
+        Theme::Set('append', Theme::RenderReturn('campaign_form_layout_assign'));
 
         // Call to render the template
-        $output = Theme::RenderReturn('campaign_form_layout_assign');
+        Theme::Set('header_text', __('Choose Layouts'));
+        $output = Theme::RenderReturn('grid_render');
 
         // Construct the Response
         $response->html = $output;
@@ -706,12 +712,24 @@ class campaignDAO extends baseDAO
         // Get a list of media
         $layoutList = $user->LayoutList(NULL, array('layout' => $name));
 
+        $cols = array(
+                array('name' => 'layout', 'title' => __('Name'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         // Add some extra information
         foreach ($layoutList as $row) {
 
             $row['list_id'] = 'LayoutID_' . $row['layoutid'];
+            $row['assign_icons'][] = array(
+                    'assign_icons_class' => 'layout_assign_list_select'
+                );
+            $row['dataAttributes'] = array(
+                    array('name' => 'rowid', 'value' => $row['list_id']),
+                    array('name' => 'litext', 'value' => $row['layout'])
+                );
 
             $rows[] = $row;
         }
@@ -719,7 +737,7 @@ class campaignDAO extends baseDAO
         Theme::Set('table_rows', $rows);
 
         // Render the Theme
-        $response->SetGridResponse(Theme::RenderReturn('campaign_form_layout_assign_list'));
+        $response->SetGridResponse(Theme::RenderReturn('table_render'));
         $response->callBack = 'LayoutAssignCallback';
         $response->pageSize = 5;
         $response->Respond();

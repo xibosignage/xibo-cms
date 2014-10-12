@@ -314,7 +314,7 @@ class layoutDAO extends baseDAO
         else 
         {
             // Retire the layout
-            Theme::Set('form_action', 'index.php?p=layout&q=retire');
+            Theme::Set('form_action', 'index.php?p=layout&q=Retire');
             Theme::Set('form_fields', array(FormManager::AddMessage(__('Sorry unable to delete this layout. Would you like to retire this layout instead?'))));
         }
 
@@ -325,6 +325,30 @@ class layoutDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#LayoutDeleteForm").submit()');
+        $response->Respond();
+    }
+
+    public function RetireForm() {
+        $response = new ResponseManager();
+        
+        $layoutid = $this->layoutid;
+
+        if (!$this->auth->edit)
+            trigger_error(__('You do not have permissions to retire this layout'), E_USER_ERROR);
+        
+        Theme::Set('form_id', 'RetireForm');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
+        
+        // Retire the layout
+        Theme::Set('form_action', 'index.php?p=layout&q=Retire');
+        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to retire this layout ?'))));
+
+        $form = Theme::RenderReturn('form_render');
+        
+        $response->SetFormRequestResponse($form, __('Retire Layout'), '300px', '200px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Retire') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#RetireForm").submit()');
         $response->Respond();
     }
 
@@ -352,27 +376,22 @@ class layoutDAO extends baseDAO
         $response->SetFormSubmitResponse(__('The Layout has been Deleted'));
         $response->Respond();
     }
-    
+
     /**
-     * Retire a Layout
-     * @return 
+     * Retires a layout 
      */
-    function retire() 
-    {
+    function Retire() {
         // Check the token
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $db =& $this->db;
         $response = new ResponseManager();
         $layoutId = Kit::GetParam('layoutid', _POST, _INT, 0);
 
-        // Permission to retire?
-        if (!$this->auth->del)
-            trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
+        if (!$this->auth->edit)
+            trigger_error(__('You do not have permission to retire this layout'), E_USER_ERROR);
 
-        // Action the retire
-        $layoutObject = new Layout($db);
+        $layoutObject = new Layout();
 
         if (!$layoutObject->Retire($layoutId))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
@@ -460,23 +479,7 @@ class layoutDAO extends baseDAO
             $row['layout_form_edit_url'] = 'index.php?p=layout&q=displayForm&layoutid=' . $layout['layoutid'];
 
             // Add some buttons for this row
-            // Schedule Now
-            $row['buttons'][] = array(
-                    'id' => 'layout_button_schedulenow',
-                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $layout['campaignid'],
-                    'text' => __('Schedule Now')
-                );
-
-            $row['buttons'][] = array(
-                    'id' => 'layout_button_preview',
-                    'linkType' => '_blank',
-                    'url' => 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layout['layoutid'],
-                    'text' => __('Preview Layout')
-                );
-
-            // Only proceed if we have edit permissions
             if ($layout['edit']) {
-
                 // Design Button
                 $row['buttons'][] = array(
                         'id' => 'layout_button_design',
@@ -484,6 +487,27 @@ class layoutDAO extends baseDAO
                         'url' => 'index.php?p=layout&modify=true&layoutid=' . $layout['layoutid'],
                         'text' => __('Design')
                     );
+            }
+
+            // Preview
+            $row['buttons'][] = array(
+                    'id' => 'layout_button_preview',
+                    'linkType' => '_blank',
+                    'url' => 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layout['layoutid'],
+                    'text' => __('Preview Layout')
+                );
+
+            // Schedule Now
+            $row['buttons'][] = array(
+                    'id' => 'layout_button_schedulenow',
+                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $layout['campaignid'],
+                    'text' => __('Schedule Now')
+                );
+
+            $row['buttons'][] = array('linkType' => 'divider');
+
+            // Only proceed if we have edit permissions
+            if ($layout['edit']) {
 
                 // Edit Button
                 $row['buttons'][] = array(
@@ -497,6 +521,19 @@ class layoutDAO extends baseDAO
                         'id' => 'layout_button_copy',
                         'url' => 'index.php?p=layout&q=CopyForm&layoutid=' . $layout['layoutid'] . '&oldlayout=' . $layout['layout'],
                         'text' => __('Copy')
+                    );
+
+                // Retire Button
+                $row['buttons'][] = array(
+                        'id' => 'layout_button_retire',
+                        'url' => 'index.php?p=layout&q=RetireForm&layoutid=' . $layout['layoutid'],
+                        'text' => __('Retire'),
+                        'multi-select' => true,
+                        'dataAttributes' => array(
+                            array('name' => 'multiselectlink', 'value' => 'index.php?p=layout&q=Retire'),
+                            array('name' => 'rowtitle', 'value' => $row['layout']),
+                            array('name' => 'layoutid', 'value' => $layout['layoutid'])
+                        )
                     );
 
                 // Extra buttons if have delete permissions
@@ -514,6 +551,8 @@ class layoutDAO extends baseDAO
                             )
                         );
                 }
+
+                $row['buttons'][] = array('linkType' => 'divider');
 
                 // Export Button
                 $row['buttons'][] = array(
@@ -540,6 +579,7 @@ class layoutDAO extends baseDAO
 
         // Store the table rows
         Theme::Set('table_rows', $rows);
+        Theme::Set('gridId', Kit::GetParam('gridId', _REQUEST, _STRING));
 
         // Initialise the theme and capture the output
         $output = Theme::RenderReturn('table_render');

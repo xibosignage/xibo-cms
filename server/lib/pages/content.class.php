@@ -301,7 +301,7 @@ class contentDAO extends baseDAO {
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryAssignView">');
-        Theme::Set('pager', ResponseManager::Pager($id, 'form_grid_pager'));
+        Theme::Set('pager', ResponseManager::Pager($id, 'grid_pager'));
         
         // Module types filter
         $modules = $this->user->ModuleAuth(0, '', 1);

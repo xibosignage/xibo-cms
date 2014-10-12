@@ -19,18 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+Kit::ClassLoader('campaign');
 
 class Layout extends Data
 {
     private $xml;
     private $DomXml;
-
-    public function  __construct($db)
-    {
-        Kit::ClassLoader('campaign');
-
-        parent::__construct($db);
-    }
 
     /**
      * Add a layout

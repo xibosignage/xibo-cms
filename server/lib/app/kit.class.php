@@ -590,7 +590,7 @@ class Kit
 	* Creates a form token
 	* @return 
 	*/
-	public static function Token($tokenName = "token")
+	public static function Token($tokenName = "token", $withInput = true)
 	{
 		//Store in the users session
 		$token = md5(uniqid() . SECRET_KEY . time());
@@ -598,7 +598,10 @@ class Kit
 		$_SESSION[$tokenName] = $token;
 		$_SESSION[$tokenName.'_timeout'] = time();
 		
-		return '<input type="hidden" name="' . $tokenName . '" value="' . $token . '">';
+		if ($withInput)
+			return '<input type="hidden" name="' . $tokenName . '" value="' . $token . '">';
+		else
+			return $token;
 	}
 
 	/**

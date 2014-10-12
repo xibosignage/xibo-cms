@@ -265,8 +265,13 @@ class indexDAO extends baseDAO {
         $response->Respond();
     }
 
-    function GetFormToken() {
-        echo Kit::Token();
+    function ExchangeGridTokenForFormToken() {
+
+        // Check our grid token against the one provided.
+        if (!Kit::CheckToken('gridToken'))
+            die(__('Sorry the form has expired. Please refresh.'));
+
+        echo Kit::Token('token', false);
         exit();
     }
 }

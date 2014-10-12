@@ -284,7 +284,7 @@ function XiboInitialise(scope) {
  * Renders any Xibo Grids that are detected
  * @param {Object} gridId
  */
-function XiboGridRender(gridId){
+function XiboGridRender(gridId) {
 
     // Grid ID tells us which grid we need to render
     var gridDiv     = '#' + gridId;
@@ -299,7 +299,7 @@ function XiboGridRender(gridId){
         type: "post",
         url: "index.php?ajax=true",
         dataType: "json",
-        data: filter.serialize(),
+        data: filter.serialize() + "&gridId=" + gridId,
         success: function(response) {
 
             // Remove the spinner
@@ -395,6 +395,19 @@ function XiboGridRender(gridId){
             else {
                 $("#XiboPager_" + gridId).hide();
             }
+
+            // Multi-select check box
+            $(outputDiv).find(".selectAllCheckbox").click(function() {
+                // Are we checked?
+                if ($(this).is(":checked")) {
+                    // Check all children
+                    $("#" + gridId + " .XiboData td input[type='checkbox']").prop("checked", true);
+                }
+                else {
+                    // Un-check all children
+                    $("#" + gridId + " .XiboData td input[type='checkbox']").prop("checked", false);
+                }
+            });
 
             return false;
         }
@@ -501,7 +514,7 @@ function XiboFormRender(formUrl, data) {
                         $(response.sortingDiv, dialog).tablesorter({
                             sortList: [[0, 0]],
                             widthFixed: true
-                        })
+                        });
                     }
                 }
 
@@ -603,6 +616,8 @@ function XiboFormRender(formUrl, data) {
 function XiboMultiSelectFormRender(button) {
 
     var buttonId = $(button).data().buttonId;
+    var gridToken = $(button).data().gridToken;
+    var gridId = $(button).data().gridId;
     var matches = [];
 
     $("." + buttonId).each(function() {
@@ -612,7 +627,12 @@ function XiboMultiSelectFormRender(button) {
         }
     });
 
-    var message = translations.multiselectMessage.replace('%s', "" + matches.length);
+    var message;
+
+    if (matches.length > 0)
+        message = translations.multiselectMessage.replace('%1', "" + matches.length).replace("%2", $(button).find("a").html());
+    else
+        message = translations.multiselectNoItemsMessage;
 
     // Open a Dialog containing all the items we have identified.
     var dialog = bootbox.dialog({
@@ -636,8 +656,9 @@ function XiboMultiSelectFormRender(button) {
             $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
 
             // We want to submit each action in turn (we don't actually have a form token yet, so we need one)
-            $.get('index.php?p=index&q=GetFormToken', null, function(response) {
-                var token = $(response).val();
+            $.post('index.php?p=index&q=ExchangeGridTokenForFormToken', { gridToken: gridToken, ajax: true}, function(response) {
+
+                var token = response;
                 
                 // Create a new queue.
                 window.queue = $.jqmq({
@@ -653,7 +674,6 @@ function XiboMultiSelectFormRender(button) {
                     callback: function( item ) {
                         var data = $(item).data();
                         data.token = token;
-                        console.log(data);
 
                         // Make an AJAX call
                         $.ajax({

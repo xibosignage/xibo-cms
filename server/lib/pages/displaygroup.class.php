@@ -672,7 +672,7 @@ class displaygroupDAO extends baseDAO
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="displaygroup"><input type="hidden" name="q" value="FileAssociationsView"><input type="hidden" name="displaygroupid" value="' . $displayGroupId . '">');
-        Theme::Set('pager', ResponseManager::Pager($id, 'form_grid_pager'));
+        Theme::Set('pager', ResponseManager::Pager($id, 'grid_pager'));
         
         // Module types filter
         $modules = $this->user->ModuleAuth(0, '', -1);
