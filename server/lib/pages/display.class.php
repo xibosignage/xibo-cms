@@ -34,7 +34,7 @@ class displayDAO extends baseDAO
         $displayid      = Kit::GetParam('displayid', _REQUEST, _INT, 0);
 
         // validate displays so we get a realistic view of the table
-        $this->validateDisplays();
+        Display::ValidateDisplays();
     }
 
     /**
@@ -225,8 +225,8 @@ class displayDAO extends baseDAO
                     __('Do you want to be notified by email if there is a problem with this display?'), 
                     'a');
 
-        $formFields[] = FormManager::AddNumber('alert_timeout', __('Alert Timeout'), $displayObject->alertTimeout, 
-            __('How long in minutes after the display last connected to the webservice should we send an alert. Set this value higher than the collection interval on the client. Set to 0 to use global default.'), 
+        $formFields[] = FormManager::AddCheckbox('alert_timeout', __('Use the Global Timeout?'), $displayObject->alertTimeout, 
+            __('Should this display be tested against the global time out or the client collection interval?'), 
             'o');
 
         Theme::Set('form_fields_maintenance', $formFields);
@@ -358,7 +358,7 @@ class displayDAO extends baseDAO
         $cols = array(
                 array('name' => 'displayid', 'title' => __('ID')),
                 array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
-                array('name' => 'display', 'title' => __('Display')),
+                array('name' => 'displayWithLink', 'title' => __('Display')),
                 array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showThumbnail == 1)),
                 array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showThumbnail == 1)),
                 array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1)),
@@ -384,7 +384,7 @@ class displayDAO extends baseDAO
                 if ($linkTarget == '')
                     $linkTarget = '_top';
 
-                $row['display'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . Theme::Prepare($row['display']) . '</a>', $row['clientaddress']);
+                $row['displayWithLink'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . Theme::Prepare($row['display']) . '</a>', $row['clientaddress']);
             }
 
             // Format last accessed
@@ -451,7 +451,13 @@ class displayDAO extends baseDAO
                 $row['buttons'][] = array(
                         'id' => 'display_button_requestScreenShot',
                         'url' => 'index.php?p=display&q=RequestScreenShotForm&displayId=' . $row['displayid'],
-                        'text' => __('Request Screen Shot')
+                        'text' => __('Request Screen Shot'),
+                        'multi-select' => true,
+                        'dataAttributes' => array(
+                            array('name' => 'multiselectlink', 'value' => 'index.php?p=display&q=RequestScreenShot'),
+                            array('name' => 'rowtitle', 'value' => $row['display']),
+                            array('name' => 'displayId', 'value' => $row['displayid'])
+                        )
                     );
 
                 $row['buttons'][] = array('linkType' => 'divider');
@@ -521,51 +527,6 @@ class displayDAO extends baseDAO
 
         $response->SetGridResponse($output);
         $response->Respond();
-    }
-
-    /**
-     * Assess each Display to correctly set the logged in flag based on last accessed time
-     * @return
-     */
-    function validateDisplays()
-    {
-        $db =& $this->db;
-
-        // Get the global timeout (overrides the alert timeout on the display if 0
-        $globalTimeout = Config::GetSetting('MAINTENANCE_ALERT_TOUT');
-
-        // Get a list of all displays and there last accessed / alert timeout value
-        $SQL  = "";
-        $SQL .= "SELECT displayid, lastaccessed, alert_timeout FROM display ";
-
-        if (!$result =$db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Unable to access displays'), E_USER_ERROR);
-        }
-
-        // Look through each display
-        while($row = $db->get_assoc_row($result))
-        {
-            $displayid    = Kit::ValidateParam($row['displayid'], _INT);
-            $lastAccessed = Kit::ValidateParam($row['lastaccessed'], _INT);
-            $alertTimeout = Kit::ValidateParam($row['alert_timeout'], _INT);
-
-            // Do we need to update the logged in light?
-            $timeoutToTestAgainst = ($alertTimeout == 0) ? $globalTimeout : $alertTimeout;
-
-            // If the last time we accessed is less than now minus the timeout
-            if ($lastAccessed < time() - ($timeoutToTestAgainst * 60))
-            {
-                // Update the display and set it as logged out
-                $SQL = "UPDATE display SET loggedin = 0 WHERE displayid = " . $displayid;
-
-                if ((!$db->query($SQL)))
-                    trigger_error($db->error());
-
-                Debug::LogEntry('audit', sprintf('LastAccessed = %d, Timeout = %d for displayId %d', $lastAccessed, $timeoutToTestAgainst, $displayid));
-            }
-        }
     }
 
     /**

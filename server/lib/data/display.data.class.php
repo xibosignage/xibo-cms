@@ -63,6 +63,7 @@ class Display extends Data {
     public $screenShotRequested;
 
     public $displayGroupId;
+    private $_config;
     
     public function Load() {
         try {
@@ -656,7 +657,128 @@ class Display extends Data {
         
             return false;
         }
+    }
 
+    public function GetSetting($key, $default) {
+
+        if (!$this->SetConfig())
+            return false;
+
+        // Find
+        $return = $default;
+        foreach($this->_config as $row) {
+            if ($row['name'] == $key || ucfirst($row['name']) == $key) {
+
+                $return = $row['value'];
+                break;
+            }
+        }
+
+        return $return;
+    }
+
+    private function SetConfig() {
+        if ($this->_config == null) {
+            try {
+                $dbh = PDOConnect::init();
+
+                $params = array();
+            
+                if ($this->displayProfileId == 0) {
+                    $sthDisplayProfile = $dbh->prepare('SELECT name, config FROM `displayprofile` WHERE type = :type AND isdefault = 1');
+                    $params['type'] = $this->clientType;
+                }
+                else {
+                    $sthDisplayProfile = $dbh->prepare('SELECT name, config FROM `displayprofile` WHERE displayprofileid = :displayprofileid');
+                    $params['displayprofileid'] = $this->displayProfileId;
+                }
+            
+                $sthDisplayProfile->execute($params);
+    
+                if ($row = $sthDisplayProfile->fetch()) {
+                    // Load the config and inject the display name
+                    $this->_config = json_decode(Kit::ValidateParam($row['config'], _HTMLSTRING), true);
+                }
+                else
+                    $this->ThrowError(__('Error loading client config'));  
+            }
+            catch (Exception $e) {
+                
+                Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            
+                if (!$this->IsError())
+                    $this->SetError(1, __('Unknown Error'));
+            
+                return false;
+            }
+        }
+    }
+    /**
+     * Assess each Display to correctly set the logged in flag based on last accessed time
+     * @return
+     */
+    public static function ValidateDisplays() {
+        // Maintain an array of timed out displays
+        $timedOutDisplays = array();
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Get a list of all displays and there last accessed / alert timeout value
+            $sth = $dbh->prepare('SELECT displayid, display, lastaccessed, alert_timeout, client_type, displayprofileid, email_alert, loggedin FROM display');
+            $sthUpdate = $dbh->prepare('UPDATE display SET loggedin = 0 WHERE displayid = :displayid');
+            
+            $sth->execute(array());
+
+            // Get the global timeout (overrides the alert timeout on the display if 0)
+            $globalTimeout = Config::GetSetting('MAINTENANCE_ALERT_TOUT') * 60;
+        
+            $displays = $sth->fetchAll();
+
+            foreach ($displays as $row) {
+                $displayid = Kit::ValidateParam($row['displayid'], _INT);
+                $lastAccessed = Kit::ValidateParam($row['lastaccessed'], _INT);
+                $alertTimeout = Kit::ValidateParam($row['alert_timeout'], _INT);
+                $clientType = Kit::ValidateParam($row['client_type'], _WORD);
+
+                // Get the config object
+                if ($alertTimeout == 0) {
+                    $displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
+
+                    $display = new Display();
+                    $display->displayId = $displayid;
+                    $display->displayProfileId = $displayProfileId;
+                    $display->clientType = $clientType;
+                    $timeoutToTestAgainst = $display->GetSetting('collectInterval', $globalTimeout);
+                }
+                else {
+                    $timeoutToTestAgainst = $globalTimeout;
+                }
+
+                // Store the time out to test against
+                $row['timeout'] = $timeoutToTestAgainst;
+    
+                // If the last time we accessed is less than now minus the time out
+                if ($lastAccessed < time() - ($timeoutToTestAgainst * 60)) {
+                    // Update the display and set it as logged out
+                    $sthUpdate->execute(array('displayid' => $displayid));
+
+                    // Store this row
+                    $timedOutDisplays[] = $row;
+                }
+            }
+
+            return $timedOutDisplays;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
     }
 
     /**
