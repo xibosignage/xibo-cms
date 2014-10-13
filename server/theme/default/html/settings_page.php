@@ -124,6 +124,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                 <?php } // End for loop ?>
             </div>
         </div>
-        <button class="btn btn-save btn-block btn-success" title="<?php echo Theme::Translate('Save Settings'); ?>" href="#" onclick="$('#<?php echo Theme::Get('form_id'); ?>').submit()"><span><?php echo Theme::Translate('Save'); ?></span></button>
+        <button class="btn btn-save btn-block btn-success" title="<?php echo Theme::Translate('Save Settings'); ?>" href="#"><span><?php echo Theme::Translate('Save'); ?></span></button>
     </form>
 </div>

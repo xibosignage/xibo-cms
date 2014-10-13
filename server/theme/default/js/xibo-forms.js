@@ -372,3 +372,12 @@ var FileAssociationsSubmit = function(displayGroupId)
 var forecastIoFormSetup = function() {
     $('#color').colorpicker();
 };
+
+var settingsUpdated = function(response) {
+    if (response.success) {
+        $("#SettingsForm input[name='token']").val($(response.nextToken).val());
+    }
+    else {
+        SystemMessage((response.message == "") ? translation.failure : response.message, true);
+    }
+};

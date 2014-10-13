@@ -46,16 +46,8 @@ require_once("config/db_config.php");
  *  a) This is a first time install
  *  b) This is a corrupt or failed install
  */
-if (!file_exists("settings.php")) 
-{
-	Kit::Redirect("install.php");
-	die();
-}
-
-if (file_exists("upgrade.php"))
-{
-    Kit::Redirect("upgrade.php");
-    die();
+if (!file_exists("settings.php") || file_exists("upgrade.php")) {
+	die('Unable to run due to installation issue.');
 }
 
 // parse and init the settings.php
