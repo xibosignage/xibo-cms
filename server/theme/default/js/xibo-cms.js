@@ -748,7 +748,7 @@ function XiboMultiSelectFormRender(button) {
         $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
 
         // Do our thing
-        XiboDialogClose();
+        dialog.modal('hide');
 
         // Keep the modal window open!
         return false;

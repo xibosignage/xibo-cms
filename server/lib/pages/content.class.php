@@ -258,7 +258,7 @@ class contentDAO extends baseDAO {
 		$response = new ResponseManager();
 		
 		// Get a list of the enabled modules and then create buttons for them
-		if (!$enabledModules = new ModuleManager($db, $user, 0, '', -1)) 
+		if (!$enabledModules = new ModuleManager($user, 0, '', -1)) 
             trigger_error($enabledModules->message, E_USER_ERROR);
 		
 		$buttons = array();

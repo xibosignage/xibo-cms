@@ -22,7 +22,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class ModuleManager
 {
-    private $db;
     private $user;
     
     public $message;
@@ -34,13 +33,11 @@ class ModuleManager
     /**
      * Constructs the Module Manager.
      * @return 
-     * @param $db Object
      * @param $user Object
      */
-    public function __construct(database $db, User $user, $regionSpecific = -1, $module = '', $assignable = 1)
+    public function __construct(User $user, $regionSpecific = -1, $module = '', $assignable = 1)
     {
-        $this->db       =& $db;
-        $this->user     =& $user;
+        $this->user =& $user;
             
         if (!$this->theMenu = $user->ModuleAuth($regionSpecific, $module, $assignable))
         {

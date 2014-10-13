@@ -336,10 +336,16 @@ class Session {
      * @param type $secondKey
      * @return boolean
      */
-    public static function Get($key, $secondKey)
+    public static function Get($key, $secondKey = NULL)
     {
-        if (isset($_SESSION[$key][$secondKey]))
-            return $_SESSION[$key][$secondKey];
+    	if ($secondKey != NULL) {
+        	if (isset($_SESSION[$key][$secondKey]))
+	            return $_SESSION[$key][$secondKey];
+	    }
+	    else {
+	    	if (isset($_SESSION[$key]))
+	            return $_SESSION[$key];	
+	    }
         
         return false;
     }        

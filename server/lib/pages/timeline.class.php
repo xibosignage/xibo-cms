@@ -648,31 +648,7 @@ class timelineDAO extends baseDAO {
         $response->Respond();
     }
 
-    /**
-     * Shows the TimeLine
-     */
-    public function Timeline()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ResponseManager();
-        $response->html = '';
-
-        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
-        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
-
-        // Make sure we have permission to edit this region
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
-        if (!$regionAuth->edit)
-            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
-
-        // Library location
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
-
+    private function ThemeSetModuleButtons($layoutId, $regionId) {
         // Present a canvas with 2 columns, left column for the media icons
         $buttons = array();
 
@@ -684,7 +660,7 @@ class timelineDAO extends baseDAO {
             );
 
         // Get a list of the enabled modules and then create buttons for them
-        if (!$enabledModules = new ModuleManager($db, $user))
+        if (!$enabledModules = new ModuleManager($this->user))
             trigger_error($enabledModules->message, E_USER_ERROR);
 
         // Loop through the buttons we have and output each one
@@ -705,13 +681,46 @@ class timelineDAO extends baseDAO {
         }
 
         Theme::Set('media_buttons', $buttons);
-        
+    }
+
+    public function TimeLine() {
+        if ($this->user->GetPref('timeLineView') == 'grid')
+            $this->TimeLineGrid();
+        else
+            $this->TimeLineList();
+    }
+
+    /**
+     * Shows the TimeLine
+     */
+    public function TimelineList()
+    {
+        $db =& $this->db;
+        $user =& $this->user;
+        $user->SetPref('timeLineView', 'list');
+        $response = new ResponseManager();
+        $response->html = '';
+
+        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
+        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
+
+        // Make sure we have permission to edit this region
+        Kit::ClassLoader('region');
+        $region = new region($db);
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+
         $response->html .= '<div class="container-fluid">';
         $response->html .= '<div class="row">';
+        // Set the theme module buttons
+        $this->ThemeSetModuleButtons($layoutId, $regionId);
         $response->html .= Theme::RenderReturn('layout_designer_form_timeline');
 
         // Load the XML for this layout and region, we need to get the media nodes.
-        // These form the timeline and go in the right column
+        // These form the time line and go in the right column
 
         // Generate an ID for the list (this is passed into the reorder function)
         $timeListMediaListId = uniqid('timelineMediaList_');
@@ -836,10 +845,194 @@ class timelineDAO extends baseDAO {
         $response->focusInFirstInput = false;
 
         // Add some buttons
+        $response->AddButton(__('Save Order'), 'XiboTimelineSaveOrder("' . $timeListMediaListId . '","' . $layoutId . '","' . $regionId . '")');
+        $response->AddButton(__('Switch to Grid'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineGrid&layoutid=' . $layoutId . '&regionid=' . $regionId . '")');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'RegionOptions') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
-        $response->AddButton(__('Save Order'), 'XiboTimelineSaveOrder("' . $timeListMediaListId . '","' . $layoutId . '","' . $regionId . '")');
 
+        $response->Respond();
+    }
+
+    /**
+     * Timeline in Grid mode
+     */
+    public function TimelineGrid() {
+        $user =& $this->user;
+        $user->SetPref('timeLineView', 'grid');
+        $response = new ResponseManager();
+        $response->html = '';
+
+        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
+        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
+
+        // Make sure we have permission to edit this region
+        Kit::ClassLoader('region');
+        $region = new Region();
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+
+        // Set the theme module buttons
+        $this->ThemeSetModuleButtons($layoutId, $regionId);
+
+        $id = uniqid();
+        Theme::Set('prepend', '<div class="row">' . Theme::RenderReturn('layout_designer_form_timeline') . '<div class="col-md-10">');
+        Theme::Set('append', '</div></div>');
+        Theme::Set('header_text', __('Media'));
+        Theme::Set('id', $id);
+        Theme::Set('form_fields', array());
+        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
+        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="timeline">
+            <input type="hidden" name="q" value="TimelineGridView">
+            <input type="hidden" name="layoutid" value="' . $layoutId . '">
+            <input type="hidden" name="regionid" value="' . $regionId . '">');
+        
+        // Call to render the template
+        $response->html = Theme::RenderReturn('grid_render');
+
+        // Finish constructing the response
+        $response->dialogClass = 'modal-big';
+        $response->dialogTitle  = __('Region Timeline');
+        $response->dialogSize   = true;
+        $response->dialogWidth  = '1000px';
+        $response->dialogHeight = '550px';
+        $response->focusInFirstInput = false;
+
+        // Add some buttons
+        $response->AddButton(__('Switch to List'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineList&layoutid=' . $layoutId . '&regionid=' . $regionId . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'RegionOptions') . '")');
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
+
+    public function TimelineGridView() {
+
+        $user =& $this->user;
+        $response = new ResponseManager();
+        
+        $layoutId = Kit::GetParam('layoutid', _POST, _INT);
+        $regionId = Kit::GetParam('regionid', _POST, _STRING);
+
+        // Make sure we have permission to edit this region
+        Kit::ClassLoader('region');
+        $region = new Region();
+        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+
+        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        if (!$regionAuth->edit)
+            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+
+        // Load the XML for this layout and region, we need to get the media nodes.
+        $region = new Region();
+
+        $cols = array(
+                array('name' => 'order', 'title' => __('Order')),
+                array('name' => 'name', 'title' => __('Name')),
+                array('name' => 'type', 'title' => __('Type')),
+                array('name' => 'duration', 'title' => __('Duration')),
+                array('name' => 'transition', 'title' => __('Transition'))
+            );
+        Theme::Set('table_cols', $cols);
+
+        $rows = array();
+        $i = 0;
+
+        foreach($region->GetMediaNodeList($layoutId, $regionId) as $mediaNode) {
+            // Construct an object containing all the layouts, and pass to the theme
+            $row = array();
+
+            // Put this node vertically in the region time line
+            $mediaId = $mediaNode->getAttribute('id');
+            $lkId = $mediaNode->getAttribute('lkid');
+            $mediaType = $mediaNode->getAttribute('type');
+            $mediaDuration = $mediaNode->getAttribute('duration');
+            $ownerId = $mediaNode->getAttribute('userId');
+
+            // Permissions for this assignment
+            $auth = $user->MediaAssignmentAuth($ownerId, $layoutId, $regionId, $mediaId, true);
+
+            // Skip over media assignments that we do not have permission to see
+            if (!$auth->view)
+                continue;
+
+            $i++;
+
+            // Create a media module to handle all the complex stuff
+            require_once("modules/$mediaType.module.php");
+            $tmpModule = new $mediaType($this->db, $this->user, $mediaId, $layoutId, $regionId, $lkId);
+
+            $mediaName = $tmpModule->GetName();
+            $row['order'] = $i;
+            $row['name'] = (($mediaName == '') ? __($tmpModule->displayType) : $mediaName);
+            $row['type'] = __($tmpModule->displayType);
+            $row['duration'] = sprintf('%d seconds', $mediaDuration);
+            $row['transition'] = sprintf('%s / %s', $tmpModule->GetTransition('in'), $tmpModule->GetTransition('out'));
+
+            if ($auth->edit) {
+                $row['buttons'][] = array(
+                        'id' => 'timeline_button_edit',
+                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'text' => __('Edit')
+                    );
+            }
+
+            if ($auth->del) {
+                $row['buttons'][] = array(
+                        'id' => 'timeline_button_delete',
+                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=DeleteForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'text' => __('Remove'),
+                        'multi-select' => true,
+                        'dataAttributes' => array(
+                            array('name' => 'multiselectlink', 'value' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=DeleteMedia'),
+                            array('name' => 'rowtitle', 'value' => $row['name']),
+                            array('name' => 'layoutid', 'value' => $layoutId),
+                            array('name' => 'regionid', 'value' => $regionId),
+                            array('name' => 'mediaid', 'value' => $mediaId),
+                            array('name' => 'lkid', 'value' => $lkId),
+                            array('name' => 'options', 'value' => 'unassign')
+                        )
+                    );
+            }
+
+            if ($auth->modifyPermissions) {
+                $row['buttons'][] = array(
+                        'id' => 'timeline_button_permissions',
+                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'text' => __('Permissions')
+                    );
+            }
+
+            if (count($this->user->TransitionAuth('in')) > 0) {
+                $row['buttons'][] = array(
+                        'id' => 'timeline_button_trans_in',
+                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'text' => __('In Transition')
+                    );
+            }
+
+            if (count($this->user->TransitionAuth('out')) > 0) {
+                $row['buttons'][] = array(
+                        'id' => 'timeline_button_trans_in',
+                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=out&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'text' => __('Out Transition')
+                    );
+            }
+
+            $rows[] = $row;
+        }
+
+        // Store the table rows
+        Theme::Set('table_rows', $rows);
+        Theme::Set('gridId', Kit::GetParam('gridId', _REQUEST, _STRING));
+
+        // Initialise the theme and capture the output
+        $output = Theme::RenderReturn('table_render');
+        
+        $response->SetGridResponse($output);
+        $response->initialSortColumn = 1;
         $response->Respond();
     }
 

@@ -20,8 +20,7 @@
  */
  defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
- class User 
- {
+class User {
     private $db;
         
     public $userid;
@@ -1157,7 +1156,7 @@ END;
 
             // Authenticate the assignment (if not null already)
             if ($layoutItem['lklayoutmediaid'] != 0) {
-                $assignmentAuth = $this->MediaAssignmentAuth($layoutItem['mediaownerid'], $layoutItem['layoutid'], $layoutItem['regionid'], $filterMediaId, true);
+                $assignmentAuth = $this->MediaAssignmentAuth($layoutItem['mediaownerid'], $layoutItem['layoutid'], $layoutItem['regionid'], Kit::GetParam('mediaId', $filter_by, _INT, 0), true);
 
                 // If we get here and the user does not have assess to this region assignment, don't add this row
                 if (!$assignmentAuth->del)
@@ -1904,6 +1903,16 @@ END;
         
             return false;
         }
+    }
+
+    public function GetPref($key, $default = NULL) {
+        $storedValue = Session::Get($key);
+
+        return ($storedValue == NULL) ? $default : $storedValue;
+    }
+
+    public function SetPref($key, $value) {
+        Session::Set($key, $value);
     }
 }
 ?>
