@@ -607,7 +607,7 @@ class Layout extends Data
                 if ($this->IsRegionSpecific($type))
                 {
                     // Generate a new media id
-                    $newMediaId = md5(uniqid());
+                    $newMediaId = md5(Kit::uniqid());
                     
                     $mediaNode->setAttribute('id', $newMediaId);
     

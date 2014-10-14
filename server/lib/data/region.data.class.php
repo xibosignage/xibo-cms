@@ -92,7 +92,7 @@ class Region extends Data
 
         //Do we have a region ID provided?
         if ($regionid == '')
-            $regionid = uniqid();
+            $regionid = Kit::uniqid();
 
         // Validation
 		if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))

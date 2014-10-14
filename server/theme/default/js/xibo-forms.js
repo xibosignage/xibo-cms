@@ -353,7 +353,7 @@ var FileAssociationsCallback = function()
     });
 
     $("#FileAssociationsSortable").sortable().disableSelection();
-}
+};
 
 var FileAssociationsSubmit = function(displayGroupId)
 {
