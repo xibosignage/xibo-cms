@@ -31,10 +31,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 // Row class defined?
 $rowClass = (Theme::Get('rowClass') != '') ? Theme::Get('rowClass') : '';
 // Any buttons multi-select?
+$hasButtons = false;
 $multiSelect = false;
 $multiSelectButtons = array();
 foreach(Theme::Get('table_rows') as $row) {
     if (isset($row['buttons']) && is_array($row['buttons']) && count($row['buttons'] > 0)) {
+        $hasButtons = true;
         foreach($row['buttons'] as $button) {
             if (isset($button['multi-select']) && $button['multi-select']) {
                 $multiSelect = true;
@@ -56,7 +58,9 @@ foreach(Theme::Get('table_rows') as $row) {
             ?>
             <th<?php if (isset($col['helpText']) && $col['helpText'] != '') { echo ' title="' . $col['helpText'] . '"'; } ?><?php if (isset($col['icons']) && $col['icons']) { ?> data-sorter="tickcross"<?php } else if (isset($col['sorter']) && $col['sorter'] != '') { ?> data-sorter="<?php echo $col['sorter'] ?>"<?php } ?>><?php echo $col['title']; ?></th>
             <?php } ?>
+            <?php if ($hasButtons) { ?>
             <th data-sorter="false"></th>
+            <?php } ?>
         </tr>
     </thead>
     <tbody>

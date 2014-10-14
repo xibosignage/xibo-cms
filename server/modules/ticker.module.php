@@ -287,7 +287,10 @@ class ticker extends Module
             $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_edit'));
 
             $formFields['advanced'][] = FormManager::AddText('allowedAttributes', __('Allowable Attributes'), $this->GetOption('allowedAttributes'), 
-                __('A comma separated list of attributes that should not be stripped from the incoming feed.'), 's');
+                __('A comma separated list of attributes that should not be stripped from the incoming feed.'), '');
+
+            $formFields['advanced'][] = FormManager::AddText('stripTags', __('Strip Tags'), $this->GetOption('stripTags'), 
+                __('A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.'), '');
         }
 
         // Get the text out of RAW
@@ -528,6 +531,7 @@ class ticker extends Module
         $this->SetOption('itemsPerPage', $itemsPerPage);
         $this->SetOption('dateFormat', Kit::GetParam('dateFormat', _POST, _STRING));
         $this->SetOption('allowedAttributes', Kit::GetParam('allowedAttributes', _POST, _STRING));
+        $this->SetOption('stripTags', Kit::GetParam('stripTags', _POST, _STRING));
         
         // Text Template
         $this->SetRaw('<template><![CDATA[' . $text . ']]></template><css><![CDATA[' . $css . ']]></css>');
@@ -780,6 +784,10 @@ class ticker extends Module
         $attrsStrip = array_diff($feed->strip_attributes, explode(',', $this->GetOption('allowedAttributes')));
         //Debug::Audit(var_export($attrsStrip, true));
         $feed->strip_attributes($attrsStrip);
+
+        // Get a list of tags to strip
+        $tagsStrip = array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags')));
+        $feed->strip_htmltags($tagsStrip);
 
         // Init
         $feed->init();
