@@ -36,7 +36,7 @@ div#loader {
     position: relative;
     margin:0 auto;
     top: 80%;
-    background:#000000 url('loader.gif') no-repeat center center;
+    background:#000000 url('../../../modules/preview/loader.gif') no-repeat center center;
     background-size: 100%;
 }
 

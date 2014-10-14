@@ -152,8 +152,8 @@ class Theme {
 	}
 
 	/**
-	 * Get an image URL
-	 * @param [string] $item the image
+	 * Get Item Path
+	 * @param string $item The Item required
 	 */
 	public static function ItemPath($item) {
 

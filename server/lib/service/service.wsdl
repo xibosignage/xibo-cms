@@ -31,8 +31,8 @@
         <part name="hardwareKey" type="xsd:string" />
         <part name="fileId" type="xsd:int" />
         <part name="fileType" type="xsd:string" />
-        <part name="chunkOffset" type="xsd:int" />
-        <part name="chuckSize" type="xsd:int" />
+        <part name="chunkOffset" type="xsd:double" />
+        <part name="chuckSize" type="xsd:double" />
         <part name="version" type="xsd:string" />
     </message>
     <message name="GetFileResponse">
