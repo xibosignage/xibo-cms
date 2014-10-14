@@ -152,6 +152,26 @@ class Theme {
 	}
 
 	/**
+	 * Get an image URL
+	 * @param [string] $item the image
+	 */
+	public static function ItemPath($item) {
+
+		$theme = Theme::GetInstance();
+		
+		// See if we have the requested file in the theme folder
+		if (file_exists('theme/' . $theme->name . '/' . $item)) {
+			return 'theme/' . $theme->name . '/' . $item;
+		}
+		// If not, then use the default folder
+		elseif (file_exists('theme/default/' . $item)) {
+			return 'theme/default/' . $item;
+		}
+		else
+			return '';
+	}
+
+	/**
 	 * Translate a string into the user language
 	 * @param string $string The String to Translate
 	 * @param array $args   Variables to insert (will replace %d %s in order)

@@ -26,7 +26,7 @@ div#screen {
 /* Style the Splash Screen */
 div#splash {
     height: 100%;
-    background:#000000 url('../../theme/default/img/xibologo.png') no-repeat center center;
+    background:#000000 url('../img/xibologo.png') no-repeat center center;
     background-size: 50%;
 }
 
