@@ -986,6 +986,11 @@ END;
                 'r');
         }
 
+        $formFields[] = FormManager::AddCheckbox('deleteOldVersion', __('Delete the old version.'), 
+                ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0), 
+                __('Completely remove the old version of this media item if a new file is being uploaded.'), 
+                '');
+
         // Add in any extra form fields we might have provided by the super-class
         if ($extraFormFields != NULL && is_array($extraFormFields)) {
             foreach($extraFormFields as $field) {
@@ -1092,7 +1097,6 @@ END;
         }
 
         // Hand off to the media module
-        Kit::ClassLoader('media');
         $mediaObject = new Media($db);
 
         // Stored As from the XML
@@ -1123,10 +1127,7 @@ END;
             }            	
 
             // Are we on a region
-            if ($regionid != '')
-            {
-                Kit::ClassLoader('layoutmediagroupsecurity');
-
+            if ($regionid != '') {
                 $security = new LayoutMediaGroupSecurity($db);
                 $security->Copy($layoutid, $regionid, $mediaid, $new_mediaid);
             }
@@ -1183,6 +1184,12 @@ END;
         if (Kit::GetParam('replaceInLayouts', _POST, _CHECKBOX) == 1)
             $this->ReplaceMediaInAllLayouts($mediaid, $this->mediaid, $this->duration);
 
+        // Do we need to delete the old media item?
+        if ($tmpName != '' && Kit::GetParam('deleteOldVersion', _POST, _CHECKBOX) == 1) {
+            if (!$mediaObject->Delete($mediaid))
+                $this->response->message .= ' ' . __('Failed to remove old media');
+        }
+        
         return $this->response;
     }
 

@@ -332,8 +332,6 @@ class Media extends Data
     {
         Debug::LogEntry('audit', 'IN', 'Media', 'Delete');
         
-        Kit::ClassLoader('lkmediadisplaygroup');
-
         try {
             $dbh = PDOConnect::init();
         
@@ -359,7 +357,6 @@ class Media extends Data
             $fileName = Kit::ValidateParam($row['StoredAs'], _STRING);
     
             // Remove permission assignments
-            Kit::ClassLoader('mediagroupsecurity');
             $security = new MediaGroupSecurity($this->db);
     
             if (!$security->UnlinkAll($mediaId))
