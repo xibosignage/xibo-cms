@@ -1121,6 +1121,22 @@ END;
         if (Kit::GetParam('tags', $filter_by, _STRING) != '')
             $SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $this->db->escape_string(Kit::GetParam('tags', $filter_by, _STRING))) . "%' ";
         
+        // Show All, Used or UnUsed
+        if (Kit::GetParam('filterLayoutStatusId', $filter_by, _INT, 1) != 1)  {
+            if (Kit::GetParam('filterLayoutStatusId', $filter_by, _INT) == 2) {
+                // Only show used layouts
+                $SQL .= ' AND ('
+                    . '     campaign.CampaignID IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
+                    . '     OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) ' 
+                    . ' ) ';
+            }
+            else {
+                // Only show unused layouts
+                $SQL .= ' AND campaign.CampaignID NOT IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
+                    . ' AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) ';
+            }
+        }
+
         // Sorting?
         if (is_array($sort_order))
             $SQL .= 'ORDER BY ' . implode(',', $sort_order);

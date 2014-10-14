@@ -104,6 +104,7 @@ class layoutDAO extends baseDAO
                     $tags = Session::Get('layout', 'filter_tags');
                     $retired = Session::Get('layout', 'filter_retired');
                     $owner = Session::Get('layout', 'filter_userid');
+                    $filterLayoutStatusId = Session::Get('layout', 'filterLayoutStatusId');
                     $pinned = 1;
                 }
                 else {
@@ -111,6 +112,7 @@ class layoutDAO extends baseDAO
                     $tags = NULL;
                     $retired = 0;
                     $owner = NULL;
+                    $filterLayoutStatusId = 1;
                     $pinned = 0;
                 }
                 
@@ -142,6 +144,19 @@ class layoutDAO extends baseDAO
                     'retired',
                     NULL, 
                     'r');
+                $formFields[] = FormManager::AddCombo(
+                    'filterLayoutStatusId', 
+                    __('Show'), 
+                    $filterLayoutStatusId,
+                    array(
+                        array('filterLayoutStatusId' => 1, 'filterLayoutStatus' => __('All')),
+                        array('filterLayoutStatusId' => 2, 'filterLayoutStatus' => __('Only Used')),
+                        array('filterLayoutStatusId' => 3, 'filterLayoutStatus' => __('Only Unused'))
+                        ),
+                    'filterLayoutStatusId',
+                    'filterLayoutStatus',
+                    NULL, 
+                    's');
                 $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
                     $pinned, NULL, 
                     'k');
@@ -421,6 +436,10 @@ class layoutDAO extends baseDAO
         // Show retired
         $filter_retired = Kit::GetParam('filter_retired', _POST, _INT);
         setSession('layout', 'filter_retired', $filter_retired);
+
+        // Show filterLayoutStatusId
+        $filterLayoutStatusId = Kit::GetParam('filterLayoutStatusId', _POST, _INT);
+        setSession('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
         
         // Tags list
         $filter_tags = Kit::GetParam("filter_tags", _POST, _STRING);
@@ -430,7 +449,7 @@ class layoutDAO extends baseDAO
         setSession('layout', 'LayoutFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         
         // Get all layouts
-        $layouts = $user->LayoutList(NULL, array('layout' => $name, 'userId' => $filter_userid, 'retired' => $filter_retired, 'tags' => $filter_tags));
+        $layouts = $user->LayoutList(NULL, array('layout' => $name, 'userId' => $filter_userid, 'retired' => $filter_retired, 'tags' => $filter_tags, 'filterLayoutStatusId' => $filterLayoutStatusId));
 
         if (!is_array($layouts))
             trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
