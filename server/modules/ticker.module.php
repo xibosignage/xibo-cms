@@ -285,6 +285,9 @@ class ticker extends Module
             Theme::Set('substitutions', $subs);
 
             $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_edit'));
+
+            $formFields['advanced'][] = FormManager::AddText('allowedAttributes', __('Allowable Attributes'), $this->GetOption('allowedAttributes'), 
+                __('A comma separated list of attributes that should not be stripped from the incoming feed.'), 's');
         }
 
         // Get the text out of RAW
@@ -524,6 +527,7 @@ class ticker extends Module
         $this->SetOption('ordering', $ordering);
         $this->SetOption('itemsPerPage', $itemsPerPage);
         $this->SetOption('dateFormat', Kit::GetParam('dateFormat', _POST, _STRING));
+        $this->SetOption('allowedAttributes', Kit::GetParam('allowedAttributes', _POST, _STRING));
         
         // Text Template
         $this->SetRaw('<template><![CDATA[' . $text . ']]></template><css><![CDATA[' . $css . ']]></css>');
@@ -629,7 +633,6 @@ class ticker extends Module
         // Information from the Module
         $direction = $this->GetOption('direction');
         $scrollSpeed = $this->GetOption('scrollSpeed');
-        $fitText = $this->GetOption('fitText', 0);
         $itemsSideBySide = $this->GetOption('itemsSideBySide', 0);
         $duration = $this->duration;
         $durationIsPerItem = $this->GetOption('durationIsPerItem', 0);
@@ -772,7 +775,16 @@ class ticker extends Module
         $feed->force_feed(true);
         $feed->set_cache_duration(($this->GetOption('updateInterval', 3600) * 60));
         $feed->handle_content_type();
+
+        // Get a list of allowed attributes
+        $attrsStrip = array_diff($feed->strip_attributes, explode(',', $this->GetOption('allowedAttributes')));
+        //Debug::Audit(var_export($attrsStrip, true));
+        $feed->strip_attributes($attrsStrip);
+
+        // Init
         $feed->init();
+
+        $dateFormat = $this->GetOption('dateFormat');
 
         if ($feed->error()) {
             Debug::LogEntry('audit', 'Feed Error: ' . $feed->error());
@@ -829,7 +841,7 @@ class ticker extends Module
                             break;
 
                         case '[Date]':
-                            $replace = ($this->GetOption('dateFormat') == '') ? $item->get_local_date() : $item->get_date($this->GetOption('dateFormat'));
+                            $replace = ($dateFormat == '') ? $item->get_local_date() : $item->get_date($dateFormat);
                             break;
 
                         case '[PermaLink]':
