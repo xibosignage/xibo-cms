@@ -303,41 +303,19 @@ class layoutDAO extends baseDAO
         if (!$this->auth->del)
             trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
         
-        // Are we going to be able to delete this?
-        Kit::ClassLoader('campaign');
-        $campaign = new Campaign($db);
-        $campaignId = $campaign->GetCampaignId($layoutid);
-
-        // Has it been scheduled?
-        $SQL = sprintf("SELECT CampaignID FROM schedule WHERE CampaignID = %d", $campaignId);
-        
-        if (!$results = $db->query($SQL)) 
-        {
-            trigger_error($db->error());
-            trigger_error(__("Can not get layout information"), E_USER_ERROR);
-        }
-
         Theme::Set('form_id', 'LayoutDeleteForm');
+        Theme::Set('form_action', 'index.php?p=layout&q=delete');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
-        
-        if ($db->num_rows($results) == 0) 
-        {
-            // Delete the layout
-            Theme::Set('form_action', 'index.php?p=layout&q=delete');
-            Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this layout? All media will be unassigned. Any layout specific media such as text/rss will be lost.'))));
-        }
-        else 
-        {
-            // Retire the layout
-            Theme::Set('form_action', 'index.php?p=layout&q=Retire');
-            Theme::Set('form_fields', array(FormManager::AddMessage(__('Sorry unable to delete this layout. Would you like to retire this layout instead?'))));
-        }
-
+        Theme::Set('form_fields', array(
+            FormManager::AddMessage(__('Are you sure you want to delete this layout?')),
+            FormManager::AddMessage(__('All media will be unassigned and any layout specific media such as text/rss will be lost. The layout will be removed from all Schedules.')),
+            ));
 
         $form = Theme::RenderReturn('form_render');
         
         $response->SetFormRequestResponse($form, __('Delete Layout'), '300px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Delete') . '")');
+        $response->AddButton(__('Retire'), 'XiboSwapDialog("index.php?p=layout&q=RetireForm&layoutid=' . $layoutid . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#LayoutDeleteForm").submit()');
         $response->Respond();
@@ -362,6 +340,7 @@ class layoutDAO extends baseDAO
         
         $response->SetFormRequestResponse($form, __('Retire Layout'), '300px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Retire') . '")');
+        $response->AddButton(__('Delete'), 'XiboSwapDialog("index.php?p=layout&q=DeleteLayoutForm&layoutid=' . $layoutid . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#RetireForm").submit()');
         $response->Respond();
@@ -376,14 +355,13 @@ class layoutDAO extends baseDAO
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $db =& $this->db;
         $response = new ResponseManager();
         $layoutId = Kit::GetParam('layoutid', _POST, _INT, 0);
 
         if (!$this->auth->del)
             trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
 
-        $layoutObject = new Layout($db);
+        $layoutObject = new Layout();
 
         if (!$layoutObject->Delete($layoutId))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);

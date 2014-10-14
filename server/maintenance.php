@@ -50,6 +50,11 @@ if (!file_exists("settings.php") || file_exists("upgrade.php")) {
 	die('Unable to run due to installation issue.');
 }
 
+// Define an auto-load function
+spl_autoload_register(function ($class) {
+    Kit::ClassLoader($class);
+});
+
 // parse and init the settings.php
 Config::Load();
 

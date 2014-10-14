@@ -97,11 +97,13 @@ class Campaign extends Data {
                 throw new Exception(__('Unable to Unlink'));
 
             // Remove all permissions
-            Kit::ClassLoader('campaignsecurity');
             $security = new CampaignSecurity($this->db);
 
             if (!$security->UnlinkAll($campaignId))
                 throw new Exception(__('Unable to set permissions'));
+
+            // Remove from all Schedules
+            Schedule::DeleteScheduleForCampaign($campaignId);
 
             // Delete from the Campaign
             $sth = $dbh->prepare('DELETE FROM `campaign` WHERE CampaignID = :campaignid');

@@ -81,11 +81,10 @@ if (file_exists("upgrade.php")) {
 //parse and init the settings.xml
 Config::Load();
 
-//create a DB
-$db = new database();
-
-if (!$db->connect_db($dbhost, $dbuser, $dbpass)) trigger_error($db->error(), E_USER_ERROR);
-if (!$db->select_db($dbname)) trigger_error($db->error(), E_USER_ERROR);
+// Define an auto-load function
+spl_autoload_register(function ($class) {
+    Kit::ClassLoader($class);
+});
 
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));

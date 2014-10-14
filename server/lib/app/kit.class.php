@@ -408,7 +408,7 @@ class Kit
 	}
 
         /**
-         * Ensures a the relevant file for a class is inclued
+         * Ensures a the relevant file for a class is included
          * @param <string> $class
          * @return <boolean> False on failure
          */

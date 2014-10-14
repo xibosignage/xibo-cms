@@ -112,6 +112,11 @@ date_default_timezone_set(Config::GetSetting("defaultTimezone"));
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));
 
+// Define an auto-load function
+spl_autoload_register(function ($class) {
+    Kit::ClassLoader($class);
+});
+
 // Define the VERSION
 Config::Version();
 

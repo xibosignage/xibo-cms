@@ -27,8 +27,6 @@ class displayDAO extends baseDAO
         $this->db   =& $db;
         $this->user =& $user;
 
-        Kit::ClassLoader('Display');
-
         $this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
         $this->ajax     = Kit::GetParam('ajax', _REQUEST, _WORD, 'false');
         $displayid      = Kit::GetParam('displayid', _REQUEST, _INT, 0);
