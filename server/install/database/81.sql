@@ -1,20 +1,11 @@
-INSERT INTO  `setting` (
-`setting` ,
-`value` ,
-`fieldType` ,
-`helptext` ,
-`options` ,
-`cat` ,
-`userChange` ,
-`title` ,
-`validation` ,
-`ordering` ,
-`default` ,
-`userSee` ,
-`type`
-)
+INSERT INTO  `setting` (`setting` ,`value` ,`fieldType` ,`helptext` ,`options` ,`cat` ,`userChange` ,`title` ,`validation` ,`ordering` ,`default` ,`userSee` ,`type`)
 VALUES (
  'DATE_FORMAT',  'Y-m-d',  'text',  'The Date Format to use when displaying dates in the CMS.', NULL ,  'regional',  '1',  'Date Format',  'required',  '30',  'Y-m-d',  '1',  'string'
+);
+
+INSERT INTO  `setting` (`setting` ,`value` ,`fieldType` ,`helptext` ,`options` ,`cat` ,`userChange` ,`title` ,`validation` ,`ordering` ,`default` ,`userSee` ,`type`)
+VALUES (
+ 'DETECT_LANGUAGE',  '1',  'checkbox',  'Detect the browser language?', NULL ,  'regional',  '1',  'Detect Language',  '',  '40',  '1',  '1',  'checkbox'
 );
 
 ALTER TABLE  `media` ADD  `is_module` TINYINT NOT NULL DEFAULT  '0';

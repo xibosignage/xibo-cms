@@ -36,7 +36,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         </div>
         <div class="btn-group pull-right xibo-calendar-controls">
             <button type="button" class="btn btn-primary" data-calendar-nav="prev"><span class="glyphicon glyphicon-backward"></span> <?php echo Theme::Translate('Prev'); ?></button>
-            <button type="button" class="btn btn-default" data-calendar-nav="today">Today</button>
+            <button type="button" class="btn btn-default" data-calendar-nav="today"><?php echo Theme::Translate('Today'); ?></button>
             <button type="button" class="btn btn-primary" data-calendar-nav="next"><?php echo Theme::Translate('Next'); ?> <span class="glyphicon glyphicon-forward"></span></button>
         </div>
         <div class="btn-group pull-right xibo-calendar-controls">

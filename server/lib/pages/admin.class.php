@@ -153,8 +153,7 @@ class adminDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
-        Kit::ClassLoader('setting');
-        $data = new Setting($this->db);
+        $data = new Setting();
 
         // Get all of the settings in an array
         $settings = Config::GetAll(NULL, array('userChange' => 1, 'userSee' => 1));

@@ -34,6 +34,7 @@ Theme::SetTranslation('failure', Theme::Translate('Failure'));
             </div>
         </div>
         </div>
+        </div>
 
 		<script src="theme/default/libraries/jquery/jquery-1.11.1.min.js"></script>
 		<script src="theme/default/libraries/jquery/jquery.validate.min.js"></script>
@@ -41,6 +42,7 @@ Theme::SetTranslation('failure', Theme::Translate('Failure'));
         <script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
         <script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>
         <script src="theme/default/libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+        <?php echo Theme::Script('libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.' . TranslationEngine::GetJsLocale() . '.js'); ?>
         <script src="theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.min.js"></script>
         <script src="theme/default/libraries/jquery-tablesorter/addons/pager/jquery.tablesorter.pager.min.js"></script>
 		<script src="theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.widgets.min.js"></script>
@@ -50,7 +52,8 @@ Theme::SetTranslation('failure', Theme::Translate('Failure'));
         <script src="theme/default/libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.js"></script>
         <script src="theme/default/libraries/underscore/underscore-min.js"></script>
         <script src="theme/default/libraries/jstimezonedetect/jstz.min.js"></script>
-    	<script src="theme/default/libraries/calendar/js/calendar.js"></script>
+        <script src="theme/default/libraries/calendar/js/calendar.js"></script>
+        <?php echo Theme::Script('libraries/calendar/js/language/' . TranslationEngine::GetJsLocale() . '.js'); ?>
         <script src="theme/default/libraries/ckeditor/ckeditor.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootstrap-ckeditor-fix.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/tmpl.min.js"></script>
@@ -73,6 +76,7 @@ Theme::SetTranslation('failure', Theme::Translate('Failure'));
     	<script src="theme/default/js/xibo-datasets.js"></script>
         <script type="text/javascript">
         var translations = <?php echo ((Theme::Get('translations') == '') ? '{}' : Theme::Get('translations')); ?>;
+        var language = "<?php echo TranslationEngine::GetJsLocale(); ?>";
         </script>
 	</body>
 </html>

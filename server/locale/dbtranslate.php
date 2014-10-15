@@ -112,6 +112,10 @@ echo __('Status Dashboard Widget');
 echo __('Proxy URL');
 echo __('Proxy Port');
 echo __('Proxy Credentials');
+echo __('Date Format');
+echo __('The Date Format to use when displaying dates in the CMS.');
+echo __('Detect language?');
+echo __('Detect the browser language?');
 
 
 // Transitions

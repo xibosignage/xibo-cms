@@ -27,85 +27,86 @@ $stream = '';
  
 class TranslationEngine
 {	
+    private static $locale;
+    private static $jsLocale;
+
 	/**
 	 * Gets and Sets the Local 
 	 * @return 
 	 */
 	public static function InitLocale($language = NULL)
 	{
-            $localeDir	= 'locale';
-            $default = ($language == NULL) ? Config::GetSetting('DEFAULT_LANGUAGE') : $language;
-            
-            global $transEngine;
-            global $stream;
+        $localeDir	= 'locale';
+        $default = ($language == NULL) ? Config::GetSetting('DEFAULT_LANGUAGE') : $language;
+        
+        global $transEngine;
+        global $stream;
 
-            //Debug::LogEntry('audit', 'IN', 'TranslationEngine', 'InitLocal');
+        //Debug::LogEntry('audit', 'IN', 'TranslationEngine', 'InitLocal');
+        // Build an array of supported languages
+        $supportedLangs = scandir($localeDir);
 
-            // Try to get the local firstly from _REQUEST (post then get)
-            $lang = Kit::GetParam('lang', _REQUEST, _WORD, '');
+        // Try to get the local firstly from _REQUEST (post then get)
+        $lang = Kit::GetParam('lang', _REQUEST, _WORD, '');
 
-            // Build an array of supported languages
-            $supportedLangs = scandir($localeDir);
+        // If we don't have a language, try from HTTP accept
+        if ($lang == '' && Config::GetSetting('DETECT_LANGUAGE') == 1) {
+            $langs = Kit::GetParam('HTTP_ACCEPT_LANGUAGE', $_SERVER, _STRING);
 
-            if ($lang != '')
-            {
-                // Set the language
-                //Debug::LogEntry('audit', 'Set the Language from REQUEST [' . $lang . ']', 'TranslationEngine', 'InitLocal');
+            if ($langs != '') {
+                Debug::LogEntry('audit', ' HTTP_ACCEPT_LANGUAGE [' . $langs . ']', 'TranslationEngine', 'InitLocal');
+                $langs = explode(',', $langs);
 
-                // Is this language supported?
-                // if not just use the default (eb_GB).
-                if (!in_array($lang . '.mo', $supportedLangs))
-                {
-                    trigger_error(sprintf('Language not supported. %s', $lang));
+                foreach ($langs as $lang) {
+                    // Remove any quality rating (as we aren't interested)
+                    $rawLang = explode(';', $lang);
+                    $lang = str_replace('-', '_', $rawLang[0]);
 
-                    // Use the default language instead.
-                    $lang = $default;
-                }
-            }
-            else
-            {
-                $langs = Kit::GetParam('HTTP_ACCEPT_LANGUAGE', $_SERVER, _STRING);
-
-                if ($langs != '')
-                {
-                    //Debug::LogEntry('audit', ' HTTP_ACCEPT_LANGUAGE [' . $langs . ']', 'TranslationEngine', 'InitLocal');
-                    $langs = explode(',', $langs);
-
-                    foreach ($langs as $lang)
-                    {
-                        // Remove any quality rating (as we aren't interested)
-                        $rawLang = explode(';', $lang);
-                        $lang = str_replace("-", "_", $rawLang[0]);
-
-                        if (in_array($lang . '.mo', $supportedLangs))
-                        {
-                            //Debug::LogEntry('audit', 'Obtained the Language from HTTP_ACCEPT_LANGUAGE [' . $lang . ']', 'TranslationEngine', 'InitLocal');
-                            break;
-                        }
-
-                        // Set lang as the default
-                        $lang = $default;
+                    if (in_array($lang . '.mo', $supportedLangs)) {
+                        //Debug::LogEntry('audit', 'Obtained the Language from HTTP_ACCEPT_LANGUAGE [' . $lang . ']', 'TranslationEngine', 'InitLocal');
+                        break;
                     }
-                }
-                else
-                {
+
+                    // Set lang as the default
                     $lang = $default;
                 }
             }
+        }
 
-            // We have the language
-            //Debug::LogEntry('audit', 'Creating new file streamer for '. $localeDir . '/' . $lang . '.mo', 'TranslationEngine', 'InitLocal');
+        // Are we still empty?
+        if ($lang == '')
+            $lang = $default;
 
-            if (!$stream = new CachedFileReader($localeDir . '/' . $lang . '.mo'))
-            {
-                trigger_error('Unable to translate this language');
-                $transEngine = false;
-                
-                return;
-            }
+        // Sanitize it
+        $lang = str_replace('-', '_', $lang);
+        $jsLang = str_replace('_', '-', $lang);
 
-            $transEngine    = new gettext_reader($stream);
+        // Check its valid
+        if (!in_array($lang . '.mo', $supportedLangs)) {
+            trigger_error(sprintf('Language not supported. %s', $lang));
+
+            // Fall back
+            $lang = 'en_GB';
+        }
+
+        //Debug::LogEntry('audit', 'Creating new file streamer for '. $localeDir . '/' . $lang . '.mo', 'TranslationEngine', 'InitLocal');
+        if (!$stream = new CachedFileReader($localeDir . '/' . $lang . '.mo')) {
+            $transEngine = false;
+            return;
+        }
+
+        $transEngine = new gettext_reader($stream);
+        self::$locale = $lang;
+        self::$jsLocale = str_replace('_', '-', $lang);
 	}
+
+    public static function GetLocale() {
+        return self::$locale;
+    }
+
+    public static function GetJsLocale() {
+        return self::$jsLocale;
+    }
 }
 
 /**

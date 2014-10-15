@@ -172,6 +172,26 @@ class Theme {
 	}
 
 	/**
+	 * Get Item Path
+	 * @param string $item The Item required
+	 */
+	public static function Script($item) {
+
+		$theme = Theme::GetInstance();
+		
+		// See if we have the requested file in the theme folder
+		if (file_exists('theme/' . $theme->name . '/' . $item)) {
+			return '<script src="theme/' . $theme->name . '/' . $item . '"></script>';
+		}
+		// If not, then use the default folder
+		elseif (file_exists('theme/default/' . $item)) {
+			return '<script src="theme/default/' . $item . '"></script>';
+		}
+		else
+			return '';
+	}
+
+	/**
 	 * Translate a string into the user language
 	 * @param string $string The String to Translate
 	 * @param array $args   Variables to insert (will replace %d %s in order)
