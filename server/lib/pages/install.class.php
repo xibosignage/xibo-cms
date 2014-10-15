@@ -290,7 +290,13 @@ class Install {
         if (!$fh)
             throw new Exception(__('Unable to write to settings.php. We already checked this was possible earlier, so something changed.'));
 
+        // Generate a secret key for various reasons
         $secretKey = Install::gen_secret();
+
+        // Escape the password before we write it to disk
+        $dbh = PDOConnect::init();
+        $existing_db_pass = addslashes($this->existing_db_pass);
+
         $settings = <<<END
 <?php
 
@@ -311,7 +317,7 @@ global \$dbname;
 
 \$dbhost = '$this->existing_db_host';
 \$dbuser = '$this->existing_db_user';
-\$dbpass = '$this->existing_db_pass';
+\$dbpass = '$existing_db_pass';
 \$dbname = '$this->existing_db_name';
 
 define('SECRET_KEY', '$secretKey');
