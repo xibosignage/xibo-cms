@@ -17,66 +17,69 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+var gridTimeouts = [];
 
 $(function() {
     // Configure the table sorter theme
-    $.extend($.tablesorter.themes.bootstrap, {
-        // these classes are added to the table. To see other table classes available,
-        // look here: http://twitter.github.com/bootstrap/base-css.html#tables
-        table      : 'table table-bordered',
-        caption    : 'caption',
-        header     : 'bootstrap-header', // give the header a gradient background
-        footerRow  : '',
-        footerCells: '',
-        icons      : '', // add "icon-white" to make them white; this icon class is added to the <i> in the header
-        sortNone   : 'bootstrap-icon-unsorted',
-        sortAsc    : 'glyphicon glyphicon-chevron-up',     // includes classes for Bootstrap v2 & v3
-        sortDesc   : 'glyphicon glyphicon-chevron-down', // includes classes for Bootstrap v2 & v3
-        active     : '', // applied when column is sorted
-        hover      : '', // use custom css here - bootstrap class may not override it
-        filterRow  : '', // filter row class
-        even       : '', // odd row zebra striping
-        odd        : ''  // even row zebra striping
-    });
+    if ($.tablesorter !== undefined) {
+        $.extend($.tablesorter.themes.bootstrap, {
+            // these classes are added to the table. To see other table classes available,
+            // look here: http://twitter.github.com/bootstrap/base-css.html#tables
+            table      : 'table table-bordered',
+            caption    : 'caption',
+            header     : 'bootstrap-header', // give the header a gradient background
+            footerRow  : '',
+            footerCells: '',
+            icons      : '', // add "icon-white" to make them white; this icon class is added to the <i> in the header
+            sortNone   : 'bootstrap-icon-unsorted',
+            sortAsc    : 'glyphicon glyphicon-chevron-up',     // includes classes for Bootstrap v2 & v3
+            sortDesc   : 'glyphicon glyphicon-chevron-down', // includes classes for Bootstrap v2 & v3
+            active     : '', // applied when column is sorted
+            hover      : '', // use custom css here - bootstrap class may not override it
+            filterRow  : '', // filter row class
+            even       : '', // odd row zebra striping
+            odd        : ''  // even row zebra striping
+        });
 
-    // add parser through the tablesorter addParser method
-    $.tablesorter.addParser({
-      // set a unique id
-      id: 'tickcross',
-      is: function() {
-        // return false so this parser is not auto detected
-        return false;
-      },
-      format: function(s, table, cell, cellIndex) {
-        return $(cell).html().toLowerCase()
-          .replace(/<span class="glyphicon glyphicon-ok"><\/span>/, 1)
-          .replace(/<span class="glyphicon glyphicon-remove"><\/span>/, 0);
-      },
-      type: 'numeric'
-    });
+        // add parser through the tablesorter addParser method
+        $.tablesorter.addParser({
+          // set a unique id
+          id: 'tickcross',
+          is: function() {
+            // return false so this parser is not auto detected
+            return false;
+          },
+          format: function(s, table, cell, cellIndex) {
+            return $(cell).html().toLowerCase()
+              .replace(/<span class="glyphicon glyphicon-ok"><\/span>/, 1)
+              .replace(/<span class="glyphicon glyphicon-remove"><\/span>/, 0);
+          },
+          type: 'numeric'
+        });
 
-    $.tablesorter.addParser({
-      // set a unique id
-      id: 'filesize',
-      is: function() {
-        // return false so this parser is not auto detected
-        return false;
-      },
-      format: function(s, table, cell, cellIndex) {
-        if (s.indexOf("k") > -1)
-            s = "B" + s;
-        else if (s.indexOf("M") > -1)
-            s = "C" + s;
-        else if (s.indexOf("G") > -1)
-            s = "D" + s;
-        else if (s.indexOf("T") > -1)
-            s = "E" + s;
-        else
-            s = "A" + s;
-        return s;
-      },
-      type: 'text'
-    });
+        $.tablesorter.addParser({
+          // set a unique id
+          id: 'filesize',
+          is: function() {
+            // return false so this parser is not auto detected
+            return false;
+          },
+          format: function(s, table, cell, cellIndex) {
+            if (s.indexOf("k") > -1)
+                s = "B" + s;
+            else if (s.indexOf("M") > -1)
+                s = "C" + s;
+            else if (s.indexOf("G") > -1)
+                s = "D" + s;
+            else if (s.indexOf("T") > -1)
+                s = "E" + s;
+            else
+                s = "A" + s;
+            return s;
+          },
+          type: 'text'
+        });
+    }
 });
 
 // Set up the light boxes
@@ -284,20 +287,20 @@ function XiboInitialise(scope) {
  * Renders any Xibo Grids that are detected
  * @param {Object} gridId
  */
-function XiboGridRender(gridId) {
+function XiboGridRender(gridId, autoRefresh) {
 
     // Grid ID tells us which grid we need to render
     var gridDiv     = '#' + gridId;
     var filter      = $('#' + gridId + ' .XiboFilter form');
     var outputDiv   = $('#' + gridId + ' .XiboData ');
-
+    var url = "index.php?ajax=true" + ((autoRefresh !== undefined && autoRefresh !== null) ? '&autoRefresh=true' : '');
     // Add a spinner
     $(gridDiv).closest('.widget').children(".widget-title").append(' <span class="saving fa fa-cog fa-spin"></span>');
 
     // AJAX call to get the XiboData
     $.ajax({
         type: "post",
-        url: "index.php?ajax=true",
+        url: url,
         dataType: "json",
         data: filter.serialize() + "&gridId=" + gridId,
         success: function(response) {
@@ -408,6 +411,26 @@ function XiboGridRender(gridId) {
                     $("#" + gridId + " .XiboData td input[type='checkbox']").prop("checked", false);
                 }
             });
+
+            // Do we need to refresh
+            if (response.refresh !== null && response.refresh !== 0) {
+                var timeout = (response.refresh > 10) ? response.refresh : 10;
+
+                // Cancel existing time outs
+                for (var i = gridTimeouts.length - 1; i >= 0; i--) {
+                    if (gridTimeouts[i].label === gridId) {
+                        clearTimeout(gridTimeouts[i].timer);
+                        gridTimeouts.splice(i, 1);
+                    }
+                }
+
+                gridTimeouts.push({
+                    label: gridId,
+                    timer: setTimeout(function() {
+                            XiboGridRender(gridId, true);
+                        }, (timeout * 1000))
+                    });
+            }
 
             return false;
         }

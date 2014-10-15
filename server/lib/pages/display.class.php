@@ -54,12 +54,14 @@ class displayDAO extends baseDAO
             $filter_displaygroup = Session::Get('display', 'filter_displaygroup');
             $filter_display = Session::Get('display', 'filter_display');
             $filter_showThumbnail = Session::Get('display', 'filter_showThumbnail');
+            $filter_autoRefresh = Session::Get('display', 'filter_autoRefresh');
         }
         else {
             $filter_pinned = 0;
             $filter_displaygroup = NULL;
             $filter_display = NULL;
             $filter_showThumbnail = 0;
+            $filter_autoRefresh = 0;
         }
 
         $formFields = array();
@@ -80,6 +82,9 @@ class displayDAO extends baseDAO
         $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'), 
             $filter_showThumbnail, NULL, 
             't');
+
+        $formFields[] = FormManager::AddNumber('filter_autoRefresh', __('Auto Refresh'), $filter_autoRefresh, 
+            NULL, 'r');
 
         $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
             $filter_pinned, NULL, 
@@ -338,6 +343,10 @@ class displayDAO extends baseDAO
         $filter_showThumbnail = Kit::GetParam('filter_showThumbnail', _REQUEST, _CHECKBOX);
         setSession('display', 'filter_showThumbnail', $filter_showThumbnail);
 
+        // filter_autoRefresh?
+        $filter_autoRefresh = Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
+        setSession('display', 'filter_autoRefresh', $filter_autoRefresh);
+
         // Pinned option?        
         setSession('display', 'DisplayFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
@@ -524,6 +533,7 @@ class displayDAO extends baseDAO
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
+        $response->refresh = Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
         $response->Respond();
     }
 

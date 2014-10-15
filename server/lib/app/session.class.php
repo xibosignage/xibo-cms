@@ -160,8 +160,9 @@ class Session {
 				// we do not want to update the expiry time of a session if it is the Clock Timer going off
 				$page = Kit::GetParam('p', _REQUEST, _WORD);
 				$query = Kit::GetParam('q', _REQUEST, _WORD);
+				$autoRefresh = (isset($_REQUEST['autoRefresh']) && Kit::GetParam('autoRefresh', _REQUEST, _WORD, 'false') == 'true');
 
-				if (($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong') || ($page == 'layout' && $query == 'LayoutStatus')) {
+				if ($autoRefresh || ($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong') || ($page == 'layout' && $query == 'LayoutStatus')) {
 
 					// Update the existing session without the expiry
 					$SQL  = "UPDATE session SET session_data = :session_data WHERE session_id = :session_id ";
