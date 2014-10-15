@@ -1589,7 +1589,6 @@ class Rest
         if (!$this->user->FileAuth($fileId))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('file');
         $file = new File($this->db);
 
         if (!$csvFileLocation = $file->GetPath($fileId))
@@ -1604,7 +1603,21 @@ class Rest
         // Convert the spread sheet mapping into an Array
         $spreadSheetMapping = json_decode($spreadSheetMapping, true);
 
-        Kit::ClassLoader('datasetdata');
+        // Check that the columns match the columns for this dataset
+        $dataSetColumnObject = new DataSetColumn();
+        
+        // Make an array with the datasetcolumnid as the key
+        $columns = array();
+        foreach ($dataSetColumnObject->GetColumns($dataSetId) as $col) {
+            $columns[$col['datasetcolumnid']] = true;
+        }
+
+        // Look through each column we have been provided and see if it matches
+        foreach ($spreadSheetMapping as $key => $value) {
+            if (!array_key_exists($value, $columns))
+                return $this->Error(1000, __('The column mappings you have provided are invalid. Please ensure you have the correct DataSetColumnIDs.'));
+        }
+
         $dataSetObject = new DataSetData($this->db);
 
         if (!$dataSetObject->ImportCsv($dataSetId, $csvFileLocation, $spreadSheetMapping, ($overwrite == 1), ($ignoreFirstRow == 1)))
