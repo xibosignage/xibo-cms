@@ -126,6 +126,11 @@ jQuery.fn.extend({
                     timeout: (duration * 1000),
                     slides: slides
                 });
+
+                // Set the width on the cycled slides
+                $(".item", this).css({
+                    width: $("body").css("width")
+                });
             }
             else if (options.direction == "left" || options.direction == "right") {
                 marquee = true;
@@ -139,9 +144,6 @@ jQuery.fn.extend({
             else if (options.direction == "up" || options.direction == "down") {
                 // We want a marquee
                 marquee = true;
-                
-                // Correct the Up and Down scrolling so that half the article is not cut
-                $(this).children().children().css("white-space", "normal");
             }
 
             if (marquee) {
@@ -162,22 +164,11 @@ jQuery.fn.extend({
 
                 // Set some options on the extra DIV and make it a marquee
                 $(this).find('.scroll').marquee();
-            }
 
-            //if (marquee) {
-            //    // Create a DIV to scroll, and put this inside the body
-            //    $(this)
-            //        .css({
-            //            overflow: "hidden",
-            //            width: options.originalWidth,
-            //            height: options.originalHeight
-            //        })
-            //        .marquee({
-            //            duration: ((15 - options.scrollSpeed) * 1000),
-            //            direction: options.direction,
-            //            duplicated: (items.count <= 1)
-            //        });
-            //}
+                // Correct for up / down
+                if (options.direction == "up" || options.direction == "down")
+                    $(this).children().children().css({"white-space": "normal", float: "none"});
+            }
         });
 
         return $(this);

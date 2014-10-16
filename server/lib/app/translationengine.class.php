@@ -54,7 +54,7 @@ class TranslationEngine
             $langs = Kit::GetParam('HTTP_ACCEPT_LANGUAGE', $_SERVER, _STRING);
 
             if ($langs != '') {
-                Debug::LogEntry('audit', ' HTTP_ACCEPT_LANGUAGE [' . $langs . ']', 'TranslationEngine', 'InitLocal');
+                //Debug::LogEntry('audit', ' HTTP_ACCEPT_LANGUAGE [' . $langs . ']', 'TranslationEngine', 'InitLocal');
                 $langs = explode(',', $langs);
 
                 foreach ($langs as $lang) {
