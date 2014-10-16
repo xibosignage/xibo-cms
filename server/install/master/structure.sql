@@ -536,7 +536,8 @@ CREATE TABLE IF NOT EXISTS `stat` (
   `start` datetime NOT NULL,
   `end` datetime NOT NULL,
   `Tag` varchar(254) DEFAULT NULL,
-  PRIMARY KEY (`statID`)
+  PRIMARY KEY (`statID`),
+  KEY `statDate` (`statDate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 CREATE TABLE IF NOT EXISTS `template` (
