@@ -335,7 +335,7 @@ class userDAO extends baseDAO {
 
         $userID	= Kit::GetParam('userid', _POST, _INT, 0);
         $username   = Kit::GetParam('edit_username', _POST, _STRING);
-        $email      = Kit::GetParam('edit_email', _POST, _STRING);
+        $email      = Kit::GetParam('email', _POST, _STRING);
         $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT, 0);
         $homepage   = Kit::GetParam('homepage', _POST, _STRING, 'dashboard');
         $retired = Kit::GetParam('retired', _POST, _CHECKBOX);
