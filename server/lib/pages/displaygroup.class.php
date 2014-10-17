@@ -522,40 +522,30 @@ class displaygroupDAO extends baseDAO
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Permissions');
         Theme::Set('form_meta', '<input type="hidden" name="displayGroupId" value="' . $displayGroupId . '" />');
 
-        // List of all Groups with a view/edit/delete checkbox
-        $SQL = '';
-        $SQL .= 'SELECT `group`.GroupID, `group`.`Group`, View, Edit, Del, `group`.IsUserSpecific ';
-        $SQL .= '  FROM `group` ';
-        $SQL .= '   LEFT OUTER JOIN lkdisplaygroupgroup ';
-        $SQL .= '   ON lkdisplaygroupgroup.GroupID = group.GroupID ';
-        $SQL .= '       AND lkdisplaygroupgroup.DisplayGroupID = %d ';
-        $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
+        // List of all Groups with a view / edit / delete check box
+        $permissions = new UserGroup();
+        if (!$result = $permissions->GetPermissionsForObject('lkdisplaygroupgroup', 'DisplayGroupID', $displayGroupId))
+            trigger_error($permissions->GetErrorMessage(), E_USER_ERROR);
 
-        $SQL = sprintf($SQL, $displayGroupId);
-
-        if (!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get permissions for this DisplayGroup'), E_USER_ERROR);
-        }
+        if (count($result) <= 0)
+            trigger_error(__('Unable to get permissions for this Campaign'), E_USER_ERROR);
 
         $checkboxes = array();
 
-        while ($row = $db->get_assoc_row($results))
-        {
-            $groupId = $row['GroupID'];
-            $rowClass = ($row['IsUserSpecific'] == 0) ? 'strong_text' : '';
+        foreach ($result as $row) {
+            $groupId = $row['groupid'];
+            $rowClass = ($row['isuserspecific'] == 0) ? 'strong_text' : '';
 
             $checkbox = array(
                     'id' => $groupId,
-                    'name' => Kit::ValidateParam($row['Group'], _STRING),
+                    'name' => Kit::ValidateParam($row['group'], _STRING),
                     'class' => $rowClass,
                     'value_view' => $groupId . '_view',
-                    'value_view_checked' => (($row['View'] == 1) ? 'checked' : ''),
+                    'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
                     'value_edit' => $groupId . '_edit',
-                    'value_edit_checked' => (($row['Edit'] == 1) ? 'checked' : ''),
+                    'value_edit_checked' => (($row['edit'] == 1) ? 'checked' : ''),
                     'value_del' => $groupId . '_del',
-                    'value_del_checked' => (($row['Del'] == 1) ? 'checked' : ''),
+                    'value_del_checked' => (($row['del'] == 1) ? 'checked' : ''),
                 );
 
             $checkboxes[] = $checkbox;
