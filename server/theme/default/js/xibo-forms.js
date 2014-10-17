@@ -299,6 +299,8 @@ function MediaFormInitUpload(dialog) {
             return false;
         }
         data.formData = inputs.serializeArray().concat($("#fileupload").serializeArray());
+
+        inputs.filter("input").prop("disabled", true);
     });
 }
 
