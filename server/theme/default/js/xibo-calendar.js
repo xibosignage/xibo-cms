@@ -108,7 +108,6 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        startDate: $("#starttime", form).val(),
         language: language
     });
 
@@ -118,7 +117,6 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        startDate: $("#endtime", form).val(),
         language: language
     });
 
@@ -128,7 +126,6 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        startDate: $("#rec_range", form).val(),
         language: language
     });
 };

@@ -56,7 +56,7 @@ class Config
 	 * @return 
 	 * @param $setting Object[optional]
 	 */
-	static function GetSetting($setting) 
+	static function GetSetting($setting, $default = NULL) 
 	{	
 		try {
 			$dbh = PDOConnect::init();
@@ -65,12 +65,14 @@ class Config
 			$sth->execute(array('setting' => $setting));
 
 			if (!$result = $sth->fetch())
-				return false;
+				return $default;
 
 			//Debug::LogEntry('audit', 'Retrieved setting ' . $result['value'] . ' for ' . $setting, 'Config', 'GetSetting');
-
+			
 			// Validate as a string and return
-			return Kit::ValidateParam($result['value'], _STRING);
+			$result = Kit::ValidateParam($result['value'], _STRING);
+			
+			return ($result == '') ? $default : $result;
 		}
 		catch (Exception $e) {
 			trigger_error($e->getMessage());

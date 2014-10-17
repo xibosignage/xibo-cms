@@ -77,6 +77,7 @@ Theme::SetTranslation('failure', Theme::Translate('Failure'));
         <script type="text/javascript">
         var translations = <?php echo ((Theme::Get('translations') == '') ? '{}' : Theme::Get('translations')); ?>;
         var language = "<?php echo TranslationEngine::GetJsLocale(); ?>";
+        var dateFormat = "<?php echo Config::GetSetting('DATE_FORMAT', 'Y-m-d h:i'); ?>";
         </script>
 	</body>
 </html>
