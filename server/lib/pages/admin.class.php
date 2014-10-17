@@ -417,20 +417,10 @@ class adminDAO extends baseDAO {
     public function BackupDatabase()
     {
         // We want to output a load of stuff to the browser as a text file.
-        Kit::ClassLoader('maintenance');
         $maintenance = new Maintenance($this->db);
 
-        $dump = $maintenance->BackupDatabase();
-
-        if ($dump == '')
-            trigger_error(__('Unable to export database'), E_USER_ERROR);
-
-        header('Content-Type: text/plaintext');
-        header('Content-Disposition: attachment; filename="' . date('Y-m-d H:i:s') . '.bak"');
-        header("Content-Transfer-Encoding: binary");
-        header('Accept-Ranges: bytes');
-        echo $dump;
-        exit;
+        if (!$dump = $maintenance->BackupDatabase())
+            trigger_error($maintenance->GetErrorMessage(), E_USER_ERROR);
     }
 
     /**

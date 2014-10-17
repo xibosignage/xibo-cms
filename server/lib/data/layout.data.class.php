@@ -1228,7 +1228,7 @@ class Layout extends Data
             $fileName = $libraryPath . 'temp/export_' . Kit::ValidateParam($row['layout'], _FILENAME) . '.zip';
 
             $zip = new ZipArchive();
-            $zip->open($fileName, ZIPARCHIVE::OVERWRITE);        
+            $zip->open($fileName, ZIPARCHIVE::OVERWRITE);
             $zip->addFromString('layout.xml', $xml);
 
             $params = array('layoutid' => $layoutId);    

@@ -28,27 +28,90 @@ class Maintenance extends Data
      */
     public function BackupDatabase($saveAs = "string")
     {
-        // Always truncate the log first
-        $this->db->query("TRUNCATE TABLE `log` ");
-        $this->db->query("TRUNCATE TABLE `oauth_log` ");
+        // Check we can run mysql
+        if (!function_exists('exec'))
+            return $this->SetError(__('Exec is not available.'));
 
+        // Always truncate the log first
+        try {
+            $dbh = PDOConnect::init();
+            $dbh->exec('TRUNCATE TABLE `log` ');
+            $dbh->exec('TRUNCATE TABLE `oauth_log` ');          
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+        
+        // Global database variables to seed into exec
         global $dbhost;
         global $dbuser;
         global $dbpass;
         global $dbname;
 
-        // Run mysqldump to a temporary file
-
         // get temporary file
-        $tempFile = tempnam(Config::GetSetting('LIBRARY_LOCATION'), 'dmp');
+        $fileName = Config::GetSetting('LIBRARY_LOCATION') . 'database.dump';
+        $zipFile = $fileName . '.tar.gz';
 
-        exec('mysqldump --opt --host=' . $dbhost . ' --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' > ' . escapeshellarg($tempFile) . ' ');
+        $command = 'mysqldump --opt --host=' . $dbhost . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' > ' . escapeshellarg($fileName) . ' ';
 
-        $sqlDump = file_get_contents($tempFile);
+        Debug::Audit($command);
 
-        unlink($tempFile);
+        // Run mysqldump to a temporary file
+        exec($command);
 
-        return $sqlDump;
+        // Check it worked
+        if (!file_exists($fileName))
+            return $this->SetError(__('Database dump failed.'));
+
+        // Zippy
+        Debug::Audit($zipFile);
+        $zip = new ZipArchive();
+        $zip->open($zipFile, ZIPARCHIVE::OVERWRITE);
+        $zip->addFile($fileName, 'database.dump');
+        $zip->close();
+
+        // Remove the dump file
+        unlink($fileName);
+
+        // Uncomment only if you are having permission issues
+        // chmod($zipFile, 0777);
+
+        // Push file back to browser
+        if (ini_get('zlib.output_compression')) {
+            ini_set('zlib.output_compression', 'Off');
+        }
+
+        $size = filesize($zipFile);
+
+        header('Content-Type: application/octet-stream');
+        header("Content-Transfer-Encoding: Binary"); 
+        header("Content-disposition: attachment; filename=\"" . basename($zipFile) . "\"");
+
+        //Output a header
+        header('Pragma: public');
+        header('Cache-Control: max-age=86400');
+        header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+        header('Content-Length: ' . $size);
+        
+        // Send via Apache X-Sendfile header?
+        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
+            header("X-Sendfile: $zipFile");
+            exit();
+        }
+        
+        // Return the file with PHP
+        // Disable any buffering to prevent OOM errors.
+        @ob_end_clean();
+        @ob_end_flush();
+        readfile($zipFile);
+
+        exit;
     }
 
     /**
