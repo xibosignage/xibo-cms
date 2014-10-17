@@ -76,11 +76,21 @@ class displayDAO extends baseDAO
             $displayGroups,
             'displaygroupid',
             'displaygroup',
-            NULL, 
+            NULL,
             'd');
 
-        $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'), 
-            $filter_showThumbnail, NULL, 
+        $formFields[] = FormManager::AddCombo(
+            'filter_showThumbnail', 
+            __('Thumbnails'), 
+            $filter_showThumbnail,
+            array(
+                array('key' => 0, 'value' => __('None')),
+                array('key' => 1, 'value' => __('Always')),
+                array('key' => 2, 'value' => __('When Logged In')),
+                ),
+            'key',
+            'value',
+            NULL, 
             't');
 
         $formFields[] = FormManager::AddNumber('filter_autoRefresh', __('Auto Refresh'), $filter_autoRefresh, 
@@ -340,7 +350,7 @@ class displayDAO extends baseDAO
         setSession('display', 'filter_displaygroup', $filter_displaygroupid);
 
         // Thumbnail?
-        $filter_showThumbnail = Kit::GetParam('filter_showThumbnail', _REQUEST, _CHECKBOX);
+        $filter_showThumbnail = Kit::GetParam('filter_showThumbnail', _REQUEST, _INT);
         setSession('display', 'filter_showThumbnail', $filter_showThumbnail);
 
         // filter_autoRefresh?
@@ -366,10 +376,10 @@ class displayDAO extends baseDAO
                 array('name' => 'displayid', 'title' => __('ID')),
                 array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
                 array('name' => 'displayWithLink', 'title' => __('Display')),
-                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showThumbnail == 1)),
-                array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showThumbnail == 1)),
-                array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1)),
-                array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1)),
+                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
+                array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
+                array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
+                array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
                 array('name' => 'loggedin', 'title' => __('Logged In'), 'icons' => true),
                 array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
                 array('name' => 'clientaddress', 'title' => __('IP Address'), 'hidden' => ($filter_showThumbnail == 1)),
@@ -404,6 +414,9 @@ class displayDAO extends baseDAO
             $row['thumbnail'] = '';
             if ($filter_showThumbnail == 1 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
                 $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '" /></a>';
+            }
+            else if ($filter_showThumbnail == 2) {
+                $row['thumbnail'] = '<i class="fa fa-times-circle"></i>';
             }
 
             // Edit and Delete buttons first
