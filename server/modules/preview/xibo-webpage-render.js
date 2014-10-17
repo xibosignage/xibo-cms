@@ -1,71 +1,92 @@
-$(document).ready(function() { 
+/**
+* Xibo - Digital Signage - http://www.xibo.org.uk
+* Copyright (C) 2009-2014 Daniel Garner
+*
+* This file is part of Xibo.
+*
+* Xibo is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* Xibo is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+*/
+jQuery.fn.extend({
+    xiboIframeScaler: function(options) {
+        var width; var height;
 
-    isMSIE = navigator.userAgent.match(/MSIE/),
-    MSIEVersion = navigator.userAgent.match(/MSIE (\d\.\d+)/) ? parseInt(RegExp.$1, 10) : null
+        // All we worry about is the item we have been working on ($(this))
+        // We want to set its margins and scale according to the provided options.
+        width = options.iframeWidth + options.offsetLeft;
+        height = options.iframeHeight + options.offsetTop;
 
-    if (options.previewWidth == 0 && options.previewHeight == 0) {
-        options.width = $(window).width();
-        options.height = $(window).height();
-    }
-    else {
-        // We are a preview
-        options.width = options.previewWidth;
-        options.height = options.previewHeight;
-    }
+        $(this).each(function() {
+            // Mode
+            if (options.modeId == 1) {
+                // We shouldn't ever get here.
+                $(this).css({
+                    "width": options.originalWidth,
+                    "height": options.originalHeight
+                });
+            }
+            else if (options.modeId == 3) {
+                // Best fit, set the scale so that the web-page fits inside the region
+                options.scale = Math.min(options.originalWidth / options.iframeWidth, options.originalHeight / options.iframeHeight);
 
-    // Scale Factor
-    options.scaleFactor = Math.min(options.width / options.originalWidth, options.height / options.originalHeight);
+                // Remove the offsets
+                options.offsetTop = 0;
+                options.offsetLeft = 0;
 
-    // We need to scale the scale according to the size difference between the layout designer and the actual request size.
-    if (options.scale_override != 1) {
-        options.offsetTop = options.offsetTop * options.scaleFactor;
-        options.offsetLeft = options.offsetLeft * options.scaleFactor;
-        options.scale = options.scale * options.scaleFactor;
-    }
+                // Set frame to the full size and scale it back to fit inside the window
+                if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
+                        $(this).css({
+                            "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + options.scale + ", M12=0, M21=0, M22=" + options.scale + ", SizingMethod=\'auto expand\'"
+                        });
+                    }
+                    else {
+                        $(this).css({
+                            "transform": "scale(" + options.scale + ")",
+                            "transform-origin": "0 0",
+                            "width": options.iframeWidth,
+                            "height": options.iframeHeight
+                        });
+                    }
+            }
+            else {
+                // Manual Position. This is the default.
+            
+                // Margins on frame
+                $(this).css({
+                    "margin-top": -1 * options.offsetTop,
+                    "margin-left": -1 * options.offsetLeft,
+                    "width": width,
+                    "height": height
+                });
 
-    // Width should take into account the offset
-    options.width = parseInt(options.width) + parseInt(options.offsetLeft);
-    options.height = parseInt(options.height) + parseInt(options.offsetTop);
+                // Do we need to scale?
+                if (options.scale !== 1 && options.scale !== 0) {
 
-    // Add the width and height on the wrap.
-    $("#wrap").css({
-        "overflow": "hidden",
-        "width": options.width,
-        "height": options.height
-    });
-
-    // Margins on frame
-    $("#iframe").css({
-        "margin-top": -1 * options.offsetTop, 
-        "margin-left": -1 * options.offsetLeft,
-        "width": options.width,
-        "height": options.height
-    });
-
-    // Transform on the frame
-    if (options.scale != 1) {
-
-        if (isMSIE) {
-            $("#iframe").css({
-                zoom: options.scale,
-                height: parseInt((options.height / options.scale) *  (1 / (MSIEVersion >= 9 ? 1 : options.scale)), 10),
-                width: parseInt((options.width / options.scale) * (1 / (MSIEVersion >= 9 ? 1 : options.scale)), 10)
-            })
-        }
-        else {
-
-            $("#iframe").css({
-                        'transform-origin': "0 0",
-                '-webkit-transform-origin': "0 0",
-                   '-moz-transform-origin': "0 0",
-                     '-o-transform-origin': "0 0",
-                        'transform': 'scale(' + options.scale + ')',
-                '-webkit-transform': 'scale(' + options.scale + ')',
-                   '-moz-transform': 'scale(' + options.scale + ')',
-                     '-o-transform': 'scale(' + options.scale + ')',
-                "width": options.width / options.scale,
-                "height": options.height / options.scale
-            });
-        }
+                    if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
+                        $(this).css({
+                            "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + options.scale + ", M12=0, M21=0, M22=" + options.scale + ", SizingMethod=\'auto expand\'"
+                        });
+                    }
+                    else {
+                        $(this).css({
+                            "transform": "scale(" + options.scale + ")",
+                            "transform-origin": "0 0",
+                            "width": width / options.scale,
+                            "height": height / options.scale
+                        });
+                    }
+                }
+            }
+        });
     }
 });
