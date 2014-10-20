@@ -80,7 +80,7 @@ class XMDSSoap {
         try {
             $dbh = PDOConnect::init();
             $sth = $dbh->prepare('
-                SELECT licensed, display, displayid, displayprofileid, client_type, version_instructions, screenShotRequested
+                SELECT licensed, display, displayid, displayprofileid, client_type, version_instructions, screenShotRequested, email_alert, loggedin
                   FROM display 
                 WHERE license = :hardwareKey');
 
@@ -127,6 +127,8 @@ class XMDSSoap {
             $clientType = Kit::ValidateParam($row['client_type'], _WORD);
             $versionInstructions = Kit::ValidateParam($row['version_instructions'], _HTMLSTRING);
             $screenShotRequested = Kit::ValidateParam($row['screenShotRequested'], _INT);
+            $emailAlert = Kit::ValidateParam($row['email_alert'], _INT);
+            $loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
 
             // Determine if we are licensed or not
             if ($row['licensed'] == 0) {
@@ -202,6 +204,9 @@ class XMDSSoap {
                     Debug::LogEntry('error', $e->getMessage());
                     throw new SoapFault('Sender', 'Error after display found');
                 }
+
+                // Send Notification if required
+                $this->AlertDisplayUp($displayid, $display, $loggedIn, $emailAlert);
             }
         }
 
@@ -1353,25 +1358,10 @@ class XMDSSoap {
             if ($row['licensed'] == 0)
                 return false;
         
-            // Pull the client IP address
-            $clientAddress = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
-        
-            // See if the client was offline and if appropriate send an alert
-            // to say that it has come back online
-            if ($row['loggedin'] == 0 
-                    && $row['email_alert'] == 1 
-                    && (Config::GetSetting('MAINTENANCE_ENABLED') == 'On' || Config::GetSetting('MAINTENANCE_ENABLED') == 'Protected') 
-                    && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
+            // See if the client was off-line and if appropriate send an alert
+            // to say that it has come back on-line
+            $this->AlertDisplayUp($row['displayID'], $row['display'], $row['loggedin'], $row['email_alert']);
 
-                $msgTo    = Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
-                $msgFrom  = Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);
-
-                $subject  = sprintf(__("Recovery for Display %s"),$row[7]);
-                $body     = sprintf(__("Display %s with ID %d is now back online."), $row[7], $row[3]);
-
-                Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
-            }
-        
             // It is licensed?
             $this->licensed = true;
             $this->includeSchedule = $row['inc_schedule'];
@@ -1385,13 +1375,32 @@ class XMDSSoap {
             
             // Last accessed date on the display
             $displayObject = new Display();
-            $displayObject->Touch($this->displayId, array('clientAddress' => $clientAddress));
+            $displayObject->Touch($this->displayId, array('clientAddress' => Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING)));
                 
             return true;
         }
         catch (Exception $e) {
             Debug::LogEntry('error', $e->getMessage());
             return false;
+        }
+    }
+
+    private function AlertDisplayUp($displayId, $display, $loggedIn, $emailAlert) {
+
+        $maintenanceEnabled = Config::GetSetting('MAINTENANCE_ENABLED');
+
+        if ($loggedIn == 0 
+                && $emailAlert == 1 
+                && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected') 
+                && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
+
+            $msgTo = Kit::ValidateParam(Config::GetSetting("mail_to") ,_PASSWORD);
+            $msgFrom = Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
+
+            $subject = sprintf(__("Recovery for Display %s"), $display);
+            $body = sprintf(__("Display %s with ID %d is now back online."), $display, $displayId);
+
+            Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
         }
     }
 
