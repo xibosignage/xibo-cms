@@ -154,7 +154,7 @@ class displayDAO extends baseDAO
         $displayObject->wakeOnLanTime = Kit::GetParam('wakeOnLanTime', _POST, _STRING);
         $displayObject->broadCastAddress = Kit::GetParam('broadCastAddress', _POST, _STRING);
         $displayObject->secureOn = Kit::GetParam('secureOn', _POST, _STRING);
-        $displayObject->cidr = Kit::GetParam('cidr', _POST, _INT);
+        $displayObject->cidr = Kit::GetParam('cidr', _POST, _STRING);
         $displayObject->latitude = Kit::GetParam('latitude', _POST, _DOUBLE);
         $displayObject->longitude = Kit::GetParam('longitude', _POST, _DOUBLE);
         $displayObject->displayProfileId = Kit::GetParam('displayprofileid', _POST, _INT);
@@ -272,7 +272,7 @@ class displayDAO extends baseDAO
             __('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), 't');
 
         $formFields[] = FormManager::AddText('cidr', __('Wake on LAN CIDR'), $displayObject->cidr, 
-            __('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unkown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), 'c');
+            __('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unknown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), 'c');
 
         Theme::Set('form_fields_wol', $formFields);
 

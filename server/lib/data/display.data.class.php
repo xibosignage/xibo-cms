@@ -106,7 +106,7 @@ class Display extends Data {
             $this->wakeOnLanTime = Kit::ValidateParam($row['WakeOnLanTime'], _STRING);
             $this->broadCastAddress = Kit::ValidateParam($row['BroadCastAddress'], _STRING);
             $this->secureOn = Kit::ValidateParam($row['SecureOn'], _STRING);
-            $this->cidr = Kit::ValidateParam($row['Cidr'], _INT);
+            $this->cidr = Kit::ValidateParam($row['Cidr'], _STRING);
             $this->latitude = Kit::ValidateParam($row['Latitude'], _DOUBLE);
             $this->longitude = Kit::ValidateParam($row['Longitude'], _DOUBLE);
             $this->versionInstructions = Kit::ValidateParam($row['version_instructions'], _STRING);
