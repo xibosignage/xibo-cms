@@ -531,10 +531,10 @@ CREATE TABLE IF NOT EXISTS `stat` (
   `statDate` datetime NOT NULL COMMENT 'State entry date',
   `scheduleID` int(8) NOT NULL,
   `displayID` int(4) NOT NULL,
-  `layoutID` int(8) NOT NULL,
+  `layoutID` int(8) NULL,
   `mediaID` varchar(50) DEFAULT NULL,
   `start` datetime NOT NULL,
-  `end` datetime NOT NULL,
+  `end` datetime NULL,
   `Tag` varchar(254) DEFAULT NULL,
   PRIMARY KEY (`statID`),
   KEY `statDate` (`statDate`)

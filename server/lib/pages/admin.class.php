@@ -143,7 +143,7 @@ class adminDAO extends baseDAO {
                 );
         }
 
-        return $menu;                 
+        return $menu;
     }
 
     function Edit() {

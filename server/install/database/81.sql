@@ -15,6 +15,9 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
 
 ALTER TABLE  `stat` ADD INDEX (  `statDate` );
 
+ALTER TABLE  `stat` CHANGE  `layoutID`  `layoutID` INT( 8 ) NULL;
+ALTER TABLE  `stat` CHANGE  `end`  `end` DATETIME NULL;
+
 UPDATE `version` SET `app_ver` = '1.7.0-alpha2', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '81';

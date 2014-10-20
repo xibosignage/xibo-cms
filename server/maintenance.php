@@ -130,22 +130,20 @@ else
 
         $emailAlerts = (Config::GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
         $alwaysAlert = (Config::GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
+        
+        // The time in the past that the last connection must be later than globally.
+        $globalTimeout = time() - (60 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_ALERT_TOUT"), _INT));
+        $msgTo = Kit::ValidateParam(Config::GetSetting("mail_to"), _PASSWORD);
+        $msgFrom = Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
 
-        if ($emailAlerts) {
+        foreach (Display::ValidateDisplays() as $display) {
+            // Is this the first time this display has gone "off-line"
+            $displayGoneOffline = (Kit::ValidateParam($display['loggedin'], _INT) == 1);
 
-            // The time in the past that the last connection must be later than globally.
-            $globalTimeout = time() - (60 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_ALERT_TOUT"), _INT));
-            $msgTo         = Kit::ValidateParam(Config::GetSetting("mail_to"), _PASSWORD);
-            $msgFrom       = Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
-            
-            // Validate all displays
-            $displays = Display::ValidateDisplays();
-
-            foreach ($displays as $display) {
-                // Only if Email alerts are enabled
+            // Should we send an email?
+            if ($emailAlerts) {
                 if (Kit::ValidateParam($display['email_alert'], _INT) == 1) {
-                    // If we should alert each time we run OR this is the first transition
-                    if ($alwaysAlert || Kit::ValidateParam($display['loggedin'], _INT) == 1) {
+                    if ($displayGoneOffline || $alwaysAlert) {
                         // Fields for email
                         $subject = sprintf(__("Email Alert for Display %s"), Kit::ValidateParam($display['display'], _STRING));
                         $body = sprintf(__("Display %s with ID %d was last seen at %s."), 
@@ -153,13 +151,11 @@ else
                             Kit::ValidateParam($display['displayid'], _INT), 
                             date("Y-m-d H:i:s", Kit::ValidateParam($display['lastaccessed'], _INT)));
 
-                        if (Kit::SendEmail($msgTo, $msgFrom, $subject, $body))
-                        {
+                        if (Kit::SendEmail($msgTo, $msgFrom, $subject, $body)) {
                             // Successful Alert
                             print "A";
                         }
-                        else
-                        {
+                        else {
                             // Error sending Alert
                             print "E";
                         }
@@ -170,10 +166,10 @@ else
                     print "D";
                 }
             }
-        }
-        else {
-            // Email alerts disabled globally
-            print "X";
+            else {
+                // Email alerts disabled globally
+                print "X";
+            }
         }
 
         flush();

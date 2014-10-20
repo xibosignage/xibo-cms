@@ -667,8 +667,8 @@ class Display extends Data {
         // Find
         $return = $default;
         foreach($this->_config as $row) {
-            if ($row['name'] == $key || ucfirst($row['name']) == $key) {
-
+            if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
+                //Debug::Audit('Found ' . $key . '. value= ' . $row['value']);
                 $return = $row['value'];
                 break;
             }
@@ -700,7 +700,9 @@ class Display extends Data {
                     $this->_config = json_decode(Kit::ValidateParam($row['config'], _HTMLSTRING), true);
                 }
                 else
-                    $this->ThrowError(__('Error loading client config'));  
+                    $this->ThrowError(__('Error loading client config'));
+
+                return true;
             }
             catch (Exception $e) {
                 
@@ -723,14 +725,15 @@ class Display extends Data {
 
         try {
             $dbh = PDOConnect::init();
+            $statObject = new Stat();
         
-            // Get a list of all displays and there last accessed / alert timeout value
+            // Get a list of all displays and there last accessed / alert time out value
             $sth = $dbh->prepare('SELECT displayid, display, lastaccessed, alert_timeout, client_type, displayprofileid, email_alert, loggedin FROM display');
             $sthUpdate = $dbh->prepare('UPDATE display SET loggedin = 0 WHERE displayid = :displayid');
             
             $sth->execute(array());
 
-            // Get the global timeout (overrides the alert timeout on the display if 0)
+            // Get the global time out (overrides the alert time out on the display if 0)
             $globalTimeout = Config::GetSetting('MAINTENANCE_ALERT_TOUT') * 60;
         
             $displays = $sth->fetchAll();
@@ -740,6 +743,7 @@ class Display extends Data {
                 $lastAccessed = Kit::ValidateParam($row['lastaccessed'], _INT);
                 $alertTimeout = Kit::ValidateParam($row['alert_timeout'], _INT);
                 $clientType = Kit::ValidateParam($row['client_type'], _WORD);
+                $loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
 
                 // Get the config object
                 if ($alertTimeout == 0) {
@@ -757,11 +761,21 @@ class Display extends Data {
 
                 // Store the time out to test against
                 $row['timeout'] = $timeoutToTestAgainst;
+                $timeOut = $lastAccessed + $timeoutToTestAgainst;
     
                 // If the last time we accessed is less than now minus the time out
-                if ($lastAccessed < time() - ($timeoutToTestAgainst * 60)) {
-                    // Update the display and set it as logged out
-                    $sthUpdate->execute(array('displayid' => $displayid));
+                if ($timeOut < time()) {
+                    Debug::Audit('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
+
+                    // If this is the first switch (i.e. the row was logged in before)
+                    if ($loggedIn == 1) {
+                        
+                        // Update the display and set it as logged out
+                        $sthUpdate->execute(array('displayid' => $displayid));
+                       
+                        // Log the down event
+                        $statObject->displayDown($displayid, $lastAccessed);
+                    }
 
                     // Store this row
                     $timedOutDisplays[] = $row;

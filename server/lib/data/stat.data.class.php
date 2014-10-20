@@ -22,68 +22,126 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Stat extends data
 {
-	public function Add($type, $fromDT, $toDT, $scheduleID, $displayID, $layoutID, $mediaID, $tag)
-	{
-		try {
-		    $dbh = PDOConnect::init();
+    public function Add($type, $fromDT, $toDT, $scheduleID, $displayID, $layoutID, $mediaID, $tag)
+    {
+        try {
+            $dbh = PDOConnect::init();
 
-		    // Lower case the type for consistancy
-		    $type = strtolower($type);
+            // Lower case the type for consistency
+            $type = strtolower($type);
 
-		    // Prepare a statement
-		    $sth = $dbh->prepare('INSERT INTO stat (Type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag) VALUES (:type, :statdate, :start, :end, :scheduleid, :displayid, :layoutid, :mediaid, :tag)');
-		
-			// Construct a parameters array to execute
-		    $params = array();
-			$params['statdate'] = date("Y-m-d H:i:s");
-			$params['type'] = $type;
-			$params['start'] = $fromDT;
-			$params['end'] = $toDT;
-			$params['scheduleid'] = $scheduleID;
-			$params['displayid'] = $displayID;
-			$params['layoutid'] = $layoutID;
+            // Prepare a statement
+            $sth = $dbh->prepare('INSERT INTO stat (Type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag) VALUES (:type, :statdate, :start, :end, :scheduleid, :displayid, :layoutid, :mediaid, :tag)');
+        
+            // Construct a parameters array to execute
+            $params = array();
+            $params['statdate'] = date("Y-m-d H:i:s");
+            $params['type'] = $type;
+            $params['start'] = $fromDT;
+            $params['end'] = $toDT;
+            $params['scheduleid'] = $scheduleID;
+            $params['displayid'] = $displayID;
+            $params['layoutid'] = $layoutID;
 
-			// Optional parameters
-			$params['mediaid'] = null;
-			$params['tag'] = null;
-				
-			// We should run different SQL depending on what Type we are
-			switch ($type)
-			{
-				case 'media':
-					$params['mediaid'] = $mediaID;
-			
-					break;
+            // Optional parameters
+            $params['mediaid'] = null;
+            $params['tag'] = null;
+                
+            // We should run different SQL depending on what Type we are
+            switch ($type)
+            {
+                case 'media':
+                    $params['mediaid'] = $mediaID;
+            
+                    break;
 
-				case 'layout':
-					// Nothing additional to do
-					break;
-					
-				case 'event':
-				
-					$params['layoutid'] = 0;
-					$params['tag'] = $tag;
-				
-					break;
-					
-				default:
-					// Nothing to do, just exit
-					return true;
-			}
+                case 'layout':
+                    // Nothing additional to do
+                    break;
+                    
+                case 'event':
+                
+                    $params['layoutid'] = 0;
+                    $params['tag'] = $tag;
+                
+                    break;
+                    
+                default:
+                    // Nothing to do, just exit
+                    return true;
+            }
 
-			$sth->execute($params);
-			
-			return true;  
-		}
-		catch (Exception $e) {
-		    
-		    Debug::LogEntry('error', $e->getMessage());
-		
-		    if (!$this->IsError())
-		        $this->SetError(25000, 'Stat Insert Failed.');
-		
-		    return false;
-		}
-	}
+            $sth->execute($params);
+            
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(25000, 'Stat Insert Failed.');
+        
+            return false;
+        }
+    }
+
+    public function displayDown($displayId, $lastAccessed)
+    {
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Prepare a statement
+            $sth = $dbh->prepare('
+                INSERT INTO stat (Type, statDate, start, scheduleID, displayID) 
+                    VALUES (:type, :statdate, :start, :scheduleid, :displayid)');
+        
+            // Construct a parameters array to execute
+            $params = array();
+            $params['type'] = 'displaydown';
+            $params['displayid'] = $displayId;
+            $params['statdate'] = date('Y-m-d H:i:s');
+            $params['start'] = $lastAccessed;
+            $params['scheduleid'] = 0;
+
+            $sth->execute($params);
+
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    public function displayUp($displayId) {
+        try {
+            $dbh = PDOConnect::init();
+
+            Debug::Audit('Display Up: ' . $displayId);
+        
+            $sth = $dbh->prepare('UPDATE stat SET end = :toDt WHERE displayId = :displayId AND end IS NULL');
+            $sth->execute(array(
+                    'toDt' => date('Y-m-d H:i:s'),
+                    'displayId' => $displayId
+                ));
+          
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
 }
 ?>

@@ -53,6 +53,33 @@ class statsDAO extends baseDAO
         Theme::Set('form_fields', $formFields);
         Theme::Render('grid_render');
 
+        // Render an Availability Widget
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="AvailabilityGrid">');
+        
+        $formFields = array();
+        $formFields[] = FormManager::AddText('fromdt', __('From Date'), date("Y-m-d", time() - (86400 * 35)), NULL, 'f');
+        $formFields[] = FormManager::AddText('todt', __('To Date'), date("Y-m-d"), NULL, 't');
+
+        // List of Displays this user has permission for
+        $displays = $this->user->DisplayGroupList(1);
+        array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
+        $formFields[] = FormManager::AddCombo(
+            'displayid', 
+            __('Display'), 
+            NULL,
+            $displays,
+            'displayid',
+            'displaygroup',
+            NULL, 
+            'd');
+
+        Theme::Set('header_text', __('Availability'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Render('grid_render');
+
+
 		// Proof of Play stats widget
         $id = uniqid();
         Theme::Set('id', $id);
@@ -94,6 +121,23 @@ class statsDAO extends baseDAO
         Theme::Render('grid_render');
 	}
 
+    public function actionMenu() {
+
+        $menu = array();
+        
+        // Always show export
+        $menu[] = array(
+            'title' => __('Export'),
+            'class' => 'XiboFormButton',
+            'selected' => false,
+            'link' => 'index.php?p=stats&q=OutputCsvForm',
+            'help' => __('Export raw data to CSV'),
+            'onclick' => ''
+            );
+
+        return $menu;
+    }
+
     /**
      * Shows the stats grid
      */
@@ -114,9 +158,6 @@ class statsDAO extends baseDAO
             $toDt = date("Y-m-d", strtotime($toDt) + 86399);
         }
 
-        Theme::Set('form_action', '');
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"/><input type="hidden" name="q" value="OutputCSV"/><input type="hidden" name="displayid" value="' . $displayId . '" /><input type="hidden" name="fromdt" value="' . $fromDt . '" /><input type="hidden" name="todt" value="' . $toDt . '" />');
-        
         // Get an array of display id this user has access to.
         $displays = $this->user->DisplayList();
         $display_ids = array();
@@ -297,7 +338,75 @@ class statsDAO extends baseDAO
         $response->Respond();
     }
 
-    public function BandwidthGrid() {
+    public function AvailabilityGrid() 
+    {
+        $fromDt = strtotime(Kit::GetParam('fromdt', _POST, _STRING));
+        $toDt = strtotime(Kit::GetParam('todt', _POST, _STRING));
+        $displayId = Kit::GetParam('displayid', _POST, _INT);
+
+        // Get some data for a bandwidth chart
+        try {
+            $dbh = PDOConnect::init();
+        
+            $params = array(
+                'type' => 'displaydown',
+                'start' => date('Y-m-d h:i:s', $fromDt),
+                'boundaryStart' => date('Y-m-d h:i:s', $fromDt),
+                'end' => date('Y-m-d h:i:s', $toDt),
+                'boundaryEnd' => date('Y-m-d h:i:s', $toDt)
+                );
+
+            $SQL = '
+                SELECT display.display, 
+                    SUM(TIME_TO_SEC(TIMEDIFF(LEAST(end, :boundaryEnd), GREATEST(start, :boundaryStart)))) AS duration
+                  FROM `stat`
+                    INNER JOIN `display`
+                    ON display.displayId = stat.displayId
+                 WHERE start <= :end
+                    AND end >= :start
+                    AND type = :type
+                GROUP BY display.display
+            ';
+
+            if ($displayId != 0) {
+                $SQL .= ' AND displayId = :displayId ';
+                $params['displayId'] = $displayId;
+            }
+
+            Debug::LogEntry('audit', $SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
+
+            $sth = $dbh->prepare($SQL);
+
+            $sth->execute($params);
+
+            $output = array();
+
+            foreach ($sth->fetchAll() as $row) {
+
+                $output[] = array(
+                        'label' => Kit::ValidateParam($row['display'], _STRING), 
+                        'value' => $row['duration']
+                    );
+            }
+
+            Theme::Set('availabilityWidget', json_encode($output));
+            $output = Theme::RenderReturn('stats_page_availability');
+
+            $response = new ResponseManager();
+            $response->SetGridResponse($output);
+            $response->Respond();
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            // Show the error in place of the bandwidth chart
+            Theme::Set('widget-error', 'Unable to get widget details');
+        }
+    }
+
+    public function BandwidthGrid() 
+    {
 
         $fromDt = strtotime(Kit::GetParam('fromdt', _POST, _STRING));
         $toDt = strtotime(Kit::GetParam('todt', _POST, _STRING));
@@ -342,7 +451,7 @@ class statsDAO extends baseDAO
 
             $SQL .= 'ORDER BY display.display';
 
-            Debug::LogEntry('audit', $SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
+            //Debug::LogEntry('audit', $SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
 
             $sth = $dbh->prepare($SQL);
 
@@ -398,6 +507,39 @@ class statsDAO extends baseDAO
             Theme::Set('widget-error', 'Unable to get widget details');
         }
     }
+
+    public function OutputCsvForm() {
+        $response = new ResponseManager();
+
+        Theme::Set('form_id', 'OutputCsvForm');
+        Theme::Set('form_action', 'index.php?p=stats&q=OutputCSV');
+        
+        $formFields = array();
+        $formFields[] = FormManager::AddText('fromdt', __('From Date'), date("Y-m-d", time() - (86400 * 35)), NULL, 'f');
+        $formFields[] = FormManager::AddText('todt', __('To Date'), date("Y-m-d"), NULL, 't');
+
+        // List of Displays this user has permission for
+        $displays = $this->user->DisplayGroupList(1);
+        array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
+        $formFields[] = FormManager::AddCombo(
+            'displayid', 
+            __('Display'), 
+            NULL,
+            $displays,
+            'displayid',
+            'displaygroup',
+            NULL, 
+            'd');
+
+        Theme::Set('header_text', __('Bandwidth'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Set('form_class', 'XiboManualSubmit');
+        
+        $response->SetFormRequestResponse(NULL, __('Export Database Backup'), '550px', '275px');
+        $response->AddButton(__('Export'), '$("#OutputCsvForm").submit()');
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
 	
 	/**
 	 * Outputs a CSV of stats
@@ -409,9 +551,9 @@ class statsDAO extends baseDAO
 		$output		= '';
 		
 		// We are expecting some parameters
-		$fromdt		= Kit::GetParam('fromdt', _GET, _STRING);
-		$todt		= Kit::GetParam('todt', _GET, _STRING);
-		$displayID	= Kit::GetParam('displayid', _GET, _INT);
+		$fromdt		= Kit::GetParam('fromdt', _POST, _STRING);
+		$todt		= Kit::GetParam('todt', _POST, _STRING);
+		$displayID	= Kit::GetParam('displayid', _POST, _INT);
 
         if ($fromdt == $todt) {
             $todt = date("Y-m-d", strtotime($todt) + 86399);
@@ -439,7 +581,7 @@ class statsDAO extends baseDAO
 		$SQL =  'SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName ';
 		$SQL .= '  FROM stat ';
 		$SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
-		$SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
+		$SQL .= '  LEFT OUTER JOIN layout ON layout.LayoutID = stat.LayoutID ';
 		$SQL .= '  LEFT OUTER JOIN media ON media.mediaID = stat.mediaID ';
 		$SQL .= ' WHERE 1=1 ';
 		$SQL .= sprintf("  AND stat.end > '%s' ", $fromdt);

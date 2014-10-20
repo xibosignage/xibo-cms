@@ -1389,18 +1389,24 @@ class XMDSSoap {
 
         $maintenanceEnabled = Config::GetSetting('MAINTENANCE_ENABLED');
 
-        if ($loggedIn == 0 
-                && $emailAlert == 1 
-                && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected') 
+        if ($loggedIn == 0) {
+
+            // Log display up
+            $statObject = new Stat();
+            $statObject->displayUp($displayId);
+
+            // Do we need to email?
+            if ($emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected') 
                 && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
 
-            $msgTo = Kit::ValidateParam(Config::GetSetting("mail_to") ,_PASSWORD);
-            $msgFrom = Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
+                $msgTo = Kit::ValidateParam(Config::GetSetting("mail_to") ,_PASSWORD);
+                $msgFrom = Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
 
-            $subject = sprintf(__("Recovery for Display %s"), $display);
-            $body = sprintf(__("Display %s with ID %d is now back online."), $display, $displayId);
+                $subject = sprintf(__("Recovery for Display %s"), $display);
+                $body = sprintf(__("Display %s with ID %d is now back online."), $display, $displayId);
 
-            Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
+                Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
+            }
         }
     }
 

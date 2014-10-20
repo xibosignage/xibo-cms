@@ -17,21 +17,31 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Theme variables:
- *  table_rows = Array containing the table rows
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="row">
     <div class="col-md-12">
-        <p class="sub-heading"><?php echo Theme::Translate('Layouts Shown'); ?></p>
-        <?php echo Theme::Get('table_layouts_shown'); ?>
-
-        <p class="sub-heading"><?php echo Theme::Translate('Library Media Shown'); ?></p>
-        <?php echo Theme::Get('table_media_shown'); ?>
-
-        <p class="sub-heading"><?php echo Theme::Translate('Media on Layouts Shown'); ?></p>
-        <?php echo Theme::Get('table_media_on_layouts_shown'); ?>
+        <div id="availabilityChart" class="morrisChart" style="height: 230px;"></div>
     </div>
 </div>
+
+<?php if (Theme::Get('availabilityWidget') != '') { ?>
+<script type="text/javascript">
+
+    var yKeys = ['value'];
+    var labels = ['<?php echo Theme::Translate("Downtime"); ?>'];
+    var availabilityChart = {
+        type: 'bar',
+        data: {
+            element: 'availabilityChart',
+            data: <?php echo Theme::Get('availabilityWidget'); ?>,
+            xkey: 'label',
+            ykeys: yKeys,
+            labels: labels,
+            stacked: false,
+            postUnits: 's'
+        }
+    };
+</script>
+<?php } ?>
