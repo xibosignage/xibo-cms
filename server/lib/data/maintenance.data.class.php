@@ -31,22 +31,6 @@ class Maintenance extends Data
         // Check we can run mysql
         if (!function_exists('exec'))
             return $this->SetError(__('Exec is not available.'));
-
-        // Always truncate the log first
-        try {
-            $dbh = PDOConnect::init();
-            $dbh->exec('TRUNCATE TABLE `log` ');
-            $dbh->exec('TRUNCATE TABLE `oauth_log` ');          
-        }
-        catch (Exception $e) {
-            
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
-        
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-        
-            return false;
-        }
         
         // Global database variables to seed into exec
         global $dbhost;
@@ -55,29 +39,33 @@ class Maintenance extends Data
         global $dbname;
 
         // get temporary file
-        $fileName = Config::GetSetting('LIBRARY_LOCATION') . 'database.dump';
-        $zipFile = $fileName . '.tar.gz';
+        $fileNameStructure = Config::GetSetting('LIBRARY_LOCATION') . 'structure.dump';
+        $fileNameData = Config::GetSetting('LIBRARY_LOCATION') . 'data.dump';
+        $zipFile = 'database.tar.gz';
 
-        $command = 'mysqldump --opt --host=' . $dbhost . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' > ' . escapeshellarg($fileName) . ' ';
-
-        Debug::Audit($command);
-
-        // Run mysqldump to a temporary file
+        // Run mysqldump structure to a temporary file
+        $command = 'mysqldump --opt --host=' . $dbhost . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' --no-data > ' . escapeshellarg($fileNameStructure) . ' ';
+        exec($command);
+        
+        // Run mysqldump data to a temporary file
+        $command = 'mysqldump --opt --host=' . $dbhost . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' --ignore-table=' . $dbname . '.log --ignore-table=' . $dbname . '.oauth_log  > ' . escapeshellarg($fileNameData) . ' ';
         exec($command);
 
         // Check it worked
-        if (!file_exists($fileName))
+        if (!file_exists($fileNameStructure) || !file_exists($fileNameData))
             return $this->SetError(__('Database dump failed.'));
 
         // Zippy
         Debug::Audit($zipFile);
         $zip = new ZipArchive();
         $zip->open($zipFile, ZIPARCHIVE::OVERWRITE);
-        $zip->addFile($fileName, 'database.dump');
+        $zip->addFile($fileNameStructure, 'structure.dump');
+        $zip->addFile($fileNameData, 'data.dump');
         $zip->close();
 
         // Remove the dump file
-        unlink($fileName);
+        unlink($fileNameStructure);
+        unlink($fileNameData);
 
         // Uncomment only if you are having permission issues
         // chmod($zipFile, 0777);
