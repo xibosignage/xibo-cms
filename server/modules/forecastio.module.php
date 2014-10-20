@@ -446,6 +446,8 @@ class ForecastIo extends Module
         // Add our fonts.css file
         $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $headContent .= '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+        $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
+
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
         
         // Make some body content

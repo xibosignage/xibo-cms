@@ -395,6 +395,8 @@ function EmbedInit()
 
         // Add our fonts.css file
         $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+        $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
+
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
         
         // Replace the Head Content with our generated java script
