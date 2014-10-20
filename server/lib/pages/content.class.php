@@ -189,7 +189,7 @@ class contentDAO extends baseDAO {
             $row['thumbnail'] = '';
 
             if ($row['mediatype'] == 'image') {
-                $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '"><img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '&width=100&height=100&dynamic=true&thumb=true" alt="' . $row['media'] . '" /></a>';
+                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '"><i class="fa fa-file-image-o"></i></a>';
             }
 
 			$row['buttons'] = array();

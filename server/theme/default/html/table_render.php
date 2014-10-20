@@ -85,8 +85,7 @@ foreach(Theme::Get('table_rows') as $row) {
             <td>
                 <div class="btn-group pull-right">
                     <button class="btn dropdown-toggle" data-toggle="dropdown">
-                        <?php echo Theme::Translate('Action'); ?>
-                        <span class="glyphicon glyphicon-tasks"></span>
+                        <span class="fa fa-caret-down"></span>
                     </button>
                     <ul class="dropdown-menu">
                         <?php foreach($row['buttons'] as $button) {

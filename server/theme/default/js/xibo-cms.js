@@ -355,7 +355,7 @@ function XiboGridRender(gridId, autoRefresh) {
                         headerTemplate: '{content} {icon}',
                     });
                     
-                    $(sortingDiv).on('sortEnd', function(e) { 
+                    $(sortingDiv).on('sortEnd', function(e) {
                         // Store on the XiboGrid
                         $('#' + gridId).data("sorting", e.target.config.sortList);
                     });
@@ -366,7 +366,7 @@ function XiboGridRender(gridId, autoRefresh) {
             if (response.paging && response.sortable) {
                 
                 // See if we have a page number
-                var pageNumber = $('#' + gridId).data("paging"); 
+                var pageNumber = $('#' + gridId).data("paging");
                 if (pageNumber == undefined)
                     pageNumber = 0;
                 
@@ -386,9 +386,16 @@ function XiboGridRender(gridId, autoRefresh) {
                         removeRows: true,
                         output: '{startRow} - {endRow} / {filteredRows} ({totalRows})'
                     });
-                       
+
                     $(sortingDiv).on('pagerComplete', function(e,c) {
                         $('#' + gridId).data("paging", c.page);
+
+                        $(sortingDiv).find('a.img-replace').each(function() {
+                            // Swap out the image
+                            var img = $("<img>").prop("src", $(this).data().imgSrc);
+                            $(this).children().remove();
+                            $(this).append(img);
+                        });
                     });
                 }
                 else {
@@ -398,6 +405,14 @@ function XiboGridRender(gridId, autoRefresh) {
             else {
                 $("#XiboPager_" + gridId).hide();
             }
+
+            // Render any images in the grid (now that it is in pages)
+            $(sortingDiv).find('a.img-replace').each(function() {
+                // Swap out the image
+                var img = $("<img>").prop("src", $(this).data().imgSrc);
+                $(this).children().remove();
+                $(this).append(img);
+            });
 
             // Multi-select check box
             $(outputDiv).find(".selectAllCheckbox").click(function() {
