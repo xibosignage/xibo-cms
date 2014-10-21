@@ -31,6 +31,8 @@ require_once('lib/app/debug.class.php');
 require_once('lib/app/kit.class.php');
 require_once('lib/app/permissionmanager.class.php');
 require_once("lib/app/responsemanager.class.php");
+require_once("lib/app/helpmanager.class.php");
+require_once("lib/app/datemanager.class.php");
 require_once('lib/data/data.class.php');
 require_once('lib/data/nonce.data.class.php');
 require_once('lib/data/bandwidth.data.class.php');
@@ -40,6 +42,8 @@ require_once('config/config.class.php');
 include_once('lib/data/stat.data.class.php');
 require_once('lib/data/display.data.class.php');
 require_once('lib/data/file.data.class.php');
+require_once("lib/app/cache.class.php");
+require_once("lib/app/thememanager.class.php");
 require_once('lib/service/serviceresponse.class.php');
 require_once('modules/module_user_general.php');
 require_once('lib/modules/module.interface.php');
@@ -80,11 +84,10 @@ if (file_exists("upgrade.php")) {
 //parse and init the settings.xml
 Config::Load();
 
-//create a DB
-$db = new database();
-
-if (!$db->connect_db($dbhost, $dbuser, $dbpass)) trigger_error($db->error(), E_USER_ERROR);
-if (!$db->select_db($dbname)) trigger_error($db->error(), E_USER_ERROR);
+// Define an auto-load function
+spl_autoload_register(function ($class) {
+    Kit::ClassLoader($class);
+});
 
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));

@@ -200,6 +200,7 @@ class oauthDAO extends baseDAO {
                 Theme::Render('header');
                 Theme::Render('application_verify');
                 Theme::Render('footer');
+                exit();
            }
         }
         catch (OAuthException $e)

@@ -32,6 +32,7 @@ require_once("lib/app/translationengine.class.php");
 require_once("lib/app/pdoconnect.class.php");
 require_once("lib/app/debug.class.php");
 require_once("lib/app/kit.class.php");
+require_once("lib/pages/base.class.php");
 require_once("lib/data/data.class.php");
 require_once("lib/data/display.data.class.php");
 
@@ -45,32 +46,24 @@ require_once("config/db_config.php");
  *  a) This is a first time install
  *  b) This is a corrupt or failed install
  */
-if (!file_exists("settings.php")) 
-{
-	Kit::Redirect("install.php");
-	die();
+if (!file_exists("settings.php") || file_exists("upgrade.php")) {
+	die('Unable to run due to installation issue.');
 }
 
-if (file_exists("upgrade.php"))
-{
-    Kit::Redirect("upgrade.php");
-    die();
-}
+// Define an auto-load function
+spl_autoload_register(function ($class) {
+    Kit::ClassLoader($class);
+});
 
 // parse and init the settings.php
 Config::Load();
 
-// create a database class instance
-$db = new database();
-
-if (!$db->connect_db($dbhost, $dbuser, $dbpass))
-{
-    die('Xibo has a database connection problem.');
+// Test our DB connection through PDO
+try {
+    PDOConnect::init();
 }
-
-if (!$db->select_db($dbname))
-{
-    die('Xibo has a database connection problem.');
+catch (PDOException $e) {
+    die('Database connection problem. ' . $e->getMessage());
 }
 
 date_default_timezone_set(Config::GetSetting("defaultTimezone"));
@@ -135,154 +128,100 @@ else
         print "<h1>" . __("Email Alerts") . "</h1>";
         flush();
 
-        $emailAlerts = Config::GetSetting("MAINTENANCE_EMAIL_ALERTS");
-        $alwaysAlert   = Config::GetSetting("MAINTENANCE_ALWAYS_ALERT");
-
-        if ($emailAlerts == "On")
-        {
-            $emailAlerts = TRUE;
-        }
-        else
-        {
-            $emailAlerts = FALSE;
-        }
+        $emailAlerts = (Config::GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
+        $alwaysAlert = (Config::GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
         
-        if ($alwaysAlert == "On")
-        {
-            $alwaysAlert = TRUE;
-        }
-        else
-        {
-            $alwaysAlert = FALSE;
-        }
-
         // The time in the past that the last connection must be later than globally.
-        $globalTimeout = time() - (60 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_ALERT_TOUT"),_INT));
-        $msgTo         = Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
-        $msgFrom       = Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);
-            
-        // Get a list of all licensed displays
-        $SQL = "SELECT `displayid`, `lastaccessed`, `email_alert`, `alert_timeout`, `display`, `loggedin` FROM `display` WHERE licensed = 1";
+        $globalTimeout = time() - (60 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_ALERT_TOUT"), _INT));
+        $msgTo = Kit::ValidateParam(Config::GetSetting("mail_to"), _PASSWORD);
+        $msgFrom = Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
 
-        if (!$result =$db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Unable to access displays'), E_USER_ERROR);
-        }
+        foreach (Display::ValidateDisplays() as $display) {
+            // Is this the first time this display has gone "off-line"
+            $displayGoneOffline = (Kit::ValidateParam($display['loggedin'], _INT) == 1);
 
-        // Loop over the licensed displays
-        while($row = $db->get_row($result))
-        {
-            $displayid     = Kit::ValidateParam($row[0],_INT);
-            $lastAccessed  = Kit::ValidateParam($row[1],_INT);
-            $email_alert   = Kit::ValidateParam($row[2],_INT);
-            $alert_timeout = Kit::ValidateParam($row[3],_INT);
-            $display_name  = Kit::ValidateParam($row[4],_STRING);
-            $loggedin      = Kit::ValidateParam($row[5],_INT);
-            $final_timeout = $globalTimeout;
-            $last_seen     = date("Y-m-d H:i:s", $lastAccessed);
+            // Should we send an email?
+            if ($emailAlerts) {
+                if (Kit::ValidateParam($display['email_alert'], _INT) == 1) {
+                    if ($displayGoneOffline || $alwaysAlert) {
+                        // Fields for email
+                        $subject = sprintf(__("Email Alert for Display %s"), Kit::ValidateParam($display['display'], _STRING));
+                        $body = sprintf(__("Display %s with ID %d was last seen at %s."), 
+                            Kit::ValidateParam($display['display'], _STRING), 
+                            Kit::ValidateParam($display['displayid'], _INT), 
+                            date("Y-m-d H:i:s", Kit::ValidateParam($display['lastaccessed'], _INT)));
 
-            if ($alert_timeout != 0)
-            {
-                $final_timeout = time() - (60 * $alert_timeout);
-            }
-
-            if (($final_timeout > $lastAccessed) || ($lastAccessed == ''))
-            {
-                // Alert
-                // Send an email alert if either case is true:
-                //   * Email alerts are enabled for this display and we're set to always alert
-                //   * Email alerts are enabled for this display and the last time we saw this display it was logged in
-                if ($emailAlerts)
-                {
-                    if ((($email_alert == 1) && $alwaysAlert) || (($loggedin == 1) && ($email_alert == 1)))
-                    {
-                        $subject  = sprintf(__("Email Alert for Display %s"),$display_name);
-                        $body     = sprintf(__("Display %s with ID %d was last seen at %s."),$display_name,$displayid,$last_seen);
-
-                        if (Kit::SendEmail($msgTo, $msgFrom, $subject, $body))
-                        {
+                        if (Kit::SendEmail($msgTo, $msgFrom, $subject, $body)) {
                             // Successful Alert
                             print "A";
                         }
-                        else
-                        {
+                        else {
                             // Error sending Alert
                             print "E";
                         }
                     }
-                    else
-                    {
-                        // Alert disabled for this display
-                        print "D";
-                    }
                 }
-                else
-                {
-                    // Email alerts disabled globally
-                    print "X";
+                else {
+                    // Alert disabled for this display
+                    print "D";
                 }
-
-                // Update the loggedin flag in the database:
-                $SQL = sprintf("UPDATE `display` SET `loggedin` = 0 WHERE `displayid` = %d",$displayid);
-
-                if (!$r =$db->query($SQL))
-                {
-                    trigger_error($db->error());
-                    trigger_error(__('Unable to update loggedin status for display.'), E_USER_ERROR);
-                }
-                
-            }            
-            else
-            {
-                print ".";
             }
-
-            flush();
+            else {
+                // Email alerts disabled globally
+                print "X";
+            }
         }
+
+        flush();
 
         // Log Tidy
         print "<h1>" . __("Tidy Logs") . "</h1>";
-        if(Config::GetSetting("MAINTENANCE_LOG_MAXAGE")!=0 && Kit::GetParam('quick', _REQUEST, _INT) != 1)
-        {
-            $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_LOG_MAXAGE"),_INT)));
+        if (Config::GetSetting("MAINTENANCE_LOG_MAXAGE") != 0 && Kit::GetParam('quick', _REQUEST, _INT) != 1) {
+            $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_LOG_MAXAGE"), _INT)));
             
-            $SQL = sprintf("DELETE from `log` WHERE logdate < '%s'",$maxage);
-            if ((!$db->query($SQL)))
-            {
-                trigger_error($db->error());
+            try {
+                $dbh = PDOConnect::init();
+            
+                $sth = $dbh->prepare('DELETE FROM `log` WHERE logdate < :maxage');
+                $sth->execute(array(
+                        'maxage' => $maxage
+                    ));
+
+                print __('Done.');
             }
-            else
-            {
-                print __("Done.");
+            catch (Exception $e) {
+                Debug::LogEntry('error', $e->getMessage());
             }
         }
-        else
-        {
+        else {
             print "-&gt;" . __("Disabled") . "<br/>\n";
         }
+
         flush();
 
         // Stats Tidy
         print "<h1>" . __("Tidy Stats") . "</h1>";
-        if(Config::GetSetting("MAINTENANCE_STAT_MAXAGE")!=0 && Kit::GetParam('quick', _REQUEST, _INT) != 1)
-        {
+        if (Config::GetSetting("MAINTENANCE_STAT_MAXAGE") != 0 && Kit::GetParam('quick', _REQUEST, _INT) != 1) {
             $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_STAT_MAXAGE"),_INT)));
             
-            $SQL = sprintf("DELETE from `stat` WHERE statDate < '%s'",$maxage);
-            if ((!$db->query($SQL)))
-            {
-                trigger_error($db->error());
+            try {
+                $dbh = PDOConnect::init();
+            
+                $sth = $dbh->prepare('DELETE FROM `stat` WHERE statDate < :maxage');
+                $sth->execute(array(
+                        'maxage' => $maxage
+                    ));
+
+                print __('Done.');
             }
-            else
-            {
-                print __("Done.");
+            catch (Exception $e) {
+                Debug::LogEntry('error', $e->getMessage());
             }
         }
-        else
-        {
+        else {
             print "-&gt;" . __("Disabled") . "<br/>\n";
         }
+
         flush();
 
 
@@ -290,46 +229,54 @@ else
         print '<h1>' . __('Wake On LAN') . '</h1>';
 
         // Create a display object to use later
-        $displayObject = new Display($db);
+        $displayObject = new Display();
 
-        // Get a list of all displays which have WOL enabled
-        $SQL = "SELECT DisplayID, Display, WakeOnLanTime, LastWakeOnLanCommandSent FROM `display` WHERE WakeOnLan = 1";
+        try {
+            $dbh = PDOConnect::init();
+        
+            // Get a list of all displays which have WOL enabled
+            $sth = $dbh->prepare('SELECT DisplayID, Display, WakeOnLanTime, LastWakeOnLanCommandSent FROM `display` WHERE WakeOnLan = 1');
+            $sth->execute(array());
 
-        foreach($db->GetArray($SQL) as $row)
-        {
-            $displayId = Kit::ValidateParam($row['DisplayID'], _INT);
-            $display = Kit::ValidateParam($row['Display'], _STRING);
-            $wakeOnLanTime = Kit::ValidateParam($row['WakeOnLanTime'], _STRING);
-            $lastWakeOnLan = Kit::ValidateParam($row['LastWakeOnLanCommandSent'], _INT);
-
-            // Time to WOL (with respect to today)
-            $timeToWake = strtotime(date('Y-m-d') . ' ' . $wakeOnLanTime);
-            $timeNow = time();
-
-            // Should the display be awake?
-            if ($timeNow >= $timeToWake)
-            {
-                // Client should be awake, so has this displays WOL time been passed
-                if ($lastWakeOnLan < $timeToWake)
+            foreach($sth->fetchAll() as $row) {
+                $displayId = Kit::ValidateParam($row['DisplayID'], _INT);
+                $display = Kit::ValidateParam($row['Display'], _STRING);
+                $wakeOnLanTime = Kit::ValidateParam($row['WakeOnLanTime'], _STRING);
+                $lastWakeOnLan = Kit::ValidateParam($row['LastWakeOnLanCommandSent'], _INT);
+    
+                // Time to WOL (with respect to today)
+                $timeToWake = strtotime(date('Y-m-d') . ' ' . $wakeOnLanTime);
+                $timeNow = time();
+    
+                // Should the display be awake?
+                if ($timeNow >= $timeToWake)
                 {
-                    // Call the Wake On Lan method of the display object
-                    if (!$displayObject->WakeOnLan($displayId))
-                        print $display . ':Error=' . $displayObject->GetErrorMessage() . '<br/>\n';
+                    // Client should be awake, so has this displays WOL time been passed
+                    if ($lastWakeOnLan < $timeToWake)
+                    {
+                        // Call the Wake On Lan method of the display object
+                        if (!$displayObject->WakeOnLan($displayId))
+                            print $display . ':Error=' . $displayObject->GetErrorMessage() . '<br/>\n';
+                        else
+                            print $display . ':Sent WOL Message. Previous WOL send time: ' . date('Y-m-d H:i:s', $lastWakeOnLan) . '<br/>\n';
+                    }
                     else
-                        print $display . ':Sent WOL Message. Previous WOL send time: ' . date('Y-m-d H:i:s', $lastWakeOnLan) . '<br/>\n';
-                }
-                else
-                    print $display . ':Display already awake. Previous WOL send time: ' . date('Y-m-d H:i:s', $lastWakeOnLan) . '<br/>\n';
-             }
-             else
-                print $display . ':Sleeping<br/>\n';
-                print $display . ':N/A<br/>\n';
+                        print $display . ':Display already awake. Previous WOL send time: ' . date('Y-m-d H:i:s', $lastWakeOnLan) . '<br/>\n';
+                 }
+                 else
+                    print $display . ':Sleeping<br/>\n';
+                    print $display . ':N/A<br/>\n';
+            }
+
+            print __('Done.');
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
         }
 
         flush();
     }
-    else
-    {
+    else {
         print __("Maintenance key invalid.");
     }
 }

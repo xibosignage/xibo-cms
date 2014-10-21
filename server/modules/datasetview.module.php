@@ -33,6 +33,14 @@ class datasetview extends Module
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
 
+    private function InstallFiles() {
+        $media = new Media();
+        $media->AddModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
+        $media->AddModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
+        $media->AddModuleFile('modules/preview/xibo-layout-scaler.js');
+        $media->AddModuleFile('modules/preview/xibo-dataset-render.js');
+    }
+
     /**
      * Return the Add Form as HTML
      * @return
@@ -405,7 +413,18 @@ class datasetview extends Module
 
     public function GetResource($displayId = 0)
     {
-        $db =& $this->db;
+        // Make sure this module is installed correctly
+        $this->InstallFiles();
+
+        // Load in the template
+        if ($this->layoutSchemaVersion == 1)
+            $template = file_get_contents('modules/preview/Html4TransitionalTemplate.html');
+        else
+            $template = file_get_contents('modules/preview/HtmlTemplate.html');
+
+        // Replace the View Port Width?
+        if (isset($_GET['preview']))
+            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
 
         // Get the embedded HTML out of RAW
         $rawXml = new DOMDocument();
@@ -433,22 +452,30 @@ class datasetview extends Module
         );
 
         $headContent  = '<style type="text/css">' . $styleSheet . '</style>';
-        $headContent .= '<script type="text/javascript">';
-        $headContent .= '   function init() { ';
-        $headContent .= '       $("#DataSetTableContainer").dataSetRender(options);';
-        $headContent .= '   } ';
-        $headContent .= '   var options = ' . json_encode($options) . ';';
-        $headContent .= '</script>';
-
-        // Load the HtmlTemplate
-        $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
-
-        // Preview?
-        if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->width . 'px', $template);
+        // Add our fonts.css file
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+        $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
 
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml($displayId), $template);
+
+        // Build some JS nodes
+        $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-dataset-render.js"></script>';
+
+        $javaScriptContent .= '<script type="text/javascript">';
+        $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
+        $javaScriptContent .= '   $(document).ready(function() { ';
+        $javaScriptContent .= '       $("#DataSetTableContainer").dataSetRender(options); $("body").xiboLayoutScaler(options);';
+        $javaScriptContent .= '   }); ';
+        $javaScriptContent .= '</script>';
+
+        // Replace the Head Content with our generated javascript
+        $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
 
         return $template;
     }

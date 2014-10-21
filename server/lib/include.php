@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-define('WEBSITE_VERSION', 80);
+define('WEBSITE_VERSION', 81);
 
 // No errors reported until we read the settings from the DB
 error_reporting(0);
@@ -41,10 +41,11 @@ require_once("lib/app/helpmanager.class.php");
 require_once("lib/app/responsemanager.class.php");
 require_once("lib/app/datemanager.class.php");
 require_once("lib/app/app_functions.php");
+require_once("lib/data/data.class.php");
 require_once("lib/modules/module.interface.php");
 require_once("lib/modules/module.class.php");
-require_once("lib/data/data.class.php");
 require_once("lib/app/session.class.php");
+require_once("lib/app/cache.class.php");
 require_once("lib/app/thememanager.class.php");
 require_once("lib/pages/base.class.php");
 
@@ -110,6 +111,11 @@ date_default_timezone_set(Config::GetSetting("defaultTimezone"));
 
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));
+
+// Define an auto-load function
+spl_autoload_register(function ($class) {
+    Kit::ClassLoader($class);
+});
 
 // Define the VERSION
 Config::Version();

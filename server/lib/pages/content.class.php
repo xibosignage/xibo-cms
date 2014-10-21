@@ -164,7 +164,7 @@ class contentDAO extends baseDAO {
             $cols[] = array('name' => 'thumbnail', 'title' => __('Thumbnail'));
 
         $cols[] = array('name' => 'duration_text', 'title' => __('Duration'));
-        $cols[] = array('name' => 'size_text', 'title' => __('Size'));
+        $cols[] = array('name' => 'size_text', 'title' => __('Size'), 'sorter' => 'filesize');
         $cols[] = array('name' => 'owner', 'title' => __('Owner'));
         $cols[] = array('name' => 'permissions', 'title' => __('Permissions'));
         $cols[] = array('name' => 'revised', 'title' => __('Revised?'), 'icons' => true);
@@ -188,8 +188,9 @@ class contentDAO extends baseDAO {
             // Thumbnail URL
             $row['thumbnail'] = '';
 
-            if ($row['mediatype'] == 'image')
-                $row['thumbnail'] = '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '&width=100&height=100&dynamic=true&thumb=true" alt="' . $row['media'] . '" />';
+            if ($row['mediatype'] == 'image') {
+                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '"><i class="fa fa-file-image-o"></i></a>';
+            }
 
 			$row['buttons'] = array();
 
@@ -257,7 +258,7 @@ class contentDAO extends baseDAO {
 		$response = new ResponseManager();
 		
 		// Get a list of the enabled modules and then create buttons for them
-		if (!$enabledModules = new ModuleManager($db, $user, 0, '', -1)) 
+		if (!$enabledModules = new ModuleManager($user, 0, '', -1)) 
             trigger_error($enabledModules->message, E_USER_ERROR);
 		
 		$buttons = array();
@@ -300,7 +301,7 @@ class contentDAO extends baseDAO {
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryAssignView">');
-        Theme::Set('pager', ResponseManager::Pager($id, 'form_grid_pager'));
+        Theme::Set('pager', ResponseManager::Pager($id, 'grid_pager'));
         
         // Module types filter
         $modules = $this->user->ModuleAuth(0, '', 1);

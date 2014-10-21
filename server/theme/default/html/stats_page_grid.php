@@ -25,12 +25,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <div class="row">
     <div class="col-md-12">
-        <p><?php echo Theme::Translate('Export raw data to CSV'); ?></p>
-        <form action="<?php echo Theme::Get('form_action'); ?>">
-            <?php echo Theme::Get('form_meta'); ?>
-            <button type="submit"><?php echo Theme::Translate('Export'); ?></button>
-        </form>
-
         <p class="sub-heading"><?php echo Theme::Translate('Layouts Shown'); ?></p>
         <?php echo Theme::Get('table_layouts_shown'); ?>
 

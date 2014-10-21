@@ -20,6 +20,9 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
+require_once("lib/pages/module.class.php");
+Kit::ClassLoader('layout');
+
 class Region extends Data
 {
 	// Caching
@@ -27,14 +30,6 @@ class Region extends Data
 	private $layoutDocument;
 
 	public $delayFinalise = false;
-
-	public function __construct(database $db) 
-	{
-		$this->db 	=& $db;
-		
-		require_once("lib/pages/module.class.php");
-		Kit::ClassLoader('layout');
-	}
 	
 	/**
 	 * Gets the Xml for the specified layout
@@ -44,7 +39,7 @@ class Region extends Data
 	public function GetLayoutXml($layoutid)
 	{
 		if ($this->layoutXml == '') {
-			$layout = new Layout($this->db);
+			$layout = new Layout();
 			$this->layoutXml = $layout->GetLayoutXml($layoutid);
 		}
 
@@ -97,7 +92,7 @@ class Region extends Data
 
         //Do we have a region ID provided?
         if ($regionid == '')
-            $regionid = uniqid();
+            $regionid = Kit::uniqid();
 
         // Validation
 		if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))

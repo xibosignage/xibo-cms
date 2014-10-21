@@ -19,27 +19,41 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
+// Translations we want always available
+Theme::SetTranslation('multiselect', Theme::Translate('Multiple Items Selected'));
+Theme::SetTranslation('multiselectNoItemsMessage', Theme::Translate('Sorry, no items have been selected.'));
+Theme::SetTranslation('multiselectMessage', Theme::Translate('Caution, you have selected %1 items. Clicking save will run the %2 transaction on all these items.'));
+Theme::SetTranslation('save', Theme::Translate('Save'));
+Theme::SetTranslation('cancel', Theme::Translate('Cancel'));
+Theme::SetTranslation('close', Theme::Translate('Close'));
+Theme::SetTranslation('success', Theme::Translate('Success'));
+Theme::SetTranslation('failure', Theme::Translate('Failure'));
 ?>
                 </div>
             </div>
+        </div>
         </div>
         </div>
 
 		<script src="theme/default/libraries/jquery/jquery-1.11.1.min.js"></script>
 		<script src="theme/default/libraries/jquery/jquery.validate.min.js"></script>
 		<script src="theme/default/libraries/jquery/additional-methods.min.js"></script>
-		<script src="theme/default/libraries/jquery/jquery.metadata.js"></script>
-		<script src="theme/default/libraries/jquery/jquery.tablesorter.pack.js"></script>
-		<script src="theme/default/libraries/jquery/jquery.tablesorter.pager.js"></script>
-		<script src="theme/default/libraries/jquery/jquery-ui/jquery-ui-1.10.2.custom.min.js"></script>
-    	<script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
-    	<script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>
+        <script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
+        <script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>
         <script src="theme/default/libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+        <?php echo Theme::Script('libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.' . TranslationEngine::GetJsLocale() . '.js'); ?>
+        <script src="theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.min.js"></script>
+        <script src="theme/default/libraries/jquery-tablesorter/addons/pager/jquery.tablesorter.pager.min.js"></script>
+		<script src="theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.widgets.min.js"></script>
+		<script src="theme/default/libraries/jquery/jquery-ui/jquery-ui-1.10.2.custom.min.js"></script>
         <script src="theme/default/libraries/bootstrap-colorpicker/js/bootstrap-colorpicker.min.js"></script>
         <script src="theme/default/libraries/bootstrap-select/js/bootstrap-select.min.js"></script>
+        <script src="theme/default/libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.js"></script>
         <script src="theme/default/libraries/underscore/underscore-min.js"></script>
         <script src="theme/default/libraries/jstimezonedetect/jstz.min.js"></script>
-    	<script src="theme/default/libraries/calendar/js/calendar.js"></script>
+        <script src="theme/default/libraries/calendar/js/calendar.js"></script>
+        <?php echo Theme::Script('libraries/calendar/js/language/' . TranslationEngine::GetJsLocale() . '.js'); ?>
         <script src="theme/default/libraries/ckeditor/ckeditor.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootstrap-ckeditor-fix.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/tmpl.min.js"></script>
@@ -50,6 +64,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <script src="theme/default/libraries/jquery-file-upload/js/jquery.fileupload-resize.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/jquery.fileupload-validate.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/jquery.fileupload-ui.js"></script>
+        <script src="theme/default/libraries/jquery-message-queuing/jquery.ba-jqmq.min.js"></script>
         <script src="theme/default/libraries/date-time-format.js"></script>
         <script src="theme/default/libraries/morrisjs/raphael.min.js"></script>
         <script src="theme/default/libraries/morrisjs/morris.min.js"></script>
@@ -59,5 +74,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     	<script src="theme/default/js/xibo-preview-timeline.js"></script>
     	<script src="theme/default/js/xibo-calendar.js"></script>
     	<script src="theme/default/js/xibo-datasets.js"></script>
+        <script type="text/javascript">
+        var translations = <?php echo ((Theme::Get('translations') == '') ? '{}' : Theme::Get('translations')); ?>;
+        var language = "<?php echo TranslationEngine::GetJsLocale(); ?>";
+        var dateFormat = "<?php echo Config::GetSetting('DATE_FORMAT', 'Y-m-d h:i'); ?>";
+        </script>
 	</body>
 </html>

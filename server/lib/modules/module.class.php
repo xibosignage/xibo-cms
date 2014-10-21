@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+include_once('lib/data/media.data.class.php');
 
 abstract class Module implements ModuleInterface
 {
@@ -37,6 +38,7 @@ abstract class Module implements ModuleInterface
     protected $previewEnabled;
     protected $validExtensions;
     protected $validExtensionsText;
+    protected $imageUri;
     protected $settings;
 
     // The Schema Version of this code
@@ -51,6 +53,7 @@ abstract class Module implements ModuleInterface
 	protected $deleteFromRegion;
     protected $width;
     protected $height;
+    protected $layoutSchemaVersion;
 
     // Media information
     protected $mediaid;
@@ -145,6 +148,7 @@ abstract class Module implements ModuleInterface
             $this->validExtensionsText = Kit::ValidateParam($row['ValidExtensions'], _STRING);
             $this->previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
             $this->assignable = Kit::ValidateParam($row['assignable'], _INT);
+            $this->imageUri = Kit::ValidateParam($row['ImageUri'], _STRING);
             $this->render_as = Kit::ValidateParam($row['render_as'], _WORD);
             $this->settings = Kit::ValidateParam($row['settings'], _HTMLSTRING);
 
@@ -155,7 +159,7 @@ abstract class Module implements ModuleInterface
             if ($this->settings == '')
                 $this->settings = array();
             else
-                $this->settings = json_decode($this->settings);
+                $this->settings = json_decode($this->settings, true);
 
             // Translated name of this module
             $this->displayType = __(Kit::ValidateParam($row['Name'], _STRING));
@@ -200,6 +204,8 @@ abstract class Module implements ModuleInterface
 
             $layoutDoc = new DOMDocument();
             $layoutDoc->loadXML($layoutXml);
+            
+            $this->layoutSchemaVersion = (int)$layoutDoc->documentElement->getAttribute('schemaVersion');
 
             $layoutXpath = new DOMXPath($layoutDoc);
 
@@ -821,6 +827,7 @@ END;
             case 'video':
             case 'localvideo':
             case 'genericfile':
+            case 'font':
                 $defaultDuration = 0;
                 break;
 
@@ -837,7 +844,7 @@ END;
                 break;
 
             default:
-                $defaultDuration = '';
+                $defaultDuration = 10;
         }
         
 
@@ -979,6 +986,11 @@ END;
                 'r');
         }
 
+        $formFields[] = FormManager::AddCheckbox('deleteOldVersion', __('Delete the old version.'), 
+                ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0), 
+                __('Completely remove the old version of this media item if a new file is being uploaded.'), 
+                '');
+
         // Add in any extra form fields we might have provided by the super-class
         if ($extraFormFields != NULL && is_array($extraFormFields)) {
             foreach($extraFormFields as $field) {
@@ -1085,7 +1097,6 @@ END;
         }
 
         // Hand off to the media module
-        Kit::ClassLoader('media');
         $mediaObject = new Media($db);
 
         // Stored As from the XML
@@ -1116,10 +1127,7 @@ END;
             }            	
 
             // Are we on a region
-            if ($regionid != '')
-            {
-                Kit::ClassLoader('layoutmediagroupsecurity');
-
+            if ($regionid != '') {
                 $security = new LayoutMediaGroupSecurity($db);
                 $security->Copy($layoutid, $regionid, $mediaid, $new_mediaid);
             }
@@ -1176,6 +1184,12 @@ END;
         if (Kit::GetParam('replaceInLayouts', _POST, _CHECKBOX) == 1)
             $this->ReplaceMediaInAllLayouts($mediaid, $this->mediaid, $this->duration);
 
+        // Do we need to delete the old media item?
+        if ($tmpName != '' && Kit::GetParam('deleteOldVersion', _POST, _CHECKBOX) == 1) {
+            if (!$mediaObject->Delete($mediaid))
+                $this->response->message .= ' ' . __('Failed to remove old media');
+        }
+        
         return $this->response;
     }
 
@@ -1337,7 +1351,7 @@ END;
 
         // Default Hover window contains a thumbnail, media type and duration
         $output = '<div class="well">';
-        $output .= '<div class="preview-module-image"><img alt="' . $this->displayType . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif"></div>';
+        $output .= '<div class="preview-module-image"><img alt="' . $this->displayType . ' thumbnail" src="theme/default/img/' . $this->imageUri . '"></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . $msgType . ': ' . $this->displayType . '</li>';
@@ -1371,52 +1385,37 @@ END;
         if (!$this->auth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this media'), E_USER_ERROR);
 
-        // List of all Groups with a view/edit/delete checkbox
-        $SQL = '';
-        $SQL .= 'SELECT `group`.GroupID, `group`.`Group`, View, Edit, Del, `group`.IsUserSpecific ';
-        $SQL .= '  FROM `group` ';
-
-        if ($this->assignedMedia)
-        {
-            $SQL .= '   LEFT OUTER JOIN lklayoutmediagroup ';
-            $SQL .= '   ON lklayoutmediagroup.GroupID = group.GroupID ';
-            $SQL .= sprintf(" AND lklayoutmediagroup.MediaID = '%s' AND lklayoutmediagroup.RegionID = '%s' AND lklayoutmediagroup.LayoutID = %d ", $this->mediaid, $this->regionid, $this->layoutid);
+        // List of all Groups with a view / edit / delete check box
+        $permissions = new UserGroup();
+        
+        if ($this->assignedMedia) {
+            if (!$result = $permissions->GetPermissionsForObject('lklayoutmediagroup', NULL, NULL, sprintf(" AND lklayoutmediagroup.MediaID = '%s' AND lklayoutmediagroup.RegionID = '%s' AND lklayoutmediagroup.LayoutID = %d ", $this->mediaid, $this->regionid, $this->layoutid)))
+                trigger_error($permissions->GetErrorMessage(), E_USER_ERROR);
         }
-        else
-        {
-            $SQL .= '   LEFT OUTER JOIN lkmediagroup ';
-            $SQL .= '   ON lkmediagroup.GroupID = group.GroupID ';
-            $SQL .= sprintf('       AND lkmediagroup.MediaID = %d ', $this->mediaid);
+        else {
+            if (!$result = $permissions->GetPermissionsForObject('lkmediagroup', 'MediaID', $this->mediaid))
+                trigger_error($permissions->GetErrorMessage(), E_USER_ERROR); 
         }
 
-        $SQL .= ' WHERE `group`.GroupID <> %d ';
-        $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
+        if (count($result) <= 0)
+            trigger_error(__('Unable to get permissions'), E_USER_ERROR);
 
-        $SQL = sprintf($SQL, $user->getGroupFromId($user->userid, true));
+        $checkboxes = array();
 
-        Debug::LogEntry('audit', $SQL, 'module', 'PermissionsForm');
-
-        if (!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get permissions for this layout'), E_USER_ERROR);
-        }
-
-        while ($row = $db->get_assoc_row($results))
-        {
-            $groupId = $row['GroupID'];
-            $rowClass = ($row['IsUserSpecific'] == 0) ? 'strong_text' : '';
+        foreach ($result as $row) {
+            $groupId = $row['groupid'];
+            $rowClass = ($row['isuserspecific'] == 0) ? 'strong_text' : '';
 
             $checkbox = array(
                     'id' => $groupId,
-                    'name' => Kit::ValidateParam($row['Group'], _STRING),
+                    'name' => Kit::ValidateParam($row['group'], _STRING),
                     'class' => $rowClass,
                     'value_view' => $groupId . '_view',
-                    'value_view_checked' => (($row['View'] == 1) ? 'checked' : ''),
+                    'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
                     'value_edit' => $groupId . '_edit',
-                    'value_edit_checked' => (($row['Edit'] == 1) ? 'checked' : ''),
+                    'value_edit_checked' => (($row['edit'] == 1) ? 'checked' : ''),
                     'value_del' => $groupId . '_del',
-                    'value_del_checked' => (($row['Del'] == 1) ? 'checked' : ''),
+                    'value_del_checked' => (($row['del'] == 1) ? 'checked' : ''),
                 );
 
             $checkboxes[] = $checkbox;
@@ -2117,6 +2116,13 @@ END;
         
             return false;
         }
+    }
+
+    public function GetSetting($setting, $default = NULL) {
+        if (isset($this->settings[$setting]))
+            return $this->settings[$setting];
+        else
+            return $default;
     }
     
     /**

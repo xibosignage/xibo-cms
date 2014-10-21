@@ -123,7 +123,7 @@ class userDAO extends baseDAO {
         setSession('user_admin', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Generate the results
-        $sql  = "SELECT user.UserID, user.UserName, user.usertypeid, user.loggedin, user.lastaccessed, user.email, user.homepage ";
+        $sql  = "SELECT user.UserID, user.UserName, user.usertypeid, user.loggedin, user.lastaccessed, user.email, user.homepage, user.retired ";
         $sql .= " FROM `user` ";
         $sql .= " WHERE 1 = 1 ";
 
@@ -155,7 +155,8 @@ class userDAO extends baseDAO {
         $cols = array(
                 array('name' => 'UserName', 'title' => __('Name')),
                 array('name' => 'homepage', 'title' => __('Homepage')),
-                array('name' => 'email', 'title' => __('Email'))
+                array('name' => 'email', 'title' => __('Email')),
+                array('name' => 'retired', 'title' => __('Retired?'), 'icons' => true)
             );
         Theme::Set('table_cols', $cols);
 
@@ -335,7 +336,7 @@ class userDAO extends baseDAO {
 
         $userID	= Kit::GetParam('userid', _POST, _INT, 0);
         $username   = Kit::GetParam('edit_username', _POST, _STRING);
-        $email      = Kit::GetParam('edit_email', _POST, _STRING);
+        $email      = Kit::GetParam('email', _POST, _STRING);
         $usertypeid	= Kit::GetParam('usertypeid', _POST, _INT, 0);
         $homepage   = Kit::GetParam('homepage', _POST, _STRING, 'dashboard');
         $retired = Kit::GetParam('retired', _POST, _CHECKBOX);

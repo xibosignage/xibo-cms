@@ -321,6 +321,7 @@ CREATE TABLE IF NOT EXISTS `media` (
   `retired` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is retired?',
   `isEdited` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is this the current record',
   `editedMediaID` int(11) DEFAULT NULL COMMENT 'The Parent ID',
+  `is_module` tinyint(4) NOT NULL DEFAULT  '0',
   PRIMARY KEY (`mediaID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=9 ;
 
@@ -530,12 +531,13 @@ CREATE TABLE IF NOT EXISTS `stat` (
   `statDate` datetime NOT NULL COMMENT 'State entry date',
   `scheduleID` int(8) NOT NULL,
   `displayID` int(4) NOT NULL,
-  `layoutID` int(8) NOT NULL,
+  `layoutID` int(8) NULL,
   `mediaID` varchar(50) DEFAULT NULL,
   `start` datetime NOT NULL,
-  `end` datetime NOT NULL,
+  `end` datetime NULL,
   `Tag` varchar(254) DEFAULT NULL,
-  PRIMARY KEY (`statID`)
+  PRIMARY KEY (`statID`),
+  KEY `statDate` (`statDate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 CREATE TABLE IF NOT EXISTS `template` (

@@ -33,14 +33,6 @@ class XMDSSoap {
     private $clientVersion;
     private $clientCode;
 
-    // Unfortunately we still need this for this data classes that require a DB
-    private $db;
-    public function __construct()
-    {
-        global $db;
-        $this->db =& $db;
-    }
-
     /**
      * Registers a new display
      * @param <type> $serverKey
@@ -49,7 +41,7 @@ class XMDSSoap {
      * @param <type> $version
      * @return <type>
      */
-    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $macAddress, $version) {
+    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $version) {
     
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
@@ -80,7 +72,7 @@ class XMDSSoap {
         try {
             $dbh = PDOConnect::init();
             $sth = $dbh->prepare('
-                SELECT licensed, display, displayid, displayprofileid, client_type, version_instructions, screenShotRequested
+                SELECT licensed, display, displayid, displayprofileid, client_type, version_instructions, screenShotRequested, email_alert, loggedin
                   FROM display 
                 WHERE license = :hardwareKey');
 
@@ -127,6 +119,8 @@ class XMDSSoap {
             $clientType = Kit::ValidateParam($row['client_type'], _WORD);
             $versionInstructions = Kit::ValidateParam($row['version_instructions'], _HTMLSTRING);
             $screenShotRequested = Kit::ValidateParam($row['screenShotRequested'], _INT);
+            $emailAlert = Kit::ValidateParam($row['email_alert'], _INT);
+            $loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
 
             // Determine if we are licensed or not
             if ($row['licensed'] == 0) {
@@ -146,62 +140,59 @@ class XMDSSoap {
                 try {
                     $dbh = PDOConnect::init();
 
-                    $displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
-                    $params = array();
-
-                    if ($displayProfileId == 0) {
-                        $sth = $dbh->prepare('SELECT name, config FROM `displayprofile` WHERE type = :type AND isdefault = 1');
-                        $params['type'] = $clientType;
+                    $displayProfile = new DisplayProfile();
+                    $displayProfile->displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
+                    
+                    if ($displayProfile->displayProfileId == 0) {
+                        // Load the default profile
+                        $displayProfile->type = $clientType;
+                        $displayProfile->LoadDefault();
                     }
                     else {
-                        $sth = $dbh->prepare('SELECT name, config FROM `displayprofile` WHERE displayprofileid = :displayprofileid');
-                        $params['displayprofileid'] = $displayProfileId;
+                        // Load the specified profile
+                        $displayProfile->Load();
                     }
-                
-                    $sth->execute($params);
 
-                    if ($row = $sth->fetch()) {
+                    // Load the config and inject the display name
+                    if ($clientType == 'windows') {
+                        $displayProfile->config[] = array(
+                            'name' => 'DisplayName',
+                            'value' => $display,
+                            'type' => 'string'
+                        );
+                        $displayProfile->config[] = array(
+                            'name' => 'ScreenShotRequested',
+                            'value' => $screenShotRequested,
+                            'type' => 'checkbox'
+                        );
+                    }
+                    else {
+                        $displayProfile->config[] = array(
+                            'name' => 'displayName',
+                            'value' => $display,
+                            'type' => 'string'
+                        );
+                        $displayProfile->config[] = array(
+                            'name' => 'screenShotRequested',
+                            'value' => $screenShotRequested,
+                            'type' => 'checkbox'
+                        );
+                    }
 
-                        // Load the config and inject the display name
-                        $config = json_decode(Kit::ValidateParam($row['config'], _HTMLSTRING), true);
-
-                        if ($clientType == 'windows') {
-                            $config[] = array(
-                                'name' => 'DisplayName',
-                                'value' => $display,
-                                'type' => 'string'
-                            );
-                            $config[] = array(
-                                'name' => 'ScreenShotRequested',
-                                'value' => $screenShotRequested,
-                                'type' => 'checkbox'
-                            );
-                        }
-                        else {
-                            $config[] = array(
-                                'name' => 'displayName',
-                                'value' => $display,
-                                'type' => 'string'
-                            );
-                            $config[] = array(
-                                'name' => 'screenShotRequested',
-                                'value' => $screenShotRequested,
-                                'type' => 'checkbox'
-                            );
-                        }
-
-                        // Create the XML nodes
-                        foreach($config as $arrayItem) {
-                            $node = $return->createElement($arrayItem['name'], $arrayItem['value']);
-                            $node->setAttribute('type', $arrayItem['type']);
-                            $displayElement->appendChild($node);
-                        }
+                    // Create the XML nodes
+                    foreach($displayProfile->config as $arrayItem) {
+                        $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
+                        $node->setAttribute('type', $arrayItem['type']);
+                        $displayElement->appendChild($node);
                     }
                 }
                 catch (Exception $e) {
                     Debug::LogEntry('error', $e->getMessage());
                     throw new SoapFault('Sender', 'Error after display found');
                 }
+
+                // Send Notification if required
+                $this->AlertDisplayUp($displayid, $display, $loggedIn, $emailAlert);
             }
         }
 
@@ -320,11 +311,17 @@ class XMDSSoap {
             $dbh = PDOConnect::init();
         
             // Add file nodes to the $fileElements
-            $SQL  = " SELECT 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, MD5(layout.xml) AS `MD5`, NULL AS FileSize, layout.xml AS xml ";
+            $SQL  = "
+                    SELECT 1 AS DownloadOrder, 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml 
+                       FROM `media`
+                     WHERE media.type IN ('module', 'font') 
+                    UNION
+                    ";
+            $SQL .= " SELECT 4 AS DownloadOrder, 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, MD5(layout.xml) AS `MD5`, NULL AS FileSize, layout.xml AS xml ";
             $SQL .= "   FROM layout ";
             $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
             $SQL .= " UNION ";
-            $SQL .= " SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml ";
+            $SQL .= " SELECT 3 AS DownloadOrder, 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml ";
             $SQL .= "   FROM media ";
             $SQL .= "   INNER JOIN lklayoutmedia ";
             $SQL .= "   ON lklayoutmedia.MediaID = media.MediaID ";
@@ -333,7 +330,7 @@ class XMDSSoap {
             $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
             $SQL .= "
                     UNION
-                    SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml 
+                    SELECT 2 AS DownloadOrder, 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml 
                        FROM `media`
                         INNER JOIN `lkmediadisplaygroup`
                         ON lkmediadisplaygroup.mediaid = media.MediaID
@@ -341,7 +338,7 @@ class XMDSSoap {
                         ON lkdisplaydg.DisplayGroupID = lkmediadisplaygroup.DisplayGroupID
                     ";
             $SQL .= " WHERE lkdisplaydg.DisplayID = :displayId ";
-            $SQL .= " ORDER BY RecordType DESC";
+            $SQL .= " ORDER BY DownloadOrder, RecordType DESC";
     
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
@@ -422,7 +419,7 @@ class XMDSSoap {
         // Go through each layout and see if we need to supply any resource nodes.
         foreach ($layouts as $layoutId) {
             // Load the layout XML and work out if we have any ticker / text / dataset media items
-            $layout = new Layout($this->db);
+            $layout = new Layout();
 
             $layoutInformation = $layout->LayoutInformation($layoutId);
 
@@ -650,6 +647,15 @@ class XMDSSoap {
         
         try {
             $dbh = PDOConnect::init();
+
+            // Get all the module dependants
+            $sth = $dbh->prepare('SELECT DISTINCT StoredAs FROM `media` WHERE type IN (\'module\', \'font\')');
+            $sth->execute(array());
+            $rows = $sth->fetchAll();
+            $moduleDependents = array();
+
+            foreach($rows as $dependent)
+                $moduleDependents[] = $dependent['StoredAs'];
         
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
@@ -680,7 +686,7 @@ class XMDSSoap {
                 $todt = date('Y-m-d H:i:s', $row[2]);
                 $scheduleid = $row[3];
                 $is_priority = Kit::ValidateParam($row[4], _INT);
-                $dependents = Kit::ValidateParam($row[5], _STRING);
+                $dependents = implode(',', $moduleDependents) . ',' . Kit::ValidateParam($row[5], _STRING);
     
                 // Add a layout node to the schedule
                 $layout = $scheduleXml->createElement("layout");
@@ -710,6 +716,7 @@ class XMDSSoap {
             $layout->setAttribute("todt", '2030-01-19 00:00:00');
             $layout->setAttribute("scheduleid", 0);
             $layout->setAttribute("priority", 0);
+            $layout->setAttribute("dependents", implode(',', $moduleDependents));
 
             $layoutElements->appendChild($layout);
         }
@@ -718,6 +725,15 @@ class XMDSSoap {
         $default = $scheduleXml->createElement("default");
         $default->setAttribute("file", $this->defaultLayoutId);
         $layoutElements->appendChild($default);
+
+        // Add on a list of global dependants
+        $globalDependents = $scheduleXml->createElement("dependants");
+
+        foreach ($moduleDependents as $dep) {
+            $dependent = $scheduleXml->createElement("file", $dep);
+            $globalDependents->appendChild($dependent);
+        }
+        $layoutElements->appendChild($globalDependents);
 
         // Format the output
         $scheduleXml->formatOutput = true;
@@ -980,7 +996,7 @@ class XMDSSoap {
             throw new SoapFault('Receiver', "Stat XML is empty.");
         
         // Log
-        $statObject = new Stat($this->db);
+        $statObject = new Stat();
 
         // Log
         if ($this->isAuditing == 1) 
@@ -1141,21 +1157,25 @@ class XMDSSoap {
 
         // What type of module is this?
         Kit::ClassLoader('region');
-        $region = new region($this->db);
+        $region = new region();
         $type = $region->GetMediaNodeType($layoutId, $regionId, $mediaId);
 
         if ($type == '')
             throw new SoapFault('Receiver', 'Unable to get the media node type');
 
         // Dummy User Object
-        $user = new User($this->db);
+        $user = new User();
         $user->userid = 0;
         $user->usertypeid = 1;
+
+        // Initialise the theme (for global styles in GetResource)
+        new Theme($user);
+        Theme::SetPagename($this->p);
 
         // Get the resource from the module
         require_once('modules/' . $type . '.module.php');
         
-        if (!$module = new $type($this->db, $user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $type(new Database(), $user, $mediaId, $layoutId, $regionId))
             throw new SoapFault('Receiver', 'Cannot create module. Check CMS Log');
 
         $resource = $module->GetResource($this->displayId);
@@ -1328,25 +1348,10 @@ class XMDSSoap {
             if ($row['licensed'] == 0)
                 return false;
         
-            // Pull the client IP address
-            $clientAddress = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
-        
-            // See if the client was offline and if appropriate send an alert
-            // to say that it has come back online
-            if ($row['loggedin'] == 0 
-                    && $row['email_alert'] == 1 
-                    && (Config::GetSetting('MAINTENANCE_ENABLED') == 'On' || Config::GetSetting('MAINTENANCE_ENABLED') == 'Protected') 
-                    && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
+            // See if the client was off-line and if appropriate send an alert
+            // to say that it has come back on-line
+            $this->AlertDisplayUp($row['displayID'], $row['display'], $row['loggedin'], $row['email_alert']);
 
-                $msgTo    = Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
-                $msgFrom  = Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);
-
-                $subject  = sprintf(__("Recovery for Display %s"),$row[7]);
-                $body     = sprintf(__("Display %s with ID %d is now back online."), $row[7], $row[3]);
-
-                Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
-            }
-        
             // It is licensed?
             $this->licensed = true;
             $this->includeSchedule = $row['inc_schedule'];
@@ -1360,13 +1365,38 @@ class XMDSSoap {
             
             // Last accessed date on the display
             $displayObject = new Display();
-            $displayObject->Touch($this->displayId, array('clientAddress' => $clientAddress));
+            $displayObject->Touch($this->displayId, array('clientAddress' => Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING)));
                 
             return true;
         }
         catch (Exception $e) {
             Debug::LogEntry('error', $e->getMessage());
             return false;
+        }
+    }
+
+    private function AlertDisplayUp($displayId, $display, $loggedIn, $emailAlert) {
+
+        $maintenanceEnabled = Config::GetSetting('MAINTENANCE_ENABLED');
+
+        if ($loggedIn == 0) {
+
+            // Log display up
+            $statObject = new Stat();
+            $statObject->displayUp($displayId);
+
+            // Do we need to email?
+            if ($emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected') 
+                && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
+
+                $msgTo = Kit::ValidateParam(Config::GetSetting("mail_to") ,_PASSWORD);
+                $msgFrom = Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
+
+                $subject = sprintf(__("Recovery for Display %s"), $display);
+                $body = sprintf(__("Display %s with ID %d is now back online."), $display, $displayId);
+
+                Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
+            }
         }
     }
 

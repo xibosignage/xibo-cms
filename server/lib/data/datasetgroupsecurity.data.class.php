@@ -27,46 +27,24 @@ class DataSetGroupSecurity extends Data
         if ($dataSetId == 0 || $dataSetId == '')
             return $this->SetError(25001, __('Missing dataSetId'));
 
-        try {
-            $dbh = PDOConnect::init();
+        $userGroup = new UserGroup();
+        if (!$result = $userGroup->GetPermissionsForObject('lkdatasetgroup', 'DataSetID', $dataSetId))
+            return $this->SetError($userGroup->GetErrorMessage());
 
-            $sth = $dbh->prepare('SELECT `group`.groupid, `group`.`group`, view, edit, del, `group`.isuserspecific
-              FROM `group`
-               LEFT OUTER JOIN lkdatasetgroup
-               ON lkdatasetgroup.GroupID = group.GroupID
-                   AND lkdatasetgroup.DataSetID = :datasetid
-             WHERE `group`.GroupID <> :groupid
-            ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group`');
+        $security = array();
 
-            $sth->execute(array(
-                    'datasetid' => $dataSetId,
-                    'groupid' => $groupId
-                ));
-
-            $security = array();
-
-            foreach($sth->fetchAll() as $row) {
-                $security[] = array(
-                        'groupid' => Kit::ValidateParam($row['groupid'], _INT),
-                        'group' => Kit::ValidateParam($row['group'], _STRING),
-                        'view' => Kit::ValidateParam($row['view'], _INT),
-                        'edit' => Kit::ValidateParam($row['edit'], _INT),
-                        'del' => Kit::ValidateParam($row['del'], _INT),
-                        'isuserspecific' => Kit::ValidateParam($row['isuserspecific'], _INT),
-                    );
-            }
-          
-            return $security;
+        foreach($result as $row) {
+            $security[] = array(
+                    'groupid' => Kit::ValidateParam($row['groupid'], _INT),
+                    'group' => Kit::ValidateParam($row['group'], _STRING),
+                    'view' => Kit::ValidateParam($row['view'], _INT),
+                    'edit' => Kit::ValidateParam($row['edit'], _INT),
+                    'del' => Kit::ValidateParam($row['del'], _INT),
+                    'isuserspecific' => Kit::ValidateParam($row['isuserspecific'], _INT),
+                );
         }
-        catch (Exception $e) {
-            
-            Debug::LogEntry('error', $e->getMessage());
-        
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-        
-            return false;
-        }
+      
+        return $security;
     }
 
     /**

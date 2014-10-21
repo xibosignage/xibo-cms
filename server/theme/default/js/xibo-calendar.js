@@ -52,7 +52,8 @@ $(document).ready(function() {
             $('h1.page-header').text(this.getTitle());
             $('.btn-group button').removeClass('active');
             $('button[data-calendar-view="' + view + '"]').addClass('active');
-        }
+        },
+        language: language
     };
 
     // Calendar is initialised without any event_source (that is changed when the selector is used)
@@ -107,7 +108,7 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        startDate: $("#starttime", form).val()
+        language: language
     });
 
     $('#endtimeControl', form).datetimepicker({
@@ -116,7 +117,7 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        startDate: $("#endtime", form).val()
+        language: language
     });
 
     $('#rec_rangeControl', form).datetimepicker({
@@ -125,9 +126,9 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        startDate: $("#rec_range", form).val()
+        language: language
     });
-}
+};
 
 /**
  * Callback for the schedule form
@@ -136,5 +137,5 @@ var setupScheduleNowForm = function(form) {
     
     // We submit this form ourselves (outside framework)
     $('#CampaignID', form).selectpicker();
-    $('select[name="DisplayGroupIDs[]"]', form).selectpicker();   
-}
+    $('select[name="DisplayGroupIDs[]"]', form).selectpicker();
+};

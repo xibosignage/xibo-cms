@@ -202,5 +202,6 @@ if (!$tabs)
             <div class="XiboData"></div>
             <?php echo Theme::Get('pager'); ?>
         </div>
+        <?php echo Theme::Get('append'); ?>
     </div>
 </div>

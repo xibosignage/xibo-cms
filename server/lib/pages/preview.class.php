@@ -82,6 +82,8 @@ class previewDAO extends baseDAO {
         // Render a specific layout in the previewer
         // layoutid must be provided
         $pfl = __('Preview for Layout');
+
+        $previewCss = Theme::ItemPath('css/html-preview.css');
         
         $output = <<<EOT
             <!DOCTYPE html>
@@ -89,7 +91,7 @@ class previewDAO extends baseDAO {
                 <head>
                     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
                     <title>$pfl $this->layoutid</title> 
-                    <link rel="stylesheet" type="text/css" href="modules/preview/html-preview.css" />
+                    <link rel="stylesheet" type="text/css" href="$previewCss" />
                     <script type="text/JavaScript" src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
                     <script type="text/JavaScript" src="modules/preview/html5Preloader.js"></script>
                     <script type="text/JavaScript" src="modules/preview/html-preview.js"></script>

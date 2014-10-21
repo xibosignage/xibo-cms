@@ -163,7 +163,7 @@ class logDAO extends baseDAO {
 		$fromdt = date("Y-m-d H:i:s", $starttime_timestamp - $seconds);
 		
 		$SQL  = "";
-		$SQL .= "SELECT logid, logdate, page, function, message FROM log ";
+		$SQL .= "SELECT logid, logdate, page, function, message, display.display FROM log LEFT OUTER JOIN display ON display.displayid = log.displayid ";
 		$SQL .= sprintf(" WHERE  logdate > '%s' AND logdate <= '%s' ", $fromdt, $todt);
 
 		if ($type != 0) 
@@ -176,7 +176,7 @@ class logDAO extends baseDAO {
 			$SQL .= sprintf("AND function = '%s' ", $db->escape_string($function));
 		
 		if($displayid != 0) 
-			$SQL .= sprintf("AND displayID = %d ", $displayid);
+			$SQL .= sprintf("AND display.displayID = %d ", $displayid);
 
 		$SQL .= " ORDER BY logid ";
 
@@ -192,6 +192,7 @@ class logDAO extends baseDAO {
         $cols = array(
                 array('name' => 'logid', 'title' => __('ID')),
                 array('name' => 'logdate', 'title' => __('Date')),
+                array('name' => 'display', 'title' => __('Display')),
                 array('name' => 'page', 'title' => __('Page')),
                 array('name' => 'function', 'title' => __('Function')),
                 array('name' => 'message', 'title' => __('Message'))
@@ -204,6 +205,7 @@ class logDAO extends baseDAO {
 
             $row['logid'] = Kit::ValidateParam($row['logid'], _INT);
 			$row['logdate'] = Kit::ValidateParam($row['logdate'], _STRING);
+            $row['display'] = (Kit::ValidateParam($row['display'], _STRING) == '') ? __('CMS') : Kit::ValidateParam($row['display'], _STRING);
 			$row['page'] = Kit::ValidateParam($row['page'], _STRING);
 			$row['function'] = Kit::ValidateParam($row['function'], _STRING);
 			$row['message'] = nl2br(htmlspecialchars($row['message']));

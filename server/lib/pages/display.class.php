@@ -27,14 +27,12 @@ class displayDAO extends baseDAO
         $this->db   =& $db;
         $this->user =& $user;
 
-        Kit::ClassLoader('Display');
-
         $this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
         $this->ajax     = Kit::GetParam('ajax', _REQUEST, _WORD, 'false');
         $displayid      = Kit::GetParam('displayid', _REQUEST, _INT, 0);
 
         // validate displays so we get a realistic view of the table
-        $this->validateDisplays();
+        Display::ValidateDisplays();
     }
 
     /**
@@ -56,12 +54,14 @@ class displayDAO extends baseDAO
             $filter_displaygroup = Session::Get('display', 'filter_displaygroup');
             $filter_display = Session::Get('display', 'filter_display');
             $filter_showThumbnail = Session::Get('display', 'filter_showThumbnail');
+            $filter_autoRefresh = Session::Get('display', 'filter_autoRefresh');
         }
         else {
             $filter_pinned = 0;
             $filter_displaygroup = NULL;
             $filter_display = NULL;
             $filter_showThumbnail = 0;
+            $filter_autoRefresh = 0;
         }
 
         $formFields = array();
@@ -76,12 +76,25 @@ class displayDAO extends baseDAO
             $displayGroups,
             'displaygroupid',
             'displaygroup',
-            NULL, 
+            NULL,
             'd');
 
-        $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'), 
-            $filter_showThumbnail, NULL, 
+        $formFields[] = FormManager::AddCombo(
+            'filter_showThumbnail', 
+            __('Thumbnails'), 
+            $filter_showThumbnail,
+            array(
+                array('key' => 0, 'value' => __('None')),
+                array('key' => 1, 'value' => __('Always')),
+                array('key' => 2, 'value' => __('When Logged In')),
+                ),
+            'key',
+            'value',
+            NULL, 
             't');
+
+        $formFields[] = FormManager::AddNumber('filter_autoRefresh', __('Auto Refresh'), $filter_autoRefresh, 
+            NULL, 'r');
 
         $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
             $filter_pinned, NULL, 
@@ -141,7 +154,7 @@ class displayDAO extends baseDAO
         $displayObject->wakeOnLanTime = Kit::GetParam('wakeOnLanTime', _POST, _STRING);
         $displayObject->broadCastAddress = Kit::GetParam('broadCastAddress', _POST, _STRING);
         $displayObject->secureOn = Kit::GetParam('secureOn', _POST, _STRING);
-        $displayObject->cidr = Kit::GetParam('cidr', _POST, _INT);
+        $displayObject->cidr = Kit::GetParam('cidr', _POST, _STRING);
         $displayObject->latitude = Kit::GetParam('latitude', _POST, _DOUBLE);
         $displayObject->longitude = Kit::GetParam('longitude', _POST, _DOUBLE);
         $displayObject->displayProfileId = Kit::GetParam('displayprofileid', _POST, _INT);
@@ -225,8 +238,8 @@ class displayDAO extends baseDAO
                     __('Do you want to be notified by email if there is a problem with this display?'), 
                     'a');
 
-        $formFields[] = FormManager::AddNumber('alert_timeout', __('Alert Timeout'), $displayObject->alertTimeout, 
-            __('How long in minutes after the display last connected to the webservice should we send an alert. Set this value higher than the collection interval on the client. Set to 0 to use global default.'), 
+        $formFields[] = FormManager::AddCheckbox('alert_timeout', __('Use the Global Timeout?'), $displayObject->alertTimeout, 
+            __('Should this display be tested against the global time out or the client collection interval?'), 
             'o');
 
         Theme::Set('form_fields_maintenance', $formFields);
@@ -259,7 +272,7 @@ class displayDAO extends baseDAO
             __('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), 't');
 
         $formFields[] = FormManager::AddText('cidr', __('Wake on LAN CIDR'), $displayObject->cidr, 
-            __('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unkown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), 'c');
+            __('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unknown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), 'c');
 
         Theme::Set('form_fields_wol', $formFields);
 
@@ -327,6 +340,7 @@ class displayDAO extends baseDAO
         $db         =& $this->db;
         $user       =& $this->user;
         $response   = new ResponseManager();
+        $dateFormat = Config::GetSetting('DATE_FORMAT');
 
         // Filter by Name
         $filter_display = Kit::GetParam('filter_display', _POST, _STRING);
@@ -337,8 +351,12 @@ class displayDAO extends baseDAO
         setSession('display', 'filter_displaygroup', $filter_displaygroupid);
 
         // Thumbnail?
-        $filter_showThumbnail = Kit::GetParam('filter_showThumbnail', _REQUEST, _CHECKBOX);
+        $filter_showThumbnail = Kit::GetParam('filter_showThumbnail', _REQUEST, _INT);
         setSession('display', 'filter_showThumbnail', $filter_showThumbnail);
+
+        // filter_autoRefresh?
+        $filter_autoRefresh = Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
+        setSession('display', 'filter_autoRefresh', $filter_autoRefresh);
 
         // Pinned option?        
         setSession('display', 'DisplayFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
@@ -358,22 +376,19 @@ class displayDAO extends baseDAO
         $cols = array(
                 array('name' => 'displayid', 'title' => __('ID')),
                 array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
-                array('name' => 'display', 'title' => __('Display')),
-                array('name' => 'description', 'title' => __('Description')),
-                array('name' => 'layout', 'title' => __('Default Layout')),
-                array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true),
-                array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true),
+                array('name' => 'displayWithLink', 'title' => __('Display')),
+                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
+                array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
+                array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
+                array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
                 array('name' => 'loggedin', 'title' => __('Logged In'), 'icons' => true),
                 array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
-                array('name' => 'clientaddress', 'title' => __('IP Address')),
-                array('name' => 'macaddress', 'title' => __('Mac Address'))
+                array('name' => 'clientaddress', 'title' => __('IP Address'), 'hidden' => ($filter_showThumbnail == 1)),
+                array('name' => 'macaddress', 'title' => __('Mac Address'), 'hidden' => ($filter_showThumbnail == 1)),
+                array('name' => 'screenShotRequested', 'title' => __('Screen shot?'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 0)),
+                array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($filter_showThumbnail == 0))
             );
         
-        if ($filter_showThumbnail == 1) {
-            $cols[] = array('name' => 'screenShotRequested', 'title' => __('Screen shot?'), 'icons' => true);
-            $cols[] = array('name' => 'thumbnail', 'title' => __('Thumbnail'));
-        }
-
         Theme::Set('table_cols', $cols);
         Theme::Set('rowClass', 'mediainventorystatus');
 
@@ -387,11 +402,11 @@ class displayDAO extends baseDAO
                 if ($linkTarget == '')
                     $linkTarget = '_top';
 
-                $row['display'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . Theme::Prepare($row['display']) . '</a>', $row['clientaddress']);
+                $row['displayWithLink'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . Theme::Prepare($row['display']) . '</a>', $row['clientaddress']);
             }
 
             // Format last accessed
-            $row['lastaccessed'] = date("Y-m-d H:i:s", $row['lastaccessed']);
+            $row['lastaccessed'] = date($dateFormat, $row['lastaccessed']);
 
             // Create some login lights
             $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
@@ -399,7 +414,10 @@ class displayDAO extends baseDAO
             // Thumbnail
             $row['thumbnail'] = '';
             if ($filter_showThumbnail == 1 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
-                $row['thumbnail'] = '<img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '" />';
+                $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '" /></a>';
+            }
+            else if ($filter_showThumbnail == 2) {
+                $row['thumbnail'] = '<i class="fa fa-times-circle"></i>';
             }
 
             // Edit and Delete buttons first
@@ -454,7 +472,13 @@ class displayDAO extends baseDAO
                 $row['buttons'][] = array(
                         'id' => 'display_button_requestScreenShot',
                         'url' => 'index.php?p=display&q=RequestScreenShotForm&displayId=' . $row['displayid'],
-                        'text' => __('Request Screen Shot')
+                        'text' => __('Request Screen Shot'),
+                        'multi-select' => true,
+                        'dataAttributes' => array(
+                            array('name' => 'multiselectlink', 'value' => 'index.php?p=display&q=RequestScreenShot'),
+                            array('name' => 'rowtitle', 'value' => $row['display']),
+                            array('name' => 'displayId', 'value' => $row['displayid'])
+                        )
                     );
 
                 $row['buttons'][] = array('linkType' => 'divider');
@@ -523,52 +547,8 @@ class displayDAO extends baseDAO
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
+        $response->refresh = Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
         $response->Respond();
-    }
-
-    /**
-     * Assess each Display to correctly set the logged in flag based on last accessed time
-     * @return
-     */
-    function validateDisplays()
-    {
-        $db =& $this->db;
-
-        // Get the global timeout (overrides the alert timeout on the display if 0
-        $globalTimeout = Config::GetSetting('MAINTENANCE_ALERT_TOUT');
-
-        // Get a list of all displays and there last accessed / alert timeout value
-        $SQL  = "";
-        $SQL .= "SELECT displayid, lastaccessed, alert_timeout FROM display ";
-
-        if (!$result =$db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Unable to access displays'), E_USER_ERROR);
-        }
-
-        // Look through each display
-        while($row = $db->get_assoc_row($result))
-        {
-            $displayid    = Kit::ValidateParam($row['displayid'], _INT);
-            $lastAccessed = Kit::ValidateParam($row['lastaccessed'], _INT);
-            $alertTimeout = Kit::ValidateParam($row['alert_timeout'], _INT);
-
-            // Do we need to update the logged in light?
-            $timeoutToTestAgainst = ($alertTimeout == 0) ? $globalTimeout : $alertTimeout;
-
-            // If the last time we accessed is less than now minus the timeout
-            if ($lastAccessed < time() - ($timeoutToTestAgainst * 60))
-            {
-                // Update the display and set it as logged out
-                $SQL = "UPDATE display SET loggedin = 0 WHERE displayid = " . $displayid;
-
-                if ((!$db->query($SQL)))
-                    trigger_error($db->error());
-
-                Debug::LogEntry('audit', sprintf('LastAccessed = %d, Timeout = %d for displayId %d', $lastAccessed, $timeoutToTestAgainst, $displayid));
-            }
-        }
     }
 
     /**

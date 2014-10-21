@@ -19,18 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+Kit::ClassLoader('campaign');
 
 class Layout extends Data
 {
     private $xml;
     private $DomXml;
-
-    public function  __construct($db)
-    {
-        Kit::ClassLoader('campaign');
-
-        parent::__construct($db);
-    }
 
     /**
      * Add a layout
@@ -543,21 +537,13 @@ class Layout extends Data
             $campaign = new Campaign($this->db);
     
             // Include to media data class?
-            if ($copyMedia)
-            {
-                Kit::ClassLoader('media');
-                Kit::ClassLoader('mediagroupsecurity');
+            if ($copyMedia) {
                 $mediaObject = new Media($this->db);
                 $mediaSecurity = new MediaGroupSecurity($this->db);
             }
     
             // We need the old campaignid
             $oldCampaignId = $campaign->GetCampaignId($oldLayoutId);
-    
-            // Permissions model
-            Kit::ClassLoader('campaignsecurity');
-            Kit::ClassLoader('layoutregiongroupsecurity');
-            Kit::ClassLoader('layoutmediagroupsecurity');
     
             // The Layout ID is the old layout
             $SQL  = "";
@@ -613,7 +599,7 @@ class Layout extends Data
                 if ($this->IsRegionSpecific($type))
                 {
                     // Generate a new media id
-                    $newMediaId = md5(uniqid());
+                    $newMediaId = md5(Kit::uniqueId());
                     
                     $mediaNode->setAttribute('id', $newMediaId);
     
@@ -740,12 +726,14 @@ class Layout extends Data
             if ($layoutId == 0)
                 $this->ThrowError(__('No Layout selected'));
         
+            // Security
             $sth = $dbh->prepare('DELETE FROM lklayoutmediagroup WHERE layoutid = :layoutid');
             $sth->execute(array('layoutid' => $layoutId));
 
             $sth = $dbh->prepare('DELETE FROM lklayoutregiongroup WHERE layoutid = :layoutid');
             $sth->execute(array('layoutid' => $layoutId));
 
+            // Media Links
             $sth = $dbh->prepare('DELETE FROM lklayoutmedia WHERE layoutid = :layoutid');
             $sth->execute(array('layoutid' => $layoutId));
         
@@ -756,6 +744,10 @@ class Layout extends Data
             // Remove the Campaign (will remove links to this layout - orphaning the layout)
             if (!$campaign->Delete($campaignId))
                 $this->ThrowError(25008, __('Unable to delete campaign'));
+
+            // Remove the Layout from any display defaults
+            $sth = $dbh->prepare('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutid');
+            $sth->execute(array('layoutid' => $layoutId));
     
             // Remove the Layout (now it is orphaned it can be deleted safely)
             $sth = $dbh->prepare('DELETE FROM layout WHERE layoutid = :layoutid');
@@ -1236,7 +1228,7 @@ class Layout extends Data
             $fileName = $libraryPath . 'temp/export_' . Kit::ValidateParam($row['layout'], _FILENAME) . '.zip';
 
             $zip = new ZipArchive();
-            $zip->open($fileName, ZIPARCHIVE::OVERWRITE);        
+            $zip->open($fileName, ZIPARCHIVE::OVERWRITE);
             $zip->addFromString('layout.xml', $xml);
 
             $params = array('layoutid' => $layoutId);    

@@ -38,7 +38,7 @@ $displays = (is_array($displays)) ? $displays : array();
                 </div>
                 <div class="widget-content pull-left">
                     <div class="title"><?php echo count($displays); ?></div>
-                    <div class="comment"><?php echo Theme::Translate('Displays'); ?></div>
+                    <div class="comment"><?php echo ((count($displays) == 1) ? Theme::Translate('Display') : Theme::Translate('Displays')); ?></div>
                 </div>
                 <div class="clearfix"></div>
             </div>
@@ -66,7 +66,7 @@ $displays = (is_array($displays)) ? $displays : array();
                 </div>
                 <div class="widget-content pull-left">
                     <div class="title"><?php echo Theme::Get('countUsers'); ?></div>
-                    <div class="comment"><?php echo Theme::Translate('Users'); ?></div>
+                    <div class="comment"><?php echo ((Theme::Get('countUsers') == 1) ? Theme::Translate('User') : Theme::Translate('Users')); ?></div>
                 </div>
                 <div class="clearfix"></div>
             </div>

@@ -39,6 +39,8 @@ class DisplayProfile extends Data {
 
     public function Load() {
 
+        Debug::Audit('Load ' . $this->displayProfileId);
+
         try {
             $dbh = PDOConnect::init();
         
@@ -60,6 +62,59 @@ class DisplayProfile extends Data {
             $this->config = ($this->config == '') ? array() : json_decode($this->config, true);
 
             $this->isNew = false;
+
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+
+    }
+
+    public function LoadDefault() {
+
+        Debug::Audit('Load Default');
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT * FROM `displayprofile` WHERE type = :type AND IsDefault = 1');
+            $sth->execute(array(
+                    'type' => $this->displayProfileId
+                ));
+          
+            if (!$row = $sth->fetch()) {
+                // Return the client default
+                include_once('config/client.config.php');
+                $this->name = $CLIENT_CONFIG[$this->type]['synonym'];
+                $this->type = $this->type;
+                $this->config = $CLIENT_CONFIG[$this->type]['settings'];
+                $this->isDefault = 1;
+                $this->userId = 1;
+
+                // Just populate the values with the defaults if the values aren't set already
+                for ($i = 0; $i < count($this->config); $i++) { 
+                    $this->config[$i]['value'] = isset($this->config[$i]['value']) ? $this->config[$i]['value'] : $this->config[$i]['default'];
+                }
+            }
+            else {
+                $this->name = Kit::ValidateParam($row['name'], _STRING);
+                $this->type = Kit::ValidateParam($row['type'], _STRING);
+                $this->config = Kit::ValidateParam($row['config'], _HTMLSTRING);
+                $this->isDefault = Kit::ValidateParam($row['isdefault'], _INT);
+                $this->userId = Kit::ValidateParam($row['userid'], _INT);
+
+                // Load the client settings into an array
+                $this->config = ($this->config == '') ? array() : json_decode($this->config, true);
+
+                $this->isNew = false;
+            }
 
             return true;
         }

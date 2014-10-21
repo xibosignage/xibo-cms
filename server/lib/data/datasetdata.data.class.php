@@ -355,6 +355,10 @@ class DataSetData extends Data
                 $rowNumber++;
             }
 
+            // Close the file
+            fclose($handle);
+
+            // Change the auto detect setting back
             ini_set('auto_detect_line_endings', false);
 
             // Delete the temporary file

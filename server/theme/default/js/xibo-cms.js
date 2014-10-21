@@ -17,6 +17,77 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+var gridTimeouts = [];
+
+$(function() {
+    // Configure the table sorter theme
+    if ($.tablesorter !== undefined) {
+        $.extend($.tablesorter.themes.bootstrap, {
+            // these classes are added to the table. To see other table classes available,
+            // look here: http://twitter.github.com/bootstrap/base-css.html#tables
+            table      : 'table table-bordered',
+            caption    : 'caption',
+            header     : 'bootstrap-header', // give the header a gradient background
+            footerRow  : '',
+            footerCells: '',
+            icons      : '', // add "icon-white" to make them white; this icon class is added to the <i> in the header
+            sortNone   : 'bootstrap-icon-unsorted',
+            sortAsc    : 'glyphicon glyphicon-chevron-up',     // includes classes for Bootstrap v2 & v3
+            sortDesc   : 'glyphicon glyphicon-chevron-down', // includes classes for Bootstrap v2 & v3
+            active     : '', // applied when column is sorted
+            hover      : '', // use custom css here - bootstrap class may not override it
+            filterRow  : '', // filter row class
+            even       : '', // odd row zebra striping
+            odd        : ''  // even row zebra striping
+        });
+
+        // add parser through the tablesorter addParser method
+        $.tablesorter.addParser({
+          // set a unique id
+          id: 'tickcross',
+          is: function() {
+            // return false so this parser is not auto detected
+            return false;
+          },
+          format: function(s, table, cell, cellIndex) {
+            return $(cell).html().toLowerCase()
+              .replace(/<span class="glyphicon glyphicon-ok"><\/span>/, 1)
+              .replace(/<span class="glyphicon glyphicon-remove"><\/span>/, 0);
+          },
+          type: 'numeric'
+        });
+
+        $.tablesorter.addParser({
+          // set a unique id
+          id: 'filesize',
+          is: function() {
+            // return false so this parser is not auto detected
+            return false;
+          },
+          format: function(s, table, cell, cellIndex) {
+            if (s.indexOf("k") > -1)
+                s = "B" + s;
+            else if (s.indexOf("M") > -1)
+                s = "C" + s;
+            else if (s.indexOf("G") > -1)
+                s = "D" + s;
+            else if (s.indexOf("T") > -1)
+                s = "E" + s;
+            else
+                s = "A" + s;
+            return s;
+          },
+          type: 'text'
+        });
+    }
+});
+
+// Set up the light boxes
+$(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
+    event.preventDefault();
+    $(this).ekkoLightbox();
+});
+
 $(document).ready(function() {
 
     // Code from: http://stackoverflow.com/questions/7585351/testing-for-console-log-statements-in-ie/7585409#7585409
@@ -36,12 +107,12 @@ $(document).ready(function() {
           }
         }());
     }
-	
-	setInterval("XiboPing('index.php?p=clock&q=GetClock')", 1000 * 60); // Every minute
-	
-	setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes	
+    
+    setInterval("XiboPing('index.php?p=clock&q=GetClock')", 1000 * 60); // Every minute
+    
+    setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes  
 
-	XiboInitialise("");
+    XiboInitialise("");
 });
 
 /**
@@ -94,6 +165,14 @@ function XiboInitialise(scope) {
         return false;
     });
 
+    // Search for any Buttons / Links on the page that are used to load forms
+    $(scope + " .XiboMultiSelectFormButton").click(function() {
+
+        XiboMultiSelectFormRender(this);
+
+        return false;
+    });
+
     // Search for any Buttons that redirect to another page
     $(scope + " .XiboRedirectButton").click(function() {
 
@@ -138,16 +217,16 @@ function XiboInitialise(scope) {
 
     // Links that just need to be submitted as forms
     $(scope + ' .XiboAjaxSubmit').click(function(){
-		
-		$.ajax({
-			type: "post", 
-			url: $(this).attr("href") + "&ajax=true", 
-			cache:false, 
-			dataType:"json",
-			success: XiboSubmitResponse
-		});
+        
+        $.ajax({
+            type: "post",
+            url: $(this).attr("href") + "&ajax=true",
+            cache:false,
+            dataType:"json",
+            success: XiboSubmitResponse
+        });
 
-		return false;
+        return false;
     });
 
     // Forms that we want to be submitted without validation.
@@ -208,22 +287,22 @@ function XiboInitialise(scope) {
  * Renders any Xibo Grids that are detected
  * @param {Object} gridId
  */
-function XiboGridRender(gridId){
+function XiboGridRender(gridId, autoRefresh) {
 
     // Grid ID tells us which grid we need to render
-    var gridDiv 	= '#' + gridId;
-    var filter 		= $('#' + gridId + ' .XiboFilter form');
-    var outputDiv 	= $('#' + gridId + ' .XiboData ');
-
+    var gridDiv     = '#' + gridId;
+    var filter      = $('#' + gridId + ' .XiboFilter form');
+    var outputDiv   = $('#' + gridId + ' .XiboData ');
+    var url = "index.php?ajax=true" + ((autoRefresh !== undefined && autoRefresh !== null) ? '&autoRefresh=true' : '');
     // Add a spinner
     $(gridDiv).closest('.widget').children(".widget-title").append(' <span class="saving fa fa-cog fa-spin"></span>');
 
     // AJAX call to get the XiboData
     $.ajax({
         type: "post",
-        url: "index.php?ajax=true",
+        url: url,
         dataType: "json",
-        data: filter.serialize(),
+        data: filter.serialize() + "&gridId=" + gridId,
         success: function(response) {
 
             // Remove the spinner
@@ -271,10 +350,12 @@ function XiboGridRender(gridId){
                     $(sortingDiv).tablesorter({
                         sortList: sortOrder,
                         widthFixed: true,
-                        theme: 'blue'
+                        theme: 'bootstrap',
+                        widgets : [ "uitheme", "zebra" ],
+                        headerTemplate: '{content} {icon}',
                     });
                     
-                    $(sortingDiv).on('sortEnd', function(e) { 
+                    $(sortingDiv).on('sortEnd', function(e) {
                         // Store on the XiboGrid
                         $('#' + gridId).data("sorting", e.target.config.sortList);
                     });
@@ -285,7 +366,7 @@ function XiboGridRender(gridId){
             if (response.paging && response.sortable) {
                 
                 // See if we have a page number
-                var pageNumber = $('#' + gridId).data("paging"); 
+                var pageNumber = $('#' + gridId).data("paging");
                 if (pageNumber == undefined)
                     pageNumber = 0;
                 
@@ -296,14 +377,25 @@ function XiboGridRender(gridId){
                     $("#XiboPager_" + gridId).show();
                     
                     $(sortingDiv + ".tablesorter").tablesorterPager({
-                       container: $("#XiboPager_" + gridId),
-                       positionFixed: false,
-                       page: pageNumber,
-                       size: response.pageSize
+                        container: $("#XiboPager_" + gridId),
+                        positionFixed: false,
+                        page: pageNumber,
+                        size: response.pageSize,
+                        // target the pager page select dropdown - choose a page
+                        cssGoto  : ".pagenum",
+                        removeRows: true,
+                        output: '{startRow} - {endRow} / {filteredRows} ({totalRows})'
                     });
-                       
+
                     $(sortingDiv).on('pagerComplete', function(e,c) {
                         $('#' + gridId).data("paging", c.page);
+
+                        $(sortingDiv).find('a.img-replace').each(function() {
+                            // Swap out the image
+                            var img = $("<img>").prop("src", $(this).data().imgSrc);
+                            $(this).children().remove();
+                            $(this).append(img);
+                        });
                     });
                 }
                 else {
@@ -312,6 +404,47 @@ function XiboGridRender(gridId){
             }
             else {
                 $("#XiboPager_" + gridId).hide();
+            }
+
+            // Render any images in the grid (now that it is in pages)
+            $(sortingDiv).find('a.img-replace').each(function() {
+                // Swap out the image
+                var img = $("<img>").prop("src", $(this).data().imgSrc);
+                $(this).children().remove();
+                $(this).append(img);
+            });
+
+            // Multi-select check box
+            $(outputDiv).find(".selectAllCheckbox").click(function() {
+                // Are we checked?
+                if ($(this).is(":checked")) {
+                    // Check all children
+                    $("#" + gridId + " .XiboData td input[type='checkbox']").prop("checked", true);
+                }
+                else {
+                    // Un-check all children
+                    $("#" + gridId + " .XiboData td input[type='checkbox']").prop("checked", false);
+                }
+            });
+
+            // Do we need to refresh
+            if (response.refresh !== null && response.refresh !== 0) {
+                var timeout = (response.refresh > 10) ? response.refresh : 10;
+
+                // Cancel existing time outs
+                for (var i = gridTimeouts.length - 1; i >= 0; i--) {
+                    if (gridTimeouts[i].label === gridId) {
+                        clearTimeout(gridTimeouts[i].timer);
+                        gridTimeouts.splice(i, 1);
+                    }
+                }
+
+                gridTimeouts.push({
+                    label: gridId,
+                    timer: setTimeout(function() {
+                            XiboGridRender(gridId, true);
+                        }, (timeout * 1000))
+                    });
             }
 
             return false;
@@ -328,8 +461,8 @@ function XiboGridRender(gridId){
  */
 function XiboFormRender(formUrl, data) {
 
-	// Currently only support one of these at once.
-	bootbox.hideAll();
+    // Currently only support one of these at once.
+    bootbox.hideAll();
 
     // Call with AJAX
     $.ajax({
@@ -358,13 +491,13 @@ function XiboFormRender(formUrl, data) {
 
                 // Create the dialog with our parameters
                 var dialog = bootbox.dialog({
-                		message: response.html,
+                        message: response.html,
                         title: dialogTitle,
                         animate: false
-                	}).attr("id", id);
+                    }).attr("id", id);
 
                 if (response.dialogClass != '') {
-                	dialog.addClass(response.dialogClass);
+                    dialog.addClass(response.dialogClass);
                 }
 
                 // Buttons?
@@ -419,7 +552,7 @@ function XiboFormRender(formUrl, data) {
                         $(response.sortingDiv, dialog).tablesorter({
                             sortList: [[0, 0]],
                             widthFixed: true
-                        })
+                        });
                     }
                 }
 
@@ -437,6 +570,9 @@ function XiboFormRender(formUrl, data) {
                             var valueMatch = false;
                             if (fieldAction.operation == "not") {
                                 valueMatch = (fieldVal != fieldAction.value);
+                            }
+                            else if (fieldAction.operation == "is:checked") {
+                                valueMatch = (fieldAction.value == $("#" + fieldAction.field).is(':checked'));
                             }
                             else {
                                 valueMatch = (fieldVal == fieldAction.value);
@@ -461,6 +597,9 @@ function XiboFormRender(formUrl, data) {
                                 var valueMatch = false;
                                 if (fieldAction.operation == "not") {
                                     valueMatch = (fieldVal != fieldAction.value);
+                                }
+                                else if (fieldAction.operation == "is:checked") {
+                                    valueMatch = (fieldAction.value == $("#" + fieldAction.field).is(':checked'));
                                 }
                                 else {
                                     valueMatch = (fieldVal == fieldAction.value);
@@ -510,6 +649,151 @@ function XiboFormRender(formUrl, data) {
 
     // Dont then submit the link/button
     return false;
+}
+
+function XiboMultiSelectFormRender(button) {
+
+    var buttonId = $(button).data().buttonId;
+    var gridToken = $(button).data().gridToken;
+    var gridId = $(button).data().gridId;
+    var matches = [];
+
+    $("." + buttonId).each(function() {
+        if ($(this).closest('tr').find('input[type="checkbox"]').is(':checked')) {
+            // This particular button should be included.
+            matches.push($(this));
+        }
+    });
+
+    var message;
+
+    if (matches.length > 0)
+        message = translations.multiselectMessage.replace('%1', "" + matches.length).replace("%2", $(button).find("a").html());
+    else
+        message = translations.multiselectNoItemsMessage;
+
+    // Open a Dialog containing all the items we have identified.
+    var dialog = bootbox.dialog({
+            message: message,
+            title: translations.multiselect,
+            animate: false
+        });
+
+    // Append a footer to the dialog
+    var dialogContent = dialog.find(".modal-body");
+    var footer = $("<div>").addClass("modal-footer");
+    dialog.find(".modal-content").append(footer);
+
+    // Add some buttons
+    var extrabutton;
+
+    if (matches.length > 0) {
+        extrabutton = $('<button class="btn">').html(translations.save).addClass('btn-primary save-button');
+        extrabutton.click(function() {
+
+            $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
+
+            // We want to submit each action in turn (we don't actually have a form token yet, so we need one)
+            $.post('index.php?p=index&q=ExchangeGridTokenForFormToken', { gridToken: gridToken, ajax: true}, function(response) {
+
+                var token = response;
+                
+                // Create a new queue.
+                window.queue = $.jqmq({
+
+                    // Next item will be processed only when queue.next() is called in callback.
+                    delay: -1,
+
+                    // Process queue items one-at-a-time.
+                    batch: 1,
+
+                    // For each queue item, execute this function, making an AJAX request. Only
+                    // continue processing the queue once the AJAX request's callback executes.
+                    callback: function( item ) {
+                        var data = $(item).data();
+                        data.token = token;
+
+                        // Make an AJAX call
+                        $.ajax({
+                            type: "post",
+                            url: data.multiselectlink + "&ajax=true",
+                            cache: false,
+                            dataType: "json",
+                            data: data,
+                            success: function(response, textStatus, error) {
+
+                                if (response.success) {
+                                    token = $(response.nextToken).val();
+
+                                    dialogContent.append($("<div>").html(data.rowtitle + ": " + translations.success));
+
+                                    // Process the next item
+                                    queue.next();
+                                }
+                                else {
+                                    // Why did we fail?
+                                    if (response.login) {
+                                        // We were logged out
+                                        LoginBox(response.message);
+                                    }
+                                    else {
+                                        dialogContent.append($("<div>").html(data.rowtitle + ": " + translations.failure));
+
+                                        // Likely just an error that we want to report on
+                                        footer.find(".saving").remove();
+                                        SystemMessageInline(response.message, footer.closest(".modal"));
+                                    }
+                                }
+                            }
+                        });
+                    },
+                    // When the queue completes naturally, execute this function.
+                    complete: function() {
+                        // Remove the save button
+                        footer.find(".saving").parent().remove();
+
+                        // Refresh the grids
+                        // (this is a global refresh)
+                        $(" .XiboGrid").each(function(){
+
+                            var gridId = $(this).attr("id");
+
+                            // Render
+                            XiboGridRender(gridId);
+                        });
+                    }
+                });
+
+                // Add our selected items to the queue
+                $(matches).each(function() {
+                    queue.add(this);
+                });
+
+                queue.start();
+            });
+
+            // Keep the modal window open!
+            return false;
+        });
+
+        footer.append(extrabutton);
+    }
+
+    // Close button
+    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-default');
+    extrabutton.click(function() {
+
+        $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
+
+        // Do our thing
+        dialog.modal('hide');
+
+        // Keep the modal window open!
+        return false;
+    });
+
+    footer.append(extrabutton);
+
 }
 
 /**
@@ -592,8 +876,8 @@ function XiboFormSubmit(form) {
         dataType:"json",
         data:$(form).serialize(),
         success: function(xhr, textStatus, error) {
-        	
-        	XiboSubmitResponse(xhr, form);
+            
+            XiboSubmitResponse(xhr, form);
         }
     });
 
@@ -605,7 +889,7 @@ function XiboFormSubmit(form) {
  * @param {Object} response
  */
 function XiboSubmitResponse(response, form) {
-	
+    
     // Remove the spinner
     $(form).closest(".modal-dialog").find(".saving").remove();
 
@@ -626,7 +910,7 @@ function XiboSubmitResponse(response, form) {
 
         // Do we need to fire a callback function?
         if (response.callBack != null && response.callBack != "") {
-            eval(response.callBack)(name);
+            eval(response.callBack)(response);
         }
 
         // Do we need to load a new form?
@@ -684,7 +968,7 @@ function XiboSubmitResponse(response, form) {
  */
 function XiboHelpRender(formUrl) {
 
-	// Call with AJAX
+    // Call with AJAX
     $.ajax({
         type: "get",
         url: formUrl + "&ajax=true",
@@ -771,8 +1055,8 @@ function XiboHoverRender(url, x, y)
 
                 // Do we need to alter the dialog size?
                 if (response.dialogSize) {
-                    dialogWidth 	= response.dialogWidth;
-                    dialogHeight	= response.dialogHeight;
+                    dialogWidth     = response.dialogWidth;
+                    dialogHeight    = response.dialogHeight;
                 }
 
                 // Create the the popup bubble with our parameters
@@ -879,26 +1163,26 @@ function LoginBox(message) {
 function SystemMessage(messageText, success) {
 
     if (messageText == '' || messageText == null) 
-    	return;
+        return;
 
     var options = {};
-	options.backdrop = false;
+    options.backdrop = false;
 
-	// Buttons
-	var buttons = [];
+    // Buttons
+    var buttons = [];
 
     var title = null;
 
-	// Only add certain things
-	if (!success) {
+    // Only add certain things
+    if (!success) {
         title = "Application Message";
-		buttons.push({
-		label: 'Close',
-			callback: function() {
-				dialog.modal('hide');
-			}
-		});
-	}
+        buttons.push({
+        label: 'Close',
+            callback: function() {
+                dialog.modal('hide');
+            }
+        });
+    }
 
     var dialog = bootbox.dialog({
         message: messageText,
@@ -908,11 +1192,11 @@ function SystemMessage(messageText, success) {
     });
 
     if (success) {    
-	    // Close after 1 second
-    	setTimeout(function() {
-        	dialog.modal('hide');
-    	}, 2000);
-	}
+        // Close after 1 second
+        setTimeout(function() {
+            dialog.modal('hide');
+        }, 2000);
+    }
 }
 
 /**
@@ -923,7 +1207,7 @@ function SystemMessage(messageText, success) {
 function SystemMessageInline(messageText, modal) {
 
     if (messageText == '' || messageText == null) 
-    	return;
+        return;
 
     // TODO: if modal is null (or not a form), then pick the nearest .text error instead.
     if (modal == undefined || modal == null || modal.length == 0)
@@ -933,8 +1217,8 @@ function SystemMessageInline(messageText, modal) {
     $(".form-error", modal).remove();
 
     $("<div/>", {
-    	class: "well text-danger text-center form-error",
-    	html: messageText
+        class: "well text-danger text-center form-error",
+        html: messageText
     }).appendTo(modal.find(".modal-footer"));
 }
 

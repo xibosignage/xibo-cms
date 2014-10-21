@@ -41,11 +41,6 @@ CREATE TABLE IF NOT EXISTS `displayprofile` (
   PRIMARY KEY (`displayprofileid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
-INSERT INTO `displayprofile` (`displayprofileid`, `name`, `type`, `config`, `isdefault`, `userid`) VALUES
-(1, 'Production', 'windows', '[{"name":"CollectInterval","value":"900","type":"int"},{"name":"PowerpointEnabled","value":0,"type":"checkbox"},{"name":"StatsEnabled","value":1,"type":"checkbox"},{"name":"SizeX","value":0,"type":"double"},{"name":"SizeY","value":0,"type":"double"},{"name":"OffsetX","value":0,"type":"double"},{"name":"OffsetY","value":0,"type":"double"},{"name":"ShowInTaskbar","value":1,"type":"checkbox"},{"name":"ClientInfomationCtrlKey","value":0,"type":"checkbox"},{"name":"ClientInformationKeyCode","value":"I","type":"word"},{"name":"CursorStartPosition","value":"Bottom Right","type":"string"},{"name":"DoubleBuffering","value":1,"type":"checkbox"},{"name":"EmptyLayoutDuration","value":"10","type":"int"},{"name":"EnableMouse","value":0,"type":"checkbox"},{"name":"EnableShellCommands","value":0,"type":"checkbox"},{"name":"ExpireModifiedLayouts","value":0,"type":"checkbox"},{"name":"LogLevel","value":"off","type":"word"},{"name":"LogToDiskLocation","value":"","type":"string"},{"name":"MaxConcurrentDownloads","value":"2","type":"int"},{"name":"ShellCommandAllowList","value":"","type":"string"},{"name":"UseCefWebBrowser","value":1,"type":"checkbox"},{"name":"SendCurrentLayoutAsStatusUpdate","value":0,"type":"checkbox"},{"name":"ScreenShotRequestInterval","value":0,"type":"int"}]', 1, 1),
-(2, 'Production', 'android', '[{"name":"emailAddress","value":"","type":"string"},{"name":"settingsPassword","value":"","type":"string"},{"name":"collectInterval","value":"600","type":"int"},{"name":"orientation","value":0,"type":"int"},{"name":"startOnBoot","value":1,"type":"checkbox"},{"name":"actionBarMode","value":"1","type":"int"},{"name":"actionBarDisplayDuration","value":"60","type":"int"},{"name":"screenDimensions","value":"","type":"string"},{"name":"autoRestart","value":1,"type":"checkbox"},{"name":"startOnBootDelay","value":"60","type":"int"},{"name":"blacklistVideo","value":1,"type":"checkbox"},{"name":"storeHtmlOnInternal","value":0,"type":"checkbox"}]', 1, 1);
-
-
 UPDATE layout SET background = SUBSTRING_INDEX(background, '.', 1) WHERE IFNULL(background, '') <> '';
 ALTER TABLE  `layout` CHANGE  `background`  `backgroundImageId` INT( 11 ) NULL DEFAULT NULL;
 
@@ -178,6 +173,6 @@ INSERT INTO `help` (`Topic`, `Category`, `Link`) VALUES
 ('DisplayProfile', 'Delete', 'manual/single.php?p=admin/displayprofiles#delete');
 
 
-UPDATE `version` SET `app_ver` = '1.7.0-alpha', `XmdsVersion` = 4;
+UPDATE `version` SET `app_ver` = '1.7.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2 ;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '80';

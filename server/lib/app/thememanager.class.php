@@ -152,6 +152,46 @@ class Theme {
 	}
 
 	/**
+	 * Get Item Path
+	 * @param string $item The Item required
+	 */
+	public static function ItemPath($item) {
+
+		$theme = Theme::GetInstance();
+		
+		// See if we have the requested file in the theme folder
+		if (file_exists('theme/' . $theme->name . '/' . $item)) {
+			return 'theme/' . $theme->name . '/' . $item;
+		}
+		// If not, then use the default folder
+		elseif (file_exists('theme/default/' . $item)) {
+			return 'theme/default/' . $item;
+		}
+		else
+			return '';
+	}
+
+	/**
+	 * Get Item Path
+	 * @param string $item The Item required
+	 */
+	public static function Script($item) {
+
+		$theme = Theme::GetInstance();
+		
+		// See if we have the requested file in the theme folder
+		if (file_exists('theme/' . $theme->name . '/' . $item)) {
+			return '<script src="theme/' . $theme->name . '/' . $item . '"></script>';
+		}
+		// If not, then use the default folder
+		elseif (file_exists('theme/default/' . $item)) {
+			return '<script src="theme/default/' . $item . '"></script>';
+		}
+		else
+			return '';
+	}
+
+	/**
 	 * Translate a string into the user language
 	 * @param string $string The String to Translate
 	 * @param array $args   Variables to insert (will replace %d %s in order)
@@ -179,6 +219,22 @@ class Theme {
 			$return = $return . Kit::Token();
 		}
 		return $return;
+	}
+
+	public static function SetTranslation($key, $value) {
+		// Get existing translations
+		$translations = Theme::Get('translations');
+
+		if ($translations == '') {
+			$translations = array();
+		}
+		else {
+			$translations = json_decode($translations, true);
+		}
+
+		$translations[$key] = $value;
+
+		Theme::Set('translations', json_encode($translations));
 	}
 
 	public static function Prepare($string) {

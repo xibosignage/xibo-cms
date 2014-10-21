@@ -80,18 +80,18 @@ function MembersSubmit() {
 /**
  * Layout Assignment Form Callback
  */
-var LayoutAssignCallback = function()
+var LayoutAssignCallback = function(gridId)
 {
     // Attach a click handler to all of the little pointers in the grid.
-    $("#LayoutAssignTable .layout_assign_list_select").click(function(){
+    $("#" + gridId).find(".layout_assign_list_select").click(function(){
         // Get the row that this is in.
-        var row = $(this).parent().parent();
+        var row = $(this).closest("tr");
 
         // Construct a new list item for the lower list and append it.
         var newItem = $("<li/>", {
-            text: row.attr("litext"),
-            id: row.attr("rowid"),
-            "class": "li-sortable",
+            text: row.data().litext,
+            id: row.data().rowid,
+            "class": "btn btn-sm btn-default",
             dblclick: function(){
                 $(this).remove();
             }
@@ -116,13 +116,13 @@ var LayoutAssignCallback = function()
     });
 
     $("#LayoutAssignSortable").sortable().disableSelection();
-}
+};
 
 function LayoutsSubmit(campaignId) {
     // Serialise the form and then submit it via Ajax.
     var layouts = $("#LayoutAssignSortable").sortable('serialize');
 
-    layouts = layouts + "&CampaignID=" + campaignId + "&token=" + $('#LayoutAssignTable input[name=token]').val();
+    layouts = layouts + "&CampaignID=" + campaignId + "&assign_token=" + $("#LayoutAssignSortable input[name='assign_token']").val();
     
     $.ajax({
         type: "post",
@@ -299,6 +299,8 @@ function MediaFormInitUpload(dialog) {
             return false;
         }
         data.formData = inputs.serializeArray().concat($("#fileupload").serializeArray());
+
+        inputs.filter("input").prop("disabled", true);
     });
 }
 
@@ -353,7 +355,7 @@ var FileAssociationsCallback = function()
     });
 
     $("#FileAssociationsSortable").sortable().disableSelection();
-}
+};
 
 var FileAssociationsSubmit = function(displayGroupId)
 {
@@ -368,4 +370,16 @@ var FileAssociationsSubmit = function(displayGroupId)
         data: mediaList,
         success: XiboSubmitResponse
     });
-}
+};
+var forecastIoFormSetup = function() {
+    $('#color').colorpicker();
+};
+
+var settingsUpdated = function(response) {
+    if (response.success) {
+        $("#SettingsForm input[name='token']").val($(response.nextToken).val());
+    }
+    else {
+        SystemMessage((response.message == "") ? translation.failure : response.message, true);
+    }
+};

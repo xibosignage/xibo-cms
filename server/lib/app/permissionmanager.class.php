@@ -22,7 +22,6 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
 
 class PermissionManager
 {
-    private $db;
     private $user;
     
     public $ownerId;
@@ -38,9 +37,8 @@ class PermissionManager
      * @param $db Object
      * @param $user Object
      */
-    public function __construct(database $db, User $user)
+    public function __construct(User $user)
     {
-        $this->db       =& $db;
         $this->user 	=& $user;
 
         $this->view = false;

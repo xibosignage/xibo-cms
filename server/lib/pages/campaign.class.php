@@ -355,41 +355,30 @@ class campaignDAO extends baseDAO
         Theme::Set('form_action', 'index.php?p=campaign&q=Permissions');
         Theme::Set('form_meta', '<input type="hidden" name="campaignId" value="' . $campaignId . '" />');
 
-        // List of all Groups with a view/edit/delete checkbox
-        $SQL = '';
-        $SQL .= 'SELECT `group`.GroupID, `group`.`Group`, View, Edit, Del, `group`.IsUserSpecific ';
-        $SQL .= '  FROM `group` ';
-        $SQL .= '   LEFT OUTER JOIN lkcampaigngroup ';
-        $SQL .= '   ON lkcampaigngroup.GroupID = group.GroupID ';
-        $SQL .= '       AND lkcampaigngroup.CampaignID = %d ';
-        $SQL .= ' WHERE `group`.GroupID <> %d ';
-        $SQL .= 'ORDER BY `group`.IsEveryone DESC, `group`.IsUserSpecific, `group`.`Group` ';
+        // List of all Groups with a view / edit / delete check box
+        $permissions = new CampaignSecurity();
+        if (!$result = $permissions->GetPermissions($campaignId))
+            trigger_error($permissions->GetErrorMessage(), E_USER_ERROR);
 
-        $SQL = sprintf($SQL, $campaignId, $this->user->getGroupFromID($this->user->userid, true));
-
-        if (!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
+        if (count($result) <= 0)
             trigger_error(__('Unable to get permissions for this Campaign'), E_USER_ERROR);
-        }
 
         $checkboxes = array();
 
-        while ($row = $db->get_assoc_row($results))
-        {
-            $groupId = $row['GroupID'];
-            $rowClass = ($row['IsUserSpecific'] == 0) ? 'strong_text' : '';
+        foreach ($result as $row) {
+            $groupId = $row['groupid'];
+            $rowClass = ($row['isuserspecific'] == 0) ? 'strong_text' : '';
 
             $checkbox = array(
                     'id' => $groupId,
-                    'name' => Kit::ValidateParam($row['Group'], _STRING),
+                    'name' => Kit::ValidateParam($row['group'], _STRING),
                     'class' => $rowClass,
                     'value_view' => $groupId . '_view',
-                    'value_view_checked' => (($row['View'] == 1) ? 'checked' : ''),
+                    'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
                     'value_edit' => $groupId . '_edit',
-                    'value_edit_checked' => (($row['Edit'] == 1) ? 'checked' : ''),
+                    'value_edit_checked' => (($row['edit'] == 1) ? 'checked' : ''),
                     'value_del' => $groupId . '_del',
-                    'value_del_checked' => (($row['Del'] == 1) ? 'checked' : ''),
+                    'value_del_checked' => (($row['del'] == 1) ? 'checked' : ''),
                 );
 
             $checkboxes[] = $checkbox;
@@ -593,7 +582,7 @@ class campaignDAO extends baseDAO
     public function SetMembers()
     {
         // Check the token
-        if (!Kit::CheckToken())
+        if (!Kit::CheckToken('assign_token'))
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
@@ -646,10 +635,10 @@ class campaignDAO extends baseDAO
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="LayoutAssignView">');
-        Theme::Set('pager', ResponseManager::Pager($id, 'form_grid_pager'));
+        Theme::Set('pager', ResponseManager::Pager($id, 'grid_pager'));
         
         // Get the currently assigned layouts and put them in the "well"
-        // // Layouts in group
+        // Layouts in group
         $SQL  = "SELECT layout.Layoutid, ";
         $SQL .= "       layout.layout, ";
         $SQL .= "       CONCAT('LayoutID_', layout.LayoutID) AS list_id ";
@@ -669,11 +658,17 @@ class campaignDAO extends baseDAO
 
         Debug::LogEntry('audit', count($layoutsAssigned) . ' layouts assigned already');
 
+        $formFields = array();
+        $formFields[] = FormManager::AddText('filter_name', __('Name'), NULL, NULL, 'l');
+        Theme::Set('form_fields', $formFields);
+
         // Set the layouts assigned
         Theme::Set('layouts_assigned', $layoutsAssigned);
+        Theme::Set('append', Theme::RenderReturn('campaign_form_layout_assign'));
 
         // Call to render the template
-        $output = Theme::RenderReturn('campaign_form_layout_assign');
+        Theme::Set('header_text', __('Choose Layouts'));
+        $output = Theme::RenderReturn('grid_render');
 
         // Construct the Response
         $response->html = $output;
@@ -706,12 +701,24 @@ class campaignDAO extends baseDAO
         // Get a list of media
         $layoutList = $user->LayoutList(NULL, array('layout' => $name));
 
+        $cols = array(
+                array('name' => 'layout', 'title' => __('Name'))
+            );
+        Theme::Set('table_cols', $cols);
+
         $rows = array();
 
         // Add some extra information
         foreach ($layoutList as $row) {
 
             $row['list_id'] = 'LayoutID_' . $row['layoutid'];
+            $row['assign_icons'][] = array(
+                    'assign_icons_class' => 'layout_assign_list_select'
+                );
+            $row['dataAttributes'] = array(
+                    array('name' => 'rowid', 'value' => $row['list_id']),
+                    array('name' => 'litext', 'value' => $row['layout'])
+                );
 
             $rows[] = $row;
         }
@@ -719,7 +726,7 @@ class campaignDAO extends baseDAO
         Theme::Set('table_rows', $rows);
 
         // Render the Theme
-        $response->SetGridResponse(Theme::RenderReturn('campaign_form_layout_assign_list'));
+        $response->SetGridResponse(Theme::RenderReturn('table_render'));
         $response->callBack = 'LayoutAssignCallback';
         $response->pageSize = 5;
         $response->Respond();

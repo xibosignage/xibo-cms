@@ -93,13 +93,15 @@ if (defined('XMDS') || $method != '')
 
             try
             {
-                $soap = new SoapServer('lib/service/service.wsdl');
+                //$soap = new SoapServer('lib/service/service.wsdl');
+                $soap = new SoapServer('lib/service/service.wsdl', array('cache_wsdl' => WSDL_CACHE_NONE));
                 $soap->setClass('XMDSSoap');
                 $soap->handle();
             }
             catch (Exception $e)
             {
-                $serviceResponse->ErrorServerError('Unable to create SOAP Server');
+                $serviceResponse->ErrorServerError('Unable to create SOAP Server: ' . $e->getMessage());
+                Debug::LogEntry('error', $e->getMessage());
             }
 
             break;

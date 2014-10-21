@@ -20,8 +20,7 @@
  */
  defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
- class User 
- {
+class User {
     private $db;
         
     public $userid;
@@ -29,7 +28,7 @@
     public $userName;
     public $homePage;
     
-    public function __construct(database $db)
+    public function __construct(database $db = NULL)
     {
         $this->db           =& $db;
         $this->userid   = Kit::GetParam('userid', _SESSION, _INT);
@@ -749,7 +748,7 @@ END;
      */
     public function MediaAuth($mediaId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         $SQL  = '';
         $SQL .= 'SELECT UserID ';
@@ -799,7 +798,7 @@ END;
      */
     public function MediaAssignmentAuth($ownerId, $layoutId, $regionId, $mediaId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         // If we are the owner, or a super admin then give full permissions
         if ($this->usertypeid == 1 || $ownerId == $this->userid)
@@ -834,7 +833,7 @@ END;
 
     public function RegionAssignmentAuth($ownerId, $layoutId, $regionId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         // If we are the owner, or a super admin then give full permissions
         if ($this->usertypeid == 1 || $ownerId == $this->userid)
@@ -884,7 +883,7 @@ END;
         $SQL .= " FROM media ";
         $SQL .= "   LEFT OUTER JOIN media parentmedia ";
         $SQL .= "   ON parentmedia.MediaID = media.MediaID ";
-        $SQL .= " WHERE   media.isEdited = 0 ";
+        $SQL .= " WHERE   media.isEdited = 0 AND media.is_module = 0 ";
         
         if ($name != '') 
         {
@@ -961,7 +960,7 @@ END;
      */
     public function LayoutAuth($layoutId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         // Get the Campaign ID
         $SQL  = "SELECT campaign.CampaignID ";
@@ -997,7 +996,7 @@ END;
      */
     public function TemplateAuth($templateId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         $SQL  = '';
         $SQL .= 'SELECT UserID ';
@@ -1122,6 +1121,22 @@ END;
         if (Kit::GetParam('tags', $filter_by, _STRING) != '')
             $SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $this->db->escape_string(Kit::GetParam('tags', $filter_by, _STRING))) . "%' ";
         
+        // Show All, Used or UnUsed
+        if (Kit::GetParam('filterLayoutStatusId', $filter_by, _INT, 1) != 1)  {
+            if (Kit::GetParam('filterLayoutStatusId', $filter_by, _INT) == 2) {
+                // Only show used layouts
+                $SQL .= ' AND ('
+                    . '     campaign.CampaignID IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
+                    . '     OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) ' 
+                    . ' ) ';
+            }
+            else {
+                // Only show unused layouts
+                $SQL .= ' AND campaign.CampaignID NOT IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
+                    . ' AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) ';
+            }
+        }
+
         // Sorting?
         if (is_array($sort_order))
             $SQL .= 'ORDER BY ' . implode(',', $sort_order);
@@ -1157,7 +1172,7 @@ END;
 
             // Authenticate the assignment (if not null already)
             if ($layoutItem['lklayoutmediaid'] != 0) {
-                $assignmentAuth = $this->MediaAssignmentAuth($layoutItem['mediaownerid'], $layoutItem['layoutid'], $layoutItem['regionid'], $filterMediaId, true);
+                $assignmentAuth = $this->MediaAssignmentAuth($layoutItem['mediaownerid'], $layoutItem['layoutid'], $layoutItem['regionid'], Kit::GetParam('mediaId', $filter_by, _INT, 0), true);
 
                 // If we get here and the user does not have assess to this region assignment, don't add this row
                 if (!$assignmentAuth->del)
@@ -1311,7 +1326,7 @@ END;
      */
     public function DataSetAuth($dataSetId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         $SQL  = '';
         $SQL .= 'SELECT UserID ';
@@ -1411,7 +1426,7 @@ END;
      */
     public function DisplayGroupAuth($displayGroupId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
         $noOwnerId = 0;
 
         // If we are the owner, or a super admin then give full permissions
@@ -1662,7 +1677,7 @@ END;
      */
     public function CampaignAuth($campaignId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         $SQL  = '';
         $SQL .= 'SELECT UserID ';
@@ -1882,7 +1897,7 @@ END;
                 $displayItem['isdefault'] = Kit::ValidateParam($row['isdefault'], _INT);
                 $displayItem['userid'] = Kit::ValidateParam($row['userid'], _INT);
     
-                $auth = new PermissionManager($this->db, $this);
+                $auth = new PermissionManager($this);
                 
                 // If we are the owner, or a super admin then give full permissions
                 if ($this->usertypeid != 1 && $this->userid != $displayItem['userid'])
@@ -1904,6 +1919,16 @@ END;
         
             return false;
         }
+    }
+
+    public function GetPref($key, $default = NULL) {
+        $storedValue = Session::Get($key);
+
+        return ($storedValue == NULL) ? $default : $storedValue;
+    }
+
+    public function SetPref($key, $value) {
+        Session::Set($key, $value);
     }
 }
 ?>

@@ -22,6 +22,15 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
 
 class CampaignSecurity extends Data
 {
+    public function GetPermissions($objectId)
+    {
+        $userGroup = new UserGroup();
+        if (!$result = $userGroup->GetPermissionsForObject('lkcampaigngroup', 'CampaignID', $objectId))
+            return $this->SetError($userGroup->GetErrorMessage());
+
+        return $result;
+    }
+
     /**
      * Links a Campaign to a Group
      * @return

@@ -137,13 +137,13 @@ class adminDAO extends baseDAO {
                 'title' => __('Tidy Library'),
                 'class' => 'XiboFormButton',
                 'selected' => false,
-                'link' => 'index.php?p=admin&q=TidyLibrary',
+                'link' => 'index.php?p=admin&q=TidyLibraryForm',
                 'help' => __('Run through the library and remove and unnecessary files'),
                 'onclick' => ''
                 );
         }
 
-        return $menu;                 
+        return $menu;
     }
 
     function Edit() {
@@ -153,8 +153,7 @@ class adminDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
-        Kit::ClassLoader('setting');
-        $data = new Setting($this->db);
+        $data = new Setting();
 
         // Get all of the settings in an array
         $settings = Config::GetAll(NULL, array('userChange' => 1, 'userSee' => 1));
@@ -185,6 +184,7 @@ class adminDAO extends baseDAO {
         }
 
         $response->SetFormSubmitResponse(__('Settings Updated'), false);
+        $response->callBack = 'settingsUpdated';
         $response->Respond();
     }
 	
@@ -417,20 +417,10 @@ class adminDAO extends baseDAO {
     public function BackupDatabase()
     {
         // We want to output a load of stuff to the browser as a text file.
-        Kit::ClassLoader('maintenance');
         $maintenance = new Maintenance($this->db);
 
-        $dump = $maintenance->BackupDatabase();
-
-        if ($dump == '')
-            trigger_error(__('Unable to export database'), E_USER_ERROR);
-
-        header('Content-Type: text/plaintext');
-        header('Content-Disposition: attachment; filename="' . date('Y-m-d H:i:s') . '.bak"');
-        header("Content-Transfer-Encoding: binary");
-        header('Accept-Ranges: bytes');
-        echo $dump;
-        exit;
+        if (!$dump = $maintenance->BackupDatabase())
+            trigger_error($maintenance->GetErrorMessage(), E_USER_ERROR);
     }
 
     /**
@@ -545,70 +535,46 @@ FORM;
         return round($bytes, $precision) . ' ' . $units[$pow];
     }
 
+    public function TidyLibraryForm()
+    {
+        $response = new ResponseManager();
+        
+        Theme::Set('form_id', 'TidyLibraryForm');
+        Theme::Set('form_action', 'index.php?p=admin&q=TidyLibrary');
+
+        $formFields = array();
+
+        // Check box to also delete un-used media that has been revised.
+        $formFields[] = FormManager::AddCheckbox('tidyOldRevisions', __('Remove old revisions'), 0, 
+            __('Cleaning up old revisions of media will result in any unused media revisions being permanently deleted.'), '');
+
+        $formFields[] = FormManager::AddMessage(__('Tidying the Library will delete any temporary files. Are you sure you want to proceed?'));
+
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Tidy Library'), '350px', '275px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Settings', 'TidyLibrary') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#TidyLibraryForm").submit()');
+        $response->Respond();
+    }
+
     /**
      * Tidies up the library
      */
     public function TidyLibrary()
     {
-        $db =& $this->db;
         $response = new ResponseManager();
-
+        $tidyOldRevisions = (Kit::GetParam('tidyOldRevisions', _POST, _CHECKBOX) == 1);
         if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
         	trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
 
-        // Also run a script to tidy up orphaned media in the library
-        $library = Config::GetSetting('LIBRARY_LOCATION');
-	    $library = rtrim($library, '/') . '/';
+        $maintenance = new Maintenance();
+        if (!$maintenance->TidyLibrary($tidyOldRevisions))
+            trigger_error($maintenance->GetErrorMessage(), E_USER_ERROR);
 
-        Debug::LogEntry('audit', 'Library Location: ' . $library);
-
-        // Dump the files in the temp folder
-        foreach (scandir($library . 'temp') as $item)
-        {
-            if ($item == '.' || $item == '..')
-                continue;
-
-            Debug::LogEntry('audit', 'Deleting temp file: ' . $item);
-
-            unlink($library . 'temp' . DIRECTORY_SEPARATOR . $item);
-        }
-
-        // Get a list of all media files
-        foreach(scandir($library) as $file)
-        {
-            Debug::LogEntry('audit', 'Checking file: ' . $file);
-
-            if ($file == '.' || $file == '..')
-                continue;
-
-	        if (is_dir($library . $file))
-		        continue;
-
-            $rowCount = $db->GetCountOfRows("SELECT * FROM media WHERE storedAs = '" . $file . "'");
-
-            Debug::LogEntry('audit', 'Media count for file: ' . $file . ' is ' . $rowCount);
-            
-            // For each media file, check to see if the file still exists in the library
-            if ($rowCount == 0)
-            {
-                Debug::LogEntry('audit', 'Deleting file: ' . $file);
-
-                // If not, delete it
-                unlink($library . $file);
-
-                if (file_exists($library . 'tn_' . $file))
-                {
-                    unlink($library . 'tn_' . $file);
-                }
-
-                if (file_exists($library . 'bg_' . $file))
-                {
-                    unlink($library . 'bg_' . $file);
-                }
-            }
-        }
-
-        trigger_error(__('Library Tidy Complete'), E_USER_ERROR);
+        $response->SetFormSubmitResponse(__('Library Tidy Complete'));
+        $response->Respond();
     }
 }
 ?>

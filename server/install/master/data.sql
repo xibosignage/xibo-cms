@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.7.0-alpha', 4, 1, 80);
+('1.7.0-alpha2', 4, 2, 81);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
 (1, 'Users', 0, 0),
@@ -113,7 +113,8 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
 (12, 'shellcommand', 'Shell Command', 1, 1, 'Execute a shell command on the client', 'forms/shellcommand.gif', 1, NULL, 1, 1, NULL, NULL),
 (13, 'localvideo', 'Local Video', 1, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 1, 1, NULL, NULL),
 (14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,js,html,htm', 0, 0, NULL, NULL),
-(15, 'clock', 'Clock', 1, 1, 'Display a Clock', 'forms/library.gif', 1, NULL, 1, 1, 'html', '[]');
+(15, 'clock', 'Clock', 1, 1, 'Display a Clock', 'forms/library.gif', 1, NULL, 1, 1, 'html', '[]'),
+(16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL);
 
 INSERT INTO `pagegroup` (`pagegroupID`, `pagegroup`) VALUES
 (1, 'Schedule'),
@@ -263,7 +264,9 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (70, 'EMBEDDED_STATUS_WIDGET', '', 'text', 'HTML to embed in an iframe on the Status Dashboard', NULL, 'general', 0, 'Status Dashboard Widget', '', 70, '', 1, 'htmlstring'),
 (71, 'PROXY_HOST', '', 'text', 'The Proxy URL', NULL, 'network', 1, 'Proxy URL', '', 10, '', 1, 'string'),
 (72, 'PROXY_PORT', '0', 'number', 'The Proxy Port', NULL, 'network', 1, 'Proxy Port', '', 20, '0', 1, 'int'),
-(73, 'PROXY_AUTH', '', 'text', 'The Authentication information for this proxy. username:password', NULL, 'network', 1, 'Proxy Credentials', '', 30, '', 1, 'string');
+(73, 'PROXY_AUTH', '', 'text', 'The Authentication information for this proxy. username:password', NULL, 'network', 1, 'Proxy Credentials', '', 30, '', 1, 'string'),
+(74, 'DATE_FORMAT',  'Y-m-d',  'text',  'The Date Format to use when displaying dates in the CMS.', NULL ,  'regional',  '1',  'Date Format',  'required',  30,  'Y-m-d',  '1',  'string'),
+(75, 'DETECT_LANGUAGE',  '1',  'checkbox',  'Detect the browser language?', NULL ,  'regional',  '1',  'Detect Language',  '',  40,  '1',  1,  'checkbox');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -338,10 +341,6 @@ INSERT INTO `datatype` (`DataTypeID`, `DataType`) VALUES
 INSERT INTO `datasetcolumntype` (`DataSetColumnTypeID`, `DataSetColumnType`) VALUES
 (1, 'Value'),
 (2, 'Formula');
-
-INSERT INTO `displayprofile` (`displayprofileid`, `name`, `type`, `config`, `isdefault`, `userid`) VALUES
-(1, 'Production', 'windows', '[{"name":"CollectInterval","value":"900","type":"int"},{"name":"PowerpointEnabled","value":0,"type":"checkbox"},{"name":"StatsEnabled","value":1,"type":"checkbox"},{"name":"SizeX","value":0,"type":"double"},{"name":"SizeY","value":0,"type":"double"},{"name":"OffsetX","value":0,"type":"double"},{"name":"OffsetY","value":0,"type":"double"},{"name":"ShowInTaskbar","value":1,"type":"checkbox"},{"name":"ClientInfomationCtrlKey","value":0,"type":"checkbox"},{"name":"ClientInformationKeyCode","value":"I","type":"word"},{"name":"CursorStartPosition","value":"Bottom Right","type":"string"},{"name":"DoubleBuffering","value":1,"type":"checkbox"},{"name":"EmptyLayoutDuration","value":"10","type":"int"},{"name":"EnableMouse","value":0,"type":"checkbox"},{"name":"EnableShellCommands","value":0,"type":"checkbox"},{"name":"ExpireModifiedLayouts","value":0,"type":"checkbox"},{"name":"LogLevel","value":"off","type":"word"},{"name":"LogToDiskLocation","value":"","type":"string"},{"name":"MaxConcurrentDownloads","value":"2","type":"int"},{"name":"ShellCommandAllowList","value":"","type":"string"},{"name":"UseCefWebBrowser","value":1,"type":"checkbox"},{"name":"SendCurrentLayoutAsStatusUpdate","value":0,"type":"checkbox"},{"name":"ScreenShotRequestInterval","value":0,"type":"int"}]', 1, 1),
-(2, 'Production', 'android', '[{"name":"emailAddress","value":"","type":"string"},{"name":"settingsPassword","value":"","type":"string"},{"name":"collectInterval","value":"600","type":"int"},{"name":"orientation","value":0,"type":"int"},{"name":"startOnBoot","value":1,"type":"checkbox"},{"name":"actionBarMode","value":"1","type":"int"},{"name":"actionBarDisplayDuration","value":"60","type":"int"},{"name":"screenDimensions","value":"","type":"string"},{"name":"autoRestart","value":1,"type":"checkbox"},{"name":"startOnBootDelay","value":"60","type":"int"},{"name":"blacklistVideo","value":1,"type":"checkbox"},{"name":"storeHtmlOnInternal","value":0,"type":"checkbox"}]', 1, 1);
 
 INSERT INTO `bandwidthtype` (`bandwidthtypeid`, `name`) VALUES
 (1, 'Register'),

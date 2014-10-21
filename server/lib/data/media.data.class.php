@@ -22,6 +22,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Media extends Data
 {
+    private $_moduleFiles;
+
     private $moduleInfoLoaded;
     private $regionSpecific;
     private $validExtensions;
@@ -80,7 +82,7 @@ class Media extends Data
                 $this->ThrowError(10, __('The name cannot be longer than 100 characters'));
     
             // Test the duration (except for video and localvideo which can have a 0)
-            if ($duration == 0 && $type != 'video' && $type != 'localvideo' && $type != 'genericfile')
+            if ($duration == 0 && $type != 'video' && $type != 'localvideo' && $type != 'genericfile' && $type != 'font')
                 $this->ThrowError(11, __('You must enter a duration.'));
     
             // Check the naming of this item to ensure it doesnt conflict
@@ -193,7 +195,7 @@ class Media extends Data
             if (strlen($name) > 100)
                 $this->ThrowError(10, __('The name cannot be longer than 100 characters'));
     
-            if ($duration == 0 && $type != 'video' && $type != 'localvideo' && $type != 'genericfile')
+            if ($duration == 0 && $type != 'video' && $type != 'localvideo' && $type != 'genericfile' && $type != 'font')
                 $this->ThrowError(11, __('You must enter a duration.'));
     
             // Any media (not this one) already has this name?
@@ -330,8 +332,6 @@ class Media extends Data
     {
         Debug::LogEntry('audit', 'IN', 'Media', 'Delete');
         
-        Kit::ClassLoader('lkmediadisplaygroup');
-
         try {
             $dbh = PDOConnect::init();
         
@@ -357,7 +357,6 @@ class Media extends Data
             $fileName = Kit::ValidateParam($row['StoredAs'], _STRING);
     
             // Remove permission assignments
-            Kit::ClassLoader('mediagroupsecurity');
             $security = new MediaGroupSecurity($this->db);
     
             if (!$security->UnlinkAll($mediaId))
@@ -644,6 +643,103 @@ class Media extends Data
         
             if (!$this->IsError())
                 $this->SetError(26, __('Error copying media.'));
+        
+            return false;
+        }
+    }
+
+    public function AddModuleFile($file, $force = false) {
+        try {
+            $name = basename($file);
+
+            $moduleExists = $this->ModuleFileExists($name);
+
+            if (!$force && $moduleExists) {
+                return;
+            }
+
+            $dbh = PDOConnect::init();
+            $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+
+            // Get the name
+            $storedAs = $libraryFolder . $name;
+            
+            // Now copy the file
+            if (!@copy($file, $storedAs))
+                $this->ThrowError(15, 'Error storing file.');
+
+            // Calculate the MD5 and the file size
+            $md5        = md5_file($storedAs);
+            $fileSize   = filesize($storedAs);
+        
+            if ($moduleExists) {
+                $SQL = "UPDATE `media` SET md5 = :md5, filesize = :filesize WHERE storedAs = :storedas ";
+
+                $sth = $dbh->prepare($SQL);
+                $sth->execute(array(
+                        'storedas' => $name,
+                        'filesize' => $fileSize,
+                        'md5' => $md5
+                    ));
+            }
+            else {
+                // All OK to insert this record
+                $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired, is_module, storedAs, FileSize, MD5) ";
+                $SQL .= "VALUES (:name, :type, :duration, :originalfilename, 1, :retired, 1, :storedas, :filesize, :md5) ";
+
+                $sth = $dbh->prepare($SQL);
+                $sth->execute(array(
+                        'name' => $name,
+                        'type' => 'module',
+                        'duration' => 10,
+                        'originalfilename' => $name,
+                        'retired' => 0,
+                        'storedas' => $name,
+                        'filesize' => $fileSize,
+                        'md5' => $md5
+                    ));
+            }
+
+            $dbh->commit();
+
+            // Add to the cache
+            $this->_moduleFiles[] = $name;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    public function ModuleFileExists($file) {
+        try {
+            if ($this->_moduleFiles == NULL || count($this->_moduleFiles) < 1) {
+                $dbh = PDOConnect::init();
+            
+                $sth = $dbh->prepare('SELECT storedAs FROM `media` WHERE type = :type');
+                $sth->execute(array(
+                        'type' => 'module'
+                    ));
+                
+                $this->_moduleFiles = array();
+
+                foreach ($sth->fetchAll() as $moduleFile)
+                    $this->_moduleFiles[] = $moduleFile['storedAs'];
+            }
+
+            return (in_array($file, $this->_moduleFiles));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
         
             return false;
         }

@@ -57,8 +57,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_savetemplate_url'); ?>" title="<?php echo Theme::Translate('Save Template'); ?>"><span><?php echo Theme::Translate('Save Template'); ?></span></a></li>
 				<?php if (Theme::Get('layoutVersion') >= 2) { ?>
 				<li class="divider"></li>
-				<li><a href="<?php echo Theme::Get('layout_zoom_in_url'); ?>"><span><?php echo Theme::Translate('Zoom In'); ?></span></a></li>
-				<li><a href="<?php echo Theme::Get('layout_zoom_out_url'); ?>"><span><?php echo Theme::Translate('Zoom Out'); ?></span></a></li>
+				<li><a href="<?php echo Theme::Get('layout_zoom_in_url'); ?>"><span><?php echo Theme::Translate('Shrink Designer'); ?></span></a></li>
+				<li><a href="<?php echo Theme::Get('layout_zoom_out_url'); ?>"><span><?php echo Theme::Translate('Enlarge Designer'); ?></span></a></li>
 				<?php } ?>
 			</ul>
 		</div>
@@ -76,6 +76,3 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<?php echo Theme::Get('layout_designer_editor'); ?>
 	</div>
 </div>
-<script type="text/javascript">
-var translations = <?php echo Theme::Get('translations'); ?>;
-</script>

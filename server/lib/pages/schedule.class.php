@@ -299,7 +299,7 @@ class scheduleDAO extends baseDAO {
 
         $formFields['general'][] = FormManager::AddCombo(
                     'CampaignID', 
-                    __('Layout'), 
+                    __('Layout / Campaign'), 
                     NULL,
                     array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
                     'id',
@@ -526,20 +526,21 @@ class scheduleDAO extends baseDAO {
         }
 
         $formFields['general'][] = FormManager::AddMultiCombo(
-                    'DisplayGroupIDs[]', 
-                    __('Display'), 
-                    $displayGroupIds,
-                    array('group' => $groups, 'display' => $displays),
-                    'displaygroupid',
-                    'displaygroup',
-                    __('Please select one or more displays / groups for this event to be shown on.'), 
-                    'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
+            'DisplayGroupIDs[]', 
+            __('Display'), 
+            $displayGroupIds,
+            array('group' => $groups, 'display' => $displays),
+            'displaygroupid',
+            'displaygroup',
+            __('Please select one or more displays / groups for this event to be shown on.'), 
+            'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
 
         // Time controls
-        $formFields['general'][] = FormManager::AddText('starttimeControl', __('Start Time'), date("Y-m-d H:i", $fromDT), 
+        $dateFormat = Config::GetSetting('DATE_FORMAT');
+        $formFields['general'][] = FormManager::AddText('starttimeControl', __('Start Time'), date($dateFormat, $fromDT), 
             __('Select the start time for this event'), 's', 'required');
 
-        $formFields['general'][] = FormManager::AddText('endtimeControl', __('End Time'), date("Y-m-d H:i", $toDT), 
+        $formFields['general'][] = FormManager::AddText('endtimeControl', __('End Time'), date($dateFormat, $toDT), 
             __('Select the end time for this event'), 'e', 'required');
 
         // Add two hidden fields to always carry the ISO date
@@ -575,7 +576,7 @@ class scheduleDAO extends baseDAO {
 
         $formFields['general'][] = FormManager::AddCombo(
                     'CampaignID', 
-                    __('Layout'), 
+                    __('Layout / Campaign'), 
                     $campaignId,
                     array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
                     'id',

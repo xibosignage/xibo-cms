@@ -28,6 +28,16 @@ class ticker extends Module
         // Must call the parent class   
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
+
+    private function InstallFiles() {
+        $media = new Media();
+        $media->AddModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
+        $media->AddModuleFile('modules/preview/vendor/moment.js');
+        $media->AddModuleFile('modules/preview/vendor/jquery.marquee.min.js');
+        $media->AddModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
+        $media->AddModuleFile('modules/preview/xibo-layout-scaler.js');
+        $media->AddModuleFile('modules/preview/xibo-text-render.js');
+    }
     
     /**
      * Return the Add Form as HTML
@@ -147,6 +157,7 @@ class ticker extends Module
 
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('format', __('Format'));
         $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
         Theme::Set('form_tabs', $tabs);
 
@@ -179,10 +190,6 @@ class ticker extends Module
 
         $field_itemsPerPage = FormManager::AddNumber('itemsPerPage', __('Items per page'), $this->GetOption('itemsPerPage'), 
             __('When in single mode how many items per page should be shown.'), 'p');
-
-        $field_fitText = FormManager::AddCheckbox('fitText', __('Fit text to region?'), 
-            $this->GetOption('fitText', 0), __('Should the text try to fit to the region dimensions'), 
-            'f');
 
         $field_updateInterval = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5), 
             __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60.'),
@@ -219,9 +226,8 @@ class ticker extends Module
             $formFields['advanced'][] = FormManager::AddNumber('upperLimit', __('Upper Row Limit'), $this->GetOption('upperLimit'), 
                 __('Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)'), 'u');
 
-            $formFields['advanced'][] = $field_itemsPerPage;
-            $formFields['advanced'][] = $field_itemsSideBySide;
-            $formFields['advanced'][] = $field_fitText;
+            $formFields['format'][] = $field_itemsPerPage;
+            $formFields['format'][] = $field_itemsSideBySide;
 
             Theme::Set('columns', $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId)));
 
@@ -235,20 +241,19 @@ class ticker extends Module
             $formFields['general'][] = $field_name;
             $formFields['general'][] = $field_duration;
             $formFields['general'][] = $field_direction;
-            $formFields['general'][] = $field_scrollSpeed;
+            $formFields['format'][] = $field_scrollSpeed;
             
-            $formFields['advanced'][] = FormManager::AddNumber('numItems', __('Number of Items'), $this->GetOption('numItems'), 
+            $formFields['format'][] = FormManager::AddNumber('numItems', __('Number of Items'), $this->GetOption('numItems'), 
                 __('The Number of RSS items you want to display'), 'o');
 
-            $formFields['advanced'][] = $field_itemsPerPage;
-            $formFields['advanced'][] = $field_fitText;
+            $formFields['format'][] = $field_itemsPerPage;
 
-            $formFields['advanced'][] = FormManager::AddText('copyright', __('Copyright'), $this->GetOption('copyright'), 
+            $formFields['format'][] = FormManager::AddText('copyright', __('Copyright'), $this->GetOption('copyright'), 
                 __('Copyright information to display as the last item in this feed.'), 'f');
 
             $formFields['advanced'][] = $field_updateInterval;
 
-            $formFields['advanced'][] = FormManager::AddCombo(
+            $formFields['format'][] = FormManager::AddCombo(
                     'takeItemsFrom', 
                     __('Take items from the '), 
                     $this->GetOption('takeItemsFrom'),
@@ -261,12 +266,16 @@ class ticker extends Module
                     __('Take the items from the beginning or the end of the list'), 
                     't');
 
-            $formFields['advanced'][] = $field_durationIsPerItem;
-            $formFields['advanced'][] = $field_itemsSideBySide;
+            $formFields['format'][] = $field_durationIsPerItem;
+            $formFields['format'][] = $field_itemsSideBySide;
+
+            $formFields['format'][] = FormManager::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'), 
+                __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
 
             $subs = array(
                     array('Substitute' => 'Title'),
                     array('Substitute' => 'Description'),
+                    array('Substitute' => 'Date'),
                     array('Substitute' => 'Content'),
                     array('Substitute' => 'Copyright'),
                     array('Substitute' => 'Link'),
@@ -276,6 +285,12 @@ class ticker extends Module
             Theme::Set('substitutions', $subs);
 
             $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_edit'));
+
+            $formFields['advanced'][] = FormManager::AddText('allowedAttributes', __('Allowable Attributes'), $this->GetOption('allowedAttributes'), 
+                __('A comma separated list of attributes that should not be stripped from the incoming feed.'), '');
+
+            $formFields['advanced'][] = FormManager::AddText('stripTags', __('Strip Tags'), $this->GetOption('stripTags'), 
+                __('A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.'), '');
         }
 
         // Get the text out of RAW
@@ -302,6 +317,7 @@ class ticker extends Module
             __('Optional Stylesheet'), 's', 10);
 
         Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_format', $formFields['format']);
         Theme::Set('form_fields_advanced', $formFields['advanced']);
 
         // Generate the Response
@@ -329,8 +345,6 @@ class ticker extends Module
      */
     public function AddMedia()
     {
-        $db =& $this->db;
-        
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
         $mediaid = $this->mediaid;
@@ -408,8 +422,6 @@ class ticker extends Module
      */
     public function EditMedia()
     {
-        $db         =& $this->db;
-        
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;
@@ -435,7 +447,6 @@ class ticker extends Module
         $numItems = Kit::GetParam('numItems', _POST, _STRING);
         $takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
         $durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
-        $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
         $itemsSideBySide = Kit::GetParam('itemsSideBySide', _POST, _CHECKBOX);
         
         // DataSet Specific Options
@@ -512,13 +523,15 @@ class ticker extends Module
         $this->SetOption('numItems', $numItems);
         $this->SetOption('takeItemsFrom', $takeItemsFrom);
         $this->SetOption('durationIsPerItem', $durationIsPerItem);
-        $this->SetOption('fitText', $fitText);
         $this->SetOption('itemsSideBySide', $itemsSideBySide);
         $this->SetOption('upperLimit', $upperLimit);
         $this->SetOption('lowerLimit', $lowerLimit);
         $this->SetOption('filter', $filter);
         $this->SetOption('ordering', $ordering);
         $this->SetOption('itemsPerPage', $itemsPerPage);
+        $this->SetOption('dateFormat', Kit::GetParam('dateFormat', _POST, _STRING));
+        $this->SetOption('allowedAttributes', Kit::GetParam('allowedAttributes', _POST, _STRING));
+        $this->SetOption('stripTags', Kit::GetParam('stripTags', _POST, _STRING));
         
         // Text Template
         $this->SetRaw('<template><![CDATA[' . $text . ']]></template><css><![CDATA[' . $css . ']]></css>');
@@ -605,8 +618,18 @@ class ticker extends Module
      */
     public function GetResource($displayId = 0)
     {
-        // Load the HtmlTemplate
-        $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
+        // Make sure this module is installed correctly
+        $this->InstallFiles();
+
+        // Load in the template
+        if ($this->layoutSchemaVersion == 1)
+            $template = file_get_contents('modules/preview/Html4TransitionalTemplate.html');
+        else
+            $template = file_get_contents('modules/preview/HtmlTemplate.html');
+
+        // Replace the View Port Width?
+        if (isset($_GET['preview']))
+            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
 
         // What is the data source for this ticker?
         $sourceId = $this->GetOption('sourceId', 1);
@@ -614,7 +637,6 @@ class ticker extends Module
         // Information from the Module
         $direction = $this->GetOption('direction');
         $scrollSpeed = $this->GetOption('scrollSpeed');
-        $fitText = $this->GetOption('fitText', 0);
         $itemsSideBySide = $this->GetOption('itemsSideBySide', 0);
         $duration = $this->duration;
         $durationIsPerItem = $this->GetOption('durationIsPerItem', 0);
@@ -642,8 +664,7 @@ class ticker extends Module
             $css = '';
         }
 
-        $options = array('type' => 'ticker',
-            'sourceid' => $sourceId,
+        $options = array(
             'direction' => $direction,
             'duration' => $duration,
             'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
@@ -651,7 +672,6 @@ class ticker extends Module
             'takeItemsFrom' => $takeItemsFrom,
             'itemsPerPage' => $itemsPerPage,
             'scrollSpeed' => $scrollSpeed,
-            'scaleMode' => (($fitText == 0) ? 'scale' : 'fit'),
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
@@ -686,13 +706,7 @@ class ticker extends Module
         $template = str_replace('<!--[[[CONTROLMETA]]]-->', '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->', $template);
 
         // Replace the head content
-        $headContent  = '<script type="text/javascript">';
-        $headContent .= '   function init() { ';
-        $headContent .= '       $("body").xiboRender(options, items);';
-        $headContent .= '   } ';
-        $headContent .= '   var options = ' . json_encode($options) . ';';
-        $headContent .= '   var items = ' . json_encode($items) . ';';
-        $headContent .= '</script>';
+        $headContent  = '';
 
         if ($itemsSideBySide == 1) {
             $headContent .= '<style type="text/css">';
@@ -705,12 +719,38 @@ class ticker extends Module
             $headContent .= '<style type="text/css">' . $css . '</style>';
         }
 
-        // Replace the View Port Width?
-        if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->width . 'px', $template);
+        // Add our fonts.css file
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $headContent .= '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+        $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
 
         // Replace the Head Content with our generated javascript
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+
+        // Add some scripts to the JavaScript Content
+        $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+
+        // Need the marquee plugin?
+        if ($direction != 'none' && $direction != 'single')
+            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
+        
+        // Need the cycle plugin?
+        if ($direction == 'single')
+            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
+        
+        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-text-render.js"></script>';
+
+        $javaScriptContent .= '<script type="text/javascript">';
+        $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
+        $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
+        $javaScriptContent .= '   $(document).ready(function() { ';
+        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items);';
+        $javaScriptContent .= '   }); ';
+        $javaScriptContent .= '</script>';
+
+        // Replace the Head Content with our generated javascript
+        $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
 
         // Replace the Body Content with our generated text
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', '', $template);
@@ -737,9 +777,23 @@ class ticker extends Module
         $feed = new SimplePie();
         $feed->set_cache_location($file->GetLibraryCacheUri());
         $feed->set_feed_url(urldecode($this->GetOption('uri')));
+        $feed->force_feed(true);
         $feed->set_cache_duration(($this->GetOption('updateInterval', 3600) * 60));
         $feed->handle_content_type();
+
+        // Get a list of allowed attributes
+        $attrsStrip = array_diff($feed->strip_attributes, explode(',', $this->GetOption('allowedAttributes')));
+        //Debug::Audit(var_export($attrsStrip, true));
+        $feed->strip_attributes($attrsStrip);
+
+        // Get a list of tags to strip
+        $tagsStrip = array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags')));
+        $feed->strip_htmltags($tagsStrip);
+
+        // Init
         $feed->init();
+
+        $dateFormat = $this->GetOption('dateFormat');
 
         if ($feed->error()) {
             Debug::LogEntry('audit', 'Feed Error: ' . $feed->error());
@@ -754,7 +808,7 @@ class ticker extends Module
             // Substitute for all matches in the template
             $rowString = $text;
             
-            // Substitite
+            // Substitute
             foreach ($matches[0] as $sub) {
                 $replace = '';
 
@@ -796,7 +850,7 @@ class ticker extends Module
                             break;
 
                         case '[Date]':
-                            $replace = $item->get_local_date();
+                            $replace = ($dateFormat == '') ? $item->get_local_date() : $item->get_date($dateFormat);
                             break;
 
                         case '[PermaLink]':

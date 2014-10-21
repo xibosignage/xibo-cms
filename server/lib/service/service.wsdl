@@ -12,6 +12,7 @@
         <part name="clientType" type="xsd:string" />
         <part name="clientVersion" type="xsd:string" />
         <part name="clientCode" type="xsd:int" />
+        <part name="operatingSystem" type="xsd:string" />
         <part name="macAddress" type="xsd:string" />
         <part name="version" type="xsd:string" />
     </message>
@@ -31,8 +32,8 @@
         <part name="hardwareKey" type="xsd:string" />
         <part name="fileId" type="xsd:int" />
         <part name="fileType" type="xsd:string" />
-        <part name="chunkOffset" type="xsd:int" />
-        <part name="chuckSize" type="xsd:int" />
+        <part name="chunkOffset" type="xsd:double" />
+        <part name="chuckSize" type="xsd:double" />
         <part name="version" type="xsd:string" />
     </message>
     <message name="GetFileResponse">

@@ -22,7 +22,7 @@
 var LOG_LEVEL;
 
 /* String: Client Version */
-var VERSION = "1.6.2";
+var VERSION = "1.7.0";
 
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;

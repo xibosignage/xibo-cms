@@ -63,6 +63,7 @@ class Display extends Data {
     public $screenShotRequested;
 
     public $displayGroupId;
+    private $_config;
     
     public function Load() {
         try {
@@ -105,7 +106,7 @@ class Display extends Data {
             $this->wakeOnLanTime = Kit::ValidateParam($row['WakeOnLanTime'], _STRING);
             $this->broadCastAddress = Kit::ValidateParam($row['BroadCastAddress'], _STRING);
             $this->secureOn = Kit::ValidateParam($row['SecureOn'], _STRING);
-            $this->cidr = Kit::ValidateParam($row['Cidr'], _INT);
+            $this->cidr = Kit::ValidateParam($row['Cidr'], _STRING);
             $this->latitude = Kit::ValidateParam($row['Latitude'], _DOUBLE);
             $this->longitude = Kit::ValidateParam($row['Longitude'], _DOUBLE);
             $this->versionInstructions = Kit::ValidateParam($row['version_instructions'], _STRING);
@@ -656,7 +657,137 @@ class Display extends Data {
         
             return false;
         }
+    }
 
+    public function GetSetting($key, $default) {
+
+        if (!$this->SetConfig())
+            return false;
+
+        // Find
+        $return = $default;
+        foreach($this->_config as $row) {
+            if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
+                //Debug::Audit('Found ' . $key . '. value= ' . $row['value']);
+                $return = $row['value'];
+                break;
+            }
+        }
+
+        return $return;
+    }
+
+    private function SetConfig() {
+        if ($this->_config == null) {
+            try {
+                $dbh = PDOConnect::init();
+
+                $displayProfile = new DisplayProfile();
+                $displayProfile->displayProfileId = $this->displayProfileId;
+            
+                if ($displayProfile->displayProfileId == 0) {
+                    // Load the default profile
+                    $displayProfile->type = $this->clientType;
+                    $displayProfile->LoadDefault();
+                }
+                else {
+                    // Load the specified profile
+                    $displayProfile->Load();
+                }
+        
+                $this->_config = $displayProfile->config;
+                
+                return true;
+            }
+            catch (Exception $e) {
+                
+                Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            
+                if (!$this->IsError())
+                    $this->SetError(1, __('Unknown Error'));
+            
+                return false;
+            }
+        }
+    }
+    /**
+     * Assess each Display to correctly set the logged in flag based on last accessed time
+     * @return
+     */
+    public static function ValidateDisplays() {
+        // Maintain an array of timed out displays
+        $timedOutDisplays = array();
+
+        try {
+            $dbh = PDOConnect::init();
+            $statObject = new Stat();
+        
+            // Get a list of all displays and there last accessed / alert time out value
+            $sth = $dbh->prepare('SELECT displayid, display, lastaccessed, alert_timeout, client_type, displayprofileid, email_alert, loggedin FROM display');
+            $sthUpdate = $dbh->prepare('UPDATE display SET loggedin = 0 WHERE displayid = :displayid');
+            
+            $sth->execute(array());
+
+            // Get the global time out (overrides the alert time out on the display if 0)
+            $globalTimeout = Config::GetSetting('MAINTENANCE_ALERT_TOUT') * 60;
+        
+            $displays = $sth->fetchAll();
+
+            foreach ($displays as $row) {
+                $displayid = Kit::ValidateParam($row['displayid'], _INT);
+                $lastAccessed = Kit::ValidateParam($row['lastaccessed'], _INT);
+                $alertTimeout = Kit::ValidateParam($row['alert_timeout'], _INT);
+                $clientType = Kit::ValidateParam($row['client_type'], _WORD);
+                $loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
+
+                // Get the config object
+                if ($alertTimeout == 0) {
+                    $displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
+
+                    $display = new Display();
+                    $display->displayId = $displayid;
+                    $display->displayProfileId = $displayProfileId;
+                    $display->clientType = $clientType;
+                    $timeoutToTestAgainst = $display->GetSetting('collectInterval', $globalTimeout);
+                }
+                else {
+                    $timeoutToTestAgainst = $globalTimeout;
+                }
+
+                // Store the time out to test against
+                $row['timeout'] = $timeoutToTestAgainst;
+                $timeOut = $lastAccessed + $timeoutToTestAgainst;
+    
+                // If the last time we accessed is less than now minus the time out
+                if ($timeOut < time()) {
+                    Debug::Audit('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
+
+                    // If this is the first switch (i.e. the row was logged in before)
+                    if ($loggedIn == 1) {
+                        
+                        // Update the display and set it as logged out
+                        $sthUpdate->execute(array('displayid' => $displayid));
+                       
+                        // Log the down event
+                        $statObject->displayDown($displayid, $lastAccessed);
+                    }
+
+                    // Store this row
+                    $timedOutDisplays[] = $row;
+                }
+            }
+
+            return $timedOutDisplays;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
     }
 
     /**

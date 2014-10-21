@@ -28,21 +28,30 @@ class text extends Module
         // Must call the parent class
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
-	
+
+    private function InstallFiles() {
+        $media = new Media();
+        $media->AddModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
+        $media->AddModuleFile('modules/preview/vendor/moment.js');
+        $media->AddModuleFile('modules/preview/vendor/jquery.marquee.min.js');
+        $media->AddModuleFile('modules/preview/xibo-layout-scaler.js');
+        $media->AddModuleFile('modules/preview/xibo-text-render.js');
+    }
+    
     /**
      * Return the Add Form as HTML
      * @return
      */
     public function AddForm()
     {
-        $db 		=& $this->db;
-        $user		=& $this->user;
+        $db         =& $this->db;
+        $user       =& $this->user;
 
         // Would like to get the regions width / height
-        $layoutid	= $this->layoutid;
-        $regionid	= $this->regionid;
-        $rWidth		= Kit::GetParam('rWidth', _REQUEST, _STRING);
-        $rHeight	= Kit::GetParam('rHeight', _REQUEST, _STRING);
+        $layoutid   = $this->layoutid;
+        $regionid   = $this->regionid;
+        $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
+        $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
 
         Theme::Set('form_id', 'ModuleForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
@@ -71,14 +80,12 @@ class text extends Module
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
             __('The duration in seconds this counter should be displayed'), 'd', 'required');
 
-        $formFields[] = FormManager::AddCheckbox('fitText', __('Fit text to region?'), 
-            NULL, __('Should the text try to fit to the region dimensions'), 
-            'f');
-
         // Handle the substitutions as RAW items
         $subs = array(
                 array('Substitute' => 'Clock'),
-                array('Substitute' => 'Date')
+                array('Substitute' => 'HH:mm'),
+                array('Substitute' => 'Date'),
+                array('Substitute' => 'dd-mm-yy')
             );
         Theme::Set('substitutions', $subs);
         $formFields[] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
@@ -152,14 +159,12 @@ class text extends Module
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
-        $formFields[] = FormManager::AddCheckbox('fitText', __('Fit text to region?'), 
-            $this->GetOption('fitText', 0), __('Should the text try to fit to the region dimensions'), 
-            'f');
-
         // Handle the substitutions as RAW items
         $subs = array(
                 array('Substitute' => 'Clock'),
-                array('Substitute' => 'Date')
+                array('Substitute' => 'HH:mm'),
+                array('Substitute' => 'Date'),
+                array('Substitute' => 'DD/MM/YYYY')
             );
         Theme::Set('substitutions', $subs);
 
@@ -200,18 +205,15 @@ class text extends Module
      */
     public function AddMedia()
     {
-        $db 		=& $this->db;
-
-        $layoutid 	= $this->layoutid;
-        $regionid 	= $this->regionid;
-        $mediaid	= $this->mediaid;
+        $layoutid   = $this->layoutid;
+        $regionid   = $this->regionid;
+        $mediaid    = $this->mediaid;
 
         //Other properties
-        $direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
-        $duration	  = Kit::GetParam('duration', _POST, _INT, 0);
-        $text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+        $direction    = Kit::GetParam('direction', _POST, _WORD, 'none');
+        $duration     = Kit::GetParam('duration', _POST, _INT, 0);
+        $text         = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
         $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 2);
-        $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
 
         $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
@@ -231,14 +233,13 @@ class text extends Module
         }
 
         // Required Attributes
-        $this->mediaid	= md5(uniqid());
+        $this->mediaid  = md5(uniqid());
         $this->duration = $duration;
 
         // Any Options
         $this->SetOption('xmds', true);
         $this->SetOption('direction', $direction);
         $this->SetOption('scrollSpeed', $scrollSpeed);
-        $this->SetOption('fitText', $fitText);
         $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 
         // Should have built the media object entirely by this time
@@ -248,8 +249,7 @@ class text extends Module
         //Set this as the session information
         setSession('content', 'type', 'text');
 
-	if ($this->showRegionOptions)
-        {
+        if ($this->showRegionOptions) {
             // We want to load a new form
             $this->response->loadForm = true;
             $this->response->loadFormUri = $url;
@@ -264,71 +264,66 @@ class text extends Module
      */
     public function EditMedia()
     {
-            $db 		=& $this->db;
-            $user =& $this->user;
+        $user =& $this->user;
 
-            $layoutid 	= $this->layoutid;
-            $regionid 	= $this->regionid;
-            $mediaid	= $this->mediaid;
+        $layoutid = $this->layoutid;
+        $regionid = $this->regionid;
+        $mediaid = $this->mediaid;
 
-        if (!$this->auth->edit)
-        {
+        if (!$this->auth->edit) {
             $this->response->SetError('You do not have permission to edit this assignment.');
             $this->response->keepOpen = false;
             return $this->response;
         }
 
-            //Other properties
-            $direction	  = Kit::GetParam('direction', _POST, _WORD, 'none');
-            $text		  = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-            $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
-        $fitText = Kit::GetParam('fitText', _POST, _CHECKBOX);
-
+        //Other properties
+        $direction    = Kit::GetParam('direction', _POST, _WORD, 'none');
+        $text         = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+        $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+        
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
 
-            Debug::LogEntry('audit', 'Text received: ' . $text);
+        Debug::LogEntry('audit', 'Text received: ' . $text);
 
-            $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
+        $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
-            // Validation
-            if ($text == '')
-            {
-                    $this->response->SetError('Please enter some text');
-                    $this->response->keepOpen = true;
-                    return $this->response;
-            }
-
-            if ($this->duration == 0)
-            {
-                $this->response->SetError('You must enter a duration.');
-                $this->response->keepOpen = true;
-                return $this->response;
-            }
-
-            // Any Options
-            $this->SetOption('xmds', true);
-            $this->SetOption('direction', $direction);
-            $this->SetOption('scrollSpeed', $scrollSpeed);
-            $this->SetOption('fitText', $fitText);
-            $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
-
-            // Should have built the media object entirely by this time
-            // This saves the Media Object to the Region
-            $this->UpdateRegion();
-
-            //Set this as the session information
-            setSession('content', 'type', 'text');
-
-	if ($this->showRegionOptions)
+        // Validation
+        if ($text == '')
         {
+            $this->response->SetError('Please enter some text');
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        if ($this->duration == 0)
+        {
+            $this->response->SetError('You must enter a duration.');
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        // Any Options
+        $this->SetOption('xmds', true);
+        $this->SetOption('direction', $direction);
+        $this->SetOption('scrollSpeed', $scrollSpeed);
+        $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
+
+        // Should have built the media object entirely by this time
+        // This saves the Media Object to the Region
+        $this->UpdateRegion();
+
+        //Set this as the session information
+        setSession('content', 'type', 'text');
+
+        if ($this->showRegionOptions) {
             // We want to load a new form
             $this->response->loadForm = true;
             $this->response->loadFormUri = $url;
         }
 
-            return $this->response;
+        return $this->response;
     }
 
     /**
@@ -350,10 +345,18 @@ class text extends Module
      */
     public function GetResource($displayId = 0)
     {
-        // Behave exactly like the client.
+        // Make sure this module is installed correctly
+        $this->InstallFiles();
 
         // Load in the template
-        $template = file_get_contents('modules/preview/HtmlTemplateForGetResource.html');
+        if ($this->layoutSchemaVersion == 1)
+            $template = file_get_contents('modules/preview/Html4TransitionalTemplate.html');
+        else
+            $template = file_get_contents('modules/preview/HtmlTemplate.html');
+
+        // Replace the View Port Width?
+        if (isset($_GET['preview']))
+            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
 
         $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
         $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
@@ -372,16 +375,13 @@ class text extends Module
         $text = $textNode->nodeValue;
 
         // Set some options
-        $options = array('type' => 'text',
-            'sourceid' => 1,
-            'direction' => $direction,
+        $options = array('direction' => $direction,
             'duration' => $duration,
             'durationIsPerItem' => false,
             'numItems' => 1,
             'takeItemsFrom' => 'start',
             'itemsPerPage' => 0,
             'scrollSpeed' => $scrollSpeed,
-            'scaleMode' => (($fitText == 0) ? 'scale' : 'fit'),
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
@@ -390,26 +390,75 @@ class text extends Module
         );
 
         // See if we need to replace out any [clock] or [date] tags
-        $text = str_replace('[Clock]', '<span id="clock"></span>', $text);
-        $text = str_replace('[Date]', '<span id="date"></span>', $text);
+        $clock = false;
+
+        if (stripos($text, '[Clock]')) {
+            $clock = true;
+            $text = str_replace('[Clock]', '[HH:mm]', $text);
+        }
+
+        if (stripos($text, '[Date]')) {
+            $clock = true;
+            $text = str_replace('[Date]', '[DD/MM/YYYY]', $text);
+        }
+
+        if ($clock) {
+            // Strip out the bit between the [] brackets and use that as the format mask for moment.
+            $matches = '';
+            preg_match_all('/\[.*?\]/', $text, $matches);
+
+            foreach($matches[0] as $subs) {
+                $text = str_replace($subs, '<span class="clock" format="' . str_replace('[', '', str_replace(']', '', $subs)) . '"></span>', $text);
+            }
+        }
 
         // Generate a JSON string of substituted items.
         $items[] = $text;
         
         // Replace the head content
-        $headContent  = '<script type="text/javascript">';
-        $headContent .= '   function init() { ';
-        $headContent .= '       $("body").xiboRender(options, items);';
-        $headContent .= '   } ';
-        $headContent .= '   var options = ' . json_encode($options) . ';';
-        $headContent .= '   var items = ' . json_encode($items) . ';';
-        $headContent .= '</script>';
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
 
-        // Replace the View Port Width?
-        if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->width . 'px', $template);
+        if ($direction != 'none')
+            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
+        
+        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-text-render.js"></script>';
+
+        // Do we need to include moment?
+        if ($clock)
+            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
+ 
+        $javaScriptContent .= '<script type="text/javascript">';
+        $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
+        $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
+        $javaScriptContent .= '   $(document).ready(function() { ';
+        $javaScriptContent .= '       $("#content").xiboTextRender(options, items); $("body").xiboLayoutScaler(options);';
+        
+        if ($clock)
+            $javaScriptContent .= ' updateClock(); setInterval(updateClock, 1000); ';
+
+        $javaScriptContent .= '   }); ';
+
+        if ($clock) {
+            $javaScriptContent .= '
+                function updateClock() {
+                    $(".clock").each(function() {
+                        $(this).html(moment().format($(this).attr("format")));
+                    });
+                }
+            ';
+        }
+
+        $javaScriptContent .= '</script>';
 
         // Replace the Head Content with our generated javascript
+        $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+
+        // Add our fonts.css file
+        $headContent  = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+        $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
+
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
         // Replace the Body Content with our generated text
@@ -432,8 +481,7 @@ class text extends Module
         $textNode = $textNodes->item(0);
         $text = $textNode->nodeValue;
 
-
-        $output .= '<div class="hoverPreview">';
+        $output .= '<div class="hoverPreview" style="transform: scale(0.43); transform-origin: 0 0;">';
         $output .= '    ' . $text;
         $output .= '</div>';
 

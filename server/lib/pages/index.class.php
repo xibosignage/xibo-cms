@@ -264,5 +264,15 @@ class indexDAO extends baseDAO {
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }
+
+    function ExchangeGridTokenForFormToken() {
+
+        // Check our grid token against the one provided.
+        if (!Kit::CheckToken('gridToken'))
+            die(__('Sorry the form has expired. Please refresh.'));
+
+        echo Kit::Token('token', false);
+        exit();
+    }
 }
 ?>
