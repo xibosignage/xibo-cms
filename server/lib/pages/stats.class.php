@@ -364,14 +364,16 @@ class statsDAO extends baseDAO
                     ON display.displayId = stat.displayId
                  WHERE start <= :end
                     AND end >= :start
-                    AND type = :type
-                GROUP BY display.display
-            ';
+                    AND type = :type ';
 
             if ($displayId != 0) {
-                $SQL .= ' AND displayId = :displayId ';
+                $SQL .= ' AND display.displayId = :displayId ';
                 $params['displayId'] = $displayId;
             }
+
+            $SQL .= '
+                GROUP BY display.display
+            ';
 
             Debug::LogEntry('audit', $SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
 

@@ -419,7 +419,14 @@ class Kit
 
             $class = strtolower($class);
 
-            // It doesnt already exist - so lets look in some places to try and find it
+            if (strpos($class, 'manager')) {
+                // Load from app
+                if (file_exists('lib/app/' . $class . '.class.php')) {
+                    include_once('lib/app/' . $class . '.class.php');
+                }
+            }
+
+            // It doesn't already exist - so lets look in some places to try and find it
             if (file_exists('lib/pages/' . $class . '.class.php'))
             {
                 include_once('lib/pages/' . $class . '.class.php');

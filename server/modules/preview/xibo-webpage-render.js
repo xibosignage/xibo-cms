@@ -71,20 +71,11 @@ jQuery.fn.extend({
 
                 // Do we need to scale?
                 if (options.scale !== 1 && options.scale !== 0) {
-
-                    if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
-                        $(this).css({
-                            "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + options.scale + ", M12=0, M21=0, M22=" + options.scale + ", SizingMethod=\'auto expand\'"
-                        });
-                    }
-                    else {
-                        $(this).css({
-                            "transform": "scale(" + options.scale + ")",
-                            "transform-origin": "0 0",
-                            "width": width / options.scale,
-                            "height": height / options.scale
-                        });
-                    }
+                    $(this).css({
+                        "zoom": options.scale,
+                        "width": width / options.scale,
+                        "height": height / options.scale
+                    });
                 }
             }
         });

@@ -682,26 +682,21 @@ class Display extends Data {
             try {
                 $dbh = PDOConnect::init();
 
-                $params = array();
+                $displayProfile = new DisplayProfile();
+                $displayProfile->displayProfileId = $this->displayProfileId;
             
-                if ($this->displayProfileId == 0) {
-                    $sthDisplayProfile = $dbh->prepare('SELECT name, config FROM `displayprofile` WHERE type = :type AND isdefault = 1');
-                    $params['type'] = $this->clientType;
+                if ($displayProfile->displayProfileId == 0) {
+                    // Load the default profile
+                    $displayProfile->type = $this->clientType;
+                    $displayProfile->LoadDefault();
                 }
                 else {
-                    $sthDisplayProfile = $dbh->prepare('SELECT name, config FROM `displayprofile` WHERE displayprofileid = :displayprofileid');
-                    $params['displayprofileid'] = $this->displayProfileId;
+                    // Load the specified profile
+                    $displayProfile->Load();
                 }
-            
-                $sthDisplayProfile->execute($params);
-    
-                if ($row = $sthDisplayProfile->fetch()) {
-                    // Load the config and inject the display name
-                    $this->_config = json_decode(Kit::ValidateParam($row['config'], _HTMLSTRING), true);
-                }
-                else
-                    $this->ThrowError(__('Error loading client config'));
-
+        
+                $this->_config = $displayProfile->config;
+                
                 return true;
             }
             catch (Exception $e) {

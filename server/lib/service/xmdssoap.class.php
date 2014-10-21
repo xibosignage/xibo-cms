@@ -33,14 +33,6 @@ class XMDSSoap {
     private $clientVersion;
     private $clientCode;
 
-    // Unfortunately we still need this for this data classes that require a DB
-    private $db;
-    public function __construct()
-    {
-        global $db;
-        $this->db =& $db;
-    }
-
     /**
      * Registers a new display
      * @param <type> $serverKey
@@ -49,7 +41,7 @@ class XMDSSoap {
      * @param <type> $version
      * @return <type>
      */
-    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $macAddress, $version) {
+    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $version) {
     
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
@@ -148,56 +140,50 @@ class XMDSSoap {
                 try {
                     $dbh = PDOConnect::init();
 
-                    $displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
-                    $params = array();
-
-                    if ($displayProfileId == 0) {
-                        $sth = $dbh->prepare('SELECT name, config FROM `displayprofile` WHERE type = :type AND isdefault = 1');
-                        $params['type'] = $clientType;
+                    $displayProfile = new DisplayProfile();
+                    $displayProfile->displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
+                    
+                    if ($displayProfile->displayProfileId == 0) {
+                        // Load the default profile
+                        $displayProfile->type = $clientType;
+                        $displayProfile->LoadDefault();
                     }
                     else {
-                        $sth = $dbh->prepare('SELECT name, config FROM `displayprofile` WHERE displayprofileid = :displayprofileid');
-                        $params['displayprofileid'] = $displayProfileId;
+                        // Load the specified profile
+                        $displayProfile->Load();
                     }
-                
-                    $sth->execute($params);
 
-                    if ($row = $sth->fetch()) {
+                    // Load the config and inject the display name
+                    if ($clientType == 'windows') {
+                        $displayProfile->config[] = array(
+                            'name' => 'DisplayName',
+                            'value' => $display,
+                            'type' => 'string'
+                        );
+                        $displayProfile->config[] = array(
+                            'name' => 'ScreenShotRequested',
+                            'value' => $screenShotRequested,
+                            'type' => 'checkbox'
+                        );
+                    }
+                    else {
+                        $displayProfile->config[] = array(
+                            'name' => 'displayName',
+                            'value' => $display,
+                            'type' => 'string'
+                        );
+                        $displayProfile->config[] = array(
+                            'name' => 'screenShotRequested',
+                            'value' => $screenShotRequested,
+                            'type' => 'checkbox'
+                        );
+                    }
 
-                        // Load the config and inject the display name
-                        $config = json_decode(Kit::ValidateParam($row['config'], _HTMLSTRING), true);
-
-                        if ($clientType == 'windows') {
-                            $config[] = array(
-                                'name' => 'DisplayName',
-                                'value' => $display,
-                                'type' => 'string'
-                            );
-                            $config[] = array(
-                                'name' => 'ScreenShotRequested',
-                                'value' => $screenShotRequested,
-                                'type' => 'checkbox'
-                            );
-                        }
-                        else {
-                            $config[] = array(
-                                'name' => 'displayName',
-                                'value' => $display,
-                                'type' => 'string'
-                            );
-                            $config[] = array(
-                                'name' => 'screenShotRequested',
-                                'value' => $screenShotRequested,
-                                'type' => 'checkbox'
-                            );
-                        }
-
-                        // Create the XML nodes
-                        foreach($config as $arrayItem) {
-                            $node = $return->createElement($arrayItem['name'], $arrayItem['value']);
-                            $node->setAttribute('type', $arrayItem['type']);
-                            $displayElement->appendChild($node);
-                        }
+                    // Create the XML nodes
+                    foreach($displayProfile->config as $arrayItem) {
+                        $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
+                        $node->setAttribute('type', $arrayItem['type']);
+                        $displayElement->appendChild($node);
                     }
                 }
                 catch (Exception $e) {
@@ -433,7 +419,7 @@ class XMDSSoap {
         // Go through each layout and see if we need to supply any resource nodes.
         foreach ($layouts as $layoutId) {
             // Load the layout XML and work out if we have any ticker / text / dataset media items
-            $layout = new Layout($this->db);
+            $layout = new Layout();
 
             $layoutInformation = $layout->LayoutInformation($layoutId);
 
@@ -1010,7 +996,7 @@ class XMDSSoap {
             throw new SoapFault('Receiver', "Stat XML is empty.");
         
         // Log
-        $statObject = new Stat($this->db);
+        $statObject = new Stat();
 
         // Log
         if ($this->isAuditing == 1) 
@@ -1171,21 +1157,25 @@ class XMDSSoap {
 
         // What type of module is this?
         Kit::ClassLoader('region');
-        $region = new region($this->db);
+        $region = new region();
         $type = $region->GetMediaNodeType($layoutId, $regionId, $mediaId);
 
         if ($type == '')
             throw new SoapFault('Receiver', 'Unable to get the media node type');
 
         // Dummy User Object
-        $user = new User($this->db);
+        $user = new User();
         $user->userid = 0;
         $user->usertypeid = 1;
+
+        // Initialise the theme (for global styles in GetResource)
+        new Theme($user);
+        Theme::SetPagename($this->p);
 
         // Get the resource from the module
         require_once('modules/' . $type . '.module.php');
         
-        if (!$module = new $type($this->db, $user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $type(new Database(), $user, $mediaId, $layoutId, $regionId))
             throw new SoapFault('Receiver', 'Cannot create module. Check CMS Log');
 
         $resource = $module->GetResource($this->displayId);

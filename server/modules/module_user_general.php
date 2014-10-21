@@ -28,7 +28,7 @@ class User {
     public $userName;
     public $homePage;
     
-    public function __construct(database $db)
+    public function __construct(database $db = NULL)
     {
         $this->db           =& $db;
         $this->userid   = Kit::GetParam('userid', _SESSION, _INT);
@@ -748,7 +748,7 @@ END;
      */
     public function MediaAuth($mediaId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         $SQL  = '';
         $SQL .= 'SELECT UserID ';
@@ -798,7 +798,7 @@ END;
      */
     public function MediaAssignmentAuth($ownerId, $layoutId, $regionId, $mediaId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         // If we are the owner, or a super admin then give full permissions
         if ($this->usertypeid == 1 || $ownerId == $this->userid)
@@ -833,7 +833,7 @@ END;
 
     public function RegionAssignmentAuth($ownerId, $layoutId, $regionId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         // If we are the owner, or a super admin then give full permissions
         if ($this->usertypeid == 1 || $ownerId == $this->userid)
@@ -960,7 +960,7 @@ END;
      */
     public function LayoutAuth($layoutId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         // Get the Campaign ID
         $SQL  = "SELECT campaign.CampaignID ";
@@ -996,7 +996,7 @@ END;
      */
     public function TemplateAuth($templateId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         $SQL  = '';
         $SQL .= 'SELECT UserID ';
@@ -1326,7 +1326,7 @@ END;
      */
     public function DataSetAuth($dataSetId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         $SQL  = '';
         $SQL .= 'SELECT UserID ';
@@ -1426,7 +1426,7 @@ END;
      */
     public function DisplayGroupAuth($displayGroupId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
         $noOwnerId = 0;
 
         // If we are the owner, or a super admin then give full permissions
@@ -1677,7 +1677,7 @@ END;
      */
     public function CampaignAuth($campaignId, $fullObject = false)
     {
-        $auth = new PermissionManager($this->db, $this);
+        $auth = new PermissionManager($this);
 
         $SQL  = '';
         $SQL .= 'SELECT UserID ';
@@ -1897,7 +1897,7 @@ END;
                 $displayItem['isdefault'] = Kit::ValidateParam($row['isdefault'], _INT);
                 $displayItem['userid'] = Kit::ValidateParam($row['userid'], _INT);
     
-                $auth = new PermissionManager($this->db, $this);
+                $auth = new PermissionManager($this);
                 
                 // If we are the owner, or a super admin then give full permissions
                 if ($this->usertypeid != 1 && $this->userid != $displayItem['userid'])

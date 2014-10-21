@@ -12,6 +12,7 @@
         <part name="clientType" type="xsd:string" />
         <part name="clientVersion" type="xsd:string" />
         <part name="clientCode" type="xsd:int" />
+        <part name="operatingSystem" type="xsd:string" />
         <part name="macAddress" type="xsd:string" />
         <part name="version" type="xsd:string" />
     </message>
