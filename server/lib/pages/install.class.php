@@ -196,7 +196,7 @@ class Install {
                 $dbh->exec(sprintf('CREATE DATABASE `%s`', $this->new_db_name));
             }
             catch (Exception $e) {
-                throw new Exception(sprintf(__('Could not create a new database with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
+                throw new Exception(sprintf(__('Could not create a new database with the administrator details [%s]. Please check and try again. Error Message = [%s]'), $this->db_admin_user, $e->getMessage()));
             }
 
             // Try to create the new user

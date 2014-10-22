@@ -58,28 +58,30 @@ Class PDOConnect {
 
 	public static function connect($dbhost, $dbuser, $dbpass, $dbname = '') {
 		if (!self::$conn) {
-			
-			$dbport = '';
-
-			if (strstr($dbhost, ':')) {
-				$hostParts = explode(':', $dbhost);
-				$dsn = 'mysql:host=' . $hostParts[0] . ';port=' . $hostParts[1] . ';';
-			}
-			else {
-				$dsn = 'mysql:host=' . $dbhost . ';';
-			}
-
-			if ($dbname != '')
-				$dsn .= 'dbname=' . $dbname . ';';
-
-			//echo 'connect ' . $dsn , ' user ' . $dbuser . ' pass ' . $dbpass;
-
-			// Open the connection and set the error mode
-			self::$conn = new PDO($dsn, $dbuser, $dbpass);
-			self::$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-			self::$conn->query("SET NAMES 'utf8'");
+			self::close();
 		}
+			
+		$dbport = '';
+
+		if (strstr($dbhost, ':')) {
+			$hostParts = explode(':', $dbhost);
+			$dsn = 'mysql:host=' . $hostParts[0] . ';port=' . $hostParts[1] . ';';
+		}
+		else {
+			$dsn = 'mysql:host=' . $dbhost . ';';
+		}
+
+		if ($dbname != '')
+			$dsn .= 'dbname=' . $dbname . ';';
+
+		//echo 'connect ' . $dsn , ' user ' . $dbuser . ' pass ' . $dbpass;
+
+		// Open the connection and set the error mode
+		self::$conn = new PDO($dsn, $dbuser, $dbpass);
+		self::$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+		self::$conn->query("SET NAMES 'utf8'");
+		
 
 		return self::$conn;
 	}
