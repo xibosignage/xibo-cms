@@ -101,6 +101,7 @@ class layoutDAO extends baseDAO
                     $owner = Session::Get('layout', 'filter_userid');
                     $filterLayoutStatusId = Session::Get('layout', 'filterLayoutStatusId');
                     $showDescriptionId = Session::Get('layout', 'showDescriptionId');
+                    $showThumbnail = Session::Get('layout', 'showThumbnail');
                     $pinned = 1;
                 }
                 else {
@@ -111,6 +112,7 @@ class layoutDAO extends baseDAO
                     $filterLayoutStatusId = 1;
                     $showDescriptionId = 2;
                     $pinned = 0;
+                    $showThumbnail = 1;
                 }
                 
                 $id = uniqid();
@@ -167,6 +169,11 @@ class layoutDAO extends baseDAO
                     'showDescription',
                     NULL, 
                     'd');
+
+                $formFields[] = FormManager::AddCheckbox('showThumbnail', __('Show Thumbnails'), 
+                    $showThumbnail, NULL, 
+                    't');
+
                 $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
                     $pinned, NULL, 
                     'k');
@@ -428,10 +435,14 @@ class layoutDAO extends baseDAO
         $filterLayoutStatusId = Kit::GetParam('filterLayoutStatusId', _POST, _INT);
         setSession('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
 
-        // Show filterLayoutStatusId
+        // Show showDescriptionId
         $showDescriptionId = Kit::GetParam('showDescriptionId', _POST, _INT);
         setSession('layout', 'showDescriptionId', $showDescriptionId);
         
+        // Show filter_showThumbnail
+        $showThumbnail = Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
+        setSession('layout', 'showThumbnail', $showThumbnail);
+
         // Tags list
         $filter_tags = Kit::GetParam("filter_tags", _POST, _STRING);
         setSession('layout', 'filter_tags', $filter_tags);
@@ -450,6 +461,7 @@ class layoutDAO extends baseDAO
                 array('name' => 'layout', 'title' => __('Name')),
                 array('name' => 'description', 'title' => __('Description'), 'hidden' => ($showDescriptionId == 1 || $showDescriptionId == 3)),
                 array('name' => 'descriptionWithMarkdown', 'title' => __('Description'), 'hidden' => ($showDescriptionId == 2 || $showDescriptionId == 3)),
+                array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($showThumbnail == 0)),
                 array('name' => 'owner', 'title' => __('Owner')),
                 array('name' => 'permissions', 'title' => __('Permissions')),
                 array('name' => 'status', 'title' => __('Status'))
@@ -467,6 +479,11 @@ class layoutDAO extends baseDAO
             $row['description'] = $layout['description'];
             $row['owner'] = $user->getNameFromID($layout['ownerid']);
             $row['permissions'] = $this->GroupsForLayout($layout['layoutid']);
+
+            $row['thumbnail'] = '';
+
+            if ($showThumbnail == 1 && $layout['backgroundImageId'] != 0)
+                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $layout['backgroundImageId'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $layout['backgroundImageId'] . '"><i class="fa fa-file-image-o"></i></a>';
 
             // Fix up the description
             if ($showDescriptionId == 1) {
@@ -1164,7 +1181,7 @@ HTML;
          // Set some information about the form
         Theme::Set('form_id', 'LayoutImportForm');
         Theme::Set('form_action', 'index.php?p=layout&q=Import');
-        Theme::Set('form_meta', '<input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
+        Theme::Set('form_meta', '<input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" /><input type="hidden" name="template" value="' . Kit::GetParam('template', _GET, _STRING, 'false') . '" />');
 
         Theme::Set('form_upload_id', 'file_upload');
         Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
@@ -1173,15 +1190,17 @@ HTML;
         Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('layout', __('Name'), NULL, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields[] = FormManager::AddText('layout', __('Name'), NULL, __('The Name of the Layout - (1 - 50 characters). Leave blank to use the name from the import.'), 'n');
         $formFields[] = FormManager::AddCheckbox('replaceExisting', __('Replace Existing Media?'), 
             NULL, 
             __('If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.'), 
             'r');
-        $formFields[] = FormManager::AddCheckbox('importTags', __('Import Tags?'), 
-            NULL, 
-            __('Would you like to import any tags contained on the layout.'), 
-            't');
+
+        if (Kit::GetParam('template', _GET, _STRING, 'false') != 'true')
+            $formFields[] = FormManager::AddCheckbox('importTags', __('Import Tags?'), 
+                NULL, 
+                __('Would you like to import any tags contained on the layout.'), 
+                't');
 
         Theme::Set('form_fields', $formFields);
 
@@ -1197,8 +1216,13 @@ HTML;
         $db =& $this->db;
         $response = new ResponseManager();
 
+        // What are we importing?
+        $template = Kit::GetParam('template', _POST, _STRING, 'false');
+        $template = ($template == 'true');
+        
         $layout = Kit::GetParam('layout', _POST, _STRING);
         $replaceExisting = Kit::GetParam('replaceExisting', _POST, _CHECKBOX);
+        $importTags = Kit::GetParam('importTags', _POST, _CHECKBOX, (!$template));
         
         // File data
         $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
@@ -1217,7 +1241,7 @@ HTML;
         Kit::ClassLoader('layout');
         $layoutObject = new Layout($this->db);
 
-        if (!$layoutObject->Import($fileLocation, $layout, $this->user->userid, $replaceExisting)) {
+        if (!$layoutObject->Import($fileLocation, $layout, $this->user->userid, $template, $replaceExisting, $importTags)) {
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
         }
 

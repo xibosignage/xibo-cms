@@ -813,6 +813,9 @@ class Layout extends Data
             // Make sure the layout id is present
             if ($layoutId == 0)
                 $this->ThrowError(__('No Layout selected'));
+
+            // Untag
+            $this->unTagAll($layoutId);
         
             // Security
             $sth = $dbh->prepare('DELETE FROM lklayoutmediagroup WHERE layoutid = :layoutid');
@@ -826,7 +829,7 @@ class Layout extends Data
             $sth->execute(array('layoutid' => $layoutId));
         
             // Handle the deletion of the campaign        
-            $campaign = new Campaign($this->db);
+            $campaign = new Campaign();
             $campaignId = $campaign->GetCampaignId($layoutId);
     
             // Remove the Campaign (will remove links to this layout - orphaning the layout)
@@ -1418,7 +1421,7 @@ class Layout extends Data
         }
     }
 
-    function Import($zipFile, $layout, $userId, $replaceExisting) {
+    function Import($zipFile, $layout, $userId, $template, $replaceExisting, $importTags) {
         // I think I might add a layout and then import
         
         if (!file_exists($zipFile))
@@ -1434,21 +1437,47 @@ class Layout extends Data
         
             $sth = $dbh->prepare('SELECT mediaid, storedAs FROM `media` WHERE name = :name AND IsEdited = 0');
             
+            // Get the layout details
+            $layoutDetails = json_decode($zip->getFromName('layout.json'), true);
+
+            // Set the layout name
+            $layout = (($layout != '') ? $layout : $layoutDetails['layout']);
+            $description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
+
             // Get the layout xml
             $xml = $zip->getFromName('layout.xml');
     
             // Add the layout
-            if (!$layoutId = $this->Add($layout, NULL, NULL, $userId, NULL, NULL, $xml))
+            if (!$layoutId = $this->Add($layout, $description, NULL, $userId, NULL, NULL, $xml))
                 return false;
+
+            // Either remove out the tags, or add them to the DB
+            if ($importTags) {
+                // Pull the tags out of the XML
+                $xmlDoc = new DOMDocument();
+                $xmlDoc->loadXML($xml);
+
+                $xpath = new DOMXPath($xmlDoc);
+                $tagsNode = $xpath->query("//tags");
+
+                foreach ($tagsNode as $tag) {
+                    $this->tag($tag->nodeValue, $layoutId);
+                }
+            }
+            else {
+                $this->EditTags($layoutId, array());
+            }
+
+            // Are we a template?
+            if ($template)
+                $this->tag('template', $layoutId);
 
             // Set the DOM XML
             $this->SetDomXml($layoutId);
 
             // We will need a file object and a media object
-            Kit::ClassLoader('file');
-            Kit::ClassLoader('media');
-            $fileObject = new File($this->db);
-            $mediaObject = new Media($this->db);
+            $fileObject = new File();
+            $mediaObject = new Media();
     
             // Go through each region and add the media (updating the media ids)
             $mappings = json_decode($zip->getFromName('mapping.json'), true);
@@ -1506,6 +1535,7 @@ class Layout extends Data
             $this->SetValid($layoutId);
 
             // Finished, so delete
+            $zip->close();
             @unlink($zipFile);
 
             return true;
@@ -1529,6 +1559,26 @@ class Layout extends Data
         if ($background == 1) {
             // Background Image
             $this->DomXml->documentElement->setAttribute('background', $storedAs);
+
+            // Add the ID to the layout record.
+            try {
+                $dbh = PDOConnect::init();
+            
+                $sth = $dbh->prepare('UPDATE `layout` SET backgroundImageId = :mediaId WHERE layoutId = :layoutId');
+                $sth->execute(array(
+                        'mediaId' => $newMediaId,
+                        'layoutId' => $layoutId
+                    ));
+            }
+            catch (Exception $e) {
+                
+                Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            
+                if (!$this->IsError())
+                    $this->SetError(1, __('Unknown Error'));
+            
+                return false;
+            }
         }
         else {
             // Media Items

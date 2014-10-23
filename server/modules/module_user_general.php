@@ -1017,6 +1017,7 @@ END;
         $SQL .= "        campaign.CampaignID, ";
         $SQL .= "        layout.status, ";
         $SQL .= "        layout.retired, ";
+        $SQL .= "        layout.backgroundImageId, ";
         $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
         
         // MediaID
@@ -1135,6 +1136,7 @@ END;
             $layoutItem['campaignid'] = Kit::ValidateParam($row['CampaignID'], _INT);
             $layoutItem['retired'] = Kit::ValidateParam($row['retired'], _INT);
             $layoutItem['status'] = Kit::ValidateParam($row['status'], _INT);
+            $layoutItem['backgroundImageId'] = Kit::ValidateParam($row['backgroundImageId'], _INT);
             $layoutItem['mediaownerid'] = Kit::ValidateParam($row['mediaownerid'], _INT);
             
             // Details for media assignment

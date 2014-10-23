@@ -33,11 +33,13 @@ class templateDAO extends baseDAO {
             $pinned = 1;
             $name = Session::Get('template', 'filter_name');
             $tags = Session::Get('template', 'filter_tags');
+            $showThumbnail = Session::Get('template', 'showThumbnail');
         }
         else {
             $pinned = 0;
             $name = '';
             $tags = '';
+            $showThumbnail = 1;
         }
         
         $id = uniqid();
@@ -48,11 +50,14 @@ class templateDAO extends baseDAO {
         Theme::Set('form_meta', '<input type="hidden" name="p" value="template"><input type="hidden" name="q" value="TemplateView">');
         
         $formFields = array();
-                $formFields[] = FormManager::AddText('filter_name', __('Name'), $name, NULL, 'n');
-                $formFields[] = FormManager::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
-                $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
-                    $pinned, NULL, 
-                    'k');
+        $formFields[] = FormManager::AddText('filter_name', __('Name'), $name, NULL, 'n');
+        $formFields[] = FormManager::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
+        $formFields[] = FormManager::AddCheckbox('showThumbnail', __('Show Thumbnails'), 
+            $showThumbnail, NULL, 
+            't');
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+            $pinned, NULL, 
+            'k');
 
         Theme::Set('form_fields', $formFields);
 
@@ -73,7 +78,7 @@ class templateDAO extends baseDAO {
                 array('title' => __('Import'),
                     'class' => 'XiboFormButton',
                     'selected' => false,
-                    'link' => 'index.php?p=layout&q=ImportForm',
+                    'link' => 'index.php?p=layout&q=ImportForm&template=true',
                     'help' => __('Import a Layout from a ZIP file.'),
                     'onclick' => ''
                     )
@@ -95,6 +100,10 @@ class templateDAO extends baseDAO {
         setSession('template', 'filter_name', $filter_name);
         setSession('template', 'filter_tags', $filter_tags);
         setSession('template', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        
+        // Show filter_showThumbnail
+        $showThumbnail = Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
+        setSession('layout', 'showThumbnail', $showThumbnail);
     
         $templates = $user->TemplateList($filter_name, $filter_tags);
 
@@ -106,6 +115,7 @@ class templateDAO extends baseDAO {
                 array('name' => 'layout', 'title' => __('Name')),
                 array('name' => 'owner', 'title' => __('Owner')),
                 array('name' => 'descriptionWithMarkup', 'title' => __('Description')),
+                array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($showThumbnail == 0)),
                 array('name' => 'permissions', 'title' => __('Permissions'))
             );
         Theme::Set('table_cols', $cols);
@@ -116,6 +126,13 @@ class templateDAO extends baseDAO {
             
             $template['permissions'] = $this->GroupsForTemplate($template['campaignid']);
             $template['owner'] = $user->getNameFromID($template['ownerid']);
+
+            $template['thumbnail'] = '';
+
+            if ($showThumbnail == 1 && $template['backgroundImageId'] != 0)
+                $template['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $template['backgroundImageId'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $template['backgroundImageId'] . '"><i class="fa fa-file-image-o"></i></a>';
+
+
             $template['buttons'] = array();
 
             // Parse down for description
@@ -359,9 +376,9 @@ class templateDAO extends baseDAO {
     {
         $response = new ResponseManager();
         
-        $templateId = Kit::GetParam('templateId', _GET, _INT);
+        $templateId = Kit::GetParam('layoutid', _GET, _INT);
 
-        $auth = $this->user->TemplateAuth($templateId);
+        $auth = $this->user->TemplateAuth($templateId, true);
         if (!$auth->del)
             trigger_error(__('You do not have permissions to delete this template'), E_USER_ERROR);
         
@@ -376,7 +393,6 @@ class templateDAO extends baseDAO {
         
         $response->SetFormRequestResponse($form, __('Delete Template'), '300px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Template', 'Delete') . '")');
-        $response->AddButton(__('Retire'), 'XiboSwapDialog("index.php?p=layout&q=RetireForm&templateId=' . $templateId . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteForm").submit()');
         $response->Respond();

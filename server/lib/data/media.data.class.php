@@ -744,5 +744,107 @@ class Media extends Data
             return false;
         }
     }
+
+    /**
+     * Links a layout and tag
+     * @param [string] $tag The Tag
+     * @param [int] $mediaId The Layout
+     */
+    public function tag($tag, $mediaId)
+    {
+        $tagObject = new Tag();
+        if (!$tagId = $tagObject->add($tag))
+            return $this->SetError($tagObject->GetErrorMessage());
+
+        try {
+            $dbh = PDOConnect::init();
+
+            // See if this tag exists
+            $sth = $dbh->prepare('SELECT * FROM `lktagmedia` WHERE mediaId = :mediaId AND tagId = :tagId');
+            $sth->execute(array(
+                    'tagId' => $tagId,
+                    'mediaId' => $mediaId
+                ));
+
+            if (!$row = $sth->fetch()) {
+        
+                $sth = $dbh->prepare('INSERT INTO `lktagmedia` (tagId, mediaId) VALUES (:tagId, :mediaId)');
+                $sth->execute(array(
+                        'tagId' => $tagId,
+                        'mediaId' => $mediaId
+                    ));
+          
+                return $dbh->lastInsertId();
+            }
+            else {
+                return Kit::ValidateParam($row['lkTagMediaId'], _INT);
+            }
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Untag a layout
+     * @param  [string] $tag The Tag
+     * @param  [int] $mediaId The Layout Id
+     */
+    public function unTag($tag, $mediaId) {
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM `lktagmedia` WHERE tagId IN (SELECT tagId FROM tag WHERE tag = :tag) AND mediaId = :mediaId)');
+            $sth->execute(array(
+                    'tag' => $tag,
+                    'mediaId' => $mediaId
+                ));
+          
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Untag all tags on a layout
+     * @param  [int] $mediaId The Layout Id
+     */
+    public function unTagAll($mediaId) {
+        Debug::Audit('IN');
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM `lktagmedia` WHERE mediaId = :mediaId');
+            $sth->execute(array(
+                    'mediaId' => $mediaId
+                ));
+          
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
 }
 ?>
