@@ -996,43 +996,7 @@ END;
      */
     public function TemplateAuth($templateId, $fullObject = false)
     {
-        $auth = new PermissionManager($this);
-
-        $SQL  = '';
-        $SQL .= 'SELECT UserID ';
-        $SQL .= '  FROM template ';
-        $SQL .= ' WHERE TemplateId = %d ';
-
-        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $templateId), 'UserID', _INT))
-            return $auth;
-
-        // If we are the owner, or a super admin then give full permissions
-        if ($this->usertypeid == 1 || $ownerId == $this->userid)
-        {
-            $auth->FullAccess();
-            return $auth;
-        }
-
-        // Permissions for groups the user is assigned to, and Everyone
-        $SQL  = '';
-        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
-        $SQL .= '  FROM template ';
-        $SQL .= '   INNER JOIN lktemplategroup ';
-        $SQL .= '   ON lktemplategroup.TemplateID = template.TemplateID ';
-        $SQL .= '   INNER JOIN `group` ';
-        $SQL .= '   ON `group`.GroupID = lktemplategroup.GroupID ';
-        $SQL .= ' WHERE template.TemplateID = %d ';
-        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
-        $SQL .= 'GROUP BY template.UserID ';
-
-        $SQL = sprintf($SQL, $templateId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry('audit', $SQL);
-
-        if (!$row = $this->db->GetSingleRow($SQL))
-            return $auth;
-
-        // There are permissions to evaluate
-        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
+        $auth = $this->LayoutAuth($templateId, true);
 
         if ($fullObject)
             return $auth;
@@ -1048,11 +1012,12 @@ END;
         $SQL .= "SELECT layout.layoutID, ";
         $SQL .= "        layout.layout, ";
         $SQL .= "        layout.description, ";
-        $SQL .= "        layout.tags, ";
         $SQL .= "        layout.userID, ";
         $SQL .= "        layout.xml, ";
         $SQL .= "        campaign.CampaignID, ";
         $SQL .= "        layout.status, ";
+        $SQL .= "        layout.retired, ";
+        $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
         
         // MediaID
         if (Kit::GetParam('mediaId', $filter_by, _INT, 0) != 0) {
@@ -1119,8 +1084,13 @@ END;
 
         // Tags
         if (Kit::GetParam('tags', $filter_by, _STRING) != '')
-            $SQL .= " AND layout.tags LIKE '%" . sprintf('%s', $this->db->escape_string(Kit::GetParam('tags', $filter_by, _STRING))) . "%' ";
+            $SQL .= " AND layout.layoutID IN (SELECT lktaglayout.layoutId FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE tag LIKE '%" . sprintf('%s', $this->db->escape_string(Kit::GetParam('tags', $filter_by, _STRING))) . "%') ";
         
+        // Exclude templates by default
+        if (Kit::GetParam('excludeTemplates', $filter_by, _INT, 1) == 1) {
+            $SQL .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+        }
+
         // Show All, Used or UnUsed
         if (Kit::GetParam('filterLayoutStatusId', $filter_by, _INT, 1) != 1)  {
             if (Kit::GetParam('filterLayoutStatusId', $filter_by, _INT) == 2) {
@@ -1141,7 +1111,7 @@ END;
         if (is_array($sort_order))
             $SQL .= 'ORDER BY ' . implode(',', $sort_order);
 
-        Debug::LogEntry('audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        //Debug::LogEntry('audit', sprintf('Retrieving list of layouts for %s with SQL: %s.', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -1159,10 +1129,11 @@ END;
             $layoutItem['layoutid'] = Kit::ValidateParam($row['layoutID'], _INT);
             $layoutItem['layout']   = Kit::ValidateParam($row['layout'], _STRING);
             $layoutItem['description'] = Kit::ValidateParam($row['description'], _STRING);
-            $layoutItem['tags']     = Kit::ValidateParam($row['tags'], _STRING);
+            $layoutItem['tags'] = Kit::ValidateParam($row['tags'], _STRING);
             $layoutItem['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
             $layoutItem['xml']  = Kit::ValidateParam($row['xml'], _HTMLSTRING);
             $layoutItem['campaignid'] = Kit::ValidateParam($row['CampaignID'], _INT);
+            $layoutItem['retired'] = Kit::ValidateParam($row['retired'], _INT);
             $layoutItem['status'] = Kit::ValidateParam($row['status'], _INT);
             $layoutItem['mediaownerid'] = Kit::ValidateParam($row['mediaownerid'], _INT);
             
@@ -1201,72 +1172,12 @@ END;
      * @param string $tags     [description]
      * @param string $isSystem [description]
      */
-    public function TemplateList($template = '', $tags = '')
+    public function TemplateList($sort_order = array('layout'), $filter_by = array())
     {
-        $db =& $this->db;
+        $filter_by['excludeTemplates'] = 0;
+        $filter_by['tags'] = 'template';
 
-        $SQL  = "";
-        $SQL .= "SELECT  template.templateID, ";
-        $SQL .= "        template.template, ";
-        $SQL .= "        template.tags, ";
-        $SQL .= "        template.userID ";
-        $SQL .= "  FROM  template ";
-        $SQL .= " WHERE 1 = 1 ";
-
-        if ($template != '') 
-        {
-            // convert into a space delimited array
-            $names = explode(' ', $template);
-            
-            foreach ($names as $searchName)
-            {
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-')
-                    $SQL.= " AND  (template.template NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
-                else
-                    $SQL.= " AND  (template.template LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
-            }
-        }
-
-        if ($tags != '') 
-        {
-            $SQL .= " AND template.tags LIKE '%" . $db->escape_string($tags) . "%' ";
-        }
-
-        Debug::LogEntry('audit', sprintf('Retreiving list of templates for %s with SQL: %s', $this->userName, $SQL));
-
-        if (!$result = $this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
-            return false;
-        }
-
-        $templates = array();
-
-        while ($row = $this->db->get_assoc_row($result))
-        {
-            $layoutItem = array();
-
-            // Validate each param and add it to the array.
-            $item['templateid'] = Kit::ValidateParam($row['templateID'], _INT);
-            $item['template']   = Kit::ValidateParam($row['template'], _STRING);
-            $item['tags'] = Kit::ValidateParam($row['tags'], _STRING);
-            $item['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
-
-            $auth = $this->TemplateAuth($item['templateid'], true);
-
-            if ($auth->view)
-            {
-                $item['view'] = (int) $auth->view;
-                $item['edit'] = (int) $auth->edit;
-                $item['del'] = (int) $auth->del;
-                $item['modifyPermissions'] = (int) $auth->modifyPermissions;
-
-                $templates[] = $item;
-            }
-        }
-
-        return $templates;
+        return $this->LayoutList($sort_order, $filter_by);
     }
 
     public function ResolutionList($sort_order = array('resolution'), $filter_by = array()) {

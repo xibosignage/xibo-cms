@@ -48,12 +48,8 @@ class layoutDAO extends baseDAO
             $this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
             $this->layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
 
-            // Include the layout data class
-            include_once("lib/data/layout.data.class.php");
-
-            //if we have modify selected then we need to get some info
-            if ($this->layoutid != '')
-            {
+            // If we have modify selected then we need to get some info
+            if ($this->layoutid != '') {
                 // get the permissions
                 Debug::LogEntry('audit', 'Loading permissions for layoutid ' . $this->layoutid);
 
@@ -64,7 +60,7 @@ class layoutDAO extends baseDAO
 
                 $this->sub_page = "edit";
 
-                $sql  = " SELECT layout, description, userid, retired, tags, xml FROM layout ";
+                $sql  = " SELECT layout, description, userid, retired, xml FROM layout ";
                 $sql .= sprintf(" WHERE layoutID = %d ", $this->layoutid);
 
                 if(!$results = $db->query($sql))
@@ -81,8 +77,7 @@ class layoutDAO extends baseDAO
                     $this->layout = Kit::ValidateParam($aRow[0], _STRING);
                     $this->description  = Kit::ValidateParam($aRow[1], _STRING);
                     $this->retired = Kit::ValidateParam($aRow[3], _INT);
-                    $this->tags = Kit::ValidateParam($aRow[4], _STRING);
-                    $this->xml = $aRow[5];
+                    $this->xml = $aRow[4];
                 }
             }
     }
@@ -105,6 +100,7 @@ class layoutDAO extends baseDAO
                     $retired = Session::Get('layout', 'filter_retired');
                     $owner = Session::Get('layout', 'filter_userid');
                     $filterLayoutStatusId = Session::Get('layout', 'filterLayoutStatusId');
+                    $showDescriptionId = Session::Get('layout', 'showDescriptionId');
                     $pinned = 1;
                 }
                 else {
@@ -113,6 +109,7 @@ class layoutDAO extends baseDAO
                     $retired = 0;
                     $owner = NULL;
                     $filterLayoutStatusId = 1;
+                    $showDescriptionId = 2;
                     $pinned = 0;
                 }
                 
@@ -157,6 +154,19 @@ class layoutDAO extends baseDAO
                     'filterLayoutStatus',
                     NULL, 
                     's');
+                $formFields[] = FormManager::AddCombo(
+                    'showDescriptionId', 
+                    __('Description'), 
+                    $showDescriptionId,
+                    array(
+                        array('showDescriptionId' => 1, 'showDescription' => __('All')),
+                        array('showDescriptionId' => 2, 'showDescription' => __('1st line')),
+                        array('showDescriptionId' => 3, 'showDescription' => __('None'))
+                        ),
+                    'showDescriptionId',
+                    'showDescription',
+                    NULL, 
+                    'd');
                 $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
                     $pinned, NULL, 
                     'k');
@@ -273,7 +283,6 @@ class layoutDAO extends baseDAO
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $db             =& $this->db;
         $response       = new ResponseManager();
 
         $layoutid       = Kit::GetParam('layoutid', _POST, _INT);
@@ -284,7 +293,7 @@ class layoutDAO extends baseDAO
         $userid         = Kit::GetParam('userid', _SESSION, _INT);
         
         // Add this layout
-        $layoutObject = new Layout($db);
+        $layoutObject = new Layout();
 
         if (!$layoutObject->Edit($layoutid, $layout, $description, $tags, $userid, $retired))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
@@ -418,6 +427,10 @@ class layoutDAO extends baseDAO
         // Show filterLayoutStatusId
         $filterLayoutStatusId = Kit::GetParam('filterLayoutStatusId', _POST, _INT);
         setSession('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
+
+        // Show filterLayoutStatusId
+        $showDescriptionId = Kit::GetParam('showDescriptionId', _POST, _INT);
+        setSession('layout', 'showDescriptionId', $showDescriptionId);
         
         // Tags list
         $filter_tags = Kit::GetParam("filter_tags", _POST, _STRING);
@@ -435,7 +448,8 @@ class layoutDAO extends baseDAO
         $cols = array(
                 array('name' => 'layoutid', 'title' => __('ID')),
                 array('name' => 'layout', 'title' => __('Name')),
-                array('name' => 'description', 'title' => __('Description')),
+                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($showDescriptionId == 1 || $showDescriptionId == 3)),
+                array('name' => 'descriptionWithMarkdown', 'title' => __('Description'), 'hidden' => ($showDescriptionId == 2 || $showDescriptionId == 3)),
                 array('name' => 'owner', 'title' => __('Owner')),
                 array('name' => 'permissions', 'title' => __('Permissions')),
                 array('name' => 'status', 'title' => __('Status'))
@@ -453,6 +467,15 @@ class layoutDAO extends baseDAO
             $row['description'] = $layout['description'];
             $row['owner'] = $user->getNameFromID($layout['ownerid']);
             $row['permissions'] = $this->GroupsForLayout($layout['layoutid']);
+
+            // Fix up the description
+            if ($showDescriptionId == 1) {
+                // Parse down for description
+                $row['descriptionWithMarkdown'] = Parsedown::instance()->text($row['description']);
+            }
+            else if ($showDescriptionId == 2) {
+                $row['description'] = strtok($row['description'], "\n");
+            }
 
             switch ($layout['status']) {
 
@@ -594,23 +617,43 @@ class layoutDAO extends baseDAO
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
+        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
+
+        // Get the layout
+        if ($layoutId != 0) {
+            $layout = $user->LayoutList(NULL, array('layoutId' => Kit::GetParam('layoutid', _GET, _INT)));
+
+            if (count($layout) <= 0)
+                trigger_error(__('Unable to find Layout'), E_USER_ERROR);
+
+            $layout = $layout[0];
+        }
         
         Theme::Set('form_id', 'LayoutForm');
+
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('description', __('Description'));
+        
+        Theme::Set('form_tabs', $tabs);
         
         $formFields = array();
-        $formFields[] = FormManager::AddText('layout', __('Name'), $this->layout, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
-        $formFields[] = FormManager::AddText('description', __('Description'), $this->description, __('An optional description of the Layout. (1 - 250 characters)'), 'd', 'maxlength="250"');
-        $formFields[] = FormManager::AddText('tags', __('Tags'), $this->tags, __('Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
+        $formFields['general'][] = FormManager::AddText('layout', __('Name'), (isset($layout['layout']) ? $layout['layout'] : NULL), __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields['general'][] = FormManager::AddText('tags', __('Tags'), (isset($layout['tags']) ? $layout['tags'] : NULL), __('Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
+        
+        $formFields['description'][] = FormManager::AddMultiText('description', __('Description'), (isset($layout['description']) ? $layout['description'] : NULL), 
+            __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
 
-        if ($this->layoutid != '') {
+        if ($layoutId != 0) {
             // We are editing
             Theme::Set('form_action', 'index.php?p=layout&q=modify');
-            Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '">');
+            Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutId . '">');
 
-            $formFields[] = FormManager::AddCombo(
+            $formFields['general'][] = FormManager::AddCombo(
                     'retired', 
                     __('Retired'), 
-                    $this->retired,
+                    $layout['retired'],
                     array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')),
                     'retiredid',
                     'retired',
@@ -623,19 +666,19 @@ class layoutDAO extends baseDAO
             Theme::Set('form_action', 'index.php?p=layout&q=add');
 
             $templates = $user->TemplateList();
-            array_unshift($templates, array('templateid' => '0', 'template' => 'None'));
+            array_unshift($templates, array('layoutid' => '0', 'layout' => 'None'));
 
-            $formFields[] = FormManager::AddCombo(
+            $formFields['general'][] = FormManager::AddCombo(
                     'templateid', 
                     __('Template'), 
                     NULL,
                     $templates,
-                    'templateid',
-                    'template',
+                    'layoutid',
+                    'layout',
                     __('Optionally choose a template you have saved before.'), 
                     't');
 
-            $formFields[] = FormManager::AddCombo(
+            $formFields['general'][] = FormManager::AddCombo(
                     'resolutionid', 
                     __('Resolution'), 
                     NULL,
@@ -650,7 +693,8 @@ class layoutDAO extends baseDAO
             $response->AddFieldAction('templateid', 'change', 0, array('.resolution-group' => array('display' => 'none')), "not");
         }
 
-        Theme::Set('form_fields', $formFields);
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_description', $formFields['description']);
 
         // Initialise the template and capture the output
         $form = Theme::RenderReturn('form_render');
@@ -1134,6 +1178,10 @@ HTML;
             NULL, 
             __('If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.'), 
             'r');
+        $formFields[] = FormManager::AddCheckbox('importTags', __('Import Tags?'), 
+            NULL, 
+            __('Would you like to import any tags contained on the layout.'), 
+            't');
 
         Theme::Set('form_fields', $formFields);
 

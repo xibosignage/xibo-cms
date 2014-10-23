@@ -74,6 +74,8 @@ class Cache {
     }
 
     private static function save() {
+        File::EnsureLibraryExists();
+
         self::$_location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache';
 
         file_put_contents(self::$_location, serialize(self::$_data));

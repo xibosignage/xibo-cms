@@ -277,7 +277,7 @@ INSERT INTO `user` (`UserID`, `usertypeid`, `UserName`, `UserPassword`, `loggedi
 (1, 1, 'xibo_admin', '21232f297a57a5a743894a0e4a801fc3', 1, NOW(), '', 'statusdashboard', 0);
 
 
-INSERT INTO `layout` (`layoutID`, `layout`, `xml`, `userID`, `createdDT`, `modifiedDT`, `description`, `tags`, `templateID`, `retired`, `duration`, `backgroundImageId`) VALUES
+INSERT INTO `layout` (`layoutID`, `layout`, `xml`, `userID`, `createdDT`, `modifiedDT`, `description`, `tags`, `retired`, `duration`, `backgroundImageId`) VALUES
 (4, 'Default Layout', '<?xml version="1.0"?><layout schemaVersion="1" width="800" height="450" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="401" top="0" left="0" userId="1"><media id="522caef6e13cb6c9fe5fac15dde59ef7" type="text" duration="15" lkid="" userId="1" schemaVersion="1">
                             <options><xmds>1</xmds><direction>none</direction><scrollSpeed>2</scrollSpeed><fitText>0</fitText></options>
                             <raw><text><![CDATA[<p style="text-align: center;"><strong><span style="font-family:arial,helvetica,sans-serif;"><span style="font-size:72px;"><span style="color:#FFFFFF;">Welcome to&nbsp;<br />
@@ -291,7 +291,7 @@ Xibo</span></span></span></strong></p>
                             <options><xmds>1</xmds><direction>none</direction><scrollSpeed>2</scrollSpeed><fitText>0</fitText></options>
                             <raw><text><![CDATA[<p style="text-align: right;"><span style="font-size:24px;"><span style="font-family:arial,helvetica,sans-serif;"><span style="color:#D3D3D3;">[Clock]</span></span></span></p>
 ]]></text></raw>
-                    </media></region></layout>', 1, '2013-02-02 14:30:40', '2013-02-02 14:30:40', NULL, NULL, NULL, 0, 0, NULL);
+                    </media></region></layout>', 1, '2013-02-02 14:30:40', '2013-02-02 14:30:40', NULL, NULL, 0, 0, NULL);
 
 INSERT INTO `campaign` (`CampaignID`, `Campaign`, `IsLayoutSpecific`, `UserID`) VALUES
 (1, 'Default Layout', 1, 1);

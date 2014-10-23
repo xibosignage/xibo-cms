@@ -72,71 +72,77 @@ class Layout extends Data
 
             Debug::LogEntry('audit', 'Validation Compelte', 'Layout', 'Add');
             // End Validation
-        
-            // Get the XML for this template.
-            if ($xml != '') {
-                $initialXml = $xml;
+            
+            // Are we coming from a template?
+            if ($templateId != '' && $templateId != 0) {
+                // Copy the template layout and adjust
+                if (!$id = $this->Copy($templateId, $layout, $description, $userid, true)) {
+                    throw new Exception(__('Unable to use this template'));
+                }
             }
             else {
-                if (!$initialXml = $this->GetInitialXml($resolutionId, $templateId, $userid))
-                    throw new Exception(__('Unable to get initial XML'));
+                // We should use the resolution or the provided XML.
+                if ($xml != '') {
+                    $initialXml = $xml;
+                }
+                else {
+                    // Do we have a template?
+                    if (!$initialXml = $this->GetInitialXml($resolutionId, $userid))
+                        throw new Exception(__('Unable to get initial XML'));
+                }
+            
+                Debug::LogEntry('audit', 'Retrieved template xml', 'Layout', 'Add');
+
+                $SQL  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, xml, status)';
+                $SQL .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :xml, :status)';
+
+                $sth = $dbh->prepare($SQL);
+                $sth->execute(array(
+                        'layout' => $layout,
+                        'description' => $description,
+                        'userid' => $userid,
+                        'createddt' => $currentdate,
+                        'modifieddt' => $currentdate,
+                        'xml' => $initialXml,
+                        'status' => 3
+                    ));
+
+                $id = $dbh->lastInsertId();
+
+                // Create a campaign
+                $campaign = new Campaign($this->db);
+        
+                $campaignId = $campaign->Add($layout, 1, $userid);
+                $campaign->Link($campaignId, $id, 0);
+
+                // What permissions should we create this with?
+                if (Config::GetSetting('LAYOUT_DEFAULT') == 'public') {
+                    
+                    $security = new CampaignSecurity($this->db);
+                    $security->LinkEveryone($campaignId, 1, 0, 0);
+                    
+                    // Permissions on the new region(s)?
+                    $layout = new Layout($this->db);
+
+                    foreach($layout->GetRegionList($id) as $region) {
+                        
+                        $security = new LayoutRegionGroupSecurity($this->db);
+                        $security->LinkEveryone($id, $region['regionid'], 1, 0, 0);
+                    }
+                }
             }
         
-            Debug::LogEntry('audit', 'Retrieved template xml', 'Layout', 'Add');
-
-            $SQL  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, tags, xml, status)';
-            $SQL .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :tags, :xml, :status)';
-
-            $sth = $dbh->prepare($SQL);
-            $sth->execute(array(
-                    'layout' => $layout,
-                    'description' => $description,
-                    'userid' => $userid,
-                    'createddt' => $currentdate,
-                    'modifieddt' => $currentdate,
-                    'tags' => $tags,
-                    'xml' => $initialXml,
-                    'status' => 3
-                ));
-
-            $id = $dbh->lastInsertId();
-        
-            Debug::LogEntry('audit', 'Updating Tags', 'Layout', 'Add');
-        
+            // By this point we should have a layout record created        
             // Are there any tags?
-            if ($tags != '')
-            {
+            if ($tags != '') {
                 // Create an array out of the tags
-                $tagsArray = explode(' ', $tags);
+                $tagsArray = explode(',', $tags);
     
                 // Add the tags XML to the layout
                 if (!$this->EditTags($id, $tagsArray))
                     $this->ThrowError(__('Unable to edit tags'));
             }
         
-            // Create a campaign
-            $campaign = new Campaign($this->db);
-    
-            $campaignId = $campaign->Add($layout, 1, $userid);
-            $campaign->Link($campaignId, $id, 0);
-        
-            // What permissions should we create this with?
-            if (Config::GetSetting('LAYOUT_DEFAULT') == 'public')
-            {
-                Kit::ClassLoader('campaignsecurity');
-                $security = new CampaignSecurity($this->db);
-                $security->LinkEveryone($campaignId, 1, 0, 0);
-                
-                // Permissions on the new region(s)?
-                $layout = new Layout($this->db);
-
-                foreach($layout->GetRegionList($id) as $region) {
-                    Kit::ClassLoader('layoutregiongroupsecurity');
-                    $security = new LayoutRegionGroupSecurity($this->db);
-                    $security->LinkEveryone($id, $region['regionid'], 1, 0, 0);
-                }
-            }
-
             Debug::LogEntry('audit', 'Complete', 'Layout', 'Add');
     
             return $id;  
@@ -192,7 +198,7 @@ class Layout extends Data
             Debug::LogEntry('audit', 'Validation Compelte', 'Layout', 'Add');
             // End Validation
             
-            $SQL  = 'UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, tags = :tags WHERE layoutID = :layoutid';
+            $SQL  = 'UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired WHERE layoutID = :layoutid';
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
@@ -200,12 +206,11 @@ class Layout extends Data
                     'description' => $description,
                     'modifieddt' => $currentdate,
                     'retired' => $retired,
-                    'tags' => $tags,
                     'layoutid' => $layoutId
                 ));
                 
             // Create an array out of the tags
-            $tagsArray = explode(' ', $tags);
+            $tagsArray = explode(',', $tags);
             
             // Add the tags XML to the layout
             if (!$this->EditTags($layoutId, $tagsArray))
@@ -244,73 +249,151 @@ class Layout extends Data
      * @param <type> $templateId
      * @param <type> $userId
      */
-    private function GetInitialXml($resolutionId, $templateId, $userId)
+    private function GetInitialXml($resolutionId, $userId)
     {
         try {
             $dbh = PDOConnect::init();
         
-            if ($templateId == 0) {
+            // Look up the width and height for the resolution
+            $sth = $dbh->prepare('SELECT * FROM resolution WHERE resolutionid = :resolutionid');
+            $sth->execute(array(
+                    'resolutionid' => $resolutionId
+                ));
 
-                // Look up the width and height for the resolution
-                $sth = $dbh->prepare('SELECT * FROM resolution WHERE resolutionid = :resolutionid');
-                $sth->execute(array(
-                        'resolutionid' => $resolutionId
-                    ));
+            if (!$row = $sth->fetch())
+                $this->ThrowError(__('Unknown Resolution'));
 
-                if (!$row = $sth->fetch())
-                    $this->ThrowError(__('Unknown Resolution'));
+            // make some default XML
+            $xmlDoc = new DOMDocument("1.0");
+            $layoutNode = $xmlDoc->createElement("layout");
 
-                // make some default XML
-                $xmlDoc = new DOMDocument("1.0");
-                $layoutNode = $xmlDoc->createElement("layout");
-    
-                $layoutNode->setAttribute("width", $row['intended_width']);
-                $layoutNode->setAttribute("height", $row['intended_height']);
-                $layoutNode->setAttribute("resolutionid", $resolutionId);
-                $layoutNode->setAttribute("bgcolor", "#000000");
-                $layoutNode->setAttribute("schemaVersion", $row['version']);
-    
-                $xmlDoc->appendChild($layoutNode);
+            $layoutNode->setAttribute("width", $row['intended_width']);
+            $layoutNode->setAttribute("height", $row['intended_height']);
+            $layoutNode->setAttribute("resolutionid", $resolutionId);
+            $layoutNode->setAttribute("bgcolor", "#000000");
+            $layoutNode->setAttribute("schemaVersion", $row['version']);
 
-                $newRegion = $xmlDoc->createElement('region');
-                $newRegion->setAttribute('id', uniqid());
-                $newRegion->setAttribute('userId', $userId);
-                $newRegion->setAttribute('width', $row['intended_width']);
-                $newRegion->setAttribute('height', $row['intended_height']);
-                $newRegion->setAttribute('top', 0);
-                $newRegion->setAttribute('left', 0);
+            $xmlDoc->appendChild($layoutNode);
 
-                $layoutNode->appendChild($newRegion);
-    
-                $xml = $xmlDoc->saveXML();
-            }
-            else {
-                // Get the template XML
-                $sth = $dbh->prepare('SELECT xml FROM template WHERE templateID = :templateid');
-                $sth->execute(array(
-                        'templateid' => $templateId
-                    ));
+            $newRegion = $xmlDoc->createElement('region');
+            $newRegion->setAttribute('id', uniqid());
+            $newRegion->setAttribute('userId', $userId);
+            $newRegion->setAttribute('width', $row['intended_width']);
+            $newRegion->setAttribute('height', $row['intended_height']);
+            $newRegion->setAttribute('top', 0);
+            $newRegion->setAttribute('left', 0);
 
-                if (!$row = $sth->fetch())
-                    $this->ThrowError(__('Unknown template'));
-    
-                $xmlDoc = new DOMDocument("1.0");
-                $xmlDoc->loadXML($row['xml']);
-    
-                $regionNodeList = $xmlDoc->getElementsByTagName('region');
-    
-                //get the regions
-                foreach ($regionNodeList as $region)
-                    $region->setAttribute('userId', $userId);
-    
-                $xml = $xmlDoc->saveXML();
-            }
-        
+            $layoutNode->appendChild($newRegion);
+
+            $xml = $xmlDoc->saveXML();
+            
             return $xml;  
         }
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Links a layout and tag
+     * @param [string] $tag The Tag
+     * @param [int] $layoutId The Layout
+     */
+    public function tag($tag, $layoutId)
+    {
+        $tagObject = new Tag();
+        if (!$tagId = $tagObject->add($tag))
+            return $this->SetError($tagObject->GetErrorMessage());
+
+        try {
+            $dbh = PDOConnect::init();
+
+            // See if this tag exists
+            $sth = $dbh->prepare('SELECT * FROM `lktaglayout` WHERE layoutId = :layoutId AND tagId = :tagId');
+            $sth->execute(array(
+                    'tagId' => $tagId,
+                    'layoutId' => $layoutId
+                ));
+
+            if (!$row = $sth->fetch()) {
+        
+                $sth = $dbh->prepare('INSERT INTO `lktaglayout` (tagId, layoutId) VALUES (:tagId, :layoutId)');
+                $sth->execute(array(
+                        'tagId' => $tagId,
+                        'layoutId' => $layoutId
+                    ));
+          
+                return $dbh->lastInsertId();
+            }
+            else {
+                return Kit::ValidateParam($row['lkTagLayoutId'], _INT);
+            }
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Untag a layout
+     * @param  [string] $tag The Tag
+     * @param  [int] $layoutId The Layout Id
+     */
+    public function unTag($tag, $layoutId) {
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM `lktaglayout` WHERE tagId IN (SELECT tagId FROM tag WHERE tag = :tag) AND layoutId = :layoutId)');
+            $sth->execute(array(
+                    'tag' => $tag,
+                    'layoutId' => $layoutId
+                ));
+          
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Untag all tags on a layout
+     * @param  [int] $layoutId The Layout Id
+     */
+    public function unTagAll($layoutId) {
+        Debug::Audit('IN');
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('DELETE FROM `lktaglayout` WHERE layoutId = :layoutId');
+            $sth->execute(array(
+                    'layoutId' => $layoutId
+                ));
+          
+            return true;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -342,11 +425,16 @@ class Layout extends Data
         
             Debug::LogEntry('audit', 'Got the XML from the DB. Now creating the tags.', 'Layout', 'EditTags');
         
+            // Untag all
+            $this->unTagAll($layoutID);
+
             // Create the tags XML
             $tagsXml = '<tags>';
     
-            foreach($tags as $tag)
+            foreach($tags as $tag) {
+                $this->tag($tag, $layoutID);
                 $tagsXml .= sprintf('<tag>%s</tag>', $tag);
+            }
     
             $tagsXml .= '</tags>';
     
@@ -547,8 +635,8 @@ class Layout extends Data
     
             // The Layout ID is the old layout
             $SQL  = "";
-            $SQL .= " INSERT INTO layout (layout, xml, userID, description, tags, templateID, retired, duration, backgroundImageId, createdDT, modifiedDT, status) ";
-            $SQL .= " SELECT :layout, xml, :userid, :description, tags, templateID, retired, duration, backgroundImageId, :createddt, :modifieddt, status ";
+            $SQL .= " INSERT INTO layout (layout, xml, userID, description, retired, duration, backgroundImageId, createdDT, modifiedDT, status) ";
+            $SQL .= " SELECT :layout, xml, :userid, :description, retired, duration, backgroundImageId, :createddt, :modifieddt, status ";
             $SQL .= "  FROM layout ";
             $SQL .= " WHERE layoutid = :layoutid";
 
@@ -995,6 +1083,11 @@ class Layout extends Data
             $user = new User($this->db);
             $user->userid = 0;
             $user->usertypeid = 1;
+
+            // Dummy DB object (if necessary)
+            if ($this->db == NULL) {
+                $this->db = new Database();
+            }
     
             Debug::LogEntry('audit', '[IN]', 'layout', 'IsValid');
     
@@ -1214,7 +1307,7 @@ class Layout extends Data
             $dbh = PDOConnect::init();
         
             $sth = $dbh->prepare('
-                SELECT layout, description, tags, backgroundImageId, xml 
+                SELECT layout, description, backgroundImageId, xml
                   FROM layout
                  WHERE layoutid = :layoutid');
 
@@ -1222,13 +1315,22 @@ class Layout extends Data
         
             if (!$row = $sth->fetch())
                 $this->ThrowError(__('Layout not found.'));
-            
-            $xml = $row['xml'];
-    
-            $fileName = $libraryPath . 'temp/export_' . Kit::ValidateParam($row['layout'], _FILENAME) . '.zip';
 
+            // Open a ZIP file with the same name as the layout
             $zip = new ZipArchive();
+            $fileName = $libraryPath . 'temp/export_' . Kit::ValidateParam($row['layout'], _FILENAME) . '.zip';
             $zip->open($fileName, ZIPARCHIVE::OVERWRITE);
+            
+            // Add layout information to the ZIP
+            $layout = array(
+                    'layout' => Kit::ValidateParam($row['layout'], _STRING),
+                    'description' => Kit::ValidateParam($row['description'], _STRING)
+                );
+
+            $zip->addFromString('layout.json', json_encode($layout));
+
+            // Add the layout XLF
+            $xml = $row['xml'];
             $zip->addFromString('layout.xml', $xml);
 
             $params = array('layoutid' => $layoutId);    
@@ -1242,7 +1344,6 @@ class Layout extends Data
 
             // Add the media to the ZIP
             $mediaSth = $dbh->prepare($SQL);
-
             $mediaSth->execute($params);
 
             $mappings = array();
@@ -1289,6 +1390,12 @@ class Layout extends Data
             // Send via Apache X-Sendfile header?
             if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
                 header("X-Sendfile: $fileName");
+                exit();
+            }
+
+            // Send via Nginx X-Accel-Redirect?
+            if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
+                header("X-Accel-Redirect: /download/temp/" . basename($fileName));
                 exit();
             }
             

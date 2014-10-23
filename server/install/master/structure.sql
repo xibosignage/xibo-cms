@@ -138,7 +138,6 @@ CREATE TABLE IF NOT EXISTS `layout` (
   `modifiedDT` datetime NOT NULL,
   `description` varchar(254) DEFAULT NULL,
   `tags` varchar(254) DEFAULT NULL,
-  `templateID` int(11) DEFAULT NULL COMMENT 'The ID of the template',
   `retired` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is this layout retired',
   `duration` int(11) NOT NULL DEFAULT '0' COMMENT 'The duration in seconds',
   `backgroundImageId` int(11) DEFAULT NULL,
@@ -267,18 +266,6 @@ CREATE TABLE IF NOT EXISTS `lkpagegroup` (
   KEY `pageID` (`pageID`),
   KEY `groupID` (`groupID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Pages available to groups' AUTO_INCREMENT=55 ;
-
-CREATE TABLE IF NOT EXISTS `lktemplategroup` (
-  `LkTemplateGroupID` int(11) NOT NULL AUTO_INCREMENT,
-  `TemplateID` int(11) NOT NULL,
-  `GroupID` int(11) NOT NULL,
-  `View` tinyint(4) NOT NULL DEFAULT '0',
-  `Edit` tinyint(4) NOT NULL DEFAULT '0',
-  `Del` tinyint(4) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`LkTemplateGroupID`),
-  KEY `TemplateID` (`TemplateID`),
-  KEY `GroupID` (`GroupID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=16 ;
 
 CREATE TABLE IF NOT EXISTS `lkusergroup` (
   `LkUserGroupID` int(11) NOT NULL AUTO_INCREMENT,
@@ -540,22 +527,6 @@ CREATE TABLE IF NOT EXISTS `stat` (
   KEY `statDate` (`statDate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
-CREATE TABLE IF NOT EXISTS `template` (
-  `templateID` int(11) NOT NULL AUTO_INCREMENT,
-  `template` varchar(50) NOT NULL,
-  `xml` text NOT NULL,
-  `userID` int(11) NOT NULL,
-  `createdDT` datetime NOT NULL,
-  `modifiedDT` datetime NOT NULL,
-  `description` varchar(254) DEFAULT NULL,
-  `tags` varchar(254) DEFAULT NULL,
-  `thumbnail` varchar(100) DEFAULT NULL,
-  `isSystem` tinyint(4) NOT NULL DEFAULT '0',
-  `retired` tinyint(4) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`templateID`),
-  KEY `userID` (`userID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Templates for use on Layouts' AUTO_INCREMENT=9 ;
-
 CREATE TABLE IF NOT EXISTS `transition` (
   `TransitionID` int(11) NOT NULL AUTO_INCREMENT,
   `Transition` varchar(254) NOT NULL,
@@ -721,10 +692,6 @@ ALTER TABLE `lkpagegroup`
   ADD CONSTRAINT `lkpagegroup_ibfk_1` FOREIGN KEY (`pageID`) REFERENCES `pages` (`pageID`),
   ADD CONSTRAINT `lkpagegroup_ibfk_2` FOREIGN KEY (`groupID`) REFERENCES `group` (`groupID`);
 
-ALTER TABLE `lktemplategroup`
-  ADD CONSTRAINT `lktemplategroup_ibfk_2` FOREIGN KEY (`GroupID`) REFERENCES `group` (`groupID`),
-  ADD CONSTRAINT `lktemplategroup_ibfk_1` FOREIGN KEY (`TemplateID`) REFERENCES `template` (`templateID`);
-
 ALTER TABLE `lkusergroup`
   ADD CONSTRAINT `lkusergroup_ibfk_2` FOREIGN KEY (`UserID`) REFERENCES `user` (`UserID`),
   ADD CONSTRAINT `lkusergroup_ibfk_1` FOREIGN KEY (`GroupID`) REFERENCES `group` (`groupID`);
@@ -749,9 +716,6 @@ ALTER TABLE `schedule`
 ALTER TABLE `schedule_detail`
   ADD CONSTRAINT `schedule_detail_ibfk_7` FOREIGN KEY (`eventID`) REFERENCES `schedule` (`eventID`),
   ADD CONSTRAINT `schedule_detail_ibfk_8` FOREIGN KEY (`DisplayGroupID`) REFERENCES `displaygroup` (`DisplayGroupID`);
-
-ALTER TABLE `template`
-  ADD CONSTRAINT `template_ibfk_3` FOREIGN KEY (`userID`) REFERENCES `user` (`UserID`);
 
 ALTER TABLE `user`
   ADD CONSTRAINT `user_ibfk_2` FOREIGN KEY (`usertypeid`) REFERENCES `usertype` (`usertypeid`);

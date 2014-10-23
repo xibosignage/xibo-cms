@@ -425,7 +425,7 @@ class XMDSSoap {
 
             foreach($layoutInformation['regions'] as $region) {
                 foreach($region['media'] as $media) {
-                    if ($media['render'] == 'html' || $media['mediatype'] == 'ticker' || $media['mediatype'] == 'text' || $media['mediatype'] == 'datasetview' || $media['mediatype'] == 'webpage') {
+                    if ($media['render'] == 'html' || $media['mediatype'] == 'ticker' || $media['mediatype'] == 'text' || $media['mediatype'] == 'datasetview' || $media['mediatype'] == 'webpage' || $media['mediatype'] == 'embedded') {
                         // Append this item to required files
                         $file = $requiredFilesXml->createElement("file");
                         $file->setAttribute('type', 'resource');
