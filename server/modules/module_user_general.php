@@ -869,8 +869,9 @@ END;
     /**
      * Returns an array of Media the current user has access to
      */
-    public function MediaList($type = '', $name = '', $ownerid = 0, $retired = 0)
+    public function MediaList($sort_order = array('name'), $filter_by = array())
     {
+        //$type = '', $name = '', $ownerid = 0, $retired = 0
         $SQL  = '';
         $SQL .= "SELECT  media.mediaID, ";
         $SQL .= "   media.name, ";
@@ -878,17 +879,29 @@ END;
         $SQL .= "   media.duration, ";
         $SQL .= "   media.userID, ";
         $SQL .= "   media.FileSize, ";
+        $SQL .= "   media.storedAs, ";
         $SQL .= "   IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
+        
+        if (Kit::GetParam('showTags', $filter_by, _INT) == 1)
+            $SQL .= " tag.tag AS tags, ";
+        else
+            $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
+        
         $SQL .= "   media.originalFileName ";
         $SQL .= " FROM media ";
         $SQL .= "   LEFT OUTER JOIN media parentmedia ";
         $SQL .= "   ON parentmedia.MediaID = media.MediaID ";
+
+        if (Kit::GetParam('showTags', $filter_by, _INT) == 1) {
+            $SQL .= " LEFT OUTER JOIN lktagmedia ON lktagmedia.mediaId = media.mediaId ";
+            $SQL .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
+        }
+
         $SQL .= " WHERE   media.isEdited = 0 AND media.is_module = 0 ";
         
-        if ($name != '') 
-        {
+        if (Kit::GetParam('name', $filter_by, _STRING) != '') {
             // convert into a space delimited array
-            $names = explode(' ', $name);
+            $names = explode(' ', Kit::GetParam('name', $filter_by, _STRING));
             
             foreach($names as $searchName)
             {
@@ -900,21 +913,27 @@ END;
             }
         }
 
-        if ($type != '')
-            $SQL .= sprintf(" AND media.type = '%s'", $this->db->escape_string($type));
+        if (Kit::GetParam('mediaId', $filter_by, _INT, -1) != -1) {
+            $SQL .= sprintf(" AND media.mediaId = %d ", Kit::GetParam('mediaId', $filter_by, _INT));
+        }
 
-        if ($ownerid != 0) 
-            $SQL .= sprintf(" AND media.userid = %d ", $ownerid);
+        if (Kit::GetParam('type', $filter_by, _STRING) != '')
+            $SQL .= sprintf(" AND media.type = '%s'", $this->db->escape_string(Kit::GetParam('type', $filter_by, _STRING)));
+
+        if (Kit::GetParam('ownerid', $filter_by, _INT) != 0)
+            $SQL .= sprintf(" AND media.userid = %d ", Kit::GetParam('ownerid', $filter_by, _INT));
         
-        if ($retired == 1) 
+        if (Kit::GetParam('retired', $filter_by, _INT, -1) == 1)
             $SQL .= " AND media.retired = 1 ";
         
-        if ($retired == 0) 
+        if (Kit::GetParam('retired', $filter_by, _INT, -1) == 0)
             $SQL .= " AND media.retired = 0 ";          
         
-        $SQL .= " ORDER BY media.name ";
+        // Sorting?
+        if (is_array($sort_order))
+            $SQL .= 'ORDER BY ' . implode(',', $sort_order);
 
-        Debug::LogEntry('audit', sprintf('Retreiving list of media for %s with SQL: %s', $this->userName, $SQL));
+        //Debug::LogEntry('audit', sprintf('Retrieving list of media for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL))
         {
@@ -937,6 +956,8 @@ END;
             $mediaItem['filesize'] = Kit::ValidateParam($row['FileSize'], _INT);
             $mediaItem['parentid'] = Kit::ValidateParam($row['ParentID'], _INT);
             $mediaItem['filename'] = Kit::ValidateParam($row['originalFileName'], _STRING);
+            $mediaItem['tags'] = Kit::ValidateParam($row['tags'], _STRING);
+            $mediaItem['storedas'] = Kit::ValidateParam($row['storedAs'], _STRING);
 
             $auth = $this->MediaAuth($mediaItem['mediaid'], true);
 
@@ -1018,8 +1039,12 @@ END;
         $SQL .= "        layout.status, ";
         $SQL .= "        layout.retired, ";
         $SQL .= "        layout.backgroundImageId, ";
-        $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
         
+        if (Kit::GetParam('showTags', $filter_by, _INT) == 1)
+            $SQL .= " tag.tag AS tags, ";
+        else
+            $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
+
         // MediaID
         if (Kit::GetParam('mediaId', $filter_by, _INT, 0) != 0) {
             $SQL .= "   lklayoutmedia.regionid, ";
@@ -1039,11 +1064,14 @@ END;
         $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
         $SQL .= "       AND campaign.IsLayoutSpecific = 1";
 
+        if (Kit::GetParam('showTags', $filter_by, _INT) == 1) {
+            $SQL .= " LEFT OUTER JOIN lktaglayout ON lktaglayout.layoutId = layout.layoutId ";
+            $SQL .= " LEFT OUTER JOIN tag ON tag.tagId = lktaglayout.tagId ";
+        }
+
         if (Kit::GetParam('campaignId', $filter_by, _INT, 0) != 0) {
             // Join Campaign back onto it again
             $SQL .= sprintf(" INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = %d", Kit::GetParam('campaignId', $filter_by, _INT, 0));
-        }
-        else {
         }
 
         // MediaID

@@ -51,12 +51,12 @@ foreach(Theme::Get('table_rows') as $row) {
 <table class="table">
     <thead>
         <tr>
-            <?php if ($multiSelect) { ?><th data-sorter="false"><input class="selectAllCheckbox" type="checkbox"></th><?php } ?>
+            <?php if ($multiSelect) { ?><th data-sorter="false" class="group-false"><input class="selectAllCheckbox" type="checkbox"></th><?php } ?>
             <?php foreach(Theme::Get('table_cols') as $col) { 
                 if (isset($col['hidden']) && $col['hidden'])
                     continue;
             ?>
-            <th<?php if (isset($col['helpText']) && $col['helpText'] != '') { echo ' title="' . $col['helpText'] . '"'; } ?><?php if (isset($col['icons']) && $col['icons']) { ?> data-sorter="tickcross"<?php } else if (isset($col['sorter']) && $col['sorter'] != '') { ?> data-sorter="<?php echo $col['sorter'] ?>"<?php } ?>><?php echo $col['title']; ?></th>
+            <th<?php echo ' class="' . ((isset($col['colClass']) && $col['colClass'] != '') ? $col['colClass'] : 'group-false') . '"'; ?><?php if (isset($col['helpText']) && $col['helpText'] != '') { echo ' title="' . $col['helpText'] . '"'; } ?><?php if (isset($col['icons']) && $col['icons']) { ?> data-sorter="tickcross"<?php } else if (isset($col['sorter']) && $col['sorter'] != '') { ?> data-sorter="<?php echo $col['sorter'] ?>"<?php } ?>><?php echo $col['title']; ?></th>
             <?php } ?>
             <?php if ($hasButtons) { ?>
             <th data-sorter="false"></th>

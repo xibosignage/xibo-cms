@@ -627,6 +627,25 @@ CREATE TABLE IF NOT EXISTS `bandwidthtype` (
   PRIMARY KEY (`bandwidthtypeid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=12 ;
 
+CREATE TABLE IF NOT EXISTS `tag` (
+  `tagId` int(11) NOT NULL AUTO_INCREMENT,
+  `tag` varchar(50) NOT NULL,
+  PRIMARY KEY (`tagId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
+
+CREATE TABLE IF NOT EXISTS `lktaglayout` (
+  `lkTagLayoutId` int(11) NOT NULL AUTO_INCREMENT,
+  `tagId` int(11) NOT NULL,
+  `layoutId` int(11) NOT NULL,
+  PRIMARY KEY (`lkTagLayoutId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf32 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `lktagmedia` (
+  `lkTagMediaId` int(11) NOT NULL AUTO_INCREMENT,
+  `tagId` int(11) NOT NULL,
+  `mediaId` int(11) NOT NULL,
+  PRIMARY KEY (`lkTagMediaId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf16 AUTO_INCREMENT=1 ;
 
 --
 -- Constraints for dumped tables

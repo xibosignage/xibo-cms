@@ -346,65 +346,63 @@ function XiboGridRender(gridId, autoRefresh) {
                 if (sortOrder == undefined)
                     sortOrder = [[response.initialSortColumn,response.initialSortOrder]];
                 
+                var widgets = [ "uitheme", "zebra", "group" ];
+
+                if (response.paging)
+                    widgets.push("pager");
+
                 if (hasRows) {
                     $(sortingDiv).tablesorter({
                         sortList: sortOrder,
                         widthFixed: true,
                         theme: 'bootstrap',
-                        widgets : [ "uitheme", "zebra" ],
+                        widgets : widgets,
                         headerTemplate: '{content} {icon}',
+                        widgetOptions: {
+                            pager_output: '{startRow} - {endRow} / {filteredRows} ({totalRows})',
+                            pager_removeRows: true,
+                            pager_savePages: true,
+                            pager_size: response.pageSize,
+                            pager_css: {
+                                container   : 'tablesorter-pager',
+                                errorRow    : 'tablesorter-errorRow', // error information row (don't include period at beginning)
+                                disabled    : 'disabled'              // class added to arrows @ extremes (i.e. prev/first arrows "disabled" on first page)
+                            },
+                            pager_selectors: {
+                                container   : "#XiboPager_" + gridId,       // target the pager markup (wrapper)
+                                first       : '.first',       // go to first page arrow
+                                prev        : '.prev',        // previous page arrow
+                                next        : '.next',        // next page arrow
+                                last        : '.last',        // go to last page arrow
+                                gotoPage    : '.pagenum',    // go to page selector - select dropdown that sets the current page
+                                pageDisplay : '.pagedisplay', // location of where the "output" is displayed
+                                pageSize    : '.pagesize'     // page size selector - select dropdown that sets the "size" option
+                            }
+                        }
                     });
                     
                     $(sortingDiv).on('sortEnd', function(e) {
                         // Store on the XiboGrid
                         $('#' + gridId).data("sorting", e.target.config.sortList);
                     });
+
+                    // Bind to pager complete
+                    if (response.paging) {
+                        
+                        $(sortingDiv).on('pagerComplete', function(e,c) {
+                            $('#' + gridId).data("paging", c.page);
+
+                            $(sortingDiv).find('a.img-replace').each(function() {
+                                // Swap out the image
+                                var img = $("<img>").prop("src", $(this).data().imgSrc);
+                                $(this).children().remove();
+                                $(this).append(img);
+                            });
+                        });
+                    }
                 }
             }
             
-            // Do we need to add a pager?
-            if (response.paging && response.sortable) {
-                
-                // See if we have a page number
-                var pageNumber = $('#' + gridId).data("paging");
-                if (pageNumber == undefined)
-                    pageNumber = 0;
-                
-                if (response.pageNumber != 0)
-                    pageNumber = response.pageNumber;
-                
-                if ($("#XiboPager_" + gridId).length > 0 && hasRows) {
-                    $("#XiboPager_" + gridId).show();
-                    
-                    $(sortingDiv + ".tablesorter").tablesorterPager({
-                        container: $("#XiboPager_" + gridId),
-                        positionFixed: false,
-                        page: pageNumber,
-                        size: response.pageSize,
-                        // target the pager page select dropdown - choose a page
-                        cssGoto  : ".pagenum",
-                        removeRows: true,
-                        output: '{startRow} - {endRow} / {filteredRows} ({totalRows})'
-                    });
-
-                    $(sortingDiv).on('pagerComplete', function(e,c) {
-                        $('#' + gridId).data("paging", c.page);
-
-                        $(sortingDiv).find('a.img-replace').each(function() {
-                            // Swap out the image
-                            var img = $("<img>").prop("src", $(this).data().imgSrc);
-                            $(this).children().remove();
-                            $(this).append(img);
-                        });
-                    });
-                }
-                else {
-                    $("#XiboPager_" + gridId).hide();
-                }
-            }
-            else {
-                $("#XiboPager_" + gridId).hide();
-            }
 
             // Render any images in the grid (now that it is in pages)
             $(sortingDiv).find('a.img-replace').each(function() {

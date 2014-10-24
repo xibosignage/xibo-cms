@@ -975,17 +975,16 @@ class Layout extends Data
             if ($version == 1) {
                 $width  =  Kit::ValidateParam($row['width'], _INT);
                 $height =  Kit::ValidateParam($row['height'], _INT);
+                $color = '#' . $color;
             }
             else {
                 $width  =  Kit::ValidateParam($row['intended_width'], _INT);
                 $height =  Kit::ValidateParam($row['intended_height'], _INT);
             }
 
-            include_once("lib/data/region.data.class.php");
-            
             $region = new region($this->db);
             
-            if (!$region->EditBackground($layoutId, '#' . $color, $bg_image, $width, $height, $resolutionId))
+            if (!$region->EditBackground($layoutId, $color, $bg_image, $width, $height, $resolutionId))
                 throw new Exception("Error Processing Request", 1);
                     
             // Update the layout record with the new background
@@ -1162,6 +1161,78 @@ class Layout extends Data
         
             return 3;
         }
+    }
+
+    /**
+     * Upgrade a Layout between schema versions
+     * @param  [type] $layoutId [description]
+     * @return [type]           [description]
+     */
+    public function upgrade($layoutId, $resolutionId)
+    {
+        // Get the Layout XML
+        $this->SetDomXml($layoutId);
+
+        // Get the Schema Versions
+        $layoutVersion = (int)$this->DomXml->documentElement->getAttribute('schemaVersion');
+        $width = (int)$this->DomXml->documentElement->getAttribute('width');
+        $height = (int)$this->DomXml->documentElement->getAttribute('height');
+        $color = trim($this->DomXml->documentElement->getAttribute('color'), '#');
+        $version = Config::Version('XlfVersion');
+
+        // Get some more info about the layout
+        try {
+            $dbh = PDOConnect::init();
+            $sth = $dbh->prepare('SELECT backgroundImageId FROM `layout` WHERE layoutId = :layoutId');
+            $sth->execute(array(
+                'layoutId' => $layoutId
+            ));
+    
+            // Look up the bg image from the media id given
+            if (!$row = $sth->fetch())
+                $this->ThrowError(__('Unable to get the Layout information'));  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+        
+        Debug::Audit('Updating layoutId: ' . $layoutId . ' from version: ' . $layoutVersion . ' to: ' . $version);
+
+        // Upgrade
+
+        // Set the background
+        $this->SetBackground($layoutId, $resolutionId, $color, $row['backgroundImageId']);
+
+        // Get the Layout XML
+        $this->SetDomXml($layoutId);
+
+        // Get the Width and Height back out
+        $updatedWidth = (int)$this->DomXml->documentElement->getAttribute('width');
+        $updatedHeight = (int)$this->DomXml->documentElement->getAttribute('height');
+        
+        // Work out the ratio
+        $ratio = min($updatedWidth / $width, $updatedHeight / $height);
+        
+        // Get all the regions.
+        $regionObject = new Region();
+        foreach ($this->GetRegionList($layoutId) as $region) {
+
+            // Work out a new width and height
+            $newWidth = $region['width'] * $ratio;
+            $newHeight = $region['height'] * $ratio;
+            $newTop = $region['top'] * $ratio;
+            $newLeft = $region['left'] * $ratio;
+
+            $regionObject->EditRegion($layoutId, $region['regionid'], $newWidth, $newHeight, $newTop, $newLeft, $region['name']);
+        }
+
+        return true;
     }
 
     /**
@@ -1421,7 +1492,7 @@ class Layout extends Data
         }
     }
 
-    function Import($zipFile, $layout, $userId, $template, $replaceExisting, $importTags) {
+    function Import($zipFile, $layout, $userId, $template, $replaceExisting, $importTags, $delete = true) {
         // I think I might add a layout and then import
         
         if (!file_exists($zipFile))
@@ -1536,7 +1607,9 @@ class Layout extends Data
 
             // Finished, so delete
             $zip->close();
-            @unlink($zipFile);
+
+            if ($delete)
+                @unlink($zipFile);
 
             return true;
         }
@@ -1630,6 +1703,26 @@ class Layout extends Data
         }
 
         return true;
+    }
+
+    /**
+     * Import a Folder of ZIP files
+     * @param  [string] $folder The folder to import
+     */
+    public function importFolder($folder) 
+    {
+        Debug::Audit('Importing folder: ' . $folder);
+
+        if (is_dir($folder)) {
+            // Get a list of files
+            foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
+
+                Debug::Audit('Found file: ' . $file);
+
+                if (stripos($file, '.zip'))
+                    $this->Import($folder . DIRECTORY_SEPARATOR . $file, NULL, 1, false, true, true, false);
+            }
+        }
     }
 }
 ?>

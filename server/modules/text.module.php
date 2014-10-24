@@ -481,7 +481,7 @@ class text extends Module
         $textNode = $textNodes->item(0);
         $text = $textNode->nodeValue;
 
-        $output .= '<div class="hoverPreview" style="transform: scale(0.43); transform-origin: 0 0;">';
+        $output .= '<div class="hoverPreview">';
         $output .= '    ' . $text;
         $output .= '</div>';
 

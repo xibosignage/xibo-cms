@@ -1,3 +1,28 @@
+CREATE TABLE IF NOT EXISTS `tag` (
+  `tagId` int(11) NOT NULL AUTO_INCREMENT,
+  `tag` varchar(50) NOT NULL,
+  PRIMARY KEY (`tagId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
+
+INSERT INTO `tag` (`tagId`, `tag`) VALUES
+(1, 'template'),
+(2, 'background'),
+(3, 'thumbnail');
+
+CREATE TABLE IF NOT EXISTS `lktaglayout` (
+  `lkTagLayoutId` int(11) NOT NULL AUTO_INCREMENT,
+  `tagId` int(11) NOT NULL,
+  `layoutId` int(11) NOT NULL,
+  PRIMARY KEY (`lkTagLayoutId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf32 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `lktagmedia` (
+  `lkTagMediaId` int(11) NOT NULL AUTO_INCREMENT,
+  `tagId` int(11) NOT NULL,
+  `mediaId` int(11) NOT NULL,
+  PRIMARY KEY (`lkTagMediaId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf16 AUTO_INCREMENT=1 ;
+
 /* Clear the un-used template id field */
 UPDATE `layout` SET templateID = NULL;
 
@@ -42,6 +67,7 @@ ALTER TABLE `campaign`
 
 DROP TABLE  `lktemplategroup`;
 DROP TABLE  `template`;
+
 ALTER TABLE `layout` DROP `templateID`;
 
 /* Tags from the layout table */
@@ -108,6 +134,10 @@ SELECT tagid, layoutid
     ON tagFromLayout.tag = tag.tag;
 
 ALTER TABLE `layout` DROP `tags`;
+
+INSERT INTO  `setting` (`setting` ,`value` ,`fieldType` ,`helptext` ,`options` ,`cat` ,`userChange` ,`title` ,`validation` ,`ordering` ,`default` ,`userSee` ,`type`)
+VALUES ('DEFAULTS_IMPORTED',  '0',  'text',  'Has the default layout been imported?', NULL ,  'general',  '0',  'Defaults Imported?',  'required',  '100',  '0',  '0',  'checkbox');
+
 
 UPDATE `version` SET `app_ver` = '1.7.0-beta', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

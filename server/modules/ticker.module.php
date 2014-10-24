@@ -765,6 +765,9 @@ class ticker extends Module
         $file = new File($this->db);
         File::EnsureLibraryExists();
 
+        // In the text template replace span with div
+        $text = str_replace('span', 'div', $text);
+
         // Parse the text template
         $matches = '';
         preg_match_all('/\[.*?\]/', $text, $matches);
@@ -782,13 +785,17 @@ class ticker extends Module
         $feed->handle_content_type();
 
         // Get a list of allowed attributes
-        $attrsStrip = array_diff($feed->strip_attributes, explode(',', $this->GetOption('allowedAttributes')));
-        //Debug::Audit(var_export($attrsStrip, true));
-        $feed->strip_attributes($attrsStrip);
+        if ($this->GetOption('allowedAttributes') != '') {
+            $attrsStrip = array_diff($feed->strip_attributes, explode(',', $this->GetOption('allowedAttributes')));
+            //Debug::Audit(var_export($attrsStrip, true));
+            $feed->strip_attributes($attrsStrip);
+        }
 
         // Get a list of tags to strip
-        $tagsStrip = array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags')));
-        $feed->strip_htmltags($tagsStrip);
+        if ($this->GetOption('stripTags') != '') {
+            $tagsStrip = array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags')));
+            $feed->strip_htmltags($tagsStrip);
+        }
 
         // Init
         $feed->init();

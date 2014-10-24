@@ -80,6 +80,26 @@ class Config
 		}
 	}
 
+	/**
+	 * Change a setting
+	 * @param [type] $setting [description]
+	 * @param [type] $value   [description]
+	 */
+	static function ChangeSetting($setting, $value) {
+		try {
+			$dbh = PDOConnect::init();
+			
+			$sth = $dbh->prepare('UPDATE setting SET value = :value WHERE setting = :setting');
+			$sth->execute(array('setting' => $setting, 'value' => $value));
+
+			return true;
+		}
+		catch (Exception $e) {
+			trigger_error($e->getMessage());
+			return false;
+		}
+	}
+
 	static function GetAll($sort_order = array('cat', 'ordering'), $filter_by = array()) {
 
 		if ($sort_order == NULL)

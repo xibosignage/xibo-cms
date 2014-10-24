@@ -2,7 +2,25 @@ var text_callback = function(dialog)
 {
     // Conjure up a text editor
     CKEDITOR.replace("ta_text");
-    CKEDITOR.config.contentsCss = 'body {background-color:' + $('#layout').css('background-color') + ';} html.cke_panel_container body { background-color: #FFF;}';
+    
+    CKEDITOR.instances["ta_text"].on('instanceReady', function() {
+        var scale = $('#layout').attr('designer_scale');
+
+        $("#cke_ta_text .cke_contents").css({
+            background: $('#layout').css('background-color'),
+        });
+
+        //$("#cke_ta_text iframe").css({
+        //    "background": "transparent",
+        //    width: $("#cke_ta_text .cke_contents").width() / scale,
+        //    height: $("#cke_ta_text .cke_contents").height() / scale,
+        //    transform: "scale(" + scale + ")",
+        //    "transform-origin": "0 0 "
+        //});
+        $("#cke_ta_text iframe").css({
+            "background": "transparent"
+        });
+    });
 
     // Make sure when we close the dialog we also destroy the editor
     dialog.on("hide", function() {
@@ -15,12 +33,13 @@ var text_callback = function(dialog)
     $('.ckeditor_snippits', dialog).dblclick(function(){
         // Linked to?
         var linkedTo = $(this).attr("linkedto");
+        var text;
 
         if (CKEDITOR.instances[linkedTo] != undefined) {
             if ($(this).attr("datasetcolumnid") != undefined)
-                var text = "[" + $(this).html() + "|" + $(this).attr("datasetcolumnid") + "]"
+                text = "[" + $(this).html() + "|" + $(this).attr("datasetcolumnid") + "]";
             else
-                var text = "[" + $(this).html() + "]"
+                text = "[" + $(this).html() + "]";
 
             CKEDITOR.instances[linkedTo].insertText(text);
         }
@@ -29,7 +48,7 @@ var text_callback = function(dialog)
     });
     
     return false;
-}
+};
 
 var datasetview_callback = function(dialog)
 {

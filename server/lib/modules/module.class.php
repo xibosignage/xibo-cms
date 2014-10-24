@@ -66,6 +66,7 @@ abstract class Module implements ModuleInterface
     protected $originalUserId;
     protected $storedAs;
     protected $originalFilename;
+    protected $tags;
 
     // Track the error state
     private $error;
@@ -269,22 +270,18 @@ abstract class Module implements ModuleInterface
                     $dbh = PDOConnect::init();
                 
                     // Load what we know about this media into the object
-                    $sth = $dbh->prepare('SELECT duration, name, UserId, storedAs, originalFilename FROM media WHERE mediaID = :media_id');
-                    $sth->execute(array(
-                            'media_id' => $mediaid
-                        ));
+                    $rows = $this->user->MediaList(NULL, array('mediaId' => $mediaid));
                     
-                    $rows = $sth->fetchAll();
-                
                     if (count($rows) != 1) {
                         return $this->SetError(__('Unable to find media record with the provided ID'));
                     }
 
                     $this->duration = $rows[0]['duration'];
-                    $this->name = $rows[0]['name'];
-                    $this->originalUserId = $rows[0]['UserId'];
-                    $this->storedAs = $rows[0]['storedAs'];
-                    $this->originalFilename = $rows[0]['originalFilename'];
+                    $this->name = $rows[0]['media'];
+                    $this->originalUserId = $rows[0]['ownerid'];
+                    $this->storedAs = $rows[0]['storedas'];
+                    $this->originalFilename = $rows[0]['filename'];
+                    $this->tags = $rows[0]['tags'];
                 }
                 catch (Exception $e) {
                     
@@ -977,6 +974,9 @@ END;
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
+        $formFields[] = FormManager::AddText('tags', __('Tags'), $this->tags, 
+            __('Tag this media. Comma Separated.'), 'n');
+
         $formFields[] = FormManager::AddMessage(sprintf(__('This form accepts: %s files up to a maximum size of %s'), $this->validExtensionsText, $this->maxFileSize));
 
         if ($this->assignable) {
@@ -1105,6 +1105,7 @@ END;
         // File data
         $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
         $name = Kit::GetParam('name', _POST, _STRING);
+        $tags = Kit::GetParam('tags', _POST, _STRING);
         
         if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
@@ -1155,7 +1156,7 @@ END;
         }
 
         // Edit the media record
-        if (!$mediaObject->Edit($this->mediaid, $name, $this->duration, $userid)) {
+        if (!$mediaObject->Edit($this->mediaid, $name, $this->duration, $userid, $tags)) {
         	$this->response->SetError($mediaObject->GetErrorMessage());
             $this->response->keepOpen = true;
             return $this->response;

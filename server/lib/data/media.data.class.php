@@ -173,7 +173,7 @@ class Media extends Data
      * @param <type> $duration
      * @return <bool>
      */
-    public function Edit($mediaId, $name, $duration, $userId)
+    public function Edit($mediaId, $name, $duration, $userId, $tags = '')
     {
         Debug::LogEntry('audit', 'IN', 'Media', 'Edit');
 
@@ -216,6 +216,20 @@ class Media extends Data
                     'name' => $name,
                     'duration' => $duration
                 ));
+
+            // Update the tags.
+            if ($tags != '') {
+                // Convert to an array.
+                $tags = explode(',', $tags);
+
+                // Untag all existing tags.
+                $this->unTagAll($mediaId);
+
+                // Loop through the new ones and tag accordingly.
+                foreach ($tags as $tag) {
+                    $this->tag($tag, $mediaId);
+                }
+            }
     
             return true;  
         }

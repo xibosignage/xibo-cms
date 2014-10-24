@@ -44,8 +44,10 @@ Theme::SetTranslation('failure', Theme::Translate('Failure'));
         <script src="theme/default/libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
         <?php echo Theme::Script('libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.' . TranslationEngine::GetJsLocale() . '.js'); ?>
         <script src="theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.min.js"></script>
-        <script src="theme/default/libraries/jquery-tablesorter/addons/pager/jquery.tablesorter.pager.min.js"></script>
-		<script src="theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.widgets.min.js"></script>
+        <script src="theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.widgets.min.js"></script>
+        <script src="theme/default/libraries/jquery-tablesorter/js/parsers/parser-input-select.js"></script>
+        <script src="theme/default/libraries/jquery-tablesorter/js/widgets/widget-grouping.js"></script>
+        <script src="theme/default/libraries/jquery-tablesorter/js/widgets/widget-pager.js"></script>
 		<script src="theme/default/libraries/jquery/jquery-ui/jquery-ui-1.10.2.custom.min.js"></script>
         <script src="theme/default/libraries/bootstrap-colorpicker/js/bootstrap-colorpicker.min.js"></script>
         <script src="theme/default/libraries/bootstrap-select/js/bootstrap-select.min.js"></script>

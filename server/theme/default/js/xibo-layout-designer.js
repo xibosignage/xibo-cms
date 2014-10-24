@@ -200,19 +200,29 @@ var LoadTimeLineCallback = function() {
     $("li.timelineMediaListItem").hover(function() {
 
         var position = $(this).position();
+        var scale = $('#layout').attr('designer_scale');
 
-        //Change the hidden div's content
+        // Change the hidden div's content
         $("div#timelinePreview")
             .html($("div.timelineMediaPreview", this).html())
-            .css("margin-top", position.top + $('#timelineControl').closest('.modal-body').scrollTop())
+            .css({
+                "margin-top": position.top + $('#timelineControl').closest('.modal-body').scrollTop()
+            })
             .show();
+
+        $("#timelinePreview .hoverPreview").css({
+            width: $("div#timelinePreview").width() / scale,
+            transform: "scale(" + scale + ")",
+            "transform-origin": "0 0 ",
+            background: $('#layout').css('background-color')
+        })
 
     }, function() {
         return false;
     });
 
     $(".timelineSortableListOfMedia").sortable();
-}
+};
 
 
 var XiboTimelineSaveOrder = function(mediaListId, layoutId, regionId) {

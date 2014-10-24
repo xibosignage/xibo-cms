@@ -102,6 +102,7 @@ class layoutDAO extends baseDAO
                     $filterLayoutStatusId = Session::Get('layout', 'filterLayoutStatusId');
                     $showDescriptionId = Session::Get('layout', 'showDescriptionId');
                     $showThumbnail = Session::Get('layout', 'showThumbnail');
+                    $showTags = Session::Get('content', 'showTags');
                     $pinned = 1;
                 }
                 else {
@@ -113,6 +114,7 @@ class layoutDAO extends baseDAO
                     $showDescriptionId = 2;
                     $pinned = 0;
                     $showThumbnail = 1;
+                    $showTags = 0;
                 }
                 
                 $id = uniqid();
@@ -170,9 +172,13 @@ class layoutDAO extends baseDAO
                     NULL, 
                     'd');
 
+                $formFields[] = FormManager::AddCheckbox('showTags', __('Show Tags'), 
+                    $showTags, NULL, 
+                    't');
+
                 $formFields[] = FormManager::AddCheckbox('showThumbnail', __('Show Thumbnails'), 
                     $showThumbnail, NULL, 
-                    't');
+                    'i');
 
                 $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
                     $pinned, NULL, 
@@ -309,6 +315,79 @@ class layoutDAO extends baseDAO
         $response->Respond();
     }
     
+    /**
+     * Upgrade Layout Form
+     */
+    public function upgradeForm() 
+    {
+        $response = new ResponseManager();
+        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
+
+        if ($layoutId == 0)
+            trigger_error(__('layoutId missing'), E_USER_ERROR);
+
+        // Do we have permission to touch this layout?
+        $auth = $this->user->LayoutAuth($layoutId, true);
+
+        if (!$auth->edit)
+            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
+        
+        Theme::Set('form_id', 'LayoutUpgradeForm');
+        Theme::Set('form_action', 'index.php?p=layout&q=upgrade');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutId" value="' . $layoutId . '">');
+
+        $formFields = array();
+        $formFields[] = FormManager::AddMessage(__('Are you sure you want to upgrade this layout?'));
+        $formFields[] = FormManager::AddMessage(__('Layouts are now designed at the display resolution allowing better positioning, smoother scrolling and much more. To upgrade this layout you need to select the intended resolution.'));
+        $formFields[] = FormManager::AddCombo(
+                    'resolutionId', 
+                    __('Resolution'), 
+                    NULL,
+                    $this->user->ResolutionList(),
+                    'resolutionid',
+                    'resolution',
+                    __('The regions will be resized to fit with the new resolution, but you may need to adjust the content manually.'), 
+                    'r', 'required');
+
+        Theme::Set('form_fields', $formFields);
+
+        $form = Theme::RenderReturn('form_render');
+        
+        $response->SetFormRequestResponse($form, __('Upgrade Layout'), '300px', '200px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Upgrade') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#LayoutUpgradeForm").submit()');
+        $response->Respond();
+    }
+
+    public function upgrade()
+    {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+        
+        $response = new ResponseManager();
+        $layoutId = Kit::GetParam('layoutId', _POST, _INT);
+        $resolutionId = Kit::GetParam('resolutionId', _POST, _INT);
+
+        if ($layoutId == 0)
+            trigger_error(__('layoutId missing'), E_USER_ERROR);
+
+        // Do we have permission to touch this layout?
+        $auth = $this->user->LayoutAuth($layoutId, true);
+
+        if (!$auth->edit)
+            trigger_error(__('You do not have permissions to upgrade this layout'), E_USER_ERROR);
+
+        $layoutObject = new Layout();
+
+        if (!$layoutObject->upgrade($layoutId, $resolutionId))
+            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('The Layout has been Upgraded'));
+        $response->Respond();
+    }
+    
     function DeleteLayoutForm() 
     {
         $db =& $this->db;
@@ -440,6 +519,10 @@ class layoutDAO extends baseDAO
         setSession('layout', 'showDescriptionId', $showDescriptionId);
         
         // Show filter_showThumbnail
+        $showTags = Kit::GetParam('showTags', _POST, _CHECKBOX);
+        setSession('layout', 'showTags', $showTags);
+
+        // Show filter_showThumbnail
         $showThumbnail = Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
         setSession('layout', 'showThumbnail', $showThumbnail);
 
@@ -451,13 +534,14 @@ class layoutDAO extends baseDAO
         setSession('layout', 'LayoutFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         
         // Get all layouts
-        $layouts = $user->LayoutList(NULL, array('layout' => $name, 'userId' => $filter_userid, 'retired' => $filter_retired, 'tags' => $filter_tags, 'filterLayoutStatusId' => $filterLayoutStatusId));
+        $layouts = $user->LayoutList(NULL, array('layout' => $name, 'userId' => $filter_userid, 'retired' => $filter_retired, 'tags' => $filter_tags, 'filterLayoutStatusId' => $filterLayoutStatusId, 'showTags' => $showTags));
 
         if (!is_array($layouts))
             trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
 
         $cols = array(
                 array('name' => 'layoutid', 'title' => __('ID')),
+                array('name' => 'tags', 'title' => __('Tag'), 'hidden' => ($showTags == 0), 'colClass' => 'group-word'),
                 array('name' => 'layout', 'title' => __('Name')),
                 array('name' => 'description', 'title' => __('Description'), 'hidden' => ($showDescriptionId == 1 || $showDescriptionId == 3)),
                 array('name' => 'descriptionWithMarkdown', 'title' => __('Description'), 'hidden' => ($showDescriptionId == 2 || $showDescriptionId == 3)),
@@ -477,6 +561,7 @@ class layoutDAO extends baseDAO
             $row['layoutid'] = $layout['layoutid'];
             $row['layout'] = $layout['layout'];
             $row['description'] = $layout['description'];
+            $row['tags'] = $layout['tags'];
             $row['owner'] = $user->getNameFromID($layout['ownerid']);
             $row['permissions'] = $this->GroupsForLayout($layout['layoutid']);
 
@@ -622,7 +707,7 @@ class layoutDAO extends baseDAO
         $output = Theme::RenderReturn('table_render');
         
         $response->SetGridResponse($output);
-        $response->initialSortColumn = 2;
+        $response->initialSortColumn = 3;
         $response->Respond();
     }
 
@@ -793,7 +878,7 @@ class layoutDAO extends baseDAO
             __('Use the colour picker to select the background colour'), 'c', 'required');
 
         // A list of available backgrounds
-        $backgrounds = $user->MediaList('image');
+        $backgrounds = $user->MediaList(NULL, array('type' => 'image'));
         array_unshift($backgrounds, array('mediaid' => '0', 'media' => 'None'));
 
         $formFields[] = FormManager::AddCombo(
@@ -850,7 +935,6 @@ class layoutDAO extends baseDAO
         if (!$this->auth->edit)
             trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
 
-        Kit::ClassLoader('Layout');
         $layoutObject = new Layout($db);
 
         if (!$layoutObject->SetBackground($layoutid, $resolutionid, $bg_color, $mediaID))
@@ -877,6 +961,7 @@ class layoutDAO extends baseDAO
         $width  = $xml->documentElement->getAttribute('width');
         $height = $xml->documentElement->getAttribute('height');
         $version = (int)$xml->documentElement->getAttribute('schemaVersion');
+        Theme::Set('layoutVersion', $version);
 
         // Get the display width / height
         if ($resolutionid != 0) {
@@ -904,9 +989,11 @@ class layoutDAO extends baseDAO
                 $zoom = Kit::GetParam('zoom', _GET, _DOUBLE, 1);
                 $designerScale = $designerScale * $zoom;
 
-                Theme::Set('layoutVersion', 2);
                 Theme::Set('layout_zoom_in_url', 'index.php?p=layout&modify=true&layoutid=' . $this->layoutid . '&zoom=' . ($zoom - 0.3));
                 Theme::Set('layout_zoom_out_url', 'index.php?p=layout&modify=true&layoutid=' . $this->layoutid . '&zoom=' . ($zoom + 0.3));
+            }
+            else {
+                Theme::Set('layout_upgrade_url', 'index.php?p=layout&q=upgradeForm&layoutId=' . $this->layoutid);
             }
         }
         
@@ -1002,7 +1089,7 @@ class layoutDAO extends baseDAO
         //render the view pane
         $surface = <<<HTML
 
-        <div id="layout" version="$version" class="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; background:$background_css;">
+        <div id="layout" tip_scale="$tipScale" designer_scale="$designerScale" version="$version" class="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; background:$background_css;">
         $regionHtml
         </div>
 HTML;
