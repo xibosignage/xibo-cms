@@ -1,5 +1,12 @@
 var text_callback = function(dialog)
 {
+    if ($("#ta_text").val() == "") {
+        // Set something sensible based on the color of the layout background
+        var color = $c.complement($("#layout").data().backgroundColor);
+
+        $("#ta_text").val("<p><span style=\"color:" + color + ";\">" + translations.enterText + "</span></p>");
+    }
+
     // Conjure up a text editor
     CKEDITOR.replace("ta_text");
     
@@ -46,7 +53,7 @@ var text_callback = function(dialog)
 
         return false;
     });
-    
+
     return false;
 };
 

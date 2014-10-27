@@ -157,6 +157,7 @@ class ticker extends Module
 
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
         $tabs[] = FormManager::AddTab('format', __('Format'));
         $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
         Theme::Set('form_tabs', $tabs);
@@ -231,7 +232,7 @@ class ticker extends Module
 
             Theme::Set('columns', $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId)));
 
-            $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_dataset_edit'));
+            $formFields['template'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_dataset_edit'));
         }
         else {
             // Extra Fields for the Ticker
@@ -284,7 +285,7 @@ class ticker extends Module
                 );
             Theme::Set('substitutions', $subs);
 
-            $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_edit'));
+            $formFields['template'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_edit'));
 
             $formFields['advanced'][] = FormManager::AddText('allowedAttributes', __('Allowable Attributes'), $this->GetOption('allowedAttributes'), 
                 __('A comma separated list of attributes that should not be stripped from the incoming feed.'), '');
@@ -304,7 +305,7 @@ class ticker extends Module
         $textNode = $textNodes->item(0);
         Theme::Set('text', $textNode->nodeValue);
 
-        $formFields['general'][] = FormManager::AddMultiText('ta_text', NULL, $textNode->nodeValue, 
+        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $textNode->nodeValue, 
             __('Enter the template. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
 
         // Get the CSS node
@@ -317,6 +318,7 @@ class ticker extends Module
             __('Optional Stylesheet'), 's', 10);
 
         Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_template', array_reverse($formFields['template']));
         Theme::Set('form_fields_format', $formFields['format']);
         Theme::Set('form_fields_advanced', $formFields['advanced']);
 
@@ -366,8 +368,6 @@ class ticker extends Module
             // Validate the URL
             if ($uri == "" || $uri == "http://")
                 trigger_error(__('Please enter a Link for this Ticker'), E_USER_ERROR);
-
-            $template = '<p><span style="font-size:22px;"><span style="color:#FFFFFF;">[Title]</span></span></p>';
         }
         else if ($sourceId == 2) {
             // DataSet

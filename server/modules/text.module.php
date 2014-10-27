@@ -57,8 +57,15 @@ class text extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
     
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = FormManager::AddTab('options', __('Options'));
+
+        Theme::Set('form_tabs', $tabs);
+
         $formFields = array();
-        $formFields[] = FormManager::AddCombo(
+        $formFields['options'][] = FormManager::AddCombo(
                     'direction', 
                     __('Direction'), 
                     NULL,
@@ -74,10 +81,10 @@ class text extends Module
                     __('Please select which direction this text should scroll. If scrolling is not required, select None'), 
                     's');
 
-        $formFields[] = FormManager::AddNumber('scrollSpeed', __('Scroll Speed'), NULL, 
+        $formFields['options'][] = FormManager::AddNumber('scrollSpeed', __('Scroll Speed'), NULL, 
             __('The scroll speed to apply if a direction is specified. Higher is faster.'), 'e');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+        $formFields['options'][] = FormManager::AddNumber('duration', __('Duration'), NULL, 
             __('The duration in seconds this counter should be displayed'), 'd', 'required');
 
         // Handle the substitutions as RAW items
@@ -88,15 +95,17 @@ class text extends Module
                 array('Substitute' => 'dd-mm-yy')
             );
         Theme::Set('substitutions', $subs);
-        $formFields[] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
+        $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
 
-        $formFields[] = FormManager::AddMultiText('ta_text', NULL, NULL, 
+        $formFields['general'][] = FormManager::AddMultiText('ta_text', NULL, NULL, 
             __('Enter the text to display. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
 
-        Theme::Set('form_fields', $formFields);
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_options', $formFields['options']);
 
         $this->response->html = Theme::RenderReturn('form_render');
         $this->response->callBack = 'text_callback';
+        $this->response->dialogSize = __('large');
         $this->response->dialogTitle = __('Add Text');
 
         if ($this->showRegionOptions)
@@ -136,8 +145,15 @@ class text extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
         
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = FormManager::AddTab('options', __('Options'));
+
+        Theme::Set('form_tabs', $tabs);
+
         $formFields = array();
-        $formFields[] = FormManager::AddCombo(
+        $formFields['options'][] = FormManager::AddCombo(
                     'direction', 
                     __('Direction'), 
                     $this->GetOption('direction'),
@@ -153,10 +169,10 @@ class text extends Module
                     __('Please select which direction this text should scroll. If scrolling is not required, select None'), 
                     's');
 
-        $formFields[] = FormManager::AddNumber('scrollSpeed', __('Scroll Speed'), $this->GetOption('scrollSpeed'), 
+        $formFields['options'][] = FormManager::AddNumber('scrollSpeed', __('Scroll Speed'), $this->GetOption('scrollSpeed'), 
             __('The scroll speed to apply if a direction is specified. Higher is faster.'), 'e');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+        $formFields['options'][] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         // Handle the substitutions as RAW items
@@ -176,15 +192,17 @@ class text extends Module
         $textNodes = $rawXml->getElementsByTagName('text');
         $textNode = $textNodes->item(0);
 
-        $formFields[] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
-
-        $formFields[] = FormManager::AddMultiText('ta_text', NULL, $textNode->nodeValue, 
+        $formFields['general'][] = FormManager::AddMultiText('ta_text', NULL, $textNode->nodeValue, 
             __('Enter the text to display. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
 
-        Theme::Set('form_fields', $formFields);
+        $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
+
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_options', $formFields['options']);
 
         $this->response->html = Theme::RenderReturn('form_render');
         $this->response->callBack = 'text_callback';
+        $this->response->dialogSize = 'large';
         $this->response->dialogTitle = __('Edit Text');
         if ($this->showRegionOptions)
         {

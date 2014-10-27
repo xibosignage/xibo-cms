@@ -617,6 +617,20 @@ function XiboFormRender(formUrl, data) {
                     });
                 }
 
+                if (response.dialogSize === "large")
+                    $(dialog).addClass("modal-big");
+
+                // Check to see if there are any tab actions
+                $('a[data-toggle="tab"]', dialog).on('shown.bs.tab', function (e) {
+        
+                    if ($(e.target).data().enlarge === 1) {
+                        $(e.target).closest(".modal").addClass("modal-big");
+                    }
+                    else {
+                        $(e.target).closest(".modal").removeClass("modal-big");
+                    }
+                });
+
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
             }

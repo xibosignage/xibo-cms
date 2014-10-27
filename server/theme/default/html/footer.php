@@ -29,6 +29,7 @@ Theme::SetTranslation('cancel', Theme::Translate('Cancel'));
 Theme::SetTranslation('close', Theme::Translate('Close'));
 Theme::SetTranslation('success', Theme::Translate('Success'));
 Theme::SetTranslation('failure', Theme::Translate('Failure'));
+Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
 ?>
                 </div>
             </div>
@@ -70,6 +71,7 @@ Theme::SetTranslation('failure', Theme::Translate('Failure'));
         <script src="theme/default/libraries/date-time-format.js"></script>
         <script src="theme/default/libraries/morrisjs/raphael.min.js"></script>
         <script src="theme/default/libraries/morrisjs/morris.min.js"></script>
+        <script src="theme/default/libraries/colors/colors.min.js"></script>
         <script src="theme/default/js/xibo-cms.js"></script>
     	<script src="theme/default/js/xibo-forms.js"></script>
     	<script src="theme/default/js/xibo-layout-designer.js"></script>

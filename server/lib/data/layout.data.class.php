@@ -958,6 +958,10 @@ class Layout extends Data
                     $this->ThrowError(__('Cannot find the background image selected'));
 
                 $bg_image = Kit::ValidateParam($row['StoredAs'], _STRING);
+
+                // Tag the background image as a background image
+                $media = new Media();
+                $media->tag('background', $backgroundImageId);
             }
         
             // Look up the width and the height
@@ -975,7 +979,6 @@ class Layout extends Data
             if ($version == 1) {
                 $width  =  Kit::ValidateParam($row['width'], _INT);
                 $height =  Kit::ValidateParam($row['height'], _INT);
-                $color = '#' . $color;
             }
             else {
                 $width  =  Kit::ValidateParam($row['intended_width'], _INT);
@@ -1543,6 +1546,9 @@ class Layout extends Data
             if ($template)
                 $this->tag('template', $layoutId);
 
+            // Tag as imported
+            $this->tag('imported', $layoutId);
+
             // Set the DOM XML
             $this->SetDomXml($layoutId);
 
@@ -1571,8 +1577,11 @@ class Layout extends Data
                             return $this->SetError(__('Unable to add a media item'));
 
                         // Add this media to the library
-                        if (!$mediaObject->Add($fileId, $file['type'], $file['name'], $file['duration'], $file['file'], $userId))
+                        if (!$mediaId = $mediaObject->Add($fileId, $file['type'], $file['name'], $file['duration'], $file['file'], $userId))
                             return $this->SetError($mediaObject->GetErrorMessage());
+
+                        // Tag it
+                        $mediaObject->tag('imported', $mediaId);
                     }
                     else {
                         // Don't add the file, use the one that already exists
@@ -1586,8 +1595,11 @@ class Layout extends Data
                         return $this->SetError(__('Unable to add a media item'));
 
                     // Add this media to the library
-                    if (!$mediaObject->Add($fileId, $file['type'], $file['name'], $file['duration'], $file['file'], $userId))
+                    if (!$mediaId = $mediaObject->Add($fileId, $file['type'], $file['name'], $file['duration'], $file['file'], $userId))
                         return $this->SetError($mediaObject->GetErrorMessage());
+
+                    // Tag it
+                    $mediaObject->tag('imported', $mediaId);
                 }
 
                 Debug::LogEntry('audit', 'Post File Import Fix', get_class(), __FUNCTION__);

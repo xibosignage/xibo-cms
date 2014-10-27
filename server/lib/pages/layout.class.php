@@ -927,7 +927,7 @@ class layoutDAO extends baseDAO
         $response       = new ResponseManager();
 
         $layoutid       = Kit::GetParam('layoutid', _POST, _INT);
-        $bg_color       = trim(Kit::GetParam('bg_color', _POST, _STRING), '#');
+        $bg_color       = Kit::GetParam('bg_color', _POST, _STRING);
         $mediaID        = Kit::GetParam('bg_image', _POST, _INT);
         $resolutionid   = Kit::GetParam('resolutionid', _POST, _INT);
 
@@ -1089,7 +1089,7 @@ class layoutDAO extends baseDAO
         //render the view pane
         $surface = <<<HTML
 
-        <div id="layout" tip_scale="$tipScale" designer_scale="$designerScale" version="$version" class="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; background:$background_css;">
+        <div id="layout" tip_scale="$tipScale" designer_scale="$designerScale" version="$version" class="layout" layoutid="$this->layoutid" data-background-color="$bgColor" style="position:relative; width:$width; height:$height; background:$background_css;">
         $regionHtml
         </div>
 HTML;
