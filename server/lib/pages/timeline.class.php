@@ -203,6 +203,10 @@ class timelineDAO extends baseDAO {
             $response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'block')), 'not');
         }
 
+        $formFields[] = FormManager::AddCheckbox('loop', __('Loop?'), 
+            $region->GetOption($layoutid, $regionid, 'loop', 0), __('If there is only one item in this region should it loop?'), 
+            'l');
+
         Theme::Set('form_fields', $formFields);
         
         $response->SetFormRequestResponse(NULL, __('Region Options'), '350px', '275px');
@@ -262,7 +266,8 @@ class timelineDAO extends baseDAO {
         $options = array(
             array('name' => 'transOut', 'value' => $transitionType), 
             array('name' => 'transOutDuration', 'value' => $duration),
-            array('name' => 'transOutDirection', 'value' => $direction)
+            array('name' => 'transOutDirection', 'value' => $direction),
+            array('name' => 'loop', 'value' => Kit::GetParam('loop', _POST, _CHECKBOX))
         );
 
         // Edit the region 

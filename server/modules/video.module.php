@@ -72,7 +72,17 @@ class video extends Module
      */
     public function EditForm()
     {
-        return $this->EditFormForLibraryMedia();
+        $formFields = array();
+        $formFields[] = FormManager::AddCheckbox('loop', __('Loop?'), 
+            $this->GetOption('loop', 0), __('Should the video loop if it finishes before the provided duration?'), 
+            'l', 'loop-fields');
+
+        $this->response->AddFieldAction('duration', 'init', '0', array('.loop-fields' => array('display' => 'none')));
+        $this->response->AddFieldAction('duration', 'change', '0', array('.loop-fields' => array('display' => 'none')));
+        $this->response->AddFieldAction('duration', 'init', '0', array('.loop-fields' => array('display' => 'block')), 'not');
+        $this->response->AddFieldAction('duration', 'change', '0', array('.loop-fields' => array('display' => 'block')), 'not');
+
+        return $this->EditFormForLibraryMedia($formFields);
     }
 
     /**
@@ -90,6 +100,9 @@ class video extends Module
      */
     public function EditMedia()
     {
+        // Set the properties specific to Images
+        $this->SetOption('loop', Kit::GetParam('loop', _POST, _CHECKBOX));
+
         return $this->EditLibraryMedia();
     }
     

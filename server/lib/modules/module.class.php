@@ -968,6 +968,8 @@ END;
         Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
 
         $formFields = array();
+        $formFields[] = FormManager::AddMessage(sprintf(__('This form accepts: %s files up to a maximum size of %s'), $this->validExtensionsText, $this->maxFileSize));
+        
         $formFields[] = FormManager::AddText('name', __('Name'), $name, 
             __('The Name of this item - Leave blank to use the file name'), 'n');
 
@@ -976,8 +978,6 @@ END;
 
         $formFields[] = FormManager::AddText('tags', __('Tags'), $this->tags, 
             __('Tag this media. Comma Separated.'), 'n');
-
-        $formFields[] = FormManager::AddMessage(sprintf(__('This form accepts: %s files up to a maximum size of %s'), $this->validExtensionsText, $this->maxFileSize));
 
         if ($this->assignable) {
             $formFields[] = FormManager::AddCheckbox('replaceInLayouts', __('Update this media in all layouts it is assigned to.'), 
