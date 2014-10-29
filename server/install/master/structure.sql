@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS `display` (
   `WakeOnLanTime` varchar(5) DEFAULT NULL,
   `BroadCastAddress` varchar(100) DEFAULT NULL,
   `SecureOn` varchar(17) DEFAULT NULL,
-  `Cidr` smallint(6) DEFAULT NULL,
+  `Cidr` varchar(6) DEFAULT NULL,
   `GeoLocation` POINT NULL,
   `version_instructions` varchar(255) NULL,
   `client_type` VARCHAR( 20 ) NULL ,
