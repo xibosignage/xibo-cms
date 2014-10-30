@@ -106,7 +106,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                         <a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo Theme::Translate('About the CMS'); ?>"><?php echo Theme::Translate('About'); ?></a>
                     </div>
                     <div class="col-sm-4">
-                        <a href="manual/" target="_blank" title="<?php echo Theme::Translate('Open the Manual in a new Window'); ?>"><?php echo Theme::Translate('Manual'); ?></a>
+                        <a href="<?php echo Config::GetSetting('HELP_BASE'); ?>" target="_blank" title="<?php echo Theme::Translate('Open the Manual in a new Window'); ?>"><?php echo Theme::Translate('Manual'); ?></a>
                     </div>
                 </div>
             </div>

@@ -78,7 +78,7 @@ class helpDAO extends baseDAO {
             $SQL = "SELECT Link FROM help WHERE Topic = '%s' and Category = '%s'";
             $SQL = sprintf($SQL, $db->escape_string($topic), $db->escape_string($category));
 
-            Debug::LogEntry('audit', $SQL);
+            // Debug::LogEntry('audit', $SQL);
 
             if(!$results = $db->query($SQL))
             {
@@ -104,7 +104,7 @@ class helpDAO extends baseDAO {
             trigger_error(__('You must specify a help page.'), E_USER_ERROR);
         }
 
-        $helpLink 	= $this->helpLink;
+        $helpLink 	= Config::GetSetting('HELP_BASE') . $this->helpLink;
         $out 		= '<iframe class="full-iframe" src="' . $helpLink . '"></iframe>';
 
         $response->SetFormRequestResponse($out, __('Help'), $width, $height);
