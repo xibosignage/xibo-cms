@@ -29,3 +29,7 @@
  .cal-legend ul {
  	list-style: none;
  }
+
+ .day-highlight {
+ 	overflow: hidden;
+ }

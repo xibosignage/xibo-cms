@@ -36,8 +36,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			<thead>
 				<tr>
 					<th></th>
-					<th><?php echo Theme::Translate('Security Group'); ?></th>
-					<th><?php echo Theme::Translate('Assigned'); ?></th>	
+					<th class="group-false"><?php echo Theme::Translate('Security Group'); ?></th>
+					<th class="group-false"><?php echo Theme::Translate('Assigned'); ?></th>	
 				</tr>
 			</thead>
 			<tbody>
