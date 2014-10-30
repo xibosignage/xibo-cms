@@ -87,7 +87,7 @@ class ticker extends Module
                     'd', 'dataset-fields');
 
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
-            __('The duration in seconds this counter should be displayed'), 'd', 'required');
+            __('The duration in seconds this should be displayed'), 'd', 'required');
 
         Theme::Set('form_fields', $formFields);
 
