@@ -86,9 +86,6 @@ class font extends Module
     {
         $return = $this->AddLibraryMedia();
 
-        // Install the font.
-        $this->InstallFonts();
-
         return $return;
     }
 

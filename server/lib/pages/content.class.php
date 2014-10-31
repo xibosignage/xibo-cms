@@ -47,7 +47,7 @@ class contentDAO extends baseDAO {
             $filter_owner = NULL;
             $filter_duration_in_seconds = 0;
             $filter_showThumbnail = 0;
-            $showTags = 1;
+            $showTags = 0;
         }
 
 		$id = uniqid();

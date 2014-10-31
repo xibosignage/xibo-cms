@@ -40,6 +40,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <link href="theme/default/libraries/jquery-tablesorter/css/theme.bootstrap.css" rel="stylesheet">
         <link href="theme/default/libraries/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css" rel="stylesheet">
         <link href="theme/default/libraries/jquery-file-upload/css/jquery.fileupload-ui.css" rel="stylesheet">
+        <link href="modules/preview/fonts.css" rel="stylesheet">
         <link href="<?php echo Theme::ItemPath('css/xibo.css'); ?>" rel="stylesheet" media="screen">
         <link href="<?php echo Theme::ItemPath('css/dashboard.css'); ?>" rel="stylesheet" media="screen">
         <link href="<?php echo Theme::ItemPath('css/timeline.css'); ?>" rel="stylesheet" media="screen">
