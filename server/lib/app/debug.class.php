@@ -22,6 +22,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Debug
 {
+    private static $pdo = NULL;
+
     public function __construct()
     {
         if (!defined('AUDIT'))
@@ -141,6 +143,9 @@ class Debug
         if ($type == 'audit' && !AUDIT)
             return;
 
+        if (self::$pdo == NULL)
+            self::$pdo = PDOConnect::newConnection();
+
         $currentdate        = date("Y-m-d H:i:s");
         $requestUri         = Kit::GetParam('REQUEST_URI', $_SERVER, _STRING, 'Not Supplied');
         $requestIp          = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING, 'Not Supplied');
@@ -158,7 +163,7 @@ class Debug
 
         // Insert into the DB
         try {
-            $dbh = PDOConnect::init();
+            $dbh = self::$pdo;
 
             $SQL  = 'INSERT INTO log (logdate, type, page, function, message, requesturi, remoteaddr, useragent, userid, displayid, scheduleid, layoutid, mediaid) ';
             $SQL .= ' VALUES (:logdate, :type, :page, :function, :message, :requesturi, :remoteaddr, :useragent, :userid, :displayid, :scheduleid, :layoutid, :mediaid) ';

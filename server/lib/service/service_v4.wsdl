@@ -14,7 +14,6 @@
         <part name="clientCode" type="xsd:int" />
         <part name="operatingSystem" type="xsd:string" />
         <part name="macAddress" type="xsd:string" />
-        <part name="version" type="xsd:string" />
     </message>
     <message name="RegisterDisplayResponse">
         <part name="ActivationMessage" type="xsd:string" />
@@ -22,7 +21,6 @@
     <message name="RequiredFilesRequest">
         <part name="serverKey" type="xsd:string" />
         <part name="hardwareKey" type="xsd:string" />
-        <part name="version" type="xsd:string" />
     </message>
     <message name="RequiredFilesResponse">
         <part name="RequiredFilesXml" type="xsd:string" />
@@ -34,7 +32,6 @@
         <part name="fileType" type="xsd:string" />
         <part name="chunkOffset" type="xsd:double" />
         <part name="chuckSize" type="xsd:double" />
-        <part name="version" type="xsd:string" />
     </message>
     <message name="GetFileResponse">
         <part name="file" type="xsd:base64Binary" />
@@ -42,7 +39,6 @@
     <message name="ScheduleRequest">
         <part name="serverKey" type="xsd:string" />
         <part name="hardwareKey" type="xsd:string" />
-        <part name="version" type="xsd:string" />
     </message>
     <message name="ScheduleResponse">
         <part name="ScheduleXml" type="xsd:string" />
@@ -53,13 +49,11 @@
         <part name="mediaId" type="xsd:int" />
         <part name="type" type="xsd:string" />
         <part name="reason" type="xsd:string" />
-        <part name="version" type="xsd:string" />
     </message>
     <message name="BlackListResponse">
         <part name="success" type="xsd:boolean" />
     </message>
     <message name="SubmitLogRequest">
-        <part name="version" type="xsd:string" />
         <part name="serverKey" type="xsd:string" />
         <part name="hardwareKey" type="xsd:string" />
         <part name="logXml" type="xsd:string" />
@@ -68,7 +62,6 @@
         <part name="success" type="xsd:boolean" />
     </message>
     <message name="SubmitStatsRequest">
-        <part name="version" type="xsd:string" />
         <part name="serverKey" type="xsd:string" />
         <part name="hardwareKey" type="xsd:string" />
         <part name="statXml" type="xsd:string" />
@@ -77,7 +70,6 @@
         <part name="success" type="xsd:boolean" />
     </message>
     <message name="MediaInventoryRequest">
-        <part name="version" type="xsd:string" />
         <part name="serverKey" type="xsd:string" />
         <part name="hardwareKey" type="xsd:string" />
         <part name="mediaInventory" type="xsd:string" />
@@ -91,13 +83,11 @@
         <part name="layoutId" type="xsd:int" />
         <part name="regionId" type="xsd:string" />
         <part name="mediaId" type="xsd:string" />
-        <part name="version" type="xsd:string" />
     </message>
     <message name="GetResourceResponse">
         <part name="resource" type="xsd:string" />
     </message>
     <message name="NotifyStatusRequest">
-        <part name="version" type="xsd:string" />
         <part name="serverKey" type="xsd:string" />
         <part name="hardwareKey" type="xsd:string" />
         <part name="status" type="xsd:string" />
@@ -106,7 +96,6 @@
         <part name="success" type="xsd:boolean" />
     </message>
     <message name="SubmitScreenShotRequest">
-        <part name="version" type="xsd:string" />
         <part name="serverKey" type="xsd:string" />
         <part name="hardwareKey" type="xsd:string" />
         <part name="screenShot" type="xsd:base64Binary" />

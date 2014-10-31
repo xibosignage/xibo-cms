@@ -28,32 +28,37 @@ Class PDOConnect {
 
 	public static function init() {
 		if (!self::$conn) {
-			
-			global $dbhost;
-			global $dbuser;
-			global $dbpass;
-			global $dbname;
-
-			$dbport = '';
-
-			if (strstr($dbhost, ':')) {
-				$hostParts = explode(':', $dbhost);
-				$dsn = 'mysql:host=' . $hostParts[0] . ';port=' . $hostParts[1] . ';dbname=' . $dbname . ';';
-			}
-			else {
-				$dsn = 'mysql:host=' . $dbhost . ';dbname=' . $dbname . ';';
-			}
-
-			//echo 'init ' . $dsn , ' user ' . $dbuser . ' pass ' . $dbpass;
-
-			// Open the connection and set the error mode
-			self::$conn = new PDO($dsn, $dbuser, $dbpass);
-			self::$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-			self::$conn->query("SET NAMES 'utf8'");
+			self::$conn = PDOConnect::newConnection();
 		}
 
 		return self::$conn;
+	}
+
+	public static function newConnection() {
+		global $dbhost;
+		global $dbuser;
+		global $dbpass;
+		global $dbname;
+
+		$dbport = '';
+
+		if (strstr($dbhost, ':')) {
+			$hostParts = explode(':', $dbhost);
+			$dsn = 'mysql:host=' . $hostParts[0] . ';port=' . $hostParts[1] . ';dbname=' . $dbname . ';';
+		}
+		else {
+			$dsn = 'mysql:host=' . $dbhost . ';dbname=' . $dbname . ';';
+		}
+
+		//echo 'init ' . $dsn , ' user ' . $dbuser . ' pass ' . $dbpass;
+
+		// Open the connection and set the error mode
+		$conn = new PDO($dsn, $dbuser, $dbpass);
+		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+		$conn->query("SET NAMES 'utf8'");
+
+		return $conn;
 	}
 
 	public static function connect($dbhost, $dbuser, $dbpass, $dbname = '') {

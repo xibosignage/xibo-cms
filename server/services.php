@@ -46,8 +46,6 @@ if (defined('XMDS') || $method != '')
     {
         case 'soap':
 
-            Kit::ClassLoader('xmdssoap');
-
             // Check to see if we have a file attribute set (for HTTP file downloads)
             if (isset($_GET['file'])) {
                 // Check send file mode is enabled
@@ -92,6 +90,10 @@ if (defined('XMDS') || $method != '')
             {
                 $wsdl = 'lib/service/service_v' . $version . '.wsdl';
 
+                if (!file_exists($wsdl)) {
+                    $serviceResponse->ErrorServerError('Your client is not the correct version to communicate with this CMS.');
+                }
+
                 //$soap = new SoapServer($wsdl);
                 $soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
                 $soap->setClass('XMDSSoap' . $version);
@@ -99,8 +101,8 @@ if (defined('XMDS') || $method != '')
             }
             catch (Exception $e)
             {
-                $serviceResponse->ErrorServerError('Unable to create SOAP Server: ' . $e->getMessage());
                 Debug::LogEntry('error', $e->getMessage());
+                $serviceResponse->ErrorServerError('Unable to create SOAP Server: ' . $e->getMessage());
             }
 
             break;

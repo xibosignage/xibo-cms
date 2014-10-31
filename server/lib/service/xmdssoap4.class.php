@@ -41,7 +41,7 @@ class XMDSSoap4 {
      * @param <type> $version
      * @return <type>
      */
-    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $version) {
+    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress) {
     
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
@@ -51,12 +51,7 @@ class XMDSSoap4 {
         $clientVersion = Kit::ValidateParam($clientVersion, _STRING);
         $clientCode = Kit::ValidateParam($clientCode, _INT);
         $macAddress = Kit::ValidateParam($macAddress, _STRING);
-        $version = Kit::ValidateParam($version, _STRING);
         $clientAddress = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
-
-        // Make sure we are talking the same language
-        if (!$this->CheckVersion($version))
-            throw new SoapFault('Sender', 'Your client is not of the correct version for communication with this server.');
 
         Debug::LogEntry('audit', "[IN] serverKey [$serverKey], hardwareKey [$hardwareKey], displayName [$displayName]", 'xmds', 'RegisterDisplay');
 
@@ -219,17 +214,12 @@ class XMDSSoap4 {
      * @param string $hardwareKey Display Hardware Key
      * @return string $requiredXml Xml Formatted String
      */
-    function RequiredFiles($serverKey, $hardwareKey, $version) {
+    function RequiredFiles($serverKey, $hardwareKey) {
         
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $version = Kit::ValidateParam($version, _STRING);
         $rfLookahead = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
-
-        // Make sure we are talking the same language
-        if (!$this->CheckVersion($version))
-            throw new SoapFault('Sender', 'Your client is not of the correct version for communication with this server.');
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -496,7 +486,7 @@ class XMDSSoap4 {
      * @param string $chunkSize   The Size of the Chunk Requested
      * @param string $version     The XMDS Version
      */
-    function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize, $version) {
+    function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize) {
         
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
@@ -505,13 +495,8 @@ class XMDSSoap4 {
         $fileType = Kit::ValidateParam($fileType, _WORD);
         $chunkOffset = Kit::ValidateParam($chunkOffset, _INT);
         $chunkSize = Kit::ValidateParam($chunkSize, _INT);
-        $version = Kit::ValidateParam($version, _STRING);
 
         $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
-
-        // Make sure we are talking the same language
-        if (!$this->CheckVersion($version))
-            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -601,16 +586,11 @@ class XMDSSoap4 {
      * @return
      * @param $hardwareKey Object
      */
-    function Schedule($serverKey, $hardwareKey, $version) {
+    function Schedule($serverKey, $hardwareKey) {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $version = Kit::ValidateParam($version, _STRING);
         $rfLookahead = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
-
-        // Make sure we are talking the same language
-        if (!$this->CheckVersion($version))
-            throw new SoapFault('Sender', "Your client is not of the correct version for communication with this server.");
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -756,7 +736,7 @@ class XMDSSoap4 {
      * @param $mediaId Object
      * @param $type Object
      */
-    function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version) {
+    function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason) {
         
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
@@ -764,11 +744,6 @@ class XMDSSoap4 {
         $mediaId = Kit::ValidateParam($mediaId, _STRING);
         $type = Kit::ValidateParam($type, _STRING);
         $reason = Kit::ValidateParam($reason, _STRING);
-        $version = Kit::ValidateParam($version, _STRING);
-
-        // Make sure we are talking the same language
-        if (!$this->CheckVersion($version))
-            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -856,12 +831,7 @@ class XMDSSoap4 {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $version = Kit::ValidateParam($version, _STRING);
         $logXml = Kit::ValidateParam($logXml, _HTMLSTRING);
-
-        // Make sure we are talking the same language
-        if (!$this->CheckVersion($version))
-            throw new SoapFault('Sender', "Your client is not of the correct version for communication with this server.");
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -970,12 +940,7 @@ class XMDSSoap4 {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $version = Kit::ValidateParam($version, _STRING);
         $statXml = Kit::ValidateParam($statXml, _HTMLSTRING);
-
-        // Make sure we are talking the same language
-        if (!$this->CheckVersion($version))
-            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -1057,12 +1022,7 @@ class XMDSSoap4 {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $version = Kit::ValidateParam($version, _STRING);
         $inventory = Kit::ValidateParam($inventory, _HTMLSTRING);
-
-        // Make sure we are talking the same language
-        if (!$this->CheckVersion($version))
-            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -1124,7 +1084,7 @@ class XMDSSoap4 {
      * @param <type> $mediaId
      * @param <type> $version
      */
-    function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId, $version) {
+    function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId) {
         
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
@@ -1132,11 +1092,6 @@ class XMDSSoap4 {
         $layoutId = Kit::ValidateParam($layoutId, _INT);
         $regionId = Kit::ValidateParam($regionId, _STRING);
         $mediaId = Kit::ValidateParam($mediaId, _STRING);
-        $version = Kit::ValidateParam($version, _STRING);
-
-        // Make sure we are talking the same language
-        if (!$this->CheckVersion($version))
-            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -1193,12 +1148,7 @@ class XMDSSoap4 {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $version = Kit::ValidateParam($version, _STRING);
         $status = Kit::ValidateParam($status, _HTMLSTRING);
-
-        // Make sure we are talking the same language
-        if (!$this->CheckVersion($version))
-            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -1228,12 +1178,7 @@ class XMDSSoap4 {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $version = Kit::ValidateParam($version, _STRING);
         $screenShot = Kit::ValidateParam($screenShot, _HTMLSTRING);
-
-        // Make sure we are talking the same language
-        if (!$this->CheckVersion($version))
-            throw new SoapFault('Receiver', "Your client is not of the correct version for communication with this server.");
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -1398,24 +1343,6 @@ class XMDSSoap4 {
                 Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
             }
         }
-    }
-
-    /**
-     * Checks that the calling service is talking the correct version
-     * @return
-     * @param $version Object
-     */
-    private function CheckVersion($version) {
-        
-        // Look up the Service XMDS version from the Version table
-        $serverVersion = Config::Version('XmdsVersion');
-
-        if ($version != $serverVersion) {
-            Debug::LogEntry('audit', sprintf('A Client with an incorrect version connected. Client Version: [%s] Server Version [%s]', $version, $serverVersion));
-            return false;
-        }
-
-        return true;
     }
 
     /**

@@ -48,83 +48,63 @@ class XMDSSoap3
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
     {
-	$db =& $this->db;
-	
-	// Sanitize
-	$serverKey 	= Kit::ValidateParam($serverKey, _STRING);
-	$hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
-	$displayName 	= Kit::ValidateParam($displayName, _STRING);
-	$version 	= Kit::ValidateParam($version, _STRING);
-        $clientAddress  = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
+        // Sanitize
+        $serverKey = Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
+        
+        // Check the serverKey matches the one we have
+        if ($serverKey != Config::GetSetting('SERVER_KEY'))
+            throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
-	// Make sure we are talking the same language
-	if (!$this->CheckVersion($version))
-            throw new SoapFault('Sender', 'Your client is not of the correct version for communication with this server.');
-
-	Debug::LogEntry("audit", "[IN]", "xmds", "RegisterDisplay");
-	Debug::LogEntry("audit", "serverKey [$serverKey], hardwareKey [$hardwareKey], displayName [$displayName]", "xmds", "RegisterDisplay");
-
-	// Check the serverKey matches the one we have stored in this servers lic.txt file
-	if ($serverKey != Config::GetSetting('SERVER_KEY'))
-        throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-
-	// Check the Length of the hardwareKey
-	if (strlen($hardwareKey) > 40)
+        // Check the Length of the hardwareKey
+        if (strlen($hardwareKey) > 40)
             throw new SoapFault('Sender', 'The Hardware Key you sent was too long. Only 40 characters are allowed (SHA1).');
 
-	// Check in the database for this hardwareKey
-	$SQL = "SELECT licensed, display, DisplayID FROM display WHERE license = '$hardwareKey'";
+        // Check in the database for this hardwareKey
+        try {
+            $dbh = PDOConnect::init();
+            $sth = $dbh->prepare('
+                SELECT licensed
+                  FROM display 
+                WHERE license = :hardwareKey');
 
-	if (!$result = $db->query($SQL))
-	{
-            trigger_error("License key query failed:" . $db->error());
+            $sth->execute(array(
+                   'hardwareKey' => $hardwareKey
+                ));
+            
+            $result = $sth->fetchAll();
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
             throw new SoapFault('Sender', 'Cannot check client key.');
-	}
+        }
 
-	// Use a display object to Add or Edit the display
-	$displayObject = new Display($db);
+        // If it doesn't already exist, then deny access.
+        if (count($result) == 0) {
+            Debug::Audit('Attempt to register a Version 3 Display.');
+            throw new SoapFault('Sender', 'You cannot register an old display against this CMS.');
+        }
 
-	// Is it there?
-	if ($db->num_rows($result) == 0)
-	{
-            // Get the default layout id
-            $defaultLayoutId = 4;
+        // Otherwise output the display status
+        $row = $result[0];
 
-            // Add this display record
-            if (!$displayid = $displayObject->Add($displayName, 0, $defaultLayoutId, $hardwareKey, 0, 0))
-                throw new SoapFault('Sender', 'Error adding display');
+        if ($row['licensed'] == 0) {
+            $active = 'Display is awaiting licensing approval from an Administrator.';
+        }
+        else {
+            $active = 'Display is active and ready to start.';
+        }
 
-            $active = 'Display added and is awaiting licensing approval from an Administrator';
-	}
-	else
-	{
-            // We have seen this display before, so check the licensed value
-            $row = $db->get_row($result);
-
-            $displayid = Kit::ValidateParam($row[2], _INT);
-
-            // Touch the display to update its last accessed and client address.
-            $displayObject->Touch($hardwareKey, $clientAddress);
-
-            // Determine if we are licensed or not
-            if ($row[0] == 0)
-            {
-                // It is not licensed
-                $active = 'Display is awaiting licensing approval from an Administrator.';
-            }
-            else
-            {
-                // It is licensed
-                $active = 'Display is active and ready to start.';
-            }
-	}
+        // Touch the display record
+        $displayObject = new Display();
+        $displayObject->Touch($displayid);
 
         // Log Bandwidth
-        $this->LogBandwidth($displayid, 1, strlen($active));
+        $this->LogBandwidth($displayid, Bandwidth::$REGISTER, strlen($active));
 
-	Debug::LogEntry("audit", "$active", "xmds", "RegisterDisplay");
+        Debug::LogEntry('audit', $active, get_class(), __FUNCTION__);
 
-	return $active;
+        return $active;
     }
 
     /**
@@ -137,9 +117,9 @@ class XMDSSoap3
         $db =& $this->db;
 
         // Sanitize
-        $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
-        $version 	= Kit::ValidateParam($version, _STRING);
+        $serverKey  = Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey    = Kit::ValidateParam($hardwareKey, _STRING);
+        $version    = Kit::ValidateParam($version, _STRING);
         $rfLookahead    = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Make sure we are talking the same language
@@ -163,7 +143,7 @@ class XMDSSoap3
             Debug::LogEntry("audit", '[IN] with hardware key: ' . $hardwareKey, 'xmds', 'RequiredFiles', '', $this->displayId);
 
         $requiredFilesXml = new DOMDocument("1.0");
-        $fileElements 	= $requiredFilesXml->createElement("files");
+        $fileElements   = $requiredFilesXml->createElement("files");
         $fileElements->setAttribute('version_instructions', $this->version_instructions);
 
         $requiredFilesXml->appendChild($fileElements);
@@ -217,10 +197,10 @@ class XMDSSoap3
         $SQL .= " UNION ";
         $SQL .= " SELECT 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS background, NULL AS xml ";
         $SQL .= "   FROM media ";
-        $SQL .= " 	INNER JOIN lklayoutmedia ";
-        $SQL .= " 	ON lklayoutmedia.MediaID = media.MediaID ";
-        $SQL .= " 	INNER JOIN layout ";
-        $SQL .= " 	ON layout.LayoutID = lklayoutmedia.LayoutID";
+        $SQL .= "   INNER JOIN lklayoutmedia ";
+        $SQL .= "   ON lklayoutmedia.MediaID = media.MediaID ";
+        $SQL .= "   INNER JOIN layout ";
+        $SQL .= "   ON layout.LayoutID = lklayoutmedia.LayoutID";
         $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
         $SQL .= "
                 UNION
@@ -248,18 +228,18 @@ class XMDSSoap3
 
         while ($row = $db->get_assoc_row($results))
         {
-            $recordType	= Kit::ValidateParam($row['RecordType'], _WORD);
-            $path	= Kit::ValidateParam($row['path'], _STRING);
-            $id		= Kit::ValidateParam($row['id'], _STRING);
-            $md5	= Kit::ValidateParam($row['MD5'], _HTMLSTRING);
-            $fileSize	= Kit::ValidateParam($row['FileSize'], _INT);
-            $background	= Kit::ValidateParam($row['background'], _STRING);
+            $recordType = Kit::ValidateParam($row['RecordType'], _WORD);
+            $path   = Kit::ValidateParam($row['path'], _STRING);
+            $id     = Kit::ValidateParam($row['id'], _STRING);
+            $md5    = Kit::ValidateParam($row['MD5'], _HTMLSTRING);
+            $fileSize   = Kit::ValidateParam($row['FileSize'], _INT);
+            $background = Kit::ValidateParam($row['background'], _STRING);
             $xml = Kit::ValidateParam($row['xml'], _HTMLSTRING);
 
             if ($recordType == 'layout')
             {
                 // For layouts the MD5 column is the layout xml
-                $fileSize 	= strlen($xml);
+                $fileSize   = strlen($xml);
                 
                 if ($this->isAuditing == 1) 
                     Debug::LogEntry("audit", 'MD5 for layoutid ' . $id . ' is: [' . $md5 . ']', 'xmds', 'RequiredFiles', '', $this->displayId);
@@ -269,8 +249,8 @@ class XMDSSoap3
                 // If they are empty calculate them and save them back to the media.
                 if ($md5 == '' || $fileSize == 0)
                 {
-                    $md5 	= md5_file($libraryLocation.$path);
-                    $fileSize	= filesize($libraryLocation.$path);
+                    $md5    = md5_file($libraryLocation.$path);
+                    $fileSize   = filesize($libraryLocation.$path);
                     
                     // Update the media record with this information
                     $SQL = sprintf("UPDATE media SET `MD5` = '%s', FileSize = %d WHERE MediaID = %d", $md5, $fileSize, $id);
@@ -399,12 +379,12 @@ class XMDSSoap3
         $db =& $this->db;
 
         // Sanitize
-        $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
-        $fileType 	= Kit::ValidateParam($fileType, _WORD);
-        $chunkOffset 	= Kit::ValidateParam($chunkOffset, _INT);
-        $chunkSize 	= Kit::ValidateParam($chunkSize, _INT);
-        $version 	= Kit::ValidateParam($version, _STRING);
+        $serverKey  = Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey    = Kit::ValidateParam($hardwareKey, _STRING);
+        $fileType   = Kit::ValidateParam($fileType, _WORD);
+        $chunkOffset    = Kit::ValidateParam($chunkOffset, _INT);
+        $chunkSize  = Kit::ValidateParam($chunkSize, _INT);
+        $version    = Kit::ValidateParam($version, _STRING);
 
         $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
 
@@ -489,9 +469,9 @@ class XMDSSoap3
         $db =& $this->db;
 
         // Sanitize
-        $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
-        $version 	= Kit::ValidateParam($version, _STRING);
+        $serverKey  = Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey    = Kit::ValidateParam($hardwareKey, _STRING);
+        $version    = Kit::ValidateParam($version, _STRING);
         $rfLookahead = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Make sure we are talking the same language
@@ -626,12 +606,12 @@ class XMDSSoap3
         $db =& $this->db;
 
         // Sanitize
-        $serverKey 		= Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
-        $mediaId	 	= Kit::ValidateParam($mediaId, _STRING);
-        $type		 	= Kit::ValidateParam($type, _STRING);
-        $reason		 	= Kit::ValidateParam($reason, _STRING);
-        $version 		= Kit::ValidateParam($version, _STRING);
+        $serverKey      = Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey    = Kit::ValidateParam($hardwareKey, _STRING);
+        $mediaId        = Kit::ValidateParam($mediaId, _STRING);
+        $type           = Kit::ValidateParam($type, _STRING);
+        $reason         = Kit::ValidateParam($reason, _STRING);
+        $version        = Kit::ValidateParam($version, _STRING);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -715,10 +695,10 @@ class XMDSSoap3
         $db =& $this->db;
 
         // Sanitize
-        $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
-        $version 	= Kit::ValidateParam($version, _STRING);
-        $logXml 	= Kit::ValidateParam($logXml, _HTMLSTRING);
+        $serverKey  = Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey    = Kit::ValidateParam($hardwareKey, _STRING);
+        $version    = Kit::ValidateParam($version, _STRING);
+        $logXml     = Kit::ValidateParam($logXml, _HTMLSTRING);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -756,13 +736,13 @@ class XMDSSoap3
             if ($node->nodeType == XML_TEXT_NODE) continue;
 
             //Zero out the common vars
-            $date 		= "";
-            $message 	= "";
+            $date       = "";
+            $message    = "";
             $scheduleID = "";
-            $layoutID 	= "";
-            $mediaID 	= "";
-            $cat		= '';
-            $method		= '';
+            $layoutID   = "";
+            $mediaID    = "";
+            $cat        = '';
+            $method     = '';
             $thread = '';
 
             // This will be a bunch of trace nodes
@@ -772,8 +752,8 @@ class XMDSSoap3
                 Debug::LogEntry( "audit", 'Trace Message: [' . $message . ']', "xmds", "SubmitLog", "", $this->displayId);
 
             // Each element should have a category and a date
-            $date	= $node->getAttribute('date');
-            $cat	= strtolower($node->getAttribute('category'));
+            $date   = $node->getAttribute('date');
+            $cat    = strtolower($node->getAttribute('category'));
 
             if ($date == '' || $cat == '')
             {
@@ -802,7 +782,7 @@ class XMDSSoap3
                 }
                 else if ($nodeElements->nodeName == "method")
                 {
-                    $method	= $nodeElements->textContent;
+                    $method = $nodeElements->textContent;
                 }
                 else if ($nodeElements->nodeName == "message")
                 {
@@ -843,10 +823,10 @@ class XMDSSoap3
         $db =& $this->db;
 
         // Sanitize
-        $serverKey 		= Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
-        $version 		= Kit::ValidateParam($version, _STRING);
-        $statXml 		= Kit::ValidateParam($statXml, _HTMLSTRING);
+        $serverKey      = Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey    = Kit::ValidateParam($hardwareKey, _STRING);
+        $version        = Kit::ValidateParam($version, _STRING);
+        $statXml        = Kit::ValidateParam($statXml, _HTMLSTRING);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -893,19 +873,19 @@ class XMDSSoap3
             if ($node->nodeType == XML_TEXT_NODE) continue;
 
             //Zero out the common vars
-            $fromdt	= '';
-            $todt	= '';
-            $type	= '';
+            $fromdt = '';
+            $todt   = '';
+            $type   = '';
 
             $scheduleID = 0;
-            $layoutID 	= 0;
-            $mediaID 	= '';
-            $tag	= '';
+            $layoutID   = 0;
+            $mediaID    = '';
+            $tag    = '';
 
             // Each element should have these attributes
-            $fromdt	= $node->getAttribute('fromdt');
-            $todt	= $node->getAttribute('todt');
-            $type	= $node->getAttribute('type');
+            $fromdt = $node->getAttribute('fromdt');
+            $todt   = $node->getAttribute('todt');
+            $type   = $node->getAttribute('type');
 
             if ($fromdt == '' || $todt == '' || $type == '')
             {
@@ -913,10 +893,10 @@ class XMDSSoap3
                 continue;
             }
 
-            $scheduleID	= $node->getAttribute('scheduleid');
-            $layoutID	= $node->getAttribute('layoutid');
-            $mediaID	= $node->getAttribute('mediaid');
-            $tag	= $node->getAttribute('tag');
+            $scheduleID = $node->getAttribute('scheduleid');
+            $layoutID   = $node->getAttribute('layoutid');
+            $mediaID    = $node->getAttribute('mediaid');
+            $tag    = $node->getAttribute('tag');
 
             // Write the stat record with the information we have available to us.
             if (!$statObject->Add($type, $fromdt, $todt, $scheduleID, $this->displayId, $layoutID, $mediaID, $tag))
@@ -941,10 +921,10 @@ class XMDSSoap3
         $db =& $this->db;
 
         // Sanitize
-        $serverKey 	= Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey 	= Kit::ValidateParam($hardwareKey, _STRING);
-        $version 	= Kit::ValidateParam($version, _STRING);
-        $inventory 	= Kit::ValidateParam($inventory, _HTMLSTRING);
+        $serverKey  = Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey    = Kit::ValidateParam($hardwareKey, _STRING);
+        $version    = Kit::ValidateParam($version, _STRING);
+        $inventory  = Kit::ValidateParam($inventory, _HTMLSTRING);
 
         // Make sure we are talking the same language
         if (!$this->CheckVersion($version))
@@ -1132,21 +1112,21 @@ class XMDSSoap3
      */
     private function AuthDisplay($hardwareKey)
     {
-	$db =& $this->db;
+    $db =& $this->db;
 
-	// check in the database for this hardwareKey
-	$SQL = "SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin, email_alert, display, version_instructions FROM display WHERE license = '$hardwareKey'";
+    // check in the database for this hardwareKey
+    $SQL = "SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin, email_alert, display, version_instructions FROM display WHERE license = '$hardwareKey'";
 
         if (!$result = $db->query($SQL))
-	{
+    {
             trigger_error("License key query failed:" .$db->error());
             return false;
-	}
+    }
 
-	//Is it there?
-	if ($db->num_rows($result) == 0)
+    //Is it there?
+    if ($db->num_rows($result) == 0)
             return false;
-	
+    
         //we have seen this display before, so check the licensed value
         $row = $db->get_row($result);
 
