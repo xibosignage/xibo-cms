@@ -21,7 +21,7 @@
 define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
-class XMDSSoap {
+class XMDSSoap4 {
     
     private $licensed;
     private $includeSchedule;

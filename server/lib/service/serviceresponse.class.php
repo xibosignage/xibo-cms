@@ -43,11 +43,11 @@ class XiboServiceResponse
     /**
      * Outputs the WSDL
      */
-    public function WSDL()
+    public function WSDL($version = 3)
     {
         // We need to buffer the output so that we can send a Content-Length header with the WSDL
         ob_start();
-        $wsdl = file_get_contents('lib/service/service.wsdl');
+        $wsdl = file_get_contents('lib/service/service_v' . $version . '.wsdl');
         $wsdl = str_replace('{{XMDS_LOCATION}}', $this->serviceLocation, $wsdl);
         echo $wsdl;
 
