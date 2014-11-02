@@ -267,7 +267,10 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (73, 'PROXY_AUTH', '', 'text', 'The Authentication information for this proxy. username:password', NULL, 'network', 1, 'Proxy Credentials', '', 30, '', 1, 'string'),
 (74, 'DATE_FORMAT',  'Y-m-d',  'text',  'The Date Format to use when displaying dates in the CMS.', NULL ,  'regional',  '1',  'Date Format',  'required',  30,  'Y-m-d',  '1',  'string'),
 (75, 'DETECT_LANGUAGE',  '1',  'checkbox',  'Detect the browser language?', NULL ,  'regional',  '1',  'Detect Language',  '',  40,  '1',  1,  'checkbox'),
-(76, 'DEFAULTS_IMPORTED', '0', 'text', 'Has the default layout been imported?', NULL, 'general', 0, 'Defaults Imported?', 'required', 100, '0', 0, 'checkbox');
+(76, 'DEFAULTS_IMPORTED', '0', 'text', 'Has the default layout been imported?', NULL, 'general', 0, 'Defaults Imported?', 'required', 100, '0', 0, 'checkbox'),
+(77, 'FORCE_HTTPS', '0', 'checkbox', 'Force the portal into HTTPS?', NULL, 'network', 1, 'Force HTTPS?', '', 70, '0', 1, 'checkbox'),
+(78, 'ISSUE_STS', '0', 'checkbox', 'Add STS to the response headers?', NULL, 'network', 1, 'Enable STS?', '', 80, '0', 1, 'checkbox'),
+(79, 'STS_TTL', '600', 'text', 'The Time to Live (maxage) of the STS header', NULL, 'network', 1, 'STS Time out', '', 90, '600', 1, 'int');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),

@@ -121,6 +121,18 @@ spl_autoload_register(function ($class) {
 // Define the VERSION
 Config::Version();
 
+// Deal with HTTPS/STS config
+if (Kit::isSSL()) {
+    Kit::IssueStsHeaderIfNecessary();
+}
+else {
+    if (Config::GetSetting('FORCE_HTTPS', 0) == 1) {
+        $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        header("Location: $redirect");
+        exit();
+    }
+}
+
 // What is the production mode of the server?
 if(Config::GetSetting('SERVER_MODE') == 'Test') 
     ini_set('display_errors', 1);

@@ -225,6 +225,14 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (83, 'DisplayProfile', 'Edit', 'displays_settings.html#edit'),
 (84, 'DisplayProfile', 'Delete', 'displays_settings.html#delete');
 
+INSERT INTO  `setting` (`setting` ,`value` ,`fieldType` ,`helptext` ,`options` ,`cat` ,`userChange` ,`title` ,`validation` ,`ordering` ,`default` ,`userSee` ,`type`)
+VALUES (
+ 'FORCE_HTTPS',  '0', 'checkbox',  'Force the portal into HTTPS?', NULL ,  'network',  '1',  'Force HTTPS?',  '',  '70',  '0',  '1',  'checkbox'
+),(
+ 'ISSUE_STS',  '0', 'checkbox',  'Add STS to the response headers?', NULL ,  'network',  '1',  'Enable STS?',  '',  '80',  '0',  '1',  'checkbox'
+),(
+ 'STS_TTL',  '600', 'text',  'The Time to Live (maxage) of the STS header', NULL ,  'network',  '1',  'STS Time out',  '',  '90',  '600',  '1',  'int'
+);
 
 UPDATE `version` SET `app_ver` = '1.7.0-beta', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

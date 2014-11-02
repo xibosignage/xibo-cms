@@ -116,6 +116,12 @@ echo __('Date Format');
 echo __('The Date Format to use when displaying dates in the CMS.');
 echo __('Detect language?');
 echo __('Detect the browser language?');
+echo __('Force HTTPS?');
+echo __('Force the portal into HTTPS?');
+echo __('Enable STS?');
+echo __('Add STS to the response headers?');
+echo __('STS Time out');
+echo __('The Time to Live (maxage) of the STS header');
 
 
 // Transitions

@@ -661,5 +661,31 @@ class Kit
     {
         return uniqid(rand());
     }
+
+    /**
+     * Is the request from SSL
+     * @return boolean TRUE OR FALSE
+     */
+    public static function isSSL()
+    {
+        if ($_SERVER['https'] == 1) /* Apache */ {
+            return TRUE;
+        } 
+        elseif ($_SERVER['https'] == 'on') /* IIS */ {
+            return TRUE;
+        } 
+        elseif ($_SERVER['SERVER_PORT'] == 443) /* others */ {
+            return TRUE;
+        } 
+        else {
+            return FALSE; /* just using http */
+        }
+    }
+
+    public static function IssueStsHeaderIfNecessary()
+    {
+        if (Config::GetSetting('ISSUE_STS', 0) == 1)
+            header("strict-transport-security: max-age=" . Config::GetSetting('STS_TTL', 600));
+    }
 }
 ?>
