@@ -399,6 +399,21 @@ function XiboGridRender(gridId, autoRefresh) {
                                 $(this).append(img);
                             });
                         });
+
+                        // Bind to enable / disable
+                        $("#XiboPager_" + gridId).find('.remove').click(function(){
+                            var enabled = $(this).find('i').hasClass("fa-ban");
+
+                            $('table').trigger( (enabled ? 'disable' : 'enable') + '.pager');
+                            
+                            if (enabled) {
+                                $('.remove').find('i').removeClass("fa-ban").addClass("fa-check-circle-o");
+                            }
+                            else {
+                                $('.remove').find('i').removeClass("fa-check-circle-o").addClass("fa-ban");
+                            }
+                            return false;
+                        });
                     }
                 }
             }
@@ -630,6 +645,9 @@ function XiboFormRender(formUrl, data) {
                         $(e.target).closest(".modal").removeClass("modal-big");
                     }
                 });
+
+                // Store the extra
+                dialog.data("extra", response.extra);
 
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));

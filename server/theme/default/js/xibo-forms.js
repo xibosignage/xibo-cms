@@ -399,6 +399,49 @@ var FileAssociationsSubmit = function(displayGroupId)
 };
 var forecastIoFormSetup = function() {
     $('#color').colorpicker();
+
+    $("#templateId").on('change', function() {
+        // Check to see if the boxes are all currently empty
+        if ($("#currentTemplate").val() == "" && $("#dailyTemplate").val() == "" && $("#styleSheet").val() == "") {
+
+            var templateId = $("#templateId").val();
+
+            $.each($('.bootbox').data().extra, function(index, value) {
+                if (value.id == templateId) {
+                    $("#currentTemplate").val(value.main);
+                    $("#dailyTemplate").val(value.daily);
+                    $("#styleSheet").val(value.css);
+                }
+            });
+        }
+    });
+
+    $(".reloadTemplateButton button").click(function() {
+        var templateId = $("#templateId").val();
+
+        $.each($('.bootbox').data().extra, function(index, value) {
+            if (value.id == templateId) {
+                $("#currentTemplate").val(value.main);
+                $("#dailyTemplate").val(value.daily);
+                $("#styleSheet").val(value.css);
+            }
+        });
+    });
+};
+
+var requestTab = function(tabName, url) {
+    // Fill a new tab with the forecast information and then switch to that tab.
+    $.ajax({
+        type: "post",
+        url: url+"&ajax=true",
+        cache: false,
+        data: "tab="+tabName,
+        success: function(response, status, xhr) {
+            $(".tab-content #" + tabName).html(response);
+
+            $('.nav-tabs a[href="#' + tabName + '"]').tab('show');
+        }
+    });
 };
 
 var settingsUpdated = function(response) {

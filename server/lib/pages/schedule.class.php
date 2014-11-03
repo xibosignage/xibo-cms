@@ -404,7 +404,7 @@ class scheduleDAO extends baseDAO {
         if ($toDT < $fromDT) 
             trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);   
         
-        if ($fromDT < (time()- 86400)) 
+        if ($fromDT < (time() - 86400)) 
             trigger_error(__("Your start time is in the past. Cannot schedule events in the past"), E_USER_ERROR);
         
         // Check recurrence dT is in the future or empty

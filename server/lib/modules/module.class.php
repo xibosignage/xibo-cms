@@ -162,6 +162,9 @@ abstract class Module implements ModuleInterface
             else
                 $this->settings = json_decode($this->settings, true);
 
+            Debug::Audit('Settings: ' . $row['settings']);
+            Debug::Audit('Settings: ' . var_export($this->settings, true) . '.' . json_last_error());
+
             // Translated name of this module
             $this->displayType = __(Kit::ValidateParam($row['Name'], _STRING));
             
@@ -473,6 +476,20 @@ XML;
 		// Return it as a XML string
 		return $this->xml->saveXML($rawNode);
 	}
+
+    final protected function GetRawNode($nodeName, $default = NULL) {
+        // Get the text out of RAW
+        $rawXml = new DOMDocument();
+        $rawXml->loadXML($this->GetRaw());
+
+        // Get the Node out of the Raw XML
+        $nodes = $rawXml->getElementsByTagName($nodeName);
+
+        if ($nodes->length < 1)
+            return $default;
+
+        return $nodes->item(0)->nodeValue;
+    }
 
 	/**
 	 * Updates the region information with this media record

@@ -166,7 +166,7 @@ class Schedule extends Data
             }
     
             // Notify (dont error)
-            $displayObject = new Display($this->db);
+            $displayObject = new Display();
             $displayObject->NotifyDisplays($campaignId);
             
             Debug::LogEntry('audit', 'OUT', 'Schedule', 'Add');
