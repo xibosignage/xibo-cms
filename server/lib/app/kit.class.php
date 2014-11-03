@@ -668,10 +668,10 @@ class Kit
      */
     public static function isSSL()
     {
-        if ($_SERVER['https'] == 1) /* Apache */ {
+        if (isset($_SERVER['https']) && $_SERVER['https'] == 1) /* Apache */ {
             return TRUE;
         } 
-        elseif ($_SERVER['https'] == 'on') /* IIS */ {
+        elseif (isset($_SERVER['https']) && $_SERVER['https'] == 'on') /* IIS */ {
             return TRUE;
         } 
         elseif ($_SERVER['SERVER_PORT'] == 443) /* others */ {

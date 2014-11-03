@@ -42,15 +42,17 @@ class logDAO extends baseDAO {
             $filter_display = Session::Get('log', 'filter_display');
             $filter_fromdt = Session::Get('log', 'filter_fromdt');
             $filter_seconds = Session::Get('log', 'filter_seconds');
+            $filter_intervalTypeId = Session::Get('log', 'filter_intervalTypeId');
         }
         else {
             $filter_pinned = 0;
             $filter_type = 0;
             $filter_page = NULL;
             $filter_function = NULL;
-			$filter_display = 0;
+            $filter_display = 0;
             $filter_fromdt = NULL;
             $filter_seconds = 120;
+            $filter_intervalTypeId = 1;
         }
 
         // Two tabs
@@ -69,7 +71,19 @@ class logDAO extends baseDAO {
             NULL, 
             't');
 
-        $formFields['general'][] = FormManager::AddText('filter_seconds', __('Seconds back'), $filter_seconds, NULL, 's');
+        $formFields['general'][] = FormManager::AddCombo(
+            'filter_intervalTypeId', 
+            __('Interval'), 
+            $filter_intervalTypeId,
+            array(array('intervalTypeid' => 1, 'intervalType' => __('Seconds')), 
+                array('intervalTypeid' => 60, 'intervalType' => __('Minutes')), 
+                array('intervalTypeid' => 3600, 'intervalType' => __('Hours'))),
+            'intervalTypeid',
+            'intervalType',
+            NULL, 
+            'i');
+
+        $formFields['general'][] = FormManager::AddText('filter_seconds', __('Duration back'), $filter_seconds, NULL, 's');
 
         $formFields['general'][] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
             $filter_pinned, NULL, 
@@ -140,7 +154,8 @@ class logDAO extends baseDAO {
 		$page 		= Kit::GetParam('filter_page', _REQUEST, _STRING);
 		$fromdt 	= Kit::GetParam('filter_fromdt', _REQUEST, _STRING);
 		$displayid	= Kit::GetParam('filter_display', _REQUEST, _INT);
-		$seconds 	= Kit::GetParam('filter_seconds', _POST, _INT, 120);
+        $seconds    = Kit::GetParam('filter_seconds', _POST, _INT, 120);
+		$filter_intervalTypeId = Kit::GetParam('filter_intervalTypeId', _POST, _INT, 1);
                 
         setSession('log', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         setSession('log', 'filter_type', $type);
@@ -149,18 +164,19 @@ class logDAO extends baseDAO {
         setSession('log', 'filter_fromdt', $fromdt);
         setSession('log', 'filter_display', $displayid);
         setSession('log', 'filter_seconds', $seconds);
+        setSession('log', 'filter_intervalTypeId', $filter_intervalTypeId);
 		
 		//get the dates and times
 		if ($fromdt == '') {
 			$starttime_timestamp = time();
 		}
 		else {
-			$start_date = explode("/",$fromdt); //		dd/mm/yyyy
+			$start_date = explode("/",$fromdt); // dd/mm/yyyy
 			$starttime_timestamp = strtotime($start_date[1] . "/" . $start_date[0] . "/" . $start_date[2] . ' ' . date("H", time()) . ":" . date("i", time()) . ':59');
 		}
 
 		$todt = date("Y-m-d H:i:s", $starttime_timestamp);
-		$fromdt = date("Y-m-d H:i:s", $starttime_timestamp - $seconds);
+		$fromdt = date("Y-m-d H:i:s", $starttime_timestamp - ($seconds * $filter_intervalTypeId));
 		
 		$SQL  = "";
 		$SQL .= "SELECT logid, logdate, page, function, message, display.display FROM log LEFT OUTER JOIN display ON display.displayid = log.displayid ";
