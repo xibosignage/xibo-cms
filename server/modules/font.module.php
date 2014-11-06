@@ -147,7 +147,7 @@ class font extends Module
             file_put_contents('modules/preview/fonts.css', $css);
 
             // Install it
-            $media->AddModuleFile('modules/preview/fonts.css', true);
+            $media->addModuleFile('modules/preview/fonts.css', true);
             
             // Generate a fonts.css file for use locally (in the CMS)
             file_put_contents('modules/preview/fonts.css', $localCss);

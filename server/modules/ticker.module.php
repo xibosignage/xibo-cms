@@ -31,12 +31,12 @@ class ticker extends Module
 
     private function InstallFiles() {
         $media = new Media();
-        $media->AddModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
-        $media->AddModuleFile('modules/preview/vendor/moment.js');
-        $media->AddModuleFile('modules/preview/vendor/jquery.marquee.min.js');
-        $media->AddModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
-        $media->AddModuleFile('modules/preview/xibo-layout-scaler.js');
-        $media->AddModuleFile('modules/preview/xibo-text-render.js');
+        $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
+        $media->addModuleFile('modules/preview/vendor/moment.js');
+        $media->addModuleFile('modules/preview/vendor/jquery.marquee.min.js');
+        $media->addModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
+        $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
+        $media->addModuleFile('modules/preview/xibo-text-render.js');
     }
     
     /**

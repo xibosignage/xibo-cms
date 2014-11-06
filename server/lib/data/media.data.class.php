@@ -662,11 +662,25 @@ class Media extends Data
         }
     }
 
-    public function AddModuleFile($file, $force = false) {
+    public function addModuleFileFromFolder($folder, $force = false) 
+    {
+        if (!is_dir($folder))
+            return $this->SetError(__('Not a folder'));
+
+        foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
+
+            Debug::Audit('Found file: ' . $file);
+
+            $this->addModuleFile($folder . DIRECTORY_SEPARATOR . $file, $force);
+        }
+    }
+
+    public function addModuleFile($file, $force = false)
+    {
         try {
             $name = basename($file);
 
-            $moduleExists = $this->ModuleFileExists($name);
+            $moduleExists = $this->moduleFileExists($name);
 
             if (!$force && $moduleExists) {
                 return;
@@ -730,7 +744,8 @@ class Media extends Data
         }
     }
 
-    public function ModuleFileExists($file) {
+    public function moduleFileExists($file)
+    {
         try {
             if ($this->_moduleFiles == NULL || count($this->_moduleFiles) < 1) {
                 $dbh = PDOConnect::init();

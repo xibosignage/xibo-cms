@@ -38,6 +38,14 @@ $(document).ready(function(){
                     minHeight: 25,
                     stop: regionPositionUpdate,
                     resize: updateRegionInfo
+                })
+            .hover(function() {
+                    $(this).find(".regionInfo").show();
+                    $(this).find(".previewNav").show();
+                },
+                function() {
+                    $(this).find(".regionInfo").hide();
+                    $(this).find(".previewNav").hide();
                 });
 
         // Preview
