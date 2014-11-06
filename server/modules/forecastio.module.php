@@ -29,6 +29,8 @@ use Forecast\Forecast;
 
 class ForecastIo extends Module
 {
+    private $resourceFolder;
+
     public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '') {
         // The Module Type must be set - this should be a unique text string of no more than 50 characters.
         // It is used to uniquely identify the module globally.
@@ -38,6 +40,9 @@ class ForecastIo extends Module
         // module data structure changes.
         // It is used to install / update your module and to put updated modules down to the display clients.
         $this->codeSchemaVersion = 1;
+
+        // The resource folder
+        $this->resourceFolder = 'modules/theme/forecastio/weather_icons/';
         
         // Must call the parent class
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -59,7 +64,7 @@ class ForecastIo extends Module
         
         if ($this->schemaVersion <= 1) {
             // Install
-            $this->InstallModule('Forecast IO', 'Weather forecasting from Forecast IO', 'forms/library.gif', 1, 1, json_decode('{"templates",[{"id":"current-day","value":"Current Day","main":"<div class=\"container\">\r\n    <div class=\"icon\"><i class=\"wi [wicon]\"><\/i> [temperature]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"desc\">[summary]<\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>","daily":"","css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.container {\r\n    text-align: center;\r\n}\r\n\r\n.icon {\r\n    font-size: 36px;\r\n}\r\n\r\n.desc {\r\n    margin-top: 10px;\r\n    font-size: 30px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n\r\n.day {\r\n    margin-top: 10px;\r\n    font-size: 48px;\r\n}"},{"id":"daily","value":"Daily","main":"<div class=\"container\">\r\n    <div class=\"daily-forecast\">[dailyForecast]<\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>","daily":"<div class=\"day\">\r\n    <div class=\"day-icon\"><i class=\"wi [wicon]\"><\/i> [temperatureMin]\/[temperatureMax]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"day-desc\">[summary]<\/div>\r\n<\/div>","css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.container {\r\n    text-align: center;\r\n}\r\n\r\n.icon {\r\n    font-size: 36px;\r\n}\r\n\r\n.desc {\r\n    margin-top: 10px;\r\n    font-size: 30px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n\r\n.day {\r\n    margin-top: 10px;\r\n    font-size: 48px;\r\n}"},{"id":"picture","value":"Pictures","main":"<div class=\"icon std-sprite-[icon]\">\r\n<\/div>\r\n<div class=\"container\">\r\n    <div class=\"desc\">[summary]<\/div>\r\n    <div class=\"temperature\">[temperatureFloor]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>","daily":"","css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.icon {\r\n    float: left;\r\n    background: url([[ICONS]]) no-repeat top left;\r\n}\r\n\r\n.container {\r\n    float: left;\r\n    text-align: right;\r\n}\r\n\r\n.temperature {\r\n    font-size: 46px;\r\n}\r\n\r\n.desc {\r\n    font-size: 34px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n.std-sprite-clear-day{ background-position: 0 0; width: 128px; height: 128px; } \r\n.std-sprite-clear-night{ background-position: 0 -178px; width: 128px; height: 128px; } \r\n.std-sprite-cloudy{ background-position: 0 -356px; width: 128px; height: 128px; } \r\n.std-sprite-lightning{ background-position: 0 -534px; width: 128px; height: 128px; } \r\n.std-sprite-partly-cloudy-day{ background-position: 0 -712px; width: 128px; height: 128px; } \r\n.std-sprite-partly-cloudy-night{ background-position: 0 -890px; width: 128px; height: 128px; } \r\n.std-sprite-rain{ background-position: 0 -1068px; width: 128px; height: 128px; } \r\n.std-sprite-sleet{ background-position: 0 -1246px; width: 128px; height: 128px; } \r\n.std-sprite-snow-night{ background-position: 0 -1424px; width: 128px; height: 128px; } \r\n.std-sprite-snow{ background-position: 0 -1602px; width: 128px; height: 128px; } \r\n.std-sprite-wind{ background-position: 0 -1780px; width: 128px; height: 128px; } \r\n"}]}'));
+            $this->InstallModule('Forecast IO', 'Weather forecasting from Forecast IO', 'forms/library.gif', 1, 1, json_decode('{"templates",[{"id":"current-day","value":"Current Day","main":"<div class=\"container\">\r\n    <div class=\"icon\"><i class=\"font-icon wi [wicon]\"><\/i> [temperature]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"desc\">[summary]<\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>","daily":"","css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.container {\r\n    text-align: center;\r\n}\r\n\r\n.icon {\r\n    font-size: 36px;\r\n}\r\n\r\n.font-icon {\r\n    font-size: 62px;\r\n}\r\n\r\n.desc {\r\n    margin-top: 10px;\r\n    font-size: 30px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n\r\n.day {\r\n    margin-top: 10px;\r\n    font-size: 48px;\r\n}"},{"id":"daily","value":"Daily","main":"<div class=\"container\">\r\n    <div class=\"daily-forecast\">[dailyForecast]<\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>","daily":"<div class=\"day\">\r\n    <div class=\"day-icon\"><i class=\"wi [wicon]\"><\/i> [temperatureMin]\/[temperatureMax]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"day-desc\">[summary]<\/div>\r\n<\/div>","css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.container {\r\n    text-align: center;\r\n}\r\n\r\n.icon {\r\n    font-size: 36px;\r\n}\r\n\r\n.desc {\r\n    margin-top: 10px;\r\n    font-size: 30px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n\r\n.day {\r\n    margin-top: 10px;\r\n    font-size: 48px;\r\n}"},{"id":"picture","value":"Pictures","main":"<div class=\"icon std-sprite-[icon]\">\r\n<\/div>\r\n<div class=\"container\">\r\n    <div class=\"desc\">[summary]<\/div>\r\n    <div class=\"temperature\">[temperatureFloor]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>","daily":"","css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.icon {\r\n    float: left;\r\n    background: url([[ICONS]]) no-repeat top left;\r\n}\r\n\r\n.container {\r\n    float: left;\r\n    text-align: right;\r\n}\r\n\r\n.temperature {\r\n    font-size: 46px;\r\n}\r\n\r\n.desc {\r\n    font-size: 34px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n.std-sprite-clear-day{ background-position: 0 0; width: 128px; height: 128px; } \r\n.std-sprite-clear-night{ background-position: 0 -178px; width: 128px; height: 128px; } \r\n.std-sprite-cloudy{ background-position: 0 -356px; width: 128px; height: 128px; } \r\n.std-sprite-lightning{ background-position: 0 -534px; width: 128px; height: 128px; } \r\n.std-sprite-partly-cloudy-day{ background-position: 0 -712px; width: 128px; height: 128px; } \r\n.std-sprite-partly-cloudy-night{ background-position: 0 -890px; width: 128px; height: 128px; } \r\n.std-sprite-rain{ background-position: 0 -1068px; width: 128px; height: 128px; } \r\n.std-sprite-sleet{ background-position: 0 -1246px; width: 128px; height: 128px; } \r\n.std-sprite-snow-night{ background-position: 0 -1424px; width: 128px; height: 128px; } \r\n.std-sprite-snow{ background-position: 0 -1602px; width: 128px; height: 128px; } \r\n.std-sprite-wind{ background-position: 0 -1780px; width: 128px; height: 128px; } \r\n"}]}'));
         }
         else {
             // Update
@@ -95,7 +100,7 @@ class ForecastIo extends Module
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
-        $media->addModuleFileFromFolder('modules/theme/forecastio/weather_icons/');
+        $media->addModuleFileFromFolder($this->resourceFolder);
     }
 
     /**
@@ -169,7 +174,11 @@ class ForecastIo extends Module
             'value', 
             __('Select the template you would like to apply. This can be overridden in Format.'), 't');
 
-        $formFields['advanced'][] = FormManager::AddButton(__('Reload Template'), 'button', '#', 'reloadTemplateButton');
+        $formFields['general'][] = FormManager::AddCombo('icons', __('Icons'), $this->GetOption('icons'), 
+            $this->iconsAvailable(), 
+            'id', 
+            'value', 
+            __('Select the icon set you would like to use.'), 't', 'icon-controls');
 
         $formFields['advanced'][] = FormManager::AddMultiText('currentTemplate', __('Template for Current Forecast'), NULL, 
             __('Enter the template for the current forecast. For a list of substitutions click "Request Forecast" below.'), 't', 10, 'required');
@@ -178,6 +187,8 @@ class ForecastIo extends Module
             __('Enter the template for the daily forecast. Replaces [dailyForecast] in main template.'), 't', 10);
 
         $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', __('CSS Style Sheet'), NULL, __('Enter a CSS style sheet to style the weather widget'), 'c', 10, 'required');
+        
+        $formFields['advanced'][] = FormManager::AddButton(__('Reload Template'), 'button', '#', 'reloadTemplateButton');
 
         $formFields['forecast'][] = FormManager::AddMessage(__('Please press Request Forecast'));
 
@@ -228,6 +239,7 @@ class ForecastIo extends Module
         $this->SetOption('longitude', Kit::GetParam('longitude', _POST, _DOUBLE));
         $this->SetOption('latitude', Kit::GetParam('latitude', _POST, _DOUBLE));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
+        $this->SetOption('icons', Kit::GetParam('icons', _POST, _STRING));
 
         $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
             <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
@@ -291,10 +303,14 @@ class ForecastIo extends Module
             'value', 
             __('Select the template you would like to apply. This can be overridden in Format.'), 't');
 
+        $formFields['general'][] = FormManager::AddCombo('icons', __('Icons'), $this->GetOption('icons'), 
+            $this->iconsAvailable(), 
+            'id', 
+            'value', 
+            __('Select the icon set you would like to use.'), 't', 'icon-controls');
+
         $formFields['general'][] = FormManager::AddText('color', __('Colour'), $this->GetOption('color', '000'), 
             __('Please select a colour for the foreground text.'), 'c', 'required');
-
-        $formFields['advanced'][] = FormManager::AddButton(__('Reload Template'), 'button', '#', 'reloadTemplateButton');
 
         $formFields['advanced'][] = FormManager::AddMultiText('currentTemplate', __('Template for Current Forecast'), $this->GetRawNode('currentTemplate'), 
             __('Enter the template for the current forecast. For a list of substitutions click "Request Forecast" below.'), 't', 10, 'required');
@@ -305,6 +321,8 @@ class ForecastIo extends Module
         $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', __('CSS Style Sheet'), $this->GetRawNode('styleSheet'), 
             __('Enter a CSS style sheet to style the weather widget'), 'c', 10, 'required');
 
+        $formFields['advanced'][] = FormManager::AddButton(__('Reload Template'), 'button', '#', 'reloadTemplateButton');
+        
         $formFields['forecast'][] = FormManager::AddMessage(__('Please press Request Forecast to show the current forecast and all available substitutions.'));
 
         // Configure the field dependencies
@@ -357,6 +375,7 @@ class ForecastIo extends Module
         $this->SetOption('longitude', Kit::GetParam('longitude', _POST, _DOUBLE));
         $this->SetOption('latitude', Kit::GetParam('latitude', _POST, _DOUBLE));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
+        $this->SetOption('icons', Kit::GetParam('icons', _POST, _STRING));
         
         $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
             <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
@@ -374,8 +393,8 @@ class ForecastIo extends Module
         return $this->response;
     }
 
-    private function SetFieldDepencencies() {
-
+    private function SetFieldDepencencies()
+    {
         // Add a dependency
         $locationControls_0 = array(
                 '.locationControls' => array('display' => 'block')
@@ -389,6 +408,23 @@ class ForecastIo extends Module
         $this->response->AddFieldAction('useDisplayLocation', 'change', false, $locationControls_0, 'is:checked');
         $this->response->AddFieldAction('useDisplayLocation', 'init', true, $locationControls_1, 'is:checked');
         $this->response->AddFieldAction('useDisplayLocation', 'change', true, $locationControls_1, 'is:checked');
+        $this->response->AddFieldAction('templateId', 'init', 'picture', array('.icon-controls' => array('display' => 'block')));
+        $this->response->AddFieldAction('templateId', 'change', 'picture', array('.icon-controls' => array('display' => 'block')));
+        $this->response->AddFieldAction('templateId', 'init', 'picture', array('.icon-controls' => array('display' => 'none')), 'not');
+        $this->response->AddFieldAction('templateId', 'change', 'picture', array('.icon-controls' => array('display' => 'none')), 'not');
+    }
+
+    private function iconsAvailable() 
+    {
+        // Scan the forecast io folder for icons
+        $icons = array();
+
+        foreach (array_diff(scandir($this->resourceFolder), array('..', '.')) as $file) {
+            if (stripos($file, '.png'))
+                $icons[] = array('id' => $file, 'value' => ucfirst(str_replace('-', ' ', str_replace('.png', '', $file))));
+        }
+
+        return $icons;
     }
 
     /**
@@ -446,9 +482,6 @@ class ForecastIo extends Module
 
         Theme::Set('table_rows', $rows);
         Theme::Render('table_render');
-
-
-
         exit();
     }
 
@@ -611,7 +644,7 @@ class ForecastIo extends Module
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->makeSubstitutions($data['currently'], $body), $template);
 
         // Replace any icon sets
-        $template = str_replace('[[ICONS]]', ((($isPreview) ? 'modules/theme/forecastio/weather_icons/' : '') . 'std-icons.png'), $template);
+        $template = str_replace('[[ICONS]]', ((($isPreview) ? 'modules/theme/forecastio/weather_icons/' : '') . $this->GetOption('icons')), $template);
         
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
