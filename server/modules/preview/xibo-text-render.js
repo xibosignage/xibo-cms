@@ -120,6 +120,12 @@ jQuery.fn.extend({
 
                 var duration = (options.durationIsPerItem) ? options.duration : options.duration / numberOfSlides;
 
+                // If we only have 1 item, then we are in trouble and need to duplicate it.
+                if ($(slides).length <= 1) {
+                    // Change our slide tag to be the paragraphs inside
+                    slides = slides + ' p';
+                }
+
                 //console.log("[Xibo] initialising the cycle2 plugin with " + numberOfSlides + " slides and selector " + slides + ". Duration per slide is " + duration + " seconds.");
 
                 // Set the content div to the height of the original window

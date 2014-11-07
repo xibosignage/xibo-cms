@@ -66,23 +66,36 @@ class text extends Module
 
         $formFields = array();
         $formFields['options'][] = FormManager::AddCombo(
-                    'direction', 
-                    __('Direction'), 
-                    NULL,
-                    array(
-                        array('directionid' => 'none', 'direction' => __('None')), 
-                        array('directionid' => 'left', 'direction' => __('Left')), 
-                        array('directionid' => 'right', 'direction' => __('Right')), 
-                        array('directionid' => 'up', 'direction' => __('Up')), 
-                        array('directionid' => 'down', 'direction' => __('Down'))
-                    ),
-                    'directionid',
-                    'direction',
-                    __('Please select which direction this text should scroll. If scrolling is not required, select None'), 
-                    's');
+                'effect', 
+                __('Effect'), 
+                $this->GetOption('effect'),
+                array(
+                    array('effectid' => 'none', 'effect' => __('None')), 
+                    array('effectid' => 'fade', 'effect' => __('Fade')),
+                    array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
+                    array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
+                    array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
+                    array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
+                    array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
+                    array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
+                    array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
+                    array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
+                    array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
+                    array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
+                    array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
+                    array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
+                ),
+                'effectid',
+                'effect',
+                __('Please select the effect that will be used. Some effects will transition between paragraphs in the text. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
+                'e');
 
-        $formFields['options'][] = FormManager::AddNumber('scrollSpeed', __('Scroll Speed'), NULL, 
-            __('The scroll speed to apply if a direction is specified. Higher is faster.'), 'e');
+        $formFields['options'][] = FormManager::AddNumber('speed', __('Speed'), NULL, 
+            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
+
+        // A list of web safe colours
+        $formFields['options'][] = FormManager::AddText('backgroundColor', __('Background Colour'), NULL, 
+            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
 
         $formFields['options'][] = FormManager::AddNumber('duration', __('Duration'), NULL, 
             __('The duration in seconds this counter should be displayed'), 'd', 'required');
@@ -153,24 +166,43 @@ class text extends Module
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
-        $formFields['options'][] = FormManager::AddCombo(
-                    'direction', 
-                    __('Direction'), 
-                    $this->GetOption('direction'),
-                    array(
-                        array('directionid' => 'none', 'direction' => __('None')), 
-                        array('directionid' => 'left', 'direction' => __('Left')), 
-                        array('directionid' => 'right', 'direction' => __('Right')), 
-                        array('directionid' => 'up', 'direction' => __('Up')), 
-                        array('directionid' => 'down', 'direction' => __('Down'))
-                    ),
-                    'directionid',
-                    'direction',
-                    __('Please select which direction this text should scroll. If scrolling is not required, select None'), 
-                    's');
 
-        $formFields['options'][] = FormManager::AddNumber('scrollSpeed', __('Scroll Speed'), $this->GetOption('scrollSpeed'), 
-            __('The scroll speed to apply if a direction is specified. Higher is faster.'), 'e');
+        // Handle older layouts that have a direction node but no effect node
+        $oldDirection = $this->GetOption('direction', 'none');
+        if ($oldDirection != 'none')
+            $oldDirection = 'marquee' . ucfirst($oldDirection);
+
+        $formFields['options'][] = FormManager::AddCombo(
+                'effect', 
+                __('Effect'), 
+                $this->GetOption('effect', $oldDirection),
+                array(
+                    array('effectid' => 'none', 'effect' => __('None')), 
+                    array('effectid' => 'fade', 'effect' => __('Fade')),
+                    array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
+                    array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
+                    array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
+                    array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
+                    array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
+                    array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
+                    array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
+                    array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
+                    array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
+                    array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
+                    array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
+                    array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
+                ),
+                'effectid',
+                'effect',
+                __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
+                'e');
+
+        $formFields['options'][] = FormManager::AddNumber('speed', __('Speed'), $this->GetOption('speed'), 
+            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
+
+        // A list of web safe colours
+        $formFields['options'][] = FormManager::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'), 
+            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
 
         $formFields['options'][] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
@@ -228,10 +260,8 @@ class text extends Module
         $mediaid    = $this->mediaid;
 
         //Other properties
-        $direction    = Kit::GetParam('direction', _POST, _WORD, 'none');
         $duration     = Kit::GetParam('duration', _POST, _INT, 0);
         $text         = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-        $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 2);
 
         $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
@@ -256,8 +286,9 @@ class text extends Module
 
         // Any Options
         $this->SetOption('xmds', true);
-        $this->SetOption('direction', $direction);
-        $this->SetOption('scrollSpeed', $scrollSpeed);
+        $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
+        $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
+        $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
         $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 
         // Should have built the media object entirely by this time
@@ -295,9 +326,7 @@ class text extends Module
         }
 
         //Other properties
-        $direction    = Kit::GetParam('direction', _POST, _WORD, 'none');
-        $text         = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-        $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+        $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
         
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
@@ -324,8 +353,9 @@ class text extends Module
 
         // Any Options
         $this->SetOption('xmds', true);
-        $this->SetOption('direction', $direction);
-        $this->SetOption('scrollSpeed', $scrollSpeed);
+        $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
+        $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
+        $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
         $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 
         // Should have built the media object entirely by this time
@@ -378,9 +408,6 @@ class text extends Module
 
         $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
         $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
-        $direction = $this->GetOption('direction');
-        $scrollSpeed = $this->GetOption('scrollSpeed');
-        $fitText = $this->GetOption('fitText', 0);
         $duration = $this->duration;
 
         // Get the text out of RAW
@@ -392,14 +419,22 @@ class text extends Module
         $textNode = $textNodes->item(0);
         $text = $textNode->nodeValue;
 
+        // Handle older layouts that have a direction node but no effect node
+        $oldDirection = $this->GetOption('direction', 'none');
+        
+        if ($oldDirection != 'none')
+            $oldDirection = 'marquee' . ucfirst($oldDirection);
+
+        $effect = $this->GetOption('effect', $oldDirection);
+
         // Set some options
-        $options = array('direction' => $direction,
+        $options = array('fx' => $effect,
             'duration' => $duration,
             'durationIsPerItem' => false,
             'numItems' => 1,
             'takeItemsFrom' => 'start',
             'itemsPerPage' => 0,
-            'scrollSpeed' => $scrollSpeed,
+            'speed' => $this->GetOption('speed'),
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
@@ -437,9 +472,14 @@ class text extends Module
         $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
 
-        if ($direction != 'none')
+        // Need the marquee plugin?
+        if (stripos($effect, 'marquee') !== false)
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
-        
+        Debug::Audit($effect . ' . ' . stripos($effect, 'marquee'));
+        // Need the cycle plugin?
+        if ($effect != 'none')
+            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
+                
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-text-render.js"></script>';
 
