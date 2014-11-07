@@ -1,0 +1,749 @@
+<?php
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2014 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *
+ *
+ * This is a template module used to demonstrate how a module for Xibo can be made.
+ *
+ * The class name must be equal to the $this->type and the file name must be equal to modules/type.module.php
+ */ 
+class Twitter extends Module
+{
+    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '') {
+        // The Module Type must be set - this should be a unique text string of no more than 50 characters.
+        // It is used to uniquely identify the module globally.
+        $this->type = 'twitter';
+
+        // This is the code schema version, it should be 1 for a new module and should be incremented each time the 
+        // module data structure changes.
+        // It is used to install / update your module and to put updated modules down to the display clients.
+        $this->codeSchemaVersion = 1;
+        
+        // Must call the parent class
+        parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
+    }
+
+    /**
+     * Install or Update this module
+     */
+    public function InstallOrUpdate()
+    {
+        // This function should update the `module` table with information about your module.
+        // The current version of the module in the database can be obtained in $this->schemaVersion
+        // The current version of this code can be obtained in $this->codeSchemaVersion
+        
+        // $settings will be made available to all instances of your module in $this->settings. These are global settings to your module, 
+        // not instance specific (i.e. not settings specific to the layout you are adding the module to).
+        // $settings will be collected from the Administration -> Modules CMS page.
+        // 
+        // Layout specific settings should be managed with $this->SetOption in your add / edit forms.
+        
+        if ($this->schemaVersion <= 1) {
+            // Install
+            $this->InstallModule('Twitter', 'Twitter Search Module', 'forms/library.gif', 1, 1, array());
+        }
+        else {
+            // Update
+            // Call "$this->UpdateModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)" with the updated items
+        }
+
+        // After calling either Install or Update your code schema version will match the database schema version and this method will not be called
+        // again. This means that if you want to change those fields in an update to your module, you will need to increment your codeSchemaVersion.
+    }
+
+    private function InstallFiles()
+    {
+        
+    }
+
+    /**
+     * Form for updating the module settings
+     */
+    public function ModuleSettingsForm()
+    {
+        // API Key
+        $formFields[] = FormManager::AddText('apiKey', __('API Key'), $this->GetSetting('apiKey'), 
+            __('Enter your API Key from Twitter.'), 'a', 'required');
+
+        // API Secret
+        $formFields[] = FormManager::AddText('apiSecret', __('API Secret'), $this->GetSetting('apiSecret'), 
+            __('Enter your API Secret from Twitter.'), 's', 'required');
+        
+        // Cache Period
+        $formFields[] = FormManager::AddText('cachePeriod', __('Cache Period'), $this->GetSetting('cachePeriod', 300), 
+            __('Enter the number of seconds you would like to cache twitter search results.'), 'c', 'required');
+        
+        return $formFields;
+    }
+
+    /**
+     * Process any module settings
+     */
+    public function ModuleSettings()
+    {
+        // Process any module settings you asked for.
+        $apiKey = Kit::GetParam('apiKey', _POST, _STRING, '');
+
+        if ($apiKey == '')
+            $this->ThrowError(__('Missing API Key'));
+
+        // Process any module settings you asked for.
+        $apiSecret = Kit::GetParam('apiSecret', _POST, _STRING, '');
+
+        if ($apiSecret == '')
+            $this->ThrowError(__('Missing API Secret'));
+
+        $this->settings['apiKey'] = $apiKey;
+        $this->settings['apiSecret'] = $apiSecret;
+        $this->settings['cachePeriod'] = Kit::GetParam('cachePeriod', _POST, _INT, 300);
+
+        // Check we are all installed
+        $this->InstallFiles();
+
+        // Return an array of the processed settings.
+        return $this->settings;
+    }
+    
+    /**
+     * Return the Add Form as HTML
+     * @return
+     */
+    public function AddForm()
+    {
+        // This is the logged in user and can be used to assess permissions
+        $user =& $this->user;
+
+        // The CMS provides the region width and height in case they are needed
+        $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
+        $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
+
+        // All forms should set some meta data about the form.
+        // Usually, you would want this meta data to remain the same.
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+    
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        Theme::Set('form_tabs', $tabs);
+
+        $formFields['general'][] = FormManager::AddText('name', __('Name'), NULL, 
+            __('An optional name for this media'), 'n');
+
+        // Any values for the form fields should be added to the theme here.
+        $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+            __('The duration in seconds this item should be displayed.'), 'd', 'required');
+
+        // Any values for the form fields should be added to the theme here.
+        $formFields['general'][] = FormManager::AddText('searchTerm', __('Search Term'), NULL, 
+            __('Search term. You can test your search term in the twitter.com search box first.'), 's', 'required');
+
+        // Common fields
+        $formFields['general'][] = FormManager::AddCombo(
+                'effect', 
+                __('Effect'), 
+                $this->GetOption('effect'),
+                array(
+                    array('effectid' => 'none', 'effect' => __('None')), 
+                    array('effectid' => 'fade', 'effect' => __('Fade')),
+                    array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
+                    array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
+                    array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
+                    array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
+                    array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
+                    array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
+                    array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
+                    array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
+                    array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
+                    array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
+                    array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
+                    array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
+                ),
+                'effectid',
+                'effect',
+                __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
+                'e');
+
+        $formFields['general'][] = FormManager::AddNumber('speed', __('Speed'), NULL, 
+            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
+
+        // A list of web safe colours
+        $formFields['general'][] = FormManager::AddText('backgroundColor', __('Background Colour'), NULL, 
+            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
+
+        // Add a text template
+        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, '[Tweet]', 
+            __('Enter the template. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+
+        // Field for the style sheet (optional)
+        $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', NULL, NULL, 
+            __('Optional Stylesheet'), 's', 10);
+
+        // Modules should be rendered using the theme engine.
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_template', $formFields['template']);
+        Theme::Set('form_fields_advanced', $formFields['advanced']);
+
+        // Set the field dependencies
+        $this->setFieldDepencencies();
+        $this->response->html = Theme::RenderReturn('form_render');
+
+        $this->response->dialogTitle = __($this->displayType);
+        $this->response->callBack = 'text_callback';
+        // The response object outputs the required JSON object to the browser
+        // which is then processed by the CMS JavaScript library (xibo-cms.js).
+        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+
+        // The response must be returned.
+        return $this->response;
+    }
+
+    /**
+     * Add Media to the Database
+     * @return
+     */
+    public function AddMedia()
+    {
+        // Same member variables as the Form call, except with POST variables for your form fields.
+        $layoutid   = $this->layoutid;
+        $regionid   = $this->regionid;
+        $mediaid    = $this->mediaid;
+
+        // You are required to set a media id, which should be unique.
+        $this->mediaid  = md5(Kit::uniqueId());
+
+        // You must also provide a duration (all media items must provide this field)
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+
+        // You should validate all form input using the Kit::GetParam helper classes
+        if (Kit::GetParam('searchTerm', _POST, _STRING) == '') {
+            $this->response->SetError(__('Please enter a search term'));
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
+        $this->SetOption('searchTerm', Kit::GetParam('searchTerm', _POST, _STRING));
+        $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
+        $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
+        $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
+        $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>');
+        
+        // Should have built the media object entirely by this time
+        // This saves the Media Object to the Region
+        $this->UpdateRegion();
+
+        // Usually you will want to load the region options form again once you have added your module.
+        // In some cases you will want to load the edit form for that module
+        $this->response->loadForm = true;
+        $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
+        
+        return $this->response;
+    }
+
+    /**
+     * Return the Edit Form as HTML
+     * @return
+     */
+    public function EditForm()
+    {
+        // This is the logged in user and can be used to assess permissions
+        $user =& $this->user;
+
+        // The CMS provides the region width and height in case they are needed
+        $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
+        $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
+
+        // All forms should set some meta data about the form.
+        // Usually, you would want this meta data to remain the same.
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $this->mediaid . '">');
+    
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        Theme::Set('form_tabs', $tabs);
+
+        $formFields['general'][] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
+            __('An optional name for this media'), 'n');
+
+        // Any values for the form fields should be added to the theme here.
+        $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+            __('The duration in seconds this item should be displayed.'), 'd', 'required');
+
+        // Any values for the form fields should be added to the theme here.
+        $formFields['general'][] = FormManager::AddText('searchTerm', __('Search Term'), $this->GetOption('searchTerm'), 
+            __('Search term. You can test your search term in the twitter.com search box first.'), 's', 'required');
+
+        // Common fields
+        $formFields['general'][] = FormManager::AddCombo(
+                'effect', 
+                __('Effect'), 
+                $this->GetOption('effect'),
+                array(
+                    array('effectid' => 'none', 'effect' => __('None')), 
+                    array('effectid' => 'fade', 'effect' => __('Fade')),
+                    array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
+                    array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
+                    array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
+                    array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
+                    array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
+                    array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
+                    array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
+                    array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
+                    array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
+                    array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
+                    array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
+                    array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
+                ),
+                'effectid',
+                'effect',
+                __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
+                'e');
+
+        $formFields['general'][] = FormManager::AddNumber('speed', __('Speed'), $this->GetOption('speed'), 
+            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
+
+        // A list of web safe colours
+        $formFields['general'][] = FormManager::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'), 
+            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
+
+        // Add a text template
+        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->GetRawNode('template', '[Tweet]'), 
+            __('Enter the template. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+
+        // Field for the style sheet (optional)
+        $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', NULL, $this->GetRawNode('styleSheet'), 
+            __('Optional Stylesheet'), 's', 10);
+
+        // Modules should be rendered using the theme engine.
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_template', $formFields['template']);
+        Theme::Set('form_fields_advanced', $formFields['advanced']);
+
+        // Set the field dependencies
+        $this->setFieldDepencencies();
+
+        $this->response->html = Theme::RenderReturn('form_render');
+        $this->response->dialogTitle = __($this->displayType);
+        $this->response->callBack = 'text_callback';
+        // The response object outputs the required JSON object to the browser
+        // which is then processed by the CMS JavaScript library (xibo-cms.js).
+        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+
+        // The response must be returned.
+        return $this->response;
+    }
+
+    /**
+     * Edit Media in the Database
+     * @return
+     */
+    public function EditMedia()
+    {
+        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
+        if (!$this->auth->edit) {
+            $this->response->SetError('You do not have permission to edit this assignment.');
+            $this->response->keepOpen = false;
+            return $this->response;
+        }
+
+        // If we have permission to change it, then get the value from the form
+        if ($this->auth->modifyPermissions)
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+
+        // You should validate all form input using the Kit::GetParam helper classes
+        if (Kit::GetParam('searchTerm', _POST, _STRING) == '') {
+            $this->response->SetError(__('Please enter a search term'));
+            $this->response->keepOpen = true;
+            return $this->response;
+        }
+
+        $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
+        $this->SetOption('searchTerm', Kit::GetParam('searchTerm', _POST, _STRING));
+        $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
+        $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
+        $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
+
+        // Text Template
+        $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>');
+        
+        // Should have built the media object entirely by this time
+        // This saves the Media Object to the Region
+        $this->UpdateRegion();
+
+        // Usually you will want to load the region options form again once you have added your module.
+        // In some cases you will want to load the edit form for that module
+        $this->response->loadForm = true;
+        $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
+        
+        return $this->response;
+    }
+
+    private function setFieldDepencencies()
+    {
+        // Add a dependency
+        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none'), '.background-color-group' => array('display' => 'none')));
+        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none'), '.background-color-group' => array('display' => 'none')));
+        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
+        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
+    }
+
+    /**
+     * Preview
+     * @param <double> $width
+     * @param <double> $height
+     * @return <string>
+     */
+    public function Preview($width, $height)
+    {
+        // Each module should be able to output a preview to use in the Layout Designer
+        
+        // If preview is not enabled for your module you can hand off to the base class
+        // and it will output a basic preview for you
+        if ($this->previewEnabled == 0)
+            return parent::Preview ($width, $height);
+        
+        // In most cases your preview will want to load the GetResource call associated with the module
+        // This imitates the client
+        return $this->PreviewAsClient($width, $height);
+    }
+
+    private function getBearerToken() {
+
+        // Prepare the URL
+        $url = 'https://api.twitter.com/oauth2/token';
+
+        // Prepare the consumer key and secret
+        $key = base64_encode(urlencode($this->GetSetting('apiKey')) . ':' . urlencode($this->GetSetting('apiSecret')));
+
+        // Check to see if we have the bearer token already cached
+        if (Cache::has('bearer_' . $key)) {
+            Debug::Audit('Bearer Token served from cache');
+            return Cache::get('bearer_' . $key);
+        }
+
+        Debug::Audit('Bearer Token served from API');
+
+        // Shame - we will need to get it.
+        // and store it.
+        $httpOptions = array(
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_HTTPHEADER => array(
+                    'POST /oauth2/token HTTP/1.1',
+                    'Authorization: Basic ' . $key, 
+                    'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
+                    'Content-Length: 29'
+                ),
+            CURLOPT_USERAGENT => 'Xibo Twitter Module',
+            CURLOPT_HEADER => true,
+            CURLINFO_HEADER_OUT => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query(array('grant_type' => 'client_credentials')),
+            CURLOPT_URL => $url,
+        );
+
+        $curl = curl_init();
+        curl_setopt_array($curl, $httpOptions);
+        $result = curl_exec($curl);
+
+        // Parse out header and body
+        list($header, $body) = explode("\r\n\r\n", $result, 2);
+
+        // See if we can parse the error.
+        $body = json_decode($body);
+
+        $outHeaders = curl_getinfo($curl);
+
+        if ($outHeaders['http_code'] != 200) {
+            Debug::Error('Twitter API returned ' . $result . ' status. Unable to proceed.');
+
+            // Parse out header and body
+            list($header, $body) = explode("\r\n\r\n", $result, 2);
+
+            // See if we can parse the error.
+            $body = json_decode($body);
+
+            Debug::Error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+
+            return false;
+        }
+
+        // We have a 200 - therefore we want to think about caching the bearer token
+        // First, lets check its a bearer token
+        if ($body->token_type != 'bearer') {
+            Debug::Error('Twitter API returned OK, but without a bearer token.');
+            return false;
+        }
+
+        // It is, so lets cache it
+        // long times...
+        Cache::put('bearer_' . $key, $body->access_token, 100000);
+
+        return $body->access_token;
+    }
+
+    private function searchApi($token, $term, $resultType = 'mixed', $count = 15)
+    {
+        // Construct the URL to call
+        $url = 'https://api.twitter.com/1.1/search/tweets.json';
+        $queryString = '?q=' . urlencode(trim($term)) . 
+            '&result_type=' . $resultType . 
+            '&count=' . $count . 
+            '&include_entities=true';
+
+        $httpOptions = array(
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_HTTPHEADER => array(
+                    'GET /1.1/search/tweets.json' . $queryString . 'HTTP/1.1',
+                    'Host: api.twitter.com',
+                    'Authorization: Bearer ' . $token
+                ),
+            CURLOPT_USERAGENT => 'Xibo Twitter Module',
+            CURLOPT_HEADER => true,
+            CURLINFO_HEADER_OUT => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_URL => $url . $queryString,
+        );
+
+        $curl = curl_init();
+        curl_setopt_array($curl, $httpOptions);
+        $result = curl_exec($curl);
+
+        // Parse out header and body
+        list($header, $body) = explode("\r\n\r\n", $result, 2);
+
+        // See if we can parse the error.
+        $body = json_decode($body);
+
+        $outHeaders = curl_getinfo($curl);
+
+        if ($outHeaders['http_code'] != 200) {
+            Debug::Error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed.');
+
+            // Parse out header and body
+            list($header, $body) = explode("\r\n\r\n", $result, 2);
+
+            // See if we can parse the error.
+            $body = json_decode($body);
+
+            Debug::Error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+
+            return false;
+        }
+
+        return $body;
+    }
+
+    private function getTwitterFeed($template)
+    {
+        if (!extension_loaded('curl')) {
+            trigger_error(__('cURL extension is required for Twitter'));
+            return false;
+        }
+
+        // Connect to twitter and get the twitter feed.
+        $key = md5($this->GetOption('searchTerm'));
+        
+        if (!Cache::has($key) || Cache::get($key) == '') {
+
+            Debug::Audit('Querying API for ' . $this->GetOption('searchTerm'));
+
+            // We need to search for it
+            if (!$token = $this->getBearerToken())
+                return false;
+
+            // We have the token, make a tweet
+            if (!$data = $this->searchApi($token, $this->GetOption('searchTerm')))
+                return false;
+
+            // Cache it
+            Cache::put($key, $data, $this->GetSetting('cachePeriod'));
+        }
+        else {
+            Debug::Audit('Served from Cache');
+            $data = Cache::get($key);
+        }
+
+        Debug::Audit('Template is ' . $template);
+
+        // Parse the text template
+        $matches = '';
+        preg_match_all('/\[.*?\]/', $template, $matches);
+
+        // Build an array to return
+        $return = array();
+
+        // This should return the formatted items.
+        foreach ($data->statuses as $tweet) {
+            // Substitute for all matches in the template
+            $rowString = $template;
+
+            foreach ($matches[0] as $sub) {
+                // Maybe make this more generic?
+                switch ($sub) {
+                    case '[Tweet]':
+                        $replace = $tweet->text;
+                        break;
+
+                    case '[User]':
+                        $replace = $tweet->user->screen_name;
+                }
+
+                $rowString = str_replace($sub, $replace, $rowString);
+            }
+
+            // Substitute the replacement we have found (it might be '')
+            $return[] = $rowString;
+        }
+        
+        // Return the data array
+        return $return;
+    }
+
+    /**
+     * GetResource
+     *     Return the rendered resource to be used by the client (or a preview)
+     *     for displaying this content.
+     * @param integer $displayId If this comes from a real client, this will be the display id.
+     */
+    public function GetResource($displayId = 0)
+    {
+        // Make sure this module is installed correctly
+        $this->InstallFiles();
+
+        // Load in the template
+        $template = file_get_contents('modules/preview/HtmlTemplate.html');
+
+        // Replace the View Port Width?
+        if (isset($_GET['preview']))
+            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
+
+        // Information from the Module
+        $duration = $this->duration;
+        
+        // Generate a JSON string of substituted items.
+        $items = $this->getTwitterFeed($this->GetRawNode('template'));
+
+        // Return empty string if there are no items to show.
+        if (count($items) == 0)
+            return '';
+
+        $options = array(
+            'direction' => 'single',
+            'fx' => $this->GetOption('effect', 'none'),
+            'speed' => $this->GetOption('speed', 500),
+            'duration' => $duration,
+            'durationIsPerItem' => ($this->GetOption('durationIsPerItem', 0) == 1),
+            'numItems' => count($items),
+            'itemsPerPage' => 1,
+            'originalWidth' => $this->width,
+            'originalHeight' => $this->height,
+            'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
+            'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
+            'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+        );
+
+        // Replace the control meta with our data from twitter
+        $controlMeta = '<!-- NUMITEMS=' . count($items) . ' -->' . PHP_EOL . '<!-- DURATION=' . ($this->GetOption('durationIsPerItem', 0) == 0 ? $duration : ($duration * count($items))) . ' -->';
+        $template = str_replace('<!--[[[CONTROLMETA]]]-->', $controlMeta, $template);
+
+        // Replace the head content
+        $headContent  = '';
+
+        // Add the CSS if it isn't empty
+        $css = $this->GetRawNode('styleSheet');
+        if ($css != '') {
+            $headContent .= '<style type="text/css">' . $css . '</style>';
+        }
+
+        $backgroundColor = $this->GetOption('backgroundColor');
+        if ($backgroundColor != '') {
+            $headContent .= '<style type="text/css">body, .page, .item { background-color: ' . $backgroundColor . ' }</style>';
+        }
+
+        // Add our fonts.css file
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $headContent .= '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+        $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
+
+        // Replace the Head Content with our generated javascript
+        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+
+        // Add some scripts to the JavaScript Content
+        $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+
+        // Need the cycle plugin?
+        if ($this->GetSetting('effect') != 'none') {
+            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
+        }
+
+        // Need the marquee plugin?
+        if (stripos($this->GetSetting('effect'), 'marquee'))
+            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
+        
+        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-text-render.js"></script>';
+
+        $javaScriptContent .= '<script type="text/javascript">';
+        $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
+        $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
+        $javaScriptContent .= '   $(document).ready(function() { ';
+        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); ';
+        $javaScriptContent .= '   }); ';
+        $javaScriptContent .= '</script>';
+
+        // Replace the Head Content with our generated javascript
+        $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+
+        // Replace the Body Content with our generated text
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', '', $template);
+
+        return $template;
+    }
+
+    public function HoverPreview()
+    {
+        // Default Hover window contains a thumbnail, media type and duration
+        $output = parent::HoverPreview();
+
+        // You can add anything you like to this, or completely replace it
+
+        return $output;
+    }
+    
+    public function IsValid() {
+        // Using the information you have in your module calculate whether it is valid or not.
+        // 0 = Invalid
+        // 1 = Valid
+        // 2 = Unknown
+        return 1;
+    }
+}
+?>

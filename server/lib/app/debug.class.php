@@ -197,7 +197,8 @@ class Debug
         return true;
     }
 
-    public static function Audit($message) {
+    public static function Audit($message)
+    {
         if (!AUDIT)
             return;
 
@@ -206,6 +207,15 @@ class Debug
         $caller = $trace[1];
 
         Debug::LogEntry('audit', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
+    }
+
+    public static function Error($message)
+    {
+        // Get the calling class / function
+        $trace = debug_backtrace();
+        $caller = $trace[1];
+
+        Debug::LogEntry('error', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
     }
 }
 ?>

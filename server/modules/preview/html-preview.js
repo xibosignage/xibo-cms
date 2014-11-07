@@ -181,8 +181,6 @@ function layout(id) {
         self.bgColour = $(self.layoutNode).filter(":first").attr('bgcolor');
         self.bgImage = $(self.layoutNode).filter(":first").attr('background');
         
-        $("#" + self.containerName).css("background-color", self.bgColour);
-        
         if (!(self.bgImage == "" || self.bgImage == undefined)) {
             /* Extract the image ID from the filename */
             self.bgId = self.bgImage.substring(0, self.bgImage.indexOf('.'));
@@ -193,6 +191,9 @@ function layout(id) {
             $("#" + self.containerName).css("background-size", self.sWidth + "px " + self.sHeight + "px");
             $("#" + self.containerName).css("background-position", "0px 0px");
         }
+
+        // Set the background color
+        $("#" + self.containerName).css("background-color", self.bgColour);
         
         $(self.layoutNode).find("region").each(function() { playLog(4, "debug", "Creating region " + $(this).attr('id'), false);
                                                  self.regionObjects.push(new region(self, $(this).attr('id'), this));

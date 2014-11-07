@@ -169,25 +169,43 @@ class ticker extends Module
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         // Common fields
-        $field_direction = FormManager::AddCombo(
-                'direction', 
-                __('Direction'), 
-                $this->GetOption('direction'),
-                array(
-                    array('directionid' => 'none', 'direction' => __('None')), 
-                    array('directionid' => 'left', 'direction' => __('Left')), 
-                    array('directionid' => 'right', 'direction' => __('Right')), 
-                    array('directionid' => 'up', 'direction' => __('Up')), 
-                    array('directionid' => 'down', 'direction' => __('Down')),
-                    array('directionid' => 'single', 'direction' => __('Single'))
-                ),
-                'directionid',
-                'direction',
-                __('Please select which direction this text should scroll. If scrolling is not required, select None'), 
-                's');
+        $oldDirection = $this->GetOption('direction');
+        
+        if ($oldDirection == 'single')
+            $oldDirection = 'fade';
+        else if ($oldDirection != 'none')
+            $oldDirection = 'marquee' . ucfirst($oldDirection);
 
-        $field_scrollSpeed = FormManager::AddNumber('scrollSpeed', __('Scroll Speed'), $this->GetOption('scrollSpeed'), 
-            __('The scroll speed to apply if a direction is specified. Higher is faster.'), 'e');
+        $fieldFx = FormManager::AddCombo(
+                'effect', 
+                __('Effect'), 
+                $this->GetOption('effect', $oldDirection),
+                array(
+                    array('effectid' => 'none', 'effect' => __('None')), 
+                    array('effectid' => 'fade', 'effect' => __('Fade')),
+                    array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
+                    array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
+                    array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
+                    array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
+                    array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
+                    array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
+                    array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
+                    array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
+                    array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
+                    array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
+                    array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
+                    array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
+                ),
+                'effectid',
+                'effect',
+                __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
+                'e');
+
+        $fieldScrollSpeed = FormManager::AddNumber('speed', __('Speed'), $this->GetOption('speed', $this->GetOption('scrollSpeed')), 
+            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
+
+        $fieldBackgroundColor = FormManager::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'), 
+            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
 
         $field_itemsPerPage = FormManager::AddNumber('itemsPerPage', __('Items per page'), $this->GetOption('itemsPerPage'), 
             __('When in single mode how many items per page should be shown.'), 'p');
@@ -209,8 +227,9 @@ class ticker extends Module
 
             $formFields['general'][] = $field_name;
             $formFields['general'][] = $field_duration;
-            $formFields['general'][] = $field_direction;
-            $formFields['general'][] = $field_scrollSpeed;
+            $formFields['general'][] = $fieldFx;
+            $formFields['general'][] = $fieldScrollSpeed;
+            $formFields['advanced'][] = $fieldBackgroundColor;
             $formFields['advanced'][] = $field_durationIsPerItem;
             $formFields['advanced'][] = $field_updateInterval;
 
@@ -241,8 +260,9 @@ class ticker extends Module
 
             $formFields['general'][] = $field_name;
             $formFields['general'][] = $field_duration;
-            $formFields['general'][] = $field_direction;
-            $formFields['format'][] = $field_scrollSpeed;
+            $formFields['general'][] = $fieldFx;
+            $formFields['format'][] = $fieldScrollSpeed;
+            $formFields['format'][] = $fieldBackgroundColor;
             
             $formFields['format'][] = FormManager::AddNumber('numItems', __('Number of Items'), $this->GetOption('numItems'), 
                 __('The Number of RSS items you want to display'), 'o');
@@ -395,7 +415,7 @@ class ticker extends Module
         $this->SetOption('uri', $uri);
         $this->SetOption('datasetid', $dataSetId);
         $this->SetOption('updateInterval', 120);
-        $this->SetOption('scrollSpeed', 2);
+        $this->SetOption('speed', 2);
 
         $this->SetRaw('<template><![CDATA[' . $template . ']]></template><css><![CDATA[]]></css>');
         
@@ -438,10 +458,8 @@ class ticker extends Module
         // Other properties
         $uri          = Kit::GetParam('uri', _POST, _URI);
 		$name = Kit::GetParam('name', _POST, _STRING);
-        $direction    = Kit::GetParam('direction', _POST, _WORD, 'none');
         $text         = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
         $css = Kit::GetParam('ta_css', _POST, _HTMLSTRING);
-        $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 2);
         $updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 360);
         $copyright    = Kit::GetParam('copyright', _POST, _STRING);
         $numItems = Kit::GetParam('numItems', _POST, _STRING);
@@ -515,9 +533,9 @@ class ticker extends Module
         // Any Options
         $this->SetOption('xmds', true);
 		$this->SetOption('name', $name);
-        $this->SetOption('direction', $direction);
+        $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
         $this->SetOption('copyright', $copyright);
-        $this->SetOption('scrollSpeed', $scrollSpeed);
+        $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
         $this->SetOption('updateInterval', $updateInterval);
         $this->SetOption('uri', $uri);
         $this->SetOption('numItems', $numItems);
@@ -532,6 +550,7 @@ class ticker extends Module
         $this->SetOption('dateFormat', Kit::GetParam('dateFormat', _POST, _STRING));
         $this->SetOption('allowedAttributes', Kit::GetParam('allowedAttributes', _POST, _STRING));
         $this->SetOption('stripTags', Kit::GetParam('stripTags', _POST, _STRING));
+        $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
         
         // Text Template
         $this->SetRaw('<template><![CDATA[' . $text . ']]></template><css><![CDATA[' . $css . ']]></css>');
@@ -635,8 +654,6 @@ class ticker extends Module
         $sourceId = $this->GetOption('sourceId', 1);
 
         // Information from the Module
-        $direction = $this->GetOption('direction');
-        $scrollSpeed = $this->GetOption('scrollSpeed');
         $itemsSideBySide = $this->GetOption('itemsSideBySide', 0);
         $duration = $this->duration;
         $durationIsPerItem = $this->GetOption('durationIsPerItem', 0);
@@ -664,14 +681,24 @@ class ticker extends Module
             $css = '';
         }
 
+        // Handle older layouts that have a direction node but no effect node
+        $oldDirection = $this->GetOption('direction', 'none');
+        
+        if ($oldDirection == 'single')
+            $oldDirection = 'fade';
+        else if ($oldDirection != 'none')
+            $oldDirection = 'marquee' . ucfirst($oldDirection);
+
+        $effect = $this->GetOption('effect', $oldDirection);
+
         $options = array(
-            'direction' => $direction,
+            'fx' => $effect,
             'duration' => $duration,
             'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
             'numItems' => $numItems,
             'takeItemsFrom' => $takeItemsFrom,
             'itemsPerPage' => $itemsPerPage,
-            'scrollSpeed' => $scrollSpeed,
+            'speed' => $this->GetOption('speed'),
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
@@ -699,8 +726,6 @@ class ticker extends Module
 
         $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
         $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
-
-        $controlMeta = array('numItems' => $pages, 'totalDuration' => $totalDuration);
 
         // Replace and Control Meta options
         $template = str_replace('<!--[[[CONTROLMETA]]]-->', '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->', $template);
@@ -731,11 +756,11 @@ class ticker extends Module
         $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
 
         // Need the marquee plugin?
-        if ($direction != 'none' && $direction != 'single')
+        if (stripos($effect, 'marquee'))
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
         
         // Need the cycle plugin?
-        if ($direction == 'single')
+        if ($effect != 'none')
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
         
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
@@ -764,9 +789,6 @@ class ticker extends Module
         Kit::ClassLoader('file');
         $file = new File($this->db);
         File::EnsureLibraryExists();
-
-        // In the text template replace span with div
-        $text = str_replace('span', 'div', $text);
 
         // Parse the text template
         $matches = '';

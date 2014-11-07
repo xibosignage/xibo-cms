@@ -162,8 +162,8 @@ abstract class Module implements ModuleInterface
             else
                 $this->settings = json_decode($this->settings, true);
 
-            Debug::Audit('Settings: ' . $row['settings']);
-            Debug::Audit('Settings: ' . var_export($this->settings, true) . '.' . json_last_error());
+            // Debug::Audit('Settings: ' . $row['settings']);
+            // Debug::Audit('Settings: ' . var_export($this->settings, true) . '.' . json_last_error());
 
             // Translated name of this module
             $this->displayType = __(Kit::ValidateParam($row['Name'], _STRING));

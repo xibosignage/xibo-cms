@@ -54,6 +54,9 @@ var text_callback = function(dialog)
         return false;
     });
 
+    // Turn the background colour into a picker
+    $("#backgroundColor").colorpicker();
+
     return false;
 };
 
