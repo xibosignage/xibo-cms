@@ -23,9 +23,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <table id="LibraryAssignTable" class="table table-bordered">
 	<thead>
 		<tr>
-			<th><?php echo Theme::Translate('Name'); ?></th>
-			<th><?php echo Theme::Translate('Type'); ?></th>
-			<th><?php echo Theme::Translate('Duration'); ?></th>
+			<th class="group-false"><?php echo Theme::Translate('Name'); ?></th>
+			<th class="group-false"><?php echo Theme::Translate('Type'); ?></th>
+			<th class="group-false"><?php echo Theme::Translate('Duration'); ?></th>
+			<th class="group-false" data-sorter="false"></th>
 		</tr>
 	</thead>
 	<tbody>

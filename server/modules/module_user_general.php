@@ -746,17 +746,19 @@ END;
      * Authorizes a user against a media ID
      * @param <int> $mediaID
      */
-    public function MediaAuth($mediaId, $fullObject = false)
+    public function MediaAuth($mediaId, $fullObject = false, $ownerId = 0)
     {
         $auth = new PermissionManager($this);
 
-        $SQL  = '';
-        $SQL .= 'SELECT UserID ';
-        $SQL .= '  FROM media ';
-        $SQL .= ' WHERE media.MediaID = %d ';
+        if ($ownerId == 0) {
+            $SQL  = '';
+            $SQL .= 'SELECT UserID ';
+            $SQL .= '  FROM media ';
+            $SQL .= ' WHERE media.MediaID = %d ';
 
-        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $mediaId), 'UserID', _INT))
-            return $auth;
+            if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $mediaId), 'UserID', _INT))
+                return $auth;
+        }
 
         // If we are the owner, or a super admin then give full permissions
         if ($this->usertypeid == 1 || $ownerId == $this->userid)
@@ -871,107 +873,50 @@ END;
      */
     public function MediaList($sort_order = array('name'), $filter_by = array())
     {
-        //$type = '', $name = '', $ownerid = 0, $retired = 0
-        $SQL  = '';
-        $SQL .= "SELECT  media.mediaID, ";
-        $SQL .= "   media.name, ";
-        $SQL .= "   media.type, ";
-        $SQL .= "   media.duration, ";
-        $SQL .= "   media.userID, ";
-        $SQL .= "   media.FileSize, ";
-        $SQL .= "   media.storedAs, ";
-        $SQL .= "   IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
-        
-        if (Kit::GetParam('showTags', $filter_by, _INT) == 1)
-            $SQL .= " tag.tag AS tags, ";
-        else
-            $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
-        
-        $SQL .= "   media.originalFileName ";
-        $SQL .= " FROM media ";
-        $SQL .= "   LEFT OUTER JOIN media parentmedia ";
-        $SQL .= "   ON parentmedia.MediaID = media.MediaID ";
+        try {
+            $dbh = PDOConnect::init();
 
-        if (Kit::GetParam('showTags', $filter_by, _INT) == 1) {
-            $SQL .= " LEFT OUTER JOIN lktagmedia ON lktagmedia.mediaId = media.mediaId ";
-            $SQL .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
-        }
+            $media = Media::Entries($sort_order, $filter_by);
+            $parsedMedia = array();
 
-        $SQL .= " WHERE   media.isEdited = 0 AND media.is_module = 0 ";
-        
-        if (Kit::GetParam('name', $filter_by, _STRING) != '') {
-            // convert into a space delimited array
-            $names = explode(' ', Kit::GetParam('name', $filter_by, _STRING));
-            
-            foreach($names as $searchName)
-            {
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-')
-                    $SQL.= " AND  (media.name NOT LIKE '%" . sprintf('%s', ltrim($this->db->escape_string($searchName), '-')) . "%') ";
-                else
-                    $SQL.= " AND  (media.name LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
+            foreach ($media as $row) {
+                $mediaItem = array();
+
+                // Validate each param and add it to the array.
+                $mediaItem['mediaid'] = $row->mediaId;
+                $mediaItem['media'] = $row->name;
+                $mediaItem['mediatype'] = $row->mediaType;
+                $mediaItem['duration'] = $row->duration;
+                $mediaItem['ownerid'] = $row->ownerId;
+                $mediaItem['filesize'] = $row->fileSize;
+                $mediaItem['parentid'] = $row->parentId;
+                $mediaItem['filename'] = $row->fileName;
+                $mediaItem['tags'] = $row->tags;
+                $mediaItem['storedas'] = $row->storedAs;
+
+                $auth = $this->MediaAuth($row->mediaId, true, $row->ownerId);
+
+                if ($auth->view) {
+                    $mediaItem['view'] = (int)$auth->view;
+                    $mediaItem['edit'] = (int)$auth->edit;
+                    $mediaItem['del'] = (int)$auth->del;
+                    $mediaItem['modifyPermissions'] = (int)$auth->modifyPermissions;
+
+                    $parsedMedia[] = $mediaItem;
+                }
             }
+
+            return $parsedMedia;
         }
-
-        if (Kit::GetParam('mediaId', $filter_by, _INT, -1) != -1) {
-            $SQL .= sprintf(" AND media.mediaId = %d ", Kit::GetParam('mediaId', $filter_by, _INT));
-        }
-
-        if (Kit::GetParam('type', $filter_by, _STRING) != '')
-            $SQL .= sprintf(" AND media.type = '%s'", $this->db->escape_string(Kit::GetParam('type', $filter_by, _STRING)));
-
-        if (Kit::GetParam('ownerid', $filter_by, _INT) != 0)
-            $SQL .= sprintf(" AND media.userid = %d ", Kit::GetParam('ownerid', $filter_by, _INT));
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
         
-        if (Kit::GetParam('retired', $filter_by, _INT, -1) == 1)
-            $SQL .= " AND media.retired = 1 ";
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
         
-        if (Kit::GetParam('retired', $filter_by, _INT, -1) == 0)
-            $SQL .= " AND media.retired = 0 ";          
-        
-        // Sorting?
-        if (is_array($sort_order))
-            $SQL .= 'ORDER BY ' . implode(',', $sort_order);
-
-        //Debug::LogEntry('audit', sprintf('Retrieving list of media for %s with SQL: %s', $this->userName, $SQL));
-
-        if (!$result = $this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
             return false;
         }
-
-        $media = array();
-
-        while($row = $this->db->get_assoc_row($result))
-        {
-            $mediaItem = array();
-
-            // Validate each param and add it to the array.
-            $mediaItem['mediaid'] = Kit::ValidateParam($row['mediaID'], _INT);
-            $mediaItem['media'] = Kit::ValidateParam($row['name'], _STRING);
-            $mediaItem['mediatype'] = Kit::ValidateParam($row['type'], _WORD);
-            $mediaItem['duration'] = Kit::ValidateParam($row['duration'], _DOUBLE);
-            $mediaItem['ownerid'] = Kit::ValidateParam($row['userID'], _INT);
-            $mediaItem['filesize'] = Kit::ValidateParam($row['FileSize'], _INT);
-            $mediaItem['parentid'] = Kit::ValidateParam($row['ParentID'], _INT);
-            $mediaItem['filename'] = Kit::ValidateParam($row['originalFileName'], _STRING);
-            $mediaItem['tags'] = Kit::ValidateParam($row['tags'], _STRING);
-            $mediaItem['storedas'] = Kit::ValidateParam($row['storedAs'], _STRING);
-
-            $auth = $this->MediaAuth($mediaItem['mediaid'], true);
-
-            if ($auth->view)
-            {
-                $mediaItem['view'] = (int)$auth->view;
-                $mediaItem['edit'] = (int)$auth->edit;
-                $mediaItem['del'] = (int)$auth->del;
-                $mediaItem['modifyPermissions'] = (int)$auth->modifyPermissions;
-                $media[] = $mediaItem;
-            }
-        }
-
-        return $media;
     }
 
     /**

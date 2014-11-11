@@ -75,6 +75,11 @@ class image extends Module
         // Provide some extra form fields
         $formFields = array();
 
+        $formFields[] = FormManager::AddCheckbox('replaceBackgroundImages', __('Replace background images?'), 
+                0, 
+                __('If the current image is used as a background, should the new image replace it?'), 
+                '', 'replacement-controls');
+
         if ($this->layoutid != '' && $this->regionid != '') {
 
             $formFields[] = FormManager::AddCombo(

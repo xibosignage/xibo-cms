@@ -273,18 +273,19 @@ abstract class Module implements ModuleInterface
                     $dbh = PDOConnect::init();
                 
                     // Load what we know about this media into the object
-                    $rows = $this->user->MediaList(NULL, array('mediaId' => $mediaid));
+                    // this is unauthenticated at this point
+                    $rows = Media::Entries(NULL, array('mediaId' => $mediaid));
                     
                     if (count($rows) != 1) {
                         return $this->SetError(__('Unable to find media record with the provided ID'));
                     }
 
-                    $this->duration = $rows[0]['duration'];
-                    $this->name = $rows[0]['media'];
-                    $this->originalUserId = $rows[0]['ownerid'];
-                    $this->storedAs = $rows[0]['storedas'];
-                    $this->originalFilename = $rows[0]['filename'];
-                    $this->tags = $rows[0]['tags'];
+                    $this->duration = $rows[0]->duration;
+                    $this->name = $rows[0]->name;
+                    $this->originalUserId = $rows[0]->ownerId;
+                    $this->storedAs = $rows[0]->storedAs;
+                    $this->originalFilename = $rows[0]->fileName;
+                    $this->tags = $rows[0]->tags;
                 }
                 catch (Exception $e) {
                     
@@ -997,13 +998,13 @@ END;
             __('Tag this media. Comma Separated.'), 'n');
 
         if ($this->assignable) {
-            $formFields[] = FormManager::AddCheckbox('replaceInLayouts', __('Update this media in all layouts it is assigned to.'), 
+            $formFields[] = FormManager::AddCheckbox('replaceInLayouts', __('Update this media in all layouts it is assigned to?'), 
                 ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0), 
                 __('Note: It will only be replaced in layouts you have permission to edit.'), 
                 'r');
         }
 
-        $formFields[] = FormManager::AddCheckbox('deleteOldVersion', __('Delete the old version.'), 
+        $formFields[] = FormManager::AddCheckbox('deleteOldVersion', __('Delete the old version?'), 
                 ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0), 
                 __('Completely remove the old version of this media item if a new file is being uploaded.'), 
                 '');
@@ -1199,8 +1200,11 @@ END;
         }
 
         // Edit from the library - check to see if we are replacing this media in *all* layouts.
-        if (Kit::GetParam('replaceInLayouts', _POST, _CHECKBOX) == 1)
-            $this->ReplaceMediaInAllLayouts($mediaid, $this->mediaid, $this->duration);
+        $replaceInLayouts = (Kit::GetParam('replaceInLayouts', _POST, _CHECKBOX) == 1);
+        $replaceBackgroundImages = (Kit::GetParam('replaceBackgroundImages', _POST, _CHECKBOX) == 1);
+
+        if ($replaceInLayouts || $replaceBackgroundImages)
+            $this->ReplaceMediaInAllLayouts($replaceInLayouts, $replaceBackgroundImages, $mediaid, $this->mediaid, $this->duration);
 
         // Do we need to delete the old media item?
         if ($tmpName != '' && Kit::GetParam('deleteOldVersion', _POST, _CHECKBOX) == 1) {
@@ -1216,10 +1220,8 @@ END;
      * @param <type> $oldMediaId
      * @param <type> $newMediaId
      */
-    private function ReplaceMediaInAllLayouts($oldMediaId, $newMediaId)
+    private function ReplaceMediaInAllLayouts($replaceInLayouts, $replaceBackgroundImages, $oldMediaId, $newMediaId)
     {
-        Kit::ClassLoader('region');
-        $db =& $this->db;
         $count = 0;
         
         Debug::LogEntry('audit', sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
@@ -1232,8 +1234,7 @@ END;
             $sth_update = $dbh->prepare('UPDATE lklayoutmedia SET mediaid = :media_id WHERE lklayoutmediaid = :lklayoutmediaid');
 
             // Loop through a list of layouts this user has access to
-            foreach($this->user->LayoutList() as $layout)
-            {
+            foreach($this->user->LayoutList() as $layout) {
                 $layoutId = $layout['layoutid'];
                 
                 // Does this layout use the old media id?
@@ -1250,7 +1251,8 @@ END;
                 Debug::LogEntry('audit', sprintf('%d linked media items for layoutid %d', count($results), $layoutId), 'module', 'ReplaceMediaInAllLayouts');
                 
                 // Create a region object for later use (new one each time)
-                $region = new region($db);
+                $layout = new Layout();
+                $region = new region($this->db);
 
                 // Loop through each media link for this layout
                 foreach ($results as $row)
@@ -1258,29 +1260,46 @@ END;
                     // Get the LKID of the link between this layout and this media.. could be more than one?
                     $lkId = $row['lklayoutmediaid'];
                     $regionId = $row['regionid'];
-    
-                    // Get the Type of this media
-                    if (!$type = $region->GetMediaNodeType($layoutId, '', '', $lkId))
-                        continue;
-    
-                    // Create a new media node use it to swap the nodes over
-                    Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
-                    require_once('modules/' . $type . '.module.php');
-    
-                    // Create a new module as if we were assigning it for the first time
-                    if (!$module = new $type($db, $this->user, $newMediaId))
-                        return false;
-    
-                    // Sets the URI field
-                    if (!$module->SetRegionInformation($layoutId, $regionId))
-                        return false;
-    
-                    // Get the media xml string to use in the swap.
-                    $mediaXmlString = $module->AsXml();
-    
-                    // Swap the nodes
-                    if (!$region->SwapMedia($layoutId, $regionId, $lkId, $oldMediaId, $newMediaId, $mediaXmlString))
-                        return false;
+
+                    if ($regionId == 'background') {
+
+                        Debug::Audit('Replacing background image');
+
+                        if (!$replaceBackgroundImages)
+                            continue;
+
+                        // Straight swap this background image node.
+                        if (!$layout->EditBackgroundImage($layoutId, $newMediaId))
+                            return false;
+                    }
+                    else {
+
+                        if (!$replaceInLayouts)
+                            continue;
+
+                        // Get the Type of this media
+                        if (!$type = $region->GetMediaNodeType($layoutId, '', '', $lkId))
+                            continue;
+        
+                        // Create a new media node use it to swap the nodes over
+                        Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
+                        require_once('modules/' . $type . '.module.php');
+        
+                        // Create a new module as if we were assigning it for the first time
+                        if (!$module = new $type($this->db, $this->user, $newMediaId))
+                            return false;
+        
+                        // Sets the URI field
+                        if (!$module->SetRegionInformation($layoutId, $regionId))
+                            return false;
+        
+                        // Get the media xml string to use in the swap.
+                        $mediaXmlString = $module->AsXml();
+        
+                        // Swap the nodes
+                        if (!$region->SwapMedia($layoutId, $regionId, $lkId, $oldMediaId, $newMediaId, $mediaXmlString))
+                            return false;
+                    }
     
                     // Update the LKID with the new media id
                     $sth_update->execute(array(

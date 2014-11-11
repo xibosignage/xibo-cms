@@ -29,7 +29,129 @@ class Media extends Data
     private $validExtensions;
 
     public $mediaId;
+    public $ownerId;
+    public $parentId;
+
+    public $name;
+    public $mediaType;
     public $storedAs;
+    public $fileName;
+    public $tags;
+    
+    public $fileSize;
+    public $duration;
+
+    public static function Entries($sort_order = array('name'), $filter_by = array())
+    {
+        $entries = array();
+        
+        try {
+            $dbh = PDOConnect::init();
+
+            $params = array();
+            $SQL  = '';
+            $SQL .= "SELECT  media.mediaID, ";
+            $SQL .= "   media.name, ";
+            $SQL .= "   media.type, ";
+            $SQL .= "   media.duration, ";
+            $SQL .= "   media.userID, ";
+            $SQL .= "   media.FileSize, ";
+            $SQL .= "   media.storedAs, ";
+            $SQL .= "   IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
+            
+            if (Kit::GetParam('showTags', $filter_by, _INT) == 1)
+                $SQL .= " tag.tag AS tags, ";
+            else
+                $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
+            
+            $SQL .= "   media.originalFileName ";
+            $SQL .= " FROM media ";
+            $SQL .= "   LEFT OUTER JOIN media parentmedia ";
+            $SQL .= "   ON parentmedia.MediaID = media.MediaID ";
+
+            if (Kit::GetParam('showTags', $filter_by, _INT) == 1) {
+                $SQL .= " LEFT OUTER JOIN lktagmedia ON lktagmedia.mediaId = media.mediaId ";
+                $SQL .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
+            }
+
+            $SQL .= " WHERE media.isEdited = 0 AND media.is_module = 0 ";
+            
+            if (Kit::GetParam('name', $filter_by, _STRING) != '') {
+                // convert into a space delimited array
+                $names = explode(' ', Kit::GetParam('name', $filter_by, _STRING));
+                $i = 0;
+                foreach($names as $searchName) {
+                    $i++;
+                    // Not like, or like?
+                    if (substr($searchName, 0, 1) == '-') {
+                        $SQL .= " AND media.name NOT LIKE :notLike ";
+                        $params['notLike'] = '%' . ltrim($searchName, '-') . '%';
+                    }
+                    else {
+                        $SQL .= " AND media.name LIKE :like ";
+                        $params['like'] = '%' . $searchName . '%';
+                    }
+                }
+            }
+
+            if (Kit::GetParam('mediaId', $filter_by, _INT, -1) != -1) {
+                $SQL .= " AND media.mediaId = :mediaId ";
+                $params['mediaId'] = Kit::GetParam('mediaId', $filter_by, _INT);
+            }
+
+            if (Kit::GetParam('type', $filter_by, _STRING) != '') {
+                $SQL .= 'AND media.type = :type';
+                $params['type'] = Kit::GetParam('type', $filter_by, _STRING);
+            }
+
+            if (Kit::GetParam('ownerid', $filter_by, _INT) != 0) {
+                $SQL .= " AND media.userid = :ownerId ";
+                $params['ownerId'] = Kit::GetParam('ownerid', $filter_by, _INT);
+            }
+            
+            if (Kit::GetParam('retired', $filter_by, _INT, -1) == 1)
+                $SQL .= " AND media.retired = 1 ";
+            
+            if (Kit::GetParam('retired', $filter_by, _INT, -1) == 0)
+                $SQL .= " AND media.retired = 0 ";          
+            
+            // Sorting?
+            if (is_array($sort_order))
+                $SQL .= 'ORDER BY ' . implode(',', $sort_order);
+
+            Debug::Audit(sprintf('Retrieving list of media with SQL: %s. Params: %s', $SQL, var_export($params, true)));
+        
+            $sth = $dbh->prepare($SQL);
+            $sth->execute($params);
+
+            foreach ($sth->fetchAll() as $row) {
+                $media = new Media();
+                $media->mediaId = Kit::ValidateParam($row['mediaID'], _INT);
+                $media->name = Kit::ValidateParam($row['name'], _STRING);
+                $media->mediaType = Kit::ValidateParam($row['type'], _WORD);
+                $media->duration = Kit::ValidateParam($row['duration'], _DOUBLE);
+                $media->ownerId = Kit::ValidateParam($row['userID'], _INT);
+                $media->fileSize = Kit::ValidateParam($row['FileSize'], _INT);
+                $media->parentId = Kit::ValidateParam($row['ParentID'], _INT);
+                $media->fileName = Kit::ValidateParam($row['originalFileName'], _STRING);
+                $media->tags = Kit::ValidateParam($row['tags'], _STRING);
+                $media->storedAs = Kit::ValidateParam($row['storedAs'], _STRING);
+
+                $entries[] = $media;
+            }
+        
+            return $entries;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
 
     /**
      * Adds a new media record

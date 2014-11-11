@@ -1038,6 +1038,91 @@ class Layout extends Data
         }
     }
 
+    public function EditBackgroundImage($layoutId, $backgroundImageId)
+    {
+        try {
+            $dbh = PDOConnect::init();
+                
+            if ($layoutId == 0)
+                $this->ThrowError(__('Layout not selected'));
+    
+            // Allow for the 0 media idea (no background image)
+            if ($backgroundImageId == 0)
+            {
+                $bg_image = '';
+            }
+            else
+            {
+                // Get the file URI
+                $sth = $dbh->prepare('SELECT StoredAs FROM media WHERE MediaID = :mediaid');
+                $sth->execute(array(
+                    'mediaid' => $backgroundImageId
+                ));
+    
+                // Look up the bg image from the media id given
+                if (!$row = $sth->fetch())
+                    $this->ThrowError(__('Cannot find the background image selected'));
+
+                $bg_image = Kit::ValidateParam($row['StoredAs'], _STRING);
+
+                // Tag the background image as a background image
+                $media = new Media();
+                $media->tag('background', $backgroundImageId);
+            }
+
+            $region = new region();
+            
+            if (!$region->EditBackgroundImage($layoutId, $bg_image))
+                throw new Exception("Error Processing Request", 1);
+                    
+            // Update the layout record with the new background
+            $sth = $dbh->prepare('UPDATE layout SET backgroundimageid = :backgroundimageid WHERE layoutid = :layoutid');
+            $sth->execute(array(
+                'backgroundimageid' => $backgroundImageId,
+                'layoutid' => $layoutId
+            ));
+
+            // Check to see if we already have a LK record for this.
+            $lkSth = $dbh->prepare('SELECT lklayoutmediaid FROM `lklayoutmedia` WHERE layoutid = :layoutid AND regionID = :regionid');
+            $lkSth->execute(array('layoutid' => $layoutId, 'regionid' => 'background'));
+
+            if ($lk = $lkSth->fetch()) {
+                // We have one
+                if ($backgroundImageId != 0) {
+                    // Update it
+                    if (!$region->UpdateDbLink($lk['lklayoutmediaid'], $backgroundImageId))
+                        $this->ThrowError(__('Unable to update background link'));
+                }
+                else {
+                    // Delete it
+                    if (!$region->RemoveDbLink($lk['lklayoutmediaid']))
+                        $this->ThrowError(__('Unable to remove background link'));
+                }
+            }
+            else {
+                // None - do we need one?
+                if ($backgroundImageId != 0) {
+                    if (!$region->AddDbLink($layoutId, 'background', $backgroundImageId))
+                        $this->ThrowError(__('Unable to create background link'));
+                }
+            }
+    
+            // Is this layout valid
+            $this->SetValid($layoutId);
+    
+            return true;  
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                return $this->SetError(__("Unable to update background information"));
+        
+            return false;
+        }
+    }
+
     /**
      * Gets a list of regions in the provided layout
      * @param [int] $layoutId [The Layout ID]
