@@ -360,7 +360,7 @@ function XiboGridRender(gridId, autoRefresh) {
                         headerTemplate: '{content} {icon}',
                         widgetOptions: {
                             pager_output: '{startRow} - {endRow} / {filteredRows} ({totalRows})',
-                            pager_removeRows: true,
+                            pager_removeRows: false,
                             pager_savePages: true,
                             pager_size: response.pageSize,
                             pager_css: {
@@ -394,9 +394,11 @@ function XiboGridRender(gridId, autoRefresh) {
 
                             $(sortingDiv).find('a.img-replace').each(function() {
                                 // Swap out the image
-                                var img = $("<img>").prop("src", $(this).data().imgSrc);
-                                $(this).children().remove();
-                                $(this).append(img);
+                                if ($(this).closest("tr").css("display") != 'none') {
+                                    var img = $("<img>").prop("src", $(this).data().imgSrc);
+                                    $(this).children().remove();
+                                    $(this).append(img);
+                                }
                             });
                         });
 
@@ -418,13 +420,14 @@ function XiboGridRender(gridId, autoRefresh) {
                 }
             }
             
-
             // Render any images in the grid (now that it is in pages)
             $(sortingDiv).find('a.img-replace').each(function() {
                 // Swap out the image
-                var img = $("<img>").prop("src", $(this).data().imgSrc);
-                $(this).children().remove();
-                $(this).append(img);
+                if ($(this).closest("tr").css("display") != 'none') {
+                    var img = $("<img>").prop("src", $(this).data().imgSrc);
+                    $(this).children().remove();
+                    $(this).append(img);
+                }
             });
 
             // Multi-select check box
