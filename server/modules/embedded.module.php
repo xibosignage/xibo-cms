@@ -42,6 +42,7 @@ class embedded extends Module
      */
     public function AddForm()
     {
+        $this->response = new ResponseManager();
         $db         =& $this->db;
         $user       =& $this->user;
                 
@@ -112,6 +113,7 @@ function EmbedInit()
      */
     public function EditForm()
     {
+        $this->response = new ResponseManager();
         $db         =& $this->db;
         
         $layoutid   = $this->layoutid;
@@ -191,6 +193,7 @@ function EmbedInit()
      */
     public function AddMedia()
     {
+        $this->response = new ResponseManager();
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;
@@ -252,6 +255,7 @@ function EmbedInit()
      */
     public function EditMedia()
     {
+        $this->response = new ResponseManager();
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;

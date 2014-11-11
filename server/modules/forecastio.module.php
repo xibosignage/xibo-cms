@@ -126,6 +126,7 @@ class ForecastIo extends Module
      */
     public function AddForm()
     {
+        $this->response = new ResponseManager();
         // This is the logged in user and can be used to assess permissions
         $user =& $this->user;
 
@@ -221,6 +222,7 @@ class ForecastIo extends Module
      */
     public function AddMedia()
     {
+        $this->response = new ResponseManager();
         // Same member variables as the Form call, except with POST variables for your form fields.
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
@@ -260,7 +262,10 @@ class ForecastIo extends Module
      * Return the Edit Form as HTML
      * @return
      */
-    public function EditForm() {
+    public function EditForm()
+    {
+        $this->response = new ResponseManager();
+
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
         {
@@ -357,6 +362,8 @@ class ForecastIo extends Module
      */
     public function EditMedia()
     {
+        $this->response = new ResponseManager();
+        
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
         {

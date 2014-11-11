@@ -44,6 +44,7 @@ class text extends Module
      */
     public function AddForm()
     {
+        $this->response = new ResponseManager();
         $db         =& $this->db;
         $user       =& $this->user;
 
@@ -140,6 +141,7 @@ class text extends Module
      */
     public function EditForm()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
         $user =& $this->user;
         $layoutid = $this->layoutid;
@@ -255,6 +257,7 @@ class text extends Module
      */
     public function AddMedia()
     {
+        $this->response = new ResponseManager();
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;
@@ -313,6 +316,7 @@ class text extends Module
      */
     public function EditMedia()
     {
+        $this->response = new ResponseManager();
         $user =& $this->user;
 
         $layoutid = $this->layoutid;

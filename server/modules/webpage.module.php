@@ -43,6 +43,7 @@ class webpage extends Module
      */
     public function AddForm()
     {
+        $this->response = new ResponseManager();
         $db         =& $this->db;
         $user       =& $this->user;
                 
@@ -145,6 +146,7 @@ class webpage extends Module
      */
     public function EditForm()
     {
+        $this->response = new ResponseManager();
         $db         =& $this->db;
         
         $layoutid   = $this->layoutid;
@@ -253,6 +255,7 @@ class webpage extends Module
      */
     public function AddMedia()
     {
+        $this->response = new ResponseManager();
         $db         =& $this->db;
         
         $layoutid   = $this->layoutid;
@@ -306,8 +309,7 @@ class webpage extends Module
         //Set this as the session information
         setSession('content', 'type', 'webpage');
         
-    if ($this->showRegionOptions)
-        {
+        if ($this->showRegionOptions) {
             // We want to load a new form
             $this->response->loadForm = true;
             $this->response->loadFormUri = $url;
@@ -322,6 +324,7 @@ class webpage extends Module
      */
     public function EditMedia()
     {
+        $this->response = new ResponseManager();
         $db         =& $this->db;
         
         $layoutid   = $this->layoutid;

@@ -304,7 +304,8 @@ class XMDSSoap4 {
             $SQL  = "
                     SELECT 1 AS DownloadOrder, 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml 
                        FROM `media`
-                     WHERE media.type IN ('module', 'font') 
+                     WHERE media.type = 'font'
+                        OR (media.type = 'module' AND media.moduleSystemFile = 1) 
                     UNION
                     ";
             $SQL .= " SELECT 4 AS DownloadOrder, 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, MD5(layout.xml) AS `MD5`, NULL AS FileSize, layout.xml AS xml ";

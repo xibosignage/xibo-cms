@@ -33,7 +33,8 @@ class datasetview extends Module
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
 
-    public function InstallFiles() {
+    public function InstallFiles()
+    {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
@@ -47,6 +48,7 @@ class datasetview extends Module
      */
     public function AddForm()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
         $user =& $this->user;
 
@@ -97,6 +99,7 @@ class datasetview extends Module
      */
     public function EditForm()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
         $user =& $this->user;
 
@@ -236,6 +239,7 @@ class datasetview extends Module
      */
     public function AddMedia()
     {
+        $this->response = new ResponseManager();
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
 
@@ -300,6 +304,7 @@ class datasetview extends Module
      */
     public function EditMedia()
     {
+        $this->response = new ResponseManager();
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
         $mediaid = $this->mediaid;
@@ -386,8 +391,8 @@ class datasetview extends Module
         return $this->response;
     }
 
-    public function DeleteMedia() {
-
+    public function DeleteMedia()
+    {
         $dataSetId = $this->GetOption('datasetid');
 
         Debug::LogEntry('audit', sprintf('Deleting Media with DataSetId %d', $dataSetId), 'datasetview', 'DeleteMedia');

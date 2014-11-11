@@ -36,6 +36,7 @@ class counter extends Module
      */
     public function AddForm()
     {
+        $this->response = new ResponseManager();
         $db 		=& $this->db;
         $user		=& $this->user;
 
@@ -87,6 +88,7 @@ class counter extends Module
      */
     public function EditForm()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
         $user =& $this->user;
         $layoutid = $this->layoutid;
@@ -157,6 +159,7 @@ class counter extends Module
      */
     public function AddMedia()
     {
+        $this->response = new ResponseManager();
         $db 		=& $this->db;
 
         $layoutid 	= $this->layoutid;
@@ -216,6 +219,7 @@ class counter extends Module
      */
     public function EditMedia()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
         $user =& $this->user;
 

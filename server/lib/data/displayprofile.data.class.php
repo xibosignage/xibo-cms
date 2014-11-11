@@ -91,7 +91,7 @@ class DisplayProfile extends Data {
           
             if (!$row = $sth->fetch()) {
                 // Return the client default
-                include_once('config/client.config.php');
+                include('config/client.config.php');
                 $this->name = $CLIENT_CONFIG[$this->type]['synonym'];
                 $this->type = $this->type;
                 $this->config = $CLIENT_CONFIG[$this->type]['settings'];

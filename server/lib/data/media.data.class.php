@@ -27,7 +27,6 @@ class Media extends Data
     private $moduleInfoLoaded;
     private $regionSpecific;
     private $validExtensions;
-    public $valid;
 
     public $mediaId;
     public $ownerId;
@@ -41,6 +40,8 @@ class Media extends Data
     
     public $fileSize;
     public $duration;
+    public $valid;
+    public $moduleSystemFile;
 
     public static function Entries($sort_order = array('name'), $filter_by = array())
     {
@@ -59,6 +60,7 @@ class Media extends Data
             $SQL .= "   media.FileSize, ";
             $SQL .= "   media.storedAs, ";
             $SQL .= "   media.valid, ";
+            $SQL .= "   media.moduleSystemFile, ";
             $SQL .= "   IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
             
             if (Kit::GetParam('showTags', $filter_by, _INT) == 1)
@@ -76,7 +78,11 @@ class Media extends Data
                 $SQL .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
             }
 
-            $SQL .= " WHERE media.isEdited = 0 AND media.is_module = 0 ";
+            $SQL .= " WHERE media.isEdited = 0 ";
+
+            if (Kit::GetParam('allModules', $filter_by, _INT) == 0) {
+                $SQL .= "AND media.type <> 'module'";
+            }
             
             if (Kit::GetParam('name', $filter_by, _STRING) != '') {
                 // convert into a space delimited array
@@ -144,6 +150,7 @@ class Media extends Data
                 $media->tags = Kit::ValidateParam($row['tags'], _STRING);
                 $media->storedAs = Kit::ValidateParam($row['storedAs'], _STRING);
                 $media->valid = Kit::ValidateParam($row['valid'], _INT);
+                $media->moduleSystemFile = Kit::ValidateParam($row['moduleSystemFile'], _INT);
 
                 $entries[] = $media;
             }
@@ -812,13 +819,41 @@ class Media extends Data
     }
 
     /**
+     * Adds a module file from a URL
+     */
+    public function addModuleFileFromUrl($url, $name, $moduleSystemFile = false, $force = false)
+    {
+        Debug::Audit('Adding: ' . $url . ' with Name: ' . $name);
+
+        // See if we already have it
+        // It doesn't matter than we might have already done this, its cached.
+        $media = $this->moduleFileExists($name);
+
+        //Debug::Audit('Module File: ' . var_export($media, true));
+
+        if ($media === false || $force) {
+            Debug::Audit('Media not valid, forcing update.');
+            
+            $fileName = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $name;
+            
+            // Put in a temporary folder
+            file_put_contents($fileName, fopen($url, 'r'));
+            
+            return $this->addModuleFile($fileName, $moduleSystemFile, true);
+        }
+        else {
+            return $media['mediaId'];
+        }
+    }
+
+    /**
      * Adds a module file. 
      * Module files are hidden from the UI and supplementary files that will be used
      * by the module that added them.
      * @param string  $file  The path to the file that needs adding
      * @param boolean $force Whether to force an update to the file or not
      */
-    public function addModuleFile($file, $force = false)
+    public function addModuleFile($file, $moduleSystemFile = true, $force = false)
     {
         try {
             $name = basename($file);
@@ -871,8 +906,8 @@ class Media extends Data
             }
             else {
                 // All OK to insert this record
-                $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired, is_module, storedAs, FileSize, MD5) ";
-                $SQL .= "VALUES (:name, :type, :duration, :originalfilename, 1, :retired, 1, :storedas, :filesize, :md5) ";
+                $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired, moduleSystemFile, storedAs, FileSize, MD5) ";
+                $SQL .= "VALUES (:name, :type, :duration, :originalfilename, 1, :retired, :moduleSystemFile, :storedas, :filesize, :md5) ";
 
                 $sth = $dbh->prepare($SQL);
                 $sth->execute(array(
@@ -883,7 +918,8 @@ class Media extends Data
                         'retired' => 0,
                         'storedas' => $name,
                         'filesize' => $fileSize,
-                        'md5' => $md5
+                        'md5' => $md5,
+                        'moduleSystemFile' => (($moduleSystemFile) ? 1 : 0)
                     ));
 
                 $mediaId = $dbh->lastInsertId();
@@ -917,9 +953,9 @@ class Media extends Data
             if ($this->_moduleFiles == NULL || count($this->_moduleFiles) < 1) {
                 $dbh = PDOConnect::init();
             
-                $sth = $dbh->prepare('SELECT storedAs, mediaId, valid FROM `media` WHERE is_module = :is_module');
+                $sth = $dbh->prepare('SELECT storedAs, mediaId, valid FROM `media` WHERE type = :type');
                 $sth->execute(array(
-                        'is_module' => 1
+                        'type' => 'module'
                     ));
                 
                 $this->_moduleFiles = array();

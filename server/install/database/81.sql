@@ -8,7 +8,7 @@ VALUES (
  'DETECT_LANGUAGE',  '1',  'checkbox',  'Detect the browser language?', NULL ,  'regional',  '1',  'Detect Language',  '',  '40',  '1',  '1',  'checkbox'
 );
 
-ALTER TABLE  `media` ADD  `is_module` TINYINT NOT NULL DEFAULT  '0';
+ALTER TABLE  `media` ADD  `moduleSystemFile` TINYINT NOT NULL DEFAULT  '0';
 
 INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`) VALUES 
 (NULL, 'font', 'Font', '1', '0', 'A font to use in other Modules', 'forms/library.gif', '1', 'ttf,otf,eot,svg,woff', '0', '0');

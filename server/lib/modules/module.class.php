@@ -101,9 +101,8 @@ abstract class Module implements ModuleInterface
         $this->regionid = $regionid;
         $this->lkid     = $lkid;
 
-        // New region and response
+        // New region
         $this->region 	= new region($db);
-        $this->response = new ResponseManager();
 
         $this->existingMedia = false;
         $this->assignedMedia = false;
@@ -274,7 +273,7 @@ abstract class Module implements ModuleInterface
                 
                     // Load what we know about this media into the object
                     // this is unauthenticated at this point
-                    $rows = Media::Entries(NULL, array('mediaId' => $mediaid));
+                    $rows = Media::Entries(NULL, array('mediaId' => $mediaid, 'allModules' => 1));
                     
                     if (count($rows) != 1) {
                         return $this->SetError(__('Unable to find media record with the provided ID'));
@@ -535,6 +534,7 @@ XML;
 	{
             $db =& $this->db;
             $helpManager = new HelpManager($db, $this->user);
+            $this->response = new ResponseManager();
             $this->response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Media', 'Delete') . '")');
 
             //Parameters
@@ -690,8 +690,7 @@ END;
 	public function DeleteMedia()
 	{
         $db =& $this->db;
-
-        Kit::ClassLoader('Media');
+        $this->response = new ResponseManager();
         $mediaObject = new Media($db);
 
         $layoutid = $this->layoutid;
@@ -813,6 +812,7 @@ END;
         global $session;
         $db =& $this->db;
         $user =& $this->user;
+        $this->response = new ResponseManager();
 
         // Check we have room in the library
         $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
@@ -915,6 +915,7 @@ END;
         global $session;
         $db =& $this->db;
         $user =& $this->user;
+        $this->response = new ResponseManager();
 
         // Would like to get the regions width / height
         $layoutid = $this->layoutid;
@@ -1038,6 +1039,7 @@ END;
 	 */
     public function AddLibraryMedia($fileId, $mediaName, $duration, $fileName)
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
@@ -1100,6 +1102,7 @@ END;
 
     protected function EditLibraryMedia()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
         $user =& $this->user;
         $layoutid = $this->layoutid;
@@ -1416,7 +1419,7 @@ END;
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = $this->response;
+        $response = new ResponseManager();
         $helpManager = new HelpManager($db, $user);
 
         if (!$this->auth->modifyPermissions)
@@ -1489,7 +1492,7 @@ END;
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = $this->response;
+        $response = new ResponseManager();
 
         Kit::ClassLoader('mediagroupsecurity');
         Kit::ClassLoader('layoutmediagroupsecurity');
@@ -1635,6 +1638,8 @@ END;
      */
     public function TransitionEditForm()
     {
+        $this->response = new ResponseManager();
+
         if (!$this->auth->edit)
         {
             $this->response->SetError('You do not have permission to edit this media.');
@@ -1747,6 +1752,8 @@ END;
      */
     public function TransitionEdit()
     {
+        $this->response = new ResponseManager();
+
         if (!$this->auth->edit)
         {
             $this->response->SetError('You do not have permission to edit this media.');
@@ -2175,7 +2182,8 @@ END;
 	 * @return 
 	 * @param $download Boolean
 	 */
-    public function ReturnFile($fileName = '') {
+    public function ReturnFile($fileName = '')
+    {
         // Return the raw flash file with appropriate headers
     	$library = Config::GetSetting("LIBRARY_LOCATION");
 

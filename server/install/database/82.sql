@@ -236,7 +236,7 @@ VALUES (
 
 ALTER TABLE  `media` ADD  `valid` TINYINT( 1 ) NOT NULL DEFAULT  '1';
 
-UPDATE `media` SET valid = 0 WHERE is_module = 1;
+UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1;
 UPDATE `version` SET `app_ver` = '1.7.0-beta', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '82';

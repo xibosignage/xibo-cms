@@ -133,6 +133,8 @@ class Twitter extends Module
      */
     public function AddForm()
     {
+        $this->response = new ResponseManager();
+
         // This is the logged in user and can be used to assess permissions
         $user =& $this->user;
 
@@ -255,6 +257,8 @@ class Twitter extends Module
      */
     public function AddMedia()
     {
+        $this->response = new ResponseManager();
+
         // Same member variables as the Form call, except with POST variables for your form fields.
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
@@ -302,6 +306,8 @@ class Twitter extends Module
      */
     public function EditForm()
     {
+        $this->response = new ResponseManager();
+
         // This is the logged in user and can be used to assess permissions
         $user =& $this->user;
 
@@ -424,6 +430,8 @@ class Twitter extends Module
      */
     public function EditMedia()
     {
+        $this->response = new ResponseManager();
+
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit) {
             $this->response->SetError('You do not have permission to edit this assignment.');
@@ -630,7 +638,7 @@ class Twitter extends Module
         return $body;
     }
 
-    private function getTwitterFeed($displayId = 0)
+    private function getTwitterFeed($displayId = 0, $isPreview = true)
     {
         if (!extension_loaded('curl')) {
             trigger_error(__('cURL extension is required for Twitter'));
@@ -683,7 +691,7 @@ class Twitter extends Module
             $data = Cache::get($key);
         }
 
-        //var_dump($data);
+        //Debug::Audit(var_export(json_encode($data), true));
 
         // Get the template
         $template = $this->GetRawNode('template');
@@ -694,6 +702,9 @@ class Twitter extends Module
 
         // Build an array to return
         $return = array();
+
+        // Media Object to get profile images
+        $media = new Media();
 
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {
@@ -709,6 +720,17 @@ class Twitter extends Module
 
                     case '[User]':
                         $replace = $tweet->user->screen_name;
+                        break;
+
+                    case '[ProfileImage]':
+                        // Grab the profile image
+                        $file = $media->addModuleFileFromUrl($tweet->user->profile_image_url, 'twitter_' . $tweet->user->id);
+
+                        $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file . '" />' : '<img src="' . $file . '" />';
+                        break;
+
+                    default:
+                        $replace = '';
                 }
 
                 $rowString = str_replace($sub, $replace, $rowString);
@@ -736,16 +758,17 @@ class Twitter extends Module
     {
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
 
         // Replace the View Port Width?
-        if (isset($_GET['preview']))
+        if ($isPreview)
             $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
 
         // Information from the Module
         $duration = $this->duration;
         
         // Generate a JSON string of substituted items.
-        $items = $this->getTwitterFeed();
+        $items = $this->getTwitterFeed($displayId, $isPreview);
 
         // Return empty string if there are no items to show.
         if (count($items) == 0)
@@ -785,7 +808,6 @@ class Twitter extends Module
         }
 
         // Add our fonts.css file
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $headContent .= '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
         $headContent .= '<link href="' . (($isPreview) ? 'modules/theme/twitter/' : '') . 'emoji.css" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
