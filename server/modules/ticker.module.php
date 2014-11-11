@@ -692,6 +692,7 @@ class ticker extends Module
         $effect = $this->GetOption('effect', $oldDirection);
 
         $options = array(
+            'type' => $this->type,
             'fx' => $effect,
             'duration' => $duration,
             'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),

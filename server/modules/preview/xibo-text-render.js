@@ -86,13 +86,21 @@ jQuery.fn.extend({
             // Loop around each of the items we have been given and append them to this element (in a div)
             for (var i = 0; i < items.length; i++) {
 
-                // If we need to set pages, have we switched over to a new page?
-                if (options.fx === "single" && (options.itemsPerPage > 1 && (itemsThisPage >= options.itemsPerPage || i === 0))) {
-                    // Append a new page to the body
-                    appendTo = $("<div/>").addClass("page").appendTo(this);
+                // We don't add any pages for marquee / none transitions.
+                if (options.fx != "none" &&
+                    options.fx != "marqueeLeft" &&
+                    options.fx != "marqueeRight" &&
+                    options.fx != "marqueeUp" &&
+                    options.fx != "marqueeDown") {
 
-                    // Reset the row count on this page
-                    itemsThisPage = 0;
+                    // If we need to set pages, have we switched over to a new page?
+                    if (options.itemsPerPage > 1 && (itemsThisPage >= options.itemsPerPage || i === 0)) {
+                        // Append a new page to the body
+                        appendTo = $("<div/>").addClass("page").appendTo(this);
+
+                        // Reset the row count on this page
+                        itemsThisPage = 0;
+                    }
                 }
 
                 // For each item output a DIV
@@ -121,7 +129,7 @@ jQuery.fn.extend({
                 var duration = (options.durationIsPerItem) ? options.duration : options.duration / numberOfSlides;
 
                 // If we only have 1 item, then we are in trouble and need to duplicate it.
-                if ($(slides).length <= 1) {
+                if ($(slides).length <= 1 && options.type == 'text') {
                     // Change our slide tag to be the paragraphs inside
                     slides = slides + ' p';
                 }

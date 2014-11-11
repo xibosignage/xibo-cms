@@ -24,6 +24,8 @@
  *
  * The class name must be equal to the $this->type and the file name must be equal to modules/type.module.php
  */ 
+include_once('modules/3rdparty/emoji.php');
+
 class Twitter extends Module
 {
     public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '') {
@@ -70,7 +72,11 @@ class Twitter extends Module
 
     private function InstallFiles()
     {
-        
+        $media = new Media();
+        $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
+        $media->addModuleFile('modules/preview/xibo-text-render.js');
+        $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
+        $media->addModuleFileFromFolder('modules/theme/twitter/');
     }
 
     /**
@@ -143,6 +149,7 @@ class Twitter extends Module
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
         $tabs[] = FormManager::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = FormManager::AddTab('effect', __('Effect'));
         $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
         Theme::Set('form_tabs', $tabs);
 
@@ -157,8 +164,27 @@ class Twitter extends Module
         $formFields['general'][] = FormManager::AddText('searchTerm', __('Search Term'), NULL, 
             __('Search term. You can test your search term in the twitter.com search box first.'), 's', 'required');
 
+        // Type
+        $formFields['general'][] = FormManager::AddCombo('resultType', __('Type'), 'mixed',
+            array(
+                array('typeid' => 'mixed', 'type' => __('Mixed')), 
+                array('typeid' => 'recent', 'type' => __('Recent')),
+                array('typeid' => 'popular', 'type' => __('Popular')),
+            ),
+            'typeid',
+            'type', 
+            __('Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.'), 't', 'required');
+
+        // Distance
+        $formFields['general'][] = FormManager::AddNumber('tweetDistance', __('Distance'), NULL,
+            __('Distance in miles that the tweets should be returned from. Set to 0 for no restrictions.'), 'd');
+
+        // Distance
+        $formFields['general'][] = FormManager::AddNumber('tweetCount', __('Count'), 15, 
+            __('The number of Tweets to return.'), 'c');
+
         // Common fields
-        $formFields['general'][] = FormManager::AddCombo(
+        $formFields['effect'][] = FormManager::AddCombo(
                 'effect', 
                 __('Effect'), 
                 $this->GetOption('effect'),
@@ -183,16 +209,20 @@ class Twitter extends Module
                 __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
                 'e');
 
-        $formFields['general'][] = FormManager::AddNumber('speed', __('Speed'), NULL, 
+        $formFields['effect'][] = FormManager::AddNumber('speed', __('Speed'), NULL, 
             __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
 
         // A list of web safe colours
-        $formFields['general'][] = FormManager::AddText('backgroundColor', __('Background Colour'), NULL, 
+        $formFields['advanced'][] = FormManager::AddText('backgroundColor', __('Background Colour'), NULL, 
             __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
 
         // Add a text template
         $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, '[Tweet]', 
             __('Enter the template. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+
+        // Field empty
+        $formFields['advanced'][] = FormManager::AddText('noTweetsMessage', __('No tweets'), NULL, 
+            __('A message to display when there are no tweets returned by the search query'), 'n');
 
         // Field for the style sheet (optional)
         $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', NULL, NULL, 
@@ -201,6 +231,7 @@ class Twitter extends Module
         // Modules should be rendered using the theme engine.
         Theme::Set('form_fields_general', $formFields['general']);
         Theme::Set('form_fields_template', $formFields['template']);
+        Theme::Set('form_fields_effect', $formFields['effect']);
         Theme::Set('form_fields_advanced', $formFields['advanced']);
 
         // Set the field dependencies
@@ -247,6 +278,10 @@ class Twitter extends Module
         $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
         $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
+        $this->SetOption('noTweetsMessage', Kit::GetParam('noTweetsMessage', _POST, _STRING));
+        $this->SetOption('resultType', Kit::GetParam('resultType', _POST, _STRING));
+        $this->SetOption('tweetDistance', Kit::GetParam('tweetDistance', _POST, _INT));
+        $this->SetOption('tweetCount', Kit::GetParam('tweetCount', _POST, _INT));
         $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>');
         
         // Should have built the media object entirely by this time
@@ -283,22 +318,42 @@ class Twitter extends Module
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
         $tabs[] = FormManager::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = FormManager::AddTab('effect', __('Effect'));
         $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
         Theme::Set('form_tabs', $tabs);
 
         $formFields['general'][] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
             __('An optional name for this media'), 'n');
 
-        // Any values for the form fields should be added to the theme here.
+        // Duration
         $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
 
-        // Any values for the form fields should be added to the theme here.
+        // Search Term
         $formFields['general'][] = FormManager::AddText('searchTerm', __('Search Term'), $this->GetOption('searchTerm'), 
             __('Search term. You can test your search term in the twitter.com search box first.'), 's', 'required');
 
+        // Type
+        $formFields['general'][] = FormManager::AddCombo('resultType', __('Type'), $this->GetOption('resultType'),
+            array(
+                array('typeid' => 'mixed', 'type' => __('Mixed')), 
+                array('typeid' => 'recent', 'type' => __('Recent')),
+                array('typeid' => 'popular', 'type' => __('Popular')),
+            ),
+            'typeid',
+            'type', 
+            __('Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.'), 't', 'required');
+
+        // Distance
+        $formFields['general'][] = FormManager::AddNumber('tweetDistance', __('Distance'), $this->GetOption('tweetDistance'), 
+            __('Distance in miles that the tweets should be returned from. Set to 0 for no restrictions.'), 'd');
+
+        // Distance
+        $formFields['general'][] = FormManager::AddNumber('tweetCount', __('Count'), $this->GetOption('tweetCount'), 
+            __('The number of Tweets to return.'), 'c');
+
         // Common fields
-        $formFields['general'][] = FormManager::AddCombo(
+        $formFields['effect'][] = FormManager::AddCombo(
                 'effect', 
                 __('Effect'), 
                 $this->GetOption('effect'),
@@ -323,16 +378,20 @@ class Twitter extends Module
                 __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
                 'e');
 
-        $formFields['general'][] = FormManager::AddNumber('speed', __('Speed'), $this->GetOption('speed'), 
+        $formFields['effect'][] = FormManager::AddNumber('speed', __('Speed'), $this->GetOption('speed'), 
             __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
 
         // A list of web safe colours
-        $formFields['general'][] = FormManager::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'), 
+        $formFields['advanced'][] = FormManager::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'), 
             __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
 
         // Add a text template
         $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->GetRawNode('template', '[Tweet]'), 
             __('Enter the template. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+
+        // Field empty
+        $formFields['advanced'][] = FormManager::AddText('noTweetsMessage', __('No tweets'), $this->GetOption('noTweetsMessage'), 
+            __('A message to display when there are no tweets returned by the search query'), 'n');
 
         // Field for the style sheet (optional)
         $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', NULL, $this->GetRawNode('styleSheet'), 
@@ -341,6 +400,7 @@ class Twitter extends Module
         // Modules should be rendered using the theme engine.
         Theme::Set('form_fields_general', $formFields['general']);
         Theme::Set('form_fields_template', $formFields['template']);
+        Theme::Set('form_fields_effect', $formFields['effect']);
         Theme::Set('form_fields_advanced', $formFields['advanced']);
 
         // Set the field dependencies
@@ -387,6 +447,10 @@ class Twitter extends Module
         $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
         $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
+        $this->SetOption('noTweetsMessage', Kit::GetParam('noTweetsMessage', _POST, _STRING));
+        $this->SetOption('resultType', Kit::GetParam('resultType', _POST, _STRING));
+        $this->SetOption('tweetDistance', Kit::GetParam('tweetDistance', _POST, _INT));
+        $this->SetOption('tweetCount', Kit::GetParam('tweetCount', _POST, _INT));
 
         // Text Template
         $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>');
@@ -508,7 +572,7 @@ class Twitter extends Module
         return $body->access_token;
     }
 
-    private function searchApi($token, $term, $resultType = 'mixed', $count = 15)
+    private function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15)
     {
         // Construct the URL to call
         $url = 'https://api.twitter.com/1.1/search/tweets.json';
@@ -516,6 +580,9 @@ class Twitter extends Module
             '&result_type=' . $resultType . 
             '&count=' . $count . 
             '&include_entities=true';
+
+        if ($geoCode != '')
+            $queryString .= '&geocode=' . $geoCode;
 
         $httpOptions = array(
             CURLOPT_TIMEOUT => 20,
@@ -531,6 +598,8 @@ class Twitter extends Module
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_URL => $url . $queryString,
         );
+
+        Debug::Audit('Calling API with: ' . $url . $queryString);
 
         $curl = curl_init();
         curl_setopt_array($curl, $httpOptions);
@@ -561,15 +630,38 @@ class Twitter extends Module
         return $body;
     }
 
-    private function getTwitterFeed($template)
+    private function getTwitterFeed($displayId = 0)
     {
         if (!extension_loaded('curl')) {
             trigger_error(__('cURL extension is required for Twitter'));
             return false;
         }
 
+        // Do we need to add a geoCode?
+        $geoCode = '';
+        $distance = $this->GetOption('tweetDistance');
+        if ($distance != 0) {
+            // Use the display ID or the default.
+            if ($displayId != 0) {
+                // Look up the lat/long
+                $display = new Display();
+                $display->displayId = $displayId;
+                $display->Load();
+
+                $defaultLat = $display->latitude;
+                $defaultLong = $display->longitude;
+            }
+            else {
+                $defaultLat = Config::GetSetting('DEFAULT_LAT');
+                $defaultLong = Config::GetSetting('DEFAULT_LONG');
+            }
+
+            // Built the geoCode string.
+            $geoCode = implode(',', array($defaultLat, $defaultLong, $distance)) . 'mi';
+        }
+
         // Connect to twitter and get the twitter feed.
-        $key = md5($this->GetOption('searchTerm'));
+        $key = md5($this->GetOption('searchTerm') . $this->GetOption('resultType') . $this->GetOption('tweetCount', 15) . $geoCode);
         
         if (!Cache::has($key) || Cache::get($key) == '') {
 
@@ -580,7 +672,7 @@ class Twitter extends Module
                 return false;
 
             // We have the token, make a tweet
-            if (!$data = $this->searchApi($token, $this->GetOption('searchTerm')))
+            if (!$data = $this->searchApi($token, $this->GetOption('searchTerm'), $this->GetOption('resultType'), $geoCode, $this->GetOption('tweetCount', 15)))
                 return false;
 
             // Cache it
@@ -591,7 +683,10 @@ class Twitter extends Module
             $data = Cache::get($key);
         }
 
-        Debug::Audit('Template is ' . $template);
+        //var_dump($data);
+
+        // Get the template
+        $template = $this->GetRawNode('template');
 
         // Parse the text template
         $matches = '';
@@ -609,7 +704,7 @@ class Twitter extends Module
                 // Maybe make this more generic?
                 switch ($sub) {
                     case '[Tweet]':
-                        $replace = $tweet->text;
+                        $replace = emoji_unified_to_html($tweet->text);
                         break;
 
                     case '[User]':
@@ -622,6 +717,10 @@ class Twitter extends Module
             // Substitute the replacement we have found (it might be '')
             $return[] = $rowString;
         }
+
+        // If we have nothing to show, display a no tweets message.
+        if (count($return) <= 0)
+            $return[] = $this->GetOption('noTweetsMessage');
         
         // Return the data array
         return $return;
@@ -649,14 +748,14 @@ class Twitter extends Module
         $duration = $this->duration;
         
         // Generate a JSON string of substituted items.
-        $items = $this->getTwitterFeed($this->GetRawNode('template'));
+        $items = $this->getTwitterFeed();
 
         // Return empty string if there are no items to show.
         if (count($items) == 0)
             return '';
 
         $options = array(
-            'direction' => 'single',
+            'type' => $this->type,
             'fx' => $this->GetOption('effect', 'none'),
             'speed' => $this->GetOption('speed', 500),
             'duration' => $duration,
@@ -691,6 +790,7 @@ class Twitter extends Module
         // Add our fonts.css file
         $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $headContent .= '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($isPreview) ? 'modules/theme/twitter/' : '') . 'emoji.css" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
 
         // Replace the Head Content with our generated javascript

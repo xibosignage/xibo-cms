@@ -428,7 +428,9 @@ class text extends Module
         $effect = $this->GetOption('effect', $oldDirection);
 
         // Set some options
-        $options = array('fx' => $effect,
+        $options = array(
+            'type' => $this->type,
+            'fx' => $effect,
             'duration' => $duration,
             'durationIsPerItem' => false,
             'numItems' => 1,

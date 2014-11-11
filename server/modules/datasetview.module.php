@@ -427,21 +427,10 @@ class datasetview extends Module
             $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
 
         // Get the embedded HTML out of RAW
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
-        $rawNodes = $rawXml->getElementsByTagName('styleSheet');
-
-        if ($rawNodes->length == 0)
-        {
-            $styleSheet = $this->DefaultStyleSheet();
-        }
-        else
-        {
-            $rawNode = $rawNodes->item(0);
-            $styleSheet = $rawNode->nodeValue;
-        }
+        $styleSheet = $this->GetRawNode('styleSheet', $this->DefaultStyleSheet());
 
         $options = array(
+            'type' => $this->type,
             'duration' => $this->duration,
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
@@ -451,11 +440,11 @@ class datasetview extends Module
             'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
         );
 
-        $headContent  = '<style type="text/css">' . $styleSheet . '</style>';
         // Add our fonts.css file
         $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
+        $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
