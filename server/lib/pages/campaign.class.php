@@ -624,14 +624,8 @@ class campaignDAO extends baseDAO
         $displayOrder = 1;
 
         foreach($layouts as $layoutId) {
-
-            // Authenticate
-            $auth = $this->user->LayoutAuth($layoutId, true);
-            if (!$auth->view)
-                trigger_error(__('Your permissions to view a layout you are adding have been revoked. Please reload the Layouts form.'), E_USER_ERROR);
-
+            // By this point everything should be authenticated
             $campaignObject->Link($campaignId, $layoutId, $displayOrder);
-
             $displayOrder++;
         }
 

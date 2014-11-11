@@ -35,7 +35,7 @@ class clock extends Module
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
 
-    private function InstallFiles() {
+    public function InstallFiles() {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
@@ -70,6 +70,9 @@ class clock extends Module
             // No updates required to this module.
             // Call "$this->UpdateModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)" with the updated items
         }
+
+        // Check we are all installed
+        $this->InstallFiles();
     }
 
     /**
@@ -173,7 +176,8 @@ class clock extends Module
      * Add Media to the Database
      * @return
      */
-    public function AddMedia() {
+    public function AddMedia()
+    {        
         // Same member variables as the Form call, except with POST variables for your form fields.
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
@@ -298,7 +302,8 @@ class clock extends Module
      * Edit Media in the Database
      * @return
      */
-    public function EditMedia() {
+    public function EditMedia()
+    {
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
         {
@@ -384,10 +389,8 @@ class clock extends Module
      *     for displaying this content.
      * @param integer $displayId If this comes from a real client, this will be the display id.
      */
-    public function GetResource($displayId = 0) {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-
+    public function GetResource($displayId = 0)
+    {
         // Clock Type
         switch ($this->GetOption('clockTypeId', 1)) {
 

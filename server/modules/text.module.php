@@ -29,7 +29,7 @@ class text extends Module
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
 
-    private function InstallFiles() {
+    public function InstallFiles() {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/vendor/moment.js');
@@ -393,9 +393,6 @@ class text extends Module
      */
     public function GetResource($displayId = 0)
     {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-
         // Load in the template
         if ($this->layoutSchemaVersion == 1)
             $template = file_get_contents('modules/preview/Html4TransitionalTemplate.html');

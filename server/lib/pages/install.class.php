@@ -500,6 +500,9 @@ END;
 
         Theme::Render('login_page');
 
+        // Install files
+        Media::installAllModuleFiles();
+
         // Delete install
         if (!unlink('install.php'))
             throw new Exception(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));

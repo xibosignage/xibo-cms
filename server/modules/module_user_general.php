@@ -693,35 +693,6 @@ class User {
     {
         return $this->usertypeid;
     }
-    
-    /**
-     * Form for outputting the User Details reminder
-     * @return 
-     */
-    function forget_details() 
-    {
-        $output = <<<END
-        <p>To recover your details, please enter them in the form below.<br /> A password will then be sent to you</p>
-        <form method="post" action="index.php?q=forgotten">
-            <div class="login_table">
-                <table>
-                    <tr>
-                        <td><label for="f_username">User Name </label></td>
-                        <td><input id="f_username" class="username" type="text" name="f_username" tabindex="4" size="12" /></td>
-                    </tr>
-                    <tr>
-                        <td><label for="f_email">Email Address </label></td>
-                        <td><input id="f_email" class="password" type="text" name="f_email" tabindex="5" size="12" /></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><div class="loginbuton"><button type="submit" tabindex="6">Request New Password</button></div></td>
-                    </tr>
-                </table>
-            </div>
-        </form>
-END;
-        echo $output;
-    }
 
     /**
      * Authenticates a user against a fileId

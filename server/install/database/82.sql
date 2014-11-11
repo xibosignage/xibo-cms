@@ -234,6 +234,9 @@ VALUES (
  'STS_TTL',  '600', 'text',  'The Time to Live (maxage) of the STS header expressed in minutes.', NULL ,  'network',  '1',  'STS Time out',  '',  '90',  '600',  '1',  'int'
 );
 
+ALTER TABLE  `media` ADD  `valid` TINYINT( 1 ) NOT NULL DEFAULT  '1';
+
+UPDATE `media` SET valid = 0 WHERE is_module = 1;
 UPDATE `version` SET `app_ver` = '1.7.0-beta', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '82';

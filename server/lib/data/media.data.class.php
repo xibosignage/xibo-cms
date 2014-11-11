@@ -27,6 +27,7 @@ class Media extends Data
     private $moduleInfoLoaded;
     private $regionSpecific;
     private $validExtensions;
+    public $valid;
 
     public $mediaId;
     public $ownerId;
@@ -57,6 +58,7 @@ class Media extends Data
             $SQL .= "   media.userID, ";
             $SQL .= "   media.FileSize, ";
             $SQL .= "   media.storedAs, ";
+            $SQL .= "   media.valid, ";
             $SQL .= "   IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
             
             if (Kit::GetParam('showTags', $filter_by, _INT) == 1)
@@ -104,6 +106,11 @@ class Media extends Data
                 $params['type'] = Kit::GetParam('type', $filter_by, _STRING);
             }
 
+            if (Kit::GetParam('storedAs', $filter_by, _STRING) != '') {
+                $SQL .= 'AND media.storedAs = :storedAs';
+                $params['storedAs'] = Kit::GetParam('storedAs', $filter_by, _STRING);
+            }
+
             if (Kit::GetParam('ownerid', $filter_by, _INT) != 0) {
                 $SQL .= " AND media.userid = :ownerId ";
                 $params['ownerId'] = Kit::GetParam('ownerid', $filter_by, _INT);
@@ -136,6 +143,7 @@ class Media extends Data
                 $media->fileName = Kit::ValidateParam($row['originalFileName'], _STRING);
                 $media->tags = Kit::ValidateParam($row['tags'], _STRING);
                 $media->storedAs = Kit::ValidateParam($row['storedAs'], _STRING);
+                $media->valid = Kit::ValidateParam($row['valid'], _INT);
 
                 $entries[] = $media;
             }
@@ -784,6 +792,12 @@ class Media extends Data
         }
     }
 
+    /**
+     * Adds module files from a folder.
+     * The entire folder will be added as module files
+     * @param string  $folder The path to the folder to add.
+     * @param boolean $force  Whether or not each individual module should be force updated if it exists already
+     */
     public function addModuleFileFromFolder($folder, $force = false) 
     {
         if (!is_dir($folder))
@@ -797,23 +811,45 @@ class Media extends Data
         }
     }
 
+    /**
+     * Adds a module file. 
+     * Module files are hidden from the UI and supplementary files that will be used
+     * by the module that added them.
+     * @param string  $file  The path to the file that needs adding
+     * @param boolean $force Whether to force an update to the file or not
+     */
     public function addModuleFile($file, $force = false)
     {
         try {
             $name = basename($file);
 
-            $moduleExists = $this->moduleFileExists($name);
+            $media = $this->moduleFileExists($name);
 
-            if (!$force && $moduleExists) {
-                return;
-            }
+            //Debug::Audit('Module File: ' . var_export($media, true));
 
             $dbh = PDOConnect::init();
+            
+            // Do we need to update this module file (meaning, is it out of date)
+            // Why might it be out of date?
+            //  - an upgrade might of invalidated it
+            // How can we tell?
+            // - valid flag on the media
+            if ($media !== false && $media['valid'] == 0) {
+                Debug::Audit('Media not valid, forcing update.');
+                $force = true;
+            }
+
+            // Force will be set by now. 
+            if (!$force && $media !== false)
+                return;
+
             $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 
             // Get the name
             $storedAs = $libraryFolder . $name;
-            
+
+            Debug::Audit('Updating: ' . $name);
+             
             // Now copy the file
             if (!@copy($file, $storedAs))
                 $this->ThrowError(15, 'Error storing file.');
@@ -822,12 +858,13 @@ class Media extends Data
             $md5        = md5_file($storedAs);
             $fileSize   = filesize($storedAs);
         
-            if ($moduleExists) {
-                $SQL = "UPDATE `media` SET md5 = :md5, filesize = :filesize WHERE storedAs = :storedas ";
+            if ($media !== false) {
+                $mediaId = $media['mediaId'];
+                $SQL = "UPDATE `media` SET md5 = :md5, filesize = :filesize WHERE mediaId = :mediaId ";
 
                 $sth = $dbh->prepare($SQL);
                 $sth->execute(array(
-                        'storedas' => $name,
+                        'mediaId' => $mediaId,
                         'filesize' => $fileSize,
                         'md5' => $md5
                     ));
@@ -848,42 +885,14 @@ class Media extends Data
                         'filesize' => $fileSize,
                         'md5' => $md5
                     ));
-            }
 
-            $dbh->commit();
+                $mediaId = $dbh->lastInsertId();
+            }
 
             // Add to the cache
-            $this->_moduleFiles[] = $name;
-        }
-        catch (Exception $e) {
-            
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
-        
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-        
-            return false;
-        }
-    }
+            $this->_moduleFiles[$name] = array('mediaId' => $mediaId, 'valid' => 1);
 
-    public function moduleFileExists($file)
-    {
-        try {
-            if ($this->_moduleFiles == NULL || count($this->_moduleFiles) < 1) {
-                $dbh = PDOConnect::init();
-            
-                $sth = $dbh->prepare('SELECT storedAs FROM `media` WHERE type = :type');
-                $sth->execute(array(
-                        'type' => 'module'
-                    ));
-                
-                $this->_moduleFiles = array();
-
-                foreach ($sth->fetchAll() as $moduleFile)
-                    $this->_moduleFiles[] = $moduleFile['storedAs'];
-            }
-
-            return (in_array($file, $this->_moduleFiles));
+            return $mediaId;
         }
         catch (Exception $e) {
             
@@ -897,9 +906,68 @@ class Media extends Data
     }
 
     /**
+     * Does the module file exist?
+     * Checks to see if the module file specified exists or not
+     * @param  string $file The path
+     * @return int The MediaId or false
+     */
+    public function moduleFileExists($file)
+    {
+        try {
+            if ($this->_moduleFiles == NULL || count($this->_moduleFiles) < 1) {
+                $dbh = PDOConnect::init();
+            
+                $sth = $dbh->prepare('SELECT storedAs, mediaId, valid FROM `media` WHERE is_module = :is_module');
+                $sth->execute(array(
+                        'is_module' => 1
+                    ));
+                
+                $this->_moduleFiles = array();
+
+                foreach ($sth->fetchAll() as $moduleFile)
+                    $this->_moduleFiles[$moduleFile['storedAs']] = array('mediaId' => $moduleFile['mediaId'], 'valid' => $moduleFile['valid']);
+            }
+
+            //Debug::Audit(var_export($this->_moduleFiles, true));
+
+            // Return the value (the ID) or false
+            return (array_key_exists($file, $this->_moduleFiles) ? $this->_moduleFiles[$file] : false);
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Installs all files related to the enabled modules
+     */
+    public static function installAllModuleFiles()
+    {
+        $media = new Media();
+
+        // Do this for all enabled modules
+        foreach ($media->ModuleList() as $module) {
+            $type = $module['module'];
+
+            // Process any module specific form fields
+            include_once('modules/' . $type . '.module.php');
+            $moduleObject = new $type(new database(), new User());
+
+            // Install Files for this module
+            $moduleObject->InstallFiles();
+        }
+    }
+
+    /**
      * Links a layout and tag
-     * @param [string] $tag The Tag
-     * @param [int] $mediaId The Layout
+     * @param string $tag The Tag
+     * @param int $mediaId The Layout
      */
     public function tag($tag, $mediaId)
     {
@@ -944,8 +1012,8 @@ class Media extends Data
 
     /**
      * Untag a layout
-     * @param  [string] $tag The Tag
-     * @param  [int] $mediaId The Layout Id
+     * @param  string $tag The Tag
+     * @param  int $mediaId The Layout Id
      */
     public function unTag($tag, $mediaId) {
         try {

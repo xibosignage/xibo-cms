@@ -308,7 +308,8 @@ CREATE TABLE IF NOT EXISTS `media` (
   `retired` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is retired?',
   `isEdited` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is this the current record',
   `editedMediaID` int(11) DEFAULT NULL COMMENT 'The Parent ID',
-  `is_module` tinyint(4) NOT NULL DEFAULT  '0',
+  `is_module` tinyint(4) NOT NULL DEFAULT '0',
+  `valid` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`mediaID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=9 ;
 

@@ -63,6 +63,9 @@ class moduletemplate extends Module
             // Call "$this->UpdateModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)" with the updated items
         }
 
+        // Check we are all installed
+        $this->InstallFiles();
+
         // After calling either Install or Update your code schema version will match the database schema version and this method will not be called
         // again. This means that if you want to change those fields in an update to your module, you will need to increment your codeSchemaVersion.
     }

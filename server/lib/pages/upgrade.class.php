@@ -259,6 +259,9 @@ class upgradeDAO extends baseDAO {
             throw new Exception(sprintf(__('An error occurred running the upgrade. Please take a screen shot of this page and seek help. Statement number: %d. Error Message = [%s]'), $i, $e->getMessage()));
         }
 
+        // Install files
+        Media::installAllModuleFiles();
+
         // Delete install
         if (!unlink('install.php'))
             $formFields[] = FormManager::AddMessage(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));

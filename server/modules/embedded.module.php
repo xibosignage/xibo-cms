@@ -30,7 +30,7 @@ class embedded extends Module
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
 
-    private function InstallFiles() {
+    public function InstallFiles() {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
@@ -251,7 +251,7 @@ function EmbedInit()
      * @return 
      */
     public function EditMedia()
-    {        
+    {
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;
@@ -338,9 +338,6 @@ function EmbedInit()
     }
    
     public function GetResource($display = 0) {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-
         // Behave exactly like the client.
 
         // Load in the template

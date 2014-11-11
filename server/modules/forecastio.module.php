@@ -96,7 +96,7 @@ class ForecastIo extends Module
         return $formFields;
     }
 
-    private function InstallFiles() {
+    public function InstallFiles() {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
@@ -116,9 +116,6 @@ class ForecastIo extends Module
         $this->settings['apiKey'] = $apiKey;
         $this->settings['cachePeriod'] = Kit::GetParam('cachePeriod', _POST, _INT, 300);
 
-        // Check we are all installed
-        $this->InstallFiles();
-
         // Return an array of the processed settings.
         return $this->settings;
     }
@@ -127,7 +124,8 @@ class ForecastIo extends Module
      * Return the Add Form as HTML
      * @return
      */
-    public function AddForm() {
+    public function AddForm()
+    {
         // This is the logged in user and can be used to assess permissions
         $user =& $this->user;
 
@@ -221,7 +219,8 @@ class ForecastIo extends Module
      * Add Media to the Database
      * @return
      */
-    public function AddMedia() {
+    public function AddMedia()
+    {
         // Same member variables as the Form call, except with POST variables for your form fields.
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
@@ -588,10 +587,8 @@ class ForecastIo extends Module
      *     for displaying this content.
      * @param integer $displayId If this comes from a real client, this will be the display id.
      */
-    public function GetResource($displayId = 0) {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-
+    public function GetResource($displayId = 0)
+    {
         // Behave exactly like the client.
         $data = $this->getForecastData($displayId);
 

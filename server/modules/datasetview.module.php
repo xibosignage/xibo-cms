@@ -33,7 +33,7 @@ class datasetview extends Module
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
 
-    private function InstallFiles() {
+    public function InstallFiles() {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
@@ -236,8 +236,6 @@ class datasetview extends Module
      */
     public function AddMedia()
     {
-        $db =& $this->db;
-
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
 
@@ -280,7 +278,7 @@ class datasetview extends Module
 
         // Link
         Kit::ClassLoader('dataset');
-        $dataSet = new DataSet($db);
+        $dataSet = new DataSet($this->db);
         $dataSet->LinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
 
         //Set this as the session information
@@ -302,8 +300,6 @@ class datasetview extends Module
      */
     public function EditMedia()
     {
-        $db =& $this->db;
-
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
         $mediaid = $this->mediaid;
@@ -413,9 +409,6 @@ class datasetview extends Module
 
     public function GetResource($displayId = 0)
     {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-
         // Load in the template
         if ($this->layoutSchemaVersion == 1)
             $template = file_get_contents('modules/preview/Html4TransitionalTemplate.html');

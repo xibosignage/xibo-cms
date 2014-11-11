@@ -66,11 +66,14 @@ class Twitter extends Module
             // Call "$this->UpdateModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)" with the updated items
         }
 
+        // Check we are all installed
+        $this->InstallFiles();
+
         // After calling either Install or Update your code schema version will match the database schema version and this method will not be called
         // again. This means that if you want to change those fields in an update to your module, you will need to increment your codeSchemaVersion.
     }
 
-    private function InstallFiles()
+    public function InstallFiles()
     {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
@@ -119,9 +122,6 @@ class Twitter extends Module
         $this->settings['apiKey'] = $apiKey;
         $this->settings['apiSecret'] = $apiSecret;
         $this->settings['cachePeriod'] = Kit::GetParam('cachePeriod', _POST, _INT, 300);
-
-        // Check we are all installed
-        $this->InstallFiles();
 
         // Return an array of the processed settings.
         return $this->settings;
@@ -734,9 +734,6 @@ class Twitter extends Module
      */
     public function GetResource($displayId = 0)
     {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
 

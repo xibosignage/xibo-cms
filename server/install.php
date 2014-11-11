@@ -52,6 +52,11 @@ else {
     TranslationEngine::InitLocale();
 }
 
+// Define an auto-load function
+spl_autoload_register(function ($class) {
+    Kit::ClassLoader($class);
+});
+
 $xibo_step = Kit::GetParam('step', _REQUEST, _INT, 1);
 
 $content = '';

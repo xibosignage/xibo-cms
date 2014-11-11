@@ -30,7 +30,7 @@ class webpage extends Module
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
 
-    private function InstallFiles() {
+    public function InstallFiles() {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');;
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');;
@@ -404,10 +404,8 @@ class webpage extends Module
         return $this->PreviewAsClient($width, $height);
     }
 
-    public function GetResource($displayId = 0) {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-        
+    public function GetResource($displayId = 0)
+    {
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
         

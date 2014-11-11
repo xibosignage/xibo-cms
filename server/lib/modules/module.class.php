@@ -2001,6 +2001,14 @@ END;
         return true;
     }
 
+    /**
+     * Installs any files specific to this module
+     */
+    public function InstallFiles()
+    {
+
+    }
+
     public function InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings) {
         
         Debug::LogEntry('audit', 'Request to install module with name: ' . $name, 'module', 'InstallModule');
