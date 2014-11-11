@@ -874,8 +874,6 @@ END;
     public function MediaList($sort_order = array('name'), $filter_by = array())
     {
         try {
-            $dbh = PDOConnect::init();
-
             $media = Media::Entries($sort_order, $filter_by);
             $parsedMedia = array();
 
@@ -909,12 +907,7 @@ END;
             return $parsedMedia;
         }
         catch (Exception $e) {
-            
             Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
-        
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-        
             return false;
         }
     }
@@ -974,147 +967,29 @@ END;
      * Returns an array of layouts that this user has access to
      */
     public function LayoutList($sort_order = array('layout'), $filter_by = array()) {
-        $SQL  = "";
-        $SQL .= "SELECT layout.layoutID, ";
-        $SQL .= "        layout.layout, ";
-        $SQL .= "        layout.description, ";
-        $SQL .= "        layout.userID, ";
-        $SQL .= "        layout.xml, ";
-        $SQL .= "        campaign.CampaignID, ";
-        $SQL .= "        layout.status, ";
-        $SQL .= "        layout.retired, ";
-        $SQL .= "        layout.backgroundImageId, ";
         
-        if (Kit::GetParam('showTags', $filter_by, _INT) == 1)
-            $SQL .= " tag.tag AS tags, ";
-        else
-            $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
+        $layouts = Layout::Entries($sort_order, $filter_by);
+        $parsedLayouts = array();
 
-        // MediaID
-        if (Kit::GetParam('mediaId', $filter_by, _INT, 0) != 0) {
-            $SQL .= "   lklayoutmedia.regionid, ";
-            $SQL .= "   lklayoutmedia.lklayoutmediaid, ";
-            $SQL .= "   media.userID AS mediaownerid ";
-        }
-        else {
-            $SQL .= "   NULL AS regionid, ";
-            $SQL .= "   NULL AS lklayoutmediaid, ";
-            $SQL .= "   NULL AS mediaownerid ";
-        }
-
-        $SQL .= "   FROM layout ";
-        $SQL .= "  INNER JOIN `lkcampaignlayout` ";
-        $SQL .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
-        $SQL .= "   INNER JOIN `campaign` ";
-        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-        $SQL .= "       AND campaign.IsLayoutSpecific = 1";
-
-        if (Kit::GetParam('showTags', $filter_by, _INT) == 1) {
-            $SQL .= " LEFT OUTER JOIN lktaglayout ON lktaglayout.layoutId = layout.layoutId ";
-            $SQL .= " LEFT OUTER JOIN tag ON tag.tagId = lktaglayout.tagId ";
-        }
-
-        if (Kit::GetParam('campaignId', $filter_by, _INT, 0) != 0) {
-            // Join Campaign back onto it again
-            $SQL .= sprintf(" INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = %d", Kit::GetParam('campaignId', $filter_by, _INT, 0));
-        }
-
-        // MediaID
-        if (Kit::GetParam('mediaId', $filter_by, _INT, 0) != 0) {
-            $SQL .= sprintf(" INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = %d", Kit::GetParam('mediaId', $filter_by, _INT, 0));
-            $SQL .= " INNER JOIN `media` ON lklayoutmedia.mediaid = media.mediaid ";
-        }
-
-        $SQL .= " WHERE 1 = 1 ";
-
-        if (Kit::GetParam('layout', $filter_by, _STRING) != '')
-        {
-            // convert into a space delimited array
-            $names = explode(' ', Kit::GetParam('layout', $filter_by, _STRING));
-
-            foreach($names as $searchName)
-            {
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-')
-                    $SQL.= " AND  (layout.layout NOT LIKE '%" . sprintf('%s', ltrim($this->db->escape_string($searchName), '-')) . "%') ";
-                else
-                    $SQL.= " AND  (layout.layout LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
-            }
-        }
-
-        // Layout
-        if (Kit::GetParam('layoutId', $filter_by, _INT, 0) != 0) 
-            $SQL .= sprintf(" AND layout.layoutId = %d ", Kit::GetParam('layoutId', $filter_by, _INT, 0));
-
-        // Owner filter
-        if (Kit::GetParam('userId', $filter_by, _INT, 0) != 0) 
-            $SQL .= sprintf(" AND layout.userid = %d ", Kit::GetParam('userId', $filter_by, _INT, 0));
-        
-        // Retired options
-        if (Kit::GetParam('retired', $filter_by, _INT, -1) != -1) 
-            $SQL .= sprintf(" AND layout.retired = %d ", Kit::GetParam('retired', $filter_by, _INT, -1));
-        else
-            $SQL .= " AND layout.retired = 0 ";
-
-        // Tags
-        if (Kit::GetParam('tags', $filter_by, _STRING) != '')
-            $SQL .= " AND layout.layoutID IN (SELECT lktaglayout.layoutId FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE tag LIKE '%" . sprintf('%s', $this->db->escape_string(Kit::GetParam('tags', $filter_by, _STRING))) . "%') ";
-        
-        // Exclude templates by default
-        if (Kit::GetParam('excludeTemplates', $filter_by, _INT, 1) == 1) {
-            $SQL .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
-        }
-
-        // Show All, Used or UnUsed
-        if (Kit::GetParam('filterLayoutStatusId', $filter_by, _INT, 1) != 1)  {
-            if (Kit::GetParam('filterLayoutStatusId', $filter_by, _INT) == 2) {
-                // Only show used layouts
-                $SQL .= ' AND ('
-                    . '     campaign.CampaignID IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
-                    . '     OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) ' 
-                    . ' ) ';
-            }
-            else {
-                // Only show unused layouts
-                $SQL .= ' AND campaign.CampaignID NOT IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
-                    . ' AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) ';
-            }
-        }
-
-        // Sorting?
-        if (is_array($sort_order))
-            $SQL .= 'ORDER BY ' . implode(',', $sort_order);
-
-        //Debug::LogEntry('audit', sprintf('Retrieving list of layouts for %s with SQL: %s.', $this->userName, $SQL));
-
-        if (!$result = $this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
-            return false;
-        }
-
-        $layouts = array();
-
-        while ($row = $this->db->get_assoc_row($result))
-        {
+        foreach ($layouts as $row) {
             $layoutItem = array();
 
             // Validate each param and add it to the array.
-            $layoutItem['layoutid'] = Kit::ValidateParam($row['layoutID'], _INT);
-            $layoutItem['layout']   = Kit::ValidateParam($row['layout'], _STRING);
-            $layoutItem['description'] = Kit::ValidateParam($row['description'], _STRING);
-            $layoutItem['tags'] = Kit::ValidateParam($row['tags'], _STRING);
-            $layoutItem['ownerid']  = Kit::ValidateParam($row['userID'], _INT);
-            $layoutItem['xml']  = Kit::ValidateParam($row['xml'], _HTMLSTRING);
-            $layoutItem['campaignid'] = Kit::ValidateParam($row['CampaignID'], _INT);
-            $layoutItem['retired'] = Kit::ValidateParam($row['retired'], _INT);
-            $layoutItem['status'] = Kit::ValidateParam($row['status'], _INT);
-            $layoutItem['backgroundImageId'] = Kit::ValidateParam($row['backgroundImageId'], _INT);
-            $layoutItem['mediaownerid'] = Kit::ValidateParam($row['mediaownerid'], _INT);
+            $layoutItem['layoutid'] = $row->layoutId;
+            $layoutItem['layout']   = $row->layout;
+            $layoutItem['description'] = $row->description;
+            $layoutItem['tags'] = $row->tags;
+            $layoutItem['ownerid']  = $row->ownerId;
+            $layoutItem['xml']  = $row->xml;
+            $layoutItem['campaignid'] = $row->campaignId;
+            $layoutItem['retired'] = $row->retired;
+            $layoutItem['status'] = $row->status;
+            $layoutItem['backgroundImageId'] = $row->backgroundImageId;
+            $layoutItem['mediaownerid'] = $row->mediaOwnerId;
             
             // Details for media assignment
-            $layoutItem['regionid'] = Kit::ValidateParam($row['regionid'], _STRING);
-            $layoutItem['lklayoutmediaid'] = Kit::ValidateParam($row['lklayoutmediaid'], _INT);
+            $layoutItem['regionid'] = $row->regionId;
+            $layoutItem['lklayoutmediaid'] = $row->lkLayoutMediaId;
 
             // Authenticate the assignment (if not null already)
             if ($layoutItem['lklayoutmediaid'] != 0) {
@@ -1127,18 +1002,17 @@ END;
 
             $auth = $this->CampaignAuth($layoutItem['campaignid'], true);
 
-            if ($auth->view)
-            {
+            if ($auth->view) {
                 $layoutItem['view'] = (int) $auth->view;
                 $layoutItem['edit'] = (int) $auth->edit;
                 $layoutItem['del'] = (int) $auth->del;
                 $layoutItem['modifyPermissions'] = (int) $auth->modifyPermissions;
                 
-                $layouts[] = $layoutItem;
+                $parsedLayouts[] = $layoutItem;
             }
         }
 
-        return $layouts;
+        return $parsedLayouts;
     }
 
     /**
