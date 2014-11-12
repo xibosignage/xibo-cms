@@ -275,6 +275,9 @@ else
         }
 
         flush();
+
+        // Keep tidy
+        Media::removeExpiredFiles();
     }
     else {
         print __("Maintenance key invalid.");

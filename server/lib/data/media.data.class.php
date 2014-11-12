@@ -42,6 +42,7 @@ class Media extends Data
     public $duration;
     public $valid;
     public $moduleSystemFile;
+    public $expires;
 
     public static function Entries($sort_order = array('name'), $filter_by = array())
     {
@@ -61,6 +62,7 @@ class Media extends Data
             $SQL .= "   media.storedAs, ";
             $SQL .= "   media.valid, ";
             $SQL .= "   media.moduleSystemFile, ";
+            $SQL .= "   media.expires, ";
             $SQL .= "   IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
             
             if (Kit::GetParam('showTags', $filter_by, _INT) == 1)
@@ -126,7 +128,13 @@ class Media extends Data
                 $SQL .= " AND media.retired = 1 ";
             
             if (Kit::GetParam('retired', $filter_by, _INT, -1) == 0)
-                $SQL .= " AND media.retired = 0 ";          
+                $SQL .= " AND media.retired = 0 ";
+
+            // Expired files?
+            if (Kit::GetParam('expires', $filter_by, _INT) != 0) {
+                $SQL .= ' AND media.expires < :expires AND IFNULL(media.expires, 0) <> 0 ';
+                $params['expires'] = Kit::GetParam('expires', $filter_by, _INT);
+            }
             
             // Sorting?
             if (is_array($sort_order))
@@ -151,6 +159,7 @@ class Media extends Data
                 $media->storedAs = Kit::ValidateParam($row['storedAs'], _STRING);
                 $media->valid = Kit::ValidateParam($row['valid'], _INT);
                 $media->moduleSystemFile = Kit::ValidateParam($row['moduleSystemFile'], _INT);
+                $media->expires = Kit::ValidateParam($row['expires'], _INT);
 
                 $entries[] = $media;
             }
@@ -821,9 +830,9 @@ class Media extends Data
     /**
      * Adds a module file from a URL
      */
-    public function addModuleFileFromUrl($url, $name, $moduleSystemFile = false, $force = false)
+    public function addModuleFileFromUrl($url, $name, $expires, $moduleSystemFile = false, $force = false)
     {
-        Debug::Audit('Adding: ' . $url . ' with Name: ' . $name);
+        Debug::Audit('Adding: ' . $url . ' with Name: ' . $name . '. Expiry: ' . date('Y-m-d h:i:s', $expires));
 
         // See if we already have it
         // It doesn't matter than we might have already done this, its cached.
@@ -839,10 +848,15 @@ class Media extends Data
             // Put in a temporary folder
             file_put_contents($fileName, fopen($url, 'r'));
             
-            return $this->addModuleFile($fileName, $moduleSystemFile, true);
+            $media = $this->addModuleFile($fileName, $expires, $moduleSystemFile, true);
+
+            // Tidy temp
+            unlink($fileName);
+
+            return $media;
         }
         else {
-            return $media['mediaId'];
+            return $media;
         }
     }
 
@@ -853,7 +867,7 @@ class Media extends Data
      * @param string  $file  The path to the file that needs adding
      * @param boolean $force Whether to force an update to the file or not
      */
-    public function addModuleFile($file, $moduleSystemFile = true, $force = false)
+    public function addModuleFile($file, $expires = 0, $moduleSystemFile = true, $force = false)
     {
         try {
             $name = basename($file);
@@ -875,8 +889,17 @@ class Media extends Data
             }
 
             // Force will be set by now. 
-            if (!$force && $media !== false)
-                return;
+            if (!$force && $media !== false) {
+                // Nibble on the update date
+                $sth = $dbh->prepare('UPDATE `media` SET expires = :expires WHERE mediaId = :mediaId');
+                $sth->execute(array(
+                        'mediaId' => $media['mediaId'],
+                        'expires' => $expires
+                    ));
+
+                // Need to return the media object
+                return $media;
+            }
 
             $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 
@@ -894,20 +917,24 @@ class Media extends Data
             $fileSize   = filesize($storedAs);
         
             if ($media !== false) {
-                $mediaId = $media['mediaId'];
-                $SQL = "UPDATE `media` SET md5 = :md5, filesize = :filesize WHERE mediaId = :mediaId ";
+                
+                $SQL = "UPDATE `media` SET md5 = :md5, filesize = :filesize, expires = :expires WHERE mediaId = :mediaId ";
 
                 $sth = $dbh->prepare($SQL);
                 $sth->execute(array(
-                        'mediaId' => $mediaId,
+                        'mediaId' => $media['mediaId'],
                         'filesize' => $fileSize,
-                        'md5' => $md5
+                        'md5' => $md5,
+                        'expires' => $expires
                     ));
+
+                // Update the media array for returning
+                $media['expires'] = $expires;
             }
             else {
                 // All OK to insert this record
-                $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired, moduleSystemFile, storedAs, FileSize, MD5) ";
-                $SQL .= "VALUES (:name, :type, :duration, :originalfilename, 1, :retired, :moduleSystemFile, :storedas, :filesize, :md5) ";
+                $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired, moduleSystemFile, storedAs, FileSize, MD5, expires) ";
+                $SQL .= "VALUES (:name, :type, :duration, :originalfilename, 1, :retired, :moduleSystemFile, :storedas, :filesize, :md5, :expires) ";
 
                 $sth = $dbh->prepare($SQL);
                 $sth->execute(array(
@@ -919,20 +946,61 @@ class Media extends Data
                         'storedas' => $name,
                         'filesize' => $fileSize,
                         'md5' => $md5,
-                        'moduleSystemFile' => (($moduleSystemFile) ? 1 : 0)
+                        'moduleSystemFile' => (($moduleSystemFile) ? 1 : 0),
+                        'expires' => $expires
                     ));
 
-                $mediaId = $dbh->lastInsertId();
+                $media = array('mediaId' => $dbh->lastInsertId(), 'storedAs' => $name, 'expires' => $expires);
             }
 
             // Add to the cache
-            $this->_moduleFiles[$name] = array('mediaId' => $mediaId, 'valid' => 1);
+            $this->_moduleFiles[$name] = $media;
 
-            return $mediaId;
+            return $media;
         }
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
+    /**
+     * Remove a module file
+     * @param  int $mediaId  The MediaID of the module to remove
+     * @param  string $storedAs The Location of the File as it is stored
+     * @return boolean True or False
+     */
+    public function removeModuleFile($mediaId, $storedAs)
+    {
+        try {
+            $dbh = PDOConnect::init();
+
+            Debug::Audit('Removing: ' . $storedAs . ' ID:' . $mediaId);
+        
+            // Delete the links
+            $sth = $dbh->prepare('DELETE FROM lklayoutmedia WHERE mediaId = :mediaId AND regionId = :regionId');
+            $sth->execute(array(
+                    'mediaId' => $mediaId,
+                    'regionId' => 'module'
+                ));
+    
+            // Delete the media
+            $sth = $dbh->prepare('DELETE FROM media WHERE mediaId = :mediaId');
+            $sth->execute(array(
+                    'mediaId' => $mediaId
+                ));
+    
+            // Delete the file itself (and any thumbs, etc)
+            return $this->DeleteMediaFile($storedAs);
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -953,7 +1021,7 @@ class Media extends Data
             if ($this->_moduleFiles == NULL || count($this->_moduleFiles) < 1) {
                 $dbh = PDOConnect::init();
             
-                $sth = $dbh->prepare('SELECT storedAs, mediaId, valid FROM `media` WHERE type = :type');
+                $sth = $dbh->prepare('SELECT storedAs, mediaId, valid, expires FROM `media` WHERE type = :type');
                 $sth->execute(array(
                         'type' => 'module'
                     ));
@@ -961,7 +1029,7 @@ class Media extends Data
                 $this->_moduleFiles = array();
 
                 foreach ($sth->fetchAll() as $moduleFile)
-                    $this->_moduleFiles[$moduleFile['storedAs']] = array('mediaId' => $moduleFile['mediaId'], 'valid' => $moduleFile['valid']);
+                    $this->_moduleFiles[$moduleFile['storedAs']] = array('mediaId' => $moduleFile['mediaId'], 'valid' => $moduleFile['valid'], 'expires' => $moduleFile['expires']);
             }
 
             //Debug::Audit(var_export($this->_moduleFiles, true));
@@ -991,12 +1059,39 @@ class Media extends Data
         foreach ($media->ModuleList() as $module) {
             $type = $module['module'];
 
-            // Process any module specific form fields
             include_once('modules/' . $type . '.module.php');
             $moduleObject = new $type(new database(), new User());
 
             // Install Files for this module
             $moduleObject->InstallFiles();
+        }
+    }
+
+    /**
+     * Removes all expired media files
+     */
+    public static function removeExpiredFiles()
+    {
+        $media = new Media();
+
+        // Get a list of all expired files and delete them
+        foreach (Media::Entries(NULL, array('expires' => time(), 'allModules' => 1)) as $entry) {
+            // If the media type is a module, then pretend its a generic file
+            if ($entry->mediaType == 'module') {
+                // Find and remove any links to layouts.
+                $media->removeModuleFile($entry->mediaId, $entry->storedAs);
+            }
+            else {
+                // Create a module for it and issue a delete
+                include_once('modules/' . $type . '.module.php');
+                $moduleObject = new $type(new database(), new User());
+
+                // Remove it from all assigned layout
+                $moduleObject->UnassignFromAll($entry->mediaId);
+                
+                // Delete it
+                $media->Delete($entry->mediaId);
+            }
         }
     }
 

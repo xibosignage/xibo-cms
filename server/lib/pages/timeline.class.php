@@ -119,8 +119,8 @@ class timelineDAO extends baseDAO {
         $layoutWidth = Kit::GetParam('layoutWidth', _GET, _INT);
         $layoutHeight = Kit::GetParam('layoutHeight', _GET, _INT);
         $scale = Kit::GetParam('scale', _GET, _DOUBLE);
+        $zindex = Kit::GetParam('zindex', _GET, _INT, NULL);
 
-        Kit::ClassLoader('region');
         $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutid, $regionid);
         $regionName = $region->GetRegionName($layoutid, $regionid);
@@ -207,6 +207,9 @@ class timelineDAO extends baseDAO {
             $region->GetOption($layoutid, $regionid, 'loop', 0), __('If there is only one item in this region should it loop?'), 
             'l');
 
+        $formFields[] = FormManager::AddNumber('zindex', __('Layer'), ($zindex == 0) ? NULL : $zindex, 
+            __('The layering order of this region (z-index). Advanced use only. '), 'z');
+
         Theme::Set('form_fields', $formFields);
         
         $response->SetFormRequestResponse(NULL, __('Region Options'), '350px', '275px');
@@ -246,7 +249,6 @@ class timelineDAO extends baseDAO {
         $duration = Kit::GetParam('transitionDuration', _POST, _INT, 0);
         $direction = Kit::GetParam('transitionDirection', _POST, _WORD, '');
 
-        Kit::ClassLoader('region');
         $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutid, $regionid);
 
@@ -271,7 +273,7 @@ class timelineDAO extends baseDAO {
         );
 
         // Edit the region 
-        if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName, $options))
+        if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName, $options, Kit::GetParam('zindex', _POST, _INT, NULL)))
             trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid");

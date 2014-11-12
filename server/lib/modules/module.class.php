@@ -84,8 +84,6 @@ abstract class Module implements ModuleInterface
      */
     public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
     {
-        Kit::ClassLoader('region');
-
         $this->db =& $db;
         $this->user =& $user;
 
@@ -793,13 +791,22 @@ END;
 
             Debug::LogEntry('audit', 'Unassigning MediaID ' . $mediaId . ' from Layout: ' . $layout['layout'], 'module', 'UnassignFromAll');
 
-            $mod = new $this->type($this->db, $this->user, $mediaId, $layout['layoutid'], $layout['regionid'], $layout['lklayoutmediaid']);
+            // What if the region is background?
+            if ($layout['regionid'] == 'background') {
 
-            // Call to delete region media
-            if (!$mod->ApiDeleteRegionMedia($layout['layoutid'], $layout['regionid'], $mediaId)) {
-                $this->response->keepOpen = true;
-                $this->response->SetError($this->errorMessage);
-                return $this->response;
+            }
+            else if ($layout['regionid'] == 'module') {
+
+            }
+            else {
+                $mod = new $this->type($this->db, $this->user, $mediaId, $layout['layoutid'], $layout['regionid'], $layout['lklayoutmediaid']);
+
+                // Call to delete region media
+                if (!$mod->ApiDeleteRegionMedia($layout['layoutid'], $layout['regionid'], $mediaId)) {
+                    $this->response->keepOpen = true;
+                    $this->response->SetError($this->errorMessage);
+                    return $this->response;
+                }
             }
         }
 
@@ -2229,7 +2236,6 @@ END;
         // Return the file with PHP
         // Disable any buffering to prevent OOM errors.
         @ob_end_clean();
-        @ob_end_flush();
         readfile($fileName);
     }
 }

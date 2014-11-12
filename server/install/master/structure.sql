@@ -310,6 +310,7 @@ CREATE TABLE IF NOT EXISTS `media` (
   `editedMediaID` int(11) DEFAULT NULL COMMENT 'The Parent ID',
   `moduleSystemFile` tinyint(1) NOT NULL DEFAULT '0',
   `valid` tinyint(1) NOT NULL DEFAULT '1',
+  `expires` int(11) NULL,
   PRIMARY KEY (`mediaID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=9 ;
 

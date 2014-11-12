@@ -99,6 +99,10 @@ class Twitter extends Module
         $formFields[] = FormManager::AddText('cachePeriod', __('Cache Period'), $this->GetSetting('cachePeriod', 300), 
             __('Enter the number of seconds you would like to cache twitter search results.'), 'c', 'required');
         
+        // Cache Period Images
+        $formFields[] = FormManager::AddText('cachePeriodImages', __('Cache Period for Images'), $this->GetSetting('cachePeriodImages', 24), 
+            __('Enter the number of hours you would like to cache twitter images.'), 'i', 'required');
+        
         return $formFields;
     }
 
@@ -122,6 +126,7 @@ class Twitter extends Module
         $this->settings['apiKey'] = $apiKey;
         $this->settings['apiSecret'] = $apiSecret;
         $this->settings['cachePeriod'] = Kit::GetParam('cachePeriod', _POST, _INT, 300);
+        $this->settings['cachePeriodImages'] = Kit::GetParam('cachePeriodImages', _POST, _INT, 24);
 
         // Return an array of the processed settings.
         return $this->settings;
@@ -705,6 +710,10 @@ class Twitter extends Module
 
         // Media Object to get profile images
         $media = new Media();
+        $layout = new Layout();
+
+        // Expiry time for any media that is downloaded
+        $expires = time() + ($this->GetSetting('cachePeriodImages') * 60 * 60);
 
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {
@@ -724,9 +733,12 @@ class Twitter extends Module
 
                     case '[ProfileImage]':
                         // Grab the profile image
-                        $file = $media->addModuleFileFromUrl($tweet->user->profile_image_url, 'twitter_' . $tweet->user->id);
+                        $file = $media->addModuleFileFromUrl($tweet->user->profile_image_url, 'twitter_' . $tweet->user->id, $expires);
 
-                        $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file . '" />' : '<img src="' . $file . '" />';
+                        // Tag this layout with this file
+                        $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
+
+                        $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . 'twitter_' . $tweet->user->id . '" />';
                         break;
 
                     default:

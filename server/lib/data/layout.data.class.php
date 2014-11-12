@@ -1056,7 +1056,7 @@ class Layout extends Data
      * @param <type> $mediaid
      * @return <type>
      */
-    private function AddLk($layoutid, $region, $mediaid)
+    public function AddLk($layoutid, $region, $mediaid)
     {
         try {
             $dbh = PDOConnect::init();
@@ -1120,7 +1120,7 @@ class Layout extends Data
      * @param string $color          [description]
      * @param int $backgroundImageId [description]
      */
-    public function SetBackground($layoutId, $resolutionId, $color, $backgroundImageId) {
+    public function SetBackground($layoutId, $resolutionId, $color, $backgroundImageId, $zindex = NULL) {
         Debug::LogEntry('audit', 'IN', 'Layout', 'SetBackground');
         
         try {
@@ -1179,7 +1179,7 @@ class Layout extends Data
 
             $region = new region($this->db);
             
-            if (!$region->EditBackground($layoutId, $color, $bg_image, $width, $height, $resolutionId))
+            if (!$region->EditBackground($layoutId, $color, $bg_image, $width, $height, $resolutionId, $zindex))
                 throw new Exception("Error Processing Request", 1);
                     
             // Update the layout record with the new background

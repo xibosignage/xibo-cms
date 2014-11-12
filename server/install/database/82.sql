@@ -235,6 +235,7 @@ VALUES (
 );
 
 ALTER TABLE  `media` ADD  `valid` TINYINT( 1 ) NOT NULL DEFAULT  '1';
+ALTER TABLE  `media` ADD  `expires` INT NULL;
 
 UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1;
 UPDATE `version` SET `app_ver` = '1.7.0-beta', `XmdsVersion` = 4, `XlfVersion` = 2;

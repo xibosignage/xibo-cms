@@ -630,7 +630,7 @@ class XMDSSoap4 {
             $dbh = PDOConnect::init();
 
             // Get all the module dependants
-            $sth = $dbh->prepare('SELECT DISTINCT StoredAs FROM `media` WHERE type IN (\'module\', \'font\')');
+            $sth = $dbh->prepare("SELECT DISTINCT StoredAs FROM `media` WHERE media.type = 'font' OR (media.type = 'module' AND media.moduleSystemFile = 1) ");
             $sth->execute(array());
             $rows = $sth->fetchAll();
             $moduleDependents = array();
@@ -641,7 +641,7 @@ class XMDSSoap4 {
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
             $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule.eventID, schedule.is_priority, ";
-            $SQL .= "  (SELECT GROUP_CONCAT(DISTINCT StoredAs) FROM media INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID WHERE lklayoutmedia.LayoutID = layout.LayoutID GROUP BY lklayoutmedia.LayoutID) AS Dependents";
+            $SQL .= "  (SELECT GROUP_CONCAT(DISTINCT StoredAs) FROM media INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID WHERE lklayoutmedia.LayoutID = layout.LayoutID AND lklayoutmedia.regionID <> 'module' GROUP BY lklayoutmedia.LayoutID) AS Dependents";
             $SQL .= " FROM `campaign` ";
             $SQL .= " INNER JOIN schedule ON schedule.CampaignID = campaign.CampaignID ";
             $SQL .= " INNER JOIN schedule_detail ON schedule_detail.eventID = schedule.eventID ";

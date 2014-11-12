@@ -528,7 +528,7 @@ class Region extends Data
         return true;
     }
     
-    public function EditBackground($layoutid, $bg_color, $bg_image, $width, $height, $resolutionId)
+    public function EditBackground($layoutid, $bg_color, $bg_image, $width, $height, $resolutionId, $zindex = NULL)
     {
         //Load the XML for this layout
         $xml = new DOMDocument("1.0");
@@ -541,6 +541,11 @@ class Region extends Data
         $xml->documentElement->setAttribute('height', $height);
         $xml->documentElement->setAttribute('resolutionid', $resolutionId);
         $xml->documentElement->setAttribute("schemaVersion", Config::Version('XlfVersion'));
+
+        if ($zindex != NULL && $zindex != 0)
+            $xml->documentElement->setAttribute('zindex', $zindex);
+        else
+            $xml->documentElement->removeAttribute('zindex');
         
         //Convert back to XML       
         if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
@@ -578,7 +583,7 @@ class Region extends Data
      * @param $top Object
      * @param $left Object
      */
-    public function EditRegion($layoutid, $regionid, $width, $height, $top, $left, $name = '', $options = '')
+    public function EditRegion($layoutid, $regionid, $width, $height, $top, $left, $name = '', $options = '', $zindex = NULL)
     {
         Debug::LogEntry('audit', sprintf('IN - RegionID = %s. Width = %s. Height = %s, Top = %s, Left = %s, Name = %s', $regionid, $width, $height, $top, $left, $name), 'Region', 'EditRegion');
 
@@ -612,6 +617,11 @@ class Region extends Data
             $regionNode->setAttribute('height', $height);
             $regionNode->setAttribute('top', $top);
             $regionNode->setAttribute('left', $left);
+
+            if ($zindex != NULL && $zindex != 0)
+                $regionNode->setAttribute('zindex', $zindex);
+            else
+                $regionNode->removeAttribute('zindex');
     
             // If the userId is blank, then set it to be the layout user id?
             if (!$ownerId = $regionNode->getAttribute('userId'))

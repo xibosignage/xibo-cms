@@ -647,8 +647,10 @@ class ticker extends Module
         else
             $template = file_get_contents('modules/preview/HtmlTemplate.html');
 
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+
         // Replace the View Port Width?
-        if (isset($_GET['preview']))
+        if ($isPreview)
             $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
 
         // What is the data source for this ticker?
@@ -713,7 +715,7 @@ class ticker extends Module
             $items = $this->GetDataSetItems($displayId, $text);
         }
         else {
-            $items = $this->GetRssItems($text);
+            $items = $this->GetRssItems($isPreview, $text);
         }
 
         // Return empty string if there are no items to show.
@@ -747,7 +749,6 @@ class ticker extends Module
         }
 
         // Add our fonts.css file
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $headContent .= '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
 
@@ -785,12 +786,15 @@ class ticker extends Module
         return $template;
     }
 
-    private function GetRssItems($text) {
+    private function GetRssItems($isPreview, $text) {
 
         // Make sure we have the cache location configured
-        Kit::ClassLoader('file');
         $file = new File($this->db);
         File::EnsureLibraryExists();
+
+        // Make sure we have a $media/$layout object to use
+        $media = new Media();
+        $layout = new Layout();
 
         // Parse the text template
         $matches = '';
@@ -820,6 +824,9 @@ class ticker extends Module
             $tagsStrip = array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags')));
             $feed->strip_htmltags($tagsStrip);
         }
+
+        // Set an expiry time for the media
+        $expires = time() + ($this->GetOption('updateInterval', 3600) * 60);
 
         // Init
         $feed->init();
@@ -852,13 +859,43 @@ class ticker extends Module
                     else
                         list($tag, $namespace) = explode('|', $sub);
 
-                    $tags = $item->get_item_tags(str_replace(']', '', $namespace), str_replace('[', '', $tag));
-                    Debug::LogEntry('audit', var_export($tags, true));
+                    // What are we looking at
+                    Debug::Audit('Namespace: ' . str_replace(']', '', $namespace) . '. Tag: ' . str_replace('[', '', $tag) . '. ');
 
-                    if ($attribs != NULL)
-                        $replace = (is_array($tags)) ? $tags[0]['attribs'][''][str_replace(']', '', $attribs)] : '';
-                    else
-                        $replace = (is_array($tags)) ? $tags[0]['data'] : '';
+                    // Are we an image place holder?
+                    if (strstr($namespace, 'image') != false) {
+                        switch (str_replace('[', '', $tag)) {
+                            case 'Link':
+                                if ($enclosure = $item->get_enclosure()) {
+                                    // Use the link to get the image
+                                    $link = $enclosure->get_link();
+
+                                    if ($link != NULL) {
+                                        // Grab the profile image
+                                        $file = $media->addModuleFileFromUrl($link, 'ticker_' . md5($this->GetOption('url') . $link), $expires);
+
+                                        // Tag this layout with this file
+                                        $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
+
+                                        $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . 'twitter_' . $tweet->user->id . '" />';
+                                    }
+                                }
+                                break;
+                        }
+                    }
+                    else {
+                        $tags = $item->get_item_tags(str_replace(']', '', $namespace), str_replace('[', '', $tag));
+                        
+                        Debug::LogEntry('audit', 'Tags:' . var_export($tags, true));
+
+                        // If we find some tags then do the business with them
+                        if ($tags != NULL) {
+                            if ($attribs != NULL)
+                                $replace = (is_array($tags)) ? $tags[0]['attribs'][''][str_replace(']', '', $attribs)] : '';
+                            else
+                                $replace = (is_array($tags)) ? $tags[0]['data'] : '';
+                        }
+                    }
                 }
                 else {
                     

@@ -832,6 +832,7 @@ class layoutDAO extends baseDAO
         $width              = (string) $xml['width'];
         $height             = (string) $xml['height'];
         $resolutionid = (int)$xml['resolutionid'];
+        $zindex = (int)$xml['zindex'];
         $bgImageId          = 0;
 
         // Do we need to override the background with one passed in?
@@ -901,6 +902,9 @@ class layoutDAO extends baseDAO
                     __('Change the resolution'), 
                     'r');
 
+        $formFields[] = FormManager::AddNumber('zindex', __('Layer'), ($zindex == 0) ? '' : $zindex, 
+            __('The layering order of this region (z-index). Advanced use only. '), 'z');
+
         Theme::Set('append', '<img id="bg_image_image" src="' . $thumbBgImage . '" alt="' . __('Background thumbnail') . '" />');
         Theme::Set('form_fields', $formFields);
 
@@ -930,6 +934,7 @@ class layoutDAO extends baseDAO
         $bg_color       = Kit::GetParam('bg_color', _POST, _STRING);
         $mediaID        = Kit::GetParam('bg_image', _POST, _INT);
         $resolutionid   = Kit::GetParam('resolutionid', _POST, _INT);
+        $zindex   = Kit::GetParam('zindex', _POST, _INT);
 
         // Permission to retire?
         if (!$this->auth->edit)
@@ -937,7 +942,7 @@ class layoutDAO extends baseDAO
 
         $layoutObject = new Layout($db);
 
-        if (!$layoutObject->SetBackground($layoutid, $resolutionid, $bg_color, $mediaID))
+        if (!$layoutObject->SetBackground($layoutid, $resolutionid, $bg_color, $mediaID, $zindex))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
         
         $response->SetFormSubmitResponse(__('Layout Background Changed'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $layoutid));
@@ -1039,6 +1044,8 @@ class layoutDAO extends baseDAO
             $regionLeft = ($region->getAttribute('left') * $designerScale) . "px";
             $regionTop  = ($region->getAttribute('top') * $designerScale) . "px";
             $regionid   = $region->getAttribute('id');
+            $regionZindex = ($region->getAttribute('zindex') == '') ? '' : 'zindex="' . $region->getAttribute('zindex') . '"';
+            $styleZindex = ($region->getAttribute('zindex') == '') ? '' : 'z-index: ' . $region->getAttribute('zindex') . ';';
             $ownerId = $region->getAttribute('userId');
 
             $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
@@ -1053,7 +1060,7 @@ class layoutDAO extends baseDAO
             $regionTransparency  = '<div class="regionTransparency ' . $regionAuthTransparency . '" style="width:100%; height:100%;"></div>';
             $doubleClickLink = ($regionAuth->edit) ? "XiboFormRender($(this).attr('href'))" : '';
 
-            $regionHtml .= "<div id='region_$regionid' regionEnabled='$regionAuth->edit' regionid='$regionid' layoutid='$this->layoutid' tip_scale='$tipScale' designer_scale='$designerScale' width='$regionWidth' height='$regionHeight' href='index.php?p=timeline&layoutid=$this->layoutid&regionid=$regionid&q=Timeline' ondblclick=\"$doubleClickLink\"' class='$regionDisabledClass $regionPreviewClass' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
+            $regionHtml .= "<div id='region_$regionid' regionEnabled='$regionAuth->edit' regionid='$regionid' layoutid='$this->layoutid' $regionZindex tip_scale='$tipScale' designer_scale='$designerScale' width='$regionWidth' height='$regionHeight' href='index.php?p=timeline&layoutid=$this->layoutid&regionid=$regionid&q=Timeline' ondblclick=\"$doubleClickLink\"' class='$regionDisabledClass $regionPreviewClass' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft; $styleZindex\">
                       $regionTransparency";
 
             if ($regionAuth->edit) {
@@ -1231,6 +1238,10 @@ HTML;
             default:
                 $status = '<span title="' . __('The Status of this Layout is not known') . '" class="glyphicon glyphicon-warning-sign"></span>';
         }
+
+        // Keep things tidy
+        // Maintenance should also do this.
+        Media::removeExpiredFiles();
 
         $response->html = $status;
         $response->success = true;

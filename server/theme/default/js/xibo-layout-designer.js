@@ -72,7 +72,8 @@ $(document).ready(function(){
             width: Math.round($(this).closest('.region').width() / designer_scale, 2),
             height: Math.round($(this).closest('.region').height() / designer_scale, 2),
             top: Math.round(position.top / designer_scale, 2),
-            left: Math.round(position.left / designer_scale, 2)
+            left: Math.round(position.left / designer_scale, 2),
+            zindex: $(this).closest('.region').attr("zindex")
         };
 
         var url = "index.php?p=timeline&q=ManualRegionPositionForm";
