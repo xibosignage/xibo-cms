@@ -316,7 +316,8 @@ INSERT INTO `transition` (`TransitionID`, `Transition`, `Code`, `HasDuration`, `
 INSERT INTO `datatype` (`DataTypeID`, `DataType`) VALUES
 (1, 'String'),
 (2, 'Number'),
-(3, 'Date');
+(3, 'Date'),
+(4, 'Image');
 
 INSERT INTO `datasetcolumntype` (`DataSetColumnTypeID`, `DataSetColumnType`) VALUES
 (1, 'Value'),

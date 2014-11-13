@@ -835,7 +835,7 @@ class Media extends Data
         Debug::Audit('Adding: ' . $url . ' with Name: ' . $name . '. Expiry: ' . date('Y-m-d h:i:s', $expires));
 
         // See if we already have it
-        // It doesn't matter than we might have already done this, its cached.
+        // It doesn't matter that we might have already done this, its cached.
         $media = $this->moduleFileExists($name);
 
         //Debug::Audit('Module File: ' . var_export($media, true));

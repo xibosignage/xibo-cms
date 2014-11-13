@@ -370,7 +370,6 @@ class scheduleDAO extends baseDAO {
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
-        $datemanager = new DateManager($db);
 
         $campaignId = Kit::GetParam('CampaignID', _POST, _INT, 0);
         $fromDT = Kit::GetParam('starttime', _POST, _STRING);
@@ -386,11 +385,11 @@ class scheduleDAO extends baseDAO {
         $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
         
         // Convert our ISO strings
-        $fromDT = $datemanager->GetDateFromString($fromDT);
-        $toDT = $datemanager->GetDateFromString($toDT);
+        $fromDT = DateManager::GetDateFromString($fromDT);
+        $toDT = DateManager::GetDateFromString($toDT);
 
         if ($recToDT != '')
-            $recToDT = $datemanager->GetDateFromString($recToDT);
+            $recToDT = DateManager::GetDateFromString($recToDT);
         
         // Validate layout
         if ($campaignId == 0)
@@ -536,11 +535,10 @@ class scheduleDAO extends baseDAO {
             'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
 
         // Time controls
-        $dateFormat = Config::GetSetting('DATE_FORMAT');
-        $formFields['general'][] = FormManager::AddText('starttimeControl', __('Start Time'), date($dateFormat, $fromDT), 
+        $formFields['general'][] = FormManager::AddText('starttimeControl', __('Start Time'), DateManager::getLocalDate($fromDT), 
             __('Select the start time for this event'), 's', 'required');
 
-        $formFields['general'][] = FormManager::AddText('endtimeControl', __('End Time'), date($dateFormat, $toDT), 
+        $formFields['general'][] = FormManager::AddText('endtimeControl', __('End Time'), DateManager::getLocalDate($toDT), 
             __('Select the end time for this event'), 'e', 'required');
 
         // Add two hidden fields to always carry the ISO date
@@ -650,7 +648,6 @@ class scheduleDAO extends baseDAO {
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
-        $datemanager = new DateManager($db);
 
         $eventId = Kit::GetParam('EventID', _POST, _INT, 0);
         $campaignId = Kit::GetParam('CampaignID', _POST, _INT, 0);
@@ -667,11 +664,11 @@ class scheduleDAO extends baseDAO {
         $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
         
         // Convert our ISO strings
-        $fromDT = $datemanager->GetDateFromString($fromDT);
-        $toDT = $datemanager->GetDateFromString($toDT);
+        $fromDT = DateManager::GetDateFromString($fromDT);
+        $toDT = DateManager::GetDateFromString($toDT);
 
         if ($recToDT != '')
-            $recToDT = $datemanager->GetDateFromString($recToDT);
+            $recToDT = DateManager::GetDateFromString($recToDT);
 
         // Validate layout
         if ($campaignId == 0)
@@ -914,7 +911,6 @@ class scheduleDAO extends baseDAO {
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
-        $datemanager = new DateManager($db);
 
         $campaignId = Kit::GetParam('CampaignID', _POST, _INT, 0);
         $displayGroupIds = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);

@@ -467,12 +467,10 @@ class ForecastIo extends Module
             );
         Theme::Set('table_cols', $cols);
 
-        $dateFormat = Config::GetSetting('DATE_FORMAT') . ' h:i:s';
-
         $rows = array();
         foreach ($data['currently'] as $key => $value) {
             if (stripos($key, 'time')) {
-                $value = date($dateFormat, $value);
+                $value = DateManager::getLocalDate($value);
             }
 
             $rows[] = array('forecast' => __('Current'), 'key' => $key, 'value' => $value);
@@ -480,7 +478,7 @@ class ForecastIo extends Module
 
         foreach ($data['daily']['data'][0] as $key => $value) {
             if (stripos($key, 'time')) {
-                $value = date($dateFormat, $value);
+                $value = DateManager::getLocalDate($value);
             }
 
             $rows[] = array('forecast' => __('Daily'), 'key' => $key, 'value' => $value);

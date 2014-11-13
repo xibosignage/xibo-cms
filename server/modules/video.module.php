@@ -72,6 +72,7 @@ class video extends Module
      */
     public function EditForm()
     {
+        $this->response = new ResponseManager();
         $formFields = array();
         $formFields[] = FormManager::AddCheckbox('loop', __('Loop?'), 
             $this->GetOption('loop', 0), __('Should the video loop if it finishes before the provided duration?'), 

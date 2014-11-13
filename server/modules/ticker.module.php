@@ -712,7 +712,7 @@ class ticker extends Module
 
         // Generate a JSON string of substituted items.
         if ($sourceId == 2) {
-            $items = $this->GetDataSetItems($displayId, $text);
+            $items = $this->GetDataSetItems($displayId, $isPreview, $text);
         }
         else {
             $items = $this->GetRssItems($isPreview, $text);
@@ -942,7 +942,7 @@ class ticker extends Module
         return $items;
     }
 
-    private function GetDataSetItems($displayId, $text) {
+    private function GetDataSetItems($displayId, $isPreview, $text) {
 
         $db =& $this->db;
 
@@ -954,6 +954,11 @@ class ticker extends Module
         $ordering = $this->GetOption('ordering');
 
         Debug::LogEntry('audit', 'Then template for each row is: ' . $text);
+
+        // Set an expiry time for the media
+        $media = new Media();
+        $layout = new Layout();
+        $expires = time() + ($this->GetOption('updateInterval', 3600) * 60);
 
         // Combine the column id's with the dataset data
         $matches = '';
@@ -970,9 +975,18 @@ class ticker extends Module
         }
 
         // Get the dataset results
-        Kit::ClassLoader('dataset');
         $dataSet = new DataSet($db);
-        $dataSetResults = $dataSet->DataSetResults($dataSetId, implode(',', $columnIds), $filter, $ordering, $lowerLimit, $upperLimit, $displayId, true /* Associative */);
+        if (!$dataSetResults = $dataSet->DataSetResults($dataSetId, implode(',', $columnIds), $filter, $ordering, $lowerLimit, $upperLimit, $displayId)) {
+            return;
+        }
+
+        // Create an array of header|datatypeid pairs
+        $columnMap = array();
+        foreach ($dataSetResults['Columns'] as $col) {
+            $columnMap[$col['Text']] = $col;
+        }
+
+        Debug::Audit(var_export($columnMap, true));
 
         $items = array();
 
@@ -984,7 +998,22 @@ class ticker extends Module
                 // Pick the appropriate column out
                 $subs = explode('|', $sub);
 
-                $rowString = str_replace('[' . $sub . ']', $row[$subs[0]], $rowString);
+                // The column header
+                $header = $subs[0];
+                $replace = $row[$header];
+
+                // Check in the columns array to see if this is a special one
+                if ($columnMap[$header]['DataTypeID'] == 4) {
+                    // Download the image, alter the replace to wrap in an image tag
+                    $file = $media->addModuleFileFromUrl(str_replace(' ', '%20', htmlspecialchars_decode($replace)), 'ticker_dataset_' . md5($dataSetId . $columnMap[$header]['DataSetColumnID'] . $replace), $expires);
+
+                    // Tag this layout with this file
+                    $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
+
+                    $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
+                }
+                
+                $rowString = str_replace('[' . $sub . ']', $replace, $rowString);
             }
 
             $items[] = $rowString;
