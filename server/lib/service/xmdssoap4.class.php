@@ -38,7 +38,6 @@ class XMDSSoap4 {
      * @param <type> $serverKey
      * @param <type> $hardwareKey
      * @param <type> $displayName
-     * @param <type> $version
      * @return <type>
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress) {
@@ -485,7 +484,6 @@ class XMDSSoap4 {
      * @param string $fileType    The File Type
      * @param int $chunkOffset The Offset of the Chunk Requested
      * @param string $chunkSize   The Size of the Chunk Requested
-     * @param string $version     The XMDS Version
      */
     function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize) {
         
@@ -822,12 +820,11 @@ class XMDSSoap4 {
     /**
      * Submit client logging
      * @return
-     * @param $version Object
      * @param $serverKey Object
      * @param $hardwareKey Object
      * @param $logXml Object
      */
-    function SubmitLog($version, $serverKey, $hardwareKey, $logXml) {
+    function SubmitLog($serverKey, $hardwareKey, $logXml) {
         
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
@@ -931,12 +928,11 @@ class XMDSSoap4 {
     /**
      * Submit display statistics to the server
      * @return
-     * @param $version Object
      * @param $serverKey Object
      * @param $hardwareKey Object
      * @param $statXml Object
      */
-    function SubmitStats($version, $serverKey, $hardwareKey, $statXml) {
+    function SubmitStats($serverKey, $hardwareKey, $statXml) {
         
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
@@ -1019,7 +1015,7 @@ class XMDSSoap4 {
      * @param <type> $hardwareKey
      * @param <type> $inventory
      */
-    public function MediaInventory($version, $serverKey, $hardwareKey, $inventory) {
+    public function MediaInventory($serverKey, $hardwareKey, $inventory) {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -1083,7 +1079,6 @@ class XMDSSoap4 {
      * @param <type> $layoutId
      * @param <type> $regionId
      * @param <type> $mediaId
-     * @param <type> $version
      */
     function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId) {
         
@@ -1126,7 +1121,7 @@ class XMDSSoap4 {
 
         // Initialise the theme (for global styles in GetResource)
         new Theme($user);
-        Theme::SetPagename($this->p);
+        Theme::SetPagename('module');
 
         // Get the resource from the module
         require_once('modules/' . $type . '.module.php');
@@ -1145,7 +1140,7 @@ class XMDSSoap4 {
         return $resource;
     }
 
-    public function NotifyStatus($version, $serverKey, $hardwareKey, $status) {
+    public function NotifyStatus($serverKey, $hardwareKey, $status) {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -1175,7 +1170,7 @@ class XMDSSoap4 {
         return true;
     }
 
-    public function SubmitScreenShot($version, $serverKey, $hardwareKey, $screenShot) {
+    public function SubmitScreenShot($serverKey, $hardwareKey, $screenShot) {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);

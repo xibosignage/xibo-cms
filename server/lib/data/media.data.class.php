@@ -852,12 +852,9 @@ class Media extends Data
 
             // Tidy temp
             unlink($fileName);
+        }
 
-            return $media;
-        }
-        else {
-            return $media;
-        }
+        return $media;
     }
 
     /**
@@ -1029,7 +1026,7 @@ class Media extends Data
                 $this->_moduleFiles = array();
 
                 foreach ($sth->fetchAll() as $moduleFile)
-                    $this->_moduleFiles[$moduleFile['storedAs']] = array('mediaId' => $moduleFile['mediaId'], 'valid' => $moduleFile['valid'], 'expires' => $moduleFile['expires']);
+                    $this->_moduleFiles[$moduleFile['storedAs']] = array('mediaId' => $moduleFile['mediaId'], 'valid' => $moduleFile['valid'], 'expires' => $moduleFile['expires'], 'storedAs' => $moduleFile['storedAs']);
             }
 
             //Debug::Audit(var_export($this->_moduleFiles, true));

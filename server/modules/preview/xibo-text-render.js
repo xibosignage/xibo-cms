@@ -192,6 +192,11 @@ jQuery.fn.extend({
                 if (options.fx == "marqueeUp" || options.fx == "marqueeDown")
                     $(this).children().children().css({"white-space": "normal", float: "none"});
             }
+
+            // Protect against images that don't load
+            $(this).find("img").error(function () {
+                $(this).unbind("error").attr("src", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNiYAAAAAkAAxkR2eQAAAAASUVORK5CYII=");
+            });
         });
 
         return $(this);

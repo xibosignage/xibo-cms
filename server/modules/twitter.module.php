@@ -738,7 +738,7 @@ class Twitter extends Module
                         // Tag this layout with this file
                         $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
 
-                        $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . 'twitter_' . $tweet->user->id . '" />';
+                        $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
                         break;
 
                     default:
