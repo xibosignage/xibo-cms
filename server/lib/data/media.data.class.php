@@ -821,7 +821,7 @@ class Media extends Data
 
         foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
 
-            Debug::Audit('Found file: ' . $file);
+            //Debug::Audit('Found file: ' . $file);
 
             $this->addModuleFile($folder . DIRECTORY_SEPARATOR . $file, $force);
         }

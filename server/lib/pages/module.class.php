@@ -381,6 +381,21 @@ class moduleDAO extends baseDAO
 
         $response = new ResponseManager();
 
+        try {
+            $dbh = PDOConnect::init();
+        
+            $dbh->exec('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1');
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+
         Media::installAllModuleFiles();
 
         $response->SetFormSubmitResponse(__('Verified'), false);
