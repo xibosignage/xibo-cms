@@ -72,6 +72,8 @@ class image extends Module
      */
     public function EditForm() {
 
+        $this->response = new ResponseManager();
+
         // Provide some extra form fields
         $formFields = array();
 

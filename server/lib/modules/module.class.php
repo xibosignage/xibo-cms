@@ -922,7 +922,9 @@ END;
         global $session;
         $db =& $this->db;
         $user =& $this->user;
-        $this->response = new ResponseManager();
+        
+        if ($this->response == null)
+            $this->response = new ResponseManager();
 
         // Would like to get the regions width / height
         $layoutid = $this->layoutid;
