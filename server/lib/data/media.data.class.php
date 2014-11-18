@@ -140,7 +140,7 @@ class Media extends Data
             if (is_array($sort_order))
                 $SQL .= 'ORDER BY ' . implode(',', $sort_order);
 
-            Debug::Audit(sprintf('Retrieving list of media with SQL: %s. Params: %s', $SQL, var_export($params, true)));
+            //Debug::Audit(sprintf('Retrieving list of media with SQL: %s. Params: %s', $SQL, var_export($params, true)));
         
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);

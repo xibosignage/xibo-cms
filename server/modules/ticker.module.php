@@ -800,7 +800,7 @@ class ticker extends Module
         $matches = '';
         preg_match_all('/\[.*?\]/', $text, $matches);
 
-        Debug::LogEntry('audit', 'Loading SimplePie to handle RSS parsing');
+        Debug::LogEntry('audit', 'Loading SimplePie to handle RSS parsing.' . urldecode($this->GetOption('uri')));
         
         // Use SimplePie to get the feed
         include_once('3rdparty/simplepie/autoloader.php');
@@ -825,9 +825,6 @@ class ticker extends Module
             $feed->strip_htmltags($tagsStrip);
         }
 
-        // Set an expiry time for the media
-        $expires = time() + ($this->GetOption('updateInterval', 3600) * 60);
-
         // Init
         $feed->init();
 
@@ -837,6 +834,9 @@ class ticker extends Module
             Debug::LogEntry('audit', 'Feed Error: ' . $feed->error());
             return array();
         }
+
+        // Set an expiry time for the media
+        $expires = time() + ($this->GetOption('updateInterval', 3600) * 60);
 
         // Store our formatted items
         $items = array();

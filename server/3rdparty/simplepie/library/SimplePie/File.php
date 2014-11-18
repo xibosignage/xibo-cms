@@ -138,11 +138,14 @@ class SimplePie_File
 					$info = curl_getinfo($fp);
 					curl_close($fp);
 
-					// DG: Patch to strip double headers
-					$this->headers = SimplePie_HTTP_Parser::strip_double_headers($this->headers);
-
+					// Remove headers from redirects
 					$this->headers = explode("\r\n\r\n", $this->headers, $info['redirect_count'] + 1);
 					$this->headers = array_pop($this->headers);
+					
+					// DG: Patch to strip double headers for HTTPS Proxies (they add headers without incrementing redirect count)
+					$this->headers = SimplePie_HTTP_Parser::strip_double_headers($this->headers);
+					Debug::Audit('Headers: ' . var_export($this->headers, true));
+					
 					$parser = new SimplePie_HTTP_Parser($this->headers);
 					if ($parser->parse())
 					{

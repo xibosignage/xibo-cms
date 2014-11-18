@@ -123,7 +123,7 @@ jQuery.fn.extend({
             else if (options.fx != "marqueeLeft" && options.fx != "marqueeRight" && options.fx != "marqueeUp" && options.fx != "marqueeDown") {
 
                 // Make sure the speed is something sensible
-                options.speed = (options.speed == 0) ? 1000 : options.speed;
+                options.speed = (options.speed <= 200) ? 1000 : options.speed;
 
                 // Cycle slides are either page or item
                 var slides = (options.itemsPerPage > 1) ? ".page" : ".item";

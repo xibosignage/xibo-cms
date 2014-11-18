@@ -419,13 +419,13 @@ XML;
 		if ($userOptions->length == 0)
 		{
 			// We do not have an option - return the default
-			Debug::LogEntry('audit', 'GetOption ' . $name . ': Not Set - returning default ' . $default);
+			//Debug::LogEntry('audit', 'GetOption ' . $name . ': Not Set - returning default ' . $default);
 			return $default;
 		}
 		else
 		{
 			// Replace the old node we found with XPath with the new node we just created
-			Debug::LogEntry('audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue);
+			//Debug::LogEntry('audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue);
 			return ($userOptions->item(0)->nodeValue != '') ? $userOptions->item(0)->nodeValue : $default;
 		}
 	}
