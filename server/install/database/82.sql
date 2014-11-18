@@ -232,6 +232,8 @@ VALUES (
  'ISSUE_STS',  '0', 'checkbox',  'Add STS to the response headers? Make sure you fully understand STS before turning it on as it will prevent access via HTTP after the first successful HTTPS connection.', NULL ,  'network',  '1',  'Enable STS?',  '',  '80',  '0',  '1',  'checkbox'
 ),(
  'STS_TTL',  '600', 'text',  'The Time to Live (maxage) of the STS header expressed in minutes.', NULL ,  'network',  '1',  'STS Time out',  '',  '90',  '600',  '1',  'int'
+),(
+  'MAINTENANCE_ALERTS_FOR_VIEW_USERS', '0', 'checkbox', 'Email maintenance alerts for users with view permissions to effected Displays.', NULL, 'displays', '1', 'Maintenance Alerts for Users', '', '60', '0', '1', 'checkbox'
 );
 
 ALTER TABLE  `media` ADD  `valid` TINYINT( 1 ) NOT NULL DEFAULT  '1';

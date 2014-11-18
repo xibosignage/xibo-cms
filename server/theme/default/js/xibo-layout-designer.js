@@ -84,7 +84,7 @@ $(document).ready(function(){
     setTimeout(function() {
         $(".region .regionInfo").hide("200");
         $(".region .previewNav").hide("200");
-    }, 2000);
+    }, 1000);
 
 });
 

@@ -96,17 +96,17 @@ class text extends Module
 
         // A list of web safe colours
         $formFields['options'][] = FormManager::AddText('backgroundColor', __('Background Colour'), NULL, 
-            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
+            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'effect-controls');
 
         $formFields['options'][] = FormManager::AddNumber('duration', __('Duration'), NULL, 
-            __('The duration in seconds this counter should be displayed'), 'd', 'required');
+            __('The duration in seconds this should be displayed'), 'd', 'required');
 
         // Handle the substitutions as RAW items
         $subs = array(
                 array('Substitute' => 'Clock'),
-                array('Substitute' => 'HH:mm'),
+                array('Substitute' => 'Clock|HH:mm'),
                 array('Substitute' => 'Date'),
-                array('Substitute' => 'dd-mm-yy')
+                array('Substitute' => 'Clock|dd-mm-yy')
             );
         Theme::Set('substitutions', $subs);
         $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
@@ -116,6 +116,12 @@ class text extends Module
 
         Theme::Set('form_fields_general', $formFields['general']);
         Theme::Set('form_fields_options', $formFields['options']);
+
+        // Add a dependency
+        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none')));
+        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none')));
+        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
+        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
 
         $this->response->html = Theme::RenderReturn('form_render');
         $this->response->callBack = 'text_callback';
@@ -204,7 +210,7 @@ class text extends Module
 
         // A list of web safe colours
         $formFields['options'][] = FormManager::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'), 
-            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
+            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'effect-controls');
 
         $formFields['options'][] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
@@ -212,9 +218,9 @@ class text extends Module
         // Handle the substitutions as RAW items
         $subs = array(
                 array('Substitute' => 'Clock'),
-                array('Substitute' => 'HH:mm'),
+                array('Substitute' => 'Clock|HH:mm'),
                 array('Substitute' => 'Date'),
-                array('Substitute' => 'DD/MM/YYYY')
+                array('Substitute' => 'Clock|DD/MM/YYYY')
             );
         Theme::Set('substitutions', $subs);
 
@@ -233,6 +239,12 @@ class text extends Module
 
         Theme::Set('form_fields_general', $formFields['general']);
         Theme::Set('form_fields_options', $formFields['options']);
+
+        // Add a dependency
+        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none')));
+        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none')));
+        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
+        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
 
         $this->response->html = Theme::RenderReturn('form_render');
         $this->response->callBack = 'text_callback';
@@ -437,7 +449,7 @@ class text extends Module
             'numItems' => 1,
             'takeItemsFrom' => 'start',
             'itemsPerPage' => 0,
-            'speed' => $this->GetOption('speed'),
+            'speed' => $this->GetOption('speed', 0),
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
@@ -448,7 +460,7 @@ class text extends Module
         // See if we need to replace out any [clock] or [date] tags
         $clock = false;
 
-        if (stripos($text, '[Clock]')) {
+        if (stripos($text, '[Clock|')) {
             $clock = true;
             $text = str_replace('[Clock]', '[HH:mm]', $text);
         }
@@ -464,7 +476,7 @@ class text extends Module
             preg_match_all('/\[.*?\]/', $text, $matches);
 
             foreach($matches[0] as $subs) {
-                $text = str_replace($subs, '<span class="clock" format="' . str_replace('[', '', str_replace(']', '', $subs)) . '"></span>', $text);
+                $text = str_replace($subs, '<span class="clock" format="' . str_replace('[Clock|', '', str_replace(']', '', $subs)) . '"></span>', $text);
             }
         }
 

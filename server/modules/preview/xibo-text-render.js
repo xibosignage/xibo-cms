@@ -122,17 +122,23 @@ jQuery.fn.extend({
             }
             else if (options.fx != "marqueeLeft" && options.fx != "marqueeRight" && options.fx != "marqueeUp" && options.fx != "marqueeDown") {
 
+                // Make sure the speed is something sensible
+                options.speed = (options.speed == 0) ? 1000 : options.speed;
+
                 // Cycle slides are either page or item
                 var slides = (options.itemsPerPage > 1) ? ".page" : ".item";
-                var numberOfSlides = (options.itemsPerPage > 1) ? numberOfPages : numberOfItems;
-
-                var duration = (options.durationIsPerItem) ? options.duration : options.duration / numberOfSlides;
 
                 // If we only have 1 item, then we are in trouble and need to duplicate it.
                 if ($(slides).length <= 1 && options.type == 'text') {
                     // Change our slide tag to be the paragraphs inside
                     slides = slides + ' p';
+
+                    // Change the number of items
+                    numberOfItems = $(slides).length;
                 }
+
+                var numberOfSlides = (options.itemsPerPage > 1) ? numberOfPages : numberOfItems;
+                var duration = (options.durationIsPerItem) ? options.duration : options.duration / numberOfSlides;
 
                 //console.log("[Xibo] initialising the cycle2 plugin with " + numberOfSlides + " slides and selector " + slides + ". Duration per slide is " + duration + " seconds.");
 
@@ -156,6 +162,9 @@ jQuery.fn.extend({
             else if (options.fx == "marqueeLeft" || options.fx == "marqueeRight") {
                 marquee = true;
                 options.direction = ((options.fx == "marqueeLeft") ? "left" : "right");
+
+                // Make sure the speed is something sensible
+                options.speed = (options.speed == 0) ? 1 : options.speed;
                 
                 // Stack the articles up and move them across the screen
                 $('.item, .item p', this).css({
@@ -167,6 +176,9 @@ jQuery.fn.extend({
                 // We want a marquee
                 marquee = true;
                 options.direction = ((options.fx == "marqueeUp") ? "up" : "down");
+
+                // Make sure the speed is something sensible
+                options.speed = (options.speed == 0) ? 1 : options.speed;
             }
 
             if (marquee) {
