@@ -171,7 +171,7 @@ class ForecastIo extends Module
             $this->settings['templates'], 
             'id', 
             'value', 
-            __('Select the template you would like to apply. This can be overridden in Format.'), 't');
+            __('Select the template you would like to apply. This can be overridden in Advanced.'), 't', 'template-selector-control');
 
         $formFields['general'][] = FormManager::AddCombo('icons', __('Icons'), $this->GetOption('icons'), 
             $this->iconsAvailable(), 
@@ -179,13 +179,16 @@ class ForecastIo extends Module
             'value', 
             __('Select the icon set you would like to use.'), 't', 'icon-controls');
 
+        $formFields['advanced'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), 0, 
+            __('Tick if you would like to override the template.'), 'o');
+
         $formFields['advanced'][] = FormManager::AddMultiText('currentTemplate', __('Template for Current Forecast'), NULL, 
-            __('Enter the template for the current forecast. For a list of substitutions click "Request Forecast" below.'), 't', 10, 'required');
+            __('Enter the template for the current forecast. For a list of substitutions click "Request Forecast" below.'), 't', 10, 'required', 'template-override-controls');
 
         $formFields['advanced'][] = FormManager::AddMultiText('dailyTemplate', __('Template for Daily Forecast'), NULL, 
-            __('Enter the template for the daily forecast. Replaces [dailyForecast] in main template.'), 't', 10);
+            __('Enter the template for the daily forecast. Replaces [dailyForecast] in main template.'), 't', 10, NULL, 'template-override-controls');
 
-        $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', __('CSS Style Sheet'), NULL, __('Enter a CSS style sheet to style the weather widget'), 'c', 10, 'required');
+        $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', __('CSS Style Sheet'), NULL, __('Enter a CSS style sheet to style the weather widget'), 'c', 10, 'required', 'template-override-controls');
         
         $formFields['advanced'][] = FormManager::AddButton(__('Reload Template'), 'button', '#', 'reloadTemplateButton');
 
@@ -241,6 +244,7 @@ class ForecastIo extends Module
         $this->SetOption('latitude', Kit::GetParam('latitude', _POST, _DOUBLE));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
         $this->SetOption('icons', Kit::GetParam('icons', _POST, _STRING));
+        $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
 
         $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
             <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
@@ -283,7 +287,7 @@ class ForecastIo extends Module
         // Two tabs
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('advanced', __('Format'));
+        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
         $tabs[] = FormManager::AddTab('forecast', __('Forecast'));
 
         Theme::Set('form_tabs', $tabs);
@@ -305,7 +309,7 @@ class ForecastIo extends Module
             $this->settings['templates'], 
             'id', 
             'value', 
-            __('Select the template you would like to apply. This can be overridden in Format.'), 't');
+            __('Select the template you would like to apply. This can be overridden on the Advanced Tab.'), 't', 'template-selector-control');
 
         $formFields['general'][] = FormManager::AddCombo('icons', __('Icons'), $this->GetOption('icons'), 
             $this->iconsAvailable(), 
@@ -316,14 +320,17 @@ class ForecastIo extends Module
         $formFields['general'][] = FormManager::AddText('color', __('Colour'), $this->GetOption('color', '000'), 
             __('Please select a colour for the foreground text.'), 'c', 'required');
 
+        $formFields['advanced'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate'), 
+            __('Tick if you would like to override the template.'), 'o');
+
         $formFields['advanced'][] = FormManager::AddMultiText('currentTemplate', __('Template for Current Forecast'), $this->GetRawNode('currentTemplate'), 
-            __('Enter the template for the current forecast. For a list of substitutions click "Request Forecast" below.'), 't', 10, 'required');
+            __('Enter the template for the current forecast. For a list of substitutions click "Request Forecast" below.'), 't', 10, 'required', 'template-override-controls');
 
         $formFields['advanced'][] = FormManager::AddMultiText('dailyTemplate', __('Template for Daily Forecast'), $this->GetRawNode('dailyTemplate'), 
-            __('Enter the template for the current forecast. Replaces [dailyForecast] in main template.'), 't', 10);
+            __('Enter the template for the current forecast. Replaces [dailyForecast] in main template.'), 't', 10, NULL, 'template-override-controls');
 
         $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', __('CSS Style Sheet'), $this->GetRawNode('styleSheet'), 
-            __('Enter a CSS style sheet to style the weather widget'), 'c', 10, 'required');
+            __('Enter a CSS style sheet to style the weather widget'), 'c', 10, 'required', 'template-override-controls');
 
         $formFields['advanced'][] = FormManager::AddButton(__('Reload Template'), 'button', '#', 'reloadTemplateButton');
         
@@ -382,7 +389,8 @@ class ForecastIo extends Module
         $this->SetOption('latitude', Kit::GetParam('latitude', _POST, _DOUBLE));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
         $this->SetOption('icons', Kit::GetParam('icons', _POST, _STRING));
-        
+        $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+
         $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
             <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
             <dailyTemplate><![CDATA[' . Kit::GetParam('dailyTemplate', _POST, _HTMLSTRING) . ']]></dailyTemplate>');
@@ -418,6 +426,32 @@ class ForecastIo extends Module
         $this->response->AddFieldAction('templateId', 'change', 'picture', array('.icon-controls' => array('display' => 'block')));
         $this->response->AddFieldAction('templateId', 'init', 'picture', array('.icon-controls' => array('display' => 'none')), 'not');
         $this->response->AddFieldAction('templateId', 'change', 'picture', array('.icon-controls' => array('display' => 'none')), 'not');
+        
+        // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
+        $this->response->AddFieldAction('overrideTemplate', 'init', false, 
+            array(
+                '.template-override-controls' => array('display' => 'none'),
+                '.reloadTemplateButton' => array('display' => 'none'),
+                '.template-selector-control' => array('display' => 'block')
+            ), 'is:checked');
+        $this->response->AddFieldAction('overrideTemplate', 'change', false, 
+            array(
+                '.template-override-controls' => array('display' => 'none'),
+                '.reloadTemplateButton' => array('display' => 'none'),
+                '.template-selector-control' => array('display' => 'block')
+            ), 'is:checked');
+        $this->response->AddFieldAction('overrideTemplate', 'init', true, 
+            array(
+                '.template-override-controls' => array('display' => 'block'),
+                '.reloadTemplateButton' => array('display' => 'block'),
+                '.template-selector-control' => array('display' => 'none')
+            ), 'is:checked');
+        $this->response->AddFieldAction('overrideTemplate', 'change', true, 
+            array(
+                '.template-override-controls' => array('display' => 'block'),
+                '.reloadTemplateButton' => array('display' => 'block'),
+                '.template-selector-control' => array('display' => 'none')
+            ), 'is:checked');
     }
 
     private function iconsAvailable() 

@@ -328,7 +328,7 @@ class ticker extends Module
         Theme::Set('text', $textNode->nodeValue);
 
         $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $textNode->nodeValue, 
-            __('Enter the template. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
 
         // Get the CSS node
         $cssNodes = $rawXml->getElementsByTagName('css');

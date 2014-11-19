@@ -225,7 +225,7 @@ class Twitter extends Module
 
         // Add a text template
         $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, '[Tweet]', 
-            __('Enter the template. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
 
         // Field empty
         $formFields['advanced'][] = FormManager::AddText('noTweetsMessage', __('No tweets'), NULL, 
@@ -398,7 +398,7 @@ class Twitter extends Module
 
         // Add a text template
         $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->GetRawNode('template', '[Tweet]'), 
-            __('Enter the template. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
 
         // Field empty
         $formFields['advanced'][] = FormManager::AddText('noTweetsMessage', __('No tweets'), $this->GetOption('noTweetsMessage'), 

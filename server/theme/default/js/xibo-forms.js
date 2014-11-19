@@ -404,8 +404,8 @@ var forecastIoFormSetup = function() {
     $('#color').colorpicker();
 
     $("#templateId").on('change', function() {
-        // Check to see if the boxes are all currently empty
-        if ($("#currentTemplate").val() == "" && $("#dailyTemplate").val() == "" && $("#styleSheet").val() == "") {
+        // Check to see if the override template check box is unchecked
+        if (!$("#overrideTemplate").is(":checked")) {
 
             var templateId = $("#templateId").val();
 

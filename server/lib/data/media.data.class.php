@@ -846,7 +846,7 @@ class Media extends Data
             $fileName = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $name;
             
             // Put in a temporary folder
-            file_put_contents($fileName, fopen($url, 'r'));
+            @file_put_contents($fileName, @fopen($url, 'r'));
             
             $media = $this->addModuleFile($fileName, $expires, $moduleSystemFile, true);
 

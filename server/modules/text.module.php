@@ -112,7 +112,7 @@ class text extends Module
         $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
 
         $formFields['general'][] = FormManager::AddMultiText('ta_text', NULL, NULL, 
-            __('Enter the text to display. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+            __('Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
 
         Theme::Set('form_fields_general', $formFields['general']);
         Theme::Set('form_fields_options', $formFields['options']);
@@ -233,7 +233,7 @@ class text extends Module
         $textNode = $textNodes->item(0);
 
         $formFields['general'][] = FormManager::AddMultiText('ta_text', NULL, $textNode->nodeValue, 
-            __('Enter the text to display. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+            __('Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
 
         $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
 
