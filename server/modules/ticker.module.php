@@ -159,6 +159,7 @@ class ticker extends Module
 
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('appearance', __('Appearance'));
         $tabs[] = FormManager::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
         $tabs[] = FormManager::AddTab('format', __('Format'));
         $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
@@ -271,7 +272,7 @@ class ticker extends Module
 
             $formFields['format'][] = $field_itemsPerPage;
 
-            $formFields['format'][] = FormManager::AddText('copyright', __('Copyright'), $this->GetOption('copyright'), 
+            $formFields['advanced'][] = FormManager::AddText('copyright', __('Copyright'), $this->GetOption('copyright'), 
                 __('Copyright information to display as the last item in this feed.'), 'f');
 
             $formFields['advanced'][] = $field_updateInterval;
@@ -290,12 +291,34 @@ class ticker extends Module
                     't');
 
             $formFields['format'][] = $field_durationIsPerItem;
-            $formFields['format'][] = $field_itemsSideBySide;
+            $formFields['advanced'][] = $field_itemsSideBySide;
 
-            $formFields['format'][] = FormManager::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'), 
+            $formFields['advanced'][] = FormManager::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'), 
                 __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
 
+            // Template - for standard stuff
+            $formFields['appearance'][] = FormManager::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'title-only'), 
+                $this->settings['templates'], 
+                'id', 
+                'value', 
+                __('Select the template you would like to apply. This can be overridden on the Template Tab.'), 't', 'template-selector-control');
+
+            // Add a field for RTL tickers
+            $formFields['appearance'][] = FormManager::AddCombo(
+                    'textDirection', 
+                    __('Text direction'), 
+                    $this->GetOption('textDirection'),
+                    array(
+                        array('textdirectionid' => 'ltr', 'textdirection' => __('Left to Right (LRT)')),
+                        array('textdirectionid' => 'rtl', 'textdirection' => __('Right to Left (RTL)'))
+                    ),
+                    'textdirectionid',
+                    'textdirection',
+                    __('Which direction does the text in the feed use? (left to right or right to left)'), 
+                    'd');
+
             $subs = array(
+                    array('Substitute' => 'Name'),
                     array('Substitute' => 'Title'),
                     array('Substitute' => 'Description'),
                     array('Substitute' => 'Date'),
@@ -307,39 +330,64 @@ class ticker extends Module
                 );
             Theme::Set('substitutions', $subs);
 
-            $formFields['template'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_edit'));
+            $formFieldSubs = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_edit'));
 
             $formFields['advanced'][] = FormManager::AddText('allowedAttributes', __('Allowable Attributes'), $this->GetOption('allowedAttributes'), 
                 __('A comma separated list of attributes that should not be stripped from the incoming feed.'), '');
 
             $formFields['advanced'][] = FormManager::AddText('stripTags', __('Strip Tags'), $this->GetOption('stripTags'), 
                 __('A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.'), '');
+
+            // Encode up the template
+            //$formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'prominent-title-with-desc-and-name-separator', 'value' => 'Prominent title with description and name separator', 'template' => '<p style="color: rgb(34, 34, 34); font-family: Arial, Verdana, sans-serif;"><span style="font-size:28px;"><span style="color: rgb(255, 0, 0);">[Name]</span></span></p><p style="color: rgb(34, 34, 34); font-family: Arial, Verdana, sans-serif;"><span style="font-size:48px;"><span style="color: rgb(0, 0, 0);"><strong>[Title]</strong></span></span></p><p style="color: rgb(34, 34, 34); font-family: Arial, Verdana, sans-serif;"><span style="font-size:48px;"><span style="color: rgb(0, 0, 0);">[Description]</span></span></p>', 'css' => ''))) . '</pre>');
         }
-
-        // Get the text out of RAW
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
-        
-        Debug::LogEntry('audit', 'Raw XML returned: ' . $this->GetRaw());
-        
-        // Get the Text Node out of this
-        $textNodes = $rawXml->getElementsByTagName('template');
-        $textNode = $textNodes->item(0);
-        Theme::Set('text', $textNode->nodeValue);
-
-        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $textNode->nodeValue, 
-            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
 
         // Get the CSS node
-        $cssNodes = $rawXml->getElementsByTagName('css');
-        if ($cssNodes->length > 0) {
-            $cssNode = $cssNodes->item(0);
+        $formFields['template'][] = FormManager::AddMultiText('ta_css', NULL, $this->GetRawNode('css'), 
+            __('Optional Style sheet'), 's', 10, NULL, 'template-override-controls');
+
+        // Get the Text Node out of this
+        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->GetRawNode('template'),
+            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
+
+        if ($this->GetOption('sourceId') == 1) {
+
+            // Append the templates to the response
+            $this->response->extra = $this->settings['templates'];
+            
+            $formFields['template'][] = $formFieldSubs;
+
+            // Add a field for whether to override the template or not.
+            // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
+            $formFields['template'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 1), 
+            __('Tick if you would like to override the template.'), 'o');
+
+            // Add some field dependencies
+            // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
+            $this->response->AddFieldAction('overrideTemplate', 'init', false, 
+                array(
+                    '.template-override-controls' => array('display' => 'none'),
+                    '.template-selector-control' => array('display' => 'block')
+                ), 'is:checked');
+            $this->response->AddFieldAction('overrideTemplate', 'change', false, 
+                array(
+                    '.template-override-controls' => array('display' => 'none'),
+                    '.template-selector-control' => array('display' => 'block')
+                ), 'is:checked');
+            $this->response->AddFieldAction('overrideTemplate', 'init', true, 
+                array(
+                    '.template-override-controls' => array('display' => 'block'),
+                    '.template-selector-control' => array('display' => 'none')
+                ), 'is:checked');
+            $this->response->AddFieldAction('overrideTemplate', 'change', true, 
+                array(
+                    '.template-override-controls' => array('display' => 'block'),
+                    '.template-selector-control' => array('display' => 'none')
+                ), 'is:checked');
         }
 
-        $formFields['advanced'][] = FormManager::AddMultiText('ta_css', NULL, (($cssNodes->length > 0) ? $cssNode->nodeValue : ''), 
-            __('Optional Stylesheet'), 's', 10);
-
         Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_appearance', $formFields['appearance']);
         Theme::Set('form_fields_template', array_reverse($formFields['template']));
         Theme::Set('form_fields_format', $formFields['format']);
         Theme::Set('form_fields_advanced', $formFields['advanced']);
@@ -379,7 +427,6 @@ class ticker extends Module
         $uri = Kit::GetParam('uri', _POST, _URI);
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT, 0);
         $duration = Kit::GetParam('duration', _POST, _INT, 0);
-        $template = '';
         
         // Must have a duration
         if ($duration == 0)
@@ -420,7 +467,11 @@ class ticker extends Module
         $this->SetOption('updateInterval', 120);
         $this->SetOption('speed', 2);
 
-        $this->SetRaw('<template><![CDATA[' . $template . ']]></template><css><![CDATA[]]></css>');
+        // New tickers have template override set to 0 by add.
+        // the edit form can then default to 1 when the element doesn't exist (for legacy)
+        $this->SetOption('overrideTemplate', 0);
+
+        $this->SetRaw('<template><![CDATA[]]></template><css><![CDATA[]]></css>');
         
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -555,6 +606,9 @@ class ticker extends Module
         $this->SetOption('allowedAttributes', Kit::GetParam('allowedAttributes', _POST, _STRING));
         $this->SetOption('stripTags', Kit::GetParam('stripTags', _POST, _STRING));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
+        $this->SetOption('textDirection', Kit::GetParam('textDirection', _POST, _WORD));
+        $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+        $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
         
         // Text Template
         $this->SetRaw('<template><![CDATA[' . $text . ']]></template><css><![CDATA[' . $css . ']]></css>');
@@ -743,6 +797,12 @@ class ticker extends Module
             $headContent .= '</style>';
         }
 
+        if ($this->GetOption('textDirection') == 'rtl') {
+            $headContent .= '<style type="text/css">';
+            $headContent .= ' #content { direction: rtl; }';
+            $headContent .= '</style>';   
+        }
+
         // Add the CSS if it isn't empty
         if ($css != '') {
             $headContent .= '<style type="text/css">' . $css . '</style>';
@@ -901,6 +961,10 @@ class ticker extends Module
                     
                     // Use the pool of standard tags
                     switch ($sub) {
+                        case '[Name]':
+                            $replace = $this->GetOption('name');
+                            break;
+
                         case '[Title]':
                             $replace = $item->get_title();
                             break;

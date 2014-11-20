@@ -516,6 +516,9 @@ function XiboFormRender(formUrl, data) {
                     dialog.addClass(response.dialogClass);
                 }
 
+                // Store the extra
+                dialog.data("extra", response.extra);
+
                 // Buttons?
                 if (response.buttons != '') {
 
@@ -648,9 +651,6 @@ function XiboFormRender(formUrl, data) {
                         $(e.target).closest(".modal").removeClass("modal-big");
                     }
                 });
-
-                // Store the extra
-                dialog.data("extra", response.extra);
 
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
