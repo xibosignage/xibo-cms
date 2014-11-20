@@ -25,60 +25,104 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class Cache {
     
     private static $_data;
-    private static $_location;
 
     private function __construct() {}
 
-    public static function put($key, $value, $expires) {
+    public static function put($key, $value, $expires)
+    {
+        // If the data store isn't there, then create it
         if (!self::$_data)
-            self::load();
+            self::$_data = array();
 
+        // Set the expiry time
         $expires = time() + $expires;
 
         self::$_data[$key] = array('value' => $value, 'expires' => $expires);
 
-        self::save();
+        // Save the key
+        self::save($key);
     }
 
-    public static function get($key, $default = NULL) {
-        if (!self::$_data)
-            self::load();
+    public static function get($key, $default = NULL)
+    {
+        // Load the key
+        self::load($key);
 
         if (!Cache::has($key))
             return $default;
 
-        $data = self::$_data[$key];
+        return self::$_data[$key]['value'];
+    }
 
-        if ($data['expires'] < time()) {
-            unset(self::$_data['key']);
-            return $default;
+    /**
+     * Does the cache have the specified key
+     * @param  string $key The Key
+     * @return boolean True or False
+     */
+    public static function has($key)
+    {
+        // Load the key
+        self::load($key);
+
+        if ((isset(self::$_data[$key]) && self::$_data[$key] != null)) {
+            // If the key has expired remove it
+            if (self::$_data[$key]['expires'] < time()) {
+                Debug::Audit($key . ' Expired: ' . self::$_data[$key]['expires']);
+                
+                // Remove it
+                self::remove($key);
+                return false;
+            }
+
+            Debug::Audit($key . ' present and in date');
+
+            return true;
         }
-        else
-            return $data['value'];
+
+        Debug::Audit($key . ' not present');
+        return false;
     }
 
-    public static function has($key) {
+    /**
+     * Loads the requested key
+     * @param string $key The Key to Load
+     */
+    private static function load($key)
+    {
+        // If the data store isn't there, then create it
         if (!self::$_data)
-            self::load();
-
-        return (isset(self::$_data[$key]) && self::$_data[$key] != null && self::$_data[$key]['expires'] >= time());
-    }
-
-    private static function load() {
-        self::$_location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache';
-
-        if (!file_exists(self::$_location))
             self::$_data = array();
-        else
-            self::$_data = unserialize(file_get_contents(self::$_location));
+
+        // Set the location for this key
+        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . Kit::ValidateParam($key, _FILENAME);
+
+        // If the key isn't there already, do nothing. Otherwise load it.
+        if (file_exists($location)) {
+            self::$_data[$key] = unserialize(file_get_contents($location));
+        }
     }
 
-    private static function save() {
+    /**
+     * Saves the specified key
+     * @param  string $key The key
+     */
+    private static function save($key)
+    {
         File::EnsureLibraryExists();
 
-        self::$_location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache';
+        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . Kit::ValidateParam($key, _FILENAME);
 
-        file_put_contents(self::$_location, serialize(self::$_data));
+        file_put_contents($location, serialize(self::$_data[$key]));
+    }
+
+    private static function remove($key)
+    {
+        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . Kit::ValidateParam($key, _FILENAME);
+
+        if (file_exists($location)) {
+            unset(self::$_data[$key]);
+            unlink($location);
+        }
     }
 }
 ?>

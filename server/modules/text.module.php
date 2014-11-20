@@ -490,7 +490,7 @@ class text extends Module
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false)
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
-        Debug::Audit($effect . ' . ' . stripos($effect, 'marquee'));
+        
         // Need the cycle plugin?
         if ($effect != 'none')
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
