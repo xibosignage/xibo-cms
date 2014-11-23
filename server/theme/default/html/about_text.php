@@ -43,7 +43,7 @@ along with Xibo. If not, see <a target="_blank" href="http://opensource.org/lice
 
 <h2>Source Code</h2>
 <p>As an end user of the Xibo software you are entitled to download and view the source code. You may do 
-	so from <a target="_blank"  id="source-link" href="<?php echo Theme::Get('source_url'); ?>">Launchpad</a>.
+	so from <a target="_blank"  id="source-link" href="<?php echo Theme::GetConfig('cms_source_url'); ?>">Launchpad</a>.
 	As a service provider you <strong>MUST</strong> provide your end users notification of and access to the source code.</p>
 
 <h2>Third Party Licenses</h2>

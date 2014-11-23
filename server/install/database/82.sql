@@ -51,7 +51,7 @@ SELECT layout, 1, userid, layoutid, templateId
 INSERT INTO `lkcampaignlayout` (CampaignID, LayoutId)
 SELECT CampaignID, LayoutId
   FROM `campaign`
- WHERE templateid <> 0
+ WHERE templateid <> 0;
 
 /* Permissions */
 INSERT INTO `lkcampaigngroup` (CampaignID, GroupID, View, Edit, Del)
@@ -242,6 +242,8 @@ ALTER TABLE  `media` ADD  `expires` INT NULL;
 INSERT INTO `datatype` (`DataTypeID`, `DataType`) VALUES ('4', 'Image');
 
 DELETE FROM `module` WHERE module = 'Microblog' LIMIT 1;
+
+UPDATE `module` SET `settings` = '{"templates":[{"id":"title-only","value":"Title Only","template":"<p style=\\"font-family: Arial, Verdana, sans-serif;\\"><span style=\\"font-size:48px;\\"><span style=\\"color: #Color#;\\"><strong>[Title]<\\/strong><\\/span><\\/span><\\/p>","css":""},{"id":"prominent-title-with-desc-and-name-separator","value":"Prominent title with description and name separator","template":"<p style=\\"font-family: Arial, Verdana, sans-serif;\\"><span style=\\"font-size:28px;\\"><span style=\\"color: rgb(255, 0, 0);\\">[Name]<\\/span><\\/span><\\/p><p style=\\"font-family: Arial, Verdana, sans-serif;\\"><span style=\\"font-size:48px;\\"><span style=\\"color: #Color#;\\"><strong>[Title]<\\/strong><\\/span><\\/span><\\/p><p style=\\"font-family: Arial, Verdana, sans-serif;\\"><span style=\\"font-size:48px;\\"><span style=\\"color: #Color#;\\">[Description]<\\/span><\\/span><\\/p>","css":""},{"id":"media-rss-with-title","value":"Image overlaid with the Title","template":"<div class=\\"image\\">[Link|image]<div class=\\"cycle-overlay\\"><p style=\\"font-family: Arial, Verdana, sans-serif; font-size:48px;\\">[Title]<\\/p><\\/div><\\/div>","css":".image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}"}]}' WHERE `module`.`Module` = 'ticker';
 
 UPDATE `version` SET `app_ver` = '1.7.0-beta', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

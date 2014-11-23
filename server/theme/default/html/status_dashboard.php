@@ -115,7 +115,7 @@ $displays = (is_array($displays)) ? $displays : array();
         <div class="widget">
             <div class="widget-title">
                 <i class="fa fa-tasks"></i>
-                <?php if (Theme::Get('xmdsLimit') != '' ) {
+                <?php if (Theme::Get('libraryLimit') != '' ) {
                     echo Theme::Translate('Library Usage. Limit %s', Theme::Get('libraryLimit'));
                 }
                 else {

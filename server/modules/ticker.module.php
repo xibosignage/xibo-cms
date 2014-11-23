@@ -339,7 +339,7 @@ class ticker extends Module
                 __('A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.'), '');
 
             // Encode up the template
-            //$formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'prominent-title-with-desc-and-name-separator', 'value' => 'Prominent title with description and name separator', 'template' => '<p style="color: rgb(34, 34, 34); font-family: Arial, Verdana, sans-serif;"><span style="font-size:28px;"><span style="color: rgb(255, 0, 0);">[Name]</span></span></p><p style="color: rgb(34, 34, 34); font-family: Arial, Verdana, sans-serif;"><span style="font-size:48px;"><span style="color: rgb(0, 0, 0);"><strong>[Title]</strong></span></span></p><p style="color: rgb(34, 34, 34); font-family: Arial, Verdana, sans-serif;"><span style="font-size:48px;"><span style="color: rgb(0, 0, 0);">[Description]</span></span></p>', 'css' => ''))) . '</pre>');
+            $formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'media-rss-with-title', 'value' => 'Image overlaid with the Title', 'template' => '<div class="image">[Link|image]<div class="cycle-overlay"><p style="font-family: Arial, Verdana, sans-serif; font-size:48px;">[Title]</p></div></div>', 'css' => '.image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}'))) . '</pre>');
         }
 
         // Get the CSS node
@@ -819,7 +819,7 @@ class ticker extends Module
         $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
 
         // Need the marquee plugin?
-        if (stripos($effect, 'marquee'))
+        if (stripos($effect, 'marquee') !== false)
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
         
         // Need the cycle plugin?
@@ -929,18 +929,20 @@ class ticker extends Module
                                 if ($enclosure = $item->get_enclosure()) {
                                     // Use the link to get the image
                                     $link = $enclosure->get_link();
-
-                                    if ($link != NULL) {
-                                        // Grab the profile image
-                                        $file = $media->addModuleFileFromUrl($link, 'ticker_' . md5($this->GetOption('url') . $link), $expires);
-
-                                        // Tag this layout with this file
-                                        $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
-
-                                        $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
-                                    }
                                 }
                                 break;
+                        }
+
+                        // If we have managed to resolve a link, download it and replace the tag with the downloaded
+                        // image url
+                        if ($link != NULL) {
+                            // Grab the profile image
+                            $file = $media->addModuleFileFromUrl($link, 'ticker_' . md5($this->GetOption('url') . $link), $expires);
+
+                            // Tag this layout with this file
+                            $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
+
+                            $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" ' . $attribs . '/>' : '<img src="' . $file['storedAs'] . '" ' . $attribs . ' />';
                         }
                     }
                     else {
