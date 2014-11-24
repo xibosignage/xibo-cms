@@ -45,18 +45,18 @@ jQuery.fn.extend({
 
                 // Set frame to the full size and scale it back to fit inside the window
                 if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
-                        $(this).css({
-                            "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + options.scale + ", M12=0, M21=0, M22=" + options.scale + ", SizingMethod=\'auto expand\'"
-                        });
-                    }
-                    else {
-                        $(this).css({
-                            "transform": "scale(" + options.scale + ")",
-                            "transform-origin": "0 0",
-                            "width": options.iframeWidth,
-                            "height": options.iframeHeight
-                        });
-                    }
+                    $(this).css({
+                        "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + options.scale + ", M12=0, M21=0, M22=" + options.scale + ", SizingMethod=\'auto expand\'"
+                    });
+                }
+                else {
+                    $(this).css({
+                        "transform": "scale(" + options.scale + ")",
+                        "transform-origin": "0 0",
+                        "width": options.iframeWidth,
+                        "height": options.iframeHeight
+                    });
+                }
             }
             else {
                 // Manual Position. This is the default.

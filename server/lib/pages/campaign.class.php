@@ -663,6 +663,7 @@ class campaignDAO extends baseDAO
 
         $formFields = array();
         $formFields[] = FormManager::AddText('filter_name', __('Name'), NULL, NULL, 'l');
+        $formFields[] = FormManager::AddText('filter_tags', __('Tags'), NULL, NULL, 't');
         Theme::Set('form_fields', $formFields);
 
         // Set the layouts assigned
@@ -700,9 +701,10 @@ class campaignDAO extends baseDAO
 
         //Input vars
         $name = Kit::GetParam('filter_name', _POST, _STRING);
+        $tags = Kit::GetParam('filter_tags', _POST, _STRING);
 
         // Get a list of media
-        $layoutList = $user->LayoutList(NULL, array('layout' => $name));
+        $layoutList = $user->LayoutList(NULL, array('layout' => $name, 'tags' => $tags));
 
         $cols = array(
                 array('name' => 'layout', 'title' => __('Name'))

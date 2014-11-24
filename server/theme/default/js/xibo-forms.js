@@ -425,7 +425,7 @@ var forecastIoFormSetup = function() {
     $('#color').colorpicker();
 
     // If all 3 of the template fields are empty, then the template should be reapplied.
-    if ($("#currentTemplate").val() == "" || $("#dailyTemplate").val() == "" || $("#styleSheet").val() == "" || !$("#overrideTemplate").is(":checked")) {
+    if (!$("#overrideTemplate").is(":checked") && ($("#currentTemplate").val() == "" || $("#dailyTemplate").val() == "" || $("#styleSheet").val() == "")) {
         // Reapply
         var templateId = $("#templateId").val();
 

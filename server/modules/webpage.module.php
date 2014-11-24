@@ -92,7 +92,7 @@ class webpage extends Module
             __('The starting point from the left in pixels'), 'l', NULL, 'webpage-offsets');
 
         $formFields[] = FormManager::AddNumber('scaling', __('Scale Percentage'), NULL, 
-            __('The Percentage to Scale this Webpage (0 - 100'), 's', NULL, 'webpage-offsets');
+            __('The Percentage to Scale this Webpage (0 - 100)'), 's', NULL, 'webpage-offsets');
 
         $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
             NULL, __('Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client.'), 
@@ -200,7 +200,7 @@ class webpage extends Module
             __('The starting point from the left in pixels'), 'l', NULL, 'webpage-offsets');
 
         $formFields[] = FormManager::AddNumber('scaling', __('Scale Percentage'), $this->GetOption('scaling'), 
-            __('The Percentage to Scale this Webpage (0 - 100'), 's', NULL, 'webpage-offsets');
+            __('The Percentage to Scale this Webpage (0 - 100)'), 's', NULL, 'webpage-offsets');
            
         $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
             $this->GetOption('transparency'), __('Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client.'), 
@@ -459,8 +459,8 @@ class webpage extends Module
         $after_body .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-webpage-render.js"></script>';
         $after_body .= '<script>
             var options = ' . json_encode($options) . '
-            $(document).ready(function() {
-                $("#content").xiboLayoutScaler(options);
+            $(document).ready(function() { ' .
+                (($this->GetOption('modeid') != 2) ? '$("#content").xiboLayoutScaler(options)' : '') . '
                 $("#iframe").xiboIframeScaler(options);
             });
             </script>';

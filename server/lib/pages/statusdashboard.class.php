@@ -131,6 +131,7 @@ class statusdashboardDAO extends baseDAO {
                     );
             }
 
+            Theme::Set('libraryLimitSet', $libraryLimit);
             Theme::Set('libraryLimit', (round((double)$libraryLimit / (pow(1024, $base)), 2)) . ' ' . $suffixes[$base]);
             Theme::Set('librarySize', Kit::formatBytes($totalSize, 1));
             Theme::Set('librarySuffix', $suffixes[$base]);
