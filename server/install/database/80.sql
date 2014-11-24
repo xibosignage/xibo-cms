@@ -114,7 +114,7 @@ UPDATE `setting` SET cat = 'users', ordering = 10, usersee = '1', userchange = '
 UPDATE `setting` SET cat = 'users', ordering = 20, usersee = '1', userchange = '1', `default` = '', `title` = 'Password Policy Regular Expression' WHERE setting = 'USER_PASSWORD_POLICY';
 UPDATE `setting` SET cat = 'users', ordering = 30, usersee = '1', userchange = '1', `default` = '', `title` = 'Description of Password Policy' WHERE setting = 'USER_PASSWORD_ERROR';
 
-ALTER TABLE  `schedule` ADD  `DisplayOrder` INT NOT NULL DEFAULT  '0';
+ALTER TABLE  `schedule` ADD  `DisplayOrder` INT NOT NULL DEFAULT '0';
 
 UPDATE `schedule` SET DisplayOrder = (SELECT MAX(DisplayOrder) FROM `schedule_detail` WHERE schedule_detail.eventid = schedule.eventid);
 

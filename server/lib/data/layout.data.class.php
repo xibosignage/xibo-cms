@@ -854,6 +854,17 @@ class Layout extends Data
             if (!$this->SetDomXml($newLayoutId))
                 $this->ThrowError(25000, __('Unable to copy layout'));
 
+            // Handle the Background
+            $sth = $dbh->prepare('SELECT mediaId FROM lklayoutmedia WHERE layoutId = :layoutId AND regionId = :regionId');
+            $sth->execute(array('layoutId' => $oldLayoutId, 'regionId' => 'background'));
+
+            if ($row = $sth->fetch()) {
+                // This layout does have a background image
+                // Link it to the new one
+                if (!$lkId = $this->AddLk($newLayoutId, 'background', $row['mediaId']))
+                    throw new Exception(__('Unable to link background'));
+            }
+
             // Get all media nodes
             $xpath = new DOMXpath($this->DomXml);
     

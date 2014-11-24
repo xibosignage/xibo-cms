@@ -2231,7 +2231,7 @@ END;
         
         // Send via Nginx X-Accel-Redirect?
         if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
-            header("X-Accel-Redirect: /download/" . $this->storedAs);
+            header("X-Accel-Redirect: /download/" . basename($fileName));
             exit();
         }
         
