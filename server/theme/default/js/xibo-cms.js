@@ -253,7 +253,7 @@ function XiboInitialise(scope) {
 
         var formUrl = $(this).attr("href");
 
-        XiboHelpRender(formUrl);
+        window.open(formUrl);
 
         return false;
     });
@@ -829,6 +829,10 @@ function XiboMultiSelectFormRender(button) {
 
 }
 
+function XiboHelpRender(url) {
+    window.open(url);
+}
+
 /**
  * Xibo Ping
  * @param {String} url
@@ -992,77 +996,6 @@ function XiboSubmitResponse(response, form) {
         }
     }
 
-    return false;
-}
-
-/**
- * Renders the formid provided
- * @param {String} formId
- */
-function XiboHelpRender(formUrl) {
-
-    // Call with AJAX
-    $.ajax({
-        type: "get",
-        url: formUrl + "&ajax=true",
-        cache: false,
-        dataType: "json",
-        success: function(response){
-
-            // Was the Call successful
-            if (response.success) {
-                
-                var dialogTitle = "Xibo Help";
-                
-                // Is there a title for the dialog?
-                if (response.dialogTitle != undefined && response.dialogTitle != "") {
-                    // Set the dialog title
-                    dialogTitle =  response.dialogTitle;
-                }
-
-                var buttons = [];
-                buttons.push({
-                    label: 'Close',
-                        callback: function() {
-                            dialog.modal('hide');
-                        }
-                });
-
-                // Create the dialog with our parameters
-                var dialog = bootbox.dialog({
-                    message: response.html,
-                    title: "Manual",
-                    buttons: buttons,
-                    animate: false,
-                    className: "modal-big help-modal-big"
-                });
-
-                // Adjust the height of the iframe
-                var height = $(window).height(); 
-                $(".full-iframe").height(height - 250);
-            }
-            else {
-                // Login Form needed?
-                if (response.login) {
-                    LoginBox(response.message);
-                    return false;
-                }
-                else {
-                    // Just an error we dont know about
-                    if (response.message == undefined) {
-                        SystemMessage(response);
-                    }
-                    else {
-                        SystemMessage(response.message);
-                    }
-                }
-            }
-
-            return false;
-        }
-    });
-
-    // Dont then submit the link/button
     return false;
 }
 

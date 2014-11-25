@@ -20,76 +20,37 @@
  */ 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class HelpManager {	
-	/**
-	 * Help Button
-	 * @return 
-	 * @param $location Object
-	 * @param $return Object[optional]
-	 */
-	public function HelpButton($location, $return = false) 
-	{
-		$db 		=& $this->db;
-		
-		$location	= explode('/', $location);
-		$topic		= ucfirst($location[0]);
-		$category	= ucfirst($location[1]);
-		
-		$msgHelp	= __('Help');
-		
-		$button = '<input type="button" class="XiboHelpButton" href="' . 'index.php?p=help&q=Display&Topic=' . $topic . '&Category=' . $category . '" value="'. $msgHelp .'" />';
-	
-		if ($return)
-		{
-			return $button;
-		}
-		else
-		{
-			echo $button;
-			return true;
-		}
-	}
-	
-	/**
-	 * Help Icon
-	 * @return 
-	 * @param $title Object
-	 * @param $return Object[optional]
-	 * @param $image Object[optional]
-	 * @param $alt Object[optional]
-	 */
-	public function HelpIcon($title, $return = false, $image = "theme/default/img/forms/info_icon.gif", $alt = "Hover for more info")
-	{
-		$button = <<<END
-		<img src="$image" alt="$alt" title="$title">
-END;
-		
-		if ($return)
-		{
-			return $button;
-		}
-		else
-		{
-			echo $button;
-			return true;
-		}
-	}
-	
-	/**
-	 * Outputs a help link
-	 * @return 
-	 * @param $topic Object[optional]
-	 * @param $category Object[optional]
-	 */
-	public static function Link($topic = "", $category = "General")
-	{
-		// if topic is empty use the page name
-		$topic	= ($topic == '') ? Kit::GetParam('p', _REQUEST, _WORD) : $topic;
-		$topic	= ucfirst($topic);
-		
-		$link	= 'index.php?p=help&q=Display&Topic=' . $topic . '&Category=' . $category . '';
-		
-		return $link;		
-	}
+class HelpManager
+{
+    /**
+     * Outputs a help link
+     * @return 
+     * @param $topic Object[optional]
+     * @param $category Object[optional]
+     */
+    public static function Link($topic = "", $category = "General")
+    {
+        // if topic is empty use the page name
+        $topic  = ($topic == '') ? Kit::GetParam('p', _REQUEST, _WORD) : $topic;
+        $topic  = ucfirst($topic);
+
+        // Get the link
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('SELECT Link FROM help WHERE Topic = :topic and Category = :cat');
+            
+
+            if (!$link = $sth->fetchColumn(0)) {
+                $sth->execute(array('topic' => $topic, 'cat' => 'General'));
+                $link = $sth->fetchColumn(0);
+            }
+
+            return Config::GetSetting('HELP_BASE') . $link;
+        }
+        catch (Exception $e) {
+            return false;
+        }
+    }
 }
 ?>
