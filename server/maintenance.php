@@ -130,6 +130,7 @@ else
 
         $emailAlerts = (Config::GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
         $alwaysAlert = (Config::GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
+        $alertForViewUsers = (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1);
         
         // The time in the past that the last connection must be later than globally.
         $globalTimeout = time() - (60 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_ALERT_TOUT"), _INT));
@@ -150,6 +151,15 @@ else
                             Kit::ValidateParam($display['display'], _STRING), 
                             Kit::ValidateParam($display['displayid'], _INT), 
                             date("Y-m-d H:i:s", Kit::ValidateParam($display['lastaccessed'], _INT)));
+
+                        // Get a list of people that have view access to the display?
+                        if ($alertForViewUsers) {
+                            foreach (Display::getUsers($display['displayid']) as $user) {
+                                if ($user['email'] != '') {
+                                    Kit::SendEmail($user['email'], $msgFrom, $subject, $body);
+                                }
+                            }
+                        }
 
                         if (Kit::SendEmail($msgTo, $msgFrom, $subject, $body)) {
                             // Successful Alert

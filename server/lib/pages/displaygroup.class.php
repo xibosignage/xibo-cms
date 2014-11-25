@@ -528,7 +528,7 @@ class displaygroupDAO extends baseDAO
             trigger_error($permissions->GetErrorMessage(), E_USER_ERROR);
 
         if (count($result) <= 0)
-            trigger_error(__('Unable to get permissions for this Campaign'), E_USER_ERROR);
+            trigger_error(__('Unable to get permissions for this Display Group'), E_USER_ERROR);
 
         $checkboxes = array();
 

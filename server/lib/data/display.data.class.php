@@ -20,9 +20,6 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-// Companion classes
-Kit::ClassLoader('displaygroup');
-
 class Display extends Data {
 
     public $loaded;
@@ -835,6 +832,46 @@ class Display extends Data {
             if (!$this->IsError())
                 $this->SetError(25012, __('Unknown Error.'));
 
+            return false;
+        }
+    }
+
+    /**
+     * Get a list of users that have permission for the provided display
+     * @param  int $displayId The Display
+     * @param  string $authLevel The Auth Level (view|edit|delete)
+     * @return array Users Array
+     */
+    public static function getUsers($displayId, $authLevel = 'view')
+    {
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('
+                    SELECT DISTINCT user.userId, user.userName, user.email 
+                      FROM `user` 
+                        INNER JOIN `lkusergroup` 
+                        ON lkusergroup.userId = user.userId
+                        INNER JOIN `group` 
+                        ON group.groupId = lkusergroup.groupId
+                        INNER JOIN `lkdisplaygroupgroup` 
+                        ON lkdisplaygroupgroup.groupId = group.groupId
+                        INNER JOIN `displaygroup` 
+                        ON displaygroup.displayGroupId = lkdisplaygroupgroup.displayGroupId
+                        INNER JOIN `lkdisplaydg` 
+                        ON lkdisplaydg.displayGroupId = lkdisplaygroupgroup.displayGroupId
+                     WHERE lkdisplaydg.displayId = :displayId
+                ');
+
+            $sth->execute(array(
+                    'displayId' => $displayId
+                ));
+            
+            // Return this list of users
+            return $sth->fetchAll();
+        }
+        catch (Exception $e) {            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
             return false;
         }
     }

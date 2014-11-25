@@ -282,19 +282,11 @@ class adminDAO extends baseDAO {
 	 */
 	public function SetMaxDebug()
 	{
-		$db			=& $this->db;
 		$response	= new ResponseManager();
 		$setting 	= new Setting($db);
 		
-		if (!$setting->Edit('debug', 'On'))
-		{
-			trigger_error(__('Cannot set debug to On'));
-		}
-		
-		if (!$setting->Edit('audit', 'On'))
-		{
-			trigger_error(__('Cannot set audit to On'));
-		}
+		if (!$setting->Edit('audit', 'audit'))
+            trigger_error(__('Cannot set audit to On'));
 		
 		$response->SetFormSubmitResponse(__('Debugging switched On.'));
 		$response->Respond();
@@ -310,15 +302,8 @@ class adminDAO extends baseDAO {
 		$response	= new ResponseManager();
 		$setting 	= new Setting($db);
 		
-		if (!$setting->Edit('debug', 'Off'))
-		{
-			trigger_error(__('Cannot set debug to Off'), E_USER_ERROR);
-		}
-		
-		if (!$setting->Edit('audit', 'Off'))
-		{
-			trigger_error(__('Cannot set audit to Off'), E_USER_ERROR);
-		}
+		if (!$setting->Edit('audit', 'error'))
+            trigger_error(__('Cannot set audit to Off'), E_USER_ERROR);
 		
 		$response->SetFormSubmitResponse(__('Debugging switched Off.'));
 		$response->Respond();

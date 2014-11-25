@@ -382,6 +382,12 @@ END;
                     'username' => $username,
                     'password' => md5($password)
                 ));
+
+            // Update group ID 3 with the user name
+            $sth = $dbh->prepare('UPDATE `group` SET group = :username WHERE groupId = 3 LIMIT 1');
+            $sth->execute(array(
+                    'username' => $username
+                ));
         }
         catch (Exception $e) {
             throw new Exception(sprintf(__('Unable to set the user details. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));

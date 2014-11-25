@@ -1148,6 +1148,15 @@ class XMDSSoap3
             $subject  = sprintf(__("Recovery for Display %s"),$row[7]);
             $body     = sprintf(__("Display %s with ID %d is now back online."), $row[7], $row[3]);
 
+            // Get a list of people that have view access to the display?
+            if (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
+                foreach (Display::getUsers($row[3]) as $user) {
+                    if ($user['email'] != '') {
+                        Kit::SendEmail($user['email'], $msgFrom, $subject, $body);
+                    }
+                }
+            }
+
             Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
         }
 

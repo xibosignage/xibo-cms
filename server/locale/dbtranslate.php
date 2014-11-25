@@ -62,7 +62,6 @@ echo __('Help Links');
 echo __('Media Permissions');
 echo __('Layout Permissions');
 echo __('Default User Type');
-echo __('Enable Debugging?');
 echo __('User Module');
 echo __('Timezone');
 echo __('Admin email address');
@@ -70,7 +69,7 @@ echo __('Sending email address');
 echo __('Default Image Duration');
 echo __('Default PowerPoint Duration');
 echo __('Default Flash Duration');
-echo __('Enable Auditing?');
+echo __('Log Level');
 echo __('Library Location');
 echo __('CMS Secret Key');
 echo __('Location of the Manual');
@@ -123,6 +122,7 @@ echo __('Add STS to the response headers? Make sure you fully understand STS bef
 echo __('The Time to Live (maxage) of the STS header expressed in minutes.');
 echo __('Maintenance Alerts for Users');
 echo __('Email maintenance alerts for users with view permissions to effected Displays.');
+echo __('Set the level of logging the CMS should record. In production systems "error" is recommended.');
 
 
 // Transitions

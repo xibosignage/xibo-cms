@@ -1319,7 +1319,7 @@ class XMDSSoap4 {
     private function AlertDisplayUp($displayId, $display, $loggedIn, $emailAlert) {
 
         $maintenanceEnabled = Config::GetSetting('MAINTENANCE_ENABLED');
-
+        
         if ($loggedIn == 0) {
 
             // Log display up
@@ -1336,6 +1336,16 @@ class XMDSSoap4 {
                 $subject = sprintf(__("Recovery for Display %s"), $display);
                 $body = sprintf(__("Display %s with ID %d is now back online."), $display, $displayId);
 
+                // Get a list of people that have view access to the display?
+                if (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
+                    foreach (Display::getUsers($displayId) as $user) {
+                        if ($user['email'] != '') {
+                            Kit::SendEmail($user['email'], $msgFrom, $subject, $body);
+                        }
+                    }
+                }
+
+                // Send to the original admin contact
                 Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
             }
         }

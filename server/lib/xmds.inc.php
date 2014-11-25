@@ -111,7 +111,7 @@ if(Config::GetSetting('SERVER_MODE') == 'Test')
     ini_set('display_errors', 1);
 
 // Debugging?
-if(Config::GetSetting('debug') == 'On') 
+if (Debug::getLevel(Config::GetSetting('audit')) == 10)
     error_reporting(E_ALL);
 
 // Work out the location of this service
