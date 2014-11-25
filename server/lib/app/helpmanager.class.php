@@ -52,5 +52,10 @@ class HelpManager
             return false;
         }
     }
+
+    public static function rawLink($link)
+    {
+        return Config::GetSetting('HELP_BASE') . $link;
+    }
 }
 ?>
