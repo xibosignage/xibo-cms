@@ -64,7 +64,7 @@ class XMDSSoap3
         try {
             $dbh = PDOConnect::init();
             $sth = $dbh->prepare('
-                SELECT licensed
+                SELECT licensed, displayid
                   FROM display 
                 WHERE license = :hardwareKey');
 
@@ -97,10 +97,10 @@ class XMDSSoap3
 
         // Touch the display record
         $displayObject = new Display();
-        $displayObject->Touch($displayid);
+        $displayObject->Touch($row['displayid']);
 
         // Log Bandwidth
-        $this->LogBandwidth($displayid, Bandwidth::$REGISTER, strlen($active));
+        $this->LogBandwidth($row['displayid'], Bandwidth::$REGISTER, strlen($active));
 
         Debug::LogEntry('audit', $active, get_class(), __FUNCTION__);
 
