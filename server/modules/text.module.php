@@ -460,9 +460,14 @@ class text extends Module
         // See if we need to replace out any [clock] or [date] tags
         $clock = false;
 
-        if (stripos($text, '[Clock|')) {
+        if (stripos($text, '[Clock]')) {
             $clock = true;
             $text = str_replace('[Clock]', '[HH:mm]', $text);
+        }
+
+        if (stripos($text, '[Clock|')) {
+            $clock = true;
+            $text = str_replace('[Clock|', '[', $text);
         }
 
         if (stripos($text, '[Date]')) {
@@ -476,7 +481,7 @@ class text extends Module
             preg_match_all('/\[.*?\]/', $text, $matches);
 
             foreach($matches[0] as $subs) {
-                $text = str_replace($subs, '<span class="clock" format="' . str_replace('[Clock|', '', str_replace(']', '', $subs)) . '"></span>', $text);
+                $text = str_replace($subs, '<span class="clock" format="' . str_replace('[', '', str_replace(']', '', $subs)) . '"></span>', $text);
             }
         }
 

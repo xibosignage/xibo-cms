@@ -384,7 +384,7 @@ END;
                 ));
 
             // Update group ID 3 with the user name
-            $sth = $dbh->prepare('UPDATE `group` SET group = :username WHERE groupId = 3 LIMIT 1');
+            $sth = $dbh->prepare('UPDATE `group` SET `group` = :username WHERE groupId = 3 LIMIT 1');
             $sth->execute(array(
                     'username' => $username
                 ));
