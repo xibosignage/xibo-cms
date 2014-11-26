@@ -79,19 +79,21 @@ class DisplayProfile extends Data {
 
     public function LoadDefault() {
 
-        Debug::Audit('Load Default');
+        Debug::Audit('Load Default ' . $this->type);
 
         try {
             $dbh = PDOConnect::init();
         
-            $sth = $dbh->prepare('SELECT * FROM `displayprofile` WHERE type = :type AND IsDefault = 1');
+            $sth = $dbh->prepare('SELECT * FROM `displayprofile` WHERE `type` = :type AND isdefault = 1');
             $sth->execute(array(
-                    'type' => $this->displayProfileId
+                    'type' => $this->type
                 ));
           
             if (!$row = $sth->fetch()) {
+                Debug::Audit('Fall back to global default');
+
                 // Return the client default
-                include_once('config/client.config.php');
+                include('config/client.config.php');
                 $this->name = $CLIENT_CONFIG[$this->type]['synonym'];
                 $this->type = $this->type;
                 $this->config = $CLIENT_CONFIG[$this->type]['settings'];

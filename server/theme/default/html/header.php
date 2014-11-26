@@ -40,6 +40,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <link href="theme/default/libraries/jquery-tablesorter/css/theme.bootstrap.css" rel="stylesheet">
         <link href="theme/default/libraries/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css" rel="stylesheet">
         <link href="theme/default/libraries/jquery-file-upload/css/jquery.fileupload-ui.css" rel="stylesheet">
+        <link href="modules/preview/fonts.css" rel="stylesheet">
         <link href="<?php echo Theme::ItemPath('css/xibo.css'); ?>" rel="stylesheet" media="screen">
         <link href="<?php echo Theme::ItemPath('css/dashboard.css'); ?>" rel="stylesheet" media="screen">
         <link href="<?php echo Theme::ItemPath('css/timeline.css'); ?>" rel="stylesheet" media="screen">
@@ -106,7 +107,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                         <a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo Theme::Translate('About the CMS'); ?>"><?php echo Theme::Translate('About'); ?></a>
                     </div>
                     <div class="col-sm-4">
-                        <a href="manual/" target="_blank" title="<?php echo Theme::Translate('Open the Manual in a new Window'); ?>"><?php echo Theme::Translate('Manual'); ?></a>
+                        <a href="<?php echo Config::GetSetting('HELP_BASE'); ?>" target="_blank" title="<?php echo Theme::Translate('Open the Manual in a new Window'); ?>"><?php echo Theme::Translate('Manual'); ?></a>
                     </div>
                 </div>
             </div>

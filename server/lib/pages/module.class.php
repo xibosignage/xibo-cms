@@ -56,6 +56,19 @@ class moduleDAO extends baseDAO
 
         return true;
     }
+
+    function actionMenu()
+    {
+        return array(
+                array('title' => __('Verify All'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=module&q=VerifyForm',
+                    'help' => __('Verify all modules have been installed correctly.'),
+                    'onclick' => ''
+                    )
+            );                   
+    }
     
     /**
      * Display the module page
@@ -298,6 +311,9 @@ class moduleDAO extends baseDAO
         include_once('modules/' . $type . '.module.php');
         $module = new $type($this->db, $this->user);
 
+        // Install Files for this module
+        $module->InstallFiles();
+
         try {
             // Get the settings (may throw an exception)
             $settings = json_encode($module->ModuleSettings());
@@ -332,7 +348,62 @@ class moduleDAO extends baseDAO
         }
     }
 
-    public function Install() {
+    /**
+     * Edit Form
+     */
+    public function VerifyForm()
+    {
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $helpManager = new HelpManager(NULL, $user);
+
+        // Set some information about the form
+        Theme::Set('form_id', 'VerifyForm');
+        Theme::Set('form_action', 'index.php?p=module&q=Verify');
+
+        $formFields = array();
+        $formFields[] = FormManager::AddMessage(__('Verify all modules have been installed correctly by reinstalling any module related files'));
+        
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Verify'), '350px', '325px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Module', 'Edit') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Verify'), '$("#VerifyForm").submit()');
+        $response->Respond();
+    }
+
+    public function Verify()
+    {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
+        $response = new ResponseManager();
+
+        try {
+            $dbh = PDOConnect::init();
+        
+            $dbh->exec('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1');
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+
+        Media::installAllModuleFiles();
+
+        $response->SetFormSubmitResponse(__('Verified'), false);
+        $response->Respond();
+    }
+
+    public function Install()
+    {
         // Module file name
         $file = Kit::GetParam('module', _GET, _STRING);
 

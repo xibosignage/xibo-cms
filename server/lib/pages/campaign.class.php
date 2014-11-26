@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2012-2013 Daniel Garner
+ * Copyright (C) 2012-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -587,8 +587,8 @@ class campaignDAO extends baseDAO
         
         $db =& $this->db;
         $response = new ResponseManager();
-        Kit::ClassLoader('campaign');
-        $campaignObject = new Campaign($db);
+
+        $campaignObject = new Campaign();
 
         $campaignId = Kit::GetParam('CampaignID', _REQUEST, _INT);
         $layouts = Kit::GetParam('LayoutID', _POST, _ARRAY, array());
@@ -598,21 +598,34 @@ class campaignDAO extends baseDAO
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this campaign'), E_USER_ERROR);
 
+        // Get all current members
+        $currentMembers = Layout::Entries(NULL, array('campaignId' => $campaignId));
+
+        // Flatten
+        $currentLayouts = array_map(function($element) {
+            return $element->layoutId;
+        }, $currentMembers);
+
+        // Work out which ones are NEW
+        $newLayouts = array_diff($currentLayouts, $layouts);
+
+        // Check permissions to all new layouts that have been selected
+        foreach ($newLayouts as $layoutId) {
+            // Authenticate
+            $auth = $this->user->LayoutAuth($layoutId, true);
+            if (!$auth->view)
+                trigger_error(__('Your permissions to view a layout you are adding have been revoked. Please reload the Layouts form.'), E_USER_ERROR);
+        }
+
         // Remove all current members
         $campaignObject->UnlinkAll($campaignId);
 
         // Add all new members
         $displayOrder = 1;
 
-        foreach($layouts as $layoutId)
-        {
-            // Authenticate
-            $auth = $this->user->LayoutAuth($layoutId, true);
-            if (!$auth->view)
-                trigger_error(__('Your permissions to view a layout you are adding have been revoked. Please reload the Layouts form.'), E_USER_ERROR);
-
+        foreach($layouts as $layoutId) {
+            // By this point everything should be authenticated
             $campaignObject->Link($campaignId, $layoutId, $displayOrder);
-
             $displayOrder++;
         }
 
@@ -638,17 +651,7 @@ class campaignDAO extends baseDAO
         Theme::Set('pager', ResponseManager::Pager($id, 'grid_pager'));
         
         // Get the currently assigned layouts and put them in the "well"
-        // Layouts in group
-        $SQL  = "SELECT layout.Layoutid, ";
-        $SQL .= "       layout.layout, ";
-        $SQL .= "       CONCAT('LayoutID_', layout.LayoutID) AS list_id ";
-        $SQL .= "FROM   layout ";
-        $SQL .= "       INNER JOIN lkcampaignlayout ";
-        $SQL .= "       ON     lkcampaignlayout.LayoutID = layout.LayoutID ";
-        $SQL .= sprintf("WHERE  lkcampaignlayout.CampaignID = %d", $campaignId);
-        $SQL .= " ORDER BY lkcampaignlayout.DisplayOrder ";
-
-        $layoutsAssigned = $db->GetArray($SQL);
+        $layoutsAssigned = Layout::Entries(array('lkcl.DisplayOrder'), array('campaignId' => $campaignId));
 
         if (!is_array($layoutsAssigned))
         {
@@ -660,6 +663,7 @@ class campaignDAO extends baseDAO
 
         $formFields = array();
         $formFields[] = FormManager::AddText('filter_name', __('Name'), NULL, NULL, 'l');
+        $formFields[] = FormManager::AddText('filter_tags', __('Tags'), NULL, NULL, 't');
         Theme::Set('form_fields', $formFields);
 
         // Set the layouts assigned
@@ -697,9 +701,10 @@ class campaignDAO extends baseDAO
 
         //Input vars
         $name = Kit::GetParam('filter_name', _POST, _STRING);
+        $tags = Kit::GetParam('filter_tags', _POST, _STRING);
 
         // Get a list of media
-        $layoutList = $user->LayoutList(NULL, array('layout' => $name));
+        $layoutList = $user->LayoutList(NULL, array('layout' => $name, 'tags' => $tags));
 
         $cols = array(
                 array('name' => 'layout', 'title' => __('Name'))

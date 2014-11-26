@@ -54,65 +54,6 @@ class helpDAO extends baseDAO {
             );
     }
 
-    /**
-     * Displays the particular help subject / page
-     * @return
-     */
-    function Display()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-
-        $response	= new ResponseManager();
-        $width          = 1000;
-        $height         = 650;
-
-        $topic	 	= Kit::GetParam('Topic', _REQUEST, _WORD);
-        $category 	= Kit::GetParam('Category', _REQUEST, _WORD, 'General');
-
-        if ($topic != '')
-        {
-            Debug::LogEntry('audit', 'Help requested for Topic = ' . $topic);
-
-            // Look up this help topic / category in the db
-            $SQL = "SELECT Link FROM help WHERE Topic = '%s' and Category = '%s'";
-            $SQL = sprintf($SQL, $db->escape_string($topic), $db->escape_string($category));
-
-            Debug::LogEntry('audit', $SQL);
-
-            if(!$results = $db->query($SQL))
-            {
-                trigger_error($db->error());
-                trigger_error(__('Error getting Help Link'), E_USER_ERROR);
-            }
-
-            if ($db->num_rows($results) != 0)
-            {
-                $row 	= $db->get_row($results);
-                $link 	= $row[0];
-
-                // Store the link for the requested help page
-                $this->helpLink = $link;
-            }
-            else
-            {
-                trigger_error(sprintf(__('No help file found for Topic %s and Category %s.'), $topic, $category), E_USER_ERROR);
-            }
-        }
-        else
-        {
-            trigger_error(__('You must specify a help page.'), E_USER_ERROR);
-        }
-
-        $helpLink 	= $this->helpLink;
-        $out 		= '<iframe class="full-iframe" src="' . $helpLink . '"></iframe>';
-
-        $response->SetFormRequestResponse($out, __('Help'), $width, $height);
-        $response->Respond();
-
-        return true;
-    }
-
     public function Grid()
     {
         $db =& $this->db;

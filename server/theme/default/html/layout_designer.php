@@ -49,7 +49,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			</button>
 			<ul class="dropdown-menu">
 				<li><a class="XiboAjaxSubmit" href="<?php echo Theme::Get('layout_form_addregion_url'); ?>" title="<?php echo Theme::Translate('Add Region'); ?>"><span><?php echo Theme::Translate('Add Region'); ?></span></a></li>
+				<?php if (Theme::Get('layoutVersion') >= 2) { ?>
 				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_edit_background_url'); ?>" title="<?php echo Theme::Translate('Background'); ?>"><span><?php echo Theme::Translate('Background'); ?></span></a></li>
+				<?php } ?>
 				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_edit_url'); ?>" title="<?php echo Theme::Translate('Edit the Layout Properties'); ?>"><span><?php echo Theme::Translate('Properties'); ?></span></a></li>
 				<li class="divider"></li>
                 <li><a href="<?php echo Theme::Get('layout_form_preview_url'); ?>" title="<?php echo Theme::Translate('Preview Layout'); ?>" target="_blank"><span><?php echo Theme::Translate('Preview Layout'); ?></span></a></li>
@@ -59,6 +61,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 				<li class="divider"></li>
 				<li><a href="<?php echo Theme::Get('layout_zoom_in_url'); ?>"><span><?php echo Theme::Translate('Shrink Designer'); ?></span></a></li>
 				<li><a href="<?php echo Theme::Get('layout_zoom_out_url'); ?>"><span><?php echo Theme::Translate('Enlarge Designer'); ?></span></a></li>
+				<?php } else { ?>
+				<li class="divider"></li>
+				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_upgrade_url'); ?>"><span><?php echo Theme::Translate('Upgrade Layout'); ?></span></a></li>
 				<?php } ?>
 			</ul>
 		</div>
@@ -76,3 +81,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<?php echo Theme::Get('layout_designer_editor'); ?>
 	</div>
 </div>
+<?php if (Theme::Get('layoutVersion') < 2) { ?>
+<div class="row">
+	<div class="col-md-offset-1 col-md-5">
+		<p class="alert alert-danger"><?php echo Theme::Translate('This is an old format layout, please consider upgrading using the options menu'); ?></p>
+	</div>
+</div>
+<?php } ?>

@@ -30,11 +30,11 @@ class webpage extends Module
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
 
-    private function InstallFiles() {
+    public function InstallFiles() {
         $media = new Media();
-        $media->AddModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');;
-        $media->AddModuleFile('modules/preview/xibo-layout-scaler.js');;
-        $media->AddModuleFile('modules/preview/xibo-webpage-render.js');;
+        $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');;
+        $media->addModuleFile('modules/preview/xibo-layout-scaler.js');;
+        $media->addModuleFile('modules/preview/xibo-webpage-render.js');;
     }
     
     /**
@@ -43,6 +43,7 @@ class webpage extends Module
      */
     public function AddForm()
     {
+        $this->response = new ResponseManager();
         $db         =& $this->db;
         $user       =& $this->user;
                 
@@ -91,7 +92,7 @@ class webpage extends Module
             __('The starting point from the left in pixels'), 'l', NULL, 'webpage-offsets');
 
         $formFields[] = FormManager::AddNumber('scaling', __('Scale Percentage'), NULL, 
-            __('The Percentage to Scale this Webpage (0 - 100'), 's', NULL, 'webpage-offsets');
+            __('The Percentage to Scale this Webpage (0 - 100)'), 's', NULL, 'webpage-offsets');
 
         $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
             NULL, __('Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client.'), 
@@ -145,6 +146,7 @@ class webpage extends Module
      */
     public function EditForm()
     {
+        $this->response = new ResponseManager();
         $db         =& $this->db;
         
         $layoutid   = $this->layoutid;
@@ -198,7 +200,7 @@ class webpage extends Module
             __('The starting point from the left in pixels'), 'l', NULL, 'webpage-offsets');
 
         $formFields[] = FormManager::AddNumber('scaling', __('Scale Percentage'), $this->GetOption('scaling'), 
-            __('The Percentage to Scale this Webpage (0 - 100'), 's', NULL, 'webpage-offsets');
+            __('The Percentage to Scale this Webpage (0 - 100)'), 's', NULL, 'webpage-offsets');
            
         $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
             $this->GetOption('transparency'), __('Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client.'), 
@@ -253,6 +255,7 @@ class webpage extends Module
      */
     public function AddMedia()
     {
+        $this->response = new ResponseManager();
         $db         =& $this->db;
         
         $layoutid   = $this->layoutid;
@@ -306,8 +309,7 @@ class webpage extends Module
         //Set this as the session information
         setSession('content', 'type', 'webpage');
         
-    if ($this->showRegionOptions)
-        {
+        if ($this->showRegionOptions) {
             // We want to load a new form
             $this->response->loadForm = true;
             $this->response->loadFormUri = $url;
@@ -322,6 +324,7 @@ class webpage extends Module
      */
     public function EditMedia()
     {
+        $this->response = new ResponseManager();
         $db         =& $this->db;
         
         $layoutid   = $this->layoutid;
@@ -404,10 +407,8 @@ class webpage extends Module
         return $this->PreviewAsClient($width, $height);
     }
 
-    public function GetResource($displayId = 0) {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-        
+    public function GetResource($displayId = 0)
+    {
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
         
@@ -458,8 +459,8 @@ class webpage extends Module
         $after_body .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-webpage-render.js"></script>';
         $after_body .= '<script>
             var options = ' . json_encode($options) . '
-            $(document).ready(function() {
-                $("#content").xiboLayoutScaler(options);
+            $(document).ready(function() { ' .
+                (($this->GetOption('modeid') != 2) ? '$("#content").xiboLayoutScaler(options)' : '') . '
                 $("#iframe").xiboIframeScaler(options);
             });
             </script>';

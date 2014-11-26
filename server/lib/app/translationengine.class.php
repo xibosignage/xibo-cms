@@ -83,7 +83,7 @@ class TranslationEngine
 
         // Check its valid
         if (!in_array($lang . '.mo', $supportedLangs)) {
-            trigger_error(sprintf('Language not supported. %s', $lang));
+            //trigger_error(sprintf('Language not supported. %s', $lang));
 
             // Fall back
             $lang = 'en_GB';

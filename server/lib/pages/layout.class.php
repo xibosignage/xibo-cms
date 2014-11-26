@@ -48,12 +48,8 @@ class layoutDAO extends baseDAO
             $this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
             $this->layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
 
-            // Include the layout data class
-            include_once("lib/data/layout.data.class.php");
-
-            //if we have modify selected then we need to get some info
-            if ($this->layoutid != '')
-            {
+            // If we have modify selected then we need to get some info
+            if ($this->layoutid != '') {
                 // get the permissions
                 Debug::LogEntry('audit', 'Loading permissions for layoutid ' . $this->layoutid);
 
@@ -64,7 +60,7 @@ class layoutDAO extends baseDAO
 
                 $this->sub_page = "edit";
 
-                $sql  = " SELECT layout, description, userid, retired, tags, xml FROM layout ";
+                $sql  = " SELECT layout, description, userid, retired, xml FROM layout ";
                 $sql .= sprintf(" WHERE layoutID = %d ", $this->layoutid);
 
                 if(!$results = $db->query($sql))
@@ -81,8 +77,7 @@ class layoutDAO extends baseDAO
                     $this->layout = Kit::ValidateParam($aRow[0], _STRING);
                     $this->description  = Kit::ValidateParam($aRow[1], _STRING);
                     $this->retired = Kit::ValidateParam($aRow[3], _INT);
-                    $this->tags = Kit::ValidateParam($aRow[4], _STRING);
-                    $this->xml = $aRow[5];
+                    $this->xml = $aRow[4];
                 }
             }
     }
@@ -105,6 +100,9 @@ class layoutDAO extends baseDAO
                     $retired = Session::Get('layout', 'filter_retired');
                     $owner = Session::Get('layout', 'filter_userid');
                     $filterLayoutStatusId = Session::Get('layout', 'filterLayoutStatusId');
+                    $showDescriptionId = Session::Get('layout', 'showDescriptionId');
+                    $showThumbnail = Session::Get('layout', 'showThumbnail');
+                    $showTags = Session::Get('content', 'showTags');
                     $pinned = 1;
                 }
                 else {
@@ -113,7 +111,10 @@ class layoutDAO extends baseDAO
                     $retired = 0;
                     $owner = NULL;
                     $filterLayoutStatusId = 1;
+                    $showDescriptionId = 2;
                     $pinned = 0;
+                    $showThumbnail = 1;
+                    $showTags = 0;
                 }
                 
                 $id = uniqid();
@@ -157,6 +158,28 @@ class layoutDAO extends baseDAO
                     'filterLayoutStatus',
                     NULL, 
                     's');
+                $formFields[] = FormManager::AddCombo(
+                    'showDescriptionId', 
+                    __('Description'), 
+                    $showDescriptionId,
+                    array(
+                        array('showDescriptionId' => 1, 'showDescription' => __('All')),
+                        array('showDescriptionId' => 2, 'showDescription' => __('1st line')),
+                        array('showDescriptionId' => 3, 'showDescription' => __('None'))
+                        ),
+                    'showDescriptionId',
+                    'showDescription',
+                    NULL, 
+                    'd');
+
+                $formFields[] = FormManager::AddCheckbox('showTags', __('Show Tags'), 
+                    $showTags, NULL, 
+                    't');
+
+                $formFields[] = FormManager::AddCheckbox('showThumbnail', __('Show Thumbnails'), 
+                    $showThumbnail, NULL, 
+                    'i');
+
                 $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
                     $pinned, NULL, 
                     'k');
@@ -273,7 +296,6 @@ class layoutDAO extends baseDAO
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $db             =& $this->db;
         $response       = new ResponseManager();
 
         $layoutid       = Kit::GetParam('layoutid', _POST, _INT);
@@ -284,12 +306,85 @@ class layoutDAO extends baseDAO
         $userid         = Kit::GetParam('userid', _SESSION, _INT);
         
         // Add this layout
-        $layoutObject = new Layout($db);
+        $layoutObject = new Layout();
 
         if (!$layoutObject->Edit($layoutid, $layout, $description, $tags, $userid, $retired))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Layout Details Changed.'));
+        $response->Respond();
+    }
+    
+    /**
+     * Upgrade Layout Form
+     */
+    public function upgradeForm() 
+    {
+        $response = new ResponseManager();
+        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
+
+        if ($layoutId == 0)
+            trigger_error(__('layoutId missing'), E_USER_ERROR);
+
+        // Do we have permission to touch this layout?
+        $auth = $this->user->LayoutAuth($layoutId, true);
+
+        if (!$auth->edit)
+            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
+        
+        Theme::Set('form_id', 'LayoutUpgradeForm');
+        Theme::Set('form_action', 'index.php?p=layout&q=upgrade');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutId" value="' . $layoutId . '">');
+
+        $formFields = array();
+        $formFields[] = FormManager::AddMessage(__('Are you sure you want to upgrade this layout?'));
+        $formFields[] = FormManager::AddMessage(__('Layouts are now designed at the display resolution allowing better positioning, smoother scrolling and much more. To upgrade this layout you need to select the intended resolution.'));
+        $formFields[] = FormManager::AddCombo(
+                    'resolutionId', 
+                    __('Resolution'), 
+                    NULL,
+                    $this->user->ResolutionList(),
+                    'resolutionid',
+                    'resolution',
+                    __('The regions will be resized to fit with the new resolution, but you may need to adjust the content manually.'), 
+                    'r', 'required');
+
+        Theme::Set('form_fields', $formFields);
+
+        $form = Theme::RenderReturn('form_render');
+        
+        $response->SetFormRequestResponse($form, __('Upgrade Layout'), '300px', '200px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Upgrade') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#LayoutUpgradeForm").submit()');
+        $response->Respond();
+    }
+
+    public function upgrade()
+    {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+        
+        $response = new ResponseManager();
+        $layoutId = Kit::GetParam('layoutId', _POST, _INT);
+        $resolutionId = Kit::GetParam('resolutionId', _POST, _INT);
+
+        if ($layoutId == 0)
+            trigger_error(__('layoutId missing'), E_USER_ERROR);
+
+        // Do we have permission to touch this layout?
+        $auth = $this->user->LayoutAuth($layoutId, true);
+
+        if (!$auth->edit)
+            trigger_error(__('You do not have permissions to upgrade this layout'), E_USER_ERROR);
+
+        $layoutObject = new Layout();
+
+        if (!$layoutObject->upgrade($layoutId, $resolutionId))
+            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('The Layout has been Upgraded'));
         $response->Respond();
     }
     
@@ -418,7 +513,19 @@ class layoutDAO extends baseDAO
         // Show filterLayoutStatusId
         $filterLayoutStatusId = Kit::GetParam('filterLayoutStatusId', _POST, _INT);
         setSession('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
+
+        // Show showDescriptionId
+        $showDescriptionId = Kit::GetParam('showDescriptionId', _POST, _INT);
+        setSession('layout', 'showDescriptionId', $showDescriptionId);
         
+        // Show filter_showThumbnail
+        $showTags = Kit::GetParam('showTags', _POST, _CHECKBOX);
+        setSession('layout', 'showTags', $showTags);
+
+        // Show filter_showThumbnail
+        $showThumbnail = Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
+        setSession('layout', 'showThumbnail', $showThumbnail);
+
         // Tags list
         $filter_tags = Kit::GetParam("filter_tags", _POST, _STRING);
         setSession('layout', 'filter_tags', $filter_tags);
@@ -427,15 +534,18 @@ class layoutDAO extends baseDAO
         setSession('layout', 'LayoutFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         
         // Get all layouts
-        $layouts = $user->LayoutList(NULL, array('layout' => $name, 'userId' => $filter_userid, 'retired' => $filter_retired, 'tags' => $filter_tags, 'filterLayoutStatusId' => $filterLayoutStatusId));
+        $layouts = $user->LayoutList(NULL, array('layout' => $name, 'userId' => $filter_userid, 'retired' => $filter_retired, 'tags' => $filter_tags, 'filterLayoutStatusId' => $filterLayoutStatusId, 'showTags' => $showTags));
 
         if (!is_array($layouts))
             trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
 
         $cols = array(
                 array('name' => 'layoutid', 'title' => __('ID')),
+                array('name' => 'tags', 'title' => __('Tag'), 'hidden' => ($showTags == 0), 'colClass' => 'group-word'),
                 array('name' => 'layout', 'title' => __('Name')),
-                array('name' => 'description', 'title' => __('Description')),
+                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($showDescriptionId == 1 || $showDescriptionId == 3)),
+                array('name' => 'descriptionWithMarkdown', 'title' => __('Description'), 'hidden' => ($showDescriptionId == 2 || $showDescriptionId == 3)),
+                array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($showThumbnail == 0)),
                 array('name' => 'owner', 'title' => __('Owner')),
                 array('name' => 'permissions', 'title' => __('Permissions')),
                 array('name' => 'status', 'title' => __('Status'))
@@ -451,8 +561,23 @@ class layoutDAO extends baseDAO
             $row['layoutid'] = $layout['layoutid'];
             $row['layout'] = $layout['layout'];
             $row['description'] = $layout['description'];
+            $row['tags'] = $layout['tags'];
             $row['owner'] = $user->getNameFromID($layout['ownerid']);
             $row['permissions'] = $this->GroupsForLayout($layout['layoutid']);
+
+            $row['thumbnail'] = '';
+
+            if ($showThumbnail == 1 && $layout['backgroundImageId'] != 0)
+                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $layout['backgroundImageId'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $layout['backgroundImageId'] . '"><i class="fa fa-file-image-o"></i></a>';
+
+            // Fix up the description
+            if ($showDescriptionId == 1) {
+                // Parse down for description
+                $row['descriptionWithMarkdown'] = Parsedown::instance()->text($row['description']);
+            }
+            else if ($showDescriptionId == 2) {
+                $row['description'] = strtok($row['description'], "\n");
+            }
 
             switch ($layout['status']) {
 
@@ -582,7 +707,7 @@ class layoutDAO extends baseDAO
         $output = Theme::RenderReturn('table_render');
         
         $response->SetGridResponse($output);
-        $response->initialSortColumn = 2;
+        $response->initialSortColumn = 3;
         $response->Respond();
     }
 
@@ -594,23 +719,43 @@ class layoutDAO extends baseDAO
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
+        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
+
+        // Get the layout
+        if ($layoutId != 0) {
+            $layout = $user->LayoutList(NULL, array('layoutId' => Kit::GetParam('layoutid', _GET, _INT)));
+
+            if (count($layout) <= 0)
+                trigger_error(__('Unable to find Layout'), E_USER_ERROR);
+
+            $layout = $layout[0];
+        }
         
         Theme::Set('form_id', 'LayoutForm');
+
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('description', __('Description'));
+        
+        Theme::Set('form_tabs', $tabs);
         
         $formFields = array();
-        $formFields[] = FormManager::AddText('layout', __('Name'), $this->layout, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
-        $formFields[] = FormManager::AddText('description', __('Description'), $this->description, __('An optional description of the Layout. (1 - 250 characters)'), 'd', 'maxlength="250"');
-        $formFields[] = FormManager::AddText('tags', __('Tags'), $this->tags, __('Tags for this layout - used when searching for it. Space delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
+        $formFields['general'][] = FormManager::AddText('layout', __('Name'), (isset($layout['layout']) ? $layout['layout'] : NULL), __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields['general'][] = FormManager::AddText('tags', __('Tags'), (isset($layout['tags']) ? $layout['tags'] : NULL), __('Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
+        
+        $formFields['description'][] = FormManager::AddMultiText('description', __('Description'), (isset($layout['description']) ? $layout['description'] : NULL), 
+            __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
 
-        if ($this->layoutid != '') {
+        if ($layoutId != 0) {
             // We are editing
             Theme::Set('form_action', 'index.php?p=layout&q=modify');
-            Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '">');
+            Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutId . '">');
 
-            $formFields[] = FormManager::AddCombo(
+            $formFields['general'][] = FormManager::AddCombo(
                     'retired', 
                     __('Retired'), 
-                    $this->retired,
+                    $layout['retired'],
                     array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')),
                     'retiredid',
                     'retired',
@@ -623,19 +768,19 @@ class layoutDAO extends baseDAO
             Theme::Set('form_action', 'index.php?p=layout&q=add');
 
             $templates = $user->TemplateList();
-            array_unshift($templates, array('templateid' => '0', 'template' => 'None'));
+            array_unshift($templates, array('layoutid' => '0', 'layout' => 'None'));
 
-            $formFields[] = FormManager::AddCombo(
+            $formFields['general'][] = FormManager::AddCombo(
                     'templateid', 
                     __('Template'), 
                     NULL,
                     $templates,
-                    'templateid',
-                    'template',
+                    'layoutid',
+                    'layout',
                     __('Optionally choose a template you have saved before.'), 
                     't');
 
-            $formFields[] = FormManager::AddCombo(
+            $formFields['general'][] = FormManager::AddCombo(
                     'resolutionid', 
                     __('Resolution'), 
                     NULL,
@@ -650,7 +795,8 @@ class layoutDAO extends baseDAO
             $response->AddFieldAction('templateid', 'change', 0, array('.resolution-group' => array('display' => 'none')), "not");
         }
 
-        Theme::Set('form_fields', $formFields);
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_description', $formFields['description']);
 
         // Initialise the template and capture the output
         $form = Theme::RenderReturn('form_render');
@@ -686,6 +832,7 @@ class layoutDAO extends baseDAO
         $width              = (string) $xml['width'];
         $height             = (string) $xml['height'];
         $resolutionid = (int)$xml['resolutionid'];
+        $zindex = (int)$xml['zindex'];
         $bgImageId          = 0;
 
         // Do we need to override the background with one passed in?
@@ -732,7 +879,7 @@ class layoutDAO extends baseDAO
             __('Use the colour picker to select the background colour'), 'c', 'required');
 
         // A list of available backgrounds
-        $backgrounds = $user->MediaList('image');
+        $backgrounds = $user->MediaList(NULL, array('type' => 'image'));
         array_unshift($backgrounds, array('mediaid' => '0', 'media' => 'None'));
 
         $formFields[] = FormManager::AddCombo(
@@ -754,6 +901,9 @@ class layoutDAO extends baseDAO
                     'resolution',
                     __('Change the resolution'), 
                     'r');
+
+        $formFields[] = FormManager::AddNumber('zindex', __('Layer'), ($zindex == 0) ? '' : $zindex, 
+            __('The layering order of this region (z-index). Advanced use only. '), 'z');
 
         Theme::Set('append', '<img id="bg_image_image" src="' . $thumbBgImage . '" alt="' . __('Background thumbnail') . '" />');
         Theme::Set('form_fields', $formFields);
@@ -781,18 +931,18 @@ class layoutDAO extends baseDAO
         $response       = new ResponseManager();
 
         $layoutid       = Kit::GetParam('layoutid', _POST, _INT);
-        $bg_color       = trim(Kit::GetParam('bg_color', _POST, _STRING), '#');
+        $bg_color       = Kit::GetParam('bg_color', _POST, _STRING);
         $mediaID        = Kit::GetParam('bg_image', _POST, _INT);
         $resolutionid   = Kit::GetParam('resolutionid', _POST, _INT);
+        $zindex   = Kit::GetParam('zindex', _POST, _INT);
 
         // Permission to retire?
         if (!$this->auth->edit)
             trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
 
-        Kit::ClassLoader('Layout');
         $layoutObject = new Layout($db);
 
-        if (!$layoutObject->SetBackground($layoutid, $resolutionid, $bg_color, $mediaID))
+        if (!$layoutObject->SetBackground($layoutid, $resolutionid, $bg_color, $mediaID, $zindex))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
         
         $response->SetFormSubmitResponse(__('Layout Background Changed'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $layoutid));
@@ -816,6 +966,7 @@ class layoutDAO extends baseDAO
         $width  = $xml->documentElement->getAttribute('width');
         $height = $xml->documentElement->getAttribute('height');
         $version = (int)$xml->documentElement->getAttribute('schemaVersion');
+        Theme::Set('layoutVersion', $version);
 
         // Get the display width / height
         if ($resolutionid != 0) {
@@ -843,9 +994,11 @@ class layoutDAO extends baseDAO
                 $zoom = Kit::GetParam('zoom', _GET, _DOUBLE, 1);
                 $designerScale = $designerScale * $zoom;
 
-                Theme::Set('layoutVersion', 2);
                 Theme::Set('layout_zoom_in_url', 'index.php?p=layout&modify=true&layoutid=' . $this->layoutid . '&zoom=' . ($zoom - 0.3));
                 Theme::Set('layout_zoom_out_url', 'index.php?p=layout&modify=true&layoutid=' . $this->layoutid . '&zoom=' . ($zoom + 0.3));
+            }
+            else {
+                Theme::Set('layout_upgrade_url', 'index.php?p=layout&q=upgradeForm&layoutId=' . $this->layoutid);
             }
         }
         
@@ -891,6 +1044,8 @@ class layoutDAO extends baseDAO
             $regionLeft = ($region->getAttribute('left') * $designerScale) . "px";
             $regionTop  = ($region->getAttribute('top') * $designerScale) . "px";
             $regionid   = $region->getAttribute('id');
+            $regionZindex = ($region->getAttribute('zindex') == '') ? '' : 'zindex="' . $region->getAttribute('zindex') . '"';
+            $styleZindex = ($region->getAttribute('zindex') == '') ? '' : 'z-index: ' . $region->getAttribute('zindex') . ';';
             $ownerId = $region->getAttribute('userId');
 
             $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $this->layoutid, $regionid, true);
@@ -905,7 +1060,7 @@ class layoutDAO extends baseDAO
             $regionTransparency  = '<div class="regionTransparency ' . $regionAuthTransparency . '" style="width:100%; height:100%;"></div>';
             $doubleClickLink = ($regionAuth->edit) ? "XiboFormRender($(this).attr('href'))" : '';
 
-            $regionHtml .= "<div id='region_$regionid' regionEnabled='$regionAuth->edit' regionid='$regionid' layoutid='$this->layoutid' tip_scale='$tipScale' designer_scale='$designerScale' width='$regionWidth' height='$regionHeight' href='index.php?p=timeline&layoutid=$this->layoutid&regionid=$regionid&q=Timeline' ondblclick=\"$doubleClickLink\"' class='$regionDisabledClass $regionPreviewClass' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft;\">
+            $regionHtml .= "<div id='region_$regionid' regionEnabled='$regionAuth->edit' regionid='$regionid' layoutid='$this->layoutid' $regionZindex tip_scale='$tipScale' designer_scale='$designerScale' width='$regionWidth' height='$regionHeight' href='index.php?p=timeline&layoutid=$this->layoutid&regionid=$regionid&q=Timeline' ondblclick=\"$doubleClickLink\"' class='$regionDisabledClass $regionPreviewClass' style=\"position:absolute; width:$regionWidth; height:$regionHeight; top: $regionTop; left: $regionLeft; $styleZindex\">
                       $regionTransparency";
 
             if ($regionAuth->edit) {
@@ -941,7 +1096,7 @@ class layoutDAO extends baseDAO
         //render the view pane
         $surface = <<<HTML
 
-        <div id="layout" version="$version" class="layout" layoutid="$this->layoutid" style="position:relative; width:$width; height:$height; background:$background_css;">
+        <div id="layout" tip_scale="$tipScale" designer_scale="$designerScale" version="$version" class="layout" layoutid="$this->layoutid" data-background-color="$bgColor" style="position:relative; width:$width; height:$height; background:$background_css;">
         $regionHtml
         </div>
 HTML;
@@ -1084,6 +1239,10 @@ HTML;
                 $status = '<span title="' . __('The Status of this Layout is not known') . '" class="glyphicon glyphicon-warning-sign"></span>';
         }
 
+        // Keep things tidy
+        // Maintenance should also do this.
+        Media::removeExpiredFiles();
+
         $response->html = $status;
         $response->success = true;
         $response->Respond();
@@ -1120,7 +1279,7 @@ HTML;
          // Set some information about the form
         Theme::Set('form_id', 'LayoutImportForm');
         Theme::Set('form_action', 'index.php?p=layout&q=Import');
-        Theme::Set('form_meta', '<input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
+        Theme::Set('form_meta', '<input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" /><input type="hidden" name="template" value="' . Kit::GetParam('template', _GET, _STRING, 'false') . '" />');
 
         Theme::Set('form_upload_id', 'file_upload');
         Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
@@ -1129,11 +1288,17 @@ HTML;
         Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('layout', __('Name'), NULL, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields[] = FormManager::AddText('layout', __('Name'), NULL, __('The Name of the Layout - (1 - 50 characters). Leave blank to use the name from the import.'), 'n');
         $formFields[] = FormManager::AddCheckbox('replaceExisting', __('Replace Existing Media?'), 
             NULL, 
             __('If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.'), 
             'r');
+
+        if (Kit::GetParam('template', _GET, _STRING, 'false') != 'true')
+            $formFields[] = FormManager::AddCheckbox('importTags', __('Import Tags?'), 
+                NULL, 
+                __('Would you like to import any tags contained on the layout.'), 
+                't');
 
         Theme::Set('form_fields', $formFields);
 
@@ -1149,8 +1314,13 @@ HTML;
         $db =& $this->db;
         $response = new ResponseManager();
 
+        // What are we importing?
+        $template = Kit::GetParam('template', _POST, _STRING, 'false');
+        $template = ($template == 'true');
+        
         $layout = Kit::GetParam('layout', _POST, _STRING);
         $replaceExisting = Kit::GetParam('replaceExisting', _POST, _CHECKBOX);
+        $importTags = Kit::GetParam('importTags', _POST, _CHECKBOX, (!$template));
         
         // File data
         $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
@@ -1169,7 +1339,7 @@ HTML;
         Kit::ClassLoader('layout');
         $layoutObject = new Layout($this->db);
 
-        if (!$layoutObject->Import($fileLocation, $layout, $this->user->userid, $replaceExisting)) {
+        if (!$layoutObject->Import($fileLocation, $layout, $this->user->userid, $template, $replaceExisting, $importTags)) {
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
         }
 

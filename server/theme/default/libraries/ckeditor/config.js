@@ -34,7 +34,7 @@ CKEDITOR.editorConfig = function( config ) {
 	config.format_tags = 'p;h1;h2;h3;pre';
 
 	// Add some more font-sizes
-	config.fontSize_sizes += ';80/80px;88/88px;96/96px;128/128px;';
+	config.fontSize_sizes += ';80/80px;88/88px;96/96px;128/128px;144/144px;168/168px';
 
 	// Make dialogs simpler.
 	config.removeDialogTabs = 'image:advanced;link:advanced';
@@ -42,7 +42,7 @@ CKEDITOR.editorConfig = function( config ) {
 	config.extraPlugins = 'iframe';
 
 	config.contentsCss = [ CKEDITOR.getUrl('contents.css'), '../../../../modules/preview/fonts.css' ];
-	/*REPLACE*/ config.font_names = 'Nothing you could Do/Nothing you could Do;JustMeAgainDownHere/JustMeAgainDownHere;' + config.font_names; /*ENDREPLACE*/
+	/*REPLACE*/  /*ENDREPLACE*/
 
 	// Change the allowed content behaviour
 	//config.extraAllowedContent = 'table[*]';

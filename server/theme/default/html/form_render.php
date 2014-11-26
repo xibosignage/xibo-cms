@@ -59,7 +59,11 @@ if (!$tabs)
                     echo '<li>';
                 }
             ?>
-            <a href="#<?php echo $tab['id']; ?>" role="tab" data-toggle="tab"><?php echo $tab['name']; ?></a></li>
+            <a href="#<?php echo $tab['id']; ?>" role="tab" data-toggle="tab" <?php if (isset($tab['dataAttributes']) && is_array($tab['dataAttributes'])) {
+                foreach ($tab['dataAttributes'] as $attribute) { 
+                    echo 'data-' . $attribute['name'] . '="' . $attribute['value'] . '"'; 
+                }
+            } ?>><?php echo $tab['name']; ?></a></li>
             <?php } ?>
         </ul>
         <?php } ?>

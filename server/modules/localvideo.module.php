@@ -35,6 +35,7 @@ class localvideo extends Module
      */
     public function AddForm()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
         $user =& $this->user;
 
@@ -83,6 +84,7 @@ class localvideo extends Module
      */
     public function EditForm()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
 
         $layoutid = $this->layoutid;
@@ -136,6 +138,7 @@ class localvideo extends Module
      */
     public function AddMedia()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
 
         $layoutid = $this->layoutid;
@@ -193,6 +196,7 @@ class localvideo extends Module
      */
     public function EditMedia()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
 
         $layoutid = $this->layoutid;

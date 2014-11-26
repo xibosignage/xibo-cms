@@ -29,6 +29,8 @@ use Forecast\Forecast;
 
 class ForecastIo extends Module
 {
+    private $resourceFolder;
+
     public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '') {
         // The Module Type must be set - this should be a unique text string of no more than 50 characters.
         // It is used to uniquely identify the module globally.
@@ -38,6 +40,9 @@ class ForecastIo extends Module
         // module data structure changes.
         // It is used to install / update your module and to put updated modules down to the display clients.
         $this->codeSchemaVersion = 1;
+
+        // The resource folder
+        $this->resourceFolder = 'modules/theme/forecastio/weather_icons/';
         
         // Must call the parent class
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
@@ -59,7 +64,7 @@ class ForecastIo extends Module
         
         if ($this->schemaVersion <= 1) {
             // Install
-            $this->InstallModule('Forecast IO', 'Weather forecasting from Forecast IO', 'forms/library.gif', 1, 1, array());
+            $this->InstallModule('Forecast IO', 'Weather forecasting from Forecast IO', 'forms/library.gif', 1, 1, json_decode('{"templates",[{"id":"current-day","value":"Current Day","main":"<div class=\"container\">\r\n    <div class=\"icon\"><i class=\"font-icon wi [wicon]\"><\/i> [temperature]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"desc\">[summary]<\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>","daily":"","css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.container {\r\n    text-align: center;\r\n}\r\n\r\n.icon {\r\n    font-size: 36px;\r\n}\r\n\r\n.font-icon {\r\n    font-size: 62px;\r\n}\r\n\r\n.desc {\r\n    margin-top: 10px;\r\n    font-size: 30px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n\r\n.day {\r\n    margin-top: 10px;\r\n    font-size: 48px;\r\n}"},{"id":"daily","value":"Daily","main":"<div class=\"container\">\r\n    <div class=\"daily-forecast\">[dailyForecast]<\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>","daily":"<div class=\"day\">\r\n    <div class=\"day-icon\"><i class=\"wi [wicon]\"><\/i> [temperatureMin]\/[temperatureMax]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"day-desc\">[summary]<\/div>\r\n<\/div>","css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.container {\r\n    text-align: center;\r\n}\r\n\r\n.icon {\r\n    font-size: 36px;\r\n}\r\n\r\n.desc {\r\n    margin-top: 10px;\r\n    font-size: 30px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n\r\n.day {\r\n    margin-top: 10px;\r\n    font-size: 48px;\r\n}"},{"id":"picture","value":"Pictures","main":"<div class=\"icon std-sprite-[icon]\">\r\n<\/div>\r\n<div class=\"container\">\r\n    <div class=\"desc\">[summary]<\/div>\r\n    <div class=\"temperature\">[temperatureFloor]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>","daily":"","css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.icon {\r\n    float: left;\r\n    background: url([[ICONS]]) no-repeat top left;\r\n}\r\n\r\n.container {\r\n    text-align: right;\r\n}\r\n\r\n.temperature {\r\n    font-size: 46px;\r\n}\r\n\r\n.desc {\r\n    font-size: 34px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n.std-sprite-clear-day{ background-position: 0 0; width: 128px; height: 128px; } \r\n.std-sprite-clear-night{ background-position: 0 -178px; width: 128px; height: 128px; } \r\n.std-sprite-cloudy{ background-position: 0 -356px; width: 128px; height: 128px; } \r\n.std-sprite-lightning{ background-position: 0 -534px; width: 128px; height: 128px; } \r\n.std-sprite-partly-cloudy-day{ background-position: 0 -712px; width: 128px; height: 128px; } \r\n.std-sprite-partly-cloudy-night{ background-position: 0 -890px; width: 128px; height: 128px; } \r\n.std-sprite-rain{ background-position: 0 -1068px; width: 128px; height: 128px; } \r\n.std-sprite-sleet{ background-position: 0 -1246px; width: 128px; height: 128px; } \r\n.std-sprite-snow-night{ background-position: 0 -1424px; width: 128px; height: 128px; } \r\n.std-sprite-snow{ background-position: 0 -1602px; width: 128px; height: 128px; } \r\n.std-sprite-wind{ background-position: 0 -1780px; width: 128px; height: 128px; } \r\n"}]}'));
         }
         else {
             // Update
@@ -91,16 +96,11 @@ class ForecastIo extends Module
         return $formFields;
     }
 
-    private function InstallFiles() {
+    public function InstallFiles() {
         $media = new Media();
-        $media->AddModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
-        $media->AddModuleFile('modules/preview/xibo-layout-scaler.js');
-        $media->AddModuleFile('modules/theme/forecastio/weather_icons/weather-icons.min.css');
-        $media->AddModuleFile('modules/theme/forecastio/weather_icons/WeatherIcons-Regular.otf');
-        $media->AddModuleFile('modules/theme/forecastio/weather_icons/weathericons-regular-webfont.eot');
-        $media->AddModuleFile('modules/theme/forecastio/weather_icons/weathericons-regular-webfont.svg');
-        $media->AddModuleFile('modules/theme/forecastio/weather_icons/weathericons-regular-webfont.ttf');
-        $media->AddModuleFile('modules/theme/forecastio/weather_icons/weathericons-regular-webfont.woff');
+        $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
+        $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
+        $media->addModuleFileFromFolder($this->resourceFolder);
     }
 
     /**
@@ -116,9 +116,6 @@ class ForecastIo extends Module
         $this->settings['apiKey'] = $apiKey;
         $this->settings['cachePeriod'] = Kit::GetParam('cachePeriod', _POST, _INT, 300);
 
-        // Check we are all installed
-        $this->InstallFiles();
-
         // Return an array of the processed settings.
         return $this->settings;
     }
@@ -127,7 +124,9 @@ class ForecastIo extends Module
      * Return the Add Form as HTML
      * @return
      */
-    public function AddForm() {
+    public function AddForm()
+    {
+        $this->response = new ResponseManager();
         // This is the logged in user and can be used to assess permissions
         $user =& $this->user;
 
@@ -147,30 +146,72 @@ class ForecastIo extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
     
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        $tabs[] = FormManager::AddTab('forecast', __('Forecast'));
+
+        Theme::Set('form_tabs', $tabs);
+
+        $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), NULL, 
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
 
-        $formFields[] = FormManager::AddCheckbox('useDisplayLocation', __('Use the Display Location'), $this->GetOption('useDisplayLocation'), 
+        $formFields['general'][] = FormManager::AddCheckbox('useDisplayLocation', __('Use the Display Location'), $this->GetOption('useDisplayLocation'), 
             __('Use the location configured on the display'), 'd');
 
         // Any values for the form fields should be added to the theme here.
-        $formFields[] = FormManager::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'), 
-            __('The Longitude of this Display'), 'g', '', 'locationControls');
+        $formFields['general'][] = FormManager::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'), 
+            __('The Longitude for this weather module'), 'g', '', 'locationControls');
 
-        $formFields[] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'), 
-            __('The Latitude of this display'), 'l', '', 'locationControls');
+        $formFields['general'][] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'), 
+            __('The Latitude for this weather module'), 'l', '', 'locationControls');
+
+        $formFields['general'][] = FormManager::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'), 
+            $this->settings['templates'], 
+            'id', 
+            'value', 
+            __('Select the template you would like to apply. This can be overridden in Advanced.'), 't', 'template-selector-control');
+
+        $formFields['general'][] = FormManager::AddCombo('icons', __('Icons'), $this->GetOption('icons'), 
+            $this->iconsAvailable(), 
+            'id', 
+            'value', 
+            __('Select the icon set you would like to use.'), 't', 'icon-controls');
+
+        $formFields['advanced'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), 0, 
+            __('Tick if you would like to override the template.'), 'o');
+
+        $formFields['advanced'][] = FormManager::AddMultiText('currentTemplate', __('Template for Current Forecast'), NULL, 
+            __('Enter the template for the current forecast. For a list of substitutions click "Request Forecast" below.'), 't', 10, 'required', 'template-override-controls');
+
+        $formFields['advanced'][] = FormManager::AddMultiText('dailyTemplate', __('Template for Daily Forecast'), NULL, 
+            __('Enter the template for the daily forecast. Replaces [dailyForecast] in main template.'), 't', 10, NULL, 'template-override-controls');
+
+        $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', __('CSS Style Sheet'), NULL, __('Enter a CSS style sheet to style the weather widget'), 'c', 10, 'required', 'template-override-controls');
+        
+        $formFields['advanced'][] = FormManager::AddButton(__('Reload Template'), 'button', '#', 'reloadTemplateButton');
+
+        $formFields['forecast'][] = FormManager::AddMessage(__('Please press Request Forecast'));
 
         // Configure the field dependencies
         $this->SetFieldDepencencies();
 
+        // Append the Templates to the response
+        $this->response->extra = $this->settings['templates'];
+
         // Modules should be rendered using the theme engine.
-        Theme::Set('form_fields', $formFields);
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_advanced', $formFields['advanced']);
+        Theme::Set('form_fields_forecast', $formFields['forecast']);
         $this->response->html = Theme::RenderReturn('form_render');
 
         $this->response->dialogTitle = __('Forecast IO');
+        $this->response->callBack = 'forecastIoFormSetup';
         
         // The response object outputs the required JSON object to the browser
         // which is then processed by the CMS JavaScript library (xibo-cms.js).
+        $this->response->AddButton(__('Request Forecast'), 'requestTab("forecast", "index.php?p=module&q=exec&mod=' . $this->type . '&method=requestTab&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&mediaid=' . $this->mediaid . '")');
         $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
@@ -182,7 +223,9 @@ class ForecastIo extends Module
      * Add Media to the Database
      * @return
      */
-    public function AddMedia() {
+    public function AddMedia()
+    {
+        $this->response = new ResponseManager();
         // Same member variables as the Form call, except with POST variables for your form fields.
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
@@ -195,7 +238,17 @@ class ForecastIo extends Module
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
 
         // You can store any additional options for your module using the SetOption method
-        $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX, 0));
+        $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
+        $this->SetOption('color', Kit::GetParam('color', _POST, _STRING, '#000'));
+        $this->SetOption('longitude', Kit::GetParam('longitude', _POST, _DOUBLE));
+        $this->SetOption('latitude', Kit::GetParam('latitude', _POST, _DOUBLE));
+        $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
+        $this->SetOption('icons', Kit::GetParam('icons', _POST, _STRING));
+        $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+
+        $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
+            <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
+            <dailyTemplate><![CDATA[' . Kit::GetParam('dailyTemplate', _POST, _HTMLSTRING) . ']]></dailyTemplate>');
         
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -213,7 +266,10 @@ class ForecastIo extends Module
      * Return the Edit Form as HTML
      * @return
      */
-    public function EditForm() {
+    public function EditForm()
+    {
+        $this->response = new ResponseManager();
+
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
         {
@@ -228,33 +284,78 @@ class ForecastIo extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $this->mediaid . '">');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        $tabs[] = FormManager::AddTab('forecast', __('Forecast'));
+
+        Theme::Set('form_tabs', $tabs);
+
+        $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
 
-        $formFields[] = FormManager::AddCheckbox('useDisplayLocation', __('Use the Display Location'), $this->GetOption('useDisplayLocation'), 
+        $formFields['general'][] = FormManager::AddCheckbox('useDisplayLocation', __('Use the Display Location'), $this->GetOption('useDisplayLocation'), 
             __('Use the location configured on the display'), 'd');
 
         // Any values for the form fields should be added to the theme here.
-        $formFields[] = FormManager::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'), 
-            __('The Longitude of this Display'), 'g', '', 'locationControls');
+        $formFields['general'][] = FormManager::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'), 
+            __('The Longitude for this weather module'), 'g', '', 'locationControls');
 
-        $formFields[] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'), 
-            __('The Latitude of this display'), 'l', '', 'locationControls');
+        $formFields['general'][] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'), 
+            __('The Latitude for this weather module'), 'l', '', 'locationControls');
 
-        $formFields[] = FormManager::AddText('color', __('Colour'), $this->GetOption('color', '000'), 
+        $formFields['general'][] = FormManager::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'), 
+            $this->settings['templates'], 
+            'id', 
+            'value', 
+            __('Select the template you would like to apply. This can be overridden on the Advanced Tab.'), 't', 'template-selector-control');
+
+        $formFields['general'][] = FormManager::AddCombo('icons', __('Icons'), $this->GetOption('icons'), 
+            $this->iconsAvailable(), 
+            'id', 
+            'value', 
+            __('Select the icon set you would like to use.'), 't', 'icon-controls');
+
+        $formFields['general'][] = FormManager::AddText('color', __('Colour'), $this->GetOption('color', '000'), 
             __('Please select a colour for the foreground text.'), 'c', 'required');
+
+        $formFields['advanced'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate'), 
+            __('Tick if you would like to override the template.'), 'o');
+
+        $formFields['advanced'][] = FormManager::AddMultiText('currentTemplate', __('Template for Current Forecast'), $this->GetRawNode('currentTemplate'), 
+            __('Enter the template for the current forecast. For a list of substitutions click "Request Forecast" below.'), 't', 10, 'required', 'template-override-controls');
+
+        $formFields['advanced'][] = FormManager::AddMultiText('dailyTemplate', __('Template for Daily Forecast'), $this->GetRawNode('dailyTemplate'), 
+            __('Enter the template for the current forecast. Replaces [dailyForecast] in main template.'), 't', 10, NULL, 'template-override-controls');
+
+        $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', __('CSS Style Sheet'), $this->GetRawNode('styleSheet'), 
+            __('Enter a CSS style sheet to style the weather widget'), 'c', 10, 'required', 'template-override-controls');
+
+        $formFields['advanced'][] = FormManager::AddButton(__('Reload Template'), 'button', '#', 'reloadTemplateButton');
+        
+        $formFields['forecast'][] = FormManager::AddMessage(__('Please press Request Forecast to show the current forecast and all available substitutions.'));
 
         // Configure the field dependencies
         $this->SetFieldDepencencies();
 
+        // Encode up the template
+        //$formFields['forecast'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'picture', 'value' => 'Pictures', 'main' => '', 'daily' => '', 'css' => ''))) . '</pre>');
+
+        // Append the Templates to the response
+        $this->response->extra = $this->settings['templates'];
+
         // Modules should be rendered using the theme engine.
-        Theme::Set('form_fields', $formFields);
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_advanced', $formFields['advanced']);
+        Theme::Set('form_fields_forecast', $formFields['forecast']);
         $this->response->html = Theme::RenderReturn('form_render');
 
         $this->response->dialogTitle = __('Forecast IO');
         $this->response->callBack = 'forecastIoFormSetup';
         // The response object outputs the required JSON object to the browser
         // which is then processed by the CMS JavaScript library (xibo-cms.js).
+        $this->response->AddButton(__('Request Forecast'), 'requestTab("forecast", "index.php?p=module&q=exec&mod=' . $this->type . '&method=requestTab&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&mediaid=' . $this->mediaid . '")');
         $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
@@ -268,6 +369,8 @@ class ForecastIo extends Module
      */
     public function EditMedia()
     {
+        $this->response = new ResponseManager();
+        
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
         {
@@ -280,8 +383,17 @@ class ForecastIo extends Module
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
 
         // You can store any additional options for your module using the SetOption method
-        $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX, 0));
+        $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
         $this->SetOption('color', Kit::GetParam('color', _POST, _STRING, '#000'));
+        $this->SetOption('longitude', Kit::GetParam('longitude', _POST, _DOUBLE));
+        $this->SetOption('latitude', Kit::GetParam('latitude', _POST, _DOUBLE));
+        $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
+        $this->SetOption('icons', Kit::GetParam('icons', _POST, _STRING));
+        $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+
+        $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
+            <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
+            <dailyTemplate><![CDATA[' . Kit::GetParam('dailyTemplate', _POST, _HTMLSTRING) . ']]></dailyTemplate>');
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -295,8 +407,8 @@ class ForecastIo extends Module
         return $this->response;
     }
 
-    private function SetFieldDepencencies() {
-
+    private function SetFieldDepencencies()
+    {
         // Add a dependency
         $locationControls_0 = array(
                 '.locationControls' => array('display' => 'block')
@@ -310,6 +422,49 @@ class ForecastIo extends Module
         $this->response->AddFieldAction('useDisplayLocation', 'change', false, $locationControls_0, 'is:checked');
         $this->response->AddFieldAction('useDisplayLocation', 'init', true, $locationControls_1, 'is:checked');
         $this->response->AddFieldAction('useDisplayLocation', 'change', true, $locationControls_1, 'is:checked');
+        $this->response->AddFieldAction('templateId', 'init', 'picture', array('.icon-controls' => array('display' => 'block')));
+        $this->response->AddFieldAction('templateId', 'change', 'picture', array('.icon-controls' => array('display' => 'block')));
+        $this->response->AddFieldAction('templateId', 'init', 'picture', array('.icon-controls' => array('display' => 'none')), 'not');
+        $this->response->AddFieldAction('templateId', 'change', 'picture', array('.icon-controls' => array('display' => 'none')), 'not');
+        
+        // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
+        $this->response->AddFieldAction('overrideTemplate', 'init', false, 
+            array(
+                '.template-override-controls' => array('display' => 'none'),
+                '.reloadTemplateButton' => array('display' => 'none'),
+                '.template-selector-control' => array('display' => 'block')
+            ), 'is:checked');
+        $this->response->AddFieldAction('overrideTemplate', 'change', false, 
+            array(
+                '.template-override-controls' => array('display' => 'none'),
+                '.reloadTemplateButton' => array('display' => 'none'),
+                '.template-selector-control' => array('display' => 'block')
+            ), 'is:checked');
+        $this->response->AddFieldAction('overrideTemplate', 'init', true, 
+            array(
+                '.template-override-controls' => array('display' => 'block'),
+                '.reloadTemplateButton' => array('display' => 'block'),
+                '.template-selector-control' => array('display' => 'none')
+            ), 'is:checked');
+        $this->response->AddFieldAction('overrideTemplate', 'change', true, 
+            array(
+                '.template-override-controls' => array('display' => 'block'),
+                '.reloadTemplateButton' => array('display' => 'block'),
+                '.template-selector-control' => array('display' => 'none')
+            ), 'is:checked');
+    }
+
+    private function iconsAvailable() 
+    {
+        // Scan the forecast io folder for icons
+        $icons = array();
+
+        foreach (array_diff(scandir($this->resourceFolder), array('..', '.')) as $file) {
+            if (stripos($file, '.png'))
+                $icons[] = array('id' => $file, 'value' => ucfirst(str_replace('-', ' ', str_replace('.png', '', $file))));
+        }
+
+        return $icons;
     }
 
     /**
@@ -332,25 +487,52 @@ class ForecastIo extends Module
         return $this->PreviewAsClient($width, $height);
     }
 
-    /**
-     * GetResource
-     *     Return the rendered resource to be used by the client (or a preview)
-     *     for displaying this content.
-     * @param integer $displayId If this comes from a real client, this will be the display id.
-     */
-    public function GetResource($displayId = 0) {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
+    // Request content for this tab
+    public function requestTab()
+    {
+        $tab = Kit::GetParam('tab', _POST, _WORD);
 
-        // Behave exactly like the client.
+        $data = $this->getForecastData(0);
+
+        $cols = array(
+                array('name' => 'forecast', 'title' => __('Forecast')),
+                array('name' => 'key', 'title' => __('Substitute')),
+                array('name' => 'value', 'title' => __('Value'))
+            );
+        Theme::Set('table_cols', $cols);
+
+        $rows = array();
+        foreach ($data['currently'] as $key => $value) {
+            if (stripos($key, 'time')) {
+                $value = DateManager::getLocalDate($value);
+            }
+
+            $rows[] = array('forecast' => __('Current'), 'key' => $key, 'value' => $value);
+        }
+
+        foreach ($data['daily']['data'][0] as $key => $value) {
+            if (stripos($key, 'time')) {
+                $value = DateManager::getLocalDate($value);
+            }
+
+            $rows[] = array('forecast' => __('Daily'), 'key' => $key, 'value' => $value);
+        }
+
+        Theme::Set('table_rows', $rows);
+        Theme::Render('table_render');
+        exit();
+    }
+
+    // Get the forecast data for the provided display id
+    private function getForecastData($displayId)
+    {
+        $defaultLat = Config::GetSetting('DEFAULT_LAT');
+        $defaultLong = Config::GetSetting('DEFAULT_LONG');
+
         if ($this->GetOption('useDisplayLocation') == 1) {
             // Use the display ID or the default.
-            if ($displayId == 0) {
-                $defaultLat = Config::GetSetting('DEFAULT_LAT');
-                $defaultLong = Config::GetSetting('DEFAULT_LONG');
-            }
-            else {
-                Kit::ClassLoader('display');
+            if ($displayId != 0) {
+            
                 $display = new Display();
                 $display->displayId = $displayId;
                 $display->Load();
@@ -358,6 +540,10 @@ class ForecastIo extends Module
                 $defaultLat = $display->latitude;
                 $defaultLong = $display->longitude;
             }
+        }
+        else {
+            $defaultLat = $this->GetOption('latitude', $defaultLat);
+            $defaultLong = $this->GetOption('longitude', $defaultLong);
         }
 
         $apiKey = $this->GetSetting('apiKey');
@@ -367,18 +553,18 @@ class ForecastIo extends Module
         // Query the API and Dump the Results.
         $forecast = new Forecast($apiKey);
 
-        $key = md5($defaultLat . $defaultLong . 'null' . implode('.', array('units' => 'auto', 'exclude' => 'flags,minutely,hourly')));
+        $apiOptions = array('units' => 'auto', 'exclude' => 'flags,minutely,hourly');
+        $key = md5($defaultLat . $defaultLong . 'null' . implode('.', $apiOptions));
 
         if (!Cache::has($key)) {
             Debug::LogEntry('audit', 'Getting Forecast from the API', $this->type, __FUNCTION__);
-            $data = $forecast->get($defaultLat, $defaultLong, null, array('units' => 'auto', 'exclude' => 'flags,minutely,hourly'));
+            $data = $forecast->get($defaultLat, $defaultLong, null, $apiOptions);
             Cache::put($key, $data, $this->GetSetting('cachePeriod'));
         }
         else {
             Debug::LogEntry('audit', 'Getting Forecast from the Cache with key: ' . $key, $this->type, __FUNCTION__);
             $data = Cache::get($key);
         }
-        Debug::LogEntry('audit', 'Data: ' . var_export($data, true), $this->type, __FUNCTION__);
 
         // Icon Mappings
         $icons = array(
@@ -395,11 +581,55 @@ class ForecastIo extends Module
                 'partly-cloudy-night' => 'wi-night-partly-cloudy',
             );
 
-        $icon = (isset($icons[$data->currently->icon]) ? $icons[$data->currently->icon] : $icons['unmapped']);
-        $temperature = (isset($data->currently->temperature) ? floor($data->currently->temperature) : '--');
-        $summary = (isset($data->currently->summary) ? $data->currently->summary : '--');
+        $data->currently->wicon = (isset($icons[$data->currently->icon]) ? $icons[$data->currently->icon] : $icons['unmapped']);
+        $data->currently->temperatureFloor = (isset($data->currently->temperature) ? floor($data->currently->temperature) : '--');
+        $data->currently->summary = (isset($data->currently->summary) ? $data->currently->summary : '--');
+        $data->currently->weekSummary = (isset($data->daily->summary) ? $data->daily->summary : '--');
 
-        //var_dump($data);
+        // Convert a stdObject to an array
+        $data = json_decode(json_encode($data), true);
+
+        // Process the icon for each day
+        for ($i = 0; $i < 7; $i++) {
+            $data['daily']['data'][$i]['wicon'] = (isset($icons[$data['daily']['data'][$i]['icon']]) ? $icons[$data['daily']['data'][$i]['icon']] : $icons['unmapped']);
+            $data['daily']['data'][$i]['temperatureFloor'] = (isset($data['daily']['data'][$i]['temperature']) ? $data['daily']['data'][$i]['temperature'] : '--');
+        }
+
+        //Debug::LogEntry('audit', 'Data: ' . var_export($data, true), $this->type, __FUNCTION__);
+
+        return $data;
+    }
+
+    private function makeSubstitutions($data, $source)
+    {
+        // Replace all matches.
+        $matches = '';
+        preg_match_all('/\[.*?\]/', $source, $matches);
+
+        // Substitute
+        foreach ($matches[0] as $sub) {
+            $replace = str_replace('[', '', str_replace(']', '', $sub));
+
+            // Debug::Audit('Matching ' . $replace . ' with ' . $sub . '. ' . (isset($data['currently'][$replace]) ? $data['currently'][$replace] : 'not in array'));
+
+            // Match that in the array
+            if (isset($data[$replace]))
+                $source = str_replace($sub, $data[$replace], $source);
+        }
+
+        return $source;
+    }
+
+    /**
+     * GetResource
+     *     Return the rendered resource to be used by the client (or a preview)
+     *     for displaying this content.
+     * @param integer $displayId If this comes from a real client, this will be the display id.
+     */
+    public function GetResource($displayId = 0)
+    {
+        // Behave exactly like the client.
+        $data = $this->getForecastData($displayId);
 
         // A template is provided which contains a number of different libraries that might
         // be useful (jQuery, etc).
@@ -415,31 +645,10 @@ class ForecastIo extends Module
         $headContent = '
             <link href="' . $pathPrefix . 'weather-icons.min.css" rel="stylesheet" media="screen">
             <style type="text/css">
-                body {
-                    font-family:Arial;
-                    margin:0;
-                    padding-top: 10px;
-                }
-
                 .container {
                     color: ' . $this->GetOption('color', '000'). ';
-                    text-align: center;
-                    width: 150px;
-                    height: 100px;
                 }
-
-                .icon {
-                    font-size: 44px;
-                }
-
-                .desc {
-                    margin-top: 10px;
-                    font-size: 20px;
-                }
-
-                .powered-by {
-                    font-size: 8px;
-                }
+                ' . $this->GetRawNode('styleSheet') . '
             </style>
         ';
         
@@ -451,21 +660,34 @@ class ForecastIo extends Module
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
         
         // Make some body content
-        $body = '<div class="container">
-            <div class="icon"><i class="wi ' . $icon . '"></i> ' . $temperature . '<i class="wi wi-degrees"></i></div>
-            <div class="desc">' . $summary . '</div>
-            <div class="powered-by">Powered by Forecast</div>
-        </div>
-        ';
+        $body = $this->GetRawNode('currentTemplate');
+        $dailyTemplate = $this->GetRawNode('dailyTemplate');
 
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $body, $template);
+        // Handle the daily template (if its here)
+        if (stripos($body, '[dailyForecast]')) {
+            // Pull it out, and run substitute over it for each day
+            $dailySubs = '';
+            // Substitute for every day (i.e. 7 times).
+            for ($i = 0; $i < 7; $i++) {
+                $dailySubs .= $this->makeSubstitutions($data['daily']['data'][$i], $dailyTemplate);
+            }
+
+            // Substitute the completed template
+            $body = str_replace('[dailyForecast]', $dailySubs, $body);
+        }
+
+        // Run replace over the main template
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->makeSubstitutions($data['currently'], $body), $template);
+
+        // Replace any icon sets
+        $template = str_replace('[[ICONS]]', ((($isPreview) ? 'modules/theme/forecastio/weather_icons/' : '') . $this->GetOption('icons')), $template);
         
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
                 'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
                 'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
-                'originalWidth' => 150,
-                'originalHeight' => 100,
+                'originalWidth' => $this->width,
+                'originalHeight' => $this->height,
                 'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
             );
 

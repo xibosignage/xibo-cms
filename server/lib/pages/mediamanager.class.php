@@ -116,6 +116,15 @@ class mediamanagerDAO extends baseDAO {
                 Debug::LogEntry('audit', 'Matched module type ' . $filterMediaType, get_class(), __FUNCTION__);
             }
         }
+
+        $cols = array(
+                array('name' => 'layout', 'title' => __('Layout'), 'colClass' => 'group-word'),
+                array('name' => 'region', 'title' => __('Region')),
+                array('name' => 'media', 'title' => __('Media')),
+                array('name' => 'mediatype', 'title' => __('Type')),
+                array('name' => 'seq', 'title' => __('Sequence')),
+            );
+        Theme::Set('table_cols', $cols);
         
         // We would like a list of all layouts, media and media assignments that this user
         // has access to.
@@ -206,7 +215,7 @@ class mediamanagerDAO extends baseDAO {
 
         Theme::Set('table_rows', $rows);
         
-        $output = Theme::RenderReturn('homepage_mediamanager_grid');
+        $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
         $response->Respond();

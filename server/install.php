@@ -42,8 +42,20 @@ require_once('lib/app/debug.class.php');
 new Theme(new User(new Database()), 'default');
 Theme::SetPagename('install');
 
-// Set-up the translations for get text
-TranslationEngine::InitLocale('en_GB');
+// Does the settings file exist
+if (file_exists('settings.php')) {
+    include_once('settings.php');
+    // Set-up the translations for get text
+    TranslationEngine::InitLocale('en_GB');
+}
+else {
+    TranslationEngine::InitLocale();
+}
+
+// Define an auto-load function
+spl_autoload_register(function ($class) {
+    Kit::ClassLoader($class);
+});
 
 $xibo_step = Kit::GetParam('step', _REQUEST, _INT, 1);
 
@@ -90,7 +102,6 @@ switch ($xibo_step) {
 
     case 5:
         // Create a user account
-        include_once('settings.php');
         try {
             $install->Step5();
 
@@ -111,7 +122,6 @@ switch ($xibo_step) {
 
     case 7:
         // Create a user account
-        include_once('settings.php');
         try {
             $install->Step7();
 
@@ -127,7 +137,6 @@ switch ($xibo_step) {
         break;
 
     case 8:
-        include_once('settings.php');
         require_once('lib/app/session.class.php');
         // Create a Session
         $session = new Session();

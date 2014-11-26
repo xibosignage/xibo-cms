@@ -22,20 +22,38 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Debug
 {
+    private static $_level = NULL;
+    private static $pdo = NULL;
+
     public function __construct()
     {
-        if (!defined('AUDIT'))
-        {
-            // Get the setting from the DB and define it
-            if (Config::GetSetting('audit') != 'On')
-            {
-                define('AUDIT', false);
-            }
-            else
-            {
-                define('AUDIT', true);
-            }
+        if (self::$_level == NULL) {
+
+            // Determine the auditing level
+            self::$_level = Debug::getLevel(Config::GetSetting('audit'));
         }
+    }
+
+    public static function getLevel($type)
+    {
+        switch ($type) {
+            case 'audit':
+                $level = 10;
+                break;
+
+            case 'info':
+                $level = 5;
+                break;
+
+            case 'error':
+                $level = 1;
+                break;
+
+            default:
+                $level = 0;
+        }
+
+        return $level;
     }
     
     public function ErrorHandler($errno, $errmsg, $filename, $linenum, $vars) {
@@ -138,8 +156,11 @@ class Debug
      */ 
     static function LogEntry($type, $message, $page = "", $function = "", $logdate = "", $displayid = 0, $scheduleID = 0, $layoutid = 0, $mediaid = 0) 
     {
-        if ($type == 'audit' && !AUDIT)
+        if (Debug::getLevel($type) > self::$_level)
             return;
+
+        if (self::$pdo == NULL)
+            self::$pdo = PDOConnect::newConnection();
 
         $currentdate        = date("Y-m-d H:i:s");
         $requestUri         = Kit::GetParam('REQUEST_URI', $_SERVER, _STRING, 'Not Supplied');
@@ -158,7 +179,7 @@ class Debug
 
         // Insert into the DB
         try {
-            $dbh = PDOConnect::init();
+            $dbh = self::$pdo;
 
             $SQL  = 'INSERT INTO log (logdate, type, page, function, message, requesturi, remoteaddr, useragent, userid, displayid, scheduleid, layoutid, mediaid) ';
             $SQL .= ' VALUES (:logdate, :type, :page, :function, :message, :requesturi, :remoteaddr, :useragent, :userid, :displayid, :scheduleid, :layoutid, :mediaid) ';
@@ -192,8 +213,9 @@ class Debug
         return true;
     }
 
-    public static function Audit($message) {
-        if (!AUDIT)
+    public static function Audit($message)
+    {
+        if (self::$_level < 10)
             return;
 
         // Get the calling class / function
@@ -201,6 +223,26 @@ class Debug
         $caller = $trace[1];
 
         Debug::LogEntry('audit', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
+    }
+
+    public static function Info($message)
+    {
+        if (self::$_level < 5)
+            return;
+
+        Debug::LogEntry('info', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
+    }
+
+    public static function Error($message)
+    {
+        if (self::$_level < 1)
+            return;
+
+        // Get the calling class / function
+        $trace = debug_backtrace();
+        $caller = $trace[1];
+
+        Debug::LogEntry('error', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
     }
 }
 ?>

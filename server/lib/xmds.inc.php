@@ -94,12 +94,24 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 
 date_default_timezone_set(Config::GetSetting('defaultTimezone'));
 
+// Deal with HTTPS/STS config
+if (Kit::isSSL()) {
+    Kit::IssueStsHeaderIfNecessary();
+}
+else {
+    if (Config::GetSetting('FORCE_HTTPS', 0) == 1) {
+        $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        header("Location: $redirect");
+        exit();
+    }
+}
+
 // What is the production mode of the server?
 if(Config::GetSetting('SERVER_MODE') == 'Test') 
     ini_set('display_errors', 1);
 
 // Debugging?
-if(Config::GetSetting('debug') == 'On') 
+if (Debug::getLevel(Config::GetSetting('audit')) == 10)
     error_reporting(E_ALL);
 
 // Work out the location of this service

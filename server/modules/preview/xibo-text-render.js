@@ -22,14 +22,13 @@ jQuery.fn.extend({
 
         // Default options
         var defaults = {
-            "direction": "single",
+            "fx": "none",
             "duration": "50",
             "durationIsPerItem": false,
             "numItems": 0,
             "takeItemsFrom": "start",
             "itemsPerPage": 0,
-            "scrollSpeed": "2",
-            "scaleMode": "scale",
+            "speed": "2",
             "previewWidth": 0,
             "previewHeight": 0,
             "scaleOverride": 0
@@ -70,7 +69,7 @@ jQuery.fn.extend({
                 
             // 2nd objective - put the items on the page
             // settings involved:
-            //  direction (if we are single we might need to configure some pages for this)
+            //  fx (if we are single we might need to configure some pages for this)
             //  itemsPerPage (tells us how many items to put on per page)
             //console.log("[Xibo] Putting " + options.numItems + " Items on the page"); 
 
@@ -87,13 +86,21 @@ jQuery.fn.extend({
             // Loop around each of the items we have been given and append them to this element (in a div)
             for (var i = 0; i < items.length; i++) {
 
-                // If we need to set pages, have we switched over to a new page?
-                if (options.direction === "single" && (options.itemsPerPage > 0 && (itemsThisPage >= options.itemsPerPage || i === 0))) {
-                    // Append a new page to the body
-                    appendTo = $("<div/>").addClass("page").appendTo(this);
+                // We don't add any pages for marquee / none transitions.
+                if (options.fx != "none" &&
+                    options.fx != "marqueeLeft" &&
+                    options.fx != "marqueeRight" &&
+                    options.fx != "marqueeUp" &&
+                    options.fx != "marqueeDown") {
 
-                    // Reset the row count on this page
-                    itemsThisPage = 0;
+                    // If we need to set pages, have we switched over to a new page?
+                    if (options.itemsPerPage > 1 && (itemsThisPage >= options.itemsPerPage || i === 0)) {
+                        // Append a new page to the body
+                        appendTo = $("<div/>").addClass("page").appendTo(this);
+
+                        // Reset the row count on this page
+                        itemsThisPage = 0;
+                    }
                 }
 
                 // For each item output a DIV
@@ -106,34 +113,58 @@ jQuery.fn.extend({
             
             // 4th objective - move the items around, start the timer
             // settings involved:
-            //  direction (the way we are moving effects the HTML required)
-            //  scrollSpeed (how fast we need to move)
+            //  fx (the way we are moving effects the HTML required)
+            //  speed (how fast we need to move)
             var marquee = false;
 
-            if (options.direction == "single") {
+            if (options.fx == "none") {
+                // Do nothing
+            }
+            else if (options.fx != "marqueeLeft" && options.fx != "marqueeRight" && options.fx != "marqueeUp" && options.fx != "marqueeDown") {
+
+                // Make sure the speed is something sensible
+                options.speed = (options.speed <= 200) ? 1000 : options.speed;
 
                 // Cycle slides are either page or item
-                var slides = (options.itemsPerPage > 0) ? "> .page" : "> .item";
-                var numberOfSlides = (options.itemsPerPage > 0) ? numberOfPages : numberOfItems;
+                var slides = (options.itemsPerPage > 1) ? ".page" : ".item";
 
+                // If we only have 1 item, then we are in trouble and need to duplicate it.
+                if ($(slides).length <= 1 && options.type == 'text') {
+                    // Change our slide tag to be the paragraphs inside
+                    slides = slides + ' p';
+
+                    // Change the number of items
+                    numberOfItems = $(slides).length;
+                }
+
+                var numberOfSlides = (options.itemsPerPage > 1) ? numberOfPages : numberOfItems;
                 var duration = (options.durationIsPerItem) ? options.duration : options.duration / numberOfSlides;
 
                 //console.log("[Xibo] initialising the cycle2 plugin with " + numberOfSlides + " slides and selector " + slides + ". Duration per slide is " + duration + " seconds.");
 
-                // Cycle handles this for us
-                $(this).cycle({
-                    fx: options.transition,
-                    timeout: (duration * 1000),
-                    slides: slides
-                });
+                // Set the content div to the height of the original window
+                $(this).css("height", options.originalHeight);
 
                 // Set the width on the cycled slides
-                $(".item", this).css({
-                    width: $("body").css("width")
+                $(slides, this).css({
+                    width: options.originalWidth,
+                    height: options.originalHeight
+                });
+
+                // Cycle handles this for us
+                $(this).cycle({
+                    fx: options.fx,
+                    speed: options.speed,
+                    timeout: (duration * 1000),
+                    slides: "> " + slides
                 });
             }
-            else if (options.direction == "left" || options.direction == "right") {
+            else if (options.fx == "marqueeLeft" || options.fx == "marqueeRight") {
                 marquee = true;
+                options.direction = ((options.fx == "marqueeLeft") ? "left" : "right");
+
+                // Make sure the speed is something sensible
+                options.speed = (options.speed == 0) ? 1 : options.speed;
                 
                 // Stack the articles up and move them across the screen
                 $('.item, .item p', this).css({
@@ -141,9 +172,13 @@ jQuery.fn.extend({
                     "padding-left": "10px"
                 });
             }
-            else if (options.direction == "up" || options.direction == "down") {
+            else if (options.fx == "marqueeUp" || options.fx == "marqueeDown") {
                 // We want a marquee
                 marquee = true;
+                options.direction = ((options.fx == "marqueeUp") ? "up" : "down");
+
+                // Make sure the speed is something sensible
+                options.speed = (options.speed == 0) ? 1 : options.speed;
             }
 
             if (marquee) {
@@ -152,7 +187,7 @@ jQuery.fn.extend({
                 var scroller = $("<div/>")
                     .addClass("scroll")
                     .attr({
-                        scrollamount: options.scrollSpeed,
+                        scrollamount: options.speed,
                         scaleFactor: options.scaleFactor,
                         behaviour: "scroll",
                         direction: options.direction,
@@ -166,9 +201,14 @@ jQuery.fn.extend({
                 $(this).find('.scroll').marquee();
 
                 // Correct for up / down
-                if (options.direction == "up" || options.direction == "down")
+                if (options.fx == "marqueeUp" || options.fx == "marqueeDown")
                     $(this).children().children().css({"white-space": "normal", float: "none"});
             }
+
+            // Protect against images that don't load
+            $(this).find("img").error(function () {
+                $(this).unbind("error").attr("src", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNiYAAAAAkAAxkR2eQAAAAASUVORK5CYII=");
+            });
         });
 
         return $(this);

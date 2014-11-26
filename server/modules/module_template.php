@@ -63,6 +63,9 @@ class moduletemplate extends Module
             // Call "$this->UpdateModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)" with the updated items
         }
 
+        // Check we are all installed
+        $this->InstallFiles();
+
         // After calling either Install or Update your code schema version will match the database schema version and this method will not be called
         // again. This means that if you want to change those fields in an update to your module, you will need to increment your codeSchemaVersion.
     }
@@ -90,7 +93,9 @@ class moduletemplate extends Module
      * Return the Add Form as HTML
      * @return
      */
-    public function AddForm() {
+    public function AddForm()
+    {
+        $this->response = new ResponseManager();
         // This is the logged in user and can be used to assess permissions
         $user =& $this->user;
 
@@ -137,7 +142,9 @@ class moduletemplate extends Module
      * Add Media to the Database
      * @return
      */
-    public function AddMedia() {
+    public function AddMedia()
+    {
+        $this->response = new ResponseManager();
         // Same member variables as the Form call, except with POST variables for your form fields.
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
@@ -185,7 +192,9 @@ class moduletemplate extends Module
      * Return the Edit Form as HTML
      * @return
      */
-    public function EditForm() {
+    public function EditForm()
+    {
+        $this->response = new ResponseManager();
         // Edit forms are the same as add forms, except you will have the $this->mediaid member variable available for use.
     }
 
@@ -195,6 +204,8 @@ class moduletemplate extends Module
      */
     public function EditMedia()
     {
+        $this->response = new ResponseManager();
+        
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
         {

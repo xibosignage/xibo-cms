@@ -196,7 +196,7 @@ class Install {
                 $dbh->exec(sprintf('CREATE DATABASE `%s`', $this->new_db_name));
             }
             catch (Exception $e) {
-                throw new Exception(sprintf(__('Could not create a new database with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
+                throw new Exception(sprintf(__('Could not create a new database with the administrator details [%s]. Please check and try again. Error Message = [%s]'), $this->db_admin_user, $e->getMessage()));
             }
 
             // Try to create the new user
@@ -382,6 +382,12 @@ END;
                     'username' => $username,
                     'password' => md5($password)
                 ));
+
+            // Update group ID 3 with the user name
+            $sth = $dbh->prepare('UPDATE `group` SET group = :username WHERE groupId = 3 LIMIT 1');
+            $sth->execute(array(
+                    'username' => $username
+                ));
         }
         catch (Exception $e) {
             throw new Exception(sprintf(__('Unable to set the user details. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
@@ -499,6 +505,9 @@ END;
         Theme::Set('login_message', sprintf(__("%s was successfully installed. Please log-in with the user details you chose earlier."), Theme::GetConfig('app_name')));
 
         Theme::Render('login_page');
+
+        // Install files
+        Media::installAllModuleFiles();
 
         // Delete install
         if (!unlink('install.php'))

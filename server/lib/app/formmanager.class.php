@@ -234,9 +234,9 @@ class FormManager {
         );
     }
 
-    public static function AddTab($id, $name) {
+    public static function AddTab($id, $name, $dataAttributes = array()) {
         return array(
-            'id' => $id, 'name' => $name
+            'id' => $id, 'name' => $name, 'dataAttributes' => $dataAttributes
         );
     }
 }

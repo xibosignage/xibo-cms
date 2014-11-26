@@ -1,8 +1,53 @@
 var text_callback = function(dialog)
 {
+    // Set the text template based on the selected template id
+    if ($("#ta_text").val() == "" && !$("#overrideTemplate").is(":checked")) {
+        // Set something sensible based on the color of the layout background
+        var color = $c.complement($("#layout").data().backgroundColor);
+
+        // Get the current template selected
+        var templateId = $("#templateId").val();
+            
+        $.each($('.bootbox').data().extra, function(index, value) {
+            if (value.id == templateId) {
+                // Substitute the #Color# references with the suggested complimentary color
+                $("#ta_text").val(value.template.replace(/#Color#/g, color));
+                $("#ta_css").val(value.css);
+            }
+        });
+    }
+
+    // Register an onchange listener to do the same if the template is changed
+    $("#templateId").on('change', function() {
+        // Check to see if the override template check box is unchecked
+        if (!$("#overrideTemplate").is(":checked")) {
+
+            var color = $c.complement($("#layout").data().backgroundColor);
+            var templateId = $("#templateId").val();
+            
+            $.each($('.bootbox').data().extra, function(index, value) {
+                if (value.id == templateId) {
+                    CKEDITOR.instances["ta_text"].setData(value.template.replace(/#Color#/g, color));
+                    $("#ta_css").val(value.css);
+                }
+            });
+        }
+    });
+
     // Conjure up a text editor
     CKEDITOR.replace("ta_text");
-    CKEDITOR.config.contentsCss = 'body {background-color:' + $('#layout').css('background-color') + ';} html.cke_panel_container body { background-color: #FFF;}';
+    
+    CKEDITOR.instances["ta_text"].on('instanceReady', function() {
+        var scale = $('#layout').attr('designer_scale');
+
+        $("#cke_ta_text .cke_contents").css({
+            background: $('#layout').css('background-color'),
+        });
+        
+        $("#cke_ta_text iframe").css({
+            "background": "transparent"
+        });
+    });
 
     // Make sure when we close the dialog we also destroy the editor
     dialog.on("hide", function() {
@@ -15,21 +60,25 @@ var text_callback = function(dialog)
     $('.ckeditor_snippits', dialog).dblclick(function(){
         // Linked to?
         var linkedTo = $(this).attr("linkedto");
+        var text;
 
         if (CKEDITOR.instances[linkedTo] != undefined) {
             if ($(this).attr("datasetcolumnid") != undefined)
-                var text = "[" + $(this).html() + "|" + $(this).attr("datasetcolumnid") + "]"
+                text = "[" + $(this).html() + "|" + $(this).attr("datasetcolumnid") + "]";
             else
-                var text = "[" + $(this).html() + "]"
+                text = "[" + $(this).html() + "]";
 
             CKEDITOR.instances[linkedTo].insertText(text);
         }
 
         return false;
     });
-    
+
+    // Turn the background colour into a picker
+    $("#backgroundColor").colorpicker();
+
     return false;
-}
+};
 
 var datasetview_callback = function(dialog)
 {
@@ -371,8 +420,66 @@ var FileAssociationsSubmit = function(displayGroupId)
         success: XiboSubmitResponse
     });
 };
+
 var forecastIoFormSetup = function() {
     $('#color').colorpicker();
+
+    // If all 3 of the template fields are empty, then the template should be reapplied.
+    if (!$("#overrideTemplate").is(":checked") && ($("#currentTemplate").val() == "" || $("#dailyTemplate").val() == "" || $("#styleSheet").val() == "")) {
+        // Reapply
+        var templateId = $("#templateId").val();
+
+        $.each($('.bootbox').data().extra, function(index, value) {
+            if (value.id == templateId) {
+                $("#currentTemplate").val(value.main);
+                $("#dailyTemplate").val(value.daily);
+                $("#styleSheet").val(value.css);
+            }
+        });
+    }
+
+    $("#templateId").on('change', function() {
+        // Check to see if the override template check box is unchecked
+        if (!$("#overrideTemplate").is(":checked")) {
+
+            var templateId = $("#templateId").val();
+
+            $.each($('.bootbox').data().extra, function(index, value) {
+                if (value.id == templateId) {
+                    $("#currentTemplate").val(value.main);
+                    $("#dailyTemplate").val(value.daily);
+                    $("#styleSheet").val(value.css);
+                }
+            });
+        }
+    });
+
+    $(".reloadTemplateButton button").click(function() {
+        var templateId = $("#templateId").val();
+
+        $.each($('.bootbox').data().extra, function(index, value) {
+            if (value.id == templateId) {
+                $("#currentTemplate").val(value.main);
+                $("#dailyTemplate").val(value.daily);
+                $("#styleSheet").val(value.css);
+            }
+        });
+    });
+};
+
+var requestTab = function(tabName, url) {
+    // Fill a new tab with the forecast information and then switch to that tab.
+    $.ajax({
+        type: "post",
+        url: url+"&ajax=true",
+        cache: false,
+        data: "tab="+tabName,
+        success: function(response, status, xhr) {
+            $(".tab-content #" + tabName).html(response);
+
+            $('.nav-tabs a[href="#' + tabName + '"]').tab('show');
+        }
+    });
 };
 
 var settingsUpdated = function(response) {

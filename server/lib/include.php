@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-define('WEBSITE_VERSION', 81);
+define('WEBSITE_VERSION', 82);
 
 // No errors reported until we read the settings from the DB
 error_reporting(0);
@@ -48,6 +48,7 @@ require_once("lib/app/session.class.php");
 require_once("lib/app/cache.class.php");
 require_once("lib/app/thememanager.class.php");
 require_once("lib/pages/base.class.php");
+require_once("3rdparty/parsedown/parsedown.php");
 
 // Required Config Files
 require_once("config/config.class.php");
@@ -120,12 +121,24 @@ spl_autoload_register(function ($class) {
 // Define the VERSION
 Config::Version();
 
+// Deal with HTTPS/STS config
+if (Kit::isSSL()) {
+    Kit::IssueStsHeaderIfNecessary();
+}
+else {
+    if (Config::GetSetting('FORCE_HTTPS', 0) == 1) {
+        $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        header("Location: $redirect");
+        exit();
+    }
+}
+
 // What is the production mode of the server?
 if(Config::GetSetting('SERVER_MODE') == 'Test') 
     ini_set('display_errors', 1);
 
 // Debugging?
-if(Config::GetSetting("debug") == "On") 
+if (Debug::getLevel(Config::GetSetting('audit')) == 10)
     error_reporting(E_ALL);
 
 // Setup the translations for gettext

@@ -528,7 +528,7 @@ class displaygroupDAO extends baseDAO
             trigger_error($permissions->GetErrorMessage(), E_USER_ERROR);
 
         if (count($result) <= 0)
-            trigger_error(__('Unable to get permissions for this Campaign'), E_USER_ERROR);
+            trigger_error(__('Unable to get permissions for this Display Group'), E_USER_ERROR);
 
         $checkboxes = array();
 
@@ -756,7 +756,7 @@ class displaygroupDAO extends baseDAO
         }
 
         // Get a list of media
-        $mediaList = $user->MediaList($mediatype, $name);
+        $mediaList = $user->MediaList(NULL, array('type' => $mediatype, 'name' => $name));
 
         $rows = array();
 
@@ -841,7 +841,7 @@ class displaygroupDAO extends baseDAO
         Theme::Set('displays', $displays);
 
         // Present a list of possible files to choose from (generic file module)
-        $mediaList = $this->user->MediaList('genericfile');
+        $mediaList = $this->user->MediaList(NULL, array('type' => 'genericfile'));
         array_unshift($mediaList, array('mediaid' => 0, 'media' => ''));
         Theme::Set('media_field_list', $mediaList);
 

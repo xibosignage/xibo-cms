@@ -24,7 +24,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-if(Config::GetSetting('debug') == 'On')
+if (Debug::getLevel(Config::GetSetting('audit')) == 10)
     DEFINE('OAUTH_LOG_REQUEST', true);
 
 // Output a discovery header

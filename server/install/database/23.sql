@@ -24,9 +24,6 @@ ALTER TABLE  `display` ADD  `ClientAddress` VARCHAR( 100 ) NULL;
 INSERT INTO `setting` (`setting`, `value`, `type`, `helptext`, `cat`, `userChange`) VALUES
   ('SHOW_DISPLAY_AS_VNCLINK', '', 'text', 'Turn the display name in display management into a VNC link using the IP address last collected. The %s is replaced with the IP address. Leave blank to disable.','general','1');
 
-/* Add Help for Microblog Media */
-INSERT INTO `help` (`Topic`, `Category`, `Link`) VALUES
-('Microblog', 'Media', 'http://wiki.xibo.org.uk/wiki/Manual:Layouts:Design#MicroBlog');
 
 /* VERSION UPDATE */
 /* Set the version table, etc */

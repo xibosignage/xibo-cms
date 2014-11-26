@@ -12,7 +12,6 @@ UPDATE `module` SET `Name` = `Module`;
 
 INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`) VALUES (NULL, 'datasetview', 'Data Set', '1', '1', 'A view on a DataSet', 'img/forms/datasetview.gif', '1', NULL);
 
-UPDATE  `module` SET  `ImageUri` =  'img/forms/microblog.gif' WHERE  `module`.`ModuleID` =9 LIMIT 1 ;
 UPDATE  `module` SET  `ImageUri` =  'img/forms/counter.gif' WHERE  `module`.`ModuleID` =10 LIMIT 1 ;
 
 UPDATE `version` SET `app_ver` = '1.3.1', `XmdsVersion` = 3;

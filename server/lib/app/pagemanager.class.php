@@ -89,6 +89,20 @@ class PageManager
                 $this->authed = true;
             else
                 $this->authed = $user->PageAuth($this->p);
+
+            // Any actions to run before we get started?
+            $this->processActions();
+        }
+    }
+
+    private function processActions()
+    {
+        if (Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
+
+            $layout = new Layout();
+            $layout->importFolder('theme' . DIRECTORY_SEPARATOR . Theme::ThemeFolder() . DIRECTORY_SEPARATOR . 'layouts');
+
+            Config::ChangeSetting('DEFAULTS_IMPORTED', 1);
         }
     }
 	

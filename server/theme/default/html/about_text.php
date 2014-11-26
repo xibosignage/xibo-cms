@@ -23,9 +23,10 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<h1>License Information</h1>
-<p>Xibo - Digital Signage - <a href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>. Version <?php echo Theme::Get('version'); ?><br />
-Copyright &copy 2006-2014 Daniel Garner and the <a href="https://launchpad.net/~xibo-developers/+members" title="Xibo Developers">Xibo Developers</a>.</p>
+<h2>License <small>Digital Signage for Everyone</small></h2>
+<p>Xibo Digital Signage - <a target="_blank"  href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>. Version <?php echo Theme::Get('version'); ?><br />
+Copyright &copy 2006-2014 Daniel Garner, Alex Harrington, Spring Signage Ltd and 
+the <a target="_blank"  href="https://launchpad.net/~xibo-developers/+members" title="Xibo Developers">Xibo Developers</a>.</p>
  
 <p>Xibo is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
@@ -38,31 +39,15 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.</p>
  
 <p>You should have received a copy of the GNU Affero General Public License
-along with Xibo.  If not, see <a href="http://www.gnu.org/licenses/">www.gnu.org/licenses</a>. </p>
+along with Xibo. If not, see <a target="_blank" href="http://opensource.org/licenses/AGPL-3.0">opensource.org/licenses/AGPL-3.0</a>. </p>
 
-<h2>Commercial Sponsor</h2>
-<p>Xibo is supported and maintained by <a href="http://springsignage.com/" title="Xibo Commercial Sponsor">Spring Signage</a></p>
+<h2>Source Code</h2>
+<p>As an end user of the Xibo software you are entitled to download and view the source code. You may do 
+	so from <a target="_blank"  id="source-link" href="<?php echo Theme::GetConfig('cms_source_url'); ?>">Launchpad</a>.
+	As a service provider you <strong>MUST</strong> provide your end users notification of and access to the source code.</p>
 
 <h2>Third Party Licenses</h2>
-<p>Xibo uses some third party libraries and tools - these are provided to you along with Xibo under the following licenses:</p>
+<p>Xibo uses some third party libraries and tools - these are provided with the software under licences compatible with the AGPLv3. All licences for 
+	third party libraries are included with that library and attributed in the code.</p>
 
-<h3>jQuery</h3>
-<p><a href="http://jquery.com/">Jquery</a> (and plugins) are provided under the <a href="http://dev.jquery.com/browser/trunk/jquery/MIT-LICENSE.txt">MIT license.</a></p>
-
-<h3>Bootstrap</h3>
-<p>Licensed under the Apache License v2.0 <a href="http://www.apache.org/licenses/LICENSE-2.0"></a></p>
-
-<h3>CK Editor</h3>
-<p><a href="http://ckeditor.com/">CK Editor</a> is provided as the text editor, and is made available under GPL/LGPL/MPL</p>
-
-<h3>oAuth PHP</h3>
-<p>oAuth PHP is provided under the MIT license</p>
-
-<h3>PHP-gettext</h3>
-<p>PHP gettext is provided under the GNU General Public License</p>
-
-<h3>Flot Charting</h3>
-<p>Copyright (c) 2007-2013 IOLA and Ole Laursen</p>
-
-<h3>Misc</h3>
-<p>Any other code items are attributed directly in the source code</p>
+<p>Xibo is supported and maintained by <a target="_blank"  href="http://springsignage.com/" title="Xibo Commercial Sponsor">Spring Signage Ltd</a>.</p>

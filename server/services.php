@@ -21,18 +21,19 @@
 DEFINE('XIBO', true);
 include_once("lib/xmds.inc.php");
 
-$method     = Kit::GetParam('method', _REQUEST, _WORD, '');
-$service    = Kit::GetParam('service', _REQUEST, _WORD, 'rest');
-$response   = Kit::GetParam('response', _REQUEST, _WORD, 'xml');
+$method = Kit::GetParam('method', _REQUEST, _WORD, '');
+$service = Kit::GetParam('service', _REQUEST, _WORD, 'rest');
+$response = Kit::GetParam('response', _REQUEST, _WORD, 'xml');
+$version = Kit::GetParam('v', _REQUEST, _INT, 3);
 $serviceResponse = new XiboServiceResponse();
 
 // Version Request?
-if (isset($_GET['v']))
+if (isset($_GET['what']))
     die(Config::Version('XmdsVersion'));
 
 // Is the WSDL being requested.
 if (isset($_GET['wsdl']) || isset($_GET['WSDL']))
-    $serviceResponse->WSDL();
+    $serviceResponse->WSDL($version);
 
 // Is the XRDS being requested
 if (isset($_GET['xrds']))
@@ -48,8 +49,6 @@ if (defined('XMDS') || $method != '')
     switch ($service)
     {
         case 'soap':
-
-            Kit::ClassLoader('xmdssoap');
 
             // Check to see if we have a file attribute set (for HTTP file downloads)
             if (isset($_GET['file'])) {
@@ -93,15 +92,21 @@ if (defined('XMDS') || $method != '')
 
             try
             {
-                //$soap = new SoapServer('lib/service/service.wsdl');
-                $soap = new SoapServer('lib/service/service.wsdl', array('cache_wsdl' => WSDL_CACHE_NONE));
-                $soap->setClass('XMDSSoap');
+                $wsdl = 'lib/service/service_v' . $version . '.wsdl';
+
+                if (!file_exists($wsdl)) {
+                    $serviceResponse->ErrorServerError('Your client is not the correct version to communicate with this CMS.');
+                }
+
+                //$soap = new SoapServer($wsdl);
+                $soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
+                $soap->setClass('XMDSSoap' . $version);
                 $soap->handle();
             }
             catch (Exception $e)
             {
-                $serviceResponse->ErrorServerError('Unable to create SOAP Server: ' . $e->getMessage());
                 Debug::LogEntry('error', $e->getMessage());
+                $serviceResponse->ErrorServerError('Unable to create SOAP Server: ' . $e->getMessage());
             }
 
             break;

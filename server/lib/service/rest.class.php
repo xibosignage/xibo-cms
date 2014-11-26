@@ -1144,15 +1144,13 @@ class Rest
         if (!$this->user->PageAuth('template'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Template');
+        $layout     = new Layout();
+        $layoutId   = $this->GetParam('templateId', _INT);
 
-        $template     = new Template($this->db);
-        $templateId   = $this->GetParam('templateId', _INT);
-
-        if (!$this->user->TemplateAuth($templateId))
+        if (!$this->user->LayoutAuth($layoutId))
             return $this->Error(1, 'Access Denied');
 
-        if (!$template->Delete($templateId))
+        if (!$layout->Delete($layoutId))
             return $this->Error($layout->GetErrorNumber(), $layout->GetErrorMessage());
 
         return $this->Respond($this->ReturnId('success', true));

@@ -81,6 +81,7 @@ class statusdashboardDAO extends baseDAO {
 
             // We would also like a library usage pie chart!
             $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
+            $libraryLimit = $libraryLimit * 1024;
 
             // Library Size in Bytes
             $sth = $dbh->prepare('SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM media GROUP BY type;');
@@ -88,10 +89,16 @@ class statusdashboardDAO extends baseDAO {
 
             $results = $sth->fetchAll();
 
-            // Lets see what the max size is
+            // Do we base the units on the maximum size or the library limit
             $maxSize = 0;
-            foreach ($results as $library) {
-                $maxSize = ($library['SumSize'] > $maxSize) ? $library['SumSize'] : $maxSize;
+            if ($libraryLimit > 0) {
+                $maxSize = $libraryLimit;
+            }
+            else {
+                // Find the maximum sized chunk of the items in the library
+                foreach ($results as $library) {
+                    $maxSize = ($library['SumSize'] > $maxSize) ? $library['SumSize'] : $maxSize;
+                }
             }
 
             // Decide what our units are going to be, based on the size
@@ -110,7 +117,6 @@ class statusdashboardDAO extends baseDAO {
             // Do we need to add the library remaining?
             if ($libraryLimit > 0) {
                 $remaining = round(($libraryLimit - $totalSize) / (pow(1024, $base)), 2);
-                Theme::Set('libraryLimit', $remaining . ' ' . $suffixes[$base]);
                 $output[] = array(
                     'value' => $remaining,
                     'label' => __('Free')
@@ -125,6 +131,8 @@ class statusdashboardDAO extends baseDAO {
                     );
             }
 
+            Theme::Set('libraryLimitSet', $libraryLimit);
+            Theme::Set('libraryLimit', (round((double)$libraryLimit / (pow(1024, $base)), 2)) . ' ' . $suffixes[$base]);
             Theme::Set('librarySize', Kit::formatBytes($totalSize, 1));
             Theme::Set('librarySuffix', $suffixes[$base]);
             Theme::Set('libraryWidget', json_encode($output));

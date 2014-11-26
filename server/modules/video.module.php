@@ -72,7 +72,25 @@ class video extends Module
      */
     public function EditForm()
     {
-        return $this->EditFormForLibraryMedia();
+        $this->response = new ResponseManager();
+        $formFields = array();
+
+        if ($this->layoutid != '' && $this->regionid != '') {
+            $formFields[] = FormManager::AddCheckbox('loop', __('Loop?'), 
+                $this->GetOption('loop', 0), __('Should the video loop if it finishes before the provided duration?'), 
+                'l', 'loop-fields');
+
+            $formFields[] = FormManager::AddCheckbox('mute', __('Mute?'), 
+                $this->GetOption('mute', 1), __('Should the video be muted?'), 
+                'm', 'mute-fields');
+
+            $this->response->AddFieldAction('duration', 'init', '0', array('.loop-fields' => array('display' => 'none')));
+            $this->response->AddFieldAction('duration', 'change', '0', array('.loop-fields' => array('display' => 'none')));
+            $this->response->AddFieldAction('duration', 'init', '0', array('.loop-fields' => array('display' => 'block')), 'not');
+            $this->response->AddFieldAction('duration', 'change', '0', array('.loop-fields' => array('display' => 'block')), 'not');
+        }
+
+        return $this->EditFormForLibraryMedia($formFields);
     }
 
     /**
@@ -90,6 +108,10 @@ class video extends Module
      */
     public function EditMedia()
     {
+        // Set the properties specific to Images
+        $this->SetOption('loop', Kit::GetParam('loop', _POST, _CHECKBOX));
+        $this->SetOption('mute', Kit::GetParam('mute', _POST, _CHECKBOX));
+
         return $this->EditLibraryMedia();
     }
     

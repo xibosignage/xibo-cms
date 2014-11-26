@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS `display` (
   `WakeOnLanTime` varchar(5) DEFAULT NULL,
   `BroadCastAddress` varchar(100) DEFAULT NULL,
   `SecureOn` varchar(17) DEFAULT NULL,
-  `Cidr` smallint(6) DEFAULT NULL,
+  `Cidr` varchar(6) DEFAULT NULL,
   `GeoLocation` POINT NULL,
   `version_instructions` varchar(255) NULL,
   `client_type` VARCHAR( 20 ) NULL ,
@@ -138,7 +138,6 @@ CREATE TABLE IF NOT EXISTS `layout` (
   `modifiedDT` datetime NOT NULL,
   `description` varchar(254) DEFAULT NULL,
   `tags` varchar(254) DEFAULT NULL,
-  `templateID` int(11) DEFAULT NULL COMMENT 'The ID of the template',
   `retired` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is this layout retired',
   `duration` int(11) NOT NULL DEFAULT '0' COMMENT 'The duration in seconds',
   `backgroundImageId` int(11) DEFAULT NULL,
@@ -268,18 +267,6 @@ CREATE TABLE IF NOT EXISTS `lkpagegroup` (
   KEY `groupID` (`groupID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Pages available to groups' AUTO_INCREMENT=55 ;
 
-CREATE TABLE IF NOT EXISTS `lktemplategroup` (
-  `LkTemplateGroupID` int(11) NOT NULL AUTO_INCREMENT,
-  `TemplateID` int(11) NOT NULL,
-  `GroupID` int(11) NOT NULL,
-  `View` tinyint(4) NOT NULL DEFAULT '0',
-  `Edit` tinyint(4) NOT NULL DEFAULT '0',
-  `Del` tinyint(4) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`LkTemplateGroupID`),
-  KEY `TemplateID` (`TemplateID`),
-  KEY `GroupID` (`GroupID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=16 ;
-
 CREATE TABLE IF NOT EXISTS `lkusergroup` (
   `LkUserGroupID` int(11) NOT NULL AUTO_INCREMENT,
   `GroupID` int(11) NOT NULL,
@@ -321,7 +308,9 @@ CREATE TABLE IF NOT EXISTS `media` (
   `retired` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is retired?',
   `isEdited` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is this the current record',
   `editedMediaID` int(11) DEFAULT NULL COMMENT 'The Parent ID',
-  `is_module` tinyint(4) NOT NULL DEFAULT  '0',
+  `moduleSystemFile` tinyint(1) NOT NULL DEFAULT '0',
+  `valid` tinyint(1) NOT NULL DEFAULT '1',
+  `expires` int(11) NULL,
   PRIMARY KEY (`mediaID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=9 ;
 
@@ -540,22 +529,6 @@ CREATE TABLE IF NOT EXISTS `stat` (
   KEY `statDate` (`statDate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
-CREATE TABLE IF NOT EXISTS `template` (
-  `templateID` int(11) NOT NULL AUTO_INCREMENT,
-  `template` varchar(50) NOT NULL,
-  `xml` text NOT NULL,
-  `userID` int(11) NOT NULL,
-  `createdDT` datetime NOT NULL,
-  `modifiedDT` datetime NOT NULL,
-  `description` varchar(254) DEFAULT NULL,
-  `tags` varchar(254) DEFAULT NULL,
-  `thumbnail` varchar(100) DEFAULT NULL,
-  `isSystem` tinyint(4) NOT NULL DEFAULT '0',
-  `retired` tinyint(4) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`templateID`),
-  KEY `userID` (`userID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Templates for use on Layouts' AUTO_INCREMENT=9 ;
-
 CREATE TABLE IF NOT EXISTS `transition` (
   `TransitionID` int(11) NOT NULL AUTO_INCREMENT,
   `Transition` varchar(254) NOT NULL,
@@ -656,6 +629,25 @@ CREATE TABLE IF NOT EXISTS `bandwidthtype` (
   PRIMARY KEY (`bandwidthtypeid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=12 ;
 
+CREATE TABLE IF NOT EXISTS `tag` (
+  `tagId` int(11) NOT NULL AUTO_INCREMENT,
+  `tag` varchar(50) NOT NULL,
+  PRIMARY KEY (`tagId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
+
+CREATE TABLE IF NOT EXISTS `lktaglayout` (
+  `lkTagLayoutId` int(11) NOT NULL AUTO_INCREMENT,
+  `tagId` int(11) NOT NULL,
+  `layoutId` int(11) NOT NULL,
+  PRIMARY KEY (`lkTagLayoutId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf32 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `lktagmedia` (
+  `lkTagMediaId` int(11) NOT NULL AUTO_INCREMENT,
+  `tagId` int(11) NOT NULL,
+  `mediaId` int(11) NOT NULL,
+  PRIMARY KEY (`lkTagMediaId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf16 AUTO_INCREMENT=1 ;
 
 --
 -- Constraints for dumped tables
@@ -721,10 +713,6 @@ ALTER TABLE `lkpagegroup`
   ADD CONSTRAINT `lkpagegroup_ibfk_1` FOREIGN KEY (`pageID`) REFERENCES `pages` (`pageID`),
   ADD CONSTRAINT `lkpagegroup_ibfk_2` FOREIGN KEY (`groupID`) REFERENCES `group` (`groupID`);
 
-ALTER TABLE `lktemplategroup`
-  ADD CONSTRAINT `lktemplategroup_ibfk_2` FOREIGN KEY (`GroupID`) REFERENCES `group` (`groupID`),
-  ADD CONSTRAINT `lktemplategroup_ibfk_1` FOREIGN KEY (`TemplateID`) REFERENCES `template` (`templateID`);
-
 ALTER TABLE `lkusergroup`
   ADD CONSTRAINT `lkusergroup_ibfk_2` FOREIGN KEY (`UserID`) REFERENCES `user` (`UserID`),
   ADD CONSTRAINT `lkusergroup_ibfk_1` FOREIGN KEY (`GroupID`) REFERENCES `group` (`groupID`);
@@ -749,9 +737,6 @@ ALTER TABLE `schedule`
 ALTER TABLE `schedule_detail`
   ADD CONSTRAINT `schedule_detail_ibfk_7` FOREIGN KEY (`eventID`) REFERENCES `schedule` (`eventID`),
   ADD CONSTRAINT `schedule_detail_ibfk_8` FOREIGN KEY (`DisplayGroupID`) REFERENCES `displaygroup` (`DisplayGroupID`);
-
-ALTER TABLE `template`
-  ADD CONSTRAINT `template_ibfk_3` FOREIGN KEY (`userID`) REFERENCES `user` (`UserID`);
 
 ALTER TABLE `user`
   ADD CONSTRAINT `user_ibfk_2` FOREIGN KEY (`usertypeid`) REFERENCES `usertype` (`usertypeid`);

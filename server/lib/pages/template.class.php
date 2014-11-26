@@ -33,11 +33,13 @@ class templateDAO extends baseDAO {
             $pinned = 1;
             $name = Session::Get('template', 'filter_name');
             $tags = Session::Get('template', 'filter_tags');
+            $showThumbnail = Session::Get('template', 'showThumbnail');
         }
         else {
             $pinned = 0;
             $name = '';
             $tags = '';
+            $showThumbnail = 1;
         }
         
         $id = uniqid();
@@ -48,11 +50,14 @@ class templateDAO extends baseDAO {
         Theme::Set('form_meta', '<input type="hidden" name="p" value="template"><input type="hidden" name="q" value="TemplateView">');
         
         $formFields = array();
-                $formFields[] = FormManager::AddText('filter_name', __('Name'), $name, NULL, 'n');
-                $formFields[] = FormManager::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
-                $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
-                    $pinned, NULL, 
-                    'k');
+        $formFields[] = FormManager::AddText('filter_name', __('Name'), $name, NULL, 'n');
+        $formFields[] = FormManager::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
+        $formFields[] = FormManager::AddCheckbox('showThumbnail', __('Show Thumbnails'), 
+            $showThumbnail, NULL, 
+            't');
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+            $pinned, NULL, 
+            'k');
 
         Theme::Set('form_fields', $formFields);
 
@@ -69,6 +74,13 @@ class templateDAO extends baseDAO {
                     'link' => '#',
                     'help' => __('Open the filter form'),
                     'onclick' => 'ToggleFilterView(\'Filter\')'
+                    ),
+                array('title' => __('Import'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=layout&q=ImportForm&template=true',
+                    'help' => __('Import a Layout from a ZIP file.'),
+                    'onclick' => ''
                     )
             );                   
     }
@@ -81,13 +93,17 @@ class templateDAO extends baseDAO {
         $db         =& $this->db;
         $user       =& $this->user;
         $response   = new ResponseManager();
-        
+
         $filter_name = Kit::GetParam('filter_name', _POST, _STRING);
         $filter_tags = Kit::GetParam('filter_tags', _POST, _STRING);
         
         setSession('template', 'filter_name', $filter_name);
         setSession('template', 'filter_tags', $filter_tags);
         setSession('template', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        
+        // Show filter_showThumbnail
+        $showThumbnail = Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
+        setSession('layout', 'showThumbnail', $showThumbnail);
     
         $templates = $user->TemplateList($filter_name, $filter_tags);
 
@@ -96,9 +112,10 @@ class templateDAO extends baseDAO {
         }
 
         $cols = array(
-                array('name' => 'template', 'title' => __('Name')),
-                array('name' => 'tags', 'title' => __('Tags')),
+                array('name' => 'layout', 'title' => __('Name')),
                 array('name' => 'owner', 'title' => __('Owner')),
+                array('name' => 'descriptionWithMarkup', 'title' => __('Description')),
+                array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($showThumbnail == 0)),
                 array('name' => 'permissions', 'title' => __('Permissions'))
             );
         Theme::Set('table_cols', $cols);
@@ -107,16 +124,35 @@ class templateDAO extends baseDAO {
 
         foreach ($templates as $template) {
             
-            $template['permissions'] = $this->GroupsForTemplate($template['templateid']);
+            $template['permissions'] = $this->GroupsForTemplate($template['campaignid']);
             $template['owner'] = $user->getNameFromID($template['ownerid']);
+
+            $template['thumbnail'] = '';
+
+            if ($showThumbnail == 1 && $template['backgroundImageId'] != 0)
+                $template['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $template['backgroundImageId'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $template['backgroundImageId'] . '"><i class="fa fa-file-image-o"></i></a>';
+
+
             $template['buttons'] = array();
+
+            // Parse down for description
+            $template['descriptionWithMarkup'] = Parsedown::instance()->text($template['description']);
+
+            if ($template['edit']) {
+                // Edit Button
+                $template['buttons'][] = array(
+                        'id' => 'template_button_edit',
+                        'url' => 'index.php?p=template&q=EditForm&modify=true&layoutid=' . $template['layoutid'],
+                        'text' => __('Edit')
+                    );
+            }
 
             if ($template['del']) {
 
                 // Delete Button
                 $template['buttons'][] = array(
                         'id' => 'layout_button_delete',
-                        'url' => 'index.php?p=template&q=DeleteTemplateForm&templateid=' . $template['templateid'],
+                        'url' => 'index.php?p=template&q=DeleteTemplateForm&layoutid=' . $template['layoutid'],
                         'text' => __('Delete')
                     );
             }
@@ -126,10 +162,20 @@ class templateDAO extends baseDAO {
                 // Permissions Button
                 $template['buttons'][] = array(
                         'id' => 'layout_button_delete',
-                        'url' => 'index.php?p=template&q=PermissionsForm&templateid=' . $template['templateid'],
+                        'url' => 'index.php?p=campaign&q=PermissionsForm&CampaignID=' . $template['campaignid'],
                         'text' => __('Permissions')
                     );
             }
+
+            $template['buttons'][] = array('linkType' => 'divider');
+
+            // Export Button
+            $template['buttons'][] = array(
+                    'id' => 'layout_button_export',
+                    'linkType' => '_self',
+                    'url' => 'index.php?p=layout&q=Export&layoutid=' . $template['layoutid'],
+                    'text' => __('Export')
+                );
 
             // Add this row to the array
             $rows[] = $template;    
@@ -174,6 +220,62 @@ class templateDAO extends baseDAO {
         $response->AddButton(__('Save'), '$("#TemplateAddForm").submit()');
         $response->Respond();
     }
+
+    function EditForm() {
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ResponseManager();
+        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
+
+        // Get the layout    
+        $layout = $user->LayoutList(NULL, array('layoutId' => Kit::GetParam('layoutid', _GET, _INT), 'excludeTemplates' => 0));
+
+        if (count($layout) <= 0)
+            trigger_error(__('Unable to find Template'), E_USER_ERROR);
+        
+        $layout = $layout[0];
+    
+        Theme::Set('form_id', 'TemplateEditForm');
+
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('description', __('Description'));
+        
+        Theme::Set('form_tabs', $tabs);
+        
+        $formFields = array();
+        $formFields['general'][] = FormManager::AddText('layout', __('Name'), $layout['layout'], __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        
+        $formFields['description'][] = FormManager::AddMultiText('description', __('Description'), $layout['description'], 
+            __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
+
+        // We are editing
+        Theme::Set('form_action', 'index.php?p=template&q=Edit');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutId . '">');
+
+        $formFields['general'][] = FormManager::AddCombo(
+                'retired', 
+                __('Retired'), 
+                $layout['retired'],
+                array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')),
+                'retiredid',
+                'retired',
+                __('Retire this template or not? It will no longer be visible in lists'), 
+                'r');
+
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_description', $formFields['description']);
+
+        // Initialise the template and capture the output
+        $form = Theme::RenderReturn('form_render');
+
+        $response->SetFormRequestResponse($form, __('Edit Template'), '350px', '275px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Template', 'Edit') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#TemplateEditForm").submit()');
+        $response->Respond();
+    }
     
     /**
      * Adds a template
@@ -192,17 +294,42 @@ class templateDAO extends baseDAO {
         $template = Kit::GetParam('template', _POST, _STRING);
         $tags = Kit::GetParam('tags', _POST, _STRING);
         $description = Kit::GetParam('description', _POST, _STRING);
-        $layoutid = Kit::GetParam('layoutid', _POST, _INT);
+        $templateLayoutId = Kit::GetParam('layoutid', _POST, _INT);
         
-        // Use the data class
-        Kit::ClassLoader('template');
-        $templateObject = new Template($db);
+        // Copy the layout and adjust the values of the new layout
+        $layoutObject = new Layout();
 
-        // Delete the template
-        if (!$templateObject->Add($template, $description, $tags, $layoutid, $user->userid))
-            trigger_error($templateObject->GetErrorMessage(), E_USER_ERROR);
+        if (!$layoutId = $layoutObject->Copy($templateLayoutId, $template, $description, $user->userid, true))
+            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+
+        // Tag it with the template tag
+        $layoutObject->tag('template', $layoutId);
         
         $response->SetFormSubmitResponse('Template Added.');
+        $response->Respond();
+    }
+
+    function Edit() {
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+        
+        $response       = new ResponseManager();
+
+        $layoutid       = Kit::GetParam('layoutid', _POST, _INT);
+        $layout         = Kit::GetParam('layout', _POST, _STRING);
+        $description    = Kit::GetParam('description', _POST, _STRING);
+        $retired        = Kit::GetParam('retired', _POST, _INT, 0);
+        $userid         = Kit::GetParam('userid', _SESSION, _INT);
+        $tags = 'template';
+        
+        // Add this layout
+        $layoutObject = new Layout();
+
+        if (!$layoutObject->Edit($layoutid, $layout, $description, $tags, $userid, $retired))
+            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Template Details Changed.'));
         $response->Respond();
     }
     
@@ -220,7 +347,7 @@ class templateDAO extends baseDAO {
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $templateId = Kit::GetParam('templateid', _POST, _INT);
+        $templateId = Kit::GetParam('templateId', _POST, _INT);
 
         if ($templateId == 0)
             trigger_error(__('No template selected'), E_USER_ERROR);
@@ -232,8 +359,7 @@ class templateDAO extends baseDAO {
             trigger_error(__('Access denied'), E_USER_ERROR);
 
         // Use the data class
-        Kit::ClassLoader('template');
-        $template = new Template($db);
+        $template = new Layout();
 
         // Delete the template
         if (!$template->Delete($templateId))
@@ -248,31 +374,27 @@ class templateDAO extends baseDAO {
      */
     public function DeleteTemplateForm()
     {
-        $db =& $this->db;
-        $user =& $this->user;
         $response = new ResponseManager();
+        
+        $templateId = Kit::GetParam('layoutid', _GET, _INT);
 
-        $templateId = Kit::GetParam('templateid', _GET, _INT);
-
-        if ($templateId == 0)
-            trigger_error(__('No template selected'), E_USER_ERROR);
-
-        // Is this user allowed to delete this template?
         $auth = $this->user->TemplateAuth($templateId, true);
-        
         if (!$auth->del)
-            trigger_error(__('Access denied'), E_USER_ERROR);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'DeleteTemplateForm');
-        Theme::Set('form_action', 'index.php?p=template&q=DeleteTemplate');
-        Theme::Set('form_meta', '<input type="hidden" name="templateid" value="' . $templateId . '" />');
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
+            trigger_error(__('You do not have permissions to delete this template'), E_USER_ERROR);
         
-        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete a Template'), '350px', '150px');
+        Theme::Set('form_id', 'DeleteForm');
+        Theme::Set('form_action', 'index.php?p=template&q=DeleteTemplate');
+        Theme::Set('form_meta', '<input type="hidden" name="templateId" value="' . $templateId . '">');
+        Theme::Set('form_fields', array(
+            FormManager::AddMessage(__('Are you sure you want to delete this template?'))
+            ));
+
+        $form = Theme::RenderReturn('form_render');
+        
+        $response->SetFormRequestResponse($form, __('Delete Template'), '300px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Template', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#DeleteTemplateForm").submit()');
+        $response->AddButton(__('Yes'), '$("#DeleteForm").submit()');
         $response->Respond();
     }
      
@@ -281,18 +403,18 @@ class templateDAO extends baseDAO {
      * @param <type> $layoutId
      * @return <type>
      */
-    private function GroupsForTemplate($templateId)
+    private function GroupsForTemplate($campaignId)
     {
         $db =& $this->db;
 
         $SQL = '';
         $SQL .= 'SELECT `group`.Group ';
         $SQL .= '  FROM `group` ';
-        $SQL .= '   INNER JOIN lktemplategroup ';
-        $SQL .= '   ON `group`.GroupID = lktemplategroup.GroupID ';
-        $SQL .= ' WHERE lktemplategroup.TemplateID = %d ';
+        $SQL .= '   INNER JOIN lkcampaigngroup ';
+        $SQL .= '   ON `group`.GroupID = lkcampaigngroup.GroupID ';
+        $SQL .= ' WHERE lkcampaigngroup.CampaignID = %d ';
 
-        $SQL = sprintf($SQL, $templateId);
+        $SQL = sprintf($SQL, $campaignId);
 
         if (!$results = $db->query($SQL))
         {
@@ -311,159 +433,6 @@ class templateDAO extends baseDAO {
         $groups = trim($groups, ',');
 
         return $groups;
-    }
-
-    /**
-     * Permissions form
-     */
-    public function PermissionsForm()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
-
-        $templateId = Kit::GetParam('templateid', _GET, _INT);
-
-        if ($templateId == 0)
-            trigger_error(__('No template selected'), E_USER_ERROR);
-
-        // Is this user allowed to delete this template?
-        $auth = $this->user->TemplateAuth($templateId, true);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'TemplatePermissionsForm');
-        Theme::Set('form_action', 'index.php?p=template&q=Permissions');
-        Theme::Set('form_meta', '<input type="hidden" name="templateid" value="' . $templateId . '" />');
-
-        // List of all Groups with a view / edit / delete check box
-        $permissions = new UserGroup();
-        if (!$result = $permissions->GetPermissionsForObject('lktemplategroup', 'TemplateID', $templateId))
-            trigger_error($permissions->GetErrorMessage(), E_USER_ERROR);
-
-        if (count($result) <= 0)
-            trigger_error(__('Unable to get permissions for this Campaign'), E_USER_ERROR);
-
-        $checkboxes = array();
-
-        foreach ($result as $row) {
-            $groupId = $row['groupid'];
-            $rowClass = ($row['isuserspecific'] == 0) ? 'strong_text' : '';
-
-            $checkbox = array(
-                    'id' => $groupId,
-                    'name' => Kit::ValidateParam($row['group'], _STRING),
-                    'class' => $rowClass,
-                    'value_view' => $groupId . '_view',
-                    'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
-                    'value_edit' => $groupId . '_edit',
-                    'value_edit_checked' => (($row['edit'] == 1) ? 'checked' : ''),
-                    'value_del' => $groupId . '_del',
-                    'value_del_checked' => (($row['del'] == 1) ? 'checked' : ''),
-                );
-
-            $checkboxes[] = $checkbox;
-        }
-
-        $formFields = array();
-        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Template', 'Permissions') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#TemplatePermissionsForm").submit()');
-        $response->Respond();
-    }
-
-    /**
-     * Set this templates permissions
-     */
-    public function Permissions()
-    {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
-        
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ResponseManager();
-        
-        $templateId = Kit::GetParam('templateid', _POST, _INT);
-
-        if ($templateId == 0)
-            trigger_error(__('No template selected'), E_USER_ERROR);
-
-        // Is this user allowed to delete this template?
-        $auth = $this->user->TemplateAuth($templateId, true);
-
-        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
-
-        // Unlink all
-        Kit::ClassLoader('templategroupsecurity');
-        $security = new TemplateGroupSecurity($db);
-        if (!$security->UnlinkAll($templateId))
-            trigger_error(__('Unable to set permissions'), E_USER_ERROR);
-
-        // Some assignments for the loop
-        $lastGroupId = 0;
-        $first = true;
-        $view = 0;
-        $edit = 0;
-        $del = 0;
-
-        // List of groupIds with view, edit and del assignments
-        foreach($groupIds as $groupPermission)
-        {
-            $groupPermission = explode('_', $groupPermission);
-            $groupId = $groupPermission[0];
-
-            if ($first)
-            {
-                // First time through
-                $first = false;
-                $lastGroupId = $groupId;
-            }
-
-            if ($groupId != $lastGroupId)
-            {
-                // The groupId has changed, so we need to write the current settings to the db.
-                // Link new permissions
-                if (!$security->Link($templateId, $lastGroupId, $view, $edit, $del))
-                    trigger_error(__('Unable to set permissions'), E_USER_ERROR);
-
-                // Reset
-                $lastGroupId = $groupId;
-                $view = 0;
-                $edit = 0;
-                $del = 0;
-            }
-
-            switch ($groupPermission[1])
-            {
-                case 'view':
-                    $view = 1;
-                    break;
-
-                case 'edit':
-                    $edit = 1;
-                    break;
-
-                case 'del':
-                    $del = 1;
-                    break;
-            }
-        }
-
-        // Need to do the last one
-        if (!$first)
-        {
-            if (!$security->Link($templateId, $lastGroupId, $view, $edit, $del))
-                    trigger_error(__('Unable to set permissions'), E_USER_ERROR);
-        }
-
-        $response->SetFormSubmitResponse(__('Permissions Changed'));
-        $response->Respond();
     }
 }
 ?>

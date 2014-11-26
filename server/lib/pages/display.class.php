@@ -340,8 +340,7 @@ class displayDAO extends baseDAO
         $db         =& $this->db;
         $user       =& $this->user;
         $response   = new ResponseManager();
-        $dateFormat = Config::GetSetting('DATE_FORMAT');
-
+        
         // Filter by Name
         $filter_display = Kit::GetParam('filter_display', _POST, _STRING);
         setSession('display', 'filter_display', $filter_display);
@@ -406,7 +405,7 @@ class displayDAO extends baseDAO
             }
 
             // Format last accessed
-            $row['lastaccessed'] = date($dateFormat, $row['lastaccessed']);
+            $row['lastaccessed'] = DateManager::getLocalDate($row['lastaccessed']);
 
             // Create some login lights
             $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');

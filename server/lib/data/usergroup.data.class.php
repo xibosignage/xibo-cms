@@ -159,23 +159,41 @@ class UserGroup extends Data
     /**
      * Deletes an Xibo User Group
      * @return
-     * @param $userGroupID Object
+     * @param $userGroupId Object
      */
-    public function Delete($userGroupID)
+    public function Delete($userGroupId)
     {
-        Debug::LogEntry('audit', 'IN', 'UserGroup', 'Delete');
+        Debug::Audit('IN: ' . $userGroupId);
 
         try {
             $dbh = PDOConnect::init();
             
-            $params = array('groupid' => $userGroupID);
+            $params = array('groupid' => $userGroupId);
+
+            // Delete all permissions
+            $sth = $dbh->prepare('DELETE FROM `lkcampaigngroup` WHERE GroupID = :groupid');
+            $sth->execute($params);
+            $sth = $dbh->prepare('DELETE FROM `lkdatasetgroup` WHERE GroupID = :groupid');
+            $sth->execute($params);
+            $sth = $dbh->prepare('DELETE FROM `lkdisplaygroupgroup` WHERE GroupID = :groupid');
+            $sth->execute($params);
+            $sth = $dbh->prepare('DELETE FROM `lklayoutmediagroup` WHERE GroupID = :groupid');
+            $sth->execute($params);
+            $sth = $dbh->prepare('DELETE FROM `lklayoutregiongroup` WHERE GroupID = :groupid');
+            $sth->execute($params);
+            $sth = $dbh->prepare('DELETE FROM `lkmediagroup` WHERE GroupID = :groupid');
+            $sth->execute($params);
+
+            // Remove linked users
+            $sth = $dbh->prepare('DELETE FROM `lkusergroup` WHERE GroupID = :groupid');
+            $sth->execute($params);
 
             // Delete all menu links
-            $sth = $dbh->prepare('DELETE FROM lkmenuitemgroup WHERE GroupID = :groupid');
+            $sth = $dbh->prepare('DELETE FROM `lkmenuitemgroup` WHERE GroupID = :groupid');
             $sth->execute($params);
 
             // Delete all page links
-            $sth = $dbh->prepare('DELETE FROM lkpagegroup WHERE GroupID = :groupid');
+            $sth = $dbh->prepare('DELETE FROM `lkpagegroup` WHERE GroupID = :groupid');
             $sth->execute($params);
 
             // Delete the user group

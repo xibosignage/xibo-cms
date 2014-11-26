@@ -23,7 +23,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
-<div class="well">
+<div class="well template-override-controls">
     <div class="text-center text-info"><?php echo Theme::Translate('Available Substitutions'); ?></div>
     <ul id="TickerDataSetColumns">
         <?php foreach(Theme::Get('substitutions') as $column) { ?>

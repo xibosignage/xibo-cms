@@ -21,36 +21,40 @@
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class DateManager
-{	
-	public static function GetClock()
-	{
-		return date("H:i T");
-	}
-	
-	public static function GetSystemClock()
-	{
-		return gmdate("H:i T");
-	}
-	
-	public static function GetLocalDate($format = 'Y-m-d H:i:s', $timestamp = '')
-	{
-		if ($timestamp == '')
-		{
-			$timestamp = time();
-		}
-		
-		return date($format, $timestamp);
-	}
-	
-	public static function GetSystemDate($format = 'Y-m-d H:i:s', $timestamp = '')
-	{
-		if ($timestamp == '')
-		{
-			$timestamp = time();
-		}
-		
-		return gmdate($format, $timestamp);
-	}
+{
+    private static $_format = NULL;
+
+    public static function getClock()
+    {
+        return date("H:i T");
+    }
+    
+    public static function getSystemClock()
+    {
+        return gmdate("H:i T");
+    }
+    
+    public static function getLocalDate($timestamp = NULL)
+    {
+        if ($timestamp == NULL)
+            $timestamp = time();
+
+        if (self::$_format == NULL)
+            self::$_format = Config::GetSetting('DATE_FORMAT');
+        
+        return date(self::$_format, $timestamp);
+    }
+    
+    public static function getSystemDate($timestamp = NULL)
+    {
+        if ($timestamp == NULL)
+            $timestamp = time();
+
+        if (self::$_format == NULL)
+            self::$_format = Config::GetSetting('DATE_FORMAT');
+        
+        return gmdate(self::$_format, $timestamp);
+    }
 
     /**
      * Gets an ISO date from a US formatted date string

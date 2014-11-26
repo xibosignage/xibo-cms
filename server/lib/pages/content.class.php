@@ -36,6 +36,7 @@ class contentDAO extends baseDAO {
             $filter_retired = Session::Get('content', 'filter_retired');
             $filter_owner = Session::Get('content', 'filter_owner');
             $filter_duration_in_seconds = Session::Get('content', 'filter_duration_in_seconds');
+            $showTags = Session::Get('content', 'showTags');
             $filter_showThumbnail = Session::Get('content', 'filter_showThumbnail');
         }
         else {
@@ -46,6 +47,7 @@ class contentDAO extends baseDAO {
             $filter_owner = NULL;
             $filter_duration_in_seconds = 0;
             $filter_showThumbnail = 0;
+            $showTags = 0;
         }
 
 		$id = uniqid();
@@ -92,6 +94,10 @@ class contentDAO extends baseDAO {
                     $filter_duration_in_seconds, NULL, 
                     's');
 
+                $formFields[] = FormManager::AddCheckbox('showTags', __('Show Tags'), 
+                    $showTags, NULL, 
+                    't');
+                
                 $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'), 
                     $filter_showThumbnail, NULL, 
                     't');
@@ -142,21 +148,23 @@ class contentDAO extends baseDAO {
         $filter_retired = Kit::GetParam('filter_retired', _REQUEST, _INT);
         $filter_duration_in_seconds = Kit::GetParam('filter_duration_in_seconds', _REQUEST, _CHECKBOX);
         $filter_showThumbnail = Kit::GetParam('filter_showThumbnail', _REQUEST, _CHECKBOX);
-		Theme::Set('filter_showThumbnail', $filter_showThumbnail);
+        $showTags = Kit::GetParam('showTags', _REQUEST, _CHECKBOX);
                 
 		setSession('content', 'filter_type', $filter_type);
 		setSession('content', 'filter_name', $filter_name);
 		setSession('content', 'filter_owner', $filter_userid);
         setSession('content', 'filter_retired', $filter_retired);
         setSession('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
-		setSession('content', 'filter_showThumbnail', $filter_showThumbnail);
+        setSession('content', 'filter_showThumbnail', $filter_showThumbnail);
+		setSession('content', 'showTags', $showTags);
         setSession('content', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		// Construct the SQL
-		$mediaList = $user->MediaList($filter_type, $filter_name, $filter_userid, $filter_retired);
+		$mediaList = $user->MediaList(NULL, array('type' => $filter_type, 'name' => $filter_name, 'ownerid' => $filter_userid, 'retired' => $filter_retired, 'showTags' => $showTags));
 
         $cols = array();
         $cols[] = array('name' => 'mediaid', 'title' => __('ID'));
+        $cols[] = array('name' => 'tags', 'title' => __('Tag'), 'hidden' => ($showTags == 0), 'colClass' => 'group-word');
         $cols[] = array('name' => 'media', 'title' => __('Name'));
         $cols[] = array('name' => 'mediatype', 'title' => __('Type'));
 
@@ -355,7 +363,7 @@ class contentDAO extends baseDAO {
         $name = Kit::GetParam('filter_name', _POST, _STRING);
 
         // Get a list of media
-        $mediaList = $user->MediaList($mediatype, $name);
+        $mediaList = $user->MediaList(NULL, array('type' => $mediatype, 'name' => $name));
 
         $rows = array();
 

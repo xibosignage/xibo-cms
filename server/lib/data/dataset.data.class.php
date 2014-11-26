@@ -309,146 +309,166 @@ class DataSet extends Data
      * @param <type> $upperLimit
      * @return <type>
      */
-    public function DataSetResults($dataSetId, $columnIds, $filter = '', $ordering = '', $lowerLimit = 0, $upperLimit = 0, $displayId = 0, $associative = false)
+    public function DataSetResults($dataSetId, $columnIds, $filter = '', $ordering = '', $lowerLimit = 0, $upperLimit = 0, $displayId = 0)
     {
-        $db =& $this->db;
+        $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
 
-        $selectSQL = '';
-        $outserSelect = '';
-        $finalSelect = '';
-        $results = array();
-        $headings = array();
-        
-        $columns = explode(',', $columnIds);
-
-        // Get the Latitude and Longitude ( might be used in a formula )
-        if ($displayId == 0) {
-            $defaultLat = Config::GetSetting('DEFAULT_LAT');
-            $defaultLong = Config::GetSetting('DEFAULT_LONG');
-            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $defaultLat . " " . $defaultLong . ")')";
-        }
-        else
-            $displayGeoLocation = sprintf("(SELECT GeoLocation FROM `display` WHERE DisplayID = %d)", $displayId);
-
-        // Get all columns for the cross tab
-        $allColumns = $db->GetArray(sprintf('SELECT DataSetColumnID, Heading, DataSetColumnTypeID, Formula FROM datasetcolumn WHERE DataSetID = %d' , $dataSetId));
-
-        foreach($allColumns as $col)
-        {
-            $heading = $col;
-            $heading['Text'] = $heading['Heading'];
+        try {
+            $dbh = PDOConnect::init();
+            $params = array('dataSetId' => $dataSetId);
             
-            // Is this column a formula column or a value column?
-            if ($col['DataSetColumnTypeID'] == 2) {
-                // Formula
-                $heading['Heading'] = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $col['Formula']) . ' AS ' . $heading['Heading'];
+            $selectSQL = '';
+            $outserSelect = '';
+            $finalSelect = '';
+            $results = array();
+            $headings = array();
+            $filter = str_replace($blackList, '', $filter);
+            
+            $columns = explode(',', $columnIds);
+    
+            // Get the Latitude and Longitude ( might be used in a formula )
+            if ($displayId == 0) {
+                $defaultLat = Config::GetSetting('DEFAULT_LAT');
+                $defaultLong = Config::GetSetting('DEFAULT_LONG');
+                $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $defaultLat . " " . $defaultLong . ")')";
             }
-            else {
-                // Value
-                $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $col['DataSetColumnID'], $heading['Heading']);
-            }
-
-            $headings[] = $heading;
-        }
-
-        // Build our select statement including formulas
-        foreach($headings as $heading)
-        {
-            if ($heading['DataSetColumnTypeID'] == 2)
-                // This is a formula, so the heading has been morphed into some SQL to run
-                $outserSelect .= sprintf(' %s,', $heading['Heading']);
             else
-                $outserSelect .= sprintf(' `%s`,', $heading['Heading']);
-        }
-        $outserSelect = rtrim($outserSelect, ',');
+                $displayGeoLocation = sprintf("(SELECT GeoLocation FROM `display` WHERE DisplayID = %d)", $displayId);
+    
+            // Get all columns for the cross tab
+            $sth = $dbh->prepare('SELECT DataSetColumnID, Heading, DataSetColumnTypeID, Formula, DataTypeID FROM datasetcolumn WHERE DataSetID = :dataSetId');
+            $sth->execute(array('dataSetId' => $dataSetId));
+            $allColumns = $sth->fetchAll();
+    
+            foreach($allColumns as $col)
+            {
+                $heading = $col;
+                $heading['Text'] = $heading['Heading'];
 
-        // For each heading, put it in the correct order (according to $columns)
-        foreach($columns as $visibleColumn)
-        {
+                $formula = str_replace($blackList, '', htmlspecialchars_decode($col['Formula'], ENT_QUOTES));
+                
+                // Is this column a formula column or a value column?
+                if ($col['DataSetColumnTypeID'] == 2) {
+                    // Formula
+                    $heading['Heading'] = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS \'' . $heading['Heading'] . '\'';
+                }
+                else {
+                    // Value
+                    $selectSQL .= sprintf("MAX(CASE WHEN DataSetColumnID = %d THEN `Value` ELSE null END) AS '%s', ", $col['DataSetColumnID'], $heading['Heading']);
+                }
+    
+                $headings[] = $heading;
+            }
+    
+            // Build our select statement including formulas
             foreach($headings as $heading)
             {
-                if ($heading['DataSetColumnID'] == $visibleColumn)
-                {
-                    $finalSelect .= sprintf(' `%s`,', $heading['Text']);
-                    
-                    $results['Columns'][] = $heading['Text'];
-                }
-            }
-        }
-        $finalSelect = rtrim($finalSelect, ',');
-
-        // We are ready to build the select and from part of the SQL
-        $SQL  = "SELECT $finalSelect ";
-        $SQL .= "  FROM ( ";
-        $SQL .= "   SELECT $outserSelect ,";
-        $SQL .= "           RowNumber ";
-        $SQL .= "     FROM ( ";
-        $SQL .= "      SELECT $selectSQL ";
-        $SQL .= "          RowNumber ";
-        $SQL .= "        FROM (";
-        $SQL .= "          SELECT datasetcolumn.DataSetColumnID, datasetdata.RowNumber, datasetdata.`Value` ";
-        $SQL .= "            FROM datasetdata ";
-        $SQL .= "              INNER JOIN datasetcolumn ";
-        $SQL .= "              ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID ";
-        $SQL .= sprintf("       WHERE datasetcolumn.DataSetID = %d ", $dataSetId);
-        $SQL .= "          ) datasetdatainner ";
-        $SQL .= "      GROUP BY RowNumber ";
-        $SQL .= "    ) datasetdata ";
-        if ($filter != '')
-        {
-            $SQL .= ' WHERE ' . $filter;
-        }
-        $SQL .= ' ) finalselect ';
-
-        if ($ordering != '')
-        {
-            $order = ' ORDER BY ';
-
-            $ordering = explode(',', $ordering);
-
-            foreach ($ordering as $orderPair)
-            {
-                if (strripos($orderPair, ' DESC'))
-                {
-                    $orderPair = str_replace(' DESC', '', $orderPair);
-                    $order .= sprintf(" `%s` DESC,", $db->escape_string($orderPair));
-                }
+                if ($heading['DataSetColumnTypeID'] == 2)
+                    // This is a formula, so the heading has been morphed into some SQL to run
+                    $outserSelect .= ' ' . $heading['Heading'] . ',';
                 else
+                    $outserSelect .= sprintf(' `%s`,', $heading['Heading']);
+            }
+            $outserSelect = rtrim($outserSelect, ',');
+    
+            // For each heading, put it in the correct order (according to $columns)
+            foreach($columns as $visibleColumn)
+            {
+                foreach($headings as $heading)
                 {
-                    $order .= sprintf(" `%s`,", $db->escape_string($orderPair));
+                    if ($heading['DataSetColumnID'] == $visibleColumn)
+                    {
+                        $finalSelect .= sprintf(' `%s`,', $heading['Text']);
+                        
+                        $results['Columns'][] = $heading;
+                    }
                 }
             }
+            $finalSelect = rtrim($finalSelect, ',');
+    
+            // We are ready to build the select and from part of the SQL
+            $SQL  = "SELECT $finalSelect ";
+            $SQL .= "  FROM ( ";
+            $SQL .= "   SELECT $outserSelect ,";
+            $SQL .= "           RowNumber ";
+            $SQL .= "     FROM ( ";
+            $SQL .= "      SELECT $selectSQL ";
+            $SQL .= "          RowNumber ";
+            $SQL .= "        FROM (";
+            $SQL .= "          SELECT datasetcolumn.DataSetColumnID, datasetdata.RowNumber, datasetdata.`Value` ";
+            $SQL .= "            FROM datasetdata ";
+            $SQL .= "              INNER JOIN datasetcolumn ";
+            $SQL .= "              ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID ";
+            $SQL .= "            WHERE datasetcolumn.DataSetID = :dataSetId ";
+            $SQL .= "          ) datasetdatainner ";
+            $SQL .= "      GROUP BY RowNumber ";
+            $SQL .= "    ) datasetdata ";
+            if ($filter != '')
+            {
+                $SQL .= ' WHERE ' . $filter;
+            }
+            $SQL .= ' ) finalselect ';
+    
+            if ($ordering != '')
+            {
+                $order = ' ORDER BY ';
+    
+                $ordering = explode(',', $ordering);
+    
+                $i = 0;
+                foreach ($ordering as $orderPair)
+                {
+                    $i++;
 
-            $SQL .= trim($order, ',');
+                    if (strripos($orderPair, ' DESC')) {
+                        $orderPair = str_replace(' DESC', '', $orderPair);
+                        $order .= ' :order' . $i . ' DESC,';
+                    }
+                    else {
+                        $order .= ' :order,' . $i;
+                    }
+
+                    $params['order' . $i] = $orderPair;
+                }
+    
+                $SQL .= trim($order, ',');
+            }
+            else
+            {
+                $SQL .= " ORDER BY RowNumber ";
+            }
+    
+            if ($lowerLimit != 0 || $upperLimit != 0)
+            {
+                // Lower limit should be 0 based
+                if ($lowerLimit != 0)
+                    $lowerLimit = $lowerLimit - 1;
+    
+                // Upper limit should be the distance between upper and lower
+                $upperLimit = $upperLimit - $lowerLimit;
+    
+                // Substitute in
+                $SQL .= sprintf(' LIMIT %d, %d ', $lowerLimit, $upperLimit);
+            }
+    
+            Debug::Audit($SQL . ' ' . var_export($params, true));
+            $sth = $dbh->prepare($SQL);
+            //$sth->debugDumpParams();
+            $sth->execute($params);
+        
+            $results['Rows'] = $sth->fetchAll();
+    
+            return $results;  
         }
-        else
-        {
-            $SQL .= " ORDER BY RowNumber ";
-        }
-
-        if ($lowerLimit != 0 || $upperLimit != 0)
-        {
-            // Lower limit should be 0 based
-            if ($lowerLimit != 0)
-                $lowerLimit = $lowerLimit - 1;
-
-            // Upper limit should be the distance between upper and lower
-            $upperLimit = $upperLimit - $lowerLimit;
-
-            // Substitute in
-            $SQL .= sprintf(' LIMIT %d, %d ', $lowerLimit, $upperLimit);
-        }
-
-        Debug::LogEntry('audit', $SQL);
-
-        $rows = $db->GetArray($SQL, $associative);
-
-        if (!is_array($rows))
-            $rows = array();
+        catch (Exception $e) {
             
-        $results['Rows'] = $rows;
-
-        return $results;
+            Debug::Error($e->getMessage());
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
     }
 
     public function GetDataTypes() {

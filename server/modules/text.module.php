@@ -29,13 +29,13 @@ class text extends Module
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
 
-    private function InstallFiles() {
+    public function InstallFiles() {
         $media = new Media();
-        $media->AddModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
-        $media->AddModuleFile('modules/preview/vendor/moment.js');
-        $media->AddModuleFile('modules/preview/vendor/jquery.marquee.min.js');
-        $media->AddModuleFile('modules/preview/xibo-layout-scaler.js');
-        $media->AddModuleFile('modules/preview/xibo-text-render.js');
+        $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
+        $media->addModuleFile('modules/preview/vendor/moment.js');
+        $media->addModuleFile('modules/preview/vendor/jquery.marquee.min.js');
+        $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
+        $media->addModuleFile('modules/preview/xibo-text-render.js');
     }
     
     /**
@@ -44,6 +44,7 @@ class text extends Module
      */
     public function AddForm()
     {
+        $this->response = new ResponseManager();
         $db         =& $this->db;
         $user       =& $this->user;
 
@@ -57,46 +58,74 @@ class text extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
     
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = FormManager::AddTab('options', __('Options'));
+
+        Theme::Set('form_tabs', $tabs);
+
         $formFields = array();
-        $formFields[] = FormManager::AddCombo(
-                    'direction', 
-                    __('Direction'), 
-                    NULL,
-                    array(
-                        array('directionid' => 'none', 'direction' => __('None')), 
-                        array('directionid' => 'left', 'direction' => __('Left')), 
-                        array('directionid' => 'right', 'direction' => __('Right')), 
-                        array('directionid' => 'up', 'direction' => __('Up')), 
-                        array('directionid' => 'down', 'direction' => __('Down'))
-                    ),
-                    'directionid',
-                    'direction',
-                    __('Please select which direction this text should scroll. If scrolling is not required, select None'), 
-                    's');
+        $formFields['options'][] = FormManager::AddCombo(
+                'effect', 
+                __('Effect'), 
+                $this->GetOption('effect'),
+                array(
+                    array('effectid' => 'none', 'effect' => __('None')), 
+                    array('effectid' => 'fade', 'effect' => __('Fade')),
+                    array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
+                    array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
+                    array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
+                    array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
+                    array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
+                    array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
+                    array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
+                    array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
+                    array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
+                    array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
+                    array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
+                    array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
+                ),
+                'effectid',
+                'effect',
+                __('Please select the effect that will be used. Some effects will transition between paragraphs in the text. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
+                'e');
 
-        $formFields[] = FormManager::AddNumber('scrollSpeed', __('Scroll Speed'), NULL, 
-            __('The scroll speed to apply if a direction is specified. Higher is faster.'), 'e');
+        $formFields['options'][] = FormManager::AddNumber('speed', __('Speed'), NULL, 
+            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
-            __('The duration in seconds this counter should be displayed'), 'd', 'required');
+        // A list of web safe colours
+        $formFields['options'][] = FormManager::AddText('backgroundColor', __('Background Colour'), NULL, 
+            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'effect-controls');
+
+        $formFields['options'][] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+            __('The duration in seconds this should be displayed'), 'd', 'required');
 
         // Handle the substitutions as RAW items
         $subs = array(
                 array('Substitute' => 'Clock'),
-                array('Substitute' => 'HH:mm'),
+                array('Substitute' => 'Clock|HH:mm'),
                 array('Substitute' => 'Date'),
-                array('Substitute' => 'dd-mm-yy')
+                array('Substitute' => 'Clock|dd-mm-yy')
             );
         Theme::Set('substitutions', $subs);
-        $formFields[] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
+        $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
 
-        $formFields[] = FormManager::AddMultiText('ta_text', NULL, NULL, 
-            __('Enter the text to display. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+        $formFields['general'][] = FormManager::AddMultiText('ta_text', NULL, NULL, 
+            __('Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
 
-        Theme::Set('form_fields', $formFields);
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_options', $formFields['options']);
+
+        // Add a dependency
+        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none')));
+        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none')));
+        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
+        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
 
         $this->response->html = Theme::RenderReturn('form_render');
         $this->response->callBack = 'text_callback';
+        $this->response->dialogSize = __('large');
         $this->response->dialogTitle = __('Add Text');
 
         if ($this->showRegionOptions)
@@ -118,6 +147,7 @@ class text extends Module
      */
     public function EditForm()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
         $user =& $this->user;
         $layoutid = $this->layoutid;
@@ -136,35 +166,61 @@ class text extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
         
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = FormManager::AddTab('options', __('Options'));
+
+        Theme::Set('form_tabs', $tabs);
+
         $formFields = array();
-        $formFields[] = FormManager::AddCombo(
-                    'direction', 
-                    __('Direction'), 
-                    $this->GetOption('direction'),
-                    array(
-                        array('directionid' => 'none', 'direction' => __('None')), 
-                        array('directionid' => 'left', 'direction' => __('Left')), 
-                        array('directionid' => 'right', 'direction' => __('Right')), 
-                        array('directionid' => 'up', 'direction' => __('Up')), 
-                        array('directionid' => 'down', 'direction' => __('Down'))
-                    ),
-                    'directionid',
-                    'direction',
-                    __('Please select which direction this text should scroll. If scrolling is not required, select None'), 
-                    's');
 
-        $formFields[] = FormManager::AddNumber('scrollSpeed', __('Scroll Speed'), $this->GetOption('scrollSpeed'), 
-            __('The scroll speed to apply if a direction is specified. Higher is faster.'), 'e');
+        // Handle older layouts that have a direction node but no effect node
+        $oldDirection = $this->GetOption('direction', 'none');
+        if ($oldDirection != 'none')
+            $oldDirection = 'marquee' . ucfirst($oldDirection);
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+        $formFields['options'][] = FormManager::AddCombo(
+                'effect', 
+                __('Effect'), 
+                $this->GetOption('effect', $oldDirection),
+                array(
+                    array('effectid' => 'none', 'effect' => __('None')), 
+                    array('effectid' => 'fade', 'effect' => __('Fade')),
+                    array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
+                    array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
+                    array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
+                    array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
+                    array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
+                    array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
+                    array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
+                    array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
+                    array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
+                    array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
+                    array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
+                    array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
+                ),
+                'effectid',
+                'effect',
+                __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
+                'e');
+
+        $formFields['options'][] = FormManager::AddNumber('speed', __('Speed'), $this->GetOption('speed'), 
+            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
+
+        // A list of web safe colours
+        $formFields['options'][] = FormManager::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'), 
+            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'effect-controls');
+
+        $formFields['options'][] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         // Handle the substitutions as RAW items
         $subs = array(
                 array('Substitute' => 'Clock'),
-                array('Substitute' => 'HH:mm'),
+                array('Substitute' => 'Clock|HH:mm'),
                 array('Substitute' => 'Date'),
-                array('Substitute' => 'DD/MM/YYYY')
+                array('Substitute' => 'Clock|DD/MM/YYYY')
             );
         Theme::Set('substitutions', $subs);
 
@@ -176,15 +232,23 @@ class text extends Module
         $textNodes = $rawXml->getElementsByTagName('text');
         $textNode = $textNodes->item(0);
 
-        $formFields[] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
+        $formFields['general'][] = FormManager::AddMultiText('ta_text', NULL, $textNode->nodeValue, 
+            __('Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
 
-        $formFields[] = FormManager::AddMultiText('ta_text', NULL, $textNode->nodeValue, 
-            __('Enter the text to display. Please note that the background colour has automatically coloured to your region background colour.'), 't', 10);
+        $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
 
-        Theme::Set('form_fields', $formFields);
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_options', $formFields['options']);
+
+        // Add a dependency
+        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none')));
+        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none')));
+        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
+        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
 
         $this->response->html = Theme::RenderReturn('form_render');
         $this->response->callBack = 'text_callback';
+        $this->response->dialogSize = 'large';
         $this->response->dialogTitle = __('Edit Text');
         if ($this->showRegionOptions)
         {
@@ -205,15 +269,14 @@ class text extends Module
      */
     public function AddMedia()
     {
+        $this->response = new ResponseManager();
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;
 
         //Other properties
-        $direction    = Kit::GetParam('direction', _POST, _WORD, 'none');
         $duration     = Kit::GetParam('duration', _POST, _INT, 0);
         $text         = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-        $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 2);
 
         $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
@@ -238,8 +301,9 @@ class text extends Module
 
         // Any Options
         $this->SetOption('xmds', true);
-        $this->SetOption('direction', $direction);
-        $this->SetOption('scrollSpeed', $scrollSpeed);
+        $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
+        $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
+        $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
         $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 
         // Should have built the media object entirely by this time
@@ -264,6 +328,7 @@ class text extends Module
      */
     public function EditMedia()
     {
+        $this->response = new ResponseManager();
         $user =& $this->user;
 
         $layoutid = $this->layoutid;
@@ -277,9 +342,7 @@ class text extends Module
         }
 
         //Other properties
-        $direction    = Kit::GetParam('direction', _POST, _WORD, 'none');
-        $text         = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-        $scrollSpeed  = Kit::GetParam('scrollSpeed', _POST, _INT, 30);
+        $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
         
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
@@ -306,8 +369,9 @@ class text extends Module
 
         // Any Options
         $this->SetOption('xmds', true);
-        $this->SetOption('direction', $direction);
-        $this->SetOption('scrollSpeed', $scrollSpeed);
+        $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
+        $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
+        $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
         $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 
         // Should have built the media object entirely by this time
@@ -345,9 +409,6 @@ class text extends Module
      */
     public function GetResource($displayId = 0)
     {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-
         // Load in the template
         if ($this->layoutSchemaVersion == 1)
             $template = file_get_contents('modules/preview/Html4TransitionalTemplate.html');
@@ -360,9 +421,6 @@ class text extends Module
 
         $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
         $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
-        $direction = $this->GetOption('direction');
-        $scrollSpeed = $this->GetOption('scrollSpeed');
-        $fitText = $this->GetOption('fitText', 0);
         $duration = $this->duration;
 
         // Get the text out of RAW
@@ -374,14 +432,24 @@ class text extends Module
         $textNode = $textNodes->item(0);
         $text = $textNode->nodeValue;
 
+        // Handle older layouts that have a direction node but no effect node
+        $oldDirection = $this->GetOption('direction', 'none');
+        
+        if ($oldDirection != 'none')
+            $oldDirection = 'marquee' . ucfirst($oldDirection);
+
+        $effect = $this->GetOption('effect', $oldDirection);
+
         // Set some options
-        $options = array('direction' => $direction,
+        $options = array(
+            'type' => $this->type,
+            'fx' => $effect,
             'duration' => $duration,
             'durationIsPerItem' => false,
             'numItems' => 1,
             'takeItemsFrom' => 'start',
             'itemsPerPage' => 0,
-            'scrollSpeed' => $scrollSpeed,
+            'speed' => $this->GetOption('speed', 0),
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
@@ -392,7 +460,7 @@ class text extends Module
         // See if we need to replace out any [clock] or [date] tags
         $clock = false;
 
-        if (stripos($text, '[Clock]')) {
+        if (stripos($text, '[Clock|')) {
             $clock = true;
             $text = str_replace('[Clock]', '[HH:mm]', $text);
         }
@@ -408,7 +476,7 @@ class text extends Module
             preg_match_all('/\[.*?\]/', $text, $matches);
 
             foreach($matches[0] as $subs) {
-                $text = str_replace($subs, '<span class="clock" format="' . str_replace('[', '', str_replace(']', '', $subs)) . '"></span>', $text);
+                $text = str_replace($subs, '<span class="clock" format="' . str_replace('[Clock|', '', str_replace(']', '', $subs)) . '"></span>', $text);
             }
         }
 
@@ -419,9 +487,14 @@ class text extends Module
         $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
 
-        if ($direction != 'none')
+        // Need the marquee plugin?
+        if (stripos($effect, 'marquee') !== false)
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
         
+        // Need the cycle plugin?
+        if ($effect != 'none')
+            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
+                
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-text-render.js"></script>';
 
@@ -481,7 +554,7 @@ class text extends Module
         $textNode = $textNodes->item(0);
         $text = $textNode->nodeValue;
 
-        $output .= '<div class="hoverPreview" style="transform: scale(0.43); transform-origin: 0 0;">';
+        $output .= '<div class="hoverPreview">';
         $output .= '    ' . $text;
         $output .= '</div>';
 

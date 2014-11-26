@@ -253,7 +253,7 @@ function XiboInitialise(scope) {
 
         var formUrl = $(this).attr("href");
 
-        XiboHelpRender(formUrl);
+        window.open(formUrl);
 
         return false;
     });
@@ -346,72 +346,88 @@ function XiboGridRender(gridId, autoRefresh) {
                 if (sortOrder == undefined)
                     sortOrder = [[response.initialSortColumn,response.initialSortOrder]];
                 
+                var widgets = [ "uitheme", "zebra", "group" ];
+
+                if (response.paging)
+                    widgets.push("pager");
+
                 if (hasRows) {
                     $(sortingDiv).tablesorter({
                         sortList: sortOrder,
                         widthFixed: true,
                         theme: 'bootstrap',
-                        widgets : [ "uitheme", "zebra" ],
+                        widgets : widgets,
                         headerTemplate: '{content} {icon}',
+                        widgetOptions: {
+                            pager_output: '{startRow} - {endRow} / {filteredRows} ({totalRows})',
+                            pager_removeRows: false,
+                            pager_savePages: true,
+                            pager_size: response.pageSize,
+                            pager_css: {
+                                container   : 'tablesorter-pager',
+                                errorRow    : 'tablesorter-errorRow', // error information row (don't include period at beginning)
+                                disabled    : 'disabled'              // class added to arrows @ extremes (i.e. prev/first arrows "disabled" on first page)
+                            },
+                            pager_selectors: {
+                                container   : "#XiboPager_" + gridId,       // target the pager markup (wrapper)
+                                first       : '.first',       // go to first page arrow
+                                prev        : '.prev',        // previous page arrow
+                                next        : '.next',        // next page arrow
+                                last        : '.last',        // go to last page arrow
+                                gotoPage    : '.pagenum',    // go to page selector - select dropdown that sets the current page
+                                pageDisplay : '.pagedisplay', // location of where the "output" is displayed
+                                pageSize    : '.pagesize'     // page size selector - select dropdown that sets the "size" option
+                            }
+                        }
                     });
                     
                     $(sortingDiv).on('sortEnd', function(e) {
                         // Store on the XiboGrid
                         $('#' + gridId).data("sorting", e.target.config.sortList);
                     });
+
+                    // Bind to pager complete
+                    if (response.paging) {
+                        
+                        $(sortingDiv).on('pagerComplete', function(e,c) {
+                            $('#' + gridId).data("paging", c.page);
+
+                            $(sortingDiv).find('a.img-replace').each(function() {
+                                // Swap out the image
+                                if ($(this).closest("tr").css("display") != 'none') {
+                                    var img = $("<img>").prop("src", $(this).data().imgSrc);
+                                    $(this).children().remove();
+                                    $(this).append(img);
+                                }
+                            });
+                        });
+
+                        // Bind to enable / disable
+                        $("#XiboPager_" + gridId).find('.remove').click(function(){
+                            var enabled = $(this).find('i').hasClass("fa-ban");
+
+                            $('table').trigger( (enabled ? 'disable' : 'enable') + '.pager');
+                            
+                            if (enabled) {
+                                $('.remove').find('i').removeClass("fa-ban").addClass("fa-check-circle-o");
+                            }
+                            else {
+                                $('.remove').find('i').removeClass("fa-check-circle-o").addClass("fa-ban");
+                            }
+                            return false;
+                        });
+                    }
                 }
             }
             
-            // Do we need to add a pager?
-            if (response.paging && response.sortable) {
-                
-                // See if we have a page number
-                var pageNumber = $('#' + gridId).data("paging");
-                if (pageNumber == undefined)
-                    pageNumber = 0;
-                
-                if (response.pageNumber != 0)
-                    pageNumber = response.pageNumber;
-                
-                if ($("#XiboPager_" + gridId).length > 0 && hasRows) {
-                    $("#XiboPager_" + gridId).show();
-                    
-                    $(sortingDiv + ".tablesorter").tablesorterPager({
-                        container: $("#XiboPager_" + gridId),
-                        positionFixed: false,
-                        page: pageNumber,
-                        size: response.pageSize,
-                        // target the pager page select dropdown - choose a page
-                        cssGoto  : ".pagenum",
-                        removeRows: true,
-                        output: '{startRow} - {endRow} / {filteredRows} ({totalRows})'
-                    });
-
-                    $(sortingDiv).on('pagerComplete', function(e,c) {
-                        $('#' + gridId).data("paging", c.page);
-
-                        $(sortingDiv).find('a.img-replace').each(function() {
-                            // Swap out the image
-                            var img = $("<img>").prop("src", $(this).data().imgSrc);
-                            $(this).children().remove();
-                            $(this).append(img);
-                        });
-                    });
-                }
-                else {
-                    $("#XiboPager_" + gridId).hide();
-                }
-            }
-            else {
-                $("#XiboPager_" + gridId).hide();
-            }
-
             // Render any images in the grid (now that it is in pages)
             $(sortingDiv).find('a.img-replace').each(function() {
                 // Swap out the image
-                var img = $("<img>").prop("src", $(this).data().imgSrc);
-                $(this).children().remove();
-                $(this).append(img);
+                if ($(this).closest("tr").css("display") != 'none') {
+                    var img = $("<img>").prop("src", $(this).data().imgSrc);
+                    $(this).children().remove();
+                    $(this).append(img);
+                }
             });
 
             // Multi-select check box
@@ -499,6 +515,9 @@ function XiboFormRender(formUrl, data) {
                 if (response.dialogClass != '') {
                     dialog.addClass(response.dialogClass);
                 }
+
+                // Store the extra
+                dialog.data("extra", response.extra);
 
                 // Buttons?
                 if (response.buttons != '') {
@@ -618,6 +637,20 @@ function XiboFormRender(formUrl, data) {
                         }
                     });
                 }
+
+                if (response.dialogSize === "large")
+                    $(dialog).addClass("modal-big");
+
+                // Check to see if there are any tab actions
+                $('a[data-toggle="tab"]', dialog).on('shown.bs.tab', function (e) {
+        
+                    if ($(e.target).data().enlarge === 1) {
+                        $(e.target).closest(".modal").addClass("modal-big");
+                    }
+                    else {
+                        $(e.target).closest(".modal").removeClass("modal-big");
+                    }
+                });
 
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
@@ -796,6 +829,10 @@ function XiboMultiSelectFormRender(button) {
 
 }
 
+function XiboHelpRender(url) {
+    window.open(url);
+}
+
 /**
  * Xibo Ping
  * @param {String} url
@@ -959,77 +996,6 @@ function XiboSubmitResponse(response, form) {
         }
     }
 
-    return false;
-}
-
-/**
- * Renders the formid provided
- * @param {String} formId
- */
-function XiboHelpRender(formUrl) {
-
-    // Call with AJAX
-    $.ajax({
-        type: "get",
-        url: formUrl + "&ajax=true",
-        cache: false,
-        dataType: "json",
-        success: function(response){
-
-            // Was the Call successful
-            if (response.success) {
-                
-                var dialogTitle = "Xibo Help";
-                
-                // Is there a title for the dialog?
-                if (response.dialogTitle != undefined && response.dialogTitle != "") {
-                    // Set the dialog title
-                    dialogTitle =  response.dialogTitle;
-                }
-
-                var buttons = [];
-                buttons.push({
-                    label: 'Close',
-                        callback: function() {
-                            dialog.modal('hide');
-                        }
-                });
-
-                // Create the dialog with our parameters
-                var dialog = bootbox.dialog({
-                    message: response.html,
-                    title: "Manual",
-                    buttons: buttons,
-                    animate: false,
-                    className: "modal-big help-modal-big"
-                });
-
-                // Adjust the height of the iframe
-                var height = $(window).height(); 
-                $(".full-iframe").height(height - 250);
-            }
-            else {
-                // Login Form needed?
-                if (response.login) {
-                    LoginBox(response.message);
-                    return false;
-                }
-                else {
-                    // Just an error we dont know about
-                    if (response.message == undefined) {
-                        SystemMessage(response);
-                    }
-                    else {
-                        SystemMessage(response.message);
-                    }
-                }
-            }
-
-            return false;
-        }
-    });
-
-    // Dont then submit the link/button
     return false;
 }
 

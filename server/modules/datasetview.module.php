@@ -33,12 +33,13 @@ class datasetview extends Module
         parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
     }
 
-    private function InstallFiles() {
+    public function InstallFiles()
+    {
         $media = new Media();
-        $media->AddModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
-        $media->AddModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
-        $media->AddModuleFile('modules/preview/xibo-layout-scaler.js');
-        $media->AddModuleFile('modules/preview/xibo-dataset-render.js');
+        $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
+        $media->addModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
+        $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
+        $media->addModuleFile('modules/preview/xibo-dataset-render.js');
     }
 
     /**
@@ -47,6 +48,7 @@ class datasetview extends Module
      */
     public function AddForm()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
         $user =& $this->user;
 
@@ -97,6 +99,7 @@ class datasetview extends Module
      */
     public function EditForm()
     {
+        $this->response = new ResponseManager();
         $db =& $this->db;
         $user =& $this->user;
 
@@ -236,8 +239,7 @@ class datasetview extends Module
      */
     public function AddMedia()
     {
-        $db =& $this->db;
-
+        $this->response = new ResponseManager();
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
 
@@ -280,7 +282,7 @@ class datasetview extends Module
 
         // Link
         Kit::ClassLoader('dataset');
-        $dataSet = new DataSet($db);
+        $dataSet = new DataSet($this->db);
         $dataSet->LinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
 
         //Set this as the session information
@@ -302,8 +304,7 @@ class datasetview extends Module
      */
     public function EditMedia()
     {
-        $db =& $this->db;
-
+        $this->response = new ResponseManager();
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
         $mediaid = $this->mediaid;
@@ -390,8 +391,8 @@ class datasetview extends Module
         return $this->response;
     }
 
-    public function DeleteMedia() {
-
+    public function DeleteMedia()
+    {
         $dataSetId = $this->GetOption('datasetid');
 
         Debug::LogEntry('audit', sprintf('Deleting Media with DataSetId %d', $dataSetId), 'datasetview', 'DeleteMedia');
@@ -413,35 +414,23 @@ class datasetview extends Module
 
     public function GetResource($displayId = 0)
     {
-        // Make sure this module is installed correctly
-        $this->InstallFiles();
-
         // Load in the template
         if ($this->layoutSchemaVersion == 1)
             $template = file_get_contents('modules/preview/Html4TransitionalTemplate.html');
         else
             $template = file_get_contents('modules/preview/HtmlTemplate.html');
 
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+
         // Replace the View Port Width?
-        if (isset($_GET['preview']))
+        if ($isPreview)
             $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
 
         // Get the embedded HTML out of RAW
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
-        $rawNodes = $rawXml->getElementsByTagName('styleSheet');
-
-        if ($rawNodes->length == 0)
-        {
-            $styleSheet = $this->DefaultStyleSheet();
-        }
-        else
-        {
-            $rawNode = $rawNodes->item(0);
-            $styleSheet = $rawNode->nodeValue;
-        }
+        $styleSheet = $this->GetRawNode('styleSheet', $this->DefaultStyleSheet());
 
         $options = array(
+            'type' => $this->type,
             'duration' => $this->duration,
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
@@ -451,15 +440,14 @@ class datasetview extends Module
             'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
         );
 
-        $headContent  = '<style type="text/css">' . $styleSheet . '</style>';
         // Add our fonts.css file
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
+        $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml($displayId), $template);
+        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml($displayId, $isPreview), $template);
 
         // Build some JS nodes
         $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
@@ -530,7 +518,7 @@ END;
         return $styleSheet;
     }
 
-    public function DataSetTableHtml($displayId = 0)
+    public function DataSetTableHtml($displayId = 0, $isPreview = true)
     {
         $db =& $this->db;
 
@@ -546,11 +534,17 @@ END;
 
         if ($columnIds == '')
             return 'No columns';
+
+        // Set an expiry time for the media
+        $media = new Media();
+        $layout = new Layout();
+        $expires = time() + ($this->GetOption('updateInterval', 3600) * 60);
             
         // Create a data set view object, to get the results.
-        Kit::ClassLoader('dataset');
         $dataSet = new DataSet($db);
-        $dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $ordering, $lowerLimit, $upperLimit, $displayId);
+        if (!$dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $ordering, $lowerLimit, $upperLimit, $displayId)) {
+            return;
+        }
 
         $rowCount = 1;
         $rowCountThisPage = 1;
@@ -584,7 +578,7 @@ END;
                     $table .= ' <tr class="HeaderRow">';
 
                     foreach($dataSetResults['Columns'] as $col)
-                        $table .= '<th class="DataSetColumnHeaderCell">' . $col . '</th>';
+                        $table .= '<th class="DataSetColumnHeaderCell">' . $col['Text'] . '</th>';
 
                     $table .= ' </tr>';
                     $table .= '</thead>';
@@ -595,8 +589,25 @@ END;
 
             $table .= '<tr class="DataSetRow DataSetRow' . (($rowCount % 2) ? 'Odd' : 'Even') . '" id="row_' . $rowCount . '">';
 
-            for($i = 0; $i < count($dataSetResults['Columns']); $i++)
-                $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $row[$i] . '</span></td>';
+            // Output each cell for these results
+            for($i = 0; $i < count($dataSetResults['Columns']); $i++) {
+
+                // Pull out the cell for this row / column
+                $replace = $row[$i];
+
+                // What if this column is an image column type?
+                if ($dataSetResults['Columns'][$i]['DataTypeID'] == 4) {
+                    // Download the image, alter the replace to wrap in an image tag
+                    $file = $media->addModuleFileFromUrl(str_replace(' ', '%20', htmlspecialchars_decode($replace)), 'datasetview_' . md5($dataSetId . $dataSetResults['Columns'][$i]['DataSetColumnID'] . $replace), $expires);
+
+                    // Tag this layout with this file
+                    $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
+
+                    $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
+                }
+
+                $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></td>';
+            }
 
             $table .= '</tr>';
 

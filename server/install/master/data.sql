@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.7.0-alpha2', 4, 2, 81);
+('1.7.0-beta', 4, 2, 82);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
 (1, 'Users', 0, 0),
@@ -7,87 +7,87 @@ INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
 (3, 'xibo_admin', 1, 0);
 
 INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
-(1, 'Layout', 'General', 'manual/single.php?p=layout/overview'),
-(2, 'Content', 'General', 'manual/single.php?p=content/overview'),
-(4, 'Schedule', 'General', 'manual/single.php?p=schedule/overview'),
-(5, 'Group', 'General', 'manual/single.php?p=users/groups'),
-(6, 'Admin', 'General', 'manual/single.php?p=admin/settings'),
-(7, 'Report', 'General', 'manual/single.php?p=admin/advanced'),
-(8, 'Dashboard', 'General', 'manual/single.php?p=coreconcepts/dashboard'),
-(9, 'User', 'General', 'manual/single.php?p=users/users'),
-(10, 'Display', 'General', 'manual/single.php?p=admin/displays'),
-(11, 'DisplayGroup', 'General', 'manual/single.php?p=admin/displaygroups'),
-(12, 'Layout', 'Add', 'manual/single.php?p=layout/overview#Add_Layout'),
-(13, 'Layout', 'Background', 'manual/single.php?p=layout/layoutdesigner#Background'),
-(14, 'Content', 'Assign', 'manual/single.php?p=layout/assigncontent#Assigning_Content'),
-(15, 'Layout', 'RegionOptions', 'manual/single.php?p=layout/assigncontent'),
-(16, 'Content', 'AddtoLibrary', 'manual/single.php?p=content/adding'),
-(17, 'Display', 'Edit', 'manual/single.php?p=admin/displays#Display_Edit'),
-(18, 'Display', 'Delete', 'manual/single.php?p=admin/displays#Display_Delete'),
-(19, 'Displays', 'Groups', 'manual/single.php?p=admin/displaygroups#Group_Members'),
-(20, 'UserGroup', 'Add', 'manual/single.php?p=users/groups#Adding_Group'),
-(21, 'User', 'Add', 'manual/single.php?p=users/users#Add_User'),
-(22, 'User', 'Delete', 'manual/single.php?p=users/users#Delete_User'),
-(23, 'Content', 'Config', 'manual/single.php?p=admin/settings#Content'),
-(24, 'LayoutMedia', 'Permissions', 'manual/single.php?p=users/user_permissions'),
-(25, 'Region', 'Permissions', 'manual/single.php?p=users/user_permissions'),
-(26, 'Library', 'Assign', 'manual/single.php?p=layout/assigncontent#Add_From_Library'),
-(27, 'Media', 'Delete', 'manual/single.php?p=content/deleting'),
-(28, 'DisplayGroup', 'Add', 'manual/single.php?p=admin/displaygroups#Add_Group'),
-(29, 'DisplayGroup', 'Edit', 'manual/single.php?p=admin/displaygroups#Edit_Group'),
-(30, 'DisplayGroup', 'Delete', 'manual/single.php?p=admin/displaygroups#Delete_Group'),
-(31, 'DisplayGroup', 'Members', 'manual/single.php?p=admin/displaygroups#Group_Members'),
-(32, 'DisplayGroup', 'Permissions', 'manual/single.php?p=users/user_permissions'),
-(34, 'Schedule', 'ScheduleNow', 'manual/single.php?p=schedule/schedule_now'),
-(35, 'Layout', 'Delete', 'manual/single.php?p=layout/overview#Delete_Layout'),
-(36, 'Layout', 'Copy', 'manual/single.php?p=layout/overview#Copy_Layout'),
-(37, 'Schedule', 'Edit', 'manual/single.php?p=schedule/schedule_event'),
-(38, 'Schedule', 'Add', 'manual/single.php?p=schedule/schedule_event'),
-(39, 'Layout', 'Permissions', 'manual/single.php?p=users/user_permissions'),
-(40, 'Display', 'MediaInventory', 'manual/single.php?p=admin/displays#Media_Inventory'),
-(41, 'User', 'ChangePassword', 'manual/single.php?p=coreconcepts/navbar#Change_Password'),
-(42, 'Schedule', 'Delete', 'manual/single.php?p=schedule/schedule_event'),
-(43, 'Layout', 'Edit', 'manual/single.php?p=layout/overview#Edit_Layout'),
-(44, 'Media', 'Permissions', 'manual/single.php?p=users/user_permissions'),
-(45, 'Display', 'DefaultLayout', 'manual/single.php?p=admin/displays'),
-(46, 'UserGroup', 'Edit', 'manual/single.php?p=users/groups#Edit_Group'),
-(47, 'UserGroup', 'Members', 'manual/single.php?p=users/groups#Group_Member'),
-(48, 'User', 'PageSecurity', 'manual/single.php?p=users/menu_page_security#Page_Security'),
-(49, 'User', 'MenuSecurity', 'manual/single.php?p=users/menu_page_security#Menu_Security'),
-(50, 'UserGroup', 'Delete', 'manual/single.php?p=users/groups#Delete_Group'),
-(51, 'User', 'Edit', 'manual/single.php?p=users/users#Edit_User'),
-(52, 'User', 'Applications', 'manual/single.php?p=users/users#Users_MyApplications'),
-(53, 'User', 'SetHomepage', 'manual/single.php?p=coreconcepts/dashboard#Media_Dashboard'),
-(54, 'DataSet', 'General', 'manual/single.php?p=content/content_dataset'),
-(55, 'DataSet', 'Add', 'manual/single.php?p=content/content_dataset#Create_Dataset'),
-(56, 'DataSet', 'Edit', 'manual/single.php?p=content/content_dataset#Edit_Dataset'),
-(57, 'DataSet', 'Delete', 'manual/single.php?p=content/content_dataset#Delete_Dataset'),
-(58, 'DataSet', 'AddColumn', 'manual/single.php?p=content/content_dataset#Dataset_Column'),
-(59, 'DataSet', 'EditColumn', 'manual/single.php?p=content/content_dataset#Dataset_Column'),
-(60, 'DataSet', 'DeleteColumn', 'manual/single.php?p=content/content_dataset#Dataset_Column'),
-(61, 'DataSet', 'Data', 'manual/single.php?p=content/content_dataset#Dataset_Row'),
-(62, 'DataSet', 'Permissions', 'manual/single.php?p=users/user_permissions'),
-(63, 'Fault', 'General', 'manual/single.php?p=admin/advanced#Report_Fault'),
-(65, 'Stats', 'General', 'manual/single.php?p=admin/displaystats'),
-(66, 'Resolution', 'General', 'manual/single.php?p=templates/template_resolution'),
-(67, 'Template', 'General', 'manual/single.php?p=templates/overview'),
-(68, 'Services', 'Register', 'manual/single.php?p=admin/api_oauth#Registered_Applications'),
-(69, 'OAuth', 'General', 'manual/single.php?p=admin/api_oauth'),
-(70, 'Services', 'Log', 'manual/single.php?p=admin/api_oauth#oAuthLog'),
-(71, 'Module', 'Edit', 'manual/single.php?p=admin/modules'),
-(72, 'Module', 'General', 'manual/single.php?p=admin/modules'),
-(73, 'Campaign', 'General', 'manual/single.php?p=layout/campaign_layout'),
-(74, 'License', 'General', 'manual/single.php?p=license/licenses'),
-(75, 'DataSet', 'ViewColumns', 'manual/single.php?p=content/content_dataset#Dataset_Column'),
-(76, 'Campaign', 'Permissions', 'manual/single.php?p=users/user_permissions'),
-(77, 'Transition', 'Edit', 'manual/single.php?p=layout/transitions'),
-(78, 'User', 'SetPassword', 'manual/single.php?p=users/users#Set_Password'),
-(79, 'DataSet', 'ImportCSV', 'manual/single.php?p=content/content_dataset#Import_CSV'),
-(80, 'DisplayGroup', 'FileAssociations', 'manual/single.php?p=admin/fileassociations'),
-(81, 'Statusdashboard', 'General', 'manual/single.php?p=coreconcepts/dashboard#Status_Dashboard'),
-(82, 'Displayprofile', 'General', 'manual/single.php?p=admin/displayprofiles'),
-(83, 'DisplayProfile', 'Edit', 'manual/single.php?p=admin/displayprofiles#edit'),
-(84, 'DisplayProfile', 'Delete', 'manual/single.php?p=admin/displayprofiles#delete');
+(1, 'Layout', 'General', 'layouts.html'),
+(2, 'Content', 'General', 'media.html'),
+(4, 'Schedule', 'General', 'scheduling.html'),
+(5, 'Group', 'General', 'users_groups.html'),
+(6, 'Admin', 'General', 'cms_settings.html'),
+(7, 'Report', 'General', 'troubleshooting.html'),
+(8, 'Dashboard', 'General', 'tour.html'),
+(9, 'User', 'General', 'users.html'),
+(10, 'Display', 'General', 'displays.html'),
+(11, 'DisplayGroup', 'General', 'displays_groups.html'),
+(12, 'Layout', 'Add', 'layouts.html#Add_Layout'),
+(13, 'Layout', 'Background', 'layouts_designer.html#Background'),
+(14, 'Content', 'Assign', 'layouts_playlists.html#Assigning_Content'),
+(15, 'Layout', 'RegionOptions', 'layouts_regions.html'),
+(16, 'Content', 'AddtoLibrary', 'media_library.html'),
+(17, 'Display', 'Edit', 'displays.html#Display_Edit'),
+(18, 'Display', 'Delete', 'displays.html#Display_Delete'),
+(19, 'Displays', 'Groups', 'displays_groups.html#Group_Members'),
+(20, 'UserGroup', 'Add', 'users_groups.html#Adding_Group'),
+(21, 'User', 'Add', 'users_administration.html#Add_User'),
+(22, 'User', 'Delete', 'users_administration.html#Delete_User'),
+(23, 'Content', 'Config', 'cms_settings.html#Content'),
+(24, 'LayoutMedia', 'Permissions', 'users_permissions.html'),
+(25, 'Region', 'Permissions', 'users_permissions.html'),
+(26, 'Library', 'Assign', 'layouts_playlists.html#Add_From_Library'),
+(27, 'Media', 'Delete', 'media_library.html#Delete'),
+(28, 'DisplayGroup', 'Add', 'displays_groups.html#Add_Group'),
+(29, 'DisplayGroup', 'Edit', 'displays_groups.html#Edit_Group'),
+(30, 'DisplayGroup', 'Delete', 'displays_groups.html#Delete_Group'),
+(31, 'DisplayGroup', 'Members', 'displays_groups.html#Group_Members'),
+(32, 'DisplayGroup', 'Permissions', 'users_permissions.html'),
+(34, 'Schedule', 'ScheduleNow', 'scheduling_now.html'),
+(35, 'Layout', 'Delete', 'layouts.html#Delete_Layout'),
+(36, 'Layout', 'Copy', 'layouts.html#Copy_Layout'),
+(37, 'Schedule', 'Edit', 'scheduling_events.html#Edit'),
+(38, 'Schedule', 'Add', 'scheduling_events.html#Add'),
+(39, 'Layout', 'Permissions', 'users_permissions.html'),
+(40, 'Display', 'MediaInventory', 'displays.html#Media_Inventory'),
+(41, 'User', 'ChangePassword', 'users.html#Change_Password'),
+(42, 'Schedule', 'Delete', 'scheduling_events.html'),
+(43, 'Layout', 'Edit', 'layouts_designer.html#Edit_Layout'),
+(44, 'Media', 'Permissions', 'users_permissions.html'),
+(45, 'Display', 'DefaultLayout', 'displays.html#DefaultLayout'),
+(46, 'UserGroup', 'Edit', 'users_groups.html#Edit_Group'),
+(47, 'UserGroup', 'Members', 'users_groups.html#Group_Member'),
+(48, 'User', 'PageSecurity', 'users_permissions.html#Page_Security'),
+(49, 'User', 'MenuSecurity', 'users_permissions.html#Menu_Security'),
+(50, 'UserGroup', 'Delete', 'users_groups.html#Delete_Group'),
+(51, 'User', 'Edit', 'users_administration.html#Edit_User'),
+(52, 'User', 'Applications', 'users_administration.html#Users_MyApplications'),
+(53, 'User', 'SetHomepage', 'users_administration.html#Media_Dashboard'),
+(54, 'DataSet', 'General', 'media_datasets.html'),
+(55, 'DataSet', 'Add', 'media_datasets.html#Create_Dataset'),
+(56, 'DataSet', 'Edit', 'media_datasets.html#Edit_Dataset'),
+(57, 'DataSet', 'Delete', 'media_datasets.html#Delete_Dataset'),
+(58, 'DataSet', 'AddColumn', 'media_datasets.html#Dataset_Column'),
+(59, 'DataSet', 'EditColumn', 'media_datasets.html#Dataset_Column'),
+(60, 'DataSet', 'DeleteColumn', 'media_datasets.html#Dataset_Column'),
+(61, 'DataSet', 'Data', 'media_datasets.html#Dataset_Row'),
+(62, 'DataSet', 'Permissions', 'users_permissions.html'),
+(63, 'Fault', 'General', 'troubleshooting.html#Report_Fault'),
+(65, 'Stats', 'General', 'displays_metrics.html'),
+(66, 'Resolution', 'General', 'layouts_resolutions.html'),
+(67, 'Template', 'General', 'layouts_templates.html'),
+(68, 'Services', 'Register', '#Registered_Applications'),
+(69, 'OAuth', 'General', 'api_oauth.html'),
+(70, 'Services', 'Log', 'api_oauth.html#oAuthLog'),
+(71, 'Module', 'Edit', 'media_modules.html'),
+(72, 'Module', 'General', 'media_modules.html'),
+(73, 'Campaign', 'General', 'layouts_campaigns.html'),
+(74, 'License', 'General', 'licence_information.html'),
+(75, 'DataSet', 'ViewColumns', 'media_datasets.html#Dataset_Column'),
+(76, 'Campaign', 'Permissions', 'users_permissions.html'),
+(77, 'Transition', 'Edit', 'layouts_transitions.html'),
+(78, 'User', 'SetPassword', 'users_administration.html#Set_Password'),
+(79, 'DataSet', 'ImportCSV', 'media_datasets.htmlmedia_datasets.html#Import_CSV'),
+(80, 'DisplayGroup', 'FileAssociations', 'displays_fileassociations.html'),
+(81, 'Statusdashboard', 'General', 'tour_status_dashboard.html'),
+(82, 'Displayprofile', 'General', 'displays_settings.html'),
+(83, 'DisplayProfile', 'Edit', 'displays_settings.html#edit'),
+(84, 'DisplayProfile', 'Delete', 'displays_settings.html#delete');
 
 INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
 (8, 'Administration Menu'),
@@ -104,10 +104,9 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
 (3, 'Flash', 'Flash', 1, 0, 'Flash', 'forms/flash.gif', 1, 'swf', 1, 1, NULL, NULL),
 (4, 'PowerPoint', 'PowerPoint', 1, 0, 'Powerpoint. PPT, PPS', 'forms/powerpoint.gif', 1, 'ppt,pps,pptx', 1, 1, NULL, NULL),
 (5, 'Webpage', 'Webpage', 1, 1, 'Webpages.', 'forms/webpage.gif', 1, NULL, 1, 1, NULL, NULL),
-(6, 'Ticker', 'Ticker', 1, 1, 'RSS Ticker.', 'forms/ticker.gif', 1, NULL, 1, 1, NULL, NULL),
+(6, 'Ticker', 'Ticker', 1, 1, 'RSS Ticker.', 'forms/ticker.gif', 1, NULL, 1, 1, NULL, '{"templates":[{"id":"title-only","value":"Title Only","template":"<p style=\\"font-family: Arial, Verdana, sans-serif;\\"><span style=\\"font-size:48px;\\"><span style=\\"color: #Color#;\\"><strong>[Title]<\\/strong><\\/span><\\/span><\\/p>","css":""},{"id":"prominent-title-with-desc-and-name-separator","value":"Prominent title with description and name separator","template":"<p style=\\"font-family: Arial, Verdana, sans-serif;\\"><span style=\\"font-size:28px;\\"><span style=\\"color: rgb(255, 0, 0);\\">[Name]<\\/span><\\/span><\\/p><p style=\\"font-family: Arial, Verdana, sans-serif;\\"><span style=\\"font-size:48px;\\"><span style=\\"color: #Color#;\\"><strong>[Title]<\\/strong><\\/span><\\/span><\\/p><p style=\\"font-family: Arial, Verdana, sans-serif;\\"><span style=\\"font-size:48px;\\"><span style=\\"color: #Color#;\\">[Description]<\\/span><\\/span><\\/p>","css":""},{"id":"media-rss-with-title","value":"Image overlaid with the Title","template":"<div class=\\"image\\">[Link|image]<div class=\\"cycle-overlay\\"><p style=\\"font-family: Arial, Verdana, sans-serif; font-size:48px;\\">[Title]<\\/p><\\/div><\\/div>","css":".image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}"}]}'),
 (7, 'Text', 'Text', 1, 1, 'Text. With Directional Controls.', 'forms/text.gif', 1, NULL, 1, 1, NULL, NULL),
 (8, 'Embedded', 'Embedded', 1, 1, 'Embedded HTML', 'forms/webpage.gif', 1, NULL, 1, 1, NULL, NULL),
-(9, 'MicroBlog', 'MicroBlog', 0, 1, NULL, 'forms/microblog.gif', 1, NULL, 1, 1, NULL, NULL),
 (10, 'Counter', 'Counter', 0, 1, 'Customer Counter connected to a Remote Control', 'forms/counter.gif', 1, NULL, 1, 1, NULL, NULL),
 (11, 'datasetview', 'Data Set', 1, 1, 'A view on a DataSet', 'forms/datasetview.gif', 1, NULL, 1, 1, NULL, NULL),
 (12, 'shellcommand', 'Shell Command', 1, 1, 'Execute a shell command on the client', 'forms/shellcommand.gif', 1, NULL, 1, 1, NULL, NULL),
@@ -215,7 +214,6 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (1, 'MEDIA_DEFAULT', 'private', 'dropdown', 'Media will be created with these settings. If public everyone will be able to view and use this media.', 'private|public', 'permissions', 1, 'Media Permissions', '', 20, 'private', 1, 'word'),
 (2, 'LAYOUT_DEFAULT', 'private', 'dropdown', 'New layouts will be created with these settings. If public everyone will be able to view and use this layout.', 'private|public', 'permissions', 1, 'Layout Permissions', '', 10, 'private', 1, 'word'),
 (3, 'defaultUsertype', 'User', 'dropdown', 'Sets the default user type selected when creating a user.\r\n<br />\r\nWe recommend that this is set to "User"', 'User|Group Admin|Super Admin', 'users', 1, 'Default User Type', '', 10, 'User', 1, 'string'),
-(5, 'debug', 'Off', 'dropdown', 'Sets whether debug information is recorded when an error occurs.\r\n<br />\r\nThis should be set to "off" to ensure smaller log sizes', 'On|Off', 'troubleshooting', 1, 'Enable Debugging?', '', 10, 'Off', 1, 'word'),
 (7, 'userModule', 'module_user_general.php', 'dirselect', 'This sets which user authentication module is currently being used.', NULL, 'users', 0, 'User Module', '', 0, 'module_user_general.php', 0, 'string'),
 (11, 'defaultTimezone', 'Europe/London', 'timezone', 'Set the default timezone for the application', 'Europe/London', 'regional', 1, 'Timezone', '', 20, 'Europe/London', 1, 'string'),
 (18, 'mail_to', 'mail@yoursite.com', 'email', 'Errors will be mailed here', NULL, 'maintenance', 1, 'Admin email address', '', 30, 'mail@yoursite.com', 1, 'string'),
@@ -223,7 +221,7 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (23, 'jpg_length', '10', 'number', 'Default length for JPG files (in seconds)', NULL, 'content', 1, 'Default Image Duration', '', 30, '10', 1, 'int'),
 (26, 'ppt_length', '10', 'number', 'Default length for PPT files (in seconds)', NULL, 'content', 1, 'Default PowerPoint Duration', '', 10, '10', 1, 'int'),
 (29, 'swf_length', '10', 'number', 'Default length for SWF files', NULL, 'content', 1, 'Default Flash Duration', '', 20, '10', 1, 'int'),
-(30, 'audit', 'Off', 'dropdown', 'Turn on the auditing information. Warning this will quickly fill up the log', 'On|Off', 'troubleshooting', 1, 'Enable Auditing?', '', 20, 'Off', 1, 'word'),
+(30, 'audit', 'error', 'dropdown', 'Set the level of logging the CMS should record. In production systems "error" is recommended.', 'error|info|audit|off', 'troubleshooting', 1, 'Log Level', '', 20, 'error', 1, 'word'),
 (33, 'LIBRARY_LOCATION', '', 'text', 'The fully qualified path to the CMS library location.', NULL, 'configuration', 1, 'Library Location', 'required', 10, '', 1, 'string'),
 (34, 'SERVER_KEY', '', 'text', NULL, NULL, 'configuration', 1, 'CMS Secret Key', 'required', 20, '', 1, 'string'),
 (35, 'HELP_BASE', 'http://www.xibo.org.uk/manual/', 'text', NULL, NULL, 'general', 1, 'Location of the Manual', 'required', 10, 'http://www.xibo.org.uk/manual/', 1, 'string'),
@@ -266,7 +264,12 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (72, 'PROXY_PORT', '0', 'number', 'The Proxy Port', NULL, 'network', 1, 'Proxy Port', '', 20, '0', 1, 'int'),
 (73, 'PROXY_AUTH', '', 'text', 'The Authentication information for this proxy. username:password', NULL, 'network', 1, 'Proxy Credentials', '', 30, '', 1, 'string'),
 (74, 'DATE_FORMAT',  'Y-m-d',  'text',  'The Date Format to use when displaying dates in the CMS.', NULL ,  'regional',  '1',  'Date Format',  'required',  30,  'Y-m-d',  '1',  'string'),
-(75, 'DETECT_LANGUAGE',  '1',  'checkbox',  'Detect the browser language?', NULL ,  'regional',  '1',  'Detect Language',  '',  40,  '1',  1,  'checkbox');
+(75, 'DETECT_LANGUAGE',  '1',  'checkbox',  'Detect the browser language?', NULL ,  'regional',  '1',  'Detect Language',  '',  40,  '1',  1,  'checkbox'),
+(76, 'DEFAULTS_IMPORTED', '0', 'text', 'Has the default layout been imported?', NULL, 'general', 0, 'Defaults Imported?', 'required', 100, '0', 0, 'checkbox'),
+(77, 'FORCE_HTTPS', '0', 'checkbox', 'Force the portal into HTTPS?', NULL, 'network', 1, 'Force HTTPS?', '', 70, '0', 1, 'checkbox'),
+(78, 'ISSUE_STS', '0', 'checkbox', 'Add STS to the response headers? Make sure you fully understand STS before turning it on as it will prevent access via HTTP after the first successful HTTPS connection.', NULL, 'network', 1, 'Enable STS?', '', 80, '0', 1, 'checkbox'),
+(79, 'STS_TTL', '600', 'text', 'The Time to Live (maxage) of the STS header expressed in minutes.', NULL, 'network', 1, 'STS Time out', '', 90, '600', 1, 'int'),
+(80, 'MAINTENANCE_ALERTS_FOR_VIEW_USERS', '0', 'checkbox', 'Email maintenance alerts for users with view permissions to effected Displays.', NULL, 'displays', 1, 'Maintenance Alerts for Users', '', 60, '0', 1, 'checkbox');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -275,29 +278,6 @@ INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 
 INSERT INTO `user` (`UserID`, `usertypeid`, `UserName`, `UserPassword`, `loggedin`, `lastaccessed`, `email`, `homepage`, `Retired`) VALUES
 (1, 1, 'xibo_admin', '21232f297a57a5a743894a0e4a801fc3', 1, NOW(), '', 'statusdashboard', 0);
-
-
-INSERT INTO `layout` (`layoutID`, `layout`, `xml`, `userID`, `createdDT`, `modifiedDT`, `description`, `tags`, `templateID`, `retired`, `duration`, `backgroundImageId`) VALUES
-(4, 'Default Layout', '<?xml version="1.0"?><layout schemaVersion="1" width="800" height="450" bgcolor="#000000"><region id="47ff29524ce1b" width="800" height="401" top="0" left="0" userId="1"><media id="522caef6e13cb6c9fe5fac15dde59ef7" type="text" duration="15" lkid="" userId="1" schemaVersion="1">
-                            <options><xmds>1</xmds><direction>none</direction><scrollSpeed>2</scrollSpeed><fitText>0</fitText></options>
-                            <raw><text><![CDATA[<p style="text-align: center;"><strong><span style="font-family:arial,helvetica,sans-serif;"><span style="font-size:72px;"><span style="color:#FFFFFF;">Welcome to&nbsp;<br />
-Xibo</span></span></span></strong></p>
-
-<p style="text-align: center;"><span style="font-size:48px;"><span style="font-family:arial,helvetica,sans-serif;"><span style="color:#FFFFFF;">Open Source Digital Signage</span></span></span></p>
-
-<p style="text-align: center;"><span style="color:#D3D3D3;"><span style="font-size:26px;"><span style="font-family:arial,helvetica,sans-serif;">This is the default layout - please feel free to change it whenever you like.</span></span></span></p>
-]]></text></raw>
-                    </media></region><region id="53654d56726e0" userId="1" width="194" height="48" top="402" left="609"><media id="11846d5d9f686fb75fc9dad0b19ca9de" type="text" duration="10" lkid="" userId="1" schemaVersion="1">
-                            <options><xmds>1</xmds><direction>none</direction><scrollSpeed>2</scrollSpeed><fitText>0</fitText></options>
-                            <raw><text><![CDATA[<p style="text-align: right;"><span style="font-size:24px;"><span style="font-family:arial,helvetica,sans-serif;"><span style="color:#D3D3D3;">[Clock]</span></span></span></p>
-]]></text></raw>
-                    </media></region></layout>', 1, '2013-02-02 14:30:40', '2013-02-02 14:30:40', NULL, NULL, NULL, 0, 0, NULL);
-
-INSERT INTO `campaign` (`CampaignID`, `Campaign`, `IsLayoutSpecific`, `UserID`) VALUES
-(1, 'Default Layout', 1, 1);
-
-INSERT INTO `lkcampaignlayout` (`LkCampaignLayoutID`, `CampaignID`, `LayoutID`, `DisplayOrder`) VALUES
-(1, 1, 4, 1);
 
 INSERT INTO `lkmenuitemgroup` (`LkMenuItemGroupID`, `GroupID`, `MenuItemID`) VALUES
 (1, 1, 33),
@@ -336,7 +316,8 @@ INSERT INTO `transition` (`TransitionID`, `Transition`, `Code`, `HasDuration`, `
 INSERT INTO `datatype` (`DataTypeID`, `DataType`) VALUES
 (1, 'String'),
 (2, 'Number'),
-(3, 'Date');
+(3, 'Date'),
+(4, 'Image');
 
 INSERT INTO `datasetcolumntype` (`DataSetColumnTypeID`, `DataSetColumnType`) VALUES
 (1, 'Value'),
@@ -354,3 +335,9 @@ INSERT INTO `bandwidthtype` (`bandwidthtypeid`, `name`) VALUES
 (9, 'Submit Log'),
 (10, 'Blacklist'),
 (11, 'Screen Shot');
+
+
+INSERT INTO `tag` (`tagId`, `tag`) VALUES
+(1, 'template'),
+(2, 'background'),
+(3, 'thumbnail');

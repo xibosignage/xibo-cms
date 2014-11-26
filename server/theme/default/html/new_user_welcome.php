@@ -25,7 +25,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <h1><?php echo Theme::Translate('Welcome to the %s CMS!', Theme::GetConfig('app_name')); ?></h1>
         <p><?php echo Theme::Translate('Digital Signage for Everyone'); ?></p>
         <p><?php echo Theme::Translate('We hope you like %s and have given you some suggestions below to get you started.', Theme::GetConfig('app_name')); ?></p>
-        <a class="btn btn-primary btn-lg" role="button" href="index.php?toc=app_overview&p=coreconcepts/overview" target="_blank"><?php echo Theme::Translate('Getting Started Guide'); ?></a>
+        <a class="btn btn-primary btn-lg" role="button" href="<?php echo HelpManager::Link('Dashboard', 'General'); ?>" target="_blank"><?php echo Theme::Translate('Getting Started Guide'); ?></a>
     </div>
 </div>
 <div class="row">
@@ -46,9 +46,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                         <h3><?php echo Theme::Translate('Display'); ?></h3>
                         <p><?php echo Theme::Translate('Displays are your physical hardware players connected to your TV/Projector. Connect your first display to get started.'); ?></p>
                         <div class="btn-group">
-                            <a class="btn btn-primary btn-lg" role="button" href="index.php?p=display"><?php echo Theme::Translate('Manage Displays'); ?></a>
-                            <a class="btn btn-default btn-lg" role="button" href="<?php echo Theme::GetConfig('manual_url'); ?>index.php?toc=getting_started&p=install/install_client" target="_blank"><?php echo Theme::Translate('Windows'); ?></a>
-                            <a class="btn btn-default btn-lg" role="button" href="<?php echo Theme::GetConfig('manual_url'); ?>index.php?toc=getting_started&p=install/install_python_client" target="_blank"><?php echo Theme::Translate('Ubuntu'); ?></a>
+                            <a class="btn btn-primary btn-lg" role="button" href="<?php echo HelpManager::Link('Dashboard', 'General'); ?>"><?php echo Theme::Translate('Manage Displays'); ?></a>
+                            <a class="btn btn-default btn-lg" role="button" href="<?php echo HelpManager::rawLink('install_windows_client.html'); ?>" target="_blank"><?php echo Theme::Translate('Windows'); ?></a>
+                            <a class="btn btn-default btn-lg" role="button" href="<?php echo HelpManager::rawLink('install_python_client.html'); ?>" target="_blank"><?php echo Theme::Translate('Ubuntu'); ?></a>
                         </div>
                     </div>
                 </div>
@@ -59,7 +59,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                         <p><?php echo Theme::Translate('Screen design and presentation is managed on a Layout. You can have as many layouts as you want and design them in the CMS.'); ?></p>
                         <div class="btn-group">
                             <a class="btn btn-primary btn-lg" role="button" href="index.php?p=layout"><?php echo Theme::Translate('Design a Layout'); ?></a>
-                            <a class="btn btn-default btn-lg" role="button" href="<?php echo Theme::GetConfig('manual_url'); ?>index.php?toc=layouts&p=layout/overview" target="_blank"><?php echo Theme::Translate('Read more'); ?></a>
+                            <a class="btn btn-default btn-lg" role="button" href="<?php echo HelpManager::Link('Layout', 'General'); ?>" target="_blank"><?php echo Theme::Translate('Read more'); ?></a>
                         </div>
                     </div>
                 </div>
@@ -70,7 +70,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                         <p><?php echo Theme::Translate('Send something down to your display and watch %s come alive! Create events on Displays / Groups for Layouts / Campaigns, create repeat events and much more.', Theme::GetConfig('app_name')); ?></p>
                         <div class="btn-group">
                             <a class="btn btn-primary btn-lg" role="button" href="index.php?p=schedule"><?php echo Theme::Translate('Schedule Event'); ?></a>
-                            <a class="btn btn-default btn-lg" role="button" href="<?php echo Theme::GetConfig('manual_url'); ?>index.php?toc=scheduling&p=schedule/overview" target="_blank"><?php echo Theme::Translate('Read more'); ?></a>
+                            <a class="btn btn-default btn-lg" role="button" href="<?php echo HelpManager::Link('Schedule', 'General'); ?>" target="_blank"><?php echo Theme::Translate('Read more'); ?></a>
                         </div>
                     </div>
                 </div>

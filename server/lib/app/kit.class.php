@@ -532,6 +532,8 @@ class Kit
      */
     public static function SendEmail($to, $from, $subject, $message)
     {
+        Debug::Audit('To: ' . $to . '. Subject: ' . $subject);
+
         $headers  = sprintf("From: %s\r\nX-Mailer: php", $from);
         return mail($to, $subject, $message, $headers);
     }
@@ -660,6 +662,32 @@ class Kit
     public static function uniqueId() 
     {
         return uniqid(rand());
+    }
+
+    /**
+     * Is the request from SSL
+     * @return boolean TRUE OR FALSE
+     */
+    public static function isSSL()
+    {
+        if (isset($_SERVER['https']) && $_SERVER['https'] == 1) /* Apache */ {
+            return TRUE;
+        } 
+        elseif (isset($_SERVER['https']) && $_SERVER['https'] == 'on') /* IIS */ {
+            return TRUE;
+        } 
+        elseif ($_SERVER['SERVER_PORT'] == 443) /* others */ {
+            return TRUE;
+        } 
+        else {
+            return FALSE; /* just using http */
+        }
+    }
+
+    public static function IssueStsHeaderIfNecessary()
+    {
+        if (Config::GetSetting('ISSUE_STS', 0) == 1)
+            header("strict-transport-security: max-age=" . Config::GetSetting('STS_TTL', 600));
     }
 }
 ?>
