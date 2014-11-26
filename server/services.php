@@ -27,6 +27,10 @@ $response = Kit::GetParam('response', _REQUEST, _WORD, 'xml');
 $version = Kit::GetParam('v', _REQUEST, _INT, 3);
 $serviceResponse = new XiboServiceResponse();
 
+// Version Request?
+if (isset($_GET['what']))
+    die(Config::Version('XmdsVersion'));
+
 // Is the WSDL being requested.
 if (isset($_GET['wsdl']) || isset($_GET['WSDL']))
     $serviceResponse->WSDL($version);
