@@ -374,8 +374,9 @@ class displayDAO extends baseDAO
         
         $cols = array(
                 array('name' => 'displayid', 'title' => __('ID')),
-                array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
                 array('name' => 'displayWithLink', 'title' => __('Display')),
+                array('name' => 'status', 'title' => __('Status'), 'icons' => true),
+                array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
                 array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
                 array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
                 array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
@@ -389,7 +390,7 @@ class displayDAO extends baseDAO
             );
         
         Theme::Set('table_cols', $cols);
-        Theme::Set('rowClass', 'mediainventorystatus');
+        Theme::Set('rowClass', 'rowColor');
 
         $rows = array();
 
@@ -408,7 +409,8 @@ class displayDAO extends baseDAO
             $row['lastaccessed'] = DateManager::getLocalDate($row['lastaccessed']);
 
             // Create some login lights
-            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
+            $row['rowColor'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
+            $row['status'] = ($row['mediainventorystatus'] == 1) ? 1 : (($row['mediainventorystatus'] == 2) ? 0 : -1);
 
             // Thumbnail
             $row['thumbnail'] = '';

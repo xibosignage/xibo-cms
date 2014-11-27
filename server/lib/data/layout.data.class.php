@@ -1942,6 +1942,9 @@ class Layout extends Data
                         'mediaId' => $newMediaId,
                         'layoutId' => $layoutId
                     ));
+
+                // Link
+                $this->AddLk($layoutId, 'background', $newMediaId);
             }
             catch (Exception $e) {
                 
@@ -2020,7 +2023,7 @@ class Layout extends Data
                 Debug::Audit('Found file: ' . $file);
 
                 if (stripos($file, '.zip'))
-                    $this->Import($folder . DIRECTORY_SEPARATOR . $file, NULL, 1, false, true, true, false);
+                    $this->Import($folder . DIRECTORY_SEPARATOR . $file, NULL, 1, false, false, true, false);
             }
         }
     }

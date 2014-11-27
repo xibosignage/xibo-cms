@@ -751,8 +751,15 @@ class timelineDAO extends baseDAO {
             Debug::LogEntry('audit', sprintf('Permission Granted to View MediaID: %s', $mediaId), 'layout', 'TimeLine');
 
             // Create a media module to handle all the complex stuff
-            require_once("modules/$mediaType.module.php");
-            $tmpModule = new $mediaType($db, $user, $mediaId, $layoutId, $regionId, $lkId);
+            try {
+                require_once("modules/$mediaType.module.php");
+                $tmpModule = new $mediaType($db, $user, $mediaId, $layoutId, $regionId, $lkId);
+            }
+            catch (Exception $e) {
+                Debug::Audit('Caught exception from Module Create');
+                trigger_error($e->getMessage(), E_USER_ERROR);
+            }
+
             $mediaName = $tmpModule->GetName();
             $transitionIn = $tmpModule->GetTransition('in');
             $transitionOut = $tmpModule->GetTransition('out');

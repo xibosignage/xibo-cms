@@ -113,7 +113,7 @@ abstract class Module implements ModuleInterface
 
         // Determine which type this module is
         if (!$this->SetModuleInformation())
-        	return false;
+            throw new Exception($this->GetErrorMessage());
 
         Debug::LogEntry('audit', 'Module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 
@@ -138,8 +138,11 @@ abstract class Module implements ModuleInterface
                     'type' => $this->type
                 ));
 
-            $row = $sth->fetch();
+            if (!$row = $sth->fetch())
+                $this->ThrowError(__('Module "' . $this->type . '" does not exist or is not installed. Please visit the module administration page or contact your administrator'));
         
+            Debug::Audit('Module Found');
+
             $this->module_id = Kit::ValidateParam($row['ModuleID'], _INT);
             $this->schemaVersion = Kit::ValidateParam($row['SchemaVersion'], _INT);
             $this->regionSpecific = Kit::ValidateParam($row['RegionSpecific'], _INT);
@@ -172,8 +175,11 @@ abstract class Module implements ModuleInterface
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage());
-        
-            return $this->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
+            
+            if (!$this->IsError())
+                $this->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
+
+            return false;
         }
 
         return true;
