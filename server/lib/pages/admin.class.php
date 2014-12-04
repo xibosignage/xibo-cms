@@ -283,7 +283,7 @@ class adminDAO extends baseDAO {
 	public function SetMaxDebug()
 	{
 		$response	= new ResponseManager();
-		$setting 	= new Setting($db);
+		$setting 	= new Setting();
 		
 		if (!$setting->Edit('audit', 'audit'))
             trigger_error(__('Cannot set audit to On'));
@@ -298,9 +298,8 @@ class adminDAO extends baseDAO {
 	 */
 	public function SetMinDebug()
 	{
-		$db			=& $this->db;
 		$response	= new ResponseManager();
-		$setting 	= new Setting($db);
+		$setting 	= new Setting();
 		
 		if (!$setting->Edit('audit', 'error'))
             trigger_error(__('Cannot set audit to Off'), E_USER_ERROR);
@@ -315,9 +314,8 @@ class adminDAO extends baseDAO {
 	 */
 	public function SetServerProductionMode()
 	{
-		$db			=& $this->db;
 		$response	= new ResponseManager();
-		$setting 	= new Setting($db);
+		$setting 	= new Setting();
 		
 		if (!$setting->Edit('SERVER_MODE', 'Production'))
 		{
@@ -334,9 +332,8 @@ class adminDAO extends baseDAO {
 	 */
 	public function SetServerTestMode()
 	{
-		$db			=& $this->db;
 		$response	= new ResponseManager();
-		$setting 	= new Setting($db);
+		$setting 	= new Setting();
 		
 		if (!$setting->Edit('SERVER_MODE', 'Test'))
 		{

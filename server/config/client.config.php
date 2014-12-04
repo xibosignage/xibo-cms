@@ -471,6 +471,28 @@ $CLIENT_CONFIG = array(
                         'helpText' => __('Store all HTML resources on the Internal Storage? Should be selected if the device cannot display text, ticker, dataset media.'),
                         'enabled' => true,
                         'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'sendCurrentLayoutAsStatusUpdate',
+                        'tabId' => 'advanced',
+                        'title' => __('Notify current layout'),
+                        'type' => _CHECKBOX,
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'screenShotRequestInterval',
+                        'tabId' => 'advanced',
+                        'title' => __('Screen shot interval'),
+                        'type' => _INT,
+                        'fieldType' => 'number',
+                        'default' => 0,
+                        'helpText' => __('The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     )
                 )
             )

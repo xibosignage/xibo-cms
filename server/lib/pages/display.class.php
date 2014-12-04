@@ -81,7 +81,7 @@ class displayDAO extends baseDAO
 
         $formFields[] = FormManager::AddCombo(
             'filter_showThumbnail', 
-            __('Thumbnails'), 
+            __('Screen Shot Thumbnails'), 
             $filter_showThumbnail,
             array(
                 array('key' => 0, 'value' => __('None')),
