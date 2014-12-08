@@ -768,6 +768,12 @@ class Twitter extends Module
      */
     public function GetResource($displayId = 0)
     {
+        // Make sure we are set up correctly
+        if ($this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
+            Debug::Error('Twitter Module not configured. Missing API Keys');
+            return '';
+        }
+
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
         $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
