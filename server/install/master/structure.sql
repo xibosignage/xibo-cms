@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `bandwidth` (
   `Month` int(11) NOT NULL,
   `Size` bigint(20) NOT NULL,
   PRIMARY KEY (`DisplayID`, `Type`, `Month`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `blacklist` (
   `BlackListID` int(11) NOT NULL AUTO_INCREMENT,
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS `file` (
   `UserID` int(11) NOT NULL,
   PRIMARY KEY (`FileID`),
   KEY `UserID` (`UserID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 CREATE TABLE IF NOT EXISTS `group` (
   `groupID` int(11) NOT NULL AUTO_INCREMENT,
@@ -558,7 +558,7 @@ CREATE TABLE IF NOT EXISTS `user` (
 
 CREATE TABLE IF NOT EXISTS `usertype` (
   `usertypeid` int(8) NOT NULL,
-  `usertype` varchar(16) CHARACTER SET latin1 NOT NULL,
+  `usertype` varchar(16) CHARACTER SET utf8 NOT NULL,
   PRIMARY KEY (`usertypeid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -627,7 +627,7 @@ CREATE TABLE IF NOT EXISTS `bandwidthtype` (
   `bandwidthtypeid` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(25) NOT NULL,
   PRIMARY KEY (`bandwidthtypeid`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=12 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=12 ;
 
 CREATE TABLE IF NOT EXISTS `tag` (
   `tagId` int(11) NOT NULL AUTO_INCREMENT,
@@ -640,14 +640,14 @@ CREATE TABLE IF NOT EXISTS `lktaglayout` (
   `tagId` int(11) NOT NULL,
   `layoutId` int(11) NOT NULL,
   PRIMARY KEY (`lkTagLayoutId`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf32 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 CREATE TABLE IF NOT EXISTS `lktagmedia` (
   `lkTagMediaId` int(11) NOT NULL AUTO_INCREMENT,
   `tagId` int(11) NOT NULL,
   `mediaId` int(11) NOT NULL,
   PRIMARY KEY (`lkTagMediaId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf16 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --
 -- Constraints for dumped tables
