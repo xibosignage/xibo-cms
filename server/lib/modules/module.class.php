@@ -110,12 +110,12 @@ abstract class Module implements ModuleInterface
 
         // Members used by forms (routed through the CMS)
         $this->showRegionOptions = Kit::GetParam('showRegionOptions', _REQUEST, _INT, 1);
+        
+        // Log
+        Debug::LogEntry('audit', 'Module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 
         // Determine which type this module is
-        if (!$this->SetModuleInformation())
-            throw new Exception($this->GetErrorMessage());
-
-        Debug::LogEntry('audit', 'Module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
+        $this->SetModuleInformation();
 
         // Either the information from the region - or some blanks
         return ($this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid));
@@ -139,9 +139,7 @@ abstract class Module implements ModuleInterface
                 ));
 
             if (!$row = $sth->fetch())
-                $this->ThrowError(__('Module "' . $this->type . '" does not exist or is not installed. Please visit the module administration page or contact your administrator'));
-        
-            Debug::Audit('Module Found');
+                return;
 
             $this->module_id = Kit::ValidateParam($row['ModuleID'], _INT);
             $this->schemaVersion = Kit::ValidateParam($row['SchemaVersion'], _INT);
@@ -179,7 +177,7 @@ abstract class Module implements ModuleInterface
             if (!$this->IsError())
                 $this->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
 
-            return false;
+            throw $e;
         }
 
         return true;
@@ -200,6 +198,9 @@ abstract class Module implements ModuleInterface
 
         if ($this->mediaid != '' && $this->regionid != '' && $this->layoutid != '')
         {
+            if ($this->module_id == 0)
+                $this->ThrowError(__('Module "' . $this->type . '" does not exist or is not installed. Please visit the module administration page or contact your administrator'));
+
             // Existing media that is assigned to a layout
             $this->existingMedia = true;
             $this->assignedMedia = true;
@@ -2003,7 +2004,7 @@ END;
 
     protected function ThrowError($errNo, $errMessage = '') {
         $this->SetError($errNo, $errMessage);
-        throw new Exception(sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage));
+        throw new Exception(sprintf('%s [%d]', $this->GetErrorMessage(), $this->GetErrorNumber()));
     }
 
     public function IsValid() {

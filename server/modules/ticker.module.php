@@ -339,7 +339,7 @@ class ticker extends Module
                 __('A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.'), '');
 
             // Encode up the template
-            $formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'media-rss-with-title', 'value' => 'Image overlaid with the Title', 'template' => '<div class="image">[Link|image]<div class="cycle-overlay"><p style="font-family: Arial, Verdana, sans-serif; font-size:48px;">[Title]</p></div></div>', 'css' => '.image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}'))) . '</pre>');
+            //$formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'media-rss-with-title', 'value' => 'Image overlaid with the Title', 'template' => '<div class="image">[Link|image]<div class="cycle-overlay"><p style="font-family: Arial, Verdana, sans-serif; font-size:48px;">[Title]</p></div></div>', 'css' => '.image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}'))) . '</pre>');
         }
 
         // Get the CSS node
@@ -912,7 +912,7 @@ class ticker extends Module
 
                 // Pick the appropriate column out
                 if (strstr($sub, '|') !== false) {
-                    // Use the provided namespace to extract a tag
+                    // Use the provided name space to extract a tag
                     $attribs = NULL;
                     if (substr_count($sub, '|') > 1)
                         list($tag, $namespace, $attribs) = explode('|', $sub);
@@ -931,6 +931,14 @@ class ticker extends Module
                                     $link = $enclosure->get_link();
                                 }
                                 break;
+
+                            default:
+                                // Default behaviour just tries to get the content from the tag provided (without a name space).
+                                $tags = $item->get_item_tags('', str_replace('[', '', $tag));
+
+                                if ($tags != null) {
+                                    $link = (is_array($tags)) ? $tags[0]['data'] : '';
+                                }
                         }
 
                         // If we have managed to resolve a link, download it and replace the tag with the downloaded
