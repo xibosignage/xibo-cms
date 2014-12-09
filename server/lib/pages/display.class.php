@@ -394,15 +394,16 @@ class displayDAO extends baseDAO
 
         $rows = array();
 
-        foreach($displays as $row)
-        {
+        foreach($displays as $row) {
             // VNC Template as display name?
-            if ($vncTemplate != '' && $row['clientaddress'] != '')
-            {
+            if ($vncTemplate != '' && $row['clientaddress'] != '') {
                 if ($linkTarget == '')
                     $linkTarget = '_top';
 
                 $row['displayWithLink'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . Theme::Prepare($row['display']) . '</a>', $row['clientaddress']);
+            }
+            else {
+                $row['displayWithLink'] = $row['display'];
             }
 
             // Format last accessed
@@ -414,11 +415,12 @@ class displayDAO extends baseDAO
 
             // Thumbnail
             $row['thumbnail'] = '';
-            if ($filter_showThumbnail == 1 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
-                $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '" /></a>';
-            }
-            else if ($filter_showThumbnail == 2) {
+            // If we aren't logged in, and we are showThumbnail == 2, then show a circle
+            if ($filter_showThumbnail == 2 && $row['loggedin'] == 0) {
                 $row['thumbnail'] = '<i class="fa fa-times-circle"></i>';
+            }
+            else if ($filter_showThumbnail <> 0 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
+                $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '" /></a>';
             }
 
             // Edit and Delete buttons first

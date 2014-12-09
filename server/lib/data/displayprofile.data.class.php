@@ -170,8 +170,8 @@ class DisplayProfile extends Data {
 
             $count = $sth->fetchColumn(0) + (int)$this->isDefault;
             
-            if ($count != 1)
-                $this->ThrowError(__('Must have 1 default per display type.'));
+            if ($count > 1)
+                $this->ThrowError(__('Only 1 default per display type is allowed.'));
 
             return true;
         }
