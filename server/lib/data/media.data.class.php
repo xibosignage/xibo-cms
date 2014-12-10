@@ -832,8 +832,6 @@ class Media extends Data
      */
     public function addModuleFileFromUrl($url, $name, $expires, $moduleSystemFile = false, $force = false)
     {
-        Debug::Audit('Adding: ' . $url . ' with Name: ' . $name . '. Expiry: ' . date('Y-m-d h:i:s', $expires));
-
         // See if we already have it
         // It doesn't matter that we might have already done this, its cached.
         $media = $this->moduleFileExists($name);
@@ -841,7 +839,7 @@ class Media extends Data
         //Debug::Audit('Module File: ' . var_export($media, true));
 
         if ($media === false || $force) {
-            Debug::Audit('Media not valid, forcing update.');
+            Debug::Audit('Adding: ' . $url . ' with Name: ' . $name . '. Expiry: ' . date('Y-m-d h:i:s', $expires));
             
             $fileName = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $name;
             

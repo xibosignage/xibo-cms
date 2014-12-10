@@ -82,6 +82,20 @@ class Twitter extends Module
         $media->addModuleFileFromFolder('modules/theme/twitter/');
     }
 
+    /** 
+     * Loads templates for this module
+     */
+    public function loadTemplates()
+    {
+        // Scan the folder for template files
+        foreach (glob('modules/theme/twitter/*.template.json') as $template) {
+            // Read the contents, json_decode and add to the array
+            $this->settings['templates'][] = json_decode(file_get_contents($template), true);
+        }
+
+        Debug::Audit(count($this->settings['templates']));
+    }
+
     /**
      * Form for updating the module settings
      */
@@ -146,6 +160,9 @@ class Twitter extends Module
         // The CMS provides the region width and height in case they are needed
         $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
+
+        // Augment settings with templates
+        $this->loadTemplates();
 
         // All forms should set some meta data about the form.
         // Usually, you would want this meta data to remain the same.
@@ -358,6 +375,9 @@ class Twitter extends Module
         // The CMS provides the region width and height in case they are needed
         $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
+
+        // Augment settings with templates
+        $this->loadTemplates();
 
         // All forms should set some meta data about the form.
         // Usually, you would want this meta data to remain the same.
@@ -947,7 +967,7 @@ class Twitter extends Module
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
-        $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
+        $javaScriptContent .= '   var items = ' . Kit::jsonEncode($items) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); ';
         $javaScriptContent .= '   }); ';

@@ -453,18 +453,6 @@ var forecastIoFormSetup = function() {
             });
         }
     });
-
-    $(".reloadTemplateButton button").click(function() {
-        var templateId = $("#templateId").val();
-
-        $.each($('.bootbox').data().extra, function(index, value) {
-            if (value.id == templateId) {
-                $("#currentTemplate").val(value.main);
-                $("#dailyTemplate").val(value.daily);
-                $("#styleSheet").val(value.css);
-            }
-        });
-    });
 };
 
 var requestTab = function(tabName, url) {

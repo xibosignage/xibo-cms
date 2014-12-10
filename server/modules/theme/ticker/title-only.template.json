@@ -1,0 +1,6 @@
+{
+ "id":"title-only",
+ "value":"Title Only",
+ "template":"<p style=\"font-family: Arial, Verdana, sans-serif;\"><span style=\"font-size:48px;\"><span style=\"color: #Color#;\"><strong>[Title]<\/strong><\/span><\/span><\/p>",
+ "css":""
+}
