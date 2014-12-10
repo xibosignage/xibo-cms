@@ -30,7 +30,7 @@ abstract class Module implements ModuleInterface
     public $auth;
 
     // Module Information
-    private $module_id;
+    protected $module_id;
     protected $render_as;
     public $displayType;
     protected $type;
@@ -182,6 +182,30 @@ abstract class Module implements ModuleInterface
 
         return true;
 	}
+
+    protected final function saveSettings()
+    {
+        // Save
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('UPDATE module SET settings = :settings WHERE moduleid = :moduleId');
+            Debug::Audit(var_export(array(
+                    'moduleId' => $this->module_id,
+                    'settings' => json_encode($this->settings)
+                ), true));
+            $sth->execute(array(
+                    'moduleId' => $this->module_id,
+                    'settings' => json_encode($this->settings)
+                ));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            trigger_error(__('Cannot Save Settings'), E_USER_ERROR);
+        }
+    }
 
     /**
      * Gets the information about this Media on this region on this layout

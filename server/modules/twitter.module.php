@@ -18,11 +18,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
- *
- *
- * This is a template module used to demonstrate how a module for Xibo can be made.
- *
- * The class name must be equal to the $this->type and the file name must be equal to modules/type.module.php
  */ 
 include_once('modules/3rdparty/emoji.php');
 
@@ -615,7 +610,7 @@ class Twitter extends Module
         return $this->PreviewAsClient($width, $height);
     }
 
-    private function getBearerToken() {
+    protected function getToken() {
 
         // Prepare the URL
         $url = 'https://api.twitter.com/oauth2/token';
@@ -691,7 +686,7 @@ class Twitter extends Module
         return $body->access_token;
     }
 
-    private function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15)
+    protected function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15)
     {
         // Construct the URL to call
         $url = 'https://api.twitter.com/1.1/search/tweets.json';
@@ -727,9 +722,6 @@ class Twitter extends Module
         // Parse out header and body
         list($header, $body) = explode("\r\n\r\n", $result, 2);
 
-        // See if we can parse the error.
-        $body = json_decode($body);
-
         $outHeaders = curl_getinfo($curl);
 
         if ($outHeaders['http_code'] != 200) {
@@ -745,11 +737,15 @@ class Twitter extends Module
 
             return false;
         }
+        else {
+            // See if we can parse the error.
+            $body = json_decode($body);
+        }
 
         return $body;
     }
 
-    private function getTwitterFeed($displayId = 0, $isPreview = true)
+    protected function getTwitterFeed($displayId = 0, $isPreview = true)
     {
         if (!extension_loaded('curl')) {
             trigger_error(__('cURL extension is required for Twitter'));
@@ -787,7 +783,7 @@ class Twitter extends Module
             Debug::Audit('Querying API for ' . $this->GetOption('searchTerm'));
 
             // We need to search for it
-            if (!$token = $this->getBearerToken())
+            if (!$token = $this->getToken())
                 return false;
 
             // We have the token, make a tweet

@@ -138,7 +138,8 @@ class moduleDAO extends baseDAO
         $SQL .= '   ValidExtensions, ';
         $SQL .= '   ImageUri, ';
         $SQL .= '   PreviewEnabled, ';
-        $SQL .= '   assignable ';
+        $SQL .= '   assignable, ';
+        $SQL .= '   settings ';
         $SQL .= '  FROM `module` ';
         $SQL .= ' ORDER BY Name ';
 
@@ -174,6 +175,7 @@ class moduleDAO extends baseDAO
             $row['enabled'] = Kit::ValidateParam($module['Enabled'], _INT);
             $row['preview_enabled'] = Kit::ValidateParam($module['PreviewEnabled'], _INT);
             $row['assignable'] = Kit::ValidateParam($module['assignable'], _INT);
+            $row['settings'] = json_decode(Kit::ValidateParam($module['settings'], _HTMLSTRING), true);
             
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();
@@ -187,6 +189,14 @@ class moduleDAO extends baseDAO
                         'url' => 'index.php?p=module&q=EditForm&ModuleID=' . $row['moduleid'],
                         'text' => __('Edit')
                     );
+            }
+
+            // Are there any buttons we need to provide as part of the module?
+            if (isset($row['settings']['buttons'])) {
+                foreach($row['settings']['buttons'] as $button) {
+                    $button['text'] = __($button['text']);
+                    $row['buttons'][] = $button;
+                }
             }
 
             $rows[] = $row;
