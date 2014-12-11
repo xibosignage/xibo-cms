@@ -221,18 +221,12 @@ class moduletemplate extends Module
      * @param <double> $height
      * @return <string>
      */
-    public function Preview($width, $height)
+    public function Preview($width, $height, $scaleOverride = 0)
     {
         // Each module should be able to output a preview to use in the Layout Designer
-        
-        // If preview is not enabled for your module you can hand off to the base class
-        // and it will output a basic preview for you
-        if ($this->previewEnabled == 0)
-            return parent::Preview ($width, $height);
-        
         // In most cases your preview will want to load the GetResource call associated with the module
         // This imitates the client
-        return $this->PreviewAsClient($width, $height);
+        return parent::Preview ($width, $height, $scaleOverride);
     }
 
     /**

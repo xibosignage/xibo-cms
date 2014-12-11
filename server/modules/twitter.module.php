@@ -23,10 +23,10 @@ include_once('modules/3rdparty/emoji.php');
 
 class Twitter extends Module
 {
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '') {
+    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '', $typeOverride = NULL) {
         // The Module Type must be set - this should be a unique text string of no more than 50 characters.
         // It is used to uniquely identify the module globally.
-        $this->type = 'twitter';
+        $this->type = ($typeOverride == NULL) ? 'twitter' : $typeOverride;
 
         // This is the code schema version, it should be 1 for a new module and should be incremented each time the 
         // module data structure changes.
@@ -590,26 +590,6 @@ class Twitter extends Module
         $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
     }
 
-    /**
-     * Preview
-     * @param <double> $width
-     * @param <double> $height
-     * @return <string>
-     */
-    public function Preview($width, $height)
-    {
-        // Each module should be able to output a preview to use in the Layout Designer
-        
-        // If preview is not enabled for your module you can hand off to the base class
-        // and it will output a basic preview for you
-        if ($this->previewEnabled == 0)
-            return parent::Preview ($width, $height);
-        
-        // In most cases your preview will want to load the GetResource call associated with the module
-        // This imitates the client
-        return $this->PreviewAsClient($width, $height);
-    }
-
     protected function getToken() {
 
         // Prepare the URL
@@ -816,9 +796,9 @@ class Twitter extends Module
 
         // Expiry time for any media that is downloaded
         $expires = time() + ($this->GetSetting('cachePeriodImages') * 60 * 60);
+        
         // Remove URL setting
         $removeUrls = $this->GetOption('removeUrls', 1);
-        Debug::Audit($removeUrls);
 
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {

@@ -697,20 +697,6 @@ class ticker extends Module
     }
 
     /**
-     * Preview
-     * @param <type> $width
-     * @param <type> $height
-     * @return <type>
-     */
-    public function Preview($width, $height)
-    {
-        if ($this->previewEnabled == 0)
-            return parent::Preview ($width, $height);
-        
-        return $this->PreviewAsClient($width, $height);
-    }
-
-    /**
      * Get Resource
      */
     public function GetResource($displayId = 0)

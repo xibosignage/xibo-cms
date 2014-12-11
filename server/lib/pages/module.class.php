@@ -82,36 +82,36 @@ class moduleDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="p" value="module"><input type="hidden" name="q" value="Grid">');
         Theme::Set('pager', ResponseManager::Pager($id));
 
-        //
         // Do we have any modules to install?!
-        //
-        // Get a list of matching files in the modules folder
-        $files = glob('modules/*.module.php');
+        if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
+            // Get a list of matching files in the modules folder
+            $files = glob('modules/*.module.php');
 
-        // Get a list of all currently installed modules
-        try {
-            $dbh = PDOConnect::init();
-        
-            $sth = $dbh->prepare("SELECT CONCAT('modules/', LOWER(Module), '.module.php') AS Module FROM `module`");
-            $sth->execute();
+            // Get a list of all currently installed modules
+            try {
+                $dbh = PDOConnect::init();
+            
+                $sth = $dbh->prepare("SELECT CONCAT('modules/', LOWER(Module), '.module.php') AS Module FROM `module`");
+                $sth->execute();
 
-            $rows = $sth->fetchAll();
-            $installed = array();
+                $rows = $sth->fetchAll();
+                $installed = array();
 
-            foreach($rows as $row)
-                $installed[] = $row['Module'];
-        }
-        catch (Exception $e) {
-            trigger_error(__('Cannot get installed modules'), E_USER_ERROR);
-        }
+                foreach($rows as $row)
+                    $installed[] = $row['Module'];
+            }
+            catch (Exception $e) {
+                trigger_error(__('Cannot get installed modules'), E_USER_ERROR);
+            }
 
-        // Compare the two
-        $to_install = array_diff($files, $installed);
+            // Compare the two
+            $to_install = array_diff($files, $installed);
 
-        if (count($to_install) > 0) {
-            Theme::Set('module_install_url', 'index.php?p=module&q=Install&module=');
-            Theme::Set('to_install', $to_install);
-            Theme::Set('prepend', Theme::RenderReturn('module_page_install_modules'));
+            if (count($to_install) > 0) {
+                Theme::Set('module_install_url', 'index.php?p=module&q=Install&module=');
+                Theme::Set('to_install', $to_install);
+                Theme::Set('prepend', Theme::RenderReturn('module_page_install_modules'));
+            }
         }
 
         // Call to render the template

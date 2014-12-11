@@ -1393,8 +1393,12 @@ END;
      * @param <type> $width
      * @param <type> $height
      */
-    public function Preview($width, $height) {
-        return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
+    public function Preview($width, $height, $scaleOverride = 0)
+    {
+        if ($this->previewEnabled == 0)
+            return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
+            
+        return $this->PreviewAsClient($width, $height, $scaleOverride);
     }
 
     /**

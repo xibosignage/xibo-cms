@@ -382,12 +382,10 @@ class TwitterOAuthRequest {
   public function get_normalized_http_url() {
     $parts = parse_url($this->http_url);
 
-    $port = @$parts['port'];
+    $port = (isset($parts['port'])) ? $parts['port'] : (($scheme == 'https') ? '443' : '80');
     $scheme = $parts['scheme'];
     $host = $parts['host'];
     $path = @$parts['path'];
-
-    $port or $port = ($scheme == 'https') ? '443' : '80';
 
     if (($scheme == 'https' && $port != '443')
         || ($scheme == 'http' && $port != '80')) {
