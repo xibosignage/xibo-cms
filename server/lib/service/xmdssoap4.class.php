@@ -138,6 +138,9 @@ class XMDSSoap4
                     $displayProfile->displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
                     
                     if ($displayProfile->displayProfileId == 0) {
+                        // We need a theme
+                        new Theme(new User());
+                        
                         // Load the default profile
                         $displayProfile->type = $clientType;
                         $displayProfile->LoadDefault();

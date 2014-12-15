@@ -285,7 +285,7 @@ $CLIENT_CONFIG = array(
                         'fieldType' => 'checkbox',
                         'default' => 0,
                         'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
-                        'enabled' => true,
+                        'enabled' => Theme::GetSetting('client_sendCurrentLayoutAsStatusUpdate_enabled', true),
                         'groupClass' => NULL
                     ),
                     array(
@@ -296,7 +296,7 @@ $CLIENT_CONFIG = array(
                         'fieldType' => 'number',
                         'default' => 0,
                         'helpText' => __('The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.'),
-                        'enabled' => true,
+                        'enabled' => Theme::GetSetting('client_screenShotRequestInterval_enabled', true),
                         'groupClass' => NULL
                     )
                 )
@@ -480,7 +480,7 @@ $CLIENT_CONFIG = array(
                         'fieldType' => 'checkbox',
                         'default' => 0,
                         'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
-                        'enabled' => true,
+                        'enabled' => Theme::GetSetting('client_sendCurrentLayoutAsStatusUpdate_enabled', true),
                         'groupClass' => NULL
                     ),
                     array(
@@ -491,7 +491,7 @@ $CLIENT_CONFIG = array(
                         'fieldType' => 'number',
                         'default' => 0,
                         'helpText' => __('The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.'),
-                        'enabled' => true,
+                        'enabled' => Theme::GetSetting('client_screenShotRequestInterval_enabled', true),
                         'groupClass' => NULL
                     )
                 )
