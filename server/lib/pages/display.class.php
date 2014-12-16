@@ -714,6 +714,14 @@ class displayDAO extends baseDAO
         if (!$document->loadXML($mediaInventoryXml))
             trigger_error(__('Invalid Media Inventory'), E_USER_ERROR);
 
+        $cols = array(
+                array('name' => 'id', 'title' => __('ID')),
+                array('name' => 'type', 'title' => __('Type')),
+                array('name' => 'complete', 'title' => __('Complete')),
+                array('name' => 'last_checked', 'title' => __('Last Checked'))
+            );
+        Theme::Set('table_cols', $cols);
+
         // Need to parse the XML and return a set of rows
         $xpath = new DOMXPath($document);
         $fileNodes = $xpath->query("//file");
@@ -735,10 +743,7 @@ class displayDAO extends baseDAO
         // Store the table rows
         Theme::Set('table_rows', $rows);
 
-        // Initialise the theme and capture the output
-        $output = Theme::RenderReturn('display_form_mediainventory');
-
-        $response->SetFormRequestResponse($output, __('Media Inventory'), '550px', '350px');
+        $response->SetFormRequestResponse(Theme::RenderReturn('table_render'), __('Media Inventory'), '550px', '350px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'MediaInventory') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
