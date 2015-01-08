@@ -170,9 +170,6 @@ class Media extends Data
             
             Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
         
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-        
             return false;
         }
     }

@@ -57,54 +57,59 @@ class contentDAO extends baseDAO {
 		Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryGrid">');
 
         $formFields = array();
-                $formFields[] = FormManager::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
-                $formFields[] = FormManager::AddCombo(
-                    'filter_owner', 
-                    __('Owner'), 
-                    $filter_owner,
-                    $db->GetArray("SELECT 0 AS UserID, 'All' AS UserName UNION SELECT DISTINCT user.UserID, user.UserName FROM `media` INNER JOIN `user` ON media.UserID = user.UserID "),
-                    'UserID',
-                    'UserName',
-                    NULL, 
-                    'o');
+        $formFields[] = FormManager::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
+        
+        // Users we have permission to see
+        $users = $this->user->userList();
+        array_unshift($users, array('userid' => '', 'username' => 'All'));
 
-                $types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
-                array_unshift($types, array('moduleid' => '', 'module' => 'All'));
-                $formFields[] = FormManager::AddCombo(
-                    'filter_type', 
-                    __('Type'), 
-                    $filter_type,
-                    $types,
-                    'moduleid',
-                    'module',
-                    NULL, 
-                    'y');
+        $formFields[] = FormManager::AddCombo(
+            'filter_owner', 
+            __('Owner'), 
+            $filter_owner,
+            $users,
+            'userid',
+            'username',
+            NULL, 
+            'o');
 
-                $formFields[] = FormManager::AddCombo(
-                    'filter_retired', 
-                    __('Retired'), 
-                    $filter_retired,
-                    array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')),
-                    'retiredid',
-                    'retired',
-                    NULL, 
-                    'r');
+        $types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
+        array_unshift($types, array('moduleid' => '', 'module' => 'All'));
+        $formFields[] = FormManager::AddCombo(
+            'filter_type', 
+            __('Type'), 
+            $filter_type,
+            $types,
+            'moduleid',
+            'module',
+            NULL, 
+            'y');
 
-                $formFields[] = FormManager::AddCheckbox('filter_duration_in_seconds', __('Duration in Seconds'), 
-                    $filter_duration_in_seconds, NULL, 
-                    's');
+        $formFields[] = FormManager::AddCombo(
+            'filter_retired', 
+            __('Retired'), 
+            $filter_retired,
+            array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')),
+            'retiredid',
+            'retired',
+            NULL, 
+            'r');
 
-                $formFields[] = FormManager::AddCheckbox('showTags', __('Show Tags'), 
-                    $showTags, NULL, 
-                    't');
-                
-                $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'), 
-                    $filter_showThumbnail, NULL, 
-                    't');
+        $formFields[] = FormManager::AddCheckbox('filter_duration_in_seconds', __('Duration in Seconds'), 
+            $filter_duration_in_seconds, NULL, 
+            's');
 
-                $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
-                    $filter_pinned, NULL, 
-                    'k');
+        $formFields[] = FormManager::AddCheckbox('showTags', __('Show Tags'), 
+            $showTags, NULL, 
+            't');
+        
+        $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'), 
+            $filter_showThumbnail, NULL, 
+            't');
+
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
+            $filter_pinned, NULL, 
+            'k');
 
         // Call to render the template
         Theme::Set('header_text', __('Library'));

@@ -1652,6 +1652,47 @@ class User {
         }
     }
 
+    public function userList($sortOrder = array('username'), $filterBy = array())
+    {
+        // Normal users can only see themselves
+        if ($this->usertypeid == 3) {
+            $filterBy['userId'] == $this->userid;
+        }
+        // Super admins can only see users from their groups.
+        else if ($this->usertypeid == 2) {
+            $filterBy['groupIds'] = $this->GetUserGroups($this->userid, true);
+        }
+
+        try {
+            $user = Userdata::Entries($sortOrder, $filterBy);
+            $parsedUser = array();
+
+            foreach ($user as $row) {
+                $userItem = array();
+
+                // Validate each param and add it to the array.
+                $userItem['userid'] = $row->userId;
+                $userItem['username'] = $row->userName;
+                $userItem['usertypeid'] = $row->userTypeId;
+                $userItem['homepage'] = $row->homePage;
+                $userItem['email'] = $row->email;
+                $userItem['newuserwizard'] = $row->newUserWizard;
+                $userItem['lastaccessed'] = $row->lastAccessed;
+                $userItem['loggedin'] = $row->loggedIn;
+                $userItem['retired'] = $row->retired;
+                
+                // Add to the collection
+                $parsedUser[] = $userItem;
+            }
+
+            return $parsedUser;
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            return false;
+        }
+    }
+
     public function GetPref($key, $default = NULL) {
         $storedValue = Session::Get($key);
 
