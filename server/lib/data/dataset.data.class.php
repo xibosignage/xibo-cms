@@ -22,6 +22,30 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class DataSet extends Data
 {
+    public function hasData($dataSetId)
+    {
+        try {
+            $dbh = PDOConnect::init();
+        
+            // First check to see if we have any data
+            $sth = $dbh->prepare('SELECT * FROM `datasetdata` INNER JOIN `datasetcolumn` ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID WHERE datasetcolumn.DataSetID = :datasetid');
+            $sth->execute(array(
+                    'datasetid' => $dataSetId
+                ));
+    
+            return ($sth->fetch());
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+        
+            return false;
+        }
+    }
+
     /**
      * Add a data set
      * @param <type> $dataSet
@@ -137,22 +161,15 @@ class DataSet extends Data
         try {
             $dbh = PDOConnect::init();
 
-            // First check to see if we have any data
-            $sth = $dbh->prepare('SELECT * FROM `datasetdata` INNER JOIN `datasetcolumn` ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID WHERE datasetcolumn.DataSetID = :datasetid');
-            $sth->execute(array(
-                    'datasetid' => $dataSetId
-                ));
+            // Delete the Data
+            $data = new DataSetData();
+            $data->DeleteAll($dataSetId);
 
-            if ($row = $sth->fetch())
-                return $this->SetError(25005, __('There is data assigned to this data set, cannot delete.'));
-            
             // Delete security
-            Kit::ClassLoader('datasetgroupsecurity');
             $security = new DataSetGroupSecurity($this->db);
             $security->UnlinkAll($dataSetId);
 
             // Delete columns
-            Kit::ClassLoader('datasetcolumn');
             $dataSetObject = new DataSetColumn($this->db);
             if (!$dataSetObject->DeleteAll($dataSetId))
                 return $this->SetError(25005, __('Cannot delete dataset, columns could not be deleted.'));
