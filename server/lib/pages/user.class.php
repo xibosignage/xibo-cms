@@ -252,15 +252,12 @@ class userDAO extends baseDAO {
         $initialGroupId = Kit::GetParam('groupid', _POST, _INT);
 
         // Validation
-        if ($username=="")
-        {
-            trigger_error("Please enter a User Name.", E_USER_ERROR);
-        }
-        if ($password=="")
-        {
-            trigger_error("Please enter a Password.", E_USER_ERROR);
-        }
+        if ($username == '' || strlen($username) > 50)
+            trigger_error(__('User name must be between 1 and 50 characters.'), E_USER_ERROR);
 
+        if ($password=="")
+            trigger_error("Please enter a Password.", E_USER_ERROR);
+        
         if ($homepage == "") 
             $homepage = "dashboard";
 
@@ -342,10 +339,8 @@ class userDAO extends baseDAO {
         $retired = Kit::GetParam('retired', _POST, _CHECKBOX);
 
         // Validation
-        if ($username == "")
-        {
-            trigger_error(__("Please enter a User Name."), E_USER_ERROR);
-        }
+        if ($username == '' || strlen($username) > 50)
+            trigger_error(__('User name must be between 1 and 50 characters.'), E_USER_ERROR);
         
         // Check for duplicate user name
         $sqlcheck = " ";
@@ -563,7 +558,7 @@ class userDAO extends baseDAO {
         // Render the return and output
         $formFields = array();
         $formFields[] = FormManager::AddText('edit_username', __('User Name'), $username, 
-            __('The Login Name of the user.'), 'n', 'required');
+            __('The Login Name of the user.'), 'n', 'required maxlength="50"');
 
         $formFields[] = FormManager::AddPassword('edit_password', __('Password'), $password, 
             __('The Password for this user.'), 'p', 'required');

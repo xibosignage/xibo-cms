@@ -543,7 +543,7 @@ CREATE TABLE IF NOT EXISTS `transition` (
 CREATE TABLE IF NOT EXISTS `user` (
   `UserID` int(11) NOT NULL AUTO_INCREMENT,
   `usertypeid` int(8) NOT NULL,
-  `UserName` varchar(15) NOT NULL,
+  `UserName` varchar(50) NOT NULL,
   `UserPassword` varchar(128) NOT NULL,
   `loggedin` tinyint(1) NOT NULL DEFAULT '0',
   `lastaccessed` datetime DEFAULT NULL,
