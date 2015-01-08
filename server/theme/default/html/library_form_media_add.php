@@ -50,9 +50,11 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	    <!-- The global progress information -->
 	    <div class="col-md-4 fileupload-progress fade">
 	        <!-- The global progress bar -->
-	        <div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-	            <div class="bar" style="width:0%;"></div>
-	        </div>
+            <div class="progress">
+    	        <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+    	            <div class="sr-only"></div>
+    	        </div>
+            </div>
 	        <!-- The extended global progress information -->
 	        <div class="progress-extended">&nbsp;</div>
 	    </div>
@@ -79,7 +81,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <td>
             <p class="size">{%=o.formatFileSize(file.size)%}</p>
             {% if (!o.files.error) { %}
-                <div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="bar" style="width:0%;"></div></div>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                        <div class="sr-only"></div>
+                    </div>
+                </div>
+            </div>
             {% } %}
         </td>
         <td>
