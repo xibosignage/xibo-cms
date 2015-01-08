@@ -344,6 +344,17 @@ class statsDAO extends baseDAO
         $toDt = strtotime(Kit::GetParam('todt', _POST, _STRING));
         $displayId = Kit::GetParam('displayid', _POST, _INT);
 
+        // Get an array of display id this user has access to.
+        $displays = $this->user->DisplayList();
+        $displayIds = array();
+
+        foreach($displays as $display) {
+            $displayIds[] = $display['displayid'];
+        }
+
+        if (count($displayIds) <= 0)
+            trigger_error(__('No displays with View permissions'), E_USER_ERROR);
+
         // Get some data for a bandwidth chart
         try {
             $dbh = PDOConnect::init();
@@ -364,7 +375,8 @@ class statsDAO extends baseDAO
                     ON display.displayId = stat.displayId
                  WHERE start <= :end
                     AND end >= :start
-                    AND type = :type ';
+                    AND type = :type 
+                    AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
             if ($displayId != 0) {
                 $SQL .= ' AND display.displayId = :displayId ';
@@ -413,6 +425,17 @@ class statsDAO extends baseDAO
         $fromDt = strtotime(Kit::GetParam('fromdt', _POST, _STRING));
         $toDt = strtotime(Kit::GetParam('todt', _POST, _STRING));
 
+        // Get an array of display id this user has access to.
+        $displays = $this->user->DisplayList();
+        $displayIds = array();
+
+        foreach($displays as $display) {
+            $displayIds[] = $display['displayid'];
+        }
+
+        if (count($displayIds) <= 0)
+            trigger_error(__('No displays with View permissions'), E_USER_ERROR);
+
         // Get some data for a bandwidth chart
         try {
             $dbh = PDOConnect::init();
@@ -439,7 +462,8 @@ class statsDAO extends baseDAO
                     ';
 
             $SQL .= '  WHERE month > :month 
-                    AND month < :month2 ';
+                    AND month < :month2
+                    AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
             if ($displayId != 0) {
                 $SQL .= ' AND display.displayid = :displayid ';
@@ -493,7 +517,7 @@ class statsDAO extends baseDAO
 
             // Set up some suffixes
             $suffixes = array('bytes', 'k', 'M', 'G', 'T');    
-            Theme::Set('bandwidthWidgetUnits', $suffixes[$base]);
+            Theme::Set('bandwidthWidgetUnits', (isset($suffixes[$base]) ? $suffixes[$base] : ''));
             
             $output = Theme::RenderReturn('stats_page_bandwidth');
 
