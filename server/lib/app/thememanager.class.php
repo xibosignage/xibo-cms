@@ -281,13 +281,13 @@ class Theme {
 		return Theme::GetInstance()->name;
 	}
 
-	public static function GetConfig($settingName) {
+	public static function GetConfig($settingName, $default = null) {
 		$theme = Theme::GetInstance();
 
 		if (isset($theme->config[$settingName]))
 			return $theme->config[$settingName];
 		else
-			return '';
+			return $default;
 	}
 
 	/**

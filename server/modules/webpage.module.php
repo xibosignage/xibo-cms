@@ -394,19 +394,6 @@ class webpage extends Module
         return $this->response; 
     }
 
-    /**
-     * Preview
-     * @param <type> $width
-     * @param <type> $height
-     * @return <type>
-     */
-    public function Preview($width, $height) {
-        if ($this->previewEnabled == 0)
-            return parent::Preview ($width, $height);
-        
-        return $this->PreviewAsClient($width, $height);
-    }
-
     public function GetResource($displayId = 0)
     {
         // Load in the template

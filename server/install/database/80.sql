@@ -45,7 +45,7 @@ UPDATE layout SET background = SUBSTRING_INDEX(background, '.', 1) WHERE IFNULL(
 ALTER TABLE  `layout` CHANGE  `background`  `backgroundImageId` INT( 11 ) NULL DEFAULT NULL;
 
 INSERT INTO `lklayoutmedia` (mediaid, layoutid, regionid)
-SELECT backgroundimageid, layoutid, 'background' FROM `layout` WHERE IFNULL(backgroundImageId, 0) <> 0;
+SELECT backgroundimageid, layoutid, 'background' FROM `layout` INNER JOIN `media` ON media.mediaid = layout.backgroundImageId WHERE IFNULL(backgroundImageId, 0) <> 0;
 
 ALTER TABLE  `setting` CHANGE  `type`  `fieldType` VARCHAR( 24 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 

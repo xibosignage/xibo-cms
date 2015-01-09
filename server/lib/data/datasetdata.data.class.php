@@ -24,11 +24,11 @@ class DataSetData extends Data
 {
     private $updateWatermark;
 
-    public function __construct(database $db) {
+    public function __construct() {
 
         $this->updateWatermark = true;
 
-        parent::__construct($db);
+        parent::__construct();
     }
 
     /**

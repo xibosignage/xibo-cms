@@ -313,7 +313,12 @@ class datasetDAO extends baseDAO
         Theme::Set('form_action', 'index.php?p=dataset&q=DeleteDataSet');
         Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
+        $formFields = array();
+        $formFields[] = FormManager::AddMessage(__('Are you sure you want to delete?'));
+        $formFields[] = FormManager::AddCheckbox('deleteData', __('Delete any associated data?'), NULL, 
+            __('Please tick the box if you would like to delete all the Data contained in this DataSet'), 'c');
+
+        Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Delete this DataSet?'), '350px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'Delete') . '")');
@@ -339,6 +344,11 @@ class datasetDAO extends baseDAO
             trigger_error(__('Access Denied'));
 
         $dataSetObject = new DataSet($db);
+
+        if ($dataSetObject->hasData($dataSetId) && Kit::GetParam('deleteData', _POST, _CHECKBOX) == 0)
+            trigger_error(__('There is data assigned to this data set, cannot delete.'), E_USER_ERROR);
+
+        // Proceed with the delete
         if (!$dataSetObject->Delete($dataSetId))
             trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
 

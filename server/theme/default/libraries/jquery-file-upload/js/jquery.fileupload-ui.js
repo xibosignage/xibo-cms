@@ -236,9 +236,9 @@
             progress: function (e, data) {
                 if (data.context) {
                     var progress = Math.floor(data.loaded / data.total * 100);
-                    data.context.find('.progress')
+                    data.context.find('.progress-bar')
                         .attr('aria-valuenow', progress)
-                        .find('.bar').css(
+                        .css(
                             'width',
                             progress + '%'
                         );
@@ -258,9 +258,9 @@
                     );
                 }
                 globalProgressNode
-                    .find('.progress')
+                    .find('.progress-bar')
                     .attr('aria-valuenow', progress)
-                    .find('.bar').css(
+                    .css(
                         'width',
                         progress + '%'
                     );

@@ -64,7 +64,7 @@ class ForecastIo extends Module
         
         if ($this->schemaVersion <= 1) {
             // Install
-            $this->InstallModule('Forecast IO', 'Weather forecasting from Forecast IO', 'forms/library.gif', 1, 1, json_decode('{"templates",[{"id":"current-day","value":"Current Day","main":"<div class=\"container\">\r\n    <div class=\"icon\"><i class=\"font-icon wi [wicon]\"><\/i> [temperature]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"desc\">[summary]<\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>","daily":"","css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.container {\r\n    text-align: center;\r\n}\r\n\r\n.icon {\r\n    font-size: 36px;\r\n}\r\n\r\n.font-icon {\r\n    font-size: 62px;\r\n}\r\n\r\n.desc {\r\n    margin-top: 10px;\r\n    font-size: 30px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n\r\n.day {\r\n    margin-top: 10px;\r\n    font-size: 48px;\r\n}"},{"id":"daily","value":"Daily","main":"<div class=\"container\">\r\n    <div class=\"daily-forecast\">[dailyForecast]<\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>","daily":"<div class=\"day\">\r\n    <div class=\"day-icon\"><i class=\"wi [wicon]\"><\/i> [temperatureMin]\/[temperatureMax]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"day-desc\">[summary]<\/div>\r\n<\/div>","css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.container {\r\n    text-align: center;\r\n}\r\n\r\n.icon {\r\n    font-size: 36px;\r\n}\r\n\r\n.desc {\r\n    margin-top: 10px;\r\n    font-size: 30px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n\r\n.day {\r\n    margin-top: 10px;\r\n    font-size: 48px;\r\n}"},{"id":"picture","value":"Pictures","main":"<div class=\"icon std-sprite-[icon]\">\r\n<\/div>\r\n<div class=\"container\">\r\n    <div class=\"desc\">[summary]<\/div>\r\n    <div class=\"temperature\">[temperatureFloor]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>","daily":"","css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.icon {\r\n    float: left;\r\n    background: url([[ICONS]]) no-repeat top left;\r\n}\r\n\r\n.container {\r\n    text-align: right;\r\n}\r\n\r\n.temperature {\r\n    font-size: 46px;\r\n}\r\n\r\n.desc {\r\n    font-size: 34px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n.std-sprite-clear-day{ background-position: 0 0; width: 128px; height: 128px; } \r\n.std-sprite-clear-night{ background-position: 0 -178px; width: 128px; height: 128px; } \r\n.std-sprite-cloudy{ background-position: 0 -356px; width: 128px; height: 128px; } \r\n.std-sprite-lightning{ background-position: 0 -534px; width: 128px; height: 128px; } \r\n.std-sprite-partly-cloudy-day{ background-position: 0 -712px; width: 128px; height: 128px; } \r\n.std-sprite-partly-cloudy-night{ background-position: 0 -890px; width: 128px; height: 128px; } \r\n.std-sprite-rain{ background-position: 0 -1068px; width: 128px; height: 128px; } \r\n.std-sprite-sleet{ background-position: 0 -1246px; width: 128px; height: 128px; } \r\n.std-sprite-snow-night{ background-position: 0 -1424px; width: 128px; height: 128px; } \r\n.std-sprite-snow{ background-position: 0 -1602px; width: 128px; height: 128px; } \r\n.std-sprite-wind{ background-position: 0 -1780px; width: 128px; height: 128px; } \r\n"}]}'));
+            $this->InstallModule('Forecast IO', 'Weather forecasting from Forecast IO', 'forms/library.gif', 1, 1, array());
         }
         else {
             // Update
@@ -119,6 +119,20 @@ class ForecastIo extends Module
         // Return an array of the processed settings.
         return $this->settings;
     }
+
+    /** 
+     * Loads templates for this module
+     */
+    public function loadTemplates()
+    {
+        // Scan the folder for template files
+        foreach (glob('modules/theme/forecastio/*.template.json') as $template) {
+            // Read the contents, json_decode and add to the array
+            $this->settings['templates'][] = json_decode(file_get_contents($template), true);
+        }
+
+        Debug::Audit(count($this->settings['templates']));
+    }
     
     /**
      * Return the Add Form as HTML
@@ -135,7 +149,9 @@ class ForecastIo extends Module
         //  $this->regionid
 
         // You also have access to $settings, which is the array of settings you configured for your module.
-        
+        // Augment settings with templates
+        $this->loadTemplates();
+
         // The CMS provides the region width and height in case they are needed
         $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
@@ -149,7 +165,7 @@ class ForecastIo extends Module
         // Two tabs
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        $tabs[] = FormManager::AddTab('advanced', __('Appearance'));
         $tabs[] = FormManager::AddTab('forecast', __('Forecast'));
 
         Theme::Set('form_tabs', $tabs);
@@ -167,17 +183,20 @@ class ForecastIo extends Module
         $formFields['general'][] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'), 
             __('The Latitude for this weather module'), 'l', '', 'locationControls');
 
-        $formFields['general'][] = FormManager::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'), 
+        $formFields['advanced'][] = FormManager::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'), 
             $this->settings['templates'], 
             'id', 
             'value', 
-            __('Select the template you would like to apply. This can be overridden in Advanced.'), 't', 'template-selector-control');
+            __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
 
-        $formFields['general'][] = FormManager::AddCombo('icons', __('Icons'), $this->GetOption('icons'), 
+        $formFields['advanced'][] = FormManager::AddCombo('icons', __('Icons'), $this->GetOption('icons'), 
             $this->iconsAvailable(), 
             'id', 
             'value', 
             __('Select the icon set you would like to use.'), 't', 'icon-controls');
+
+        $formFields['advanced'][] = FormManager::AddNumber('size', __('Size'), $this->GetOption('size', 1), 
+            __('Set the size. Start at 1 and work up until the widget fits your region appropriately.'), 's', 'number', 'template-selector-control');
 
         $formFields['advanced'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), 0, 
             __('Tick if you would like to override the template.'), 'o');
@@ -190,8 +209,6 @@ class ForecastIo extends Module
 
         $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', __('CSS Style Sheet'), NULL, __('Enter a CSS style sheet to style the weather widget'), 'c', 10, 'required', 'template-override-controls');
         
-        $formFields['advanced'][] = FormManager::AddButton(__('Reload Template'), 'button', '#', 'reloadTemplateButton');
-
         $formFields['forecast'][] = FormManager::AddMessage(__('Please press Request Forecast'));
 
         // Configure the field dependencies
@@ -245,6 +262,7 @@ class ForecastIo extends Module
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
         $this->SetOption('icons', Kit::GetParam('icons', _POST, _STRING));
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+        $this->SetOption('size', Kit::GetParam('size', _POST, _INT));
 
         $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
             <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
@@ -284,10 +302,13 @@ class ForecastIo extends Module
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $this->mediaid . '">');
 
+        // Augment settings with templates
+        $this->loadTemplates();
+
         // Two tabs
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        $tabs[] = FormManager::AddTab('advanced', __('Appearance'));
         $tabs[] = FormManager::AddTab('forecast', __('Forecast'));
 
         Theme::Set('form_tabs', $tabs);
@@ -305,17 +326,20 @@ class ForecastIo extends Module
         $formFields['general'][] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'), 
             __('The Latitude for this weather module'), 'l', '', 'locationControls');
 
-        $formFields['general'][] = FormManager::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'), 
+        $formFields['advanced'][] = FormManager::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'), 
             $this->settings['templates'], 
             'id', 
             'value', 
-            __('Select the template you would like to apply. This can be overridden on the Advanced Tab.'), 't', 'template-selector-control');
+            __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
 
-        $formFields['general'][] = FormManager::AddCombo('icons', __('Icons'), $this->GetOption('icons'), 
+        $formFields['advanced'][] = FormManager::AddCombo('icons', __('Icons'), $this->GetOption('icons'), 
             $this->iconsAvailable(), 
             'id', 
             'value', 
             __('Select the icon set you would like to use.'), 't', 'icon-controls');
+
+        $formFields['advanced'][] = FormManager::AddNumber('size', __('Size'), $this->GetOption('size', 1), 
+            __('Set the size. Start at 1 and work up until the widget fits your region appropriately.'), 's', 'number', 'template-selector-control');
 
         $formFields['general'][] = FormManager::AddText('color', __('Colour'), $this->GetOption('color', '000'), 
             __('Please select a colour for the foreground text.'), 'c', 'required');
@@ -331,10 +355,12 @@ class ForecastIo extends Module
 
         $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', __('CSS Style Sheet'), $this->GetRawNode('styleSheet'), 
             __('Enter a CSS style sheet to style the weather widget'), 'c', 10, 'required', 'template-override-controls');
-
-        $formFields['advanced'][] = FormManager::AddButton(__('Reload Template'), 'button', '#', 'reloadTemplateButton');
         
         $formFields['forecast'][] = FormManager::AddMessage(__('Please press Request Forecast to show the current forecast and all available substitutions.'));
+
+        // Encode up the template
+        if ($this->user->usertypeid == 1)
+            $formFields['forecast'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'main' => $this->GetRawNode('currentTemplate'), 'daily' => $this->GetRawNode('dailyTemplate'), 'css' => $this->GetRawNode('styleSheet')))) . '</pre>');
 
         // Configure the field dependencies
         $this->SetFieldDepencencies();
@@ -390,6 +416,7 @@ class ForecastIo extends Module
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
         $this->SetOption('icons', Kit::GetParam('icons', _POST, _STRING));
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+        $this->SetOption('size', Kit::GetParam('size', _POST, _INT));
 
         $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
             <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
@@ -465,26 +492,6 @@ class ForecastIo extends Module
         }
 
         return $icons;
-    }
-
-    /**
-     * Preview
-     * @param <double> $width
-     * @param <double> $height
-     * @return <string>
-     */
-    public function Preview($width, $height)
-    {
-        // Each module should be able to output a preview to use in the Layout Designer
-        
-        // If preview is not enabled for your module you can hand off to the base class
-        // and it will output a basic preview for you
-        if ($this->previewEnabled == 0)
-            return parent::Preview ($width, $height);
-        
-        // In most cases your preview will want to load the GetResource call associated with the module
-        // This imitates the client
-        return $this->PreviewAsClient($width, $height);
     }
 
     // Request content for this tab
@@ -645,9 +652,8 @@ class ForecastIo extends Module
         $headContent = '
             <link href="' . $pathPrefix . 'weather-icons.min.css" rel="stylesheet" media="screen">
             <style type="text/css">
-                .container {
-                    color: ' . $this->GetOption('color', '000'). ';
-                }
+                .container { color: ' . $this->GetOption('color', '000'). '; }
+                #content { zoom: ' . $this->GetOption('size', 1). '; }
                 ' . $this->GetRawNode('styleSheet') . '
             </style>
         ';

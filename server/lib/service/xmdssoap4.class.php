@@ -21,8 +21,8 @@
 define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
-class XMDSSoap4 {
-    
+class XMDSSoap4 
+{
     private $licensed;
     private $includeSchedule;
     private $isAuditing;
@@ -40,8 +40,8 @@ class XMDSSoap4 {
      * @param <type> $displayName
      * @return <type>
      */
-    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress) {
-    
+    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress)
+    {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -138,6 +138,9 @@ class XMDSSoap4 {
                     $displayProfile->displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
                     
                     if ($displayProfile->displayProfileId == 0) {
+                        // We need a theme
+                        new Theme(new User());
+                        
                         // Load the default profile
                         $displayProfile->type = $clientType;
                         $displayProfile->LoadDefault();
@@ -213,8 +216,8 @@ class XMDSSoap4 {
      * @param string $hardwareKey Display Hardware Key
      * @return string $requiredXml Xml Formatted String
      */
-    function RequiredFiles($serverKey, $hardwareKey) {
-        
+    function RequiredFiles($serverKey, $hardwareKey)
+    {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -485,8 +488,8 @@ class XMDSSoap4 {
      * @param int $chunkOffset The Offset of the Chunk Requested
      * @param string $chunkSize   The Size of the Chunk Requested
      */
-    function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize) {
-        
+    function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
+    {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -585,7 +588,8 @@ class XMDSSoap4 {
      * @return
      * @param $hardwareKey Object
      */
-    function Schedule($serverKey, $hardwareKey) {
+    function Schedule($serverKey, $hardwareKey)
+    {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -735,8 +739,8 @@ class XMDSSoap4 {
      * @param $mediaId Object
      * @param $type Object
      */
-    function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason) {
-        
+    function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
+    {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -824,8 +828,8 @@ class XMDSSoap4 {
      * @param $hardwareKey Object
      * @param $logXml Object
      */
-    function SubmitLog($serverKey, $hardwareKey, $logXml) {
-        
+    function SubmitLog($serverKey, $hardwareKey, $logXml)
+    {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -932,8 +936,8 @@ class XMDSSoap4 {
      * @param $hardwareKey Object
      * @param $statXml Object
      */
-    function SubmitStats($serverKey, $hardwareKey, $statXml) {
-        
+    function SubmitStats($serverKey, $hardwareKey, $statXml)
+    {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -1015,7 +1019,8 @@ class XMDSSoap4 {
      * @param <type> $hardwareKey
      * @param <type> $inventory
      */
-    public function MediaInventory($serverKey, $hardwareKey, $inventory) {
+    public function MediaInventory($serverKey, $hardwareKey, $inventory)
+    {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -1080,8 +1085,8 @@ class XMDSSoap4 {
      * @param <type> $regionId
      * @param <type> $mediaId
      */
-    function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId) {
-        
+    function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
+    {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -1140,7 +1145,8 @@ class XMDSSoap4 {
         return $resource;
     }
 
-    public function NotifyStatus($serverKey, $hardwareKey, $status) {
+    public function NotifyStatus($serverKey, $hardwareKey, $status)
+    {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -1161,16 +1167,17 @@ class XMDSSoap4 {
         if ($this->isAuditing == 1) 
             Debug::LogEntry('audit', $status, 'xmds', 'Status', '', $this->displayId);
 
+        $this->LogBandwidth($this->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
+
         // Touch the display record
         $displayObject = new Display();
         $displayObject->Touch($this->displayId, json_decode($status, true));
 
-        $this->LogBandwidth($this->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
-
         return true;
     }
 
-    public function SubmitScreenShot($serverKey, $hardwareKey, $screenShot) {
+    public function SubmitScreenShot($serverKey, $hardwareKey, $screenShot)
+    {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
@@ -1210,8 +1217,8 @@ class XMDSSoap4 {
     /**
      * PHONE_HOME if required
      */
-    private function PhoneHome() {
-        
+    private function PhoneHome()
+    {
         if (Config::GetSetting('PHONE_HOME') == 'On') {
             // Find out when we last PHONED_HOME :D
             // If it's been > 28 days since last PHONE_HOME then
@@ -1261,8 +1268,8 @@ class XMDSSoap4 {
      * @param <type> $hardwareKey
      * @return <type>
      */
-    private function AuthDisplay($hardwareKey, $status = NULL) {
-    
+    private function AuthDisplay($hardwareKey, $status = NULL)
+    {
         try {
             $dbh = PDOConnect::init();
         
@@ -1316,8 +1323,8 @@ class XMDSSoap4 {
         }
     }
 
-    private function AlertDisplayUp($displayId, $display, $loggedIn, $emailAlert) {
-
+    private function AlertDisplayUp($displayId, $display, $loggedIn, $emailAlert)
+    {
         $maintenanceEnabled = Config::GetSetting('MAINTENANCE_ENABLED');
         
         if ($loggedIn == 0) {
@@ -1354,7 +1361,8 @@ class XMDSSoap4 {
     /**
      * Check we havent exceeded the bandwidth limits
      */
-    private function CheckBandwidth() {
+    private function CheckBandwidth()
+    {
         $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
         if ($xmdsLimit <= 0)
@@ -1385,8 +1393,8 @@ class XMDSSoap4 {
      * @param <type> $type
      * @param <type> $sizeInBytes
      */
-    private function LogBandwidth($displayId, $type, $sizeInBytes) {
-        
+    private function LogBandwidth($displayId, $type, $sizeInBytes)
+    {    
         $bandwidth = new Bandwidth();
         $bandwidth->Log($displayId, $type, $sizeInBytes);
     }

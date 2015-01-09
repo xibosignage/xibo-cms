@@ -148,7 +148,7 @@ class image extends Module
         return $this->EditLibraryMedia();
     }
 
-    public function Preview($width, $height)
+    public function Preview($width, $height, $scaleOverride = 0)
     {
         if ($this->previewEnabled == 0)
             return parent::Preview ($width, $height);

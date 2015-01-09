@@ -18,20 +18,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
- *
- *
- * This is a template module used to demonstrate how a module for Xibo can be made.
- *
- * The class name must be equal to the $this->type and the file name must be equal to modules/type.module.php
  */ 
 include_once('modules/3rdparty/emoji.php');
 
 class Twitter extends Module
 {
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '') {
+    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '', $typeOverride = NULL) {
         // The Module Type must be set - this should be a unique text string of no more than 50 characters.
         // It is used to uniquely identify the module globally.
-        $this->type = 'twitter';
+        $this->type = ($typeOverride == NULL) ? 'twitter' : $typeOverride;
 
         // This is the code schema version, it should be 1 for a new module and should be incremented each time the 
         // module data structure changes.
@@ -80,6 +75,20 @@ class Twitter extends Module
         $media->addModuleFile('modules/preview/xibo-text-render.js');
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
         $media->addModuleFileFromFolder('modules/theme/twitter/');
+    }
+
+    /** 
+     * Loads templates for this module
+     */
+    public function loadTemplates()
+    {
+        // Scan the folder for template files
+        foreach (glob('modules/theme/twitter/*.template.json') as $template) {
+            // Read the contents, json_decode and add to the array
+            $this->settings['templates'][] = json_decode(file_get_contents($template), true);
+        }
+
+        Debug::Audit(count($this->settings['templates']));
     }
 
     /**
@@ -146,6 +155,9 @@ class Twitter extends Module
         // The CMS provides the region width and height in case they are needed
         $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
+
+        // Augment settings with templates
+        $this->loadTemplates();
 
         // All forms should set some meta data about the form.
         // Usually, you would want this meta data to remain the same.
@@ -223,17 +235,52 @@ class Twitter extends Module
         $formFields['advanced'][] = FormManager::AddText('backgroundColor', __('Background Colour'), NULL, 
             __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
 
-        // Add a text template
-        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, '[Tweet]', 
-            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
-
         // Field empty
         $formFields['advanced'][] = FormManager::AddText('noTweetsMessage', __('No tweets'), NULL, 
             __('A message to display when there are no tweets returned by the search query'), 'n');
+        
+        // Template - for standard stuff
+        $formFields['template'][] = FormManager::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'), 
+            $this->settings['templates'], 
+            'id', 
+            'value', 
+            __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
 
+        // Add a field for whether to override the template or not.
+        // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
+        $formFields['template'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0), 
+        __('Tick if you would like to override the template.'), 'o');
+        
+        // Add a text template
+        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->GetRawNode('template'), 
+            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
+        
         // Field for the style sheet (optional)
-        $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', NULL, NULL, 
-            __('Optional Stylesheet'), 's', 10);
+        $formFields['template'][] = FormManager::AddMultiText('ta_css', NULL, $this->GetRawNode('styleSheet'), 
+            __('Optional Stylesheet'), 's', 10, NULL, 'template-override-controls');
+
+        // Add some field dependencies
+        // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
+        $this->response->AddFieldAction('overrideTemplate', 'init', false, 
+            array(
+                '.template-override-controls' => array('display' => 'none'),
+                '.template-selector-control' => array('display' => 'block')
+            ), 'is:checked');
+        $this->response->AddFieldAction('overrideTemplate', 'change', false, 
+            array(
+                '.template-override-controls' => array('display' => 'none'),
+                '.template-selector-control' => array('display' => 'block')
+            ), 'is:checked');
+        $this->response->AddFieldAction('overrideTemplate', 'init', true, 
+            array(
+                '.template-override-controls' => array('display' => 'block'),
+                '.template-selector-control' => array('display' => 'none')
+            ), 'is:checked');
+        $this->response->AddFieldAction('overrideTemplate', 'change', true, 
+            array(
+                '.template-override-controls' => array('display' => 'block'),
+                '.template-selector-control' => array('display' => 'none')
+            ), 'is:checked');
 
         // Modules should be rendered using the theme engine.
         Theme::Set('form_fields_general', $formFields['general']);
@@ -247,6 +294,8 @@ class Twitter extends Module
 
         $this->response->dialogTitle = __($this->displayType);
         $this->response->callBack = 'text_callback';
+        // Append the templates to the response
+        $this->response->extra = $this->settings['templates'];
         // The response object outputs the required JSON object to the browser
         // which is then processed by the CMS JavaScript library (xibo-cms.js).
         $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
@@ -291,8 +340,10 @@ class Twitter extends Module
         $this->SetOption('resultType', Kit::GetParam('resultType', _POST, _STRING));
         $this->SetOption('tweetDistance', Kit::GetParam('tweetDistance', _POST, _INT));
         $this->SetOption('tweetCount', Kit::GetParam('tweetCount', _POST, _INT));
-        $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>');
-        
+        $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('ta_css', _POST, _HTMLSTRING) . ']]></styleSheet>');
+        $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+        $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
+
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
         $this->UpdateRegion();
@@ -320,6 +371,9 @@ class Twitter extends Module
         $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
 
+        // Augment settings with templates
+        $this->loadTemplates();
+
         // All forms should set some meta data about the form.
         // Usually, you would want this meta data to remain the same.
         Theme::Set('form_id', 'ModuleForm');
@@ -328,7 +382,7 @@ class Twitter extends Module
     
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = FormManager::AddTab('template', __('Appearance'), array(array('name' => 'enlarge', 'value' => true)));
         $tabs[] = FormManager::AddTab('effect', __('Effect'));
         $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
         Theme::Set('form_tabs', $tabs);
@@ -396,17 +450,59 @@ class Twitter extends Module
         $formFields['advanced'][] = FormManager::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'), 
             __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
 
-        // Add a text template
-        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->GetRawNode('template', '[Tweet]'), 
-            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
-
         // Field empty
         $formFields['advanced'][] = FormManager::AddText('noTweetsMessage', __('No tweets'), $this->GetOption('noTweetsMessage'), 
             __('A message to display when there are no tweets returned by the search query'), 'n');
 
+        $formFields['advanced'][] = FormManager::AddCheckbox('removeUrls', __('Remove URLs?'), $this->GetOption('removeUrls', 1), 
+            __('Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage.'), 'u');
+
+        // Encode up the template
+        if ($this->user->usertypeid == 1)
+            $formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'template' => $this->GetRawNode('template'), 'css' => $this->GetRawNode('styleSheet')))) . '</pre>');
+
+        // Template - for standard stuff
+        $formFields['template'][] = FormManager::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'), 
+            $this->settings['templates'], 
+            'id', 
+            'value', 
+            __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
+
+        // Add a field for whether to override the template or not.
+        // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
+        $formFields['template'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0), 
+        __('Tick if you would like to override the template.'), 'o');
+        
+        // Add a text template
+        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->GetRawNode('template'), 
+            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
+        
         // Field for the style sheet (optional)
-        $formFields['advanced'][] = FormManager::AddMultiText('styleSheet', NULL, $this->GetRawNode('styleSheet'), 
-            __('Optional Stylesheet'), 's', 10);
+        $formFields['template'][] = FormManager::AddMultiText('ta_css', NULL, $this->GetRawNode('styleSheet'), 
+            __('Optional Stylesheet'), 's', 10, NULL, 'template-override-controls');
+
+        // Add some field dependencies
+        // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
+        $this->response->AddFieldAction('overrideTemplate', 'init', false, 
+            array(
+                '.template-override-controls' => array('display' => 'none'),
+                '.template-selector-control' => array('display' => 'block')
+            ), 'is:checked');
+        $this->response->AddFieldAction('overrideTemplate', 'change', false, 
+            array(
+                '.template-override-controls' => array('display' => 'none'),
+                '.template-selector-control' => array('display' => 'block')
+            ), 'is:checked');
+        $this->response->AddFieldAction('overrideTemplate', 'init', true, 
+            array(
+                '.template-override-controls' => array('display' => 'block'),
+                '.template-selector-control' => array('display' => 'none')
+            ), 'is:checked');
+        $this->response->AddFieldAction('overrideTemplate', 'change', true, 
+            array(
+                '.template-override-controls' => array('display' => 'block'),
+                '.template-selector-control' => array('display' => 'none')
+            ), 'is:checked');
 
         // Modules should be rendered using the theme engine.
         Theme::Set('form_fields_general', $formFields['general']);
@@ -422,6 +518,8 @@ class Twitter extends Module
         $this->response->callBack = 'text_callback';
         // The response object outputs the required JSON object to the browser
         // which is then processed by the CMS JavaScript library (xibo-cms.js).
+        // Append the templates to the response
+        $this->response->extra = $this->settings['templates'];
         $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
@@ -464,9 +562,12 @@ class Twitter extends Module
         $this->SetOption('resultType', Kit::GetParam('resultType', _POST, _STRING));
         $this->SetOption('tweetDistance', Kit::GetParam('tweetDistance', _POST, _INT));
         $this->SetOption('tweetCount', Kit::GetParam('tweetCount', _POST, _INT));
+        $this->SetOption('removeUrls', Kit::GetParam('removeUrls', _POST, _CHECKBOX));
+        $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+        $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
 
         // Text Template
-        $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>');
+        $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('ta_css', _POST, _HTMLSTRING) . ']]></styleSheet>');
         
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -489,27 +590,7 @@ class Twitter extends Module
         $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
     }
 
-    /**
-     * Preview
-     * @param <double> $width
-     * @param <double> $height
-     * @return <string>
-     */
-    public function Preview($width, $height)
-    {
-        // Each module should be able to output a preview to use in the Layout Designer
-        
-        // If preview is not enabled for your module you can hand off to the base class
-        // and it will output a basic preview for you
-        if ($this->previewEnabled == 0)
-            return parent::Preview ($width, $height);
-        
-        // In most cases your preview will want to load the GetResource call associated with the module
-        // This imitates the client
-        return $this->PreviewAsClient($width, $height);
-    }
-
-    private function getBearerToken() {
+    protected function getToken() {
 
         // Prepare the URL
         $url = 'https://api.twitter.com/oauth2/token';
@@ -585,7 +666,7 @@ class Twitter extends Module
         return $body->access_token;
     }
 
-    private function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15)
+    protected function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15)
     {
         // Construct the URL to call
         $url = 'https://api.twitter.com/1.1/search/tweets.json';
@@ -621,9 +702,6 @@ class Twitter extends Module
         // Parse out header and body
         list($header, $body) = explode("\r\n\r\n", $result, 2);
 
-        // See if we can parse the error.
-        $body = json_decode($body);
-
         $outHeaders = curl_getinfo($curl);
 
         if ($outHeaders['http_code'] != 200) {
@@ -639,11 +717,15 @@ class Twitter extends Module
 
             return false;
         }
+        else {
+            // See if we can parse the error.
+            $body = json_decode($body);
+        }
 
         return $body;
     }
 
-    private function getTwitterFeed($displayId = 0, $isPreview = true)
+    protected function getTwitterFeed($displayId = 0, $isPreview = true)
     {
         if (!extension_loaded('curl')) {
             trigger_error(__('cURL extension is required for Twitter'));
@@ -681,7 +763,7 @@ class Twitter extends Module
             Debug::Audit('Querying API for ' . $this->GetOption('searchTerm'));
 
             // We need to search for it
-            if (!$token = $this->getBearerToken())
+            if (!$token = $this->getToken())
                 return false;
 
             // We have the token, make a tweet
@@ -714,6 +796,9 @@ class Twitter extends Module
 
         // Expiry time for any media that is downloaded
         $expires = time() + ($this->GetSetting('cachePeriodImages') * 60 * 60);
+        
+        // Remove URL setting
+        $removeUrls = $this->GetOption('removeUrls', 1);
 
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {
@@ -724,7 +809,15 @@ class Twitter extends Module
                 // Maybe make this more generic?
                 switch ($sub) {
                     case '[Tweet]':
-                        $replace = emoji_unified_to_html($tweet->text);
+                        // Handle URL removal if requested
+                        if ($removeUrls == 1) {
+                            $tweetText = preg_replace("@(https?://([-\w\.]+[-\w])+(:\d+)?(/([\w/_\.#-]*(\?\S+)?[^\.\s])?)?)@", '', $tweet->text);
+                        }
+                        else {
+                            $tweetText = $tweet->text;
+                        }
+
+                        $replace = emoji_unified_to_html($tweetText);
                         break;
 
                     case '[User]':
@@ -754,7 +847,7 @@ class Twitter extends Module
 
         // If we have nothing to show, display a no tweets message.
         if (count($return) <= 0)
-            $return[] = $this->GetOption('noTweetsMessage');
+            $return[] = str_replace('[Tweet]', $this->GetOption('noTweetsMessage'), $template);
         
         // Return the data array
         return $return;
@@ -768,6 +861,12 @@ class Twitter extends Module
      */
     public function GetResource($displayId = 0)
     {
+        // Make sure we are set up correctly
+        if ($this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
+            Debug::Error('Twitter Module not configured. Missing API Keys');
+            return '';
+        }
+
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
         $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
@@ -844,7 +943,7 @@ class Twitter extends Module
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
-        $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
+        $javaScriptContent .= '   var items = ' . Kit::jsonEncode($items) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); ';
         $javaScriptContent .= '   }); ';

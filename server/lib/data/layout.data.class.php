@@ -1682,9 +1682,12 @@ class Layout extends Data
                 $this->ThrowError(__('Layout not found.'));
 
             // Open a ZIP file with the same name as the layout
+            File::EnsureLibraryExists();
             $zip = new ZipArchive();
             $fileName = $libraryPath . 'temp/export_' . Kit::ValidateParam($row['layout'], _FILENAME) . '.zip';
-            $zip->open($fileName, ZIPARCHIVE::OVERWRITE);
+            $result = $zip->open($fileName, ZIPARCHIVE::OVERWRITE);
+            if ($result !== true)
+                $this->ThrowError(__('Can\'t create ZIP. Error Code: ' . $result));
             
             // Add layout information to the ZIP
             $layout = array(
@@ -1942,6 +1945,9 @@ class Layout extends Data
                         'mediaId' => $newMediaId,
                         'layoutId' => $layoutId
                     ));
+
+                // Link
+                $this->AddLk($layoutId, 'background', $newMediaId);
             }
             catch (Exception $e) {
                 
@@ -2020,7 +2026,7 @@ class Layout extends Data
                 Debug::Audit('Found file: ' . $file);
 
                 if (stripos($file, '.zip'))
-                    $this->Import($folder . DIRECTORY_SEPARATOR . $file, NULL, 1, false, true, true, false);
+                    $this->Import($folder . DIRECTORY_SEPARATOR . $file, NULL, 1, false, false, true, false);
             }
         }
     }

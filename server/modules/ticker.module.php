@@ -38,6 +38,20 @@ class ticker extends Module
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
         $media->addModuleFile('modules/preview/xibo-text-render.js');
     }
+
+    /** 
+     * Loads templates for this module
+     */
+    public function loadTemplates()
+    {
+        // Scan the folder for template files
+        foreach (glob('modules/theme/ticker/*.template.json') as $template) {
+            // Read the contents, json_decode and add to the array
+            $this->settings['templates'][] = json_decode(file_get_contents($template), true);
+        }
+
+        Debug::Audit(count($this->settings['templates']));
+    }
     
     /**
      * Return the Add Form as HTML
@@ -54,6 +68,9 @@ class ticker extends Module
         $regionid   = $this->regionid;
         $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
         $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
+
+        // Augment settings with templates
+        $this->loadTemplates();
 
         Theme::Set('form_id', 'ModuleForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
@@ -147,6 +164,9 @@ class ticker extends Module
             return $this->response;
         }
 
+        // Augment settings with templates
+        $this->loadTemplates();
+
         Theme::Set('form_id', 'ModuleForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
@@ -159,8 +179,7 @@ class ticker extends Module
 
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('appearance', __('Appearance'));
-        $tabs[] = FormManager::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = FormManager::AddTab('template', __('Appearance'), array(array('name' => 'enlarge', 'value' => true)));
         $tabs[] = FormManager::AddTab('format', __('Format'));
         $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
         Theme::Set('form_tabs', $tabs);
@@ -265,7 +284,22 @@ class ticker extends Module
             $formFields['general'][] = $field_duration;
             $formFields['general'][] = $fieldFx;
             $formFields['format'][] = $fieldScrollSpeed;
-            $formFields['format'][] = $fieldBackgroundColor;
+
+            // Add a field for RTL tickers
+            $formFields['format'][] = FormManager::AddCombo(
+                    'textDirection', 
+                    __('Text direction'), 
+                    $this->GetOption('textDirection'),
+                    array(
+                        array('textdirectionid' => 'ltr', 'textdirection' => __('Left to Right (LRT)')),
+                        array('textdirectionid' => 'rtl', 'textdirection' => __('Right to Left (RTL)'))
+                    ),
+                    'textdirectionid',
+                    'textdirection',
+                    __('Which direction does the text in the feed use? (left to right or right to left)'), 
+                    'd');
+
+            $formFields['advanced'][] = $fieldBackgroundColor;
             
             $formFields['format'][] = FormManager::AddNumber('numItems', __('Number of Items'), $this->GetOption('numItems'), 
                 __('The Number of RSS items you want to display'), 'o');
@@ -296,27 +330,6 @@ class ticker extends Module
             $formFields['advanced'][] = FormManager::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'), 
                 __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
 
-            // Template - for standard stuff
-            $formFields['appearance'][] = FormManager::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'title-only'), 
-                $this->settings['templates'], 
-                'id', 
-                'value', 
-                __('Select the template you would like to apply. This can be overridden on the Template Tab.'), 't', 'template-selector-control');
-
-            // Add a field for RTL tickers
-            $formFields['appearance'][] = FormManager::AddCombo(
-                    'textDirection', 
-                    __('Text direction'), 
-                    $this->GetOption('textDirection'),
-                    array(
-                        array('textdirectionid' => 'ltr', 'textdirection' => __('Left to Right (LRT)')),
-                        array('textdirectionid' => 'rtl', 'textdirection' => __('Right to Left (RTL)'))
-                    ),
-                    'textdirectionid',
-                    'textdirection',
-                    __('Which direction does the text in the feed use? (left to right or right to left)'), 
-                    'd');
-
             $subs = array(
                     array('Substitute' => 'Name'),
                     array('Substitute' => 'Title'),
@@ -339,7 +352,7 @@ class ticker extends Module
                 __('A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.'), '');
 
             // Encode up the template
-            $formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'media-rss-with-title', 'value' => 'Image overlaid with the Title', 'template' => '<div class="image">[Link|image]<div class="cycle-overlay"><p style="font-family: Arial, Verdana, sans-serif; font-size:48px;">[Title]</p></div></div>', 'css' => '.image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}'))) . '</pre>');
+            //$formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'media-rss-with-title', 'value' => 'Image overlaid with the Title', 'template' => '<div class="image">[Link|image]<div class="cycle-overlay"><p style="font-family: Arial, Verdana, sans-serif; font-size:48px;">[Title]</p></div></div>', 'css' => '.image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}'))) . '</pre>');
         }
 
         // Get the CSS node
@@ -350,6 +363,7 @@ class ticker extends Module
         $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->GetRawNode('template'),
             __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
 
+        // RSS
         if ($this->GetOption('sourceId') == 1) {
 
             // Append the templates to the response
@@ -361,6 +375,13 @@ class ticker extends Module
             // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
             $formFields['template'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 1), 
             __('Tick if you would like to override the template.'), 'o');
+
+            // Template - for standard stuff
+            $formFields['template'][] = FormManager::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'title-only'), 
+                $this->settings['templates'], 
+                'id', 
+                'value', 
+                __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
 
             // Add some field dependencies
             // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
@@ -387,7 +408,6 @@ class ticker extends Module
         }
 
         Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_appearance', $formFields['appearance']);
         Theme::Set('form_fields_template', array_reverse($formFields['template']));
         Theme::Set('form_fields_format', $formFields['format']);
         Theme::Set('form_fields_advanced', $formFields['advanced']);
@@ -677,20 +697,6 @@ class ticker extends Module
     }
 
     /**
-     * Preview
-     * @param <type> $width
-     * @param <type> $height
-     * @return <type>
-     */
-    public function Preview($width, $height)
-    {
-        if ($this->previewEnabled == 0)
-            return parent::Preview ($width, $height);
-        
-        return $this->PreviewAsClient($width, $height);
-    }
-
-    /**
      * Get Resource
      */
     public function GetResource($displayId = 0)
@@ -912,7 +918,7 @@ class ticker extends Module
 
                 // Pick the appropriate column out
                 if (strstr($sub, '|') !== false) {
-                    // Use the provided namespace to extract a tag
+                    // Use the provided name space to extract a tag
                     $attribs = NULL;
                     if (substr_count($sub, '|') > 1)
                         list($tag, $namespace, $attribs) = explode('|', $sub);
@@ -931,6 +937,14 @@ class ticker extends Module
                                     $link = $enclosure->get_link();
                                 }
                                 break;
+
+                            default:
+                                // Default behaviour just tries to get the content from the tag provided (without a name space).
+                                $tags = $item->get_item_tags('', str_replace('[', '', $tag));
+
+                                if ($tags != null) {
+                                    $link = (is_array($tags)) ? $tags[0]['data'] : '';
+                                }
                         }
 
                         // If we have managed to resolve a link, download it and replace the tag with the downloaded

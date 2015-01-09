@@ -132,6 +132,17 @@ class Nonce extends Data {
                     $params['displayId'] = $displayId;
                     break;
 
+                case 'oldfile':
+                    if ($this->validateFileStatement == NULL) {
+                        $this->validateFileStatement = $dbh->prepare('
+                            SELECT nonceId, nonce, expiry, lastUsed FROM `xmdsnonce` INNER JOIN `media` ON media.mediaid = xmdsnonce.fileId WHERE displayId = :displayId AND media.storedAs = :fileId');
+                    }
+
+                    $sth = $this->validateFileStatement;
+                    $params['fileId'] = $fileId;
+                    $params['displayId'] = $displayId;
+                    break;
+
                 case 'layout':
                     if ($this->validateLayoutStatement == NULL) {
                         $this->validateLayoutStatement = $dbh->prepare('

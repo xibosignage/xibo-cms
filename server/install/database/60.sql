@@ -32,6 +32,19 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `type`, `helptext`, `opt
 
 INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES (NULL, 'timeline', '3');
 
+/* Get all of the current permission links between pages in the Layouts group and add a duplicate for the new time line page  */
+INSERT INTO `lkpagegroup` (`pageID`, `groupID`)
+SELECT DISTINCT newpage.pageID, lkpagegroup.groupID
+  FROM `lkpagegroup`
+    INNER JOIN `pages`
+    ON pages.pageID = lkpagegroup.pageID
+    CROSS JOIN (
+      SELECT pageID
+        FROM `pages`
+       WHERE `name` = 'timeline'
+    ) newpage
+   WHERE pages.pagegroupID = 3;
+
 UPDATE `module` SET `ImageUri` = REPLACE(ImageUri, 'img/forms/', 'forms/') WHERE ImageUri IS NOT NULL;
 
 UPDATE `menuitem` SET `Img` = REPLACE(Img, 'img/dashboard/', 'dashboard/') WHERE Img IS NOT NULL;

@@ -689,5 +689,63 @@ class Kit
         if (Config::GetSetting('ISSUE_STS', 0) == 1)
             header("strict-transport-security: max-age=" . Config::GetSetting('STS_TTL', 600));
     }
+
+    /**
+     * Json Encode, handling and logging errors
+     * http://stackoverflow.com/questions/10199017/how-to-solve-json-error-utf8-error-in-php-json-decode
+     * @param  mixed $mixed The item to encode
+     * @return mixed The Encoded Item
+     */
+    public static function jsonEncode($mixed)
+    {
+        if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
+            $encoded = json_encode($mixed, JSON_PRETTY_PRINT);
+        }
+        else {
+            $encoded = json_encode($mixed);
+        }
+
+        switch (json_last_error()) {
+            case JSON_ERROR_NONE:
+                return $encoded;
+            case JSON_ERROR_DEPTH:
+                Debug::Audit('Maximum stack depth exceeded');
+                return false;
+            case JSON_ERROR_STATE_MISMATCH:
+                Debug::Audit('Underflow or the modes mismatch');
+                return false;
+            case JSON_ERROR_CTRL_CHAR:
+                Debug::Audit('Unexpected control character found');
+                return false;
+            case JSON_ERROR_SYNTAX:
+                Debug::Audit('Syntax error, malformed JSON');
+                return false;
+            case JSON_ERROR_UTF8:
+                $clean = Kit::utf8ize($mixed);
+                return Kit::jsonEncode($clean);
+            default:
+                Debug::Audit('Unknown error');
+                return false;
+        }
+    }
+
+    /**
+     * Utf8ize a string or array
+     * http://stackoverflow.com/questions/10199017/how-to-solve-json-error-utf8-error-in-php-json-decode
+     * @param  mixed $mixed The item to uft8ize
+     * @return mixed The utf8ized item
+     */
+    public static function utf8ize($mixed)
+    {
+        if (is_array($mixed)) {
+            foreach ($mixed as $key => $value) {
+                $mixed[$key] = Kit::utf8ize($value);
+            }
+        }
+        else if (is_string ($mixed)) {
+            return utf8_encode($mixed);
+        }
+        return $mixed;
+    }
 }
 ?>

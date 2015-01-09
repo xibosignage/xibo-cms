@@ -127,13 +127,18 @@ class layoutDAO extends baseDAO
                 $formFields = array();
                 $formFields[] = FormManager::AddText('filter_layout', __('Name'), $layout, NULL, 'l');
                 $formFields[] = FormManager::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
+
+                // Users we have permission to see
+                $users = $this->user->userList();
+                array_unshift($users, array('userid' => '', 'username' => 'All'));
+
                 $formFields[] = FormManager::AddCombo(
                     'filter_userid', 
                     __('Owner'), 
                     $owner,
-                    $db->GetArray("SELECT 0 AS UserID, 'All' AS UserName UNION SELECT DISTINCT user.UserID, user.UserName FROM `layout` INNER JOIN `user` ON layout.UserID = user.UserID "),
-                    'UserID',
-                    'UserName',
+                    $users,
+                    'userid',
+                    'username',
                     NULL, 
                     'r');
                 $formFields[] = FormManager::AddCombo(

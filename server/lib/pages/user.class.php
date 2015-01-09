@@ -122,38 +122,30 @@ class userDAO extends baseDAO {
         // Pinned option?        
         setSession('user_admin', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
+        // Filter our users?
+        $filterBy = array();
+
         // Generate the results
         $sql  = "SELECT user.UserID, user.UserName, user.usertypeid, user.loggedin, user.lastaccessed, user.email, user.homepage, user.retired ";
         $sql .= " FROM `user` ";
         $sql .= " WHERE 1 = 1 ";
 
-        // Normal users can only see themselves
-        if ($user->usertypeid == 3) 
-            $sql .= sprintf(" AND userid = %d ", $user->userid);
-
         // Filter on User Type
-        if($filter_usertypeid != 0) 
-            $sql .= sprintf(" AND usertypeid = %d ", $filter_usertypeid);
+        if ($filter_usertypeid != 0)
+            $filterBy['userTypeId'] = $filter_usertypeid;
 
         // Filter on User Name
         if ($filter_username != '') 
-            $sql .= " AND UserName LIKE '%" . sprintf("%s", $db->escape_string($filter_username) . "%' ");
-
-        $sql .= " ORDER by UserName";
-        
-        //Debug::LogEntry('audit', $sql);
+            $filterBy['userName'] = $filter_username;
 
         // Load results into an array
-        $users = $db->GetArray($sql);
+        $users = $user->userList(array('userName'), $filterBy);
 
         if (!is_array($users)) 
-        {
-            trigger_error($db->error());
             trigger_error(__('Error getting list of users'), E_USER_ERROR);
-        }
-
+        
         $cols = array(
-                array('name' => 'UserName', 'title' => __('Name')),
+                array('name' => 'username', 'title' => __('Name')),
                 array('name' => 'homepage', 'title' => __('Homepage')),
                 array('name' => 'email', 'title' => __('Email')),
                 array('name' => 'retired', 'title' => __('Retired?'), 'icons' => true)
@@ -164,7 +156,7 @@ class userDAO extends baseDAO {
 
         foreach ($users as $row) {
 
-            $row['groupid'] = $user->getGroupFromID($row['UserID'], true);
+            $row['groupid'] = $user->getGroupFromID($row['userid'], true);
 
             // Super admins have some buttons
             if ($user->usertypeid == 1) {
@@ -172,14 +164,14 @@ class userDAO extends baseDAO {
                 // Edit        
                 $row['buttons'][] = array(
                         'id' => 'user_button_edit',
-                        'url' => 'index.php?p=user&q=DisplayForm&userID=' . $row['UserID'],
+                        'url' => 'index.php?p=user&q=DisplayForm&userID=' . $row['userid'],
                         'text' => __('Edit')
                     );
 
                 // Delete
                 $row['buttons'][] = array(
                         'id' => 'user_button_delete',
-                        'url' => 'index.php?p=user&q=DeleteForm&userID=' . $row['UserID'],
+                        'url' => 'index.php?p=user&q=DeleteForm&userID=' . $row['userid'],
                         'text' => __('Delete')
                     );
 
@@ -200,21 +192,21 @@ class userDAO extends baseDAO {
                 // Applications
                 $row['buttons'][] = array(
                         'id' => 'user_button_applications',
-                        'url' => 'index.php?p=oauth&q=UserTokens&userID=' . $row['UserID'],
+                        'url' => 'index.php?p=oauth&q=UserTokens&userID=' . $row['userid'],
                         'text' => __('Applications')
                     );
 
                 // Set Home Page
                 $row['buttons'][] = array(
                         'id' => 'user_button_homepage',
-                        'url' => 'index.php?p=user&q=SetUserHomePageForm&userid=' . $row['UserID'],
+                        'url' => 'index.php?p=user&q=SetUserHomePageForm&userid=' . $row['userid'],
                         'text' => __('Set Homepage')
                     );
 
                 // Set Password
                 $row['buttons'][] = array(
                         'id' => 'user_button_delete',
-                        'url' => 'index.php?p=user&q=SetPasswordForm&userid=' . $row['UserID'],
+                        'url' => 'index.php?p=user&q=SetPasswordForm&userid=' . $row['userid'],
                         'text' => __('Set Password')
                     );
             }
@@ -252,15 +244,12 @@ class userDAO extends baseDAO {
         $initialGroupId = Kit::GetParam('groupid', _POST, _INT);
 
         // Validation
-        if ($username=="")
-        {
-            trigger_error("Please enter a User Name.", E_USER_ERROR);
-        }
-        if ($password=="")
-        {
-            trigger_error("Please enter a Password.", E_USER_ERROR);
-        }
+        if ($username == '' || strlen($username) > 50)
+            trigger_error(__('User name must be between 1 and 50 characters.'), E_USER_ERROR);
 
+        if ($password=="")
+            trigger_error("Please enter a Password.", E_USER_ERROR);
+        
         if ($homepage == "") 
             $homepage = "dashboard";
 
@@ -342,10 +331,8 @@ class userDAO extends baseDAO {
         $retired = Kit::GetParam('retired', _POST, _CHECKBOX);
 
         // Validation
-        if ($username == "")
-        {
-            trigger_error(__("Please enter a User Name."), E_USER_ERROR);
-        }
+        if ($username == '' || strlen($username) > 50)
+            trigger_error(__('User name must be between 1 and 50 characters.'), E_USER_ERROR);
         
         // Check for duplicate user name
         $sqlcheck = " ";
@@ -563,7 +550,7 @@ class userDAO extends baseDAO {
         // Render the return and output
         $formFields = array();
         $formFields[] = FormManager::AddText('edit_username', __('User Name'), $username, 
-            __('The Login Name of the user.'), 'n', 'required');
+            __('The Login Name of the user.'), 'n', 'required maxlength="50"');
 
         $formFields[] = FormManager::AddPassword('edit_password', __('Password'), $password, 
             __('The Password for this user.'), 'p', 'required');

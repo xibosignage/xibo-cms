@@ -391,20 +391,6 @@ class text extends Module
     }
 
     /**
-     * Preview
-     * @param <type> $width
-     * @param <type> $height
-     * @return <type>
-     */
-    public function Preview($width, $height)
-    {
-        if ($this->previewEnabled == 0)
-            return parent::Preview ($width, $height);
-        
-        return $this->PreviewAsClient($width, $height);
-    }
-
-    /**
      * Raw Preview
      */
     public function GetResource($displayId = 0)

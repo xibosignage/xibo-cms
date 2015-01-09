@@ -35,6 +35,91 @@ define("HASH_PBKDF2_INDEX", 3);
 class Userdata extends Data
 {
     public $userId;
+    public $userName;
+    public $userTypeId;
+    public $loggedIn;
+    public $email;
+    public $homePage;
+    public $lastAccessed;
+    public $newUserWizard;
+    public $retired;
+
+    public static function entries($sortOrder = array(), $filterBy = array())
+    {
+        $entries = array();
+
+        try {
+            $dbh = PDOConnect::init();
+
+            $params = array();
+            $SQL  = 'SELECT userId, userName, userTypeId, loggedIn, email, homePage, lastAccessed, newUserWizard, retired ';
+            $SQL .= '  FROM `user` ';
+            $SQL .= ' WHERE 1 = 1 ';
+
+            // User Id Provided?
+            if (Kit::GetParam('userId', $filterBy, _INT) != 0) {
+                $SQL .= " AND user.userId = :userId ";
+                $params['userId'] = Kit::GetParam('userId', $filterBy, _INT);
+            }
+
+            // User Type Provided
+            if (Kit::GetParam('userTypeId', $filterBy, _INT) != 0) {
+                $SQL .= " AND user.userTypeId = :userTypeId ";
+                $params['userTypeId'] = Kit::GetParam('userTypeId', $filterBy, _INT);
+            }
+
+            // User Name Provided
+            if (Kit::GetParam('userName', $filterBy, _STRING) != 0) {
+                $SQL .= " AND user.userName LIKE :userName ";
+                $params['userName'] = '%' . Kit::GetParam('userName', $filterBy, _STRING) . '%';
+            }
+
+            // Groups Provided
+            $groups = Kit::GetParam('groupIds', $filterBy, _ARRAY_INT);
+            Debug::Audit(var_export($groups, true));
+            if (count($groups) > 0) {
+                $SQL .= " AND user.groupIds IN (" . implode($groups, ',') . ") ";
+            }
+
+            // Retired users?
+            if (Kit::GetParam('retired', $filterBy, _INT) != -1) {
+                $SQL .= " AND user.retired = :retired ";
+                $params['retired'] = Kit::GetParam('retired', $filterBy, _INT);
+            }
+
+            // Sorting?
+            if (is_array($sortOrder))
+                $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
+
+            //Debug::Audit(sprintf('Retrieving list of users with SQL: %s. Params: %s', $SQL, var_export($params, true)));
+        
+            $sth = $dbh->prepare($SQL);
+            $sth->execute($params);
+
+            foreach ($sth->fetchAll() as $row) {
+                $user = new Userdata();
+                $user->userId = Kit::ValidateParam($row['userId'], _INT);
+                $user->userName = Kit::ValidateParam($row['userName'], _STRING);
+                $user->userTypeId = Kit::ValidateParam($row['userTypeId'], _INT);
+                $user->loggedIn = Kit::ValidateParam($row['loggedIn'], _INT);
+                $user->email = Kit::ValidateParam($row['email'], _STRING);
+                $user->homePage = Kit::ValidateParam($row['homePage'], _STRING);
+                $user->lastAccessed = Kit::ValidateParam($row['lastAccessed'], _INT);
+                $user->newUserWizard = Kit::ValidateParam($row['newUserWizard'], _INT);
+                $user->retired = Kit::ValidateParam($row['retired'], _INT);
+
+                $entries[] = $user;
+            }
+
+            return $entries;
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        
+            return false;
+        }
+    }
 
     public function Delete() {
         if (!isset($this->userId) || $this->userId == 0)

@@ -30,7 +30,7 @@ abstract class Module implements ModuleInterface
     public $auth;
 
     // Module Information
-    private $module_id;
+    protected $module_id;
     protected $render_as;
     public $displayType;
     protected $type;
@@ -110,12 +110,12 @@ abstract class Module implements ModuleInterface
 
         // Members used by forms (routed through the CMS)
         $this->showRegionOptions = Kit::GetParam('showRegionOptions', _REQUEST, _INT, 1);
+        
+        // Log
+        Debug::LogEntry('audit', 'Module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
 
         // Determine which type this module is
-        if (!$this->SetModuleInformation())
-        	return false;
-
-        Debug::LogEntry('audit', 'Module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
+        $this->SetModuleInformation();
 
         // Either the information from the region - or some blanks
         return ($this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid));
@@ -138,8 +138,9 @@ abstract class Module implements ModuleInterface
                     'type' => $this->type
                 ));
 
-            $row = $sth->fetch();
-        
+            if (!$row = $sth->fetch())
+                return;
+
             $this->module_id = Kit::ValidateParam($row['ModuleID'], _INT);
             $this->schemaVersion = Kit::ValidateParam($row['SchemaVersion'], _INT);
             $this->regionSpecific = Kit::ValidateParam($row['RegionSpecific'], _INT);
@@ -172,12 +173,39 @@ abstract class Module implements ModuleInterface
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage());
-        
-            return $this->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
+            
+            if (!$this->IsError())
+                $this->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
+
+            throw $e;
         }
 
         return true;
 	}
+
+    protected final function saveSettings()
+    {
+        // Save
+        try {
+            $dbh = PDOConnect::init();
+        
+            $sth = $dbh->prepare('UPDATE module SET settings = :settings WHERE moduleid = :moduleId');
+            Debug::Audit(var_export(array(
+                    'moduleId' => $this->module_id,
+                    'settings' => json_encode($this->settings)
+                ), true));
+            $sth->execute(array(
+                    'moduleId' => $this->module_id,
+                    'settings' => json_encode($this->settings)
+                ));
+        }
+        catch (Exception $e) {
+            
+            Debug::LogEntry('error', $e->getMessage());
+        
+            trigger_error(__('Cannot Save Settings'), E_USER_ERROR);
+        }
+    }
 
     /**
      * Gets the information about this Media on this region on this layout
@@ -194,6 +222,9 @@ abstract class Module implements ModuleInterface
 
         if ($this->mediaid != '' && $this->regionid != '' && $this->layoutid != '')
         {
+            if ($this->module_id == 0)
+                $this->ThrowError(__('Module "' . $this->type . '" does not exist or is not installed. Please visit the module administration page or contact your administrator'));
+
             // Existing media that is assigned to a layout
             $this->existingMedia = true;
             $this->assignedMedia = true;
@@ -1362,8 +1393,12 @@ END;
      * @param <type> $width
      * @param <type> $height
      */
-    public function Preview($width, $height) {
-        return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
+    public function Preview($width, $height, $scaleOverride = 0)
+    {
+        if ($this->previewEnabled == 0)
+            return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
+            
+        return $this->PreviewAsClient($width, $height, $scaleOverride);
     }
 
     /**
@@ -1997,7 +2032,7 @@ END;
 
     protected function ThrowError($errNo, $errMessage = '') {
         $this->SetError($errNo, $errMessage);
-        throw new Exception(sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage));
+        throw new Exception(sprintf('%s [%d]', $this->GetErrorMessage(), $this->GetErrorNumber()));
     }
 
     public function IsValid() {

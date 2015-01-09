@@ -81,7 +81,7 @@ class displayDAO extends baseDAO
 
         $formFields[] = FormManager::AddCombo(
             'filter_showThumbnail', 
-            __('Thumbnails'), 
+            __('Screen Shot Thumbnails'), 
             $filter_showThumbnail,
             array(
                 array('key' => 0, 'value' => __('None')),
@@ -374,8 +374,9 @@ class displayDAO extends baseDAO
         
         $cols = array(
                 array('name' => 'displayid', 'title' => __('ID')),
-                array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
                 array('name' => 'displayWithLink', 'title' => __('Display')),
+                array('name' => 'status', 'title' => __('Status'), 'icons' => true),
+                array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
                 array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
                 array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
                 array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
@@ -389,34 +390,37 @@ class displayDAO extends baseDAO
             );
         
         Theme::Set('table_cols', $cols);
-        Theme::Set('rowClass', 'mediainventorystatus');
+        Theme::Set('rowClass', 'rowColor');
 
         $rows = array();
 
-        foreach($displays as $row)
-        {
+        foreach($displays as $row) {
             // VNC Template as display name?
-            if ($vncTemplate != '' && $row['clientaddress'] != '')
-            {
+            if ($vncTemplate != '' && $row['clientaddress'] != '') {
                 if ($linkTarget == '')
                     $linkTarget = '_top';
 
                 $row['displayWithLink'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . Theme::Prepare($row['display']) . '</a>', $row['clientaddress']);
+            }
+            else {
+                $row['displayWithLink'] = $row['display'];
             }
 
             // Format last accessed
             $row['lastaccessed'] = DateManager::getLocalDate($row['lastaccessed']);
 
             // Create some login lights
-            $row['mediainventorystatus'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
+            $row['rowColor'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
+            $row['status'] = ($row['mediainventorystatus'] == 1) ? 1 : (($row['mediainventorystatus'] == 2) ? 0 : -1);
 
             // Thumbnail
             $row['thumbnail'] = '';
-            if ($filter_showThumbnail == 1 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
-                $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '" /></a>';
-            }
-            else if ($filter_showThumbnail == 2) {
+            // If we aren't logged in, and we are showThumbnail == 2, then show a circle
+            if ($filter_showThumbnail == 2 && $row['loggedin'] == 0) {
                 $row['thumbnail'] = '<i class="fa fa-times-circle"></i>';
+            }
+            else if ($filter_showThumbnail <> 0 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
+                $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '" /></a>';
             }
 
             // Edit and Delete buttons first
@@ -710,6 +714,14 @@ class displayDAO extends baseDAO
         if (!$document->loadXML($mediaInventoryXml))
             trigger_error(__('Invalid Media Inventory'), E_USER_ERROR);
 
+        $cols = array(
+                array('name' => 'id', 'title' => __('ID')),
+                array('name' => 'type', 'title' => __('Type')),
+                array('name' => 'complete', 'title' => __('Complete')),
+                array('name' => 'last_checked', 'title' => __('Last Checked'))
+            );
+        Theme::Set('table_cols', $cols);
+
         // Need to parse the XML and return a set of rows
         $xpath = new DOMXPath($document);
         $fileNodes = $xpath->query("//file");
@@ -731,10 +743,7 @@ class displayDAO extends baseDAO
         // Store the table rows
         Theme::Set('table_rows', $rows);
 
-        // Initialise the theme and capture the output
-        $output = Theme::RenderReturn('display_form_mediainventory');
-
-        $response->SetFormRequestResponse($output, __('Media Inventory'), '550px', '350px');
+        $response->SetFormRequestResponse(Theme::RenderReturn('table_render'), __('Media Inventory'), '550px', '350px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'MediaInventory') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();

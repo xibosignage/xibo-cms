@@ -326,20 +326,6 @@ function EmbedInit()
         // Can't be sure because the client does the rendering
         return 2;
     }
-
-    /**
-     * Preview
-     * @param <type> $width
-     * @param <type> $height
-     * @return <type>
-     */
-    public function Preview($width, $height)
-    {
-        if ($this->previewEnabled == 0)
-            return parent::Preview ($width, $height);
-        
-        return $this->PreviewAsClient($width, $height);
-    }
    
     public function GetResource($display = 0) {
         // Behave exactly like the client.

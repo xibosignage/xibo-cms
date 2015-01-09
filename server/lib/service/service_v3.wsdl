@@ -42,15 +42,6 @@
     <message name="ScheduleResponse">
         <part name="ScheduleXml" type="xsd:string" />
     </message>
-    <message name="RecieveXmlLogRequest">
-        <part name="serverKey" type="xsd:string" />
-        <part name="hardwareKey" type="xsd:string" />
-        <part name="xml" type="xsd:string" />
-        <part name="version" type="xsd:string" />
-    </message>
-    <message name="RecieveXmlLogResponse">
-        <part name="success" type="xsd:boolean" />
-    </message>
     <message name="BlackListRequest">
         <part name="serverKey" type="xsd:string" />
         <part name="hardwareKey" type="xsd:string" />
