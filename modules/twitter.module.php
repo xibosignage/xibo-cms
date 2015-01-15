@@ -111,6 +111,11 @@ class Twitter extends Module
         // Cache Period Images
         $formFields[] = FormManager::AddText('cachePeriodImages', __('Cache Period for Images'), $this->GetSetting('cachePeriodImages', 24), 
             __('Enter the number of hours you would like to cache twitter images.'), 'i', 'required');
+
+        // Present an error message if we don't have the required extension enabled. Don't prevent further configuration.
+        if (!extension_loaded('curl')) {
+            $formFields[] = FormManager::AddMessage(__('The php-curl extension is required for the Twitter Module and it does not appear to be enabled on this CMS. Please enable it before using this module.'), 'alert alert-danger');
+        }
         
         return $formFields;
     }
@@ -281,6 +286,11 @@ class Twitter extends Module
                 '.template-override-controls' => array('display' => 'block'),
                 '.template-selector-control' => array('display' => 'none')
             ), 'is:checked');
+
+        // Present an error message if the module has not been configured. Don't prevent further configuration.
+        if (!extension_loaded('curl') || $this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
+            $formFields['general'][] = FormManager::AddMessage(__('The Twitter Widget has not been configured yet, please ask your CMS Administrator to look at it for you.'), 'alert alert-danger');
+        }
 
         // Modules should be rendered using the theme engine.
         Theme::Set('form_fields_general', $formFields['general']);
@@ -503,6 +513,11 @@ class Twitter extends Module
                 '.template-override-controls' => array('display' => 'block'),
                 '.template-selector-control' => array('display' => 'none')
             ), 'is:checked');
+
+        // Present an error message if the module has not been configured. Don't prevent further configuration.
+        if (!extension_loaded('curl') || $this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
+            $formFields['general'][] = FormManager::AddMessage(__('The Twitter Widget has not been configured yet, please ask your CMS Administrator to look at it for you.'), 'alert alert-danger');
+        }
 
         // Modules should be rendered using the theme engine.
         Theme::Set('form_fields_general', $formFields['general']);
