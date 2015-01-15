@@ -34,6 +34,9 @@ require_once("lib/app/debug.class.php");
 require_once("lib/app/kit.class.php");
 require_once("lib/pages/base.class.php");
 require_once("lib/data/data.class.php");
+require_once("lib/app/datemanager.class.php");
+require_once("lib/app/helpmanager.class.php");
+require_once("lib/app/thememanager.class.php");
 require_once("lib/data/display.data.class.php");
 
 // Required Config Files
