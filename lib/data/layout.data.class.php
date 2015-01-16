@@ -1701,13 +1701,14 @@ class Layout extends Data
             $xml = $row['xml'];
             $zip->addFromString('layout.xml', $xml);
 
-            $params = array('layoutid' => $layoutId);    
+            $params = array('layoutid' => $layoutId, 'excludeType' => 'module');
             $SQL = ' 
                 SELECT media.mediaid, media.name, media.storedAs, originalFileName, type, duration
                   FROM `media` 
                     INNER JOIN `lklayoutmedia`
                     ON lklayoutmedia.mediaid = media.mediaid
                  WHERE lklayoutmedia.layoutid = :layoutid
+                   AND media.type <> :excludeType
                 ';
 
             // Add the media to the ZIP
