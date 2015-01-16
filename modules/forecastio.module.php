@@ -198,6 +198,12 @@ class ForecastIo extends Module
         $formFields['advanced'][] = FormManager::AddNumber('size', __('Size'), $this->GetOption('size', 1), 
             __('Set the size. Start at 1 and work up until the widget fits your region appropriately.'), 's', 'number', 'template-selector-control');
 
+        $formFields['advanced'][] = FormManager::AddCombo('units', __('units'), $this->GetOption('units'), 
+            $this->unitsAvailable(), 
+            'id', 
+            'value', 
+            __('Select the units you would like to use.'), 'u');
+
         $formFields['advanced'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), 0, 
             __('Tick if you would like to override the template.'), 'o');
 
@@ -263,6 +269,7 @@ class ForecastIo extends Module
         $this->SetOption('icons', Kit::GetParam('icons', _POST, _STRING));
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('size', Kit::GetParam('size', _POST, _INT));
+        $this->SetOption('units', Kit::GetParam('units', _POST, _WORD));
 
         $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
             <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
@@ -341,6 +348,12 @@ class ForecastIo extends Module
         $formFields['advanced'][] = FormManager::AddNumber('size', __('Size'), $this->GetOption('size', 1), 
             __('Set the size. Start at 1 and work up until the widget fits your region appropriately.'), 's', 'number', 'template-selector-control');
 
+        $formFields['advanced'][] = FormManager::AddCombo('units', __('units'), $this->GetOption('units'), 
+            $this->unitsAvailable(), 
+            'id', 
+            'value', 
+            __('Select the units you would like to use.'), 'u');
+
         $formFields['general'][] = FormManager::AddText('color', __('Colour'), $this->GetOption('color', '000'), 
             __('Please select a colour for the foreground text.'), 'c', 'required');
 
@@ -417,6 +430,7 @@ class ForecastIo extends Module
         $this->SetOption('icons', Kit::GetParam('icons', _POST, _STRING));
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('size', Kit::GetParam('size', _POST, _INT));
+        $this->SetOption('units', Kit::GetParam('units', _POST, _WORD));
 
         $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
             <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
@@ -494,6 +508,17 @@ class ForecastIo extends Module
         return $icons;
     }
 
+    private function unitsAvailable()
+    {
+        return array(
+                array('id' => 'auto', 'value' => 'Automatically select based on geographic location'),
+                array('id' => 'ca', 'value' => 'Canada'),
+                array('id' => 'si', 'value' => 'Standard International Units'),
+                array('id' => 'uk', 'value' => 'United Kingdom'),
+                array('id' => 'us', 'value' => 'United States'),
+            );
+    }
+
     // Request content for this tab
     public function requestTab()
     {
@@ -560,7 +585,7 @@ class ForecastIo extends Module
         // Query the API and Dump the Results.
         $forecast = new Forecast($apiKey);
 
-        $apiOptions = array('units' => 'auto', 'exclude' => 'flags,minutely,hourly');
+        $apiOptions = array('units' => $this->GetOption('units', 'auto'), 'exclude' => 'flags,minutely,hourly');
         $key = md5($defaultLat . $defaultLong . 'null' . implode('.', $apiOptions));
 
         if (!Cache::has($key)) {
