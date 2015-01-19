@@ -24,21 +24,27 @@ $(document).ready(function(){
         window.location = 'index.php?p=layout&modify=true&layoutid=' + $(this).val();
     }).selectpicker();
 
-    $("#layout").each(function(){
+    $("#layout").each(function() {
+
+        // Only enable drag / drop if we are within a certain limit
+        if ($(this).attr("designer_scale") > 0.41) {
+
+            $(this).find(".region")
+                .draggable({
+                        containment: this,
+                        stop: regionPositionUpdate,
+                        drag: updateRegionInfo
+                    })
+                .resizable({
+                        containment: this,
+                        minWidth: 25,
+                        minHeight: 25,
+                        stop: regionPositionUpdate,
+                        resize: updateRegionInfo
+                    });
+        }
 
         $(this).find(".region")
-            .draggable({
-                    containment: this,
-                    stop: regionPositionUpdate,
-                    drag: updateRegionInfo
-                })
-            .resizable({
-                    containment: this,
-                    minWidth: 25,
-                    minHeight: 25,
-                    stop: regionPositionUpdate,
-                    resize: updateRegionInfo
-                })
             .hover(function() {
                     $(this).find(".regionInfo").show();
                     $(this).find(".previewNav").show();
@@ -61,19 +67,17 @@ $(document).ready(function(){
 
     $('.RegionOptionsMenuItem').click(function() {
 
-        var designer_scale = $(this).closest('.region').attr("designer_scale");
-        var position = $(this).closest('.region').position();
+        // If any regions have been moved, then save them.
+        if ($("#layout-save-all").length > 0) {
+            SystemMessage(translations.savePositionsFirst, true);
+            return;
+        }
+
         var data = {
             layoutid: $(this).closest('.region').attr("layoutid"),
             regionid: $(this).closest('.region').attr("regionid"),
             scale: $(this).closest('.region').attr("tip_scale"),
-            layoutWidth: Math.round(($(this).closest('.layout').width() + 2) / designer_scale, 2),
-            layoutHeight: Math.round(($(this).closest('.layout').height() + 2) / designer_scale, 2),
-            width: Math.round($(this).closest('.region').width() / designer_scale, 2),
-            height: Math.round($(this).closest('.region').height() / designer_scale, 2),
-            top: Math.round(position.top / designer_scale, 2),
-            left: Math.round(position.left / designer_scale, 2),
-            zindex: $(this).closest('.region').attr("zindex")
+            zoom: $(this).closest('.layout').attr("zoom")
         };
 
         var url = "index.php?p=timeline&q=ManualRegionPositionForm";
@@ -128,6 +132,18 @@ function regionPositionUpdate(e, ui) {
                 return false;
             })
             .appendTo(".layout-meta");
+
+        $("<button/>",  {
+                "class": "btn",
+                id: "layout-revert",
+                html: translations.revert_position_button
+            })
+            .click(function() {
+                // Reload
+                location.reload();
+                return false;
+            })
+            .appendTo(".layout-meta");
     }
 }
 
@@ -135,6 +151,7 @@ function savePositions() {
 
     // Ditch the button
     $("#layout-save-all").remove();
+    $("#layout-revert").remove();
 
     // Update all layouts
     $("#layout").each(function(){
@@ -154,7 +171,7 @@ function savePositions() {
                 top: position.top / designer_scale,
                 left: position.left / designer_scale,
                 regionid: $(this).attr("regionid")
-            }
+            };
 
             // Update the region width / height attributes
             $(this).attr("width", region.width).attr("height", region.height);
@@ -164,10 +181,10 @@ function savePositions() {
         });
 
         $.ajax({
-                type: "post", 
-                url: "index.php?p=timeline&q=RegionChange&layoutid="+layoutid+"&ajax=true", 
-                cache: false, 
-                dataType: "json", 
+                type: "post",
+                url: "index.php?p=timeline&q=RegionChange&layoutid="+layoutid+"&ajax=true",
+                cache: false,
+                dataType: "json",
                 data: {regions : JSON.stringify(regions) },
                 success: XiboSubmitResponse
             });

@@ -1656,7 +1656,7 @@ class User {
     {
         // Normal users can only see themselves
         if ($this->usertypeid == 3) {
-            $filterBy['userId'] == $this->userid;
+            $filterBy['userId'] = $this->userid;
         }
         // Super admins can only see users from their groups.
         else if ($this->usertypeid == 2) {
