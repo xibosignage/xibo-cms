@@ -215,7 +215,9 @@ class layoutDAO extends baseDAO
                 Theme::Set('layouts', $this->user->LayoutList());
 
 				// Set up any JavaScript translations
-   				Theme::SetTranslation('save_position_button', __('Save Position'));
+                Theme::SetTranslation('save_position_button', __('Save Position'));
+   				Theme::SetTranslation('revert_position_button', __('Undo'));
+                Theme::SetTranslation('savePositionsFirst', Theme::Translate('Please save the pending position changes first by clicking "Save Positions" or cancel by clicking "Undo".'));
 
                 // Call the render the template
                 Theme::Render('layout_designer');
@@ -960,6 +962,9 @@ class layoutDAO extends baseDAO
     function RenderDesigner() 
     {
         $db =& $this->db;
+
+        // What zoom level are we at?
+        $zoom = Kit::GetParam('zoom', _GET, _DOUBLE, 1);
         
         // Assume we have the xml in memory already
         // Make a DOM from the XML
@@ -996,7 +1001,6 @@ class layoutDAO extends baseDAO
 
             // To do - version 2 layout can support zooming?
             if ($version > 1) {
-                $zoom = Kit::GetParam('zoom', _GET, _DOUBLE, 1);
                 $designerScale = $designerScale * $zoom;
 
                 Theme::Set('layout_zoom_in_url', 'index.php?p=layout&modify=true&layoutid=' . $this->layoutid . '&zoom=' . ($zoom - 0.3));
@@ -1006,6 +1010,9 @@ class layoutDAO extends baseDAO
                 Theme::Set('layout_upgrade_url', 'index.php?p=layout&q=upgradeForm&layoutId=' . $this->layoutid);
             }
         }
+
+        // Pass the designer scale to the theme (we use this to present an error message in the default theme, if the scale drops below 0.41)
+        Theme::Set('designerScale', $designerScale);
         
         // do we have a background? Or a background color (or both)
         $bgImage = $xml->documentElement->getAttribute('background');
@@ -1101,7 +1108,7 @@ class layoutDAO extends baseDAO
         //render the view pane
         $surface = <<<HTML
 
-        <div id="layout" tip_scale="$tipScale" designer_scale="$designerScale" version="$version" class="layout" layoutid="$this->layoutid" data-background-color="$bgColor" style="position:relative; width:$width; height:$height; background:$background_css;">
+        <div id="layout" zoom="$zoom" tip_scale="$tipScale" designer_scale="$designerScale" version="$version" class="layout" layoutid="$this->layoutid" data-background-color="$bgColor" style="position:relative; width:$width; height:$height; background:$background_css;">
         $regionHtml
         </div>
 HTML;

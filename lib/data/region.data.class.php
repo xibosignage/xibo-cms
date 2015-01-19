@@ -718,17 +718,23 @@ class Region extends Data
 
     public function GetRegionName($layoutId, $regionId)
     {
-        //Load the XML for this layout
+        // Get the region node
+        $regionNode = $this->getRegion($layoutId, $regionId);
+
+        return $regionNode->getAttribute('name');
+    }
+
+    public function getRegion($layoutId, $regionId)
+    {
+        // Load the XML for this layout
         $xml = new DOMDocument("1.0");
         $xml->loadXML($this->GetLayoutXml($layoutId));
 
-        //Find the region
+        // Find the region
         $xpath = new DOMXPath($xml);
 
         $regionNodeList = $xpath->query("//region[@id='$regionId']");
-        $regionNode = $regionNodeList->item(0);
-
-        return $regionNode->getAttribute('name');
+        return $regionNode = $regionNodeList->item(0);
     }
 
     /**

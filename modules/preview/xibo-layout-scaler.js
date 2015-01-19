@@ -21,6 +21,9 @@ jQuery.fn.extend({
     xiboLayoutScaler: function(options) {
         var width; var height;
 
+        var originalWidth = options.originalWidth;
+        var originalHeight = options.originalHeight;
+
         if (options.previewWidth === 0 || options.previewHeight === 0) {
             width = $(window).width();
             height = $(window).height();
@@ -32,14 +35,18 @@ jQuery.fn.extend({
 
         var ratio = Math.min(width / options.originalWidth, height / options.originalHeight);
 
-        if (options.scaleOverride !== 0)
+        if (options.scaleOverride !== 0) {
+            // console.log("Scale Override is set, meaning we want to scale according to the provided scale of " + options.scaleOverride + ". Provided Width is " + width + ". Provided Height is " + height + ".");
             ratio = options.scaleOverride;
+            originalWidth = width / ratio;
+            originalHeight = width / ratio;
+        }
 
         $(this).each(function() {
 
             $(this).css({
-                width: options.originalWidth,
-                height: options.originalHeight
+                width: originalWidth,
+                height: originalHeight
             });
             
             // Handle the scaling
