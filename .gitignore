@@ -2,3 +2,4 @@ settings.php
 .project/
 .vagrant/
 .idea/
+.locale/*.mo

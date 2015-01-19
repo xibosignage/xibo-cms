@@ -31,8 +31,8 @@ class TranslationEngine
     private static $jsLocale;
 
 	/**
-	 * Gets and Sets the Local 
-	 * @return 
+	 * Gets and Sets the Locale
+     * @param $language string[optional] The Language to Load
 	 */
 	public static function InitLocale($language = NULL)
 	{
@@ -44,60 +44,63 @@ class TranslationEngine
 
         //Debug::LogEntry('audit', 'IN', 'TranslationEngine', 'InitLocal');
         // Build an array of supported languages
-        $supportedLangs = scandir($localeDir);
+        $supportedLanguages = scandir($localeDir);
 
         // Try to get the local firstly from _REQUEST (post then get)
-        $lang = Kit::GetParam('lang', _REQUEST, _WORD, '');
+        $requestedLanguage = Kit::GetParam('lang', _REQUEST, _WORD, '');
+        $foundLanguage = '';
 
         // If we don't have a language, try from HTTP accept
-        if ($lang == '' && Config::GetSetting('DETECT_LANGUAGE') == 1) {
-            $langs = Kit::GetParam('HTTP_ACCEPT_LANGUAGE', $_SERVER, _STRING);
+        if ($requestedLanguage == '' && Config::GetSetting('DETECT_LANGUAGE') == 1) {
+            // Parse the language header and build a preference array
+            $languagePreferenceArray = TranslationEngine::parseHttpAcceptLanguageHeader();
 
-            if ($langs != '') {
-                //Debug::LogEntry('audit', ' HTTP_ACCEPT_LANGUAGE [' . $langs . ']', 'TranslationEngine', 'InitLocal');
-                $langs = explode(',', $langs);
+            if (count($languagePreferenceArray) > 0) {
 
-                foreach ($langs as $lang) {
-                    // Remove any quality rating (as we aren't interested)
-                    $rawLang = explode(';', $lang);
-                    $lang = str_replace('-', '_', $rawLang[0]);
+                // Go through the list until we have a match
+                foreach ($languagePreferenceArray as $languagePreference => $preferenceRating) {
 
-                    if (in_array($lang . '.mo', $supportedLangs)) {
-                        //Debug::LogEntry('audit', 'Obtained the Language from HTTP_ACCEPT_LANGUAGE [' . $lang . ']', 'TranslationEngine', 'InitLocal');
+                    // We don't ship an en.mo, so fudge in a case where we automatically convert that to en_GB
+                    if ($languagePreference == 'en')
+                        $languagePreference = 'en_GB';
+
+                    if (in_array(str_replace('-', '_', $languagePreference) . '.mo', $supportedLanguages)) {
+                        $foundLanguage = $languagePreference;
                         break;
                     }
-
-                    // Set lang as the default
-                    $lang = $default;
                 }
+            }
+        }
+        else {
+            // Requested language is not empty, so check it
+            // This may also be because the headers are empty for some reason
+
+            // Firstly, Sanitize it
+            $requestedLanguage = str_replace('-', '_', $requestedLanguage);
+
+            // Check its valid
+            if (in_array($requestedLanguage . '.mo', $supportedLanguages)) {
+                $foundLanguage = $requestedLanguage;
+            }
+            else {
+                // Fall back
+                $foundLanguage = 'en_GB';
             }
         }
 
         // Are we still empty?
-        if ($lang == '')
-            $lang = $default;
+        if ($foundLanguage == '')
+            $foundLanguage = $default;
 
-        // Sanitize it
-        $lang = str_replace('-', '_', $lang);
-        $jsLang = str_replace('_', '-', $lang);
-
-        // Check its valid
-        if (!in_array($lang . '.mo', $supportedLangs)) {
-            //trigger_error(sprintf('Language not supported. %s', $lang));
-
-            // Fall back
-            $lang = 'en_GB';
-        }
-
-        //Debug::LogEntry('audit', 'Creating new file streamer for '. $localeDir . '/' . $lang . '.mo', 'TranslationEngine', 'InitLocal');
-        if (!$stream = new CachedFileReader($localeDir . '/' . $lang . '.mo')) {
+        //Debug::LogEntry('audit', 'Creating new file streamer for '. $localeDir . '/' . $foundLanguage . '.mo', 'TranslationEngine', 'InitLocal');
+        if (!$stream = new CachedFileReader($localeDir . '/' . $foundLanguage . '.mo')) {
             $transEngine = false;
             return;
         }
 
         $transEngine = new gettext_reader($stream);
-        self::$locale = $lang;
-        self::$jsLocale = str_replace('_', '-', $lang);
+        self::$locale = $foundLanguage;
+        self::$jsLocale = str_replace('_', '-', $foundLanguage);
 	}
 
     public static function GetLocale() {
@@ -106,6 +109,41 @@ class TranslationEngine
 
     public static function GetJsLocale() {
         return self::$jsLocale;
+    }
+
+    /**
+     * Parse the HttpAcceptLanguage Header
+     * Inspired by: http://www.thefutureoftheweb.com/blog/use-accept-language-header
+     * @param null $header
+     * @return array Language array where the key is the language identifier and the value is the preference double.
+     */
+    public static function parseHttpAcceptLanguageHeader($header = null)
+    {
+        if ($header == null)
+            $header = Kit::GetParam('HTTP_ACCEPT_LANGUAGE', $_SERVER, _STRING);
+
+        $languages = array();
+
+        if ($header != '') {
+            // break up string into pieces (languages and q factors)
+            preg_match_all('/([a-z]{1,8}(-[a-z]{1,8})?)\s*(;\s*q\s*=\s*(1|0\.[0-9]+))?/i', $header, $langParse);
+
+            if (count($langParse[1])) {
+                // create a list like "en" => 0.8
+                $languages = array_combine($langParse[1], $langParse[4]);
+
+                // set default to 1 for any without q factor
+                foreach ($languages as $lang => $val) {
+                    if ($val === '')
+                        $languages[$lang] = 1;
+                }
+
+                // sort list based on value
+                arsort($languages, SORT_NUMERIC);
+            }
+        }
+
+        return $languages;
     }
 }
 
