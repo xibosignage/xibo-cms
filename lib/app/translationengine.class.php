@@ -111,8 +111,8 @@ class TranslationEngine
 
 /**
  * Global Translation Function
- * @return 
- * @param $string Object
+ * @return string
+ * @param $string string
  */ 
 function __($string)
 {
