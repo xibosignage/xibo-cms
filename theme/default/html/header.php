@@ -100,13 +100,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                     ?>
                 </ul>
                 <div class="sidebar-footer">
-                    <div class="col-sm-4">
-                        <a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo Theme::Translate('Click to show more time information'); ?>"><?php echo Theme::GetClock(); ?></a>
-                    </div>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                         <a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo Theme::Translate('About the CMS'); ?>"><?php echo Theme::Translate('About'); ?></a>
                     </div>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                         <a href="<?php echo Config::GetSetting('HELP_BASE'); ?>" target="_blank" title="<?php echo Theme::Translate('Open the Manual in a new Window'); ?>"><?php echo Theme::Translate('Manual'); ?></a>
                     </div>
                 </div>
@@ -124,7 +121,9 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                                         <img src="<?php echo Theme::ImageUrl('avatar.jpg'); ?>" />
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-right">
-                                        <li class="dropdown-header"><?php echo Theme::GetUsername(); ?></li>
+                                        <li class="dropdown-header"><?php echo Theme::GetUsername(); ?><br/>
+                                            <a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo Theme::Translate('Click to show more time information'); ?>"><?php echo Theme::GetClock(); ?></a>
+                                        </li>
                                         <li class="divider"></li>
                                         <li><a class="XiboFormButton" href="index.php?p=user&q=ChangePasswordForm" title="<?php echo Theme::Translate('Change Password') ?>"><?php echo Theme::Translate('Change Password') ?></a></li>
                                         <li><a href="index.php?p=index&sp=welcome"><?php echo Theme::Translate('Reshow welcome'); ?></a></li>
