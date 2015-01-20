@@ -1998,37 +1998,37 @@ END;
 	
 	/**
 	 * Gets the Error Message
-	 * @return 
+	 * @return string
 	 */
 	public function GetErrorMessage()
 	{
 		return $this->errorMessage;
 	}
-	
-	/**
-	 * Sets the Error for this Data object
-	 * @return 
-	 * @param $errNo Object
-	 * @param $errMessage Object
-	 */
-	protected function SetError($errNo, $errMessage = '')
-	{
-		$this->error = true;
 
-		// Is an error No provided?
-		if (!is_numeric($errNo)) {
-			$errMessage = $errNo;
-			$errNo = -1;
-		}
+    /**
+     * Sets the Error for this Data object
+     * @return bool
+     * @param $errNo mixed
+     * @param $errMessage string
+     */
+    protected function SetError($errNo, $errMessage = '')
+    {
+        $this->error = true;
 
-		$this->errorNo = $errNo;
-		$this->errorMessage	= $errMessage;
-		
-		Debug::LogEntry('audit', sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Media Module', 'SetError');
+        // Is an error No provided?
+        if (!is_numeric($errNo)) {
+            $errMessage = $errNo;
+            $errNo = -1;
+        }
+
+        $this->errorNo = $errNo;
+        $this->errorMessage	= $errMessage;
+
+        Debug::LogEntry('audit', sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Media Module', 'SetError');
 
         // Return false so that we can use this method as the return call for parent methods
-		return false;
-	}
+        return false;
+    }
 
     protected function ThrowError($errNo, $errMessage = '') {
         $this->SetError($errNo, $errMessage);
