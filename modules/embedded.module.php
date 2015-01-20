@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2012 Daniel Garner
+ * Copyright (C) 2009-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -80,10 +80,10 @@ class embedded extends Module
 function EmbedInit()
 {
     // Init will be called when this page is loaded in the client.
-    
+
     return;
 }
-</script>', 
+</script>',
             __('HEAD content to Embed (including script tags)'), 'h', 10);
 
         Theme::Set('form_fields', $formFields);
@@ -109,13 +109,12 @@ function EmbedInit()
     
     /**
      * Return the Edit Form as HTML
-     * @return 
+     * @return ResponseManager
      */
     public function EditForm()
     {
         $this->response = new ResponseManager();
-        $db         =& $this->db;
-        
+
         $layoutid   = $this->layoutid;
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;
@@ -154,16 +153,10 @@ function EmbedInit()
             $this->GetOption('scaleContent'), __('Should the embedded content be scaled along with the layout?'), 
             's');
 
-        $textNodes  = $rawXml->getElementsByTagName('embedHtml');
-        $textNode   = $textNodes->item(0);
-
-        $formFields[] = FormManager::AddMultiText('embedHtml', NULL, $textNode->nodeValue, 
+        $formFields[] = FormManager::AddMultiText('embedHtml', NULL, $this->GetRawNode('embedHtml'),
             __('HTML to Embed'), 'h', 10);
 
-        $textNodes  = $rawXml->getElementsByTagName('embedScript');
-        $textNode   = $textNodes->item(0);
-
-        $formFields[] = FormManager::AddMultiText('embedScript', NULL, $textNode->nodeValue, 
+        $formFields[] = FormManager::AddMultiText('embedScript', NULL, $this->GetRawNode('embedScript'),
             __('HEAD content to Embed (including script tags)'), 'h', 10);
 
         Theme::Set('form_fields', $formFields);

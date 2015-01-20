@@ -34,6 +34,18 @@ class Rest
     }
 
     /**
+     * Raise an API Error
+     * This should be implemented by the child class
+     * @param $errorNo mixed
+     * @param string $errorMessage string
+     * @return bool
+     */
+    public function Error($errorNo, $errorMessage = '')
+    {
+        return true;
+    }
+
+    /**
      * List all Displays for this user
      * @return <XiboAPIResponse>
      */
@@ -840,7 +852,7 @@ class Rest
 
     /**
      * Add Media to a Region
-     * @return <XiboAPIResponse>
+     * @return XiboAPIResponse
      */
     public function LayoutRegionMediaAdd()
     {
@@ -858,7 +870,6 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Check the user has permission
-        Kit::ClassLoader('region');
         $region = new region($this->db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 

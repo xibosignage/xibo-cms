@@ -24,9 +24,9 @@ include_once('lib/data/media.data.class.php');
 abstract class Module implements ModuleInterface
 {
     // Session Variables
-	protected $db;
-	protected $user;
-	protected $response;
+    protected $db;
+    protected $user;
+    protected $response;
     public $auth;
 
     // Module Information
@@ -42,7 +42,7 @@ abstract class Module implements ModuleInterface
     protected $settings;
 
     // The Schema Version of this code
-	protected $schemaVersion;
+    protected $schemaVersion;
     protected $codeSchemaVersion = -1;
     
     // Layout Information
@@ -50,7 +50,7 @@ abstract class Module implements ModuleInterface
     protected $layoutid;
     protected $regionid;
     protected $xml;
-	protected $deleteFromRegion;
+    protected $deleteFromRegion;
     protected $width;
     protected $height;
     protected $layoutSchemaVersion;
@@ -89,10 +89,10 @@ abstract class Module implements ModuleInterface
 
         // Initialise the error state
         $this->error = false;
-		$this->errorNo = 0;
-		$this->errorMessage = '';
+        $this->errorNo = 0;
+        $this->errorMessage = '';
 
-		// Initialise the module state
+        // Initialise the module state
         $this->mediaid 	= $mediaid;
         $this->name 	= '';
         $this->layoutid = $layoutid;
@@ -121,16 +121,16 @@ abstract class Module implements ModuleInterface
         return ($this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid));
     }
 
-	/**
-	 * Sets the module information
-	 * @return
-	 */
-	final private function SetModuleInformation()
-	{
+    /**
+     * Sets the module information
+     * @return
+     */
+    final private function SetModuleInformation()
+    {
         if ($this->type == '')
             return $this->SetError(__('Unable to create Module [No type given] - please refer to the Module Documentation.'));
 
-		try {
+        try {
             $dbh = PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT * FROM module WHERE Module = :type');
@@ -181,7 +181,7 @@ abstract class Module implements ModuleInterface
         }
 
         return true;
-	}
+    }
 
     protected final function saveSettings()
     {
@@ -345,166 +345,164 @@ XML;
         return true;
     }
 
-	/**
-	 * Sets the Layout and Region Information
-	 * @return
-	 * @param $layoutid Object
-	 * @param $regionid Object
-	 * @param $mediaid Object
-	 */
-	public function SetRegionInformation($layoutid, $regionid)
-	{
-		$this->layoutid = $layoutid;
-		$this->regionid = $regionid;
+    /**
+     * Sets the Layout and Region Information
+     * @return
+     * @param $layoutid Object
+     * @param $regionid Object
+     * @param $mediaid Object
+     */
+    public function SetRegionInformation($layoutid, $regionid)
+    {
+        $this->layoutid = $layoutid;
+        $this->regionid = $regionid;
 
-		return true;
-	}
+        return true;
+    }
 
-	/**
-	 * This Media item represented as XML
-	 * @return
-	 */
-	final public function AsXml()
-	{
-		// Make sure the required attributes are present on the Media Node
-		// We can add / change:
-		// 		MediaID
-		//		Duration
-		//		Type
-		//		SchemaVersion (use the type to get this from the DB)
-		// LkID is done by the region code (where applicable - otherwise it will be left blank)
-		$mediaNodes = $this->xml->getElementsByTagName('media');
-		$mediaNode	= $mediaNodes->item(0);
+    /**
+     * This Media item represented as XML
+     * @return
+     */
+    final public function AsXml()
+    {
+        // Make sure the required attributes are present on the Media Node
+        // We can add / change:
+        // 		MediaID
+        //		Duration
+        //		Type
+        //		SchemaVersion (use the type to get this from the DB)
+        // LkID is done by the region code (where applicable - otherwise it will be left blank)
+        $mediaNodes = $this->xml->getElementsByTagName('media');
+        $mediaNode	= $mediaNodes->item(0);
 
-		$mediaNode->setAttribute('id', $this->mediaid);
-		$mediaNode->setAttribute('duration', $this->duration);
+        $mediaNode->setAttribute('id', $this->mediaid);
+        $mediaNode->setAttribute('duration', $this->duration);
         $mediaNode->setAttribute('type', $this->type);
-		$mediaNode->setAttribute('render', $this->render_as);
+        $mediaNode->setAttribute('render', $this->render_as);
         $mediaNode->setAttribute('userId', $this->originalUserId);
 
-		return $this->xml->saveXML($mediaNode);
-	}
+        return $this->xml->saveXML($mediaNode);
+    }
 
-	/**
-	 * Adds the name/value element to the XML Options sequence
-	 * @return
-	 * @param $name String
-	 * @param $value String
-	 */
-	final protected function SetOption($name, $value)
-	{
-		$db =& $this->db;
-		
-		if ($name == '') 
-			return;
+    /**
+     * Adds the name/value element to the XML Options sequence
+     * @return
+     * @param $name String
+     * @param $value String
+     */
+    final protected function SetOption($name, $value)
+    {
+        $db =& $this->db;
 
-		Debug::LogEntry('audit', sprintf('IN with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
+        if ($name == '')
+            return;
 
-		// Get the options node from this document
-		$optionNodes = $this->xml->getElementsByTagName('options');
-		// There is only 1
-		$optionNode = $optionNodes->item(0);
+        Debug::LogEntry('audit', sprintf('IN with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
 
-		// Create a new option node
-		$newNode = $this->xml->createElement($name, $value);
+        // Get the options node from this document
+        $optionNodes = $this->xml->getElementsByTagName('options');
+        // There is only 1
+        $optionNode = $optionNodes->item(0);
 
-		Debug::LogEntry('audit', sprintf('Created a new Option Node with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
+        // Create a new option node
+        $newNode = $this->xml->createElement($name, $value);
 
-		// Check to see if we already have this option or not
-		$xpath = new DOMXPath($this->xml);
+        Debug::LogEntry('audit', sprintf('Created a new Option Node with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
 
-		// Xpath for it
-		$userOptions = $xpath->query('//options/' . $name);
+        // Check to see if we already have this option or not
+        $xpath = new DOMXPath($this->xml);
 
-		if ($userOptions->length == 0)
-		{
-			// Append the new node to the list
-			$optionNode->appendChild($newNode);
-		}
-		else
-		{
-			// Replace the old node we found with XPath with the new node we just created
-			$optionNode->replaceChild($newNode, $userOptions->item(0));
-		}
-	}
+        // Xpath for it
+        $userOptions = $xpath->query('//options/' . $name);
 
-	/**
-	 * Gets the value for the option in Parameter 1
-	 * @return
-	 * @param $name String The Option Name
-	 * @param $default Object[optional] The Default Value
-	 */
-	final protected function GetOption($name, $default = false)
-	{
-		$db =& $this->db;
+        if ($userOptions->length == 0)
+        {
+            // Append the new node to the list
+            $optionNode->appendChild($newNode);
+        }
+        else
+        {
+            // Replace the old node we found with XPath with the new node we just created
+            $optionNode->replaceChild($newNode, $userOptions->item(0));
+        }
+    }
 
-		if ($name == '') 
-			return false;
+    /**
+     * Gets the value for the option in Parameter 1
+     * @return
+     * @param $name String The Option Name
+     * @param $default Object[optional] The Default Value
+     */
+    final protected function GetOption($name, $default = false)
+    {
+        $db =& $this->db;
 
-		// Check to see if we already have this option or not
-		$xpath = new DOMXPath($this->xml);
+        if ($name == '')
+            return false;
 
-		// Xpath for it
-		$userOptions = $xpath->query('//options/' . $name);
+        // Check to see if we already have this option or not
+        $xpath = new DOMXPath($this->xml);
 
-		if ($userOptions->length == 0)
-		{
-			// We do not have an option - return the default
-			//Debug::LogEntry('audit', 'GetOption ' . $name . ': Not Set - returning default ' . $default);
-			return $default;
-		}
-		else
-		{
-			// Replace the old node we found with XPath with the new node we just created
-			//Debug::LogEntry('audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue);
-			return ($userOptions->item(0)->nodeValue != '') ? $userOptions->item(0)->nodeValue : $default;
-		}
-	}
+        // Xpath for it
+        $userOptions = $xpath->query('//options/' . $name);
 
-	/**
-	 * Sets the RAW XML string that is given as the content for Raw
-	 * @return
-	 * @param $xml String
-	 * @param $replace Boolean[optional]
-	 */
-	final protected function SetRaw($xml, $replace = false)
-	{
-		if ($xml == '') 
-			return;
+        if ($userOptions->length == 0)
+        {
+            // We do not have an option - return the default
+            //Debug::LogEntry('audit', 'GetOption ' . $name . ': Not Set - returning default ' . $default);
+            return $default;
+        }
+        else
+        {
+            // Check to see if what we have is empty or 0, if so then return the default value.
+            return ($userOptions->item(0)->nodeValue == '' || $userOptions->item(0)->nodeValue === 0) ? $default : $userOptions->item(0)->nodeValue;
+        }
+    }
 
-		// Load the XML we are given into its own document
-		$rawNode = new DOMDocument();
-		if (!$rawNode->loadXML('<raw>' . $xml . '</raw>'))
-            return $this->SetError(__('There is an error in the HTML/XML'));
+    /**
+     * Sets the RAW XML string that is given as the content for Raw
+     * @param $xml string
+     * @param $replace bool
+     */
+    final protected function SetRaw($xml, $replace = false)
+    {
+        if ($xml == '')
+            $this->ThrowError(__('Missing XML for SetRaw'));
 
-		// Import the Raw node into this document (with all sub nodes)
-		$importedNode = $this->xml->importNode($rawNode->documentElement, true);
+        // Load the XML we are given into its own document
+        $rawNode = new DOMDocument();
+        if (!@$rawNode->loadXML('<raw>' . $xml . '</raw>'))
+            $this->ThrowError(__('There is an error in the HTML/XML'));
 
-		// Get the Raw Xml node from our document
-		$rawNodes = $this->xml->getElementsByTagName('raw');
+        // Import the Raw node into this document (with all sub nodes)
+        $importedNode = $this->xml->importNode($rawNode->documentElement, true);
 
-		// There is only 1
-		$rawNode = $rawNodes->item(0);
+        // Get the Raw Xml node from our document
+        $rawNodes = $this->xml->getElementsByTagName('raw');
 
-		// Append the imported node (at the end of whats already there)
-		$rawNode->parentNode->replaceChild($importedNode, $rawNode);
-	}
+        // There is only 1
+        $rawNode = $rawNodes->item(0);
 
-	/**
-	 * Gets the XML string from RAW
-	 * @return
-	 */
-	final protected function GetRaw()
-	{
-		// Get the Raw Xml node from our document
-		$rawNodes = $this->xml->getElementsByTagName('raw');
+        // Append the imported node (at the end of whats already there)
+        $rawNode->parentNode->replaceChild($importedNode, $rawNode);
+    }
 
-		// There is only 1
-		$rawNode = $rawNodes->item(0);
+    /**
+     * Gets the XML string from RAW
+     * @return
+     */
+    final protected function GetRaw()
+    {
+        // Get the Raw Xml node from our document
+        $rawNodes = $this->xml->getElementsByTagName('raw');
 
-		// Return it as a XML string
-		return $this->xml->saveXML($rawNode);
-	}
+        // There is only 1
+        $rawNode = $rawNodes->item(0);
+
+        // Return it as a XML string
+        return $this->xml->saveXML($rawNode);
+    }
 
     final protected function GetRawNode($nodeName, $default = NULL) {
         // Get the text out of RAW
@@ -520,12 +518,12 @@ XML;
         return $nodes->item(0)->nodeValue;
     }
 
-	/**
-	 * Updates the region information with this media record
-	 * @return
-	 */
-	final public function UpdateRegion()
-	{
+    /**
+     * Updates the region information with this media record
+     * @return
+     */
+    final public function UpdateRegion()
+    {
         Debug::LogEntry('audit', 'Updating Region');
 
         // By this point we expect to have a MediaID, duration
@@ -553,14 +551,14 @@ XML;
         Debug::LogEntry('audit', 'Finished Updating Region');
 
         return true;
-	}
+    }
 
-	/**
-	 * Return the Delete Form as HTML
-	 * @return
-	 */
-	public function DeleteForm()
-	{
+    /**
+     * Return the Delete Form as HTML
+     * @return
+     */
+    public function DeleteForm()
+    {
             $db =& $this->db;
             $helpManager = new HelpManager($db, $this->user);
             $this->response = new ResponseManager();
@@ -710,14 +708,14 @@ END;
             $this->response->dialogHeight = '280px';
 
             return $this->response;
-	}
+    }
 
-	/**
-	 * Delete Media from the Database
-	 * @return
-	 */
-	public function DeleteMedia()
-	{
+    /**
+     * Delete Media from the Database
+     * @return
+     */
+    public function DeleteMedia()
+    {
         $db =& $this->db;
         $this->response = new ResponseManager();
         $mediaObject = new Media($db);
@@ -738,9 +736,9 @@ END;
         if ($layoutid != '')
         {
             if (!$this->ApiDeleteRegionMedia($layoutid, $regionid, $mediaid)) {
-				$this->response->keepOpen = true;
-            	$this->response->SetError($this->errorMessage);
-				return $this->response;
+                $this->response->keepOpen = true;
+                $this->response->SetError($this->errorMessage);
+                return $this->response;
             }
         }
 
@@ -758,23 +756,23 @@ END;
                 }
             }
             // If we are set to retire we retire
-			else if ($options == 'retire')
-			{
-	            if (!$mediaObject->Retire($mediaid)) {
-	            	$this->response->SetError($mediaObject->GetErrorMessage());
-					$this->response->keepOpen = true;
-					return $this->response;
-	            }
-			}
-			// If we are set to delete, we delete
-			else if ($options == 'delete')
-			{
-                if (!$mediaObject->Delete($mediaid)) {
-            		$this->response->SetError($mediaObject->GetErrorMessage());
-	            	$this->response->keepOpen = true;
-					return $this->response;
+            else if ($options == 'retire')
+            {
+                if (!$mediaObject->Retire($mediaid)) {
+                    $this->response->SetError($mediaObject->GetErrorMessage());
+                    $this->response->keepOpen = true;
+                    return $this->response;
                 }
-			}
+            }
+            // If we are set to delete, we delete
+            else if ($options == 'delete')
+            {
+                if (!$mediaObject->Delete($mediaid)) {
+                    $this->response->SetError($mediaObject->GetErrorMessage());
+                    $this->response->keepOpen = true;
+                    return $this->response;
+                }
+            }
 
             $this->response->message = __('Completed Successfully');
         }
@@ -787,26 +785,26 @@ END;
         }
                 
         return $this->response;
-	}
+    }
 
-	public function ApiDeleteRegionMedia($layoutid, $regionid, $mediaid) {
-		$db =& $this->db;
+    public function ApiDeleteRegionMedia($layoutid, $regionid, $mediaid) {
+        $db =& $this->db;
 
-		Kit::ClassLoader('layoutmediagroupsecurity');
+        Kit::ClassLoader('layoutmediagroupsecurity');
         $security = new LayoutMediaGroupSecurity($db);
 
         if (!$security->UnlinkAll($layoutid, $regionid, $this->mediaid)) {
-        	return $this->SetError($security->GetErrorMessage());
+            return $this->SetError($security->GetErrorMessage());
         }
 
         $this->deleteFromRegion = true;
 
         // Attempt to update the region
         if (!$this->UpdateRegion())
-        	return false;
+            return false;
 
         return true;
-	}
+    }
 
     /**
      * Unassign from all Layouts
@@ -909,33 +907,33 @@ END;
             $this->response->AddButton(__('Assign to Layout'), 'XiboAssignToLayout(' . $layoutid . ',"' . $regionid . '")');
             $this->response->AddButton(__('View Library'), 'XiboSwapDialog("index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutid . '&regionid=' . $regionid . '")');
             $this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-		}
+        }
         elseif ($regionid != '' && !$this->showRegionOptions)
         {
-        	$this->response->AddButton(__('Close'), 'XiboDialogClose()');
-		}
+            $this->response->AddButton(__('Close'), 'XiboDialogClose()');
+        }
         elseif ($backgroundImage)
         {
-        	$this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=layout&q=BackgroundForm&modify=true&layoutid=' . $layoutid . '")');
+            $this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=layout&q=BackgroundForm&modify=true&layoutid=' . $layoutid . '")');
 
-        	// Background override url is used on the theme to add a button next to each uploaded file (if in background override)
-			Theme::Set('background_override_url', "index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid&backgroundOveride=");
+            // Background override url is used on the theme to add a button next to each uploaded file (if in background override)
+            Theme::Set('background_override_url', "index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid&backgroundOveride=");
         }
         else
         {
-        	$this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=content&q=displayForms&sp=add");XiboRefreshAllGrids()');
+            $this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=content&q=displayForms&sp=add");XiboRefreshAllGrids()');
         }
 
         // Setup the theme
-		Theme::Set('form_upload_id', 'fileupload');
+        Theme::Set('form_upload_id', 'fileupload');
         Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload&type=' . $this->type);
-		Theme::Set('form_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="type" value="' . $this->type . '"><input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '">');
-		Theme::Set('form_valid_ext', '/(\.|\/)' . implode('|', $this->validExtensions) . '$/i');
-		Theme::Set('form_max_size', Kit::ReturnBytes($this->maxFileSize));
-		Theme::Set('valid_extensions', sprintf(__('This form accepts: %s files up to a maximum size of %s'), $this->validExtensionsText, $this->maxFileSize));
-		Theme::Set('default_duration', $defaultDuration);
+        Theme::Set('form_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="type" value="' . $this->type . '"><input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '">');
+        Theme::Set('form_valid_ext', '/(\.|\/)' . implode('|', $this->validExtensions) . '$/i');
+        Theme::Set('form_max_size', Kit::ReturnBytes($this->maxFileSize));
+        Theme::Set('valid_extensions', sprintf(__('This form accepts: %s files up to a maximum size of %s'), $this->validExtensionsText, $this->maxFileSize));
+        Theme::Set('default_duration', $defaultDuration);
 
-		$form = Theme::RenderReturn('library_form_media_add');
+        $form = Theme::RenderReturn('library_form_media_add');
 
         $this->response->html = $form;
         $this->response->dialogTitle = sprintf(__('Add New %s'), __($this->displayType));
@@ -983,7 +981,7 @@ END;
 
         if (!$row = $db->GetSingleRow($SQL))
         {
-        	// log the error
+            // log the error
             trigger_error($db->error());
             trigger_error(__('Error querying for the Media information'), E_USER_ERROR);
         }
@@ -997,7 +995,7 @@ END;
         $editedMediaID = $row['editedMediaID'];
         $ext = strtolower(substr(strrchr($originalFilename, '.'), 1));
 
-		// Save button is different depending on if we are on a region or not
+        // Save button is different depending on if we are on a region or not
         if ($regionid != '' && $this->showRegionOptions)
         {
             setSession('content', 'mediatype', $this->type);
@@ -1018,11 +1016,11 @@ END;
         // Setup the theme
         Theme::Set('form_id', 'EditLibraryBasedMedia');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
-		Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '"><input type="hidden" name="mediaid" value="' . $mediaid . '"><input type="hidden" name="lkid" value="' . $lkid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '"><input type="hidden" name="mediaid" value="' . $mediaid . '"><input type="hidden" name="lkid" value="' . $lkid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
 
-		Theme::Set('form_upload_id', 'file_upload');
+        Theme::Set('form_upload_id', 'file_upload');
         Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
-		Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSizeBytes . '" />');
+        Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSizeBytes . '" />');
 
         Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
 
@@ -1068,15 +1066,15 @@ END;
         return $this->response;
     }
 
-	/**
-	 * Adds Library Media
-	 *  called from inside the FileUpload Handler
-	 * @param [type] $fileId    [description]
-	 * @param [type] $mediaName [description]
-	 * @param [type] $duration  [description]
-	 * @param [type] $fileName  [description]
-	 * @return [int] [The ID of the Media Added]
-	 */
+    /**
+     * Adds Library Media
+     *  called from inside the FileUpload Handler
+     * @param [type] $fileId    [description]
+     * @param [type] $mediaName [description]
+     * @param [type] $duration  [description]
+     * @param [type] $fileName  [description]
+     * @return [int] [The ID of the Media Added]
+     */
     public function AddLibraryMedia($fileId, $mediaName, $duration, $fileName)
     {
         $this->response = new ResponseManager();
@@ -1086,14 +1084,14 @@ END;
 
         // The media name might be empty here, because the user isn't forced to select it
         if ($mediaName == '')
-        	$mediaName = $fileName;
+            $mediaName = $fileName;
 
         // Hand off to the media module
         Kit::ClassLoader('media');
         $mediaObject = new Media($db);
 
         if (!$mediaid = $mediaObject->Add($fileId, $this->type, $mediaName, $duration, $fileName, $this->user->userid)) {
-        	return $this->SetError($mediaObject->GetErrorMessage());
+            return $this->SetError($mediaObject->GetErrorMessage());
         }
 
         Debug::LogEntry('audit', 'Returned MediaId: ' . $mediaid, 'module', 'AddLibraryMedia');
@@ -1133,7 +1131,7 @@ END;
         {
             // This saves the Media Object to the Region
             if (!$this->UpdateRegion())
-            	return false;
+                return false;
         }
 
         // Return the ID of this media
@@ -1174,18 +1172,18 @@ END;
         // Revise this file?
         if ($tmpName != '') {
 
-        	Debug::LogEntry('audit', 'Uploading a new revision', 'module', 'EditLibraryMedia');
-        	
+            Debug::LogEntry('audit', 'Uploading a new revision', 'module', 'EditLibraryMedia');
+
             // File name and extension (orignial name)
             $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
 
             if ($name == '')
-            	$name = $fileName;
+                $name = $fileName;
 
             if (!$new_mediaid = $mediaObject->FileRevise($mediaid, $tmpName, $fileName)) {
-            	$this->response->SetError($mediaObject->GetErrorMessage());
-	            $this->response->keepOpen = true;
-	            return $this->response;
+                $this->response->SetError($mediaObject->GetErrorMessage());
+                $this->response->keepOpen = true;
+                return $this->response;
             }            	
 
             // Are we on a region
@@ -1195,9 +1193,9 @@ END;
             }
 
             // Required Attributes
-        	$this->mediaid	= $new_mediaid;
-        	
-        	// Find out what we stored this item as
+            $this->mediaid	= $new_mediaid;
+
+            // Find out what we stored this item as
             try {
                 $dbh = PDOConnect::init();
 
@@ -1218,7 +1216,7 @@ END;
 
         // Edit the media record
         if (!$mediaObject->Edit($this->mediaid, $name, $this->duration, $userid, $tags)) {
-        	$this->response->SetError($mediaObject->GetErrorMessage());
+            $this->response->SetError($mediaObject->GetErrorMessage());
             $this->response->keepOpen = true;
             return $this->response;
         }
@@ -1518,11 +1516,11 @@ END;
         $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != 0) ? $helpManager->Link('LayoutMedia', 'Permissions') : $helpManager->Link('Media', 'Permissions')) . '")');
         
         if ($this->assignedMedia) {
-        	$response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
-    	}
-    	else {
-			$response->AddButton(__('Cancel'), 'XiboDialogClose()');
-    	}
+            $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+        }
+        else {
+            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        }
 
         $response->AddButton(__('Save'), '$("#LayoutPermissionsForm").submit()');
 
@@ -1875,160 +1873,170 @@ END;
 
     /**
      * Add/Edit via setting the entire XLF
-     * @param [type] $xml [description]
+     * @param string $xml The XML
+     * @return string The MediaId
      */
-    public function SetMediaXml($xml) {
-    	$db =& $this->db;
-
+    public function SetMediaXml($xml)
+    {
         // Validation
         if ($xml == '')
             return $this->SetError(__('No XLF provided'));
 
         Debug::LogEntry('audit', 'Setting the media XML for this item directly', 'module', 'SetMediaXml');
 
-    	// Load the XML into a document
-    	$xmlDoc = new DOMDocument();
+        // Load the XML into a document
+        $xmlDoc = new DOMDocument();
 
-    	if (!$xmlDoc->loadXML($xml))
+        if (!$xmlDoc->loadXML($xml))
             return $this->SetError(__('Invalid XLF'));
 
         Debug::LogEntry('audit', 'Provided XML Loaded', 'module', 'SetMediaXml');
 
-    	// Validate the XML Document
-    	if (!$this->ValidateMediaXml($xmlDoc))
-    		return false;
+        // Validate the XML Document
+        if (!$this->ValidateMediaXml($xmlDoc))
+            return false;
 
-    	// Switch the XML with the XML currently held for this media node
-    	$this->xml = $xmlDoc;
+        // Switch the XML with the XML currently held for this media node
+        $this->xml = $xmlDoc;
 
-    	// Call region update
-    	if (!$this->UpdateRegion())
-    		return false;
+        // Call region update
+        if (!$this->UpdateRegion())
+            return false;
 
         // Send back the media id
-    	return $this->mediaid;
+        return $this->mediaid;
     }
 
-    protected function ValidateMediaXml($xmlDoc) {
-        $db =& $this->db;
-
+    /**
+     * Validate the Media XML Provided
+     * @param $xmlDoc DOMDocument The Media XML
+     * @return bool
+     */
+    protected function ValidateMediaXml($xmlDoc)
+    {
         Debug::LogEntry('audit', 'Validating provided XLF', 'module', 'ValidateMediaXml');
 
-    	// Compare the XML we have been given, with the XML of the existing media item OR compare as a new item
-    	$mediaNodes = $xmlDoc->getElementsByTagName('media');
+        // Compare the XML we have been given, with the XML of the existing media item OR compare as a new item
+        $mediaNodes = $xmlDoc->getElementsByTagName('media');
 
-    	if ($mediaNodes->length > 1)
-    		return $this->SetError(__('Too many media nodes'));
+        if ($mediaNodes->length > 1)
+            return $this->SetError(__('Too many media nodes'));
 
-    	$mediaNode = $mediaNodes->item(0);
+        $mediaNode = $mediaNodes->item(0);
 
-    	// Do some basic checks regardless of whether it is an add or edit
-    	// Check the schema version
-		if ($mediaNode->getAttribute('schemaVersion') != $this->schemaVersion)
-			return $this->SetError(__('SchemaVersion does not match'));
+        // Do some basic checks regardless of whether it is an add or edit
+        // Check the schema version
+        if ($mediaNode->getAttribute('schemaVersion') != $this->schemaVersion)
+            return $this->SetError(__('SchemaVersion does not match'));
 
-		// Check the type
-		if ($mediaNode->getAttribute('type') != $this->type)
-			return $this->SetError(__('Media Type does not match'));
+        // Check the type
+        if ($mediaNode->getAttribute('type') != $this->type)
+            return $this->SetError(__('Media Type does not match'));
 
-		// Do we have a new item or an existing item
-    	if ($this->assignedMedia) {
-    		// An existing item
-    		Debug::LogEntry('audit', 'An existing media entry', 'module', 'ValidateMediaXml');
+        // Do we have a new item or an existing item
+        if ($this->assignedMedia) {
+            // An existing item
+            Debug::LogEntry('audit', 'An existing media entry', 'module', 'ValidateMediaXml');
 
-    		// Check the ID
-    		if ($mediaNode->getAttribute('id') != $this->mediaid)
-    			return $this->SetError(sprintf(__('ID does not match [%s vs %s]'), $mediaNode->getAttribute('id'), $this->mediaid));
+            // Check the ID
+            if ($mediaNode->getAttribute('id') != $this->mediaid)
+                return $this->SetError(sprintf(__('ID does not match [%s vs %s]'), $mediaNode->getAttribute('id'), $this->mediaid));
 
-    		// Check that the "owner" userId on the media item has not changed
-    		if ($mediaNode->getAttribute('userId') != $this->originalUserId)
-    			return $this->SetError(__('UserId does not match'));
-    	}
-    	else {
-    		// A new item
-    		Debug::LogEntry('audit', 'A new media entry', 'module', 'ValidateMediaXml');
-    		
-    		// New media items may not have a media id on them (region media is born without an ID)
-    		if ($this->regionSpecific == 1) {
-    			// Create a new media id and set it on this object
-    			$this->mediaid = md5(uniqid());
-				$mediaNode->setAttribute('id', $this->mediaid);
-    		}
-    		else {
-    			// We already know that the media id exists, now check it matches
-    			if ($mediaNode->getAttribute('id') != $this->mediaid)
-	    			return $this->SetError(__('ID does not match'));
-    		}
+            // Check that the "owner" userId on the media item has not changed
+            if ($mediaNode->getAttribute('userId') != $this->originalUserId)
+                return $this->SetError(__('UserId does not match'));
+        }
+        else {
+            // A new item
+            Debug::LogEntry('audit', 'A new media entry', 'module', 'ValidateMediaXml');
+
+            // New media items may not have a media id on them (region media is born without an ID)
+            if ($this->regionSpecific == 1) {
+                // Create a new media id and set it on this object
+                $this->mediaid = md5(uniqid());
+                $mediaNode->setAttribute('id', $this->mediaid);
+            }
+            else {
+                // This is library media that we want to assign or update
+                // We need to check that the mediaId exists and if so, store the mediaId on this media object
+                $mediaIdInXlf = $mediaNode->getAttribute('id');
+                $entries = Media::Entries(null, array('mediaId' => $mediaIdInXlf));
+
+                if (count($entries) <=0)
+                    return $this->SetError(__(sprintf('MediaId %s provided in XLF does not exist.', $mediaIdInXlf)));
+                else
+                    $this->mediaid = $mediaIdInXlf;
+            }
 
             // The user ID should be that of the new user
             $this->originalUserId = $this->user->userid;
-    	}
+        }
 
-    	// Check we have some core attributes (and set them on the media object - this gives us the new values to save)
-    	// (we have already validated that the media id and the type are the same, we dont need to check them again)
-		$this->duration = $mediaNode->getAttribute('duration');
+        // Check we have some core attributes (and set them on the media object - this gives us the new values to save)
+        // (we have already validated that the media id and the type are the same, we dont need to check them again)
+        $this->duration = $mediaNode->getAttribute('duration');
 
-		if ($this->duration == '' || !is_numeric($this->duration))
-			return $this->SetError(__('Duration not provided or not a number'));
+        if ($this->duration == '' || !is_numeric($this->duration))
+            return $this->SetError(__('Duration not provided or not a number'));
 
         if ($this->duration < 0)
             return $this->SetError(__('Cannot be less than zero'));
 
-		// The "core" items appear to be ok
-		return true;
+        // The "core" items appear to be ok
+        return true;
     }
 
     /**
-	 * Gets the error state
-	 * @return 
-	 */
-	public function IsError()
-	{
-		return $this->error;
-	}
-	
-	/**
-	 * Gets the Error Number
-	 * @return 
-	 */
-	public function GetErrorNumber()
-	{
-		return $this->errorNo;
-	}
-	
-	/**
-	 * Gets the Error Message
-	 * @return 
-	 */
-	public function GetErrorMessage()
-	{
-		return $this->errorMessage;
-	}
-	
-	/**
-	 * Sets the Error for this Data object
-	 * @return 
-	 * @param $errNo Object
-	 * @param $errMessage Object
-	 */
-	protected function SetError($errNo, $errMessage = '')
-	{
-		$this->error = true;
+     * Gets the error state
+     * @return
+     */
+    public function IsError()
+    {
+        return $this->error;
+    }
 
-		// Is an error No provided?
-		if (!is_numeric($errNo)) {
-			$errMessage = $errNo;
-			$errNo = -1;
-		}
+    /**
+     * Gets the Error Number
+     * @return
+     */
+    public function GetErrorNumber()
+    {
+        return $this->errorNo;
+    }
 
-		$this->errorNo = $errNo;
-		$this->errorMessage	= $errMessage;
-		
-		Debug::LogEntry('audit', sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Media Module', 'SetError');
+    /**
+     * Gets the Error Message
+     * @return string
+     */
+    public function GetErrorMessage()
+    {
+        return $this->errorMessage;
+    }
+
+    /**
+     * Sets the Error for this Data object
+     * @return bool
+     * @param $errNo mixed
+     * @param $errMessage string
+     */
+    protected function SetError($errNo, $errMessage = '')
+    {
+        $this->error = true;
+
+        // Is an error No provided?
+        if (!is_numeric($errNo)) {
+            $errMessage = $errNo;
+            $errNo = -1;
+        }
+
+        $this->errorNo = $errNo;
+        $this->errorMessage	= $errMessage;
+
+        Debug::LogEntry('audit', sprintf('Module Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Media Module', 'SetError');
 
         // Return false so that we can use this method as the return call for parent methods
-		return false;
-	}
+        return false;
+    }
 
     protected function ThrowError($errNo, $errMessage = '') {
         $this->SetError($errNo, $errMessage);
@@ -2131,9 +2139,6 @@ END;
             if ($description == '')
                 $this->ThrowError(__('Module has not set the description'));
 
-            if (!is_numeric($regionSpecific))
-                $this->ThrowError(__('Region Specific variable must be a number'));
-
             if (!is_numeric($previewEnabled))
                 $this->ThrowError(__('Preview Enabled variable must be a number'));
 
@@ -2222,17 +2227,17 @@ END;
     }
     
     /**
-	 * Return file based media items to the browser for Download/Preview
-	 * @return 
-	 * @param $download Boolean
-	 */
+     * Return file based media items to the browser for Download/Preview
+     * @return
+     * @param $download Boolean
+     */
     public function ReturnFile($fileName = '')
     {
         // Return the raw flash file with appropriate headers
-    	$library = Config::GetSetting("LIBRARY_LOCATION");
+        $library = Config::GetSetting("LIBRARY_LOCATION");
 
         # If we weren't passed in a filename then use the default
-    	if ($fileName == '') {
+        if ($fileName == '') {
             $fileName = $library . $this->storedAs;
         }
         

@@ -873,6 +873,7 @@ class Twitter extends Module
      *     Return the rendered resource to be used by the client (or a preview)
      *     for displaying this content.
      * @param integer $displayId If this comes from a real client, this will be the display id.
+     * @return string
      */
     public function GetResource($displayId = 0)
     {

@@ -74,11 +74,12 @@ class Kit
     /**
      * Gets the appropriate Param, making sure its valid
      * Based on code from Joomla! 1.5
-     * @return 
-     * @param $param Object
-     * @param $source Object[optional]
-     * @param $type Object[optional]
-     * @param $default Object[optional]
+     * @return mixed
+     * @param $param string
+     * @param $source string[optional]
+     * @param $type string[optional]
+     * @param $default mixed[optional]
+     * @param $sanitize bool[optional]
      */
     static public function GetParam($param, $source = _POST, $type = _STRING, $default = '', $sanitize = true)
     {

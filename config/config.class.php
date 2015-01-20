@@ -175,7 +175,7 @@ class Config
 	
 	/**
 	 * Checks the Environment and Determines if it is suitable
-	 * @return 
+	 * @return string
 	 */
 	public function CheckEnvironment()
 	{
@@ -207,7 +207,7 @@ class Config
 			);
 		
 		// Check for file system permissions
-		$advice = __("Write access required for settings.php, install.php and upgrade.php");
+		$advice = __("Write access required for settings.php and install.php");
 		if ($this->CheckFsPermissions()) 
 		{
 			$status = 1;
@@ -568,7 +568,7 @@ class Config
 	 */
 	function CheckFsPermissions() 
 	{
-	  return ((is_writable("install.php") && (is_writable("settings.php")) && (is_writable("upgrade.php")) || is_writable(".")));
+	  return (is_writable("install.php") && (is_writable("settings.php")) || is_writable("."));
 	}
 	
 	/**
