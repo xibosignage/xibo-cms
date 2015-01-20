@@ -36,10 +36,10 @@ jQuery.fn.extend({
         var ratio = Math.min(width / options.originalWidth, height / options.originalHeight);
 
         if (options.scaleOverride !== 0) {
-            // console.log("Scale Override is set, meaning we want to scale according to the provided scale of " + options.scaleOverride + ". Provided Width is " + width + ". Provided Height is " + height + ".");
+            //console.log("Scale Override is set, meaning we want to scale according to the provided scale of " + options.scaleOverride + ". Provided Width is " + width + ". Provided Height is " + height + ".");
             ratio = options.scaleOverride;
             originalWidth = width / ratio;
-            originalHeight = width / ratio;
+            originalHeight = height / ratio;
         }
 
         $(this).each(function() {

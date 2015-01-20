@@ -455,9 +455,8 @@ XML;
         }
         else
         {
-            // Replace the old node we found with XPath with the new node we just created
-            //Debug::LogEntry('audit', 'GetOption ' . $name . ': Set - returning: ' . $userOptions->item(0)->nodeValue);
-            return ($userOptions->item(0)->nodeValue != '') ? $userOptions->item(0)->nodeValue : $default;
+            // Check to see if what we have is empty or 0, if so then return the default value.
+            return ($userOptions->item(0)->nodeValue == '' || $userOptions->item(0)->nodeValue === 0) ? $default : $userOptions->item(0)->nodeValue;
         }
     }
 

@@ -394,6 +394,27 @@ class webpage extends Module
         return $this->response; 
     }
 
+    /**
+     * Preview code for a module
+     * @param int $width
+     * @param int $height
+     * @param int $scaleOverride The Scale Override
+     * @return string The Rendered Content
+     */
+    public function Preview($width, $height, $scaleOverride = 0)
+    {
+        // If we are opening the web page natively on the device, then we cannot offer a preview
+        if ($this->GetOption('modeid') == 1)
+            return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
+
+        return $this->PreviewAsClient($width, $height, $scaleOverride);
+    }
+
+    /**
+     * GetResource for Web page Media
+     * @param int $displayId
+     * @return mixed|string
+     */
     public function GetResource($displayId = 0)
     {
         // Load in the template
@@ -406,12 +427,12 @@ class webpage extends Module
         // Get some parameters
         $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
         $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
-        $duration = $this->duration;
 
         // Work out the url
         $url = urldecode($this->GetOption('uri'));
         $url = (preg_match('/^' . preg_quote('http') . "/", $url)) ? $url : 'http://' . $url;
 
+        // Set the iFrame dimensions
         $iframeWidth = $this->GetOption('pageWidth');
         $iframeHeight = $this->GetOption('pageHeight');
 
@@ -446,8 +467,8 @@ class webpage extends Module
         $after_body .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-webpage-render.js"></script>';
         $after_body .= '<script>
             var options = ' . json_encode($options) . '
-            $(document).ready(function() { ' .
-                (($this->GetOption('modeid') != 2) ? '$("#content").xiboLayoutScaler(options)' : '') . '
+            $(document).ready(function() {
+                $("#content").xiboLayoutScaler(options)
                 $("#iframe").xiboIframeScaler(options);
             });
             </script>';

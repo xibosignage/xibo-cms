@@ -22,14 +22,12 @@ jQuery.fn.extend({
         var width; var height;
 
         // All we worry about is the item we have been working on ($(this))
-        // We want to set its margins and scale according to the provided options.
-        width = options.iframeWidth + options.offsetLeft;
-        height = options.iframeHeight + options.offsetTop;
-
         $(this).each(function() {
             // Mode
             if (options.modeId == 1) {
-                // We shouldn't ever get here.
+                // Open Natively
+                // We shouldn't ever get here, because the Layout Designer will not show a preview for mode 1, and
+                // the client will not call GetResource at all for mode 1
                 $(this).css({
                     "width": options.originalWidth,
                     "height": options.originalHeight
@@ -37,7 +35,20 @@ jQuery.fn.extend({
             }
             else if (options.modeId == 3) {
                 // Best fit, set the scale so that the web-page fits inside the region
-                options.scale = Math.min(options.originalWidth / options.iframeWidth, options.originalHeight / options.iframeHeight);
+
+                // If there is a preview width and height, then we want to reset the original width and height in the
+                // ratio calculation so that it represents the preview width/height * the scale override
+                var originalWidth = options.originalWidth;
+                var originalHeight = options.originalHeight;
+
+                if (options.scaleOverride !== 0) {
+                    //console.log("Iframe: Scale Override is set, meaning we want to scale according to the provided scale of " + options.scaleOverride + ". Provided Width is " + options.previewWidth + ". Provided Height is " + options.previewHeight + ".");
+                    ratio = options.scaleOverride;
+                    originalWidth = options.previewWidth / ratio;
+                    originalHeight = options.previewHeight / ratio;
+                }
+
+                options.scale = Math.min(originalWidth / options.iframeWidth, originalHeight / options.iframeHeight);
 
                 // Remove the offsets
                 options.offsetTop = 0;
@@ -60,7 +71,10 @@ jQuery.fn.extend({
             }
             else {
                 // Manual Position. This is the default.
-            
+                // We want to set its margins and scale according to the provided options.
+                width = options.iframeWidth + options.offsetLeft;
+                height = options.iframeHeight + options.offsetTop;
+
                 // Margins on frame
                 $(this).css({
                     "margin-top": -1 * options.offsetTop,
