@@ -463,19 +463,18 @@ XML;
 
 	/**
 	 * Sets the RAW XML string that is given as the content for Raw
-	 * @return
-	 * @param $xml String
-	 * @param $replace Boolean[optional]
+	 * @param $xml string
+     * @param $replace bool
 	 */
 	final protected function SetRaw($xml, $replace = false)
 	{
 		if ($xml == '') 
-			return;
+			$this->ThrowError(__('Missing XML for SetRaw'));
 
 		// Load the XML we are given into its own document
 		$rawNode = new DOMDocument();
-		if (!$rawNode->loadXML('<raw>' . $xml . '</raw>'))
-            return $this->SetError(__('There is an error in the HTML/XML'));
+		if (!@$rawNode->loadXML('<raw>' . $xml . '</raw>'))
+            $this->ThrowError(__('There is an error in the HTML/XML'));
 
 		// Import the Raw node into this document (with all sub nodes)
 		$importedNode = $this->xml->importNode($rawNode->documentElement, true);

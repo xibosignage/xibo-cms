@@ -153,16 +153,10 @@ function EmbedInit()
             $this->GetOption('scaleContent'), __('Should the embedded content be scaled along with the layout?'), 
             's');
 
-        $textNodes  = $rawXml->getElementsByTagName('embedHtml');
-        $textNode   = $textNodes->item(0);
-
-        $formFields[] = FormManager::AddMultiText('embedHtml', NULL, $textNode->nodeValue, 
+        $formFields[] = FormManager::AddMultiText('embedHtml', NULL, $this->GetRawNode('embedHtml'),
             __('HTML to Embed'), 'h', 10);
 
-        $textNodes  = $rawXml->getElementsByTagName('embedScript');
-        $textNode   = $textNodes->item(0);
-
-        $formFields[] = FormManager::AddMultiText('embedScript', NULL, $textNode->nodeValue, 
+        $formFields[] = FormManager::AddMultiText('embedScript', NULL, $this->GetRawNode('embedScript'),
             __('HEAD content to Embed (including script tags)'), 'h', 10);
 
         Theme::Set('form_fields', $formFields);
