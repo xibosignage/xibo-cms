@@ -24,9 +24,9 @@ require_once("3rdparty/php-gettext/streams.php");
 require_once("3rdparty/php-gettext/gettext.php");
 $transEngine = '';
 $stream = '';
- 
+
 class TranslationEngine
-{	
+{
     private static $locale;
     private static $jsLocale;
 
@@ -38,7 +38,7 @@ class TranslationEngine
 	{
         $localeDir	= 'locale';
         $default = ($language == NULL) ? Config::GetSetting('DEFAULT_LANGUAGE') : $language;
-        
+
         global $transEngine;
         global $stream;
 
@@ -103,8 +103,13 @@ class TranslationEngine
         self::$jsLocale = str_replace('_', '-', $foundLanguage);
 	}
 
-    public static function GetLocale() {
-        return self::$locale;
+    /**
+     * Get the Locale
+     * @param null $characters The number of characters to take from the beginning of the local string
+     * @return mixed
+     */
+    public static function GetLocale($characters = null) {
+        return ($characters == null) ? self::$locale : substr(self::$locale, 0, $characters);
     }
 
     public static function GetJsLocale() {
@@ -151,11 +156,11 @@ class TranslationEngine
  * Global Translation Function
  * @return string
  * @param $string string
- */ 
+ */
 function __($string)
 {
 	global $transEngine;
-        
+
     if ($transEngine != '')
 	   $string = $transEngine->translate($string);
 
