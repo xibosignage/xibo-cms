@@ -1874,11 +1874,11 @@ END;
 
     /**
      * Add/Edit via setting the entire XLF
-     * @param [type] $xml [description]
+     * @param string $xml The XML
+     * @return string The MediaId
      */
-    public function SetMediaXml($xml) {
-    	$db =& $this->db;
-
+    public function SetMediaXml($xml)
+    {
         // Validation
         if ($xml == '')
             return $this->SetError(__('No XLF provided'));
@@ -1908,9 +1908,13 @@ END;
     	return $this->mediaid;
     }
 
-    protected function ValidateMediaXml($xmlDoc) {
-        $db =& $this->db;
-
+    /**
+     * Validate the Media XML Provided
+     * @param $xmlDoc DOMDocument The Media XML
+     * @return bool
+     */
+    protected function ValidateMediaXml($xmlDoc)
+    {
         Debug::LogEntry('audit', 'Validating provided XLF', 'module', 'ValidateMediaXml');
 
     	// Compare the XML we have been given, with the XML of the existing media item OR compare as a new item
@@ -1954,9 +1958,15 @@ END;
 				$mediaNode->setAttribute('id', $this->mediaid);
     		}
     		else {
-    			// We already know that the media id exists, now check it matches
-    			if ($mediaNode->getAttribute('id') != $this->mediaid)
-	    			return $this->SetError(__('ID does not match'));
+    			// This is library media that we want to assign or update
+                // We need to check that the mediaId exists and if so, store the mediaId on this media object
+    			$mediaIdInXlf = $mediaNode->getAttribute('id');
+                $entries = Media::Entries(null, array('mediaId' => $mediaIdInXlf));
+
+                if (count($entries) <=0)
+	    			return $this->SetError(__(sprintf('MediaId %s provided in XLF does not exist.', $mediaIdInXlf)));
+                else
+                    $this->mediaid = $mediaIdInXlf;
     		}
 
             // The user ID should be that of the new user
