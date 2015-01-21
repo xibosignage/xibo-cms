@@ -415,7 +415,7 @@ function EmbedInit()
                 continue;
 
             // We have a valid mediaId to substitute
-            $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $entry[0]->mediaId . '" />' : '<img src="' . $entry[0]->storedAs . '" />';
+            $replace = ($isPreview) ? 'index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $entry[0]->mediaId : $entry[0]->storedAs;
 
             // Substitute the replacement we have found (it might be '')
             $parsedContent = str_replace($sub, $replace, $parsedContent);
