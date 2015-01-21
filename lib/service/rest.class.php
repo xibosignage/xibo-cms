@@ -20,13 +20,11 @@
  */
 class Rest
 {
-    protected $db;
     protected $user;
     protected $POST;
 
-    public function __construct(database $db, User $user, $postData)
+    public function __construct(User $user, $postData)
     {
-        $this->db =& $db;
         $this->user =& $user;
 
         // Hold the POST data
@@ -43,6 +41,40 @@ class Rest
     public function Error($errorNo, $errorMessage = '')
     {
         return true;
+    }
+
+    /**
+     * Returns an ID only response
+     * @param string $nodeName
+     * @param string $id
+     * @param string $idAttributeName
+     * @return DOMElement
+     */
+    protected function ReturnId($nodeName, $id, $idAttributeName = 'id')
+    {
+        return false;
+    }
+
+    /**
+     * Returns a single node with the attributes contained in a key/value array
+     * @param string $nodeName
+     * @param array $attributes
+     * @return DOMElement
+     */
+    protected function ReturnAttributes($nodeName, $attributes)
+    {
+        return false;
+    }
+
+    /**
+     * Creates a node list from an array
+     * @param array $array
+     * @param string $nodeName
+     * @return DOMElement
+     */
+    protected function NodeListFromArray($array, $nodeName)
+    {
+        return false;
     }
 
     /**
@@ -112,8 +144,8 @@ class Rest
 
         Kit::ClassLoader('Display');
 
-        $displayObject = new Display($this->db);
-        $displaId = $this->GetParam('displayId', _INT);
+        $displayObject = new Display();
+        $displayId = $this->GetParam('displayId', _INT);
 
         // Try to issue the WOL command
         if (!$displayObject->WakeOnLan($displayId))
@@ -293,7 +325,7 @@ class Rest
 
         Kit::ClassLoader('file');
 
-        $file           = new File($this->db);
+        $file           = new File();
         $fileId         = $this->GetParam('fileId', _INT);
         $checkSum       = $this->GetParam('checksum', _STRING);
         $payload        = $this->GetParam('payload', _STRING);
@@ -348,7 +380,7 @@ class Rest
         Kit::ClassLoader('Media');
 
         // Create a media object and gather the required parameters.
-        $media          = new Media($this->db);
+        $media          = new Media();
         $fileId         = $this->GetParam('fileId', _INT);
         $type           = $this->GetParam('type', _WORD);
         $name           = $this->GetParam('name', _STRING);
@@ -378,7 +410,7 @@ class Rest
         Kit::ClassLoader('Media');
 
         // Create a media object and gather the required parameters.
-        $media          = new Media($this->db);
+        $media          = new Media();
         $mediaId        = $this->GetParam('mediaId', _INT);
         $name           = $this->GetParam('name', _STRING);
         $duration       = $this->GetParam('duration', _INT);
@@ -405,7 +437,7 @@ class Rest
 
         Kit::ClassLoader('Media');
 
-        $media      = new Media($this->db);
+        $media      = new Media();
         $mediaId    = $this->GetParam('mediaId', _INT);
 
         if (!$this->user->MediaAuth($mediaId))
@@ -427,7 +459,7 @@ class Rest
 
         Kit::ClassLoader('Media');
 
-        $media      = new Media($this->db);
+        $media      = new Media();
         $mediaId    = $this->GetParam('mediaId', _INT);
 
         if (!$this->user->MediaAuth($mediaId))
@@ -452,7 +484,7 @@ class Rest
         Kit::ClassLoader('Media');
 
         // Create a media object and gather the required parameters.
-        $media          = new Media($this->db);
+        $media          = new Media();
         $mediaId        = $this->GetParam('mediaId', _INT);
         $fileId         = $this->GetParam('fileId', _INT);
         $fileName       = $this->GetParam('fileName', _FILENAME);
@@ -508,7 +540,7 @@ class Rest
         $resolutionId = $this->GetParam('resolutionid', _INT, 0);
 
         // Add this layout
-        $layoutObject = new Layout($this->db);
+        $layoutObject = new Layout();
 
         if(!$id = $layoutObject->Add($layout, $description, $tags, $this->user->userid, $templateId, $resolutionId))
             return $this->Error($layoutObject->GetErrorNumber(), $layoutObject->GetErrorMessage());
@@ -529,7 +561,7 @@ class Rest
 
         Kit::ClassLoader('Layout');
 
-        $layout     = new Layout($this->db);
+        $layout     = new Layout();
         $layoutId   = $this->GetParam('layoutId', _INT);
 
         if (!$this->user->LayoutAuth($layoutId))
@@ -549,7 +581,7 @@ class Rest
 
         Kit::ClassLoader('Layout');
 
-        $layout     = new Layout($this->db);
+        $layout     = new Layout();
         $layoutId   = $this->GetParam('layoutId', _INT);
 
         if (!$this->user->LayoutAuth($layoutId))
@@ -569,7 +601,7 @@ class Rest
 
         Kit::ClassLoader('Layout');
 
-        $layout     = new Layout($this->db);
+        $layout     = new Layout();
         $layoutId   = $this->GetParam('layoutId', _INT);
 
         if (!$this->user->LayoutAuth($layoutId))
@@ -592,7 +624,7 @@ class Rest
 
         Kit::ClassLoader('Layout');
 
-        $layout     = new Layout($this->db);
+        $layout     = new Layout();
         $layoutId   = $this->GetParam('layoutId', _INT);
 
         if (!$this->user->LayoutAuth($layoutId))
@@ -612,7 +644,7 @@ class Rest
 
         Kit::ClassLoader('Layout');
 
-        $layout     = new Layout($this->db);
+        $layout     = new Layout();
         $layoutId   = $this->GetParam('layoutId', _INT);
 
         if (!$this->user->LayoutAuth($layoutId))
@@ -632,7 +664,7 @@ class Rest
 
         Kit::ClassLoader('Layout');
 
-        $layout     = new Layout($this->db);
+        $layout     = new Layout();
         $layoutId   = $this->GetParam('layoutId', _INT);
 
         if (!$this->user->LayoutAuth($layoutId))
@@ -658,7 +690,7 @@ class Rest
 
         // Get a list of region items
         Kit::ClassLoader('layout');
-        $layout = new Layout($this->db);
+        $layout = new Layout();
 
         // Get the list of regions for this layout
         $regions = $layout->GetRegionList($layoutId);
@@ -708,7 +740,7 @@ class Rest
 
         // Create a region object
         Kit::ClassLoader('region');
-        $region = new Region($this->db);
+        $region = new Region();
 
         if (!$regionId = $region->AddRegion($layoutId, $this->user->userid, '', $width, $height, $top, $left, $name))
             return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
@@ -739,7 +771,7 @@ class Rest
 
         // Create a region object
         Kit::ClassLoader('region');
-        $region = new Region($this->db);
+        $region = new Region();
 
         // Region Assignment needs the Owner Id
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
@@ -773,7 +805,7 @@ class Rest
 
         // Create a region object
         Kit::ClassLoader('region');
-        $region = new Region($this->db);
+        $region = new Region();
 
         // Region Assignment needs the Owner Id
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
@@ -807,7 +839,7 @@ class Rest
 
         // Create a region object
         Kit::ClassLoader('region');
-        $region = new Region($this->db);
+        $region = new Region();
 
         // Region Assignment needs the Owner Id
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
@@ -870,7 +902,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Check the user has permission
-        $region = new region($this->db);
+        $region = new region();
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -881,7 +913,7 @@ class Rest
         require_once("modules/$type.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $type($this->db, $this->user, '', $layoutId, $regionId))
+        if (!$module = new $type(null, $this->user, '', $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         // Set the XML (causes save)
@@ -912,7 +944,7 @@ class Rest
 
         // Check the user has permission
         Kit::ClassLoader('region');
-        $region = new region($this->db);
+        $region = new region();
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -923,7 +955,7 @@ class Rest
         require_once("modules/$type.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $type($this->db, $this->user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $type(null, $this->user, $mediaId, $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->edit)
@@ -956,7 +988,7 @@ class Rest
 
         // Check the user has permission
         Kit::ClassLoader('region');
-        $region = new region($this->db);
+        $region = new region();
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -967,7 +999,7 @@ class Rest
         require_once("modules/$type.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $type($this->db, $this->user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $type(null, $this->user, $mediaId, $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->view)
@@ -995,7 +1027,7 @@ class Rest
 
         // Check the user has permission
         Kit::ClassLoader('region');
-        $region = new region($this->db);
+        $region = new region();
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -1032,7 +1064,7 @@ class Rest
 
         // Check the user has permission
         Kit::ClassLoader('region');
-        $region = new region($this->db);
+        $region = new region();
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -1041,18 +1073,17 @@ class Rest
 
         // Load the media information from the provided ids
         // Get the type from this media
-        $SQL = sprintf("SELECT type FROM media WHERE mediaID = %d", $mediaId);
+        $entry = Media::Entries(null, array('mediaId' => $mediaId));
 
-        if (!$mod = $this->db->GetSingleValue($SQL, 'type', _STRING))
-        {
-            trigger_error($this->db->error());
+        if (count($entry) <= 0)
             return $this->SetError(__('Error getting type from a media item.'));
-        }
+
+        $mod = $entry[0]->type;
 
         require_once("modules/$mod.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $mod($this->db, $this->user, $mediaId, $layoutId, $regionId, $lkId))
+        if (!$module = new $mod(null, $this->user, $mediaId, $layoutId, $regionId, $lkId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->del)
@@ -1085,7 +1116,7 @@ class Rest
 
         // Make sure we have permission to edit this region
         Kit::ClassLoader('region');
-        $region = new region($this->db);
+        $region = new region();
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
@@ -1180,7 +1211,7 @@ class Rest
         Kit::ClassLoader('Media');
 
         // Create a media object and gather the required parameters.
-        $media = new Media($this->db);
+        $media = new Media();
 
         if (!$modules = $media->ModuleList())
             return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
@@ -1218,7 +1249,7 @@ class Rest
         $description = $this->GetParam('description', _STRING);
 
         Kit::ClassLoader('dataset');
-        $dataSetObject = new DataSet($this->db);
+        $dataSetObject = new DataSet();
         if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->user->userid))
             return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
 
@@ -1244,7 +1275,7 @@ class Rest
         $description = $this->GetParam('description', _STRING);
 
         Kit::ClassLoader('dataset');
-        $dataSetObject = new DataSet($this->db);
+        $dataSetObject = new DataSet();
         if (!$dataSetObject->Edit($dataSetId, $dataSet, $description))
             return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
 
@@ -1267,7 +1298,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('dataset');
-        $dataSetObject = new DataSet($this->db);
+        $dataSetObject = new DataSet();
         if (!$dataSetObject->Delete($dataSetId))
             return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
 
@@ -1290,7 +1321,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('datasetcolumn');
-        $dataSetObject = new DataSetColumn($this->db);
+        $dataSetObject = new DataSetColumn();
         if (!$columns = $dataSetObject->GetColumns($dataSetId))
             return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
 
@@ -1320,7 +1351,7 @@ class Rest
         $formula = $this->GetParam('formula', _STRING);
 
         Kit::ClassLoader('datasetcolumn');
-        $dataSetColumnObject = new DataSetColumn($this->db);
+        $dataSetColumnObject = new DataSetColumn();
         if (!$dataSetColumnId = $dataSetColumnObject->Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
             return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
 
@@ -1351,7 +1382,7 @@ class Rest
         $formula = $this->GetParam('formula', _STRING);
 
         Kit::ClassLoader('datasetcolumn');
-        $dataSetColumnObject = new DataSetColumn($this->db);
+        $dataSetColumnObject = new DataSetColumn();
         if (!$dataSetColumnObject->Edit($dataSetColumnId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
             return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
 
@@ -1376,7 +1407,7 @@ class Rest
         $dataSetColumnId = $this->GetParam('datasetColumnId', _POST, _INT);
 
         Kit::ClassLoader('datasetcolumn');
-        $dataSetColumnObject = new DataSetColumn($this->db);
+        $dataSetColumnObject = new DataSetColumn();
         if (!$dataSetColumnId = $dataSetColumnObject->Delete($dataSetColumnId))
             return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
 
@@ -1399,7 +1430,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('datasetdata');
-        $dataSetObject = new DataSetData($this->db);
+        $dataSetObject = new DataSetData();
         if (!$columns = $dataSetObject->GetData($dataSetId))
             return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
 
@@ -1428,7 +1459,7 @@ class Rest
 
         // Use the DataSetData class to do the insert
         Kit::ClassLoader('datasetdata');
-        $data = new DataSetData($this->db);
+        $data = new DataSetData();
 
         if (!$id = $data->Add($dataSetColumnId, $rowNumber, $value))
             return $this->Error($data->GetErrorNumber(), $data->GetErrorMessage());
@@ -1458,7 +1489,7 @@ class Rest
 
         // Use the DataSetData class to do the update
         Kit::ClassLoader('datasetdata');
-        $data = new DataSetData($this->db);
+        $data = new DataSetData();
 
         if (!$data->Edit($dataSetColumnId, $rowNumber, $value))
             return $this->Error($data->GetErrorNumber(), $data->GetErrorMessage());
@@ -1487,7 +1518,7 @@ class Rest
 
         // Use the DataSetData class to do the delete
         Kit::ClassLoader('datasetdata');
-        $data = new DataSetData($this->db);
+        $data = new DataSetData();
 
         if (!$id = $data->Delete($dataSetColumnId, $rowNumber))
             return $this->Error($data->GetErrorNumber(), $data->GetErrorMessage());
@@ -1511,7 +1542,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('datasetgroupsecurity');
-        $security = new DataSetGroupSecurity($this->db);
+        $security = new DataSetGroupSecurity();
 
         if (!$results = $security->ListSecurity($dataSetId, $this->user->getGroupFromId($this->user->userid, true))) {
             return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
@@ -1541,7 +1572,7 @@ class Rest
         $del = $this->GetParam('delete', _INT);
 
         Kit::ClassLoader('datasetgroupsecurity');
-        $security = new DataSetGroupSecurity($this->db);
+        $security = new DataSetGroupSecurity();
 
         if (!$results = $security->Link($dataSetId, $groupId, $view, $edit, $del)) {
             return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
@@ -1568,7 +1599,7 @@ class Rest
         $groupId = $this->GetParam('groupId', _INT);
 
         Kit::ClassLoader('datasetgroupsecurity');
-        $security = new DataSetGroupSecurity($this->db);
+        $security = new DataSetGroupSecurity();
 
         if (!$results = $security->Unlink($dataSetId, $groupId)) {
             return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
@@ -1598,7 +1629,7 @@ class Rest
         if (!$this->user->FileAuth($fileId))
             return $this->Error(1, 'Access Denied');
 
-        $file = new File($this->db);
+        $file = new File();
 
         if (!$csvFileLocation = $file->GetPath($fileId))
             return $this->Error($file->GetErrorNumber(), $file->GetErrorMessage());
@@ -1627,7 +1658,7 @@ class Rest
                 return $this->Error(1000, __('The column mappings you have provided are invalid. Please ensure you have the correct DataSetColumnIDs.'));
         }
 
-        $dataSetObject = new DataSetData($this->db);
+        $dataSetObject = new DataSetData();
 
         if (!$dataSetObject->ImportCsv($dataSetId, $csvFileLocation, $spreadSheetMapping, ($overwrite == 1), ($ignoreFirstRow == 1)))
             return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
@@ -1641,7 +1672,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('dataset');
-        $dataSet = new DataSet($this->db);
+        $dataSet = new DataSet();
 
         return $this->Respond($this->NodeListFromArray($dataSet->GetDataTypes(), 'datatype'));
     }
@@ -1652,7 +1683,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('dataset');
-        $dataSet = new DataSet($this->db);
+        $dataSet = new DataSet();
 
         return $this->Respond($this->NodeListFromArray($dataSet->GetDataSetColumnTypes(), 'datasetcolumntype'));
     }
