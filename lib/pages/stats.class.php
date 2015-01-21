@@ -399,7 +399,7 @@ class statsDAO extends baseDAO
 
                 $output[] = array(
                         'label' => Kit::ValidateParam($row['display'], _STRING), 
-                        'value' => $row['duration']
+                        'value' => (Kit::ValidateParam($row['duration'], _DOUBLE) / 60)
                     );
             }
 
