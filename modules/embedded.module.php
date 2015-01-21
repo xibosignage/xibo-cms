@@ -322,6 +322,7 @@ function EmbedInit()
    
     public function GetResource($display = 0) {
         // Behave exactly like the client.
+        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
 
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
@@ -337,12 +338,12 @@ function EmbedInit()
         // Get the Text Node
         $html = $rawXml->getElementsByTagName('embedHtml');
         $html = $html->item(0);
-        $html = $html->nodeValue;
+        $html = $this->parseLibraryReferences($isPreview, $html->nodeValue);
 
         // Get the Script
         $script = $rawXml->getElementsByTagName('embedScript');
         $script = $script->item(0);
-        $javaScriptContent = $script->nodeValue;
+        $javaScriptContent = $this->parseLibraryReferences($isPreview, $script->nodeValue);
 
         // Set some options
         $options = array(
@@ -354,7 +355,6 @@ function EmbedInit()
         );
 
         // Include some vendor items
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $javaScriptContent .= '<script src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
         $javaScriptContent .= '<script src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
 
@@ -386,6 +386,42 @@ function EmbedInit()
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $html, $template);
 
         return $template;
+    }
+
+    /**
+     * Parse for any library references
+     * @param $isPreview bool
+     * @param $content string
+     * @return mixed The Parsed Content
+     */
+    private function parseLibraryReferences($isPreview, $content)
+    {
+        $parsedContent = $content;
+        $matches = '';
+        preg_match_all('/\[.*?\]/', $content, $matches);
+
+        foreach ($matches[0] as $sub) {
+            // Parse out the mediaId
+            $mediaId = str_replace(']', '', str_replace('[', '', $sub));
+
+            // Only proceed if the content is actually an ID
+            if (!is_numeric($mediaId))
+                continue;
+
+            // Check that this mediaId exists and get some information about it
+            $entry = Media::Entries(null, array('mediaId' => $mediaId));
+
+            if (count($entry) <= 0)
+                continue;
+
+            // We have a valid mediaId to substitute
+            $replace = ($isPreview) ? 'index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $entry[0]->mediaId : $entry[0]->storedAs;
+
+            // Substitute the replacement we have found (it might be '')
+            $parsedContent = str_replace($sub, $replace, $parsedContent);
+        }
+
+        return $parsedContent;
     }
 }
 

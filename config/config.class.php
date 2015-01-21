@@ -138,8 +138,8 @@ class Config
 	
 	/**
 	 * Defines the Version and returns it
-	 * @return 
-	 * @param $object String [optional]
+	 * @param $object string[optional]
+	 * @return array
 	 */
 	static function Version($object = '')
 	{
@@ -148,7 +148,7 @@ class Config
 			$sth = $dbh->prepare('SELECT app_ver, XlfVersion, XmdsVersion, DBVersion FROM version');
 			$sth->execute();
 
-			if (!$row = $sth->fetch())
+			if (!$row = $sth->fetch(PDO::FETCH_ASSOC))
 				throw new Exception('No results returned');
 
 			$appVer = Kit::ValidateParam($row['app_ver'], _STRING);
