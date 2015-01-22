@@ -49,6 +49,7 @@ class scheduleDAO extends baseDAO {
         Theme::Set('allSelected', in_array(-1, $displayGroupIds));
         Theme::Set('groups', $groups);
         Theme::Set('displays', $displays);
+        Theme::Set('calendarType', Config::GetSetting('CALENDAR_TYPE'));
 
         // Render the Theme and output
         Theme::Render('schedule_page');
