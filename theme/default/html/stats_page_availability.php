@@ -40,8 +40,26 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             ykeys: yKeys,
             labels: labels,
             stacked: false,
-            postUnits: 's'
+            postUnits: 'min',
+            hoverCallback: function (index, options, content, row) {
+                console.log(row);
+                return secondsToTime(row.value * 60);
+            }
         }
     };
+
+    function secondsToTime(secs)
+    {
+        secs = Math.round(secs);
+        var hours = Math.floor(secs / (60 * 60));
+
+        var divisor_for_minutes = secs % (60 * 60);
+        var minutes = Math.floor(divisor_for_minutes / 60);
+
+        var divisor_for_seconds = divisor_for_minutes % 60;
+        var seconds = Math.ceil(divisor_for_seconds);
+
+        return hours + ":" + minutes + ":" + seconds;
+    }
 </script>
 <?php } ?>
