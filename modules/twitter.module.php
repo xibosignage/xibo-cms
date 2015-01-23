@@ -723,12 +723,15 @@ class Twitter extends Module
         curl_setopt_array($curl, $httpOptions);
         $result = curl_exec($curl);
 
-        // Parse out header and body
-        list($header, $body) = explode("\r\n\r\n", $result, 2);
-
+        // Get the response headers
         $outHeaders = curl_getinfo($curl);
 
-        if ($outHeaders['http_code'] != 200) {
+        if ($outHeaders['http_code'] == 0) {
+            // Unable to connect
+            Debug::Error('Unable to reach twitter api.');
+            return false;
+        }
+        else if ($outHeaders['http_code'] != 200) {
             Debug::Error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed.');
 
             // Parse out header and body
@@ -741,10 +744,11 @@ class Twitter extends Module
 
             return false;
         }
-        else {
-            // See if we can parse the error.
-            $body = json_decode($body);
-        }
+
+        // Parse out header and body
+        list($header, $body) = explode("\r\n\r\n", $result, 2);
+
+        $body = json_decode($body);
 
         return $body;
     }
@@ -880,7 +884,7 @@ class Twitter extends Module
                         break;
 
                     case '[Date]':
-                        $replace = date($this->GetOption('dateFormat', Config::GetSetting('DATE_FORMAT')), strtotime($tweet->created_at));
+                        $replace = date($this->GetOption('dateFormat', Config::GetSetting('DATE_FORMAT')), DateManager::getDateFromString($tweet->created_at));
                         break;
 
                     case '[ProfileImage]':

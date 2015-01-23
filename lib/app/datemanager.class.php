@@ -34,33 +34,46 @@ class DateManager
         return gmdate("H:i T");
     }
     
-    public static function getLocalDate($timestamp = NULL)
+    public static function getLocalDate($timestamp = NULL, $format = NULL)
     {
         if ($timestamp == NULL)
             $timestamp = time();
 
-        if (self::$_format == NULL)
-            self::$_format = Config::GetSetting('DATE_FORMAT');
+        if (format == NULL)
+            $format = DateManager::getDefaultFormat();
         
-        return date(self::$_format, $timestamp);
+        return date($format, $timestamp);
     }
     
-    public static function getSystemDate($timestamp = NULL)
+    public static function getSystemDate($timestamp = NULL, $format = NULL)
     {
         if ($timestamp == NULL)
             $timestamp = time();
 
-        if (self::$_format == NULL)
-            self::$_format = Config::GetSetting('DATE_FORMAT');
+        if (format == NULL)
+            $format = DateManager::getDefaultFormat();
         
-        return gmdate(self::$_format, $timestamp);
+        return gmdate($format, $timestamp);
     }
 
     /**
-     * Gets an ISO date from a US formatted date string
-     * @param <string> $date
+     * Get the default date format
+     * @return string
      */
-    public static function GetDateFromString($date)
+    public static function getDefaultFormat()
+    {
+        if (self::$_format == NULL)
+            self::$_format = Config::GetSetting('DATE_FORMAT');
+
+        return self::$_format;
+    }
+
+    /**
+     * Gets a Unix Timestamp from a textual date time string
+     * @param string $date
+     * @return int
+     */
+    public static function getDateFromString($date)
     {
         return strtotime($date);
     }

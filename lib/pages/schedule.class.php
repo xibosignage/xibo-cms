@@ -386,11 +386,11 @@ class scheduleDAO extends baseDAO {
         $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
         
         // Convert our ISO strings
-        $fromDT = DateManager::GetDateFromString($fromDT);
-        $toDT = DateManager::GetDateFromString($toDT);
+        $fromDT = DateManager::getDateFromString($fromDT);
+        $toDT = DateManager::getDateFromString($toDT);
 
         if ($recToDT != '')
-            $recToDT = DateManager::GetDateFromString($recToDT);
+            $recToDT = DateManager::getDateFromString($recToDT);
         
         // Validate layout
         if ($campaignId == 0)
@@ -665,11 +665,11 @@ class scheduleDAO extends baseDAO {
         $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
         
         // Convert our ISO strings
-        $fromDT = DateManager::GetDateFromString($fromDT);
-        $toDT = DateManager::GetDateFromString($toDT);
+        $fromDT = DateManager::getDateFromString($fromDT);
+        $toDT = DateManager::getDateFromString($toDT);
 
         if ($recToDT != '')
-            $recToDT = DateManager::GetDateFromString($recToDT);
+            $recToDT = DateManager::getDateFromString($recToDT);
 
         // Validate layout
         if ($campaignId == 0)
