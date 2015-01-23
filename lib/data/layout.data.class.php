@@ -211,9 +211,6 @@ class Layout extends Data
             
             Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
         
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-        
             return false;
         }
     }
@@ -1847,14 +1844,23 @@ class Layout extends Data
             // We will need a file object and a media object
             $fileObject = new File();
             $mediaObject = new Media();
+            $currentType = '';
     
             // Go through each region and add the media (updating the media ids)
             $mappings = json_decode($zip->getFromName('mapping.json'), true);
     
             foreach($mappings as $file) {
 
-                Debug::LogEntry('audit', 'Found file ' . $file['name']);
-    
+                Debug::LogEntry('audit', 'Found file ' . json_encode($file));
+
+                // Do we need to recharge our media object
+                if ($currentType != '' && $file['type'] != $currentType) {
+                    $mediaObject = new Media();
+                }
+
+                // Set the current type
+                $currentType = $file['type'];
+
                 // Does a media item with this name already exist?
                 $sth->execute(array('name' => $file['name']));
                 $rows = $sth->fetchAll();
