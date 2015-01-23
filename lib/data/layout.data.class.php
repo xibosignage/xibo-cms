@@ -40,6 +40,8 @@ class Layout extends Data
     public $xml;
     private $DomXml;
 
+    public $delayFinalise = false;
+
     public static function Entries($sort_order = array(), $filter_by = array())
     {
         $entries = array();
@@ -773,14 +775,14 @@ class Layout extends Data
                 ));
 
             // Get the Campaign ID
-            Kit::ClassLoader('campaign');
             $campaign = new Campaign($this->db);
             $campaignId = $campaign->GetCampaignId($layoutid);
 
             // Notify (dont error)
-            Kit::ClassLoader('display');
-            $displayObject = new Display($this->db);
-            $displayObject->NotifyDisplays($campaignId);
+            if (!$this->delayFinalise) {
+                $displayObject = new Display($this->db);
+                $displayObject->NotifyDisplays($campaignId);
+            }
         
             Debug::LogEntry('audit', 'OUT', 'Layout', 'SetLayoutXml');
         
@@ -1186,7 +1188,8 @@ class Layout extends Data
             }
 
             $region = new region($this->db);
-            
+            $region->delayFinalise = $this->delayFinalise;
+
             if (!$region->EditBackground($layoutId, $color, $bg_image, $width, $height, $resolutionId, $zindex))
                 throw new Exception("Error Processing Request", 1);
                     
@@ -1453,10 +1456,12 @@ class Layout extends Data
 
     /**
      * Upgrade a Layout between schema versions
-     * @param  [type] $layoutId [description]
-     * @return [type]           [description]
+     * @param int $layoutId
+     * @param int $resolutionId
+     * @param int $scaleContent
+     * @return bool
      */
-    public function upgrade($layoutId, $resolutionId)
+    public function upgrade($layoutId, $resolutionId, $scaleContent)
     {
         // Get the Layout XML
         $this->SetDomXml($layoutId);
@@ -1465,7 +1470,7 @@ class Layout extends Data
         $layoutVersion = (int)$this->DomXml->documentElement->getAttribute('schemaVersion');
         $width = (int)$this->DomXml->documentElement->getAttribute('width');
         $height = (int)$this->DomXml->documentElement->getAttribute('height');
-        $color = trim($this->DomXml->documentElement->getAttribute('color'), '#');
+        $color = $this->DomXml->documentElement->getAttribute('bgcolor');
         $version = Config::Version('XlfVersion');
 
         // Get some more info about the layout
@@ -1493,11 +1498,12 @@ class Layout extends Data
         Debug::Audit('Updating layoutId: ' . $layoutId . ' from version: ' . $layoutVersion . ' to: ' . $version);
 
         // Upgrade
+        $this->delayFinalise = true;
 
         // Set the background
         $this->SetBackground($layoutId, $resolutionId, $color, $row['backgroundImageId']);
 
-        // Get the Layout XML
+        // Get the Layout XML again (now that we have set the background)
         $this->SetDomXml($layoutId);
 
         // Get the Width and Height back out
@@ -1506,10 +1512,12 @@ class Layout extends Data
         
         // Work out the ratio
         $ratio = min($updatedWidth / $width, $updatedHeight / $height);
-        
+
         // Get all the regions.
-        $regionObject = new Region();
         foreach ($this->GetRegionList($layoutId) as $region) {
+            // New region object each time, because the region stores the layout xml
+            $regionObject = new Region();
+            $regionObject->delayFinalise = $this->delayFinalise;
 
             // Work out a new width and height
             $newWidth = $region['width'] * $ratio;
@@ -1518,7 +1526,54 @@ class Layout extends Data
             $newLeft = $region['left'] * $ratio;
 
             $regionObject->EditRegion($layoutId, $region['regionid'], $newWidth, $newHeight, $newTop, $newLeft, $region['name']);
+
+            if ($scaleContent == 1) {
+                Debug::Audit('Updating the scale of media in regionId ' . $region['regionid']);
+                // Also update the width, height and font-size on each media item
+
+                foreach ($regionObject->GetMediaNodeList($layoutId, $region['regionid']) as $mediaNode) {
+                    // Run some regular expressions over each, to adjust the values by the ratio we have calculated.
+                    // widths
+                    $mediaId = $mediaNode->getAttribute('id');
+                    $lkId = $mediaNode->getAttribute('lkid');
+                    $mediaType = $mediaNode->getAttribute('type');
+
+                    // Create a media module to handle all the complex stuff
+                    require_once("modules/$mediaType.module.php");
+                    $tmpModule = new $mediaType(new Database(), new User(), $mediaId, $layoutId, $region['regionid'], $lkId);
+
+                    // Get the XML
+                    $mediaXml = $tmpModule->asXml();
+
+                    // Replace widths
+                    $mediaXml = preg_replace_callback(
+                        '/width:(.*?)/',
+                        function ($matches) use ($ratio) {
+                            return "width:" . $matches[1] * $ratio;
+                        }, $mediaXml);
+
+                    // Replace heights
+                    $mediaXml = preg_replace_callback(
+                        '/height=(.*?)/',
+                        function ($matches) use ($ratio) {
+                            return "height=" . $matches[1] * $ratio;
+                        }, $mediaXml);
+
+                    // Replace fonts
+                    $mediaXml = preg_replace_callback(
+                        '/font-size:(.*?)px;/',
+                        function ($matches) use ($ratio) {
+                            return "font-size:" . $matches[1] * $ratio . "px;";
+                        }, $mediaXml);
+
+                    // Save this new XML
+                    $tmpModule->SetMediaXml($mediaXml);
+                }
+            }
         }
+
+        $this->delayFinalise = false;
+        $this->SetValid($layoutId);
 
         return true;
     }
@@ -1528,6 +1583,10 @@ class Layout extends Data
      * @param [int] $layoutId [The Layout Id]
      */
     public function SetValid($layoutId) {
+        // Delay?
+        if ($this->delayFinalise)
+            return;
+
         try {
             $dbh = PDOConnect::init();
 
