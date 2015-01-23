@@ -837,7 +837,7 @@ class Twitter extends Module
             $user->profile_image_url = '';
 
             $tweet = new stdClass();
-            $tweet->text = $this->GetOption('noTweetsMessage', __('“@WaxandThreadCo: We are open! Book your appointment on 01273 730727 http://t.co/EhuvbixTKS” best threader in Brighton. Used to work for us'));
+            $tweet->text = $this->GetOption('noTweetsMessage', __('There are no tweets to display'));
             $tweet->created_at = date("Y-m-d H:i:s");
             $tweet->user = $user;
 
