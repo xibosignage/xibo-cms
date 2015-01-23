@@ -806,7 +806,7 @@ class Twitter extends Module
             $data = Cache::get($key);
         }
 
-        //Debug::Audit(var_export(json_encode($data), true));
+        Debug::Audit(var_export(json_encode($data), true));
 
         // Get the template
         $template = $this->GetRawNode('template');
@@ -837,7 +837,7 @@ class Twitter extends Module
             $user->profile_image_url = '';
 
             $tweet = new stdClass();
-            $tweet->text = $this->GetOption('noTweetsMessage', __('There are no tweets to display'));
+            $tweet->text = $this->GetOption('noTweetsMessage', __('“@WaxandThreadCo: We are open! Book your appointment on 01273 730727 http://t.co/EhuvbixTKS” best threader in Brighton. Used to work for us'));
             $tweet->created_at = date("Y-m-d H:i:s");
             $tweet->user = $user;
 
@@ -869,7 +869,7 @@ class Twitter extends Module
 
                         // Handle URL removal if requested
                         if ($removeUrls == 1) {
-                            $tweetText = preg_replace("@(https?://([-\w\.]+[-\w])+(:\d+)?(/([\w/_\.#-]*(\?\S+)?[^\.\s])?)?)@", '', $tweetText);
+                            $tweetText = preg_replace("((https?|ftp|gopher|telnet|file|notes|ms-help):((\/\/)|(\\\\))+[\w\d:#\@%\/;$()~_?\+-=\\\.&]*)", '', $tweetText);
                         }
 
                         $replace = emoji_unified_to_html($tweetText);
