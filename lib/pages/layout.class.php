@@ -356,6 +356,11 @@ class layoutDAO extends baseDAO
                     __('The regions will be resized to fit with the new resolution, but you may need to adjust the content manually.'), 
                     'r', 'required');
 
+        // Provide a check box which will attempt to scale up the contents of all media items
+        $formFields[] = FormManager::AddCheckbox('scaleContent', __('Upscale?'), 1,
+            __('Automatically upscale all media content on this Layout to fit with the new resolution selected. Manual adjustment may still be required.'),
+            's');
+
         Theme::Set('form_fields', $formFields);
 
         $form = Theme::RenderReturn('form_render');
@@ -376,6 +381,7 @@ class layoutDAO extends baseDAO
         $response = new ResponseManager();
         $layoutId = Kit::GetParam('layoutId', _POST, _INT);
         $resolutionId = Kit::GetParam('resolutionId', _POST, _INT);
+        $scaleContent = Kit::GetParam('scaleContent', _POST, _CHECKBOX);
 
         if ($layoutId == 0)
             trigger_error(__('layoutId missing'), E_USER_ERROR);
@@ -388,10 +394,10 @@ class layoutDAO extends baseDAO
 
         $layoutObject = new Layout();
 
-        if (!$layoutObject->upgrade($layoutId, $resolutionId))
+        if (!$layoutObject->upgrade($layoutId, $resolutionId, $scaleContent))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
-        $response->SetFormSubmitResponse(__('The Layout has been Upgraded'));
+        $response->SetFormSubmitResponse(__('The Layout has been Upgraded'), true, 'index.php?p=layout&modify=true&layoutid=' . $layoutId);
         $response->Respond();
     }
     

@@ -913,7 +913,7 @@ class Rest
         require_once("modules/$type.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $type(null, $this->user, '', $layoutId, $regionId))
+        if (!$module = new $type(new Database(), $this->user, '', $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         // Set the XML (causes save)
@@ -955,7 +955,7 @@ class Rest
         require_once("modules/$type.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $type(null, $this->user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $type(new Database(), $this->user, $mediaId, $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->edit)
@@ -999,7 +999,7 @@ class Rest
         require_once("modules/$type.module.php");
 
         // Create the media object without any region and layout information
-        if (!$module = new $type(null, $this->user, $mediaId, $layoutId, $regionId))
+        if (!$module = new $type(new Database(), $this->user, $mediaId, $layoutId, $regionId))
             return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
 
         if (!$module->auth->view)

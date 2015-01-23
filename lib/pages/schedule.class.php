@@ -49,6 +49,7 @@ class scheduleDAO extends baseDAO {
         Theme::Set('allSelected', in_array(-1, $displayGroupIds));
         Theme::Set('groups', $groups);
         Theme::Set('displays', $displays);
+        Theme::Set('calendarType', Config::GetSetting('CALENDAR_TYPE'));
 
         // Render the Theme and output
         Theme::Render('schedule_page');
@@ -377,19 +378,21 @@ class scheduleDAO extends baseDAO {
         $displayGroupIDs = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
         $isPriority = Kit::GetParam('is_priority', _POST, _CHECKBOX);
 
-        $rec_type = Kit::GetParam('rec_type', _POST, _STRING);
-        $rec_detail = Kit::GetParam('rec_detail', _POST, _INT);
-        $recToDT = Kit::GetParam('rec_range', _POST, _STRING);
+        $repeatType = Kit::GetParam('rec_type', _POST, _STRING);
+        $repeatInterval = Kit::GetParam('rec_detail', _POST, _INT);
+        $repeatToDt = Kit::GetParam('rec_range', _POST, _STRING);
         
         $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
         $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
         
-        // Convert our ISO strings
-        $fromDT = DateManager::GetDateFromString($fromDT);
-        $toDT = DateManager::GetDateFromString($toDT);
+        // Convert our dates
+        $fromDT = DateManager::getDateFromString($fromDT);
+        $toDT = DateManager::getDateFromString($toDT);
 
-        if ($recToDT != '')
-            $recToDT = DateManager::GetDateFromString($recToDT);
+        if ($repeatToDt != '')
+            $repeatToDt = DateManager::getDateFromString($repeatToDt);
+
+        Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
         
         // Validate layout
         if ($campaignId == 0)
@@ -407,12 +410,12 @@ class scheduleDAO extends baseDAO {
             trigger_error(__("Your start time is in the past. Cannot schedule events in the past"), E_USER_ERROR);
         
         // Check recurrence dT is in the future or empty
-        if (($recToDT != '') && ($recToDT < (time()- 86400))) 
+        if ($repeatType != '' && ($repeatToDt != '' && ($repeatToDt < (time() - 86400))))
             trigger_error(__("Your repeat until date is in the past. Cannot schedule events to repeat in to the past"), E_USER_ERROR);
         
         // Ready to do the add 
         $scheduleObject = new Schedule($db);
-        if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $this->user->userid, $displayOrder))
+        if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->user->userid, $displayOrder))
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
         
         $response->SetFormSubmitResponse(__("The Event has been Added."));
@@ -542,8 +545,8 @@ class scheduleDAO extends baseDAO {
             __('Select the end time for this event'), 'e', 'required');
 
         // Add two hidden fields to always carry the ISO date
-        $formFields['general'][] = FormManager::AddHidden('starttime', date("Y-m-d H:i", $fromDT));
-        $formFields['general'][] = FormManager::AddHidden('endtime', date("Y-m-d H:i", $toDT));
+        $formFields['general'][] = FormManager::AddHidden('starttime', DateManager::getLocalDate($fromDT, "Y-m-d H:i"));
+        $formFields['general'][] = FormManager::AddHidden('endtime', DateManager::getLocalDate($toDT, "Y-m-d H:i"));
         
         // Generate a list of layouts.
         $layouts = $user->CampaignList(NULL, false /* isRetired */);
@@ -610,10 +613,10 @@ class scheduleDAO extends baseDAO {
         $formFields['repeats'][] = FormManager::AddNumber('rec_detail', __('Repeat every'), $recDetail, 
             __('How often does this event repeat?'), 'o', '', 'repeat-control-group');
 
-        $formFields['repeats'][] = FormManager::AddText('rec_rangeControl', __('Until'), ((($recToDT == 0) ? '' : date("Y-m-d H:i", $recToDT))), 
+        $formFields['repeats'][] = FormManager::AddText('rec_rangeControl', __('Until'), ((($recToDT == 0) ? '' : DateManager::getLocalDate($recToDT))),
             __('When should this event stop repeating?'), 'u', '', 'repeat-control-group');
         
-        $formFields['repeats'][] = FormManager::AddHidden('rec_range', date("Y-m-d H:i", $recToDT));
+        $formFields['repeats'][] = FormManager::AddHidden('rec_range', DateManager::getLocalDate($recToDT, "Y-m-d H:i"));
 
         // Set some field dependencies
         $response->AddFieldAction('rec_type', 'init', '', array('.repeat-control-group' => array('display' => 'none')));
@@ -656,19 +659,21 @@ class scheduleDAO extends baseDAO {
         $displayGroupIDs = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
         $isPriority = Kit::GetParam('is_priority', _POST, _CHECKBOX);
 
-        $rec_type = Kit::GetParam('rec_type', _POST, _STRING);
-        $rec_detail = Kit::GetParam('rec_detail', _POST, _INT);
-        $recToDT = Kit::GetParam('rec_range', _POST, _STRING);
+        $repeatType = Kit::GetParam('rec_type', _POST, _STRING);
+        $repeatInterval = Kit::GetParam('rec_detail', _POST, _INT);
+        $repeatToDt = Kit::GetParam('rec_range', _POST, _STRING);
         
         $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
         $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
         
         // Convert our ISO strings
-        $fromDT = DateManager::GetDateFromString($fromDT);
-        $toDT = DateManager::GetDateFromString($toDT);
+        $fromDT = DateManager::getDateFromString($fromDT);
+        $toDT = DateManager::getDateFromString($toDT);
 
-        if ($recToDT != '')
-            $recToDT = DateManager::GetDateFromString($recToDT);
+        if ($repeatToDt != '')
+            $repeatToDt = DateManager::getDateFromString($repeatToDt);
+
+        Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
 
         // Validate layout
         if ($campaignId == 0)
@@ -683,13 +688,13 @@ class scheduleDAO extends baseDAO {
             trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);   
         
         // Check recurrence dT is in the future or empty
-        if (($recToDT != '') && ($recToDT < (time()- 86400))) 
+        if (($repeatToDt != '') && ($repeatToDt < (time()- 86400)))
             trigger_error(__("Your repeat until date is in the past. Cannot schedule events to repeat in to the past"), E_USER_ERROR);
         
         
         // Ready to do the edit 
         $scheduleObject = new Schedule($db);
-        if (!$scheduleObject->Edit($eventId, $displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $this->user->userid, $displayOrder))
+        if (!$scheduleObject->Edit($eventId, $displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->user->userid, $displayOrder))
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
         
         $response->SetFormSubmitResponse(__("The Event has been Modified."));
@@ -789,7 +794,6 @@ class scheduleDAO extends baseDAO {
         $response = new ResponseManager();
 
         $date = time();
-        $dateText = date("d/m/Y", $date);
 
         // We might have a layout id, or a display id
         $campaignId = Kit::GetParam('CampaignID', _GET, _INT, 0);

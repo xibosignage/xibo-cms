@@ -243,6 +243,10 @@ class Twitter extends Module
         // Field empty
         $formFields['advanced'][] = FormManager::AddText('noTweetsMessage', __('No tweets'), NULL, 
             __('A message to display when there are no tweets returned by the search query'), 'n');
+
+        // Date format
+        $formFields['advanced'][] = FormManager::AddText('dateFormat', __('Date Format'), 'd M',
+            __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
         
         // Template - for standard stuff
         $formFields['template'][] = FormManager::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'), 
@@ -347,6 +351,7 @@ class Twitter extends Module
         $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
         $this->SetOption('noTweetsMessage', Kit::GetParam('noTweetsMessage', _POST, _STRING));
+        $this->SetOption('dateFormat', Kit::GetParam('dateFormat', _POST, _STRING));
         $this->SetOption('resultType', Kit::GetParam('resultType', _POST, _STRING));
         $this->SetOption('tweetDistance', Kit::GetParam('tweetDistance', _POST, _INT));
         $this->SetOption('tweetCount', Kit::GetParam('tweetCount', _POST, _INT));
@@ -464,6 +469,9 @@ class Twitter extends Module
         $formFields['advanced'][] = FormManager::AddText('noTweetsMessage', __('No tweets'), $this->GetOption('noTweetsMessage'), 
             __('A message to display when there are no tweets returned by the search query'), 'n');
 
+        $formFields['advanced'][] = FormManager::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'),
+            __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
+
         $formFields['advanced'][] = FormManager::AddCheckbox('removeUrls', __('Remove URLs?'), $this->GetOption('removeUrls', 1), 
             __('Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage.'), 'u');
 
@@ -574,6 +582,7 @@ class Twitter extends Module
         $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
         $this->SetOption('noTweetsMessage', Kit::GetParam('noTweetsMessage', _POST, _STRING));
+        $this->SetOption('dateFormat', Kit::GetParam('dateFormat', _POST, _STRING));
         $this->SetOption('resultType', Kit::GetParam('resultType', _POST, _STRING));
         $this->SetOption('tweetDistance', Kit::GetParam('tweetDistance', _POST, _INT));
         $this->SetOption('tweetCount', Kit::GetParam('tweetCount', _POST, _INT));
@@ -714,12 +723,15 @@ class Twitter extends Module
         curl_setopt_array($curl, $httpOptions);
         $result = curl_exec($curl);
 
-        // Parse out header and body
-        list($header, $body) = explode("\r\n\r\n", $result, 2);
-
+        // Get the response headers
         $outHeaders = curl_getinfo($curl);
 
-        if ($outHeaders['http_code'] != 200) {
+        if ($outHeaders['http_code'] == 0) {
+            // Unable to connect
+            Debug::Error('Unable to reach twitter api.');
+            return false;
+        }
+        else if ($outHeaders['http_code'] != 200) {
             Debug::Error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed.');
 
             // Parse out header and body
@@ -732,10 +744,11 @@ class Twitter extends Module
 
             return false;
         }
-        else {
-            // See if we can parse the error.
-            $body = json_decode($body);
-        }
+
+        // Parse out header and body
+        list($header, $body) = explode("\r\n\r\n", $result, 2);
+
+        $body = json_decode($body);
 
         return $body;
     }
@@ -793,7 +806,7 @@ class Twitter extends Module
             $data = Cache::get($key);
         }
 
-        //Debug::Audit(var_export(json_encode($data), true));
+        Debug::Audit(var_export(json_encode($data), true));
 
         // Get the template
         $template = $this->GetRawNode('template');
@@ -815,38 +828,89 @@ class Twitter extends Module
         // Remove URL setting
         $removeUrls = $this->GetOption('removeUrls', 1);
 
+        // If we have nothing to show, display a no tweets message.
+        if (count($data->statuses) <= 0) {
+            // Create ourselves an empty tweet so that the rest of the code can continue as normal
+            $user = new stdClass();
+            $user->name = '';
+            $user->screen_name = '';
+            $user->profile_image_url = '';
+
+            $tweet = new stdClass();
+            $tweet->text = $this->GetOption('noTweetsMessage', __('There are no tweets to display'));
+            $tweet->created_at = date("Y-m-d H:i:s");
+            $tweet->user = $user;
+
+            // Append to our statuses
+            $data->statuses[] = $tweet;
+        }
+
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {
             // Substitute for all matches in the template
             $rowString = $template;
 
             foreach ($matches[0] as $sub) {
+                // Always clear the stored template replacement
+                $replace = '';
+
                 // Maybe make this more generic?
                 switch ($sub) {
                     case '[Tweet]':
+                        // Get the tweet text to operate on
+                        $tweetText = $tweet->text;
+
+                        // Replace URLs with their display_url before removal
+                        if (isset($tweet->entities->urls)) {
+                            foreach ($tweet->entities->urls as $url) {
+                                $tweetText = str_replace($url->url, $url->display_url, $tweetText);
+                            }
+                        }
+
                         // Handle URL removal if requested
                         if ($removeUrls == 1) {
-                            $tweetText = preg_replace("@(https?://([-\w\.]+[-\w])+(:\d+)?(/([\w/_\.#-]*(\?\S+)?[^\.\s])?)?)@", '', $tweet->text);
-                        }
-                        else {
-                            $tweetText = $tweet->text;
+                            $tweetText = preg_replace("((https?|ftp|gopher|telnet|file|notes|ms-help):((\/\/)|(\\\\))+[\w\d:#\@%\/;$()~_?\+-=\\\.&]*)", '', $tweetText);
                         }
 
                         $replace = emoji_unified_to_html($tweetText);
                         break;
 
                     case '[User]':
+                        $replace = $tweet->user->name;
+                        break;
+
+                    case '[ScreenName]':
                         $replace = $tweet->user->screen_name;
+                        break;
+
+                    case '[Date]':
+                        $replace = date($this->GetOption('dateFormat', Config::GetSetting('DATE_FORMAT')), DateManager::getDateFromGregorianString($tweet->created_at));
                         break;
 
                     case '[ProfileImage]':
                         // Grab the profile image
-                        $file = $media->addModuleFileFromUrl($tweet->user->profile_image_url, 'twitter_' . $tweet->user->id, $expires);
+                        if ($tweet->user->profile_image_url != '') {
+                            $file = $media->addModuleFileFromUrl($tweet->user->profile_image_url, 'twitter_' . $tweet->user->id, $expires);
 
-                        // Tag this layout with this file
-                        $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
+                            // Tag this layout with this file
+                            $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
 
-                        $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
+                            $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
+                        }
+                        break;
+
+                    case '[Photo]':
+                        // See if there are any photos associated with this tweet.
+                        if (isset($tweet->entities->media) && count($tweet->entities->media) > 0) {
+                            // Only take the first one
+                            $photoUrl = $tweet->entities->media[0]->media_url;
+
+                            if ($photoUrl != '') {
+                                $file = $media->addModuleFileFromUrl($photoUrl, 'twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $expires);
+                                $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
+                            }
+                        }
+
                         break;
 
                     default:
@@ -859,10 +923,6 @@ class Twitter extends Module
             // Substitute the replacement we have found (it might be '')
             $return[] = $rowString;
         }
-
-        // If we have nothing to show, display a no tweets message.
-        if (count($return) <= 0)
-            $return[] = str_replace('[Tweet]', $this->GetOption('noTweetsMessage'), $template);
         
         // Return the data array
         return $return;
