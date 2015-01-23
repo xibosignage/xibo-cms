@@ -387,11 +387,8 @@ class Schedule extends Data
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
-        
-            if (!$this->IsError())
-                $this->SetError(25015,__('Unable to delete schedule records for Campaign.'));
-        
-            return false;
+
+            throw new Exception(__('Unable to delete schedule records for Campaign.'), 25015);
         }
     }
 
@@ -412,9 +409,6 @@ class Schedule extends Data
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage());
-        
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
         
             return false;
         }
@@ -437,9 +431,6 @@ class Schedule extends Data
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage());
-        
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
         
             return false;
         }

@@ -884,7 +884,7 @@ class Twitter extends Module
                         break;
 
                     case '[Date]':
-                        $replace = date($this->GetOption('dateFormat', Config::GetSetting('DATE_FORMAT')), DateManager::getDateFromString($tweet->created_at));
+                        $replace = date($this->GetOption('dateFormat', Config::GetSetting('DATE_FORMAT')), DateManager::getDateFromGregorianString($tweet->created_at));
                         break;
 
                     case '[ProfileImage]':
