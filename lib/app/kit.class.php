@@ -456,9 +456,10 @@ class Kit
 
     /**
      * GetXiboRoot
-     * @return <string> The Root of the Xibo installation
+     * @param bool $trimPage Trim Page
+     * @return string The Root of the Xibo installation
      */
-    public static function GetXiboRoot()
+    public static function GetXiboRoot($trimPage = false)
     {
 
         # Check REQUEST_URI is set. IIS doesn't set it so we need to build it
