@@ -73,17 +73,26 @@ $install = new Install();
 switch ($xibo_step) {
 
     case 1:
+        if ($settingsExists)
+            die(__('The CMS has already been installed. Please contact your system administrator.'));
+
         // Welcome to the installer (this should only show once)
         // Checks environment
         $content = $install->Step1();
         break;
 
     case 2:
+        if ($settingsExists)
+            die(__('The CMS has already been installed. Please contact your system administrator.'));
+
         // Collect details about the database
         $content = $install->Step2();
         break;
 
     case 3:
+        if ($settingsExists)
+            die(__('The CMS has already been installed. Please contact your system administrator.'));
+
         // Check and validate DB details
         if (defined('MAX_EXECUTION') && MAX_EXECUTION)
             set_time_limit(0);

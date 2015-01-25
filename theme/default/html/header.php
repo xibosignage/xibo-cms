@@ -133,6 +133,24 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                                     </ul>
                                 </div>
                             </div>
+                            <?php if (count(Theme::Get('notifications')) > 0) { ?>
+                            <div class="user pull-right">
+                                <div class="item dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                        <i class="fa fa-exclamation-circle"></i>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-right">
+                                        <li class="dropdown-header"><?php echo Theme::Translate('Notifications'); ?><br/>
+
+                                        </li>
+                                        <li class="divider"></li>
+                                        <?php foreach(Theme::Get('notifications') as $notification) { ?>
+                                        <li><div><?php echo $notification; ?></div></li>
+                                        <?php } ?>
+                                    </ul>
+                                </div>
+                            </div>
+                            <?php } ?>
                         </div>
                     </div>
                     <div class="row">
