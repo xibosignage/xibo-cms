@@ -27,7 +27,7 @@ body {
 #sidebar-wrapper {
   margin-left: -150px;
   left: -30px;
-  width: 250px;
+  width: 180px;
   position: fixed;
   height: 100%;
   z-index: 999;
@@ -71,7 +71,7 @@ ul.sidebar li a {
   display: block;
   float: left;
   text-decoration: none;
-  width: 250px;  
+  width: 180px;
 }
 ul.sidebar .sidebar-main {
   height: 65px;
@@ -158,7 +158,7 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 }
 @media only screen and (min-width:561px){
   #page-wrapper.active {
-    padding-left: 250px;
+    padding-left: 180px;
   }
 }
 @media only screen and (max-width:560px){
@@ -260,6 +260,9 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 .row.header .user > .item ul.dropdown-menu li.link a {
   padding-left: 7px;
   padding-right: 7px;
+}
+.row.header .user > .item ul.dropdown-menu div {
+  padding: 15px;
 }
 
 /* Widgets */

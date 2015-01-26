@@ -69,6 +69,7 @@ class Region extends Data
         $this->layoutXml = $xml;
 
         $layout = new Layout($this->db);
+        $layout->delayFinalise = $this->delayFinalise;
 
         if (!$layout->SetLayoutXml($layoutid, $xml))
             return $this->SetError($layout->GetErrorMessage());
@@ -520,9 +521,8 @@ class Region extends Data
             return false;
 
         // Update layout status
-        Kit::ClassLoader('Layout');
         $layout = new Layout($this->db);
-        $layout->SetValid($layoutid, true);
+        $layout->SetValid($layoutid);
         
         //Its swapped
         return true;
@@ -547,16 +547,16 @@ class Region extends Data
         else
             $xml->documentElement->removeAttribute('zindex');
         
-        //Convert back to XML       
+        // Convert back to XML
         if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
             return false;
 
         // Update layout status
-        Kit::ClassLoader('Layout');
         $layout = new Layout($this->db);
-        $layout->SetValid($layoutid, true);
+        $layout->delayFinalise = $this->delayFinalise;
+        $layout->SetValid($layoutid);
         
-        //Its swapped
+        // Its swapped
         return true;
     }
 
@@ -652,14 +652,12 @@ class Region extends Data
             if (!$this->SetLayoutXml($layoutid, $xml->saveXML())) 
                 return false;
     
-            if (!$this->delayFinalise) {
-                // Update layout status
-                Kit::ClassLoader('Layout');
-                $layout = new Layout($this->db);
-                $layout->SetValid($layoutid, true);
-            }
-            
-            //Its swapped
+            // Update layout status
+            $layout = new Layout();
+            $layout->delayFinalise = $this->delayFinalise;
+            $layout->SetValid($layoutid);
+
+            // Its swapped
             return true;  
         }
         catch (Exception $e) {
@@ -718,17 +716,23 @@ class Region extends Data
 
     public function GetRegionName($layoutId, $regionId)
     {
-        //Load the XML for this layout
+        // Get the region node
+        $regionNode = $this->getRegion($layoutId, $regionId);
+
+        return $regionNode->getAttribute('name');
+    }
+
+    public function getRegion($layoutId, $regionId)
+    {
+        // Load the XML for this layout
         $xml = new DOMDocument("1.0");
         $xml->loadXML($this->GetLayoutXml($layoutId));
 
-        //Find the region
+        // Find the region
         $xpath = new DOMXPath($xml);
 
         $regionNodeList = $xpath->query("//region[@id='$regionId']");
-        $regionNode = $regionNodeList->item(0);
-
-        return $regionNode->getAttribute('name');
+        return $regionNode = $regionNodeList->item(0);
     }
 
     /**
@@ -930,8 +934,11 @@ class Region extends Data
 
     /**
      * Get media node list
-     * @param <type> $layoutId
-     * @param <type> $regionId
+     * @param int $layoutId
+     * @param string $regionId
+     * @param string[optional] $mediaId
+     * @param string[optional] $lkId
+     * @return DOMNodeList
      */
     public function GetMediaNodeList($layoutId, $regionId = '', $mediaId = '', $lkId = '') {
 

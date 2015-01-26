@@ -738,7 +738,7 @@ class Display extends Data {
                 $loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
 
                 // Get the config object
-                if ($alertTimeout == 0) {
+                if ($alertTimeout == 0 && $clientType != '') {
                     $displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
 
                     $display = new Display();

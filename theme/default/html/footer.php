@@ -69,6 +69,7 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
         <script src="theme/default/libraries/jquery-file-upload/js/jquery.fileupload-ui.js"></script>
         <script src="theme/default/libraries/jquery-message-queuing/jquery.ba-jqmq.min.js"></script>
         <script src="theme/default/libraries/date-time-format.js"></script>
+        <script src="theme/default/libraries/momentjs/moment.js"></script>
         <script src="theme/default/libraries/morrisjs/raphael.min.js"></script>
         <script src="theme/default/libraries/morrisjs/morris.min.js"></script>
         <script src="theme/default/libraries/colors/colors.min.js"></script>

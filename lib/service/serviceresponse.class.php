@@ -42,6 +42,7 @@ class XiboServiceResponse
 
     /**
      * Outputs the WSDL
+     * @param int $version
      */
     public function WSDL($version = 3)
     {
@@ -74,7 +75,7 @@ class XiboServiceResponse
         // TODO: Need to strip out the services.php part of serviceLocation - or work out a better way to do it.
 
         $xrds = file_get_contents('lib/service/services.xrds.xml');
-        $xrds = str_replace('{{XRDS_LOCATION}}', $this->serviceLocation, $xrds);
+        $xrds = str_replace('{{XRDS_LOCATION}}', str_replace('/services.php', '', $this->serviceLocation), $xrds);
         echo $xrds;
 
         die();

@@ -28,7 +28,7 @@ class database
     function connect_db($dbhost, $dbuser, $dbpass) 
     {
         //open the db link
-        if (!$this->connection = mysql_connect($dbhost, $dbuser, $dbpass))
+        if (!$this->connection = @mysql_connect($dbhost, $dbuser, $dbpass))
             return false;
 
         return true;

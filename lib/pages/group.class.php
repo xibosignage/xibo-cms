@@ -266,7 +266,7 @@ END;
 	
 	/**
 	 * Assign Page Security Filter form (will trigger grid)
-	 * @return 
+	 * @return boolean
 	 */
 	function PageSecurityForm()
 	{
@@ -274,9 +274,16 @@ END;
 		
 		$id = uniqid();
         Theme::Set('id', $id);
+		Theme::Set('header_text', __('Please select your Page Security Assignments'));
+		Theme::Set('pager', ResponseManager::Pager($id));
 		Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="PageSecurityFormGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
 
-		$xiboGrid = Theme::RenderReturn('usergroup_form_pagesecurity');
+		$formFields = array();
+		$formFields[] = FormManager::AddText('filter_name', __('Name'), NULL, NULL, 'n');
+		Theme::Set('form_fields', $formFields);
+
+		// Call to render the template
+		$xiboGrid = Theme::RenderReturn('grid_render');
 			
 		// Construct the Response		
 		$response->SetFormRequestResponse($xiboGrid, __('Page Security'), '500', '380');
@@ -290,17 +297,18 @@ END;
 	
 	/**
 	 * Assign Page Security Grid
-	 * @return 
 	 */
 	function PageSecurityFormGrid() 
 	{
-		$db 		=& $this->db;
-		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
+		$db	=& $this->db;
+		$groupId = Kit::GetParam('groupid', _POST, _INT);
 
 		Theme::Set('form_id', 'UserGroupForm');
-		Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupid . '">');
+		Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupId . '">');
 		Theme::Set('form_action', 'index.php?p=group&q=assign');
-		
+
+		$params = array();
+
 		$SQL = <<<END
 		SELECT 	pagegroup.pagegroup,
 				pagegroup.pagegroupID,
@@ -313,46 +321,53 @@ END;
 				(SELECT DISTINCT pages.pagegroupID
 				 FROM	lkpagegroup
 				 INNER JOIN pages ON lkpagegroup.pageID = pages.pageID
-				 WHERE  groupID = $groupid
+				 WHERE  groupID = :groupId
 				) pages_assigned
 		ON pagegroup.pagegroupID = pages_assigned.pagegroupID
 END;
-		
-		if (!$results = $db->query($SQL)) 
-		{
-			trigger_error($db->error());
-			trigger_error(__("Can't get this groups information"), E_USER_ERROR);
-		}
-		
-		if ($db->num_rows($results) == 0) 
-		{
-			echo '';
-			exit;
-		}
-		
-		// while loop
-		$rows = array(); 
-		
-		while ($row = $db->get_assoc_row($results)) 
-		{
-			$row['name'] = $row['pagegroup'];
-			$row['pageid'] = $row['pagegroupID'];
-			$row['assigned'] = (($row['AssignedID'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove');
-			$row['assignedid'] = $row['AssignedID'];
-			$row['checkbox_value'] = $row['AssignedID'] . ',' . $row['pagegroupID'];
-			$row['checkbox_ticked'] = '';
-			
-			$rows[] = $row;
+		$params['groupId'] = $groupId;
+
+		// Filter by Name?
+		if (Kit::GetParam('filter_name', _POST, _STRING) != '') {
+			$SQL .= ' WHERE pagegroup.pagegroup LIKE :name ';
+			$params['name'] = '%' . Kit::GetParam('filter_name', _POST, _STRING) . '%';
 		}
 
-		Theme::Set('table_rows', $rows);
+		try {
+			$dbh = PDOConnect::init();
 
-        $output = Theme::RenderReturn('usergroup_form_pagesecurity_grid');
+			$sth = $dbh->prepare($SQL);
+			$sth->execute($params);
 
-		$response = new ResponseManager();
-        $response->SetGridResponse($output);
-        $response->initialSortColumn = 2;
-        $response->Respond();
+			$results = $sth->fetchAll();
+
+			// while loop
+			$rows = array();
+
+			foreach ($results as $row) {
+				$row['name'] = $row['pagegroup'];
+				$row['pageid'] = $row['pagegroupID'];
+				$row['assigned'] = (($row['AssignedID'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove');
+				$row['assignedid'] = $row['AssignedID'];
+				$row['checkbox_value'] = $row['AssignedID'] . ',' . $row['pagegroupID'];
+				$row['checkbox_ticked'] = '';
+
+				$rows[] = $row;
+			}
+
+			Theme::Set('table_rows', $rows);
+
+			$output = Theme::RenderReturn('usergroup_form_pagesecurity_grid');
+
+			$response = new ResponseManager();
+			$response->SetGridResponse($output);
+			$response->initialSortColumn = 2;
+			$response->Respond();
+		}
+		catch (Exception $e) {
+			Debug::Error($e);
+			trigger_error(__('Unable to process request'), E_USER_ERROR);
+		}
 	}
 	
 	/**
@@ -525,11 +540,26 @@ END;
 		
 		$id = uniqid();
         Theme::Set('id', $id);
+		Theme::Set('header_text', __('Select your Menu Assignments'));
+		Theme::Set('pager', ResponseManager::Pager($id));
 		Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="MenuItemSecurityGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
-		Theme::Set('menu_field_list', $db->GetArray("SELECT MenuID, Menu FROM menu"));
 
-		$xiboGrid = Theme::RenderReturn('usergroup_form_menusecurity');
-		
+		$formFields = array();
+		$formFields[] = FormManager::AddCombo(
+			'filter_menu',
+			__('Menu'),
+			null,
+			$db->GetArray("SELECT MenuID, Menu FROM menu"),
+			'MenuID',
+			'Menu',
+			NULL,
+			'r');
+
+		Theme::Set('form_fields', $formFields);
+
+		// Call to render the template
+		$xiboGrid = Theme::RenderReturn('grid_render');
+
 		// Construct the Response
 		$response = new ResponseManager();		
 		$response->SetFormRequestResponse($xiboGrid, __('Menu Item Security'), '500', '380');

@@ -61,7 +61,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
     </div>
 </div>
 <div class="row">
-    <div class="col-sm-12">
+    <div id="CalendarContainer" data-calendar-type="<?php echo Theme::Get('calendarType'); ?>" class="col-sm-12">
         <div id="Calendar"></div>
     </div>
 </div>

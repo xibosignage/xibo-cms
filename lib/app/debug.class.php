@@ -22,15 +22,19 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Debug
 {
+    private static $_logSql = null;
     private static $_level = NULL;
     private static $pdo = NULL;
 
     public function __construct()
     {
         if (self::$_level == NULL) {
-
             // Determine the auditing level
             self::$_level = Debug::getLevel(Config::GetSetting('audit'));
+        }
+
+        if (self::$_logSql == NULL) {
+            self::$_logSql = 1;
         }
     }
 
@@ -142,19 +146,17 @@ class Debug
 
     /**
      * Write an Entry to the Log table
-     * @return 
-     * @param $db Object
-     * @param $type Object
-     * @param $message Object
-     * @param $page Object[optional]
-     * @param $function Object[optional]
-     * @param $logdate Object[optional]
-     * @param $displayid Object[optional]
-     * @param $scheduleID Object[optional]
-     * @param $layoutid Object[optional]
-     * @param $mediaid Object[optional]
+     * @param $type string
+     * @param $message string
+     * @param $page string[optional]
+     * @param $function string[optional]
+     * @param $logdate string[optional]
+     * @param $displayid int[optional]
+     * @param $scheduleID int[optional]
+     * @param $layoutid int[optional]
+     * @param $mediaid string[optional]
      */ 
-    static function LogEntry($type, $message, $page = "", $function = "", $logdate = "", $displayid = 0, $scheduleID = 0, $layoutid = 0, $mediaid = 0) 
+    static function LogEntry($type, $message, $page = "", $function = "", $logdate = "", $displayid = 0, $scheduleID = 0, $layoutid = 0, $mediaid = '')
     {
         if (Debug::getLevel($type) > self::$_level)
             return;
@@ -209,8 +211,6 @@ class Debug
             error_log($message . '\n\n', 3, './err_log.xml');
             error_log($e->getMessage() . '\n\n', 3, './err_log.xml');
         }
-
-        return true;
     }
 
     public static function Audit($message)
@@ -243,6 +243,23 @@ class Debug
         $caller = $trace[1];
 
         Debug::LogEntry('error', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
+    }
+
+    /**
+     * Log the SQL statement
+     * @param $sql string The SQL
+     * @param $params array The Params
+     */
+    public static function sql($sql, $params)
+    {
+        if (self::$_logSql != 1)
+            return;
+
+        // Get the calling class / function
+        $trace = debug_backtrace();
+        $caller = $trace[1];
+
+        Debug::LogEntry('error', 'SQL: ' . $sql . '. Params: ' . var_export($params, true) . '.', (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
     }
 }
 ?>

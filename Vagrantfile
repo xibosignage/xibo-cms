@@ -7,6 +7,7 @@ VAGRANTFILE_API_VERSION = "2"
 $script = <<SCRIPT
 apt-get update
 apt-get install libapache2-mod-xsendfile
+apt-get install libcurl3 php5-curl
 SCRIPT
 
 $ip = <<IP

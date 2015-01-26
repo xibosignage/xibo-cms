@@ -164,24 +164,31 @@ class User {
     }
 
         /**
-         * Logs in a specific userID
-         * @param <int> $userID
+         * Logs in a specific user
+         * @param int $userId
+         * @return bool
          */
-        function LoginServices($userID)
+        function LoginServices($userId)
         {
-            $db =& $this->db;
+            try {
+                $dbh = PDOConnect::init();
+                $sth = $dbh->prepare('SELECT UserName, usertypeid, homepage FROM user WHERE userID = :userId AND Retired = 0');
+                $sth->execute(array('userId' => $userId));
 
-            $SQL = sprintf("SELECT UserName, usertypeid, homepage FROM user WHERE userID = '%d' AND Retired = 0", $userID);
+                if (!$results = $sth->fetch())
+                    return false;
 
-            if (!$results = $this->db->GetSingleRow($SQL))
+                $this->userid = $userId;
+                $this->userName = Kit::ValidateParam($results['UserName'], _USERNAME);
+                $this->usertypeid = Kit::ValidateParam($results['usertypeid'], _INT);
+                $this->homePage = Kit::ValidateParam($results['homepage'], _WORD);
+
+                return true;
+            }
+            catch (Exception $e) {
+                Debug::Audit($e->getMessage());
                 return false;
-
-            $this->userName     = Kit::ValidateParam($results['UserName'], _USERNAME);
-            $this->usertypeid   = Kit::ValidateParam($results['usertypeid'], _INT);
-            $this->userid   = $userID;
-            $this->homePage = Kit::ValidateParam($results['homepage'], _WORD);
-
-            return true;
+            }
         }
 
     /**
@@ -1656,7 +1663,7 @@ class User {
     {
         // Normal users can only see themselves
         if ($this->usertypeid == 3) {
-            $filterBy['userId'] == $this->userid;
+            $filterBy['userId'] = $this->userid;
         }
         // Super admins can only see users from their groups.
         else if ($this->usertypeid == 2) {

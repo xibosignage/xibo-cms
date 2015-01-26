@@ -217,8 +217,10 @@ class Media extends Data
                 throw new Exception("Error Processing Request", 1);
                 
             // Check the extension is valid for that media type
-            if (!$this->IsValidFile($extension))
+            if (!$this->IsValidFile($type, $extension)) {
+                Debug::Error('Invalid extension: ' . $extension);
                 $this->ThrowError(18, __('Invalid file extension'));
+            }
     
             // Validation
             if (strlen($name) > 100)
@@ -619,15 +621,16 @@ class Media extends Data
         return true;
     }
 
-    private function IsValidFile($extension)
+    private function IsValidFile($type, $extension)
     {
-        Debug::LogEntry('audit', 'IN', 'Media', 'IsValidFile');
-        
+        // Load some information about this module
         if (!$this->moduleInfoLoaded)
         {
-            if (!$this->LoadModuleInfo())
+            if (!$this->LoadModuleInfo($type))
                 return false;
         }
+
+        Debug::Audit('Valid Extensions: ' . var_export($this->validExtensions, true));
 
         // TODO: Is this search case sensitive?
         return in_array($extension, $this->validExtensions);
@@ -1075,8 +1078,8 @@ class Media extends Data
             }
             else {
                 // Create a module for it and issue a delete
-                include_once('modules/' . $type . '.module.php');
-                $moduleObject = new $type(new database(), new User());
+                include_once('modules/' . $entry->type . '.module.php');
+                $moduleObject = new $entry->type(new database(), new User());
 
                 // Remove it from all assigned layout
                 $moduleObject->UnassignFromAll($entry->mediaId);

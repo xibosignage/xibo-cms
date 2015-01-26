@@ -88,3 +88,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	</div>
 </div>
 <?php } ?>
+<?php if (Theme::Get('designerScale') < 0.41) { ?>
+<div class="row">
+	<div class="col-md-offset-1 col-md-5">
+		<p class="alert alert-danger"><?php echo Theme::Translate('This Layout is very large, so we have disabled region drag and drop. You could enlarge the designer from the options menu or use Region Options to Manually Position your regions.'); ?></p>
+	</div>
+</div>
+<?php } ?>
